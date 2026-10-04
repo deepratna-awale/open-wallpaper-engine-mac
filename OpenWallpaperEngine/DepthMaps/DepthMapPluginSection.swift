@@ -14,7 +14,7 @@ struct DepthMapPluginSection: View {
                 Spacer()
                 status
             }
-            Text("Generates depth maps for depth parallax in the Scene Editor and the Wallpaper Editor, on this Mac, with Depth Anything V2 Small (Apache License 2.0). The model is downloaded on demand from Apple’s Core ML release on Hugging Face and checked against the version this app expects.",
+            Text("Generates depth maps for depth parallax in the Scene Editor (Live) and the Wallpaper Editor, on this Mac, with Depth Anything V2 Small (Apache License 2.0). The model is downloaded on demand from Apple’s Core ML release on Hugging Face and checked against the version this app expects.",
                  tableName: "DepthMaps", comment: "Settings › Plugins: what Depth Map Generation is")
                 .font(.caption)
                 .foregroundStyle(.secondary)

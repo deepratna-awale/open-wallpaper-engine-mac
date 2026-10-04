@@ -38,10 +38,11 @@ enum LivePhotoHelper {
         try? FileManager.default.removeItem(at: cacheDirectory) // Optional: temporary folders.
     }
 
-    /// Renders the Live Photo of `wallpaper` with `properties` into a new folder under
-    /// `cacheDirectory`. `progress` gets 0…1 on the main actor.
+    /// Renders the Live Photo of `wallpaper` with `properties` (the isolated store's values,
+    /// `IsolatedSceneEditSession.values`) as `settings` say, into a new folder under `cacheDirectory`.
+    /// `progress` gets 0…1 on the main actor.
     @MainActor
-    static func export(_ wallpaper: WEWallpaper, properties: [String: String], crop: LivePhotoCrop, clip: LivePhotoClip,
+    static func export(_ wallpaper: WEWallpaper, properties: [String: String], settings: LivePhotoExportSettings,
                        progress: @escaping @MainActor (Double) -> Void) async throws -> Files {
         let identifier = UUID().uuidString
         let directory = cacheDirectory.appending(path: identifier, directoryHint: .isDirectory)
@@ -49,8 +50,7 @@ enum LivePhotoHelper {
         let base = LivePhotoRenderer.fileName(wallpaper.project.displayTitle)
         let files = Files(directory: directory, still: directory.appending(path: base + ".HEIC"),
                           movie: directory.appending(path: base + ".MOV"), identifier: identifier)
-        let job = LivePhotoJob(wallpaperDirectory: wallpaper.wallpaperDirectory, properties: properties, crop: crop, clip: clip,
-                               still: files.still, movie: files.movie, identifier: identifier)
+        let job = exportJob(wallpaper, properties: properties, settings: settings, files: files)
         do {
             try await run(job, in: directory, progress: progress)
             return files
@@ -60,18 +60,45 @@ enum LivePhotoHelper {
         }
     }
 
-    /// The clip's frames at `crop`'s (small) output size, for previewing the loop.
+    /// The helper's job for an export: `settings` and `properties` as they are, into `files`.
+    static func exportJob(_ wallpaper: WEWallpaper, properties: [String: String], settings: LivePhotoExportSettings,
+                          files: Files) -> LivePhotoJob {
+        LivePhotoJob(wallpaperDirectory: wallpaper.wallpaperDirectory, properties: properties, crop: settings.crop,
+                     clip: settings.clip, quality: settings.quality, still: files.still, movie: files.movie,
+                     identifier: files.identifier)
+    }
+
+    /// The clip's frames at `settings`' crop (a small output size), for previewing the loop.
     @MainActor
-    static func previewFrames(_ wallpaper: WEWallpaper, properties: [String: String], crop: LivePhotoCrop, clip: LivePhotoClip,
+    static func previewFrames(_ wallpaper: WEWallpaper, properties: [String: String], settings: LivePhotoExportSettings,
                               progress: @escaping @MainActor (Double) -> Void) async throws -> [CGImage] {
         let directory = cacheDirectory.appending(path: "preview-\(UUID().uuidString)", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) } // Optional: a temporary folder.
         let movie = directory.appending(path: "preview.MOV")
-        let job = LivePhotoJob(wallpaperDirectory: wallpaper.wallpaperDirectory, properties: properties, crop: crop, clip: clip,
-                               still: nil, movie: movie, identifier: UUID().uuidString)
+        let job = LivePhotoJob(wallpaperDirectory: wallpaper.wallpaperDirectory, properties: properties, crop: settings.crop,
+                               clip: settings.clip, quality: settings.quality, still: nil, movie: movie,
+                               identifier: UUID().uuidString)
         try await run(job, in: directory, progress: progress)
-        return try await frames(of: movie, count: clip.frameCount)
+        return try await frames(of: movie, count: settings.clip.frameCount)
+    }
+
+    /// The motion of the scene's first `LivePhotoMotion.analysisSeconds` through `settings`' crop,
+    /// rendered small (`LivePhotoRenderer.analyse`).
+    @MainActor
+    static func analyseMotion(_ wallpaper: WEWallpaper, properties: [String: String], settings: LivePhotoExportSettings,
+                              progress: @escaping @MainActor (Double) -> Void) async throws -> LivePhotoMotion.Analysis {
+        let directory = cacheDirectory.appending(path: "motion-\(UUID().uuidString)", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) } // Optional: a temporary folder.
+        let output = directory.appending(path: "motion.json")
+        var job = LivePhotoJob(wallpaperDirectory: wallpaper.wallpaperDirectory, properties: properties, crop: settings.crop,
+                               clip: settings.clip, quality: settings.quality, still: nil,
+                               movie: directory.appending(path: "unused.MOV"), identifier: UUID().uuidString)
+        job.analysisPath = output.path(percentEncoded: false)
+        job.analysisSeconds = LivePhotoMotion.analysisSeconds
+        try await run(job, in: directory, progress: progress)
+        return try JSONDecoder().decode(LivePhotoMotion.Analysis.self, from: Data(contentsOf: output))
     }
 
     /// Every frame of `movie`, in order.

@@ -67,9 +67,18 @@ private struct SceneInspectorTexture: Identifiable {
     let image: NSImage
 }
 
-/// What the Scene Inspector shows: the scene's objects, or the iPhone Live Photo preview.
-private enum SceneInspectorMode {
-    case inspector, deviceExport
+/// The Scene Editor (Live)'s modes: the wallpaper's objects, edited on the running wallpaper, or
+/// the iPhone & iPad Export mode's lock screen, edited on the mode's own copy
+/// (`IsolatedSceneEditSession`). The picker lists them in this order.
+enum SceneInspectorMode: CaseIterable {
+    case wallpaper, deviceExport
+
+    var title: LocalizedStringResource {
+        switch self {
+        case .wallpaper: return LocalizedStringResource("Wallpaper", comment: "Scene Editor (Live): the mode that edits the running wallpaper")
+        case .deviceExport: return LocalizedStringResource("iPhone & iPad Export", comment: "Scene Editor (Live): the mode that exports a Live Photo")
+        }
+    }
 }
 
 private enum SceneHorizontalSnap {
@@ -673,6 +682,48 @@ private final class SceneInspectorModel: ObservableObject {
         return parts.joined(separator: " ")
     }
 
+    /// An image layer's `alpha` (WE's default 1); nil while something else sets it (a user
+    /// property, a script or an animation), which WE's editor shows no value for either.
+    func alpha(for item: SceneInspectorItem) -> Double? {
+        guard let data = item.rawObject.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return 1 } // not an object: WE's default
+        switch object["alpha"] {
+        case nil: return 1
+        case let number as NSNumber: return number.doubleValue
+        case let text as String: return Double(text.trimmingCharacters(in: .whitespaces))
+        default: return nil
+        }
+    }
+
+    /// Sets an image layer's `alpha`, saved with the object's edited JSON.
+    func setAlpha(_ value: Double, for item: SceneInspectorItem) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }),
+              let data = items[index].rawObject.data(using: .utf8),
+              var object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        object["alpha"] = min(max(value, 0), 1)
+        saveObjectJSON(prettyJSON(object), item: items[index])
+    }
+
+    /// An image layer's `color` (WE's default white); nil while something else sets it.
+    func color(for item: SceneInspectorItem) -> SIMD3<Double>? {
+        guard let data = item.rawObject.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return SIMD3(1, 1, 1) } // WE's default
+        guard let value = object["color"] else { return SIMD3(1, 1, 1) }
+        guard !(value is [String: Any]), let parsed = Self.parseOrigin(value) else { return nil }
+        return parsed
+    }
+
+    /// Sets an image layer's `color`, saved with the object's edited JSON.
+    func setColor(_ color: Color, for item: SceneInspectorItem) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }),
+              let data = items[index].rawObject.data(using: .utf8),
+              var object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        let rgb = NSColor(color).usingColorSpace(.deviceRGB) ?? .white
+        let components: [Double] = [rgb.redComponent, rgb.greenComponent, rgb.blueComponent].map { Double($0) }
+        object["color"] = components.map { String(format: "%.5g", $0) }.joined(separator: " ")
+        saveObjectJSON(prettyJSON(object), item: items[index])
+    }
+
     /// An image layer's `colorBlendMode` (WE's default 0, Normal).
     func blendMode(for item: SceneInspectorItem) -> Int {
         guard let data = item.rawObject.data(using: .utf8),
@@ -883,7 +934,7 @@ extension AppDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = String(localized: "Scene Editor")
+        window.title = String(localized: "Scene Editor (Live)")
         window.isReleasedWhenClosed = false
         window.contentView = Self.sceneInspectorContent(wallpaper, scopes)
         window.center()
@@ -891,8 +942,13 @@ extension AppDelegate {
         // kept for the app's life, and so is this observer.
         WallpaperServices.shared.propertyEditing.begin()
         _ = NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: window,
-                                                   queue: .main) { _ in
-            MainActor.assumeIsolated { WallpaperServices.shared.propertyEditing.end() }
+                                                   queue: .main) { [weak window] _ in
+            MainActor.assumeIsolated {
+                WallpaperServices.shared.propertyEditing.end()
+                // The editor goes with the window, so an isolated mode's private instance and
+                // store stop now. Showing the editor again gives the window new content.
+                window?.contentView = NSView()
+            }
         }
         window.makeKeyAndOrderFront(nil)
         sceneInspectorWindow = window
@@ -907,7 +963,51 @@ extension AppDelegate {
     }
 }
 
+/// The Scene Editor (Live): its mode, and the editor for it. The Wallpaper mode edits the stores
+/// the running wallpaper reads; the iPhone & iPad Export mode edits an isolated copy of them made
+/// when it opens (`IsolatedSceneEditSession`), shown by the mode's private instance and exported,
+/// and dropped when it closes.
 struct SceneInspectorView: View {
+    private let wallpaper: WEWallpaper
+    private let scopes: [WallpaperPropertyScope]
+    @State private var exportModel: LivePhotoExportModel?
+
+    init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope] = [.shared]) {
+        self.wallpaper = wallpaper
+        self.scopes = scopes
+    }
+
+    var body: some View {
+        if let exportModel {
+            SceneInspectorContent(wallpaper: wallpaper, scopes: [exportModel.session.scope], isolated: exportModel.session,
+                                  exportModel: exportModel, onModeChange: setMode)
+                .id(SceneInspectorMode.deviceExport)
+        } else {
+            SceneInspectorContent(wallpaper: wallpaper, scopes: scopes, isolated: nil, exportModel: nil,
+                                  onModeChange: setMode)
+                .id(SceneInspectorMode.wallpaper)
+        }
+    }
+
+    /// Opening the export mode copies the edited store's values into its isolated store; leaving
+    /// it drops them, once its preview (and with it the private instance) is gone.
+    private func setMode(_ mode: SceneInspectorMode, sceneSize: SIMD2<Double>) {
+        switch mode {
+        case .deviceExport:
+            guard exportModel == nil else { return }
+            let session = IsolatedSceneEditSession(wallpaper: wallpaper, purpose: LivePhotoExportModel.purpose,
+                                                   seededFrom: scopes)
+            exportModel = LivePhotoExportModel(session: session, sceneSize: sceneSize)
+        case .wallpaper:
+            guard let model = exportModel else { return }
+            exportModel = nil
+            model.cancel()
+            DispatchQueue.main.async { model.session.end() }
+        }
+    }
+}
+
+private struct SceneInspectorContent: View {
     @StateObject private var model: SceneInspectorModel
     /// Depth maps and depth parallax, kept in the wallpaper's editor overlay.
     @StateObject private var depthMaps: SceneEditorDepthMapHost
@@ -916,17 +1016,28 @@ struct SceneInspectorView: View {
     @State private var didCopyPath = false
     @State private var isMovementPresented = true
     @State private var isConfirmingReset = false
-    @State private var mode = SceneInspectorMode.inspector
-    @State private var exportModel: LivePhotoExportModel?
+    /// Moves when the Export Settings sheet closes, so the panel reads the properties it changed.
+    @State private var exportPanelRevision = 0
     @FocusState private var isSearchFocused: Bool
     private let wallpaperDirectory: URL
     private let wallpaper: WEWallpaper
+    /// The stores the editor edits: the running wallpaper's, or the isolated session's.
     private let scopes: [WallpaperPropertyScope]
+    /// An isolated mode's session; nil in the Wallpaper mode.
+    private let isolated: IsolatedSceneEditSession?
+    private let exportModel: LivePhotoExportModel?
+    private let onModeChange: (SceneInspectorMode, SIMD2<Double>) -> Void
 
-    init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope] = [.shared]) {
+    private var mode: SceneInspectorMode { exportModel == nil ? .wallpaper : .deviceExport }
+
+    init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope], isolated: IsolatedSceneEditSession?,
+         exportModel: LivePhotoExportModel?, onModeChange: @escaping (SceneInspectorMode, SIMD2<Double>) -> Void) {
         wallpaperDirectory = wallpaper.wallpaperDirectory
         self.wallpaper = wallpaper
         self.scopes = scopes
+        self.isolated = isolated
+        self.exportModel = exportModel
+        self.onModeChange = onModeChange
         _model = StateObject(wrappedValue: SceneInspectorModel(wallpaper: wallpaper, scopes: scopes))
         _depthMaps = StateObject(wrappedValue: SceneEditorDepthMapHost(wallpaper: wallpaper))
     }
@@ -961,6 +1072,7 @@ struct SceneInspectorView: View {
                 loadSelectedTextures()
             }
             .onChange(of: selectedID) { _, _ in loadSelectedTextures() }
+            .onDisappear { isolated?.end() }
     }
 
     /// Both side columns (the object list and the movement controls) start at one width.
@@ -986,14 +1098,20 @@ struct SceneInspectorView: View {
             modeDetail
                 .inspector(isPresented: $isMovementPresented) {
                     Group {
-                        if mode == .deviceExport, let exportModel {
-                            LivePhotoExportSettingsView(model: exportModel, scopes: scopes)
+                        if let exportModel {
+                            LivePhotoExportSettingsView(model: exportModel) {
+                                layerAdjustments(for: model.items.first(where: { $0.id == selectedID }))
+                            }
+                            .id(exportPanelRevision)
                         } else {
                             movementColumn(for: model.items.first(where: { $0.id == selectedID }))
                         }
                     }
                     .inspectorColumnWidth(min: 260, ideal: Self.sidebarWidth, max: 400)
                 }
+                .modifier(LivePhotoExportSheetHost(model: exportModel, onClose: { exportPanelRevision += 1 }) {
+                    layerAdjustments(for: model.items.first(where: { $0.id == selectedID }))
+                })
                 .toolbar {
                     ToolbarItem(placement: .navigation) {
                         modePicker
@@ -1010,26 +1128,16 @@ struct SceneInspectorView: View {
                         ToolbarSpacer(.fixed)
                     }
                     ToolbarItem(placement: .automatic) {
-                        Button {
-                            withAnimation { isMovementPresented.toggle() }
-                        } label: {
-                            Label("Move & Align", systemImage: "sidebar.right")
-                        }
-                        .help("Show or hide the move, size and align controls")
+                        panelToggle
                     }
                     if #available(macOS 26, *) {
                         ToolbarSpacer(.fixed)
                     }
                     ToolbarItem(placement: .automatic) {
-                        Button {
-                            isConfirmingReset = true
-                        } label: {
-                            Label("Reset Edits", systemImage: "arrow.triangle.2.circlepath")
-                        }
-                        .help("Undo every change made to this wallpaper in the Scene Editor")
+                        modeAction
                     }
                 }
-                .alert("Reset Scene Editor Edits", isPresented: $isConfirmingReset) {
+                .alert("Reset Scene Editor (Live) Edits", isPresented: $isConfirmingReset) {
                     Button("Reset", role: .destructive) {
                         model.removeEdits()
                         // Rebuilt from the stored values, now without the edits, once this view's
@@ -1039,7 +1147,7 @@ struct SceneInspectorView: View {
                     }
                     Button("Cancel", role: .cancel) { }
                 } message: {
-                    Text("Do you want to undo every Scene Editor edit of “\(wallpaper.project.displayTitle)”? Its properties are kept.")
+                    Text("Do you want to undo every Scene Editor (Live) edit of “\(wallpaper.project.displayTitle)”? Its properties are kept.")
                 }
         }
         .searchable(text: $searchText, placement: .sidebar, prompt: "Search")
@@ -1051,35 +1159,68 @@ struct SceneInspectorView: View {
         }
     }
 
-    /// The detail column: the selected object, or the iPhone lock screen.
+    /// The detail column: the selected object, or the device's lock screen.
     @ViewBuilder
     private var modeDetail: some View {
-        if mode == .deviceExport, let exportModel {
+        if let exportModel {
             LockScreenPreview(model: exportModel)
-                .navigationTitle(Text("iPhone Live Photo"))
+                .navigationTitle(Text(SceneInspectorMode.deviceExport.title))
         } else {
             detailColumn
         }
     }
 
-    /// Inspector or iPhone; only a scene wallpaper can be made into a Live Photo for now.
+    /// Shows or hides the right-hand panel: Move & Align, or the Export Settings.
+    private var panelToggle: some View {
+        Button {
+            withAnimation { isMovementPresented.toggle() }
+        } label: {
+            if exportModel == nil {
+                Label("Move & Align", systemImage: "sidebar.right")
+            } else {
+                Label("Export Settings Panel", systemImage: "sidebar.right")
+            }
+        }
+        .help(exportModel == nil ? Text("Show or hide the move, size and align controls")
+                                 : Text("Show or hide the Export Settings panel"))
+    }
+
+    /// The Wallpaper mode's Reset Edits, or the export mode's Export Settings.
+    @ViewBuilder
+    private var modeAction: some View {
+        if let exportModel {
+            Button {
+                exportModel.showSettings()
+            } label: {
+                Label("Export Settings", systemImage: "slider.horizontal.3")
+            }
+            .help("Open the export settings: device, crop, clip, quality, layers and properties")
+        } else {
+            Button {
+                isConfirmingReset = true
+            } label: {
+                Label("Reset Edits", systemImage: "arrow.triangle.2.circlepath")
+            }
+            .help("Undo every change made to this wallpaper in the Scene Editor (Live)")
+        }
+    }
+
+    /// The modes; only a scene wallpaper can leave the Wallpaper mode (a Live Photo is rendered
+    /// from a scene).
     private var modePicker: some View {
         let eligible = LivePhotoExportModel.isEligible(wallpaper)
         return Picker("Mode", selection: Binding(get: { mode }, set: { newValue in
-            if newValue == .deviceExport, exportModel == nil {
-                exportModel = LivePhotoExportModel(wallpaper: wallpaper, properties: scopes.first ?? .shared,
-                                                   sceneSize: model.sceneSize)
-            }
-            if newValue == .deviceExport { isMovementPresented = true }
-            mode = newValue
+            guard newValue != mode else { return }
+            onModeChange(newValue, model.sceneSize)
         })) {
-            Text("Inspector").tag(SceneInspectorMode.inspector)
-            Text("iPhone").tag(SceneInspectorMode.deviceExport)
+            ForEach(SceneInspectorMode.allCases, id: \.self) { mode in
+                Text(mode.title).tag(mode)
+            }
         }
         .pickerStyle(.segmented)
         .disabled(!eligible)
-        .help(eligible ? Text("Preview the wallpaper as an iPhone lock screen and export it as a Live Photo")
-                       : Text("Only scene wallpapers can be exported to iPhone for now"))
+        .help(eligible ? Text("Edit the running wallpaper, or preview it as an iPhone or iPad lock screen and export a Live Photo without changing your desktop")
+                       : Text("Only scene wallpapers can be exported to iPhone or iPad for now"))
     }
 
     /// ⌘K. macOS 15 focuses a search field through `searchFocused`; macOS 14 has no API for it,
@@ -1132,7 +1273,7 @@ struct SceneInspectorView: View {
                 }
             }
         }
-        .navigationTitle("Scene Editor")
+        .navigationTitle(exportModel == nil ? Text("Scene Editor (Live)") : Text(SceneInspectorMode.deviceExport.title))
     }
 
     private var detailColumn: some View {
@@ -1445,6 +1586,7 @@ struct SceneInspectorView: View {
                     .buttonStyle(.link)
                     .font(.caption)
                 if item.kind == "Image" {
+                    appearanceControls(for: item)
                     blendModePicker(for: item)
                 }
                 if !SceneInspectorModel.blendingOptions(for: item).isEmpty {
@@ -1455,6 +1597,47 @@ struct SceneInspectorView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+        }
+    }
+
+    /// The image layer's opacity and colour (its `alpha` and `color`), when nothing else sets them.
+    @ViewBuilder private func appearanceControls(for item: SceneInspectorItem) -> some View {
+        if let alpha = model.alpha(for: item) {
+            SceneLayerOpacitySlider(value: alpha) { model.setAlpha($0, for: item) }
+        }
+        if let color = model.color(for: item) {
+            ColorPicker(selection: Binding(get: { Color(red: color.x, green: color.y, blue: color.z) },
+                                           set: { model.setColor($0, for: item) }),
+                        supportsOpacity: false) {
+                Text("Color")
+            }
+            .anchorsColorPanel()
+        }
+    }
+
+    /// The selected layer's adjustments in an isolated mode's panel: the Wallpaper mode's own
+    /// controls (visibility, move, size, opacity and colour, blending, alignment, effects), on the
+    /// isolated store.
+    @ViewBuilder private func layerAdjustments(for item: SceneInspectorItem?) -> some View {
+        if let item, !item.isSynthetic {
+            VStack(alignment: .leading, spacing: 12) {
+                Toggle(isOn: Binding(get: { item.visible }, set: { model.setObjectVisible($0, item: item) })) {
+                    Text(verbatim: item.name)
+                        .font(.headline)
+                        .lineLimit(1)
+                }
+                .toggleStyle(.switch)
+                .help(item.visible ? "Hide object" : "Show object")
+                movementControls(for: item)
+                scaleControls(for: item)
+                alignmentControls(for: item)
+                effectList(for: item)
+            }
+            .modifier(ArrowKeyMove { direction in move(item, direction: direction) })
+        } else {
+            Text("Select a layer in the list to adjust it here.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -1734,6 +1917,32 @@ struct SceneInspectorView: View {
                 .background(Color(nsColor: .controlBackgroundColor))
                 .clipShape(RoundedRectangle(cornerRadius: 6))
             }
+        }
+    }
+}
+
+/// A layer's opacity: the slider shows the value as it moves and saves it when the drag ends (an
+/// object JSON edit reloads the scene).
+private struct SceneLayerOpacitySlider: View {
+    let value: Double
+    let onCommit: (Double) -> Void
+    @State private var draft: Double?
+
+    var body: some View {
+        let shown = draft ?? value
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("Opacity")
+                Spacer()
+                Text(shown, format: .percent.precision(.fractionLength(0)))
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+            Slider(value: Binding(get: { draft ?? value }, set: { draft = $0 }), in: 0...1, onEditingChanged: { editing in
+                guard !editing, let draft else { return }
+                onCommit(draft)
+                self.draft = nil
+            })
         }
     }
 }
