@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Two scenes drawing at once no longer read each other's properties:** each wallpaper instance renders on its own thread, but every frame shared one property snapshot, so a frame could draw with the other instance's values (two displays with their own properties, or the iPhone & iPad Export's preview beside the desktop), and the two could crash the app. Each thread now keeps its own.
 - **Wallpaper Editor and Scene Inspector:** a number's unit (×, %, °, px, s, fps) stays beside the number on one line in a narrow inspector or beside a long translated label, instead of the number showing above it.
 - **Settings › Assets › Update from Steam** no longer downloads Wallpaper Engine again when the assets are current: it first reads the public build from SteamCMD's app info and reports "up to date" when it matches the installed build and the files are there. If the check fails (offline, not logged in), nothing is downloaded. **Re-download** downloads regardless, to repair a damaged copy.
 
