@@ -174,15 +174,15 @@ Each phase ships on its own; effort is focused engineering time.
   `<app id>.editor`, its own name, Dock tile, menu bar and badged icon (`EditorHelper/Info.plist`,
   `EditorHelper/WallpaperEditor.icns`, `LSUIElement` false). So macOS never takes it for Open
   Wallpaper Engine: the app's Dock tile and opening the app from Finder always mean the app.
-  - **How it is built.** The app target's last build phase runs `Scripts/build-editor-helper.sh`,
-    which makes the bundle like the Chromium helper apps beside it: the executable is a copy of the
-    app's own (one codebase, no second target; the bundle id puts it in editor mode, `AppLaunchMode`),
-    the resources are the app's except the large media the editor never shows (read from the app,
-    `AppBundleLayout.appBundle`), and Sparkle.framework is the app's, found through a second rpath
-    the app links with (`@executable_path/../../../../Frameworks`). It is signed with the app's
-    identity, hardened runtime and entitlements before Xcode seals the app, so library validation
-    holds (one team) and the release's Developer ID export, notarization and checks cover it
-    (`release.yml`).
+  - **How it is built.** The WallpaperEditor target, which the app embeds in `Contents/Helpers`
+    (one codebase: the app's code is the OpenWallpaperEngine framework in the app's
+    `Contents/Frameworks`, and both apps' executables are the same `main.swift`, which calls
+    `AppMain.run()`; the bundle id puts it in editor mode, `AppLaunchMode`). It finds the framework,
+    and through it Sparkle.framework, with its rpath `@executable_path/../../../../Frameworks`, so
+    it costs its executable, strings and asset catalog, not a second copy of the code. Its Info.plist
+    takes the app's version from the build settings. It is signed with the app's identity, hardened
+    runtime and entitlements, so library validation holds (one team) and the release's Developer ID
+    export, notarization and checks cover it (`release.yml`).
   - **Its process.** `AppLaunchPlan` gives it `WallpaperEditorAppDelegate`: none of the main app's
     services start (no desktop wallpapers, menu bar item, screen saver, lock-screen picture,
     Workshop sync, updater, crash watcher or safe restart) and `AppDelegate` is never made; the canvas
