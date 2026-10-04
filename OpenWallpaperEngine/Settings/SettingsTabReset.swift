@@ -13,7 +13,6 @@ enum SettingsTabReset {
         case .optimizations: return ["ReclaimOriginalPackages"]
         case .assets: return ["InstallSteamCmdAutomatically", "InstallsWallpaperEngineAssetsAfterLogin"]
         case .updates: return ["HidesReleaseNotesAfterUpdate", "ReceiveBetaUpdates"]
-        case .plugins: return ["TestAnimates"]
         default: return []
         }
     }
