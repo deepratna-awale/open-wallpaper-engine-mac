@@ -7,8 +7,9 @@
 
 import SwiftUI
 
-/// Settings › Plugins: optional features. Screen Saver works now; Depth Map Generation is coming
-/// as downloadable plugins. Animated library previews are built in (`ThumbnailAnimation`).
+/// Settings › Plugins: optional features. Screen Saver, and the Chromium engine and Depth Map
+/// Generation, which are downloaded on demand. Animated library previews are built in
+/// (`ThumbnailAnimation`).
 struct PluginsPage: SettingsPage {
     @ObservedObject var viewModel: GlobalSettingsViewModel
 
@@ -35,21 +36,8 @@ struct PluginsPage: SettingsPage {
                 }
                 ChromiumEngineSection()
                     .settingsAnchor(SettingsAnchor.chromium)
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text("Depth Map Generation")
-                        Spacer()
-                        Text("Coming soon")
-                            .font(.caption.weight(.semibold))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 2)
-                            .background(.quaternary, in: Capsule())
-                    }
-                    Text("Machine-learning models that generate depth maps for depth parallax in the scene editor, offered as downloadable plugins.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                DepthMapPluginSection()
+                    .settingsAnchor(SettingsAnchor.depthMaps)
             } header: {
                 Label("Plugins", systemImage: "puzzlepiece.extension.fill")
             } footer: {

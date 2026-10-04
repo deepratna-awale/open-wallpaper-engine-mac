@@ -63,9 +63,13 @@ struct AboutUsView: View {
 
                 Link("All contributors", destination: Self.authorsURL)
                     .font(.caption)
+
+                // The optional Depth Map Generation plugin's model (`DepthMapModelPin`).
+                DepthMapPluginCredit()
+                    .font(.caption)
             }
         }
-        .frame(width: 440, height: 480)
+        .frame(width: 440, height: 500)
     }
 }
 
