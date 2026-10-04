@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Display Settings shows each display's wallpaper as a miniature of that screen**: a rounded rectangle with the display's own shape (16:10, 21:9…) holding the full-resolution picture of the scene's own frame at that display's size, instead of the square Workshop preview. Without one it uses the scene's picture at another size, a frame of a video wallpaper, then the preview, placed as the wallpaper's Fill, Fit or Stretch setting places it. It updates when a running scene takes a new picture.
 - **The Scene Editor is now the Scene Editor (Live)** in its window, the Details panel, the Window menu (⌥⌘I), tooltips and the onboarding tour, in every language: its Wallpaper mode edits the running wallpaper. Image layers gain Opacity and Color controls.
 - **The Wallpaper Editor runs as its own app**, inside Open Wallpaper Engine. It has its own Dock icon and menu bar ("Wallpaper Editor"), one process for every wallpaper you edit. Quitting Open Wallpaper Engine leaves it open, closing it leaves Open Wallpaper Engine as it was, and a crash of one doesn't take the other down. Edits, drags and property changes still show on the desktop as you make them; the editor quits when its last window closes.
 - **The Scene Inspector is now called the Scene Editor**, in its window, the Details panel, the Window menu (⌥⌘I), tooltips and the onboarding tour, in every language.

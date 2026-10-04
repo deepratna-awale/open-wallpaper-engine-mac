@@ -22,6 +22,12 @@ struct WEWallpaper: Codable, RawRepresentable, Identifiable {
 
     var isWorkshopPreset: Bool { presetDirectory != nil }
 
+    /// Which wallpaper this is, for Next, Previous and the history: its own folder by path, so
+    /// `…/name` and `…/name/` match and a Workshop preset differs from its base wallpaper.
+    var identityPath: String { settingsDirectory.standardizedFileURL.path }
+
+    func isSameWallpaper(as other: WEWallpaper) -> Bool { identityPath == other.identityPath }
+
     /// Where the wallpaper's own project.json lives: its stored settings, its running property
     /// store (`WallpaperPropertyScope.runtimeKey`) and its preview are keyed by it.
     var settingsDirectory: URL { presetDirectory ?? wallpaperDirectory }

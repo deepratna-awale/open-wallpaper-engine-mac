@@ -23,10 +23,8 @@ class WallpaperViewModel: ObservableObject {
     WEWallpaper(using: .invalid, where: AppBundleLayout.wallpaperNotFoundURL) {
         willSet {
             guard confirmApply?(newValue) ?? true else { return }
-            // Whatever its case, as the library reads project.json's type ("Web" is common).
-            if ["web", "application"].contains(newValue.project.type.lowercased()) {
-                if let trustedWallpapers = UserDefaults.app.array(forKey: "TrustedWallpapers") as? [String],
-                   trustedWallpapers.contains(newValue.wallpaperDirectory.path(percentEncoded: false)) {
+            if Self.runsCode(newValue) {
+                if !Self.needsTrust(newValue) {
                     self.setWallpaper(newValue, for: selectedScreenIds)
                     // Points out a wallpaper that needs Chromium while it isn't installed.
                     ChromiumFeatureAdvisor.shared.wallpaperApplied(newValue)
@@ -37,6 +35,19 @@ class WallpaperViewModel: ObservableObject {
                 self.setWallpaper(newValue, for: selectedScreenIds)
             }
         }
+    }
+
+    /// A web or application wallpaper, which runs its own code; whatever the case of the
+    /// project's type, as the library reads it ("Web" is common).
+    static func runsCode(_ wallpaper: WEWallpaper) -> Bool {
+        ["web", "application"].contains(wallpaper.project.type.lowercased())
+    }
+
+    /// A wallpaper that runs code and that the user hasn't trusted yet: applying it asks first.
+    static func needsTrust(_ wallpaper: WEWallpaper) -> Bool {
+        guard runsCode(wallpaper) else { return false }
+        let trusted = UserDefaults.app.array(forKey: "TrustedWallpapers") as? [String] ?? []
+        return !trusted.contains(wallpaper.wallpaperDirectory.path(percentEncoded: false))
     }
 
     /// Per-screen wallpaper assignments, keyed by CGDirectDisplayID as String.
@@ -544,13 +555,20 @@ class WallpaperViewModel: ObservableObject {
 
     private func advancePlaylist(skippingFlagged: Bool) {
         guard let playlist = activePlaylist, !playlist.items.isEmpty else { return }
+        syncPlaylistIndex(with: playlist)
         let isFlagged = isFlaggedBySafeRestart
-        let next = playlist.nextIndex(after: playlistIndex, shuffle: playlistShuffle, repeats: playlistRepeats) { index in
+        let isSkipped = { (index: Int) -> Bool in
             let wallpaper = playlist.items[index].wallpaper
             guard skippingFlagged, isFlagged?(wallpaper) == true else { return false }
             OWELog.info(.app, "Playlist skips \"\(wallpaper.project.title)\": flagged by safe restart")
             return true
         }
+        let shown = playlistShownWallpaper(of: playlist)
+        // Never the wallpaper shown now (a playlist may list a folder twice) while another can play.
+        let next = playlist.nextIndex(after: playlistIndex, shuffle: playlistShuffle, repeats: playlistRepeats) { index in
+            shown.map { playlist.items[index].wallpaper.isSameWallpaper(as: $0) } == true || isSkipped(index)
+        } ?? playlist.nextIndex(after: playlistIndex, shuffle: playlistShuffle, repeats: playlistRepeats,
+                                isSkipped: isSkipped)
         guard let next else {
             if playlistRepeats {
                 OWELog.info(.app, "Playlist \"\(playlist.name)\" has nothing left to show: every item is flagged by safe restart")
@@ -566,9 +584,35 @@ class WallpaperViewModel: ObservableObject {
 
     func previousPlaylistWallpaper() {
         guard let playlist = activePlaylist, !playlist.items.isEmpty else { return }
-        playlistIndex = (playlistIndex - 1 + playlist.items.count) % playlist.items.count
+        syncPlaylistIndex(with: playlist)
+        let count = playlist.items.count
+        let shown = playlistShownWallpaper(of: playlist)
+        // As Next: passes over items that are the wallpaper shown now, while another exists.
+        var index = playlistIndex
+        for _ in 0..<count {
+            index = (index - 1 + count) % count
+            if shown.map({ playlist.items[index].wallpaper.isSameWallpaper(as: $0) }) != true { break }
+        }
+        playlistIndex = index
         showPlaylistItem(of: playlist)
         restartPlaylistTimer()
+    }
+
+    /// Where Next and Previous step from: the selected display's wallpaper when that is one of
+    /// the playlist's items, so one applied by hand (or shown on another display before) moves
+    /// the position there instead of stepping from a stale one.
+    private func syncPlaylistIndex(with playlist: WallpaperPlaylist) {
+        guard let screenId = steppingScreenId else { return }
+        let shown = wallpaper(for: screenId)
+        if playlist.items[safe: playlistIndex]?.wallpaper.isSameWallpaper(as: shown) == true { return }
+        if let index = playlist.items.firstIndex(where: { $0.wallpaper.isSameWallpaper(as: shown) }) {
+            playlistIndex = index
+        }
+    }
+
+    /// The wallpaper a step must move away from: the selected display's, else the current item.
+    private func playlistShownWallpaper(of playlist: WallpaperPlaylist) -> WEWallpaper? {
+        steppingScreenId.map { wallpaper(for: $0) } ?? playlist.items[safe: playlistIndex]?.wallpaper
     }
 
     /// Shows the playlist's current item on the selected displays (where it is not already
@@ -576,7 +620,7 @@ class WallpaperViewModel: ObservableObject {
     private func showPlaylistItem(of playlist: WallpaperPlaylist) {
         guard let item = playlist.items[safe: playlistIndex] else { return }
         let wallpaper = item.wallpaper
-        let targets = selectedScreenIds.filter { self.wallpaper(for: $0).wallpaperDirectory != wallpaper.wallpaperDirectory }
+        let targets = selectedScreenIds.filter { !self.wallpaper(for: $0).isSameWallpaper(as: wallpaper) }
         if !targets.isEmpty { setWallpaper(wallpaper, for: targets) }
         let displays = selectedScreenIds.sorted()
         if let index = playlists.firstIndex(where: { $0.id == playlist.id }), playlists[index].displays != displays {
