@@ -607,17 +607,7 @@ private final class SceneInspectorModel: ObservableObject {
     }
 
     private static func sceneSize(for scene: WEScene) -> SIMD2<Double> {
-        if case .orthographic(let width, let height) = scene.general.projection {
-            return SIMD2<Double>(Double(width), Double(height))
-        }
-        let bounds = scene.objects.compactMap { object -> SIMD2<Double>? in
-            guard let origin = object.origin?.parseVector3(), let size = object.size?.parseVector2() else { return nil }
-            return SIMD2<Double>(origin.0 + size.0 / 2, origin.1 + size.1 / 2)
-        }
-        guard let width = bounds.map(\.x).max(), let height = bounds.map(\.y).max(), width > 0, height > 0 else {
-            return SIMD2<Double>(1920, 1080)
-        }
-        return SIMD2<Double>(width, height)
+        LivePhotoSceneSize.of(scene)
     }
 
     private static func rawObject(_ rawObject: String, settingOrigin origin: String) -> String {
