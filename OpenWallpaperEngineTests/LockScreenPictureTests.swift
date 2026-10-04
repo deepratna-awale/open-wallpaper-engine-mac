@@ -30,7 +30,7 @@ final class LockScreenPictureTests: XCTestCase {
 
     func testNeverRecordsOWEsOwnPictures() {
         picture.recordOriginal(picture.url(display: 2, slot: 0, fileExtension: "heic"), display: 2)
-        picture.recordOriginal(DesktopSnapshotCache(cachesDirectory: caches).url(display: 2, slot: 1), display: 2)
+        picture.recordOriginal(DesktopSnapshotCache(cachesDirectory: caches).directory.appending(path: "desktop-2-b.jpg"), display: 2)
         picture.recordOriginal(nil, display: 2)
         XCTAssertNil(picture.originals()[2])
     }
@@ -44,10 +44,11 @@ final class LockScreenPictureTests: XCTestCase {
         XCTAssertTrue(picture.isLockPicture(first))
         let second = try picture.write(snapshot: snapshot, display: 7, showing: first)
         XCTAssertEqual(second.lastPathComponent, "lock-7-b.heic", "macOS ignores the URL it already shows")
-        picture.removePictures(display: 7, except: second)
-        XCTAssertFalse(FileManager.default.fileExists(atPath: first.path))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: second.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: first.path), "another Space may still show the other slot")
         XCTAssertEqual(try Data(contentsOf: second), Data([1, 2, 3]))
+        let jpeg = try picture.write(Data([4]), fileExtension: "jpg", display: 7, showing: second)
+        XCTAssertEqual(jpeg.lastPathComponent, "lock-7-a.jpg")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: first.path), "a slot holds one file, whatever its format")
     }
 
     func testRestorePutsBackEachDisplaysOwnPicture() {
@@ -58,18 +59,46 @@ final class LockScreenPictureTests: XCTestCase {
         let lock2 = picture.url(display: 2, slot: 1, fileExtension: "jpg")
         let lock3 = picture.url(display: 3, slot: 0, fileExtension: "heic")
         let fallback = URL(filePath: "/Users/me/Pictures/launch.jpg")
-        let plan = picture.restorePlan(showing: [1: lock1, 2: lock2, 3: lock3, 4: userPicture, 5: nil], fallback: fallback)
+        let plan = picture.restorePlan(showing: [1: lock1, 2: lock2, 3: lock3, 4: userPicture, 5: nil], fallback: fallback,
+                                       exists: { _ in true })
         XCTAssertEqual(plan, [1: userPicture, 2: other, 3: fallback],
                        "displays showing the user's own picture keep it; one with no record gets the launch picture")
         picture.forgetOriginals()
         XCTAssertTrue(picture.originals().isEmpty)
     }
 
-    func testTintPicturesAreNotLockPictures() {
-        let tint = DesktopSnapshotCache(cachesDirectory: caches).url(display: 1, slot: 0)
-        XCTAssertFalse(picture.isLockPicture(tint))
-        XCTAssertTrue(DesktopSnapshotCache(cachesDirectory: caches).isSnapshot(picture.url(display: 1, slot: 0, fileExtension: "jpg")))
-        XCTAssertTrue(picture.restorePlan(showing: [1: tint], fallback: userPicture).isEmpty)
+    /// A picture that is gone is never put back: the display keeps OWE's picture, which exists.
+    func testRestoreNeverPointsAtAMissingFile() {
+        let gone = URL(filePath: "/Users/me/Pictures/deleted.jpg")
+        picture.recordOriginal(gone, display: 1)
+        let lock = picture.url(display: 1, slot: 0, fileExtension: "heic")
+        let oldTint = DesktopSnapshotCache(cachesDirectory: caches).directory.appending(path: "desktop-2-a.jpg")
+        let exists = { (url: URL) in url != gone }
+        XCTAssertEqual(picture.restorePlan(showing: [1: lock, 2: oldTint], fallback: userPicture, exists: exists),
+                       [1: userPicture, 2: userPicture], "an earlier version's tint picture is OWE's too")
+        XCTAssertTrue(picture.restorePlan(showing: [1: lock], fallback: gone, exists: exists).isEmpty)
+        XCTAssertTrue(picture.restorePlan(showing: [4: lock], fallback: picture.url(display: 3, slot: 1, fileExtension: "jpg"),
+                                          exists: { _ in true }).isEmpty, "OWE's picture is never the user's")
+    }
+
+    /// The live bug: `OSWallpaper` held `lock-1-a.heic`, a file OWE had since replaced, so quitting
+    /// pointed the desktop at a missing file.
+    func testTheSavedUserPictureIsNeverOWEsOrMissing() {
+        let lock = picture.url(display: 1, slot: 0, fileExtension: "heic")
+        let gone = URL(filePath: "/Users/me/Pictures/deleted.jpg")
+        let exists = { (url: URL) in url != gone }
+        XCTAssertEqual(picture.userPicture(saved: lock, showing: userPicture, exists: exists), userPicture)
+        XCTAssertNil(picture.userPicture(saved: lock, showing: lock, exists: exists))
+        XCTAssertEqual(picture.userPicture(saved: gone, showing: userPicture, exists: exists), userPicture)
+        let saved = URL(filePath: "/Users/me/Pictures/mine.jpg")
+        XCTAssertEqual(picture.userPicture(saved: saved, showing: lock, exists: exists), saved)
+    }
+
+    func testForgetsOneDisplaysPicture() {
+        picture.recordOriginal(userPicture, display: 1)
+        picture.recordOriginal(userPicture, display: 2)
+        picture.forgetOriginals(of: [1])
+        XCTAssertEqual(Array(picture.originals().keys), [2])
     }
 
     func testIsolatedCopiesNeverChangeTheDesktopPicture() {
@@ -85,29 +114,6 @@ final class LockScreenPictureTests: XCTestCase {
     }
 
     // MARK: A new snapshot
-
-    private let shown = URL(filePath: "/Wallpapers/431960/shown", directoryHint: .isDirectory)
-    private let other = URL(filePath: "/Wallpapers/431960/other", directoryHint: .isDirectory)
-
-    private func refreshed(savedFor directory: URL, isOn: Bool = true, mayChange: Bool = true) -> [Int] {
-        let showing: [Int: URL] = [1: shown, 2: other, 3: shown]
-        return LockScreenPicture.screensToRefresh(savedFor: directory, screens: [1, 2, 3, 4],
-                                                  shownDirectory: { showing[$0] }, isOn: isOn, mayChange: mayChange)
-    }
-
-    func testASnapshotOfTheShownWallpaperRefreshesTheDisplaysShowingIt() {
-        XCTAssertEqual(refreshed(savedFor: shown), [1, 3])
-        XCTAssertEqual(refreshed(savedFor: URL(filePath: "/Wallpapers/431960/other/../shown")), [1, 3])
-    }
-
-    func testASnapshotOfAWallpaperNoLongerShownChangesNothing() {
-        XCTAssertTrue(refreshed(savedFor: URL(filePath: "/Wallpapers/431960/gone")).isEmpty)
-    }
-
-    func testNothingChangesWithTheSettingOffOrWhenIsolated() {
-        XCTAssertTrue(refreshed(savedFor: shown, isOn: false).isEmpty)
-        XCTAssertTrue(refreshed(savedFor: shown, mayChange: false).isEmpty)
-    }
 
     func testEverySavedSnapshotIsReportedIncludingAfterAPropertyChange() throws {
         let wallpaper = caches.appending(path: "Library/123456", directoryHint: .isDirectory)

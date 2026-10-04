@@ -134,8 +134,8 @@ final class AppSystemControlService: SystemControlService {
         app.globalSettingsViewModel.settings.lockScreenPicture = enabled
     }
 
-    /// What turning the setting on runs (`GlobalSettingsViewModel.didChangeLockScreenPicture`).
+    /// Draws every display's desktop picture again from what it shows (`DesktopPictureController`).
     func refreshLockScreen() {
-        LockScreenPicture.apply(app.wallpaperViewModel.currentWallpaper)
+        app.desktopPictures.refresh()
     }
 }
