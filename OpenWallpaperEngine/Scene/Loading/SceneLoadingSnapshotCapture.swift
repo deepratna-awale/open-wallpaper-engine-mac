@@ -11,8 +11,8 @@ extension Notification.Name {
 /// has shown its content on a display for `delay`, the render loop (`SceneRenderLoop`) copies a
 /// frame at that display's pixel size and this saves it, encoded off the render thread. Each
 /// display size is captured once per session (`SceneLoadingSnapshotSession`), and again after the
-/// user's properties change. Each saved snapshot is passed to `onSaved` (by default `didSave`: the
-/// lock-screen picture and `sceneLoadingSnapshotSaved`). Thread-safe: `lock` owns `armedAt`.
+/// user's properties change. Each saved snapshot is passed to `onSaved` (by default `didSave`:
+/// `sceneLoadingSnapshotSaved`, which the views and the desktop pictures follow). Thread-safe: `lock` owns `armedAt`.
 final class SceneLoadingSnapshotCapture: @unchecked Sendable {
     static let delay: CFTimeInterval = 4
 
@@ -34,10 +34,10 @@ final class SceneLoadingSnapshotCapture: @unchecked Sendable {
         armedAt = now
     }
 
-    /// A snapshot of the wallpaper at `directory` was saved: shows it as the lock-screen picture,
-    /// and posts `sceneLoadingSnapshotSaved` on the main thread for the views showing it.
+    /// A snapshot of the wallpaper at `directory` was saved: posts `sceneLoadingSnapshotSaved` on
+    /// the main thread for the views showing it and the desktop pictures
+    /// (`DesktopPictureController`).
     static func didSave(wallpaperDirectory directory: URL) {
-        LockScreenPicture.snapshotSaved(wallpaperDirectory: directory)
         DispatchQueue.main.async {
             NotificationCenter.default.post(name: .sceneLoadingSnapshotSaved, object: directory)
         }
