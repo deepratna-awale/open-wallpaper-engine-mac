@@ -5,18 +5,21 @@ import XCTest
 
 final class LivePhotoTests: XCTestCase {
     private let landscape = SIMD2<Double>(1920, 1080)
+    private let proMax = DeviceModel.model(id: "iPhone 17 Pro Max")
+    private let pro = DeviceModel.model(id: "iPhone 17 Pro")
 
     // MARK: Crop and scale
 
-    func testDefaultDeviceIsTheLargest() {
-        XCTAssertEqual(IPhoneModel.largest, .proMax)
-        XCTAssertEqual(IPhoneModel.proMax.pixelSize, SIMD2(1320, 2868))
-        XCTAssertEqual(IPhoneModel.pro.pixelSize, SIMD2(1206, 2622))
-        XCTAssertEqual(IPhoneModel.standard.pixelSize, SIMD2(1179, 2556))
+    func testDefaultDeviceIsTheNewestLargestIPhone() {
+        XCTAssertEqual(DeviceModel.defaultModel.name, "iPhone 17 Pro Max")
+        XCTAssertEqual(proMax.pixelSize, SIMD2(1320, 2868))
+        XCTAssertEqual(pro.pixelSize, SIMD2(1206, 2622))
+        XCTAssertEqual(DeviceModel.model(id: "iPhone 16").pixelSize, SIMD2(1179, 2556))
+        XCTAssertEqual(DeviceModel.model(id: "no such device"), DeviceModel.defaultModel)
     }
 
     func testCoverFitIsTheTallestPortraitWindowInALandscapeScene() {
-        let crop = LivePhotoCrop(sceneSize: landscape, outputPixels: IPhoneModel.proMax.pixelSize)
+        let crop = LivePhotoCrop(sceneSize: landscape, outputPixels: proMax.pixelSize)
         XCTAssertEqual(crop.coverSize.y, 1080, accuracy: 1e-9)
         XCTAssertEqual(crop.coverSize.x, 1080 * 1320 / 2868, accuracy: 1e-9)
         XCTAssertEqual(crop.cropRect.midX, 960, accuracy: 1e-9)
@@ -24,13 +27,13 @@ final class LivePhotoTests: XCTestCase {
     }
 
     func testCoverFitInAPortraitSceneUsesItsWidth() {
-        let crop = LivePhotoCrop(sceneSize: SIMD2(1000, 4000), outputPixels: IPhoneModel.proMax.pixelSize)
+        let crop = LivePhotoCrop(sceneSize: SIMD2(1000, 4000), outputPixels: proMax.pixelSize)
         XCTAssertEqual(crop.coverSize.x, 1000, accuracy: 1e-9)
         XCTAssertEqual(crop.coverSize.y, 1000 * 2868 / 1320, accuracy: 1e-9)
     }
 
     func testPanIsClampedInsideTheScene() {
-        var crop = LivePhotoCrop(sceneSize: landscape, outputPixels: IPhoneModel.proMax.pixelSize)
+        var crop = LivePhotoCrop(sceneSize: landscape, outputPixels: proMax.pixelSize)
         crop.pan(by: SIMD2(-10_000, -10_000))
         XCTAssertEqual(crop.cropRect.minX, 0, accuracy: 1e-9)
         XCTAssertEqual(crop.cropRect.minY, 0, accuracy: 1e-9)
@@ -40,7 +43,7 @@ final class LivePhotoTests: XCTestCase {
     }
 
     func testZoomIsClampedAndShrinksTheWindow() {
-        var crop = LivePhotoCrop(sceneSize: landscape, outputPixels: IPhoneModel.proMax.pixelSize)
+        var crop = LivePhotoCrop(sceneSize: landscape, outputPixels: proMax.pixelSize)
         crop.setZoom(0.2)
         XCTAssertEqual(crop.zoom, 1)
         crop.setZoom(10)
@@ -54,7 +57,7 @@ final class LivePhotoTests: XCTestCase {
     }
 
     func testRenderScaleIsNeverBelowAuthoredNorThePhonesPixels() {
-        for device in IPhoneModel.allCases {
+        for device in DeviceModel.all {
             for zoom in [1.0, 1.5, 2, 3] {
                 let crop = LivePhotoCrop(sceneSize: landscape, outputPixels: device.pixelSize, zoom: zoom)
                 XCTAssertGreaterThanOrEqual(crop.renderScale, 1)
@@ -64,7 +67,7 @@ final class LivePhotoTests: XCTestCase {
             }
         }
         // A scene far larger than the phone renders at its authored size.
-        let large = LivePhotoCrop(sceneSize: SIMD2(7680, 4320), outputPixels: IPhoneModel.proMax.pixelSize)
+        let large = LivePhotoCrop(sceneSize: SIMD2(7680, 4320), outputPixels: proMax.pixelSize)
         XCTAssertEqual(large.renderScale, 1)
         XCTAssertEqual(large.renderPixelSize, SIMD2(7680, 4320))
     }
@@ -105,6 +108,22 @@ final class LivePhotoTests: XCTestCase {
         XCTAssertEqual(short.frameCount, 30)
         XCTAssertEqual(short.start, LivePhotoClip.timelineLength - 1)
         XCTAssertEqual(LivePhotoClip(length: 10).length, LivePhotoClip.duration)
+        // Lengthening a clip at the end of the timeline moves its start back.
+        var clip = short
+        clip.setLength(3)
+        XCTAssertEqual(clip.length, 3)
+        XCTAssertEqual(clip.end, LivePhotoClip.timelineLength)
+    }
+
+    func testLandscapeWindowIsTheMiddleBandOfThePortraitCrop() {
+        let crop = LivePhotoCrop(sceneSize: landscape, outputPixels: SIMD2(2064, 2752))
+        let portrait = crop.cropRect
+        let band = crop.landscapeRect
+        let bandWidth: Double = band.width
+        let bandHeight: Double = band.height
+        XCTAssertEqual(bandWidth, portrait.width, accuracy: 1e-9)
+        XCTAssertEqual(bandWidth / bandHeight, 2752.0 / 2064.0, accuracy: 1e-9)
+        XCTAssertEqual(band.midY, portrait.midY, accuracy: 1e-9)
     }
 
     // MARK: Preview sound
@@ -133,17 +152,18 @@ final class LivePhotoTests: XCTestCase {
     // MARK: Helper job
 
     func testJobRoundTripsTheCropClipAndProperties() throws {
-        let crop = LivePhotoCrop(sceneSize: landscape, outputPixels: IPhoneModel.pro.pixelSize, zoom: 2,
+        let crop = LivePhotoCrop(sceneSize: landscape, outputPixels: pro.pixelSize, zoom: 2,
                                  center: SIMD2(300, 400))
         let clip = LivePhotoClip(start: 4.5)
         let job = LivePhotoJob(wallpaperDirectory: URL(filePath: "/tmp/w", directoryHint: .isDirectory),
-                               properties: ["schemecolor": "1 0 0"], crop: crop, clip: clip,
+                               properties: ["schemecolor": "1 0 0"], crop: crop, clip: clip, quality: .high,
                                still: URL(filePath: "/tmp/a.HEIC"), movie: URL(filePath: "/tmp/a.MOV"), identifier: "id")
         let decoded = try JSONDecoder().decode(LivePhotoJob.self, from: JSONEncoder().encode(job))
         XCTAssertEqual(decoded, job)
         XCTAssertEqual(decoded.crop, crop)
         XCTAssertEqual(decoded.clip, clip)
         XCTAssertEqual(decoded.properties["schemecolor"], "1 0 0")
+        XCTAssertEqual(decoded.qualityLevel, .high)
         XCTAssertNil(LivePhotoJob(wallpaperDirectory: URL(filePath: "/tmp/w"), properties: [:], crop: crop, clip: clip,
                                   still: nil, movie: URL(filePath: "/tmp/p.MOV"), identifier: "p").still)
     }

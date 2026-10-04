@@ -3,7 +3,7 @@ import Foundation
 /// The user properties of every running wallpaper instance, their music-synced modulation and the
 /// per-frame snapshot the render loop reads them from. Owned by `WallpaperServices`.
 final class SceneUserPropertyService {
-    /// Guards every stored property except `frameSnapshot`, which is confined to the render thread.
+    /// Guards every stored property. `frameSnapshot` is the rendering thread's own (`FrameSlot`).
     private let levelLock = NSLock()
     /// The current system audio level, used by music-synced properties.
     private let audioLevel: () -> Double
@@ -65,15 +65,48 @@ final class SceneUserPropertyService {
     // MARK: - Frame snapshot
 
     /// Copy of the property state the render loop reads. Taken once per frame so per-layer reads
-    /// stop contending with the audio thread. Confined to the render thread; dictionaries are
-    /// copy-on-write so taking it is cheap.
+    /// stop contending with the audio thread. Dictionaries are copy-on-write so taking it is cheap.
     struct FrameSnapshot {
         var globalValues: [String: Double]
         var userPropertyStrings: [String: String]
         var level: Double
     }
 
-    private var frameSnapshot: FrameSnapshot?
+    /// One thread's frame snapshot. Every wallpaper instance renders on a thread of its own
+    /// (`SceneRenderThread`), and two instances (two displays' stores, or an isolated edit
+    /// session's private instance beside the desktop's) render at once: each frame reads the
+    /// snapshot its own thread took, never one another thread took or cleared meanwhile.
+    private final class FrameSlot {
+        var owner: ObjectIdentifier?
+        var snapshot: FrameSnapshot?
+    }
+
+    private static let frameSlotKey: pthread_key_t = {
+        var key = pthread_key_t()
+        pthread_key_create(&key) { Unmanaged<FrameSlot>.fromOpaque($0).release() }
+        return key
+    }()
+
+    /// This thread's frame snapshot of this service; nil outside a frame.
+    private var frameSnapshot: FrameSnapshot? {
+        get {
+            guard let raw = pthread_getspecific(Self.frameSlotKey) else { return nil }
+            let slot = Unmanaged<FrameSlot>.fromOpaque(raw).takeUnretainedValue()
+            return slot.owner == ObjectIdentifier(self) ? slot.snapshot : nil
+        }
+        set {
+            let slot: FrameSlot
+            if let raw = pthread_getspecific(Self.frameSlotKey) {
+                slot = Unmanaged<FrameSlot>.fromOpaque(raw).takeUnretainedValue()
+            } else {
+                guard newValue != nil else { return }
+                slot = FrameSlot()
+                pthread_setspecific(Self.frameSlotKey, Unmanaged.passRetained(slot).toOpaque())
+            }
+            slot.owner = ObjectIdentifier(self)
+            slot.snapshot = newValue
+        }
+    }
 
     /// The audio level captured with the current frame's snapshot; nil outside a frame.
     var frameAudioLevel: Double? { frameSnapshot?.level }

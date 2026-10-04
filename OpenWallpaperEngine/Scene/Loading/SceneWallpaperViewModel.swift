@@ -1104,21 +1104,29 @@ class SceneWallpaperViewModel: ObservableObject {
         LiveSceneValueContext(wallpaper: propertyStoreKey)
     }
 
+    /// The scene's size in scene units (`Self.sceneSize(of:)`).
+    private func metalSceneSize(for scene: WEScene) -> SIMD2<Float> {
+        if case .orthographicAuto = scene.general.projection, Self.firstImage(of: scene)?.size?.parseVector2() == nil {
+            // Its image takes its texture's size and the scene stays 1920×1080 (§5.21).
+            OWELog.debug(.scene, "\(loadedWallpaperDirectory?.lastPathComponent ?? "?"): orthogonalprojection auto "
+                         + "without an image size; the scene is 1920×1080")
+        }
+        return Self.sceneSize(of: scene)
+    }
+
     /// The scene's size in scene units (`general.orthogonalprojection` as WE reads it,
     /// docs/models-plan.md §2.1): an orthographic scene's width and height; `{"auto": true}`'s
     /// first image's size (0x14018b2c0); a perspective scene, whose objects are in world units,
-    /// WE's default canvas.
-    private func metalSceneSize(for scene: WEScene) -> SIMD2<Float> {
+    /// WE's default canvas. What the renderer draws the scene at, so anything framing the drawn
+    /// scene (the iPhone & iPad Export's crop) measures it with this.
+    static func sceneSize(of scene: WEScene) -> SIMD2<Float> {
         switch scene.general.projection {
         case .orthographic(let width, let height):
             return SIMD2<Float>(Float(width), Float(height))
         case .orthographicAuto:
-            if let size = Self.firstImage(of: scene)?.size?.parseVector2(), size.0 != 0, size.1 != 0 {
+            if let size = firstImage(of: scene)?.size?.parseVector2(), size.0 != 0, size.1 != 0 {
                 return SIMD2<Float>(Float(size.0), Float(size.1))
             }
-            // Its image takes its texture's size and the scene stays 1920×1080 (§5.21).
-            OWELog.debug(.scene, "\(loadedWallpaperDirectory?.lastPathComponent ?? "?"): orthogonalprojection auto "
-                         + "without an image size; the scene is 1920×1080")
             return SIMD2<Float>(1920, 1080)
         case .perspective:
             return SIMD2<Float>(1920, 1080)

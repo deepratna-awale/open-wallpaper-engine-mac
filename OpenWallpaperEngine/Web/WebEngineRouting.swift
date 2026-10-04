@@ -39,7 +39,7 @@ enum WebEngineRouting {
 enum ChromiumEngineInstallation {
     /// The active install's folder, nil without a complete one.
     static func activeInstall(in root: URL = ChromiumEngineInstaller.defaultRoot) -> URL? {
-        guard let active = ChromiumEngineInstallState.read(in: root).active else { return nil }
+        guard let active = VersionedInstallState.read(in: root).active else { return nil }
         let folder = root.appending(path: active, directoryHint: .isDirectory)
         return ChromiumEnginePackage.manifest(in: folder) != nil ? folder : nil
     }
