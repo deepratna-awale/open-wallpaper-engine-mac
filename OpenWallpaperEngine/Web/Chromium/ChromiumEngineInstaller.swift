@@ -84,7 +84,7 @@ final class ChromiumEngineInstaller: ObservableObject {
 
     /// Re-reads what is on disk.
     func refresh() {
-        let state = ChromiumEngineInstallState.read(in: root)
+        let state = VersionedInstallState.read(in: root)
         let previousVersion = installedVersion
         if let active = state.active, ChromiumEnginePackage.manifest(in: root.appending(path: active)) != nil {
             installedVersion = active
@@ -196,24 +196,6 @@ final class ChromiumEngineInstaller: ObservableObject {
     }
 }
 
-/// `.state.json`: which install is active and which one came before it.
-struct ChromiumEngineInstallState: Codable, Equatable {
-    var active: String?
-    var previous: String?
-
-    static let fileName = ".state.json"
-
-    static func read(in root: URL) -> ChromiumEngineInstallState {
-        guard let data = try? Data(contentsOf: root.appending(path: fileName)),
-              let state = try? JSONDecoder().decode(Self.self, from: data) else { return ChromiumEngineInstallState() }
-        return state
-    }
-
-    func write(in root: URL) throws {
-        try JSONEncoder().encode(self).write(to: root.appending(path: Self.fileName), options: .atomic)
-    }
-}
-
 /// The work of one install, off the main actor.
 struct ChromiumEngineInstallJob: Sendable {
     let root: URL
@@ -276,7 +258,7 @@ struct ChromiumEngineInstallJob: Sendable {
             }
             throw error
         }
-        var state = ChromiumEngineInstallState.read(in: root)
+        var state = VersionedInstallState.read(in: root)
         if state.active != pin.version {
             state.previous = state.active
             state.active = pin.version

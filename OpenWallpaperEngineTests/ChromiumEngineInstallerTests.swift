@@ -210,8 +210,8 @@ final class ChromiumEngineInstallerTests: XCTestCase {
 
         XCTAssertEqual(try visibleEntries(), ["2.0.0", "3.0.0"])
         XCTAssertEqual(installer.installedVersion, "3.0.0")
-        XCTAssertEqual(ChromiumEngineInstallState.read(in: engineRoot),
-                       ChromiumEngineInstallState(active: "3.0.0", previous: "2.0.0"))
+        XCTAssertEqual(VersionedInstallState.read(in: engineRoot),
+                       VersionedInstallState(active: "3.0.0", previous: "2.0.0"))
     }
 
     @MainActor
@@ -220,8 +220,8 @@ final class ChromiumEngineInstallerTests: XCTestCase {
         _ = try await install(version: "2.0.0")
         _ = try await install(version: "2.0.0")
         XCTAssertEqual(try visibleEntries(), ["1.0.0", "2.0.0"])
-        XCTAssertEqual(ChromiumEngineInstallState.read(in: engineRoot),
-                       ChromiumEngineInstallState(active: "2.0.0", previous: "1.0.0"))
+        XCTAssertEqual(VersionedInstallState.read(in: engineRoot),
+                       VersionedInstallState(active: "2.0.0", previous: "1.0.0"))
     }
 
     @MainActor
