@@ -557,9 +557,7 @@ class WallpaperViewModel: ObservableObject {
         guard wallpaper.project.workshopid == nil else { return }
         var updated = wallpaper
         updated.project.contentrating = rating
-        if let data = try? JSONEncoder().encode(updated.project) {
-            try? data.write(to: updated.wallpaperDirectory.appending(path: "project.json"), options: .atomic)
-        }
+        guard WallpaperProjectFileEdit.setLogging(["contentrating": rating], inProjectAt: updated.wallpaperDirectory) else { return }
         for key in wallpapers.keys where wallpapers[key]?.wallpaperDirectory == updated.wallpaperDirectory {
             wallpapers[key] = updated
         }
