@@ -1112,6 +1112,15 @@ private struct SceneInspectorContent: View {
     /// Both side columns (the object list and the movement controls) start at one width.
     private static let sidebarWidth: CGFloat = 300
 
+    /// The symbol for an item's kind: particle systems and effects as everywhere in the editors.
+    private static func kindSymbol(_ kind: String) -> String {
+        switch kind {
+        case "Particle": return "sparkles"
+        case "Effect Stack": return "slider.horizontal.3"
+        default: return "photo"
+        }
+    }
+
     /// The name shown for an item's kind; `kind` itself stays English, as the code matches on it.
     private static func kindLabel(_ kind: String) -> String {
         switch kind {
@@ -1342,7 +1351,7 @@ private struct SceneInspectorContent: View {
             Section("Scene Objects") {
                 ForEach(model.items.filter { !$0.isVersion }.filter(matches)) { item in
                     HStack(spacing: 8) {
-                        Label(item.name, systemImage: item.kind == "Particle" ? "sparkles" : "photo")
+                        Label(item.name, systemImage: Self.kindSymbol(item.kind))
                         Spacer(minLength: 4)
                         Toggle("Visible", isOn: Binding(
                             get: { item.visible },
