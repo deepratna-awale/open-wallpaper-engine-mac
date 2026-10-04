@@ -134,6 +134,7 @@ groups:
     - "Desktop*"
     - "Steam*"
     - "ImportedFolder*"
+    - "FolderImport*"
     - "FilterResults*"
     - "SortBy*"
     - "UserProperty*"

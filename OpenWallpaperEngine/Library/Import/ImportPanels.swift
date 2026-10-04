@@ -41,35 +41,8 @@ extension AppDelegate {
             if response != .OK { return }
             guard !panel.urls.isEmpty else { return }
 
-            let fm = FileManager.default
-            let docsDir = fm.wallpapersDirectory
-
-            var wallpaperURLs: [URL] = []
-            var zipURLs: [URL] = []
-
-            for url in panel.urls {
-                if url.pathExtension.lowercased() == "zip" {
-                    zipURLs.append(url)
-                } else if fm.fileExists(atPath: url.appending(path: "project.json").path) {
-                    wallpaperURLs.append(url)
-                } else {
-                    // Scan immediate children for wallpaper folders
-                    guard let children = try? fm.contentsOfDirectory(
-                        at: url, includingPropertiesForKeys: [.isDirectoryKey],
-                        options: .skipsHiddenFiles
-                    ) else { continue }
-                    for child in children {
-                        var isDir: ObjCBool = false
-                        if fm.fileExists(atPath: child.path, isDirectory: &isDir),
-                           isDir.boolValue,
-                           fm.fileExists(atPath: child.appending(path: "project.json").path) {
-                            wallpaperURLs.append(child)
-                        }
-                    }
-                }
-            }
-
-            guard !wallpaperURLs.isEmpty || !zipURLs.isEmpty else {
+            let sources = FolderImport.sources(in: panel.urls)
+            guard !sources.isEmpty else {
                 DispatchQueue.main.async {
                     self?.contentViewModel.alertImportModal(which: .doesNotContainWallpaper)
                 }
@@ -77,22 +50,7 @@ extension AppDelegate {
             }
 
             DispatchQueue.main.async {
-                for url in wallpaperURLs {
-                    let dest = docsDir.appending(path: url.lastPathComponent)
-                    guard !fm.fileExists(atPath: dest.path) else { continue }
-                    do {
-                        try ImportedFolderLinks.copyWithoutLinks(from: url, to: dest)
-                    } catch {
-                        OWELog.error(.importer, "Can't import \(url.path): \(error)")
-                        continue
-                    }
-                    DispatchQueue.global(qos: .utility).async {
-                        WallpaperPreparation.prepare(wallpaperDirectory: dest)
-                    }
-                }
-                for url in zipURLs {
-                    ZipImporter.importZip(at: url)
-                }
+                FolderImport.importWallpapers(sources, into: FileManager.default.wallpapersDirectory)
             }
         }
     }
