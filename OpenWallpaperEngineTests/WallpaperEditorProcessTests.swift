@@ -449,6 +449,61 @@ final class WallpaperEditorProcessTests: XCTestCase {
         XCTAssertEqual(reached, 0, "AppDelegate.shared used from the editor's services")
     }
 
+    /// What an MCP client drives in the editor's process (an edit taken, undone and redone, the
+    /// timeline, depth maps, Save as Local Wallpaper, the canvas's scene) never makes or uses Open
+    /// Wallpaper Engine's delegate.
+    func testTheEditorsMCPPathsNeverReachTheAppsDelegate() throws {
+        var reached = 0
+        AppDelegate.sharedAccessProbe = { reached += 1 }
+        defer { AppDelegate.sharedAccessProbe = nil }
+        // Save as Local Wallpaper writes into the library: a temporary one.
+        let storageKey = "CustomWallpapersDirectory"
+        let savedStorage = UserDefaults.app.string(forKey: storageKey)
+        let library = folder.deletingLastPathComponent().appending(path: "library", directoryHint: .isDirectory)
+        UserDefaults.app.set(library.path, forKey: storageKey)
+        defer { UserDefaults.app.set(savedStorage, forKey: storageKey) }
+        let messaging = FakeProcessMessaging()
+        var dependencies = editorDependencies(messaging: messaging)
+        dependencies.store = SceneEditOverlayFiles.defaultStore
+        dependencies.appIsRunning = { true }
+        let sync = WallpaperEditorChangeSync(role: .editor, dependencies: dependencies)
+        let wallpaper = try XCTUnwrap(InstalledLibrary.wallpaper(at: folder, hiding: []))
+        let identity = WallpaperSettingsIdentity.resolve(directory: wallpaper.wallpaperDirectory)
+        defer { try? SceneEditOverlayFiles.defaultStore.remove(identity.rawValue) } // The isolated tests' store.
+        let editor = try WallpaperEditorController(wallpaper: wallpaper, host: WallpaperEditorAppDelegate.makeSceneHost(),
+                                                   sync: sync)
+        defer { editor.window.close() }
+        func nextEvent() { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+
+        // The canvas's scene runs with the process's own host, and takes no loading snapshots.
+        let canvas = WallpaperViewModel(persistsWallpapers: false)
+        canvas.sceneHost = WallpaperEditorAppDelegate.makeSceneHost()
+        XCTAssertNil(SceneWallpaperView.environment(of: canvas).loadingSnapshots)
+
+        // An MCP edit, its Undo and its Redo, taken by the window.
+        var edited = SceneEditOverlay()
+        let other = SceneEditSession(outline: try SceneOutline(sceneData: Self.scene), overlay: edited)
+        other.setValue(.number(0.5), for: "alpha", of: 4, actionName: "Opacity")
+        edited = other.overlay
+        for (overlay, step) in [(edited, AppProcessChannel.OverlayStep.edit), (SceneEditOverlay(), .undo), (edited, .redo)] {
+            try SceneEditOverlayFiles.defaultStore.save(overlay, for: identity.rawValue)
+            editor.adoptSavedOverlay(actionName: "Opacity", step: step)
+            nextEvent()
+            XCTAssertEqual(editor.session.overlay, overlay)
+        }
+        // The timeline (its tab comes forward), played, sought and paused.
+        editor.controlTimeline(command: "play", seconds: nil)
+        editor.controlTimeline(command: "seek", seconds: 1)
+        editor.controlTimeline(command: "pause", seconds: nil)
+        // Depth maps and Save as Local Wallpaper, through the window's services.
+        let services = editor.makeServices()
+        try XCTUnwrap(services.depthMaps).openPlugins()
+        _ = try services.saveAsLocalWallpaper("Process (Edited)")
+        XCTAssertTrue(messaging.posted.contains { $0.name.rawValue.hasSuffix("library.didChange") },
+                      "the app's library hears of the copy through the channel")
+        XCTAssertEqual(reached, 0, "AppDelegate.shared used from the editor's process")
+    }
+
     private func editorDependencies(messaging: FakeProcessMessaging) -> WallpaperEditorChangeSync.Dependencies {
         WallpaperEditorChangeSync.Dependencies(
             messaging: messaging, channel: AppProcessChannel(isolationTag: "tests"), sender: "editor",

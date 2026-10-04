@@ -224,7 +224,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         super.init()
         OWELog.info(.app, "AppDelegate created (pid \(ProcessInfo.processInfo.processIdentifier))")
         if AppLaunchMode.parse(CommandLine.arguments).isWallpaperEditor {
-            OWELog.error(.app, "AppDelegate created in the Wallpaper Editor's process: something there reached AppDelegate.shared")
+            let caller = Thread.callStackSymbols.prefix(12).joined(separator: "\n")
+            OWELog.error(.app, "AppDelegate created in the Wallpaper Editor's process: something there reached AppDelegate.shared from\n\(caller)")
+            // Debug builds stop here; a release keeps running with the app's delegate made.
+            assertionFailure("AppDelegate.shared reached in the Wallpaper Editor's process")
         }
     }
     
