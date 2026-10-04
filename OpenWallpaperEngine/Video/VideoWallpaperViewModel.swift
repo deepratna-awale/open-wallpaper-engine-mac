@@ -117,6 +117,10 @@ class VideoWallpaperViewModel: ObservableObject {
                 self?.updatePlaybackRates(audioLevel: WallpaperServices.shared.audioLevel)
             }
             .store(in: &cancellables)
+        wallpaperViewModel.displayOptions.$entries
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.updatePlaybackRates(audioLevel: WallpaperServices.shared.audioLevel) }
+            .store(in: &cancellables)
         VideoMusicSyncStore.shared.$revision
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.updateMusicSyncCapture() }
@@ -229,12 +233,14 @@ class VideoWallpaperViewModel: ObservableObject {
         } else {
             smoothedAudioLevel = level
         }
-        // A paused wallpaper stays paused; pacing only modulates a video that is playing.
-        let rate = displayPlayback.rendersFrames ? playRate : 0
+        // A paused wallpaper stays paused; pacing only modulates a video that is playing. The
+        // wallpaper's own playback rate (WE's per-wallpaper option) scales the app's.
+        let displayRate = wallpaperViewModel.displayPlaybackRate(of: currentWallpaper)
+        let rate = displayPlayback.rendersFrames ? playRate * displayRate : 0
         setVideoRate(rate > 0 ? max(0, rate + Float(smoothedAudioLevel * paceAmount)) : 0)
         // Audio runs on a second player, so a paused wallpaper keeps playing sound unless the
         // pause is applied here too.
-        setAudioRate(playsAudio && !audioPlayer.isMuted && rate > 0 ? wallpaperViewModel.audioPlayRate : 0)
+        setAudioRate(playsAudio && !audioPlayer.isMuted && rate > 0 ? wallpaperViewModel.audioPlayRate * displayRate : 0)
     }
 
     /// Assigning `AVPlayer.rate` restarts the timebase, so doing it on every audio sample stutters

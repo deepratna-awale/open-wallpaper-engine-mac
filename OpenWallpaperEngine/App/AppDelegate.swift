@@ -603,9 +603,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             window.canBecomeVisibleWithoutLogin = true
             window.isReleasedWhenClosed = false
             window.ignoresMouseEvents = true
-            window.contentView = NSHostingView(rootView:
-                WallpaperView(viewModel: self.wallpaperViewModel, screenId: screenId)
-            )
+            // The wallpaper's display options (offset, zoom, flip) place the view on the display.
+            window.contentView = WallpaperDisplayTransformView(
+                content: NSHostingView(rootView: WallpaperView(viewModel: self.wallpaperViewModel, screenId: screenId)),
+                screenID: screenId, viewModel: wallpaperViewModel)
             wallpaperWindows[screenId] = window
         }
     }
@@ -703,7 +704,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             // Find the WKWebView in whichever wallpaper window the event lands on
             let mouseLocation = NSEvent.mouseLocation
             guard let targetWindow = self.wallpaperWindows.values.first(where: { $0.frame.contains(mouseLocation) }),
-                  let webview = targetWindow.contentView?.subviews.first?.subviews.first,
+                  // The content is the display-options view, holding the hosting view.
+                  let webview = targetWindow.contentView?.subviews.first?.subviews.first?.subviews.first,
                   webview is WKWebView else { return }
 
             switch event.type {

@@ -270,7 +270,10 @@ final class SceneWallpaperInstance {
         guard SceneWallpaperViewModel.isVideoType(viewModel.currentWallpaper.project.type),
               let wallpapers = environment.wallpapers else { return }
         let rendering = wallpapers.playback(of: key).rendersFrames
-        viewModel.updateVideoPlayback(playRate: rendering ? wallpapers.playRate : 0, audioRate: wallpapers.audioPlayRate,
+        // The wallpaper's own playback rate (WE's per-wallpaper option) scales the app's.
+        let displayRate = wallpapers.displayPlaybackRate(of: viewModel.currentWallpaper)
+        viewModel.updateVideoPlayback(playRate: rendering ? wallpapers.playRate * displayRate : 0,
+                                      audioRate: wallpapers.audioPlayRate * displayRate,
                                       audioLevel: WallpaperServices.shared.audioLevel,
                                       audioEnabled: wallpapers.playsAudio(for: key) && wallpapers.wallpaperPlayback(of: key).playsSound,
                                       volume: wallpapers.playVolume)

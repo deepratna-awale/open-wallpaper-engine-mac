@@ -37773,6 +37773,194 @@
         }
       }
     },
+    "Flip Horizontally" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قلب أفقيًا"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Horizontal spiegeln"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invertir horizontalmente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverser horizontalement"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "क्षैतिज रूप से पलटें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capovolgi orizzontalmente"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左右反転"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "수평으로 뒤집기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odbij w poziomie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverter Horizontalmente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отразить по горизонтали"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yatay Çevir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Віддзеркалити по горизонталі"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "水平翻转"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "水平翻轉"
+          }
+        }
+      }
+    },
+    "Flip Vertically" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قلب عموديًا"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vertikal spiegeln"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invertir verticalmente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverser verticalement"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लंबवत रूप से पलटें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capovolgi verticalmente"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上下反転"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "수직으로 뒤집기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odbij w pionie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverter Verticalmente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отразить по вертикали"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dikey Çevir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Віддзеркалити по вертикалі"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "垂直翻转"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "垂直翻轉"
+          }
+        }
+      }
+    },
     "Folder" : {
       "localizations" : {
         "ar" : {
@@ -63776,6 +63964,100 @@
         }
       }
     },
+    "Moves, zooms or mirrors the wallpaper on the selected displays, after its placement. Each display keeps its own." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ينقل الخلفية أو يكبّرها أو يقلبها على شاشات العرض المحددة، بعد ترتيبها. تحتفظ كل شاشة عرض بقيمها الخاصة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verschiebt, zoomt oder spiegelt das Hintergrundbild auf den ausgewählten Bildschirmen, nach seiner Anordnung. Jeder Bildschirm behält seine eigenen Werte."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mueve, amplía o refleja el fondo de pantalla en las pantallas seleccionadas, después de su colocación. Cada pantalla conserva los suyos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déplace, agrandit ou inverse le fond d’écran sur les moniteurs sélectionnés, après sa disposition. Chaque moniteur garde les siens."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "चुने गए डिस्प्ले पर वॉलपेपर को उसकी प्लेसमेंट के बाद खिसकाता, ज़ूम करता या उलटता है। हर डिस्प्ले अपनी सेटिंग रखता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sposta, ingrandisce o riflette lo sfondo sui monitor selezionati, dopo la sua disposizione. Ogni monitor mantiene i propri valori."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択したディスプレイで、配置のあとに壁紙を移動、拡大縮小、または反転します。ディスプレイごとに個別に保持されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택한 디스플레이에서 배치 후 배경화면을 이동, 확대/축소 또는 반전합니다. 디스플레이마다 따로 유지됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przesuwa, powiększa lub odbija tapetę na wybranych monitorach, po jej rozmieszczeniu. Każdy monitor zachowuje własne wartości."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move, amplia ou espelha a imagem de fundo nas telas selecionadas, após o posicionamento. Cada tela mantém os próprios valores."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сдвигает, масштабирует или отражает обои на выбранных мониторах после их размещения. У каждого монитора свои значения."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçili ekranlarda duvar kâğıdını yerleşiminden sonra taşır, yakınlaştırır veya çevirir. Her ekran kendi değerlerini korur."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зсуває, масштабує або віддзеркалює шпалери на вибраних моніторах після їх розміщення. Кожен монітор зберігає свої значення."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在所选显示器上按排列方式放置后，移动、缩放或翻转墙纸。每个显示器各自保留。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在所選顯示器上依排列方式放置後，移動、縮放或翻轉背景圖片。每個顯示器各自保留。"
+          }
+        }
+      }
+    },
     "Moving into Wallpaper Storage…" : {
       "comment" : "Download status; Wallpaper Storage is the name of the library folder setting",
       "localizations" : {
@@ -79534,6 +79816,100 @@
         }
       }
     },
+    "Playback rate" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "معدل سرعة التشغيل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geschwindigkeit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Velocidad de reproducción"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vitesse de lecture"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्लेबैक दर"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Velocità riproduzione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再生速度"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재생 속도"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szybkość odtwarzania"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taxa de reprodução"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скорость воспроизведения"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynatma hızı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Швидкість"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放速度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放速度"
+          }
+        }
+      }
+    },
     "Playback speed of the soundtrack. Link it to the video speed to keep them in step." : {
       "comment" : "Details panel tooltip",
       "localizations" : {
@@ -81084,6 +81460,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "直向顯示器／手機"
+          }
+        }
+      }
+    },
+    "Position" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الموضع"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Position"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Posición"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Position"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्थिति"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Posizione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "위치"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pozycja"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Posição"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Позиция"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konum"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Позиція"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置"
           }
         }
       }
@@ -122370,6 +122840,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此快速鍵可能無法運作：另一個 App 使用了它。"
+          }
+        }
+      }
+    },
+    "This video's speed on the selected displays, times the app's Video Speed. A video shown on several displays plays at the main display's rate." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سرعة هذا الفيديو على شاشات العرض المحددة، مضروبة في سرعة الفيديو في التطبيق. يُشغَّل الفيديو المعروض على عدة شاشات بسرعة شاشة العرض الرئيسية."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Geschwindigkeit dieses Videos auf den ausgewählten Bildschirmen, mal der Videogeschwindigkeit der App. Ein Video auf mehreren Bildschirmen läuft mit der Geschwindigkeit des Hauptbildschirms."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La velocidad de este vídeo en las pantallas seleccionadas, multiplicada por la velocidad del vídeo de la app. Un vídeo mostrado en varias pantallas va a la velocidad de la pantalla principal."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La vitesse de cette vidéo sur les moniteurs sélectionnés, multipliée par la vitesse de la vidéo de l’app. Une vidéo affichée sur plusieurs moniteurs suit la vitesse du moniteur principal."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "चुने गए डिस्प्ले पर इस वीडियो की गति, ऐप की वीडियो स्पीड से गुणा की हुई। कई डिस्प्ले पर दिखाया गया वीडियो मुख्य डिस्प्ले की दर से चलता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La velocità di questo video sui monitor selezionati, moltiplicata per la velocità video dell’app. Un video mostrato su più monitor segue la velocità del monitor principale."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択したディスプレイでのこのビデオの速度で、アプリのビデオ速度に掛け合わされます。複数のディスプレイに表示されたビデオは、メインディスプレイの速度で再生されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택한 디스플레이에서 이 비디오의 속도로, 앱의 비디오 속도에 곱해집니다. 여러 디스플레이에 표시된 비디오는 주 디스플레이의 속도로 재생됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szybkość tego wideo na wybranych monitorach, pomnożona przez szybkość wideo w aplikacji. Wideo na kilku monitorach odtwarza się z szybkością monitora głównego."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A velocidade deste vídeo nas telas selecionadas, multiplicada pela Velocidade do Vídeo do app. Um vídeo mostrado em várias telas é reproduzido na taxa da tela principal."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скорость этого видео на выбранных мониторах, умноженная на скорость видео в приложении. Видео на нескольких мониторах идёт со скоростью главного монитора."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu videonun seçili ekranlardaki hızı; uygulamanın video hızıyla çarpılır. Birden çok ekranda gösterilen bir video ana ekranın hızında oynatılır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Швидкість цього відео на вибраних моніторах, помножена на швидкість відео в програмі. Відео на кількох моніторах відтворюється зі швидкістю головного монітора."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此视频在所选显示器上的速度，与 App 的视频速度相乘。在多个显示器上显示的视频按主显示器的速度播放。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此影片在所選顯示器上的速度，與 App 的影片速度相乘。在多個顯示器上顯示的影片依主顯示器的速度播放。"
           }
         }
       }
