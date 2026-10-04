@@ -1039,6 +1039,7 @@ private struct SceneInspectorContent: View {
     @State private var didCopyPath = false
     @State private var isMovementPresented = true
     @State private var isConfirmingReset = false
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
     /// Moves when the Export Settings sheet closes, so the panel reads the properties it changed.
     @State private var exportPanelRevision = 0
     @FocusState private var isSearchFocused: Bool
@@ -1124,9 +1125,11 @@ private struct SceneInspectorContent: View {
     }
 
     private var inspectorSplitView: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             sidebarColumn
                 .navigationSplitViewColumnWidth(min: 240, ideal: Self.sidebarWidth, max: 440)
+                // `sidebarToggle` takes its place, right before the modes.
+                .toolbar(removing: .sidebarToggle)
         } detail: {
             modeDetail
                 .inspector(isPresented: $isMovementPresented) {
@@ -1150,6 +1153,12 @@ private struct SceneInspectorContent: View {
                     layerAdjustments(for: model.items.first(where: { $0.id == selectedID }))
                 })
                 .toolbar {
+                    ToolbarItem(placement: .navigation) {
+                        sidebarToggle
+                    }
+                    if #available(macOS 26, *) {
+                        ToolbarSpacer(.fixed, placement: .navigation)
+                    }
                     ToolbarItem(placement: .navigation) {
                         modePicker
                     }
@@ -1193,7 +1202,27 @@ private struct SceneInspectorContent: View {
             Button("") { focusSearch() }
                 .keyboardShortcut("k", modifiers: .command)
                 .hidden()
+            Button("") { toggleSidebar() }
+                .keyboardShortcut("s", modifiers: [.command, .control])
+                .hidden()
         }
+    }
+
+    private var isSidebarShown: Bool { columnVisibility != .detailOnly }
+
+    private func toggleSidebar() {
+        withAnimation { columnVisibility = isSidebarShown ? .detailOnly : .all }
+    }
+
+    /// Shows or hides the object list; the system's own toggle is removed so this one sits right
+    /// before the modes whether the list is shown or not.
+    private var sidebarToggle: some View {
+        let title: LocalizedStringKey = isSidebarShown ? "Hide Sidebar" : "Show Sidebar"
+        return Button(action: toggleSidebar) {
+            Label(title, systemImage: "sidebar.left")
+        }
+        .help(Text(title))
+        .accessibilityLabel(Text(title))
     }
 
     /// The detail column: the selected object, or the device's lock screen.
