@@ -1,15 +1,19 @@
 import Foundation
 
-/// The user's display layout, as WE keeps it (`wallpaperconfig.layout`, the profile's `groups`,
-/// each monitor's flip and mute), saved in the app's defaults. Every display is named by its
-/// identity (`DisplayIdentity`). Without a saved layout every display shows its own wallpaper, so
-/// the per-display wallpapers saved before layouts existed show as they did.
+/// The user's display layout, as WE keeps it (`wallpaperconfig.layout`, the profile's `groups`
+/// and `splits`, each monitor's flip and mute), saved in the app's defaults. Every display is
+/// named by its identity (`DisplayIdentity`). Without a saved layout every display shows its own
+/// wallpaper, so the per-display wallpapers saved before layouts existed show as they did.
 struct DisplayLayoutConfiguration: Codable, Equatable {
     static let defaultsKey = "DisplayLayout"
 
     var layout: DisplayLayoutMode = .perDisplay
     /// Clone and stretch groups of some displays, used under `.perDisplay` only.
     private(set) var groups: [DisplayGroup] = []
+    /// Splits of displays into regions (WE's `profile.splits`), keyed by location: a display's
+    /// identity, or a region's (`<identity>/L`, `<identity>/L/R`…). Used under `.perDisplay` only,
+    /// on displays in no group.
+    private(set) var splits: [String: DisplaySplit] = [:]
     /// The clone layout's main display; nil: the first connected display (the main one).
     private(set) var cloneSource: String?
     /// The displays the clone layout shows mirrored.
@@ -28,12 +32,16 @@ struct DisplayLayoutConfiguration: Codable, Equatable {
         groups.first { $0.members.contains(display) }
     }
 
-    /// Groups `displays` into a clone group (at least two). They leave the groups they were in, and
-    /// a group left with fewer than two displays is removed.
+    /// Groups `displays` into a clone or stretch group (at least two). They leave the groups they
+    /// were in, and a group left with fewer than two displays is removed. A stretch group removes
+    /// its displays' splits, as WE's does (a clone group keeps them, unused while it lasts).
     mutating func addGroup(_ displays: [String], layout: DisplayLayoutMode) {
         let group = DisplayGroup(members: displays, layout: layout)
-        guard group.members.count >= 2 else { return }
+        guard group.members.count >= 2, layout != .perDisplay else { return }
         for display in group.members { removeFromGroup(display) }
+        if layout == .stretch {
+            for display in group.members { removeAllSplits(of: display) }
+        }
         groups.append(group)
     }
 
@@ -98,6 +106,62 @@ struct DisplayLayoutConfiguration: Codable, Equatable {
         }
     }
 
+    // MARK: Splits
+
+    /// The splits below `display`, keyed by path (`""` the display itself, `/L`…).
+    func splits(of display: String) -> [String: DisplaySplit] {
+        var result: [String: DisplaySplit] = [:]
+        for (location, split) in splits {
+            guard let path = Self.path(of: location, below: display) else { continue }
+            result[path] = split
+        }
+        return result
+    }
+
+    /// Splits the display or region at `location` (`<identity>` or `<identity>/L…`), or changes its
+    /// split. A display in a group isn't split (WE doesn't offer it).
+    mutating func setSplit(_ split: DisplaySplit, at location: String) {
+        guard group(containing: Self.display(of: location)) == nil else { return }
+        splits[location] = split
+    }
+
+    /// WE's "Remove Split" on a region: the split it came from goes, with every split inside it.
+    /// Nothing for a display that isn't a region of a split.
+    mutating func removeSplit(containing region: String) {
+        guard region.hasSuffix(DisplaySplit.first) || region.hasSuffix(DisplaySplit.second) else { return }
+        let parent = String(region.dropLast(DisplaySplit.first.count))
+        removeSplits(below: parent)
+        splits[parent] = nil
+    }
+
+    /// WE's "Remove All Splits": `display` is one region again.
+    mutating func removeAllSplits(of display: String) {
+        removeSplits(below: display)
+        splits[display] = nil
+    }
+
+    private mutating func removeSplits(below location: String) {
+        for key in splits.keys where key != location && Self.path(of: key, below: location) != nil {
+            splits[key] = nil
+        }
+    }
+
+    /// The display a location names: the identity before its first region suffix.
+    static func display(of location: String) -> String {
+        guard let slash = location.firstIndex(of: "/") else { return location }
+        return String(location[..<slash])
+    }
+
+    /// `location`'s path below `ancestor` (`""` when they're the same), or nil when it isn't below it.
+    private static func path(of location: String, below ancestor: String) -> String? {
+        guard location.hasPrefix(ancestor) else { return nil }
+        let rest = location.dropFirst(ancestor.count)
+        guard rest.isEmpty || rest.hasPrefix("/") else { return nil }
+        // WE's own check: the rest is only region steps.
+        guard rest.allSatisfy({ $0 == "/" || $0 == "L" || $0 == "R" }) else { return nil }
+        return String(rest)
+    }
+
     // MARK: Mute
 
     func isMuted(_ display: String) -> Bool { muted.contains(display) }
@@ -126,7 +190,7 @@ struct DisplayLayoutConfiguration: Codable, Equatable {
         }
     }
 
-    private enum CodingKeys: String, CodingKey { case layout, groups, cloneSource, cloneFlipped, muted }
+    private enum CodingKeys: String, CodingKey { case layout, groups, cloneSource, cloneFlipped, muted, splits }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -134,6 +198,8 @@ struct DisplayLayoutConfiguration: Codable, Equatable {
         cloneSource = try container.decodeIfPresent(String.self, forKey: .cloneSource)
         cloneFlipped = try container.decodeIfPresent(Set<String>.self, forKey: .cloneFlipped) ?? []
         muted = try container.decodeIfPresent(Set<String>.self, forKey: .muted) ?? []
+        // Split by split, so one that can't be read doesn't drop the others.
+        splits = container.decodeEntries(DisplaySplit.self, forKey: .splits, userInfo: decoder.userInfo) ?? [:]
         // Group by group, so one that can't be read doesn't drop the others.
         groups = container.decodeElements(DisplayGroup.self, forKey: .groups, userInfo: decoder.userInfo) ?? []
     }

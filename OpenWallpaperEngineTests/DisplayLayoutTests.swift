@@ -89,7 +89,7 @@ final class DisplayLayoutTests: XCTestCase {
         layout.addGroup(["UUID-A", "UUID-B"], layout: .clone)
         XCTAssertTrue(DisplayLayoutResolution(layout, displays: [a, c]).clones.isEmpty, "display B is gone")
         XCTAssertEqual(layout.groups.count, 1, "the group is kept")
-        XCTAssertEqual(DisplayLayoutResolution(layout, displays: [a, b, c]).cloneSources, ["2": "1"], "B is back")
+        XCTAssertEqual(DisplayLayoutResolution(layout, displays: [a, b, c]).sources, ["2": "1"], "B is back")
     }
 
     // MARK: Clone source and flip
@@ -97,12 +97,12 @@ final class DisplayLayoutTests: XCTestCase {
     func testTheMainCloneDisplayIsTheFirstUnlessChosen() {
         var layout = DisplayLayoutConfiguration()
         layout.addGroup(["UUID-B", "UUID-A"], layout: .clone)
-        XCTAssertEqual(DisplayLayoutResolution(layout, displays: [a, b]).cloneSources, ["1": "2"])
+        XCTAssertEqual(DisplayLayoutResolution(layout, displays: [a, b]).sources, ["1": "2"])
         layout.setCloneSource("UUID-A", isSource: true, connected: ["UUID-A", "UUID-B"])
-        XCTAssertEqual(DisplayLayoutResolution(layout, displays: [a, b]).cloneSources, ["2": "1"])
+        XCTAssertEqual(DisplayLayoutResolution(layout, displays: [a, b]).sources, ["2": "1"])
         XCTAssertEqual(DisplayLayoutResolution(layout, displays: [b, c]).clones, [], "with A gone the group is dormant")
         layout.setCloneSource("UUID-A", isSource: false, connected: ["UUID-A", "UUID-B"])
-        XCTAssertEqual(DisplayLayoutResolution(layout, displays: [a, b]).cloneSources, ["1": "2"], "back to the first")
+        XCTAssertEqual(DisplayLayoutResolution(layout, displays: [a, b]).sources, ["1": "2"], "back to the first")
     }
 
     func testTheMainCloneDisplayCantBeFlipped() {
@@ -129,7 +129,7 @@ final class DisplayLayoutTests: XCTestCase {
     func testTheCloneLayoutClonesEveryDisplayFromTheMainOne() {
         let layout = DisplayLayoutConfiguration(layout: .clone)
         let resolution = DisplayLayoutResolution(layout, displays: [b, a, c])
-        XCTAssertEqual(resolution.cloneSources, ["1": "2", "3": "2"], "the main display (listed first) is the source")
+        XCTAssertEqual(resolution.sources, ["1": "2", "3": "2"], "the main display (listed first) is the source")
         XCTAssertEqual(resolution.clones.map(\.id), [DisplayLayoutResolution.globalCloneID])
         XCTAssertEqual(resolution.expandingClones(["3"]), ["1", "2", "3"])
     }
@@ -137,8 +137,11 @@ final class DisplayLayoutTests: XCTestCase {
     func testGroupsApplyUnderAWallpaperPerDisplayOnly() {
         var layout = DisplayLayoutConfiguration()
         layout.addGroup(["UUID-A", "UUID-B"], layout: .clone)
-        layout.layout = .stretch // Phase 2: shown as a wallpaper per display until it is implemented.
-        XCTAssertTrue(DisplayLayoutResolution(layout, displays: [a, b]).clones.isEmpty)
+        layout.layout = .stretch
+        let resolution = DisplayLayoutResolution(layout, displays: [a, b])
+        XCTAssertTrue(resolution.clones.isEmpty)
+        XCTAssertEqual(resolution.stretches.map(\.id), [DisplayLayoutResolution.globalStretchID],
+                       "the stretch layout spans every display instead")
     }
 
     func testMuteFollowsTheDisplay() {

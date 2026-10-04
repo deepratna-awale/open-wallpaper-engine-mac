@@ -198,6 +198,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var audioOutputCancellable: AnyCancellable?
     private var syncPropertiesCancellable: AnyCancellable?
     private var displayFlipCancellable: AnyCancellable?
+    private var stretchCanvasCancellable: AnyCancellable?
     private var mediaIntegrationCancellable: AnyCancellable?
     /// Follows the default output device: capture always restarts, wallpapers reload when the
     /// setting is on. `rebuildWallpaperWindows` is the same reload an asset change uses.
@@ -276,6 +277,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Flipped clone displays mirror their window's content (`WallpaperWindowContentView`).
         displayFlipCancellable = wallpaperViewModel.$layoutResolution.map(\.flipped).removeDuplicates()
             .sink { [weak self] flipped in self?.applyDisplayFlips(flipped) }
+        // Stretched displays name their canvas to the scene views in their windows.
+        stretchCanvasCancellable = wallpaperViewModel.$layoutResolution.map(\.canvases).removeDuplicates()
+            .sink { [weak self] canvases in self?.applyStretchCanvases(canvases) }
+        // The screen saver's loops follow the displays' wallpapers and layouts.
+        screenSaver.observe(wallpaperViewModel)
         // Settings › Optimizations › Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
             .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }
@@ -627,9 +633,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             window.isReleasedWhenClosed = false
             window.ignoresMouseEvents = true
             let content = WallpaperWindowContentView(content: NSHostingView(rootView:
-                WallpaperView(viewModel: self.wallpaperViewModel, screenId: screenId)
+                DisplayWallpaperView(viewModel: self.wallpaperViewModel, screenId: screenId)
             ))
             content.isMirrored = wallpaperViewModel.isFlipped(screenId)
+            content.stretchCanvas = wallpaperViewModel.layoutResolution.canvases[screenId]
             window.contentView = content
             wallpaperWindows[screenId] = window
         }
@@ -639,6 +646,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func applyDisplayFlips(_ flipped: Set<String>) {
         for (screenId, window) in wallpaperWindows {
             (window.contentView as? WallpaperWindowContentView)?.isMirrored = flipped.contains(screenId)
+        }
+    }
+
+    /// Names each stretched display's canvas in its window; the others have none.
+    private func applyStretchCanvases(_ canvases: [String: CGRect]) {
+        for (screenId, window) in wallpaperWindows {
+            (window.contentView as? WallpaperWindowContentView)?.stretchCanvas = canvases[screenId]
         }
     }
 
@@ -736,9 +750,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
             // Find the WKWebView in whichever wallpaper window the event lands on
             let mouseLocation = NSEvent.mouseLocation
+            // A split display has a page per region, and a stretched page is the canvas's size.
             guard let targetWindow = self.wallpaperWindows.values.first(where: { $0.frame.contains(mouseLocation) }),
-                  let webview = (targetWindow.contentView as? WallpaperWindowContentView)?.content?.subviews.first?.subviews.first,
-                  webview is WKWebView else { return }
+                  let webview = targetWindow.contentView?.webView(at: mouseLocation) else { return }
 
             switch event.type {
             case .scrollWheel:

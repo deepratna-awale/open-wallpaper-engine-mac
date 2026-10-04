@@ -140,11 +140,14 @@ final class ScreenSaverVideoSourceTests: XCTestCase {
     // MARK: - Manifest
 
     func testManifestEntryUsesTheTrackSizeAndSpeed() throws {
-        let manifest = Plugin.videoManifest(fileName: "a.mp4", size: SIMD2(1080, 1920), rate: 1)
-        XCTAssertEqual(manifest.videos, [ScreenSaverManifest.Video(file: "a.mp4", width: 1080, height: 1920)])
-        XCTAssertNil(manifest.videos.first?.rate)
-        XCTAssertEqual(Plugin.videoManifest(fileName: "a.mp4", size: SIMD2(1, 1), rate: 1.5).videos.first?.rate, 1.5)
-        XCTAssertNil(Plugin.videoManifest(fileName: "a.mp4", size: SIMD2(1, 1), rate: 0).videos.first?.rate)
+        let loop = ScreenSaverLayoutPlan.Loop(content: .init(id: "/w"), sizes: [], displays: ["A"])
+        func videos(size: SIMD2<Int>, rate: Float) -> [ScreenSaverManifest.Video] {
+            Plugin.manifestVideos(for: loop, file: "a.mp4", size: size, rate: rate, everyDisplay: true)
+        }
+        XCTAssertEqual(videos(size: SIMD2(1080, 1920), rate: 1), [ScreenSaverManifest.Video(file: "a.mp4", width: 1080, height: 1920)])
+        XCTAssertNil(videos(size: SIMD2(1080, 1920), rate: 1).first?.rate)
+        XCTAssertEqual(videos(size: SIMD2(1, 1), rate: 1.5).first?.rate, 1.5)
+        XCTAssertNil(videos(size: SIMD2(1, 1), rate: 0).first?.rate)
     }
 
     func testManifestWithoutRateStillDecodes() throws {

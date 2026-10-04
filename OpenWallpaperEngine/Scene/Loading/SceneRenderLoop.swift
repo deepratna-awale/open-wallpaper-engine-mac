@@ -144,8 +144,9 @@ final class SceneRenderLoop {
     var displayCount: Int { displays.count }
 
     /// A display's draw, from its view's `draw()`: one display draws the scene straight onto its
-    /// drawable; with several, the driving display renders the frame for all of them and each
-    /// presents it. Returns whether the renderer has content to show.
+    /// drawable; with several, or on a stretch (which shows a rect of a frame the canvas's size),
+    /// the driving display renders the frame for all of them and each presents it. Returns
+    /// whether the renderer has content to show.
     @discardableResult
     func draw(_ id: ObjectIdentifier, in view: MTKView) -> Bool {
         guard let renderer else { return false }
@@ -164,7 +165,8 @@ final class SceneRenderLoop {
                 applyPacing()
             }
         }
-        guard displays.count > 1 else {
+        let spansCanvas = SceneViewSnapshots.snapshot(of: view)?.canvas != nil
+        guard displays.count > 1 || spansCanvas else {
             renderer.draw(in: view)
             captureSnapshotIfDue(view, renderer: renderer, rendersFrame: true)
             return renderer.hasContent
@@ -178,7 +180,8 @@ final class SceneRenderLoop {
         guard displays[id]?.presentedFrame != renderer.encodedFrames else { return renderer.hasContent }
         displays[id]?.presentedFrame = renderer.encodedFrames
         renderer.present(in: view)
-        captureSnapshotIfDue(view, renderer: renderer, rendersFrame: false)
+        // A stretched display's picture is its rect of the canvas, not the wallpaper's.
+        if !spansCanvas { captureSnapshotIfDue(view, renderer: renderer, rendersFrame: false) }
         return renderer.hasContent
     }
 

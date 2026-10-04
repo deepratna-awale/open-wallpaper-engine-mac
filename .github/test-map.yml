@@ -131,6 +131,7 @@ groups:
     - "Workshop*"
     - "Playlist*"
     - "Display*"
+    - "ScreenSaverLayout*"
     - "Desktop*"
     - "Steam*"
     - "ImportedFolder*"

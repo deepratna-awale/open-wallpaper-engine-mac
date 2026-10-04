@@ -95,7 +95,10 @@ final class SafeRestart: ObservableObject {
     // MARK: - Session tracking
 
     private func recordSession(wallpapers: [String: WEWallpaper], enabledScreens: Set<String>) {
-        let showing = wallpapers.filter { enabledScreens.contains($0.key) && $0.value.project != .invalid }
+        // A split display's regions are on their display.
+        let showing = wallpapers.filter {
+            enabledScreens.contains(DisplayLayoutResolution.screen(of: $0.key)) && $0.value.project != .invalid
+        }
         let previous = ledger.activeSession ?? [:]
         let unchanged = showing.count == previous.count && showing.allSatisfy { screenId, wallpaper in
             previous[screenId].map(SafeRestartLedger.key(for:)) == SafeRestartLedger.key(for: wallpaper)
