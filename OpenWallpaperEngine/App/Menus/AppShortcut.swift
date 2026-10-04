@@ -102,7 +102,7 @@ struct AppShortcut: Identifiable, Equatable {
 
         AppShortcut(name: .minimize, title: "Minimize", menu: .window, key: "m", modifiers: .command),
         AppShortcut(name: .wallpaperExplorer, title: "Wallpaper Explorer", menu: .window, key: "1", modifiers: [.command, .shift]),
-        AppShortcut(name: .sceneInspector, title: "Scene Editor", menu: .window, key: "i", modifiers: [.command, .option]),
+        AppShortcut(name: .sceneInspector, title: "Scene Editor (Live)", menu: .window, key: "i", modifiers: [.command, .option]),
         AppShortcut(name: .wallpaperEditor, title: "Wallpaper Editor", menu: .window, key: "e", modifiers: [.command, .option]),
 
         AppShortcut(name: .help, title: "Open Wallpaper Engine Help", menu: .help, key: "?", modifiers: .command),

@@ -93,8 +93,8 @@ extension OnboardingTour {
                             text: "Zoom, pace, tilt and saturation can pulse with audio. A wallpaper with its own soundtrack follows that; when it is silent, it follows whatever else is playing.",
                             systemImage: "waveform",
                             imageColor: .pink),
-                    Section(title: "Scene Editor",
-                            text: "Inspect every layer, texture and effect in a wallpaper, tweak parameters live, and nudge or align objects.",
+                    Section(title: "Scene Editor (Live)",
+                            text: "Edit layers and effects live on the running wallpaper, or switch to iPhone & iPad Export to make a Live Photo lock screen without changing your desktop.",
                             systemImage: "square.stack.3d.up",
                             imageColor: .orange)
                  ]),

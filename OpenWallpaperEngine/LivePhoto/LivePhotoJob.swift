@@ -1,8 +1,10 @@
 import Foundation
 
 /// One Live Photo render, handed to the helper run (`ShaderPrewarmCommand`, `--render-live-photo
-/// <job.json>`) as a JSON file: the wallpaper, its user properties as the inspector holds them,
-/// the crop, the device's pixels, the clip and where the files go.
+/// <job.json>`) as a JSON file: the wallpaper, the isolated store's values (its user properties and
+/// layer edits, `IsolatedSceneEditSession.values`), the crop, the device's pixels, the clip, the
+/// movie's quality and where the files go. With `analysisPath` it renders no movie: it measures the
+/// scene's motion over its first `analysisSeconds` (`LivePhotoMotion`) and writes that there.
 struct LivePhotoJob: Codable, Equatable {
     var wallpaperDirectory: String
     /// The user-property snapshot the render uses, whatever the helper's defaults hold.
@@ -13,13 +15,18 @@ struct LivePhotoJob: Codable, Equatable {
     var center: [Double]
     var clipStart: Double
     var clipLength: Double
+    /// `LivePhotoQuality`'s raw value.
+    var quality: String
     /// The HEIC; nil renders the movie only (the clip's preview).
     var stillPath: String?
     var moviePath: String
     var identifier: String
+    /// Where a motion analysis goes (`LivePhotoMotion.Analysis`); nil renders the clip.
+    var analysisPath: String?
+    var analysisSeconds: Double = 0
 
     init(wallpaperDirectory: URL, properties: [String: String], crop: LivePhotoCrop, clip: LivePhotoClip,
-         still: URL?, movie: URL, identifier: String) {
+         quality: LivePhotoQuality = .best, still: URL?, movie: URL, identifier: String) {
         self.wallpaperDirectory = wallpaperDirectory.path(percentEncoded: false)
         self.properties = properties
         sceneSize = [crop.sceneSize.x, crop.sceneSize.y]
@@ -28,6 +35,7 @@ struct LivePhotoJob: Codable, Equatable {
         center = [crop.center.x, crop.center.y]
         clipStart = clip.start
         clipLength = clip.length
+        self.quality = quality.rawValue
         stillPath = still?.path(percentEncoded: false)
         moviePath = movie.path(percentEncoded: false)
         self.identifier = identifier
@@ -40,6 +48,8 @@ struct LivePhotoJob: Codable, Equatable {
     }
 
     var clip: LivePhotoClip { LivePhotoClip(start: clipStart, length: clipLength) }
+    var qualityLevel: LivePhotoQuality { LivePhotoQuality(rawValue: quality) ?? .best }
+    var analysis: URL? { analysisPath.map { URL(filePath: $0, directoryHint: .notDirectory) } }
     var still: URL? { stillPath.map { URL(filePath: $0, directoryHint: .notDirectory) } }
     var movie: URL { URL(filePath: moviePath, directoryHint: .notDirectory) }
 

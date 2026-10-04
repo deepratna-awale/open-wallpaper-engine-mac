@@ -467,8 +467,9 @@ final class ScreenSaverWebLoopRecorder: NSObject, WKNavigationDelegate {
     """
 }
 
-/// Reads the intermediate video's frames back in order as `CGImage`s.
-private final class IntermediateReader {
+/// Reads an intermediate video's frames back in order as `CGImage`s (a recorded page's, a Live
+/// Photo's first pass).
+final class IntermediateReader {
     private let reader: AVAssetReader
     private let output: AVAssetReaderTrackOutput
 

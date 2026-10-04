@@ -66,6 +66,26 @@ final class SceneWallpaperInstance {
     /// over, while the editor is sending them: drawn live against the overlay the loaded scene was
     /// read with (`SceneWallpaperInstance+EditorLive`).
     var editorEdits: (overlay: SceneEditOverlay, base: SceneOutline)?
+    /// How a picture that is previewed here and rendered elsewhere draws, the same in both (the
+    /// iPhone & iPad Export's preview, `LivePhotoRenderer.presentation`): its own placement
+    /// instead of the user's, a fixed pointer instead of the mouse, and its clock layers shown or
+    /// not. Nil for a display's wallpaper.
+    struct Presentation: Equatable {
+        var placement: WallpaperPlacement
+        /// `SceneMetalRenderer.fixedPointer`.
+        var pointer: SIMD2<Float>
+        var hidesClockLayers: Bool
+
+        /// Render thread.
+        func apply(to renderer: SceneMetalRenderer) {
+            renderer.setPlacement(placement)
+            renderer.fixedPointer = pointer
+            renderer.hidesClockLayers = hidesClockLayers
+        }
+    }
+
+    /// Set once, before the instance is shown.
+    var presentation: Presentation?
     /// Objects a structural property change rebuilds alone, and the pending rebuild.
     private var pendingObjects = Set<Int>()
     private var pendingObjectRebuild: DispatchWorkItem?
@@ -218,12 +238,13 @@ final class SceneWallpaperInstance {
         // Scene video textures decode only while some display shows the wallpaper playing.
         let shown = playback.displays.values.contains { $0.plays && !$0.hidden }
         viewModel.setEmbeddedVideoRate(playback.paused || !shown ? 0 : wallpapers.playRate)
+        let presentation = presentation
         let placement = wallpapers.wallpaperPlacement
         let gain = soundGain
         let limits = FramePacing.Limits(environment.settings.settings, power: PowerPolicyMonitor.shared.policy)
         // Thread boundary: main → render thread (applied before the playback, which reads the rate).
         renderLoop.perform { renderer in
-            renderer.setPlacement(placement)
+            if let presentation { presentation.apply(to: renderer) } else { renderer.setPlacement(placement) }
             renderer.sounds.setTargetGain(gain)
             renderer.framePacing.limits = limits
         }

@@ -298,8 +298,10 @@ final class HEVCWriter {
     private let frameRate: Int
 
     /// `prepare` adds what else the movie holds (metadata, more inputs) before writing starts.
-    init?(url: URL, pixelSize: SIMD2<Int>, frameRate: Int, quality: Double = HEVCWriter.quality,
-          prepare: (AVAssetWriter) throws -> Void = { _ in }) {
+    /// `bitRate` (bits per second) replaces the constant quality with an average bitrate;
+    /// `colorProperties` tags the track's colour (`AVVideoColorPropertiesKey`).
+    init?(url: URL, pixelSize: SIMD2<Int>, frameRate: Int, quality: Double = HEVCWriter.quality, bitRate: Int? = nil,
+          colorProperties: [String: String]? = nil, prepare: (AVAssetWriter) throws -> Void = { _ in }) {
         do {
             writer = try AVAssetWriter(outputURL: url, fileType: .mov)
         } catch {
@@ -308,13 +310,21 @@ final class HEVCWriter {
         }
         // Constant quality, not a bitrate: rain, particles and glow need several times the bits
         // of a calm scene (a fixed 0.07 bit per pixel smeared them), and a still scene stays small.
-        input = AVAssetWriterInput(mediaType: .video, outputSettings: [
+        // A caller with a size budget (a Live Photo) passes its bitrate instead.
+        var compression: [String: Any] = [AVVideoExpectedSourceFrameRateKey: frameRate]
+        if let bitRate {
+            compression[AVVideoAverageBitRateKey] = bitRate
+        } else {
+            compression[AVVideoQualityKey] = quality
+        }
+        var settings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.hevc,
             AVVideoWidthKey: pixelSize.x,
             AVVideoHeightKey: pixelSize.y,
-            AVVideoCompressionPropertiesKey: [AVVideoQualityKey: quality,
-                                              AVVideoExpectedSourceFrameRateKey: frameRate],
-        ])
+            AVVideoCompressionPropertiesKey: compression,
+        ]
+        if let colorProperties { settings[AVVideoColorPropertiesKey] = colorProperties }
+        input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
         input.expectsMediaDataInRealTime = false
         adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input, sourcePixelBufferAttributes: [
             kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
