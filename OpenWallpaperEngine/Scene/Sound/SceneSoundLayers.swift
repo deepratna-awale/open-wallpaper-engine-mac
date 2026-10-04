@@ -4,13 +4,24 @@ import AVFoundation
 /// `SceneSoundPlayback` per scene.json `sound` object, played through one `SceneSoundMixer`, and
 /// the wallpaper's gain. Owned by the renderer, main thread.
 ///
-/// The wallpaper's gain is the app's volume, mute and pause (and whether this display is the one
-/// that plays the wallpaper's sound). Like WE's wallpaper volume (0x140114d7c, 0x1401816d0) it
-/// fades towards its target with WE's ease (`SceneClock.ease`: the gap shrinks by min(6·dt, 1) a
-/// frame, and closes once under 0.01), stepped by each drawn frame's wall step (`advanceFade`),
-/// as WE's main loop steps it. WE's loop keeps running while no wallpaper frame is drawn (it
-/// sleeps 250 ms a turn while paused, 0x140111486), so while no frame comes a timer steps it
-/// instead; at 0 the layers pause, above 0 they resume where they were.
+/// The wallpaper's gain is WE's wallpaper volume (the setter 0x1401816d0): `fade × level`.
+/// - `level` is the app's volume times this wallpaper's music volume (WE's +0x178, the
+///   wallpaper's `volume` over 100). It changes at once, as WE sets it (0x140114e20, 0x140115361).
+/// - `fade` (WE's +0x174) is whether the wallpaper is heard: it eases to 0 when it is muted or
+///   paused (or another display plays the wallpaper's sound) and back to 1 when it plays again,
+///   with WE's ease (`SceneClock.ease`: the gap shrinks by min(6·dt, 1) a frame and closes once
+///   under 0.01; main loop 0x1401113f8…0x14011144d), so a mute or a pause fades out in about
+///   0.75 s and a resume fades in as long. It starts at 1 (constructor 0x14010dc00) and a loaded
+///   wallpaper takes its value at once (0x140114950): WE doesn't fade a wallpaper in when it
+///   starts, nor out when it stops or is replaced, nor at a loop point or between clips (the
+///   sound update 0x1401f4f50 has no gain ramp of its own).
+///
+/// The fade is stepped by each drawn frame's wall step (`advanceFade`), as WE's main loop steps
+/// it. WE's loop keeps running while no wallpaper frame is drawn (it sleeps 250 ms a turn while
+/// paused, 0x140111486), so while no frame comes a timer steps it instead; at 0 the layers pause,
+/// above 0 they resume where they were. Each step sets the players' volumes, which
+/// AVAudioMixerNode ramps sample by sample, so a step of the fade never clicks (OpenAL Soft
+/// ramps WE's gain changes the same way).
 ///
 /// A `spatialization` layer's mono files play from its object (`SceneSoundSpatialization`),
 /// placed when they start and on every update, like WE's.
@@ -30,8 +41,14 @@ final class SceneSoundLayers {
     private var mixer: SceneSoundMixer?
     private var layers: [Int: Layer] = [:]
     private var order: [Int] = []
+    /// The app's volume × the wallpaper's music volume (WE's +0x178), applied at once.
+    private(set) var level: Float = 0
+    /// Whether the wallpaper is heard (WE's +0x174), eased toward `fadeTarget`.
+    private(set) var fade: Float = 0
+    /// 1 while the wallpaper plays sound, 0 while it is muted or paused.
+    private(set) var fadeTarget: Float = 0
+    /// The wallpaper's gain the layers play at: `fade × level`.
     private(set) var gain: Float = 0
-    private(set) var targetGain: Float = 0
     private var fadeTimer: Timer?
     private var lastFadeTime: CFTimeInterval = 0
     /// When a drawn frame last stepped the fade (`advanceFade`).
@@ -160,15 +177,17 @@ final class SceneSoundLayers {
 
     // MARK: - Wallpaper gain
 
-    /// The gain the wallpaper fades to. The first target (before any sound played) is taken at once.
-    func setTargetGain(_ target: Float) {
-        let target = max(target, 0)
-        targetGain = target
-        if layers.isEmpty && fadeTimer == nil {
-            gain = target
-            return
-        }
-        guard gain != target, fadeTimer == nil else { return }
+    /// The wallpaper's gain: `level` at once, and the fade toward heard (`audible`) or silent.
+    /// A level of 0 counts as silent and keeps the last level, so the sound fades out from where
+    /// it was (the app mutes by setting its volume to 0). Before any layer exists (and with no
+    /// fade running) the fade takes its target at once, as WE's loaded wallpaper does.
+    func setTarget(level newLevel: Float, audible: Bool) {
+        let heard = audible && newLevel > 0
+        if newLevel > 0 { level = newLevel }
+        fadeTarget = heard ? 1 : 0
+        if layers.isEmpty && fadeTimer == nil { fade = fadeTarget }
+        applyGain()
+        guard fade != fadeTarget, fadeTimer == nil else { return }
         lastFadeTime = CACurrentMediaTime()
         let timer = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
             guard let self else { return }
@@ -185,26 +204,36 @@ final class SceneSoundLayers {
         RunLoop.current.add(timer, forMode: .common)
     }
 
+    /// Heard at `target`, or silent at 0 (previews, captures and tests).
+    func setTargetGain(_ target: Float) {
+        setTarget(level: max(target, 0), audible: target > 0)
+    }
+
     /// A drawn frame's step of the fade: `frameSeconds` is its wall step, clamped as the scene
     /// clock clamps it (`SceneClock.frame`).
     func advanceFade(frameSeconds: Double) {
         lastFrameFade = CACurrentMediaTime()
-        guard gain != targetGain else { return }
+        guard fade != fadeTarget else { return }
         stepFade(frameSeconds)
     }
 
     /// One step of WE's fade, `seconds` long.
     func stepFade(_ seconds: Double) {
-        let next = SceneClock.ease(gain, toward: targetGain, seconds: max(seconds, 0))
-        if next != gain {
-            gain = next
-            for id in order { layers[id]?.playback.setSceneGain(next) }
-        }
-        if gain == targetGain {
+        fade = SceneClock.ease(fade, toward: fadeTarget, seconds: max(seconds, 0))
+        applyGain()
+        if fade == fadeTarget {
             fadeTimer?.invalidate()
             fadeTimer = nil
         }
         idleIfSilent()
+    }
+
+    /// `fade × level` to every layer, when it changed.
+    private func applyGain() {
+        let next = fade * level
+        guard next != gain else { return }
+        gain = next
+        for id in order { layers[id]?.playback.setSceneGain(next) }
     }
 
     /// The one mixer of this wallpaper instance, made when the first voice plays.
