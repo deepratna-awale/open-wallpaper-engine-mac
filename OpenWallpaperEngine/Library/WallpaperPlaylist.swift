@@ -40,14 +40,17 @@ struct WallpaperPlaylist: Codable, Identifiable, Equatable {
     }
 
     /// The item auto-advance moves to after `current`, passing over any `isSkipped` item. Nil
-    /// when the end is reached without `repeats`, or when every item is skipped.
+    /// when the end is reached without `repeats`, or when every item is skipped. Shuffle never
+    /// picks `current` again while another item can play.
     func nextIndex(after current: Int, shuffle: Bool, repeats: Bool, isSkipped: (Int) -> Bool,
                    random: (Range<Int>) -> Int = { Int.random(in: $0) }) -> Int? {
         guard !items.isEmpty else { return nil }
         if shuffle {
             let playable = items.indices.filter { !isSkipped($0) }
-            guard !playable.isEmpty else { return nil }
-            return playable[random(0..<playable.count)]
+            let others = playable.filter { $0 != current }
+            let pool = others.isEmpty ? playable : others
+            guard !pool.isEmpty else { return nil }
+            return pool[random(0..<pool.count)]
         }
         var index = current
         for _ in 0..<items.count {
