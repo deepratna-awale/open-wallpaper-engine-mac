@@ -9,14 +9,14 @@ struct WallpaperHistory: Codable, Equatable {
     private(set) var stacks: [String: [WEWallpaper]] = [:]
 
     static func == (lhs: WallpaperHistory, rhs: WallpaperHistory) -> Bool {
-        lhs.stacks.mapValues { $0.map(\.wallpaperDirectory) } == rhs.stacks.mapValues { $0.map(\.wallpaperDirectory) }
+        lhs.stacks.mapValues { $0.map(\.identityPath) } == rhs.stacks.mapValues { $0.map(\.identityPath) }
     }
 
     /// Records `wallpaper` as set on `screenId`. Setting the wallpaper already on top does nothing.
     mutating func push(_ wallpaper: WEWallpaper, for screenId: String) {
         guard wallpaper.project != .invalid else { return }
         var stack = stacks[screenId] ?? []
-        if stack.last?.wallpaperDirectory == wallpaper.wallpaperDirectory { return }
+        if stack.last?.isSameWallpaper(as: wallpaper) == true { return }
         stack.append(wallpaper)
         if stack.count > Self.capacity { stack.removeFirst(stack.count - Self.capacity) }
         stacks[screenId] = stack
@@ -37,7 +37,7 @@ struct WallpaperHistory: Codable, Equatable {
     /// The stack without the entries for the wallpaper shown now.
     private static func trimmed(_ stack: [WEWallpaper], showing current: WEWallpaper) -> [WEWallpaper] {
         var stack = stack
-        while stack.last?.wallpaperDirectory == current.wallpaperDirectory { stack.removeLast() }
+        while stack.last?.isSameWallpaper(as: current) == true { stack.removeLast() }
         return stack
     }
 }

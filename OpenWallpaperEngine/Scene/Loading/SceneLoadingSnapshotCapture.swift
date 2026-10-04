@@ -1,12 +1,18 @@
 import CoreGraphics
 import QuartzCore
 
+extension Notification.Name {
+    /// A running scene saved a loading snapshot (`SceneLoadingSnapshotCapture`); the object is the
+    /// wallpaper's folder URL. Posted on the main thread.
+    static let sceneLoadingSnapshotSaved = Notification.Name("OpenWallpaperEngine.sceneLoadingSnapshotSaved")
+}
+
 /// A running scene's side of its loading snapshots (`SceneLoadingSnapshotStore`): once the scene
 /// has shown its content on a display for `delay`, the render loop (`SceneRenderLoop`) copies a
 /// frame at that display's pixel size and this saves it, encoded off the render thread. Each
 /// display size is captured once per session (`SceneLoadingSnapshotSession`), and again after the
-/// user's properties change. Each saved snapshot is passed to `onSaved` (by default the lock-screen
-/// picture, `LockScreenPicture.snapshotSaved`). Thread-safe: `lock` owns `armedAt`.
+/// user's properties change. Each saved snapshot is passed to `onSaved` (by default `didSave`: the
+/// lock-screen picture and `sceneLoadingSnapshotSaved`). Thread-safe: `lock` owns `armedAt`.
 final class SceneLoadingSnapshotCapture: @unchecked Sendable {
     static let delay: CFTimeInterval = 4
 
@@ -20,12 +26,21 @@ final class SceneLoadingSnapshotCapture: @unchecked Sendable {
     private static let queue = DispatchQueue(label: "OWE.LoadingSnapshots", qos: .utility)
 
     init(wallpaperDirectory: URL, session: SceneLoadingSnapshotSession, now: CFTimeInterval = CACurrentMediaTime(),
-         onSaved: @escaping @Sendable (URL) -> Void = { LockScreenPicture.snapshotSaved(wallpaperDirectory: $0) }) {
+         onSaved: @escaping @Sendable (URL) -> Void = { SceneLoadingSnapshotCapture.didSave(wallpaperDirectory: $0) }) {
         self.wallpaperDirectory = wallpaperDirectory
         wallpaperKey = SceneLoadingSnapshotStore.wallpaperKey(for: wallpaperDirectory)
         self.session = session
         self.onSaved = onSaved
         armedAt = now
+    }
+
+    /// A snapshot of the wallpaper at `directory` was saved: shows it as the lock-screen picture,
+    /// and posts `sceneLoadingSnapshotSaved` on the main thread for the views showing it.
+    static func didSave(wallpaperDirectory directory: URL) {
+        LockScreenPicture.snapshotSaved(wallpaperDirectory: directory)
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .sceneLoadingSnapshotSaved, object: directory)
+        }
     }
 
     /// The user's properties changed: capture again once the new look has shown for `delay`.
