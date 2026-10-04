@@ -236,7 +236,7 @@ final class ImageMaterialRenderTests: XCTestCase {
         }
         let sceneTexture = try XCTUnwrap(lastTarget)
         XCTAssertEqual(Self.pixel(scene, x: 128, y: 64).alpha, 64 / 255, accuracy: 2 / 255)
-        let library = try XCTUnwrap(device.makeDefaultLibrary())
+        let library = try XCTUnwrap(SceneMetalLibrary.make(device: device))
         let layerDescriptor = MTLRenderPipelineDescriptor()
         layerDescriptor.vertexFunction = library.makeFunction(name: "sceneVertex")
         layerDescriptor.fragmentFunction = library.makeFunction(name: "sceneFragment")
@@ -550,7 +550,7 @@ final class ImageMaterialRenderTests: XCTestCase {
     /// `SceneMetalRenderer`'s layer draw: `sceneVertex`/`sceneFragment`, translucent or additive.
     private func drawNative(_ layer: Layer, texture: MTLTexture, additive: Bool,
                             encoder: MTLRenderCommandEncoder, format: MTLPixelFormat) throws {
-        let library = try XCTUnwrap(device.makeDefaultLibrary())
+        let library = try XCTUnwrap(SceneMetalLibrary.make(device: device))
         let descriptor = MTLRenderPipelineDescriptor()
         descriptor.vertexFunction = library.makeFunction(name: "sceneVertex")
         descriptor.fragmentFunction = library.makeFunction(name: "sceneFragment")

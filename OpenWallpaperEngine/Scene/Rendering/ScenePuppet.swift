@@ -420,7 +420,7 @@ final class ScenePuppetRenderer {
         self.archive = archive
         uniformArena = SceneUniformArena(device: device)
         do {
-            guard let library = device.makeDefaultLibrary(),
+            guard let library = SceneMetalLibrary.make(device: device),
                   let function = library.makeFunction(name: "scenePuppetUnpremultiply"),
                   let warpVertex = library.makeFunction(name: "scenePuppetWarpVertex"),
                   let warpFragment = library.makeFunction(name: "scenePuppetWarpFragment"),

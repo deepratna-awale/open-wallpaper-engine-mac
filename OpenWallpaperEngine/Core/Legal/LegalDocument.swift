@@ -1,7 +1,7 @@
 import Foundation
 
-/// The Terms of Use and the Privacy Policy. The app bundles both (`Resources/Legal`, copies of
-/// `docs/legal`) so they can be read offline; the website has them too.
+/// The Terms of Use and the Privacy Policy. The app bundles both (`Resources/Legal`, in the
+/// framework; copies of `docs/legal`) so they can be read offline; the website has them too.
 enum LegalDocument: String, CaseIterable, Identifiable {
     case termsOfUse = "terms-of-use"
     case privacyPolicy = "privacy-policy"
@@ -24,7 +24,7 @@ enum LegalDocument: String, CaseIterable, Identifiable {
     }
 
     /// The bundled Markdown text; nil if the bundle lacks it.
-    func text(in bundle: Bundle = .main) -> String? {
+    func text(in bundle: Bundle = AppBundleLayout.framework) -> String? {
         guard let url = bundle.url(forResource: rawValue, withExtension: "md", subdirectory: "Legal")
                 ?? bundle.url(forResource: rawValue, withExtension: "md") else { return nil }
         do {
@@ -51,7 +51,7 @@ enum LegalDocument: String, CaseIterable, Identifiable {
         return Edition(version: String(text[version]), effectiveDate: String(text[date]))
     }
 
-    func edition(in bundle: Bundle = .main) -> Edition? {
+    func edition(in bundle: Bundle = AppBundleLayout.framework) -> Edition? {
         text(in: bundle).flatMap(Self.edition(of:))
     }
 }

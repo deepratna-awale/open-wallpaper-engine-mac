@@ -150,7 +150,7 @@ final class SceneRenderThreadTests: XCTestCase {
     /// The scene pass's MSAA pipelines are made once, whichever threads ask for them at once.
     func testMSAAPipelinesAreMadeOnceUnderConcurrentAccess() throws {
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        let library = try XCTUnwrap(device.makeDefaultLibrary())
+        let library = try XCTUnwrap(SceneMetalLibrary.make(device: device))
         let pipelines = try SceneLayerPipelines(
             device: device, vertex: try XCTUnwrap(library.makeFunction(name: "sceneVertex")),
             fragment: try XCTUnwrap(library.makeFunction(name: "sceneFragment")),
