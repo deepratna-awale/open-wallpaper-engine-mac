@@ -113,6 +113,7 @@ La prima compilazione dal codice sorgente scarica il pacchetto Swift Sparkle. Le
 
 ### Workshop e libreria
 - I filtri del Workshop di Wallpaper Engine: Mostra solo, un filtro per risoluzione, generi combinati con E/O e tag su ogni scheda.
+- **Anteprime animate** — i riquadri degli sfondi nella libreria riproducono l’animazione di anteprima del Workshop (GIF), così puoi vedere uno sfondo in movimento prima di applicarlo. Vengono riprodotte solo quando sono visibili e si mettono in pausa quando la finestra è nascosta o in modalità Risparmio energetico.
 - Gli sfondi installati mostrano i propri tag del Workshop e si possono filtrare in base a essi; gli elementi che sono solo risorse o dipendenze restano fuori da Installati.
 - Le dipendenze del Workshop mancanti vengono scaricate automaticamente e quelle non più usate vengono rimosse dopo un’eliminazione. Ogni download finisce nella cartella Archivio sfondi.
 - **Ripristina** in Dettagli riporta le proprietà di uno sfondo, e le sue modifiche nell’Inspector scena, ai valori predefiniti scelti dall’autore.

@@ -32,7 +32,7 @@ final class SettingsTransferTests: XCTestCase {
     /// left in the defaults where old builds kept them) are never read.
     func testExportImportRoundTripWithoutSecrets() throws {
         defaults.set(true, forKey: "ReclaimOriginalPackages")
-        defaults.set(true, forKey: "TestAnimates")
+        defaults.set(true, forKey: "HidesReleaseNotesAfterUpdate")
         defaults.set(false, forKey: "ReceiveBetaUpdates")
         defaults.set("SECRET-API-KEY-0123456789", forKey: "SteamWebAPIKey")
         defaults.set("secret-steam-account", forKey: "SteamLastUsername")
@@ -51,13 +51,13 @@ final class SettingsTransferTests: XCTestCase {
         XCTAssertEqual(imported, exported)
         XCTAssertEqual(imported.settings, changedSettings())
         XCTAssertEqual(imported.updates, updates)
-        XCTAssertEqual(imported.preferences, ["ReclaimOriginalPackages": true, "TestAnimates": true, "ReceiveBetaUpdates": false])
+        XCTAssertEqual(imported.preferences, ["ReclaimOriginalPackages": true, "HidesReleaseNotesAfterUpdate": true, "ReceiveBetaUpdates": false])
 
         let other = try XCTUnwrap(UserDefaults(suiteName: suite + ".other"))
         defer { other.removePersistentDomain(forName: suite + ".other") }
         imported.applyPreferences(to: other)
         XCTAssertTrue(other.bool(forKey: "ReclaimOriginalPackages"))
-        XCTAssertTrue(other.bool(forKey: "TestAnimates"))
+        XCTAssertTrue(other.bool(forKey: "HidesReleaseNotesAfterUpdate"))
         XCTAssertNil(other.object(forKey: "SteamWebAPIKey"))
     }
 
@@ -71,8 +71,8 @@ final class SettingsTransferTests: XCTestCase {
         XCTAssertThrowsError(try SettingsTransfer.decode(newer.encoded()))
 
         var extra = SettingsTransfer.export(settings: GlobalSettings(), defaults: defaults, updates: nil, appVersion: "1")
-        extra.preferences = ["SteamWebAPIKey": true, "TestAnimates": true]
-        XCTAssertEqual(try SettingsTransfer.decode(extra.encoded()).preferences, ["TestAnimates": true])
+        extra.preferences = ["SteamWebAPIKey": true, "ReceiveBetaUpdates": true]
+        XCTAssertEqual(try SettingsTransfer.decode(extra.encoded()).preferences, ["ReceiveBetaUpdates": true])
     }
 
     /// "Restore Defaults" resets only the shown tab's settings.
@@ -111,14 +111,14 @@ final class SettingsTransferTests: XCTestCase {
         let viewModel = GlobalSettingsViewModel()
         let saved = viewModel.settings
         defer { viewModel.settings = saved }
-        defaults.set(true, forKey: "TestAnimates")
         defaults.set(true, forKey: "ReclaimOriginalPackages")
-        XCTAssertTrue(SettingsTabReset.hasChanges(.plugins, settings: GlobalSettings(), defaults: defaults))
+        defaults.set(true, forKey: "HidesReleaseNotesAfterUpdate")
+        XCTAssertTrue(SettingsTabReset.hasChanges(.optimizations, settings: GlobalSettings(), defaults: defaults))
 
-        SettingsTabReset.reset(.plugins, viewModel: viewModel, defaults: defaults, updater: nil)
-        XCTAssertNil(defaults.object(forKey: "TestAnimates"))
-        XCTAssertTrue(defaults.bool(forKey: "ReclaimOriginalPackages"), "another tab's preference stays")
-        XCTAssertFalse(SettingsTabReset.hasChanges(.plugins, settings: GlobalSettings(), defaults: defaults))
+        SettingsTabReset.reset(.optimizations, viewModel: viewModel, defaults: defaults, updater: nil)
+        XCTAssertNil(defaults.object(forKey: "ReclaimOriginalPackages"))
+        XCTAssertTrue(defaults.bool(forKey: "HidesReleaseNotesAfterUpdate"), "another tab's preference stays")
+        XCTAssertFalse(SettingsTabReset.hasChanges(.optimizations, settings: GlobalSettings(), defaults: defaults))
 
         var fast = GlobalSettings()
         fast.fps = 90

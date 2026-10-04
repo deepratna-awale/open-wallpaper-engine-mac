@@ -38,7 +38,8 @@ struct EffectsSection: View {
             Text(L("Effects"))
         }
         .sheet(isPresented: $isBrowsing) {
-            EffectBrowserView(entries: services.effectCatalog()) { entry in
+            EffectBrowserView(entries: services.effectCatalog(), previews: services.previews,
+                              hasWEAssets: services.hasWEAssets(), openAssetsSetup: services.openAssetsSetup) { entry in
                 do {
                     try services.prepareEffect(entry)
                 } catch {
