@@ -11,10 +11,11 @@
 # /Volumes/980Pro/owe-local-assets) and set OWE_ASSETS to it to run the asset-dependent tests.
 # Nothing it copies may be committed: the repository ships no Wallpaper Engine files.
 #
-# Kept: effect manifests (without editor preview art), GLSL shaders and shared headers (without
-# Direct3D or editor shaders), materials, models, particles, the SceneScript runtime, the
-# compatibility patches, the built-in fonts with their licence files, and the UI strings
-# (`<install>/locale/ui_*.json`, beside `assets`) that translate label keys.
+# Kept: effect manifests (without editor preview projects), GLSL shaders and shared headers
+# (without Direct3D or editor shaders), materials, models, particles, the editor's particle presets
+# (without their preview projects), the SceneScript runtime, the compatibility patches, the
+# built-in fonts with their licence files, and the UI strings (`<install>/locale/ui_*.json`,
+# beside `assets`) that translate label keys.
 
 set -euo pipefail
 
@@ -34,6 +35,12 @@ mkdir -p "$STAGING"
 rsync -a --prune-empty-dirs \
     --exclude '*/preview*/' --exclude 'preview*/' --exclude '.DS_Store' \
     "$ASSETS/effects/" "$STAGING/effects/"
+
+if [[ -d "$ASSETS/presets" ]]; then
+    rsync -a --prune-empty-dirs \
+        --exclude '*/preview*/' --exclude 'preview*/' --exclude '.DS_Store' \
+        "$ASSETS/presets/" "$STAGING/presets/"
+fi
 
 rsync -a --prune-empty-dirs --exclude 'HLSL/' --exclude 'editor/' --exclude '.DS_Store' \
     "$ASSETS/shaders/" "$STAGING/shaders/"

@@ -150,15 +150,26 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         services.userPropertyChoices = { resources.userPropertyChoices() }
         services.timeline = timeline
         services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
+        // The browsers' previews, rendered for the WE assets in use when the window opened.
+        let previews = EditorPreviewHelper.provider()
+        let hasWEAssets = { WallpaperEngineAssets.directory != nil }
+        let openAssetsSetup = { AppDelegate.shared.openAssetsSettings() }
+        services.previews = previews
+        services.hasWEAssets = hasWEAssets
+        services.openAssetsSetup = openAssetsSetup
         let assets = particleAssets, directory = wallpaper.wallpaperDirectory
         do {
-            services.particles = try ParticleEditorServices.make(
-                session: session, readAsset: { assets.data($0) }, presets: assets.presets(labels: labels),
+            let particles = try ParticleEditorServices.make(
+                session: session, readAsset: { assets.data($0) }, catalog: { assets.catalog(labels: labels) },
                 textures: assets.textures(), thumbnail: { assets.thumbnail($0) },
                 restart: { layerID in
                     // The system is built again from nothing; the rest of the scene keeps running.
                     SceneEditOverlayFiles.postParticles(session.overlay, wallpaperDirectory: directory, objectIDs: [layerID])
                 })
+            particles.previews = previews
+            particles.hasWEAssets = hasWEAssets
+            particles.openAssetsSetup = openAssetsSetup
+            services.particles = particles
         } catch {
             OWELog.error(.ui, "The Wallpaper Editor runs without its particle editor: its schema can't be read: \(error)")
         }

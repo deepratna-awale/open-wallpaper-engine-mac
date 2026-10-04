@@ -72,8 +72,9 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
 
     // MARK: Cache layout
 
-    /// The same subset `Scripts/fill-assets-cache.sh` takes: no preview art, no HLSL or editor
-    /// shaders, the locale's `ui_*.json` from beside `assets`, and nothing else of the install.
+    /// The same subset `Scripts/fill-assets-cache.sh` takes: no preview projects (of effects and
+    /// presets), no HLSL or editor shaders, the presets the editor offers, the locale's `ui_*.json`
+    /// from beside `assets`, and nothing else of the install.
     func testTheCacheKeepsOnlyTheAssetsSubset() throws {
         let install = scratch.appending(path: "download")
         let assets = install.appending(path: "assets")
@@ -81,7 +82,9 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
                      "shaders/HLSL/common.hlsl", "shaders/editor/grid.frag", "materials/util/white.json",
                      "models/util/sphere.mdl", "particles/fire.json", "scripts/jsclasses/baseclasses.js",
                      "zcompat/web/1.json", "fonts/Roboto.ttf", "fonts/SIL Open Font License.txt",
-                     "presets/p.json", "effects/tint/.DS_Store"] {
+                     "presets/rain/preset.json", "presets/rain/particles/presets/rain.json",
+                     "presets/rain/previewdownpour/scene.json", "scenes/particleeditor/scene.json",
+                     "effects/tint/.DS_Store"] {
             try write(path, to: path, in: assets)
         }
         try write("{}", to: "locale/ui_en-us.json", in: install)
@@ -101,8 +104,9 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
         XCTAssertEqual(files, ["effects/tint/effect.json", "shaders/common.h", "materials/util/white.json",
                                "models/util/sphere.mdl", "particles/fire.json", "scripts/jsclasses/baseclasses.js",
                                "zcompat/web/1.json", "fonts/Roboto.ttf", "fonts/SIL Open Font License.txt",
+                               "presets/rain/preset.json", "presets/rain/particles/presets/rain.json",
                                "locale/ui_en-us.json", ".owe-assets-info.json"])
-        XCTAssertEqual(copied, 10)
+        XCTAssertEqual(copied, 12)
         XCTAssertEqual(WallpaperEngineAssetsCache.readInfo(cache: cache), info)
         XCTAssertTrue(WallpaperEngineAssets.isAssetTree(cache))
         XCTAssertFalse(FileManager.default.fileExists(atPath: cache.path + ".partial"))

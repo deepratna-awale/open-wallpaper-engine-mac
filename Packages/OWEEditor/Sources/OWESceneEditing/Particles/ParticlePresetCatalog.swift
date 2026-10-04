@@ -18,8 +18,24 @@ public struct ParticlePreset: Identifiable, Hashable, Sendable {
     /// The preset's folder name (`rain`).
     public let id: String
     public let title: String
+    /// Its description, in WE's words for the user's language; empty when it has none.
+    public var summary: String = ""
+    /// The scenes WE offers it in (`scene2d`, `scene3d`); empty when it doesn't say.
+    public var tag: String = ""
     public let directory: URL
     public let variants: [Variant]
+
+    /// Offered for 3D scenes (`scene3d`), whose units aren't pixels.
+    public var is3D: Bool { tag.caseInsensitiveCompare("scene3d") == .orderedSame }
+
+    public init(id: String, title: String, summary: String = "", tag: String = "", directory: URL, variants: [Variant]) {
+        self.id = id
+        self.title = title
+        self.summary = summary
+        self.tag = tag
+        self.directory = directory
+        self.variants = variants
+    }
 }
 
 public enum ParticlePresetCatalog {
@@ -36,9 +52,10 @@ public enum ParticlePresetCatalog {
 
     /// The preset in `directory`; nil when it has no particle variant or its file can't be read.
     public static func preset(in directory: URL, translate: (String) -> String?) -> ParticlePreset? {
-        // Optional: WE ships a preset file that isn't valid JSON (`water`), which is skipped.
+        // Optional: a folder without a readable preset file isn't a preset. WE's reader allows
+        // trailing commas, which its `water` preset has.
         guard let data = try? Data(contentsOf: directory.appending(path: "preset.json")),
-              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let root = try? WETolerantJSON.object(from: data) as? [String: Any],
               let variants = root["variants"] as? [[String: Any]] else { return nil }
         let id = directory.lastPathComponent
         let nameKey = root["name"] as? String
@@ -59,6 +76,8 @@ public enum ParticlePresetCatalog {
                                           dependencies: dependencies)
         }
         guard !particleVariants.isEmpty else { return nil }
-        return ParticlePreset(id: id, title: title, directory: directory, variants: particleVariants)
+        let summary = (root["description"] as? String).map { translate($0) ?? $0 } ?? ""
+        return ParticlePreset(id: id, title: title, summary: summary, tag: root["tag"] as? String ?? "",
+                              directory: directory, variants: particleVariants)
     }
 }
