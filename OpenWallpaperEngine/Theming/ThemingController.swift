@@ -7,7 +7,9 @@ import OWETheming
 /// when they apply: when the wallpaper, its scheme colour, the screens or the settings change,
 /// debounced. The preferences go through `SystemThemeApplier` (originals saved first, restored
 /// when a checkbox or the master switch goes off, on quit when chosen, and after a crash at the
-/// next launch). The menu bar strips are drawn into the desktop pictures OWE sets
+/// next launch). A new icon or folder colour restarts the Dock once it settles
+/// (`DockRestartScheduler`). The menu bar strips fill the top of each wallpaper window (what the
+/// transparent menu bar shows) and are drawn into the desktop pictures OWE sets
 /// (`DesktopPictureTheming`).
 @MainActor
 final class ThemingController: ObservableObject {
@@ -15,14 +17,16 @@ final class ThemingController: ObservableObject {
     @Published private(set) var color: ThemeColor?
     /// Whether the colour is the snapshot's main colour rather than a scheme colour.
     @Published private(set) var isDerivedColor = false
-    /// The icon style or tint changed since the Dock last started: it shows once the Dock restarts.
+    /// The icon style or tint changed since the Dock last started and the Dock doesn't restart by
+    /// itself: Settings offers the button.
     @Published private(set) var needsDockRestart = false
 
     private let writer: SystemAppearanceWriter
     private let applier: SystemThemeApplier
+    private let dock: DockRestartScheduler
     private let services: WallpaperServices
-    /// Shows the current wallpaper's desktop pictures again, so they get (or lose) the strip.
-    private let refreshDesktopPictures: () -> Void
+    /// The strips changed: the wallpaper windows and the desktop pictures get (or lose) them.
+    private let stripsChanged: () -> Void
     private var settings = ThemingSettings()
     private weak var wallpaperViewModel: WallpaperViewModel?
     private var cancellables: [AnyCancellable] = []
@@ -34,22 +38,28 @@ final class ThemingController: ObservableObject {
 
     static let debounce: TimeInterval = 0.4
     private static let queue = DispatchQueue(label: "OWE.Theming", qos: .utility)
+    /// Each picture's main colour, per wallpaper snapshot or preview file and its version.
+    nonisolated private static let dominantColors = DominantColorCache()
 
-    init(writer: SystemAppearanceWriter, store: ThemingJournalStore, services: WallpaperServices = .shared,
-         refreshDesktopPictures: @escaping () -> Void) {
+    init(writer: SystemAppearanceWriter, store: ThemingJournalStore, dock: DockRestarting,
+         services: WallpaperServices = .shared, stripsChanged: @escaping () -> Void) {
         self.writer = writer
+        // Before the applier recovers a crashed session: the Dock started with today's values.
+        self.dock = DockRestartScheduler(restarter: dock, writer: writer,
+                                         logError: { OWELog.error(.settings, "\($0)") })
         applier = SystemThemeApplier(writer: writer, store: store)
         self.services = services
-        self.refreshDesktopPictures = refreshDesktopPictures
+        self.stripsChanged = stripsChanged
     }
 
-    /// The app's controller: the real preferences, or none written in an isolated copy (tests,
-    /// development copies), which never change the Mac's settings.
-    static func make(refreshDesktopPictures: @escaping () -> Void) -> ThemingController {
+    /// The app's controller: the real preferences and Dock, or none written and no Dock restarted in
+    /// an isolated copy (tests, development copies), which never changes the Mac's settings.
+    static func make(stripsChanged: @escaping () -> Void) -> ThemingController {
         let isolated: Bool = AppStorageLocation.current.isIsolated
         let writer: SystemAppearanceWriter = isolated ? ReadOnlyAppearanceWriter() : GlobalPreferencesWriter()
+        let dock = LoggedDockRestart(restarter: isolated ? nil : SystemDockRestarter())
         let store = UserDefaultsJournalStore(defaults: .app, logError: { OWELog.error(.settings, "\($0)") })
-        return ThemingController(writer: writer, store: store, refreshDesktopPictures: refreshDesktopPictures)
+        return ThemingController(writer: writer, store: store, dock: dock, stripsChanged: stripsChanged)
     }
 
     // MARK: Lifecycle
@@ -98,6 +108,8 @@ final class ThemingController: ObservableObject {
         observers.forEach(NotificationCenter.default.removeObserver)
         observers = []
         applier.endSession(restoring: settings.restoresOnQuit)
+        // A restore on quit, or a settle still pending, shows in the Dock now.
+        if settings.restartsDockAutomatically { dock.settle() }
     }
 
     // MARK: Updating
@@ -150,8 +162,8 @@ final class ThemingController: ObservableObject {
         let desired = ThemePlan.preferences(for: newColor, settings: settings,
                                             currentIconTheme: writer.value(for: .iconAppearanceTheme))
         let written = applier.apply(desired)
-        if written.contains(where: { $0.change == .iconAppearance }) { needsDockRestart = true }
         if !written.isEmpty { OWELog.info(.settings, "Theming: wrote \(written.map(\.rawValue).sorted())") }
+        updateDock(iconsWritten: written.contains { $0.change == .iconAppearance })
         if color != newColor { color = newColor }
         if isDerivedColor != derived { isDerivedColor = derived }
 
@@ -160,21 +172,27 @@ final class ThemingController: ObservableObject {
         } : nil
         guard newStrips != strips else { return }
         strips = newStrips
-        refreshDesktopPictures()
+        stripsChanged()
     }
 
-    /// Restarts the Dock, which shows a new icon style or tint when it starts. Only on the user's
-    /// click ("Apply now"); never automatically.
-    func restartDock() {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/killall")
-        process.arguments = ["Dock"]
-        do {
-            try process.run()
-            needsDockRestart = false
-        } catch {
-            OWELog.error(.settings, "Theming: restarting the Dock failed: \(error)")
+    /// The Dock shows a new icon style or tint only once it starts. With "Restart the Dock
+    /// automatically" it restarts after the values settle (`DockRestartScheduler`: once per settle,
+    /// never for unchanged values); otherwise Settings offers the button.
+    private func updateDock(iconsWritten: Bool) {
+        if settings.restartsDockAutomatically {
+            if iconsWritten || needsDockRestart { dock.iconPreferencesChanged() }
+            if needsDockRestart { needsDockRestart = false }
+        } else {
+            dock.cancel()
+            let outOfDate = dock.isOutOfDate
+            if needsDockRestart != outOfDate { needsDockRestart = outOfDate }
         }
+    }
+
+    /// Restarts the Dock now (the button), when it shows other values than those stored.
+    func restartDock() {
+        dock.settle()
+        needsDockRestart = dock.isOutOfDate
     }
 
     // MARK: Pictures
@@ -227,8 +245,24 @@ final class ThemingController: ObservableObject {
         }
         if let preview = candidates.preview { urls.append(preview) }
         for url in urls {
-            if let color = DominantColor.of(fileAt: url) { return color }
+            if let color = dominantColors.color(fileAt: url) { return color }
         }
         return nil
+    }
+}
+
+/// The app's Dock restart, logged; an isolated copy (no restarter) only logs.
+private final class LoggedDockRestart: DockRestarting {
+    private let restarter: DockRestarting?
+
+    init(restarter: DockRestarting?) { self.restarter = restarter }
+
+    func restartDock() throws {
+        guard let restarter else {
+            OWELog.info(.settings, "Theming: would restart the Dock (isolated copy)")
+            return
+        }
+        try restarter.restartDock()
+        OWELog.info(.settings, "Theming: restarted the Dock to show the icon and folder colour")
     }
 }
