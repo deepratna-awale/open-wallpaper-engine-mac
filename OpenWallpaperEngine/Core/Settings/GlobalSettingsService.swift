@@ -130,10 +130,14 @@ class GlobalSettingsViewModel: ObservableObject {
             .removeDuplicates()
             .dropFirst()
             .sink { [weak self] _ in
-                guard let enabled = self?.settings.screenSaver else { return }
-                // The loop follows Render Resolution, so a change re-renders it.
-                AppDelegate.shared.screenSaver.update(enabled: enabled,
-                                                      wallpaper: AppDelegate.shared.wallpaperViewModel.currentWallpaper)
+                // `$settings` publishes before the property changes: the plugin reads the new
+                // settings (on or off, Render Resolution) once they are set.
+                DispatchQueue.main.async {
+                    guard let enabled = self?.settings.screenSaver else { return }
+                    // The loop follows Render Resolution, so a change re-renders it.
+                    AppDelegate.shared.screenSaver.update(enabled: enabled,
+                                                          wallpaper: AppDelegate.shared.wallpaperViewModel.currentWallpaper)
+                }
             }
             
         
