@@ -62,8 +62,9 @@ class WallpaperViewModel: ObservableObject {
         }
     }
 
-    /// How wallpapers spread over the displays: a wallpaper per display (with clone groups of some
-    /// of them) or one cloned onto every display (docs/architecture.md "Display layouts").
+    /// How wallpapers spread over the displays: a wallpaper per display (with clone and stretch
+    /// groups of some of them, and splits), or one stretched over or cloned onto every display
+    /// (docs/architecture.md "Display layouts").
     @Published var displayLayout = DisplayLayoutConfiguration() {
         didSet {
             guard displayLayout != oldValue else { return }
@@ -74,6 +75,14 @@ class WallpaperViewModel: ObservableObject {
 
     /// The display layout on the displays connected now (`refreshDisplayLayout`).
     @Published internal(set) var layoutResolution = DisplayLayoutResolution.empty
+
+    /// The screen saver's layout: the wallpapers' ("Same as wallpaper", the default) or its own.
+    @Published var screenSaverLayout = ScreenSaverDisplayLayout() {
+        didSet {
+            guard screenSaverLayout != oldValue, persistsWallpapers else { return }
+            screenSaverLayout.save(to: .app)
+        }
+    }
 
     /// The connected displays with their identities, main display first; tests pass their own.
     var connectedDisplays: @MainActor () -> [DisplayIdentity] = { DisplayIdentity.connected() }
@@ -289,7 +298,8 @@ class WallpaperViewModel: ObservableObject {
         saveRecents()
     }
 
-    /// The wallpaper `screenId` shows: its main clone display's while it clones one, else its own.
+    /// The wallpaper `screenId` (a display or a split display's region) shows: its clone's or
+    /// stretch's source display's while it is in one, else its own.
     func wallpaper(for screenId: String) -> WEWallpaper {
         wallpapers[layoutResolution.source(of: screenId)] ?? Self.defaultWallpaper
     }
@@ -302,10 +312,11 @@ class WallpaperViewModel: ObservableObject {
         setWallpaper(wallpaper, for: [screenId])
     }
 
-    /// Sets `wallpaper` on `screenIds`; for a display that clones another, on its main clone
-    /// display, so every member shows it and the members' own selections stay for when they leave.
+    /// Sets `wallpaper` on `screenIds`; for a display in a clone or stretch, on its source display,
+    /// so every member shows it and the members' own selections stay for when they leave; for a
+    /// split display, on each of its regions.
     func setWallpaper(_ wallpaper: WEWallpaper, for screenIds: Set<String>) {
-        for screenId in Set(screenIds.map(layoutResolution.source(of:))).sorted() {
+        for screenId in layoutResolution.targets(of: screenIds).sorted() {
             // The outgoing one too: it may have been restored at launch rather than set.
             wallpaperHistory.push(self.wallpaper(for: screenId), for: screenId)
             wallpaperHistory.push(wallpaper, for: screenId)
@@ -704,8 +715,19 @@ class WallpaperViewModel: ObservableObject {
         selectedScreenId = screenId
     }
 
+    /// Whether wallpapers show on `screenId`, or on the display a region of a split is on.
     func isScreenEnabled(_ screenId: String) -> Bool {
-        enabledScreens.contains(screenId)
+        enabledScreens.contains(DisplayLayoutResolution.screen(of: screenId))
+    }
+
+    /// The enabled displays, a split one with its regions, as the playback and audio routing count
+    /// them (each region is a display with its own view).
+    var routedScreens: Set<String> {
+        var screens = enabledScreens
+        for (screen, regions) in layoutResolution.regions where enabledScreens.contains(screen) {
+            screens.formUnion(regions.map(\.id))
+        }
+        return screens
     }
 
     /// The app's "Audio Output" setting; off silences every wallpaper. Set by the app delegate.
@@ -739,10 +761,15 @@ class WallpaperViewModel: ObservableObject {
     /// (`DisplayLayoutConfiguration.muted`). Empty in the Workshop preview: every display plays.
     @Published private(set) var displayPlayback: [String: DisplayPlayback] = [:]
 
-    /// Merges the displays' mute into the playback rules' states.
+    /// Merges the displays' mute into the playback rules' states; a split display's regions take
+    /// its state.
     func refreshDisplayPlayback() {
         var states = rulePlayback
         for screen in layoutResolution.muted { states[screen] = max(states[screen] ?? .run, .mute) }
+        for (screen, regions) in layoutResolution.regions {
+            guard let state = states[screen] else { continue }
+            for region in regions { states[region.id] = state }
+        }
         guard states != displayPlayback else { return }
         displayPlayback = states
         let summary = states.keys.sorted().map { "\($0)=\(states[$0] ?? .run)" }.joined(separator: ", ")
@@ -758,7 +785,7 @@ class WallpaperViewModel: ObservableObject {
     /// (`DisplayPlaybackRouting.instance`).
     func playback(of key: WallpaperInstanceKey) -> DisplayPlayback {
         guard persistsWallpapers else { return .run }
-        return DisplayPlaybackRouting.instance(key, instanceKeys: instanceKeys, enabledScreens: enabledScreens,
+        return DisplayPlaybackRouting.instance(key, instanceKeys: instanceKeys, enabledScreens: routedScreens,
                                                states: displayPlayback)
     }
 
@@ -766,12 +793,12 @@ class WallpaperViewModel: ObservableObject {
     /// sound plays (`DisplayPlaybackRouting.wallpaper`).
     func wallpaperPlayback(of key: WallpaperInstanceKey) -> DisplayPlayback {
         guard persistsWallpapers else { return .run }
-        return DisplayPlaybackRouting.wallpaper(key, instanceKeys: instanceKeys, enabledScreens: enabledScreens,
+        return DisplayPlaybackRouting.wallpaper(key, instanceKeys: instanceKeys, enabledScreens: routedScreens,
                                                 states: displayPlayback)
     }
 
     private func audibleCandidates(of key: WallpaperInstanceKey) -> Set<String> {
-        DisplayPlaybackRouting.audibleCandidates(of: key, instanceKeys: instanceKeys, enabledScreens: enabledScreens,
+        DisplayPlaybackRouting.audibleCandidates(of: key, instanceKeys: instanceKeys, enabledScreens: routedScreens,
                                                  states: displayPlayback)
     }
 
@@ -809,7 +836,7 @@ class WallpaperViewModel: ObservableObject {
 
     /// Whose properties editing `screenId`'s wallpaper changes: the shared store while synced
     /// (and in the Workshop preview, which has no real display), else the display's own.
-    /// A display that clones another edits and runs its main clone display's.
+    /// A display in a clone or stretch edits and runs its source display's.
     func propertyScope(for screenId: String) -> WallpaperPropertyScope {
         syncsPropertiesAcrossDisplays || !persistsWallpapers ? .shared : .display(layoutResolution.source(of: screenId))
     }
@@ -838,9 +865,9 @@ class WallpaperViewModel: ObservableObject {
             identity.seed(scope)
             return identity.stored(.userProperties, scope: scope) as? [String: String] ?? [:]
         }
-        // A clone runs once: its members show their main display's instance, whatever their own
-        // properties (WE renders a clone once and mirrors it).
-        for (member, source) in layoutResolution.cloneSources {
+        // A clone or a stretch runs once: its members show their source display's instance,
+        // whatever their own properties (WE renders a clone or a span once).
+        for (member, source) in layoutResolution.sources {
             if let key = keys[source] { keys[member] = key }
         }
         if keys != instanceKeys { instanceKeys = keys }
@@ -869,7 +896,9 @@ class WallpaperViewModel: ObservableObject {
         return audible == screenId
     }
 
-    func toggleScreen(_ screenId: String) {
+    /// Turns wallpapers on `screenId` (a display, or the display a region is on) on or off.
+    func toggleScreen(_ id: String) {
+        let screenId = DisplayLayoutResolution.screen(of: id)
         if enabledScreens.contains(screenId) {
             enabledScreens.remove(screenId)
         } else {
@@ -1008,6 +1037,7 @@ class WallpaperViewModel: ObservableObject {
         self.selectedScreenIds = Set(NSScreen.screens.map { Self.screenId(for: $0) })
 
         displayLayout = DisplayLayoutConfiguration.load(from: .app)
+        screenSaverLayout = ScreenSaverDisplayLayout.load(from: .app)
         refreshDisplayLayout()
 
         // Load recent wallpapers

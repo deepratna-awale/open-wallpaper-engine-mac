@@ -13,14 +13,31 @@ struct SceneViewSnapshot {
     var headroom = SceneDisplayHeadroom()
     /// The display shows the view mirrored (a flipped clone): the cursor is mirrored to match.
     var mirrored = false
+    /// The canvas the view's display shows its part of while it is in a stretch, in global points.
+    var canvas: CGRect?
     /// The view's layer, which Core Animation lets any thread configure.
     weak var layer: CAMetalLayer?
 
-    /// The cursor in the view's points (origin bottom-left) when `mouse` is on its screen.
+    /// The cursor in the view's points (origin bottom-left) when `mouse` is on the view (its
+    /// screen, or its region of a split screen).
     func cursor(at mouse: CGPoint) -> SIMD2<Float>? {
-        guard let viewInScreen, let screenFrame, screenFrame.contains(mouse) else { return nil }
+        guard let viewInScreen, let screenFrame, screenFrame.contains(mouse), viewInScreen.contains(mouse) else { return nil }
         let x = mirrored ? viewInScreen.maxX - mouse.x : mouse.x - viewInScreen.minX
         return SIMD2(Float(x), Float(mouse.y - viewInScreen.minY))
+    }
+
+    /// The cursor on the stretch's canvas, in points from its bottom-left, when `mouse` is on this
+    /// view's display: each display maps the cursor it has into the one canvas.
+    func canvasCursor(at mouse: CGPoint) -> SIMD2<Float>? {
+        guard let canvas, let viewInScreen, viewInScreen.contains(mouse) else { return nil }
+        let point = DisplayCanvas.point(mouse, in: canvas)
+        return SIMD2(Float(point.x), Float(point.y))
+    }
+
+    /// The view's rect on the stretch's canvas, in points from the canvas's bottom-left.
+    var rectInCanvas: CGRect? {
+        guard let canvas, let viewInScreen else { return nil }
+        return viewInScreen.offsetBy(dx: -canvas.minX, dy: -canvas.minY)
     }
 }
 
@@ -46,6 +63,7 @@ enum SceneViewSnapshots {
             snapshot.screenFrame = screen.frame
             snapshot.headroom = SceneDisplayHeadroom(screen: screen)
             snapshot.mirrored = view.isMirroredOnScreen
+            snapshot.canvas = view.stretchCanvasOnScreen
         }
         snapshot.layer = view.layer as? CAMetalLayer
         lock.withLock {

@@ -2,11 +2,15 @@ import AppKit
 
 /// A wallpaper window's content: the display's wallpaper view, mirrored horizontally while the
 /// display is a flipped clone (WE's "Flip clone display"). The mirror is a layer transform, so the
-/// compositor flips the frame the display shows anyway: nothing renders again.
-final class WallpaperWindowContentView: NSView {
+/// compositor flips the frame the display shows anyway: nothing renders again. While the display
+/// is in a stretch it names the stretch's canvas, which a scene's view reads
+/// (`NSView.stretchCanvasOnScreen`) to show its rect of the one frame.
+final class WallpaperWindowContentView: NSView, StretchCanvasHosting {
     var isMirrored = false {
         didSet { if isMirrored != oldValue { applyMirror() } }
     }
+
+    var stretchCanvas: CGRect?
 
     init(content: NSView) {
         super.init(frame: .zero)

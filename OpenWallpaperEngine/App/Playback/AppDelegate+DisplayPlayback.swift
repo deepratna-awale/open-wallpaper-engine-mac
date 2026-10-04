@@ -6,7 +6,8 @@ extension AppDelegate {
         let wallpapers = wallpaperViewModel
         let sources = DisplayPlaybackSources.system(showsWebWallpaper: { [weak wallpapers] in
             guard let wallpapers else { return false }
-            return wallpapers.enabledScreens.contains { (screen: String) -> Bool in
+            // A split display's regions each show their own wallpaper.
+            return wallpapers.routedScreens.contains { (screen: String) -> Bool in
                 let type: String = wallpapers.wallpaper(for: screen).project.type
                 return type.lowercased() == "web"
             }
