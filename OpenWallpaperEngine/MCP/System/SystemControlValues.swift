@@ -11,6 +11,14 @@ struct SystemExportDefaults: Equatable {
     var photosAccess: String
 }
 
+/// One Android export of one or more wallpapers, as the "Export for Android…" sheet would set it.
+struct SystemAndroidRequest: Equatable {
+    var wallpapers: [ControlWallpaper]
+    var options: AndroidExportOptions
+    /// An existing folder for the packages; nil uses the export's cache folder.
+    var outputFolder: URL?
+}
+
 /// One Live Photo export, as the mode's Export Settings would set it.
 struct SystemLivePhotoRequest: Equatable {
     var wallpaper: ControlWallpaper

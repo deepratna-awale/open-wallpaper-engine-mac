@@ -15,6 +15,12 @@ protocol SystemControlService: AnyObject {
     /// Renders a Live Photo as the mode's Save does, and waits for it.
     func exportLivePhoto(_ request: SystemLivePhotoRequest) async throws -> SystemLivePhotoResult
 
+    // MARK: Android export
+
+    /// Exports the wallpapers as `.mpkg` packages as the library's "Export for Android…" does,
+    /// and waits for them.
+    func exportAndroid(_ request: SystemAndroidRequest) async throws -> AndroidExportBatch
+
     // MARK: Screen saver
 
     var screenSaver: SystemScreenSaverState { get }
