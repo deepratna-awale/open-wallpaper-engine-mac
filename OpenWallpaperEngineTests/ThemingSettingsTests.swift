@@ -37,28 +37,23 @@ final class ThemingSettingsTests: XCTestCase {
         XCTAssertNil(DesktopPictureTheming.strips())
     }
 
-    func testDrawFillsTheStripOfTheWrittenPicture() throws {
-        let folder = FileManager.default.temporaryDirectory.appending(path: "owe-theming-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: folder) }
-        let url = folder.appending(path: "desktop-1-a.jpg")
+    func testDrawFillsTheStripOfTheComposedPicture() throws {
         let context = try XCTUnwrap(CGContext(data: nil, width: 64, height: 64, bitsPerComponent: 8, bytesPerRow: 0,
                                               space: CGColorSpace(name: CGColorSpace.sRGB)!,
                                               bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
         context.setFillColor(gray: 0, alpha: 1)
         context.fill(CGRect(x: 0, y: 0, width: 64, height: 64))
-        let jpeg = try XCTUnwrap(DesktopSnapshotCache.jpegData(try XCTUnwrap(context.makeImage())))
-        try jpeg.write(to: url)
+        let picture = try XCTUnwrap(context.makeImage())
 
-        DesktopPictureTheming.draw(nil, into: url, display: 1)
-        XCTAssertEqual(try Data(contentsOf: url), jpeg, "no strips leave the picture as written")
+        XCTAssertTrue(DesktopPictureTheming.draw(nil, over: picture, display: 1) === picture,
+                      "no strips leave the picture as composed")
+        XCTAssertEqual(DesktopPictureTheming.signature(nil, display: 1), "")
 
         let strips = DesktopPictureStrips(color: ThemeColor(red: 1, green: 1, blue: 1),
                                           displays: [1: MenuBarStripDisplay(size: CGSize(width: 32, height: 32), menuBarHeight: 8)])
-        DesktopPictureTheming.draw(strips, into: url, display: 1)
-        let source = try XCTUnwrap(CGImageSourceCreateWithURL(url as CFURL, nil))
-        XCTAssertEqual(CGImageSourceGetType(source) as String?, "public.jpeg")
-        let image = try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil))
+        XCTAssertTrue(DesktopPictureTheming.draw(strips, over: picture, display: 2) === picture, "display 2 has no strip")
+        XCTAssertNotEqual(DesktopPictureTheming.signature(strips, display: 1), "")
+        let image = DesktopPictureTheming.draw(strips, over: picture, display: 1)
         var pixels = [UInt8](repeating: 0, count: 64 * 64 * 4)
         pixels.withUnsafeMutableBytes { buffer in
             let reader = CGContext(data: buffer.baseAddress, width: 64, height: 64, bitsPerComponent: 8, bytesPerRow: 256,

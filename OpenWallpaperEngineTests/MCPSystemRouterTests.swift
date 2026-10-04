@@ -367,11 +367,10 @@ final class MCPSystemRouterTests: XCTestCase {
         XCTAssertEqual(service.refreshes, 1)
     }
 
-    func testLockScreenRefreshInAnIsolatedCopyOrForAVideo() async throws {
+    func testLockScreenRefreshForAVideoAndInAnIsolatedCopy() async throws {
         service.lock.follows = model.library[1]
-        let video = try await result("lock_screen_refresh")
-        XCTAssertEqual(service.refreshes, 0)
-        XCTAssertTrue(video["message"]?.stringValue?.contains("video") ?? false)
+        _ = try await result("lock_screen_refresh")
+        XCTAssertEqual(service.refreshes, 1, "a video's frame is a picture too")
         service.lock.mayChangeDesktopPicture = false
         let isolated = await error("lock_screen_refresh")
         XCTAssertEqual(isolated?.code, .unavailable)

@@ -87,15 +87,15 @@ extension MCPToolCatalog {
 
     private static let lockScreenTools: [MCPTool] = [
         MCPTool("lock_screen_get", title: "Get Lock Screen",
-                description: "Settings › General › \"Show Wallpaper on Lock Screen\": whether it is on, the wallpaper whose snapshot it shows, and each display's wallpaper and desktop picture (which the lock screen shows), and whether this copy may change the desktop picture.",
+                description: "Settings › General › \"Show Wallpaper on Lock Screen\": whether it is on, the selected display's wallpaper, and each display's wallpaper and desktop picture (which the lock screen shows), and whether this copy may change the desktop picture.",
                 annotations: .readOnly) { message($0) },
         MCPTool("lock_screen_set", title: "Set Lock Screen",
-                description: "Turns \"Show Wallpaper on Lock Screen\" on (the lock screens show the scene's snapshot) or off (the user's own desktop pictures come back), as Settings › General does.",
+                description: "Turns \"Show Wallpaper on Lock Screen\" on (each display's lock screen shows a picture of the wallpaper it shows) or off (the user's own desktop pictures come back), as Settings › General does.",
                 input: JSONSchema.object([
                     "enabled": JSONSchema.boolean("true turns it on, false off."),
                 ], required: ["enabled"]), annotations: .idempotent) { message($0) },
         MCPTool("lock_screen_refresh", title: "Refresh Lock Screen",
-                description: "Shows the followed scene's latest snapshot on every display's lock screen now, as turning the setting on does. The setting must be on.",
+                description: "Draws each display's lock-screen picture again now from the wallpaper it shows (a scene's latest snapshot, a video's frame, a web page's snapshot, or the preview until there is one), as turning the setting on does. The setting must be on.",
                 annotations: .change) { message($0) },
     ]
 

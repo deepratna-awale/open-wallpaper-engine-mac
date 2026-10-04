@@ -201,7 +201,8 @@ final class ThemingController: ObservableObject {
             isScene: wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame,
             directory: wallpaper.wallpaperDirectory,
             pixelSize: size ?? SIMD2(1920, 1080),
-            displayID: main.flatMap(DesktopSnapshotCache.displayID),
+            desktopPicture: main.flatMap { NSWorkspace.shared.desktopImageURL(for: $0) }
+                .flatMap { LockScreenPicture.current.isLockPicture($0) ? $0 : nil },
             preview: wallpaper.project.preview.map { wallpaper.wallpaperDirectory.appending(path: $0) })
     }
 
@@ -209,7 +210,8 @@ final class ThemingController: ObservableObject {
         var isScene: Bool
         var directory: URL
         var pixelSize: SIMD2<Int>
-        var displayID: CGDirectDisplayID?
+        /// The main display's desktop picture, when it is one of OWE's (`DesktopPictureSync`).
+        var desktopPicture: URL?
         var preview: URL?
     }
 
@@ -220,8 +222,7 @@ final class ThemingController: ObservableObject {
             forWallpaperAt: candidates.directory, pixelSize: candidates.pixelSize) {
             urls.append(snapshot)
         }
-        if !candidates.isScene, let id = candidates.displayID,
-           let desktop = DesktopSnapshotCache.current.existingURL(display: id) {
+        if !candidates.isScene, let desktop = candidates.desktopPicture, LockScreenPicture.fileExists(desktop) {
             urls.append(desktop)
         }
         if let preview = candidates.preview { urls.append(preview) }

@@ -46,19 +46,20 @@ macOS has no API for the menu bar's colour. The bar is translucent over the desk
 the picture's top strip shows through it. When this is on, each desktop picture OWE sets gets its
 top strip filled with the colour: the menu bar's height on that display (the frame's top minus the
 visible frame's top, or the safe area's top inset when taller), mapped into the picture as macOS's
-default "Fill Screen" shows it (`MenuBarStrip`). It is drawn by one hook in the two places OWE
-writes a desktop picture (`DesktopSnapshotCache.setDesktopPicture`, `LockScreenPicture.apply`),
-just after the file is written and before it is shown (`DesktopPictureTheming`).
+default "Fill Screen" shows it (`MenuBarStrip`). It is drawn by one hook in OWE's per-display
+desktop pictures (`DesktopPictureSync`): over each display's composed picture, before it is
+written and shown (`DesktopPictureTheming`). Each display gets its own strip, also when it shows
+its part of a stretch, a clone or split regions. The strip's colour and height are part of the
+picture's signature, so a new colour or a display change draws the pictures again; a Space change
+or a wake shows the same pictures, strip included.
 
 Limits:
 
-- Only the pictures OWE sets get the strip: a scene's lock-screen picture ("Show Wallpaper on
-  Lock Screen") and a video or web wallpaper's picture ("Adjust Menu Bar Color"). With neither,
-  the desktop picture stays the user's own and the menu bar is unchanged.
+- Only the pictures OWE sets get the strip: they follow the wallpaper while "Show Wallpaper on
+  Lock Screen" or "Adjust Menu Bar Color" is on. With neither, the desktop picture stays the
+  user's own and the menu bar is unchanged.
 - The bar is translucent, so the colour shows as a tint, not as the exact colour.
 - A display whose menu bar hides itself has no strip.
-- A web wallpaper's picture gets the strip with its next snapshot (when its page loads); scenes and
-  videos get it at once.
 
 ### Accent Color
 

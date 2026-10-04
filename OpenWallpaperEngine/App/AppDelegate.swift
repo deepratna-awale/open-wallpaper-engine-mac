@@ -151,8 +151,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     lazy var screenSaver = ScreenSaverPlugin()
     /// Settings › General › Theming: macOS follows the wallpaper's scheme colour.
     private(set) lazy var theming = ThemingController.make { [unowned self] in
-        setDesktopPictures(for: wallpaperViewModel.currentWallpaper)
+        desktopPictures.refresh()
     }
+    /// Each display's desktop picture, which the lock screen and the menu bar's tint show.
+    lazy var desktopPictures = DesktopPictureController.system()
     /// Settings › Plugins › MCP Server: MCP clients' control of the app while installed (`MCP/`).
     private(set) lazy var mcpServerPlugin: MCPServerPlugin = {
         let model = AppControlModel(app: self)
@@ -377,8 +379,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // A test copy wears "TEST", a local build "Dev", on its Dock icon (`DockBadge`).
         DockBadge.current.apply()
-        saveCurrentWallpaper()
         AppDelegate.shared.setPlacehoderWallpaper(with: wallpaperViewModel.currentWallpaper)
+        // Each display's desktop picture (lock screen, menu bar tint) follows what it shows.
+        desktopPictures.observe(wallpaperViewModel, settings: globalSettingsViewModel)
 
         // 显示桌面壁纸
         for (_, window) in self.wallpaperWindows {
@@ -497,21 +500,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         updater.stopShaderPrewarm()
         // The system colours go back when the user chose "Restore on quit".
         theming.stop()
-        // The lock-screen pictures go back to each display's own picture, the rest to the one saved
-        // at launch.
-        LockScreenPicture.restore(synchronously: true)
-        if DesktopSnapshotCache.mayChangeDesktopPicture, let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
-            for screen in NSScreen.screens
-            where NSWorkspace.shared.desktopImageURL(for: screen).map(DesktopSnapshotCache.current.isSnapshot) ?? true {
-                try? NSWorkspace.shared.setDesktopImageURL(wallpaper, for: screen)
-            }
-        }
-        
-        // The user's pictures are back: OWE's snapshots (only its own folder) go, and any
-        // full-screen TIFFs earlier versions left in Caches go to the Trash.
-        let snapshots = DesktopSnapshotCache.current
-        snapshots.removeAll()
-        snapshots.trashLegacySnapshots()
+        // The user's pictures go back where they still exist; OWE's pictures stay on disk, since
+        // a Space macOS doesn't let OWE reach may still show one. Full-screen TIFFs earlier
+        // versions left in Caches go to the Trash.
+        desktopPictures.restoreUsersPictures()
+        DesktopSnapshotCache.current.trashLegacySnapshots()
     }
     
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -803,50 +796,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
     }
     
-    func saveCurrentWallpaper() {
-        guard DesktopSnapshotCache.mayChangeDesktopPicture, let mainScreen = NSScreen.main else { return }
-        var wallpaper: URL {
-            var osWallpaper: URL { NSWorkspace.shared.desktopImageURL(for: mainScreen)! }
-            if let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
-                if wallpaper != osWallpaper {
-                    if !DesktopSnapshotCache.current.isSnapshot(wallpaper) {
-                        return wallpaper
-                    }
-                }
-            }
-            return osWallpaper
-        }
-        UserDefaults.app.set(wallpaper, forKey: "OSWallpaper")
-    }
-    
+    /// The screen saver follows the main display's wallpaper.
     func setPlacehoderWallpaper(with wallpaper: WEWallpaper) {
         screenSaver.update(enabled: globalSettingsViewModel.settings.screenSaver, wallpaper: wallpaper)
-        setDesktopPictures(for: wallpaper)
-    }
-
-    /// The desktop pictures OWE sets for `wallpaper`: the scene's lock-screen picture, a video's
-    /// first frame. Again when theming's menu bar strip changes (`ThemingController`).
-    func setDesktopPictures(for wallpaper: WEWallpaper) {
-        let settings = globalSettingsViewModel.settings
-        if settings.lockScreenPicture { LockScreenPicture.apply(wallpaper) }
-        switch wallpaper.project.type {
-        case "video":
-            let asset = AVAsset(url: wallpaper.wallpaperDirectory.appending(component: wallpaper.project.file))
-            let imageGenerator = AVAssetImageGenerator(asset: asset)
-            imageGenerator.appliesPreferredTrackTransform = true
-            
-            let time = CMTimeMake(value: 1, timescale: 1) // 第一帧的时间
-            imageGenerator.generateCGImagesAsynchronously(forTimes: [NSValue(time: time)]) { _, cgImage, _, _, error in
-                if let error = error {
-                    OWELog.error(.app, "Video thumbnail for desktop picture failed: \(error)")
-                } else if let cgImage = cgImage {
-                    DispatchQueue.main.async {
-                        DesktopSnapshotCache.setDesktopPicture(cgImage, for: NSScreen.screens)
-                    }
-                }
-            }
-        default:
-            return
-        }
     }
 }

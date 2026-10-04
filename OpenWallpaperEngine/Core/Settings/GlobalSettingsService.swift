@@ -45,8 +45,6 @@ class GlobalSettingsViewModel: ObservableObject {
     var didFinishLaunchingNotificationCancellable: Cancellable?
     var didCurrentWallpaperChangeCancellable: Cancellable?
     var didAddToLoginItemCancellable: Cancellable?
-    var didChangeAdjustMenuBarTintCancellable: Cancellable?
-    var didChangeLockScreenPictureCancellable: Cancellable?
     var didChangeScreenSaverCancellable: Cancellable?
     
     /// `followsLaunch`: at launch, the settings that act on the system (launch at login, the menu
@@ -94,8 +92,6 @@ class GlobalSettingsViewModel: ObservableObject {
         didFinishLaunchingNotificationCancellable?.cancel()
         didCurrentWallpaperChangeCancellable?.cancel()
         didAddToLoginItemCancellable?.cancel()
-        didChangeAdjustMenuBarTintCancellable?.cancel()
-        didChangeLockScreenPictureCancellable?.cancel()
         didChangeScreenSaverCancellable?.cancel()
     }
     
@@ -115,19 +111,6 @@ class GlobalSettingsViewModel: ObservableObject {
             .map { $0.autoStart }
             .sink { [weak self] in self?.didAddToLoginItem($0) }
         
-        self.didChangeAdjustMenuBarTintCancellable =
-        self.$settings
-            .removeDuplicates { $0.adjustMenuBarTint == $1.adjustMenuBarTint }
-            .map { $0.adjustMenuBarTint }
-            .sink { [weak self] in self?.didChangeAdjustMenuBarTint($0) }
-
-        self.didChangeLockScreenPictureCancellable =
-        self.$settings
-            .map { $0.lockScreenPicture }
-            .removeDuplicates()
-            .dropFirst()
-            .sink { [weak self] in self?.didChangeLockScreenPicture($0) }
-
         self.didChangeScreenSaverCancellable =
         self.$settings
             .map { [$0.screenSaver as AnyHashable, $0.renderResolution] }
@@ -161,33 +144,6 @@ class GlobalSettingsViewModel: ObservableObject {
         }
     }
     
-    func didChangeAdjustMenuBarTint(_ newValue: Bool) {
-        // A lock-screen picture stays either way: it is a setting of its own, and already the
-        // scene's picture.
-        let showsLockPicture = NSScreen.main.flatMap { NSWorkspace.shared.desktopImageURL(for: $0) }
-            .map(LockScreenPicture.current.isLockPicture) ?? false
-        guard !showsLockPicture else { return }
-        if newValue != true {
-            if DesktopSnapshotCache.mayChangeDesktopPicture, let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
-                try? NSWorkspace.shared.setDesktopImageURL(wallpaper, for: .main!)
-            }
-        } else {
-            DesktopSnapshotCache.restoreDesktopPicture(for: NSScreen.main.map { [$0] } ?? [])
-        }
-    }
-    
-    /// The lock screen shows the scene again, or the user's own pictures come back (and the menu
-    /// bar tint's picture of a video or web wallpaper, when that is on).
-    func didChangeLockScreenPicture(_ newValue: Bool) {
-        let wallpaper = AppDelegate.shared.wallpaperViewModel.currentWallpaper
-        if newValue {
-            LockScreenPicture.apply(wallpaper)
-        } else {
-            LockScreenPicture.restore()
-            if settings.adjustMenuBarTint { AppDelegate.shared.setPlacehoderWallpaper(with: wallpaper) }
-        }
-    }
-
     func didCurrentWallpaperChange(_ newValue: WEWallpaper) {
         AppDelegate.shared.setPlacehoderWallpaper(with: newValue)
     }
