@@ -59,7 +59,9 @@ extension SceneViewport {
         let mouse = NSEvent.mouseLocation
         guard let window = view.window, let screen = window.screen, screen.frame.contains(mouse) else { return }
         let point = view.convert(window.convertPoint(fromScreen: mouse), from: nil)
-        cursor = SIMD2(Float(point.x), Float(point.y))
+        // A flipped clone shows the view mirrored (`NSView.isMirroredOnScreen`).
+        let x = view.isMirroredOnScreen ? view.bounds.width - point.x : point.x
+        cursor = SIMD2(Float(x), Float(point.y))
     }
 }
 
