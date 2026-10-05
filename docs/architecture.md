@@ -84,6 +84,7 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
 - **`Settings/`:** settings pages.
 - **`UI/`:** the main window and shared components.
 - **`App/`:** the entry point, `AppDelegate`, windows and menus.
+  - **Identity migration** (`App/IdentityMigration/`): the app's bundle id is `app.openwallpaperengine` (the reverse DNS of openwallpaperengine.app). The first launch under it, before anything reads the defaults (`AppMain`), moves the previous id's state once (`AppIdentityMigration`): the defaults domains (the app's, the editor's), `<Caches>/<id>`, the web views' data, the Steam keychain items (written, read back, then deleted from the old service), the installed screen saver and launch at login. Each step is idempotent and recorded in `<support>/IdentityMigration.json` as it finishes, so a crash resumes. An isolated copy moves only its own tag's defaults, caches and keychain items. `AppIdentityNotice` then says once that macOS asks again for privacy permissions, which can't be moved. See [`docs/releasing.md`](releasing.md#updating-installed-copies).
 - Each view model lives next to its view.
 
 ### `Editor/` and `Packages/OWEEditor`: the Wallpaper Editor

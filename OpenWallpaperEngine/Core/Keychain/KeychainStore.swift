@@ -6,7 +6,7 @@ import Security
 /// Items are this-device-only and never synced through iCloud. The data protection keychain is
 /// tried first; a build without a keychain entitlement (ad-hoc or unsigned, as in CI) gets
 /// `errSecMissingEntitlement` there and falls back to the login keychain.
-struct KeychainStore {
+struct KeychainStore: KeychainStoring {
     let service: String
 
     struct Failure: Error, CustomStringConvertible {

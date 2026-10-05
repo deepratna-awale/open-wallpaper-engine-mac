@@ -2,8 +2,8 @@ import Darwin
 import Foundation
 
 /// Where the source a shader compiler step rejected is kept for inspection (CONTRIBUTING.md,
-/// Debugging): a folder only the user can read, `<AppStorageLocation.cachesDirectory>/
-/// app.openwallpaperengine/FailedShaders`, with one file per shader and stage.
+/// Debugging): a folder only the user can read, `<AppStorageLocation.appCachesDirectory>/
+/// FailedShaders`, with one file per shader and stage.
 ///
 /// The folder is created (or, if it exists, reset) with `directoryPermissions` and must be a real
 /// folder, not a symbolic link. Each file is created afresh with `filePermissions` and never
@@ -16,8 +16,7 @@ struct FailedShaderDump {
     /// `~/Library/Caches/app.openwallpaperengine/FailedShaders` for the user's real launch;
     /// inside the isolated Caches folder for tests and development copies (`AppStorageLocation`).
     static var defaultDirectory: URL {
-        AppStorageLocation.current.cachesDirectory
-            .appending(path: "app.openwallpaperengine/FailedShaders", directoryHint: .isDirectory)
+        AppStorageLocation.current.appCachesDirectory.appending(path: "FailedShaders", directoryHint: .isDirectory)
     }
 
     struct NotADirectory: Error, CustomStringConvertible {

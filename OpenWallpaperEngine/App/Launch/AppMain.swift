@@ -36,6 +36,11 @@ public enum AppMain {
             if !isTestHost {
                 // Open Wallpaper Engine, or the Wallpaper Editor in a process of its own (`AppLaunchPlan`).
                 let mode: AppLaunchMode = AppLaunchMode.parse(ProcessInfo.processInfo.arguments)
+                // The first launch under the new bundle id moves the old one's state, before
+                // anything reads the defaults (`AppIdentityMigration`).
+                if case .main = mode {
+                    AppIdentityMigration.forCurrentProcess().run()
+                }
                 delegate = AppLaunchPlan.plan(for: mode).makeDelegate()
                 NSApplication.shared.delegate = delegate
             } else {

@@ -80594,6 +80594,100 @@
         }
       }
     },
+    "Open Wallpaper Engine has a new identity; macOS will ask again for permissions like system audio, Local Network and Photos." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لدى Open Wallpaper Engine هوية جديدة؛ سيطلب macOS مرة أخرى أذونات مثل صوت النظام والشبكة المحلية والصور."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine hat eine neue Identität. macOS fragt erneut nach Berechtigungen wie Systemaudio, Lokales Netzwerk und Fotos."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine tiene una nueva identidad; macOS volverá a pedirte permisos como el audio del sistema, Red local y Fotos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine a une nouvelle identité ; macOS vous redemandera des autorisations comme les sons du système, Réseau local et Photos."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine की नई पहचान है; macOS आपसे सिस्टम ऑडियो, लोकल नेटवर्क और Photos जैसी अनुमतियाँ फिर से माँगेगा."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine ha una nuova identità; macOS ti chiederà di nuovo i permessi come audio di sistema, Rete locale e Foto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engineの識別情報が新しくなりました。システムオーディオ、ローカルネットワーク、写真などのアクセス許可がmacOSから再度求められます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine의 식별 정보가 새로워졌습니다. macOS에서 시스템 오디오, 로컬 네트워크, 사진 등의 권한을 다시 요청합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine ma nową tożsamość; macOS ponownie poprosi o uprawnienia, takie jak dźwięk systemowy, Sieć lokalna i Zdjęcia."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Open Wallpaper Engine tem uma nova identidade; o macOS pedirá novamente permissões como Áudio do Sistema, Rede Local e Fotos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У Open Wallpaper Engine новый идентификатор; macOS снова запросит разрешения, например на системный звук, локальную сеть и Фото."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine’in yeni bir kimliği var; macOS, Sistem Sesi, Yerel Ağ ve Fotoğraflar gibi izinleri yeniden isteyecek."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine має новий ідентифікатор; macOS знову попросить дозволи, як-от на системний звук, локальну мережу та Фото."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 已更换身份标识；macOS 会再次请求系统录音、本地网络和照片等权限。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 已更換識別身分；macOS 會再次要求系統錄音、區域網路和照片等權限。"
+          }
+        }
+      }
+    },
     "Open Wallpaper Engine has no control over this file. Make sure it comes from a reliable source before proceeding." : {
       "localizations" : {
         "ar" : {

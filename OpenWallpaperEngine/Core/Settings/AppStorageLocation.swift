@@ -51,6 +51,11 @@ struct AppStorageLocation: @unchecked Sendable { // UserDefaults is thread-safe;
 
     var isIsolated: Bool { isolationTag != nil }
 
+    /// `<cachesDirectory>/<app id>`: the shader caches and the failed shaders.
+    var appCachesDirectory: URL {
+        cachesDirectory.appending(path: Self.realBundleIdentifier, directoryHint: .isDirectory)
+    }
+
     init(isolationTag: String?, bundleIdentifier: String = Bundle.main.bundleIdentifier ?? realBundleIdentifier,
          readOnlyDefaults: Bool = false) {
         let fileManager = FileManager.default
