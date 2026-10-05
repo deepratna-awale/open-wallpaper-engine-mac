@@ -63,9 +63,9 @@ final class SceneShadowRenderTests: XCTestCase {
     static func plane() -> MDLMesh {
         let u = SIMD3<Float>(planeHalf, 0, 0), v = SIMD3<Float>(0, 0, -planeHalf)
         var floats: [Float] = []
-        for corner in [-u - v, u - v, u + v, -u + v] { floats += [corner.x, corner.y, corner.z, 0, 1, 0] }
+        for corner in [-u - v, u - v, u + v, -u + v] { floats += [corner.x, corner.y, corner.z, 0, 1, 0, 0, 0] }
         let indices: [UInt16] = [0, 1, 2, 0, 2, 3]
-        return MDLMesh(materials: ["materials/lit.json"], flags: 0, format: MDLVertexFormat(rawValue: 0x3),
+        return MDLMesh(materials: ["materials/lit.json"], flags: 0, format: MDLVertexFormat(rawValue: 0xb),
                        vertexData: floats.withUnsafeBytes { Data($0) }, indexData: indices.withUnsafeBytes { Data($0) })
     }
 
