@@ -4,7 +4,8 @@ import Foundation
 /// file-only work (videos, Dynamic scenes) runs beside them, `fileConcurrency` at once. Each
 /// item's progress and state, and the whole batch's, are published; `cancel()` stops what runs
 /// and leaves what hasn't started. The batch lists the packages in the selection's order,
-/// whatever order they finish in.
+/// whatever order they finish in. Its packages go into the Android exports list
+/// (`AndroidExportOutbox`) when it finishes.
 @MainActor
 final class AndroidExportQueue: ObservableObject {
     static let fileConcurrency = 2
@@ -28,13 +29,18 @@ final class AndroidExportQueue: ObservableObject {
     let folder: URL
     @Published private(set) var isRunning = false
     @Published private(set) var isCancelled = false
+    /// The Android device the export is framed for, which the Android exports list shows.
+    var device: String?
+    /// Whether its packages go into the Android exports list.
+    private let recordsExports: Bool
     private let worker: AndroidExportWorking
     private var task: Task<AndroidExportBatch, Never>?
 
     /// `items` go into `folder` under unique names (`AndroidExportNaming`), avoiding `taken`
     /// (the folder's files, by default), or under `names` (a save panel's choice).
     init(items: [AndroidExportItem], skipped: [AndroidExportBatch.Skipped] = [], folder: URL,
-         taken: Set<String>? = nil, names chosen: [String]? = nil, worker: AndroidExportWorking) {
+         taken: Set<String>? = nil, names chosen: [String]? = nil, worker: AndroidExportWorking,
+         recordsExports: Bool = true) {
         let names = chosen.flatMap { $0.count == items.count ? $0 : nil }
             ?? AndroidExportNaming.uniqueNames(items.map(\.wallpaper.project.displayTitle),
                                                taken: taken ?? AndroidExportNaming.existingNames(in: folder))
@@ -42,6 +48,7 @@ final class AndroidExportQueue: ObservableObject {
         self.skipped = skipped
         self.folder = folder
         self.worker = worker
+        self.recordsExports = recordsExports
     }
 
     /// The whole batch's progress, 0…1: each item counts the same.
@@ -58,6 +65,7 @@ final class AndroidExportQueue: ObservableObject {
         self.task = task
         let batch = await task.value
         isRunning = false
+        if recordsExports { AndroidExportOutbox.shared.record(batch, device: device) }
         return batch
     }
 
