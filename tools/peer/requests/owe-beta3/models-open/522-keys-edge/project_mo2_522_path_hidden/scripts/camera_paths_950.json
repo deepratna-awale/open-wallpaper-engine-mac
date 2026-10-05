@@ -1,0 +1,364 @@
+{
+ "paths": [
+  {
+   "center": {
+    "c0": [
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 0,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": 0
+     },
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 150,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": 600
+     }
+    ],
+    "c1": [
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 0,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": 0
+     },
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 150,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": 0
+     }
+    ],
+    "c2": [
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 0,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": -1
+     },
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 150,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": -1
+     }
+    ]
+   },
+   "eye": {
+    "c0": [
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 0,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": 0
+     },
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 150,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": 600
+     }
+    ],
+    "c1": [
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 0,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": 0
+     },
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 150,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": 0
+     }
+    ],
+    "c2": [
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 0,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": 0
+     },
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 150,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": 0
+     }
+    ]
+   },
+   "up": {
+    "c0": [
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 0,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": 0
+     },
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 150,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": 0
+     }
+    ],
+    "c1": [
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 0,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": 1
+     },
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 150,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": 1
+     }
+    ],
+    "c2": [
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 0,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": 0
+     },
+     {
+      "back": {
+       "enabled": true,
+       "x": -1,
+       "y": 0
+      },
+      "frame": 150,
+      "front": {
+       "enabled": true,
+       "x": 1,
+       "y": 0
+      },
+      "lockangle": true,
+      "locklength": true,
+      "value": 0
+     }
+    ]
+   },
+   "fov": [
+    {
+     "back": {
+      "enabled": true,
+      "x": -1,
+      "y": 0
+     },
+     "frame": 0,
+     "front": {
+      "enabled": true,
+      "x": 1,
+      "y": 0
+     },
+     "lockangle": true,
+     "locklength": true,
+     "value": 50
+    },
+    {
+     "back": {
+      "enabled": true,
+      "x": -1,
+      "y": 0
+     },
+     "frame": 150,
+     "front": {
+      "enabled": true,
+      "x": 1,
+      "y": 0
+     },
+     "lockangle": true,
+     "locklength": true,
+     "value": 50
+    }
+   ],
+   "id": 900,
+   "name": "probe",
+   "visible": false,
+   "zoom": null,
+   "options": {
+    "cameramode": "fly",
+    "events": null,
+    "fps": 30.0,
+    "length": 150,
+    "mode": "loop",
+    "wraploop": true
+   }
+  }
+ ]
+}

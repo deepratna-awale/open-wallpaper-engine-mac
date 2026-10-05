@@ -1,0 +1,16 @@
+{
+ "passes": [
+  {
+   "combos": {},
+   "constantshadervalues": {
+    "Alpha": 0.001,
+    "Color": "1.00000 1.00000 1.00000"
+   },
+   "shader": "generic4",
+   "textures": [
+    "util/white"
+   ],
+   "blending": "translucent"
+  }
+ ]
+}
