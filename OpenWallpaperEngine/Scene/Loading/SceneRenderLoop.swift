@@ -236,8 +236,8 @@ final class SceneRenderLoop {
     func captureTransitionFrame(pixelSize: SIMD2<Int>, completion: @escaping @Sendable (MTLTexture?) -> Void) {
         thread.perform { [self] in
             guard let renderer else { return completion(nil) }
-            let restoring = displays.count > 1 ? viewports() : []
-            if !renderer.captureTransitionFrame(pixelSize: pixelSize, restoring: restoring, completion: completion) {
+            if !renderer.captureTransitionFrame(pixelSize: pixelSize, live: viewports(), sharesFrame: displays.count > 1,
+                                                completion: completion) {
                 completion(nil)
             }
         }
