@@ -59,6 +59,9 @@ final class EffectGraphRenderer {
         /// one clears it as it starts (no extra pass), which a blended pass would otherwise blend over.
         var unclearedPings: Set<ObjectIdentifier> = []
         var fbos: [[String: MTLTexture]] = []
+        /// The start colour of each FBO of the effects that carry frames (`carriesFrames`), by
+        /// effect index: their history, which `restartHistory` clears.
+        var history: [Int: [String: MTLClearColor]] = [:]
         /// FBOs made since the last frame, with the colour each starts as (`EffectFBO.clear`).
         var pendingClears: [(texture: MTLTexture, color: MTLClearColor)] = []
         /// The size each target stands for when the chain is drawn below its size
@@ -1041,6 +1044,11 @@ final class EffectGraphRenderer {
         state.pingA = nil
         state.pingB = nil
         state.unclearedPings.removeAll()
+        state.history = [:]
+        for (index, effect) in effects.enumerated() where effect.carriesFrames {
+            state.history[index] = Dictionary(effect.fbos.map { ($0.name, Self.clearColor($0.clear)) },
+                                              uniquingKeysWith: { first, _ in first })
+        }
         state.fbos = effects.map { effect in
             Dictionary(effect.fbos.compactMap { fbo -> (String, MTLTexture)? in
                 let (size, reducedFrom) = state.resolution.fboSize(fbo, in: effect, width: width, height: height)
@@ -1061,6 +1069,20 @@ final class EffectGraphRenderer {
         let parts = (authored ?? "").split(separator: " ").compactMap { Double($0) }
         func part(_ index: Int) -> Double { index < parts.count && parts[index].isFinite ? parts[index] : 0 }
         return MTLClearColor(red: part(0), green: part(1), blue: part(2), alpha: part(3))
+    }
+
+    /// Starts the history of every chain that carries frames again: its FBOs go back to their
+    /// start colour before its next frame reads them, as when they were made. A scene's frames
+    /// before its first complete one (`SceneMetalRenderer.hasCompleteFrame`) draw only what is
+    /// ready, and WE's history starts with the scene, from its first frame.
+    func restartHistory() {
+        for state in layers.values {
+            for (index, clears) in state.history where index < state.fbos.count {
+                for (name, color) in clears {
+                    if let texture = state.fbos[index][name] { state.pendingClears.append((texture, color)) }
+                }
+            }
+        }
     }
 
     /// Clears the FBOs made since the last frame to their start colour, before any pass reads one.

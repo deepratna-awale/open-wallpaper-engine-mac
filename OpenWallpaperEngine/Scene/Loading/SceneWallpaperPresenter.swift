@@ -49,7 +49,7 @@ final class SceneWallpaperPresenter: NSObject, MTKViewDelegate {
     func draw(in view: MTKView) {
         guard let renderLoop, renderLoop.draw(ObjectIdentifier(self), in: view), !shownContent else { return }
         shownContent = true
-        // Thread boundary: the live scene drew its first frame; crossfade to it on the main thread.
+        // Thread boundary: the live scene drew its first complete frame; crossfade to it on the main thread.
         DispatchQueue.main.async { [weak self] in
             MainActor.assumeIsolated {
                 self?.instance?.hasContent = true
@@ -61,10 +61,10 @@ final class SceneWallpaperPresenter: NSObject, MTKViewDelegate {
 }
 
 /// A picture of a scene wallpaper over its view while the scene loads, crossfaded out once the
-/// live scene draws (WE shows a wallpaper's preview while it loads too), so setting a wallpaper
-/// never shows an empty desktop: the scene's own loading snapshot for this display
-/// (`SceneLoadingSnapshotStore`, the nearest size scaled when none matches), else its Workshop
-/// preview. The image is looked up and decoded off the main thread, at the display's size.
+/// live scene draws a complete frame (WE shows a wallpaper's preview while it loads too), so
+/// setting a wallpaper never shows an empty desktop: the scene's own loading snapshot for this
+/// display (`SceneLoadingSnapshotStore`, the nearest size scaled when none matches), else its
+/// Workshop preview. The image is looked up and decoded off the main thread, at the display's size.
 @MainActor
 final class ScenePreviewPlaceholder {
     static let fadeDuration: CFTimeInterval = 0.25
