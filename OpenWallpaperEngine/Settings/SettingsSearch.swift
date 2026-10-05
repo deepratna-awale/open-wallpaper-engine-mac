@@ -11,6 +11,7 @@ enum SettingsAnchor {
     static let shortcuts = "shortcuts"
     static let hotKeys = "hotkeys"
     static let screenshots = "screenshots"
+    static let transitions = "transitions"
     static let playback = "playback"
     static let quality = "quality"
     static let converted = "converted"
@@ -72,6 +73,7 @@ struct SettingsSearch {
             entry("Run Setup Again…", .general, SettingsAnchor.setup),
             entry("Keyboard Shortcuts", .general, SettingsAnchor.shortcuts),
             entry("Hotkeys", .general, SettingsAnchor.hotKeys),
+            entry("Wallpaper browser transition", .general, SettingsAnchor.transitions),
             entry("Screenshots", .general, SettingsAnchor.screenshots),
             entry("Take Screenshot", .general, SettingsAnchor.screenshots),
 

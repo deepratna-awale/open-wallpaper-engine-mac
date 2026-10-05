@@ -94,6 +94,17 @@ struct GeneralPage: SettingsPage {
                 }
             }
             .settingsAnchor(SettingsAnchor.setup)
+            // MARK: Transitions
+            Section {
+                WallpaperTransitionEditor(settings: $viewModel.settings.browseTransition,
+                                          label: "Wallpaper browser transition")
+                    .changedFromDefault(viewModel.isChanged(\.browseTransition))
+            } header: {
+                Label("Transitions", systemImage: "rectangle.portrait.on.rectangle.portrait.angled")
+            } footer: {
+                Text("Shown when you choose a wallpaper in the library. Each playlist has its own transition in its settings.")
+            }
+            .settingsAnchor(SettingsAnchor.transitions)
             // MARK: Screenshots
             ScreenshotSection(viewModel: viewModel)
             // MARK: Hotkeys
