@@ -29,12 +29,13 @@ public enum MCPToolCatalog {
                 + displays.map { "\($0["name"]?.stringValue ?? "?") (\($0["id"]?.stringValue ?? "?"))" }.joined(separator: ", ")
         },
         MCPTool("get_status", title: "Get Status",
-                description: "What each display shows (wallpaper id, title and type), whether wallpapers are playing or paused, the volume and mute, and the active playlist if any.",
+                description: "What each display shows (wallpaper id, title and type), whether wallpapers are playing, paused or stopped, the volume and mute, and the active playlist if any.",
                 input: JSONSchema.object(["display": display]), annotations: .readOnly) { result in
             let displays = (result["displays"]?.arrayValue ?? []).map { item in
                 "\(item["name"]?.stringValue ?? "?"): \(wallpaperName(item["wallpaper"]))"
             }
-            let state = result["paused"]?.boolValue == true ? "paused" : "playing"
+            let state = result["stopped"]?.boolValue == true ? "stopped"
+                : result["paused"]?.boolValue == true ? "paused" : "playing"
             let sound = result["muted"]?.boolValue == true
                 ? "muted" : "volume \(Int(((result["volume"]?.doubleValue ?? 0) * 100).rounded()))%"
             var text = "Wallpapers are \(state), \(sound). " + displays.joined(separator: "; ") + "."
@@ -103,10 +104,13 @@ public enum MCPToolCatalog {
                 description: "Pauses every wallpaper, as Pause in the menu bar does. Playback is app-wide in Open Wallpaper Engine.",
                 annotations: .idempotent) { _ in "Wallpapers are paused." },
         MCPTool("resume", title: "Resume",
-                description: "Resumes every wallpaper, as Resume in the menu bar does.",
+                description: "Resumes every wallpaper, as Resume in the menu bar does: unpauses them, and loads them again when they are stopped.",
                 annotations: .idempotent) { _ in "Wallpapers are playing." },
+        MCPTool("stop", title: "Stop",
+                description: "Stops every wallpaper, as Stop Wallpapers in the menu bar does: unloads them, freeing their CPU, GPU and memory, and shows the macOS desktop picture until resume. Each display keeps its wallpaper, which resume loads again.",
+                annotations: .idempotent) { _ in "Wallpapers are stopped." },
         MCPTool("toggle_playback", title: "Toggle Playback",
-                description: "Pauses the wallpapers when they play, resumes them when paused.",
+                description: "Pauses the wallpapers when they play, resumes them when paused or stopped.",
                 annotations: .change) { result in
             result["paused"]?.boolValue == true ? "Wallpapers are paused." : "Wallpapers are playing."
         },

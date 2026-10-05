@@ -56,7 +56,8 @@ final class AppControlModel: ControlAppModel {
     }
 
     var playback: ControlPlayback {
-        ControlPlayback(paused: wallpaperViewModel.playRate == 0, volume: Double(wallpaperViewModel.playVolume))
+        ControlPlayback(paused: wallpaperViewModel.playRate == 0, volume: Double(wallpaperViewModel.playVolume),
+                        stopped: wallpaperViewModel.isStopped)
     }
 
     func playlists() -> [ControlPlaylist] {
@@ -97,6 +98,8 @@ final class AppControlModel: ControlAppModel {
     func setPaused(_ paused: Bool) {
         if paused { app.pause() } else { app.resume() }
     }
+
+    func stop() { app.stopWallpapers() }
 
     func setVolume(_ volume: Double) {
         wallpaperViewModel.playVolume = Float(volume)
