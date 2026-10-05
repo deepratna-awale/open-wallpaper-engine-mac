@@ -28,13 +28,21 @@ struct WESceneCameraLayer: Equatable {
     var queueMode: QueueMode = .random
     /// `fov` and `zoom` in their authored form (bindable: 3378346807 binds `fov`).
     var values: [SceneCameraLayerValueField: SceneRawValue] = [:]
+    /// Whether the object authors `visible` (in any form). WE 2.8.42 plays a camera layer's paths
+    /// only then: an editor-made path doesn't move the view of a layer without the key, in an
+    /// orthographic scene or a perspective one, and does once `"visible": {"value": true}` is
+    /// added (docs/models-plan.md §5.19; `tools/peer/requests/owe-beta3/models-open/519b-ortho-camera-path`).
+    /// The layer is still the camera from its transform: library scenes without the key (3455121165,
+    /// 3657770939, …) are framed by theirs.
+    var authorsVisible = true
 
     init(camera: String, path: String? = nil, queueMode: QueueMode = .random,
-         values: [SceneCameraLayerValueField: SceneRawValue] = [:]) {
+         values: [SceneCameraLayerValueField: SceneRawValue] = [:], authorsVisible: Bool = true) {
         self.camera = camera
         self.path = path
         self.queueMode = queueMode
         self.values = values
+        self.authorsVisible = authorsVisible
     }
 
     /// Decodes from the scene object's own container; nil when `camera` isn't a string.
@@ -44,6 +52,7 @@ struct WESceneCameraLayer: Equatable {
             return nil
         }
         self.camera = camera
+        authorsVisible = c.contains(key("visible"))
         path = c.decodeLogged(SceneRawValue.self, forKey: key("path"), userInfo: info)?.literalString
         switch c.decodeLogged(SceneRawValue.self, forKey: key("queuemode"), userInfo: info)?.literalString {
         case "sequential"?: queueMode = .sequential

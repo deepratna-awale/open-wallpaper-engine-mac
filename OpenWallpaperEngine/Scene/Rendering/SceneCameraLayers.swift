@@ -3,7 +3,8 @@ import simd
 /// WE's camera layers (docs/models-plan.md §2.3): every visible one plays its path file, and the
 /// last visible one in scene order is the scene's camera.
 ///
-/// **Playback** (the layer's update, `wallpaper64.exe` 0x1401f2ad0, only while it is visible):
+/// **Playback** (the layer's update, `wallpaper64.exe` 0x1401f2ad0, only while it is visible, and
+/// only for a layer whose object authors `visible`, as WE 2.8.42 plays them: §5.19):
 /// 1. A path finished since the last frame (a "single" clock) is rewound and a new one picked; so
 ///    is one when none plays yet. `queuemode` "sequential" takes the next visible path, wrapping;
 ///    "random" draws from a bag of the visible paths at a uniform index, steps past entries equal
@@ -17,6 +18,8 @@ import simd
 /// 3. The result is written back into the layer: `origin` = eye and `angles` those of
 ///    `lookAt(eye, centre, up)`, so the camera moves through its own transform. A perspective
 ///    scene takes the path's `fov` channel (50 without one); `zoom` is an orthographic scene's.
+///    The write-back wins over a script's or a timeline's `origin` and `angles` on the layer: WE
+///    2.8.42 follows only the path while one plays, and the script only without one (§5.20).
 ///
 /// **The camera** (0x140189220…0x140189402): the active layer's world matrix gives eye = row 3,
 /// centre = row 3 − row 2, up = row 1 (it looks down its local −z; parents apply), and its fov is
@@ -28,6 +31,9 @@ final class SceneCameraLayers {
         var pose: SceneCameraPose
         /// Degrees, before the clamp.
         var fov: Float
+        /// The playing path's `zoom` (1 without a channel), else the layer's: an orthographic
+        /// scene's camera zoom.
+        var zoom: Float = 1
     }
 
     /// What the rig asks of the frame about one layer.
@@ -50,12 +56,15 @@ final class SceneCameraLayers {
         var center: SceneTimelineAnimation?
         var up: SceneTimelineAnimation?
         var fovChannel: SceneTimelineAnimation?
+        var zoomChannel: SceneTimelineAnimation?
         /// `visible`, resolved at load: a hidden path isn't queued.
         let visible: Bool
         /// Whether the file gives the path a `visible` key, whose load runs WE's visibility hook.
         let authorsVisible: Bool
         /// The path's fov (+0x33c): 50 until its channel sets it.
         var fov = Float(SceneCameraDefaults.fov)
+        /// The path's zoom: 1 until its channel sets it [I].
+        var zoom: Float = 1
 
         init(_ path: WECameraLayerPath, values: SceneValueContext, layer: String) {
             visible = Self.flag(path.visible, in: values) ?? true
@@ -74,6 +83,7 @@ final class SceneCameraLayers {
             center = animation(path.center, "center")
             up = animation(path.up, "up")
             fovChannel = animation(path.fov, "fov")
+            zoomChannel = animation(path.zoom, "zoom")
         }
 
         static func flag(_ raw: SceneRawValue?, in values: SceneValueContext) -> Bool? {
@@ -86,6 +96,9 @@ final class SceneCameraLayers {
     private final class Layer {
         let object: SceneCameraLayerObject
         let fov: Float
+        let zoom: Float
+        /// The object authors `visible`: only then do its paths play (§5.19).
+        let playsPaths: Bool
         let paths: [Path]
         /// The visible paths with a clock, in file order.
         let queue: [Int]
@@ -105,6 +118,8 @@ final class SceneCameraLayers {
             let raw = object.authored.values[.fov]
             let resolved = raw?.userBindingSource.map { SceneValueResolver.resolve($0, in: values).float }
             fov = resolved ?? Float(object.authored.fov)
+            zoom = Float(object.authored.zoom)
+            playsPaths = object.authored.authorsVisible
             let paths = (object.pathFile?.paths ?? []).map { Path($0, values: values, layer: object.id) }
             self.paths = paths
             queue = paths.indices.filter { paths[$0].visible && paths[$0].clock != nil }
@@ -162,7 +177,7 @@ final class SceneCameraLayers {
     func update(_ input: FrameInput) -> Camera? {
         var active: Layer?
         for layer in layers where input.isVisible(layer.object.id) {
-            play(layer, input: input)
+            if layer.playsPaths { play(layer, input: input) }
             active = layer
         }
         guard let active else { return nil }
@@ -171,7 +186,8 @@ final class SceneCameraLayers {
         let pose = SceneCameraPose(eye: row(3), center: row(3) - row(2), up: row(1))
         let pathFov: Float? = active.current.map { active.paths[$0].fov }
         let fov: Float = pathFov ?? input.fov(active.object.id) ?? active.fov
-        return Camera(id: active.object.id, pose: pose, fov: fov)
+        let zoom = active.current.map { active.paths[$0].zoom } ?? active.zoom
+        return Camera(id: active.object.id, pose: pose, fov: fov, zoom: zoom)
     }
 
     /// The layer's origin and angles its paths wrote back, if they did (tests, scripts).
@@ -219,6 +235,10 @@ final class SceneCameraLayers {
             path.fov = channel.components(on: clock).x
             path.fovChannel = channel
         }
+        if var channel = path.zoomChannel, channel.channels.first.map({ !$0.keyframes.isEmpty }) ?? false {
+            path.zoom = channel.components(on: clock).x
+            path.zoomChannel = channel
+        }
     }
 
     /// The next path to play, WE's queue step (0x1401f2bab…0x1401f2e70).
@@ -252,14 +272,16 @@ final class SceneCameraLayers {
         animation = channels
     }
 
-    /// The layer's world matrix: its parents' times its own transform, the written-back origin
-    /// and angles standing in for the authored ones, scripts and timelines over both.
+    /// The layer's world matrix: its parents' times its own transform. Its paths' written-back
+    /// origin and angles stand in for the authored ones and for what scripts and timelines set
+    /// (WE 2.8.42: a script writing the layer's `origin` every frame has no effect while a path
+    /// plays, §5.20); without a write-back, scripts and timelines move it.
     private func worldMatrix(_ layer: Layer, input: FrameInput) -> simd_float4x4 {
         let id = layer.object.id
-        var own = transforms.nodes[id]?.local ?? .identity
+        var own = input.live(id) ?? transforms.nodes[id]?.local ?? .identity
         if let origin = layer.writtenOrigin { own.origin = origin }
         if let angles = layer.writtenAngles { own.angles = angles }
-        return transforms.world(of: id, local: input.live(id) ?? own, live: input.live)
+        return transforms.world(of: id, local: own, live: input.live)
     }
 
     /// A seeded generator for the random queue: WE's own generator (behind 0x140077e10, a uniform
