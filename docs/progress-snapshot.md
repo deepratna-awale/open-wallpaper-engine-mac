@@ -42,7 +42,7 @@ Legend: ✅ working · 🟡 partial (what's left is named) · ❌ missing. "Unve
 | User-property bindings | ✅ | One generic binding layer on every field (#67, `UserPropertyBindingTableTests`, `SceneBindingResolutionTests`); sweep of every property in #68. Particle overrides change only newly spawned particles, as in WE (#112). |
 | SceneScript | ✅ | §5. |
 | Audio-reactive (effects, scripts, bars) | ✅ | Core Audio process tap (#30), `g_AudioSpectrum*` fed (`AudioSpectrumTests`, `SceneScriptAudioBufferTests`), restart on device change (#96). |
-| Sound objects | ✅ | WE's modes, gain, timers, script control, spatialization; the volume applies at once and only mute, pause and resume fade, as in WE (#181) (`SceneSoundLayersTests`, `SceneSoundSpatializationTests`). Edge pan unverified against WE. |
+| Sound objects | ✅ | WE's modes, gain, timers, script control, spatialization; the volume applies at once and only mute, pause and resume fade, as in WE (#181); OWE's own addition: a starting wallpaper's sound fades in with the same ease (`SceneSoundLayersTests`, `SceneSoundSpatializationTests`). Edge pan unverified against WE. |
 | Bloom / HDR | ✅ | WE's LDR and HDR chains, display HDR (`SceneBloomChainTests`, `SceneHDRChainTests`, `lighting-plan.md` B1–B3). |
 | Camera parallax / shake | ✅ | WE's formulas from the binary (`CameraParallaxLibraryTests`, `SceneCameraMotionTests`). Toggling parallax eases it in or out live, without a rebuild (#106, `LiveParallaxTests`). |
 | Lights, 3D models, puppet warp | ✅ | `lighting-plan.md`, `models-plan.md` (`ModelRenderTests`, `ModelSkinningTests`, `ScenePuppetTests`). Texture channels (mesh flag 0x2) done (#175): `ScenePuppetTextureChannelsTests` on WE 2.8.42's files. |

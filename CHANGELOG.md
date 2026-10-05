@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Android Export in the Scene Editor (Live) starts on Dynamic (Balanced)**, as the library's Export for Android sheet does, instead of Pre-Rendered. Pre-Rendered is one click away.
 - **Screen saver loops are recorded at up to 30 fps and at most 30 s** (they were up to 60 fps and 60 s), so recording is quicker and lighter and the videos are smaller. Existing loops are recorded again.
+- **A scene's music fades in when the wallpaper starts** (loaded, switched to, or at launch), over about 0.75 s with the same ease as pause and resume, instead of starting at full volume. This is Open Wallpaper Engine's own touch; Wallpaper Engine starts at full volume. Loop points don't fade, nothing fades out on a switch or quit, and mute, `startsilent` and the volume work as before.
+
 
 ## [1.0.0-beta.5] - 2026-10-04
 

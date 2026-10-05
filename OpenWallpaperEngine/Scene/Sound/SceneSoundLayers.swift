@@ -11,10 +11,16 @@ import AVFoundation
 ///   paused (or another display plays the wallpaper's sound) and back to 1 when it plays again,
 ///   with WE's ease (`SceneClock.ease`: the gap shrinks by min(6·dt, 1) a frame and closes once
 ///   under 0.01; main loop 0x1401113f8…0x14011144d), so a mute or a pause fades out in about
-///   0.75 s and a resume fades in as long. It starts at 1 (constructor 0x14010dc00) and a loaded
-///   wallpaper takes its value at once (0x140114950): WE doesn't fade a wallpaper in when it
-///   starts, nor out when it stops or is replaced, nor at a loop point or between clips (the
+///   0.75 s and a resume fades in as long. In WE it starts at 1 (constructor 0x14010dc00) and a
+///   loaded wallpaper takes its value at once (0x140114950): WE doesn't fade a wallpaper in when
+///   it starts, nor out when it stops or is replaced, nor at a loop point or between clips (the
 ///   sound update 0x1401f4f50 has no gain ramp of its own).
+/// - **OWE's own start fade-in (not WE's):** when a wallpaper starts (loaded, switched to, the app
+///   launched), the fade starts at 0 as its first layer arrives and eases to 1 with the same ease,
+///   so the music comes in over about 0.75 s instead of at full volume at once. Only the first
+///   layers after the content is released fade in: a rebuild, a script's new layer and a loop
+///   point don't, and nothing fades out on a switch or quit. A muted or paused wallpaper has
+///   nothing to fade in (its target is 0), and `level` (the volume) still applies at once.
 ///
 /// The fade is stepped by each drawn frame's wall step (`advanceFade`), as WE's main loop steps
 /// it. WE's loop keeps running while no wallpaper frame is drawn (it sleeps 250 ms a turn while
@@ -34,6 +40,10 @@ final class SceneSoundLayers {
 
     /// How long without a drawn frame before the timer steps the fade.
     static let frameGap: CFTimeInterval = 0.25
+
+    /// Whether a layer has arrived since the content was last released; the first one fades the
+    /// wallpaper in (OWE's start fade-in).
+    private var hasStarted = false
 
     private let label: String
     private let offline: AVAudioFormat?
@@ -97,6 +107,10 @@ final class SceneSoundLayers {
     /// Adds one layer (a script's `createLayer`, or new content) and loads it.
     func add(_ content: SceneSoundContent) {
         if layers[content.id] != nil { remove(content.id) }
+        if !hasStarted {
+            hasStarted = true
+            fadeInFromSilence()
+        }
         // OpenAL Soft places only mono sources; a stereo file of a spatialized sound plays as it is.
         let spatialFiles = content.sound.spatialization
             ? Set(content.files.indices.filter { content.files[$0].channels == 1 }) : []
@@ -125,6 +139,7 @@ final class SceneSoundLayers {
         order.removeAll()
         fadeTimer?.invalidate()
         fadeTimer = nil
+        hasStarted = false
         mixer?.idle()
     }
 
@@ -180,13 +195,27 @@ final class SceneSoundLayers {
     /// The wallpaper's gain: `level` at once, and the fade toward heard (`audible`) or silent.
     /// A level of 0 counts as silent and keeps the last level, so the sound fades out from where
     /// it was (the app mutes by setting its volume to 0). Before any layer exists (and with no
-    /// fade running) the fade takes its target at once, as WE's loaded wallpaper does.
+    /// fade running) the fade takes its target at once, as WE's loaded wallpaper does; the first
+    /// layer then fades the wallpaper in (`fadeInFromSilence`, OWE's own).
     func setTarget(level newLevel: Float, audible: Bool) {
         let heard = audible && newLevel > 0
         if newLevel > 0 { level = newLevel }
         fadeTarget = heard ? 1 : 0
         if layers.isEmpty && fadeTimer == nil { fade = fadeTarget }
         applyGain()
+        startFadeTimer()
+    }
+
+    /// OWE's start fade-in: a wallpaper about to be heard starts silent and eases in.
+    private func fadeInFromSilence() {
+        guard fadeTarget > 0 else { return }
+        fade = 0
+        applyGain()
+        startFadeTimer()
+    }
+
+    /// Steps the fade while no frame does, until it reaches its target.
+    private func startFadeTimer() {
         guard fade != fadeTarget, fadeTimer == nil else { return }
         lastFadeTime = CACurrentMediaTime()
         let timer = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
