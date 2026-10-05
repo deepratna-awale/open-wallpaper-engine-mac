@@ -5,10 +5,10 @@ import Foundation
 /// `hotkeys` config). Wallpapers, playlists and profiles get their own hotkeys elsewhere (playlists:
 /// `PlaylistShortcutController`).
 ///
-/// Left out: WE's "Stop wallpapers" (`stop`), which this app has no user-set state for (a rule's
-/// Stop action only). Added: Previous Wallpaper, which the app's menus already have.
+/// Added: Previous Wallpaper, which the app's menus already have.
 enum GlobalHotKeyAction: String, CaseIterable, Identifiable, Codable {
     case pause
+    case stop
     case mute
     case nextWallpaper = "nextwallpaper"
     case previousWallpaper = "previouswallpaper"
@@ -39,7 +39,7 @@ enum GlobalHotKeyAction: String, CaseIterable, Identifiable, Codable {
 
     var group: Group {
         switch self {
-        case .pause, .mute, .nextWallpaper, .previousWallpaper: return .playback
+        case .pause, .stop, .mute, .nextWallpaper, .previousWallpaper: return .playback
         case .toggleRecording, .toggleIcons, .screenshot, .startScreensaver: return .general
         case .windowBrowser, .windowSettings, .windowEditor: return .windows
         }
@@ -49,6 +49,7 @@ enum GlobalHotKeyAction: String, CaseIterable, Identifiable, Codable {
     var title: LocalizedStringResource {
         switch self {
         case .pause: return LocalizedStringResource("Pause wallpapers", comment: "Hotkey action: pauses or resumes every wallpaper")
+        case .stop: return LocalizedStringResource("Stop wallpapers", comment: "Hotkey action: stops every wallpaper (unloads them, freeing memory, and shows the desktop picture), or loads them again")
         case .mute: return LocalizedStringResource("Mute wallpapers", comment: "Hotkey action: mutes or unmutes every wallpaper")
         case .nextWallpaper: return LocalizedStringResource("Next wallpaper", comment: "Hotkey action")
         case .previousWallpaper: return LocalizedStringResource("Previous wallpaper", comment: "Hotkey action")
@@ -72,7 +73,7 @@ enum GlobalHotKeyAction: String, CaseIterable, Identifiable, Codable {
         case .windowBrowser: return .wallpaperExplorer
         case .windowSettings: return .settings
         case .windowEditor: return .wallpaperEditor
-        case .toggleRecording, .toggleIcons, .screenshot, .startScreensaver: return nil
+        case .stop, .toggleRecording, .toggleIcons, .screenshot, .startScreensaver: return nil
         }
     }
 }

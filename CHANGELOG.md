@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Stop Wallpapers**, Wallpaper Engine's Stop beside Pause: in the menu bar menu, the Playback menu, a hotkey (Settings › General › Hotkeys › Stop wallpapers, with the usual conflict checks) and the MCP server (`stop`). Every wallpaper is unloaded, freeing its CPU, GPU and memory, and the desktop shows the macOS desktop picture, as an application rule's Stop shows it; the menu bar icon dims and its tooltip says the wallpapers are stopped. Resume (the same items, Resume Wallpapers, Play, or MCP `resume`) loads each display's wallpaper again and unpauses. Your Stop wins over application rules until you resume: rules keep evaluating, and whatever they call for applies on resume. It lasts for the session.
+
 ### Changed
 
 - **Android Export in the Scene Editor (Live) starts on Dynamic (Balanced)**, as the library's Export for Android sheet does, instead of Pre-Rendered. Pre-Rendered is one click away.

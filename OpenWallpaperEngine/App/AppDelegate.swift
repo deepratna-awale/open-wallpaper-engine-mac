@@ -338,6 +338,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         
         // 创建桌面壁纸视窗
         setWallpaperWindows()
+        // Stop Wallpapers closes them, Resume makes them again.
+        observeStoppedState()
 
         // 监听显示器连接/断开
         NotificationCenter.default.addObserver(
@@ -643,6 +645,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     
 // MARK: Set Wallpaper Windows - One per screen
     func setWallpaperWindows() {
+        // Stopped (`stopWallpapers`): no windows until Resume, whatever rebuilds them meanwhile.
+        guard !wallpaperViewModel.isStopped else { return }
         for screen in NSScreen.screens {
             let screenId = WallpaperViewModel.screenId(for: screen)
             guard wallpaperViewModel.isScreenEnabled(screenId) else { continue }
@@ -699,15 +703,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     /// Rebuild wallpaper windows without changing enabled state.
     func rebuildWallpaperWindows() {
-        for (_, window) in wallpaperWindows {
+        Self.closeWallpaperWindows(wallpaperWindows)
+        wallpaperWindows.removeAll()
+        setWallpaperWindows()
+        orderWallpaperWindowsFront()
+    }
+
+    /// Closes wallpaper windows and drops their content, so every wallpaper view goes and with it
+    /// its hold on the running instance (`WallpaperInstanceRegistry`), page or player.
+    static func closeWallpaperWindows(_ windows: [String: NSWindow]) {
+        for (_, window) in windows {
             // `isReleasedWhenClosed` is false, so the hosting view (and the video players inside
             // it) survives a plain close and keeps playing.
             window.contentView = nil
             window.close()
         }
-        wallpaperWindows.removeAll()
-        setWallpaperWindows()
-        orderWallpaperWindowsFront()
     }
 
     @MainActor

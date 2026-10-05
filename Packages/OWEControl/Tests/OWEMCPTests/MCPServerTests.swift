@@ -83,7 +83,7 @@ final class MCPServerTests: XCTestCase {
         let names = tools.compactMap { $0["name"]?.stringValue }
         XCTAssertTrue(Set(names).isSuperset(of: [
             "list_displays", "get_status", "list_wallpapers", "get_wallpaper", "set_wallpaper",
-            "pause", "resume", "toggle_playback", "set_volume", "set_muted", "set_user_property",
+            "pause", "resume", "stop", "toggle_playback", "set_volume", "set_muted", "set_user_property",
             "list_playlists", "play_playlist", "next_wallpaper", "previous_wallpaper",
             "import_wallpaper", "open_editor", "snapshot",
         ]), "the basic tools stay")

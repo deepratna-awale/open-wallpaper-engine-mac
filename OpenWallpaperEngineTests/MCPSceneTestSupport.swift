@@ -183,6 +183,7 @@ final class MCPSceneAppModel: ControlAppModel {
     func playlists() -> [ControlPlaylist] { [] }
     func setWallpaper(_ wallpaper: ControlWallpaper, displays: [String]) throws {}
     func setPaused(_ paused: Bool) {}
+    func stop() {}
     func setVolume(_ volume: Double) {}
     func setMuted(_ muted: Bool) {}
     func setUserProperty(_ key: String, to value: String, of wallpaper: ControlWallpaper) -> [String] { [] }

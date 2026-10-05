@@ -139,11 +139,12 @@ the sentence their summary shows.
 | Tool | Arguments | What it does |
 |---|---|---|
 | `list_displays` | none | The displays: `id`, `name`, `main`, `enabled` (wallpapers shown), `width`/`height` in points, `scale`, `rule` (Settings › Performance › Playback's state: `run`, `mute`, `pause`, `stop`) and the `wallpaper` each shows. |
-| `get_status` | `display?` | Per display, the wallpaper (`id`, `title`, `type`) and whether it is `playing`; `paused`, `volume` (0–1), `muted`, and the active `playlist`. |
+| `get_status` | `display?` | Per display, the wallpaper (`id`, `title`, `type`) and whether it is `playing`; `paused`, `stopped`, `volume` (0–1), `muted`, and the active `playlist`. |
 | `list_wallpapers` | `query?`, `type?` (`scene`, `video`, `web`, `application`), `tags?`, `limit?` (1–500, 50 by default), `offset?` | Searches the library (the Installed tab, without its filters), by title, tags and description. Returns `total` and each wallpaper's `id`, `title`, `type`, `tags`, `folder` and `workshop_id`. |
 | `get_wallpaper` | `id` | The wallpaper's details, the `displays` showing it, and its user `properties`: `key`, `title`, `type`, `value`, `default`, `condition`; sliders add `min`, `max`, `step`, `whole_numbers`; combos add `options` (`label`, `value`) and `free_text`. |
 | `set_wallpaper` | `id`, `display?` | Shows the wallpaper, as applying it in the library does. A web wallpaper must have been trusted in the app once ("Don't ask again for this wallpaper"); the app never skips that question for a client. |
-| `pause`, `resume`, `toggle_playback` | none | Pauses or resumes every wallpaper, as the menu bar does. Returns `paused`. |
+| `pause`, `resume`, `toggle_playback` | none | Pauses or resumes every wallpaper, as the menu bar does; `resume` (and the toggle, when stopped) also ends a stop. Returns `paused` and `stopped`. |
+| `stop` | none | Stop Wallpapers from the menu bar: every wallpaper is unloaded (freeing its CPU, GPU and memory) and the desktop shows the macOS desktop picture until `resume`, which loads each display's wallpaper again. Application rules keep evaluating and apply on resume; nothing they do loads a wallpaper while stopped. Returns `paused` and `stopped`. |
 | `set_volume` | `level` (0–1) | The wallpapers' volume. Returns `volume` and `muted`. |
 | `set_muted` | `muted` | Mute and Unmute from the menu bar; unmuting brings back the volume from before. |
 | `set_user_property` | `id`, `key`, `value` (text; a JSON number or boolean works too) | Changes one user property, as the Details panel does, live on the displays showing the wallpaper (each display's own properties, or the shared ones while "Sync properties across displays" is on). The value must fit the property: a number within a slider's range (whole when it takes whole numbers), `true`/`false` for a checkbox, a combo option's value or label, a colour as `"r g b"` with each 0–1 (or `#rrggbb`, or `[r, g, b]`), text, or an existing absolute path for a file or folder. |
@@ -155,7 +156,7 @@ the sentence their summary shows.
 | `snapshot` | `display?` (the main display by default), `format?` (`image` by default, or `path`) | A PNG of the wallpaper on that display, at most 960 pixels wide, as image content (with `path`: saved to a temporary file whose path is returned). `source` says what it is: `loading_snapshot` (the scene's own frame, which the app captures for its loading screen), `video_frame`, or `preview` (the wallpaper's preview image, when there is no frame yet). |
 
 Playback and volume are app-wide in Open Wallpaper Engine (as in the menu bar), so `pause`,
-`resume`, `toggle_playback`, `set_volume` and `set_muted` take no display.
+`resume`, `stop`, `toggle_playback`, `set_volume` and `set_muted` take no display.
 
 ### Scene and editors
 
