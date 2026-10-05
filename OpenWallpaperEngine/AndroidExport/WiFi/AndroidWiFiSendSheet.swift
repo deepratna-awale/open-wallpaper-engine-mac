@@ -67,7 +67,7 @@ struct AndroidWiFiSendSheet: View {
             selection = selection.intersection(numbers).union(added)
         }
         .onChange(of: selection) { _, _ in
-            if session.isActive { session.update(files: outbox.wifiFiles(selection)) }
+            if hasStarted, session.isActive { session.update(files: outbox.wifiFiles(selection)) }
         }
         .onChange(of: session.progress) { _, progress in
             for (number, entry) in progress {
@@ -336,7 +336,7 @@ struct AndroidWiFiSendSheet: View {
     private var footer: some View {
         HStack {
             Spacer()
-            if session.isActive {
+            if hasStarted, session.isActive {
                 Button("Stop Sending") { session.stop() }
                     .glassButtonStyle()
             } else {

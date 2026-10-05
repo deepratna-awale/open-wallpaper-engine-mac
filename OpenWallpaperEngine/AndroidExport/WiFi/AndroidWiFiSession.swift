@@ -199,6 +199,15 @@ final class AndroidWiFiSession: ObservableObject {
         }
         guard current == generation else { return }
         hostName = name
+        // No answer yet (macOS may be asking whether the app may use the local network): try
+        // again later, and switch to the name once it's granted.
+        if name == nil, localName.timedOut {
+            Task { [weak self] in
+                try? await Task.sleep(for: self?.localName.retryDelay ?? .seconds(5))
+                guard let self, current == self.generation, self.hostName == nil else { return }
+                await self.advertise(address: address, port: port, generation: current)
+            }
+        }
     }
 
     private func withdrawName() {

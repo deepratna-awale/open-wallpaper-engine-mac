@@ -32,8 +32,6 @@ final class AndroidWiFiLocalName {
     nonisolated static let baseName = "owe-fileshare"
     /// Names tried before giving up: `owe-fileshare`, `owe-fileshare-2` … `-9`.
     nonisolated static let attempts = 9
-    /// How long a name may take to be confirmed (mDNS probes for about a second).
-    nonisolated static let timeout: Duration = .seconds(4)
 
     private let registrar: AndroidWiFiNameRegistering
     /// The Mac's LocalHostName as a DNS label (`pyxis`); nil when it has none.
@@ -43,11 +41,21 @@ final class AndroidWiFiLocalName {
     private var pending: (@MainActor (AndroidWiFiNameOutcome) -> Void)?
     /// The name in use, with `.local`.
     private(set) var host: String?
+    /// Whether the last `advertise` got no answer in time.
+    private(set) var timedOut = false
+
+    /// How long a name may take to be confirmed (mDNS probes for about a second).
+    let timeout: Duration
+    /// How long until a name that got no answer is tried again.
+    let retryDelay: Duration
 
     /// `registrar` is DNS-SD by default; `localHostName` the Mac's (`scutil --get LocalHostName`).
     init(registrar: AndroidWiFiNameRegistering? = nil,
-         localHostName: String? = SCDynamicStoreCopyLocalHostName(nil) as String?) {
+         localHostName: String? = SCDynamicStoreCopyLocalHostName(nil) as String?,
+         timeout: Duration = .seconds(4), retryDelay: Duration = .seconds(5)) {
         self.registrar = registrar ?? AndroidWiFiDNSSDRegistrar()
+        self.timeout = timeout
+        self.retryDelay = retryDelay
         macName = localHostName.flatMap(Self.label)
     }
 
@@ -78,6 +86,7 @@ final class AndroidWiFiLocalName {
     /// `onLost` runs if the name is taken later, after the name was dropped.
     func advertise(address: AndroidLANAddress, port: UInt16, onLost: @escaping @MainActor () -> Void) async -> String? {
         withdraw()
+        timedOut = false
         let current = generation
         for attempt in 1...Self.attempts {
             let name = self.name(attempt: attempt)
@@ -96,6 +105,7 @@ final class AndroidWiFiLocalName {
             case .conflict:
                 OWELog.info(.app, "Send over Wi-Fi: \(name).local is taken, trying the next name")
             case .failed(let code):
+                timedOut = Int(code) == kDNSServiceErr_Timeout
                 OWELog.error(.app, "Send over Wi-Fi: advertising \(name).local failed (\(code)); using the IP address")
                 registrar.unregister()
                 return nil
@@ -127,7 +137,7 @@ final class AndroidWiFiLocalName {
             pending = finish
             registrar.register(host: name, address: address, port: port, completion: finish, onLost: onLost)
             Task { @MainActor in
-                try? await Task.sleep(for: Self.timeout)
+                try? await Task.sleep(for: self.timeout)
                 finish(.failed(Int32(kDNSServiceErr_Timeout)))
             }
         }

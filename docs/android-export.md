@@ -91,6 +91,8 @@ If the page doesn't open on the device:
 - The sheet also shows the link with the Mac's IP address. **Use IP address in QR code** puts it
   in the QR code, for devices that can't look up `.local` names.
 - macOS may ask whether Open Wallpaper Engine may accept incoming network connections. Allow it.
+- macOS may ask whether Open Wallpaper Engine may find devices on local networks. Allow it: until
+  then the link and the QR code use the IP address, and they switch to the name once it's allowed.
 - Some networks (guest networks, many public ones) keep devices from reaching each other
   ("client isolation" or "AP isolation"). Use a network that doesn't, or copy the files.
 - If a download stops, keep the window open and tap **Download** again: it resumes.

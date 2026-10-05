@@ -228,6 +228,21 @@ final class AndroidWiFiSendTests: XCTestCase {
         XCTAssertNil(session.url)
     }
 
+    func testANameWithNoAnswerIsTriedAgain() async throws {
+        let registrar = FakeNameRegistrar()
+        registrar.unanswered = 1
+        let session = AndroidWiFiSession(files: try files(), addresses: { [Self.loopback] },
+                                         localName: AndroidWiFiLocalName(registrar: registrar, localHostName: "Pyxis",
+                                                                         timeout: .milliseconds(200), retryDelay: .milliseconds(300)))
+        await session.start()
+        defer { session.stop() }
+        XCTAssertEqual(session.state, .serving)
+        XCTAssertNil(session.hostName, "the IP address meanwhile")
+        XCTAssertEqual(session.url, session.ipURL)
+        try await waitUntil { session.hostName == "owe-fileshare.pyxis.local" }
+        XCTAssertEqual(registrar.attempts, ["owe-fileshare.pyxis", "owe-fileshare.pyxis"])
+    }
+
     func testWithoutANameTheShareUsesItsIPAddress() async throws {
         let registrar = FakeNameRegistrar()
         registrar.taken = Set((1...AndroidWiFiLocalName.attempts).map { AndroidWiFiLocalName.name(attempt: $0, macName: "pyxis") })
@@ -514,6 +529,8 @@ final class AndroidWiFiSendTests: XCTestCase {
 @MainActor
 private final class FakeNameRegistrar: AndroidWiFiNameRegistering {
     var taken: Set<String> = []
+    /// Registrations that get no answer (macOS asking about the local network).
+    var unanswered = 0
     private(set) var attempts: [String] = []
     private(set) var active: String?
     private(set) var address: AndroidLANAddress?
@@ -524,6 +541,10 @@ private final class FakeNameRegistrar: AndroidWiFiNameRegistering {
                   completion: @escaping @MainActor (AndroidWiFiNameOutcome) -> Void,
                   onLost: @escaping @MainActor () -> Void) {
         attempts.append(host)
+        guard unanswered == 0 else {
+            unanswered -= 1
+            return
+        }
         guard !taken.contains(host) else { return completion(.conflict) }
         active = host
         self.address = address
