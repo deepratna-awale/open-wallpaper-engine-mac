@@ -385,6 +385,11 @@ struct GlobalSettings: Codable, Equatable {
     /// The folder screenshots are saved in; empty for Pictures › Open Wallpaper Engine.
     var screenshotFolder = ""
 
+    // MARK: Transitions
+    /// WE's "Wallpaper browser transition" (`browsetransition`): the transition a wallpaper chosen
+    /// in the library shows. None until the user picks one, as in WE.
+    var browseTransition = WallpaperTransitionSettings.unset
+
     // MARK: Displays
     /// "Sync properties across displays": one set of user properties for a wallpaper on every
     /// display. Off is WE's default: its "Wallpaper per display" layout keeps each display's
@@ -447,6 +452,7 @@ struct GlobalSettings: Codable, Equatable {
         case screenshotResolution, screenshotFolder
         case audioRecordingThreshold
         case theming
+        case browseTransition = "browsetransition"
     }
 }
 
@@ -521,6 +527,7 @@ extension GlobalSettings {
         read(.screenshotFolder, &screenshotFolder)
         read(.audioRecordingThreshold, &audioRecordingThreshold)
         read(.theming, &theming)
+        read(.browseTransition, &browseTransition)
         audioRecordingThreshold = min(max(audioRecordingThreshold, 0), 10)
     }
 }

@@ -95,7 +95,7 @@ final class WallpaperScreenshotService {
         throw Failure.nothingToCapture
     }
 
-    private static func chromiumPageView(in view: NSView) -> ChromiumPageView? {
+    static func chromiumPageView(in view: NSView) -> ChromiumPageView? {
         if let pageView = view as? ChromiumPageView { return pageView }
         for subview in view.subviews {
             if let pageView = chromiumPageView(in: subview) { return pageView }
@@ -113,7 +113,7 @@ final class WallpaperScreenshotService {
     }
 
     /// The frame `player` shows now, at the video's own size.
-    private static func currentFrame(of player: AVPlayer) async throws -> CGImage {
+    static func currentFrame(of player: AVPlayer) async throws -> CGImage {
         guard let asset = player.currentItem?.asset else { throw Failure.nothingToCapture }
         let generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
@@ -122,7 +122,7 @@ final class WallpaperScreenshotService {
         return try await generator.image(at: player.currentTime()).image
     }
 
-    private static func webView(in view: NSView) -> WKWebView? {
+    static func webView(in view: NSView) -> WKWebView? {
         if let webView = view as? WKWebView { return webView }
         for subview in view.subviews {
             if let webView = webView(in: subview) { return webView }
@@ -131,7 +131,7 @@ final class WallpaperScreenshotService {
     }
 
     /// The page as it shows now, `pixelWidth` pixels wide.
-    private static func snapshot(of webView: WKWebView, pixelWidth: Int, backingScale: CGFloat) async throws -> CGImage {
+    static func snapshot(of webView: WKWebView, pixelWidth: Int, backingScale: CGFloat) async throws -> CGImage {
         let configuration = WKSnapshotConfiguration()
         configuration.afterScreenUpdates = false
         configuration.snapshotWidth = NSNumber(value: Double(pixelWidth) / Double(max(backingScale, 1)))

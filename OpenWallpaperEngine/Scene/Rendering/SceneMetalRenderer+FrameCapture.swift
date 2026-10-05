@@ -58,6 +58,45 @@ extension SceneMetalRenderer {
         return started
     }
 
+    /// A transition's outgoing picture: the scene's current moment drawn again, unstepped, at
+    /// `pixelSize` and 1 pixel per point (as `captureScreenshot`), into a texture that stays on the
+    /// GPU, in 8-bit BGRA without sRGB decoding, so it samples as the display showed it. `completion`
+    /// gets it once the GPU is done (nil if it failed), on a Metal thread. False (and no completion)
+    /// when there is no content or the copy can't start. Render thread.
+    func captureTransitionFrame(pixelSize: SIMD2<Int>, restoring viewports: [SceneViewport],
+                                completion: @escaping @Sendable (MTLTexture?) -> Void) -> Bool {
+        guard hasContent, pixelSize.x > 0, pixelSize.y > 0,
+              pixelFormat == .bgra8Unorm || pixelFormat == .bgra8Unorm_srgb else { return false }
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: pixelFormat, width: pixelSize.x,
+                                                                  height: pixelSize.y, mipmapped: false)
+        descriptor.usage = [.renderTarget, .shaderRead, .pixelFormatView]
+        descriptor.storageMode = .private
+        guard let target = device.makeTexture(descriptor: descriptor),
+              let commandBuffer = commandQueue.makeCommandBuffer() else {
+            OWELog.error(.scene, "Transition: can't allocate a \(pixelSize.x)×\(pixelSize.y) capture")
+            return false
+        }
+        commandBuffer.label = "Transition capture"
+        let size = SIMD2<Float>(Float(pixelSize.x), Float(pixelSize.y))
+        let frameRate = viewports.map(\.frameRateLimit).max() ?? 60
+        redrawShared([SceneViewport(drawableSize: size, pointSize: size, cursor: nil, frameRateLimit: frameRate)])
+        let encoded = encodeSharedFrame(into: target, pixelsPerPoint: 1, commandBuffer: commandBuffer)
+        if viewports.isEmpty { releaseSharedFrame() } else { redrawShared(viewports) }
+        guard encoded else { return false }
+        // The bytes as the display shows them: an sRGB target is read without decoding.
+        let picture = target.pixelFormat == .bgra8Unorm ? target : target.makeTextureView(pixelFormat: .bgra8Unorm)
+        commandBuffer.addCompletedHandler { finished in
+            guard finished.status == .completed else {
+                OWELog.error(.scene, "Transition: the capture failed on the GPU: \(finished.error.map { "\($0)" } ?? "unknown")")
+                completion(nil)
+                return
+            }
+            completion(picture)
+        }
+        commandBuffer.commit()
+        return true
+    }
+
     /// An sRGB image over `buffer`'s BGRA pixels (alpha ignored); the image keeps the buffer alive.
     private static func image(wrapping buffer: MTLBuffer, size: SIMD2<Int>, bytesPerRow: Int) -> CGImage? {
         let retained = Unmanaged.passRetained(buffer as AnyObject)
