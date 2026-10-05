@@ -41,11 +41,20 @@ final class ChromiumBrowserPage: NSObject, WebWallpaperPage, ChromiumBrowserClie
     /// Recreations after a crash in a row; a page that keeps crashing stops being retried.
     private var crashes = 0
     static let maxCrashes = 3
+    /// Screenshots waiting for their frame, by token.
+    private var captures: [Int: (width: Int, height: Int, resized: Bool, completion: (CGImage?) -> Void)] = [:]
+    private var nextCapture = 1
 
     // `lock` guards what the XPC queue reads.
     private let lock = NSLock()
     private var servedContent: Content?
     private var lastFrame: ChromiumFrame?
+    /// The screenshot frame being waited for.
+    private var pendingCapture: PendingCapture?
+    /// The image of the screenshot frame that came, by token.
+    private var capturedImages: [Int: CGImage] = [:]
+    /// A screenshot's size, whose frames still in flight after it are dropped.
+    private var staleSize: (width: Int, height: Int)?
 
     init(host: ChromiumBrowserHost = .shared, startScripts: [String], frameRate: Int) {
         self.host = host
@@ -151,15 +160,90 @@ final class ChromiumBrowserPage: NSObject, WebWallpaperPage, ChromiumBrowserClie
     var hostWindow: NSWindow? { view?.window }
 
     func snapshot(completion: @escaping (CGImage?) -> Void) {
-        guard let frame = lock.withLock({ lastFrame }),
-              let image = CIImage(mtlTexture: frame.texture, options: [.colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!])
-        else {
-            completion(nil)
+        completion(lock.withLock { lastFrame }.flatMap(Self.image))
+    }
+
+    /// A screenshot `pixelWidth` pixels wide (main thread, as `completion`): the browser is drawn
+    /// at the device scale that makes it that wide, a frame of that size (`captureSettle`) is read
+    /// on XPC's queue before the helper reuses its surface, and the page gets its own size back.
+    /// A hidden (or paused) page, or one already that wide, gives its last frame. Without a frame
+    /// of that size within `timeout`, the last frame at the page's own size; nil without any.
+    func capture(pixelWidth: Int, timeout: TimeInterval = 5, completion: @escaping (CGImage?) -> Void) {
+        let last = lock.withLock { lastFrame }
+        guard let browserId, let size, !hidden, pixelWidth > 0 else {
+            completion(last.flatMap(Self.image))
             return
         }
+        let scale = Double(pixelWidth) / Double(size.width)
+        let height = Int((Double(size.height) * scale).rounded())
+        if let last, Self.frame(last, matches: (pixelWidth, height)) {
+            completion(Self.image(of: last))
+            return
+        }
+        let token = nextCapture
+        nextCapture += 1
+        // Another size than the page's own: its frames are the screenshot's, not the page's.
+        let resized = abs(Int((Double(size.width) * size.scale).rounded()) - pixelWidth) > 1
+        captures[token] = (pixelWidth, height, resized, completion)
+        lock.withLock { pendingCapture = PendingCapture(token: token, width: pixelWidth, height: height, resized: resized) }
+        host.resize(browserId, width: size.width, height: size.height, scale: scale)
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeout) { [weak self] in
+            self?.finishCapture(token, timedOut: true)
+        }
+    }
+
+    private func finishCapture(_ token: Int, timedOut: Bool) {
+        guard let capture = captures.removeValue(forKey: token) else {
+            _ = lock.withLock { capturedImages.removeValue(forKey: token) }
+            return
+        }
+        let (image, last): (CGImage?, ChromiumFrame?) = lock.withLock {
+            if pendingCapture?.token == token { pendingCapture = nil }
+            // Frames of the screenshot's size still on their way aren't the page's.
+            if capture.resized { staleSize = (capture.width, capture.height) }
+            return (capturedImages.removeValue(forKey: token), lastFrame)
+        }
+        if let browserId, let size {
+            host.resize(browserId, width: size.width, height: size.height, scale: size.scale)
+        }
+        if let image {
+            capture.completion(image)
+            return
+        }
+        if timedOut {
+            OWELog.info(.web, "Chromium drew no \(capture.width)×\(capture.height) frame in time; the screenshot is the page at its own size")
+        }
+        capture.completion(last.flatMap(Self.image))
+    }
+
+    private struct PendingCapture {
+        let token: Int
+        let width: Int
+        let height: Int
+        let resized: Bool
+        /// When the first frame of that size came.
+        var firstAt: CFAbsoluteTime?
+    }
+
+    /// The first frames after a resize can be half drawn (a canvas redrawn on the next animation
+    /// frame, tiles still rastering): the screenshot is the newest frame of its size this long
+    /// after the first, or that first one when the page stops painting.
+    static let captureSettle: TimeInterval = 0.5
+
+    /// Chromium rounds a scaled size its own way; a pixel either side is the same size.
+    static func frame(_ frame: ChromiumFrame, matches size: (width: Int, height: Int)) -> Bool {
+        abs(frame.texture.width - size.width) <= 1 && abs(frame.texture.height - size.height) <= 1
+    }
+
+    private static let imageContext = CIContext()
+
+    /// The frame as an upright sRGB image; reads the surface now, while the helper doesn't reuse it.
+    static func image(of frame: ChromiumFrame) -> CGImage? {
+        guard let image = CIImage(mtlTexture: frame.texture, options: [.colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!])
+        else { return nil }
         // Metal's origin is top-left, Core Image's bottom-left.
         let upright = image.transformed(by: CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -image.extent.height))
-        completion(CIContext().createCGImage(upright, from: upright.extent))
+        return imageContext.createCGImage(upright, from: upright.extent)
     }
 
     func sendMouse(_ event: ChromiumMouseEvent) {
@@ -170,8 +254,39 @@ final class ChromiumBrowserPage: NSObject, WebWallpaperPage, ChromiumBrowserClie
     // MARK: ChromiumBrowserClient
 
     func chromiumFrame(_ frame: ChromiumFrame) {
-        lock.withLock { lastFrame = frame }
-        onFrame?(frame)
+        enum Use { case show, capture(Int, last: Bool), drop }
+        let use: Use = lock.withLock {
+            if var pending = pendingCapture, Self.frame(frame, matches: (pending.width, pending.height)) {
+                let now = CFAbsoluteTimeGetCurrent()
+                guard let first = pending.firstAt else {
+                    pending.firstAt = now
+                    pendingCapture = pending
+                    return .capture(pending.token, last: false)
+                }
+                guard now - first >= Self.captureSettle else { return .drop }
+                pendingCapture = nil
+                if pending.resized { staleSize = (pending.width, pending.height) }
+                return .capture(pending.token, last: true)
+            }
+            if let stale = staleSize {
+                if Self.frame(frame, matches: stale) { return .drop }
+                staleSize = nil
+            }
+            lastFrame = frame
+            return .show
+        }
+        switch use {
+        case .show:
+            onFrame?(frame)
+        case .capture(let token, let last):
+            let image = Self.image(of: frame)
+            lock.withLock { if let image { capturedImages[token] = image } }
+            DispatchQueue.main.asyncAfter(deadline: .now() + (last ? 0 : 2 * Self.captureSettle)) { [weak self] in
+                self?.finishCapture(token, timedOut: false)
+            }
+        case .drop:
+            break
+        }
     }
 
     func chromiumMessage(name: String, body: String) {
