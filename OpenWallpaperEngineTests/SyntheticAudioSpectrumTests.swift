@@ -72,11 +72,11 @@ final class SyntheticAudioSpectrumTests: XCTestCase {
             ScreenSaverLoopLength.recordingPeriods([timeline], readsAudio: false))?.seconds, 3)
         XCTAssertEqual(ScreenSaverLoopLength.periodicLoop(
             ScreenSaverLoopLength.recordingPeriods([], readsAudio: true))?.seconds, 8)
-        // Still capped: 7 s × 8 s = 56 s fits, 9 s × 8 s = 72 s doesn't.
+        // Still capped at 30 s: 3 s × 8 s = 24 s fits, 5 s × 8 s = 40 s doesn't.
         XCTAssertEqual(ScreenSaverLoopLength.periodicLoop(ScreenSaverLoopLength.recordingPeriods(
-            [ScreenSaverLoopLength.Period(numerator: 7, denominator: 1)!], readsAudio: true))?.seconds, 56)
+            [ScreenSaverLoopLength.Period(numerator: 3, denominator: 1)!], readsAudio: true))?.seconds, 24)
         XCTAssertNil(ScreenSaverLoopLength.periodicLoop(ScreenSaverLoopLength.recordingPeriods(
-            [ScreenSaverLoopLength.Period(numerator: 9, denominator: 1)!], readsAudio: true)))
+            [ScreenSaverLoopLength.Period(numerator: 5, denominator: 1)!], readsAudio: true)))
     }
 
     func testSeamPrefersBarBoundary() {

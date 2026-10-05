@@ -39,18 +39,24 @@ final class ScreenSaverLoopTests: XCTestCase {
     }
 
     func testPeriodicLoopTakesAFrameRateThatCutsItExactly() throws {
-        // 1/24 s × 25 frames isn't a whole number of frames at 30 or 60 fps.
+        // 1/24 s × 25 frames isn't a whole number of frames at 30 fps.
         let period = try XCTUnwrap(Period(numerator: 25, denominator: 24))
         XCTAssertEqual(ScreenSaverLoopLength.periodicLoop([period]), ScreenSaverLoopLength.Loop(frames: 25, frameRate: 24))
     }
 
-    func testPeriodicLoopIsCappedAtAboutAMinute() throws {
+    func testPeriodicLoopIsCappedAtThirtySecondsAndThirtyFPS() throws {
+        XCTAssertEqual(ScreenSaverLoopLength.maximumSeconds, 30)
+        XCTAssertEqual(ScreenSaverSeamFinder.maximumSeconds, 30)
+        XCTAssertTrue(ScreenSaverLoopLength.frameRates.allSatisfy { $0 <= 30 })
+        let five = try XCTUnwrap(Period(numerator: 5, denominator: 1))
         let seven = try XCTUnwrap(Period(numerator: 7, denominator: 1))
-        let eleven = try XCTUnwrap(Period(numerator: 11, denominator: 1))
-        XCTAssertNil(ScreenSaverLoopLength.periodicLoop([seven, eleven]), "77 s is over the cap")
-        XCTAssertEqual(ScreenSaverLoopLength.periodicLoop([seven, eleven], maximumSeconds: 80)?.seconds, 77)
-        let sixty = try XCTUnwrap(Period(numerator: 60, denominator: 1))
-        XCTAssertEqual(ScreenSaverLoopLength.periodicLoop([sixty])?.frames, 1800)
+        XCTAssertNil(ScreenSaverLoopLength.periodicLoop([five, seven]), "35 s is over the cap")
+        XCTAssertEqual(ScreenSaverLoopLength.periodicLoop([five, seven], maximumSeconds: 40)?.seconds, 35)
+        let thirty = try XCTUnwrap(Period(numerator: 30, denominator: 1))
+        XCTAssertEqual(ScreenSaverLoopLength.periodicLoop([thirty]), ScreenSaverLoopLength.Loop(frames: 900, frameRate: 30))
+        // 1/60 s × 61 frames needs 60 fps to cut exactly: no loop, so the seam is searched at 30.
+        let sixtieths = try XCTUnwrap(Period(numerator: 61, denominator: 60))
+        XCTAssertNil(ScreenSaverLoopLength.periodicLoop([sixtieths]))
     }
 
     // MARK: Seam

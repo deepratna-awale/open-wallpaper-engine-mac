@@ -244,6 +244,7 @@ final class AndroidExportEditorTests: XCTestCase {
 
         session.setLayerVisible(false, objectID: 2)
         session.setValues(["speed": "0.9"])
+        model.chooseMode(.preRendered)
         let item = model.item
         XCTAssertEqual(item.properties["speed"], "0.9", "the pre-render renders the mode's values")
         XCTAssertEqual(item.properties[sceneObjectVisibilityKey(objectID: 2)], "false")
@@ -259,9 +260,11 @@ final class AndroidExportEditorTests: XCTestCase {
 
     // MARK: Export item
 
-    func testPreRenderedIsTheDefaultAndCarriesTheFraming() throws {
+    func testDynamicIsTheDefaultAndPreRenderedCarriesTheFraming() throws {
         let model = try model()
-        XCTAssertEqual(model.options.mode, .preRendered, "the tab exports the video loop by default")
+        XCTAssertEqual(model.options.mode, .balanced, "the tab exports the live scene (Balanced) by default, as the sheet does")
+        XCTAssertNil(model.item.framing)
+        model.chooseMode(.preRendered)
         XCTAssertEqual(model.options.frameRate, 30)
         XCTAssertEqual(model.seconds, 30)
         model.zoom = 2
@@ -432,6 +435,7 @@ final class AndroidExportEditorTests: XCTestCase {
                                              defaults: defaults)
         model.choose(nil)
         model.setCustom(width: "320", height: "568")
+        model.chooseMode(.preRendered)
         session.setValues(["showtitle": "false"])
 
         func blue(hidden: Bool) async throws -> Double {

@@ -11,9 +11,10 @@ import Foundation
 /// timeline) has no known period, and the loop is found by looking instead (`ScreenSaverSeamFinder`).
 enum ScreenSaverLoopLength {
     /// The longest periodic loop rendered.
-    static let maximumSeconds = 60.0
-    /// The video frame rates tried, preferred first.
-    static let frameRates = [30, 60, 24, 25]
+    static let maximumSeconds = 30.0
+    /// The video frame rates tried, preferred first: never above 30 fps, which keeps the loop's
+    /// render, encode and file small.
+    static let frameRates = [30, 24, 25]
 
     /// A non-negative fraction, reduced.
     struct Period: Equatable, Hashable {

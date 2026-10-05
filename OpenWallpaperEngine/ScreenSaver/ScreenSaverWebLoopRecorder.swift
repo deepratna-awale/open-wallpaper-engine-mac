@@ -17,7 +17,7 @@ import WebKit
 /// longer, the video still shows 30 frames per page second. The time each frame took is logged.
 ///
 /// Pages aren't periodic, so the loop is always found by `ScreenSaverSeamFinder.searchActiveSeam`
-/// (the best seam pair in the page's active segment, at least 5 s and at most 60 s apart, a cut or
+/// (the best seam pair in the page's active segment, at least 5 s and at most 30 s apart, a cut or
 /// a crossfade of up to 1 s that must score `minimumSeamScore`); a page that doesn't loop smoothly,
 /// or stops moving or goes black too soon, is `doesNotLoop`. A page can't be replayed
 /// identically (randomness, network), so the frames are kept in a near-lossless intermediate

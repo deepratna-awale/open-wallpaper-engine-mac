@@ -8,7 +8,7 @@ import Foundation
 /// `crossfadeFrames` frames are blended into frames 0… so the seam fades instead of jumping.
 enum ScreenSaverSeamFinder {
     static let minimumSeconds = 5.0
-    static let maximumSeconds = 60.0
+    static let maximumSeconds = 30.0
     /// A difference (`ScreenSaverFrameSignature.difference`, 0…1) at or below this is invisible.
     static let invisibleDifference = 0.012
     static let crossfadeSeconds = 0.25
