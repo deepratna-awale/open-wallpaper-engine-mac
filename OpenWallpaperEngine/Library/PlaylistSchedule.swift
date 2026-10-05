@@ -61,8 +61,12 @@ enum PlaylistSchedule {
     /// The fraction of the day `date` is at, by the wall clock of `calendar`'s time zone.
     static func dayFraction(of date: Date, calendar: Calendar) -> Double {
         let parts = calendar.dateComponents([.hour, .minute, .second, .nanosecond], from: date)
-        let seconds = Double((parts.hour ?? 0) * 3600 + (parts.minute ?? 0) * 60 + (parts.second ?? 0))
-            + Double(parts.nanosecond ?? 0) / 1_000_000_000
+        let hours: Int = parts.hour ?? 0
+        let minutes: Int = parts.minute ?? 0
+        let wholeSeconds: Int = parts.second ?? 0
+        let nanoseconds: Int = parts.nanosecond ?? 0
+        let clock: Int = hours * 3600 + minutes * 60 + wholeSeconds
+        let seconds = Double(clock) + Double(nanoseconds) / 1_000_000_000
         return min(max(seconds / 86_400, 0), 1)
     }
 
