@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Android Export in the Scene Editor (Live) starts on Dynamic (Balanced)**, as the library's Export for Android sheet does, instead of Pre-Rendered. Pre-Rendered is one click away.
+
 ## [1.0.0-beta.5] - 2026-10-04
 
 ### Added

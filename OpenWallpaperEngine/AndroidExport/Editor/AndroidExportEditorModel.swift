@@ -65,8 +65,9 @@ final class AndroidExportEditorModel: ObservableObject {
     /// wallpaper, as the iPhone & iPad Export keeps it).
     @Published private(set) var parallaxPosition: SIMD2<Double>
     @Published private(set) var followsPointer: Bool?
-    /// The package's options: Pre-Rendered (the default here) or Dynamic, and their settings.
-    @Published var options = AndroidExportOptions(mode: .preRendered)
+    /// The package's options: Dynamic (Balanced, the default, as in the library's sheet) or
+    /// Pre-Rendered, and their settings.
+    @Published var options = AndroidExportOptions(mode: .balanced)
     /// The loop's length in seconds.
     @Published var seconds = AndroidExportOptions.videoSeconds
     @Published private(set) var queue: AndroidExportQueue?
@@ -96,7 +97,7 @@ final class AndroidExportEditorModel: ObservableObject {
         identity = WallpaperSettingsIdentity.resolve(session.wallpaper, defaults: defaults)
         parallaxPosition = LivePhotoParallax.position(for: identity, defaults: defaults)
         resolution = .of(tags: session.wallpaper.project.tags ?? [], sceneSizes: [sceneSize])
-        options = AndroidExportOptions(mode: .preRendered, resolution: resolution)
+        options = AndroidExportOptions(mode: .balanced, resolution: resolution)
     }
 
     // MARK: Screen
