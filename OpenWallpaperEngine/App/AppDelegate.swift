@@ -390,7 +390,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         
         safeRestart.showPendingNotice()
-        updater.willRelaunch = { [unowned self] in self.captureUpdateRelaunchState().save(to: .app) }
+        updater.willRelaunch = { [unowned self] in
+            self.captureUpdateRelaunchState().save(to: .app)
+            // Sparkle quits next; a sheet would stop that.
+            AppTermination.shared.armDeadline()
+        }
+        // Logout, shutdown and scripted quits go through the same bounded quit.
+        AppTermination.shared.installQuitHandlers()
         updater.start()
         displayPlaybackMonitor.start(settings: globalSettingsViewModel.$settings)
         videoMemorySettingCancellable = globalSettingsViewModel.$settings

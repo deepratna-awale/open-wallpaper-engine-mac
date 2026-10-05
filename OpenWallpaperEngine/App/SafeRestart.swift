@@ -74,7 +74,7 @@ final class SafeRestart: ObservableObject {
         // sentinel is cleared, instead of dying and having the wallpapers held back next launch.
         signal(SIGTERM, SIG_IGN)
         let source = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
-        source.setEventHandler { NSApplication.shared.terminate(nil) }
+        source.setEventHandler { AppTermination.shared.quit() }
         source.resume()
         terminationSignal = source
     }

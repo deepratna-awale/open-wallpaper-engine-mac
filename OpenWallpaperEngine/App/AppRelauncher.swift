@@ -32,7 +32,7 @@ enum AppRelauncher {
                     OWELog.error(.settings, "Can't relaunch Open Wallpaper Engine: \(error)")
                     return
                 }
-                NSApp.terminate(nil)
+                AppTermination.shared.quit()
             }
         }
     }

@@ -48,7 +48,7 @@ extension AppDelegate {
             item(.hideOthers, #selector(NSApplication.hideOtherApplications(_:))),
             plain("Show All", #selector(NSApplication.unhideAllApplications(_:))),
             .separator(),
-            item(.quit, #selector(NSApplication.terminate(_:))),
+            item(.quit, #selector(AppTermination.quit(_:)), target: AppTermination.shared),
         ])
 
         let fileMenu = submenu(String(localized: "File"), [
