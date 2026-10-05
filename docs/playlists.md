@@ -75,6 +75,8 @@ How they play (`App/Transitions/`):
   texture that stays on the GPU, an AVKit video's current frame, a page's snapshot or a Chromium
   page's frame. The change then applies, the outgoing wallpaper stops as it would without a
   transition, and the incoming one runs live underneath.
+- Its clock starts when the change asks for it, as WE's transition window's does: progress stays 0
+  for WE's 0.1 s lead-in (the capture and setup included), then runs over the time.
 - Each frame the transition draws the outgoing picture with its coverage (premultiplied) once per
   changing wallpaper into an IOSurface, which an overlay layer in each display's window shows; the
   compositor lays it over the incoming wallpaper. A clone's and a stretch's displays show the one

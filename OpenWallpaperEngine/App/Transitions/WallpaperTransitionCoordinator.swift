@@ -1,5 +1,6 @@
 import AppKit
 import Metal
+import QuartzCore
 
 /// Plays WE's transitions on the wallpaper windows: a playlist's between its wallpapers, and
 /// Settings' "Transition" for a wallpaper chosen in the library (WE's "Wallpaper browser
@@ -66,13 +67,15 @@ final class WallpaperTransitionCoordinator: WallpaperTransitionPerforming {
         }
         let id = UUID()
         pending = Pending(id: id, apply: apply)
+        // WE's transition clock starts when the change asks for it, its setup included.
+        let requested = CACurrentMediaTime()
         Task { @MainActor [weak self] in
-            await self?.start(id: id, kind: kind, duration: duration, geometries: geometries,
+            await self?.start(id: id, kind: kind, duration: duration, requested: requested, geometries: geometries,
                               windows: windows, renderer: renderer, queue: queue)
         }
     }
 
-    private func start(id: UUID, kind: WallpaperTransitionKind, duration: TimeInterval,
+    private func start(id: UUID, kind: WallpaperTransitionKind, duration: TimeInterval, requested: CFTimeInterval,
                        geometries: [WallpaperTransitionGeometry], windows: [String: NSWindow],
                        renderer: WallpaperTransitionRenderer, queue: MTLCommandQueue) async {
         // The pipeline compiles off the main thread while the pictures are captured.
@@ -115,7 +118,8 @@ final class WallpaperTransitionCoordinator: WallpaperTransitionPerforming {
             do {
                 let player = try WallpaperTransitionPlayer(
                     kind: kind, duration: duration, target: geometry.target, outgoing: texture,
-                    pixelSize: geometry.pixelSize, renderer: renderer, queue: queue, overlays: overlays)
+                    pixelSize: geometry.pixelSize, renderer: renderer, queue: queue, startTime: requested,
+                    overlays: overlays)
                 try player.showFirstFrame()
                 started.append(player)
             } catch {

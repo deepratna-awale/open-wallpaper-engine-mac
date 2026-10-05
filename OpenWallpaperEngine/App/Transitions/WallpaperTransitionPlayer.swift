@@ -25,11 +25,16 @@ final class WallpaperTransitionPlayer {
     private var nextSurface = 0
     private var displayLink: CADisplayLink?
     private var ticker: WallpaperTransitionTicker?
-    private var startTime: CFTimeInterval?
+    /// When the change asked for it (`CACurrentMediaTime`), the clock its progress runs on.
+    private let startTime: CFTimeInterval
     private var frameInFlight = false
     private var onFinish: ((WallpaperTransitionPlayer) -> Void)?
 
     static let surfaceCount = 3
+    /// WE's lead-in (wallpaper64's transition window): progress stays 0 for this long after the
+    /// transition was asked for, the window's and the shader's setup included, then runs over the
+    /// duration: `max(0, elapsed - 0.1) / duration`.
+    static let leadIn: CFTimeInterval = 0.1
 
     /// Errors setting one up: the change then applies without it.
     enum Failure: Error, CustomStringConvertible {
@@ -48,9 +53,11 @@ final class WallpaperTransitionPlayer {
 
     init(kind: WallpaperTransitionKind, duration: TimeInterval, target: String, outgoing: MTLTexture,
          pixelSize: SIMD2<Int>, renderer: WallpaperTransitionRenderer, queue: MTLCommandQueue,
-         seed: WallpaperTransitionSeed = .random(), overlays: [WallpaperTransitionOverlayView]) throws {
+         seed: WallpaperTransitionSeed = .random(), startTime: CFTimeInterval = CACurrentMediaTime(),
+         overlays: [WallpaperTransitionOverlayView]) throws {
         self.kind = kind
         self.duration = max(duration, 0.001)
+        self.startTime = startTime
         self.target = target
         self.renderer = renderer
         self.queue = queue
@@ -85,17 +92,14 @@ final class WallpaperTransitionPlayer {
         displayLink = link
     }
 
-    /// The progress `time` after it started.
+    /// The progress at `time` (`CACurrentMediaTime`), after WE's lead-in.
     func progress(at time: CFTimeInterval) -> Float {
-        guard let startTime else { return 0 }
-        return Float(min(max((time - startTime) / duration, 0), 1))
+        Float(min(max((time - startTime - Self.leadIn) / duration, 0), 1))
     }
 
     private func tick(_ link: CADisplayLink) {
         guard !isFinished else { return }
-        let now = link.timestamp
-        if startTime == nil { startTime = now }
-        let progress = progress(at: now)
+        let progress = progress(at: link.timestamp)
         guard progress < 1 else { return stop() }
         // A frame still on the GPU: this refresh keeps showing the last one.
         guard !frameInFlight else { return }

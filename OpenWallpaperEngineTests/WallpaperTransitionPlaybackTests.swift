@@ -158,8 +158,13 @@ final class WallpaperTransitionPlaybackTests: XCTestCase {
         descriptor.usage = [.shaderRead]
         let texture = try XCTUnwrap(device.makeTexture(descriptor: descriptor))
         let player = try WallpaperTransitionPlayer(kind: .fade, duration: 2, target: "1", outgoing: texture,
-                                                   pixelSize: SIMD2(8, 8), renderer: renderer, queue: queue, overlays: [])
+                                                   pixelSize: SIMD2(8, 8), renderer: renderer, queue: queue,
+                                                   startTime: 100, overlays: [])
         XCTAssertEqual(player.progress(at: 100), 0, "nothing has played yet")
+        XCTAssertEqual(player.progress(at: 100.1), 0, "WE holds the start for its lead-in")
+        XCTAssertEqual(player.progress(at: 101.1), 0.5, accuracy: 0.0001)
+        XCTAssertEqual(player.progress(at: 102.1), 1)
+        XCTAssertEqual(player.progress(at: 99), 0)
         player.stop()
     }
 }
