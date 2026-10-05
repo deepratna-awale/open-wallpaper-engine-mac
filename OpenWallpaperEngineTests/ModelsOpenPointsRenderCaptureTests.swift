@@ -52,6 +52,7 @@ final class ModelsOpenPointsRenderCaptureTests: XCTestCase {
     /// WE draws nothing of it (only the clear colour) and logs nothing. The app skips the draw too.
     /// The control (not captured in WE) reads only `a_Position` and draws.
     func testAMeshLackingAShaderInputIsNotDrawn() throws {
+        throw XCTSkip("the skip rule is reverted: it stopped ordinary models drawing; to be redone narrower")
         let missing = try frame("511-missing-attribute", binaries: Self.box)
         XCTAssertEqual(Self.drawnPixels(missing), 0, "only the clear colour")
 
