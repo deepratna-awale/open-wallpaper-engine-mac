@@ -182,7 +182,8 @@ public final class MCPServer {
         // How the client takes the picture is owe-mcp's business, not the app's.
         let savesToFile = tool.returnsImage && forwarded.removeValue(forKey: "format")?.stringValue == "path"
         let progress = tool.isLongRunning ? reportProgress(token: params["_meta"]?["progressToken"], tool: name) : nil
-        defer { progress?.cancel() }
+        // Stopped before the answer is returned: no report may follow it.
+        defer { progress?.stop() }
         do {
             var result = try await channel.call(name, params: forwarded, longRunning: tool.isLongRunning)
             if savesToFile { result = try savingPicture(result) }
@@ -197,10 +198,11 @@ public final class MCPServer {
     /// Reports every `progressInterval` that the call is still running, until cancelled: the app
     /// doesn't say how far a render or a recording is, so the progress counts the reports and has
     /// no total. Nil without a token or a way to send.
-    private func reportProgress(token: JSONValue?, tool: String) -> Task<Void, Never>? {
+    private func reportProgress(token: JSONValue?, tool: String) -> ProgressReporter? {
         guard let token, Self.isValidID(token), let send = sendNotification else { return nil }
         let interval = progressInterval, withMessage = MCPProtocolVersion.hasProgressMessages(negotiatedVersion)
-        return Task {
+        let reporter = ProgressReporter()
+        reporter.task = Task {
             var reports = 0
             while true {
                 do { try await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000)) } catch { return }
@@ -209,9 +211,11 @@ public final class MCPServer {
                 if withMessage {
                     params["message"] = .string("\(tool) is still running (\(Int((Double(reports) * interval).rounded())) s).")
                 }
-                send(Self.encode(["jsonrpc": "2.0", "method": "notifications/progress", "params": .object(params)]))
+                let line: Data = Self.encode(["jsonrpc": "2.0", "method": "notifications/progress", "params": .object(params)])
+                guard reporter.sendUnlessStopped({ send(line) }) else { return }
             }
         }
+        return reporter
     }
 
     /// `result` with its PNG saved to a file of its own (owner-only) instead: `path` replaces
@@ -367,5 +371,26 @@ public final class MCPServer {
     private static func encode(_ value: JSONValue) -> Data {
         // A value built from decoded JSON and strings always encodes.
         (try? value.encodedLine()) ?? Data(#"{"jsonrpc":"2.0","id":null,"error":{"code":-32603,"message":"Internal error"}}"#.utf8)
+    }
+}
+
+/// A call's progress reports: `stop()` returns only once no report is being sent, and none is
+/// sent after it, so the call's answer is always the last line about it.
+final class ProgressReporter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var stopped = false
+    var task: Task<Void, Never>?
+
+    /// Runs `send` while not stopped; false once stopped.
+    func sendUnlessStopped(_ send: () -> Void) -> Bool {
+        lock.lock(); defer { lock.unlock() }
+        guard !stopped else { return false }
+        send()
+        return true
+    }
+
+    func stop() {
+        lock.lock(); stopped = true; lock.unlock()
+        task?.cancel()
     }
 }
