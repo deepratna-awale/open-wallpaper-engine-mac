@@ -106,7 +106,7 @@ extension WallpaperViewModel {
             showPlaylistItem(of: playlist, transitions: false)
             restartPlaylistTimer()
         case .timer, .never:
-            break
+            restartPlaylistTimer()
         }
     }
 

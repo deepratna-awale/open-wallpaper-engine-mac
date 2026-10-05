@@ -1080,16 +1080,15 @@ class WallpaperViewModel: ObservableObject {
            let saved = try? JSONDecoder().decode([WallpaperPlaylist].self, from: data) {
             self.playlists = saved
         }
-        if let value = UserDefaults.app.string(forKey: "ActiveWallpaperPlaylist") {
-            self.activePlaylistID = UUID(uuidString: value)
-        }
-        if self.activePlaylistID == nil {
-            self.activePlaylistID = self.playlists.first?.id
-        }
-        self.playlistShuffle = UserDefaults.app.bool(forKey: "WallpaperPlaylistShuffle")
-        self.playlistRepeats = UserDefaults.app.object(forKey: "WallpaperPlaylistRepeats") == nil
-            ? true : UserDefaults.app.bool(forKey: "WallpaperPlaylistRepeats")
-        self.playlistEnabled = UserDefaults.app.bool(forKey: "WallpaperPlaylistEnabled")
+        // Into the storage, not through the setters: their observers save all four, which would
+        // overwrite the saved ones not read yet, and start the playlist before the app does
+        // (`startPlaylistAtLaunch`).
+        let activePlaylistID = UserDefaults.app.string(forKey: "ActiveWallpaperPlaylist").flatMap(UUID.init(uuidString:))
+        _activePlaylistID = Published(initialValue: activePlaylistID ?? self.playlists.first?.id)
+        _playlistShuffle = Published(initialValue: UserDefaults.app.bool(forKey: "WallpaperPlaylistShuffle"))
+        _playlistRepeats = Published(initialValue: UserDefaults.app.object(forKey: "WallpaperPlaylistRepeats") == nil
+            ? true : UserDefaults.app.bool(forKey: "WallpaperPlaylistRepeats"))
+        _playlistEnabled = Published(initialValue: UserDefaults.app.bool(forKey: "WallpaperPlaylistEnabled"))
 
         // Load per-screen wallpapers. They stay as they are: without a saved display layout every
         // display shows its own.

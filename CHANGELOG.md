@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Rotate automatically, Shuffle and Repeat survive a restart.** Loading the active playlist saved the playlist settings before the rest were read, so the app always started with the playlist stopped; a timer playlist now also starts its timer at launch.
 - **A locally built Release now launches.** Release builds sign with Apple Development under the project's team, as Debug builds do, instead of ad hoc, which library validation rejected for the app's own framework and Sparkle. Published releases are still signed with Developer ID and notarized.
 
 ## [1.0.0-beta.5] - 2026-10-04
