@@ -6,7 +6,11 @@ extension AppDelegate {
     static let securityReportURL = URL(string: "https://github.com/deepratna-awale/open-wallpaper-engine-mac/security")!
 
     @objc func togglePauseWallpapers() {
-        if wallpaperViewModel.playRate == 0 || videoMemoryWatch.exhausted { resume() } else { pause() }
+        if wallpaperViewModel.playRate == 0 || videoMemoryWatch.exhausted || wallpaperViewModel.isStopped {
+            resume()
+        } else {
+            pause()
+        }
     }
 
     /// The status line under Pause/Resume while video memory holds the wallpapers paused; never
