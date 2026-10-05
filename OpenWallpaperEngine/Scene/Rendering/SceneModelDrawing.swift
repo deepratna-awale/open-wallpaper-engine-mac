@@ -20,6 +20,10 @@ protocol SceneModelDrawing: AnyObject {
     /// (`SceneRasterState`, through `draw.depth`); the renderer resets its own state after.
     func draw(_ model: SceneModelObject, _ draw: SceneModelDraw, encoder: MTLRenderCommandEncoder,
               commandBuffer: MTLCommandBuffer)
+
+    /// Whether a mesh's pipeline is still compiling off the render thread (the mesh draws nothing
+    /// until it lands).
+    var hasPendingPipelines: Bool { get }
 }
 
 /// What a model's draw gets from the renderer.

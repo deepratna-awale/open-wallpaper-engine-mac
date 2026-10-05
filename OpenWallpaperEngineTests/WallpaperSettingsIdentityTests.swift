@@ -153,7 +153,8 @@ final class WallpaperSettingsIdentityTests: XCTestCase {
         XCTAssertEqual(WallpaperSettingsIdentity.resolve(directory: item, defaults: defaults).rawValue, "workshop-424242")
         try WallpaperProjectFileEdit.set(["title": "Snow"], inProjectAt: item, defaults: defaults)
         XCTAssertEqual(WallpaperSettingsIdentity.resolve(directory: item, defaults: defaults).rawValue, "workshop-424242")
-        XCTAssertNil(defaults.object(forKey: LocalWallpaperIdentities.defaultsKey))
+        // This test's own store: a lookup through `defaults` also searches the process's shared domains.
+        XCTAssertNil(defaults.persistentDomain(forName: suite)?[LocalWallpaperIdentities.defaultsKey])
     }
 
     func testSettingsSurviveMovingTheLibrary() throws {

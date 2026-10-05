@@ -124,7 +124,9 @@ final class ModelSceneHarness {
             count += 1
             guard count % 8 == 0, let texture = renderer.sharedFrame else { continue }
             let bytes = try TextureUploadTests.read(texture, device: device)
-            if let previous, count >= 24, Self.meanDifference(bytes, previous) < 0.2 {
+            // A frame drawn while a pipeline compiles lacks what it draws: at alpha 0 (or off screen) it
+            // looks the same as the finished one, so stillness alone doesn't say the scene is drawn.
+            if let previous, count >= 24, !renderer.pipelinesCompiling, Self.meanDifference(bytes, previous) < 0.2 {
                 still += 1
                 if still == 2 { return true }
             } else {
@@ -133,6 +135,21 @@ final class ModelSceneHarness {
             previous = bytes
         }
         return false
+    }
+
+    /// Draws with the clock held until no pipeline has compiled for three frames in a row (at most
+    /// `seconds` of wall time), as WE has every shader of a scene compiled before its first frame;
+    /// returns whether they did.
+    @discardableResult
+    func waitForPipelines(seconds: Double = 60) -> Bool {
+        var idle = 0
+        let deadline = Date().addingTimeInterval(seconds)
+        while idle < 3, Date() < deadline {
+            frame(step: 0)
+            RunLoop.main.run(until: Date().addingTimeInterval(0.005))
+            idle = renderer.pipelinesCompiling ? 0 : idle + 1
+        }
+        return idle >= 3
     }
 
     /// The mean absolute difference of two frames' bytes (levels of 255).

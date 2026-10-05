@@ -4149,7 +4149,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Whether any pipeline is still compiling off the render thread.
     var pipelinesCompiling: Bool {
         hasPendingEffectPipelines || imageMaterials?.hasPendingPipelines == true
-            || particleMaterials?.hasPendingPipelines == true
+            || particleMaterials?.hasPendingPipelines == true || modelDrawing?.hasPendingPipelines == true
     }
 
     /// The unquantised pixels per unit that sizes the scene target to `drawable` when the scene is
