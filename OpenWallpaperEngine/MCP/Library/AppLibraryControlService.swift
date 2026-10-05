@@ -43,6 +43,15 @@ final class AppLibraryControlService: LibraryControlService {
         wallpaperViewModel.setPlaylistChangeWhenVideoEnds(enabled, playlistID: id)
     }
 
+    func playlistSettings(playlist id: UUID) -> ControlPlaylistSettings {
+        wallpaperViewModel.playlists.first { $0.id == id }.map(ControlPlaylistSettings.init) ?? ControlPlaylistSettings()
+    }
+
+    func setPlaylistSettings(_ settings: ControlPlaylistSettings, playlist id: UUID) throws {
+        try requirePlaylist(id)
+        wallpaperViewModel.updatePlaylistSettings(id) { settings.apply(to: &$0) }
+    }
+
     func add(_ wallpapers: [ControlWallpaper], toPlaylist id: UUID) throws {
         try requirePlaylist(id)
         wallpaperViewModel.addToPlaylist(try wallpapers.map(library), playlistID: id)

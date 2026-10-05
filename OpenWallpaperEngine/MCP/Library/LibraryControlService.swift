@@ -17,6 +17,11 @@ protocol LibraryControlService: AnyObject {
     func changesWhenVideoEnds(playlist id: UUID) -> Bool
     func setDuration(_ seconds: Double, playlist id: UUID) throws
     func setChangesWhenVideoEnds(_ enabled: Bool, playlist id: UUID) throws
+    /// A playlist's Playlist Settings: when it changes wallpaper, the timer's options, the items'
+    /// time-of-day ends and the transition.
+    func playlistSettings(playlist id: UUID) -> ControlPlaylistSettings
+    /// Saves them as the Playlist Settings sheet does.
+    func setPlaylistSettings(_ settings: ControlPlaylistSettings, playlist id: UUID) throws
     /// Appends each wallpaper the playlist doesn't have yet.
     func add(_ wallpapers: [ControlWallpaper], toPlaylist id: UUID) throws
     func remove(_ wallpapers: [ControlWallpaper], fromPlaylist id: UUID) throws

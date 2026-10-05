@@ -59,10 +59,17 @@ final class LibraryControlRequests: ControlRequestGroup {
         let playlist = try lookup.playlist(params.required("playlist"))
         let duration = try params.double("duration_seconds")
         let videoEnds = try params.bool("change_when_video_ends")
-        guard duration != nil || videoEnds != nil else {
-            throw ControlError(.invalidParams, "Give duration_seconds or change_when_video_ends to change. A playlist's name can't be changed: Open Wallpaper Engine has no rename.")
+        let settingKeys = Self.playlistSettingKeys.filter(params.has)
+        guard duration != nil || videoEnds != nil || !settingKeys.isEmpty else {
+            throw ControlError(.invalidParams, "Give an option to change: change_wallpaper, duration_seconds, change_when_video_ends, change_while_paused, begin_with_first_wallpaper, first_wallpaper_at_startup_only, daytime_ends, transition, transition_pool or transition_time_ms. A playlist's name can't be changed: Open Wallpaper Engine has no rename.")
         }
         var changes: [String] = []
+        if !settingKeys.isEmpty {
+            let current = service.playlistSettings(playlist: playlist.id)
+            let updated = try Self.playlistSettings(params, current: current, itemCount: playlist.wallpapers.count)
+            try service.setPlaylistSettings(updated, playlist: playlist.id)
+            changes.append(contentsOf: Self.describe(updated, from: current))
+        }
         if let duration {
             guard PlaylistDurationFormat.range.contains(duration) else {
                 throw ControlError(.invalidParams, "duration_seconds must be from 5 to 3600.")
@@ -77,7 +84,8 @@ final class LibraryControlRequests: ControlRequestGroup {
             changes.append(videoEnds ? "videos move on when they end" : "videos play for the whole duration")
         }
         let updated = try saved(playlist.id, lookup)
-        return result(updated, "In \"\(updated.name)\", " + changes.joined(separator: " and ") + ".")
+        let summary = changes.isEmpty ? "nothing changed" : changes.joined(separator: " and ")
+        return result(updated, "In \"\(updated.name)\", " + summary + ".")
     }
 
     private func addItems(_ params: ControlParameters, _ lookup: ControlLookup) throws -> JSONValue {
@@ -157,6 +165,8 @@ final class LibraryControlRequests: ControlRequestGroup {
                 "active": .bool(playlist.isActive), "rotating": .bool(playlist.isRotating),
                 "shuffle": .bool(playlist.shuffles), "duration_seconds": .number(playlist.duration),
                 "change_when_video_ends": .bool(service.changesWhenVideoEnds(playlist: playlist.id)),
+                "settings": .object(service.playlistSettings(playlist: playlist.id)
+                    .json(itemCount: playlist.wallpapers.count, calendar: .autoupdatingCurrent)),
                 "displays": .array(playlist.displays.map { .string($0) }),
                 "wallpapers": .array(playlist.wallpapers.map {
                     ["id": .string($0.id), "title": .string($0.title), "type": .string($0.type)]

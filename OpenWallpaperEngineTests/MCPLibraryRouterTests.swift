@@ -51,6 +51,7 @@ private final class LibraryFakeAppModel: ControlAppModel {
 private final class FakeLibraryService: LibraryControlService {
     let model: LibraryFakeAppModel
     var videoEnds: [UUID: Bool] = [:]
+    var playlistSettings: [UUID: ControlPlaylistSettings] = [:]
     var favorites: Set<String> = []
     var deleted: [(String, Bool)] = []
     var deleteFailure: ControlError?
@@ -76,6 +77,11 @@ private final class FakeLibraryService: LibraryControlService {
     func changesWhenVideoEnds(playlist id: UUID) -> Bool { videoEnds[id] ?? false }
     func setDuration(_ seconds: Double, playlist id: UUID) throws { model.playlistList[try index(id)].duration = seconds }
     func setChangesWhenVideoEnds(_ enabled: Bool, playlist id: UUID) throws { videoEnds[id] = enabled }
+    func playlistSettings(playlist id: UUID) -> ControlPlaylistSettings { playlistSettings[id] ?? ControlPlaylistSettings() }
+    func setPlaylistSettings(_ settings: ControlPlaylistSettings, playlist id: UUID) throws {
+        _ = try index(id)
+        playlistSettings[id] = settings
+    }
 
     func add(_ wallpapers: [ControlWallpaper], toPlaylist id: UUID) throws {
         model.playlistList[try index(id)].wallpapers += wallpapers
@@ -193,6 +199,62 @@ final class MCPLibraryRouterTests: XCTestCase {
         XCTAssertEqual(tooLong?.code, .invalidParams)
         let missing = await error("playlist_update", ["playlist": "Morning", "duration_seconds": 60])
         XCTAssertEqual(missing?.code, .notFound)
+    }
+
+    func testUpdatePlaylistSetsWhenItChangesAndItsTransition() async throws {
+        let updated = try await result("playlist_update", [
+            "playlist": "Evening", "change_wallpaper": "daytime", "daytime_ends": ["07:30", ""],
+            "transition": "random", "transition_pool": ["door", "zoom", "door"], "transition_time_ms": 1234,
+        ])
+        let settings = updated["playlist"]?["settings"]
+        XCTAssertEqual(settings?["change_wallpaper"], "daytime")
+        XCTAssertEqual(settings?["transition"], "random")
+        XCTAssertEqual(settings?["transition_pool"], ["door", "zoom"])
+        XCTAssertEqual(settings?["transition_time_ms"], 1250, "snapped to the slider's 50 ms")
+        XCTAssertEqual(settings?["daytime_slots"]?.arrayValue?[0]["end"], "07:30")
+        XCTAssertEqual(settings?["daytime_slots"]?.arrayValue?[1]["start"], "07:30")
+        XCTAssertEqual(settings?["daytime_slots"]?.arrayValue?[1]["end"], "24:00")
+        let stored = service.playlistSettings(playlist: model.playlistList[0].id)
+        XCTAssertEqual(stored.timing, .daytime)
+        XCTAssertEqual(stored.transition.pool, [.door, .zoom])
+        XCTAssertEqual(stored.daytimeEnds, [7.5 / 24, nil])
+
+        let options = try await result("playlist_update", [
+            "playlist": "Evening", "change_wallpaper": "timer", "begin_with_first_wallpaper": true,
+            "first_wallpaper_at_startup_only": true, "change_while_paused": true, "transition": "glass_shatter",
+        ])
+        XCTAssertEqual(options["playlist"]?["settings"]?["first_wallpaper_at_startup_only"], true)
+        XCTAssertEqual(options["playlist"]?["settings"]?["transition"], "glass_shatter")
+
+        let week = try await result("playlist_update", ["playlist": "Evening", "change_wallpaper": "dayofweek"])
+        XCTAssertEqual(week["playlist"]?["settings"]?["weekdays"]?.arrayValue?.count, 2, "two wallpapers share the week")
+    }
+
+    func testUpdatePlaylistRefusesSettingsItCantKeep() async throws {
+        let badTiming = await error("playlist_update", ["playlist": "Evening", "change_wallpaper": "hourly"])
+        XCTAssertEqual(badTiming?.code, .invalidParams)
+        let badKind = await error("playlist_update", ["playlist": "Evening", "transition_pool": ["wobble"]])
+        XCTAssertEqual(badKind?.code, .invalidParams)
+        let backwards = await error("playlist_update", ["playlist": "Evening", "daytime_ends": ["25:00", ""]])
+        XCTAssertEqual(backwards?.code, .invalidParams)
+        let count = await error("playlist_update", ["playlist": "Evening", "daytime_ends": ["08:00"]])
+        XCTAssertEqual(count?.code, .invalidParams, "one per wallpaper")
+        let intro = await error("playlist_update", ["playlist": "Evening", "first_wallpaper_at_startup_only": true])
+        XCTAssertEqual(intro?.code, .invalidParams, "needs begin_with_first_wallpaper")
+    }
+
+    func testEveryTransitionTheToolNamesIsOne() {
+        XCTAssertEqual(ControlPlaylistOptions.transitionKinds.count, WallpaperTransitionKind.allCases.count)
+        for kind in WallpaperTransitionKind.allCases {
+            XCTAssertEqual(ControlPlaylistSettings.kind(named: ControlPlaylistSettings.name(of: kind)), kind)
+        }
+        for name in ControlPlaylistOptions.transitionChoices {
+            XCTAssertNotNil(ControlPlaylistSettings.choice(named: name), name)
+        }
+        for name in ControlPlaylistOptions.timings {
+            XCTAssertNotNil(ControlPlaylistSettings.timing(named: name), name)
+        }
+        XCTAssertEqual(ControlPlaylistOptions.timings.count, PlaylistTiming.allCases.count)
     }
 
     func testAddAndRemoveItems() async throws {
