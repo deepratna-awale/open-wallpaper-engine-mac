@@ -221,6 +221,72 @@ final class ChromiumWebWallpaperBridgeTests: XCTestCase {
         waitUntil("the click") { helper.mouse[id]?.last == click }
     }
 
+    // MARK: Screenshots
+
+    /// A page that has shown one frame at its own size (320×200 points at 2: 640×400 pixels).
+    private func makeShownPage() -> (ChromiumBrowserPage, Int, () -> [Int]) {
+        let (page, _, id) = makePage()
+        var widths: [Int] = []
+        let frameLock = NSLock()
+        page.onFrame = { frame in frameLock.withLock { widths.append(frame.texture.width) } }
+        helper.paint(id, frames: 1, width: 640, height: 400)
+        waitUntil("the first frame") { frameLock.withLock { widths.count } == 1 }
+        return (page, id, { frameLock.withLock { widths } })
+    }
+
+    private func capture(_ page: ChromiumBrowserPage, pixelWidth: Int, timeout: TimeInterval = 5) -> CGImage? {
+        var result: CGImage?
+        var answered = false
+        page.capture(pixelWidth: pixelWidth, timeout: timeout) { image in result = image; answered = true }
+        waitUntil("the screenshot", timeout: timeout + 2) { answered }
+        return result
+    }
+
+    func testAScreenshotDrawsThePageOnceAtTheChosenWidthThenGivesItsSizeBack() throws {
+        let (page, id, shownWidths) = makeShownPage()
+        defer { page.close() }
+        helper.paintsOnResize = true
+        let image = try XCTUnwrap(capture(page, pixelWidth: 1280))
+        XCTAssertEqual(image.width, 1280)
+        XCTAssertEqual(image.height, 800)
+        // The device scale that makes 320 points 1280 pixels, then the page's own again.
+        waitUntil("the restore") { helper.resizes(for: id).count == 2 }
+        XCTAssertEqual(helper.resizes(for: id).map(\.scale), [4, 2])
+        XCTAssertTrue(helper.resizes(for: id).allSatisfy { $0.width == 320 && $0.height == 200 })
+        // The screenshot's frame never reaches the view, nor the page's last frame.
+        waitUntil("the page's own frame") { shownWidths().count == 2 }
+        XCTAssertEqual(shownWidths(), [640, 640])
+        var last: CGImage?
+        page.snapshot { last = $0 }
+        XCTAssertEqual(last?.width, 640)
+    }
+
+    func testWithoutAFrameOfThatSizeTheScreenshotIsTheLastFrame() throws {
+        let (page, id, _) = makeShownPage()
+        defer { page.close() }
+        let image = try XCTUnwrap(capture(page, pixelWidth: 1280, timeout: 0.2))
+        XCTAssertEqual(image.width, 640)
+        XCTAssertEqual(helper.resizes(for: id).last?.scale, 2)
+    }
+
+    func testAHiddenPageGivesItsLastFrameWithoutDrawing() throws {
+        let (page, id, _) = makeShownPage()
+        defer { page.close() }
+        page.applySchedulingPolicy(muted: false, visible: false)
+        let image = try XCTUnwrap(capture(page, pixelWidth: 1280))
+        XCTAssertEqual(image.width, 640)
+        XCTAssertTrue(helper.resizes(for: id).isEmpty)
+    }
+
+    func testAPageThatNeverDrawsTimesOut() async throws {
+        let (page, _, _) = makePage()
+        defer { page.close() }
+        do {
+            _ = try await WallpaperScreenshotService.capture(page, pixelWidth: 1280, timeout: 0.2)
+            XCTFail("A page with no frame gave a screenshot")
+        } catch WallpaperScreenshotService.Failure.timedOut {}
+    }
+
     // MARK: Mouse mapping
 
     func testMousePointsAreFlippedIntoTheView() {
@@ -296,6 +362,8 @@ private final class FakeBrowserHelper: NSObject, NSXPCListenerDelegate, Chromium
     private var _frameRates: [Int: Int] = [:]
     private var _mouse: [Int: [ChromiumMouseEvent]] = [:]
     private var frameNumbers: [Int: Int64] = [:]
+    private var _resizes: [Int: [(width: Int, height: Int, scale: Double)]] = [:]
+    private var _paintsOnResize = false
 
     var initialized: [(framework: String, cache: String)] { lock.withLock { _initialized } }
     var created: [Created] { lock.withLock { _created } }
@@ -304,6 +372,12 @@ private final class FakeBrowserHelper: NSObject, NSXPCListenerDelegate, Chromium
     var muted: [Int: Bool] { lock.withLock { _muted } }
     var frameRates: [Int: Int] { lock.withLock { _frameRates } }
     var mouse: [Int: [ChromiumMouseEvent]] { lock.withLock { _mouse } }
+    func resizes(for id: Int) -> [(width: Int, height: Int, scale: Double)] { lock.withLock { _resizes[id] ?? [] } }
+    /// Paint one frame of the new size on each resize, as Chromium does.
+    var paintsOnResize: Bool {
+        get { lock.withLock { _paintsOnResize } }
+        set { lock.withLock { _paintsOnResize = newValue } }
+    }
 
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection connection: NSXPCConnection) -> Bool {
         connection.exportedInterface = .chromiumBrowserHelper
@@ -343,9 +417,9 @@ private final class FakeBrowserHelper: NSObject, NSXPCListenerDelegate, Chromium
         return answer
     }
 
-    func paint(_ id: Int, frames: Int) {
+    func paint(_ id: Int, frames: Int, width: Int = 8, height: Int = 8) {
         for _ in 0..<frames {
-            guard let surface = IOSurface(properties: [.width: 8, .height: 8, .bytesPerElement: 4,
+            guard let surface = IOSurface(properties: [.width: width, .height: height, .bytesPerElement: 4,
                                                        .pixelFormat: ChromiumHelperIPC.pixelFormat]) else { continue }
             let number: Int64 = lock.withLock {
                 frameNumbers[id, default: 0] += 1
@@ -380,7 +454,13 @@ private final class FakeBrowserHelper: NSObject, NSXPCListenerDelegate, Chromium
     }
 
     func closeBrowser(_ browserId: Int) {}
-    func resizeBrowser(_ browserId: Int, width: Int, height: Int, scale: Double) {}
+    func resizeBrowser(_ browserId: Int, width: Int, height: Int, scale: Double) {
+        lock.withLock { _resizes[browserId, default: []].append((width, height, scale)) }
+        if paintsOnResize {
+            paint(browserId, frames: 1, width: Int((Double(width) * scale).rounded()),
+                  height: Int((Double(height) * scale).rounded()))
+        }
+    }
 
     func setBrowserHidden(_ browserId: Int, hidden: Bool) {
         lock.withLock { _hidden[browserId] = hidden }

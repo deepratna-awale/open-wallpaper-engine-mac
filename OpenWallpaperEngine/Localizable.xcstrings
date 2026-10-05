@@ -110865,100 +110865,6 @@
         }
       }
     },
-    "Screenshots of wallpapers in the Chromium engine aren't supported yet." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لقطات الشاشة للخلفيات في محرك Chromium غير مدعومة بعد."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bildschirmfotos von Hintergrundbildern in der Chromium-Engine werden noch nicht unterstützt."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Las capturas de pantalla de fondos de pantalla en el motor Chromium aún no son compatibles."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les captures d’écran des fonds d’écran du moteur Chromium ne sont pas encore prises en charge."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chromium इंजन में चल रहे वॉलपेपर के स्क्रीनशॉट अभी समर्थित नहीं हैं।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le schermate degli sfondi nel motore Chromium non sono ancora supportate."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chromium エンジンの壁紙のスクリーンショットにはまだ対応していません。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chromium 엔진의 배경화면 스크린샷은 아직 지원되지 않습니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zrzuty ekranu tapet w silniku Chromium nie są jeszcze obsługiwane."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ainda não há suporte a capturas de tela de imagens de fundo no mecanismo Chromium."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Снимки экрана обоев в движке Chromium пока не поддерживаются."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chromium motorundaki duvar kâğıtlarının ekran görüntüleri henüz desteklenmiyor."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Знімки екрана шпалер у рушії Chromium ще не підтримуються."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "尚不支持截取 Chromium 引擎中的墙纸。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "尚不支援擷取 Chromium 引擎中的背景圖片。"
-          }
-        }
-      }
-    },
     "Search" : {
       "localizations" : {
         "ar" : {
@@ -129357,6 +129263,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "下載的 Chromium 不是有效的封存檔。請稍後再試。"
+          }
+        }
+      }
+    },
+    "The Chromium engine didn't draw the wallpaper in time." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يرسم محرك Chromium الخلفية في الوقت المحدد."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Chromium-Engine hat das Hintergrundbild nicht rechtzeitig gezeichnet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El motor Chromium no dibujó el fondo de pantalla a tiempo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le moteur Chromium n’a pas dessiné le fond d’écran à temps."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium इंजन ने वॉलपेपर समय पर नहीं बनाया।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il motore Chromium non ha disegnato lo sfondo in tempo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium エンジンが時間内に壁紙を描画しませんでした。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium 엔진이 제시간에 배경화면을 그리지 못했습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Silnik Chromium nie narysował tapety na czas."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O mecanismo Chromium não desenhou a imagem de fundo a tempo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Движок Chromium не успел отрисовать обои."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium motoru duvar kâğıdını zamanında çizmedi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рушій Chromium не встиг намалювати шпалери."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium 引擎未能及时绘制墙纸。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium 引擎未能及時繪製背景圖片。"
           }
         }
       }

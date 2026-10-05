@@ -11,18 +11,20 @@ import WebKit
 ///   unstepped, at the chosen size (`GSScreenshotResolution`), every pass at that size.
 /// - AVKit videos: the frame the player shows now, at the video's own size.
 /// - Web wallpapers (and videos WebKit plays): the page's snapshot at the chosen width.
+/// - Pages in the Chromium engine (web wallpapers and the videos it plays): one frame drawn at the
+///   chosen width (`ChromiumBrowserPage.capture`); a paused or hidden page gives its last frame.
 @MainActor
 final class WallpaperScreenshotService {
     enum Failure: LocalizedError {
         case nothingToCapture
-        case unsupported
         case captureFailed
+        case timedOut
 
         var errorDescription: String? {
             switch self {
             case .nothingToCapture: return String(localized: "No wallpaper is showing on this display.")
-            case .unsupported: return String(localized: "Screenshots of wallpapers in the Chromium engine aren't supported yet.")
             case .captureFailed: return String(localized: "The wallpaper's picture couldn't be captured.")
+            case .timedOut: return String(localized: "The Chromium engine didn't draw the wallpaper in time.")
             }
         }
     }
@@ -87,7 +89,27 @@ final class WallpaperScreenshotService {
         if let webView = Self.webView(in: content) {
             return try await Self.snapshot(of: webView, pixelWidth: pixelSize.x, backingScale: backingScale)
         }
-        throw Failure.unsupported
+        if let chromium = Self.chromiumPageView(in: content) {
+            return try await Self.capture(chromium.page, pixelWidth: pixelSize.x)
+        }
+        throw Failure.nothingToCapture
+    }
+
+    private static func chromiumPageView(in view: NSView) -> ChromiumPageView? {
+        if let pageView = view as? ChromiumPageView { return pageView }
+        for subview in view.subviews {
+            if let pageView = chromiumPageView(in: subview) { return pageView }
+        }
+        return nil
+    }
+
+    /// The Chromium page drawn `pixelWidth` pixels wide, or its last frame; none at all is a timeout.
+    static func capture(_ page: ChromiumBrowserPage, pixelWidth: Int, timeout: TimeInterval = 5) async throws -> CGImage {
+        let image: CGImage? = await withCheckedContinuation { continuation in
+            page.capture(pixelWidth: pixelWidth, timeout: timeout) { continuation.resume(returning: $0) }
+        }
+        guard let image else { throw Failure.timedOut }
+        return image
     }
 
     /// The frame `player` shows now, at the video's own size.
