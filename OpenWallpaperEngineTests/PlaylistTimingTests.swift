@@ -1,3 +1,4 @@
+import AppKit
 import XCTest
 @testable import OpenWallpaperEngine
 
@@ -145,6 +146,29 @@ final class PlaylistTimingTests: XCTestCase {
         now = calendar.date(from: DateComponents(year: 2026, month: 6, day: 2, hour: 0, minute: 1)) ?? Date()
         model.applyPlaylistSchedule()
         XCTAssertEqual(shown(model), "p0", "after midnight, the first slot")
+    }
+
+    func testWakingLooksAtTheSlotAgain() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "Europe/Berlin") ?? .gmt
+        var now = calendar.date(from: DateComponents(year: 2026, month: 6, day: 1, hour: 7, minute: 59)) ?? Date()
+        let model = model(items: 3, showing: 2) { playlist in
+            playlist.timing = .daytime
+            playlist.items[0].daytimeEnd = 8.0 / 24
+            playlist.items[1].daytimeEnd = 20.0 / 24
+        }
+        model.playlistClock = { now }
+        model.playlistCalendar = { calendar }
+        model.playlistEnabled = true
+        XCTAssertEqual(shown(model), "p0")
+        // Asleep across 08:00: the slot's timer never fired. Waking looks again.
+        let observer = PlaylistClockObserver { [weak model] in model?.applyPlaylistSchedule() }
+        now = calendar.date(from: DateComponents(year: 2026, month: 6, day: 1, hour: 9)) ?? Date()
+        XCTAssertEqual(shown(model), "p0")
+        NSWorkspace.shared.notificationCenter.post(name: NSWorkspace.didWakeNotification, object: NSWorkspace.shared)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        XCTAssertEqual(shown(model), "p1", "09:00 after waking is the second slot")
+        withExtendedLifetime(observer) {}
     }
 
     func testADayOfWeekPlaylistShowsTodaysWallpaper() {
