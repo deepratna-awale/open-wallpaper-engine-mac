@@ -61,8 +61,9 @@ into an iCloud Drive folder.
 After a batch export, or from **Send over Wi-Fi…** in the export sheet, a sheet lets the phone or
 tablet download the packages from the Mac over the local network, with no cable:
 
-1. Scan the QR code with the device, or type the link it shows. With several networks, pick the
-   one the device is on.
+1. Scan the QR code with the device, or type the link it shows,
+   `http://owe-fileshare.<mac>.local:<port>/<token>/`. With several networks, pick the one the device is
+   on.
 2. The page lists every package with its preview, title, type and size. Tap **Download** for one,
    or **Download All** (Chrome asks once to allow several downloads).
 3. Import each file in the Wallpaper Engine app, as with a copied file.
@@ -73,6 +74,8 @@ explains why and offers **Save to Folder…** instead.
 
 If the page doesn't open on the device:
 
+- The sheet also shows the link with the Mac's IP address. **Use IP address in QR code** puts it
+  in the QR code, for devices that can't look up `.local` names.
 - macOS may ask whether Open Wallpaper Engine may accept incoming network connections. Allow it.
 - Some networks (guest networks, many public ones) keep devices from reaching each other
   ("client isolation" or "AP isolation"). Use a network that doesn't, or copy the files.
@@ -83,13 +86,21 @@ If the page doesn't open on the device:
 - The server is started only while the sheet is open, for at most 15 minutes, and serves only
   that batch. Closing the sheet ends it.
 - It listens on one private or link-local IPv4 address of the Mac's local network, and only
-  answers devices on that network. VPN, public and cellular addresses are never used, and nothing
-  is advertised on the network.
-- The link carries a random 128-bit token. A wrong or expired token, and any other path, get the
+  answers devices on that network. VPN, public and cellular addresses are never used.
+- While it runs, the Mac advertises the name `owe-fileshare.<mac>.local` (`<mac>` is the Mac's Bonjour name, its LocalHostName, as a DNS label) for that address over
+  multicast DNS (Bonjour), with an `_http._tcp` service on it and no TXT record, so the token is
+  never advertised. When another Mac already has the name, it takes `owe-fileshare-2.<mac>.local`, and
+  so on. The name is withdrawn when the share stops.
+- The link carries a random token: 10 base32 characters (50 bits), short enough to type and far
+  beyond guessing in a 15-minute share that limits requests and refuses a device after 20 wrong
+  paths. A wrong or expired token, and any other path, get the
   same "not found". Files are addressed by their place in the batch, never by a path, so nothing
   else on the Mac can be reached.
 - Only downloads are accepted. Connections and requests per device are limited, and a device that
   keeps guessing paths is refused until the session ends.
 - The page loads nothing from the internet.
+- It is plain HTTP on purpose: public certificate authorities don't issue certificates for
+  `.local` names and a self-signed one shows a full-page browser warning, while the packages
+  only cross the local network, for 15 minutes, behind the random token.
 
 MCP clients get `export_android` and `android_send_wifi` ([`mcp.md`](mcp.md)).

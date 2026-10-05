@@ -1,3 +1,4 @@
+import AppKit
 import CoreImage
 import Foundation
 import XCTest
@@ -9,7 +10,7 @@ import XCTest
 @MainActor
 final class AndroidWiFiSendTests: XCTestCase {
     private var directory: URL!
-    private let token = "AAAAAAAAAAAAAAAAAAAAAA"
+    private let token = "abcdefgh23"
     private static let loopback = AndroidLANAddress(interface: "lo0", displayName: nil, address: 0x7F00_0001, netmask: 0xFF00_0000)
 
     override func setUpWithError() throws {
@@ -41,15 +42,19 @@ final class AndroidWiFiSendTests: XCTestCase {
 
     // MARK: Router
 
-    func testTokensAreRandom128BitAndCheckedWhole() throws {
-        let made = try AndroidWiFiRouter.makeToken()
-        XCTAssertEqual(made.count, 22, "16 bytes, base64url without padding")
-        XCTAssertNotEqual(made, try AndroidWiFiRouter.makeToken())
-        XCTAssertTrue(made.allSatisfy { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" })
+    func testTokensAreRandom50BitBase32AndCheckedWhole() throws {
+        let made = (0..<200).map { _ in try? AndroidWiFiRouter.makeToken() }.compactMap { $0 }
+        XCTAssertEqual(made.count, 200)
+        XCTAssertEqual(Set(made).count, 200, "random")
+        for token in made {
+            XCTAssertEqual(token.count, 10, "50 bits, 5 per character")
+            XCTAssertTrue(token.allSatisfy { "abcdefghijklmnopqrstuvwxyz234567".contains($0) }, token)
+        }
+        XCTAssertEqual(Set(made.joined()).count, 32, "the whole alphabet comes up")
         let router = AndroidWiFiRouter(token: token, files: try files(), expiry: .distantFuture)
         XCTAssertEqual(router.route(request("/\(token)/"), now: Date()), .page)
         XCTAssertEqual(router.route(request("/\(token)"), now: Date()), .page)
-        for wrong in ["/", "/AAAAAAAAAAAAAAAAAAAAAB/", "/AAAAAAAAAAAAAAAAAAAAA/", "/\(token)A/", "/\(token.lowercased())/", "/favicon.ico"] {
+        for wrong in ["/", "/abcdefgh22/", "/abcdefgh2/", "/\(token)a/", "/\(token.uppercased())/", "/favicon.ico"] {
             XCTAssertEqual(router.route(request(wrong), now: Date()), .notFound, wrong)
             XCTAssertEqual(router.response(to: request(wrong), now: Date()).status, 404, wrong)
         }
@@ -173,12 +178,94 @@ final class AndroidWiFiSendTests: XCTestCase {
 
     // MARK: QR code and addresses
 
-    func testTheQRCodeHoldsTheURL() throws {
-        let url = "http://192.168.1.23:52731/\(token)/"
-        let image = try XCTUnwrap(AndroidWiFiQRCode.image(for: url))
+    /// The code with the app icon at its centre still decodes to the exact address, for short and
+    /// long addresses, with the icon as light and dark mode draw it.
+    func testTheQRCodeWithTheLogoHoldsTheURL() throws {
+        let logo = try XCTUnwrap(NSImage(named: "AppIcon"), "the About window's icon")
         let detector = try XCTUnwrap(CIDetector(ofType: CIDetectorTypeQRCode, context: nil, options: [CIDetectorAccuracy: CIDetectorAccuracyHigh]))
-        let found = detector.features(in: CIImage(cgImage: image)).compactMap { ($0 as? CIQRCodeFeature)?.messageString }
-        XCTAssertEqual(found, [url])
+        let urls = [
+            "http://10.0.0.5:8080/\(token)/",
+            "http://owe-fileshare.pyxis.local:52731/\(token)/",
+            "http://owe-fileshare-9.deepratnas-macbook-pro-16-inch-2024.local:65535/\(token)/",
+            "http://owe-fileshare-2.\(String(repeating: "a", count: 63)).local:65535/\(token)/",
+            "http://192.168.100.200:52731/\(token)/",
+        ]
+        for url in urls {
+            for appearance in [NSAppearance.Name.aqua, .darkAqua] {
+                let image = try XCTUnwrap(AndroidWiFiQRCode.image(for: url, logo: logo, appearance: NSAppearance(named: appearance)))
+                XCTAssertNotEqual(try XCTUnwrap(AndroidWiFiQRCode.image(for: url, logo: nil)).dataProvider?.data as Data?,
+                                  image.dataProvider?.data as Data?, "the logo is drawn")
+                let found = detector.features(in: CIImage(cgImage: image)).compactMap { ($0 as? CIQRCodeFeature)?.messageString }
+                XCTAssertEqual(found, [url], "\(url) \(appearance.rawValue)")
+            }
+        }
+    }
+
+    // MARK: The .local name
+
+    func testTheNameIsAdvertisedAndRenamedOnAConflict() async throws {
+        let registrar = FakeNameRegistrar()
+        registrar.taken = ["owe-fileshare.pyxis", "owe-fileshare-2.pyxis"]
+        let session = AndroidWiFiSession(files: try files(), addresses: { [Self.loopback] },
+                                         localName: AndroidWiFiLocalName(registrar: registrar, localHostName: "Pyxis"))
+        await session.start()
+        XCTAssertEqual(session.state, .serving)
+        XCTAssertEqual(registrar.attempts, ["owe-fileshare.pyxis", "owe-fileshare-2.pyxis", "owe-fileshare-3.pyxis"])
+        XCTAssertEqual(registrar.active, "owe-fileshare-3.pyxis")
+        XCTAssertEqual(registrar.address, Self.loopback)
+        XCTAssertEqual(registrar.port, session.port)
+        XCTAssertEqual(session.hostName, "owe-fileshare-3.pyxis.local")
+
+        // Another device claims the name later: the next free one replaces it.
+        registrar.taken.insert("owe-fileshare-3.pyxis")
+        registrar.loseName()
+        try await waitUntil { session.hostName == "owe-fileshare-4.pyxis.local" }
+        XCTAssertEqual(registrar.active, "owe-fileshare-4.pyxis")
+
+        session.stop()
+        XCTAssertNil(registrar.active, "stopping withdraws the name")
+        XCTAssertNil(session.hostName)
+        XCTAssertNil(session.url)
+    }
+
+    func testWithoutANameTheShareUsesItsIPAddress() async throws {
+        let registrar = FakeNameRegistrar()
+        registrar.taken = Set((1...AndroidWiFiLocalName.attempts).map { AndroidWiFiLocalName.name(attempt: $0, macName: "pyxis") })
+        let session = AndroidWiFiSession(files: try files(), addresses: { [Self.loopback] },
+                                         localName: AndroidWiFiLocalName(registrar: registrar, localHostName: "Pyxis"))
+        await session.start()
+        defer { session.stop() }
+        XCTAssertEqual(registrar.attempts.count, AndroidWiFiLocalName.attempts)
+        XCTAssertNil(registrar.active)
+        XCTAssertNil(session.hostName)
+        XCTAssertEqual(session.url, session.ipURL)
+        XCTAssertEqual(session.qrURL(usesIPAddress: false), session.ipURL)
+    }
+
+    func testTheURLsUseTheNameOrTheIPAddress() async throws {
+        let session = AndroidWiFiSession(files: try files(), addresses: { [Self.loopback] },
+                                         localName: AndroidWiFiLocalName(registrar: FakeNameRegistrar(), localHostName: "Pyxis"))
+        await session.start()
+        defer { session.stop() }
+        let port = try XCTUnwrap(session.port)
+        let local = "http://owe-fileshare.pyxis.local:\(port)/\(session.token)/", ip = "http://127.0.0.1:\(port)/\(session.token)/"
+        XCTAssertEqual(session.url?.absoluteString, local)
+        XCTAssertEqual(session.localURL?.absoluteString, local)
+        XCTAssertEqual(session.ipURL?.absoluteString, ip)
+        XCTAssertEqual(session.qrURL(usesIPAddress: false)?.absoluteString, local)
+        XCTAssertEqual(session.qrURL(usesIPAddress: true)?.absoluteString, ip)
+        XCTAssertEqual(AndroidWiFiSession.link(host: "owe-fileshare-2.pyxis.local", port: 80, token: "abcdefgh23")?.absoluteString,
+                       "http://owe-fileshare-2.pyxis.local:80/abcdefgh23/")
+        XCTAssertEqual(AndroidWiFiLocalName.name(attempt: 1, macName: "pyxis"), "owe-fileshare.pyxis")
+        XCTAssertEqual(AndroidWiFiLocalName.name(attempt: 2, macName: "pyxis"), "owe-fileshare-2.pyxis")
+        XCTAssertEqual(AndroidWiFiLocalName.name(attempt: 1, macName: nil), "owe-fileshare")
+        // The Mac's LocalHostName as one DNS label.
+        XCTAssertEqual(AndroidWiFiLocalName.label("Pyxis"), "pyxis")
+        XCTAssertEqual(AndroidWiFiLocalName.label("Deep's MacBook Pro"), "deep-s-macbook-pro")
+        XCTAssertEqual(AndroidWiFiLocalName.label("--Mac_mini.2--"), "mac-mini-2")
+        XCTAssertEqual(AndroidWiFiLocalName.label(String(repeating: "a", count: 62) + "-bc"), String(repeating: "a", count: 62))
+        XCTAssertNil(AndroidWiFiLocalName.label("ÄÖÜ"))
+        XCTAssertNil(AndroidWiFiLocalName.label(""))
     }
 
     func testOnlyLocalNetworkAddressesCount() throws {
@@ -201,7 +288,8 @@ final class AndroidWiFiSendTests: XCTestCase {
     // MARK: The listener
 
     private func session(lifetime: TimeInterval = 60) throws -> AndroidWiFiSession {
-        AndroidWiFiSession(files: try files(), lifetime: lifetime, addresses: { [Self.loopback] })
+        AndroidWiFiSession(files: try files(), lifetime: lifetime, addresses: { [Self.loopback] },
+                           localName: AndroidWiFiLocalName(registrar: FakeNameRegistrar(), localHostName: "Pyxis"))
     }
 
     private static func get(_ url: URL, method: String = "GET", headers: [String: String] = [:]) async throws -> (Data, HTTPURLResponse) {
@@ -222,7 +310,7 @@ final class AndroidWiFiSendTests: XCTestCase {
         await session.start()
         defer { session.stop() }
         XCTAssertEqual(session.state, .serving)
-        let base = try XCTUnwrap(session.url)
+        let base = try XCTUnwrap(session.ipURL)
         XCTAssertTrue(base.absoluteString.hasPrefix("http://127.0.0.1:"))
         XCTAssertTrue(base.absoluteString.hasSuffix("/\(session.token)/"))
 
@@ -244,7 +332,7 @@ final class AndroidWiFiSendTests: XCTestCase {
         let (_, preview) = try await Self.get(base.appending(path: "preview/0"))
         XCTAssertEqual(preview.value(forHTTPHeaderField: "Content-Type"), "image/jpeg")
 
-        let wrong = try XCTUnwrap(URL(string: base.absoluteString.replacingOccurrences(of: session.token, with: String(repeating: "B", count: 22))))
+        let wrong = try XCTUnwrap(URL(string: base.absoluteString.replacingOccurrences(of: session.token, with: String(repeating: "b", count: 10))))
         let (_, missing) = try await Self.get(wrong.appending(path: "file/0"))
         XCTAssertEqual(missing.statusCode, 404)
         let (_, posted) = try await Self.get(file, method: "POST")
@@ -261,10 +349,11 @@ final class AndroidWiFiSendTests: XCTestCase {
         var limits = AndroidWiFiServer.Limits()
         limits.requestBurst = 3
         limits.requestsPerSecond = 0.01
-        let session = AndroidWiFiSession(files: try files(), limits: limits, addresses: { [Self.loopback] })
+        let session = AndroidWiFiSession(files: try files(), limits: limits, addresses: { [Self.loopback] },
+                                         localName: AndroidWiFiLocalName(registrar: FakeNameRegistrar(), localHostName: "Pyxis"))
         await session.start()
         defer { session.stop() }
-        let base = try XCTUnwrap(session.url)
+        let base = try XCTUnwrap(session.ipURL)
         var statuses: [Int] = []
         for _ in 0..<5 { statuses.append(try await Self.get(base).1.statusCode) }
         XCTAssertEqual(statuses, [200, 200, 200, 429, 429])
@@ -273,7 +362,7 @@ final class AndroidWiFiSendTests: XCTestCase {
     func testExpiryStopsTheListener() async throws {
         let session = try session(lifetime: 0.5)
         await session.start()
-        let base = try XCTUnwrap(session.url)
+        let base = try XCTUnwrap(session.ipURL)
         let (_, before) = try await Self.get(base)
         XCTAssertEqual(before.statusCode, 200)
         try await waitUntil { session.state == .stopped(.expired) }
@@ -290,7 +379,7 @@ final class AndroidWiFiSendTests: XCTestCase {
         let session = try session()
         await session.start()
         let first = session.token
-        let base = try XCTUnwrap(session.url)
+        let base = try XCTUnwrap(session.ipURL)
         session.stop()
         XCTAssertEqual(session.state, .stopped(.closed))
         try await Task.sleep(for: .milliseconds(200))
@@ -305,7 +394,8 @@ final class AndroidWiFiSendTests: XCTestCase {
     }
 
     func testNoNetworkSaysSo() async throws {
-        let session = AndroidWiFiSession(files: try files(), addresses: { [] })
+        let session = AndroidWiFiSession(files: try files(), addresses: { [] },
+                                         localName: AndroidWiFiLocalName(registrar: FakeNameRegistrar(), localHostName: "Pyxis"))
         await session.start()
         XCTAssertEqual(session.state, .noNetwork)
         XCTAssertNil(session.url)
@@ -317,5 +407,40 @@ final class AndroidWiFiSendTests: XCTestCase {
             guard Date() < deadline else { return XCTFail("timed out") }
             try await Task.sleep(for: .milliseconds(20))
         }
+    }
+}
+
+/// DNS-SD as the share sees it: names in `taken` belong to another device.
+@MainActor
+private final class FakeNameRegistrar: AndroidWiFiNameRegistering {
+    var taken: Set<String> = []
+    private(set) var attempts: [String] = []
+    private(set) var active: String?
+    private(set) var address: AndroidLANAddress?
+    private(set) var port: UInt16?
+    private var onLost: (@MainActor () -> Void)?
+
+    func register(host: String, address: AndroidLANAddress, port: UInt16,
+                  completion: @escaping @MainActor (AndroidWiFiNameOutcome) -> Void,
+                  onLost: @escaping @MainActor () -> Void) {
+        attempts.append(host)
+        guard !taken.contains(host) else { return completion(.conflict) }
+        active = host
+        self.address = address
+        self.port = port
+        self.onLost = onLost
+        completion(.registered)
+    }
+
+    func unregister() {
+        active = nil
+        onLost = nil
+    }
+
+    /// Another device claims the active name.
+    func loseName() {
+        let onLost = onLost
+        active = nil
+        onLost?()
     }
 }

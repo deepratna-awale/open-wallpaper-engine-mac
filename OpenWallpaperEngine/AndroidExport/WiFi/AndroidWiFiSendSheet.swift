@@ -7,6 +7,10 @@ import SwiftUI
 struct AndroidWiFiSendSheet: View {
     @StateObject var session: AndroidWiFiSession
     let dismiss: () -> Void
+    /// For devices that can't resolve `.local` names.
+    @State private var qrUsesIPAddress = false
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.displayScale) private var displayScale
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -52,6 +56,17 @@ struct AndroidWiFiSendSheet: View {
                         .help("Copy Address")
                     }
                 }
+                if let ip = session.ipURL, session.localURL != nil {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("If that doesn't open: \(Text(verbatim: ip.absoluteString).monospaced())")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                        Toggle("Use IP address in QR code", isOn: $qrUsesIPAddress)
+                            .toggleStyle(.checkbox)
+                            .controlSize(.small)
+                    }
+                }
                 if session.addresses.count > 1 { networkPicker }
                 status
             }
@@ -63,11 +78,12 @@ struct AndroidWiFiSendSheet: View {
         let side: CGFloat = 196
         ZStack {
             RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.white)
-            if let url = session.url, let image = AndroidWiFiQRCode.image(for: url.absoluteString) {
-                Image(decorative: image, scale: 1)
-                    .interpolation(.none)
+            if let url = session.qrURL(usesIPAddress: qrUsesIPAddress),
+               let image = AndroidWiFiQRCode.image(for: url.absoluteString, side: Int((side - 8) * displayScale),
+                                                   appearance: NSAppearance(named: colorScheme == .dark ? .darkAqua : .aqua)) {
+                Image(decorative: image, scale: displayScale)
                     .resizable()
-                    .padding(8)
+                    .padding(4)
                     .accessibilityLabel(Text("QR code of the address"))
             } else if session.isActive {
                 ProgressView()

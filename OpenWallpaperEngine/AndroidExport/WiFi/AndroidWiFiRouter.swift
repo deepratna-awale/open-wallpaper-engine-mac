@@ -10,7 +10,7 @@ import Security
 /// - a file is the batch's `index`th package (a number, never a path from the request), with
 ///   `Range` for resumed downloads.
 struct AndroidWiFiRouter: Sendable {
-    /// 128 random bits, base64url without padding (22 characters).
+    /// 50 random bits, base32 (10 characters).
     let token: String
     let files: [AndroidWiFiFile]
     let expiry: Date
@@ -24,17 +24,33 @@ struct AndroidWiFiRouter: Sendable {
         self.page = page ?? Data(AndroidWiFiPage.html(files: files, token: token).utf8)
     }
 
-    /// A new random token: 16 bytes from the system's secure generator.
+    /// The token's alphabet: RFC 4648 base32, lower case.
+    static let tokenAlphabet = Array("abcdefghijklmnopqrstuvwxyz234567")
+    static let tokenLength = 10
+
+    /// A new random token: 50 bits from the system's secure generator, as 10 base32 characters.
+    /// Short enough to type, and unguessable for a 15-minute share that refuses a device after 20
+    /// wrong paths and limits its requests.
     static func makeToken() throws -> String {
-        var bytes = [UInt8](repeating: 0, count: 16)
+        let bits = try randomBytes(8).reduce(UInt64(0)) { $0 << 8 | UInt64($1) }
+        return String((0..<tokenLength).map { tokenAlphabet[Int(bits >> UInt64(5 * $0) & 31)] })
+    }
+
+    /// A page's CSP nonce: 128 random bits, base64url without padding.
+    static func makeNonce() throws -> String {
+        try Data(randomBytes(16)).base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
+
+    private static func randomBytes(_ count: Int) throws -> [UInt8] {
+        var bytes = [UInt8](repeating: 0, count: count)
         let status = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
         guard status == errSecSuccess else {
             throw NSError(domain: NSOSStatusErrorDomain, code: Int(status))
         }
-        return Data(bytes).base64EncodedString()
-            .replacingOccurrences(of: "+", with: "-")
-            .replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: "=", with: "")
+        return bytes
     }
 
     enum Route: Equatable {
@@ -74,7 +90,7 @@ struct AndroidWiFiRouter: Sendable {
         case .notFound:
             return .text(404)
         case .page:
-            let nonce = (try? Self.makeToken()) ?? "owe" // Optional: the CSP nonce only needs to be unguessable per page.
+            let nonce = (try? Self.makeNonce()) ?? "owe" // Optional: the CSP nonce only needs to be unguessable per page.
             let body = Data(String(decoding: page, as: UTF8.self).replacingOccurrences(of: AndroidWiFiPage.noncePlaceholder, with: nonce).utf8)
             return .init(status: 200, headers: AndroidWiFiHTTP.commonHeaders + [
                 ("Content-Type", "text/html; charset=utf-8"),
