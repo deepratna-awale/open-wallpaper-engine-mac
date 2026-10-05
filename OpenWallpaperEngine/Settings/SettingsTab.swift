@@ -85,7 +85,8 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
         case .general:
             return [SettingField(\.autoStart), SettingField(\.language), SettingField(\.appearance),
                     SettingField(\.adjustMenuBarTint), SettingField(\.lockScreenPicture), SettingField(\.theming),
-                    SettingField(\.screenshotResolution), SettingField(\.screenshotFolder)]
+                    SettingField(\.screenshotResolution), SettingField(\.screenshotFolder),
+                    SettingField(\.browseTransition)]
         case .performance:
             return [SettingField(\.otherApplicationFocused), SettingField(\.otherApplicationMaximized),
                     SettingField(\.otherApplicationFullscreen), SettingField(\.otherApplicationPlayingAudio),

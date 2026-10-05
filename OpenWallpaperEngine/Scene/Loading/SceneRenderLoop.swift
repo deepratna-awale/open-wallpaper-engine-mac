@@ -230,6 +230,19 @@ final class SceneRenderLoop {
         }
     }
 
+    /// Main: a transition's outgoing picture at `pixelSize`, kept on the GPU
+    /// (`SceneMetalRenderer.captureTransitionFrame`), drawn on the render thread between frames;
+    /// `completion` gets it, or nil, on a Metal or the render thread.
+    func captureTransitionFrame(pixelSize: SIMD2<Int>, completion: @escaping @Sendable (MTLTexture?) -> Void) {
+        thread.perform { [self] in
+            guard let renderer else { return completion(nil) }
+            if !renderer.captureTransitionFrame(pixelSize: pixelSize, live: viewports(), sharesFrame: displays.count > 1,
+                                                completion: completion) {
+                completion(nil)
+            }
+        }
+    }
+
     /// Something that changes the picture happened: tick at `demand`'s rate from the next refresh.
     func wake(_ demand: FrameDemand) {
         guard let renderer, renderer.framePacing.level < demand else { return }

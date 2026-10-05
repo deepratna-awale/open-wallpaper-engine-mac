@@ -9,6 +9,8 @@ struct PlaylistView: View {
     @State private var isRecordingShortcut = false
     /// A recorded shortcut something else uses, until the warning is answered.
     @State private var pendingShortcut: PendingShortcut?
+    /// The playlist whose Playlist Settings sheet is open.
+    @State private var configuredPlaylist: WallpaperPlaylist?
 
     private struct PendingShortcut {
         let shortcut: GlobalShortcut
@@ -51,6 +53,9 @@ struct PlaylistView: View {
             } message: { pending in
                 Text(verbatim: pending.conflicts.map(\.message).joined(separator: "\n\n"))
             }
+            .sheet(item: $configuredPlaylist) { playlist in
+                PlaylistSettingsSheet(wallpaperViewModel: wallpaperViewModel, playlist: playlist)
+            }
     }
 
     /// Saves a recorded shortcut, or first warns about what already uses it.
@@ -81,6 +86,13 @@ struct PlaylistView: View {
                                 recording ? hotKeys.suspend() : hotKeys.resume()
                             }
                         )
+                        Button {
+                            configuredPlaylist = playlist
+                        } label: {
+                            Label("Configure", systemImage: "gearshape")
+                        }
+                        .glassButtonStyle()
+                        .help("Playlist Settings: when the wallpaper changes, and the transition")
                         Button(role: .destructive) {
                             playlistPendingDeletion = playlist
                         } label: {
@@ -96,12 +108,20 @@ struct PlaylistView: View {
                     }
                     VStack(alignment: .leading, spacing: 8) {
                         Toggle("Rotate automatically", isOn: $wallpaperViewModel.playlistEnabled)
-                        Toggle("Shuffle", isOn: $wallpaperViewModel.playlistShuffle)
-                        Toggle("Repeat", isOn: $wallpaperViewModel.playlistRepeats)
+                        // A scheduled playlist's slots pick the wallpaper, not the order.
+                        Group {
+                            Toggle("Shuffle", isOn: $wallpaperViewModel.playlistShuffle)
+                            Toggle("Repeat", isOn: $wallpaperViewModel.playlistRepeats)
+                        }
+                        .disabled(playlist.timing.isScheduled)
                         Toggle("Change when video ends", isOn: Binding(
                             get: { playlist.changeWhenVideoEnds },
                             set: { wallpaperViewModel.setPlaylistChangeWhenVideoEnds($0) }
                         ))
+                        .disabled(!playlist.timing.usesTimerOptions)
+                        LabeledContent("Change wallpaper") {
+                            Text(playlist.timing.title)
+                        }
                         HStack {
                             Text("Wallpaper duration")
                             // No `step:` (AppKit would draw a tick per step); the binding snaps instead.
@@ -114,6 +134,7 @@ struct PlaylistView: View {
                                 .frame(minWidth: 64, alignment: .trailing)
                                 .fixedSize()
                         }
+                        .disabled(playlist.timing != .timer)
                     }
                     GlassGroup {
                         HStack {

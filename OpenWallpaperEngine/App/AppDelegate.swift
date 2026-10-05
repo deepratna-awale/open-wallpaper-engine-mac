@@ -125,6 +125,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     lazy var safeRestart = SafeRestart()
     /// Each playlist's system-wide shortcut (`App/GlobalShortcuts`).
     lazy var playlistShortcuts = PlaylistShortcutController(viewModel: wallpaperViewModel)
+    /// Playlist transitions, and Settings' transition for wallpapers chosen by hand, on the
+    /// wallpaper windows.
+    private(set) lazy var wallpaperTransitions = WallpaperTransitionCoordinator(
+        wallpapers: wallpaperViewModel,
+        settings: { [unowned self] in globalSettingsViewModel.settings.browseTransition },
+        windows: { [unowned self] in wallpaperWindows })
     /// The hotkey actions' system-wide shortcuts (Settings › General › Hotkeys).
     lazy var globalHotKeys: GlobalHotKeyController = {
         let controller = GlobalHotKeyController(viewModel: wallpaperViewModel)
@@ -338,6 +344,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         
         // 创建桌面壁纸视窗
         setWallpaperWindows()
+        // Changes show their transitions from now; the playlist starts as its settings say.
+        wallpaperViewModel.transitions = wallpaperTransitions
+        wallpaperViewModel.startPlaylistAtLaunch()
         // Stop Wallpapers closes them, Resume makes them again.
         observeStoppedState()
 

@@ -9,7 +9,7 @@ import SwiftUI
 import AVKit
 import Combine
 
-private extension Array {
+extension Array {
     subscript(safe index: Index) -> Element? {
         indices.contains(index) ? self[index] : nil
     }
@@ -18,7 +18,7 @@ private extension Array {
 /// Provide Wallpaper Database for WallpaperView and ContentView etc.
 @MainActor
 class WallpaperViewModel: ObservableObject {
-    private let persistsWallpapers: Bool
+    let persistsWallpapers: Bool
 
     @Published var nextCurrentWallpaper: WEWallpaper =
     WEWallpaper(using: .invalid, where: AppBundleLayout.wallpaperNotFoundURL) {
@@ -26,14 +26,14 @@ class WallpaperViewModel: ObservableObject {
             guard confirmApply?(newValue) ?? true else { return }
             if Self.runsCode(newValue) {
                 if !Self.needsTrust(newValue) {
-                    self.setWallpaper(newValue, for: selectedScreenIds)
+                    self.setWallpaper(newValue, for: selectedScreenIds, transition: .manual)
                     // Points out a wallpaper that needs Chromium while it isn't installed.
                     ChromiumFeatureAdvisor.shared.wallpaperApplied(newValue)
                 } else {
                     AppDelegate.shared.contentViewModel.warningUnsafeWallpaperModal(which: newValue)
                 }
             } else {
-                self.setWallpaper(newValue, for: selectedScreenIds)
+                self.setWallpaper(newValue, for: selectedScreenIds, transition: .manual)
             }
         }
     }
@@ -144,6 +144,7 @@ class WallpaperViewModel: ObservableObject {
                 playlistIndex = activePlaylistID.flatMap { playlistPositions[$0] } ?? 0
             }
             savePlaylistSettings(); restartPlaylistTimer()
+            if oldValue != activePlaylistID { applyPlaylistSchedule(force: true) }
         }
     }
     /// Where each playlist that isn't active stopped, for when it is chosen again.
@@ -157,10 +158,26 @@ class WallpaperViewModel: ObservableObject {
         didSet { savePlaylistSettings() }
     }
     @Published var playlistEnabled = false {
-        didSet { savePlaylistSettings(); restartPlaylistTimer() }
+        didSet {
+            savePlaylistSettings(); restartPlaylistTimer()
+            if playlistEnabled && !oldValue { applyPlaylistSchedule(force: true) }
+        }
     }
 
-    private var playlistTimer: Timer?
+    /// The timer's next change, or a scheduled playlist's next slot (`restartPlaylistTimer`).
+    var playlistTimer: Timer?
+    /// A timer playlist's time left, which stands still while the wallpaper is paused.
+    var playlistCountdown: PlaylistCountdown?
+    /// Looks at a scheduled playlist again after sleep and clock changes.
+    var playlistClockObserver: PlaylistClockObserver?
+    /// The item a scheduled playlist last showed for its slot: Next and Previous stay until the
+    /// slot changes.
+    var playlistScheduledIndex: Int?
+    /// The clock and calendar a scheduled playlist reads (tests set their own).
+    var playlistClock: () -> Date = { Date() }
+    var playlistCalendar: () -> Calendar = { Calendar.autoupdatingCurrent }
+    /// Plays transitions between wallpapers on the displays; nil (previews, tests): none.
+    var transitions: WallpaperTransitionPerforming?
 
     /// WE's "Stop wallpapers" (`ui_settings_hotkeys_action_stop`), set by the user: every
     /// display's wallpaper is unloaded and the desktop shows the macOS desktop picture, until Resume
@@ -211,7 +228,8 @@ class WallpaperViewModel: ObservableObject {
     let loadingSnapshots = SceneLoadingSnapshotSession(store: .current)
     /// The AVKit videos running on this model's displays, one player per video.
     let videoInstances = WallpaperInstanceRegistry<WallpaperInstanceKey, VideoWallpaperViewModel>(teardown: { $0.stop() })
-    private var playlistIndex = 0
+    /// The active playlist's current item.
+    var playlistIndex = 0
 
     private func loadRecents() {
         guard let data = UserDefaults.app.data(forKey: Self.recentsKey),
@@ -343,8 +361,28 @@ class WallpaperViewModel: ObservableObject {
     /// Sets `wallpaper` on `screenIds`; for a display in a clone or stretch, on its source display,
     /// so every member shows it and the members' own selections stay for when they leave; for a
     /// split display, on each of its regions.
-    func setWallpaper(_ wallpaper: WEWallpaper, for screenIds: Set<String>) {
-        for screenId in layoutResolution.targets(of: screenIds).sorted() {
+    ///
+    /// `transition`: the transition shown on the displays that change, played by `transitions`
+    /// (a playlist's own, or Settings' for wallpapers chosen by hand). The change applies at once
+    /// without one; with one, as soon as the outgoing pictures are captured, and before any later
+    /// change.
+    func setWallpaper(_ wallpaper: WEWallpaper, for screenIds: Set<String>,
+                      transition: WallpaperChangeTransition = .none) {
+        transitions?.flushPending()
+        let targets = layoutResolution.targets(of: screenIds)
+        let apply: @MainActor () -> Void = { [weak self] in self?.assign(wallpaper, to: targets) }
+        let changing = targets.filter { !self.wallpaper(for: $0).isSameWallpaper(as: wallpaper) }
+        guard let transitions, !changing.isEmpty,
+              let settings = transition.settings(manual: transitions.manualSettings),
+              let kind = settings.pick() else {
+            apply()
+            return
+        }
+        transitions.perform(kind, duration: settings.duration, on: Set(changing), apply: apply)
+    }
+
+    private func assign(_ wallpaper: WEWallpaper, to targets: Set<String>) {
+        for screenId in targets.sorted() {
             // The outgoing one too: it may have been restored at launch rather than set.
             wallpaperHistory.push(self.wallpaper(for: screenId), for: screenId)
             wallpaperHistory.push(wallpaper, for: screenId)
@@ -392,6 +430,11 @@ class WallpaperViewModel: ObservableObject {
               let id = playlistID ?? activePlaylistID,
               let index = playlists.firstIndex(where: { $0.id == id }),
               !playlists[index].items.contains(where: { $0.wallpaper.wallpaperDirectory == wallpaper.wallpaperDirectory }) else { return }
+        // WE's limit: a day-of-week playlist has a wallpaper per day at most.
+        if playlists[index].timing == .dayofweek, playlists[index].items.count >= PlaylistTiming.maxDayOfWeekItems {
+            OWELog.info(.app, "Playlist \"\(playlists[index].name)\" is a day-of-week playlist with 7 wallpapers; \"\(wallpaper.project.title)\" wasn't added")
+            return
+        }
         playlists[index].items.append(WallpaperPlaylistItem(wallpaper: wallpaper))
     }
 
@@ -425,7 +468,7 @@ class WallpaperViewModel: ObservableObject {
         }
 
         func advancePlaylistIfVideoEnds(_ wallpaper: WEWallpaper) {
-          guard let playlist = activePlaylist, playlist.changeWhenVideoEnds,
+          guard let playlist = activePlaylist, playlist.changeWhenVideoEnds, playlist.timing.usesTimerOptions,
               playlist.items.indices.contains(playlistIndex),
               playlist.items[playlistIndex].wallpaper.wallpaperDirectory == wallpaper.wallpaperDirectory else { return }
           advancePlaylistAutomatically()
@@ -609,7 +652,7 @@ class WallpaperViewModel: ObservableObject {
 
     /// Timer and video-end advances. Nobody is there to confirm a wallpaper safe restart
     /// flagged, so those are passed over instead of asking.
-    private func advancePlaylistAutomatically() {
+    func advancePlaylistAutomatically() {
         advancePlaylist(skippingFlagged: true)
     }
 
@@ -618,6 +661,8 @@ class WallpaperViewModel: ObservableObject {
         syncPlaylistIndex(with: playlist)
         let isFlagged = isFlaggedBySafeRestart
         let isSkipped = { (index: Int) -> Bool in
+            // "First wallpaper played at startup only": the rotation leaves it out.
+            if index == 0 && playlist.leavesOutFirstItem { return true }
             let wallpaper = playlist.items[index].wallpaper
             guard skippingFlagged, isFlagged?(wallpaper) == true else { return false }
             OWELog.info(.app, "Playlist skips \"\(wallpaper.project.title)\": flagged by safe restart")
@@ -651,6 +696,7 @@ class WallpaperViewModel: ObservableObject {
         var index = playlistIndex
         for _ in 0..<count {
             index = (index - 1 + count) % count
+            if index == 0 && playlist.leavesOutFirstItem { continue }
             if shown.map({ playlist.items[index].wallpaper.isSameWallpaper(as: $0) }) != true { break }
         }
         playlistIndex = index
@@ -677,11 +723,15 @@ class WallpaperViewModel: ObservableObject {
 
     /// Shows the playlist's current item on the selected displays (where it is not already
     /// shown) and remembers those displays as the playlist's.
-    private func showPlaylistItem(of playlist: WallpaperPlaylist) {
+    /// `transitions`: the playlist's own transition, except where nothing showed before (the app
+    /// starting).
+    func showPlaylistItem(of playlist: WallpaperPlaylist, transitions: Bool = true) {
         guard let item = playlist.items[safe: playlistIndex] else { return }
         let wallpaper = item.wallpaper
         let targets = selectedScreenIds.filter { !self.wallpaper(for: $0).isSameWallpaper(as: wallpaper) }
-        if !targets.isEmpty { setWallpaper(wallpaper, for: targets) }
+        if !targets.isEmpty {
+            setWallpaper(wallpaper, for: targets, transition: transitions ? .playlist(playlist.transition) : .none)
+        }
         let displays = selectedScreenIds.sorted()
         if let index = playlists.firstIndex(where: { $0.id == playlist.id }), playlists[index].displays != displays {
             playlists[index].displays = displays
@@ -698,22 +748,16 @@ class WallpaperViewModel: ObservableObject {
         let displays = Set(playlist.displays ?? []).intersection(connected)
         if !displays.isEmpty { selectedScreenIds = displays }
         if !playlist.items.isEmpty {
-            if !playlist.items.indices.contains(playlistIndex) { playlistIndex = 0 }
+            // "Always begin with the first wallpaper" starts it at its first item.
+            if !playlist.items.indices.contains(playlistIndex)
+                || (playlist.timing.usesTimerOptions && playlist.beginsWithFirst) { playlistIndex = 0 }
+            if let scheduled = playlist.scheduledIndex(at: playlistClock(), calendar: playlistCalendar()) {
+                playlistIndex = scheduled
+                playlistScheduledIndex = scheduled
+            }
             showPlaylistItem(of: playlist)
         }
         playlistEnabled = true
-    }
-
-    private func restartPlaylistTimer() {
-        playlistTimer?.invalidate()
-        playlistTimer = nil
-          guard persistsWallpapers, playlistEnabled, !isPlaylistSuspended, !isStopped, let playlist = activePlaylist,
-              let item = playlist.items[safe: playlistIndex] else { return }
-          let type = item.wallpaper.project.type.lowercased()
-          if playlist.changeWhenVideoEnds && (type == "video" || type == "remote-video") { return }
-          playlistTimer = Timer.scheduledTimer(withTimeInterval: playlist.duration, repeats: false) { [weak self] _ in
-            self?.advancePlaylistAutomatically()
-        }
     }
 
     private func savePlaylists() {
@@ -780,7 +824,7 @@ class WallpaperViewModel: ObservableObject {
     /// Each display's playback under Settings › Performance › Playback (`PlaybackRules`), set by the
     /// app delegate's `DisplayPlaybackMonitor`.
     var rulePlayback: [String: DisplayPlayback] = [:] {
-        didSet { refreshDisplayPlayback() }
+        didSet { refreshDisplayPlayback(); updatePlaylistPause() }
     }
 
     /// Each display's playback: the playback rules', and muted where the display is muted
@@ -996,6 +1040,7 @@ class WallpaperViewModel: ObservableObject {
             if arePlaybackRatesLinked {
                 audioPlayRate = playRate
             }
+            if (oldValue == 0) != (playRate == 0) { updatePlaylistPause() }
         }
     }
 
@@ -1059,16 +1104,15 @@ class WallpaperViewModel: ObservableObject {
            let saved = try? JSONDecoder().decode([WallpaperPlaylist].self, from: data) {
             self.playlists = saved
         }
-        if let value = UserDefaults.app.string(forKey: "ActiveWallpaperPlaylist") {
-            self.activePlaylistID = UUID(uuidString: value)
-        }
-        if self.activePlaylistID == nil {
-            self.activePlaylistID = self.playlists.first?.id
-        }
-        self.playlistShuffle = UserDefaults.app.bool(forKey: "WallpaperPlaylistShuffle")
-        self.playlistRepeats = UserDefaults.app.object(forKey: "WallpaperPlaylistRepeats") == nil
-            ? true : UserDefaults.app.bool(forKey: "WallpaperPlaylistRepeats")
-        self.playlistEnabled = UserDefaults.app.bool(forKey: "WallpaperPlaylistEnabled")
+        // Into the storage, not through the setters: their observers save all four, which would
+        // overwrite the saved ones not read yet, and start the playlist before the app does
+        // (`startPlaylistAtLaunch`).
+        let activePlaylistID = UserDefaults.app.string(forKey: "ActiveWallpaperPlaylist").flatMap(UUID.init(uuidString:))
+        _activePlaylistID = Published(initialValue: activePlaylistID ?? self.playlists.first?.id)
+        _playlistShuffle = Published(initialValue: UserDefaults.app.bool(forKey: "WallpaperPlaylistShuffle"))
+        _playlistRepeats = Published(initialValue: UserDefaults.app.object(forKey: "WallpaperPlaylistRepeats") == nil
+            ? true : UserDefaults.app.bool(forKey: "WallpaperPlaylistRepeats"))
+        _playlistEnabled = Published(initialValue: UserDefaults.app.bool(forKey: "WallpaperPlaylistEnabled"))
 
         // Load per-screen wallpapers. They stay as they are: without a saved display layout every
         // display shows its own.
