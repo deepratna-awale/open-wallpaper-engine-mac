@@ -146,7 +146,8 @@ final class SceneRenderLoop {
     /// A display's draw, from its view's `draw()`: one display draws the scene straight onto its
     /// drawable; with several, or on a stretch (which shows a rect of a frame the canvas's size),
     /// the driving display renders the frame for all of them and each presents it. Returns
-    /// whether the renderer has content to show.
+    /// whether the scene has drawn a complete frame (`SceneMetalRenderer.hasCompleteFrame`), which
+    /// the loading picture waits for.
     @discardableResult
     func draw(_ id: ObjectIdentifier, in view: MTKView) -> Bool {
         guard let renderer else { return false }
@@ -169,7 +170,7 @@ final class SceneRenderLoop {
         guard displays.count > 1 || spansCanvas else {
             renderer.draw(in: view)
             captureSnapshotIfDue(view, renderer: renderer, rendersFrame: true)
-            return renderer.hasContent
+            return renderer.hasCompleteFrame
         }
         let now = CACurrentMediaTime()
         if schedule.shouldRender(id, at: now) {
@@ -177,12 +178,12 @@ final class SceneRenderLoop {
             schedule.rendered(at: now)
         }
         // An idle frame encoded nothing: the display keeps the frame it shows.
-        guard displays[id]?.presentedFrame != renderer.encodedFrames else { return renderer.hasContent }
+        guard displays[id]?.presentedFrame != renderer.encodedFrames else { return renderer.hasCompleteFrame }
         displays[id]?.presentedFrame = renderer.encodedFrames
         renderer.present(in: view)
         // A stretched display's picture is its rect of the canvas, not the wallpaper's.
         if !spansCanvas { captureSnapshotIfDue(view, renderer: renderer, rendersFrame: false) }
-        return renderer.hasContent
+        return renderer.hasCompleteFrame
     }
 
     /// Once the scene has shown its content for a while, copies what `view`'s display shows into

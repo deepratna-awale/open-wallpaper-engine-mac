@@ -360,6 +360,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private(set) var pendingReplacements = 0
     /// The last `setContent` has been applied (its layers and scripts are in place).
     private(set) var hasContent = false
+    /// A frame of the content has been drawn with every pass in it: none waited on a pipeline
+    /// still compiling, a script layer being built or text being rasterised. The first frames
+    /// after `hasContent` draw what is ready and skip the rest, so they can show a darker or
+    /// partial scene; a loading picture stays over the scene until this is set.
+    private(set) var hasCompleteFrame = false
     /// Which object each authored scene index is, for the draw order scripts set.
     private var objectIDs: [Int] = []
     private var camera = SceneCameraEffects()
@@ -744,6 +749,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             pendingEmits.removeAll()
             objectIDs = []
             hasContent = false
+            hasCompleteFrame = false
             textFrameCache.removeAll()
             textRaster.reset()
             textRasterScales.removeAll()
@@ -878,6 +884,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.timelines.registerTextures(self.layers.compactMap(Self.textureAnimation))
                 self.orderLayers()
                 self.hasContent = true
+                self.hasCompleteFrame = false
                 self.clock = SceneClock()
             }
         }
@@ -1607,6 +1614,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                          frame: effectFrame) else { return }
         let sceneTexture = targets.scene
         if targets.sceneIsOutput { compositesSkipped += 1 }
+        // Until the first complete frame: whether this one can be, and the compiles landed before it.
+        let landedBefore = hasCompleteFrame || !hasContent || pipelinesCompiling ? nil : pipelinesLanded
+        // The frames before it drew only what was ready: effect history starts with this one.
+        if landedBefore != nil { effectGraph?.restartHistory() }
         let multisampledScene = sceneMultisample(for: sceneTexture)
         // Draws sample the last frame's copy; this frame's is made after the scene pass.
         mipMappedTarget = mipMappedFrameBuffer?.target(matching: sceneTexture, commandBuffer: commandBuffer)
@@ -2109,6 +2120,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         }
         commandBuffer.commit()
         lastCommandBuffer = commandBuffer
+        // Nothing was compiling when the frame started, nor started or landed while it was
+        // encoded: every pass drew.
+        if let landedBefore, !pipelinesCompiling, pipelinesLanded == landedBefore, pendingScriptLayers == 0,
+           pendingReplacements == 0, textRaster.inFlight == 0 {
+            hasCompleteFrame = true
+        }
     }
 
     /// The scene's bloom this frame: `thisScene.bloom`, `bloomstrength` and `bloomthreshold` once a

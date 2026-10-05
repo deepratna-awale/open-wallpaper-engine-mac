@@ -187,6 +187,32 @@ final class EffectGraphTests: XCTestCase {
         XCTAssertLessThan(difference(pixels, outputs[7]), 1, "after eight frames the image shows through")
     }
 
+    /// `restartHistory` takes a chain that carries frames back to its first frame: motion blur's
+    /// buffers go back to transparent black, so the next frame is again 0.8 of the image, not what
+    /// the frames before it accumulated (a scene's frames before its first complete one).
+    func testRestartedHistoryStartsFromTheNextFrame() throws {
+        let plan = try builder.build(try effect(#"{"file":"effects/motionblur/effect.json"}"#))
+        let queue = try XCTUnwrap(device.makeCommandQueue())
+        let input = try checkerboard()
+        let context = EffectGraphRenderer.Context(frame: BuiltinFrameContext(time: 1.5), values: FixedValues(),
+                                                  assetTexture: { _, _ in nil }, sceneSnapshot: nil,
+                                                  layerColor: SIMD3(1, 1, 1), layerAlpha: 1)
+        XCTAssertTrue(renderer.waitUntilReady([plan], width: input.width, height: input.height))
+        func frame() throws -> [UInt8] {
+            let buffer = try XCTUnwrap(queue.makeCommandBuffer())
+            let output = try XCTUnwrap(renderer.apply([plan], to: input, layerID: "blur", context: context, commandBuffer: buffer))
+            buffer.commit()
+            buffer.waitUntilCompleted()
+            return try read(output, queue: queue)
+        }
+        let firstFrame = try frame()
+        for _ in 0..<4 { _ = try frame() }
+        let accumulated = try frame()
+        XCTAssertGreaterThan(difference(firstFrame, accumulated), 1, "the history built up")
+        renderer.restartHistory()
+        XCTAssertLessThan(difference(firstFrame, try frame()), 0.5, "the frame after the restart is a first frame again")
+    }
+
     /// Glitter draws its sparkles into a fixed 256² tile (`"width"`, `"height"`) that repeats
     /// (`"uvs": "repeat"`): each tile texel covers a few screen pixels, WE's 3-4 px sparkles.
     func testFixedSizeFBOsDontFollowTheLayer() throws {
