@@ -22,7 +22,7 @@ import Foundation
 /// falls back to a copy of the real domain (`readOnlyView`), so nothing it or the code it runs
 /// sets reaches the user's defaults; `discardReadOnlyScratch` deletes the scratch suite.
 struct AppStorageLocation: @unchecked Sendable { // UserDefaults is thread-safe; the rest is immutable.
-    static let realBundleIdentifier = "com.winddog.wallpaper-engine"
+    static let realBundleIdentifier = "app.openwallpaperengine"
     static let environmentKey = "OWE_ISOLATED_STATE"
     static let argumentKey = "-OWEIsolatedState"
     static let testsTag = "tests"

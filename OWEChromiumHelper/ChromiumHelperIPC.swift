@@ -6,7 +6,7 @@ import IOSurface
 
 enum ChromiumHelperIPC {
     /// The bundle identifier of the XPC service in `Contents/XPCServices`.
-    static let serviceName = "com.winddog.wallpaper-engine.chromium-helper"
+    static let serviceName = "app.openwallpaperengine.chromium.helper"
     /// The largest frame side either end accepts, in pixels.
     static let maxDimension = 16_384
     /// The only pixel format frames come in: 8-bit BGRA, what CEF paints on macOS.

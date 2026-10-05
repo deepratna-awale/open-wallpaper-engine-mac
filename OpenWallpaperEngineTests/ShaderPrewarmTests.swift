@@ -10,7 +10,7 @@ final class ShaderPrewarmTests: XCTestCase {
     private var caches: URL!
 
     override func setUpWithError() throws {
-        suiteName = "com.winddog.wallpaper-engine.isolated.tests.prewarm-\(UUID().uuidString)"
+        suiteName = "app.openwallpaperengine.isolated.tests.prewarm-\(UUID().uuidString)"
         defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
         caches = FileManager.default.temporaryDirectory.appending(path: "owe-prewarm-caches-\(UUID().uuidString)")
     }

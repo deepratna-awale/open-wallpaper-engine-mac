@@ -128,7 +128,7 @@ The `SceneMetalRenderer` class (~1,600 lines) and its private per-frame helpers 
 
 ## Step 6: safety net
 
-1. **Logging.** Route `OWELog` through `os.Logger` (subsystem `com.winddog.wallpaper-engine`, category per `OWELog.Category`, messages `privacy: .public`), and replace the remaining `print` and `NSLog` calls. This is a small, deliberate behaviour change: log output only.
+1. **Logging.** Route `OWELog` through `os.Logger` (subsystem `app.openwallpaperengine`, category per `OWELog.Category`, messages `privacy: .public`), and replace the remaining `print` and `NSLog` calls. This is a small, deliberate behaviour change: log output only.
 2. **Tests.**
    - Add an `Open Wallpaper EngineTests` unit-test target, and fix the shared scheme's dangling test references.
    - Add fixtures under `Tests/Fixtures/`: small hand-made scenes plus the `effect.json`/material shapes, covering multi-pass, combos, user bindings and text alignment.

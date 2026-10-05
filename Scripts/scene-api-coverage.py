@@ -18,7 +18,7 @@ import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_LIBRARY = "/Volumes/980Pro/OpenWallpaperStorage"
-BUNDLE_ID = "com.winddog.wallpaper-engine"
+BUNDLE_ID = "app.openwallpaperengine"
 OBJECTS = ("thisScene", "thisLayer", "thisObject", "engine", "input")
 
 

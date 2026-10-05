@@ -49,11 +49,11 @@ final class WallpaperEditorProcessTests: XCTestCase {
                        "an option after the flag isn't a folder")
         XCTAssertEqual(AppLaunchMode.parse(["/app", "--wallpaper-editor", ""]), .wallpaperEditor(nil))
         // The editor's own app is the editor, with or without the flag.
-        let editorApp = "com.winddog.wallpaper-engine.editor"
+        let editorApp = "app.openwallpaperengine.editor"
         XCTAssertEqual(AppLaunchMode.parse(["/editor"], bundleIdentifier: editorApp), .wallpaperEditor(nil))
         XCTAssertEqual(AppLaunchMode.parse(["/editor", "--wallpaper-editor", "/library/42"], bundleIdentifier: editorApp),
                        .wallpaperEditor(URL(filePath: "/library/42", directoryHint: .isDirectory)))
-        XCTAssertEqual(AppLaunchMode.parse(["/app"], bundleIdentifier: "com.winddog.wallpaper-engine"), .main)
+        XCTAssertEqual(AppLaunchMode.parse(["/app"], bundleIdentifier: "app.openwallpaperengine"), .main)
     }
 
     func testTheEditorIsLaunchedWithTheFolderAndTheAppsIsolation() {
@@ -73,7 +73,7 @@ final class WallpaperEditorProcessTests: XCTestCase {
     }
 
     func testRunningProcessesAreToldApartByTheirBundleAndArguments() {
-        let app = "com.winddog.wallpaper-engine", editor = "com.winddog.wallpaper-engine.editor"
+        let app = "app.openwallpaperengine", editor = "app.openwallpaperengine.editor"
         func kind(_ arguments: [String], _ bundle: String = app) -> AppProcessList.Kind {
             AppProcessList.classify(arguments: arguments, environment: [:], bundleIdentifier: bundle).kind
         }
@@ -98,9 +98,9 @@ final class WallpaperEditorProcessTests: XCTestCase {
         XCTAssertEqual(AppBundleLayout.appURL(containingHelper: editor)?.path, app.path, "the editor finds the app it is in")
         XCTAssertNil(AppBundleLayout.appURL(containingHelper: app), "the app isn't inside another")
         XCTAssertNil(AppBundleLayout.appURL(containingHelper: URL(filePath: "/tmp/Helpers/X.app", directoryHint: .isDirectory)))
-        XCTAssertEqual(AppBundleLayout.editorIdentifier(for: "com.winddog.wallpaper-engine"), "com.winddog.wallpaper-engine.editor")
-        XCTAssertEqual(AppBundleLayout.appIdentifier(for: "com.winddog.wallpaper-engine.editor"), "com.winddog.wallpaper-engine")
-        XCTAssertEqual(AppBundleLayout.appIdentifier(for: "com.winddog.wallpaper-engine"), "com.winddog.wallpaper-engine")
+        XCTAssertEqual(AppBundleLayout.editorIdentifier(for: "app.openwallpaperengine"), "app.openwallpaperengine.editor")
+        XCTAssertEqual(AppBundleLayout.appIdentifier(for: "app.openwallpaperengine.editor"), "app.openwallpaperengine")
+        XCTAssertEqual(AppBundleLayout.appIdentifier(for: "app.openwallpaperengine"), "app.openwallpaperengine")
         XCTAssertTrue(AppBundleLayout.appBundle === Bundle.main, "the app reads its own Info.plist")
     }
 
@@ -160,8 +160,8 @@ final class WallpaperEditorProcessTests: XCTestCase {
     }
 
     func testTheEditorsAppKeepsTheAppsState() {
-        let editor = AppStorageLocation(isolationTag: "shots", bundleIdentifier: "com.winddog.wallpaper-engine.editor")
-        let app = AppStorageLocation(isolationTag: "shots", bundleIdentifier: "com.winddog.wallpaper-engine")
+        let editor = AppStorageLocation(isolationTag: "shots", bundleIdentifier: "app.openwallpaperengine.editor")
+        let app = AppStorageLocation(isolationTag: "shots", bundleIdentifier: "app.openwallpaperengine")
         XCTAssertEqual(editor.suiteName, app.suiteName, "the same defaults")
         XCTAssertEqual(editor.supportDirectory, app.supportDirectory)
         XCTAssertEqual(editor.cachesDirectory, app.cachesDirectory)
@@ -264,7 +264,7 @@ final class WallpaperEditorProcessTests: XCTestCase {
         XCTAssertNotEqual(AppProcessChannel(isolationTag: "a").name(.openWallpaper),
                           AppProcessChannel(isolationTag: nil).name(.openWallpaper))
         XCTAssertEqual(AppProcessChannel(isolationTag: nil).name(.openWallpaper).rawValue,
-                       "com.winddog.wallpaper-engine.editor.open")
+                       "app.openwallpaperengine.editor.open")
     }
 
     // MARK: Live sync

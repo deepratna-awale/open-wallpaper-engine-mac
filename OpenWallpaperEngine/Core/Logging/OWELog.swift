@@ -29,7 +29,7 @@ enum OWELog {
     private static let loggers: [Category: Logger] = Dictionary(uniqueKeysWithValues: [
         Category.scene, .script, .audio, .shader, .importer, .workshop, .texture, .perf,
         .app, .library, .web, .settings, .ui
-    ].map { ($0, Logger(subsystem: "com.winddog.wallpaper-engine", category: $0.rawValue)) })
+    ].map { ($0, Logger(subsystem: "app.openwallpaperengine", category: $0.rawValue)) })
 
     /// Before the Log Level is applied, debug builds log lifecycle diagnostics (`.info`) too.
     nonisolated(unsafe) static var minimumSeverity: Severity = {

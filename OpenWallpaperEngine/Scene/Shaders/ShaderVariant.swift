@@ -92,7 +92,7 @@ final class ShaderVariantTranslator {
 
     static var defaultCacheDirectory: URL? {
         AppStorageLocation.current.cachesDirectory
-            .appending(path: "com.winddog.wallpaper-engine/shader-variants", directoryHint: .isDirectory)
+            .appending(path: "app.openwallpaperengine/shader-variants", directoryHint: .isDirectory)
     }
 
     /// Names the cache subdirectory of one translator revision and compiler. Variants of any other

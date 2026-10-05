@@ -9,7 +9,7 @@ final class SteamCredentialsTests: XCTestCase {
     private var suiteName: String!
 
     override func setUpWithError() throws {
-        keychain = KeychainStore(service: "com.winddog.wallpaper-engine.tests.keychain.\(UUID().uuidString)")
+        keychain = KeychainStore(service: "app.openwallpaperengine.tests.keychain.\(UUID().uuidString)")
         suiteName = "owe-steam-credentials-tests-\(UUID().uuidString)"
         defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
     }

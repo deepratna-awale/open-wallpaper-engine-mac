@@ -13,7 +13,7 @@ public protocol AppLaunching {
 /// LaunchServices knows by its bundle id. It is opened in the background, isolated under
 /// `isolationTag` for an isolated copy, so a development copy never starts on the user's real state.
 public struct OWEAppLauncher: AppLaunching {
-    public static let bundleIdentifier = "com.winddog.wallpaper-engine"
+    public static let bundleIdentifier = "app.openwallpaperengine"
 
     public let appURL: URL?
     public let isolationTag: String?

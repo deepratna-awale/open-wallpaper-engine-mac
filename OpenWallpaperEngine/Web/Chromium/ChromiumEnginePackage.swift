@@ -116,7 +116,7 @@ enum ChromiumEnginePackage {
     /// CEF's browser process and only names this bundle as CEF's main bundle.
     private static func writeBundleInfo(in folder: URL) throws {
         let info: [String: Any] = [
-            "CFBundleIdentifier": "com.winddog.wallpaper-engine.chromium-engine",
+            "CFBundleIdentifier": "app.openwallpaperengine.chromium",
             "CFBundleName": "OWE Chromium",
             "CFBundlePackageType": "APPL",
             "CFBundleInfoDictionaryVersion": "6.0",

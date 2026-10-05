@@ -24,7 +24,7 @@ final class DesktopPictureTests: XCTestCase {
         root = FileManager.default.temporaryDirectory.appending(path: "DesktopPictureTests-\(UUID().uuidString)",
                                                                 directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        let suite = "com.winddog.wallpaper-engine.isolated.tests.desktoppicture.\(UUID().uuidString)"
+        let suite = "app.openwallpaperengine.isolated.tests.desktoppicture.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         let caches = root.appending(path: "Caches", directoryHint: .isDirectory)
         setter = FakeDesktopPictures()

@@ -193,7 +193,7 @@ Prebuilt `.metallib` files are dropped. They gain nothing over the OS cache, and
 
 **Variant cache key:** `sha256(translatorRevision ‖ vertex source after includes ‖ fragment source after includes ‖ sorted resolved combos)`.
 - Stored in `<cacheRoot>/variants/<key>.{vert,frag}.metal` + `<key>.layout.json`.
-- `cacheRoot` is `~/Library/Caches/com.winddog.wallpaper-engine/shaders`, **not** inside the WE install or the wallpaper folders.
+- `cacheRoot` is `~/Library/Caches/app.openwallpaperengine/shaders`, **not** inside the WE install or the wallpaper folders.
 
 **Combos are compiled lazily**, per variant, when a scene loads.
 - Real scenes need at most 230 variants, out of 1,871 theoretical for the built-ins alone. The first load costs about 2–50 ms per new variant, done in the background. Until a variant is ready, its layer renders **without** that effect; it never falls back to an approximation.
