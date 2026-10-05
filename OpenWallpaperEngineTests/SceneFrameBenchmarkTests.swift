@@ -370,7 +370,7 @@ final class SceneFrameBenchmarkTests: XCTestCase {
     /// Loading a wallpaper stores its settings; this puts back what was stored before (nothing, for a
     /// wallpaper never opened), so the benchmark leaves the user's settings as they were.
     private static func keepStoredSettings(directory: URL, projectData: Data) -> () -> Void {
-        let identity = WallpaperSettingsIdentity(directory: directory, projectData: projectData)
+        let identity = WallpaperSettingsIdentity.resolve(directory: directory)
         var keys: [String] = ["SceneAdditionalControlsVersion." + directory.path]
         for family in WallpaperSettingsIdentity.Family.allCases {
             keys.append(identity.key(family))

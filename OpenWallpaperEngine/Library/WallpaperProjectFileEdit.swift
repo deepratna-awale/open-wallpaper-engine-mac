@@ -6,7 +6,10 @@ import Foundation
 /// key is written back as read.
 enum WallpaperProjectFileEdit {
     /// Sets each key to its value, or removes it when the value is nil.
-    static func set(_ values: [String: Any?], inProjectAt directory: URL) throws {
+    static func set(_ values: [String: Any?], inProjectAt directory: URL, defaults: UserDefaults = .app) throws {
+        // A local wallpaper's settings identity is registered before its bytes change, so the edit
+        // keeps its settings even when it was never resolved before.
+        _ = WallpaperSettingsIdentity.resolve(directory: directory, defaults: defaults)
         let url = directory.appending(path: "project.json")
         let data = try Data(contentsOf: url)
         guard var project = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {

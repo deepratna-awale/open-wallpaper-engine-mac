@@ -91,7 +91,7 @@ Properties. Later phases add a timeline under the canvas (P4) and an asset strip
   preview and commit once on release. The desktop runs in Open Wallpaper Engine's process, the
   canvas in the editor's: `WallpaperEditorChangeSync` carries the change across (see Architecture).
 - **Stored** per wallpaper in `<Application Support>/Open Wallpaper Engine/editor/<identity>.json`
-  (the settings identity: Workshop id, else a project hash), never in the wallpaper's folder or the
+  (the settings identity: Workshop id, else the app's id for the local wallpaper), never in the wallpaper's folder or the
   property store. An empty overlay removes its file.
 - **Structure** (version 2 of the file, written only when used, so an older app still reads a
   version-1 overlay): layers added (`added`, their scene.json objects under new ids), deleted

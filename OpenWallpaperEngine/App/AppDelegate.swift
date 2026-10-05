@@ -435,7 +435,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             self.steamCmdInstaller.detectThenAutoInstall(self.contentViewModel.steamCmd)
         }
 
+        // Local wallpapers get their stable settings ids once, before any of them is edited.
+        let libraries = [FileManager.default.wallpapersDirectory] + LibraryFolders().folders
         DispatchQueue.global(qos: .utility).async {
+            LocalWallpaperIdentities.registerLibrary(libraries)
             WallpaperPackageConverter.convertInstalledLibrary()
             if UserDefaults.app.bool(forKey: "ReclaimOriginalPackages") {
                 WallpaperPackageConverter.reclaimEligibleSources()

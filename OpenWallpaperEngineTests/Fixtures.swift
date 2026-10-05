@@ -27,8 +27,7 @@ extension Fixtures {
     /// Removes what loading the wallpaper in `directory` stores in the app's defaults (its settings,
     /// under its identity and any old path key), so tests leave nothing behind.
     static func removeStoredSettings(for directory: URL) {
-        let identity = WallpaperSettingsIdentity(directory: directory,
-                                                 projectData: FileManager.default.contents(atPath: directory.appending(path: "project.json").path))
+        let identity = WallpaperSettingsIdentity.resolve(directory: directory)
         for family in WallpaperSettingsIdentity.Family.allCases {
             UserDefaults.app.removeObject(forKey: identity.key(family))
             UserDefaults.app.removeObject(forKey: family.rawValue + directory.path)

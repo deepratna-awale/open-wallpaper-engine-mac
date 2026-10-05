@@ -119,7 +119,7 @@ struct WEReferenceRenderer {
     /// what puts it back.
     private static func clearStoredSettings(directory: URL) -> () -> Void {
         let projectData = FileManager.default.contents(atPath: directory.appending(path: "project.json").path)
-        let identity = WallpaperSettingsIdentity(directory: directory, projectData: projectData)
+        let identity = WallpaperSettingsIdentity.resolve(directory: directory)
         var keys: [String] = ["SceneAdditionalControlsVersion." + directory.path]
         for family in WallpaperSettingsIdentity.Family.allCases {
             keys.append(identity.key(family))

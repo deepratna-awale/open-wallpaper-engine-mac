@@ -41,7 +41,7 @@ final class ParticleLibraryBenchmarkTests: XCTestCase {
             guard FileManager.default.fileExists(atPath: directory.appending(path: "scene.json").path),
                   let data = FileManager.default.contents(atPath: directory.appending(path: "project.json").path),
                   let project = try? JSONDecoder().decode(WEProject.self, from: data) else { continue } // decoding is covered elsewhere
-            let identity = WallpaperSettingsIdentity(directory: directory, projectData: data)
+            let identity = WallpaperSettingsIdentity.resolve(directory: directory)
             var keys: [String] = ["SceneAdditionalControlsVersion." + directory.path]
             for family in WallpaperSettingsIdentity.Family.allCases {
                 keys.append(identity.key(family))
