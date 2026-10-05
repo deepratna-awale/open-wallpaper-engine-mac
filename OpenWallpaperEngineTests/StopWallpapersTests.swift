@@ -80,28 +80,31 @@ final class StopWallpapersTests: XCTestCase {
         XCTAssertEqual(model.wallpaper(for: "3").project.title, "rule", "the rule's wallpaper shows")
     }
 
-    /// The wallpaper windows' views hold the running instances; closing the windows, as Stop does,
-    /// leaves the registries empty.
-    func testClosingTheWallpaperWindowsReleasesEveryInstance() throws {
-        let directory = FileManager.default.temporaryDirectory.appending(path: "owe-stop-\(UUID().uuidString)")
-        defer { try? FileManager.default.removeItem(at: directory) } // Best-effort cleanup.
-        let clip = try VideoClipFixture.make(frames: 10, in: directory)
-        let video = WEWallpaper(using: WEProject(file: clip.lastPathComponent, preview: "p.jpg", title: "clip", type: "video"),
-                                where: clip.deletingLastPathComponent())
+    /// A display's view holds its wallpaper's running instance; stopping drops the view, and
+    /// closing the window as Stop does drops the rest: the registries are left empty.
+    func testStoppingReleasesEveryInstance() {
+        // A video (the file needn't exist): an AVKit player, or a Metal scene with WE's assets.
+        let video = WEWallpaper(using: WEProject(file: "clip.mp4", preview: "p.jpg", title: "clip", type: "video"),
+                                where: URL(filePath: "/tmp/owe-stop-tests/clip"))
         let model = model()
         model.wallpapers["1"] = video
         func running() -> Int { model.sceneInstances.instances.count + model.videoInstances.instances.count }
 
-        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 64, height: 64), styleMask: .borderless,
+        let window = NSWindow(contentRect: NSRect(x: -10_000, y: -10_000, width: 64, height: 64), styleMask: .borderless,
                               backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(rootView: DisplayWallpaperView(viewModel: model, screenId: "1"))
-        window.contentView?.layoutSubtreeIfNeeded()
+        window.orderFront(nil)
         wait(until: { running() == 1 }, "the display's view runs its wallpaper")
 
+        model.stopWallpapers()
+        wait(until: { running() == 0 }, "nothing runs once stopped")
         AppDelegate.closeWallpaperWindows(["1": window])
-        wait(until: { running() == 0 }, "nothing runs once the window is closed")
         XCTAssertNil(window.contentView)
+        XCTAssertFalse(window.isVisible)
+
+        model.resumeWallpapers()
+        XCTAssertEqual(running(), 0, "a closed window loads nothing; the app delegate makes new ones on resume")
     }
 
     private func wait(until condition: () -> Bool, _ message: String) {

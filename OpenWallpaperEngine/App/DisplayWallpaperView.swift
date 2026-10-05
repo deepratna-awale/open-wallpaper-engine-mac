@@ -8,7 +8,11 @@ struct DisplayWallpaperView: View {
     let screenId: String
 
     var body: some View {
-        if let regions = viewModel.layoutResolution.regions[screenId], let frame = viewModel.displayRect(of: screenId) {
+        // Stopped: no wallpaper view, so nothing holds an instance, page or player, even before
+        // the app delegate closes the window (`AppDelegate+StopWallpapers`).
+        if viewModel.isStopped {
+            Color.clear
+        } else if let regions = viewModel.layoutResolution.regions[screenId], let frame = viewModel.displayRect(of: screenId) {
             ZStack(alignment: .topLeading) {
                 ForEach(regions) { region in
                     let rect = DisplayCanvas.rect(of: region.rect, in: frame)
