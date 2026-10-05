@@ -240,6 +240,31 @@ xcrun stapler validate OpenWallpaperEngine-1.0.0.dmg
 
 A pre-release's files carry its label: `OpenWallpaperEngine-1.1.0-beta.1.zip`.
 
+## Local Release builds
+
+The Release configuration signs every target (the app, `OpenWallpaperEngine.framework`, the
+Wallpaper Editor, `owe-mcp`, the Chromium helper and the screen saver) with **Apple
+Development**, automatic style, under the project's `DEVELOPMENT_TEAM`, as Debug does. An
+ad-hoc ("-") signature can't be used: with the hardened runtime, library validation only loads
+code signed by the same team (or Apple), so an ad-hoc app refuses its own framework and Sparkle
+and doesn't launch. To build one locally:
+
+```sh
+xcodebuild -project OpenWallpaperEngine.xcodeproj -scheme OpenWallpaperEngine \
+  -configuration Release -derivedDataPath build/Release build
+```
+
+Off the project's team, add `DEVELOPMENT_TEAM=<your team ID>` (an Apple Development certificate
+for that team must be in your keychain; `security find-identity -v -p codesigning` lists them).
+Such a build runs on your Mac only; it isn't notarized.
+
+The release workflow doesn't use these settings: its archive passes `CODE_SIGN_STYLE=Manual`,
+`CODE_SIGN_IDENTITY="Developer ID Application: …"`, `DEVELOPMENT_TEAM` and an empty
+`PROVISIONING_PROFILE_SPECIFIER` on the command line, which override the project's
+(conditional) identity for every target, and the `developer-id` export re-signs the bundle.
+CI's test builds are Debug with `CODE_SIGNING_ALLOWED=NO`. Hardened runtime and library
+validation are unchanged.
+
 ## Entitlements and nested code
 
 `OpenWallpaperEngine/OpenWallpaperEngine.entitlements`: not sandboxed,

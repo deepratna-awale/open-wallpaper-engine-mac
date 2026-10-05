@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Screen saver loops are recorded at up to 30 fps and at most 30 s** (they were up to 60 fps and 60 s), so recording is quicker and lighter and the videos are smaller. Existing loops are recorded again.
 - **A scene's music fades in when the wallpaper starts** (loaded, switched to, or at launch), over about 0.75 s with the same ease as pause and resume, instead of starting at full volume. This is Open Wallpaper Engine's own touch; Wallpaper Engine starts at full volume. Loop points don't fade, nothing fades out on a switch or quit, and mute, `startsilent` and the volume work as before.
 
+### Fixed
+
+- **A locally built Release now launches.** Release builds sign with Apple Development under the project's team, as Debug builds do, instead of ad hoc, which library validation rejected for the app's own framework and Sparkle. Published releases are still signed with Developer ID and notarized.
 
 ## [1.0.0-beta.5] - 2026-10-04
 
