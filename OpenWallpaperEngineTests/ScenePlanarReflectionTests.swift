@@ -58,9 +58,9 @@ final class ScenePlanarReflectionTests: XCTestCase {
     /// A square of half-size 4 in the plane y = 0, facing +y (counter-clockwise seen from above).
     private static func plane() -> MDLMesh {
         let corners: [SIMD3<Float>] = [SIMD3(-4, 0, 4), SIMD3(4, 0, 4), SIMD3(4, 0, -4), SIMD3(-4, 0, -4)]
-        let floats: [Float] = corners.flatMap { [$0.x, $0.y, $0.z, 0, 1, 0] }
+        let floats: [Float] = corners.flatMap { [$0.x, $0.y, $0.z, 0, 1, 0, 0, 0] }
         let indices: [UInt16] = [0, 1, 2, 0, 2, 3]
-        return MDLMesh(materials: ["materials/reflective.json"], flags: 0, format: MDLVertexFormat(rawValue: 0x3),
+        return MDLMesh(materials: ["materials/reflective.json"], flags: 0, format: MDLVertexFormat(rawValue: 0xb),
                        vertexData: floats.withUnsafeBytes { Data($0) }, indexData: indices.withUnsafeBytes { Data($0) })
     }
 

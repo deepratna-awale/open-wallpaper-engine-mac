@@ -50,15 +50,17 @@ final class ModelsOpenPointsRenderCaptureTests: XCTestCase {
 
     /// The box through a custom shader reading `a_Color` and `a_TexCoordC1`, which the mesh lacks:
     /// WE draws nothing of it (only the clear colour) and logs nothing. The app skips the draw too.
-    /// The control (not captured in WE) reads only `a_Position` and draws.
+    /// The control (not captured in WE) reads only `a_Position` and draws: it declares `a_Color`
+    /// without reading it, and only the inputs the compiled stage reads count, as in D3D11's
+    /// `CreateInputLayout` against the compiled shader's input signature.
     func testAMeshLackingAShaderInputIsNotDrawn() throws {
-        throw XCTSkip("the skip rule is reverted: it stopped ordinary models drawing; to be redone narrower")
         let missing = try frame("511-missing-attribute", binaries: Self.box)
         XCTAssertEqual(Self.drawnPixels(missing), 0, "only the clear colour")
 
         let control = try project("511-missing-attribute", binaries: Self.box, as: "511-control")
         try """
         attribute vec3 a_Position;
+        attribute vec4 a_Color;
         uniform mat4 g_ModelViewProjectionMatrix;
         void main() {
         	gl_Position = mul(vec4(a_Position, 1.0), g_ModelViewProjectionMatrix);
