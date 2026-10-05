@@ -3,7 +3,7 @@ import Metal
 import simd
 @testable import OpenWallpaperEngine
 
-/// docs/models-plan.md §5.13, 5.14, 5.16, 5.17 and 5.19 against WE 2.8.0.42's captures
+/// docs/models-plan.md §5.13, 5.14, 5.15, 5.16, 5.17 and 5.19 against WE 2.8.0.42's captures
 /// (we-test-wp-images 4e82eed, tools/peer/requests/owe-beta3/models-open: a README per point and
 /// the stills in `shots/`, built by `build_variants.py`). Every project is a 1920×1080
 /// orthographic scene whose image is 1024 px square at scale 0.85; the Windows taskbar covers
@@ -47,6 +47,9 @@ final class ModelsOpenPointsCaptureTests: XCTestCase {
         let found = try Self.rootsWithoutOrigin(under: Fixtures.root, relativeTo: Fixtures.root, orthographicOnly: false)
         XCTAssertEqual(found, [
             "Library/installed/3000000003/scene.json #- [none]",
+            "Models/OpenPoints/510-text-depth-disabled/scene.json #17 rootmotion_box [model]",
+            "Models/OpenPoints/510-text-depth-enabled/scene.json #17 rootmotion_box [model]",
+            "Models/OpenPoints/511-missing-attribute/scene.json #17 rootmotion_box [model]",
             "SceneScript/replay/failures/scene.json #3 Label [text]",
             "Scenes/lights/scene.json #900 [light]",
             "Scenes/lights/scene.json #901 [light]",
@@ -124,6 +127,49 @@ final class ModelsOpenPointsCaptureTests: XCTestCase {
                        "WE draws \"0.02 0.02\" as \"0.02 0.02 0\"")
         XCTAssertNotEqual(try image(stills, "mo_514_box_scale2").pixels, try image(stills, "mo_514_box_scale3").pixels)
         XCTAssertEqual(try image(stills, "mo_514_img_scale2").pixels, try image(stills, "mo_514_img_scale3").pixels)
+    }
+
+    // MARK: - 5.15 Attachment depth
+
+    /// WE 2.8.42's capture (models-open/515-attachment-depth, the scene in
+    /// `Tests/Fixtures/Models/OpenPoints`): an image hung from the rope puppet's `tail` at depth 1,
+    /// then plain children at depths 2–4, each 1100 local units along x. All four draw, a row of
+    /// 61 px tiles from (960, 540) 66 px apart (x 929–1188, y 509–570): no cut-off past 3. The rope's
+    /// `.mdl` has no attachment points (no `MDAT`), so the tail resolves to the parent's origin,
+    /// which is also where the tail joint sits.
+    func testAttachedChainsResolveAtEveryDepth() throws {
+        let data = try Fixtures.data("Models/OpenPoints/515-attachment-depth/scene.json")
+        let scene = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let objects = try JSONDecoder().decode([WESceneObject].self,
+                                               from: JSONSerialization.data(withJSONObject: try XCTUnwrap(scene["objects"])))
+        let hierarchy = SceneTransformHierarchy(objects: objects)
+        var asked: [String] = []
+        let attachments: SceneTransformHierarchy.Attachments = { child, parent, name in
+            asked.append("\(child)<-\(parent):\(name)")
+            return nil
+        }
+        var tiles: [PixelBox] = []
+        for (depth, id) in ["601", "602", "603", "604"].enumerated() {
+            let tile = box(hierarchy.world(of: id, attachments: attachments))
+            let left = 929 + 66 * depth
+            assertBox(tile, PixelBox(minX: left, maxX: left + 61, minY: 509, maxY: 570), "depth \(depth + 1)")
+            tiles.append(tile)
+        }
+        XCTAssertEqual(Set(asked), ["601<-10:tail"], "only depth 1 hangs from the rig")
+        let deep = SceneTransformHierarchy3D(objects: objects).world(of: "604")
+        XCTAssertEqual(deep.columns.3.x, 960 + 3 * 66, accuracy: 1e-3, "the 3D hierarchy agrees")
+
+        guard let folder = Self.capture("515-attachment-depth") else { return }
+        // The tiles right of the rope (depths 2–4; the rope covers depth 1's columns), across row 540
+        // and down depth 3's centre column, against the clear colour; the bloom's glow is fainter.
+        let still = try image(folder, "mo2_515_attach_chain")
+        func strong(_ x: Int, _ y: Int) -> Bool {
+            let index = (y * still.width + x) * 4
+            return (0..<3).reduce(0) { $0 + abs(Int(still.pixels[index + $1]) - Int(still.pixels[$1])) } > 120
+        }
+        let xs = (993..<1400).filter { strong($0, 540) }, ys = (480..<600).filter { strong(1092, $0) }
+        let row = PixelBox(minX: xs.first ?? -1, maxX: xs.last ?? -1, minY: ys.first ?? -1, maxY: ys.last ?? -1)
+        assertBox(row, PixelBox(minX: tiles[1].minX, maxX: tiles[3].maxX, minY: 509, maxY: 570), "WE's tiles", accuracy: 3)
     }
 
     // MARK: - 5.16 Nested tilts in an orthographic scene
@@ -347,17 +393,26 @@ final class ModelsOpenPointsCaptureTests: XCTestCase {
         return FileManager.default.fileExists(atPath: folder.path) ? folder : nil
     }
 
+    /// A round-2 capture's folder (`requests/owe-beta3/models-open/<name>`, stills beside the
+    /// projects) under `OWE_WE_REFERENCE`; nil without it.
+    static func capture(_ name: String) -> URL? {
+        guard let root = ProcessInfo.processInfo.environment["OWE_WE_REFERENCE"], !root.isEmpty else { return nil }
+        let folder = URL(fileURLWithPath: root, isDirectory: true).appending(path: "requests/owe-beta3/models-open/\(name)")
+        return FileManager.default.fileExists(atPath: folder.path) ? folder : nil
+    }
+
     private func image(_ folder: URL, _ name: String) throws -> WEReferenceImage {
         try WEReferenceImage.load(folder.appending(path: "\(name).png"))
     }
 
     /// The bounds of what differs from the background (the top-left pixel) above the taskbar;
     /// nil when nothing does.
-    static func measure(_ image: WEReferenceImage) -> PixelBox? {
+    static func measure(_ image: WEReferenceImage, in region: PixelBox? = nil) -> PixelBox? {
         let pixels = image.pixels
         var box: PixelBox?
-        for y in 0..<(image.height - taskbar) {
-            for x in 0..<image.width {
+        let region = region ?? PixelBox(minX: 0, maxX: image.width - 1, minY: 0, maxY: image.height - taskbar - 1)
+        for y in region.minY...region.maxY {
+            for x in region.minX...region.maxX {
                 let index = (y * image.width + x) * 4
                 let difference = (0..<3).reduce(0) { $0 + abs(Int(pixels[index + $1]) - Int(pixels[$1])) }
                 guard difference > 24 else { continue }

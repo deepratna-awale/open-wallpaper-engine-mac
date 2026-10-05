@@ -203,10 +203,11 @@ struct FixtureMDL {
         return (floats, indices)
     }
 
-    /// One mesh: a cube in `material`.
+    /// One mesh: a cube in `material`, with texture coordinates, which WE's model shaders read (a
+    /// mesh lacking an input its shader reads isn't drawn, docs/models-plan.md §5.11).
     static func cubeModel(material: String = "materials/facecolor.json", bones: Int = 0, bone: UInt32? = nil) -> FixtureMDL {
-        let cube = Self.cube(material: material, bone: bone)
-        return FixtureMDL(format: bones > 0 ? skinned : positionNormal, materialsPerMesh: 1,
+        let cube = Self.cube(material: material, bone: bone, uv: true)
+        return FixtureMDL(format: (bones > 0 ? skinned : positionNormal) | uv, materialsPerMesh: 1,
                           meshes: [Mesh(materials: [material], vertices: cube.vertices, indices: cube.indices)], bones: bones)
     }
 }
