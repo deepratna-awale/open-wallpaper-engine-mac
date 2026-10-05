@@ -3,6 +3,20 @@ import XCTest
 
 /// A helper run (shader prewarm) reads the user's defaults and never writes them.
 final class ReadOnlyDefaultsTests: XCTestCase {
+    /// A read-only view puts the domain it reads into the registration domain, which every
+    /// defaults object of the process searches: right in a helper run, which only reads, but in
+    /// the test host it would hand the isolated store's keys (the settings identity registry,
+    /// say) to every other test's own suite. Each test puts it back as it was.
+    private var registered: [String: Any] = [:]
+
+    override func setUp() {
+        registered = UserDefaults.standard.volatileDomain(forName: UserDefaults.registrationDomain)
+    }
+
+    override func tearDown() {
+        UserDefaults.standard.setVolatileDomain(registered, forName: UserDefaults.registrationDomain)
+    }
+
     func testReadOnlyViewReadsButNeverWritesTheDomain() throws {
         let domain = "com.winddog.wallpaper-engine.isolated.tests.readonly-base-\(UUID().uuidString)"
         let scratch = domain + ".scratch"
