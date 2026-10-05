@@ -11,6 +11,8 @@ Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・We
 
 **Wiki：** ガイドとドキュメントは [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki) にあります。
 
+**ウェブサイト：** ダウンロード、プライバシーポリシー、利用規約は[openwallpaperengine.app](https://openwallpaperengine.app/) にあります。
+
 ## 必要条件
 
 ### 必須

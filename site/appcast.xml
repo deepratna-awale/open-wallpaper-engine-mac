@@ -2,7 +2,7 @@
 <rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
     <channel>
         <title>Open Wallpaper Engine</title>
-        <link>https://deepratna-awale.github.io/open-wallpaper-engine-mac/appcast.xml</link>
+        <link>https://openwallpaperengine.app/appcast.xml</link>
         <description>Open Wallpaper Engine updates. Items are added by .github/workflows/appcast.yml when a release is published.</description>
         <language>en</language>
         <item>

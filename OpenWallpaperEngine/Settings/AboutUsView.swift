@@ -20,6 +20,7 @@ extension AppDelegate {
 }
 
 struct AboutUsView: View {
+    static let websiteURL = URL(string: "https://openwallpaperengine.app/")!
     static let authorsURL = URL(string: "https://github.com/deepratna-awale/open-wallpaper-engine-mac/blob/main/AUTHORS.md")!
 
     var body: some View {
@@ -35,6 +36,8 @@ struct AboutUsView: View {
             VStack(spacing: 12) {
                 Text("Version \(AppVersion.current)")
                     .textSelection(.enabled)
+                Link(String("openwallpaperengine.app"), destination: Self.websiteURL)
+                    .font(.callout)
                 Text("Released and maintained by \("Deepratna Awale")",
                      comment: "%@ is the maintainer's name")
                     .font(.callout)

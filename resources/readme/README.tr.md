@@ -11,6 +11,8 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 
 **Wiki:** kılavuzlar ve belgeler [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)’de.
 
+**Web sitesi:** indirmeler, gizlilik politikası ve kullanım koşulları [openwallpaperengine.app](https://openwallpaperengine.app/)’de.
+
 ## Gereksinimler
 
 ### Gerekli

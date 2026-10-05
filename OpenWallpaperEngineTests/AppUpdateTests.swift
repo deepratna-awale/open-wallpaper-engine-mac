@@ -7,7 +7,7 @@ import XCTest
 final class AppUpdateTests: XCTestCase {
     /// 32 bytes, base64: the shape of a Sparkle EdDSA public key (not a real one).
     private let sampleKey: String = Data(repeating: 7, count: 32).base64EncodedString()
-    private let feed: URL? = URL(string: "https://deepratna-awale.github.io/open-wallpaper-engine-mac/appcast.xml")
+    private let feed: URL? = URL(string: "https://openwallpaperengine.app/appcast.xml")
 
     private func configuration(key: String, label: String = "1.0.0") -> AppUpdateConfiguration {
         AppUpdateConfiguration(feedURL: feed, publicEDKey: key, versionLabel: label)

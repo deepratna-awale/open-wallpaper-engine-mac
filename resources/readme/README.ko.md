@@ -11,6 +11,8 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 
 **위키:** 가이드와 문서는 [위키](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)에 있습니다.
 
+**웹사이트:** 다운로드, 개인정보 처리방침, 이용 약관은 [openwallpaperengine.app](https://openwallpaperengine.app/)에 있습니다.
+
 ## 요구 사항
 
 ### 필수
