@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Playlists change wallpaper as Wallpaper Engine's do.** Configure in a playlist's header opens its Playlist Settings: change wallpaper on a timer, when logging in (one step each time the app starts), by time of day (each wallpaper from its start time, slots edited per wallpaper and snapped to 5 minutes) or by day of week (up to seven wallpapers share the week from its first day), or never. The timer's options are Wallpaper Engine's: change when a video ends, allow changing while paused (otherwise the timer stands still while the wallpaper is paused), always begin with the first wallpaper, and the first wallpaper played at startup only. Scheduled playlists look again when the Mac wakes and when the clock, time zone or day changes, without polling ([docs/playlists.md](docs/playlists.md)).
+- **Wallpaper transitions.** Wallpaper Engine's 27 transitions (Fade, Fade to black, Mosaic, Diffuse, slides and fades, Clouds, Burnt paper, Circular, Zipper, Door, Lines, Radial wipe, Zoom, Drip, Pixelate, Bricks, Paint, Twister, Black hole, CRT, Glass shatter, Bullets, Ice, Boilover), ported to Metal from its own transition shader, play between a playlist's wallpapers, or a random one from a pool you pick, over 0 to 3 s, with a live preview in the playlist's settings. Settings › General › Transitions sets the one for wallpapers chosen in the library (Wallpaper Engine's "Wallpaper browser transition"; off by default). The outgoing picture is captured once and the incoming wallpaper runs live underneath; a clone or stretch renders it once for all its displays.
+- **The control channel's `playlist_update`** sets the timing, the timer's options, the time-of-day ends and the transition, and returns them with each slot.
+
 ### Changed
 
 - **Android Export in the Scene Editor (Live) starts on Dynamic (Balanced)**, as the library's Export for Android sheet does, instead of Pre-Rendered. Pre-Rendered is one click away.
