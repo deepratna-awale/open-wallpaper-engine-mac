@@ -15,7 +15,8 @@ While it is on, the loop of the wallpaper you are showing is recorded in the bac
 priority, waiting while the Mac is on battery or hot:
 
 - **Scenes**: a loop the length of the scene's own animation where it repeats exactly (at most
-  60 s), otherwise the stretch that comes back closest to its start, crossfaded at the seam.
+  30 s), otherwise the stretch that comes back closest to its start (5 to 30 s), crossfaded at
+  the seam.
 - **Web pages and WebM videos**: recorded from the page on a stepped clock, so the loop is
   smooth even when a frame is slow to capture. A page that never loops smoothly isn't used.
 - **Video wallpapers** (MP4 and MOV in H.264 or HEVC) play their own file, with nothing recorded.
