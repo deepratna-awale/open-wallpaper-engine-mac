@@ -401,9 +401,109 @@ final class AndroidWiFiSendTests: XCTestCase {
         XCTAssertNil(session.url)
     }
 
-    private func waitUntil(timeout: TimeInterval = 5, _ condition: @MainActor () -> Bool) async throws {
+    // MARK: Android exports list
+
+    /// A batch of the two test packages, the first with a preview.
+    private func batch() throws -> AndroidExportBatch {
+        let files = try files()
+        var batch = AndroidExportBatch(folder: directory)
+        batch.outputs = [
+            .init(wallpaperID: "1", title: "Rain", type: "scene", mode: .preRendered, url: files[0].url, size: files[0].size,
+                  previewURL: files[0].previewURL),
+            .init(wallpaperID: "2", title: "City", type: "video", mode: nil, url: files[1].url, size: files[1].size, previewURL: nil),
+        ]
+        return batch
+    }
+
+    func testTheExportsListIsKeptAndDropsMissingPackages() throws {
+        let folder = directory.appending(path: "outbox", directoryHint: .isDirectory)
+        let outbox = AndroidExportOutbox(directory: folder)
+        outbox.record(try batch(), device: "Galaxy Tab S9")
+        XCTAssertEqual(outbox.entries.map(\.title), ["City", "Rain"], "newest first")
+        let rain = try XCTUnwrap(outbox.entries.first { $0.title == "Rain" })
+        XCTAssertEqual(rain.kind, .scenePreRendered)
+        XCTAssertEqual(rain.device, "Galaxy Tab S9")
+        let preview = try XCTUnwrap(outbox.previewURL(of: rain))
+        XCTAssertEqual(try Data(contentsOf: preview), Data([0xFF, 0xD8, 0xFF]), "a copy of the wallpaper's preview")
+        outbox.markDownloaded(rain.number, by: "192.168.1.80")
+
+        let reloaded = AndroidExportOutbox(directory: folder)
+        XCTAssertEqual(reloaded.entries, outbox.entries)
+        XCTAssertEqual(reloaded.entries.first { $0.title == "Rain" }?.downloadedBy, ["192.168.1.80"])
+
+        // Exporting the same file again replaces its entry with a new number.
+        reloaded.record(try batch())
+        XCTAssertEqual(reloaded.entries.count, 2)
+        XCTAssertFalse(reloaded.entries.contains { $0.number == rain.number })
+
+        try FileManager.default.removeItem(at: directory.appending(path: "Rain.mpkg")) // test fixture
+        let pruned = AndroidExportOutbox(directory: folder)
+        XCTAssertEqual(pruned.entries.map(\.title), ["City"])
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: pruned.previews.path(percentEncoded: false)), [],
+                       "its preview goes with it")
+        pruned.remove([try XCTUnwrap(pruned.entries.first).number])
+        XCTAssertTrue(AndroidExportOutbox(directory: folder).entries.isEmpty)
+    }
+
+    /// Only the chosen entries are served; choosing more while it runs serves them too, and the
+    /// page's list tells it to reload. Previews need the token.
+    func testTheSelectionIsServedAndChangesWhileRunning() async throws {
+        let outbox = AndroidExportOutbox(directory: directory.appending(path: "outbox", directoryHint: .isDirectory))
+        outbox.record(try batch())
+        let rain = try XCTUnwrap(outbox.entries.first { $0.title == "Rain" }).number
+        let city = try XCTUnwrap(outbox.entries.first { $0.title == "City" }).number
+        let session = try session()
+        session.update(files: outbox.wifiFiles([rain]))
+        await session.start()
+        defer { session.stop() }
+        let base = try XCTUnwrap(session.ipURL)
+        let status1 = try await Self.get(base.appending(path: "file/\(rain)")).1.statusCode
+        XCTAssertEqual(status1, 200)
+        let status2 = try await Self.get(base.appending(path: "file/\(city)")).1.statusCode
+        XCTAssertEqual(status2, 404, "not chosen")
+        let (page, _) = try await Self.get(base)
+        XCTAssertFalse(String(decoding: page, as: UTF8.self).contains("/file/\(city)"))
+        let (before, _) = try await Self.get(base.appending(path: "list"))
+        XCTAssertEqual(String(decoding: before, as: UTF8.self), #"{"version":0,"downloaded":[\#(rain)]}"#, "marks what this device downloaded")
+
+        session.update(files: outbox.wifiFiles([rain, city]))
+        try await waitUntil { (try? await Self.get(base.appending(path: "file/\(city)")).1.statusCode) == 200 }
+        let (after, _) = try await Self.get(base.appending(path: "list"))
+        XCTAssertTrue(String(decoding: after, as: UTF8.self).hasPrefix(#"{"version":1,"#), "the page reloads")
+        let (newPage, _) = try await Self.get(base)
+        XCTAssertTrue(String(decoding: newPage, as: UTF8.self).contains("href=\"/\(session.token)/file/\(city)\""))
+
+        let preview = base.appending(path: "preview/\(rain)")
+        let status3 = try await Self.get(preview).1.statusCode
+        XCTAssertEqual(status3, 200)
+        let wrong = try XCTUnwrap(URL(string: preview.absoluteString.replacingOccurrences(of: session.token, with: "aaaaaaaaaa")))
+        let status4 = try await Self.get(wrong).1.statusCode
+        XCTAssertEqual(status4, 404, "previews need the token")
+        let bare = try XCTUnwrap(URL(string: preview.absoluteString.replacingOccurrences(of: "/\(session.token)", with: "")))
+        let status5 = try await Self.get(bare).1.statusCode
+        XCTAssertEqual(status5, 404)
+    }
+
+    func testRequestsRestartTheExpiry() async throws {
+        let session = try session(lifetime: 1.5)
+        await session.start()
+        defer { session.stop() }
+        let base = try XCTUnwrap(session.ipURL)
+        let first = session.expiry
+        try await Task.sleep(for: .milliseconds(1000))
+        let status6 = try await Self.get(base).1.statusCode
+        XCTAssertEqual(status6, 200)
+        try await waitUntil { session.expiry > first.addingTimeInterval(0.5) }
+        try await Task.sleep(for: .milliseconds(1000))
+        XCTAssertEqual(session.state, .serving, "past the first expiry, still serving")
+        let status7 = try await Self.get(base.appending(path: "list")).1.statusCode
+        XCTAssertEqual(status7, 200)
+        try await waitUntil(timeout: 4) { session.state == .stopped(.expired) }
+    }
+
+    private func waitUntil(timeout: TimeInterval = 5, _ condition: @MainActor () async -> Bool) async throws {
         let deadline = Date().addingTimeInterval(timeout)
-        while !condition() {
+        while !(await condition()) {
             guard Date() < deadline else { return XCTFail("timed out") }
             try await Task.sleep(for: .milliseconds(20))
         }

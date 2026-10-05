@@ -1,11 +1,12 @@
 import AppKit
 import Foundation
 
-/// One "Send over Wi-Fi" of an export batch: a random token, the server on the chosen local-network
-/// address, its `.local` name (`AndroidWiFiLocalName`), and each file's downloads as the server
-/// reports them. It ends when it expires (15
-/// minutes), when `stop()` is called (the sheet closed), or when the app quits; the token dies
-/// with it. Changing the address restarts the server with the same token and expiry.
+/// One "Send over Wi-Fi" of some packages (`update(files:)` changes them while it serves): a
+/// random token, the server on the chosen local-network address, its `.local` name
+/// (`AndroidWiFiLocalName`), and each file's downloads as the server reports them. It ends when it
+/// expires (15 minutes after the last page or download request), when `stop()` is called (the
+/// window closed), or when the app quits; the token dies with it. Changing the address restarts
+/// the server with the same token and expiry.
 @MainActor
 final class AndroidWiFiSession: ObservableObject {
     nonisolated static let lifetime: TimeInterval = 15 * 60
@@ -28,7 +29,7 @@ final class AndroidWiFiSession: ObservableObject {
         var completedBy: [String] = []
     }
 
-    let files: [AndroidWiFiFile]
+    @Published private(set) var files: [AndroidWiFiFile]
     /// A new one each time the session starts.
     private(set) var token = ""
     @Published private(set) var expiry: Date
@@ -139,7 +140,7 @@ final class AndroidWiFiSession: ObservableObject {
         self.address = address
         port = nil
         let router = AndroidWiFiRouter(token: token, files: files, expiry: expiry)
-        let server = AndroidWiFiServer(router: router, address: address, limits: limits) { [weak self] event in
+        let server = AndroidWiFiServer(router: router, address: address, lifetime: lifetime, limits: limits) { [weak self] event in
             Task { @MainActor in self?.handle(event, generation: current) }
         }
         self.server = server
@@ -161,6 +162,8 @@ final class AndroidWiFiSession: ObservableObject {
     private func handle(_ event: AndroidWiFiServer.Event, generation current: Int) {
         guard current == generation else { return }
         switch event {
+        case .expiry(let date):
+            expiry = date
         case .stopped(let reason):
             server = nil
             withdrawName()
@@ -175,6 +178,13 @@ final class AndroidWiFiSession: ObservableObject {
             }
             progress[transfer.index] = entry
         }
+    }
+
+    /// Serves `files` from now on (the page reloads its list); the token and expiry stay.
+    func update(files: [AndroidWiFiFile]) {
+        guard files != self.files else { return }
+        self.files = files
+        server?.update(files: files)
     }
 
     // MARK: Name

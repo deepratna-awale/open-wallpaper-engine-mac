@@ -1,11 +1,11 @@
 import Foundation
 
 /// One package "Send over Wi-Fi" offers: what the phone's page shows of it, and the file and
-/// preview the server reads. The server finds it by its index in the batch, never by a path from
-/// the request.
+/// preview the server reads. The server finds it by its number (`index`: its place in a batch, or
+/// its Android exports list entry's number), never by a path from the request.
 struct AndroidWiFiFile: Equatable, Identifiable, Sendable {
     /// What the page calls the package.
-    enum Kind: String, Equatable, Sendable {
+    enum Kind: String, Codable, Equatable, Sendable {
         case sceneDynamic, scenePreRendered, video
     }
 
@@ -17,6 +17,8 @@ struct AndroidWiFiFile: Equatable, Identifiable, Sendable {
     var previewURL: URL?
     /// `<title>.mpkg`, unique within the batch: the name the phone saves it under.
     var downloadName: String
+    /// The Android device it was framed for, when the export chose one.
+    var device: String? = nil
 
     var id: Int { index }
 

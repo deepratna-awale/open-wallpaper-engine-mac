@@ -74,8 +74,6 @@ final class AndroidExportEditorModel: ObservableObject {
     @Published private(set) var batch: AndroidExportBatch?
     @Published var errorMessage: String?
     @Published var sheet: AndroidEditorSheet?
-    /// The batch "Send over Wi-Fi" serves while its sheet is open.
-    @Published var wifiSend: AndroidWiFiSendRequest?
 
     init(session: IsolatedSceneEditSession, sceneSize: SIMD2<Double>, defaults: UserDefaults = .app,
          worker: AndroidExportWorking? = nil) {
@@ -260,15 +258,14 @@ final class AndroidExportEditorModel: ObservableObject {
             errorMessage = error.localizedDescription
             return
         }
-        export(to: folder, name: nil) { [weak self] batch in
-            self?.wifiSend = AndroidWiFiSendRequest(batch: batch)
-        }
+        export(to: folder, name: nil) { _ in AndroidWiFiShareWindow.show() }
     }
 
     /// Exports `item` into `folder` (as `name`, else a unique name), then hands a finished batch to `then`.
     func export(to folder: URL, name: String?, then: ((AndroidExportBatch) -> Void)?) {
         let queue = AndroidExportQueue(items: [item], folder: folder, taken: name.map { _ in [] }, names: name.map { [$0] },
                                        worker: worker)
+        queue.device = device?.name
         self.queue = queue
         batch = nil
         errorMessage = nil

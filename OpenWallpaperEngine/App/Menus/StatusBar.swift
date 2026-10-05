@@ -107,6 +107,7 @@ extension AppDelegate {
             .separator(),
             setUpAssets,
             item("Browse Workshop", "globe", #selector(browseWorkshop), .workshop),
+            item("Send Android Exports over Wi-Fi…", "wifi", #selector(showAndroidWiFiShare)),
             item("Settings", "gearshape.fill", #selector(openSettingsWindow), .settings),
             item("Check for Updates…", "arrow.down.circle", #selector(checkForUpdates), .checkForUpdates),
             .separator(),

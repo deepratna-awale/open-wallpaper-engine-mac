@@ -2,12 +2,6 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The batch a "Send over Wi-Fi" sheet serves.
-struct AndroidWiFiSendRequest: Identifiable {
-    let id = UUID()
-    let batch: AndroidExportBatch
-}
-
 /// "Export for Android…": the sheet's state for one wallpaper or a library selection, as WE's
 /// "Exporting … for usage on Android" dialog has it (`AndroidExportOptions`), the pre-rendered
 /// crop's live preview in an isolated session (`IsolatedSceneEditSession`, never the desktop's
@@ -48,8 +42,6 @@ final class AndroidExportModel: ObservableObject {
     @Published private(set) var queue: AndroidExportQueue?
     @Published private(set) var batch: AndroidExportBatch?
     @Published var errorMessage: String?
-    /// The batch "Send over Wi-Fi" serves while its sheet is open.
-    @Published var wifiSend: AndroidWiFiSendRequest?
     @Published var usesFolder: Bool {
         didSet { defaults.set(usesFolder, forKey: Self.usesFolderKey) }
     }
@@ -258,10 +250,10 @@ final class AndroidExportModel: ObservableObject {
         DispatchQueue.main.async { AppDelegate.shared.showSceneInspector(for: wallpaper, scopes: scopes, mode: .androidExport) }
     }
 
-    /// Opens "Send over Wi-Fi" for the exported packages.
+    /// Opens "Send over Wi-Fi", where the exported packages are in the Android exports list.
     func sendOverWiFi() {
         guard let batch, !batch.outputs.isEmpty else { return }
-        wifiSend = AndroidWiFiSendRequest(batch: batch)
+        AndroidWiFiShareWindow.show()
     }
 
     func showInFinder() {

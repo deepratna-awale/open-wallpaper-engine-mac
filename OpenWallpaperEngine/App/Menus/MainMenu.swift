@@ -53,6 +53,7 @@ extension AppDelegate {
 
         let fileMenu = submenu(String(localized: "File"), [
             item(.importFolder, #selector(openImportFromFolderPanel)),
+            plain("Send Android Exports over Wi-Fi…", #selector(showAndroidWiFiShare)),
             .separator(),
             item(.closeWindow, #selector(NSWindow.performClose(_:))),
         ])

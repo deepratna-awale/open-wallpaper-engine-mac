@@ -67,23 +67,11 @@ extension AppSystemControlService {
     /// Packages an export already wrote, read from their own project.json: only `.mpkg` files that
     /// are WE mobile packages (`PKGM`), so nothing else on the Mac can be served.
     nonisolated static func wifiFiles(packages: [URL]) throws -> [AndroidWiFiFile] {
-        let titles = try packages.map { url -> (title: String, kind: AndroidWiFiFile.Kind, size: Int64) in
-            guard url.pathExtension.lowercased() == AndroidExportNaming.fileExtension,
-                  let size = AndroidWiFiRouter.size(of: url) else {
-                throw ControlError(.invalidParams, "\(url.path(percentEncoded: false)) isn't an exported .mpkg file.")
-            }
-            let package: PKGParser
-            do {
-                package = try PKGParser(url: url, magic: "PKGM")
-            } catch {
-                throw ControlError(.invalidParams, "\(url.path(percentEncoded: false)) isn't a Wallpaper Engine mobile package: \(error.localizedDescription)")
-            }
-            let project = try package.extractFile(named: "project.json").map { try JSONSerialization.jsonObject(with: $0) as? [String: Any] } ?? nil
-            let stem = url.deletingPathExtension().lastPathComponent
-            let type = (project?["type"] as? String)?.lowercased() ?? "scene"
-            let file = project?["file"] as? String
-            let kind: AndroidWiFiFile.Kind = type == "video" ? .video : file == AndroidPackageBuilder.videoFileName ? .scenePreRendered : .sceneDynamic
-            return ((project?["title"] as? String) ?? stem, kind, size)
+        let titles: [AndroidExportOutbox.Package]
+        do {
+            titles = try packages.map(AndroidExportOutbox.describe(package:))
+        } catch {
+            throw ControlError(.invalidParams, error.localizedDescription)
         }
         let names = AndroidExportNaming.uniqueNames(titles.map(\.title), taken: [])
         return packages.indices.map { index in

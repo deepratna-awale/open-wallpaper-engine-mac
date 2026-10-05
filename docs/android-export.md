@@ -58,19 +58,33 @@ into an iCloud Drive folder.
 
 ## Send over Wi-Fi
 
-After a batch export, or from **Send over Wi-Fi…** in the export sheet, a sheet lets the phone or
-tablet download the packages from the Mac over the local network, with no cable:
+Every Android export (from the library's sheet, the Scene Editor's Android Export tab or MCP) is
+also added to the **Android exports** list, with its title, type, size, the device it was framed
+for, the date and a copy of the wallpaper's preview. The list is kept in
+`~/Library/Application Support/Open Wallpaper Engine/Android Exports/`; entries whose file is gone
+are dropped.
+
+**Send over Wi-Fi…** (after an export, in the export sheets, or **File › Send Android Exports over
+Wi-Fi…** and the menu bar icon's menu) opens a window with the whole list as a grid of previews.
+Everything not downloaded yet starts selected. **Add .mpkg Files…** adds packages exported
+earlier; each tile's menu has **Show in Finder** and **Remove from List**. **Start Sharing** lets
+the phone or tablet download the selected packages from the Mac over the local network, with no
+cable:
 
 1. Scan the QR code with the device, or type the link it shows,
-   `http://owe-fileshare.<mac>.local:<port>/<token>/`. With several networks, pick the one the device is
-   on.
-2. The page lists every package with its preview, title, type and size. Tap **Download** for one,
-   or **Download All** (Chrome asks once to allow several downloads).
+   `http://owe-fileshare.<mac>.local:<port>/<token>/`. With several networks, pick the one the
+   device is on.
+2. The page shows the import steps, **Download All**, and a card per package with its preview
+   (animated when the wallpaper's is a GIF), title, type, device and size. Tap **Download** for
+   one, or **Download All** (Chrome asks once to allow several downloads). Downloaded cards are
+   marked.
 3. Import each file in the Wallpaper Engine app, as with a copied file.
 
-The sheet shows each file's progress and which devices have downloaded it. The link lasts 15
-minutes; **Send Again** makes a new one. Without a local network address on the Mac, the sheet
-explains why and offers **Save to Folder…** instead.
+While it shares, each tile shows its progress and which devices downloaded it; selecting,
+adding or removing packages updates the page within a few seconds. The link lasts until 15
+minutes pass without the page or a download being opened; **Send Again** makes a new one.
+Without a local network address on the Mac, the window explains why and offers **Save to
+Folder…** instead.
 
 If the page doesn't open on the device:
 
@@ -79,23 +93,24 @@ If the page doesn't open on the device:
 - macOS may ask whether Open Wallpaper Engine may accept incoming network connections. Allow it.
 - Some networks (guest networks, many public ones) keep devices from reaching each other
   ("client isolation" or "AP isolation"). Use a network that doesn't, or copy the files.
-- If a download stops, keep the sheet open and tap **Download** again: it resumes.
+- If a download stops, keep the window open and tap **Download** again: it resumes.
 
 ### Security
 
-- The server is started only while the sheet is open, for at most 15 minutes, and serves only
-  that batch. Closing the sheet ends it.
+- The server is started only while the window shares, until 15 minutes pass without a request,
+  and serves only the selected packages. Closing the window ends it.
 - It listens on one private or link-local IPv4 address of the Mac's local network, and only
   answers devices on that network. VPN, public and cellular addresses are never used.
-- While it runs, the Mac advertises the name `owe-fileshare.<mac>.local` (`<mac>` is the Mac's Bonjour name, its LocalHostName, as a DNS label) for that address over
-  multicast DNS (Bonjour), with an `_http._tcp` service on it and no TXT record, so the token is
-  never advertised. When another Mac already has the name, it takes `owe-fileshare-2.<mac>.local`, and
-  so on. The name is withdrawn when the share stops.
+- While it runs, the Mac advertises the name `owe-fileshare.<mac>.local` (`<mac>` is its
+  LocalHostName, the Bonjour name, as a DNS label) for that address over multicast DNS, with an
+  `_http._tcp` service on it and no TXT record, so the token is never advertised. When the name is
+  taken (another Mac sharing), it uses `owe-fileshare-2.<mac>.local`, and so on. The name is
+  withdrawn when the share stops.
 - The link carries a random token: 10 base32 characters (50 bits), short enough to type and far
   beyond guessing in a 15-minute share that limits requests and refuses a device after 20 wrong
-  paths. A wrong or expired token, and any other path, get the
-  same "not found". Files are addressed by their place in the batch, never by a path, so nothing
-  else on the Mac can be reached.
+  paths. A wrong or expired token, and any other path, previews included, get the
+  same "not found". Files are addressed by number, never by a path, so nothing else on the Mac
+  can be reached.
 - Only downloads are accepted. Connections and requests per device are limited, and a device that
   keeps guessing paths is refused until the session ends.
 - The page loads nothing from the internet.
