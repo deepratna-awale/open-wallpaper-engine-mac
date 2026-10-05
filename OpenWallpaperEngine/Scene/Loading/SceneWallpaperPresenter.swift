@@ -69,6 +69,10 @@ final class SceneWallpaperPresenter: NSObject, MTKViewDelegate {
 final class ScenePreviewPlaceholder {
     static let fadeDuration: CFTimeInterval = 0.25
     nonisolated static let previewNames = ["preview.jpg", "preview.png", "preview.gif", "preview.webp"]
+    /// Its own serial queue: the global queues are busy with the scene's loading, which kept the
+    /// picture (a few milliseconds of work) waiting about a second on an empty view.
+    nonisolated private static let imageQueue = DispatchQueue(label: "com.winddog.wallpaper-engine.scene-preview",
+                                                              qos: .userInteractive)
 
     let layer = CALayer()
     private(set) var isFading = false
@@ -85,7 +89,7 @@ final class ScenePreviewPlaceholder {
         let pixelSize = screen.map { SIMD2(Int($0.frame.width * $0.backingScaleFactor), Int($0.frame.height * $0.backingScaleFactor)) }
             ?? SIMD2(3840, 2160)
         let maxPixels = max(pixelSize.x, pixelSize.y)
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+        Self.imageQueue.async { [weak self] in
             let snapshot = snapshots?.bestSnapshot(forWallpaperAt: wallpaperDirectory, pixelSize: pixelSize)
             let image = snapshot.flatMap { Self.image(at: $0, maxPixels: maxPixels) }
                 ?? Self.previewImage(in: wallpaperDirectory, maxPixels: maxPixels)
