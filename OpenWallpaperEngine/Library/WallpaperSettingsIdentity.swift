@@ -5,9 +5,10 @@ import CryptoKit
 /// where it is, so moving or renaming the library keeps them.
 ///
 /// The identity is the Workshop id when there is one (`project.json`'s `workshopid`, or a
-/// numeric folder name, which is how Steam names Workshop downloads), else a hash of
-/// `project.json`'s bytes plus the folder name. Settings stored under the old path keys are
-/// moved over the first time a wallpaper is seen (`resolve`).
+/// numeric folder name, which is how Steam names Workshop downloads), else an id the app keeps
+/// for the local wallpaper's folder (`LocalWallpaperIdentities`), so editing its project.json
+/// doesn't orphan its settings. Settings stored under the old path keys are moved over the first
+/// time a wallpaper is seen (`resolve`).
 struct WallpaperSettingsIdentity: Hashable {
     let rawValue: String
 
@@ -20,8 +21,10 @@ struct WallpaperSettingsIdentity: Hashable {
 
     init(rawValue: String) { self.rawValue = rawValue }
 
-    /// The identity of the wallpaper in `directory`, from its `project.json` (nil when unreadable:
-    /// the folder name alone then, which is all that is known).
+    /// The identity derived from the wallpaper's `project.json` alone (nil when unreadable: the
+    /// folder name alone then): its Workshop id, else a hash of the file's bytes plus the folder
+    /// name. For a local wallpaper this changes when the file is edited; `resolve` gives the stable
+    /// identity, and uses this one only to keep settings stored before local ids were kept.
     init(directory: URL, projectData: Data?) {
         let folder = directory.standardizedFileURL.lastPathComponent
         if let id = Self.workshopID(projectData: projectData, folder: folder) {
@@ -36,10 +39,17 @@ struct WallpaperSettingsIdentity: Hashable {
 
     func key(_ family: Family) -> String { family.rawValue + rawValue }
 
+    var isWorkshop: Bool { rawValue.hasPrefix("workshop-") }
+
     /// The identity of the wallpaper in `directory`, with any settings still stored under a path
     /// key moved to it: the directory's own path, or else a single path with the same folder name
     /// that no longer exists (the library moved). Settings already under the identity win.
     static func resolve(directory: URL, defaults: UserDefaults = .app) -> WallpaperSettingsIdentity {
+        resolve(directory: directory, defaults: defaults, index: nil)
+    }
+
+    /// `resolve`, with the stored-settings names already read when many wallpapers are resolved.
+    static func resolve(directory: URL, defaults: UserDefaults, index: LegacySettingsIndex?) -> WallpaperSettingsIdentity {
         let projectURL = directory.appending(path: "project.json")
         let projectData: Data?
         do {
@@ -48,8 +58,20 @@ struct WallpaperSettingsIdentity: Hashable {
             OWELog.error(.library, "Could not read \(projectURL.path) to identify its settings: \(error)")
             projectData = nil
         }
-        let identity = WallpaperSettingsIdentity(directory: directory, projectData: projectData)
-        identity.migrateLegacyKeys(from: directory, defaults: defaults)
+        let derived = WallpaperSettingsIdentity(directory: directory, projectData: projectData)
+        // Only a wallpaper folder is registered (not, say, the bundled placeholder video).
+        var isFolder: ObjCBool = false
+        guard !derived.isWorkshop, FileManager.default.fileExists(atPath: directory.path, isDirectory: &isFolder),
+              isFolder.boolValue else {
+            derived.migrateLegacyKeys(from: directory, defaults: defaults)
+            return derived
+        }
+        let local = LocalWallpaperIdentities.identity(
+            directory: directory, derived: derived.rawValue, contentKnown: projectData != nil, defaults: defaults,
+            index: { index ?? LegacySettingsIndex(defaults: defaults, supportDirectory: AppStorageLocation.current.supportDirectory) })
+        let identity = WallpaperSettingsIdentity(rawValue: local.id)
+        // Path keys (older builds) are looked for once, when the wallpaper is first seen.
+        if local.isNew { identity.migrateLegacyKeys(from: directory, defaults: defaults) }
         return identity
     }
 

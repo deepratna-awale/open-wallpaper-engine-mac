@@ -173,6 +173,20 @@ final class SceneTimelineTests: XCTestCase {
         XCTAssertEqual(SceneTimelineChannel.evaluate(keys, at: 20), 4)
     }
 
+    /// Two keys at one frame: the first in the list is kept and the second dropped (WE 2.8.42,
+    /// docs/models-plan.md §5.22: a camera path's eye x with 400 then −400 at frame 30 plays through
+    /// 400 there, easing in and out of it, and never reaches −400).
+    func testTheFirstOfTwoKeysAtOneFrameWins() {
+        let keys = [key(0, 0, front: [1, 0]), key(30, 400, back: [-1, 0], front: [1, 0]),
+                    key(30, -400, back: [-1, 0], front: [1, 0]), key(60, 0, back: [-1, 0])]
+        var channel = SceneTimelineChannel(keyframes: keys)
+        XCTAssertEqual(channel.keyframes.map(\.value), [0, 400, 0])
+        XCTAssertEqual(channel.sample(30), 400)
+        let samples = (0...60).map { channel.sample(Int32($0)) }
+        XCTAssertGreaterThanOrEqual(samples.min() ?? -1, 0, "−400 is never reached")
+        XCTAssertGreaterThan(channel.sample(45), 100, "eases back from 400")
+    }
+
     func testTheCacheMatchesDirectEvaluation() {
         let keys = [key(0, 0, front: [1, 0.3]), key(7, 2, back: [-0.2, 1]), key(15, -1)]
         var channel = SceneTimelineChannel(keyframes: keys)

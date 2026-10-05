@@ -38,7 +38,7 @@ final class ControlRequestRouter {
         case "list_wallpapers": return try listWallpapers(params)
         case "get_wallpaper": return try getWallpaper(params)
         case "set_wallpaper": return try setWallpaper(params)
-        case "pause", "resume", "toggle_playback": return playback(method)
+        case "pause", "resume", "toggle_playback", "stop": return playback(method)
         case "set_volume": return try setVolume(params)
         case "set_muted": return try setMuted(params)
         case "set_user_property": return try setUserProperty(params)
@@ -66,12 +66,14 @@ final class ControlRequestRouter {
             "displays": .array(displays.map { display in
                 var item = json(display)
                 if case .object(var object) = item {
-                    object["playing"] = .bool(!playback.paused && display.isEnabled && ["run", "mute"].contains(display.rule))
+                    object["playing"] = .bool(!playback.paused && !playback.stopped && display.isEnabled
+                                              && ["run", "mute"].contains(display.rule))
                     item = .object(object)
                 }
                 return item
             }),
             "paused": .bool(playback.paused),
+            "stopped": .bool(playback.stopped),
             "volume": .number(playback.volume),
             "muted": .bool(playback.volume == 0),
             "playlist": active.map(json) ?? .null,
@@ -150,15 +152,16 @@ final class ControlRequestRouter {
 
     // MARK: - Playback
 
+    /// Pause, Resume (which ends a stop too), Stop, and the toggle: playing pauses, paused or
+    /// stopped resumes.
     private func playback(_ method: String) -> JSONValue {
-        let paused: Bool
         switch method {
-        case "pause": paused = true
-        case "resume": paused = false
-        default: paused = !model.playback.paused
+        case "stop": model.stop()
+        case "pause": model.setPaused(true)
+        case "resume": model.setPaused(false)
+        default: model.setPaused(!(model.playback.paused || model.playback.stopped))
         }
-        model.setPaused(paused)
-        return ["paused": .bool(model.playback.paused)]
+        return ["paused": .bool(model.playback.paused), "stopped": .bool(model.playback.stopped)]
     }
 
     private func setVolume(_ params: ControlParameters) throws -> JSONValue {

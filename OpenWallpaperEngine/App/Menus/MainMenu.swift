@@ -53,6 +53,7 @@ extension AppDelegate {
 
         let fileMenu = submenu(String(localized: "File"), [
             item(.importFolder, #selector(openImportFromFolderPanel)),
+            plain("Send Android Exports over Wi-Fi…", #selector(showAndroidWiFiShare)),
             .separator(),
             item(.closeWindow, #selector(NSWindow.performClose(_:))),
         ])
@@ -84,6 +85,7 @@ extension AppDelegate {
         let playbackMenu = submenu(String(localized: "Playback"), [
             item(.pauseResume, #selector(togglePauseWallpapers)),
             plain("Paused: video memory is full", #selector(videoMemoryPauseNotice)),
+            plain("Stop Wallpapers", #selector(toggleStopWallpapers)),
             item(.muteUnmute, #selector(toggleMuteWallpapers)),
             .separator(),
             item(.nextWallpaper, #selector(nextWallpaper)),
@@ -185,6 +187,17 @@ extension AppDelegate: NSMenuItemValidation {
         case #selector(togglePauseWallpapers):
             menuItem.title = wallpaperViewModel.playRate == 0 || videoMemoryWatch.exhausted
                 ? String(localized: "Resume Wallpapers") : String(localized: "Pause Wallpapers")
+            // While stopped, Stop's item reads Resume and does what this would.
+            menuItem.isHidden = wallpaperViewModel.isStopped
+            return true
+        case #selector(toggleStopWallpapers):
+            menuItem.title = wallpaperViewModel.isStopped
+                ? String(localized: "Resume Wallpapers") : String(localized: "Stop Wallpapers")
+            // The status menu's item has a symbol; the menu bar's has none.
+            if menuItem.image != nil {
+                menuItem.image = NSImage(systemSymbolName: wallpaperViewModel.isStopped ? "play.fill" : "stop.fill",
+                                         accessibilityDescription: nil)
+            }
             return true
         case #selector(videoMemoryPauseNotice):
             // Shown, disabled, while "Pause when VRAM is exhausted" holds the wallpapers.

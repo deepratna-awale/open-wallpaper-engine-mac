@@ -347,6 +347,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Changes show their transitions from now; the playlist starts as its settings say.
         wallpaperViewModel.transitions = wallpaperTransitions
         wallpaperViewModel.startPlaylistAtLaunch()
+        // Stop Wallpapers closes them, Resume makes them again.
+        observeStoppedState()
 
         // 监听显示器连接/断开
         NotificationCenter.default.addObserver(
@@ -444,7 +446,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             self.steamCmdInstaller.detectThenAutoInstall(self.contentViewModel.steamCmd)
         }
 
+        // Local wallpapers get their stable settings ids once, before any of them is edited.
+        let libraries = [FileManager.default.wallpapersDirectory] + LibraryFolders().folders
         DispatchQueue.global(qos: .utility).async {
+            LocalWallpaperIdentities.registerLibrary(libraries)
             WallpaperPackageConverter.convertInstalledLibrary()
             if UserDefaults.app.bool(forKey: "ReclaimOriginalPackages") {
                 WallpaperPackageConverter.reclaimEligibleSources()
@@ -649,6 +654,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     
 // MARK: Set Wallpaper Windows - One per screen
     func setWallpaperWindows() {
+        // Stopped (`stopWallpapers`): no windows until Resume, whatever rebuilds them meanwhile.
+        guard !wallpaperViewModel.isStopped else { return }
         for screen in NSScreen.screens {
             let screenId = WallpaperViewModel.screenId(for: screen)
             guard wallpaperViewModel.isScreenEnabled(screenId) else { continue }
@@ -705,15 +712,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     /// Rebuild wallpaper windows without changing enabled state.
     func rebuildWallpaperWindows() {
-        for (_, window) in wallpaperWindows {
+        Self.closeWallpaperWindows(wallpaperWindows)
+        wallpaperWindows.removeAll()
+        setWallpaperWindows()
+        orderWallpaperWindowsFront()
+    }
+
+    /// Closes wallpaper windows and drops their content, so every wallpaper view goes and with it
+    /// its hold on the running instance (`WallpaperInstanceRegistry`), page or player.
+    static func closeWallpaperWindows(_ windows: [String: NSWindow]) {
+        for (_, window) in windows {
             // `isReleasedWhenClosed` is false, so the hosting view (and the video players inside
             // it) survives a plain close and keeps playing.
             window.contentView = nil
             window.close()
         }
-        wallpaperWindows.removeAll()
-        setWallpaperWindows()
-        orderWallpaperWindowsFront()
     }
 
     @MainActor

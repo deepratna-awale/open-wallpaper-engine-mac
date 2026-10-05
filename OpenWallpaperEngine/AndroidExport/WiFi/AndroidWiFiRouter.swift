@@ -4,41 +4,60 @@ import Security
 /// What the Wi-Fi send server answers, decided from the request alone:
 ///
 /// - only `GET`; any other method is 405;
-/// - only paths under the batch's token, `/<token>/` (the page), `/<token>/file/<index>` and
-///   `/<token>/preview/<index>`; a wrong token, an expired one, or anything else is 404, the
-///   same answer, so a guess learns nothing;
-/// - a file is the batch's `index`th package (a number, never a path from the request), with
-///   `Range` for resumed downloads.
+/// - only paths under the share's token, `/<token>/` (the page), `/<token>/list` (what the page
+///   polls), `/<token>/file/<index>` and `/<token>/preview/<index>`; a wrong token, an expired
+///   one, or anything else is 404, the same answer, so a guess learns nothing;
+/// - a file is the shared package numbered `index` (a number, never a path from the request),
+///   with `Range` for resumed downloads.
 struct AndroidWiFiRouter: Sendable {
-    /// 128 random bits, base64url without padding (22 characters).
+    /// 50 random bits, base32 (10 characters).
     let token: String
-    let files: [AndroidWiFiFile]
-    let expiry: Date
-    /// The page, made once.
-    let page: Data
+    var files: [AndroidWiFiFile]
+    var expiry: Date
+    /// Goes up each time `files` changes, so the page knows to reload.
+    var version = 0
 
-    init(token: String, files: [AndroidWiFiFile], expiry: Date, page: Data? = nil) {
+    init(token: String, files: [AndroidWiFiFile], expiry: Date) {
         self.token = token
         self.files = files
         self.expiry = expiry
-        self.page = page ?? Data(AndroidWiFiPage.html(files: files, token: token).utf8)
     }
 
-    /// A new random token: 16 bytes from the system's secure generator.
+    /// The file numbered `index`.
+    func file(_ index: Int) -> AndroidWiFiFile? { files.first { $0.index == index } }
+
+    /// The token's alphabet: RFC 4648 base32, lower case.
+    static let tokenAlphabet = Array("abcdefghijklmnopqrstuvwxyz234567")
+    static let tokenLength = 10
+
+    /// A new random token: 50 bits from the system's secure generator, as 10 base32 characters.
+    /// Short enough to type, and unguessable for a 15-minute share that refuses a device after 20
+    /// wrong paths and limits its requests.
     static func makeToken() throws -> String {
-        var bytes = [UInt8](repeating: 0, count: 16)
-        let status = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
-        guard status == errSecSuccess else {
-            throw NSError(domain: NSOSStatusErrorDomain, code: Int(status))
-        }
-        return Data(bytes).base64EncodedString()
+        let bits = try randomBytes(8).reduce(UInt64(0)) { $0 << 8 | UInt64($1) }
+        return String((0..<tokenLength).map { tokenAlphabet[Int(bits >> UInt64(5 * $0) & 31)] })
+    }
+
+    /// A page's CSP nonce: 128 random bits, base64url without padding.
+    static func makeNonce() throws -> String {
+        try Data(randomBytes(16)).base64EncodedString()
             .replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "/", with: "_")
             .replacingOccurrences(of: "=", with: "")
     }
 
+    private static func randomBytes(_ count: Int) throws -> [UInt8] {
+        var bytes = [UInt8](repeating: 0, count: count)
+        let status = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+        guard status == errSecSuccess else {
+            throw NSError(domain: NSOSStatusErrorDomain, code: Int(status))
+        }
+        return bytes
+    }
+
     enum Route: Equatable {
         case page
+        case list
         case file(Int)
         case preview(Int)
         case notFound
@@ -55,11 +74,12 @@ struct AndroidWiFiRouter: Sendable {
         switch parts.count {
         case 1: return .page
         case 2 where parts[1].isEmpty: return .page
+        case 2 where parts[1] == "list": return .list
         case 3:
-            guard let index = Self.index(parts[2]), files.indices.contains(index) else { return .notFound }
+            guard let index = Self.index(parts[2]), let file = file(index) else { return .notFound }
             switch parts[1] {
             case "file": return .file(index)
-            case "preview": return files[index].previewURL == nil ? .notFound : .preview(index)
+            case "preview": return file.previewURL == nil ? .notFound : .preview(index)
             default: return .notFound
             }
         default: return .notFound
@@ -67,27 +87,35 @@ struct AndroidWiFiRouter: Sendable {
     }
 
     /// The response to `request` at `now`; a file's size and date are read when it is asked for.
-    func response(to request: AndroidWiFiHTTP.Request, now: Date) -> AndroidWiFiHTTP.Response {
+    /// `downloaded` are the files the asking device downloaded whole, which the page marks.
+    func response(to request: AndroidWiFiHTTP.Request, now: Date, downloaded: Set<Int> = []) -> AndroidWiFiHTTP.Response {
         switch route(request, now: now) {
         case .methodNotAllowed:
             return .text(405, [("Allow", "GET")])
         case .notFound:
             return .text(404)
         case .page:
-            let nonce = (try? Self.makeToken()) ?? "owe" // Optional: the CSP nonce only needs to be unguessable per page.
-            let body = Data(String(decoding: page, as: UTF8.self).replacingOccurrences(of: AndroidWiFiPage.noncePlaceholder, with: nonce).utf8)
+            let nonce = (try? Self.makeNonce()) ?? "owe" // Optional: the CSP nonce only needs to be unguessable per page.
+            let page = AndroidWiFiPage.html(files: files, token: token, version: version, downloaded: downloaded)
+            let body = Data(page.replacingOccurrences(of: AndroidWiFiPage.noncePlaceholder, with: nonce).utf8)
             return .init(status: 200, headers: AndroidWiFiHTTP.commonHeaders + [
                 ("Content-Type", "text/html; charset=utf-8"),
                 ("Content-Length", "\(body.count)"),
-                ("Content-Security-Policy", "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; script-src 'nonce-\(nonce)'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"),
+                ("Content-Security-Policy", "default-src 'none'; img-src 'self'; connect-src 'self'; style-src 'unsafe-inline'; script-src 'nonce-\(nonce)'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"),
+            ], body: .data(body))
+        case .list:
+            let body = Data(AndroidWiFiPage.list(version: version, downloaded: downloaded).utf8)
+            return .init(status: 200, headers: AndroidWiFiHTTP.commonHeaders + [
+                ("Content-Type", "application/json"), ("Content-Length", "\(body.count)"),
             ], body: .data(body))
         case .preview(let index):
-            guard let url = files[index].previewURL, let size = Self.size(of: url) else { return .text(404) }
+            guard let url = file(index)?.previewURL, let size = Self.size(of: url) else { return .text(404) }
             return .init(status: 200, headers: AndroidWiFiHTTP.commonHeaders + [
                 ("Content-Type", Self.pictureType(url)), ("Content-Length", "\(size)"),
             ], body: .picture(url))
         case .file(let index):
-            return fileResponse(files[index], request: request)
+            guard let file = file(index) else { return .text(404) }
+            return fileResponse(file, request: request)
         }
     }
 

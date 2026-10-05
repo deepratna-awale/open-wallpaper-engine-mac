@@ -1588,6 +1588,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // WE's camera eye and forward (ctx+0x68, ctx+0x160). An orthographic scene's camera stays
         // still and the objects move by the shake instead (`SceneFrameLightingInput.cameraShake`).
         effectFrame.camera = cameraRig.frameCamera(cameraRigInput(time: sceneTime, motion: motion))
+        // An orthographic scene is drawn in its camera's drawn space: the zoom and the view a
+        // camera layer or path gives it this frame (docs/models-plan.md §5.19).
+        if !isPerspective { frameZoom = effectFrame.camera.drawnSpace }
         effectFrame.eyePosition = effectFrame.camera.eye
         effectFrame.viewForward = effectFrame.camera.forward
         // Spatialized sounds are placed against it from the next update on.
@@ -3317,13 +3320,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                          attachments: puppetAttachments.affine)
     }
 
-    /// This frame's orthographic zoom (`SceneOrthographicZoom`): `general.zoom` × the camera's
-    /// zoom a script set, as the camera rig's projection has it. None in a perspective scene,
-    /// where the zoom isn't read.
+    /// This frame's orthographic zoom (`SceneOrthographicZoom`) until the camera rig gives the
+    /// frame's own: `general.zoom` × the camera's zoom a script set, and the last frame's camera
+    /// view. None in a perspective scene, where the zoom isn't read.
     private func orthographicZoom() -> SceneOrthographicZoom {
         guard !isPerspective else { return .none }
         let general = Float(spatial.camera.zoom)
-        return SceneOrthographicZoom(factor: general * (scripts.state.scene.scriptCamera?.zoom ?? 1), sceneSize: sceneSize)
+        return SceneOrthographicZoom(factor: general * (scripts.state.scene.scriptCamera?.zoom ?? 1), sceneSize: sceneSize,
+                                     view: frameZoom.view)
     }
 
     /// A particle system's emitter transform this frame: its object's, parents included, moved by

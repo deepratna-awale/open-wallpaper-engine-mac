@@ -179,6 +179,30 @@ class WallpaperViewModel: ObservableObject {
     /// Plays transitions between wallpapers on the displays; nil (previews, tests): none.
     var transitions: WallpaperTransitionPerforming?
 
+    /// WE's "Stop wallpapers" (`ui_settings_hotkeys_action_stop`), set by the user: every
+    /// display's wallpaper is unloaded and the desktop shows the macOS desktop picture, until Resume
+    /// or Play. Each display keeps its wallpaper here, so resuming shows exactly what was shown.
+    /// For this session only. The playlist holds still meanwhile; the playback and application
+    /// rules keep evaluating and apply again on resume.
+    @Published private(set) var isStopped = false {
+        didSet {
+            guard oldValue != isStopped else { return }
+            restartPlaylistTimer()
+            onStoppedChange?(isStopped)
+        }
+    }
+
+    /// Told after `isStopped` changes: the app delegate closes or rebuilds the wallpaper windows.
+    var onStoppedChange: ((Bool) -> Void)?
+
+    func stopWallpapers() { isStopped = true }
+
+    /// WE's Play: unpauses, and ends a stop.
+    func resumeWallpapers() {
+        if playRate == 0 { playRate = lastPlayRate == 0 ? 1 : lastPlayRate }
+        isStopped = false
+    }
+
     /// Holds the playlist still after safe restart stopped a wallpaper; the setting is untouched.
     var isPlaylistSuspended = false {
         didSet { restartPlaylistTimer() }

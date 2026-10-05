@@ -20,9 +20,10 @@ extension AppDelegate {
         self.wallpaperViewModel.playRate = 0
     }
 
+    /// Resume or Play: unpauses, and loads the wallpapers again when they are stopped.
     @objc func resume() {
         videoMemoryWatch.userResumed()
-        self.wallpaperViewModel.playRate = self.wallpaperViewModel.lastPlayRate == 0 ? 1 : self.wallpaperViewModel.lastPlayRate
+        self.wallpaperViewModel.resumeWallpapers()
     }
 
     @objc func browseWorkshop() {
@@ -83,6 +84,7 @@ extension AppDelegate {
                 button.image = NSImage(systemSymbolName: "play.desktopcomputer", accessibilityDescription: nil)
             }
         }
+        showStoppedState()
     }
 }
 
@@ -107,6 +109,7 @@ extension AppDelegate {
             .separator(),
             setUpAssets,
             item("Browse Workshop", "globe", #selector(browseWorkshop), .workshop),
+            item("Send Android Exports over Wi-Fi…", "wifi", #selector(showAndroidWiFiShare)),
             item("Settings", "gearshape.fill", #selector(openSettingsWindow), .settings),
             item("Check for Updates…", "arrow.down.circle", #selector(checkForUpdates), .checkForUpdates),
             .separator(),
@@ -114,6 +117,7 @@ extension AppDelegate {
             .separator(),
             item("Mute", "speaker.slash.fill", #selector(toggleMuteWallpapers), .muteUnmute),
             item("Pause", "pause.fill", #selector(togglePauseWallpapers), .pauseResume),
+            item("Stop Wallpapers", "stop.fill", #selector(toggleStopWallpapers)),
             item("Paused: video memory is full", "memorychip", #selector(videoMemoryPauseNotice)),
             item("Next Wallpaper", "forward.fill", #selector(nextWallpaper), .nextWallpaper),
             item("Previous Wallpaper", "backward.fill", #selector(previousWallpaper), .previousWallpaper),

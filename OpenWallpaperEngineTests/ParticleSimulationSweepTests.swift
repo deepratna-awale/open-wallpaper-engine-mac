@@ -25,7 +25,7 @@ final class ParticleSimulationSweepTests: XCTestCase {
                   let data = FileManager.default.contents(atPath: directory.appending(path: "project.json").path),
                   let project = try? JSONDecoder().decode(WEProject.self, from: data) else { continue } // decoding is covered elsewhere
             // Loading stores the wallpaper's settings: remove them unless the app had some (a user's).
-            let identity = WallpaperSettingsIdentity(directory: directory, projectData: data)
+            let identity = WallpaperSettingsIdentity.resolve(directory: directory)
             var keys: [String] = ["SceneAdditionalControlsVersion." + directory.path]
             for family in WallpaperSettingsIdentity.Family.allCases {
                 keys.append(identity.key(family))

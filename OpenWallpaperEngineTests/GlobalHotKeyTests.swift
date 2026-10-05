@@ -140,6 +140,28 @@ final class GlobalHotKeyTests: XCTestCase {
         XCTAssertEqual(Array(registrar.registered.values), [ctrlOptS])
     }
 
+    func testStopRegistersRunsAndConflicts() {
+        XCTAssertEqual(GlobalHotKeyAction(rawValue: "stop"), .stop, "WE's action name")
+        XCTAssertEqual(GlobalHotKeyAction.stop.group, .playback)
+        XCTAssertNil(GlobalHotKeyAction.stop.menuCommand, "the menus' Stop has no shortcut")
+        // The menu's ⌥⌘P is Pause's, so it is one for Stop.
+        XCTAssertEqual(finder.conflicts(for: cmdOptP, action: .stop, playlists: [], hotKeys: GlobalHotKeyBindings()),
+                       [.appMenu(.pauseResume)])
+
+        let model = WallpaperViewModel(persistsWallpapers: false)
+        let registrar = FakeRegistrar()
+        let hotKeys = controller(model, registrar)
+        var performed: [GlobalHotKeyAction] = []
+        hotKeys.perform = { performed.append($0) }
+        XCTAssertEqual(hotKeys.conflicts(for: ctrlOpt9, action: .stop), [])
+        hotKeys.assign(ctrlOpt9, to: .stop, resolving: [])
+        XCTAssertEqual(Array(registrar.registered.values), [ctrlOpt9])
+        registrar.press(ctrlOpt9)
+        XCTAssertEqual(performed, [.stop])
+        XCTAssertEqual(hotKeys.conflicts(for: ctrlOpt9, action: .pause), [.action(.stop)])
+        XCTAssertEqual(GlobalHotKeyBindings.load(from: defaults)[.stop], ctrlOpt9, "stored under WE's name")
+    }
+
     func testAPlaylistTakingAnActionsShortcutClearsTheAction() {
         let model = WallpaperViewModel(persistsWallpapers: false)
         let mine = playlist("Mine")

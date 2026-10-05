@@ -15,7 +15,10 @@ protocol ControlAppModel: AnyObject {
     func playlists() -> [ControlPlaylist]
 
     func setWallpaper(_ wallpaper: ControlWallpaper, displays: [String]) throws
+    /// false resumes from a stop too, as Resume in the menu bar does.
     func setPaused(_ paused: Bool)
+    /// Stops every wallpaper, as Stop Wallpapers in the menu bar does.
+    func stop()
     func setVolume(_ volume: Double)
     func setMuted(_ muted: Bool)
     /// Sets one property's value (already checked against its type) on the stores of the displays
@@ -79,6 +82,8 @@ struct ControlPlayback: Equatable {
     var paused: Bool
     /// 0…1; 0 is muted, as Mute in the menu bar does it.
     var volume: Double
+    /// Stopped by the user (Stop Wallpapers): nothing is loaded until resumed.
+    var stopped = false
 }
 
 struct ControlPlaylist: Equatable {

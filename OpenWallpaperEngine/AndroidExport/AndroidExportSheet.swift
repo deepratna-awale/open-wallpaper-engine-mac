@@ -29,9 +29,6 @@ struct AndroidExportSheet: View {
         .padding(20)
         .frame(width: 640, height: 640)
         .onDisappear { model.close() }
-        .sheet(item: $model.wifiSend) { request in
-            AndroidWiFiSendSheet(session: AndroidWiFiSession(batch: request.batch), dismiss: { model.wifiSend = nil })
-        }
     }
 
     @ViewBuilder

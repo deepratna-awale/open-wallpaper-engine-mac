@@ -10,7 +10,7 @@ extension WallpaperViewModel {
         playlistTimer?.invalidate()
         playlistTimer = nil
         playlistCountdown = nil
-        guard persistsWallpapers, playlistEnabled, !isPlaylistSuspended, let playlist = activePlaylist,
+        guard persistsWallpapers, playlistEnabled, !isPlaylistSuspended, !isStopped, let playlist = activePlaylist,
               let item = playlist.items[safe: playlistIndex] else {
             playlistClockObserver = nil
             return
@@ -73,7 +73,7 @@ extension WallpaperViewModel {
     /// Shows the item a Time of day or Day of week playlist schedules now, when its slot changed
     /// since it last did (`force`: whatever it last did), and waits for the next slot.
     func applyPlaylistSchedule(force: Bool = false, transitions: Bool = true) {
-        guard playlistEnabled, !isPlaylistSuspended, let playlist = activePlaylist,
+        guard playlistEnabled, !isPlaylistSuspended, !isStopped, let playlist = activePlaylist,
               let scheduled = playlist.scheduledIndex(at: playlistClock(), calendar: playlistCalendar()) else { return }
         if force || scheduled != playlistScheduledIndex {
             playlistScheduledIndex = scheduled

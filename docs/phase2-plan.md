@@ -72,7 +72,7 @@ The reference implementations agree on most of this. Where they disagree, the ch
 3. the instance pass `constantshadervalues`.
 
 Each value may be a literal, `{user}`, `{script}` or `{animation}`, and is resolved every frame (LWE's live-binding behaviour). Other rules:
-- The JSON key is the annotation's `"material"` name, matched case-sensitively first and then case-insensitively. As a fallback, the uniform name without its `g_` prefix also matches (WSR).
+- The JSON key is the annotation's `"material"` name, matched case-sensitively (WE 2.8.42 leaves generic4's opacity at 1 for a capital `Alpha`, docs/models-plan.md §5.18). As a fallback, the uniform name without its `g_` prefix also matches (WSR).
 - Vectors are space-separated strings. A float with a string default is parsed as a float (LWE truncates it; we don't).
 - Uniforms with no value and no default are set to 0.
 

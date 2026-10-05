@@ -8,6 +8,7 @@ extension AppDelegate {
     func performHotKey(_ action: GlobalHotKeyAction) {
         switch action {
         case .pause: togglePauseWallpapers()
+        case .stop: toggleStopWallpapers()
         case .mute: toggleMuteWallpapers()
         case .nextWallpaper: nextWallpaper()
         case .previousWallpaper: previousWallpaper()

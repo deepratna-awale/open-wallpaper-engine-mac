@@ -176,7 +176,7 @@ final class RenderCheckTests: XCTestCase {
         let hidden = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
         XCTAssertEqual(hidden.visibility["2"], false, "the property's default hides the bars")
 
-        let identity = WallpaperSettingsIdentity(directory: directory, projectData: projectData)
+        let identity = WallpaperSettingsIdentity.resolve(directory: directory)
         UserDefaults.app.set(["bars": "true"], forKey: identity.key(.userProperties))
         UserDefaults.app.set(true, forKey: identity.key(.explicitUserProperties))
         let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())

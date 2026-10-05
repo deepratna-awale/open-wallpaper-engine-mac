@@ -54,7 +54,11 @@ private final class FakeAppModel: ControlAppModel {
         for display in displays { shown[display] = wallpaper }
     }
 
-    func setPaused(_ paused: Bool) { playbackState.paused = paused }
+    func setPaused(_ paused: Bool) {
+        playbackState.paused = paused
+        if !paused { playbackState.stopped = false }
+    }
+    func stop() { playbackState.stopped = true }
     func setVolume(_ volume: Double) { playbackState.volume = volume }
     func setMuted(_ muted: Bool) { playbackState.volume = muted ? 0 : 0.8 }
 
@@ -192,6 +196,25 @@ final class MCPControlRouterTests: XCTestCase {
         XCTAssertEqual(muted["volume"], 0)
         let outOfRange = await error("set_volume", ["level": 3])
         XCTAssertEqual(outOfRange?.code, .invalidParams)
+    }
+
+    func testStopAndResume() async throws {
+        let stopped = try await result("stop")
+        XCTAssertEqual(stopped["stopped"], true)
+        XCTAssertEqual(stopped["paused"], false)
+        let status = try await result("get_status")
+        XCTAssertEqual(status["stopped"], true)
+        XCTAssertEqual(status["displays"]?.arrayValue?.first?["playing"], false, "nothing plays while stopped")
+
+        let toggled = try await result("toggle_playback")
+        XCTAssertEqual(toggled["stopped"], false, "the toggle resumes from a stop")
+        XCTAssertEqual(toggled["paused"], false)
+
+        _ = try await result("pause")
+        _ = try await result("stop")
+        let resumed = try await result("resume")
+        XCTAssertEqual(resumed["stopped"], false, "resume ends a stop")
+        XCTAssertEqual(resumed["paused"], false, "and a pause")
     }
 
     func testUserPropertiesAreCheckedAgainstTheirType() async throws {

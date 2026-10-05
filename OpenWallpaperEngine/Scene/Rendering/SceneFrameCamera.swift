@@ -18,6 +18,9 @@ struct SceneFrameCamera: Equatable {
     var reversedDepth = true
     /// `camerafade`'s alpha this frame (`materials/util/fade.json`); 0 draws no fade.
     var fade: Float = 0
+    /// An orthographic scene's drawn space this frame: its zoom and its camera's view, in which
+    /// the renderer draws the scene (`SceneOrthographicZoom`). None in a perspective scene.
+    var drawnSpace = SceneOrthographicZoom.none
 
     var viewProjection: simd_float4x4 { projection * view }
     var isPerspective: Bool { fieldOfView != nil }
@@ -73,34 +76,77 @@ enum SceneCameraRigs {
     /// perspective scene, the orthographic camera otherwise. Bound values resolve against the
     /// content's user properties.
     static func make(for content: SceneMetalContent) -> any SceneCameraRig {
+        let values = LiveSceneValueContext(wallpaper: content.wallpaperKey)
         guard content.spatial.camera.projection.isPerspective else {
-            return SceneOrthographicCameraRig(zoom: Float(content.spatial.camera.zoom))
+            return SceneOrthographicCameraRig(content.spatial, values: values)
         }
-        return ScenePerspectiveCameraRig(content.spatial, values: LiveSceneValueContext(wallpaper: content.wallpaperKey))
+        return ScenePerspectiveCameraRig(content.spatial, values: values)
     }
 }
 
-/// An orthographic scene's camera (0x1401891a0 without camera paths): the view from the origin
-/// down −z (identity), `ortho(0, width, 0, height)` over z −2000…2000, and the eye WE reports
-/// afterwards, (width/2, height/2, 2000) (0x140189da0). WE scales the projection about its centre
-/// by `general.zoom` × the camera's zoom; the app draws the scene in that zoom's drawn space
-/// instead (`SceneOrthographicZoom`, docs/models-plan.md §5.19), which this camera sees over a
-/// depth range and from an eye grown alike. Camera shake isn't in it: the renderer moves the
-/// layers and lights by its negative instead, which leaves every eye-to-object vector as WE's.
-/// The layer pass draws with its own matrix (`ImageMaterialRenderer.viewProjection`); the models
-/// and the volumetrics draw with this one.
+/// An orthographic scene's camera (0x1401891a0): `ortho(0, width, 0, height)` over z −2000…2000,
+/// and the eye WE reports afterwards, (width/2, height/2, 2000) (0x140189da0). The view is the
+/// reset one (from the origin down −z, the identity) unless a camera layer or a camera path moves
+/// it, as in a perspective scene (`ScenePerspectiveCameraRig`, steps 1 and 2): WE 2.8.42 plays an
+/// editor-made path in an orthographic scene, its eye x 0 → 400 → 0 shifting a 1920-wide scene's
+/// image 391 px and back (docs/models-plan.md §5.19). The view is then `lookAt(eye, centre, up)`,
+/// and the camera's zoom the active layer's (its path's `zoom`, else its own) or the path key's.
+/// WE scales the projection about its centre by `general.zoom` × the camera's zoom; the app draws
+/// the scene in the drawn space of that zoom and view instead (`SceneOrthographicZoom`), which this
+/// camera sees over a depth range and from an eye grown alike. Camera shake isn't in it: the
+/// renderer moves the layers and lights by its negative instead, which leaves every eye-to-object
+/// vector as WE's. The layer pass draws with its own matrix (`ImageMaterialRenderer.viewProjection`);
+/// the models and the volumetrics draw with this one.
 final class SceneOrthographicCameraRig: SceneCameraRig {
     /// `general.zoom`.
     let zoom: Float
+    private let cameraFade: Bool
+    private var paths: SceneCameraPaths
+    private let layers: SceneCameraLayers?
 
-    init(zoom: Float = 1) { self.zoom = zoom }
+    init(zoom: Float = 1) {
+        self.zoom = zoom
+        cameraFade = false
+        paths = SceneCameraPaths([])
+        layers = nil
+    }
+
+    init(_ spatial: SceneSpatialContent, values: SceneValueContext) {
+        zoom = Float(spatial.camera.zoom)
+        cameraFade = spatial.camera.cameraFade
+        paths = SceneCameraPaths(spatial.cameraPaths)
+        layers = spatial.cameraLayers.isEmpty ? nil
+            : SceneCameraLayers(spatial.cameraLayers, transforms: spatial.transforms, values: values)
+    }
+
+    func setParent(_ id: String, to parent: String?, attachment: String?) {
+        layers?.setParent(id, to: parent, attachment: attachment)
+    }
+
+    /// The camera layers' state (tests).
+    var cameraLayers: SceneCameraLayers? { layers }
 
     func frameCamera(_ input: SceneCameraRigInput) -> SceneFrameCamera {
         let size = simd_max(input.sceneSize, SIMD2(1, 1))
-        let depth = Self.frameZoom(general: zoom, input: input).orthographicDepth
-        return SceneFrameCamera(projection: SceneCamera.orthographic(left: 0, right: size.x, bottom: 0, top: size.y,
-                                                                     near: -depth, far: depth),
-                                eye: SIMD3(size.x / 2, size.y / 2, depth))
+        var pose: SceneCameraPose?
+        let layerInput = SceneCameraLayers.FrameInput(deltaTime: input.deltaTime, isVisible: input.isVisible,
+                                                      live: input.live, fov: input.layerFov)
+        if let layer = layers?.update(layerInput) {
+            pose = layer.pose
+            pose?.zoom = layer.zoom
+        } else if let path = paths.advance(by: input.deltaTime) {
+            pose = path
+        }
+        let view = pose.map { SceneCamera.lookAt(eye: $0.eye, center: $0.center, up: $0.up) } ?? matrix_identity_float4x4
+        let drawn = SceneOrthographicZoom(factor: zoom * (pose?.zoom ?? input.scriptCamera?.zoom ?? 1),
+                                          sceneSize: input.sceneSize, view: view)
+        let depth = drawn.orthographicDepth
+        var camera = SceneFrameCamera(projection: SceneCamera.orthographic(left: 0, right: size.x, bottom: 0, top: size.y,
+                                                                           near: -depth, far: depth),
+                                      eye: SIMD3(size.x / 2, size.y / 2, depth))
+        camera.drawnSpace = drawn
+        if input.cameraFade ?? cameraFade { camera.fade = paths.fade }
+        return camera
     }
 
     /// The zoom this frame: `general` × the camera's, as `thisScene.setCameraTransforms` set it

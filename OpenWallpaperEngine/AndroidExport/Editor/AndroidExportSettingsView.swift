@@ -286,9 +286,9 @@ private struct AndroidEditorExportProgress: View {
     @ViewBuilder private func outputButtons(_ batch: AndroidExportBatch) -> some View {
         Button("Show in Finder") { model.showInFinder() }
             .glassButtonStyle()
-        if model.wifiSend == nil {
+        if !batch.outputs.isEmpty {
             Button {
-                model.wifiSend = AndroidWiFiSendRequest(batch: batch)
+                AndroidWiFiShareWindow.show()
             } label: {
                 Label("Send Again", systemImage: "wifi")
             }
@@ -385,9 +385,6 @@ private struct AndroidExportSheetPresenter<Layer: View>: ViewModifier {
         content
             .sheet(item: $model.sheet, onDismiss: onClose) { sheet in
                 AndroidExportSettingsSheetView(model: model, sheet: sheet, layer: layer)
-            }
-            .sheet(item: $model.wifiSend) { request in
-                AndroidWiFiSendSheet(session: AndroidWiFiSession(batch: request.batch), dismiss: { model.wifiSend = nil })
             }
     }
 }

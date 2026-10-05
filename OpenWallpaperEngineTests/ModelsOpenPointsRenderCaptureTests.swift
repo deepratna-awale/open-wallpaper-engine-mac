@@ -1,10 +1,13 @@
 import XCTest
 import simd
+import ImageIO
 @testable import OpenWallpaperEngine
 
-/// docs/models-plan.md §5.10, 5.11 and 5.31 against WE 2.8.42's captures of running wallpapers
-/// (we-test-wp-images, tools/peer/requests/owe-beta3/models-open: 510, 511 and 531b, a README,
-/// the stills and the projects each). The projects are in `Tests/Fixtures/Models/OpenPoints`
+/// docs/models-plan.md §5.10, 5.11, 5.18, 5.19, 5.20, 5.22 and 5.31 against WE 2.8.42's captures
+/// of running wallpapers (we-test-wp-images, tools/peer/requests/owe-beta3/models-open: 510, 511,
+/// 518-fade-threshold, 519b, 520, 522 and 531b, a README, the stills and the projects each).
+/// The camera captures' gradient image isn't in the projects; a test draws its own, opaque and
+/// 1024 px square as WE's, so only its edges are measured. The projects are in `Tests/Fixtures/Models/OpenPoints`
 /// without their binaries, which come from the repository's fixtures: the box from WE's import of
 /// `rootmotion_box` (models_gt/mg4), the rope from bone-physics A (`Models/BonePhysics/rope-A.mdl`)
 /// with the texture-channels capture's `rope.tex`. Each is drawn headlessly at 1920×1080 by the
@@ -113,7 +116,209 @@ final class ModelsOpenPointsRenderCaptureTests: XCTestCase {
         }
     }
 
+    // MARK: - 5.18 A model's opacity
+
+    /// The editor's Opacity (Material → Shader) writes a lowercase `alpha` into the pass's
+    /// `constantshadervalues`, generic4's `g_TintAlpha`: the translucent box's contrast against
+    /// the clear colour scales linearly with it (WE: 102, 51, 10, 1, 0 at 1, 0.5, 0.1, 0.01, 0),
+    /// and the draw is issued at 0 too. A capital `Alpha` and the object's `alpha` change nothing.
+    func testAModelsOpacityIsTheLowercaseAlphaWithoutAThreshold() throws {
+        func box(_ name: String, constants: [String: Any], objectAlpha: Double = 1) throws -> (image: Image, draws: Int) {
+            let directory = try project("518-alpha", binaries: Self.box, as: name)
+            try Self.editJSON(directory.appending(path: "materials/models/rootmotion_box/red.json")) { material in
+                var passes = material["passes"] as! [[String: Any]]
+                passes[0]["constantshadervalues"] = constants.merging(["Color": "1 1 1"]) { a, _ in a }
+                material["passes"] = passes
+            }
+            try Self.editJSON(directory.appending(path: "scene.json")) { scene in
+                var objects = scene["objects"] as! [[String: Any]]
+                objects[0]["alpha"] = objectAlpha
+                scene["objects"] = objects
+            }
+            let harness = try ModelSceneHarness(directory: directory, settings: SceneRenderSettings(), size: SIMD2(1920, 1080),
+                                                storage: scratch.appending(path: "storage", directoryHint: .isDirectory))
+            defer { harness.close() }
+            try harness.settle(seconds: 10)
+            let bytes = try TextureUploadTests.read(try XCTUnwrap(harness.renderer.sharedFrame), device: harness.device)
+            XCTAssertEqual(harness.gpuErrors, [], name)
+            return (Image(width: 1920, height: 1080, pixels: bytes), harness.models?.meshDraws["17"] ?? 0)
+        }
+        let clear = try box("alpha-0", constants: ["Alpha": 1, "alpha": 0])
+        XCTAssertGreaterThan(clear.draws, 0, "the box is drawn at alpha 0")
+        XCTAssertEqual(Self.maxDelta(clear.image, Image(width: 1920, height: 1080, pixels: Self.cleared(clear.image))), 0,
+                       "alpha 0 leaves the clear colour")
+        let full = Self.maxDelta(try box("alpha-1", constants: ["Alpha": 1, "alpha": 1]).image, clear.image)
+        XCTAssertGreaterThan(full, 60)
+        for alpha in [0.5, 0.1, 0.01] {
+            let faded = try box("alpha-\(alpha)", constants: ["Alpha": 1, "alpha": alpha])
+            XCTAssertGreaterThan(faded.draws, 0)
+            XCTAssertEqual(Double(Self.maxDelta(faded.image, clear.image)), alpha * Double(full), accuracy: 1.5, "alpha \(alpha)")
+        }
+        // The inert keys: capital `Alpha` 0 and the object's `alpha` 0 draw the box at full opacity.
+        XCTAssertEqual(Self.maxDelta(try box("capital", constants: ["Alpha": 0]).image, clear.image), full, "capital Alpha")
+        XCTAssertEqual(Self.maxDelta(try box("object", constants: ["Alpha": 1, "alpha": 1], objectAlpha: 0).image, clear.image),
+                       full, "object alpha")
+
+        guard let folder = ModelsOpenPointsCaptureTests.capture("518-fade-threshold") else { return }
+        let weClear = Image(try WEReferenceImage.load(folder.appending(path: "mo2_518e_alpha_0.png")))
+        for (file, expected) in [("1", 102), ("0p5", 51), ("0p1", 10), ("0p01", 1), ("0p001", 0)] {
+            let still = Image(try WEReferenceImage.load(folder.appending(path: "mo2_518e_alpha_\(file).png")))
+            XCTAssertEqual(Self.maxDelta(still, weClear), expected, accuracy: 1, "WE alpha \(file)")
+        }
+    }
+
+    // MARK: - 5.19, 5.20, 5.22 Camera paths in an orthographic scene
+
+    /// The image's left edge when no camera moves it (WE: x 525–1394).
+    private static let restEdge = 525
+
+    /// An editor-made path (eye and centre x 0 → 400 → 0 over 60 frames at 30 fps, mode single)
+    /// on a camera layer with `"visible": {"value": true}` moves an orthographic scene's view: the
+    /// image is 400 px left at 1 s and back at 2 s, and the random queue picks the path again (WE:
+    /// 391 px at its t = 1 still, 400 in 520's; models-open/519b). Without `visible` nothing plays.
+    func testACameraPathMovesAnOrthographicScene() throws {
+        let edges = try leftEdges(try gradientProject("519b-ortho-campath"), at: [0.5, 1, 1.5, 2, 3])
+        XCTAssertEqual(edges[1], Self.restEdge - 400, accuracy: 8, "t 1")
+        for index in [0, 2] { XCTAssertTrue((Self.restEdge - 300...Self.restEdge - 100).contains(edges[index]), "\(edges)") }
+        XCTAssertEqual(edges[3], Self.restEdge, accuracy: 8, "t 2: the path's end")
+        XCTAssertEqual(edges[4], Self.restEdge - 400, accuracy: 8, "t 3: played again")
+
+        let hidden = try gradientProject("519b-ortho-campath", as: "519b-no-visible") { scene in
+            var objects = scene["objects"] as! [[String: Any]]
+            objects[1].removeValue(forKey: "visible")
+            scene["objects"] = objects
+        }
+        XCTAssertEqual(try leftEdges(hidden, at: [0.5, 1, 1.5]), [Self.restEdge, Self.restEdge, Self.restEdge], "no visible")
+
+        guard let folder = ModelsOpenPointsCaptureTests.capture("519b-ortho-camera-path") else { return }
+        let peak = try XCTUnwrap(Self.leftEdge(Image(try WEReferenceImage.load(folder.appending(path: "mo2_519b_ortho_campath_t1.png")))))
+        XCTAssertTrue((125...140).contains(peak), "WE t 1: \(peak)")
+        let early = try XCTUnwrap(Self.leftEdge(Image(try WEReferenceImage.load(folder.appending(path: "mo2_519b_ortho_campath_t0.5.png")))))
+        XCTAssertTrue((Self.restEdge - 300...Self.restEdge - 100).contains(early), "WE t 0.5: \(early)")
+    }
+
+    /// A script writing the camera layer's origin every frame (x = −400·min(t/5, 1)) shows only
+    /// without a path: with one the view follows the path alone (WE: 125 px at 1 and 3 s, at rest
+    /// at 6 s); without, the image moves right 80, 240 and 400 px at 1, 3 and 6 s (WE: 80, 234, 400).
+    func testAPlayingPathWinsOverACameraScript() throws {
+        let path = try leftEdges(try gradientProject("520-writeback-vs-script"), at: [1, 2, 3, 6])
+        XCTAssertEqual(path[0], Self.restEdge - 400, accuracy: 8, "t 1")
+        XCTAssertEqual(path[1], Self.restEdge, accuracy: 8, "t 2")
+        XCTAssertEqual(path[2], Self.restEdge - 400, accuracy: 8, "t 3")
+        XCTAssertEqual(path[3], Self.restEdge, accuracy: 8, "t 6")
+        let script = try leftEdges(try gradientProject("520b-script-only"), at: [1, 3, 6])
+        for (edge, shift) in zip(script, [80, 240, 400]) { XCTAssertEqual(edge, Self.restEdge + shift, accuracy: 10, "\(script)") }
+
+        guard let folder = ModelsOpenPointsCaptureTests.capture("520-writeback-vs-script") else { return }
+        for (file, expected) in [("520_writeback_vs_script_t1", 125), ("520_writeback_vs_script_t3", 125),
+                                 ("520_writeback_vs_script_t6", 525), ("520b_script_only_t1", 605),
+                                 ("520b_script_only_t3", 765), ("520b_script_only_t6", 925)] {
+            let still = Image(try WEReferenceImage.load(folder.appending(path: "mo2_\(file).png")))
+            XCTAssertEqual(try XCTUnwrap(Self.leftEdge(still)), expected, accuracy: 10, "WE \(file)")
+        }
+    }
+
+    /// Two eye/centre x keys at frame 30 (400, then −400): the first wins, the view reaches +400
+    /// at 1 s and eases back, the image never moves right of rest. A path with `visible` false
+    /// doesn't play (models-open/522).
+    func testTheFirstOfTwoKeysAtAFrameWinsAndAHiddenPathDoesntPlay() throws {
+        let edges = try leftEdges(try gradientProject("522-samekey"), at: (1...60).map { Double($0) / 30 })
+        XCTAssertEqual(edges[29], Self.restEdge - 400, accuracy: 8, "frame 30")
+        XCTAssertLessThanOrEqual(edges.max() ?? .max, Self.restEdge + 2, "−400 is never reached")
+        XCTAssertEqual(try leftEdges(try gradientProject("522-path-hidden"), at: [0.5, 1, 1.5]),
+                       [Self.restEdge, Self.restEdge, Self.restEdge], "visible false")
+
+        guard let folder = ModelsOpenPointsCaptureTests.capture("522-keys-edge") else { return }
+        for time in ["0.3", "0.9", "1.4", "1.8"] {
+            let still = Image(try WEReferenceImage.load(folder.appending(path: "mo2_522_samekey_t\(time).png")))
+            XCTAssertLessThan(try XCTUnwrap(Self.leftEdge(still)), Self.restEdge, "WE t \(time)")
+        }
+        let still = Image(try WEReferenceImage.load(folder.appending(path: "mo2_522_path_hidden_t1.png")))
+        XCTAssertEqual(Self.leftEdge(still), Self.restEdge, "WE: hidden")
+    }
+
     // MARK: - Helpers
+
+    /// A camera capture's project with a gradient image in place of WE's, its scene edited.
+    private func gradientProject(_ name: String, as copy: String? = nil,
+                                 scene edit: ((inout [String: Any]) -> Void)? = nil) throws -> URL {
+        let directory = try project(name, binaries: [:], as: copy)
+        try Self.writeGradient(to: directory.appending(path: "materials/gradient.png"))
+        if let edit { try Self.editJSON(directory.appending(path: "scene.json"), edit) }
+        return directory
+    }
+
+    /// The image's left edge on row 540 at each time in `shots` (ascending seconds, 30 fps).
+    private func leftEdges(_ directory: URL, at shots: [Double]) throws -> [Int] {
+        let harness = try ModelSceneHarness(directory: directory, settings: SceneRenderSettings(), size: SIMD2(1920, 1080),
+                                            storage: scratch.appending(path: "storage", directoryHint: .isDirectory))
+        defer { harness.close() }
+        var time = 0.0
+        var edges: [Int] = []
+        for shot in shots {
+            while time + 1.0 / 60 < shot {
+                harness.frame()
+                time += 1.0 / 30
+            }
+            let bytes = try TextureUploadTests.read(try XCTUnwrap(harness.renderer.sharedFrame), device: harness.device)
+            edges.append(try XCTUnwrap(Self.leftEdge(Image(width: 1920, height: 1080, pixels: bytes)), "t \(shot)"))
+        }
+        XCTAssertEqual(harness.gpuErrors, [], directory.lastPathComponent)
+        return edges
+    }
+
+    /// The first pixel of `row` that differs from the background (the right edge's colour).
+    static func leftEdge(_ image: Image, row: Int = 540) -> Int? {
+        let background = image.range(image.width - 1, row)
+        return (0..<image.width).first {
+            let pixel = image.range($0, row)
+            return abs(pixel.low - background.low) + abs(pixel.high - background.high) > 24
+        }
+    }
+
+    /// The largest channel difference between two frames above the taskbar's rows.
+    static func maxDelta(_ a: Image, _ b: Image) -> Int {
+        var largest = 0
+        for index in 0..<(rows * a.width * 4) where index % 4 != 3 {
+            largest = max(largest, abs(Int(a.pixels[index]) - Int(b.pixels[index])))
+        }
+        return largest
+    }
+
+    /// A frame of `image`'s top-left pixel everywhere (its clear colour).
+    static func cleared(_ image: Image) -> [UInt8] {
+        let pixel = Array(image.pixels[0..<4])
+        return Array([[UInt8]](repeating: pixel, count: image.width * image.height).joined())
+    }
+
+    /// An opaque 1024 px gradient: red ramps across, green and blue stay well off the clear colour.
+    private static func writeGradient(to url: URL) throws {
+        let size = 1024
+        var pixels = [UInt8](repeating: 255, count: size * size * 4)
+        for y in 0..<size {
+            for x in 0..<size {
+                let index = (y * size + x) * 4
+                pixels[index] = UInt8(80 + x * 175 / size)
+                pixels[index + 1] = 200
+                pixels[index + 2] = 120
+            }
+        }
+        let provider = try XCTUnwrap(CGDataProvider(data: Data(pixels) as CFData))
+        let image = try XCTUnwrap(CGImage(width: size, height: size, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: size * 4,
+                                          space: CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),
+                                          provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent))
+        let destination = try XCTUnwrap(CGImageDestinationCreateWithURL(url as CFURL, "public.png" as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, image, nil)
+        XCTAssertTrue(CGImageDestinationFinalize(destination))
+    }
+
+    /// Rewrites a JSON object file.
+    private static func editJSON(_ url: URL, _ edit: (inout [String: Any]) -> Void) throws {
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+        edit(&object)
+        try JSONSerialization.data(withJSONObject: object).write(to: url)
+    }
 
     private static let box = ["Models/OpenPoints/rootmotion_box.mdl": "models/rootmotion_box/rootmotion_box.mdl"]
 

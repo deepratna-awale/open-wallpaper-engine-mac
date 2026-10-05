@@ -139,7 +139,8 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - **Pause per Display** or **Pause All**, with the playback rules checked for each display, including Wallpaper Engine's maximized-window rule.
 - **Application Rules** — pause, stop or mute wallpapers, or load a wallpaper, playlist or display profile, while an app is running, focused, maximized, in full screen or playing audio.
 - **Playlists** as in Wallpaper Engine: change wallpaper on a timer, at login, by time of day or by day of week; begin with the first wallpaper, an intro played at startup only, changing while paused; and Wallpaper Engine's 27 **transitions** between wallpapers (or a random one), drawn on the GPU, also for wallpapers chosen in the library ([docs/playlists.md](docs/playlists.md)).
-- **Hotkeys** for Wallpaper Engine's actions and for each playlist, system-wide, with no Accessibility permission; **Next and Previous Wallpaper** in the menu bar menu.
+- **Hotkeys** for Wallpaper Engine's actions (including Stop wallpapers) and for each playlist, system-wide, with no Accessibility permission; **Next and Previous Wallpaper** in the menu bar menu.
+- **Stop Wallpapers** (menu bar menu, Playback menu, a hotkey): unloads every wallpaper, freeing its CPU, GPU and memory, and shows the macOS desktop picture until Resume.
 - **Take Screenshot** of the wallpaper alone, at the display's size, 4K or 8K.
 - Per-wallpaper **position, zoom and flip** on each display, and a video's playback rate.
 - Per-display user properties, with "Sync properties across displays".

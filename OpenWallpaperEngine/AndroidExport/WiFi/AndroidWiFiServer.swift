@@ -2,8 +2,9 @@ import Foundation
 import Network
 
 /// "Send over Wi-Fi"'s HTTP server: a Network.framework listener on one local-network address
-/// (`AndroidLANAddress`) that answers what `AndroidWiFiRouter` decides, for one batch, until it
-/// expires or is stopped.
+/// (`AndroidLANAddress`) that answers what `AndroidWiFiRouter` decides, for the packages it is
+/// given (`update(files:)` changes them while it runs), until it expires or is stopped. With a
+/// `lifetime`, each page, preview or download request moves the expiry to `lifetime` from then.
 ///
 /// - It accepts only peers on that address's subnet (`acceptLocalOnly`, then the subnet checked
 ///   again), never cellular, and stops by itself at the router's expiry.
@@ -52,11 +53,16 @@ final class AndroidWiFiServer: @unchecked Sendable {
 
     enum Event: Equatable, Sendable {
         case transfer(Transfer)
+        /// A request moved the expiry.
+        case expiry(Date)
         case stopped(StopReason)
     }
 
-    let router: AndroidWiFiRouter
+    /// What it answers; `queue` owns it.
+    private var router: AndroidWiFiRouter
     let address: AndroidLANAddress
+    /// How long the share lasts after a request; nil for a fixed expiry.
+    let lifetime: TimeInterval?
     let limits: Limits
     let queue = DispatchQueue(label: "OpenWallpaperEngine.AndroidWiFiServer", qos: .userInitiated)
     private let onEvent: @Sendable (Event) -> Void
@@ -66,12 +72,16 @@ final class AndroidWiFiServer: @unchecked Sendable {
     private var clients: [ObjectIdentifier: AndroidWiFiConnection] = [:]
     private var budgets: [UInt32: (tokens: Double, at: Date)] = [:]
     private var notFound: [UInt32: Int] = [:]
+    /// The files each device (its dotted address) downloaded whole.
+    private var downloaded: [String: Set<Int>] = [:]
+    private var reportedExpiry = Date.distantPast
     private var stopReason: StopReason?
 
-    init(router: AndroidWiFiRouter, address: AndroidLANAddress, limits: Limits = Limits(),
+    init(router: AndroidWiFiRouter, address: AndroidLANAddress, lifetime: TimeInterval? = nil, limits: Limits = Limits(),
          now: @escaping @Sendable () -> Date = { Date() }, onEvent: @escaping @Sendable (Event) -> Void) {
         self.router = router
         self.address = address
+        self.lifetime = lifetime
         self.limits = limits
         self.now = now
         self.onEvent = onEvent
@@ -121,9 +131,26 @@ final class AndroidWiFiServer: @unchecked Sendable {
                 }
                 listener.newConnectionHandler = { [weak self] connection in self?.accept(connection) }
                 listener.start(queue: queue)
-                let remaining = max(0, router.expiry.timeIntervalSince(now()))
-                queue.asyncAfter(wallDeadline: .now() + remaining) { [weak self] in self?.stop(.expired) }
+                scheduleExpiry()
             }
+        }
+    }
+
+    /// Stops at the router's expiry, or looks again then if a request moved it.
+    private func scheduleExpiry() {
+        let remaining = max(0, router.expiry.timeIntervalSince(now()))
+        queue.asyncAfter(wallDeadline: .now() + remaining) { [weak self] in
+            guard let self, self.stopReason == nil else { return }
+            if self.now() < self.router.expiry { self.scheduleExpiry() } else { self.stop(.expired) }
+        }
+    }
+
+    /// Serves `files` from now on; the page reloads its list.
+    func update(files: [AndroidWiFiFile]) {
+        queue.async { [self] in
+            guard files != router.files else { return }
+            router.files = files
+            router.version += 1
         }
     }
 
@@ -179,12 +206,23 @@ final class AndroidWiFiServer: @unchecked Sendable {
         }
         budget.tokens -= 1
         budgets[device] = budget
-        let response = router.response(to: request, now: time)
+        let route = router.route(request, now: time)
+        let response = router.response(to: request, now: time, downloaded: downloaded[AndroidLANAddress.dotted(device)] ?? [])
         if response.status == 404 { notFound[device, default: 0] += 1 }
+        if let lifetime, response.status < 400, route != .list {
+            router.expiry = time.addingTimeInterval(lifetime)
+            if router.expiry.timeIntervalSince(reportedExpiry) >= 1 {
+                reportedExpiry = router.expiry
+                onEvent(.expiry(router.expiry))
+            }
+        }
         return response
     }
 
-    func report(_ transfer: Transfer) { onEvent(.transfer(transfer)) }
+    func report(_ transfer: Transfer) {
+        if transfer.state == .completed { downloaded[transfer.device, default: []].insert(transfer.index) }
+        onEvent(.transfer(transfer))
+    }
 }
 
 enum AndroidWiFiError: LocalizedError {

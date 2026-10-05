@@ -1,30 +1,102 @@
 import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
-/// "Send over Wi-Fi": the QR code and address of the page the Android device downloads the batch
-/// from, the time left, each file's downloads and which device made them, and what to try when
-/// the phone can't connect. Closing the sheet stops the server and the link with it.
+/// "Send over Wi-Fi": the Android exports list (`AndroidExportOutbox`) as a grid of previews to
+/// pick from (everything not downloaded yet, at first), then the QR code and address of the page
+/// the Android device downloads the chosen packages from, the time left, each one's downloads and
+/// which device made them, and what to try when the phone can't connect. Packages can be picked,
+/// added or removed while it shares; the page follows. Closing the window stops the server and
+/// the link with it.
 struct AndroidWiFiSendSheet: View {
-    @StateObject var session: AndroidWiFiSession
+    @ObservedObject var outbox: AndroidExportOutbox
+    @ObservedObject var session: AndroidWiFiSession
     let dismiss: () -> Void
+    /// The entries to share, by number.
+    @State private var selection: Set<Int>
+    /// The entries the grid has shown, so new ones start selected.
+    @State private var known: Set<Int>
+    @State private var hasStarted = false
+    @State private var addError: String?
+    /// For devices that can't resolve `.local` names.
+    @State private var qrUsesIPAddress = false
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.displayScale) private var displayScale
+
+    init(outbox: AndroidExportOutbox, session: AndroidWiFiSession, dismiss: @escaping () -> Void) {
+        self.outbox = outbox
+        self.session = session
+        self.dismiss = dismiss
+        _selection = State(initialValue: Set(outbox.entries.filter { !$0.isDownloaded }.map(\.number)))
+        _known = State(initialValue: Set(outbox.entries.map(\.number)))
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Send over Wi-Fi")
-                .font(.title3.weight(.semibold))
-            if session.state == .noNetwork {
+            HStack {
+                Text("Send over Wi-Fi")
+                    .font(.title3.weight(.semibold))
+                Spacer()
+                Button {
+                    addPackages()
+                } label: {
+                    Label("Add .mpkg Files…", systemImage: "plus")
+                }
+                .glassButtonStyle()
+            }
+            if hasStarted, session.state == .noNetwork {
                 noNetwork
             } else {
-                address
-                fileList
-                help
+                if hasStarted { address }
+                grid
+                if let addError {
+                    Text(addError).font(.caption).foregroundStyle(.red)
+                }
+                if hasStarted { help }
             }
             footer
         }
         .padding(20)
-        .frame(width: 620, height: 640)
-        .task { await session.start() }
+        .frame(width: 760, height: 720)
+        .onAppear { outbox.prune() }
         .onDisappear { session.stop() }
+        .onChange(of: outbox.entries) { _, entries in
+            let numbers = Set(entries.map(\.number))
+            let added = numbers.subtracting(known).filter { number in entries.first { $0.number == number }?.isDownloaded == false }
+            known = numbers
+            selection = selection.intersection(numbers).union(added)
+        }
+        .onChange(of: selection) { _, _ in
+            if hasStarted, session.isActive { session.update(files: outbox.wifiFiles(selection)) }
+        }
+        .onChange(of: session.progress) { _, progress in
+            for (number, entry) in progress {
+                for device in entry.completedBy { outbox.markDownloaded(number, by: device) }
+            }
+        }
+    }
+
+    private func share() {
+        hasStarted = true
+        session.update(files: outbox.wifiFiles(selection))
+        Task { await session.start() }
+    }
+
+    private func addPackages() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = true
+        panel.canChooseDirectories = false
+        panel.allowedContentTypes = [UTType(filenameExtension: AndroidExportNaming.fileExtension) ?? .data]
+        guard panel.runModal() == .OK else { return }
+        let urls = panel.urls
+        addError = nil
+        Task {
+            do {
+                try await outbox.add(packages: urls)
+            } catch {
+                addError = error.localizedDescription
+            }
+        }
     }
 
     // MARK: Address
@@ -52,6 +124,17 @@ struct AndroidWiFiSendSheet: View {
                         .help("Copy Address")
                     }
                 }
+                if let ip = session.ipURL, session.localURL != nil {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("If that doesn't open: \(Text(verbatim: ip.absoluteString).monospaced())")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                        Toggle("Use IP address in QR code", isOn: $qrUsesIPAddress)
+                            .toggleStyle(.checkbox)
+                            .controlSize(.small)
+                    }
+                }
                 if session.addresses.count > 1 { networkPicker }
                 status
             }
@@ -63,11 +146,12 @@ struct AndroidWiFiSendSheet: View {
         let side: CGFloat = 196
         ZStack {
             RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.white)
-            if let url = session.url, let image = AndroidWiFiQRCode.image(for: url.absoluteString) {
-                Image(decorative: image, scale: 1)
-                    .interpolation(.none)
+            if let url = session.qrURL(usesIPAddress: qrUsesIPAddress),
+               let image = AndroidWiFiQRCode.image(for: url.absoluteString, side: Int((side - 8) * displayScale),
+                                                   appearance: NSAppearance(named: colorScheme == .dark ? .darkAqua : .aqua)) {
+                Image(decorative: image, scale: displayScale)
                     .resizable()
-                    .padding(8)
+                    .padding(4)
                     .accessibilityLabel(Text("QR code of the address"))
             } else if session.isActive {
                 ProgressView()
@@ -120,45 +204,87 @@ struct AndroidWiFiSendSheet: View {
 
     // MARK: Files
 
-    private var fileList: some View {
+    private var grid: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
-                ForEach(session.files) { file in
-                    fileRow(file, progress: session.progress[file.index] ?? .init())
+            if outbox.entries.isEmpty {
+                Text("No Android exports yet. Export a wallpaper for Android, or add .mpkg files.")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, minHeight: 160)
+            } else {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: 12)], spacing: 12) {
+                    ForEach(outbox.entries) { entry in
+                        tile(entry, progress: session.progress[entry.number] ?? .init())
+                    }
                 }
+                .padding(12)
             }
-            .padding(12)
         }
         .glassBackground(in: RoundedRectangle(cornerRadius: 12, style: .continuous)) {
             $0.background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
         }
     }
 
-    private func fileRow(_ file: AndroidWiFiFile, progress: AndroidWiFiSession.Progress) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(file.title).lineLimit(1)
-                Spacer()
-                Text(verbatim: "\(AndroidWiFiPage.label(file.kind)) · \(file.size.formatted(.byteCount(style: .file)))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                if !progress.completedBy.isEmpty {
-                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                        .accessibilityLabel(Text("Downloaded"))
+    private func tile(_ entry: AndroidExportOutbox.Entry, progress: AndroidWiFiSession.Progress) -> some View {
+        let selected = selection.contains(entry.number)
+        return VStack(alignment: .leading, spacing: 4) {
+            AndroidExportPreview(url: outbox.previewURL(of: entry))
+                .frame(height: 100)
+                .frame(maxWidth: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .overlay(alignment: .topLeading) {
+                    Toggle("Share", isOn: Binding(get: { selected }, set: { on in
+                        if on { selection.insert(entry.number) } else { selection.remove(entry.number) }
+                    }))
+                    .toggleStyle(.checkbox)
+                    .labelsHidden()
+                    .padding(6)
                 }
-            }
+                .overlay(alignment: .topTrailing) {
+                    Menu {
+                        actions(entry)
+                    } label: {
+                        Image(systemName: "ellipsis.circle.fill")
+                    }
+                    .menuStyle(.borderlessButton)
+                    .menuIndicator(.hidden)
+                    .fixedSize()
+                    .padding(6)
+                }
+            Text(entry.title).lineLimit(1)
+            Text(verbatim: ([AndroidWiFiPage.label(entry.kind)] + [entry.device].compactMap { $0 }
+                            + [entry.size.formatted(.byteCount(style: .file))]).joined(separator: " · "))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
             if progress.isDownloading || (progress.position > 0 && progress.completedBy.isEmpty) {
-                ProgressView(value: Double(progress.position), total: Double(max(file.size, 1)))
-                Text("\(progress.position.formatted(.byteCount(style: .file))) of \(file.size.formatted(.byteCount(style: .file)))")
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                ProgressView(value: Double(progress.position), total: Double(max(entry.size, 1)))
+                    .controlSize(.small)
             }
-            if !progress.completedBy.isEmpty {
-                Text("Downloaded by \(progress.completedBy.formatted(.list(type: .and)))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            if !entry.downloadedBy.isEmpty {
+                Label {
+                    Text("Downloaded by \(entry.downloadedBy.formatted(.list(type: .and)))")
+                } icon: {
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
             }
         }
+        .padding(8)
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous)
+            .strokeBorder(selected ? Color.accentColor : Color.secondary.opacity(0.25), lineWidth: selected ? 2 : 1))
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if selected { selection.remove(entry.number) } else { selection.insert(entry.number) }
+        }
+        .contextMenu { actions(entry) }
+    }
+
+    @ViewBuilder
+    private func actions(_ entry: AndroidExportOutbox.Entry) -> some View {
+        Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([entry.url]) }
+        Button("Remove from List") { outbox.remove([entry.number]) }
     }
 
     // MARK: Help
@@ -209,14 +335,94 @@ struct AndroidWiFiSendSheet: View {
 
     private var footer: some View {
         HStack {
-            if case .stopped = session.state {
-                Button("Send Again") { Task { await session.start() } }
-                    .glassButtonStyle()
-            }
             Spacer()
-            Button(session.isActive ? LocalizedStringKey("Stop Sending") : LocalizedStringKey("Done")) { dismiss() }
-                .glassButtonStyle(.prominent)
-                .keyboardShortcut(.defaultAction)
+            if hasStarted, session.isActive {
+                Button("Stop Sending") { session.stop() }
+                    .glassButtonStyle()
+            } else {
+                Button("Done") { dismiss() }
+                    .glassButtonStyle()
+                Button(hasStarted ? LocalizedStringKey("Send Again") : LocalizedStringKey("Start Sharing")) { share() }
+                    .glassButtonStyle(.prominent)
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(selection.isEmpty)
+            }
         }
     }
+}
+
+/// An Android exports list entry's preview picture, downsampled off the main thread; a GIF shows
+/// its first frame.
+private struct AndroidExportPreview: View {
+    let url: URL?
+    @State private var image: NSImage?
+
+    var body: some View {
+        ZStack {
+            Rectangle().fill(.quaternary)
+            if let image {
+                Image(nsImage: image).resizable().scaledToFill()
+            } else {
+                Image(systemName: "photo").foregroundStyle(.secondary)
+            }
+        }
+        .task(id: url) {
+            guard let url else { return }
+            image = await Task.detached(priority: .utility) {
+                guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+                      let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, [
+                        kCGImageSourceCreateThumbnailFromImageAlways: true,
+                        kCGImageSourceThumbnailMaxPixelSize: 400,
+                        kCGImageSourceCreateThumbnailWithTransform: true,
+                      ] as CFDictionary) else { return nil }
+                return NSImage(cgImage: thumbnail, size: .zero)
+            }.value
+        }
+    }
+}
+
+/// The "Send over Wi-Fi" window: one at a time, from the export sheets' "Send over Wi-Fi…", the
+/// File menu and the menu bar. Closing it stops sharing.
+@MainActor
+enum AndroidWiFiShareWindow {
+    private static var window: NSWindow?
+    private static var session: AndroidWiFiSession?
+    private static var observer: NSObjectProtocol?
+
+    static func show() {
+        if let window {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+        let session = AndroidWiFiSession(files: [])
+        let window = NSWindow()
+        window.styleMask = [.titled, .closable, .miniaturizable]
+        window.isReleasedWhenClosed = false
+        window.title = String(localized: "Send over Wi-Fi")
+        window.contentView = NSHostingView(rootView: AndroidWiFiSendSheet(outbox: .shared, session: session) { [weak window] in
+            window?.close()
+        }.frostedWindowBackground())
+        observer = NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: window, queue: .main) { _ in
+            MainActor.assumeIsolated { close() }
+        }
+        self.window = window
+        self.session = session
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private static func close() {
+        session?.stop()
+        session = nil
+        window?.contentView = nil
+        window = nil
+        if let observer { NotificationCenter.default.removeObserver(observer) }
+        observer = nil
+    }
+}
+
+extension AppDelegate {
+    @objc func showAndroidWiFiShare() { AndroidWiFiShareWindow.show() }
 }
