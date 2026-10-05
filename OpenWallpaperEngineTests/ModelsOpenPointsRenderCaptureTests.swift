@@ -96,6 +96,7 @@ final class ModelsOpenPointsRenderCaptureTests: XCTestCase {
         let harness = try ModelSceneHarness(directory: directory, settings: SceneRenderSettings(), size: SIMD2(1920, 1080),
                                             storage: scratch.appending(path: "storage", directoryHint: .isDirectory))
         defer { harness.close() }
+        XCTAssertTrue(harness.waitForPipelines(), "the pipelines compile")
         var time = 0.0
         for shot in [1.0, 3, 5.5] {
             while time + 1.0 / 60 < shot {

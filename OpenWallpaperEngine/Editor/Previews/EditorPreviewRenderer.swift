@@ -246,7 +246,9 @@ final class EditorPreviewRenderer {
                 renderer.renderShared([viewport])
                 renderer.lastCommandBuffer?.waitUntilCompleted()
                 try await Task.sleep(for: .milliseconds(5))
-                settled = renderer.hasPendingEffectPipelines ? 0 : settled + 1
+                // Every pipeline, not only the effects': a particle pipeline still compiling draws
+                // nothing, and the probe would frame the preview on what drew without it.
+                settled = renderer.pipelinesCompiling ? 0 : settled + 1
             }
             guard renderer.hasContent, settled >= 3 else {
                 renderer.releaseContent()

@@ -551,6 +551,8 @@ final class SceneModelRenderer: SceneModelDrawing {
             + "|x\(sampleCount)|d\(depthFormat.rawValue)"
     }
 
+    var hasPendingPipelines: Bool { pipelineLock.withLock { !pending.isEmpty } }
+
     /// Blocks until every mesh's pipeline compiled or failed (tests, prewarming). True when all are ready.
     func waitUntilReady(_ plan: SceneModelPlan, pixelFormat: MTLPixelFormat, sampleCount: Int = 1,
                         depthFormat: MTLPixelFormat = SceneDepthStates.format, timeout: TimeInterval = 120) -> Bool {
