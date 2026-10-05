@@ -28,12 +28,12 @@ final class SceneCameraLayersTests: XCTestCase {
     }
 
     private static func layer(_ id: String, order: Int, paths: [String] = [], queue: WESceneCameraLayer.QueueMode = .sequential,
-                              fov: Double = 40) throws -> SceneCameraLayerObject {
+                              fov: Double = 40, authorsVisible: Bool = true) throws -> SceneCameraLayerObject {
         let file = try WECameraLayerPathFile(data: Data(#"{"paths": [\#(paths.joined(separator: ", "))]}"#.utf8))
         XCTAssertEqual(file.paths.count, paths.count)
         return SceneCameraLayerObject(id: id, name: id, order: order,
                                       authored: WESceneCameraLayer(camera: "default", path: "p.json", queueMode: queue,
-                                                                   values: [.fov: .number(fov)]),
+                                                                   values: [.fov: .number(fov)], authorsVisible: authorsVisible),
                                       pathFile: file)
     }
 
@@ -103,6 +103,45 @@ final class SceneCameraLayersTests: XCTestCase {
     }
 
     // MARK: - Paths
+
+    /// WE 2.8.42 plays a camera layer's paths only when the object authors `visible`, in any form
+    /// (docs/models-plan.md §5.19, models-open/519b): without the key the layer is still the
+    /// camera, from its own transform, and its path doesn't move it.
+    func testPathsPlayOnlyWhenTheLayerAuthorsVisible() throws {
+        let eye = SIMD3<Float>(5, 0, 0)
+        let path = Self.path(eye: eye, center: SIMD3(5, 0, -5), frames: 50)
+        let silent = SceneCameraLayers([try Self.layer("cam", order: 0, paths: [path], authorsVisible: false)],
+                                       transforms: Self.transforms(), values: SpatialProperties())
+        for _ in 0..<5 { Self.assertClose(try XCTUnwrap(silent.update(Self.input())).pose.eye, .zero) }
+        XCTAssertNil(silent.playingPath("cam"))
+        XCTAssertNil(silent.writtenBack("cam"))
+        let playing = SceneCameraLayers([try Self.layer("cam", order: 0, paths: [path])],
+                                        transforms: Self.transforms(), values: SpatialProperties())
+        Self.assertClose(try XCTUnwrap(playing.update(Self.input())).pose.eye, eye)
+
+        func authors(_ object: String) throws -> Bool {
+            try XCTUnwrap(JSONDecoder().decode(WESceneObject.self, from: Data(object.utf8)).cameraLayer).authorsVisible
+        }
+        XCTAssertFalse(try authors(#"{"camera": "default", "path": "p.json"}"#))
+        XCTAssertTrue(try authors(#"{"camera": "default", "visible": {"value": true}}"#))
+        XCTAssertTrue(try authors(#"{"camera": "default", "visible": true}"#))
+        XCTAssertTrue(try authors(#"{"camera": "default", "visible": {"user": {"condition": "0", "name": "camerastyle"}, "value": true}}"#))
+    }
+
+    /// While a path plays, its write-back wins over a script's `origin` and `angles` on the layer
+    /// (WE 2.8.42, models-open/520: the script's drift never shows); without a path the script
+    /// moves the camera (`testTheLastVisibleLayerIsTheCamera`).
+    func testAPlayingPathWinsOverAScriptedOrigin() throws {
+        let eye = SIMD3<Float>(5, 0, 0)
+        let layers = SceneCameraLayers([try Self.layer("cam", order: 0, paths: [Self.path(eye: eye, center: SIMD3(5, 0, -5), frames: 50)])],
+                                       transforms: Self.transforms(), values: SpatialProperties())
+        let scripted = Self.input(live: ["cam": Self.local(origin: SIMD3(-400, 0, 0), angles: SIMD3(0, 30, 0))])
+        for _ in 0..<3 {
+            let camera = try XCTUnwrap(layers.update(scripted))
+            Self.assertClose(camera.pose.eye, eye)
+            Self.assertClose(simd_normalize(camera.pose.center - camera.pose.eye), SIMD3(0, 0, -1))
+        }
+    }
 
     /// "sequential": each finished path hands over to the next visible one, wrapping. A path's
     /// channels drive the camera and are written back into the layer; a component without keys

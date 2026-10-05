@@ -21,8 +21,13 @@ struct SceneTimelineChannel: Equatable {
     /// keyframe value (a JSON number) can be.
     private static let unsolved = Float(bitPattern: 0x7FA0_0DAD)
 
+    /// A keyframe at the frame of an earlier one is dropped: WE 2.8.42 plays a camera path whose
+    /// eye x has two keys at frame 30 (400, then −400) through 400 at frame 30, easing in and out
+    /// of it, and never reaches −400 (docs/models-plan.md §5.22). The editor can't author two keys
+    /// at one frame; a second one overwrites the first there.
     init(keyframes: [Keyframe]) {
-        self.keyframes = keyframes
+        var frames = Set<Int32>()
+        self.keyframes = keyframes.filter { frames.insert($0.frame).inserted }
     }
 
     static func == (lhs: Self, rhs: Self) -> Bool {

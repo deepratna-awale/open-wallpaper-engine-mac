@@ -14,42 +14,58 @@ import simd
 /// grown alike (`orthographicDepth`). What scripts see stays WE's world: their world matrices
 /// are unzoomed, and the cursor's world position is the drawn point taken back through the zoom
 /// (`worldPoint(drawn:)`), so a click lands on what is drawn under it.
+///
+/// A camera layer or a camera path moves an orthographic scene's view too (WE 2.8.42's capture,
+/// docs/models-plan.md §5.19): WE's view becomes `lookAt(eye, centre, up)` in place of the reset
+/// view (the identity), under the same projection. The drawn space takes that view first, then
+/// the zoom: `space` is zoom · view. The layer path's `plane` is its xy part, which is exact for
+/// what lies in the scene plane and for any view turning about z; a view tilted out of the plane
+/// moves an object with a depth by its z too, which the plane leaves out [I: no capture has one].
 struct SceneOrthographicZoom: Equatable {
     /// The projection's scale; 1 is none.
     let factor: Float
     /// The scene's centre, which the zoom keeps in place.
     let centre: SIMD2<Float>
+    /// The camera's view: the identity (WE's reset view) unless a camera layer or path moves it.
+    let view: simd_float4x4
 
     static let none = SceneOrthographicZoom(factor: 1, sceneSize: .zero)
 
     /// A zoom that isn't positive and finite is none.
-    init(factor: Float, sceneSize: SIMD2<Float>) {
+    init(factor: Float, sceneSize: SIMD2<Float>, view: simd_float4x4 = matrix_identity_float4x4) {
         self.factor = factor.isFinite && factor > 0 ? factor : 1
         centre = sceneSize / 2
+        self.view = view
     }
 
-    var isNone: Bool { factor == 1 }
+    var isNone: Bool { factor == 1 && view == matrix_identity_float4x4 }
 
-    /// The drawn plane: the scene scaled by `factor` about its centre.
+    /// The drawn plane: the scene seen through the view, then scaled by `factor` about its centre.
     var plane: SceneAffineTransform {
         guard !isNone else { return .identity }
-        return SceneAffineTransform(linear: simd_float2x2(diagonal: SIMD2(repeating: factor)),
-                                    translation: centre - factor * centre)
+        let zoom = SceneAffineTransform(linear: simd_float2x2(diagonal: SIMD2(repeating: factor)),
+                                        translation: centre - factor * centre)
+        guard view != matrix_identity_float4x4 else { return zoom }
+        let viewPlane = SceneAffineTransform(linear: simd_float2x2(SIMD2(view[0].x, view[0].y), SIMD2(view[1].x, view[1].y)),
+                                             translation: SIMD2(view[3].x, view[3].y))
+        return zoom * viewPlane
     }
 
     /// The same in 3D, z scaled too, so every distance in it grows by `factor` alike.
     var space: simd_float4x4 {
         guard !isNone else { return matrix_identity_float4x4 }
         let shift = centre - factor * centre
-        return simd_float4x4(columns: (SIMD4(factor, 0, 0, 0), SIMD4(0, factor, 0, 0), SIMD4(0, 0, factor, 0),
-                                       SIMD4(shift.x, shift.y, 0, 1)))
+        let zoom = simd_float4x4(columns: (SIMD4(factor, 0, 0, 0), SIMD4(0, factor, 0, 0), SIMD4(0, 0, factor, 0),
+                                           SIMD4(shift.x, shift.y, 0, 1)))
+        return zoom * view
     }
 
     /// The world point drawn at `drawn` (a point of the drawn plane, which is the screen's scene
-    /// units): what unprojecting the cursor through the zoomed camera gives.
+    /// units): what unprojecting the cursor through the zoomed camera gives, on the scene plane.
     func worldPoint(drawn: SIMD2<Float>) -> SIMD2<Float> {
         guard !isNone else { return drawn }
-        return centre + (drawn - centre) / factor
+        guard view != matrix_identity_float4x4 else { return centre + (drawn - centre) / factor }
+        return plane.inverse?.apply(drawn) ?? drawn
     }
 
     /// A projection with its x and y scaled by `factor` about its centre: WE's zoom itself, for

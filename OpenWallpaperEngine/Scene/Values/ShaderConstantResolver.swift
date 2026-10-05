@@ -125,8 +125,8 @@ enum ShaderConstantResolver {
         return .literal(value)
     }
 
-    /// Key matching: annotation `material` exact, then case-insensitive, then the uniform name
-    /// without its `g_` prefix (case-insensitive).
+    /// Key matching: annotation `material` exact, then the uniform name without its `g_` prefix
+    /// (case-insensitive).
     private struct KeyLookup {
         let exact: [String: SceneValueSource]
         let folded: [String: SceneValueSource]
@@ -147,11 +147,11 @@ enum ShaderConstantResolver {
             return [uniform.materialName?.lowercased(), bare.lowercased()].compactMap { $0 }
         }
 
+        /// The annotation's `material` name matches its key exactly: WE 2.8.42 fades generic4's
+        /// `g_TintAlpha` (`"material": "alpha"`) by a pass's lowercase `alpha` and leaves it at 1
+        /// for a capital `Alpha` (docs/models-plan.md §5.18).
         func source(for uniform: Uniform) -> SceneValueSource? {
-            if let material = uniform.materialName {
-                if let value = exact[material] { return value }
-                if let value = folded[material.lowercased()] { return value }
-            }
+            if let material = uniform.materialName, let value = exact[material] { return value }
             let bare = uniform.name.hasPrefix("g_") ? String(uniform.name.dropFirst(2)) : uniform.name
             return folded[bare.lowercased()]
         }

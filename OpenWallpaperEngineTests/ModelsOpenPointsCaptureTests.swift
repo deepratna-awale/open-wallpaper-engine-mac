@@ -50,6 +50,7 @@ final class ModelsOpenPointsCaptureTests: XCTestCase {
             "Models/OpenPoints/510-text-depth-disabled/scene.json #17 rootmotion_box [model]",
             "Models/OpenPoints/510-text-depth-enabled/scene.json #17 rootmotion_box [model]",
             "Models/OpenPoints/511-missing-attribute/scene.json #17 rootmotion_box [model]",
+            "Models/OpenPoints/518-alpha/scene.json #17 rootmotion_box [model]",
             "SceneScript/replay/failures/scene.json #3 Label [text]",
             "Scenes/lights/scene.json #900 [light]",
             "Scenes/lights/scene.json #901 [light]",
