@@ -9,8 +9,8 @@ import simd
 ///
 /// Each mesh is one interleaved vertex buffer and a triangle list, as the `.mdl` has them; the
 /// vertex descriptor maps the translated shader's `a_*` inputs onto the mesh's attributes by their
-/// D3D semantic, as WE's input layout does (0x1400d81a3); a stage reading an input the mesh lacks
-/// draws nothing, as in WE (open point 11, `missingInputs`). Pipelines compile off the render thread, keyed by the depth format, and share
+/// D3D semantic, as WE's input layout does (0x1400d81a3), and an input the mesh lacks reads zeros
+/// (open point 11). Pipelines compile off the render thread, keyed by the depth format, and share
 /// the effects' binary archive; a mesh draws nothing until its pipeline is ready, and a pipeline
 /// that fails is logged once. Call on the render thread, apart from the compiles.
 final class SceneModelRenderer: SceneModelDrawing {
@@ -593,9 +593,6 @@ final class SceneModelRenderer: SceneModelDrawing {
                     Self.pipelineDescriptor(variant, format: format, blending: blending, pixelFormat: pixelFormat,
                                             sampleCount: sampleCount, depthFormat: depthFormat, device: device),
                     device: device, archive: archive, key: key)
-            } catch let missing as SceneModelMissingInputs {
-                OWELog.debug(.shader, "Model material \(material): the mesh draws nothing: \(missing)")
-                result = nil
             } catch {
                 OWELog.error(.shader, "Model material \(material) can't draw through its shader; the mesh draws nothing: \(error)")
                 result = nil
@@ -634,29 +631,14 @@ final class SceneModelRenderer: SceneModelDrawing {
             attachment.destinationRGBBlendFactor = blend.destination
             attachment.destinationAlphaBlendFactor = blend.destination
         }
-        try SceneModelMissingInputs.check(vertex, attributes: variant.attributes, format: format)
         descriptor.vertexDescriptor = vertexDescriptor(for: vertex, attributes: variant.attributes, format: format)
         return descriptor
-    }
-
-    /// The names of the inputs `function` reads that the mesh has no attribute for
-    /// (`meshAttribute(for:in:)`), sorted.
-    static func missingInputs(of function: MTLFunction, attributes: [String: Int], format: MDLVertexFormat) -> [String] {
-        var names: [Int: [String]] = [:]
-        for (name, location) in attributes { names[location, default: []].append(name) }
-        return (function.vertexAttributes ?? []).compactMap { input -> String? in
-            guard input.isActive else { return nil }
-            let wanted = names[input.attributeIndex] ?? []
-            guard meshAttribute(for: wanted, in: format) == nil else { return nil }
-            return wanted.sorted().first ?? input.name
-        }.sorted()
     }
 
     /// The mesh's interleaved attributes at the locations the translated stage reads them from
     /// (`ShaderPairRewriter.attributeLocations`). An input takes the mesh's attribute of the same
     /// D3D semantic and index (a `vec2 a_TexCoord` reads the first two components of a mesh's
-    /// `a_TexCoordVec4`, as WE's input layout binds by semantic [I]); one the mesh lacks reads zeros
-    /// where a caller allows it (model pipelines refuse it first, `SceneModelMissingInputs`).
+    /// `a_TexCoordVec4`, as WE's input layout binds by semantic [I]); one the mesh lacks reads zeros.
     static func vertexDescriptor(for function: MTLFunction, attributes: [String: Int],
                                  format: MDLVertexFormat) -> MTLVertexDescriptor {
         let descriptor = MTLVertexDescriptor()
@@ -709,24 +691,6 @@ final class SceneModelRenderer: SceneModelDrawing {
             }) { return match }
         }
         return nil
-    }
-}
-
-/// A model pipeline whose vertex stage reads inputs the mesh's format lacks (docs/models-plan.md
-/// §5.11). WE binds the shader's inputs by semantic in an input layout built from the mesh's
-/// format (0x1400d81a3); D3D11 refuses a layout missing an input the stage reads, and WE then draws
-/// nothing of the mesh and logs nothing (WE 2.8.42's capture, models-open/511: a box whose custom
-/// shader reads `a_Color` and `a_TexCoordC1` isn't drawn). The app skips the draw the same way and
-/// logs it once at debug level. Only inputs the translated stage keeps count [I: D3D's signature
-/// may also hold declared inputs the compiler didn't strip].
-struct SceneModelMissingInputs: Error, CustomStringConvertible {
-    let inputs: [String]
-
-    var description: String { "its shader reads \(inputs.joined(separator: ", ")), which the mesh lacks" }
-
-    static func check(_ function: MTLFunction, attributes: [String: Int], format: MDLVertexFormat) throws {
-        let missing = SceneModelRenderer.missingInputs(of: function, attributes: attributes, format: format)
-        if !missing.isEmpty { throw SceneModelMissingInputs(inputs: missing) }
     }
 }
 

@@ -534,9 +534,6 @@ final class SceneShadowPass {
             do {
                 result = try EffectGraphRenderer.makePipeline(Self.pipelineDescriptor(variant, format: format, device: device),
                                                               device: device, archive: archive, key: key)
-            } catch let missing as SceneModelMissingInputs {
-                OWELog.debug(.shader, "Model material \(name): the mesh casts no shadow: \(missing)")
-                result = nil
             } catch {
                 OWELog.error(.shader, "Model material \(name) can't draw into the shadow atlas; the mesh casts no shadow: \(error)")
                 result = nil
@@ -568,7 +565,6 @@ final class SceneShadowPass {
         descriptor.depthAttachmentPixelFormat = SceneShadowAtlas.pixelFormat
         descriptor.rasterSampleCount = 1
         descriptor.inputPrimitiveTopology = .triangle
-        try SceneModelMissingInputs.check(vertex, attributes: variant.attributes, format: format)
         descriptor.vertexDescriptor = SceneModelRenderer.vertexDescriptor(for: vertex, attributes: variant.attributes, format: format)
         return descriptor
     }
