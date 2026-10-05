@@ -196,6 +196,8 @@ final class SceneSoundSpatializationTests: XCTestCase {
             id: 9, name: "tone", sound: sound,
             files: [SceneSoundContent.File(path: "sounds/tone.wav", url: url, duration: 1, channels: Int(channels))],
             volume: 1)])
+        // Past OWE's start fade-in, at full volume.
+        for _ in 0..<60 { layers.stepFade(1.0 / 60) }
         return layers
     }
 

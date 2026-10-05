@@ -102,16 +102,37 @@ final class ScenePlaybackEaseTests: XCTestCase {
 
     // MARK: - Sound
 
-    /// The wallpaper gain fades by the drawn frames' steps with WE's ease.
+    private func toneContent() -> SceneSoundContent {
+        SceneSoundContent(id: 7, name: "tone", sound: WESceneSound(files: ["sounds/tone.wav"], playbackMode: .loop),
+                          files: [SceneSoundContent.File(path: "sounds/tone.wav",
+                                                         url: Fixtures.url("Scenes/scripted-objects/sounds/tone.wav"),
+                                                         duration: 0.1)], volume: 1)
+    }
+
+    /// OWE's start fade-in (not WE's) is stepped by the drawn frames with the same ease: silent
+    /// as the first layer arrives, a tenth after one 60 Hz frame, full after 45.
+    func testTheStartFadeInStepsByTheFrames() throws {
+        let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2))
+        let layers = SceneSoundLayers(label: "test", offline: format)
+        layers.setTargetGain(1)
+        layers.setContent([toneContent()])
+        XCTAssertEqual(layers.gain, 0)
+        layers.advanceFade(frameSeconds: Self.step)
+        XCTAssertEqual(layers.gain, 0.1, accuracy: 1e-6)
+        for _ in 0..<44 { layers.advanceFade(frameSeconds: Self.step) }
+        XCTAssertEqual(layers.gain, 1, "snapped once within 0.01")
+        layers.stopAll()
+    }
+
+    /// The wallpaper gain fades by the drawn frames' steps with WE's ease (a pause once the
+    /// sound plays at full volume).
     func testTheWallpaperGainFadesByTheFrames() throws {
         let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2))
         let layers = SceneSoundLayers(label: "test", offline: format)
         layers.setTargetGain(1)
-        let content = SceneSoundContent(id: 7, name: "tone", sound: WESceneSound(files: ["sounds/tone.wav"], playbackMode: .loop),
-                                        files: [SceneSoundContent.File(path: "sounds/tone.wav",
-                                                                       url: Fixtures.url("Scenes/scripted-objects/sounds/tone.wav"),
-                                                                       duration: 0.1)], volume: 1)
-        layers.setContent([content])
+        layers.setContent([toneContent()])
+        for _ in 0..<45 { layers.advanceFade(frameSeconds: Self.step) }
+        XCTAssertEqual(layers.gain, 1)
         layers.setTargetGain(0)
         layers.advanceFade(frameSeconds: Self.step)
         XCTAssertEqual(layers.gain, 0.9, accuracy: 1e-6)
