@@ -566,9 +566,11 @@ struct WallpaperPreview: SubviewOfContentView {
                                     
                                     wallpaperViewModel.inspect(wallpaper)
                                 } label: {
-                                    Image(systemName: "xmark.circle.fill")
+                                    Label("Remove Tag", systemImage: "xmark.circle.fill")
+                                        .labelStyle(.iconOnly)
                                 }
                                 .buttonStyle(.plain)
+                                .help("Remove Tag")
                                 .foregroundStyle(.white, .red)
                                 .symbolRenderingMode(.palette)
                                 .offset(x: 5, y: -2.5)
@@ -591,10 +593,12 @@ struct WallpaperPreview: SubviewOfContentView {
                 Button {
                     isEditingId = "tags"
                 } label: {
-                    Image(systemName: "plus")
+                    Label("Add Tag", systemImage: "plus")
+                        .labelStyle(.iconOnly)
                         .font(.body)
                 }
                 .buttonStyle(.plain)
+                .help("Add Tag")
             }
         }
         .font(.footnote)
