@@ -1,6 +1,6 @@
 # Open Wallpaper Engine — Privacy Policy
 
-**Version 1.0 · Effective date: 2026-09-28**
+**Version 1.1 · Effective date: 2026-10-06**
 
 ---
 
@@ -67,7 +67,7 @@ Your use of these services is subject to Valve's Steam Subscriber Agreement (htt
 
 OWE uses the open-source Sparkle framework to check for new versions.
 
-- It fetches an update feed (`appcast.xml`) from GitHub Pages and downloads updates from GitHub Releases.
+- It fetches an update feed from `https://openwallpaperengine.app/appcast.xml` (hosted by GitHub Pages) and downloads updates from GitHub Releases. The old feed address on `github.io` redirects there.
 - Like any web request, these connections expose your IP address to GitHub, and Sparkle includes its standard request information, such as the app's name and version and your macOS version, so that a compatible update can be offered. We have not enabled Sparkle's optional "system profiling", so no hardware details are sent.
 - We do not receive or log these requests; they go to GitHub's servers.
 
@@ -81,6 +81,7 @@ You can turn off automatic update checks in the app's Settings. GitHub's Privacy
 
 - **Chromium web engine** (Settings › Plugins): downloaded only when you install it, from the Chromium Embedded Framework's official builds (`cef-builds.spotifycdn.com`), and checked against the SHA-256 the app pins.
 - **Depth Map Generation** (Settings › Plugins): downloaded only when you install it, from Apple's Hugging Face repository (`huggingface.co`), and checked against the SHA-256 the app pins. The model runs only on your Mac.
+- **MCP Server** (Settings › Plugins): while installed, the app opens a local control connection (a socket file in its support folder) that only your macOS user account can use, so AI assistants you run on your Mac can control the app. It never listens on the network; removing the plugin closes it.
 - **Send over Wi-Fi** (Android export): while you share, the Mac serves only the packages you selected, to devices on your local network, until 15 minutes pass without a request. Nothing goes over the internet.
 
 ### 4.5 Links
