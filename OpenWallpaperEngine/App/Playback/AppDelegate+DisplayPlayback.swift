@@ -12,11 +12,16 @@ extension AppDelegate {
                 return type.lowercased() == "web"
             }
         })
-        return DisplayPlaybackMonitor(sources: sources, onLoad: { [weak self] load in
+        let monitor = DisplayPlaybackMonitor(sources: sources, onLoad: { [weak self] load in
             self?.applicationRuleLoader.update(load)
+        }, onCoverage: { [weak wallpapers] covered in
+            wallpapers?.coveredScreens = covered
         }, apply: { [weak self] states in
             self?.applyDisplayPlayback(states)
         })
+        // A display hidden under windows stops drawing (`WallpaperViewModel.coveredScreens`).
+        monitor.watchesCoverage = true
+        return monitor
     }
 
     /// Application rules' "Load wallpaper", "Load playlist" and "Load profile".

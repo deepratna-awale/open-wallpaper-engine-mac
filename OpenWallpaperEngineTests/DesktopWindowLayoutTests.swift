@@ -125,4 +125,44 @@ final class DesktopWindowLayoutTests: XCTestCase {
     func testEveryDisplayGetsAnEntry() {
         XCTAssertEqual(Set(conditions([]).keys), ["1", "2"])
     }
+
+    // MARK: Covered displays
+
+    /// Two windows tiling the visible area, with the gaps macOS leaves between tiles, cover the
+    /// display, though neither is maximized and the menu bar still shows the wallpaper.
+    func testWindowsTilingADisplayCoverIt() {
+        let leftHalf = DesktopWindow(ownerPID: app, bounds: CGRect(x: 6, y: 31, width: 948, height: 973))
+        let rightHalf = DesktopWindow(ownerPID: other, bounds: CGRect(x: 966, y: 31, width: 948, height: 973))
+        XCTAssertFalse(conditions([leftHalf, rightHalf])["1"]!.maximized)
+        XCTAssertEqual(DesktopWindowLayout.coveredDisplays(windows: [leftHalf, rightHalf], displays: displays), ["1"])
+        XCTAssertEqual(DesktopWindowLayout.coveredDisplays(windows: [leftHalf], displays: displays), [])
+    }
+
+    /// This app's own windows count (the library over a display hides it too); overlays,
+    /// invisible windows and windows of other Spaces don't.
+    func testCoverageCountsOwnWindowsButNotOverlays() {
+        let whole = CGRect(x: 1920, y: 25, width: 2560, height: 1415)
+        XCTAssertEqual(DesktopWindowLayout.coveredDisplays(
+            windows: [DesktopWindow(ownerPID: own, bounds: whole)], displays: displays), ["2"])
+        for window in [DesktopWindow(ownerPID: app, bounds: whole, layer: 25),
+                       DesktopWindow(ownerPID: app, bounds: whole, alpha: 0),
+                       DesktopWindow(ownerPID: app, bounds: whole, isOnScreen: false),
+                       DesktopWindow(ownerPID: app, bounds: whole, ownerIsApplication: false)] {
+            XCTAssertEqual(DesktopWindowLayout.coveredDisplays(windows: [window], displays: displays), [])
+        }
+    }
+
+    /// A window spanning two displays covers its part of each.
+    func testAWindowAcrossDisplaysCoversItsPartOfEach() {
+        let spanning = DesktopWindow(ownerPID: app, bounds: CGRect(x: 0, y: 0, width: 4480, height: 1440))
+        XCTAssertEqual(DesktopWindowLayout.coveredDisplays(windows: [spanning], displays: displays), ["1", "2"])
+    }
+
+    func testUnionAreaCountsOverlapsOnce() {
+        XCTAssertEqual(DesktopWindowLayout.unionArea([]), 0)
+        XCTAssertEqual(DesktopWindowLayout.unionArea([CGRect(x: 0, y: 0, width: 10, height: 10),
+                                                      CGRect(x: 5, y: 5, width: 10, height: 10)]), 175)
+        XCTAssertEqual(DesktopWindowLayout.unionArea([CGRect(x: 0, y: 0, width: 10, height: 10),
+                                                      CGRect(x: 2, y: 2, width: 3, height: 3)]), 100)
+    }
 }

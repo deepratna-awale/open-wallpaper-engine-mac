@@ -118,6 +118,53 @@ enum DesktopWindowLayout {
         return result
     }
 
+    /// How much of a display's visible area windows have to hide for its wallpaper to count as
+    /// covered: what still shows (the gaps between tiled windows) is a sliver.
+    static let coveredShare: CGFloat = 0.97
+
+    /// The displays whose visible area (the menu bar and Dock left out) applications' windows,
+    /// this app's included, hide all but a sliver of (`coveredShare`), together or alone. Such a
+    /// display's wallpaper can't be seen, so it needn't draw new frames. Unlike the window
+    /// server's occlusion state, which counts the gaps between windows and the translucent menu
+    /// bar as showing the wallpaper, this holds for a display tiled with several windows.
+    static func coveredDisplays(windows: [DesktopWindow], displays: [DesktopDisplay]) -> Set<String> {
+        let shown = windows.filter { counts($0, ignoring: []) }.map(\.bounds)
+        guard !shown.isEmpty else { return [] }
+        var covered: Set<String> = []
+        for display in displays {
+            let visible = display.visibleFrame
+            let visibleArea = visible.width * visible.height
+            guard visibleArea > 0 else { continue }
+            let parts = shown.map { $0.intersection(visible) }.filter { !$0.isNull && $0.width > 0 && $0.height > 0 }
+            if unionArea(parts) >= coveredShare * visibleArea { covered.insert(display.id) }
+        }
+        return covered
+    }
+
+    /// The area `rects` cover together: the sum, over the vertical strips between their edges, of
+    /// the merged lengths of the rects crossing each strip.
+    static func unionArea(_ rects: [CGRect]) -> CGFloat {
+        let edges = Set(rects.flatMap { [$0.minX, $0.maxX] }).sorted()
+        var area: CGFloat = 0
+        for (left, right) in zip(edges, edges.dropFirst()) {
+            let spans = rects.filter { $0.minX <= left && $0.maxX >= right }
+                .map { ($0.minY, $0.maxY) }.sorted { $0.0 < $1.0 }
+            var length: CGFloat = 0
+            var current: (CGFloat, CGFloat)?
+            for span in spans {
+                if let open = current, span.0 <= open.1 {
+                    current = (open.0, max(open.1, span.1))
+                } else {
+                    if let open = current { length += open.1 - open.0 }
+                    current = span
+                }
+            }
+            if let open = current { length += open.1 - open.0 }
+            area += length * (right - left)
+        }
+        return area
+    }
+
     /// `bounds` covers the whole display, menu bar included.
     static func coversFrame(_ bounds: CGRect, of display: DesktopDisplay) -> Bool {
         bounds.insetBy(dx: -fullscreenTolerance, dy: -fullscreenTolerance).contains(display.frame)
