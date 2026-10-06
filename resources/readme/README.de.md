@@ -11,6 +11,8 @@ Open Wallpaper Engine ist ein kostenloser Open-Source-Player für macOS, der Wal
 
 **Wiki:** Anleitungen und Dokumentation findest du im [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
+**Website:** Downloads, Datenschutzerklärung und Nutzungsbedingungen findest du auf [openwallpaperengine.app](https://openwallpaperengine.app/).
+
 ## Voraussetzungen
 
 ### Erforderlich

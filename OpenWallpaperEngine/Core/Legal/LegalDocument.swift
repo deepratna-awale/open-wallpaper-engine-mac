@@ -18,8 +18,8 @@ enum LegalDocument: String, CaseIterable, Identifiable {
     /// The document on the project's website.
     var onlineURL: URL {
         switch self {
-        case .termsOfUse: return URL(string: "https://deepratna-awale.github.io/open-wallpaper-engine-mac/terms.html")!
-        case .privacyPolicy: return URL(string: "https://deepratna-awale.github.io/open-wallpaper-engine-mac/privacy.html")!
+        case .termsOfUse: return URL(string: "https://openwallpaperengine.app/terms.html")!
+        case .privacyPolicy: return URL(string: "https://openwallpaperengine.app/privacy.html")!
         }
     }
 

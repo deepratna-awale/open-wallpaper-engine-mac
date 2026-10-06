@@ -18,7 +18,7 @@ final class ReadOnlyDefaultsTests: XCTestCase {
     }
 
     func testReadOnlyViewReadsButNeverWritesTheDomain() throws {
-        let domain = "com.winddog.wallpaper-engine.isolated.tests.readonly-base-\(UUID().uuidString)"
+        let domain = "app.openwallpaperengine.isolated.tests.readonly-base-\(UUID().uuidString)"
         let scratch = domain + ".scratch"
         let base = try XCTUnwrap(UserDefaults(suiteName: domain))
         defer {

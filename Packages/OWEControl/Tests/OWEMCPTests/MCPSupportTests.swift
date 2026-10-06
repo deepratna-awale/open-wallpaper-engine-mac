@@ -47,7 +47,7 @@ final class MCPSupportTests: XCTestCase {
         let isolated = OWEAppLauncher.forCurrentProcess(executable: helper, environment: ["OWE_ISOLATED_STATE": "mcp"])
         XCTAssertEqual(isolated.openArguments,
                        ["-g", "-n", "-a", "/Applications/Open Wallpaper Engine.app", "--args", "-OWEIsolatedState", "mcp"])
-        XCTAssertEqual(OWEAppLauncher(appURL: nil, isolationTag: nil).openArguments, ["-g", "-b", "com.winddog.wallpaper-engine"])
+        XCTAssertEqual(OWEAppLauncher(appURL: nil, isolationTag: nil).openArguments, ["-g", "-b", "app.openwallpaperengine"])
     }
 
     /// The user's own app doesn't count as a running isolated copy, nor the other way round.

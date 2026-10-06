@@ -7,8 +7,62 @@ without a Gatekeeper warning.
 
 Publishing the draft runs `.github/workflows/appcast.yml`, which adds the release to the
 **Sparkle** update feed, `site/appcast.xml`, served by GitHub Pages at
-<https://deepratna-awale.github.io/open-wallpaper-engine-mac/appcast.xml>. Installed copies
-update themselves from it (Settings › General › Updates).
+<https://openwallpaperengine.app/appcast.xml> (the app's `SUFeedURL`, which `release.yml`
+checks). Installed copies update themselves from it (Settings › General › Updates).
+
+## The domain: openwallpaperengine.app
+
+The site (`site/`: the download page, the privacy policy, the terms and the appcast) is served
+at **<https://openwallpaperengine.app/>**, and the app's bundle ids are its reverse DNS
+(`app.openwallpaperengine`, see [Bundle ids](#bundle-ids)). The source, releases, issues and
+wiki stay on GitHub.
+
+**Pages.** `.github/workflows/pages.yml` deploys `site/` with GitHub Actions, so the repository
+has no `CNAME` file: the custom domain is a repository setting. Under *Settings → Pages*, the
+source is *GitHub Actions* and *Custom domain* is `openwallpaperengine.app`; once the
+certificate is issued, turn on *Enforce HTTPS*. Verify the domain for the account first
+(*Settings → Pages → Verified domains*, at the user or organisation level), so no other
+repository can claim it.
+
+**DNS records** at the registrar:
+
+| Name | Type | Value |
+| --- | --- | --- |
+| `@` (apex) | `A` | `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` |
+| `@` (apex) | `AAAA` | `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153` |
+| `www` | `CNAME` | `deepratna-awale.github.io` |
+| `_github-pages-challenge-deepratna-awale` | `TXT` | the verification code GitHub shows when you add the verified domain |
+
+These are GitHub Pages' published addresses; check them against GitHub's *Managing a custom
+domain for your GitHub Pages site* before changing anything. `.app` is on the HSTS preload
+list, so browsers only ever load it over HTTPS: the site is unreachable until GitHub has issued
+its certificate (usually within an hour of the DNS records resolving).
+
+**The feed.** The app reads `https://openwallpaperengine.app/appcast.xml`. Copies released
+before the move read `https://deepratna-awale.github.io/open-wallpaper-engine-mac/appcast.xml`,
+which GitHub Pages redirects to the custom domain once it is set, so they still find the update
+that moves them over. Don't merge a change of `SUFeedURL` (or release a build carrying it) until
+`curl -I https://openwallpaperengine.app/appcast.xml` answers `200` over HTTPS with a valid
+certificate.
+
+### Bundle ids
+
+| Bundle | Bundle id |
+| --- | --- |
+| Open Wallpaper Engine.app | `app.openwallpaperengine` |
+| Wallpaper Editor.app (`Contents/Helpers`) | `app.openwallpaperengine.editor` |
+| Open Wallpaper Engine.saver | `app.openwallpaperengine.saver` |
+| OpenWallpaperEngine.framework | `app.openwallpaperengine.framework` |
+| owe-mcp | `app.openwallpaperengine.mcp` |
+| owe-chromium-helper.xpc (the XPC service) | `app.openwallpaperengine.chromium.helper` |
+| The Chromium engine bundle (OWE Chromium.app) | `app.openwallpaperengine.chromium` |
+| CEF's helper apps | `app.openwallpaperengine.chromium.helper[.renderer\|.gpu\|.plugin].app` |
+| The unit tests | `app.openwallpaperengine.tests` |
+| An isolated copy's defaults and keychain services | `app.openwallpaperengine.isolated.<tag>` |
+
+The log subsystem (`OWELog`, `OWESignpost`) is `app.openwallpaperengine` too:
+`/usr/bin/log show --predicate 'subsystem == "app.openwallpaperengine"'`. `AppIdentityLintTests`
+checks the project's ids against this table and that the old id is left only in the migration.
 
 ## One-time setup: repository secrets
 
@@ -206,6 +260,27 @@ inside its bundle (`UpdatePreservesUserStateTests` checks the sources): the defa
 keychain items (Steam Web API key), Application Support (SteamCMD and its login, SceneScript
 storage, the safe-restart ledger), the Wallpaper Storage with its `.owe-assets` cache, and
 the caches under `~/Library/Caches` all stay. No store is keyed on the app version.
+
+**The update that changed the bundle id.** Versions before the move to
+`openwallpaperengine.app` used another bundle id. The first launch under the new one moves
+that identity's state over once (`AppIdentityMigration`, before anything reads the defaults):
+the defaults (and the Wallpaper Editor's), the caches under `~/Library/Caches/<id>` (shader
+variants and pipeline archives included), the web views' data (`~/Library/WebKit/<id>`,
+`~/Library/HTTPStorages/<id>`) and the Steam keychain items, which may show one keychain prompt
+to read. It reinstalls the screen saver under the new id and registers launch at login again.
+The Application Support folder is named after the app, not its id, and stays as it is. Each
+step is recorded in `IdentityMigration.json` in that folder as it finishes, so an interrupted
+migration resumes where it stopped; the old copy of anything is removed only after the new one
+is verified. Afterwards the app says once that macOS will ask again for its permissions.
+
+- **Downgrading isn't supported** past this update: the old identity's defaults, caches and
+  keychain items are moved, not copied, so an older version starts as a new install.
+- **Privacy permissions (TCC) can't be migrated.** macOS grants System Audio Recording (or
+  Screen Recording), Local Network, Photos and the other privacy permissions to an app's
+  identity, so the renamed app asks for each again the first time it needs it. The old
+  identity's entries stay in System Settings › Privacy & Security until removed there.
+- **Launch at login:** the old identity's Login Items entry can't be removed by the new app;
+  remove it in System Settings › General › Login Items if it is still listed.
 
 **Shader caches across updates.** The translated-shader cache is keyed on
 `ShaderVariantTranslator.revision` and the toolchain fingerprint, and the Metal pipeline

@@ -760,7 +760,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -euo pipefail\n# CEF's helper apps, in CEF's macOS naming: \"<helper>.app\" and its (Renderer), (GPU) and (Plugin)\n# variants, which Chromium launches by name. The installer copies them into the engine bundle\n# (<version>/OWE Chromium.app/Contents/Frameworks) beside the framework, so CEF's sandbox, which\n# allows its main bundle, covers them. Same executable and entitlements as the XPC helper.\nHELPERS=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers\"\nSOURCE=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/XPCServices/owe-chromium-helper.xpc/Contents\"\nrm -rf \"$HELPERS\"/\"OWE Chromium Helper\"*.app\nmkdir -p \"$HELPERS\"\nfor VARIANT in \"\" \" (Renderer)\" \" (GPU)\" \" (Plugin)\"; do\n  NAME=\"OWE Chromium Helper$VARIANT\"\n  SUFFIX=$(printf '%s' \"$VARIANT\" | tr -d ' ()' | tr '[:upper:]' '[:lower:]')\n  APP=\"$HELPERS/$NAME.app\"\n  mkdir -p \"$APP/Contents/MacOS\"\n  cp \"$SOURCE/MacOS/owe-chromium-helper\" \"$APP/Contents/MacOS/$NAME\"\n  cp \"$SOURCE/Info.plist\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleExecutable -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleName -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleDisplayName -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleIdentifier -string \"com.winddog.wallpaper-engine.chromium-helper${SUFFIX:+.$SUFFIX}.app\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundlePackageType -string APPL \"$APP/Contents/Info.plist\"\n  plutil -remove XPCService \"$APP/Contents/Info.plist\"\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ]; then\n    codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --options runtime ${OTHER_CODE_SIGN_FLAGS:-} --entitlements \"${SRCROOT}/OWEChromiumHelper/OWEChromiumHelper.entitlements\" \"$APP\"\n  fi\ndone\nrm -rf \"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/XPCServices/owe-chromium-helper (Renderer).app\"\n";
+			shellScript = "set -euo pipefail\n# CEF's helper apps, in CEF's macOS naming: \"<helper>.app\" and its (Renderer), (GPU) and (Plugin)\n# variants, which Chromium launches by name. The installer copies them into the engine bundle\n# (<version>/OWE Chromium.app/Contents/Frameworks) beside the framework, so CEF's sandbox, which\n# allows its main bundle, covers them. Same executable and entitlements as the XPC helper.\nHELPERS=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers\"\nSOURCE=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/XPCServices/owe-chromium-helper.xpc/Contents\"\nrm -rf \"$HELPERS\"/\"OWE Chromium Helper\"*.app\nmkdir -p \"$HELPERS\"\nfor VARIANT in \"\" \" (Renderer)\" \" (GPU)\" \" (Plugin)\"; do\n  NAME=\"OWE Chromium Helper$VARIANT\"\n  SUFFIX=$(printf '%s' \"$VARIANT\" | tr -d ' ()' | tr '[:upper:]' '[:lower:]')\n  APP=\"$HELPERS/$NAME.app\"\n  mkdir -p \"$APP/Contents/MacOS\"\n  cp \"$SOURCE/MacOS/owe-chromium-helper\" \"$APP/Contents/MacOS/$NAME\"\n  cp \"$SOURCE/Info.plist\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleExecutable -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleName -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleDisplayName -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleIdentifier -string \"app.openwallpaperengine.chromium.helper${SUFFIX:+.$SUFFIX}.app\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundlePackageType -string APPL \"$APP/Contents/Info.plist\"\n  plutil -remove XPCService \"$APP/Contents/Info.plist\"\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ]; then\n    codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --options runtime ${OTHER_CODE_SIGN_FLAGS:-} --entitlements \"${SRCROOT}/OWEChromiumHelper/OWEChromiumHelper.entitlements\" \"$APP\"\n  fi\ndone\nrm -rf \"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/XPCServices/owe-chromium-helper (Renderer).app\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -973,7 +973,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.openwallpaperengine";
 				PRODUCT_MODULE_NAME = OpenWallpaperEngineApp;
 				PRODUCT_NAME = "Open Wallpaper Engine";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1010,7 +1010,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.openwallpaperengine";
 				PRODUCT_MODULE_NAME = OpenWallpaperEngineApp;
 				PRODUCT_NAME = "Open Wallpaper Engine";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1028,7 +1028,7 @@
 				INFOPLIST_KEY_NSPrincipalClass = OWETestPhaseTimer;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.tests";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.openwallpaperengine.tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -1046,7 +1046,7 @@
 				INFOPLIST_KEY_NSPrincipalClass = OWETestPhaseTimer;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.tests";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.openwallpaperengine.tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -1070,7 +1070,7 @@
 				INSTALL_PATH = "$(HOME)/Library/Screen Savers";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.saver";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.openwallpaperengine.saver";
 				PRODUCT_MODULE_NAME = OpenWallpaperEngineSaver;
 				PRODUCT_NAME = "Open Wallpaper Engine";
 				SKIP_INSTALL = YES;
@@ -1096,7 +1096,7 @@
 				INSTALL_PATH = "$(HOME)/Library/Screen Savers";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.saver";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.openwallpaperengine.saver";
 				PRODUCT_MODULE_NAME = OpenWallpaperEngineSaver;
 				PRODUCT_NAME = "Open Wallpaper Engine";
 				SKIP_INSTALL = YES;
@@ -1124,7 +1124,7 @@
 				INFOPLIST_FILE = OWEChromiumHelper/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.chromium-helper";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.openwallpaperengine.chromium.helper";
 				PRODUCT_MODULE_NAME = OWEChromiumHelper;
 				PRODUCT_NAME = "owe-chromium-helper";
 				SKIP_INSTALL = YES;
@@ -1152,7 +1152,7 @@
 				INFOPLIST_FILE = OWEChromiumHelper/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.chromium-helper";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.openwallpaperengine.chromium.helper";
 				PRODUCT_MODULE_NAME = OWEChromiumHelper;
 				PRODUCT_NAME = "owe-chromium-helper";
 				SKIP_INSTALL = YES;
@@ -1188,7 +1188,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.framework";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.openwallpaperengine.framework";
 				PRODUCT_MODULE_NAME = OpenWallpaperEngine;
 				PRODUCT_NAME = OpenWallpaperEngine;
 				SKIP_INSTALL = YES;
@@ -1223,7 +1223,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.framework";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.openwallpaperengine.framework";
 				PRODUCT_MODULE_NAME = OpenWallpaperEngine;
 				PRODUCT_NAME = OpenWallpaperEngine;
 				SKIP_INSTALL = YES;
@@ -1252,7 +1252,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.editor";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.openwallpaperengine.editor";
 				PRODUCT_MODULE_NAME = WallpaperEditor;
 				PRODUCT_NAME = "Wallpaper Editor";
 				SKIP_INSTALL = YES;
@@ -1281,7 +1281,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.editor";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.openwallpaperengine.editor";
 				PRODUCT_MODULE_NAME = WallpaperEditor;
 				PRODUCT_NAME = "Wallpaper Editor";
 				SKIP_INSTALL = YES;
@@ -1304,7 +1304,7 @@
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.mcp";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.openwallpaperengine.mcp";
 				PRODUCT_MODULE_NAME = OWEMCPServer;
 				PRODUCT_NAME = "owe-mcp";
 				SKIP_INSTALL = YES;
@@ -1327,7 +1327,7 @@
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.mcp";
+				PRODUCT_BUNDLE_IDENTIFIER = "app.openwallpaperengine.mcp";
 				PRODUCT_MODULE_NAME = OWEMCPServer;
 				PRODUCT_NAME = "owe-mcp";
 				SKIP_INSTALL = YES;

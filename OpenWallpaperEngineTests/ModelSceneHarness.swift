@@ -242,7 +242,7 @@ struct ModelLogWindow {
             let position = store.position(date: start.addingTimeInterval(-1))
             return try store.getEntries(at: position)
                 .compactMap { $0 as? OSLogEntryLog }
-                .filter { $0.subsystem == "com.winddog.wallpaper-engine" && $0.date >= start.addingTimeInterval(-1) }
+                .filter { $0.subsystem == "app.openwallpaperengine" && $0.date >= start.addingTimeInterval(-1) }
                 .map(\.composedMessage)
                 .filter { $0.contains(text) }
         } catch {

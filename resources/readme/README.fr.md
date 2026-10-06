@@ -11,6 +11,8 @@ Open Wallpaper Engine est un lecteur macOS gratuit et open source pour les fonds
 
 **Wiki :** les guides et la documentation se trouvent dans le [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
+**Site web :** les téléchargements, la politique de confidentialité et les conditions d’utilisation se trouvent sur [openwallpaperengine.app](https://openwallpaperengine.app/).
+
 ## Configuration requise
 
 ### Obligatoire

@@ -17,7 +17,7 @@
 Open Wallpaper Engine is a free, open-source macOS application released and maintained by **Deepratna Awale**, an individual ("we", "us"). It is based on the open-source Open Wallpaper Engine by Haren Chen and MrWindDog.
 
 - Source code: https://github.com/deepratna-awale/open-wallpaper-engine-mac
-- Website: https://deepratna-awale.github.io/open-wallpaper-engine-mac/
+- Website: https://openwallpaperengine.app/
 - Contact: open an issue at https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues
 
 OWE is not affiliated with, endorsed by or connected to Wallpaper Engine, its developer (Kristjan Skutta / Wallpaper Engine Team), Valve Corporation or Steam.

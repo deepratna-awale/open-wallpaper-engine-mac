@@ -401,6 +401,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         
         safeRestart.showPendingNotice()
+        // Once, after the move from the old bundle id: macOS asks for its permissions again.
+        identityNotice.showIfPending()
         updater.willRelaunch = { [unowned self] in
             self.captureUpdateRelaunchState().save(to: .app)
             // Sparkle quits next; a sheet would stop that.
@@ -464,6 +466,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
     }
     
+    private lazy var identityNotice = AppIdentityNotice()
     private var staleBundleRefresher: StaleBundleRefresher?
     private var staleBundleNotice: SafeRestartNotice?
 

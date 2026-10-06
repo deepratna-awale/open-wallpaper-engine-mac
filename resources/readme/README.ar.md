@@ -13,6 +13,8 @@ Open Wallpaper Engine مشغّل مجاني ومفتوح المصدر لنظام
 
 **الويكي:** الأدلة والتوثيق موجودة في [الويكي](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
+**الموقع:** التنزيلات وسياسة الخصوصية وشروط الاستخدام على [openwallpaperengine.app](https://openwallpaperengine.app/).
+
 ## المتطلبات
 
 ### مطلوب

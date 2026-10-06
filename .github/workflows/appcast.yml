@@ -1,7 +1,7 @@
 name: Appcast
 
 # Adds a published release to the Sparkle feed, site/appcast.xml, which Pages serves at
-# https://deepratna-awale.github.io/open-wallpaper-engine-mac/appcast.xml. See docs/releasing.md.
+# https://openwallpaperengine.app/appcast.xml. See docs/releasing.md.
 #
 # release.yml leaves a draft with the notarized zip and <zip>.sparkle.json (its EdDSA signature).
 # Publishing the draft runs this workflow:

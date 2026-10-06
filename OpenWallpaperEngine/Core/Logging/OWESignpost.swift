@@ -3,7 +3,7 @@ import QuartzCore
 import os
 
 enum OWESignpost {
-    static let subsystem = "com.winddog.wallpaper-engine"
+    static let subsystem = "app.openwallpaperengine"
 
     static let render = OSLog(subsystem: subsystem, category: "Render")
     static let scene = OSLog(subsystem: subsystem, category: "Scene")

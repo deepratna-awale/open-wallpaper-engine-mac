@@ -67,10 +67,10 @@ final class AppStorageIsolationTests: XCTestCase {
     }
 
     func testIsolatedLocationNaming() {
-        let store = AppStorageLocation(isolationTag: "shots", bundleIdentifier: "com.winddog.wallpaper-engine")
-        XCTAssertEqual(store.suiteName, "com.winddog.wallpaper-engine.isolated.shots")
+        let store = AppStorageLocation(isolationTag: "shots", bundleIdentifier: "app.openwallpaperengine")
+        XCTAssertEqual(store.suiteName, "app.openwallpaperengine.isolated.shots")
         XCTAssertEqual(store.supportDirectory.lastPathComponent, "Open Wallpaper Engine (isolated shots)")
         XCTAssertEqual(store.cachesDirectory.lastPathComponent, "Open Wallpaper Engine (isolated shots)")
-        XCTAssertEqual(store.keychainServicePrefix, "com.winddog.wallpaper-engine.isolated.shots")
+        XCTAssertEqual(store.keychainServicePrefix, "app.openwallpaperengine.isolated.shots")
     }
 }

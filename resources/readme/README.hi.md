@@ -11,6 +11,8 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
 
 **विकी:** गाइड और डॉक्यूमेंटेशन [विकी](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki) में हैं.
 
+**वेबसाइट:** डाउनलोड, गोपनीयता नीति और उपयोग की शर्तें यहाँ हैं: [openwallpaperengine.app](https://openwallpaperengine.app/).
+
 ## ज़रूरी चीज़ें
 
 ### आवश्यक

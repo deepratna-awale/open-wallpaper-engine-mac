@@ -99,7 +99,7 @@ public final class DepthMapGenerator: ObservableObject {
     }
 
     nonisolated public static let defaultLog: @Sendable (String) -> Void = { message in
-        Logger(subsystem: "com.winddog.wallpaper-engine", category: "DepthMaps").info("\(message, privacy: .public)")
+        Logger(subsystem: "app.openwallpaperengine", category: "DepthMaps").info("\(message, privacy: .public)")
     }
 
     // MARK: Generating

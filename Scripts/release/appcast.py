@@ -37,7 +37,7 @@ def empty_feed():
     rss = ET.Element("rss", {"version": "2.0"})
     channel = ET.SubElement(rss, "channel")
     ET.SubElement(channel, "title").text = "Open Wallpaper Engine"
-    ET.SubElement(channel, "link").text = "https://deepratna-awale.github.io/open-wallpaper-engine-mac/appcast.xml"
+    ET.SubElement(channel, "link").text = "https://openwallpaperengine.app/appcast.xml"
     ET.SubElement(channel, "description").text = "Open Wallpaper Engine updates"
     ET.SubElement(channel, "language").text = "en"
     return ET.ElementTree(rss)

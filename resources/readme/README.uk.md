@@ -11,6 +11,8 @@ Open Wallpaper Engine — безкоштовний плеєр із відкри�
 
 **Вікі:** посібники та документація — у [вікі](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
+**Сайт:** завантаження, політика конфіденційності та умови використання — на [openwallpaperengine.app](https://openwallpaperengine.app/).
+
 ## Вимоги
 
 ### Обовʼязкові

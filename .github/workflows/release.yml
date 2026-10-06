@@ -322,8 +322,18 @@ jobs:
           # Sparkle: the public key the updates are signed for, and the GitHub Pages feed.
           test "$(plist SUPublicEDKey)" = "$(printf '%s' "$SPARKLE_PUBLIC_ED_KEY" | tr -d '[:space:]')" \
             || { echo "::error::SUPublicEDKey is not SPARKLE_PUBLIC_ED_KEY"; exit 1; }
-          test "$(plist SUFeedURL)" = "https://deepratna-awale.github.io/open-wallpaper-engine-mac/appcast.xml" \
+          test "$(plist SUFeedURL)" = "https://openwallpaperengine.app/appcast.xml" \
             || { echo "::error::unexpected SUFeedURL"; exit 1; }
+          # The bundle ids: reverse DNS of openwallpaperengine.app (docs/releasing.md, Bundle ids).
+          bundle_id() { /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$1/Contents/Info.plist"; }
+          test "$(plist CFBundleIdentifier)" = "app.openwallpaperengine" \
+            || { echo "::error::the app's bundle id is not app.openwallpaperengine"; exit 1; }
+          test "$(bundle_id "$APP/Contents/Helpers/Wallpaper Editor.app")" = "app.openwallpaperengine.editor" \
+            || { echo "::error::the Wallpaper Editor's bundle id is not app.openwallpaperengine.editor"; exit 1; }
+          test "$(bundle_id "$APP/Contents/Resources/Open Wallpaper Engine.saver")" = "app.openwallpaperengine.saver" \
+            || { echo "::error::the screen saver's bundle id is not app.openwallpaperengine.saver"; exit 1; }
+          test "$(bundle_id "$APP/Contents/XPCServices/owe-chromium-helper.xpc")" = "app.openwallpaperengine.chromium.helper" \
+            || { echo "::error::the Chromium helper's bundle id is not app.openwallpaperengine.chromium.helper"; exit 1; }
 
           # The app and its framework link only system libraries, the framework and the embedded
           # Sparkle.framework (which the app links so that it embeds it): nothing from Homebrew or

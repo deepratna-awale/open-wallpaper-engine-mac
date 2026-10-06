@@ -11,6 +11,8 @@ Open Wallpaper Engine 是一款免費、開源的 macOS 播放器，可播放 Wa
 
 **Wiki：** 指南與文件請見 [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)。
 
+**網站：** 下載、隱私權政策與使用條款請見[openwallpaperengine.app](https://openwallpaperengine.app/)。
+
 ## 系統需求
 
 ### 必要

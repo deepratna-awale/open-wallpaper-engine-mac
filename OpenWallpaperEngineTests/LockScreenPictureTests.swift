@@ -10,7 +10,7 @@ final class LockScreenPictureTests: XCTestCase {
 
     override func setUpWithError() throws {
         caches = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
-        suite = "com.winddog.wallpaper-engine.isolated.tests.lockscreen.\(UUID().uuidString)"
+        suite = "app.openwallpaperengine.isolated.tests.lockscreen.\(UUID().uuidString)"
         defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         picture = LockScreenPicture(cache: DesktopSnapshotCache(cachesDirectory: caches), defaults: defaults)
     }

@@ -54,7 +54,7 @@ runs:
           echo "$prefix-$os-"
           echo "$prefix-"
           echo "EOF"
-          echo "root=$HOME/Library/Caches/Open Wallpaper Engine (isolated tests)/com.winddog.wallpaper-engine"
+          echo "root=$HOME/Library/Caches/Open Wallpaper Engine (isolated tests)/app.openwallpaperengine"
           echo "file=$RUNNER_TEMP/shader-cache.$ext"
         } >> "$GITHUB_OUTPUT"
 

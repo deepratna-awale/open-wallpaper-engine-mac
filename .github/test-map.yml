@@ -38,6 +38,7 @@ serial:
 always:
   - "Localization*"
   - "AppStorageIsolationTests"
+  - "AppIdentity*"
 
 all:
   - ".github/**"

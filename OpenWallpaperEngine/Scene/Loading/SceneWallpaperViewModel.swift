@@ -70,7 +70,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// Guards the parsed scene and its asset caches. `metalContent()` runs on a background queue,
     /// so it must not race a `loadScene` triggered from the main thread.
     private let sceneLock = NSRecursiveLock()
-    private let contentQueue = DispatchQueue(label: "com.winddog.wallpaper-engine.scene-content", qos: .userInitiated)
+    private let contentQueue = DispatchQueue(label: "app.openwallpaperengine.scene-content", qos: .userInitiated)
     private var cachedContent: SceneMetalContent?
     private var cachedContentRevision = -1
     /// The user's quality settings the content is built for: `pendingRenderSettings` as the
