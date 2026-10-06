@@ -44,7 +44,7 @@ final class MCPSceneHeadlessTests: XCTestCase {
             (edit(["op": "set_alpha", "layer": 4, "alpha": 0.5]), { $0.setValue(.number(0.5), for: "alpha", of: 4, actionName: "Opacity") }),
             (edit(["op": "set_name", "layer": 5, "name": "Heading"]), { $0.rename(5, to: "Heading", actionName: "Rename") }),
             (edit(["op": "add_layer", "kind": "text", "text": "Hi", "x": 10, "y": 20]), { session in
-                let object = SceneLayerFactory.text(name: "Hi", value: "Hi", font: "systemfont_arial", pointSize: 64,
+                let object = SceneLayerFactory.text(name: "Hi", value: "Hi", font: "systemfont_arial", pointSize: 32,
                                                     origin: SIMD2(10, 20))
                 session.addLayer(object, actionName: "Add Text Layer")
             }),

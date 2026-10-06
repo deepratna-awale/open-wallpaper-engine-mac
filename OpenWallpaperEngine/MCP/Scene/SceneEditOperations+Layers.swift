@@ -261,8 +261,8 @@ extension SceneEditOperations {
 
     private static func addLayer(_ edit: ControlParameters, _ context: SceneEditOperationContext) throws -> JSONValue {
         let session = context.session
-        let sceneSize = session.outline.size ?? SIMD2(1920, 1080)
-        let centre = (session.outline.size ?? .zero) / 2
+        let (sceneSize, centre) = try SceneAddLayerDefaults.canvas(sceneData: context.resources.sceneData,
+                                                                   overlay: session.overlay)
         let origin = SIMD2(try edit.double("x") ?? centre.x, try edit.double("y") ?? centre.y)
         func size(_ fallback: SIMD2<Double>) throws -> SIMD2<Double> {
             let size = SIMD2(try edit.double("width") ?? fallback.x, try edit.double("height") ?? fallback.y)
@@ -286,8 +286,9 @@ extension SceneEditOperations {
                 object = SceneLayerFactory.image(name: name ?? image.title, model: image.model,
                                                  size: try size(image.size), origin: origin)
             } else if let model = try edit.string("model") {
+                let modelSize = SceneAddLayerDefaults.imageSize(ofModel: model, readAsset: context.resources.readAsset)
                 object = SceneLayerFactory.image(name: name ?? (model as NSString).lastPathComponent, model: model,
-                                                 size: try size(sceneSize / 2), origin: origin)
+                                                 size: try size(modelSize ?? sceneSize / 2), origin: origin)
             } else {
                 throw ControlError(.invalidParams, "An image layer needs image_path (a PNG or JPEG on this Mac) or model (a models/…json the wallpaper has).")
             }
@@ -304,7 +305,7 @@ extension SceneEditOperations {
             }
             let text = try edit.string("text") ?? script?.placeholder ?? String(localized: "Text", comment: "The text of a new text layer")
             object = SceneLayerFactory.text(name: name ?? text, value: text, font: try edit.string("font") ?? "systemfont_arial",
-                                            pointSize: try edit.double("point_size") ?? 64, origin: origin,
+                                            pointSize: try edit.double("point_size") ?? WETextDefaults.pointSize, origin: origin,
                                             script: script?.source, scriptProperties: script?.properties)
         case "composition":
             object = SceneLayerFactory.composition(name: name ?? String(localized: "Composition", comment: "The name of a new composition layer"),
