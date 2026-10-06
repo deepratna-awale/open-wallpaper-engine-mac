@@ -35,7 +35,7 @@ final class SettingsEditSnapshotTests: XCTestCase {
     func testOKKeepsTheChanges() {
         let model = GlobalSettingsViewModel(followsLaunch: false)
         model.beginEditing()
-        let fps = model.settings.fps == 30 ? 45 : 30
+        let fps: Double = model.settings.fps == 30 ? 45 : 30
         model.settings.fps = fps
         model.commitEdits()
         XCTAssertFalse(model.hasUnconfirmedEdits)
