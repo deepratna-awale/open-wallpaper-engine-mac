@@ -537,9 +537,10 @@ extension SceneLayerAnalysis {
 
     static func staticCoverage(of layer: SceneMetalLayer, transforms: SceneTransformHierarchy, sceneSize: SIMD2<Float>,
                                unbounded: Bool, scanTextures: Bool) -> SceneLayerCoverage {
-        let materialIsPlain = layer.imageMaterial.map { $0.materialPath.lowercased().contains("genericimage") } ?? true
+        // A material's vertex stage places the vertices, and nothing short of running it bounds
+        // where they land: a layer drawn through one covers the scene.
         guard !unbounded, !layer.fillsScene, !layer.sceneInput, !layer.perspective, layer.puppet == nil,
-              layer.text == nil, materialIsPlain, layer.tilt == .zero, transforms.nodes[layer.id] != nil else {
+              layer.text == nil, layer.imageMaterial == nil, layer.tilt == .zero, transforms.nodes[layer.id] != nil else {
             return .full(sceneSize)
         }
         let world = transforms.world(of: layer.id)
