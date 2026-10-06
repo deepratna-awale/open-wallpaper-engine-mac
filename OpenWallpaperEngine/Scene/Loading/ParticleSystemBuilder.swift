@@ -95,6 +95,9 @@ enum ParticleSystemBuilder {
     /// A renderer's fields with WE's defaults (`sprite` without one); its material is the caller's.
     static func rendererDraw(_ renderer: WEParticleRenderer?, particleSystem: WEParticleSystem) -> ParticleRendererDraw {
         let trail = ParticleRendererDefaults(renderer)
+        if let name = renderer?.name, WEParticleRendererType(rawValue: name.lowercased()) == nil {
+            OWELog.error(.scene, "Particle renderer \"\(name)\" isn't one of WE's (sprite, spritetrail, rope, ropetrail); drawn as sprites")
+        }
         // The emitters WE registers (`registeredEmitters`, without its log).
         let emitters = (particleSystem.emitter ?? []).filter { supportedEmitters.contains($0.name?.lowercased() ?? "") }
         return ParticleRendererDraw(
