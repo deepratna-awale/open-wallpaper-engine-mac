@@ -47,7 +47,7 @@ final class SceneEditorExportTests: XCTestCase {
 
     private func scene(_ name: String) throws -> WEWallpaper {
         let wallpaper = try wallpaper(name, type: "scene", file: "scene.json")
-        try Data(#"{"general": {"orthogonalprojection": {"width": 1600, "height": 900}}, "objects": []}"#.utf8)
+        try Data(#"{"camera": {}, "general": {"orthogonalprojection": {"width": 1600, "height": 900}}, "objects": []}"#.utf8)
             .write(to: wallpaper.wallpaperDirectory.appending(path: "scene.json"))
         return wallpaper
     }
@@ -109,18 +109,18 @@ final class SceneEditorExportTests: XCTestCase {
     /// `auto` takes its first image's size.
     func testExportsMeasureTheDrawnCanvas() throws {
         let perspective = try wallpaper("perspective", type: "scene", file: "scene.json")
-        try Data(#"{"general": {}, "objects": [{"origin": "4000 3000 0", "size": "200 100", "image": "models/a.json"}]}"#.utf8)
+        try Data(#"{"camera": {}, "general": {}, "objects": [{"origin": "4000 3000 0", "size": "200 100", "image": "models/a.json"}]}"#.utf8)
             .write(to: perspective.wallpaperDirectory.appending(path: "scene.json"))
         XCTAssertEqual(try AndroidPackageBuilder.sceneSize(perspective), SIMD2(1920, 1080))
 
-        let auto = Data(#"{"general": {"orthogonalprojection": {"auto": true}}, "objects": [{"origin": "0 0 0", "size": "800 600", "image": "models/a.json"}, {"origin": "5000 5000 0", "size": "10 10", "image": "models/b.json"}]}"#.utf8)
+        let auto = Data(#"{"camera": {}, "general": {"orthogonalprojection": {"auto": true}}, "objects": [{"origin": "0 0 0", "size": "800 600", "image": "models/a.json"}, {"origin": "5000 5000 0", "size": "10 10", "image": "models/b.json"}]}"#.utf8)
         XCTAssertEqual(try SceneDrawnSize.of(sceneData: auto, overlay: nil), SIMD2(800, 600))
         XCTAssertEqual(try AndroidPackageBuilder.sceneSize(try scene("ortho")), SIMD2(1600, 900))
     }
 
     /// The editor's overlay changes what the renderer draws, so the size is read with it applied.
     func testDrawnSizeAppliesTheEditOverlay() throws {
-        let authored = Data(#"{"general": {"orthogonalprojection": {"width": 1600, "height": 900}}, "objects": []}"#.utf8)
+        let authored = Data(#"{"camera": {}, "general": {"orthogonalprojection": {"width": 1600, "height": 900}}, "objects": []}"#.utf8)
         var overlay = SceneEditOverlay()
         overlay.general = ["orthogonalprojection": .object(["width": .number(1280), "height": .number(1280)])]
         XCTAssertEqual(try SceneDrawnSize.of(sceneData: authored, overlay: overlay), SIMD2(1280, 1280))
