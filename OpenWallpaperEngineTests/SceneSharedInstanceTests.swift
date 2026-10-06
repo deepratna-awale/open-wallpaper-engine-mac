@@ -58,7 +58,7 @@ final class SceneSharedInstanceTests: XCTestCase {
         var layer = SceneMetalLayer(
             id: "1", name: "halves", source: .image(try Self.halves()), position: SIMD2(40, 32),
             size: SIMD2(128, 64), scale: SIMD2(1, 1), opacity: 1, brightness: 1, color: SIMD4(repeating: 1),
-            text: nil, parallaxDepth: .zero, perspective: false, rotation: 0, effects: .identity)
+            text: nil, parallaxDepth: .zero, perspective: false, rotation: 0)
         layer.order = 0
         renderer.setContent(SceneMetalContent(
             size: SIMD2(64, 64), layers: [layer], particleSystems: [],
@@ -91,7 +91,7 @@ final class SceneSharedInstanceTests: XCTestCase {
         var layer = SceneMetalLayer(
             id: "1", name: "halves", source: .image(try Self.halves()), position: SIMD2(40, 32),
             size: SIMD2(128, 64), scale: SIMD2(1, 1), opacity: 1, brightness: 1, color: SIMD4(repeating: 1),
-            text: nil, parallaxDepth: .zero, perspective: false, rotation: 0, effects: .identity)
+            text: nil, parallaxDepth: .zero, perspective: false, rotation: 0)
         layer.order = 0
         renderer.setContent(SceneMetalContent(
             size: SIMD2(64, 64), layers: [layer], particleSystems: [],

@@ -92,7 +92,7 @@ Each split is cut and paste along existing type boundaries, one commit per sourc
 | New file | Types moved | Visibility change |
 |---|---|---|
 | `SceneFontRegistry.swift` | `SceneFontRegistry` (5–24) | – |
-| `SceneRenderContent.swift` | `SceneMetalTextureSource`, `SceneMetalEffect`, `SceneMetalLayer`, `VideoMusicSyncVisuals`, `SceneMetalText`, `SceneClock`, `SceneMaterialEffects`, `SceneBloomSettings`, `SceneMetalContent` | – |
+| `SceneRenderContent.swift` | `SceneMetalTextureSource`, `SceneMetalEffect`, `SceneMetalLayer`, `VideoMusicSyncVisuals`, `SceneMetalText`, `SceneClock`, `SceneBloomSettings`, `SceneMetalContent` | – |
 | `SceneParticleContent.swift` | `SceneMetalParticleSystem` and the `Particle*`, `Turbulence`, `Attractor`, `CursorControlPoint`, `SpriteSheet` value types (133–315) | – |
 | `SceneGPUTypes.swift` | `LayerUniform`, `DXTDecodeUniform`, `EffectUniform`, `EffectDescriptorGPU` | `private` → `internal` |
 | `NativeEffectStack.swift` | `EffectStack` (378–627), scheduled for deletion in Phase 2 | `private` → `internal` |

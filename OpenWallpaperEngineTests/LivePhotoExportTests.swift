@@ -517,8 +517,7 @@ final class LivePhotoExportTests: XCTestCase {
                    order: Int) -> SceneMetalLayer {
             var layer = SceneMetalLayer(
                 id: id, name: id, source: .image(image), position: position, size: size, scale: SIMD2(1, 1), opacity: 1,
-                brightness: 1, color: SIMD4(repeating: 1), text: nil, parallaxDepth: depth, perspective: false, rotation: 0,
-                effects: .identity)
+                brightness: 1, color: SIMD4(repeating: 1), text: nil, parallaxDepth: depth, perspective: false, rotation: 0)
             layer.order = order
             return layer
         }

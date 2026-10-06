@@ -235,7 +235,7 @@ final class FramePacingTests: XCTestCase {
         var layer = SceneMetalLayer(
             id: "1", name: "card", source: .image(try Self.image()), position: SIMD2(32, 32),
             size: SIMD2(32, 32), scale: SIMD2(1, 1), opacity: 1, brightness: 1, color: SIMD4(repeating: 1),
-            text: nil, parallaxDepth: SIMD3<Float>(1, 1, 0), perspective: false, rotation: 0, effects: .identity)
+            text: nil, parallaxDepth: SIMD3<Float>(1, 1, 0), perspective: false, rotation: 0)
         layer.order = 0
         var content = SceneMetalContent(
             size: SIMD2(64, 64), layers: [layer], particleSystems: [],

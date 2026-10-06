@@ -753,7 +753,6 @@ class SceneWallpaperViewModel: ObservableObject {
             brightness: 1, color: SIMD4<Float>(repeating: 1), text: nil,
             parallaxDepth: .zero, perspective: false,
             rotation: 0,
-                effects: .identity,
             )], particleSystems: [],
             bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7, tint: SIMD3<Float>(repeating: 1)))
     }
@@ -920,8 +919,7 @@ class SceneWallpaperViewModel: ObservableObject {
             scale: SIMD2<Float>(repeating: 1),
             opacity: 1,
             brightness: 1, color: SIMD4<Float>(repeating: 1), text: nil, parallaxDepth: .zero, perspective: false,
-            rotation: 0,
-            effects: .identity)
+            rotation: 0)
         layer.musicSync = musicSync
         return SceneMetalContent(size: sceneSize, layers: [layer], particleSystems: [],
                                  bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7,
@@ -1222,7 +1220,7 @@ class SceneWallpaperViewModel: ObservableObject {
                        brightness: Float(object.brightness ?? 1), color: SIMD4<Float>(Float(objectColor.0), Float(objectColor.1), Float(objectColor.2), 1), text: nil,
                        parallaxDepth: Self.parallaxDepth(of: object),
                        perspective: object.perspective ?? false,
-                               rotation: rotation, effects: .identity)
+                               rotation: rotation)
         layer.weEffects = effectPlans.plans
         layer.sceneInput = sceneInput
         layer.clearsSceneAlpha = sceneInput && object.copybackground == false
@@ -1387,7 +1385,7 @@ class SceneWallpaperViewModel: ObservableObject {
                        brightness: Float(object.brightness ?? 1), color: SIMD4<Float>(repeating: 1), text: nil,
                        parallaxDepth: Self.parallaxDepth(of: object),
                        perspective: object.perspective ?? false,
-                       rotation: Float(object.angles?.parseVector3().2 ?? 0), effects: .identity)
+                       rotation: Float(object.angles?.parseVector3().2 ?? 0))
         layer.weEffects = buildEffectPlans(object.effects ?? [], objectID: object.id ?? -1, wallpaperDir: wallpaperDir).plans
         layer.alignment = object.alignment
         layer.solidFill = SIMD4(Float(color.0), Float(color.1), Float(color.2), 1)
@@ -1446,8 +1444,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                opacity: Float(object.alpha ?? 1),
                                brightness: Float(object.brightness ?? 1), color: SIMD4<Float>(Float(color.0), Float(color.1), Float(color.2), 1), text: textConfig, parallaxDepth: Self.parallaxDepth(of: object),
                                perspective: object.perspective ?? false,
-                               rotation: Float(object.angles?.parseVector3().2 ?? 0),
-                               effects: .identity)
+                               rotation: Float(object.angles?.parseVector3().2 ?? 0))
         // No alignment: the lines sit around the origin by `horizontalalign` and `verticalalign` as
         // WE places them (`SceneTextLayout.baselineOrigins`), in a block centred on them (`boxCenter`).
         // WE runs a text object's effects on its rasterised text; the renderer rasterises before effects run.
@@ -1505,8 +1502,7 @@ class SceneWallpaperViewModel: ObservableObject {
                        scale: SIMD2<Float>(Float(staticScale.0), Float(staticScale.1)),
                        opacity: Float(object.alpha ?? 1),
                        brightness: 1, color: SIMD4<Float>(repeating: 1), text: nil, parallaxDepth: Self.parallaxDepth(of: object), perspective: object.perspective ?? false,
-                       rotation: Float(object.angles?.parseVector3().2 ?? 0),
-                       effects: .identity)
+                       rotation: Float(object.angles?.parseVector3().2 ?? 0))
         layer.weEffects = plans
         layer.alignment = object.alignment
         layer.solidFill = SIMD4(1, 1, 1, 0)
