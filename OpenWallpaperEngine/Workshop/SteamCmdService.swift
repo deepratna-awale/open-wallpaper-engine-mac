@@ -89,9 +89,10 @@ class SteamCmdService: ObservableObject {
         detectSteamCmd { [weak self] _ in self?.attemptCachedLogin() }
     }
 
-    /// Runs steamcmd with `script` on its stdin; nothing of the script shows in the process list.
-    private func runSteamCmd(script: SteamCmdScript, timeout: TimeInterval = 30) -> (output: String, exitCode: Int32) {
-        guard let cmdPath = steamCmdPath else { return ("", -1) }
+    /// Runs the steamcmd at `cmdPath` (read on the main thread) with `script` on its stdin;
+    /// nothing of the script shows in the process list.
+    private func runSteamCmd(at cmdPath: String, script: SteamCmdScript,
+                             timeout: TimeInterval = 30) -> (output: String, exitCode: Int32) {
         let run = runner.run(executable: URL(fileURLWithPath: cmdPath), script: script, timeout: timeout)
         return (run.output, run.exitCode)
     }
@@ -235,7 +236,7 @@ class SteamCmdService: ObservableObject {
     /// Attempt login with username and password. Steam Guard code is optional.
     /// Neither is stored: steamcmd caches a login token, which `loginWithCachedSession` reuses.
     func login(username: String, password: String, guardCode: String? = nil) {
-        guard steamCmdPath != nil else { return }
+        guard let cmdPath = steamCmdPath else { return }
 
         let code = guardCode.flatMap { $0.isEmpty ? nil : $0 }
         var script = SteamCmdScript.withoutPasswordPrompt()
@@ -253,7 +254,7 @@ class SteamCmdService: ObservableObject {
         downloadQueue.async { [weak self] in
             guard let self = self else { return }
 
-            let (rawOutput, exitCode) = self.runSteamCmd(script: script, timeout: 60)
+            let (rawOutput, exitCode) = self.runSteamCmd(at: cmdPath, script: script, timeout: 60)
             let output = SteamSecretRedactor.redact(rawOutput, secrets: [password] + (code.map { [$0] } ?? []))
 
             DispatchQueue.main.async {
@@ -290,7 +291,7 @@ class SteamCmdService: ObservableObject {
     /// `failureMessage` replaces the default error when the session isn't there.
     func loginWithCachedSession(username: String, failureMessage: String? = nil,
                                 completion: ((Bool) -> Void)? = nil) {
-        guard steamCmdPath != nil else { completion?(false); return }
+        guard let cmdPath = steamCmdPath else { completion?(false); return }
 
         var script = SteamCmdScript.withoutPasswordPrompt()
         do {
@@ -305,10 +306,11 @@ class SteamCmdService: ObservableObject {
         loginError = nil
         steamUsername = username
 
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+        // On the steamcmd queue: a login must never run beside a download or the assets install.
+        downloadQueue.async(qos: .userInitiated) { [weak self] in
             guard let self = self else { return }
 
-            let (output, exitCode) = self.runSteamCmd(script: script, timeout: 30)
+            let (output, exitCode) = self.runSteamCmd(at: cmdPath, script: script, timeout: 30)
 
             DispatchQueue.main.async {
                 self.isLoggingIn = false
@@ -524,7 +526,7 @@ class SteamCmdService: ObservableObject {
     }
 
     private func prepareWorkshopPreview(workshopId: String, presentWhenReady: Bool) {
-        guard steamCmdPath != nil, isLoggedIn else { return }
+        guard let cmdPath = steamCmdPath, isLoggedIn else { return }
 
         if presentWhenReady {
             requestedPreviewId = workshopId
@@ -559,7 +561,7 @@ class SteamCmdService: ObservableObject {
                     self.finishPreview(workshopId, with: .failure(error), presentWhenReady: presentWhenReady)
                     return
                 }
-                let (output, exitCode) = self.runSteamCmd(script: script, timeout: 300)
+                let (output, exitCode) = self.runSteamCmd(at: cmdPath, script: script, timeout: 300)
 
                 guard exitCode == 0, FileManager.default.fileExists(atPath: sourcePath.path) else {
                     let errorLine = output.components(separatedBy: "\n")
