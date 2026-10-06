@@ -1,7 +1,7 @@
 import Foundation
 
 /// The overlay's structural edits: layers added, deleted and reordered, effects added, removed and
-/// reordered (docs/editor-plan.md §3, phases 2–3).
+/// reordered (editor-plan notes §3, phases 2–3).
 extension SceneEditOverlay {
     /// What decides the editor's outline (`SceneEditSession.outline`): the structure, the effects'
     /// order, and the fields that name, group or identify a layer. Other edits leave it as it is.

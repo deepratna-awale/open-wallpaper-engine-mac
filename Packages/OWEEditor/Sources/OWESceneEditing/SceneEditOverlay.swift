@@ -2,7 +2,7 @@ import CryptoKit
 import Foundation
 
 /// The Wallpaper Editor's edits of one wallpaper: object fields and effect changes kept beside the
-/// wallpaper, never written into its files (docs/editor-plan.md §3). The scene loader applies them
+/// wallpaper, never written into its files (editor-plan notes §3). The scene loader applies them
 /// on top of scene.json (`applied(to:)`) wherever the wallpaper runs; Revert drops them; Save as
 /// Local Wallpaper bakes them into a copy.
 ///

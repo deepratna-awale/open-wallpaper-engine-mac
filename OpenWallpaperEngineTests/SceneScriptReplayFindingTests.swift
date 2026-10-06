@@ -2,7 +2,7 @@ import JavaScriptCore
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// The object-model bugs the corpus replay found (docs/scenescript-replay-findings.md): RF1, asset
+/// The object-model bugs the corpus replay found (scenescript-replay-findings notes): RF1, asset
 /// paths under the script's Workshop item, and RF2, strings flushed although unchanged.
 final class SceneScriptReplayFindingTests: XCTestCase {
     private func objectFixture(_ objects: [SceneScriptObjectDescription]) throws -> (FakeSceneScriptObjectHost, SceneScriptRuntime) {

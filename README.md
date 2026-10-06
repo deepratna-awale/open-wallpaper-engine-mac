@@ -76,7 +76,7 @@ Building from source fetches the Sparkle Swift package on first build. Builds fr
 ### Edit Wallpapers
 
 - **Scene Editor (Live)** (Details › Scene Editor (Live), ⌥⌘I) has three tabs. **Wallpaper** edits the running wallpaper: show, hide, move, resize, recolour and fade layers and change effects, live on the desktop. **Screen Saver** records a version of the wallpaper as your screen saver ([docs/screen-saver.md](docs/screen-saver.md)). **iPhone & iPad Export** turns it into a Live Photo lock screen ([docs/iphone-ipad-export.md](docs/iphone-ipad-export.md)).
-- **Wallpaper Editor** (Edit Wallpaper in the library's bottom bar, ⌥⌘E) is an editor in the spirit of Wallpaper Engine's, running as an app of its own: add, arrange and group layers; add effects from Wallpaper Engine's catalog with rendered previews; animate on a timeline; write SceneScript with autocomplete; author user properties; edit particle systems and Puppet Warp rigs. Edits are kept beside the wallpaper, never in its files, can all be undone, and show on the desktop as you make them; **Save as Local Wallpaper** writes a copy with them. The plan and its phases: [docs/editor-plan.md](docs/editor-plan.md).
+- **Wallpaper Editor** (Edit Wallpaper in the library's bottom bar, ⌥⌘E) is an editor in the spirit of Wallpaper Engine's, running as an app of its own: add, arrange and group layers; add effects from Wallpaper Engine's catalog with rendered previews; animate on a timeline; write SceneScript with autocomplete; author user properties; edit particle systems and Puppet Warp rigs. Edits are kept beside the wallpaper, never in its files, can all be undone, and show on the desktop as you make them; **Save as Local Wallpaper** writes a copy with them.
 - **Depth maps** — with the Depth Map Generation plugin, both editors make a depth map of a layer or the whole scene on your Mac and apply Wallpaper Engine's Depth Parallax effect to it ([docs/depth-maps.md](docs/depth-maps.md)).
 
 ### Several Displays
@@ -205,7 +205,7 @@ Everything Open Wallpaper Engine saves stays on your Mac: your settings, library
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift` — Steam Workshop browsing and downloads
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — library storage, import, and package conversion
 - `OpenWallpaperEngine/Library/DisplayLayout/` — display layouts, groups, splits and profiles ([docs/display-layouts.md](docs/display-layouts.md))
-- `OpenWallpaperEngine/Editor/`, `Packages/OWEEditor/` — the Wallpaper Editor ([docs/editor-plan.md](docs/editor-plan.md))
+- `OpenWallpaperEngine/Editor/`, `Packages/OWEEditor/` — the Wallpaper Editor
 - `OpenWallpaperEngine/ScreenSaver/`, `OpenWallpaperEngineSaver/` — screen saver loops and the screen saver itself ([docs/screen-saver.md](docs/screen-saver.md))
 - `OpenWallpaperEngine/LivePhoto/`, `OpenWallpaperEngine/AndroidExport/` — iPhone & iPad and Android export ([docs/iphone-ipad-export.md](docs/iphone-ipad-export.md), [docs/android-export.md](docs/android-export.md))
 - `OpenWallpaperEngine/DepthMaps/` — the Depth Map Generation plugin ([docs/depth-maps.md](docs/depth-maps.md))

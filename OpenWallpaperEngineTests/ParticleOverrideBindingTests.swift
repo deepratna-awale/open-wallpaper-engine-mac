@@ -14,7 +14,7 @@ private struct Properties: SceneValueContext {
 /// definition whose built parts are shared (`ParticleDefinitionCache`).
 ///
 /// The overrides WE applies to the base values (alpha, size, lifetime, speed, colour) reach the
-/// particles spawned after the change, as WE's do (§11.3 of docs/we-values-audit.md): each test
+/// particles spawned after the change, as WE's do (§11.3 of we-values-audit notes): each test
 /// runs the systems past the authored lifetime (1…2 s) before reading the GPU state back.
 final class ParticleOverrideBindingTests: XCTestCase {
     private var device: MTLDevice!

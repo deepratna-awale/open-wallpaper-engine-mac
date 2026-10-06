@@ -1,5 +1,5 @@
 Goal: run all WE wallpapers except `application`. WE-faithful, no per-name hacks.
-Rules: CONTRIBUTING.md. Layout: docs/architecture.md. Status: docs/progress-snapshot.md. Order of work: docs/roadmap.md.
+Rules: CONTRIBUTING.md. Layout: docs/architecture.md. Status: /Volumes/980Pro/.claude/notes/progress-snapshot.md. Order of work: /Volumes/980Pro/.claude/notes/roadmap.md. Other planning notes ("… notes" in comments): /Volumes/980Pro/.claude/notes/.
 Moves/renames = own commit, no logic, must build.
 Logs: `/usr/bin/log` (`log` may be shadowed). Failed shaders: ~/Library/Caches/app.openwallpaperengine/FailedShaders (isolated copies: under `~/Library/Caches/Open Wallpaper Engine (isolated <tag>)/`).
 Bump `ShaderVariantTranslator.revision` if translated output changes.

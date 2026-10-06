@@ -2,7 +2,7 @@ import XCTest
 import MetalKit
 @testable import OpenWallpaperEngine
 
-/// Adaptive frame rate and idle skipping (docs/efficiency-plan-2d.md WP2-C): the demand and rate
+/// Adaptive frame rate and idle skipping (efficiency-plan-2d notes WP2-C): the demand and rate
 /// decision tables, the ramps, the slider and N10, and an idle scene waking on a cursor move.
 final class FramePacingTests: XCTestCase {
     // MARK: - Demand

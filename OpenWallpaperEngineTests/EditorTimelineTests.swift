@@ -3,7 +3,7 @@ import XCTest
 import OWESceneEditing
 @testable import OpenWallpaperEngine
 
-/// The editor's timeline against the player (docs/editor-plan.md P4): what the editor writes is
+/// The editor's timeline against the player (editor-plan notes P4): what the editor writes is
 /// what the player reads, curves shaped in the editor evaluate to the player's values bit for
 /// bit, and the playhead sets the renderer's timeline time.
 @MainActor

@@ -1,6 +1,6 @@
 # Timeline animations: evidence and plan
 
-**Status: 2026-09-26. T0–T7 are implemented, with the optimisation pass** (§4 has what's left: animation layers, with areas 6 and 7). This covers roadmap area 3 (timeline animations) and the animation half of SceneScript WP12 (docs/scenescript-plan.md). It sets out:
+**Status: 2026-09-26. T0–T7 are implemented, with the optimisation pass** (§4 has what's left: animation layers, with areas 6 and 7). This covers roadmap notes area 3 (timeline animations) and the animation half of SceneScript WP12 (docs/scenescript-plan.md). It sets out:
 
 - WE's format for animated values;
 - how `wallpaper64.exe` evaluates them;
@@ -266,7 +266,7 @@ Callbacks at `0x140170770`…`0x1401708ba`; binding at `0x140177f8e`.
 | `getFrame()` | `time / frameDuration`, a fractional frame. |
 | `setFrame(f)` | `time = f · frameDuration`, not clamped. It keeps the play state; a finished single stays finished, and `play()` then restarts it from 0. |
 
-- **Finding the animation.** `getAnimation()` with no name, in a property's script, is that property's animation (d.ts). `getAnimation(name)` on a layer matches `options.name`, else the property of that key, which is how an unnamed timeline is found (2321732083's `getAnimation('origin')`, docs/scenescript-replay-findings.md RF3); `thisScene.getAnimation(name)` searches every layer by name.
+- **Finding the animation.** `getAnimation()` with no name, in a property's script, is that property's animation (d.ts). `getAnimation(name)` on a layer matches `options.name`, else the property of that key, which is how an unnamed timeline is found (2321732083's `getAnimation('origin')`, scenescript-replay-findings notes RF3); `thisScene.getAnimation(name)` searches every layer by name.
 - **Where the binding lives.** `getAnimation` is bound by `scenescript64.dll`, not the exe (the exe has no `getAnimation` string; its reflection tables start at `getAnimationLayer`). `IScene.getAnimation`'s callback is `0x181635ee0` (bound at `0x181631824`, among `getLayerCount`…`createModelData`); past the global-scope check it continues at `0x18163613d`:
   - with no argument, or one that isn't a string (V8 instance type ≥ 0x80), it returns `null` (isolate root +0x378);
   - otherwise it converts the name and calls the host interface (`[this+0x18]`, vtable +0x78) with **no owner** (`edx = 0`) and the name; a result is wrapped (`0x181652380`), none returns `undefined` (root +0x368).
@@ -442,7 +442,7 @@ Each package lists the files it owns. Packages in the same phase share no files.
 - Frame-time cost: the Bézier cache is filled lazily; 600-frame channels must cost nothing after warm-up.
 - The `SceneScriptLibraryCostTests` table is updated.
 
-**T7 — Sprite-sheet effect textures** (roadmap 8.15; owns the effect texture binding in `EffectGraphRenderer`, after T3 lands). Done. Effect and material textures with TEXS frames read the shared clock, and `g_Texture<n>Rotation/Translation` per frame.
+**T7 — Sprite-sheet effect textures** (roadmap notes 8.15; owns the effect texture binding in `EffectGraphRenderer`, after T3 lands). Done. Effect and material textures with TEXS frames read the shared clock, and `g_Texture<n>Rotation/Translation` per frame.
 
 **Later, with areas 6 and 7:** animation layers, the puppet `animationEvent` and bones (§3.4).
 

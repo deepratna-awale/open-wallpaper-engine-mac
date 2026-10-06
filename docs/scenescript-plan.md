@@ -2,7 +2,7 @@
 
 **Note (2026-09-28):** `Vendor/we-assets` no longer exists. Wallpaper Engine's assets now come from the user's own Steam copy (Settings › Assets, cached in `<Wallpaper Storage>/.owe-assets`) or a chosen Wallpaper Engine folder, and tests read them from `OWE_ASSETS`. Mentions of `we-assets` below describe the tree as it was when this was written.
 
-**Status: 2026-09-26, WP0 (from evidence) and WP1–WP11 done: the app runs every scene's scripts on `SceneScriptRuntime`, one per display, and the legacy `AudioReactiveScriptEngine` scripting is deleted. WP11's gaps are closed (sound layers, desktop clicks, no frame of latency, `createLayer` of every kind, `brightness`/`size`) and the optimisation pass is done (see "After WP11"). WP12 (timelines and animation APIs) is next.** Roadmap area 4 (Phase 6). This document is the evidence and the plan for making our SceneScript runtime run *every* script users have. It replaces §5 and P5 of [`progress-snapshot.md`](progress-snapshot.md) as the source of truth for scripting.
+**Status: 2026-09-26, WP0 (from evidence) and WP1–WP11 done: the app runs every scene's scripts on `SceneScriptRuntime`, one per display, and the legacy `AudioReactiveScriptEngine` scripting is deleted. WP11's gaps are closed (sound layers, desktop clicks, no frame of latency, `createLayer` of every kind, `brightness`/`size`) and the optimisation pass is done (see "After WP11"). WP12 (timelines and animation APIs) is next.** Roadmap area 4 (Phase 6). This document is the evidence and the plan for making our SceneScript runtime run *every* script users have. It replaces §5 and P5 of the progress-snapshot notes as the source of truth for scripting.
 
 Sources, in order of authority:
 
@@ -367,7 +367,7 @@ Legend: ✅ works like WE · 🟡 partial or wrong in a way the corpus hits · �
 8. The engine reads `NSEvent.pressedMouseButtons`/`mouseLocation` on the render thread and ties cursor state to one global `__lastCursor` per context.
 9. `localStorage` writes `UserDefaults.standard` (CONTRIBUTING rule 3) and uses `dictionaryRepresentation()` scans for `clear`.
 10. `BrowserMediaIntegration` runs AppleScript against eight browsers every 2 s. That triggers Automation permission prompts, reports tab titles rather than media, and never dispatches events.
-11. Effects hidden at load (`isEffectVisible`) are not built at all, so no script or user property can show them later. The same holds for objects (roadmap area 8 item 3 and item 10).
+11. Effects hidden at load (`isEffectVisible`) are not built at all, so no script or user property can show them later. The same holds for objects (roadmap notes area 8 item 3 and item 10).
 12. Particle scripts use the particle system's elapsed time as `engine.runtime`, while layer scripts use scene time.
 13. `SceneValueContext` has a `properties` parameter that `LiveSceneValueContext` ignores (its doc comment says so), so `scriptproperties` never reach effect, particle or visible scripts.
 14. The audio capture, FFT, property store and the render-side property reads (`userPropertyValue`, `_owe_*`) all live in the script engine file. The script runtime can't be extracted or tested without them.
@@ -443,7 +443,7 @@ The corpus uses only `export function|let|var|const NAME` and `import * as X fro
 
 **The renderer** stops calling `layerValue`/`evaluate*` per draw. It reads the table after the script phase. `SceneObjectMotion`, `ParticleFrameInputs` and `LiveSceneValueContext.evaluateScript` read the resolved field from the table instead of running scripts themselves.
 
-**Hidden objects** stay in the table and the draw list with `visible = 0`. Their scripts keep running (P6). Hidden effects are built and skipped. This closes roadmap area 8 items 3 and 10 for scripts.
+**Hidden objects** stay in the table and the draw list with `visible = 0`. Their scripts keep running (P6). Hidden effects are built and skipped. This closes roadmap notes area 8 items 3 and 10 for scripts.
 
 ### 4.4 Frame order
 

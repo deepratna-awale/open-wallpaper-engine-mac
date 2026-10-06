@@ -3,7 +3,7 @@ import Metal
 import simd
 @testable import OpenWallpaperEngine
 
-/// Particle rotation in 3D (test-risks PG1, we-values-audit §11): WE keeps a particle's rotation
+/// Particle rotation in 3D (test-risks PG1, we-values-audit notes §11): WE keeps a particle's rotation
 /// and angular velocity per axis (system+0x280, +0x288, +0x290 and +0x298, +0x2a0, +0x2a8).
 /// `rotationrandom` and `angularvelocityrandom` draw every axis (0x14023bf55…0x14023bffb,
 /// 0x14023c3d5…0x14023c4c3), `angularmovement` spins each with its own force (0x14023ffc7), and
