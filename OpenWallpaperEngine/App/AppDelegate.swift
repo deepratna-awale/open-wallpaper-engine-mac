@@ -243,9 +243,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private(set) lazy var videoMemoryWatch = makeVideoMemoryWatch()
     private var videoMemorySettingCancellable: AnyCancellable?
     
-    var importOpenPanel: NSOpenPanel!
-    
-    var eventHandler: Any?
+    /// Passes the mouse to web wallpapers while one is shown.
+    private lazy var webMouseForwarder = WebWallpaperMouseForwarder(windows: { [unowned self] in
+        Array(wallpaperWindows.values)
+    })
+    private var webMouseCancellable: AnyCancellable?
     
     private static let instance = AppDelegate()
     /// Open Wallpaper Engine's delegate, made on first use. Never in the Wallpaper Editor's process
@@ -349,6 +351,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         wallpaperViewModel.startPlaylistAtLaunch()
         // Stop Wallpapers closes them, Resume makes them again.
         observeStoppedState()
+        // A display turned on or off in the Displays sheet: only its window comes or goes.
+        wallpaperViewModel.onScreenEnabledChange = { [weak self] screenId in self?.updateWallpaperWindow(for: screenId) }
 
         // 监听显示器连接/断开
         NotificationCenter.default.addObserver(
@@ -370,14 +374,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         self.mainWindowController = MainWindowController()
         
         // 将外部输入传递到壁纸窗口
-        AppDelegate.shared.setEventHandler()
+        observeWebWallpapers()
 
         observeMainWindowForWhatsNew()
     }
     
     func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
-        let dockMenu = self.statusItem.menu?.copy() as! NSMenu?
-        dockMenu?.items.removeLast() // Remove `Quit` menu item
+        guard let dockMenu = statusItem?.menu?.copy() as? NSMenu else { return nil }
+        // The Dock has its own Quit.
+        for item in dockMenu.items where item.action == #selector(AppTermination.quit(_:)) {
+            dockMenu.removeItem(item)
+        }
         return dockMenu
     }
     
@@ -499,7 +506,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if !steamCmdInstaller.isBusy {
             contentViewModel.steamCmd.detectSteamCmd()
         }
-        NSApp.activate(ignoringOtherApps: true)
     }
 
     func applicationDidResignActive(_ notification: Notification) {
@@ -537,6 +543,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
 // MARK: - misc methods
     @objc func openSettingsWindow() {
+        // What Cancel goes back to.
+        globalSettingsViewModel.beginEditing()
         NSApp.activate(ignoringOtherApps: true)
         self.settingsWindow.makeKeyAndOrderFront(nil)
     }
@@ -566,8 +574,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         openMainWindow()
     }
 
+    /// Nothing before launch has made the window (test hosts never get there).
     @objc func openMainWindow() {
-        self.mainWindowController.window?.makeKeyAndOrderFront(nil)
+        guard let window = self.mainWindowController?.window else { return }
+        window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
     
@@ -662,32 +672,50 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         for screen in NSScreen.screens {
             let screenId = WallpaperViewModel.screenId(for: screen)
             guard wallpaperViewModel.isScreenEnabled(screenId) else { continue }
-
-            let window = WallpaperWindow()
-            window.styleMask = [.borderless, .fullSizeContentView]
-            window.level = Self.wallpaperWindowLevel(hidingDesktopIcons: hidesDesktopIcons)
-            window.collectionBehavior = [.stationary, .canJoinAllSpaces]
-            window.setFrame(screen.frame, display: true)
-            window.isMovable = false
-            window.titlebarAppearsTransparent = true
-            window.titleVisibility = .hidden
-            window.backgroundColor = .black
-            window.isOpaque = true
-            window.canHide = false
-            window.canBecomeVisibleWithoutLogin = true
-            window.isReleasedWhenClosed = false
-            window.ignoresMouseEvents = true
-            // The wallpaper's display options (offset, zoom, flip) place the view on the display,
-            // inside the layout's content (clone mirror, stretch canvas).
-            let content = WallpaperWindowContentView(content: WallpaperDisplayTransformView(
-                content: NSHostingView(rootView: DisplayWallpaperView(viewModel: self.wallpaperViewModel, screenId: screenId)),
-                screenID: screenId, viewModel: wallpaperViewModel))
-            content.isMirrored = wallpaperViewModel.isFlipped(screenId)
-            content.stretchCanvas = wallpaperViewModel.layoutResolution.canvases[screenId]
-            window.contentView = content
-            wallpaperWindows[screenId] = window
+            wallpaperWindows[screenId] = makeWallpaperWindow(on: screen, screenId: screenId)
         }
         applyMenuBarStrips()
+    }
+
+    /// The wallpaper window for `screen`.
+    private func makeWallpaperWindow(on screen: NSScreen, screenId: String) -> NSWindow {
+        let window = WallpaperWindow()
+        window.styleMask = [.borderless, .fullSizeContentView]
+        window.level = Self.wallpaperWindowLevel(hidingDesktopIcons: hidesDesktopIcons)
+        window.collectionBehavior = [.stationary, .canJoinAllSpaces]
+        window.setFrame(screen.frame, display: true)
+        window.isMovable = false
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.backgroundColor = .black
+        window.isOpaque = true
+        window.canHide = false
+        window.canBecomeVisibleWithoutLogin = true
+        window.isReleasedWhenClosed = false
+        window.ignoresMouseEvents = true
+        // The wallpaper's display options (offset, zoom, flip) place the view on the display,
+        // inside the layout's content (clone mirror, stretch canvas).
+        let content = WallpaperWindowContentView(content: WallpaperDisplayTransformView(
+            content: NSHostingView(rootView: DisplayWallpaperView(viewModel: self.wallpaperViewModel, screenId: screenId)),
+            screenID: screenId, viewModel: wallpaperViewModel))
+        content.isMirrored = wallpaperViewModel.isFlipped(screenId)
+        content.stretchCanvas = wallpaperViewModel.layoutResolution.canvases[screenId]
+        window.contentView = content
+        return window
+    }
+
+    /// Adds or removes `screenId`'s window as its wallpapers are turned on or off; the other
+    /// displays' windows stay as they are.
+    func updateWallpaperWindow(for screenId: String) {
+        let wanted = !wallpaperViewModel.isStopped && wallpaperViewModel.isScreenEnabled(screenId)
+        if !wanted, let window = wallpaperWindows.removeValue(forKey: screenId) {
+            Self.closeWallpaperWindows([screenId: window])
+        } else if wanted, wallpaperWindows[screenId] == nil,
+                  let screen = NSScreen.screens.first(where: { WallpaperViewModel.screenId(for: $0) == screenId }) {
+            wallpaperWindows[screenId] = makeWallpaperWindow(on: screen, screenId: screenId)
+            applyMenuBarStrips()
+            orderWallpaperWindowsFront()
+        }
     }
 
     /// Fills each wallpaper window's menu bar strip with theming's colour, or clears it.
@@ -784,58 +812,51 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         wallpaperViewModel.applyInspectedWallpaper()
     }
 
-    /// Called when monitors connect/disconnect — auto-enables newly connected screens.
+    /// Displays connected, disconnected, woken, resized or rearranged. Only a display never
+    /// connected before gets wallpapers turned on; one the user turned off stays off. The windows
+    /// are rebuilt only when the displays with wallpapers or the layout changed; otherwise they
+    /// follow their displays' frames.
     @objc func screensChanged() {
-        let connectedIds = Set(NSScreen.screens.map { WallpaperViewModel.screenId(for: $0) })
-        for id in connectedIds where !wallpaperViewModel.enabledScreens.contains(id) {
-            wallpaperViewModel.enabledScreens.insert(id)
-        }
+        let screens = NSScreen.screens
+        let connected = screens.map { WallpaperViewModel.screenId(for: $0) }
+        wallpaperViewModel.enableNewDisplays(Set(connected))
         // Groups whose displays came back wake up; those left with one display go dormant.
+        let layout = wallpaperViewModel.layoutResolution
         wallpaperViewModel.refreshDisplayLayout()
-        rebuildWallpaperWindows()
-    }
-    
-    func windowWillClose(_ notification: Notification) {
-        globalSettingsViewModel.reset()
-    }
-    
-    func setEventHandler() {
-        // Only monitor event types we actually handle — .any causes main thread starvation
-        let relevantEvents: NSEvent.EventTypeMask = [
-            .scrollWheel, .mouseMoved, .mouseEntered, .mouseExited,
-            .leftMouseUp, .rightMouseUp, .leftMouseDown,
-            .leftMouseDragged, .rightMouseDragged
-        ]
-        self.eventHandler = NSEvent.addGlobalMonitorForEvents(matching: relevantEvents) { [weak self] event in
-            guard let self = self,
-                  let frontmostApplication = NSWorkspace.shared.frontmostApplication,
-                  frontmostApplication.bundleIdentifier == "com.apple.finder" else { return }
-
-            // Find the WKWebView in whichever wallpaper window the event lands on
-            let mouseLocation = NSEvent.mouseLocation
-            // A split display has a page per region, and a stretched page is the canvas's size.
-            guard let targetWindow = self.wallpaperWindows.values.first(where: { $0.frame.contains(mouseLocation) }),
-                  let webview = targetWindow.contentView?.webView(at: mouseLocation) else { return }
-
-            switch event.type {
-            case .scrollWheel:
-                webview.scrollWheel(with: event)
-            case .mouseMoved:
-                webview.mouseMoved(with: event)
-            case .mouseEntered:
-                webview.mouseEntered(with: event)
-            case .mouseExited:
-                webview.mouseExited(with: event)
-            case .leftMouseUp, .rightMouseUp:
-                webview.mouseUp(with: event)
-            case .leftMouseDown:
-                webview.mouseDown(with: event)
-            case .leftMouseDragged, .rightMouseDragged:
-                webview.mouseDragged(with: event)
-            default:
-                break
+        let wanted: Set<String> = wallpaperViewModel.isStopped
+            ? [] : Set(connected.filter { wallpaperViewModel.isScreenEnabled($0) })
+        guard wanted == Set(wallpaperWindows.keys), layout == wallpaperViewModel.layoutResolution else {
+            rebuildWallpaperWindows()
+            return
+        }
+        for screen in screens {
+            if let window = wallpaperWindows[WallpaperViewModel.screenId(for: screen)], window.frame != screen.frame {
+                window.setFrame(screen.frame, display: true)
             }
         }
+    }
+
+    func windowDidBecomeKey(_ notification: Notification) {
+        // Settings opened some other way than `openSettingsWindow`: what Cancel goes back to.
+        guard (notification.object as? NSWindow) === settingsWindow else { return }
+        globalSettingsViewModel.beginEditing()
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        // Closed without OK: back to the settings the window opened with.
+        guard (notification.object as? NSWindow) === settingsWindow else { return }
+        globalSettingsViewModel.reset()
+    }
+
+    /// Installs the mouse forwarding while a web wallpaper is shown on an enabled display, and
+    /// removes it otherwise: on every change of the shown wallpapers (and layouts), the enabled
+    /// displays, or Stop. The publishers send the new values.
+    private func observeWebWallpapers() {
+        webMouseCancellable = wallpaperViewModel.$instanceKeys
+            .combineLatest(wallpaperViewModel.$enabledScreens, wallpaperViewModel.$isStopped)
+            .map { WebWallpaperMouseForwarder.isNeeded(instanceKeys: $0, enabledScreens: $1, stopped: $2) }
+            .removeDuplicates()
+            .sink { [weak self] needed in self?.webMouseForwarder.update(needed: needed) }
     }
     
     /// The screen saver follows the main display's wallpaper.

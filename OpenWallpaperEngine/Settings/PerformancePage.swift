@@ -35,7 +35,7 @@ struct PerformancePage: SettingsPage {
     var body: some View {
         SettingsForm {
             Section {
-                Picker("Other Application Focused:", selection: $viewModel.settings.otherApplicationFocused) {
+                Picker("Other Application Focused", selection: $viewModel.settings.otherApplicationFocused) {
                     Text("Keep Running").tag(GSPlayback.keepRunning)
                     Text("Mute").tag(GSPlayback.mute)
                     pauseOptions(viewModel.settings.otherApplicationFocused)
@@ -43,7 +43,7 @@ struct PerformancePage: SettingsPage {
                 .changedFromDefault(viewModel.isChanged(\.otherApplicationFocused))
                 .help("What wallpapers do while another app's window is active. Pause per Display pauses only the display that window is on; Pause All pauses every display.")
 
-                Picker("Other Application Maximized:", selection: $viewModel.settings.otherApplicationMaximized) {
+                Picker("Other Application Maximized", selection: $viewModel.settings.otherApplicationMaximized) {
                     Text("Keep Running").tag(GSPlayback.keepRunning)
                     Text("Mute").tag(GSPlayback.mute)
                     pauseOptions(viewModel.settings.otherApplicationMaximized)
@@ -52,7 +52,7 @@ struct PerformancePage: SettingsPage {
                 .changedFromDefault(viewModel.isChanged(\.otherApplicationMaximized))
                 .help("What wallpapers do while another app's window fills their display. Stop (free memory) hides the wallpaper to free its memory.")
 
-                Picker("Other Application Fullscreen:", selection: $viewModel.settings.otherApplicationFullscreen) {
+                Picker("Other Application Fullscreen", selection: $viewModel.settings.otherApplicationFullscreen) {
                     Text("Keep Running").tag(GSPlayback.keepRunning)
                     Text("Mute").tag(GSPlayback.mute)
                     pauseOptions(viewModel.settings.otherApplicationFullscreen)
@@ -61,7 +61,7 @@ struct PerformancePage: SettingsPage {
                 .changedFromDefault(viewModel.isChanged(\.otherApplicationFullscreen))
                 .help("What wallpapers do while another app is in full screen on their display. Pause and Stop save the work of drawing a wallpaper no one can see.")
                 
-                Picker("Other Application Playing Audio:", selection: $viewModel.settings.otherApplicationPlayingAudio) {
+                Picker("Other Application Playing Audio", selection: $viewModel.settings.otherApplicationPlayingAudio) {
                     Text("Keep Running").tag(GSPlayback.keepRunning)
                     Text("Mute").tag(GSPlayback.mute)
                     Text("Pause").tag(GSPlayback.pause)
@@ -237,7 +237,7 @@ struct PerformancePage: SettingsPage {
                 HStack {
                     Text("Reflections")
                     Spacer()
-                    Toggle("Reflection", isOn: $viewModel.settings.reflections)
+                    Toggle("Reflections", isOn: $viewModel.settings.reflections)
                         .toggleStyle(.checkbox)
                         .labelsHidden()
                 }

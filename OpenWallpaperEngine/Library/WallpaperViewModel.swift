@@ -98,6 +98,14 @@ class WallpaperViewModel: ObservableObject {
         }
     }
 
+    /// The displays connected before: only one never seen gets wallpapers turned on when it
+    /// connects (`enableNewDisplays`).
+    private(set) var knownDisplays = KnownDisplays()
+
+    /// Told after a display's wallpapers are turned on or off (`toggleScreen`): the app delegate
+    /// adds or removes that display's window.
+    var onScreenEnabledChange: ((String) -> Void)?
+
     /// The screen currently selected in the UI for configuration.
     @Published var selectedScreenId: String = ""
 
@@ -243,6 +251,12 @@ class WallpaperViewModel: ObservableObject {
         if let data = try? JSONEncoder().encode(recentWallpapers) {
             UserDefaults.app.set(data, forKey: Self.recentsKey)
         }
+    }
+
+    /// The recent wallpapers whose folder still exists: a deleted one would apply a missing folder.
+    func availableRecentWallpapers(folderExists: (URL) -> Bool = { FileManager.default.fileExists(atPath: $0.path) })
+        -> [WEWallpaper] {
+        recentWallpapers.filter { folderExists($0.wallpaperDirectory) }
     }
 
     func addToRecents(_ wallpaper: WEWallpaper) {
@@ -1006,16 +1020,28 @@ class WallpaperViewModel: ObservableObject {
         } else {
             enabledScreens.insert(screenId)
         }
-        AppDelegate.shared.rebuildWallpaperWindows()
+        onScreenEnabledChange?(screenId)
+    }
+
+    /// Turns wallpapers on for the displays in `connected` never connected before, and remembers
+    /// them; a display seen before keeps its choice. Returns the displays turned on.
+    @discardableResult
+    func enableNewDisplays(_ connected: Set<String>) -> Set<String> {
+        let new = knownDisplays.recordConnected(connected)
+        guard !new.isEmpty else { return [] }
+        enabledScreens.formUnion(new)
+        if persistsWallpapers { knownDisplays.save(to: .app) }
+        return new
     }
 
     /// Remove a wallpaper from all screens (e.g., when unsubscribing).
     func removeWallpaperFromAllScreens(directory: URL) {
-        for (key, wp) in wallpapers {
-            if wp.wallpaperDirectory == directory {
-                wallpapers[key] = Self.defaultWallpaper
-            }
-        }
+        // One assignment: each change saves and refreshes the instances.
+        let shown = wallpapers.filter { $0.value.wallpaperDirectory == directory }.keys
+        guard !shown.isEmpty else { return }
+        var updated = wallpapers
+        for key in shown { updated[key] = Self.defaultWallpaper }
+        wallpapers = updated
     }
 
     // MARK: - Display options
@@ -1048,25 +1074,6 @@ class WallpaperViewModel: ObservableObject {
 
     var lastPlayRate: Float = 1.0
     @Published public var playRate: Float = 1.0 {
-        willSet {
-            guard persistsWallpapers else { return }
-            // Matched by action: the titles are localized.
-            if newValue == 0.0 {
-                for (index, item) in AppDelegate.shared.statusItem.menu!.items.enumerated() {
-                    if item.action == #selector(AppDelegate.shared.pause) {
-                        AppDelegate.shared.statusItem.menu!.items[index] =
-                            .init(title: String(localized: "Resume"), systemImage: "play.fill", action: #selector(AppDelegate.shared.resume), keyEquivalent: "")
-                    }
-                }
-            } else {
-                for (index, item) in AppDelegate.shared.statusItem.menu!.items.enumerated() {
-                    if item.action == #selector(AppDelegate.shared.resume) {
-                        AppDelegate.shared.statusItem.menu!.items[index] =
-                            .init(title: String(localized: "Pause"), systemImage: "pause.fill", action: #selector(AppDelegate.shared.pause), keyEquivalent: "")
-                    }
-                }
-            }
-        }
         didSet {
             self.lastPlayRate = oldValue
             if arePlaybackRatesLinked {
@@ -1087,24 +1094,6 @@ class WallpaperViewModel: ObservableObject {
 
     var lastPlayVolume: Float = 1.0
     @Published public var playVolume: Float = 1.0 {
-        willSet {
-            guard persistsWallpapers else { return }
-            if newValue == 0.0 {
-                for (index, item) in AppDelegate.shared.statusItem.menu!.items.enumerated() {
-                    if item.action == #selector(AppDelegate.shared.mute) {
-                        AppDelegate.shared.statusItem.menu!.items[index] =
-                            .init(title: String(localized: "Unmute"), systemImage: "speaker.fill", action: #selector(AppDelegate.shared.unmute), keyEquivalent: "")
-                    }
-                }
-            } else {
-                for (index, item) in AppDelegate.shared.statusItem.menu!.items.enumerated() {
-                    if item.action == #selector(AppDelegate.shared.unmute) {
-                        AppDelegate.shared.statusItem.menu!.items[index] =
-                            .init(title: String(localized: "Mute"), systemImage: "speaker.slash.fill", action: #selector(AppDelegate.shared.mute), keyEquivalent: "")
-                    }
-                }
-            }
-        }
         didSet {
             self.lastPlayVolume = oldValue
         }
@@ -1165,6 +1154,13 @@ class WallpaperViewModel: ObservableObject {
         } else {
             self.enabledScreens = Set(NSScreen.screens.map { Self.screenId(for: $0) })
         }
+        // Before the list was kept, every display enabled or connected now counts as known.
+        if let known = KnownDisplays.load(from: .app) {
+            knownDisplays = known
+        } else {
+            knownDisplays = KnownDisplays(enabledScreens.union(NSScreen.screens.map { Self.screenId(for: $0) }))
+            knownDisplays.save(to: .app)
+        }
 
         // Default the active screen to main while assigning wallpapers to all desktops.
         self.selectedScreenId = Self.mainScreenId()
@@ -1188,9 +1184,11 @@ class WallpaperViewModel: ObservableObject {
         return String(displayId)
     }
 
+    /// The primary display's (the one with the menu bar in System Settings' arrangement), not
+    /// `NSScreen.main`, which is the display with the key window.
     static func mainScreenId() -> String {
-        guard let main = NSScreen.main else { return "0" }
-        return screenId(for: main)
+        guard let primary = NSScreen.screens.first else { return "0" }
+        return screenId(for: primary)
     }
 
     static func screenName(for screen: NSScreen) -> String {
@@ -1200,12 +1198,10 @@ class WallpaperViewModel: ObservableObject {
     // MARK: - Persistence
 
     private func saveWallpapers() {
-        if let data = try? JSONEncoder().encode(wallpapers) {
-            UserDefaults.app.set(data, forKey: "ScreenWallpapers")
-        }
-        // Keep legacy key updated for backward compat
-        if let data = try? JSONEncoder().encode(currentWallpaper) {
-            UserDefaults.app.set(data, forKey: "CurrentWallpaper")
+        do {
+            UserDefaults.app.set(try JSONEncoder().encode(wallpapers), forKey: "ScreenWallpapers")
+        } catch {
+            OWELog.error(.library, "Saving the displays' wallpapers failed: \(error)")
         }
     }
 }

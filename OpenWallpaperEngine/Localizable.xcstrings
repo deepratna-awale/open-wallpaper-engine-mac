@@ -91604,379 +91604,379 @@
         }
       }
     },
-    "Other Application Focused:" : {
+    "Other Application Focused" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "عند التركيز على تطبيق آخر:"
+            "value" : "عند التركيز على تطبيق آخر"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Andere App im Vordergrund:"
+            "value" : "Andere App im Vordergrund"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otra app activa:"
+            "value" : "Otra app activa"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Autre app au premier plan :"
+            "value" : "Autre app au premier plan"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "दूसरा ऐप फ़ोकस में होने पर:"
+            "value" : "दूसरा ऐप फ़ोकस में होने पर"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Altra applicazione attiva:"
+            "value" : "Altra applicazione attiva"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ほかのアプリケーションがアクティブなとき："
+            "value" : "ほかのアプリケーションがアクティブなとき"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "다른 응용 프로그램이 활성화된 경우:"
+            "value" : "다른 응용 프로그램이 활성화된 경우"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inna aplikacja aktywna:"
+            "value" : "Inna aplikacja aktywna"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Outro Aplicativo em Foco:"
+            "value" : "Outro Aplicativo em Foco"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Активно другое приложение:"
+            "value" : "Активно другое приложение"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Başka Uygulama Etkinken:"
+            "value" : "Başka Uygulama Etkinken"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Інша програма активна:"
+            "value" : "Інша програма активна"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "其他应用程序成为焦点时："
+            "value" : "其他应用程序成为焦点时"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "其他應用程式為使用中時："
+            "value" : "其他應用程式為使用中時"
           }
         }
       }
     },
-    "Other Application Fullscreen:" : {
+    "Other Application Fullscreen" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "عند عرض تطبيق آخر بملء الشاشة:"
+            "value" : "عند عرض تطبيق آخر بملء الشاشة"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Andere App im Vollbildmodus:"
+            "value" : "Andere App im Vollbildmodus"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otra app a pantalla completa:"
+            "value" : "Otra app a pantalla completa"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Autre app en plein écran :"
+            "value" : "Autre app en plein écran"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "दूसरा ऐप फ़ुल स्क्रीन होने पर:"
+            "value" : "दूसरा ऐप फ़ुल स्क्रीन होने पर"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Altra applicazione a schermo intero:"
+            "value" : "Altra applicazione a schermo intero"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ほかのアプリケーションがフルスクリーンのとき："
+            "value" : "ほかのアプリケーションがフルスクリーンのとき"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "다른 응용 프로그램이 전체 화면인 경우:"
+            "value" : "다른 응용 프로그램이 전체 화면인 경우"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inna aplikacja na pełnym ekranie:"
+            "value" : "Inna aplikacja na pełnym ekranie"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Outro Aplicativo em Tela Cheia:"
+            "value" : "Outro Aplicativo em Tela Cheia"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Другое приложение на весь экран:"
+            "value" : "Другое приложение на весь экран"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Başka Uygulama Tam Ekrandayken:"
+            "value" : "Başka Uygulama Tam Ekrandayken"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Інша програма на весь екран:"
+            "value" : "Інша програма на весь екран"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "其他应用程序全屏时："
+            "value" : "其他应用程序全屏时"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "其他應用程式全螢幕時："
+            "value" : "其他應用程式全螢幕時"
           }
         }
       }
     },
-    "Other Application Maximized:" : {
+    "Other Application Maximized" : {
       "comment" : "Settings › Performance › Playback: what the wallpaper does while another application's window fills a display's visible area (a zoomed window)",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "عند تكبير تطبيق آخر:"
+            "value" : "عند تكبير تطبيق آخر"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Andere App maximiert:"
+            "value" : "Andere App maximiert"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otra app maximizada:"
+            "value" : "Otra app maximizada"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Autre app maximisée :"
+            "value" : "Autre app maximisée"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "दूसरा ऐप मैक्सिमाइज़ होने पर:"
+            "value" : "दूसरा ऐप मैक्सिमाइज़ होने पर"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Altra applicazione ingrandita:"
+            "value" : "Altra applicazione ingrandita"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ほかのアプリケーションが最大化されているとき："
+            "value" : "ほかのアプリケーションが最大化されているとき"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "다른 응용 프로그램이 최대화된 경우:"
+            "value" : "다른 응용 프로그램이 최대화된 경우"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inna aplikacja zmaksymalizowana:"
+            "value" : "Inna aplikacja zmaksymalizowana"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Outro Aplicativo Maximizado:"
+            "value" : "Outro Aplicativo Maximizado"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Другое приложение развёрнуто:"
+            "value" : "Другое приложение развёрнуто"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Başka Uygulama Ekranı Kapladığında:"
+            "value" : "Başka Uygulama Ekranı Kapladığında"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Інша програма розгорнута:"
+            "value" : "Інша програма розгорнута"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "其他应用程序最大化时："
+            "value" : "其他应用程序最大化时"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "其他應用程式最大化時："
+            "value" : "其他應用程式最大化時"
           }
         }
       }
     },
-    "Other Application Playing Audio:" : {
+    "Other Application Playing Audio" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "عند تشغيل تطبيق آخر للصوت:"
+            "value" : "عند تشغيل تطبيق آخر للصوت"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Andere App gibt Audio wieder:"
+            "value" : "Andere App gibt Audio wieder"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otra app reproduciendo audio:"
+            "value" : "Otra app reproduciendo audio"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Autre app lisant de l’audio :"
+            "value" : "Autre app lisant de l’audio"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "दूसरा ऐप ऑडियो चला रहा हो तब:"
+            "value" : "दूसरा ऐप ऑडियो चला रहा हो तब"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Altra applicazione che riproduce audio:"
+            "value" : "Altra applicazione che riproduce audio"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ほかのアプリケーションがオーディオを再生中のとき："
+            "value" : "ほかのアプリケーションがオーディオを再生中のとき"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "다른 응용 프로그램이 오디오를 재생하는 경우:"
+            "value" : "다른 응용 프로그램이 오디오를 재생하는 경우"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inna aplikacja odtwarza dźwięk:"
+            "value" : "Inna aplikacja odtwarza dźwięk"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Outro Aplicativo Reproduzindo Áudio:"
+            "value" : "Outro Aplicativo Reproduzindo Áudio"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Другое приложение воспроизводит звук:"
+            "value" : "Другое приложение воспроизводит звук"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Başka Uygulama Ses Çalarken:"
+            "value" : "Başka Uygulama Ses Çalarken"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Інша програма відтворює звук:"
+            "value" : "Інша програма відтворює звук"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "其他应用程序播放音频时："
+            "value" : "其他应用程序播放音频时"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "其他應用程式播放音訊時："
+            "value" : "其他應用程式播放音訊時"
           }
         }
       }
@@ -106461,100 +106461,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重做"
-          }
-        }
-      }
-    },
-    "Reflection" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الانعكاس"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reflexion"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reflejo"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Réflexion"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "रिफ़्लेक्शन"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Riflesso"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "反射"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "반사"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odbicie"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reflexo"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отражение"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yansıma"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Відображення"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "反射"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "反射"
           }
         }
       }

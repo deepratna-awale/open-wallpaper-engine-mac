@@ -140,10 +140,8 @@ struct SettingsView: View {
             .menuIndicator(.hidden)
             .fixedSize()
             .help("Export, import or restore settings")
-            if let savedSettings = try? JSONDecoder()
-                .decode(GlobalSettings.self,
-                    from: UserDefaults.app.data(forKey: "GlobalSettings")
-                        ?? Data()), viewModel.settings != savedSettings {
+            // Against the settings the window opened with, which Cancel goes back to.
+            if viewModel.hasUnconfirmedEdits {
                 Image(systemName: "exclamationmark.circle.fill")
                     .foregroundStyle(.yellow)
                 Text("Edited")
@@ -153,14 +151,14 @@ struct SettingsView: View {
             GlassGroup {
                 HStack {
                     Button {
-                        viewModel.save()
+                        viewModel.commitEdits()
                         AppDelegate.shared.settingsWindow.close()
                     } label: {
                         Text("OK").frame(minWidth: 50)
                     }
                     .glassButtonStyle(.prominent)
                     Button {
-                        // The delegate resets unsaved changes when the window closes.
+                        // The delegate goes back to the settings the window opened with as it closes.
                         AppDelegate.shared.settingsWindow.close()
                     } label: {
                         Text("Cancel").frame(minWidth: 50)
@@ -204,6 +202,9 @@ struct SettingsView: View {
         do {
             let transfer = try SettingsTransfer.decode(Data(contentsOf: url))
             viewModel.settings = transfer.settings
+            // The other preferences it sets stay, so Cancel goes back to the imported settings.
+            viewModel.commitEdits()
+            viewModel.beginEditing()
             transfer.applyPreferences(to: .app)
             let updater = AppDelegate.shared.updater
             if let updates = transfer.updates, updater.isEnabled {
