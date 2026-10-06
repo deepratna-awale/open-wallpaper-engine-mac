@@ -2259,17 +2259,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let textTint = entry.layer.text == nil ? SIMD3<Float>(repeating: 1) : self.textTint(layerID: entry.layer.id)
         uniform.color = entry.layer.text?.effects == nil && entry.layer.weEffects.isEmpty ? draw.color * SIMD4(textTint, 1)
             : SIMD4(1, 1, 1, draw.color.w)
-        let materialEffects = entry.layer.effects
-        uniform.effects = SIMD4<Float>(materialEffects.brightness * draw.brightness, materialEffects.contrast,
-                                       materialEffects.saturation
-                                           * (1 + (entry.layer.musicSync?.saturationAmount ?? 0) * Float(draw.musicSyncLevel)),
-                                       materialEffects.bloom * WallpaperServices.shared.userPropertyValue("_owe_bloom", fallback: 1))
-        uniform.blur = materialEffects.blur * WallpaperServices.shared.userPropertyValue("_owe_blur", fallback: 1)
-        uniform.colorEffects = SIMD4<Float>(materialEffects.exposure, materialEffects.gamma,
-                                            materialEffects.hue, materialEffects.bloomThreshold)
-        uniform.transform = SIMD4<Float>(materialEffects.transformAngle, materialEffects.transformOffset.x,
-                                         materialEffects.transformOffset.y, materialEffects.transformScale.x)
-        uniform.transformScaleY = materialEffects.transformScale.y
+        // The layer's brightness and a video's music-synced saturation; the other adjustments
+        // stay at their identity (`layerUniform`).
+        uniform.effects.x = draw.brightness
+        uniform.effects.z = 1 + (entry.layer.musicSync?.saturationAmount ?? 0) * Float(draw.musicSyncLevel)
         uniform.uvOrigin = textureFrame.uvOrigin
         uniform.uvAxisX = textureFrame.uvAxisX
         uniform.uvAxisY = textureFrame.uvAxisY

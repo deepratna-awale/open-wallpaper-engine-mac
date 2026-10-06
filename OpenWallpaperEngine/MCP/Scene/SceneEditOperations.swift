@@ -119,6 +119,4 @@ enum SceneEditOperations {
             throw ControlError(.refused, "\(field) of layer \(layer.id) follows the user property \"\(property)\"; unbind_field it first.")
         }
     }
-
-    static func vectorText(_ components: [Double]) -> String { SceneVector.string(components) }
 }

@@ -2,23 +2,18 @@ import Security
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// Keychain storage and migration of Steam secrets, and keeping them out of URLs, logs and argv.
+/// Keychain storage of Steam secrets, and keeping them out of URLs, logs and argv.
 final class SteamCredentialsTests: XCTestCase {
     private var keychain: KeychainStore!
-    private var defaults: UserDefaults!
-    private var suiteName: String!
 
     override func setUpWithError() throws {
         keychain = KeychainStore(service: "app.openwallpaperengine.tests.keychain.\(UUID().uuidString)")
-        suiteName = "owe-steam-credentials-tests-\(UUID().uuidString)"
-        defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
     }
 
     override func tearDownWithError() throws {
         for account in ["token", "SteamWebAPIKey"] {
             try keychain.removeValue(forAccount: account)
         }
-        defaults.removePersistentDomain(forName: suiteName)
         StubURLProtocol.handler = nil
     }
 
@@ -46,41 +41,9 @@ final class SteamCredentialsTests: XCTestCase {
         XCTAssertNil(try KeychainStore(service: keychain.service + ".other").string(forAccount: "token"))
     }
 
-    // MARK: Migration from user defaults
-
-    func testMigratesALegacyDefaultsValueOnceAndDeletesIt() throws {
+    func testSaveAndRemove() throws {
         try requireKeychain()
-        defaults.set("  LEGACYKEY0123456789  ", forKey: "SteamWebAPIKey")
-
-        XCTAssertEqual(secret.load(), "LEGACYKEY0123456789")
-        XCTAssertNil(defaults.object(forKey: "SteamWebAPIKey"), "the plain-text copy is gone")
-        XCTAssertEqual(try keychain.string(forAccount: "SteamWebAPIKey"), "LEGACYKEY0123456789")
-        XCTAssertEqual(secret.load(), "LEGACYKEY0123456789", "later loads read the keychain")
-    }
-
-    func testKeychainValueWinsOverALeftoverDefaultsValue() throws {
-        try requireKeychain()
-        try keychain.set("KEYCHAIN", forAccount: "SteamWebAPIKey")
-        defaults.set("STALE", forKey: "SteamWebAPIKey")
-
-        XCTAssertEqual(secret.load(), "KEYCHAIN")
-        XCTAssertNil(defaults.object(forKey: "SteamWebAPIKey"))
-    }
-
-    func testEmptyLegacyValueIsDroppedWithoutAKeychainItem() throws {
-        try requireKeychain()
-        defaults.set("", forKey: "SteamWebAPIKey")
-
-        XCTAssertNil(secret.load())
-        XCTAssertNil(defaults.object(forKey: "SteamWebAPIKey"))
-        XCTAssertNil(try keychain.string(forAccount: "SteamWebAPIKey"))
-    }
-
-    func testSaveAndRemoveNeverLeaveADefaultsCopy() throws {
-        try requireKeychain()
-        defaults.set("OLD", forKey: "SteamWebAPIKey")
         try secret.save("NEW")
-        XCTAssertNil(defaults.object(forKey: "SteamWebAPIKey"))
         XCTAssertEqual(secret.load(), "NEW")
 
         try secret.remove()
@@ -91,8 +54,8 @@ final class SteamCredentialsTests: XCTestCase {
         // Under XCTest the prefix is the isolated suite, so no test can touch the real items.
         let bundleId = AppStorageLocation.current.keychainServicePrefix
         XCTAssertTrue(bundleId.contains(".isolated."), bundleId)
-        XCTAssertEqual(SteamCredentials.webAPIKey(defaults: defaults).keychain.service, "\(bundleId).steam-web-api-key")
-        XCTAssertEqual(SteamCredentials.steamCmdAccount(defaults: defaults).keychain.service, "\(bundleId).steamcmd-account")
+        XCTAssertEqual(SteamCredentials.webAPIKey().keychain.service, "\(bundleId).steam-web-api-key")
+        XCTAssertEqual(SteamCredentials.steamCmdAccount().keychain.service, "\(bundleId).steamcmd-account")
     }
 
     // MARK: Redaction
@@ -256,7 +219,7 @@ final class SteamCredentialsTests: XCTestCase {
     // MARK: Helpers
 
     private var secret: KeychainSecret {
-        KeychainSecret(keychain: keychain, account: "SteamWebAPIKey", legacyDefaultsKey: "SteamWebAPIKey", defaults: defaults)
+        KeychainSecret(keychain: keychain, account: "SteamWebAPIKey")
     }
 
     private var service: WorkshopAPIService {

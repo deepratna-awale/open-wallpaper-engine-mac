@@ -27,7 +27,4 @@ enum WETextDefaults {
     static let dropShadowColor = SIMD3<Float>(0, 0, 0)
     /// `horizontalalign` and `verticalalign` (+0x59c, +0x59e): centre.
     static let alignment = "center"
-    /// The flags word (+0x518) that holds `msdf`, `outline`, `blur` and `dropshadow` starts clear:
-    /// each is off unless the object turns it on.
-    static let effectsEnabled = false
 }

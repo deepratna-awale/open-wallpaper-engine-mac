@@ -46,10 +46,6 @@ struct ScreenSaverSettingsStore {
         defaults.set(values, forKey: Self.valuesKey(identity))
     }
 
-    func removeValues(for identity: WallpaperSettingsIdentity) {
-        defaults.removeObject(forKey: Self.valuesKey(identity))
-    }
-
     // MARK: Selection and schedule
 
     var selection: Selection? {

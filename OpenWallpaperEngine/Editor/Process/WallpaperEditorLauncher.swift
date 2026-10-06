@@ -109,9 +109,6 @@ final class WallpaperEditorLauncher {
         return post(.timeline, folder: folder, extra: info)
     }
 
-    /// Whether an editor process runs (isolated as this app is).
-    var isEditorRunning: Bool { dependencies.editorIsRunning() }
-
     private func post(_ message: AppProcessChannel.Message, folder: URL, extra: [String: String] = [:]) -> Bool {
         guard dependencies.editorIsRunning() else { return false }
         var info = extra

@@ -119,7 +119,6 @@ struct SceneMetalLayer {
     let rotation: Float
     /// `angles.x` and `angles.y` (radians): the orthographic squash of a tilted object.
     var tilt: SIMD2<Float> = .zero
-    let effects: SceneMaterialEffects
     /// Set for video layers so the picture can pulse with the music the way the AVKit path does.
     var musicSync: VideoMusicSyncVisuals? = nil
     /// Authored effects, run through Wallpaper Engine's own shaders.
@@ -201,28 +200,6 @@ struct SceneMetalText {
     let blockAlign: Bool
     /// `outline`, `blur` and `dropshadow` (`SceneTextEffects`); nil for plain text.
     var effects: SceneTextEffects? = nil
-}
-
-struct SceneMaterialEffects {
-    let brightness: Float
-    let contrast: Float
-    let saturation: Float
-    let bloom: Float
-    let blur: Float
-    let exposure: Float
-    let gamma: Float
-    let hue: Float
-    let bloomThreshold: Float
-    let transformAngle: Float
-    let transformOffset: SIMD2<Float>
-    let transformScale: SIMD2<Float>
-
-    /// No adjustment. A layer's material constants reach WE's own shader (`ImageMaterialPlan`);
-    /// they are never guessed into these native adjustments by name.
-    static let identity = SceneMaterialEffects(brightness: 1, contrast: 1, saturation: 1, bloom: 0, blur: 0,
-                                               exposure: 0, gamma: 1, hue: 0, bloomThreshold: 0.7,
-                                               transformAngle: 0, transformOffset: .zero,
-                                               transformScale: SIMD2<Float>(repeating: 1))
 }
 
 struct SceneBloomSettings {
