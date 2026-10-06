@@ -165,49 +165,4 @@ final class WallpaperSettingsIdentityTests: XCTestCase {
         let after = WallpaperSettingsIdentity.resolve(directory: moved, defaults: defaults).key(.userProperties)
         XCTAssertEqual(defaults.dictionary(forKey: after) as? [String: String], ["speed": "2"])
     }
-
-    func testPathKeyedSettingsMigrateOnFirstSight() throws {
-        let directory = try wallpaper("library/Rain")
-        defaults.set(["speed": "2"], forKey: "SceneUserProperties." + directory.path)
-        defaults.set(true, forKey: "SceneUserPropertiesExplicit." + directory.path)
-        let identity = WallpaperSettingsIdentity.resolve(directory: directory, defaults: defaults)
-        XCTAssertEqual(defaults.dictionary(forKey: identity.key(.userProperties)) as? [String: String], ["speed": "2"])
-        XCTAssertTrue(defaults.bool(forKey: identity.key(.explicitUserProperties)))
-        XCTAssertNil(defaults.object(forKey: "SceneUserProperties." + directory.path), "the old key is gone")
-    }
-
-    /// Settings saved by an older build, then the library moved before the upgrade: the old path
-    /// no longer exists, and the one missing folder of that name is the wallpaper's.
-    func testSettingsOfAMovedLibraryMigrateByFolderName() throws {
-        let old = root.appending(path: "old-library/Rain").path
-        defaults.set(["speed": "3"], forKey: "SceneUserProperties." + old)
-        let directory = try wallpaper("new-library/Rain")
-        let identity = WallpaperSettingsIdentity.resolve(directory: directory, defaults: defaults)
-        XCTAssertEqual(defaults.dictionary(forKey: identity.key(.userProperties)) as? [String: String], ["speed": "3"])
-        XCTAssertNil(defaults.object(forKey: "SceneUserProperties." + old))
-    }
-
-    func testAmbiguousOrLiveLegacyKeysAreLeftAlone() throws {
-        defaults.set(["speed": "1"], forKey: "SceneUserProperties." + root.appending(path: "gone-a/Rain").path)
-        defaults.set(["speed": "2"], forKey: "SceneUserProperties." + root.appending(path: "gone-b/Rain").path)
-        let directory = try wallpaper("new/Rain")
-        let identity = WallpaperSettingsIdentity.resolve(directory: directory, defaults: defaults)
-        XCTAssertNil(defaults.object(forKey: identity.key(.userProperties)), "two candidates: neither is guessed")
-
-        let other = try wallpaper("live/Snow")
-        defaults.set(["speed": "4"], forKey: "SceneUserProperties." + other.path)
-        let sameName = try wallpaper("copy/Snow", project: #"{"title":"Snow copy"}"#)
-        let copyIdentity = WallpaperSettingsIdentity.resolve(directory: sameName, defaults: defaults)
-        XCTAssertNil(defaults.object(forKey: copyIdentity.key(.userProperties)), "a folder that still exists keeps its settings")
-        XCTAssertNotNil(defaults.object(forKey: "SceneUserProperties." + other.path))
-    }
-
-    func testSettingsUnderTheIdentityWin() throws {
-        let directory = try wallpaper("library/Rain")
-        let identity = WallpaperSettingsIdentity(directory: directory, projectData: try Data(contentsOf: directory.appending(path: "project.json")))
-        defaults.set(["speed": "new"], forKey: identity.key(.userProperties))
-        defaults.set(["speed": "old"], forKey: "SceneUserProperties." + directory.path)
-        _ = WallpaperSettingsIdentity.resolve(directory: directory, defaults: defaults)
-        XCTAssertEqual(defaults.dictionary(forKey: identity.key(.userProperties)) as? [String: String], ["speed": "new"])
-    }
 }

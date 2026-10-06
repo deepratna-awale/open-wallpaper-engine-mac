@@ -7,12 +7,11 @@ import CryptoKit
 /// The identity is the Workshop id when there is one (`project.json`'s `workshopid`, or a
 /// numeric folder name, which is how Steam names Workshop downloads), else an id the app keeps
 /// for the local wallpaper's folder (`LocalWallpaperIdentities`), so editing its project.json
-/// doesn't orphan its settings. Settings stored under the old path keys are moved over the first
-/// time a wallpaper is seen (`resolve`).
+/// doesn't orphan its settings.
 struct WallpaperSettingsIdentity: Hashable {
     let rawValue: String
 
-    /// The stored settings families, each `<prefix><identity>` (formerly `<prefix><path>`).
+    /// The stored settings families, each `<prefix><identity>`.
     enum Family: String, CaseIterable {
         case userProperties = "SceneUserProperties."
         /// Whether the user ever set a value (else project defaults are re-derived on load).
@@ -41,9 +40,7 @@ struct WallpaperSettingsIdentity: Hashable {
 
     var isWorkshop: Bool { rawValue.hasPrefix("workshop-") }
 
-    /// The identity of the wallpaper in `directory`, with any settings still stored under a path
-    /// key moved to it: the directory's own path, or else a single path with the same folder name
-    /// that no longer exists (the library moved). Settings already under the identity win.
+    /// The identity of the wallpaper in `directory`.
     static func resolve(directory: URL, defaults: UserDefaults = .app) -> WallpaperSettingsIdentity {
         resolve(directory: directory, defaults: defaults, index: nil)
     }
@@ -62,50 +59,15 @@ struct WallpaperSettingsIdentity: Hashable {
         // Only a wallpaper folder is registered (not, say, the bundled placeholder video).
         var isFolder: ObjCBool = false
         guard !derived.isWorkshop, FileManager.default.fileExists(atPath: directory.path, isDirectory: &isFolder),
-              isFolder.boolValue else {
-            derived.migrateLegacyKeys(from: directory, defaults: defaults)
-            return derived
-        }
+              isFolder.boolValue else { return derived }
         let local = LocalWallpaperIdentities.identity(
             directory: directory, derived: derived.rawValue, contentKnown: projectData != nil, defaults: defaults,
             index: { index ?? LegacySettingsIndex(defaults: defaults, supportDirectory: AppStorageLocation.current.supportDirectory) })
-        let identity = WallpaperSettingsIdentity(rawValue: local.id)
-        // Path keys (older builds) are looked for once, when the wallpaper is first seen.
-        if local.isNew { identity.migrateLegacyKeys(from: directory, defaults: defaults) }
-        return identity
+        return WallpaperSettingsIdentity(rawValue: local)
     }
 
     static func resolve(_ wallpaper: WEWallpaper, defaults: UserDefaults = .app) -> WallpaperSettingsIdentity {
         resolve(directory: wallpaper.settingsDirectory, defaults: defaults)
-    }
-
-    private func migrateLegacyKeys(from directory: URL, defaults: UserDefaults) {
-        guard defaults.object(forKey: key(.userProperties)) == nil else { return }
-        let path = directory.path
-        let prefix = Family.userProperties.rawValue
-        var legacyPath: String?
-        if defaults.object(forKey: prefix + path) != nil {
-            legacyPath = path
-        } else {
-            let folder = directory.standardizedFileURL.lastPathComponent
-            let moved = defaults.dictionaryRepresentation().keys.compactMap { key -> String? in
-                guard key.hasPrefix(prefix + "/") else { return nil }
-                let candidate = String(key.dropFirst(prefix.count))
-                guard URL(fileURLWithPath: candidate).lastPathComponent == folder,
-                      !FileManager.default.fileExists(atPath: candidate) else { return nil }
-                return candidate
-            }
-            // Two missing folders of the same name can't be told apart; neither is guessed.
-            if moved.count == 1 { legacyPath = moved[0] }
-        }
-        guard let legacyPath else { return }
-        for family in Family.allCases {
-            let old = family.rawValue + legacyPath
-            guard let value = defaults.object(forKey: old) else { continue }
-            if defaults.object(forKey: key(family)) == nil { defaults.set(value, forKey: key(family)) }
-            defaults.removeObject(forKey: old)
-        }
-        OWELog.info(.library, "Moved the settings stored for \(legacyPath) to \(rawValue)")
     }
 
     private static func workshopID(projectData: Data?, folder: String) -> String? {

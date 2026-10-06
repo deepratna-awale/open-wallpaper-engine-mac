@@ -23,10 +23,9 @@ enum LocalWallpaperIdentities {
     private static let lock = NSLock()
 
     /// The id of the local wallpaper in `directory`, registered on first sight. `derived` is its
-    /// project's derived identity; `index` says whether settings are stored under a string. True
-    /// in `isNew` when this call registered it.
+    /// project's derived identity; `index` says whether settings are stored under a string.
     static func identity(directory: URL, derived: String, contentKnown: Bool, defaults: UserDefaults,
-                         index: () -> LegacySettingsIndex) -> (id: String, isNew: Bool) {
+                         index: () -> LegacySettingsIndex) -> String {
         lock.lock()
         defer { lock.unlock() }
         var entries = defaults.dictionary(forKey: defaultsKey) as? [String: [String: String]] ?? [:]
@@ -38,7 +37,7 @@ enum LocalWallpaperIdentities {
                 entries[path] = entry
                 defaults.set(entries, forKey: defaultsKey)
             }
-            return (id, false)
+            return id
         }
         let node = fileNode(directory)
         let missing = entries.filter { $0.key != path && !FileManager.default.fileExists(atPath: $0.key) }
@@ -51,7 +50,7 @@ enum LocalWallpaperIdentities {
             entries[path] = entry(id: id, node: node, content: content)
             defaults.set(entries, forKey: defaultsKey)
             OWELog.info(.library, "Settings identity \(id) follows its wallpaper from \(oldPath) to \(path)")
-            return (id, false)
+            return id
         }
         let live = Set(entries.compactMap { $0.key != path && !missing.keys.contains($0.key) ? $0.value["id"] : nil })
         let id: String
@@ -63,7 +62,7 @@ enum LocalWallpaperIdentities {
         }
         entries[path] = entry(id: id, node: node, content: content)
         defaults.set(entries, forKey: defaultsKey)
-        return (id, true)
+        return id
     }
 
     /// Registers every local wallpaper in `libraries` (folders of wallpaper folders) once, before
