@@ -19,10 +19,3 @@ extension SceneObjectValueField {
         return ShaderValue(components: Array(repeating: value.float, count: 3))
     }
 }
-
-extension ShaderValue {
-    /// WE's text form: components separated by spaces.
-    var sceneString: String {
-        components.map { SceneJSON.number(Double($0)).scalarString ?? "0" }.joined(separator: " ")
-    }
-}

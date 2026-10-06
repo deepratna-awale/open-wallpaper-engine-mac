@@ -13,21 +13,13 @@ enum SteamCredentials {
     static let steamCmdAccountItem = (suffix: "steamcmd-account", account: "SteamLastUsername")
     static let keychainItems = [webAPIKeyItem, steamCmdAccountItem]
 
-    static func webAPIKey(defaults: UserDefaults = .app) -> KeychainSecret {
-        KeychainSecret(
-            keychain: KeychainStore(service: KeychainSecret.service(webAPIKeyItem.suffix)),
-            account: webAPIKeyItem.account,
-            legacyDefaultsKey: "SteamWebAPIKey",
-            defaults: defaults
-        )
+    static func webAPIKey() -> KeychainSecret {
+        KeychainSecret(keychain: KeychainStore(service: KeychainSecret.service(webAPIKeyItem.suffix)),
+                       account: webAPIKeyItem.account)
     }
 
-    static func steamCmdAccount(defaults: UserDefaults = .app) -> KeychainSecret {
-        KeychainSecret(
-            keychain: KeychainStore(service: KeychainSecret.service(steamCmdAccountItem.suffix)),
-            account: steamCmdAccountItem.account,
-            legacyDefaultsKey: "SteamLastUsername",
-            defaults: defaults
-        )
+    static func steamCmdAccount() -> KeychainSecret {
+        KeychainSecret(keychain: KeychainStore(service: KeychainSecret.service(steamCmdAccountItem.suffix)),
+                       account: steamCmdAccountItem.account)
     }
 }

@@ -339,7 +339,6 @@ final class SceneBonePhysicsTests: XCTestCase {
         }
         XCTAssertEqual(commands, [.physicsImpulse(bone: 1, linear: SIMD3(1, 2, 3), angularDegrees: SIMD3(0, 0, 45)),
                                   .resetPhysics(bone: 0), .resetPhysics(bone: 2)])
-        XCTAssertFalse(f.model.unsupportedMembers.contains("IImageLayer.applyBonePhysicsImpulse"))
 
         XCTAssertEqual(SceneScriptRigLayout.decode(.rigBonePhysicsImpulse, numbers: [1, 1, 2, 3, 0, 0, 45], strings: []),
                        .physicsImpulse(bone: 1, linear: SIMD3(1, 2, 3), angularDegrees: SIMD3(0, 0, 45)))

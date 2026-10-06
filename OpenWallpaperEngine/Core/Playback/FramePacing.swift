@@ -66,9 +66,6 @@ struct QualityEfficiency: Equatable {
         default: return 4
         }
     }
-
-    /// The MetalFX upscaling input scale (1 draws at full size).
-    var upscaleInputScale: Float { stop >= 5 ? 0.75 : 1 }
 }
 
 /// What the frame's analysis saw, for `FramePacing.classify`.

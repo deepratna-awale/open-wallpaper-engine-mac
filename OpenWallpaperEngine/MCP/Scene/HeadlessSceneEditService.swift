@@ -38,9 +38,4 @@ final class HeadlessSceneEditService {
         documents[key] = document
         return document
     }
-
-    /// The document already open for the wallpaper, without reading anything (undo state).
-    func openDocument(for wallpaper: ControlWallpaper) -> HeadlessSceneDocument? {
-        documents[wallpaper.folder.standardizedFileURL.path]
-    }
 }

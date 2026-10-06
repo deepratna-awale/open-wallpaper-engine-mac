@@ -46,13 +46,12 @@ struct WallpaperExplorer: SubviewOfContentView {
                             spacing: 8
                         )
                     ], alignment: .leading, spacing: 8) {
-                        ForEach(Array(viewModel.displayedWallpapers.enumerated()), id: \.0) { (index, wallpaper) in
-                            ExplorerItem(viewModel: viewModel, wallpaperViewModel: wallpaperViewModel, wallpaper: wallpaper, index: index)
+                        ForEach(Array(viewModel.displayedWallpapers.enumerated()), id: \.0) { (_, wallpaper) in
+                            ExplorerItem(viewModel: viewModel, wallpaperViewModel: wallpaperViewModel, wallpaper: wallpaper)
                                 .contextMenu {
                                     ExplorerItemMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel, current: wallpaper)
                                     ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
                                 }
-                                .animation(.spring(), value: viewModel.imageScaleIndex)
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

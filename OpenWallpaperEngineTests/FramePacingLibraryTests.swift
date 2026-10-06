@@ -73,7 +73,7 @@ final class FramePacingLibraryTests: XCTestCase {
         var layer = SceneMetalLayer(
             id: "1", name: "still", source: .image(image), position: SIMD2(960, 540), size: SIMD2(1920, 1080),
             scale: SIMD2(1, 1), opacity: 1, brightness: 1, color: SIMD4(repeating: 1), text: nil, parallaxDepth: .zero,
-            perspective: false, rotation: 0, effects: .identity)
+            perspective: false, rotation: 0)
         layer.order = 0
         let content = SceneMetalContent(
             size: SIMD2(1920, 1080), layers: [layer], particleSystems: [],

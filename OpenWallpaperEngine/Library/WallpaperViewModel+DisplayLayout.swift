@@ -125,9 +125,6 @@ extension WallpaperViewModel {
     /// Whether `id` is a region of a split display.
     func isSplitRegion(_ id: String) -> Bool { layoutResolution.region(id) != nil }
 
-    /// Whether the display `id` is on is split.
-    func isSplit(_ id: String) -> Bool { layoutResolution.regions[DisplayLayoutResolution.screen(of: id)] != nil }
-
     /// Splits `id` (a display or a region) into two regions; the first takes what it showed, as
     /// WE moves the wallpaper to the new left region. The position is kept a point inside.
     func split(_ id: String, _ split: DisplaySplit) {

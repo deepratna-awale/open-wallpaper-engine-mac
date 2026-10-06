@@ -78,7 +78,6 @@ final class SceneScriptReplayHarness {
         var createdLayers: Int
         /// `shared`'s numeric members after the last frame.
         var sharedNumbers: [String: Double]
-        var unsupportedMembers: Set<String>
 
         var meanFrameMilliseconds: Double {
             frameMilliseconds.isEmpty ? 0 : frameMilliseconds.reduce(0, +) / Double(frameMilliseconds.count)
@@ -245,7 +244,7 @@ final class SceneScriptReplayHarness {
                       loadMilliseconds: loadMilliseconds, frameMilliseconds: frameMilliseconds,
                       frameCPUMilliseconds: frameCPUMilliseconds, strings: strings,
                       nonFinite: nonFinite, commandCount: commandCount,
-                      createdLayers: objectHost.created, sharedNumbers: sharedNumbers, unsupportedMembers: model.unsupportedMembers)
+                      createdLayers: objectHost.created, sharedNumbers: sharedNumbers)
     }
 
     /// The wallpaper's sites as SceneScriptSiteBuilder finds them, by "<object index>|<field path>".

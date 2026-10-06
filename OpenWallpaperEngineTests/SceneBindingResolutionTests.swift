@@ -52,11 +52,7 @@ final class SceneBindingResolutionTests: XCTestCase {
         let layer = SceneMetalLayer(id: "1", name: "Tinted", source: .image(NSImage()), position: SIMD2(110, 210),
                                     size: SIMD2(200, 200), scale: SIMD2(0.2, 0.2),
                                     opacity: 1, brightness: 1.5, color: SIMD4(1, 0.5, 0.25, 1), text: nil, parallaxDepth: .zero,
-                                    perspective: false, rotation: 0.5,
-                                    effects: SceneMaterialEffects(brightness: 1, contrast: 1, saturation: 1, bloom: 0, blur: 0,
-                                                                  exposure: 0, gamma: 1, hue: 0, bloomThreshold: 0.7,
-                                                                  transformAngle: 0, transformOffset: .zero,
-                                                                  transformScale: SIMD2(1, 1)))
+                                    perspective: false, rotation: 0.5)
         XCTAssertEqual(bindings.baseValues(for: layer, in: built), SceneLayerBaseValues(layer))
 
         var changed = built
@@ -80,11 +76,7 @@ final class SceneBindingResolutionTests: XCTestCase {
         let layer = SceneMetalLayer(id: "1", name: "Tinted", source: .image(NSImage()), position: .zero,
                                     size: SIMD2(200, 200), scale: SIMD2(1, 1),
                                     opacity: 0, brightness: 1, color: SIMD4(0, 1, 1, 1), text: nil, parallaxDepth: .zero,
-                                    perspective: false, rotation: 0,
-                                    effects: SceneMaterialEffects(brightness: 1, contrast: 1, saturation: 1, bloom: 0, blur: 0,
-                                                                  exposure: 0, gamma: 1, hue: 0, bloomThreshold: 0.7,
-                                                                  transformAngle: 0, transformOffset: .zero,
-                                                                  transformScale: SIMD2(1, 1)))
+                                    perspective: false, rotation: 0)
         let base = bindings.baseValues(for: layer, in: PropertyContext(properties: ["color": "0.6 1 1", "mode": "2"]))
         XCTAssertEqual(base.color.x, 0.6, accuracy: 1e-5)
         XCTAssertEqual(base.opacity, 1, accuracy: 1e-5)

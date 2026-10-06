@@ -121,8 +121,6 @@ final class SceneScriptObjectStore {
         animationSlots = SceneScriptIndexAllocator(capacity: capacity.animations)
     }
 
-    var liveSlots: Set<Int> { Set(allocations.keys) }
-
     /// Every buffer scripts can reach, for `SceneScriptRuntime.watch(_:)`.
     var sharedBuffers: [SceneScriptDetachable] {
         table.sharedBuffers + effects.sharedBuffers + constants.sharedBuffers + animations.sharedBuffers

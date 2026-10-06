@@ -1,7 +1,7 @@
 'use strict';
 // SceneScript object model, part 1 of 6 (docs/scenescript-plan.md WP7): the `__rt.objects`
-// namespace, value conversion, generated accessors over the shared tables, and the registry of
-// WE members that are explicit stubs here. SceneScriptObjectModel.swift installed
+// namespace, value conversion and generated accessors over the shared tables.
+// SceneScriptObjectModel.swift installed
 // `__rt.native.objects` (tables, field lists, opcodes, native functions) before this file runs.
 (function (global) {
     const rt = global.__rt;
@@ -26,8 +26,6 @@
         // Extension points for later packages (WP12 replaces `animation` to return timeline-backed
         // objects; the default returns `Animation`/`TextureAnimation` over the animation buffer).
         hooks: {},
-        // Every stubbed member, as 'Interface.member'.
-        UNSUPPORTED: new Set(),
     };
 
     // MARK: vectors (WE's own classes, so WEVector/WEMath and the Vec methods work on them)
@@ -236,27 +234,6 @@
 
     objects.defineMethod = function (proto, name, fn) {
         Object.defineProperty(proto, name, { configurable: true, enumerable: false, writable: true, value: fn });
-    };
-
-    // MARK: explicit stubs
-
-    const reported = new Set();
-    objects.unsupported = function (member) {
-        if (reported.has(member)) return;
-        reported.add(member);
-        native.unsupported(member);
-    };
-
-    // Defines `iface.member` on `proto` as an inert stub that logs once per runtime and returns
-    // `result()` (or nothing). These are WE members that need engine features this app lacks yet
-    // (none are left; kept for members a future WE adds).
-    objects.stub = function (proto, iface, member, result) {
-        const qualified = iface + '.' + member;
-        objects.UNSUPPORTED.add(qualified);
-        objects.defineMethod(proto, member, function () {
-            objects.unsupported(qualified);
-            return result ? result() : undefined;
-        });
     };
 
     // MARK: commands

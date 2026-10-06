@@ -84,6 +84,7 @@ final class InstalledWorkshopTagsTests: XCTestCase {
         let items = try WorkshopAPIService.parseItems(from: Data(response.utf8))
         XCTAssertEqual(items.map(\.id), ["1081733658"], "a missing item isn't an item")
         XCTAssertEqual(items[0].timeUpdated, 1671716441)
+        XCTAssertEqual(items[0].fileSize, 3645971, "a 64-bit field arrives as a string")
         XCTAssertEqual(items[0].tags, ["Abstract", "Audio responsive", "Everyone", "Wallpaper", "Web"])
         XCTAssertEqual(InstalledWorkshopTags.merged(project: ["Music"], workshop: items[0].tags),
                        ["Music", "Abstract", "Audio responsive", "Everyone", "Web"])

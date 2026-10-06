@@ -11,8 +11,6 @@ import JavaScriptCore
 ///   through the command ring as opcodes 400–999 and reach `host` as `SceneScriptObjectCommand`s.
 /// - `createLayer` describes the new layer synchronously through the host, so the script gets a
 ///   live layer at once; the host materializes it when the `.create` command arrives.
-/// - Members WE has but this app cannot do yet are explicit stubs: inert, and logged once each
-///   (`unsupportedMembers`).
 final class SceneScriptObjectModel: SceneScriptRuntimeExtension {
     let scriptResources = ["objects-values", "objects-animations", "objects-effects", "objects-layers",
                            "objects-transforms", "objects-scene", "objects-modeldata"]
@@ -33,8 +31,6 @@ final class SceneScriptObjectModel: SceneScriptRuntimeExtension {
     private var pendingSources: [Int: SceneScriptLayerSource] = [:]
     private var reportedFull = false
     private var reportedInvalid = Set<Int32>()
-    /// WE members a script used that are stubs here, by `Interface.member`.
-    private(set) var unsupportedMembers = Set<String>()
 
     init(host: SceneScriptObjectHost, capacity: SceneScriptObjectStore.Capacity = .standard,
          modelData: SceneScriptModelDataStore = SceneScriptModelDataStore()) {
@@ -124,12 +120,7 @@ final class SceneScriptObjectModel: SceneScriptRuntimeExtension {
         let create: @convention(block) (String, String, Int32, String) -> Any = { [weak self] kind, payload, sourceSlot, workshopID in
             self?.createLayer(kind: kind, payload: payload, sourceSlot: Int(sourceSlot), workshopID: workshopID) ?? NSNull()
         }
-        let unsupported: @convention(block) (String) -> Void = { [weak self] member in
-            guard let self, unsupportedMembers.insert(member).inserted else { return }
-            OWELog.info(.script, "\(runtime?.identity.wallpaperID ?? ""): \(member) is not supported yet; it does nothing")
-        }
         objects.setValue(create, forProperty: "create")
-        objects.setValue(unsupported, forProperty: "unsupported")
         installModelDataFunctions(on: objects)
     }
 

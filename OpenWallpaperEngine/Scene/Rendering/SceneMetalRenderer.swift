@@ -1843,7 +1843,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // WE's object loop (docs/models-plan.md §2.4): the layers and models in draw order, each
         // after the particle systems whose key is below its barrier.
         let sequence = drawSequence(batches: particleBatches.map(\.system), forward: effectFrame.camera.forward)
-        particleBatches = sequence.batchOrder.map { particleBatches[$0] }
+        // A loop, not `map`: the optimised build's specialisation of `map` for this tuple (typed
+        // throws, `Never`) checks the error register after a closure that never sets it, and traps
+        // ("Never can't be initialized") when the register holds a stale value.
+        let unordered = particleBatches
+        particleBatches.removeAll(keepingCapacity: true)
+        for index in sequence.batchOrder { particleBatches.append(unordered[index]) }
         // Text and the media artwork drawn at the output's backing pixels, after the composite.
         let native = nativeDetailPlan(output, destination: destination, sequence: sequence,
                                       particleBatchCount: particleBatches.count, draws: draws,
@@ -2254,17 +2259,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let textTint = entry.layer.text == nil ? SIMD3<Float>(repeating: 1) : self.textTint(layerID: entry.layer.id)
         uniform.color = entry.layer.text?.effects == nil && entry.layer.weEffects.isEmpty ? draw.color * SIMD4(textTint, 1)
             : SIMD4(1, 1, 1, draw.color.w)
-        let materialEffects = entry.layer.effects
-        uniform.effects = SIMD4<Float>(materialEffects.brightness * draw.brightness, materialEffects.contrast,
-                                       materialEffects.saturation
-                                           * (1 + (entry.layer.musicSync?.saturationAmount ?? 0) * Float(draw.musicSyncLevel)),
-                                       materialEffects.bloom * WallpaperServices.shared.userPropertyValue("_owe_bloom", fallback: 1))
-        uniform.blur = materialEffects.blur * WallpaperServices.shared.userPropertyValue("_owe_blur", fallback: 1)
-        uniform.colorEffects = SIMD4<Float>(materialEffects.exposure, materialEffects.gamma,
-                                            materialEffects.hue, materialEffects.bloomThreshold)
-        uniform.transform = SIMD4<Float>(materialEffects.transformAngle, materialEffects.transformOffset.x,
-                                         materialEffects.transformOffset.y, materialEffects.transformScale.x)
-        uniform.transformScaleY = materialEffects.transformScale.y
+        // The layer's brightness and a video's music-synced saturation; the other adjustments
+        // stay at their identity (`layerUniform`).
+        uniform.effects.x = draw.brightness
+        uniform.effects.z = 1 + (entry.layer.musicSync?.saturationAmount ?? 0) * Float(draw.musicSyncLevel)
         uniform.uvOrigin = textureFrame.uvOrigin
         uniform.uvAxisX = textureFrame.uvAxisX
         uniform.uvAxisY = textureFrame.uvAxisY

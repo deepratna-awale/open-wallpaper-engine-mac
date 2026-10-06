@@ -11,8 +11,7 @@ final class SceneLayerAnalysisTests: XCTestCase {
         var layer = SceneMetalLayer(
             id: id, name: id, source: source ?? .image(NSImage(size: NSSize(width: 1, height: 1))),
             position: .zero, size: size, scale: SIMD2(1, 1), opacity: opacity, brightness: 1,
-            color: SIMD4(repeating: 1), text: nil, parallaxDepth: .zero, perspective: false, rotation: 0,
-            effects: .identity)
+            color: SIMD4(repeating: 1), text: nil, parallaxDepth: .zero, perspective: false, rotation: 0)
         layer.order = order
         return layer
     }
@@ -203,7 +202,7 @@ final class SceneLayerAnalysisTests: XCTestCase {
                                text: SceneMetalText(value: "12:00", font: nil, pointSize: 12, horizontalAlignment: nil,
                                                     verticalAlignment: nil, padding: .zero, maxWidth: nil, maxRows: nil,
                                                     useEllipsis: false, anchor: nil, blockAlign: false),
-                               parallaxDepth: .zero, perspective: false, rotation: 0, effects: .identity)
+                               parallaxDepth: .zero, perspective: false, rotation: 0)
         XCTAssertEqual(SceneLayerAnalysis.classify(text).0, .text)
     }
 
