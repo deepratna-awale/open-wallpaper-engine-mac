@@ -29,6 +29,8 @@ class WorkshopViewModel: ObservableObject {
     let steamCmd: SteamCmdService
     /// Wallpapers and authors hidden from the results (`WorkshopBlockList`).
     let blockList: WorkshopBlockList
+    /// The cards' preview images, cached and decoded at card size for the Workshop and Discover tabs.
+    let thumbnails = WorkshopThumbnailLoader()
     /// Brings the Workshop browser to the front: "Related Wallpapers" from another tab opens there.
     var showsBrowser: () -> Void = {}
     private let api = WorkshopAPIService()

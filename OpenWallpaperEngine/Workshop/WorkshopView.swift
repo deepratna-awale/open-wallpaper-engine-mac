@@ -540,21 +540,9 @@ struct WorkshopItemCard: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            AsyncImage(url: item.previewImageURL) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(1, contentMode: .fill)
-                case .failure:
-                    placeholder
-                default:
-                    placeholder
-                        .overlay(ProgressView().controlSize(.small))
-                }
-            }
-            .aspectRatio(1, contentMode: .fit)
-            .clipped()
+            WorkshopThumbnail(url: item.previewImageURL, loader: viewModel.thumbnails)
+                .aspectRatio(1, contentMode: .fit)
+                .clipped()
 
             VStack(spacing: 2) {
                 Text(item.title)
@@ -655,6 +643,36 @@ struct WorkshopItemCard: View {
     private var shownTags: [String] {
         item.tags.filter { $0.caseInsensitiveCompare("Wallpaper") != .orderedSame }
             .map { String(localized: LocalizedLabels.filterOption($0)) }
+    }
+
+}
+
+/// A Workshop card's preview from `WorkshopThumbnailLoader`, with a placeholder while it loads.
+private struct WorkshopThumbnail: View {
+    let url: URL?
+    let loader: WorkshopThumbnailLoader
+    @State private var loaded: (url: URL, image: NSImage?)?
+
+    var body: some View {
+        // A cached image draws at once, without a loading frame.
+        let image = url.flatMap { url in loaded?.url == url ? loaded?.image : loader.cachedImage(for: url) }
+        Group {
+            if let image {
+                Image(nsImage: image)
+                    .resizable()
+                    .aspectRatio(1, contentMode: .fill)
+            } else if url != nil, loaded?.url != url {
+                placeholder.overlay(ProgressView().controlSize(.small))
+            } else {
+                placeholder
+            }
+        }
+        .task(id: url) {
+            guard let url, loader.cachedImage(for: url) == nil else { return }
+            let image = await loader.image(for: url)
+            guard !Task.isCancelled else { return }
+            loaded = (url, image)
+        }
     }
 
     private var placeholder: some View {
