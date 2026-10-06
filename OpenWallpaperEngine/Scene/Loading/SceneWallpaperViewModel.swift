@@ -1118,7 +1118,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// docs/models-plan.md §2.1): an orthographic scene's width and height; `{"auto": true}`'s
     /// first image's size (0x14018b2c0); a perspective scene, whose objects are in world units,
     /// WE's default canvas. What the renderer draws the scene at, so anything framing the drawn
-    /// scene (the iPhone & iPad Export's crop) measures it with this.
+    /// scene (the iPhone & iPad Export's crop) measures it with this (`SceneDrawnSize`).
     static func sceneSize(of scene: WEScene) -> SIMD2<Float> {
         switch scene.general.projection {
         case .orthographic(let width, let height):
@@ -1127,11 +1127,14 @@ class SceneWallpaperViewModel: ObservableObject {
             if let size = firstImage(of: scene)?.size?.parseVector2(), size.0 != 0, size.1 != 0 {
                 return SIMD2<Float>(Float(size.0), Float(size.1))
             }
-            return SIMD2<Float>(1920, 1080)
+            return defaultCanvas
         case .perspective:
-            return SIMD2<Float>(1920, 1080)
+            return defaultCanvas
         }
     }
+
+    /// WE's default canvas: a perspective scene's, and `auto`'s without an image size.
+    static let defaultCanvas = SIMD2<Float>(1920, 1080)
 
     /// `{"auto": true}` sizes the scene from its first image object, which WE puts at the
     /// scene's centre (0x14018b2c0) once: a script that moves it afterwards wins (WE 2.8,

@@ -152,10 +152,11 @@ enum AndroidPackageBuilder {
         }
     }
 
-    /// The scene's authored size (`LivePhotoSceneSize`), which the pre-rendered crop is measured in.
+    /// The scene as the renderer draws it, its saved overlay applied (`SceneDrawnSize`), which the
+    /// pre-rendered crop is measured in.
     static func sceneSize(_ wallpaper: WEWallpaper) throws -> SIMD2<Double> {
         do {
-            return LivePhotoSceneSize.of(try JSONDecoder().decode(WEScene.self, from: sceneData(wallpaper)))
+            return try SceneDrawnSize.of(sceneData: sceneData(wallpaper), overlay: SceneDrawnSize.savedOverlay(of: wallpaper))
         } catch let failure as Failure {
             throw failure
         } catch {

@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - A web or application wallpaper whose trust prompt was cancelled no longer stays behind as the wallpaper to apply.
+- **iPhone & iPad and Android exports frame the scene as it is drawn.** The Scene Editor (Live)'s export modes, Export More with These Settings… and the MCP exports measured a 3D scene by its objects' positions and ignored `auto`-sized scenes, so the crop could miss the picture; they now use the canvas the wallpaper renders at, with the Wallpaper Editor's saved edits applied. The editor's Align buttons snap to that canvas too.
+- **Send over Wi-Fi no longer serves its page with a weak security policy.** If macOS can't supply random bytes for the page's script nonce, the page answers with an error (and the log says why) instead of falling back to a fixed nonce.
 
 ## [1.0.0-beta.6] - 2026-10-06
 
