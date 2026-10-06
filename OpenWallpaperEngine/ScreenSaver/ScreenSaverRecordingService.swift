@@ -83,14 +83,70 @@ final class ScreenSaverRecordingService: ObservableObject {
         }
     }
 
+    /// Sets a video wallpaper's own video as the screen saver (turning the plugin on when it is
+    /// off): nothing is rendered, the file goes in as the desktop's video does
+    /// (`ScreenSaverVideoSource.prepare`: linked, or repaired), and becomes the selection.
+    /// `completion` gets whether it was set.
+    func useVideo(_ wallpaper: WEWallpaper, completion: @escaping @MainActor (Bool) -> Void = { _ in }) {
+        guard !isRecording else {
+            completion(false)
+            return
+        }
+        guard ScreenSaverVideoSource.isEligible(wallpaper),
+              let key = ScreenSaverPlugin.statusKey(for: wallpaper, properties: [:]) else {
+            OWELog.error(.app, "Screen saver: \(wallpaper.wallpaperDirectory.lastPathComponent) isn't a video the screen saver plays")
+            completion(false)
+            return
+        }
+        let started = Date()
+        let source = wallpaper.mediaURL
+        let loopName = ScreenSaverVideoSource.fileName(key: key, source: source)
+        let fileName = "\((loopName as NSString).deletingPathExtension)-rec\(Int(started.timeIntervalSince1970)).\(source.pathExtension.lowercased())"
+        let videos = videos
+        isRecording = true
+        plugin.beginRecording()
+        OWELog.info(.app, "Screen saver: setting \(wallpaper.wallpaperDirectory.lastPathComponent)'s video")
+        Task { [weak self] in
+            let size: SIMD2<Int>? = await withCheckedContinuation { continuation in
+                DispatchQueue.global(qos: .userInitiated).async {
+                    continuation.resume(returning: Self.installVideo(source, as: fileName, in: videos))
+                }
+            }
+            self?.finish(wallpaper, fileName: fileName, size: size ?? .zero, started: started, succeeded: size != nil)
+            completion(size != nil)
+        }
+    }
+
+    /// Puts `source` in the saver's folder as `fileName` and lists it alone; its display size,
+    /// or nil when it can't. Blocking file IO.
+    nonisolated private static func installVideo(_ source: URL, as fileName: String, in videos: ScreenSaverVideoStore) -> SIMD2<Int>? {
+        let staging = videos.url(fileName: ".staging-\(UUID().uuidString).\(source.pathExtension.lowercased())")
+        guard case .ready = ScreenSaverVideoSource.prepare(source, at: staging) else { return nil }
+        guard let size = ScreenSaverVideoSource.displaySize(of: staging) else {
+            try? FileManager.default.removeItem(at: staging) // Optional: the staging copy of a failed install.
+            return nil
+        }
+        do {
+            try videos.install(staging, as: fileName, pixelSize: size)
+            return size
+        } catch {
+            OWELog.error(.app, "Screen saver: can't install \(source.lastPathComponent): \(error)")
+            return nil
+        }
+    }
+
     private func finish(_ wallpaper: WEWallpaper, values: [String: String], target: ScreenSaverPlugin.Target,
                         started: Date, succeeded: Bool) {
+        if succeeded { store.setValues(values, for: WallpaperSettingsIdentity.resolve(wallpaper, defaults: store.defaults)) }
+        finish(wallpaper, fileName: target.fileName, size: target.pixelSize, started: started, succeeded: succeeded)
+    }
+
+    private func finish(_ wallpaper: WEWallpaper, fileName: String, size: SIMD2<Int>, started: Date, succeeded: Bool) {
         isRecording = false
         if succeeded {
-            store.setValues(values, for: WallpaperSettingsIdentity.resolve(wallpaper, defaults: store.defaults))
             store.selection = ScreenSaverSettingsStore.Selection(
                 wallpaperDirectory: wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false),
-                fileName: target.fileName, width: target.pixelSize.x, height: target.pixelSize.y, recorded: started)
+                fileName: fileName, width: size.x, height: size.y, recorded: started)
             if !environment.isPluginEnabled() { environment.enablePlugin() }
         }
         plugin.endRecording(wallpaper: environment.desktopWallpaper())
@@ -106,6 +162,11 @@ final class ScreenSaverRecordingService: ObservableObject {
         guard let wallpaper = InstalledLibrary.wallpaper(at: folder, hiding: []) else {
             OWELog.error(.app, "Screen saver: \(folder.lastPathComponent), set as the screen saver, is no longer in the library")
             return false
+        }
+        // A video is its own screen saver: linked again, as it is.
+        if ScreenSaverVideoSource.isEligible(wallpaper) {
+            useVideo(wallpaper, completion: completion)
+            return true
         }
         let identity = WallpaperSettingsIdentity.resolve(wallpaper, defaults: store.defaults)
         let values = store.values(for: identity) ?? IsolatedSceneEditSession.seed(of: wallpaper, from: [.shared], defaults: store.defaults)
