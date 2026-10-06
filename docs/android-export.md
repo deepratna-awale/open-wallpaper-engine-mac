@@ -26,9 +26,10 @@ wallpaper.
 - **High Quality** (Dynamic): the scene itself, rendered live on the device. Everything a scene
   does keeps working there: animation, particles, effects, scripts, clocks and dates, audio
   response, touch and its user properties. Textures are converted to the compressed format
-  phones read (ETC2), at full size. Shaders get the same small GLSL ES edits Wallpaper Engine
+  phones read (ETC2), at full size (half for wallpapers over 1920×1080). Shaders get the same small GLSL ES edits Wallpaper Engine
   makes.
-- **Balanced** (Dynamic): as High Quality, with the textures at half their resolution. This is
+- **Balanced** (Dynamic): as High Quality, with the textures at half their resolution (a quarter
+  over 1920×1080; full size for pixel art). This is
   the default, both in the sheet and in the Scene Editor (Live)'s Android Export tab.
 - **High Performance** (Pre-Rendered): the scene recorded as a seamless 30-second H.264 video,
   which any device plays cheaply. As Wallpaper Engine warns, the scene's dynamic parts are

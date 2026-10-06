@@ -6,7 +6,7 @@
 
 > **In short**
 >
-> Open Wallpaper Engine ("OWE") runs entirely on your Mac. We have no servers, no accounts, no analytics, no crash reporting, no advertising and no tracking. We do not collect, receive, sell or share any personal data. The only things the app sends over the internet go to Valve (Steam), to GitHub (for app updates) and to whatever websites a web wallpaper you install chooses to load. Those services have their own privacy policies.
+> Open Wallpaper Engine ("OWE") runs entirely on your Mac. We have no servers, no accounts, no analytics, no crash reporting, no advertising and no tracking. We do not collect, receive, sell or share any personal data. The only things the app sends over the internet go to Valve (Steam), to GitHub (for app updates), to the hosts of the optional plugins you choose to install, and to whatever websites a web wallpaper you install chooses to load. Those services have their own privacy policies.
 >
 > This summary is for convenience only. The full text below is what applies.
 
@@ -77,7 +77,13 @@ You can turn off automatic update checks in the app's Settings. GitHub's Privacy
 
 "Web" wallpapers are HTML pages made by their creators. When you run one, it may load content from the internet exactly as a web page in a browser would — for example, a YouTube or Vimeo embed, fonts, images or scripts. Those requests go to the sites the wallpaper's author chose, are governed by those sites' policies, and are outside our control. Only install wallpapers from creators you trust (see also the Terms of Use).
 
-### 4.4 Links
+### 4.4 Optional plugins and Send over Wi-Fi
+
+- **Chromium web engine** (Settings › Plugins): downloaded only when you install it, from the Chromium Embedded Framework's official builds (`cef-builds.spotifycdn.com`), and checked against the SHA-256 the app pins.
+- **Depth Map Generation** (Settings › Plugins): downloaded only when you install it, from Apple's Hugging Face repository (`huggingface.co`), and checked against the SHA-256 the app pins. The model runs only on your Mac.
+- **Send over Wi-Fi** (Android export): while you share, the Mac serves only the packages you selected, to devices on your local network, until 15 minutes pass without a request. Nothing goes over the internet.
+
+### 4.5 Links
 
 Links in the app (to GitHub, Steam and so on) open in your default web browser. From that point on, your browser and the destination site apply.
 
@@ -87,9 +93,11 @@ OWE may ask for the following macOS permissions. Each is optional; the app works
 
 | Permission | Why | What happens to the data |
 |---|---|---|
-| **Screen & System Audio Recording** | Some wallpapers react to the audio playing on your Mac. macOS grants access to system audio through this permission. | Audio is analysed on your Mac in real time to drive the wallpaper's visuals. It is never recorded, saved or sent anywhere. Screen frames are not captured or used. |
-| **Accessibility / window information** | To pause wallpapers when a window covers a display, saving power. | The app only checks window positions and sizes on your Mac. Nothing is stored or transmitted. |
-| **Now Playing (media information)** | Some wallpapers can display the current track title, artist and artwork. | Read from macOS's media information on your Mac and shown in the wallpaper. Nothing is stored or transmitted. |
+| **System Audio Recording** (Screen & System Audio Recording before macOS 14.2) | Some wallpapers react to the audio playing on your Mac. macOS grants access to system audio through this permission. | Audio is analysed on your Mac in real time to drive the wallpaper's visuals. It is never recorded, saved or sent anywhere. Screen frames are not captured or used. |
+| **Photos** | Only when you turn on "Also Save to Photos Album" for iPhone & iPad exports. | The app finds or creates the album you chose and adds your exported Live Photos to it. Nothing else is read, stored or transmitted. |
+| **Local Network** | Send over Wi-Fi advertises the share's name on your local network. | Only the packages you selected are served, to devices on your local network. Nothing goes over the internet. |
+| **Window information** (no prompt) | To pause wallpapers when a window covers a display, saving power. | The app only checks window positions and sizes on your Mac. Nothing is stored or transmitted. |
+| **Now Playing (media information)** (no prompt) | Some wallpapers can display the current track title, artist and artwork. | Read from macOS's media information on your Mac and shown in the wallpaper. Nothing is stored or transmitted. |
 
 ## 6. Keychain and credentials
 
@@ -138,7 +146,7 @@ We make no international transfers of personal data, since we make no transfers 
 - Credentials are kept in the macOS Keychain, which encrypts them at rest and restricts access to the app.
 - Passwords and Steam Guard codes are handled in memory only, for the duration of the sign-in, and passed only to Valve's SteamCMD.
 - Update downloads are signed and verified before installation, so a tampered update will not install.
-- All connections to Valve and GitHub use HTTPS.
+- All connections to Valve, GitHub and the plugin hosts use HTTPS. Send over Wi-Fi uses plain HTTP on your local network only, behind a random token.
 
 No software is perfectly secure. Because OWE is open source, you can inspect exactly what it does. Please report security problems privately through the repository's Security tab ("Report a vulnerability"), as described in SECURITY.md.
 

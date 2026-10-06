@@ -151,7 +151,7 @@ the sentence their summary shows.
 | `list_playlists` | none | Each playlist's `id`, `name`, `wallpapers`, `duration_seconds`, `active`, `rotating`, `shuffle` and the `displays` it last played on. |
 | `play_playlist` | `name`, `display?` | Makes the playlist active and starts rotating it, as its shortcut does. Names match case-insensitively. |
 | `next_wallpaper`, `previous_wallpaper` | `display?` | Next and Previous Wallpaper from the menu: the active playlist's next or previous item where it plays, else a random library wallpaper, skipping web wallpapers not trusted yet (next), or the one shown before (previous). |
-| `import_wallpaper` | `path` | Import › From Folder: a wallpaper folder (with `project.json`), a folder of them, or a `.zip`. Returns the `imported` wallpapers and what was `skipped`, with why (a folder of that name is already in the library, for example). |
+| `import_wallpaper` | `path` | File › Import Wallpaper from Folder…: a wallpaper folder (with `project.json`), a folder of them, or a `.zip`. Returns the `imported` wallpapers and what was `skipped`, with why (a folder of that name is already in the library, for example). |
 | `open_editor` | `id`, `editor` (`scene` or `wallpaper`) | Opens a scene wallpaper in the Scene Editor (Live) or the Wallpaper Editor, for you to edit. |
 | `snapshot` | `display?` (the main display by default), `format?` (`image` by default, or `path`) | A PNG of the wallpaper on that display, at most 960 pixels wide, as image content (with `path`: saved to a temporary file whose path is returned). `source` says what it is: `loading_snapshot` (the scene's own frame, which the app captures for its loading screen), `video_frame`, or `preview` (the wallpaper's preview image, when there is no frame yet). |
 
@@ -443,7 +443,7 @@ return the playlist as `list_playlists` writes it, plus `change_when_video_ends`
 | `reflections` | boolean | Reflections |
 | `sync_properties_across_displays` | boolean | Optimizations › Sync properties across displays |
 | `video_framework` | `avkit`, `metal` | Video Framework |
-| `audio_output`, `reload_on_output_device_change`, `media_integration` | boolean | Audio output, Reload when changing output device, Media integration support |
+| `audio_output`, `reload_on_output_device_change`, `media_integration` | boolean | Audio Output, Reload when changing output device, Media integration support |
 | `optimise_textures`, `cheaper_shadows`, `web_standard_resolution`, `reduced_resolution_particles` | boolean | Optimise textures, Cheaper shadows, Render web wallpapers at standard resolution, Draw large glowing particles at half resolution |
 | `process_priority` | `normal`, `below_normal` | Process Priority |
 | `pause_on_vram_exhausted` | boolean | Pause when VRAM is exhausted |

@@ -1,7 +1,7 @@
 # iPhone & iPad Export
 
-**iPhone & iPad Export** is the last tab of the Scene Editor (Live) (Wallpaper | Screen Saver |
-iPhone & iPad Export). It frames a scene wallpaper as an iPhone or iPad lock screen and exports
+**iPhone & iPad Export** is the third tab of the Scene Editor (Live) (Wallpaper | Screen Saver |
+iPhone & iPad Export | Android Export). It frames a scene wallpaper as an iPhone or iPad lock screen and exports
 it as a Live Photo, which iOS and iPadOS 17 or later can set as a moving lock screen. Video and
 web wallpapers show the tab disabled. How it is built: [`architecture.md`](architecture.md),
 "Isolated edits" and "Live Photo export".
