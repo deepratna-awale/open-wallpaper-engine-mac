@@ -37,17 +37,20 @@ struct LivePhotoExportSettingsView<Layer: View>: View {
                         .font(.caption)
                         .foregroundStyle(.red)
                 }
-                Divider()
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Layer Adjustments")
-                        .font(.headline)
-                    layer()
+                // A video has no layers or properties: its frames are the file's.
+                if !model.isVideo {
+                    Divider()
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Layer Adjustments")
+                            .font(.headline)
+                        layer()
+                    }
+                    Divider()
+                    Text("Only this export changes. The wallpaper on your desktop keeps its properties and edits.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    SceneUserPropertiesView(wallpaper: model.wallpaper, scopes: [model.session.scope])
                 }
-                Divider()
-                Text("Only this export changes. The wallpaper on your desktop keeps its properties and edits.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                SceneUserPropertiesView(wallpaper: model.wallpaper, scopes: [model.session.scope])
             }
             .padding()
         }
@@ -205,10 +208,19 @@ struct LivePhotoExportSettingsView<Layer: View>: View {
                 Button("Cancel", role: .cancel) { model.cancel() }
             }
         } else {
-            // Side by side, or stacked at full width when the panel is too narrow for both labels.
-            ViewThatFits(in: .horizontal) {
-                HStack { exportButtons(fill: false) }
-                VStack(alignment: .leading) { exportButtons(fill: true) }
+            VStack(alignment: .leading, spacing: 6) {
+                // Side by side, or stacked at full width when the panel is too narrow for both labels.
+                ViewThatFits(in: .horizontal) {
+                    HStack { exportButtons(fill: false) }
+                    VStack(alignment: .leading) { exportButtons(fill: true) }
+                }
+                Button {
+                    model.showBatch()
+                } label: {
+                    Label("Export More with These Settings…", systemImage: "square.stack.3d.down.right")
+                }
+                .glassButtonStyle()
+                .help("Pick more wallpapers from your library and export them as Live Photos with this device, quality and clip")
             }
         }
     }
@@ -322,8 +334,12 @@ private struct LivePhotoExportSheetPresenter<Layer: View>: ViewModifier {
     @ViewBuilder let layer: () -> Layer
 
     func body(content: Content) -> some View {
-        content.sheet(item: $model.sheet, onDismiss: onClose) { sheet in
-            LivePhotoExportSheetView(model: model, sheet: sheet, layer: layer)
-        }
+        content
+            .sheet(item: $model.sheet, onDismiss: onClose) { sheet in
+                LivePhotoExportSheetView(model: model, sheet: sheet, layer: layer)
+            }
+            .sheet(isPresented: $model.isBatchPresented, onDismiss: { model.closeBatch() }) {
+                LivePhotoBatchExportSheet(model: model)
+            }
     }
 }

@@ -2,7 +2,8 @@ import AVFoundation
 import CoreGraphics
 import Metal
 
-/// Renders a scene wallpaper's clip as a Live Photo (a HEIC still and an HEVC movie paired by one
+/// Renders a scene wallpaper's clip (or a video wallpaper's, its frames read from the video by
+/// `LivePhotoVideoFrames` in place of the scene renderer) as a Live Photo (a HEIC still and an HEVC movie paired by one
 /// content identifier), or as the clip's movie alone for its preview, in the app's helper run
 /// (`ShaderPrewarmCommand`, `--render-live-photo`): in its own process, never on the app's main
 /// or render thread. The app shows the progress the helper reports and shares the files
@@ -101,7 +102,7 @@ final class LivePhotoRenderer {
     static func run(_ job: LivePhotoJob) -> Int32 {
         guard let crop = job.crop,
               let wallpaper = InstalledLibrary.wallpaper(at: URL(filePath: job.wallpaperDirectory, directoryHint: .isDirectory), hiding: []),
-              wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame else {
+              LivePhotoExportModel.isEligible(wallpaper) || ScreenSaverVideoSource.isEligible(wallpaper) else {
             OWELog.error(.app, "Live Photo: bad job for \(job.wallpaperDirectory)")
             return 2
         }
@@ -236,6 +237,12 @@ final class LivePhotoRenderer {
                 frameRate: Int = LivePhotoClip.frameRate, hidesClockLayers: Bool = Policy.hidesClockLayers,
                 progress: @escaping (Double) -> Void,
                 frame: (Int, CGImage) throws -> Void) async throws {
+        // A video wallpaper's frames are its video's, read in place of a scene render.
+        if ScreenSaverVideoSource.isEligible(wallpaper) {
+            try await LivePhotoVideoFrames(url: wallpaper.mediaURL).render(crop: crop, leadIn: leadIn, frames: frames,
+                                                                            frameRate: frameRate, progress: progress, frame: frame)
+            return
+        }
         let name = wallpaper.wallpaperDirectory.lastPathComponent
         let scratch = FileManager.default.temporaryDirectory.appending(path: "owe-livephoto-\(UUID().uuidString)",
                                                                        directoryHint: .isDirectory)
