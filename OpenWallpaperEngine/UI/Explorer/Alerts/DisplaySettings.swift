@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct DisplaySettings: SubviewOfContentView {
-    @ObservedObject var viewModel: ContentViewModel
+    var viewModel: ContentViewModel
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
 
     init(viewModel: ContentViewModel) {
@@ -134,7 +134,7 @@ struct DisplaySettings: SubviewOfContentView {
             HStack {
                 Spacer()
                 Button("Done") {
-                    viewModel.isDisplaySettingsReveal = false
+                    viewModel.presentation.isDisplaySettingsReveal = false
                 }
                 .keyboardShortcut(.defaultAction)
                 .glassButtonStyle(.prominent)

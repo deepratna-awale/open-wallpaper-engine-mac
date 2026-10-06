@@ -9,7 +9,7 @@ import SwiftUI
 
 /// The Installed tab's filters, in the main window's sidebar.
 struct FilterResults: View {
-    @ObservedObject var viewModel: FilterResultsViewModel
+    var viewModel: FilterResultsViewModel
 
     @State private var expandedSections: Set<String> = ["Show Only", "Type", "Category", "Age Rating", "Resolution", "Source", "Tags"]
 

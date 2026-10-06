@@ -13,17 +13,17 @@ final class InstalledLibrarySearchTests: XCTestCase {
 
     func testMatchesIgnoringCaseAndDiacritics() {
         let cafe = wallpaper(title: "Café Night")
-        XCTAssertTrue(ContentViewModel.matchesSearch("cafe", wallpaper: cafe, tags: []))
-        XCTAssertTrue(ContentViewModel.matchesSearch("NIGHT", wallpaper: cafe, tags: []))
-        XCTAssertFalse(ContentViewModel.matchesSearch("day", wallpaper: cafe, tags: []))
+        XCTAssertTrue(InstalledLibraryModel.matchesSearch("cafe", wallpaper: cafe, tags: []))
+        XCTAssertTrue(InstalledLibraryModel.matchesSearch("NIGHT", wallpaper: cafe, tags: []))
+        XCTAssertFalse(InstalledLibraryModel.matchesSearch("day", wallpaper: cafe, tags: []))
     }
 
     func testMatchesEveryField() {
         let item = wallpaper(title: "Title", description: "Rainy street", folder: "my-folder")
-        XCTAssertTrue(ContentViewModel.matchesSearch("rainy", wallpaper: item, tags: []))
-        XCTAssertTrue(ContentViewModel.matchesSearch("anime", wallpaper: item, tags: ["Anime"]))
-        XCTAssertTrue(ContentViewModel.matchesSearch("23", wallpaper: item, tags: []))
-        XCTAssertTrue(ContentViewModel.matchesSearch("my-folder", wallpaper: item, tags: []))
-        XCTAssertTrue(ContentViewModel.matchesSearch("scene", wallpaper: item, tags: []))
+        XCTAssertTrue(InstalledLibraryModel.matchesSearch("rainy", wallpaper: item, tags: []))
+        XCTAssertTrue(InstalledLibraryModel.matchesSearch("anime", wallpaper: item, tags: ["Anime"]))
+        XCTAssertTrue(InstalledLibraryModel.matchesSearch("23", wallpaper: item, tags: []))
+        XCTAssertTrue(InstalledLibraryModel.matchesSearch("my-folder", wallpaper: item, tags: []))
+        XCTAssertTrue(InstalledLibraryModel.matchesSearch("scene", wallpaper: item, tags: []))
     }
 }

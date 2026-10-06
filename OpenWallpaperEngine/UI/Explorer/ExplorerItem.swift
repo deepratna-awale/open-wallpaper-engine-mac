@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ExplorerItem: SubviewOfContentView {
     
-    @ObservedObject var viewModel: ContentViewModel
+    var viewModel: ContentViewModel
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     @ObservedObject var safeRestart = AppDelegate.shared.safeRestart
     
@@ -23,7 +23,7 @@ struct ExplorerItem: SubviewOfContentView {
     
     /// project.json's tags and the Workshop item's, as the Workshop cards show them.
     private var tags: [String] {
-        viewModel.tags(of: wallpaper)
+        viewModel.library.tags(of: wallpaper)
     }
 
     /// The tags as the UI names them (`LocalizedLabels`), in the user's language.
@@ -46,7 +46,7 @@ struct ExplorerItem: SubviewOfContentView {
             // switches slow.
             GifImage(contentsOf: wallpaper.previewURL
                         ?? AppBundleLayout.wallpaperNotFoundURL,
-                     animates: ThumbnailAnimation.plays(isAppActive: viewModel.isApplicationActive,
+                     animates: ThumbnailAnimation.plays(isAppActive: viewModel.navigation.isApplicationActive,
                                                         isLowPowerMode: lowPowerMode.isEnabled,
                                                         isHovered: isHovered))
             .resizable()
@@ -77,12 +77,12 @@ struct ExplorerItem: SubviewOfContentView {
         .selectionHighlight(wallpaper.wallpaperDirectory == wallpaperViewModel.displayedWallpaper.wallpaperDirectory,
                             cornerRadius: Self.cornerRadius)
         .overlay(alignment: .topLeading) {
-            if !viewModel.selectedWallpapers.isEmpty {
+            if !viewModel.library.selectedWallpapers.isEmpty {
                 Button {
-                    viewModel.toggleSelection(for: wallpaper)
+                    viewModel.library.toggleSelection(for: wallpaper)
                 } label: {
-                    Image(systemName: viewModel.isSelected(wallpaper) ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(viewModel.isSelected(wallpaper) ? Color.accentColor : .white)
+                    Image(systemName: viewModel.library.isSelected(wallpaper) ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(viewModel.library.isSelected(wallpaper) ? Color.accentColor : .white)
                 }
                 .buttonStyle(.plain)
                 .shadow(color: .black.opacity(0.8), radius: 3, x: 0, y: 1)
@@ -100,9 +100,9 @@ struct ExplorerItem: SubviewOfContentView {
             }
         }
         .onTapGesture {
-            viewModel.selectWallpaper(
+            viewModel.library.selectWallpaper(
                 wallpaper,
-                from: viewModel.autoRefreshWallpapers,
+                from: viewModel.library.autoRefreshWallpapers,
                 inspectingWith: wallpaperViewModel
             )
             wallpaperViewModel.inspect(wallpaper)

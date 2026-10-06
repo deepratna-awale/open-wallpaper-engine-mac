@@ -6,8 +6,8 @@ extension AppDelegate {
     func captureUpdateRelaunchState() -> UpdateRelaunchState {
         UpdateRelaunchState(
             mainWindowOpen: mainWindowController.window?.isVisible == true,
-            tab: contentViewModel.topTabBarSelection,
-            selectedWallpapers: Array(contentViewModel.selectedWallpapers).sorted { $0.path < $1.path },
+            tab: contentViewModel.navigation.topTabBarSelection,
+            selectedWallpapers: Array(contentViewModel.library.selectedWallpapers).sorted { $0.path < $1.path },
             settingsOpen: settingsWindow?.isVisible == true,
             settingsPage: settingsNavigation.tab.rawValue,
             settingsFrame: settingsWindow?.frameDescriptor,
@@ -20,8 +20,8 @@ extension AppDelegate {
     func restoreUpdateRelaunchState(from defaults: UserDefaults = .app) -> Bool {
         guard let state = UpdateRelaunchState.take(from: defaults) else { return false }
         OWELog.info(.app, "Restoring the UI after an update relaunch")
-        contentViewModel.topTabBarSelection = state.tab
-        contentViewModel.selectedWallpapers = Set(state.selectedWallpapers)
+        contentViewModel.navigation.topTabBarSelection = state.tab
+        contentViewModel.library.selectedWallpapers = Set(state.selectedWallpapers)
         if state.paused { wallpaperViewModel.playRate = 0 }
         if state.settingsOpen {
             if let tab = SettingsTab(rawValue: state.settingsPage) { settingsNavigation.show(tab) }

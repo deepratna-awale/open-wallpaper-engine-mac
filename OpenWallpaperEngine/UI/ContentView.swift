@@ -14,7 +14,7 @@ protocol SubviewOfContentView: View {
 struct ContentView: View {
     @EnvironmentObject var globalSettingsViewModel: GlobalSettingsViewModel
     
-    @ObservedObject var viewModel: ContentViewModel
+    var viewModel: ContentViewModel
     
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     
@@ -24,7 +24,7 @@ struct ContentView: View {
     /// Picked on the setup assistant's last step; opened once the sheet has closed.
     @State private var onboardingShortcut: OnboardingShortcut?
 
-    private var tab: Int { viewModel.topTabBarSelection }
+    private var tab: Int { viewModel.navigation.topTabBarSelection }
 
     /// Installed, the Workshop browser and Playlists have a sidebar; Downloads doesn't.
     private var hasSidebar: Bool {
@@ -37,14 +37,14 @@ struct ContentView: View {
 
     /// The filter panes share one state, as they did before; the playlist list has its own.
     private var isSidebarRevealed: Bool {
-        tab == 3 ? viewModel.isPlaylistSidebarReveal : viewModel.isFilterReveal
+        tab == 3 ? viewModel.navigation.isPlaylistSidebarReveal : viewModel.navigation.isFilterReveal
     }
 
     private func setSidebarRevealed(_ revealed: Bool) {
         if tab == 3 {
-            viewModel.isPlaylistSidebarReveal = revealed
+            viewModel.navigation.isPlaylistSidebarReveal = revealed
         } else {
-            viewModel.isFilterReveal = revealed
+            viewModel.navigation.isFilterReveal = revealed
         }
     }
 
@@ -61,9 +61,9 @@ struct ContentView: View {
 
     private var isDetailsPresented: Binding<Bool> {
         Binding(
-            get: { tab == 0 && viewModel.isDetailsReveal },
+            get: { tab == 0 && viewModel.navigation.isDetailsReveal },
             set: { presented in
-                if tab == 0 { viewModel.isDetailsReveal = presented }
+                if tab == 0 { viewModel.navigation.isDetailsReveal = presented }
             }
         )
     }
@@ -79,7 +79,7 @@ struct ContentView: View {
                 }
                 .inspector(isPresented: isDetailsPresented) {
                     Group {
-                        if viewModel.isStaging {
+                        if viewModel.navigation.isStaging {
                             WallpaperPreview(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
                         }
                     }
@@ -90,46 +90,46 @@ struct ContentView: View {
         // Frosted: the live wallpaper shows through the window, blurred, under the panes.
         .frostedWindowBackground()
         .confirmationDialog("Unsubscribe Confirmation",
-                            isPresented: $viewModel.isUnsubscribeConfirming) {
-            if let url = viewModel.hoveredWallpaper?.wallpaperDirectory {
+                            isPresented: Bindable(viewModel.presentation).isUnsubscribeConfirming) {
+            if let url = viewModel.presentation.hoveredWallpaper?.wallpaperDirectory {
                 Button("Delete Immediately", role: .destructive) {
-                    viewModel.deleteWallpapers(at: [url], toTrash: false, wallpaperViewModel: wallpaperViewModel)
-                    viewModel.hoveredWallpaper = nil
+                    viewModel.library.deleteWallpapers(at: [url], toTrash: false, wallpaperViewModel: wallpaperViewModel)
+                    viewModel.presentation.hoveredWallpaper = nil
                 }
                 Button("Move to Trash") {
-                    viewModel.deleteWallpapers(at: [url], toTrash: true, wallpaperViewModel: wallpaperViewModel)
-                    viewModel.hoveredWallpaper = nil
+                    viewModel.library.deleteWallpapers(at: [url], toTrash: true, wallpaperViewModel: wallpaperViewModel)
+                    viewModel.presentation.hoveredWallpaper = nil
                 }
             }
             Button("Cancel", role: .cancel) {
-                viewModel.hoveredWallpaper = nil
+                viewModel.presentation.hoveredWallpaper = nil
             }
         } message: {
-            Text(verbatim: viewModel.hoveredWallpaper?.project.displayTitle ?? "")
+            Text(verbatim: viewModel.presentation.hoveredWallpaper?.project.displayTitle ?? "")
         }
         .confirmationDialog("Batch Unsubscribe Confirmation",
-                            isPresented: $viewModel.isBatchUnsubscribeConfirming) {
-            Button("Delete All \(viewModel.selectedWallpapers.count) Immediately", role: .destructive) {
-                viewModel.deleteWallpapers(at: Array(viewModel.selectedWallpapers), toTrash: false,
+                            isPresented: Bindable(viewModel.presentation).isBatchUnsubscribeConfirming) {
+            Button("Delete All \(viewModel.library.selectedWallpapers.count) Immediately", role: .destructive) {
+                viewModel.library.deleteWallpapers(at: Array(viewModel.library.selectedWallpapers), toTrash: false,
                                            wallpaperViewModel: wallpaperViewModel)
-                viewModel.clearSelection()
+                viewModel.library.clearSelection()
             }
-            Button("Move All \(viewModel.selectedWallpapers.count) to Trash") {
-                viewModel.deleteWallpapers(at: Array(viewModel.selectedWallpapers), toTrash: true,
+            Button("Move All \(viewModel.library.selectedWallpapers.count) to Trash") {
+                viewModel.library.deleteWallpapers(at: Array(viewModel.library.selectedWallpapers), toTrash: true,
                                            wallpaperViewModel: wallpaperViewModel)
-                viewModel.clearSelection()
+                viewModel.library.clearSelection()
             }
             Button("Cancel", role: .cancel) {}
         } message: {
             batchUnsubscribeMessage
         }
-        .alert(isPresented: $viewModel.importAlertPresented, error: viewModel.importAlertError) { _ in
+        .alert(isPresented: Bindable(viewModel.presentation).importAlertPresented, error: viewModel.presentation.importAlertError) { _ in
         } message: { error in
             // Already localized: the reason, then what to do about it.
             Text(verbatim: [error.failureReason, error.recoverySuggestion]
                 .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n\n"))
         }
-        .alert(isPresented: $viewModel.deletionAlertPresented, error: viewModel.deletionAlertError) {
+        .alert(isPresented: Bindable(viewModel.presentation).deletionAlertPresented, error: viewModel.presentation.deletionAlertError) {
 
         }
         .sheet(isPresented: onboardingPresented, onDismiss: openOnboardingShortcut) {
@@ -141,17 +141,17 @@ struct ContentView: View {
                 .environmentObject(globalSettingsViewModel)
                 .presentationBackground(.regularMaterial)
         }
-        .sheet(isPresented: $viewModel.isCollectionImportPresented) {
+        .sheet(isPresented: Bindable(viewModel.presentation).isCollectionImportPresented) {
             WorkshopCollectionImportView(model: AppDelegate.shared.onboardingImports.collection)
                 .frame(width: 680, height: 560)
                 .presentationBackground(.regularMaterial)
         }
-        .sheet(isPresented: $viewModel.isSteamLibraryImportPresented) {
+        .sheet(isPresented: Bindable(viewModel.presentation).isSteamLibraryImportPresented) {
             SteamLibraryImportView(model: AppDelegate.shared.onboardingImports.library)
                 .frame(width: 680, height: 560)
                 .presentationBackground(.regularMaterial)
         }
-        .sheet(isPresented: $viewModel.isUnsafeWallpaperWarningPresented) {
+        .sheet(isPresented: Bindable(viewModel).isUnsafeWallpaperWarningPresented) {
             UnsafeWallpaper(wallpaper: wallpaperViewModel.nextCurrentWallpaper)
                 .frame(width: 600, height: 300)
                 .presentationBackground(.regularMaterial)
@@ -170,7 +170,7 @@ struct ContentView: View {
                 .frame(width: 500, height: 180)
                 .presentationBackground(.regularMaterial)
         }
-        .sheet(isPresented: $viewModel.isDisplaySettingsReveal) {
+        .sheet(isPresented: Bindable(viewModel.presentation).isDisplaySettingsReveal) {
             DisplaySettings(viewModel: viewModel)
                 .padding()
                 .frame(width: 600, height: 600)
@@ -190,16 +190,16 @@ struct ContentView: View {
     private func openOnboardingShortcut() {
         defer { onboardingShortcut = nil }
         switch onboardingShortcut {
-        case .installed: viewModel.topTabBarSelection = 0
-        case .workshop: viewModel.topTabBarSelection = 1
-        case .displaySettings: viewModel.isDisplaySettingsReveal = true
+        case .installed: viewModel.navigation.topTabBarSelection = 0
+        case .workshop: viewModel.navigation.topTabBarSelection = 1
+        case .displaySettings: viewModel.presentation.isDisplaySettingsReveal = true
         case nil: break
         }
     }
 
     /// Up to three titles, then "and N more", as one list in the user's language.
     private var batchUnsubscribeMessage: Text {
-        let items = viewModel.selectedWallpaperItems()
+        let items = viewModel.library.selectedWallpaperItems()
         var names: [String] = items.prefix(3).map(\.project.displayTitle)
         if items.count > 3 {
             names.append(String(localized: "\(items.count - 3) more", comment: "Ends a list of wallpaper titles: and 2 more"))
@@ -222,8 +222,8 @@ struct ContentView: View {
     /// Every sidebar stays alive and only the current tab's is shown, so switching tabs keeps each
     /// sidebar's scroll position and collapsed sections instead of rebuilding it.
     @ViewBuilder private var sidebarContent: some View {
-        if viewModel.isStaging {
-            keptAlive(FilterResults(viewModel: viewModel), isShown: tab == 0)
+        if viewModel.navigation.isStaging {
+            keptAlive(FilterResults(viewModel: viewModel.filters), isShown: tab == 0)
             if viewModel.steamCmd.isInstalled && viewModel.steamCmd.isLoggedIn {
                 keptAlive(WorkshopFiltersSidebar(viewModel: viewModel.workshopVM), isShown: tab == 1)
             }
@@ -240,7 +240,7 @@ struct ContentView: View {
 
     private var detail: some View {
         ZStack {
-            if viewModel.isStaging {
+            if viewModel.navigation.isStaging {
                 tabContent
                     .transition(.modifier(active: StagingFade(isStaged: false),
                                           identity: StagingFade(isStaged: true)))
@@ -257,7 +257,7 @@ struct ContentView: View {
         switch tab {
         case 0:
             WallpaperExplorer(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
-                .onDrop(of: [.fileURL], delegate: viewModel)
+                .onDrop(of: [.fileURL], delegate: LibraryDropImport(presentation: viewModel.presentation))
                 .contextMenu {
                     ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
                 }
@@ -272,7 +272,7 @@ struct ContentView: View {
             PlaylistView(wallpaperViewModel: wallpaperViewModel)
         case 4:
             WorkshopDiscoverView(model: viewModel.discoverVM, workshop: viewModel.workshopVM,
-                                 cardSize: viewModel.explorerIconSize - 5)
+                                 cardSize: viewModel.navigation.explorerIconSize - 5)
         default:
             EmptyView()
         }
@@ -307,7 +307,7 @@ struct ContentView: View {
         }
         ToolbarItemGroup(placement: .primaryAction) {
             Button {
-                viewModel.isDisplaySettingsReveal = true
+                viewModel.presentation.isDisplaySettingsReveal = true
             } label: {
                 Label("Displays", systemImage: "display")
             }
@@ -320,7 +320,7 @@ struct ContentView: View {
             .help("Settings", shortcut: .settings)
             if tab == 0 {
                 Button {
-                    withAnimation { viewModel.isDetailsReveal.toggle() }
+                    withAnimation { viewModel.navigation.isDetailsReveal.toggle() }
                 } label: {
                     Label("Details", systemImage: "sidebar.right")
                 }
@@ -382,7 +382,7 @@ private struct RemoteWallpaperURLSheet: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         let viewModel = ContentViewModel()
-        viewModel.isStaging = true
+        viewModel.navigation.isStaging = true
         return ContentView(viewModel: viewModel, wallpaperViewModel: .init())
             .environmentObject(GlobalSettingsViewModel())
     }

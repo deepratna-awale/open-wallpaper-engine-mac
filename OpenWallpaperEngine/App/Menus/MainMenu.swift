@@ -217,7 +217,7 @@ extension AppDelegate: NSMenuItemValidation {
             return true
         case #selector(nextWallpaper):
             Self.labelStepItem(menuItem, next: true, inPlaylist: wallpaperViewModel.stepsThroughPlaylist)
-            return wallpaperViewModel.canStepToNextWallpaper(shown: contentViewModel.autoRefreshWallpapers)
+            return wallpaperViewModel.canStepToNextWallpaper(shown: contentViewModel.library.autoRefreshWallpapers)
         case #selector(previousWallpaper):
             Self.labelStepItem(menuItem, next: false, inPlaylist: wallpaperViewModel.stepsThroughPlaylist)
             return wallpaperViewModel.canStepToPreviousWallpaper

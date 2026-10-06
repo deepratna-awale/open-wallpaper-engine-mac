@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-typealias FilterResultsViewModel = ContentViewModel
-
 /// One checkbox of a filter. `key` is the option's stored spelling: WE's tag, matched against the
 /// wallpapers' tags and never shown; `label` is what the sidebar shows, in the user's language.
 /// Option `i` of a filter is bit `1 << i` of its stored value, so the order of a filter's options

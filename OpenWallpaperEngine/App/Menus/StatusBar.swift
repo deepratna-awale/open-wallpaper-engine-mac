@@ -28,7 +28,7 @@ extension AppDelegate {
 
     @objc func browseWorkshop() {
         // Change tab selection to `Workshop`
-        self.contentViewModel.topTabBarSelection = 1
+        self.contentViewModel.navigation.topTabBarSelection = 1
         openMainWindow()
     }
 

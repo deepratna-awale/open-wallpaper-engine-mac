@@ -44,7 +44,7 @@ extension AppDelegate {
             let sources = FolderImport.sources(in: panel.urls)
             guard !sources.isEmpty else {
                 DispatchQueue.main.async {
-                    self?.contentViewModel.alertImportModal(which: .doesNotContainWallpaper)
+                    self?.contentViewModel.presentation.alertImportModal(which: .doesNotContainWallpaper)
                 }
                 return
             }

@@ -31,7 +31,7 @@ final class AppControlModel: ControlAppModel {
     }
 
     func wallpapers() -> [ControlWallpaper] {
-        contentViewModel.allWallpapers.filter { $0.project != .invalid }.map(control)
+        contentViewModel.library.allWallpapers.filter { $0.project != .invalid }.map(control)
     }
 
     func wallpaper(onDisplay id: String) -> ControlWallpaper? {
@@ -135,7 +135,7 @@ final class AppControlModel: ControlAppModel {
         model.selectedScreenIds = Set(displays)
         if forward {
             // Never one that would wait on the trust prompt, which no one may be there to answer.
-            model.stepToNextWallpaper(shown: contentViewModel.autoRefreshWallpapers.filter { !Self.needsTrust($0) })
+            model.stepToNextWallpaper(shown: contentViewModel.library.autoRefreshWallpapers.filter { !Self.needsTrust($0) })
         } else {
             model.stepToPreviousWallpaper()
         }
@@ -214,14 +214,14 @@ final class AppControlModel: ControlAppModel {
         let workshopID = (projectID?.allSatisfy(\.isNumber) == true ? projectID : nil)
             ?? (folderName.allSatisfy(\.isNumber) ? folderName : nil)
         return ControlWallpaper(id: folderName, title: wallpaper.project.title, type: wallpaper.project.type.lowercased(),
-                                tags: contentViewModel.tags(of: wallpaper), folder: folder, workshopID: workshopID,
+                                tags: contentViewModel.library.tags(of: wallpaper), folder: folder, workshopID: workshopID,
                                 description: wallpaper.project.description, contentRating: wallpaper.project.contentrating)
     }
 
     /// The library's wallpaper a control result names; nil when it is no longer there.
     func find(_ wallpaper: ControlWallpaper) -> WEWallpaper? {
         let path = wallpaper.folder.standardizedFileURL.path
-        return contentViewModel.allWallpapers.first { $0.settingsDirectory.standardizedFileURL.path == path }
+        return contentViewModel.library.allWallpapers.first { $0.settingsDirectory.standardizedFileURL.path == path }
             ?? wallpaperViewModel.wallpapers.values.first { $0.settingsDirectory.standardizedFileURL.path == path }
     }
 
