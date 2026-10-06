@@ -50,8 +50,8 @@ extension WallpaperViewModel {
             nextPlaylistWallpaper()
         } else if let pick = Self.randomPick(from: Self.steppable(shown), excluding: steppedWallpapers,
                                              random: random) {
-            // Through `nextCurrentWallpaper`, so safe restart still applies.
-            nextCurrentWallpaper = pick
+            // Through `apply`, so safe restart still applies.
+            apply(pick)
         }
     }
 

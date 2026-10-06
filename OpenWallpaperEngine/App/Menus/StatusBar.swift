@@ -38,7 +38,7 @@ extension AppDelegate {
 
     @objc func selectRecentWallpaper(_ sender: NSMenuItem) {
         guard let wallpaper = sender.representedObject as? WEWallpaper else { return }
-        wallpaperViewModel.nextCurrentWallpaper = wallpaper
+        wallpaperViewModel.apply(wallpaper)
     }
 
     func buildRecentWallpapersMenu() -> NSMenu {

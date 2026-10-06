@@ -151,8 +151,9 @@ struct ContentView: View {
                 .frame(width: 680, height: 560)
                 .presentationBackground(.regularMaterial)
         }
-        .sheet(isPresented: Bindable(viewModel).isUnsafeWallpaperWarningPresented) {
-            UnsafeWallpaper(wallpaper: wallpaperViewModel.nextCurrentWallpaper)
+        // However the prompt closes, the wallpaper waiting on it doesn't stay behind.
+        .sheet(isPresented: Bindable(viewModel).isUnsafeWallpaperWarningPresented, onDismiss: wallpaperViewModel.endTrustRequest) {
+            UnsafeWallpaper(model: wallpaperViewModel)
                 .frame(width: 600, height: 300)
                 .presentationBackground(.regularMaterial)
         }

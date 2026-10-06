@@ -20,36 +20,17 @@ extension Array {
 class WallpaperViewModel: ObservableObject {
     let persistsWallpapers: Bool
 
-    @Published var nextCurrentWallpaper: WEWallpaper =
-    WEWallpaper(using: .invalid, where: AppBundleLayout.wallpaperNotFoundURL) {
-        willSet {
-            guard confirmApply?(newValue) ?? true else { return }
-            if Self.runsCode(newValue) {
-                if !Self.needsTrust(newValue) {
-                    self.setWallpaper(newValue, for: selectedScreenIds, transition: .manual)
-                    // Points out a wallpaper that needs Chromium while it isn't installed.
-                    ChromiumFeatureAdvisor.shared.wallpaperApplied(newValue)
-                } else {
-                    AppDelegate.shared.contentViewModel.warningUnsafeWallpaperModal(which: newValue)
-                }
-            } else {
-                self.setWallpaper(newValue, for: selectedScreenIds, transition: .manual)
-            }
-        }
-    }
-
-    /// A web or application wallpaper, which runs its own code; whatever the case of the
-    /// project's type, as the library reads it ("Web" is common).
-    static func runsCode(_ wallpaper: WEWallpaper) -> Bool {
-        ["web", "application"].contains(wallpaper.project.type.lowercased())
-    }
-
-    /// A wallpaper that runs code and that the user hasn't trusted yet: applying it asks first.
-    static func needsTrust(_ wallpaper: WEWallpaper) -> Bool {
-        guard runsCode(wallpaper) else { return false }
-        let trusted = UserDefaults.app.array(forKey: "TrustedWallpapers") as? [String] ?? []
-        return !trusted.contains(wallpaper.wallpaperDirectory.path(percentEncoded: false))
-    }
+    /// A web or application wallpaper waiting for the user's answer to the trust prompt
+    /// (`apply(_:)`); nil once it is answered or dismissed.
+    @Published internal(set) var trustRequest: WallpaperTrustRequest?
+    /// The trusted wallpapers (`WallpaperTrustStore`).
+    var trustStore = WallpaperTrustStore()
+    /// Shows the trust prompt for `trustRequest`. Tests replace it.
+    var askToTrust: (WEWallpaper) -> Void = { AppDelegate.shared.contentViewModel.warningUnsafeWallpaperModal(which: $0) }
+    /// Reads a trusted wallpaper's folder before it is applied, to see whether it changed.
+    internal(set) var trustCheck: Task<Void, Never>?
+    /// The fingerprint of `trustRequest`'s folder, recorded when the user trusts it.
+    var trustRequestFingerprint: Task<String, Never>?
 
     /// Per-screen wallpaper selections, keyed by CGDirectDisplayID as String: each display's own,
     /// kept while it clones another (WE keeps `selectedwallpapers` per monitor under a clone).
@@ -353,7 +334,7 @@ class WallpaperViewModel: ObservableObject {
             return
         }
         inspectedWallpaper = wallpaper
-        nextCurrentWallpaper = wallpaper
+        apply(wallpaper)
     }
 
     func relocateWallpapers(from sourceDirectory: URL, to destinationDirectory: URL) {
