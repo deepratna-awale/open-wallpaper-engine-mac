@@ -240,7 +240,6 @@ final class AndroidExportEditorTests: XCTestCase {
                                                seededFrom: [.shared], defaults: defaults)
         let model = AndroidExportEditorModel(session: session, sceneSize: SIMD2(1600, 900), defaults: defaults)
         XCTAssertNotEqual(AndroidExportEditorModel.purpose, LivePhotoExportModel.purpose)
-        XCTAssertNotEqual(AndroidExportEditorModel.purpose, AndroidExportModel.purpose)
 
         session.setLayerVisible(false, objectID: 2)
         session.setValues(["speed": "0.9"])

@@ -66,6 +66,11 @@ final class LivePhotoExportModel: NSObject, ObservableObject, NSSharingServiceDe
     @Published var errorMessage: String?
     /// The Export Settings sheet, while it is open.
     @Published var sheet: LivePhotoExportSheet?
+    /// "Export More with These Settings…": its sheet is open, and the batch it started.
+    @Published var isBatchPresented = false
+    @Published var batch: LivePhotoBatchQueue?
+    /// The batch's last save to Photos, or why it failed.
+    @Published var batchPhotosNotice: String?
 
     private var task: Task<Void, Never>?
     private var sharedFiles: LivePhotoHelper.Files?
@@ -87,9 +92,14 @@ final class LivePhotoExportModel: NSObject, ObservableObject, NSSharingServiceDe
         photosAlbum = defaults.string(forKey: Self.photosAlbumKey) ?? LivePhotoAlbumSync.defaultAlbumName
     }
 
-    static func isEligible(_ wallpaper: WEWallpaper) -> Bool {
+    /// A scene: rendered by the scene renderer, with layers, properties and parallax.
+    nonisolated static func isEligible(_ wallpaper: WEWallpaper) -> Bool {
         wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame
     }
+
+    /// A video wallpaper: its frames are read from its file (`LivePhotoVideoFrames`), so the mode
+    /// has no layers, properties or parallax for it.
+    var isVideo: Bool { ScreenSaverVideoSource.isEligible(wallpaper) }
 
     /// What the export renders: the panel's device, crop, clip, quality and parallax position.
     var settings: LivePhotoExportSettings {
@@ -375,7 +385,13 @@ struct LockScreenPreview: View {
     @ViewBuilder
     private func content(frame: CGSize, window: CGRect, scale: CGFloat) -> some View {
         if model.previewFrames.isEmpty {
-            if !model.session.isEnded {
+            if model.isVideo {
+                // The video at its own aspect, as large as the scene units say: the crop shows through.
+                let layout = Self.Layout(window: window, sceneSize: model.sceneSize, scale: scale)
+                Self.pinned(LoopingVideoFileView(url: model.wallpaper.mediaURL, gravity: .resize),
+                            size: layout.sceneViewSize, at: layout.sceneViewOffset, in: frame)
+                    .allowsHitTesting(false)
+            } else if !model.session.isEnded {
                 let layout = Self.Layout(window: window, sceneSize: model.sceneSize, scale: scale)
                 Self.pinned(IsolatedSceneView(session: model.session, presentation: model.presentation,
                                               onContent: { [weak model = self.model] in model?.sceneLoaded($0) }),
