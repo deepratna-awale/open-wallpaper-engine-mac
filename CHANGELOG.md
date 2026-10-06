@@ -7,15 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.6] - 2026-10-06
+
 ### Added
 
 - **Playlists change wallpaper as Wallpaper Engine's do.** Configure in a playlist's header opens its Playlist Settings: change wallpaper on a timer, when logging in (one step each time the app starts), by time of day (each wallpaper from its start time, slots edited per wallpaper and snapped to 5 minutes) or by day of week (up to seven wallpapers share the week from its first day), or never. The timer's options are Wallpaper Engine's: change when a video ends, allow changing while paused (otherwise the timer stands still while the wallpaper is paused), always begin with the first wallpaper, and the first wallpaper played at startup only. Scheduled playlists look again when the Mac wakes and when the clock, time zone or day changes, without polling ([docs/playlists.md](docs/playlists.md)).
 - **Wallpaper transitions.** Wallpaper Engine's 27 transitions (Fade, Fade to black, Mosaic, Diffuse, slides and fades, Clouds, Burnt paper, Circular, Zipper, Door, Lines, Radial wipe, Zoom, Drip, Pixelate, Bricks, Paint, Twister, Black hole, CRT, Glass shatter, Bullets, Ice, Boilover), ported to Metal from its own transition shader, play between a playlist's wallpapers, or a random one from a pool you pick, over 0 to 3 s, with a live preview in the playlist's settings. Settings › General › Transitions sets the one for wallpapers chosen in the library (Wallpaper Engine's "Wallpaper browser transition"; off by default). The outgoing picture is captured once and the incoming wallpaper runs live underneath; a clone or stretch renders it once for all its displays.
 - **The control channel's `playlist_update`** sets the timing, the timer's options, the time-of-day ends and the transition, and returns them with each slot.
 - **Stop Wallpapers**, Wallpaper Engine's Stop beside Pause: in the menu bar menu, the Playback menu, a hotkey (Settings › General › Hotkeys › Stop wallpapers, with the usual conflict checks) and the MCP server (`stop`). Every wallpaper is unloaded, freeing its CPU, GPU and memory, and the desktop shows the macOS desktop picture, as an application rule's Stop shows it; the menu bar icon dims and its tooltip says the wallpapers are stopped. Resume (the same items, Resume Wallpapers, Play, or MCP `resume`) loads each display's wallpaper again and unpauses. Your Stop wins over application rules until you resume: rules keep evaluating, and whatever they call for applies on resume. It lasts for the session.
-
 - **Videos open in the Scene Editor (Live)**, on the tabs that apply to them: **Android Export** packs the video exactly as Wallpaper Engine does (the original file byte for byte, its preview and a minimal project.json), **iPhone & iPad Export** makes a Live Photo from the video's own frames (crop, clip, the window with the most motion, the sharpest still), and **Screen Saver** sets the video itself as the screen saver. A video has no Wallpaper tab. A web wallpaper shows Android Export unavailable with Wallpaper Engine's message.
 - **Export More with These Settings…** in the Android Export and iPhone & iPad Export tabs exports other wallpapers picked from the library (search, type filter, several at once) with the tab's device, output, quality, frame rate and clip; only the wallpaper being edited keeps its edits, the others export as authored. The batch shows overall and per-wallpaper progress and can be cancelled; renders take the GPU one at a time while file work runs beside them. Android packages go to the Send over Wi-Fi list; Live Photos go to the chosen folder and/or the Photos album, and **AirDrop All** sends them in one share, each photo paired with its movie.
+- **Send over Wi-Fi shares your whole Android exports list.** Every Android export is kept in a list (title, type, size, device, date and preview). Send over Wi-Fi (also in the File menu and the menu bar menu) opens one window with the list as a grid of previews: pick packages, add `.mpkg` files and share; each tile shows its progress and who downloaded it. The phone's page is a grid of cards with previews.
+- **The Wi-Fi link has a name, and the QR code the app's icon.** The share is advertised as `owe-fileshare.<your Mac's name>.local` (with the IP address link underneath, and a toggle to put it in the QR code), and the QR code has rounded corners and modules with the app icon in the centre.
+- **Take Screenshot works for web wallpapers in the Chromium engine.**
+- **Camera layers and camera paths in orthographic scenes**, as Wallpaper Engine plays them.
 
 ### Changed
 
@@ -24,12 +29,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Android Export in the Scene Editor (Live) starts on Dynamic (Balanced)**, as Wallpaper Engine's dialog does, instead of Pre-Rendered. Pre-Rendered is one click away.
 - **Screen saver loops are recorded at up to 30 fps and at most 30 s** (they were up to 60 fps and 60 s), so recording is quicker and lighter and the videos are smaller. Existing loops are recorded again.
 - **A scene's music fades in when the wallpaper starts** (loaded, switched to, or at launch), over about 0.75 s with the same ease as pause and resume, instead of starting at full volume. This is Open Wallpaper Engine's own touch; Wallpaper Engine starts at full volume. Loop points don't fade, nothing fades out on a switch or quit, and mute, `startsilent` and the volume work as before.
+- **Privacy policy 1.1.** It names the new update feed at openwallpaperengine.app and the MCP Server plugin's local connection. The app asks you to review it once.
+- **A project cleanup** removed dead code, unused strings and images, migrations that no longer run, and a stub SceneScript framework, and made the renderer's safety nets log what they catch.
 
 ### Fixed
 
 - **A scene starts cleanly.** Setting, switching to or launching with a scene wallpaper showed about a second of black before its loading picture, then a dark or half-drawn frame, and on some wallpapers stray rectangles (on the rain wallpaper's road) that motion blur dragged out for half a second. The loading picture now shows at once and stays until the scene has drawn a frame with all its effects, effect history (motion blur and the like) starts with that frame, and an effect drawing over a fresh buffer starts from transparent black, as in Wallpaper Engine.
 - **Rotate automatically, Shuffle and Repeat survive a restart.** Loading the active playlist saved the playlist settings before the rest were read, so the app always started with the playlist stopped; a timer playlist now also starts its timer at launch.
 - **A locally built Release now launches.** Release builds sign with Apple Development under the project's team, as Debug builds do, instead of ad hoc, which library validation rejected for the app's own framework and Sparkle. Published releases are still signed with Developer ID and notarized.
+- **The wallpaper no longer lags while the library window is open.** Preview animations in the library play from one shared animator, decoded off the main thread at tile size, and a display hidden by windows tiled over it (not only by one big window) pauses its scene.
+- **Editing a local wallpaper's title, tags or content rating keeps its settings**: user properties, presets, editor edits, display and screen saver options.
+- **3D models whose shader needs data the mesh lacks are skipped**, as Wallpaper Engine skips them.
+- **Timelines with two keyframes on the same frame** use the first, and material constants match their material name exactly, as in Wallpaper Engine.
+- **The Details panel shows the current wallpaper's author at launch**, instead of Unknown Author until another tile was clicked.
+- **Quit works while a sheet is open**, also for logout, shutdown and an update's relaunch.
+- **The `.local` Wi-Fi link appears once macOS allows Local Network access**, instead of staying on the IP address.
+- **Scenes with CPU-simulated particles no longer crash in release builds.** Reordering the particle batches could trap in optimized builds.
+- **Settings › Cancel restores the settings the window opened with.**
+- **Displays you turned off stay off** after a wake or a display change, and only the windows that change are touched.
+- **The menu bar menu shows the current state when it opens**, and Displays offers No wallpaper.
+- **Library:** dropped files import off the main thread and report the ones that fail; Rating sorts Everyone, Questionable, Mature; titles are trimmed (an empty one keeps the old title) and there's a Rename button; edited tags are trimmed and deduplicated in their order; the Installed search ignores case and accents; the Details buttons and Workshop cards have VoiceOver labels.
+- **Text layers whose font is missing are set in Arial**, as Wallpaper Engine does, and new text layers start at Wallpaper Engine's 32 points.
+- **The library and the Workshop scroll more smoothly:** card previews are decoded at card size and cached, folder sizes are measured lazily, and download progress no longer redraws the whole window.
+- **The Steam account name stays out of logged steamcmd output.**
 
 ## [1.0.0-beta.5] - 2026-10-04
 
