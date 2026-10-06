@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Editing a local wallpaper's title, tags or content rating keeps its settings**: user properties, presets, editor edits, display and screen saver options.
 - **3D models whose shader needs data the mesh lacks are skipped**, as Wallpaper Engine skips them.
 - **Timelines with two keyframes on the same frame** use the first, and material constants match their material name exactly, as in Wallpaper Engine.
+- **The Details panel shows the current wallpaper's author at launch**, instead of Unknown Author until another tile was clicked.
 - **Quit works while a sheet is open**, also for logout, shutdown and an update's relaunch.
 - **The `.local` Wi-Fi link appears once macOS allows Local Network access**, instead of staying on the IP address.
 
