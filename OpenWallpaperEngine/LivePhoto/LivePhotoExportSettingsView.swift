@@ -2,15 +2,11 @@ import SwiftUI
 
 /// The Export Settings: the device, the lock-screen guide, the crop and zoom, where the pointer
 /// rests (for a scene with parallax), the clip (its motion timeline, start and length), the
-/// movie's quality, the Photos album, then the selected
-/// layer's adjustments and the user properties, all of them the export mode's own (`IsolatedSceneEditSession`). The same view is the
-/// mode's right-hand panel and the sheet shown before an export.
-struct LivePhotoExportSettingsView<Layer: View>: View {
+/// movie's quality, the Photos album, then the user properties, all of them the export mode's own
+/// (`IsolatedSceneEditSession`). It is the Export Settings sheet's body; the selected layer's
+/// adjustments are the mode's right-hand panel (`LivePhotoExportLayerPanel`).
+struct LivePhotoExportSettingsView: View {
     @ObservedObject var model: LivePhotoExportModel
-    /// The panel has the export buttons and progress; the sheet has its own buttons.
-    var showsExportButtons = true
-    /// The selected layer's adjustments (the Scene Editor (Live)'s own controls, on the isolated store).
-    @ViewBuilder let layer: () -> Layer
 
     var body: some View {
         ScrollView {
@@ -28,23 +24,13 @@ struct LivePhotoExportSettingsView<Layer: View>: View {
                 qualitySection
                 Divider()
                 photosSection
-                if showsExportButtons {
-                    Divider()
-                    exportSection
-                }
                 if let error = model.errorMessage {
                     Text(error)
                         .font(.caption)
                         .foregroundStyle(.red)
                 }
-                // A video has no layers or properties: its frames are the file's.
+                // A video has no properties: its frames are the file's.
                 if !model.isVideo {
-                    Divider()
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Layer Adjustments")
-                            .font(.headline)
-                        layer()
-                    }
                     Divider()
                     Text("Only this export changes. The wallpaper on your desktop keeps its properties and edits.")
                         .font(.caption)
@@ -54,7 +40,7 @@ struct LivePhotoExportSettingsView<Layer: View>: View {
             }
             .padding()
         }
-        .onAppear { if showsExportButtons { model.measureMotionIfNeeded() } }
+        .onAppear { model.measureMotionIfNeeded() }
     }
 
     private var deviceSection: some View {
@@ -198,59 +184,67 @@ struct LivePhotoExportSettingsView<Layer: View>: View {
             }
         }
     }
+}
 
-    @ViewBuilder private var exportSection: some View {
-        if model.isRendering {
-            VStack(alignment: .leading, spacing: 6) {
-                ProgressView(value: model.progress) {
-                    Text("Rendering…")
+/// The iPhone & iPad Export mode's right-hand panel: the selected layer's adjustments, on the
+/// mode's isolated store, and the export's progress while it renders. The settings and the exports
+/// are in the Export Settings sheet (the toolbar's Export Settings button).
+struct LivePhotoExportLayerPanel<Layer: View>: View {
+    @ObservedObject var model: LivePhotoExportModel
+    @ViewBuilder let layer: () -> Layer
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                if model.isRendering {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ProgressView(value: model.progress) {
+                            Text("Rendering…")
+                        }
+                        Button("Cancel", role: .cancel) { model.cancel() }
+                    }
+                    Divider()
                 }
-                Button("Cancel", role: .cancel) { model.cancel() }
+                if let error = model.errorMessage {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                ExportLayerAdjustments(isVideo: model.isVideo, layer: layer)
             }
-        } else {
-            VStack(alignment: .leading, spacing: 6) {
-                // Side by side, or stacked at full width when the panel is too narrow for both labels.
-                ViewThatFits(in: .horizontal) {
-                    HStack { exportButtons(fill: false) }
-                    VStack(alignment: .leading) { exportButtons(fill: true) }
-                }
-                Button {
-                    model.showBatch()
-                } label: {
-                    Label("Export More with These Settings…", systemImage: "square.stack.3d.down.right")
-                }
-                .glassButtonStyle()
-                .help("Pick more wallpapers from your library and export them as Live Photos with this device, quality and clip")
-            }
+            .padding()
         }
+        .onAppear { model.measureMotionIfNeeded() }
     }
+}
 
-    @ViewBuilder private func exportButtons(fill: Bool) -> some View {
-        Button {
-            model.requestExport(.airDrop)
-        } label: {
-            Label("Send with AirDrop", systemImage: "square.and.arrow.up")
-                .frame(maxWidth: fill ? .infinity : nil)
+/// An export mode's Layer Adjustments, or why a video has none.
+struct ExportLayerAdjustments<Layer: View>: View {
+    let isVideo: Bool
+    @ViewBuilder let layer: () -> Layer
+
+    var body: some View {
+        if isVideo {
+            Text("A video has no layers to adjust.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        } else {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Layer Adjustments")
+                    .font(.headline)
+                layer()
+            }
         }
-        .glassButtonStyle(.prominent)
-        .help("Review the export settings, then render the Live Photo and send it with AirDrop")
-        Button {
-            model.requestExport(.save)
-        } label: {
-            Text("Save…")
-                .frame(maxWidth: fill ? .infinity : nil)
-        }
-        .glassButtonStyle()
-        .help("Review the export settings, then render the Live Photo and save its photo and movie to a folder")
     }
 }
 
 /// The Export Settings as a sheet: before an export (Cancel, and the export as the confirm
-/// button), or opened from the toolbar (Done, and both exports).
-struct LivePhotoExportSheetView<Layer: View>: View {
+/// button), or opened from the toolbar (Done, both exports and Export More).
+struct LivePhotoExportSheetView: View {
     @ObservedObject var model: LivePhotoExportModel
     let sheet: LivePhotoExportSheet
-    @ViewBuilder let layer: () -> Layer
 
     var body: some View {
         VStack(spacing: 0) {
@@ -264,15 +258,26 @@ struct LivePhotoExportSheetView<Layer: View>: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding([.horizontal, .top])
-            LivePhotoExportSettingsView(model: model, showsExportButtons: false, layer: layer)
+            LivePhotoExportSettingsView(model: model)
             Divider()
-            footer
+            VStack(spacing: 0) { footer }
                 .padding()
         }
         .frame(width: 440, height: 680)
     }
 
     @ViewBuilder private var footer: some View {
+        if sheet == .settings {
+            Button {
+                model.showBatchAfterSheet()
+            } label: {
+                Label("Export More with These Settings…", systemImage: "square.stack.3d.down.right")
+            }
+            .glassButtonStyle()
+            .help("Pick more wallpapers from your library and export them as Live Photos with this device, quality and clip")
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, 8)
+        }
         HStack {
             switch sheet {
             case .settings:
@@ -314,29 +319,30 @@ struct LivePhotoExportSheetView<Layer: View>: View {
 
 /// Presents the Export Settings sheet while `model` asks for it (`LivePhotoExportModel.sheet`);
 /// `onClose` runs when it closes. Without a model (another mode) it does nothing.
-struct LivePhotoExportSheetHost<Layer: View>: ViewModifier {
+struct LivePhotoExportSheetHost: ViewModifier {
     let model: LivePhotoExportModel?
     let onClose: () -> Void
-    @ViewBuilder let layer: () -> Layer
 
     func body(content: Content) -> some View {
         if let model {
-            content.modifier(LivePhotoExportSheetPresenter(model: model, onClose: onClose, layer: layer))
+            content.modifier(LivePhotoExportSheetPresenter(model: model, onClose: onClose))
         } else {
             content
         }
     }
 }
 
-private struct LivePhotoExportSheetPresenter<Layer: View>: ViewModifier {
+private struct LivePhotoExportSheetPresenter: ViewModifier {
     @ObservedObject var model: LivePhotoExportModel
     let onClose: () -> Void
-    @ViewBuilder let layer: () -> Layer
 
     func body(content: Content) -> some View {
         content
-            .sheet(item: $model.sheet, onDismiss: onClose) { sheet in
-                LivePhotoExportSheetView(model: model, sheet: sheet, layer: layer)
+            .sheet(item: $model.sheet, onDismiss: {
+                onClose()
+                model.sheetDidClose()
+            }) { sheet in
+                LivePhotoExportSheetView(model: model, sheet: sheet)
             }
             .sheet(isPresented: $model.isBatchPresented, onDismiss: { model.closeBatch() }) {
                 LivePhotoBatchExportSheet(model: model)

@@ -4973,6 +4973,101 @@
         }
       }
     },
+    "A video has no layers to adjust." : {
+      "comment" : "Scene Editor (Live): the export modes' Layer Adjustments panel for a video wallpaper",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يحتوي الفيديو على طبقات لضبطها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Video hat keine Ebenen zum Anpassen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un vídeo no tiene capas que ajustar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une vidéo n’a pas de calques à ajuster."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वीडियो में एडजस्ट करने के लिए कोई लेयर नहीं होती।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un video non ha livelli da regolare."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ビデオには調整するレイヤーがありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "동영상에는 조절할 레이어가 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wideo nie ma warstw do dostosowania."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um vídeo não tem camadas para ajustar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У видео нет слоёв для настройки."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Videoda ayarlanacak katman yok."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У відео немає шарів для налаштування."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "视频没有可调整的图层。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "影片沒有可調整的圖層。"
+          }
+        }
+      }
+    },
     "A video wallpaper's screen saver is its own video file, played as it is and filling each display. Nothing is recorded, so it looks exactly like the wallpaper." : {
       "localizations" : {
         "ar" : {
@@ -44913,100 +45008,6 @@
         }
       }
     },
-    "Export Settings Panel" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لوحة إعدادات التصدير"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exporteinstellungen-Bereich"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Panel de ajustes de exportación"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Panneau des réglages d’exportation"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "एक्सपोर्ट सेटिंग्स पैनल"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pannello impostazioni di esportazione"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "書き出し設定パネル"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "내보내기 설정 패널"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Panel ustawień eksportu"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Painel de Ajustes de Exportação"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Панель настроек экспорта"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dışa Aktarma Ayarları Paneli"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Панель параметрів експорту"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "导出设置面板"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "輸出設定面板"
-          }
-        }
-      }
-    },
     "Export Settings…" : {
       "localizations" : {
         "ar" : {
@@ -66766,6 +66767,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "圖層調整"
+          }
+        }
+      }
+    },
+    "Layer Adjustments Panel" : {
+      "comment" : "Scene Editor (Live) toolbar: shows or hides the export modes' right-hand Layer Adjustments panel",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لوحة ضبط الطبقة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereich „Ebenenanpassungen“"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panel de ajustes de capa"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panneau des ajustements du calque"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लेयर एडजस्टमेंट पैनल"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pannello regolazioni del livello"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レイヤーの調整パネル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "레이어 조절 패널"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panel dostosowania warstwy"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painel de Ajustes da Camada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Панель настройки слоя"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Katman Ayarları Paneli"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Панель налаштування шару"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图层调整面板"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "圖層調整面板"
           }
         }
       }
@@ -89343,190 +89439,192 @@
         }
       }
     },
-    "Open the export settings: device, crop, clip, quality, layers and properties" : {
+    "Open the export settings and export: device, crop, clip, quality and properties" : {
+      "comment" : "Scene Editor (Live) toolbar: help for the iPhone & iPad Export mode's Export Settings button",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "فتح إعدادات التصدير: الجهاز والقص والمقطع والجودة والطبقات والخصائص"
+            "value" : "افتح إعدادات التصدير وصدّر: الجهاز والاقتصاص والمقطع والجودة والخصائص"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exporteinstellungen öffnen: Gerät, Ausschnitt, Clip, Qualität, Ebenen und Eigenschaften"
+            "value" : "Exporteinstellungen öffnen und exportieren: Gerät, Ausschnitt, Clip, Qualität und Eigenschaften"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abre los ajustes de exportación: dispositivo, recorte, clip, calidad, capas y propiedades"
+            "value" : "Abre los ajustes de exportación y exporta: dispositivo, recorte, clip, calidad y propiedades"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ouvrir les réglages d’exportation : appareil, recadrage, extrait, qualité, calques et propriétés"
+            "value" : "Ouvrir les réglages d’exportation et exporter : appareil, recadrage, extrait, qualité et propriétés"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "एक्सपोर्ट सेटिंग्स खोलें: डिवाइस, क्रॉप, क्लिप, क्वालिटी, लेयर और प्रॉपर्टी"
+            "value" : "एक्सपोर्ट सेटिंग्स खोलें और एक्सपोर्ट करें: डिवाइस, क्रॉप, क्लिप, क्वालिटी और प्रॉपर्टीज़"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apri le impostazioni di esportazione: dispositivo, ritaglio, clip, qualità, livelli e proprietà"
+            "value" : "Apri le impostazioni di esportazione ed esporta: dispositivo, ritaglio, clip, qualità e proprietà"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "書き出し設定を開きます：デバイス、切り取り、クリップ、品質、レイヤー、プロパティ"
+            "value" : "書き出し設定を開いて書き出します：デバイス、切り取り、クリップ、品質、プロパティ"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "내보내기 설정 열기: 기기, 자르기, 클립, 화질, 레이어 및 속성"
+            "value" : "내보내기 설정을 열고 내보냅니다: 기기, 자르기, 클립, 품질, 속성"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otwórz ustawienia eksportu: urządzenie, kadr, klip, jakość, warstwy i właściwości"
+            "value" : "Otwórz ustawienia eksportu i eksportuj: urządzenie, kadr, klip, jakość i właściwości"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abre os ajustes de exportação: dispositivo, recorte, clipe, qualidade, camadas e propriedades"
+            "value" : "Abre os ajustes de exportação e exporta: dispositivo, recorte, clipe, qualidade e propriedades"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Открыть настройки экспорта: устройство, кадрирование, клип, качество, слои и свойства"
+            "value" : "Открыть настройки экспорта и экспортировать: устройство, кадрирование, клип, качество и свойства"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dışa aktarma ayarlarını açar: aygıt, kırpma, klip, kalite, katmanlar ve özellikler"
+            "value" : "Dışa aktarma ayarlarını açar ve dışa aktarır: aygıt, kırpma, klip, kalite ve özellikler"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Відкрити параметри експорту: пристрій, кадрування, кліп, якість, шари й властивості"
+            "value" : "Відкрити параметри експорту й експортувати: пристрій, кадрування, кліп, якість і властивості"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打开导出设置：设备、裁剪、片段、质量、图层和属性"
+            "value" : "打开导出设置并导出：设备、裁剪、片段、质量和属性"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打開輸出設定：裝置、裁切、片段、品質、圖層和屬性"
+            "value" : "打開輸出設定並輸出：裝置、裁切、片段、品質和屬性"
           }
         }
       }
     },
-    "Open the export settings: device, crop, output, layers and properties" : {
+    "Open the export settings and export: device, crop, output and properties" : {
+      "comment" : "Scene Editor (Live) toolbar: help for the Android Export mode's Export Settings button",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "فتح إعدادات التصدير: الجهاز والاقتصاص والإخراج والطبقات والخصائص"
+            "value" : "افتح إعدادات التصدير وصدّر: الجهاز والاقتصاص والمخرجات والخصائص"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exporteinstellungen öffnen: Gerät, Ausschnitt, Ausgabe, Ebenen und Eigenschaften"
+            "value" : "Exporteinstellungen öffnen und exportieren: Gerät, Ausschnitt, Ausgabe und Eigenschaften"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abrir los ajustes de exportación: dispositivo, recorte, salida, capas y propiedades"
+            "value" : "Abre los ajustes de exportación y exporta: dispositivo, recorte, salida y propiedades"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ouvrir les réglages d’exportation : appareil, recadrage, sortie, calques et propriétés"
+            "value" : "Ouvrir les réglages d’exportation et exporter : appareil, recadrage, sortie et propriétés"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "एक्सपोर्ट सेटिंग्स खोलें: डिवाइस, क्रॉप, आउटपुट, लेयर और प्रॉपर्टी"
+            "value" : "एक्सपोर्ट सेटिंग्स खोलें और एक्सपोर्ट करें: डिवाइस, क्रॉप, आउटपुट और प्रॉपर्टीज़"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apri le impostazioni di esportazione: dispositivo, ritaglio, output, livelli e proprietà"
+            "value" : "Apri le impostazioni di esportazione ed esporta: dispositivo, ritaglio, output e proprietà"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "書き出し設定を開きます：デバイス、切り取り、出力、レイヤー、プロパティ"
+            "value" : "書き出し設定を開いて書き出します：デバイス、切り取り、出力、プロパティ"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "내보내기 설정 열기: 기기, 자르기, 출력, 레이어 및 속성"
+            "value" : "내보내기 설정을 열고 내보냅니다: 기기, 자르기, 출력, 속성"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Otwórz ustawienia eksportu: urządzenie, kadr, wyjście, warstwy i właściwości"
+            "value" : "Otwórz ustawienia eksportu i eksportuj: urządzenie, kadr, wynik i właściwości"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abrir os ajustes de exportação: dispositivo, recorte, saída, camadas e propriedades"
+            "value" : "Abre os ajustes de exportação e exporta: dispositivo, recorte, saída e propriedades"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Открыть настройки экспорта: устройство, кадр, вывод, слои и свойства"
+            "value" : "Открыть настройки экспорта и экспортировать: устройство, кадрирование, вывод и свойства"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dışa aktarma ayarlarını aç: aygıt, kırpma, çıktı, katmanlar ve özellikler"
+            "value" : "Dışa aktarma ayarlarını açar ve dışa aktarır: aygıt, kırpma, çıktı ve özellikler"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Відкрити параметри експорту: пристрій, кадр, вивід, шари й властивості"
+            "value" : "Відкрити параметри експорту й експортувати: пристрій, кадрування, вивід і властивості"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打开导出设置：设备、裁剪、输出、图层和属性"
+            "value" : "打开导出设置并导出：设备、裁剪、输出和属性"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打開輸出設定：裝置、裁切、輸出、圖層和屬性"
+            "value" : "打開輸出設定並輸出：裝置、裁切、輸出和屬性"
           }
         }
       }
@@ -114526,382 +114624,6 @@
         }
       }
     },
-    "Review the export settings, then export the .mpkg and serve it to your Android device on this network" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "راجع إعدادات التصدير، ثم صدّر ملف ‎.mpkg وقدّمه إلى جهاز Android على هذه الشبكة"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exporteinstellungen prüfen, dann die .mpkg-Datei exportieren und Ihrem Android-Gerät in diesem Netzwerk bereitstellen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Revisa los ajustes de exportación, exporta el .mpkg y sírvelo a tu dispositivo Android en esta red"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vérifiez les réglages d’exportation, puis exportez le .mpkg et mettez-le à disposition de votre appareil Android sur ce réseau"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "एक्सपोर्ट सेटिंग्स देखें, फिर .mpkg एक्सपोर्ट करके इस नेटवर्क पर अपने Android डिवाइस को दें"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Controlla le impostazioni di esportazione, poi esporta il .mpkg e rendilo disponibile al dispositivo Android su questa rete"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "書き出し設定を確認してから .mpkg を書き出し、このネットワーク上の Android デバイスに提供します"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "내보내기 설정을 검토한 다음 .mpkg를 내보내고 이 네트워크의 Android 기기에 제공합니다"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sprawdź ustawienia eksportu, a potem wyeksportuj plik .mpkg i udostępnij go urządzeniu z Androidem w tej sieci"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Revise os ajustes de exportação, exporte o .mpkg e disponibilize-o ao seu dispositivo Android nesta rede"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Проверьте настройки экспорта, затем экспортируйте .mpkg и передайте его на устройство Android в этой сети"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dışa aktarma ayarlarını gözden geçirin, ardından .mpkg dosyasını dışa aktarıp bu ağdaki Android aygıtınıza sunun"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Перевірте параметри експорту, потім експортуйте .mpkg і передайте його на пристрій Android у цій мережі"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "检查导出设置，然后导出 .mpkg 并通过此网络提供给你的 Android 设备"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "檢查輸出設定，然後輸出 .mpkg 並透過此網路提供給你的 Android 裝置"
-          }
-        }
-      }
-    },
-    "Review the export settings, then export the .mpkg to a file" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "راجع إعدادات التصدير، ثم صدّر ملف ‎.mpkg"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exporteinstellungen prüfen, dann die .mpkg-Datei exportieren"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Revisa los ajustes de exportación y exporta el .mpkg a un archivo"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vérifiez les réglages d’exportation, puis exportez le .mpkg dans un fichier"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "एक्सपोर्ट सेटिंग्स देखें, फिर .mpkg को फ़ाइल में एक्सपोर्ट करें"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Controlla le impostazioni di esportazione, poi esporta il .mpkg in un file"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "書き出し設定を確認してから .mpkg をファイルに書き出します"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "내보내기 설정을 검토한 다음 .mpkg를 파일로 내보냅니다"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sprawdź ustawienia eksportu, a potem wyeksportuj plik .mpkg"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Revise os ajustes de exportação e exporte o .mpkg para um arquivo"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Проверьте настройки экспорта, затем экспортируйте .mpkg в файл"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dışa aktarma ayarlarını gözden geçirin, ardından .mpkg dosyasını dışa aktarın"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Перевірте параметри експорту, потім експортуйте .mpkg у файл"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "检查导出设置，然后将 .mpkg 导出为文件"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "檢查輸出設定，然後將 .mpkg 輸出為檔案"
-          }
-        }
-      }
-    },
-    "Review the export settings, then render the Live Photo and save its photo and movie to a folder" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "راجع إعدادات التصدير، ثم اعرض Live Photo واحفظ صورتها وفيلمها في مجلد"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exporteinstellungen prüfen, dann das Live Photo rendern und Foto und Film in einem Ordner sichern"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Revisa los ajustes de exportación y luego renderiza la Live Photo y guarda su foto y su vídeo en una carpeta"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vérifier les réglages d’exportation, puis effectuer le rendu de la Live Photo et enregistrer sa photo et sa vidéo dans un dossier"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "एक्सपोर्ट सेटिंग्स देखें, फिर Live Photo रेंडर करके उसकी फ़ोटो और मूवी किसी फ़ोल्डर में सेव करें"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Controlla le impostazioni di esportazione, poi esegui il rendering della Live Photo e salvane foto e filmato in una cartella"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "書き出し設定を確認してから、Live Photoをレンダリングして写真とムービーをフォルダに保存します"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "내보내기 설정을 확인한 다음 Live Photo를 렌더링하여 사진과 동영상을 폴더에 저장합니다"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Przejrzyj ustawienia eksportu, a następnie wyrenderuj Live Photo i zachowaj jego zdjęcie i film w folderze"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Revise os ajustes de exportação e depois renderize a Live Photo e salve sua foto e seu vídeo em uma pasta"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Проверить настройки экспорта, затем отрисовать Live Photo и сохранить его фото и видео в папку"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dışa aktarma ayarlarını gözden geçirin, ardından Live Photo’yu işleyip fotoğrafını ve filmini bir klasöre kaydedin"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Переглянути параметри експорту, потім відрендерити Live Photo і зберегти його фото й відео в папку"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "检查导出设置，然后渲染实况照片并将其照片和影片存储到文件夹"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "檢查輸出設定，然後算繪原況照片並將其照片和影片儲存到檔案夾"
-          }
-        }
-      }
-    },
-    "Review the export settings, then render the Live Photo and send it with AirDrop" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "راجع إعدادات التصدير، ثم اعرض Live Photo وأرسلها عبر AirDrop"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exporteinstellungen prüfen, dann das Live Photo rendern und per AirDrop senden"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Revisa los ajustes de exportación y luego renderiza la Live Photo y envíala con AirDrop"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vérifier les réglages d’exportation, puis effectuer le rendu de la Live Photo et l’envoyer avec AirDrop"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "एक्सपोर्ट सेटिंग्स देखें, फिर Live Photo रेंडर करके AirDrop से भेजें"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Controlla le impostazioni di esportazione, poi esegui il rendering della Live Photo e inviala con AirDrop"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "書き出し設定を確認してから、Live PhotoをレンダリングしてAirDropで送信します"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "내보내기 설정을 확인한 다음 Live Photo를 렌더링하여 AirDrop으로 보냅니다"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Przejrzyj ustawienia eksportu, a następnie wyrenderuj Live Photo i wyślij przez AirDrop"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Revise os ajustes de exportação e depois renderize a Live Photo e envie-a por AirDrop"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Проверить настройки экспорта, затем отрисовать Live Photo и отправить через AirDrop"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dışa aktarma ayarlarını gözden geçirin, ardından Live Photo’yu işleyip AirDrop ile gönderin"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Переглянути параметри експорту, потім відрендерити Live Photo і надіслати через AirDrop"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "检查导出设置，然后渲染实况照片并通过隔空投送发送"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "檢查輸出設定，然後算繪原況照片並透過 AirDrop 傳送"
-          }
-        }
-      }
-    },
     "Right" : {
       "localizations" : {
         "ar" : {
@@ -128867,96 +128589,97 @@
         }
       }
     },
-    "Show or hide the Export Settings panel" : {
+    "Show or hide the Layer Adjustments panel" : {
+      "comment" : "Scene Editor (Live) toolbar: help for the export modes' panel toggle",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "إظهار لوحة إعدادات التصدير أو إخفاؤها"
+            "value" : "إظهار لوحة ضبط الطبقة أو إخفاؤها"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bereich „Exporteinstellungen“ ein- oder ausblenden"
+            "value" : "Bereich „Ebenenanpassungen“ ein- oder ausblenden"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Muestra u oculta el panel de ajustes de exportación"
+            "value" : "Muestra u oculta el panel de ajustes de capa"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Afficher ou masquer le panneau des réglages d’exportation"
+            "value" : "Afficher ou masquer le panneau des ajustements du calque"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "एक्सपोर्ट सेटिंग्स पैनल दिखाएँ या छिपाएँ"
+            "value" : "लेयर एडजस्टमेंट पैनल दिखाएँ या छिपाएँ"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mostra o nascondi il pannello delle impostazioni di esportazione"
+            "value" : "Mostra o nascondi il pannello delle regolazioni del livello"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "書き出し設定パネルを表示または非表示にします"
+            "value" : "レイヤーの調整パネルを表示または非表示にします"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "내보내기 설정 패널을 보거나 가립니다"
+            "value" : "레이어 조절 패널을 보거나 가립니다"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pokaż lub ukryj panel ustawień eksportu"
+            "value" : "Pokaż lub ukryj panel dostosowania warstwy"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mostra ou oculta o painel de ajustes de exportação"
+            "value" : "Mostra ou oculta o painel de ajustes da camada"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Показать или скрыть панель настроек экспорта"
+            "value" : "Показать или скрыть панель настройки слоя"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dışa Aktarma Ayarları panelini gösterir veya gizler"
+            "value" : "Katman Ayarları panelini gösterir veya gizler"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Показати або сховати панель параметрів експорту"
+            "value" : "Показати або сховати панель налаштування шару"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "显示或隐藏导出设置面板"
+            "value" : "显示或隐藏图层调整面板"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "顯示或隱藏輸出設定面板"
+            "value" : "顯示或隱藏圖層調整面板"
           }
         }
       }

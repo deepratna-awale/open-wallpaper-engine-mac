@@ -37,6 +37,19 @@ extension LivePhotoExportModel {
         isBatchPresented = true
     }
 
+    /// Export More from the Export Settings sheet: one sheet at a time, so the batch waits for it to close.
+    func showBatchAfterSheet() {
+        opensBatchWhenSheetCloses = true
+        sheet = nil
+    }
+
+    /// The Export Settings sheet closed.
+    func sheetDidClose() {
+        guard opensBatchWhenSheetCloses else { return }
+        opensBatchWhenSheetCloses = false
+        showBatch()
+    }
+
     /// Exports `wallpapers` into `folder` (when given) and the Photos album (when that is on).
     func exportMore(_ wallpapers: [WEWallpaper], folder: URL?, worker: LivePhotoBatchWorking? = nil) {
         guard batch?.isRunning != true else { return }
