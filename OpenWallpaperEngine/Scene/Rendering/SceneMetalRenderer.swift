@@ -1843,7 +1843,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // WE's object loop (docs/models-plan.md §2.4): the layers and models in draw order, each
         // after the particle systems whose key is below its barrier.
         let sequence = drawSequence(batches: particleBatches.map(\.system), forward: effectFrame.camera.forward)
-        particleBatches = sequence.batchOrder.map { particleBatches[$0] }
+        // A loop, not `map`: the optimised build's specialisation of `map` for this tuple (typed
+        // throws, `Never`) checks the error register after a closure that never sets it, and traps
+        // ("Never can't be initialized") when the register holds a stale value.
+        let unordered = particleBatches
+        particleBatches.removeAll(keepingCapacity: true)
+        for index in sequence.batchOrder { particleBatches.append(unordered[index]) }
         // Text and the media artwork drawn at the output's backing pixels, after the composite.
         let native = nativeDetailPlan(output, destination: destination, sequence: sequence,
                                       particleBatchCount: particleBatches.count, draws: draws,
