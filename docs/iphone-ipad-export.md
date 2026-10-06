@@ -1,10 +1,20 @@
 # iPhone & iPad Export
 
-**iPhone & iPad Export** is the last tab of the Scene Editor (Live) (Wallpaper | Screen Saver |
-iPhone & iPad Export). It frames a scene wallpaper as an iPhone or iPad lock screen and exports
-it as a Live Photo, which iOS and iPadOS 17 or later can set as a moving lock screen. Video and
-web wallpapers show the tab disabled. How it is built: [`architecture.md`](architecture.md),
+**iPhone & iPad Export** is a tab of the Scene Editor (Live) (Wallpaper | Screen Saver |
+iPhone & iPad Export | Android Export). It frames a scene or video wallpaper as an iPhone or iPad
+lock screen and exports it as a Live Photo, which iOS and iPadOS 17 or later can set as a moving
+lock screen. All exporting happens in the Scene Editor (Live); the library has no export command.
+Web wallpapers don't show the tab. How it is built: [`architecture.md`](architecture.md),
 "Isolated edits" and "Live Photo export".
+
+## Videos
+
+A video wallpaper (an MP4, M4V or MOV file in the library) opens the Scene Editor (Live) on its
+export and screen saver tabs; it has no Wallpaper tab. Its Live Photo is made the same way as a
+scene's, from the video's own frames instead of a render: the crop (drag and zoom), the clip with
+the most motion, the sharpest still and the blend at both ends all apply, and the clip loops back
+to the video's start when it runs past its end. A video has no layers, properties or parallax, so
+those sections aren't shown. A WebM or remote video shows the tab with why it can't be used.
 
 ## Your desktop doesn't change
 
@@ -50,6 +60,23 @@ iCloud Photos on, it reaches your iPhone and iPad. Photos access is asked for on
 it on; if it's refused, the switch turns off and offers **Open Privacy Settings**. A save that
 fails is reported without failing the export. Apps can't write iCloud Shared Albums, so this is a
 regular album.
+
+## Export More with These Settings
+
+**Export More with These Settings…** (under the export buttons) makes Live Photos of other
+wallpapers with the tab's device, quality and clip length. Pick them from the library (search, a
+type filter, tick as many as you like; the wallpaper being edited starts ticked, and wallpapers that
+can't be made into a Live Photo are shown with why), then where they go: **Save to Folder** (the
+last folder is kept) and/or **Also Save to Photos Album**. Only the wallpaper being edited keeps
+its crop, clip, parallax position, layer edits and properties; the others are centred at the
+device's size, exported as authored, and, when the tab's clip is the automatic one, each starts at
+its own window with the most motion.
+
+The batch runs as a queue with overall and per-wallpaper progress, and can be cancelled. Scenes
+render one at a time (they use the GPU) while videos are read beside them. Names are the
+wallpapers' titles, made unique within the batch and the folder. **AirDrop All** sends every
+finished Live Photo in one AirDrop share, each photo with its movie, so Photos on the iPhone or
+iPad imports them as Live Photos; each finished one also has its own AirDrop button.
 
 On the iPhone or iPad, open the photo, then Share › Use as Wallpaper, and turn Live Photo on.
 

@@ -51,11 +51,11 @@ final class LegalNoticeTests: XCTestCase {
             XCTAssertEqual(bundled, published, "Resources/Legal/\(document.rawValue).md differs from docs/legal")
             XCTAssertFalse(bundled.contains("Draft for review"))
             let edition = try XCTUnwrap(LegalDocument.edition(of: bundled))
-            XCTAssertEqual(edition.effectiveDate, "2026-09-28")
+            XCTAssertEqual(edition.effectiveDate, document == .privacyPolicy ? "2026-10-06" : "2026-09-28")
             editions[document] = edition
         }
         XCTAssertEqual(LegalNotice.version(of: editions), LegalNotice.currentVersion)
-        XCTAssertEqual(LegalNotice.currentVersion, "terms-of-use 1.0, privacy-policy 1.0")
+        XCTAssertEqual(LegalNotice.currentVersion, "terms-of-use 1.0, privacy-policy 1.1")
     }
 
     func testTheMarkdownReaderFindsTheBlocks() {

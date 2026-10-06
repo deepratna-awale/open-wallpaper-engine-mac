@@ -12,6 +12,10 @@ struct AndroidExportItem: Identifiable, Equatable {
     /// A pre-render's crop, pointer and length (the Android Export mode's); nil frames it by the
     /// options (`AndroidExportOptions.crop`), the pointer centred, WE's 30 s.
     var framing: AndroidVideoFraming?
+    /// A pre-render without its own `framing` made for a screen: the video's pixels and length
+    /// (the Android Export mode's "Export More with These Settings…"), the crop centred on the
+    /// scene at zoom 1, the pointer centred. Nil frames it by the options.
+    var screen: AndroidVideoScreen?
     /// Dynamic: values baked into the package's scene.json and project.json
     /// (`AndroidSceneBake`), the Android Export mode's layer edits and user properties; nil packs
     /// the scene as it is.
@@ -22,10 +26,25 @@ struct AndroidExportItem: Identifiable, Equatable {
     /// A pre-render needs the GPU; everything else only reads and writes files.
     var usesGPU: Bool { kind == .scene && options.mode == .preRendered }
 
+    /// A pre-render's framing for a scene of `sceneSize`: its own, the screen's, or the options'.
+    func framing(sceneSize: SIMD2<Double>) -> AndroidVideoFraming {
+        if let framing { return framing }
+        if let screen {
+            return AndroidVideoFraming(crop: LivePhotoCrop(sceneSize: sceneSize, outputPixels: screen.pixels), seconds: screen.seconds)
+        }
+        return AndroidVideoFraming(crop: options.crop(sceneSize: sceneSize))
+    }
+
     static func == (lhs: AndroidExportItem, rhs: AndroidExportItem) -> Bool {
         lhs.id == rhs.id && lhs.options == rhs.options && lhs.properties == rhs.properties && lhs.framing == rhs.framing
-            && lhs.bakedValues == rhs.bakedValues
+            && lhs.screen == rhs.screen && lhs.bakedValues == rhs.bakedValues
     }
+}
+
+/// The video a pre-render makes for a screen, whatever the scene: its pixels and length.
+struct AndroidVideoScreen: Equatable {
+    var pixels: SIMD2<Int>
+    var seconds = AndroidExportOptions.videoSeconds
 }
 
 /// How a pre-rendered video frames the scene: the window and its pixels, where the pointer rests

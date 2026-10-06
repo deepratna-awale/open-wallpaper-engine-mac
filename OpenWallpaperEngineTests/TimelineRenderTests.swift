@@ -64,7 +64,7 @@ final class TimelineRenderTests: XCTestCase {
         XCTAssertEqual(try runtime() - startRuntime, elapsed, accuracy: 1e-9)
     }
 
-    /// A `relative` origin is baked on the authored value; scale and `angles.z` animate (roadmap E7).
+    /// A `relative` origin is baked on the authored value; scale and `angles.z` animate (roadmap notes E7).
     func testOriginScaleAndAnglesAnimate() throws {
         _ = try Fixtures.assets()
         let scene = try Scene(services: services())

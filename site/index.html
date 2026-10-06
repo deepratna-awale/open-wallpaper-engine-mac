@@ -149,7 +149,7 @@
         <div class="feature">
           <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"/></svg>Audio</h3>
           <ul>
-            <li>System audio captured with ScreenCaptureKit (needs the Screen &amp; System Audio Recording permission)</li>
+            <li>System audio captured with a Core Audio process tap on macOS 14.2 or later (System Audio Recording permission), or with ScreenCaptureKit before that (Screen &amp; System Audio Recording)</li>
             <li>The audio spectrum is computed the way Wallpaper Engine computes it, in stereo</li>
             <li>Audio-reactive layers, effects, particles and scripts</li>
             <li>Sound layers play on the scene's clock, with spatial sound placed as in Wallpaper Engine</li>
@@ -203,7 +203,7 @@
           </ul>
         </div>
         <div class="feature">
-          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg>15 languages</h3>
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg>16 languages</h3>
           <ul>
             <li>German, French, Spanish, Brazilian Portuguese, Italian, Japanese, Korean, Simplified and Traditional Chinese, Russian, Polish, Turkish, Ukrainian, Arabic and Hindi, in addition to English</li>
             <li>Chosen from the Language picker in Settings</li>
@@ -215,8 +215,8 @@
             <li>Your Steam password is never stored; SteamCMD reuses its own cached session</li>
             <li>The Steam Web API key is checked with Steam and kept in your Keychain</li>
             <li>Everything the app saves stays on your Mac; no server, no data collection or analytics</li>
-            <li>Contacts Valve (Steam for the Workshop and assets, Valve's server for SteamCMD) and GitHub to check for app updates (the update feed on GitHub Pages, downloads from GitHub Releases); web wallpapers may load their own online content</li>
-            <li>Update checks send no personal data and can be turned off in Settings › General</li>
+            <li>Contacts Valve (Steam for the Workshop and assets, Valve's server for SteamCMD) and GitHub to check for app updates (the update feed on GitHub Pages, downloads from GitHub Releases); optional plugins download from their own hosts only when you install them; web wallpapers may load their own online content</li>
+            <li>Update checks send no personal data and can be turned off in Settings › Updates</li>
           </ul>
         </div>
       </div>
@@ -230,8 +230,8 @@
       <p class="lede">Captured from the app on macOS. Select a screenshot to enlarge it.</p>
       <div class="gallery">
         <figure>
-          <button type="button"><img src="screenshots/library-installed.jpg" width="1600" height="1002" loading="lazy"
-            alt="The main window's Installed tab: a grid of wallpaper thumbnails, with the Details inspector showing Snowy Plains, its tags, Set Wallpaper, Scene Editor (Live) and its wallpaper settings."></button>
+          <button type="button"><img src="screenshots/library.jpg" width="1600" height="1000" loading="lazy"
+            alt="The main window's Installed tab: a grid of landscape, abstract and pixel-art wallpapers, with Details showing Snowy Plains, its tags, Set Wallpaper, Scene Editor (Live), Export for Android and its properties."></button>
           <figcaption><strong>Library and Details</strong>Installed wallpapers, with properties for the selected one.</figcaption>
         </figure>
         <figure>
@@ -240,9 +240,9 @@
           <figcaption><strong>Filters</strong>Wallpaper Engine's filters, with only Everyone ticked.</figcaption>
         </figure>
         <figure>
-          <button type="button"><img src="screenshots/scene-inspector.jpg" width="1600" height="939" loading="lazy"
-            alt="The Scene Editor (Live) window listing a scene's objects with visibility switches, the selected object's JSON properties, and move, size and align controls."></button>
-          <figcaption><strong>Scene Editor (Live)</strong>Every object in a scene, its properties and placement, and its iPhone &amp; iPad Live Photo export.</figcaption>
+          <button type="button"><img src="screenshots/scene-editor-live.jpg" width="1300" height="820" loading="lazy"
+            alt="The Scene Editor (Live) window on its Wallpaper tab: the scene's layers with visibility switches, the selected image layer with its texture, effects and depth map options, and move, size, opacity and blend controls. Tabs for Screen Saver, iPhone &amp; iPad Export and Android Export sit beside it."></button>
+          <figcaption><strong>Scene Editor (Live)</strong>Change the running wallpaper live, record a screen saver, or export it for iPhone, iPad and Android.</figcaption>
         </figure>
         <figure>
           <button type="button"><img src="screenshots/settings-performance.jpg" width="1010" height="1127" loading="lazy"
@@ -250,9 +250,9 @@
           <figcaption><strong>Performance settings</strong>Playback rules and quality.</figcaption>
         </figure>
         <figure>
-          <button type="button"><img src="screenshots/settings-general.jpg" width="1060" height="1170" loading="lazy"
-            alt="The Settings window on the General page: Start with macOS, language, the Wallpaper Storage folder with a Choose button, and converted wallpapers."></button>
-          <figcaption><strong>General settings</strong>Startup, language and where wallpapers are stored.</figcaption>
+          <button type="button"><img src="screenshots/theming.jpg" width="760" height="800" loading="lazy"
+            alt="The Settings window on the General page, showing the Theming section: theme macOS with the wallpaper's colour, with options for the menu bar, accent colour, tinted icons and folders."></button>
+          <figcaption><strong>Theming</strong>The menu bar, accent colour and folders follow the wallpaper.</figcaption>
         </figure>
         <figure>
           <button type="button"><img src="screenshots/menubar-menu.jpg" width="580" height="560" loading="lazy"
@@ -265,9 +265,29 @@
           <figcaption><strong>Workshop</strong>Browse, search and download Steam Workshop wallpapers.</figcaption>
         </figure>
         <figure>
-          <button type="button"><img src="screenshots/display-settings.jpg" width="1037" height="600" loading="lazy"
-            alt="The Display Settings sheet showing two connected displays, with the selected display enabled and showing the Dance Club wallpaper."></button>
-          <figcaption><strong>Displays</strong>A wallpaper per display, each enabled on its own.</figcaption>
+          <button type="button"><img src="screenshots/displays-clone.jpg" width="760" height="760" loading="lazy"
+            alt="The Display Settings sheet with the layout set to Clone single wallpaper: two displays in a clone group, both showing Snowy Plains."></button>
+          <figcaption><strong>Displays</strong>A wallpaper per display, or one stretched across them or cloned onto each.</figcaption>
+        </figure>
+        <figure>
+          <button type="button"><img src="screenshots/wallpaper-editor.jpg" width="1600" height="960" loading="lazy"
+            alt="The Wallpaper Editor window: the layer list on the left, the Snowy Plains scene on the canvas, and the scene's size and user properties on the right."></button>
+          <figcaption><strong>Wallpaper Editor</strong>Layers, effects, timelines, SceneScript and user properties, kept beside the wallpaper.</figcaption>
+        </figure>
+        <figure>
+          <button type="button"><img src="screenshots/playlists.jpg" width="700" height="868" loading="lazy"
+            alt="The playlist settings sheet: change wallpaper on a timer every five minutes, options for videos, pausing and the first wallpaper, and a Fade transition of 1.5 seconds."></button>
+          <figcaption><strong>Playlists</strong>Timers, time of day, day of week and Wallpaper Engine's transitions.</figcaption>
+        </figure>
+        <figure>
+          <button type="button"><img src="screenshots/send-over-wifi.jpg" width="760" height="752" loading="lazy"
+            alt="The Send over Wi-Fi window sharing a Snowy Plains package for Android, with a QR code and an address (both blurred here) and a 15-minute expiry."></button>
+          <figcaption><strong>Send over Wi-Fi</strong>Android packages download straight to the phone with a QR code.</figcaption>
+        </figure>
+        <figure>
+          <button type="button"><img src="screenshots/plugins.jpg" width="760" height="720" loading="lazy"
+            alt="The Settings window on the Plugins page: the Screen Saver plugin, the Chromium web engine, Depth Map Generation and the MCP Server, each with its description and Install button."></button>
+          <figcaption><strong>Plugins</strong>Screen saver, Chromium, depth maps and the MCP Server, installed only if you want them.</figcaption>
         </figure>
         <figure>
           <button type="button"><img src="screenshots/live-solar-system.jpg" width="1600" height="900" loading="lazy"
@@ -299,7 +319,7 @@
           <li>Now Playing needs macOS 15.4 or later</li>
           <li>Scene wallpapers need Wallpaper Engine assets from your Steam copy (a Steam account that owns Wallpaper Engine); video and web wallpapers don't</li>
           <li>Workshop downloads need a Steam account that owns Wallpaper Engine. The app sets up Valve's SteamCMD for you; no Homebrew needed</li>
-          <li>Audio-reactive wallpapers need the Screen &amp; System Audio Recording permission</li>
+          <li>Audio-reactive wallpapers need the System Audio Recording permission (Screen &amp; System Audio Recording before macOS 14.2)</li>
         </ul>
         <ol class="steps">
           <li>Download the DMG from the button above.</li>
@@ -338,7 +358,7 @@
         </details>
         <details>
           <summary>What data does the app keep or send?</summary>
-          <p>Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It contacts Valve (Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD) and GitHub, to check for app updates: the update feed on GitHub Pages and the downloads on GitHub Releases. Update checks send no personal data, and you can turn them off in Settings › General. Web wallpapers may load their own online content. Your Steam password and Steam Guard code go straight to SteamCMD and are never stored, logged or sent anywhere else; only your account name is remembered, to reuse SteamCMD's saved login.</p>
+          <p>Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It contacts Valve (Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD) and GitHub, to check for app updates: the update feed on GitHub Pages and the downloads on GitHub Releases. Update checks send no personal data, and you can turn them off in Settings › Updates. Optional plugins download only when you install them: the Chromium web engine from the Chromium Embedded Framework's builds, and the depth model from Apple's Hugging Face repository. Send over Wi-Fi serves an Android export only to devices on your local network. Web wallpapers may load their own online content. Your Steam password and Steam Guard code go straight to SteamCMD and are never stored, logged or sent anywhere else; only your account name is remembered, to reuse SteamCMD's saved login.</p>
         </details>
       </div>
     </div>

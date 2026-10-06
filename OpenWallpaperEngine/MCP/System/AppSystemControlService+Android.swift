@@ -1,7 +1,7 @@
 import Foundation
 import OWEControlProtocol
 
-/// "Export for Android…" for the control channel: the same plan, queue and exporter as the
+/// Android export for the control channel: the same plan, queue and exporter as the
 /// library's sheet, with the wallpapers' own values (what the sheet's preview starts from).
 extension AppSystemControlService {
     func exportAndroid(_ request: SystemAndroidRequest) async throws -> AndroidExportBatch {

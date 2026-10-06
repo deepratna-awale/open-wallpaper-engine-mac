@@ -10,9 +10,7 @@ import Foundation
 final class AndroidExportQueue: ObservableObject {
     static let fileConcurrency = 2
 
-    enum Status: Equatable {
-        case waiting, running, done, failed(String), cancelled
-    }
+    typealias Status = ExportItemStatus
 
     struct Entry: Identifiable, Equatable {
         var item: AndroidExportItem
@@ -77,24 +75,7 @@ final class AndroidExportQueue: ObservableObject {
     private func runAll() async -> AndroidExportBatch {
         let gpu = entries.indices.filter { entries[$0].item.usesGPU }
         let files = entries.indices.filter { !entries[$0].item.usesGPU }
-        await withTaskGroup(of: Void.self) { group in
-            group.addTask { @MainActor in
-                for index in gpu { await self.runEntry(index) }
-            }
-            group.addTask { @MainActor in
-                await withTaskGroup(of: Void.self) { lane in
-                    var pending = files.makeIterator()
-                    for _ in 0..<Self.fileConcurrency {
-                        guard let index = pending.next() else { break }
-                        lane.addTask { @MainActor in await self.runEntry(index) }
-                    }
-                    while await lane.next() != nil {
-                        guard let index = pending.next() else { continue }
-                        lane.addTask { @MainActor in await self.runEntry(index) }
-                    }
-                }
-            }
-        }
+        await ExportLanes.run(gpu: gpu, files: files, fileConcurrency: Self.fileConcurrency) { await self.runEntry($0) }
         return batch
     }
 

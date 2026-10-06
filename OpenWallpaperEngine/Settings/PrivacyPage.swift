@@ -12,7 +12,7 @@ struct PrivacyPage: View {
                 Label("Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login.",
                       systemImage: "internaldrive")
                 Label("There are no servers, accounts, analytics or tracking.", systemImage: "hand.raised")
-                Label("The app contacts only Valve (Steam and SteamCMD) and GitHub (app updates). Web wallpapers may load their own online content.",
+                Label("The app contacts Valve (Steam and SteamCMD), GitHub (app updates) and, when you install an optional plugin, its publisher. Web wallpapers and URLs you add load their own online content.",
                       systemImage: "network")
                 Label("You can turn update checks off in Settings › Updates.", systemImage: "arrow.down.circle")
             } header: {

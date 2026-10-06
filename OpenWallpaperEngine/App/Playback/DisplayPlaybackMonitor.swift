@@ -16,6 +16,9 @@ import IOKit.ps
 /// its applications runs, since zooming a window posts no event: a window-list read costs about
 /// 0.1 ms of CPU.
 ///
+/// While `watchesCoverage` is on (always, in the app) it also follows which displays windows cover
+/// (`DesktopWindowLayout.coveredDisplays`) and polls for it, since moving a window posts no event.
+///
 /// Besides each display's playback, the answer names what the first matching rule with a load
 /// action loads (`onLoad`, `ApplicationRuleLoader`).
 ///
@@ -36,6 +39,7 @@ final class DisplayPlaybackMonitor {
     private let sources: DisplayPlaybackSources
     private let apply: ([String: DisplayPlayback]) -> Void
     private let onLoad: (ApplicationRuleLoad?) -> Void
+    private let onCoverage: (Set<String>) -> Void
     private(set) var rules = PlaybackRules()
     private(set) var displaysAsleep = false
     /// Video memory ran out (`VideoMemoryWatch`, only while its setting is on).
@@ -44,6 +48,18 @@ final class DisplayPlaybackMonitor {
     private(set) var states: [String: DisplayPlayback]?
     /// The last load handed to `onLoad`.
     private(set) var load: ApplicationRuleLoad?
+    /// The displays windows cover (`DesktopWindowLayout.coveredDisplays`), last handed to
+    /// `onCoverage`.
+    private(set) var coveredDisplays: Set<String> = []
+    /// Whether to follow which displays windows cover, whatever the rules: a covered display's
+    /// wallpaper stops drawing frames nobody sees (`SceneWallpaperInstance`).
+    var watchesCoverage = false {
+        didSet {
+            guard watchesCoverage != oldValue else { return }
+            updatePolling()
+            evaluate()
+        }
+    }
     private var evaluationPending = false
     private var pollTimer: DispatchSourceTimer?
     private var pollTimerInterval: TimeInterval?
@@ -64,10 +80,12 @@ final class DisplayPlaybackMonitor {
     init(sources: DisplayPlaybackSources,
          scanQueue: DispatchQueue? = DispatchQueue(label: "OpenWallpaperEngine.DisplayPlaybackMonitor", qos: .utility),
          onLoad: @escaping (ApplicationRuleLoad?) -> Void = { _ in },
+         onCoverage: @escaping (Set<String>) -> Void = { _ in },
          apply: @escaping ([String: DisplayPlayback]) -> Void) {
         self.sources = sources
         self.scanQueue = scanQueue
         self.onLoad = onLoad
+        self.onCoverage = onCoverage
         self.apply = apply
     }
 
@@ -136,7 +154,8 @@ final class DisplayPlaybackMonitor {
                             ignoresWebKitAudio: rules.watchesAudio && sources.showsWebWallpaper(),
                             displaysAsleep: displaysAsleep,
                             applications: rules.watchesApplications ? sources.applications() : [:],
-                            videoMemoryExhausted: videoMemoryExhausted)
+                            videoMemoryExhausted: videoMemoryExhausted,
+                            watchesCoverage: watchesCoverage)
         shared.set(inputs: inputs)
         let maximizedRuns = !rules.maximizedRuleApplications.isDisjoint(with: inputs.applications.values)
         if maximizedRuns != maximizedRuleApplicationRuns {
@@ -165,6 +184,11 @@ final class DisplayPlaybackMonitor {
             load = next.load
             onLoad(next.load)
         }
+        if next.covered != coveredDisplays {
+            coveredDisplays = next.covered
+            OWELog.debug(.app, "Covered displays: \(next.covered.sorted().joined(separator: ", "))")
+            onCoverage(next.covered)
+        }
         guard next.states != states else { return }
         states = next.states
         let summary: [String] = next.states.keys.sorted().map { (screen: String) -> String in "\(screen)=\(next.states[screen] ?? .run)" }
@@ -176,14 +200,17 @@ final class DisplayPlaybackMonitor {
     struct Outcome: Equatable {
         var states: [String: DisplayPlayback]
         var load: ApplicationRuleLoad?
+        var covered: Set<String> = []
     }
 
     /// The rules' answer for `inputs`, reading the windows, audio and power as they need.
     /// Runs on the scan queue.
     nonisolated private static func playback(_ inputs: Inputs, sources: DisplayPlaybackSources) -> Outcome {
         let rules = inputs.rules
-        let conditions = rules.watchesWindows || rules.applicationRulesWatchWindows
-            ? DesktopWindowLayout.conditions(windows: sources.windows(), displays: inputs.displays,
+        let windowRules = rules.watchesWindows || rules.applicationRulesWatchWindows
+        let windows = windowRules || inputs.watchesCoverage ? sources.windows() : []
+        let conditions = windowRules
+            ? DesktopWindowLayout.conditions(windows: windows, displays: inputs.displays,
                                              frontmostPID: inputs.frontmostPID, ignoredPIDs: [sources.ownPID],
                                              bundleIdentifiers: inputs.applications)
             : [:]
@@ -195,7 +222,9 @@ final class DisplayPlaybackMonitor {
             audioProcesses: rules.applicationRulesWatchAudio ? sources.audioProcesses() : [],
             videoMemoryExhausted: inputs.videoMemoryExhausted)
         return Outcome(states: rules.playback(displays: inputs.displays.map(\.id), conditions: conditions, system: system),
-                       load: rules.load(conditions: conditions, system: system))
+                       load: rules.load(conditions: conditions, system: system),
+                       covered: inputs.watchesCoverage
+                        ? DesktopWindowLayout.coveredDisplays(windows: windows, displays: inputs.displays) : [])
     }
 
     /// One poll on the scan queue: hops to the main thread only when the answer changed.
@@ -221,10 +250,12 @@ final class DisplayPlaybackMonitor {
         /// rule is on.
         var applications: [pid_t: String] = [:]
         var videoMemoryExhausted = false
+        var watchesCoverage = false
 
         /// Whether the answer needs a read that is too slow for the main thread.
         var needsScan: Bool {
             rules.watchesWindows || rules.applicationRulesWatchWindows || rules.watchesAudio || rules.watchesPower
+                || watchesCoverage
         }
     }
 
@@ -243,7 +274,7 @@ final class DisplayPlaybackMonitor {
     /// The poll's interval while a rule needs it; nil: no poll.
     var neededPollInterval: TimeInterval? {
         guard !displaysAsleep else { return nil }
-        if rules.watchesWindows || rules.watchesAudio { return Self.pollInterval }
+        if rules.watchesWindows || rules.watchesAudio || watchesCoverage { return Self.pollInterval }
         if maximizedRuleApplicationRuns { return Self.maximizedRulePollInterval }
         return nil
     }

@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-/// The editor's timeline (docs/editor-plan.md P4): the playhead, playback, the keyframe selection
+/// The editor's timeline (editor-plan notes P4): the playhead, playback, the keyframe selection
 /// and clipboard, and every timeline edit, each one undo step in the session's undo manager.
 ///
 /// Clips come from the overlay's timeline edits, else from scene.json; edits are stored in the
