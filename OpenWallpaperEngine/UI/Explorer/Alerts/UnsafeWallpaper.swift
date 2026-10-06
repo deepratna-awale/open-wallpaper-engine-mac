@@ -58,7 +58,7 @@ struct UnsafeWallpaper: View {
                     .frame(maxWidth: 100)
                 VStack(alignment: .leading, spacing: 10) {
                     Text(intro)
-                    Text(verbatim: wallpaper.wallpaperDirectory.path(percentEncoded: false) + wallpaper.project.file).bold()
+                    Text(verbatim: wallpaper.wallpaperDirectory.appending(path: wallpaper.project.file).path(percentEncoded: false)).bold()
                     Text("Open Wallpaper Engine has no control over this file. Make sure it comes from a reliable source before proceeding.")
                     Text(seconds > 0 ? "Please wait \(seconds) seconds." : "Please be aware of malware.")
                     Toggle("Don't ask again for this wallpaper", isOn: $isIgnored)
