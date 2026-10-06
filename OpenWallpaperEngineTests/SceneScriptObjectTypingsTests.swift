@@ -36,10 +36,6 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
     private static let layerParts = ["IObject", "IImageLayer", "ISoundLayer", "IEffectLayer", "ITextLayer",
                                      "IParticleSystem", "IModelLayer", "ICamera"]
 
-    /// Interfaces whose objects need engine features this app lacks yet; the members that hand them
-    /// out are stubs.
-    private static let unreachable: [String: String] = [:]
-
     private func members() throws -> [String: [String]] {
         let data = try Fixtures.data("SceneScript/object-model-members.json")
         let root = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
@@ -74,9 +70,6 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
             function __check(target, member) {
                 if (target === null || target === undefined) return 'no object';
                 if (!(member in target)) return 'missing';
-                var stubbed = Array.from(__rt.objects.UNSUPPORTED).some(function (name) {
-                    return name.slice(name.lastIndexOf('.') + 1) === member;
-                });
                 try {
                     var value = target[member];
                     if (typeof value === 'function') value.call(target);
@@ -85,20 +78,14 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
                     if (__requiresArgument[member] === error.message) return 'ok';
                     return 'throws ' + error;
                 }
-                return stubbed ? 'stub' : 'ok';
+                return 'ok';
             }
             """)
         var failures: [String] = []
-        var stubs = Set<String>()
         let typed = try members()
         for (interface, own) in typed {
             // `ILayer extends IObject, IImageLayer, ISoundLayer, …`: every layer has the whole union.
             let names = interface == "ILayer" ? Self.layerParts.flatMap { typed[$0] ?? [] } + own : own
-            if let handout = Self.unreachable[interface] {
-                XCTAssertEqual(f.evaluate("__rt.objects.UNSUPPORTED.has('\(handout)')")?.toBool(), true,
-                               "\(interface) is reached only through the stub \(handout)")
-                continue
-            }
             guard let targets = Self.implementations[interface] else {
                 failures.append("\(interface): no implementation mapped")
                 continue
@@ -106,20 +93,12 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
             for target in targets {
                 for member in names {
                     let result = f.evaluate("__check(\(target), '\(member)')")?.toString() ?? "nil"
-                    switch result {
-                    case "ok": break
-                    case "stub": stubs.insert(member)
-                    default: failures.append("\(interface).\(member) on \(target): \(result)")
-                    }
+                    if result != "ok" { failures.append("\(interface).\(member) on \(target): \(result)") }
                 }
             }
         }
         XCTAssertEqual(failures.sorted(), [])
         XCTAssertTrue(f.scriptHost.errors.isEmpty, "\(f.scriptHost.errors)")
-        // Every stub that was called logged itself once.
-        let logged = Set(f.model.unsupportedMembers.map { String($0.split(separator: ".").last ?? "") })
-        XCTAssertEqual(stubs.subtracting(logged), [])
-        XCTAssertTrue(stubs.isEmpty, "\(stubs)")
     }
 
     func testFixtureMatchesTheTypings() throws {

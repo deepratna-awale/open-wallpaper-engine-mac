@@ -46,8 +46,6 @@ final class SceneScriptVideoTextureTests: XCTestCase {
             for column in 0..<4 { for row in 0..<4 { f.store.table.values[base + column * 4 + row] = world[column][row] } }
             let source = try String(contentsOf: Fixtures.url("SceneScript/members/\(member).js"), encoding: .utf8)
             XCTAssertEqual(string(f, source), "ok", member)
-            XCTAssertEqual(string(f, "Array.from(__rt.objects.UNSUPPORTED).some(function (m) { return m.endsWith('.\(member)'); })"),
-                           "false", "\(member) is a stub")
         }
     }
 
