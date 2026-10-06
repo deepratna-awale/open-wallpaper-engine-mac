@@ -95,6 +95,8 @@ struct UnsafeWallpaper: View {
                     Text("Cancel")
                         .padding(.horizontal, 10)
                 }
+                .glassButtonStyle()
+                .keyboardShortcut(.cancelAction)
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .trailing)
