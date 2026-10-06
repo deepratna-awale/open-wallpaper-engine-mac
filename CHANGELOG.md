@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Screen saver loops are recorded at up to 30 fps and at most 30 s** (they were up to 60 fps and 60 s), so recording is quicker and lighter and the videos are smaller. Existing loops are recorded again.
 - **A scene's music fades in when the wallpaper starts** (loaded, switched to, or at launch), over about 0.75 s with the same ease as pause and resume, instead of starting at full volume. This is Open Wallpaper Engine's own touch; Wallpaper Engine starts at full volume. Loop points don't fade, nothing fades out on a switch or quit, and mute, `startsilent` and the volume work as before.
 - **Privacy policy 1.1.** It names the new update feed at openwallpaperengine.app and the MCP Server plugin's local connection. The app asks you to review it once.
+- **A project cleanup** removed dead code, unused strings and images, migrations that no longer run, and a stub SceneScript framework, and made the renderer's safety nets log what they catch.
 
 ### Fixed
 
@@ -43,6 +44,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The Details panel shows the current wallpaper's author at launch**, instead of Unknown Author until another tile was clicked.
 - **Quit works while a sheet is open**, also for logout, shutdown and an update's relaunch.
 - **The `.local` Wi-Fi link appears once macOS allows Local Network access**, instead of staying on the IP address.
+- **Scenes with CPU-simulated particles no longer crash in release builds.** Reordering the particle batches could trap in optimized builds.
+- **Settings › Cancel restores the settings the window opened with.**
+- **Displays you turned off stay off** after a wake or a display change, and only the windows that change are touched.
+- **The menu bar menu shows the current state when it opens**, and Displays offers No wallpaper.
+- **Library:** dropped files import off the main thread and report the ones that fail; Rating sorts Everyone, Questionable, Mature; titles are trimmed (an empty one keeps the old title) and there's a Rename button; edited tags are trimmed and deduplicated in their order; the Installed search ignores case and accents; the Details buttons and Workshop cards have VoiceOver labels.
+- **Text layers whose font is missing are set in Arial**, as Wallpaper Engine does, and new text layers start at Wallpaper Engine's 32 points.
+- **The library and the Workshop scroll more smoothly:** card previews are decoded at card size and cached, folder sizes are measured lazily, and download progress no longer redraws the whole window.
+- **The Steam account name stays out of logged steamcmd output.**
 
 ## [1.0.0-beta.5] - 2026-10-04
 
