@@ -97,7 +97,8 @@ struct SceneSkeleton: Equatable {
         }
         let orphans = skeleton.bones.indices.filter { skeleton.bones[$0].parentIndex != nil && parents[$0] == nil }
         if !orphans.isEmpty {
-            OWELog.debug(.scene, "Skeleton: bones \(orphans.map { "\(names[$0]) (\($0))" }) name a parent out of range or after them; posed as roots")
+            let listed = orphans.map { "\(skeleton.bones[$0].name) (\($0))" }
+            OWELog.debug(.scene, "Skeleton: bones \(listed) name a parent out of range or after them; posed as roots")
         }
         let local = skeleton.bones.map(\.matrix)
         self.parents = parents
