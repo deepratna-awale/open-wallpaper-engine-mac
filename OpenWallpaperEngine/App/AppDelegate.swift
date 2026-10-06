@@ -574,8 +574,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         openMainWindow()
     }
 
+    /// Nothing before launch has made the window (test hosts never get there).
     @objc func openMainWindow() {
-        self.mainWindowController.window?.makeKeyAndOrderFront(nil)
+        guard let window = self.mainWindowController?.window else { return }
+        window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
     
