@@ -728,6 +728,7 @@ class TEXParser {
             }
         }
         if written == uncompressedSize { return output }
+        OWELog.debug(.texture, "TEX mipmap \(width)x\(height): Compression's LZ4 decoder wrote \(written) of \(uncompressedSize) bytes; retrying with the scalar decoder")
         return Self.decompressLZ4Scalar(input, into: &output) ? output : []
     }
 
