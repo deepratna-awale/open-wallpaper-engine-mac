@@ -221,6 +221,9 @@ struct WallpaperPreview: SubviewOfContentView {
                         }
                         Spacer()
                     }
+                    .task(id: wallpaperViewModel.displayedWallpaper.wallpaperDirectory) {
+                        wallpaperViewModel.loadDisplayedWorkshopDetails()
+                    }
                     favoriteControl
                     HStack {
                         Text(verbatim: LocalizedLabels.wallpaperType(wallpaperViewModel.displayedWallpaper.project.type))
