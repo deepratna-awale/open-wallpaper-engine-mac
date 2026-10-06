@@ -44,7 +44,7 @@ struct ParticleMaterialPlanBuilder {
         if let blending { pass.blending = blending.rawValue }
 
         let rendererName = renderer?.name?.lowercased() ?? "sprite"
-        let format: ParticleVertexFormat = rendererName.hasPrefix("rope") ? .rope : .sprite
+        let format = Self.vertexFormat(rendererName: rendererName)
         // WE's engine swaps its sprite shader for the rope one when a rope renderer draws it.
         let shader = format == .rope && Self.isBuiltinSpriteShader(pass.shader) ? "genericropeparticle" : pass.shader
         var engineCombos = Self.engineCombos(format: format, rendererName: rendererName, renderer: renderer,
@@ -130,6 +130,11 @@ struct ParticleMaterialPlanBuilder {
 
     /// The combos WE's engine sets from the particle system rather than the material (as
     /// linux-wallpaperengine and wallpaper-scene-renderer set them).
+    /// Strips for WE's `rope` and `ropetrail`, quads for every other renderer.
+    static func vertexFormat(rendererName: String) -> ParticleVertexFormat {
+        WEParticleRendererType(rawValue: rendererName)?.isRope == true ? .rope : .sprite
+    }
+
     static func engineCombos(format: ParticleVertexFormat, rendererName: String, renderer: WEParticleRenderer?,
                              flags: Int, spriteSheet: SpriteSheet?, baseTexture: SceneMetalTextureSource) -> [String: Int] {
         var combos: [String: Int] = [:]

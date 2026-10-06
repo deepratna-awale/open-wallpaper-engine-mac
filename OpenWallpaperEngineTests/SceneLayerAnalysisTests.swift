@@ -157,6 +157,25 @@ final class SceneLayerAnalysisTests: XCTestCase {
         XCTAssertFalse(fadedOpaque)
     }
 
+    /// A material's vertex stage places the vertices, so a layer drawn through one covers the
+    /// scene whatever its material is named.
+    func testMaterialLayersCoverTheScene() {
+        let pass = SceneEffectPassPlan(command: .render, variantKey: "", variant: nil, blending: "normal", target: nil,
+                                       textures: [:], constants: .init(staticValues: [:], dynamic: []))
+        var layers: [SceneMetalLayer] = []
+        for (id, path) in [("1", "materials/genericimage2.json"), ("2", "materials/wobble.json")] {
+            var layer = Self.layer(id, source: .image(Self.opaqueImage(width: 8, height: 8)))
+            layer.imageMaterial = ImageMaterialPlan(materialPath: path, pass: pass, usesSpriteSheetUniforms: false,
+                                                    liveFactors: [:])
+            layers.append(layer)
+        }
+        layers.append(Self.layer("3", source: .image(Self.opaqueImage(width: 8, height: 8))))
+        let analysis = Self.analyse(Self.content(layers))
+        XCTAssertTrue(analysis.coverage(at: 0).fullScene)
+        XCTAssertTrue(analysis.coverage(at: 1).fullScene)
+        XCTAssertFalse(analysis.coverage(at: 2).fullScene, "a natively drawn quad keeps its bounds")
+    }
+
     func testShaderDependenciesComeFromTheBuiltinsItReads() {
         func variant(_ fragment: String) -> TranslatedShaderVariant {
             TranslatedShaderVariant(vertexMSL: "", fragmentMSL: fragment, uniforms: nil, textureSlots: [0], attributes: [:],

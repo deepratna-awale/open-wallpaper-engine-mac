@@ -1547,7 +1547,7 @@ class SceneWallpaperViewModel: ObservableObject {
         case .data(let bytes, _)?:
             data = bytes
         case nil:
-            OWELog.error(.scene, "Font \"\(path)\" not found in the wallpaper, WE assets or workshop items; using the system font")
+            OWELog.error(.scene, "Font \"\(path)\" not found in the wallpaper, WE assets or workshop items; using Arial, as WE does")
             return path
         }
         guard let descriptors = CTFontManagerCreateFontDescriptorsFromData(data as CFData) as? [CTFontDescriptor],
@@ -2071,7 +2071,12 @@ class SceneWallpaperViewModel: ObservableObject {
         } else {
             data = original
         }
-        return try? JSONDecoder().decode(T.self, from: data)
+        do {
+            return try JSONDecoder().decode(T.self, from: data)
+        } catch {
+            OWELog.debug(.scene, "\(path) isn't a \(T.self): \(error)")
+            return nil
+        }
     }
 
     /// The file at `path` as the build reads it: a JSON document with its user bindings resolved
@@ -2164,7 +2169,8 @@ class SceneWallpaperViewModel: ObservableObject {
             // Try .tex from PKG
             if let texData = assetData(named: texPath, wallpaperDir: wallpaperDir) {
                 Self.logDetail("  TEX from PKG '\(texPath)' size=\(texData.count)")
-                let texParser = TEXParser(data: Data(texData))  // Copy to reset indices
+                // A slice is copied so the parser's indices start at 0; whole data is used as is.
+                let texParser = TEXParser(data: texData.startIndex == 0 ? texData : Data(texData))
                 if let image = texParser.extractImage() {
                     return image
                 }

@@ -38,11 +38,15 @@ final class SceneLayerPipelines {
 
     private let byFormat: [MTLPixelFormat: Pipelines]
     private let fallback: Pipelines
+    private let fallbackFormat: MTLPixelFormat
     private let device: MTLDevice
     private let functions: Functions
     /// Made on first use, on the render thread; nil for one that failed (logged once). Behind
     /// `variantsLock`, so a frame drawn on another thread can't corrupt it.
     private var variants: [Variant: Pipelines?] = [:]
+    /// Target formats `pipelines(for:)` had none for and drew with the first format's (logged
+    /// once each). Behind `variantsLock`.
+    private var unmadeFormats: Set<MTLPixelFormat> = []
     private let variantsLock = NSLock()
 
     /// The pipelines for each of `formats`, the first of which `pipelines(for:)` falls back to.
@@ -60,13 +64,23 @@ final class SceneLayerPipelines {
         }
         self.byFormat = byFormat
         self.fallback = fallback
+        fallbackFormat = first
         self.device = device
         self.functions = functions
     }
 
-    /// The pipelines drawing into a single-sampled target of `format` without depth.
+    /// The pipelines drawing into a single-sampled target of `format` without depth; the first
+    /// format's for one they weren't made for (logged once per format).
     func pipelines(for format: MTLPixelFormat?) -> Pipelines {
-        format.flatMap { byFormat[$0] } ?? fallback
+        guard let format else { return fallback }
+        if let made = byFormat[format] { return made }
+        variantsLock.lock()
+        let isNew = unmadeFormats.insert(format).inserted
+        variantsLock.unlock()
+        if isNew {
+            OWELog.debug(.scene, "Layer pipelines: no pipelines for target format \(format.rawValue); drawing with format \(fallbackFormat.rawValue)'s")
+        }
+        return fallback
     }
 
     /// The pipelines drawing into a `sampleCount`-sample target of `format` with a `depthFormat`

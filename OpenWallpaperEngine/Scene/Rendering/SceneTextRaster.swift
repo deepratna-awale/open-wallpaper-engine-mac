@@ -7,7 +7,7 @@ import MetalKit
 struct SceneTextRasterRequest {
     let text: SceneMetalText
     let value: String
-    /// The font the layer asks for (the user's, else authored, else "System").
+    /// The font the layer asks for (the user's, else authored, else none: Arial, as in WE).
     let fontName: String
     let pointSize: Float
     let bold: Bool
@@ -33,7 +33,7 @@ enum SceneTextRaster {
         let pixelSize = SceneTextLayout.pixelSize(pointSize: CGFloat(request.pointSize))
         var font = SceneFontRegistry.font(named: request.fontName, size: pixelSize)
             ?? NSFont(name: request.fontName, size: pixelSize)
-            ?? NSFont.systemFont(ofSize: pixelSize)
+            ?? SceneTextFallbackFont.font(size: pixelSize)
         if request.bold { font = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask) }
         if request.italic { font = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask) }
         let layout = SceneTextLayout(text: request.value, font: font, padding: text.padding,

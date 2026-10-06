@@ -24,6 +24,14 @@ final class SceneTextLayoutTests: XCTestCase {
                         maxWidth: maxWidth, maxRows: maxRows, useEllipsis: ellipsis)
     }
 
+    /// A font that can't be found is set in Arial, as WE falls back to `arial.ttf` (0x1401ad549).
+    func testMissingFontFallsBackToArial() {
+        let font = SceneTextFallbackFont.font(size: 40)
+        XCTAssertEqual(font.fontName, "ArialMT")
+        XCTAssertEqual(font.pointSize, 40)
+        XCTAssertNil(NSFont(name: "", size: 40), "an absent font name resolves to nothing, so the fallback applies")
+    }
+
     /// WE sets its FreeType face at 300 dpi (`FT_Set_Char_Size(…, pointsize × 64, 300, 300)`) and
     /// lays glyphs out one atlas pixel per scene unit. R1: 3270035750's "Nami" and "Robin"
     /// (Deutschlands, `pointsize` 25, scale 1) best match WE's capture at an em of 104 units.

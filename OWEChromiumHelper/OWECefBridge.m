@@ -797,8 +797,13 @@ static int CEF_CALLBACK render_get_screen_info(cef_render_handler_t *self, cef_b
 static void CEF_CALLBACK render_on_paint(cef_render_handler_t *self, cef_browser_t *cefBrowser,
                                          cef_paint_element_type_t type, size_t dirtyRectsCount,
                                          cef_rect_t const *dirtyRects, const void *buffer, int width, int height) {
-    // Only called when shared textures are unavailable; frames are shared textures only.
+    // Only called when shared textures are unavailable; frames are shared textures only, so the
+    // page shows nothing. Said once per helper process.
     (void)self; (void)type; (void)dirtyRectsCount; (void)dirtyRects; (void)buffer; (void)width; (void)height;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        report("software paint frames (no shared textures) are dropped; the page draws nothing");
+    });
     OWE_RELEASE(cefBrowser);
 }
 

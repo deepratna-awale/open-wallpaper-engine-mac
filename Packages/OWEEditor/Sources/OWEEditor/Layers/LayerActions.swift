@@ -39,10 +39,11 @@ struct LayerActions {
         session.addLayer(object, actionName: L("Add Image Layer"))
     }
 
+    /// WE's new text layer: Arial at 32 points.
     func addText(script: SceneLayerFactory.TextScript? = nil) {
         let value = script?.placeholder ?? L("Text")
         let object = SceneLayerFactory.text(name: script == .clock ? L("Clock") : script == .date ? L("Date") : L("Text"),
-                                            value: value, font: "systemfont_arial", pointSize: 64, origin: sceneCentre,
+                                            value: value, font: "systemfont_arial", pointSize: 32, origin: sceneCentre,
                                             script: script?.source, scriptProperties: script?.properties)
         let id = session.addLayer(object, actionName: L("Add Text Layer"))
         if script == nil { session.editingText = id }

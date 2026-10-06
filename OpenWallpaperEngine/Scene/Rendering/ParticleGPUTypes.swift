@@ -76,10 +76,14 @@ enum ParticleGPUDrawKind: UInt32 {
     }
 
     /// The built-in draw's kind for a renderer, as `SceneMetalRenderer` picks it.
+    /// A name outside WE's four (`WEParticleRendererType`) draws sprites.
     static func fallback(rendererName: String) -> ParticleGPUDrawKind {
-        if rendererName == "rope" { return .fallbackRope }
-        if rendererName == "ropetrail" { return .fallbackRopeTrail }
-        return rendererName.contains("trail") ? .fallbackSpriteTrail : .fallbackSprite
+        switch WEParticleRendererType(rawValue: rendererName) {
+        case .rope: return .fallbackRope
+        case .ropetrail: return .fallbackRopeTrail
+        case .spritetrail: return .fallbackSpriteTrail
+        case .sprite, nil: return .fallbackSprite
+        }
     }
 }
 

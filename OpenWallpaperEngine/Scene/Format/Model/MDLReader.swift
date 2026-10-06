@@ -145,6 +145,7 @@ enum MDLReader {
                 model.referencePose = try readReferencePose(&r, bones: model.skeleton?.bones.count ?? 0)
             } else {
                 skipped = true
+                OWELog.debug(.scene, "MDL: skipped unknown section \(tag) at 0x\(String(offset, radix: 16)) (\(end - r.offset) bytes)")
             }
             guard r.offset <= end else {
                 throw MDLError.malformed("section \(tag) read to 0x\(String(r.offset, radix: 16)) past its end 0x\(String(end, radix: 16))")

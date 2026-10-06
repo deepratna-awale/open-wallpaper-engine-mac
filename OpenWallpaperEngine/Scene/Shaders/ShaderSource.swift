@@ -209,7 +209,7 @@ struct ShaderSourceLoader {
             return result
         }
         var main = try collect(text)
-        main = dropUnmatchedEndifs(in: commentUnknownRequires(in: main, path: path))
+        main = dropUnmatchedEndifs(in: commentUnknownRequires(in: main, path: path), path: path)
         guard !bodies.isEmpty else { return main }
         let blob = "\n" + bodies.joined(separator: "\n") + "\n"
         let insertion = includeInsertionOffset(in: main, testedMacros: testedMacros(in: bodies.joined(separator: "\n")))
@@ -224,15 +224,25 @@ struct ShaderSourceLoader {
     private static let declarationPattern = NSRegularExpression.shader(#"^(attribute|varying|uniform|struct)\s"#)
 
     /// WE's compiler ignores an `#endif` that closes nothing; glslang rejects the whole shader.
-    static func dropUnmatchedEndifs(in text: String) -> String {
+    /// Each one dropped is logged (once per shader source read).
+    static func dropUnmatchedEndifs(in text: String, path: String = "") -> String {
         var depth = 0
         var lines = text.components(separatedBy: "\n")
+        var dropped: [Int] = []
         for index in lines.indices {
             let trimmed = lines[index].trimmingCharacters(in: .whitespaces)
             if ifPattern.matches(trimmed) { depth += 1 }
             if endifPattern.matches(trimmed) {
-                if depth == 0 { lines[index] = "// (unmatched) " + lines[index] } else { depth -= 1 }
+                if depth == 0 {
+                    lines[index] = "// (unmatched) " + lines[index]
+                    dropped.append(index + 1)
+                } else {
+                    depth -= 1
+                }
             }
+        }
+        if !dropped.isEmpty {
+            OWELog.debug(.shader, "\(path): unmatched #endif on line(s) \(dropped.map(String.init).joined(separator: ", ")) ignored, as WE's preprocessor does")
         }
         return lines.joined(separator: "\n")
     }

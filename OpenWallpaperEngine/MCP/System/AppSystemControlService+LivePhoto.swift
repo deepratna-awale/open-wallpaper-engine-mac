@@ -16,8 +16,10 @@ extension AppSystemControlService {
             photosAccess: Self.accessName(PhotoKitLibrary().authorizationStatus()))
     }
 
+    /// The scene as the renderer draws it (`SceneWallpaperViewModel.sceneSize(of:)`), which the
+    /// mode's crop frames, as the Scene Editor hands the mode `renderSceneSize`.
     func sceneSize(of wallpaper: ControlWallpaper) throws -> SIMD2<Double> {
-        LivePhotoSceneSize.of(try SystemSceneFile.scene(of: found(wallpaper)))
+        SIMD2<Double>(SceneWallpaperViewModel.sceneSize(of: try SystemSceneFile.scene(of: found(wallpaper))))
     }
 
     func exportLivePhoto(_ request: SystemLivePhotoRequest) async throws -> SystemLivePhotoResult {

@@ -137,16 +137,25 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
         attempt(generation)
     }
 
-    private func attempt(_ generation: Int) {
+    /// Retries every 0.1 s, without a limit, until the page has its `<video>`, the player stops
+    /// or a newer state replaces this one; a page still without one after `slowAttempts` is logged
+    /// (once per state).
+    private func attempt(_ generation: Int, count: Int = 0) {
         guard !stopped, generation == self.generation else { return }
+        if count == Self.slowAttempts {
+            OWELog.debug(.library, "WebKit video \(url.lastPathComponent): no <video> after \(count) tries; still retrying every 0.1 s")
+        }
         page.evaluate(Self.script(for: state)) { [weak self] result in
             // An error here is the page still loading; the retry covers it.
             guard (result as? Bool) != true else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                MainActor.assumeIsolated { self?.attempt(generation) }
+                MainActor.assumeIsolated { self?.attempt(generation, count: count + 1) }
             }
         }
     }
+
+    /// 5 s of retries.
+    private static let slowAttempts = 50
 
     /// Styles the media document's `<video>` like the AVKit view's gravity and applies playback.
     static func script(for state: State) -> String {

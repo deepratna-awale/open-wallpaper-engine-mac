@@ -11,7 +11,7 @@ import Foundation
 /// and every reduced buffer reports its authored size to the built-ins (`g_Texture0Texel`), so a
 /// kernel's reach in UV space, and so the blur's radius, is unchanged.
 ///
-/// Recognised from the effect's file name or its buffers' pattern (`isBlurLike`), never per wallpaper. Left alone:
+/// Recognised from its buffers' pattern (`isBlurLike`), never by name. Left alone:
 /// - buffers of fixed size (a tile) or that tile (`uvs: repeat`);
 /// - effects that carry frames (motion blur's accumulation, simulations) or copy between buffers,
 ///   whose sizes must match;
@@ -35,16 +35,12 @@ struct EffectResolutionPolicy: Equatable {
     /// A reduced buffer keeps at least this many pixels on its shorter side.
     static let minSide = 16
 
-    /// Effect file names (without folders) of blur-like effects.
-    private static let namePatterns = ["blur", "bloom", "glow", "godray", "shine", "lightshaft"]
-    /// The effect spreads light (a blur, bloom, glow or god rays): its file or folder is named
-    /// so, or its passes already draw into a downsampled buffer (an FBO with `scale` ≥ 2, WE's
-    /// blur, god-ray, shine and local-contrast pattern: the author treats it as low-frequency).
+    /// The effect spreads light (a blur, bloom, glow or god rays): its passes already draw into a
+    /// downsampled buffer (an FBO with `scale` ≥ 2 and no fixed size, WE's blur, god-ray, shine
+    /// and local-contrast pattern: the author treats it as low-frequency). Decided from the
+    /// effect's structure only, never its name.
     static func isBlurLike(_ effect: SceneEffectPlan) -> Bool {
-        let name = (effect.file as NSString).lastPathComponent.lowercased()
-        let folder = ((effect.file as NSString).deletingLastPathComponent as NSString).lastPathComponent.lowercased()
-        if namePatterns.contains(where: { name.contains($0) || folder.contains($0) }) { return true }
-        return effect.fbos.contains { $0.scale >= 2 && $0.width == nil }
+        effect.fbos.contains { $0.scale >= 2 && $0.width == nil }
     }
 
     /// The extra divisor of `fbo`'s size in `effect` (1 keeps the authored size).

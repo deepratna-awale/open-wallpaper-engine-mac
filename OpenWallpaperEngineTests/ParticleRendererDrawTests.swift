@@ -47,6 +47,22 @@ final class ParticleRendererDrawTests: XCTestCase {
         }
     }
 
+    /// WE's four renderer types are matched by name exactly; anything else draws sprites rather
+    /// than whatever its name happens to contain.
+    func testRendererTypesMatchWEsFourNamesExactly() {
+        XCTAssertEqual(WEParticleRendererType.allCases.map(\.rawValue), ["sprite", "spritetrail", "rope", "ropetrail"])
+        let expected: [String: (ParticleGPUDrawKind, ParticleVertexFormat)] = [
+            "sprite": (.fallbackSprite, .sprite), "spritetrail": (.fallbackSpriteTrail, .sprite),
+            "rope": (.fallbackRope, .rope), "ropetrail": (.fallbackRopeTrail, .rope),
+            "mytrail": (.fallbackSprite, .sprite), "ropes": (.fallbackSprite, .sprite),
+            "trailsprite": (.fallbackSprite, .sprite), "": (.fallbackSprite, .sprite),
+        ]
+        for (name, (kind, format)) in expected {
+            XCTAssertEqual(ParticleGPUDrawKind.fallback(rendererName: name), kind, name)
+            XCTAssertEqual(ParticleMaterialPlanBuilder.vertexFormat(rendererName: name), format, name)
+        }
+    }
+
     func testTheSecondRendererTakesItsOwnFields() throws {
         let (_, system) = try build(#"""
             [{"name": "sprite", "orientation": "upright", "axis": "0 1 0"},

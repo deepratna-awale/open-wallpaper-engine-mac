@@ -155,10 +155,12 @@ struct LayerTextSection: View {
     }
 
     private var fontRow: some View {
-        let current = session.value("font", of: layer.id)?.stringValue ?? "systemfont_arial"
+        // WE parses an absent font as empty and draws it in its fallback face, Arial.
+        let current = session.value("font", of: layer.id)?.stringValue ?? ""
         var fonts = services.fonts()
         if !fonts.contains(where: { $0.value == current }) {
-            fonts.insert(EditorFont(value: current, title: (current as NSString).lastPathComponent), at: 0)
+            let title = current.isEmpty ? L("Default") : (current as NSString).lastPathComponent
+            fonts.insert(EditorFont(value: current, title: title), at: 0)
         }
         return fieldRow("font", title: L("Font")) {
             HStack(spacing: 4) {
