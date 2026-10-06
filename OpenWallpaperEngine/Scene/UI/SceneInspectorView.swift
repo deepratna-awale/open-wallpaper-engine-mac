@@ -617,8 +617,7 @@ private final class SceneInspectorModel: ObservableObject {
             return try SceneDrawnSize.of(sceneData: sceneData, overlay: SceneDrawnSize.savedOverlay(of: wallpaper),
                                          edits: ScenePreparation.split(storedValues: storedValues).edits)
         } catch {
-            OWELog.error(.ui, "Scene Editor: \(wallpaper.wallpaperDirectory.lastPathComponent)'s edited scene can't be "
-                         + "read for its size; framing the authored scene: \(error)")
+            OWELog.error(.ui, "Scene Editor: no drawn size for \(wallpaper.wallpaperDirectory.lastPathComponent), framing the authored scene: \(error)")
             return SIMD2<Double>(SceneWallpaperViewModel.sceneSize(of: scene))
         }
     }
