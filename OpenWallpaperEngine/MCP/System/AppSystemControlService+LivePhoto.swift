@@ -16,10 +16,16 @@ extension AppSystemControlService {
             photosAccess: Self.accessName(PhotoKitLibrary().authorizationStatus()))
     }
 
-    /// The scene as the renderer draws it (`SceneWallpaperViewModel.sceneSize(of:)`), which the
-    /// mode's crop frames, as the Scene Editor hands the mode `renderSceneSize`.
+    /// The scene as the renderer draws it, its saved overlay applied (`SceneDrawnSize`), which the
+    /// mode's crop frames, as the Scene Editor hands the mode its `sceneSize`.
     func sceneSize(of wallpaper: ControlWallpaper) throws -> SIMD2<Double> {
-        SIMD2<Double>(SceneWallpaperViewModel.sceneSize(of: try SystemSceneFile.scene(of: found(wallpaper))))
+        let item = try found(wallpaper)
+        do {
+            return try AndroidPackageBuilder.sceneSize(item)
+        } catch {
+            OWELog.error(.app, "MCP: \(item.project.title)'s scene size can't be read: \(error)")
+            throw ControlError(.failed, "\"\(item.project.title)\"'s \(item.project.file) can't be read: \(error.localizedDescription)")
+        }
     }
 
     func exportLivePhoto(_ request: SystemLivePhotoRequest) async throws -> SystemLivePhotoResult {
