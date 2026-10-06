@@ -17,7 +17,7 @@ final class WorkshopPresetFilterTests: XCTestCase {
     }
 
     func testTheCategoryOptionsAreWEsTags() {
-        XCTAssertEqual(FRCategory.allOptions, ["Wallpaper", "Preset"])
+        XCTAssertEqual(FRCategory.optionKeys, ["Wallpaper", "Preset"])
         XCTAssertEqual(FRCategory.all, [.wallpaper, .preset])
     }
 

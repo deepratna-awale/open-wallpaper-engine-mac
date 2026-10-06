@@ -78,6 +78,8 @@ final class AndroidExportEditorModel: ObservableObject {
     @Published var sheet: AndroidEditorSheet?
     /// "Export More with These Settings…": its sheet is open, and the batch it started.
     @Published var isBatchPresented = false
+    /// Export More was picked in the Export Settings sheet: the batch opens once that sheet has closed.
+    var opensBatchWhenSheetCloses = false
     @Published private(set) var batchQueue: AndroidExportQueue?
 
     init(session: IsolatedSceneEditSession, sceneSize: SIMD2<Double>, defaults: UserDefaults = .app,
@@ -312,6 +314,19 @@ final class AndroidExportEditorModel: ObservableObject {
     func showBatch() {
         guard !isExporting else { return }
         isBatchPresented = true
+    }
+
+    /// Export More from the Export Settings sheet: one sheet at a time, so the batch waits for it to close.
+    func showBatchAfterSheet() {
+        opensBatchWhenSheetCloses = true
+        sheet = nil
+    }
+
+    /// The Export Settings sheet closed.
+    func sheetDidClose() {
+        guard opensBatchWhenSheetCloses else { return }
+        opensBatchWhenSheetCloses = false
+        showBatch()
     }
 
     var isBatchRunning: Bool { batchQueue?.isRunning == true }

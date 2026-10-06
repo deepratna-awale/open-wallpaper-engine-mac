@@ -7,7 +7,7 @@ import SwiftUI
 struct AndroidBatchExportSheet: View {
     @ObservedObject var model: AndroidExportEditorModel
     /// The library's wallpapers, read when the sheet opens.
-    var library: @MainActor () -> [WEWallpaper] = { AppDelegate.shared.contentViewModel.allWallpapers }
+    var library: @MainActor () -> [WEWallpaper] = { AppDelegate.shared.contentViewModel.library.allWallpapers }
     @State private var wallpapers: [WEWallpaper] = []
     @State private var selection: Set<String> = []
 

@@ -23,7 +23,7 @@ extension AppDelegate {
 
     /// The next playlist wallpaper, or a random one from the Installed list as shown.
     @objc func nextWallpaper() {
-        wallpaperViewModel.stepToNextWallpaper(shown: contentViewModel.autoRefreshWallpapers)
+        wallpaperViewModel.stepToNextWallpaper(shown: contentViewModel.library.autoRefreshWallpapers)
     }
 
     /// The previous playlist wallpaper, or the display's previous one.
@@ -47,7 +47,7 @@ extension AppDelegate {
     @objc func showPlaylistsTab() { showLibraryTab(3) }
 
     private func showLibraryTab(_ tab: Int) {
-        contentViewModel.topTabBarSelection = tab
+        contentViewModel.navigation.topTabBarSelection = tab
         openMainWindow()
     }
 
@@ -58,7 +58,7 @@ extension AppDelegate {
             settingsNavigation.focusesSearch = true
             return
         }
-        if contentViewModel.topTabBarSelection > 1 { contentViewModel.topTabBarSelection = 0 }
+        if contentViewModel.navigation.topTabBarSelection > 1 { contentViewModel.navigation.topTabBarSelection = 0 }
         openMainWindow()
         DispatchQueue.main.async { [weak self] in
             guard let window = self?.mainWindowController.window else { return }

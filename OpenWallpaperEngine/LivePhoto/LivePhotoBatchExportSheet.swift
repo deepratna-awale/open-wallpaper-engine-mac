@@ -10,7 +10,7 @@ struct LivePhotoBatchExportSheet: View {
     static let folderKey = "LivePhotoBatchFolder"
 
     @ObservedObject var model: LivePhotoExportModel
-    var library: @MainActor () -> [WEWallpaper] = { AppDelegate.shared.contentViewModel.allWallpapers }
+    var library: @MainActor () -> [WEWallpaper] = { AppDelegate.shared.contentViewModel.library.allWallpapers }
     @State private var wallpapers: [WEWallpaper] = []
     @State private var selection: Set<String> = []
     @State private var savesToFolder = true

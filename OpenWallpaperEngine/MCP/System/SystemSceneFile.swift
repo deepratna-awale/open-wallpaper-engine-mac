@@ -2,7 +2,7 @@ import Foundation
 import OWEControlProtocol
 
 /// A scene wallpaper's scene.json as authored, read the way the Scene Editor (Live) reads it (from
-/// the wallpaper's package when it has one, else its folder): its layers and its authored size.
+/// the wallpaper's package when it has one, else its folder), for its layers.
 enum SystemSceneFile {
     /// The authored scene; a `ControlError` saying why when it can't be read.
     static func scene(of wallpaper: WEWallpaper) throws -> WEScene {

@@ -16,11 +16,15 @@ struct AndroidWiFiRouter: Sendable {
     var expiry: Date
     /// Goes up each time `files` changes, so the page knows to reload.
     var version = 0
+    /// Where each page's CSP nonce comes from (`makeNonce`; tests make it fail).
+    let nonceSource: @Sendable () throws -> String
 
-    init(token: String, files: [AndroidWiFiFile], expiry: Date) {
+    init(token: String, files: [AndroidWiFiFile], expiry: Date,
+         nonceSource: @escaping @Sendable () throws -> String = AndroidWiFiRouter.makeNonce) {
         self.token = token
         self.files = files
         self.expiry = expiry
+        self.nonceSource = nonceSource
     }
 
     /// The file numbered `index`.
@@ -95,7 +99,14 @@ struct AndroidWiFiRouter: Sendable {
         case .notFound:
             return .text(404)
         case .page:
-            let nonce = (try? Self.makeNonce()) ?? "owe" // Optional: the CSP nonce only needs to be unguessable per page.
+            let nonce: String
+            do {
+                nonce = try nonceSource()
+            } catch {
+                // A guessable nonce would let injected script run, so the page isn't served without one.
+                OWELog.error(.app, "Send over Wi-Fi: no CSP nonce for the page, answering 500: \(error)")
+                return .text(500)
+            }
             let page = AndroidWiFiPage.html(files: files, token: token, version: version, downloaded: downloaded)
             let body = Data(page.replacingOccurrences(of: AndroidWiFiPage.noncePlaceholder, with: nonce).utf8)
             return .init(status: 200, headers: AndroidWiFiHTTP.commonHeaders + [

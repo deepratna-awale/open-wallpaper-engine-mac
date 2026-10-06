@@ -17,7 +17,7 @@ final class LocalizationLintTests: XCTestCase {
     static let scannedFiles = ["App/AppDelegate.swift", "App/SafeRestart.swift", "App/SafeRestartNotice.swift",
                                "Library/Import/ImportPanels.swift"]
     /// Data, not text: English option ids and the table that maps them to labels.
-    static let exemptFiles: Set<String> = ["UI/Explorer/FilterResultsViewModel.swift", "UI/Components/LocalizedLabels.swift"]
+    static let exemptFiles: Set<String> = ["UI/Explorer/FilterResultsOptions.swift", "UI/Components/LocalizedLabels.swift"]
     /// The product name and people's names are never translated.
     static let allowedLiterals: Set<String> = ["Open Wallpaper Engine", "Open Wallpaper Engine \u{1}", "Haren Chen",
                                                "Chen Chia Yang", "Deepratna Awale", "Klaus Zhu"]

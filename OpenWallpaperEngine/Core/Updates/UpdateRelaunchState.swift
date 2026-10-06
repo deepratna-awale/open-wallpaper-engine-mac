@@ -8,7 +8,7 @@ struct UpdateRelaunchState: Codable, Equatable {
     static let defaultsKey = "UpdateRelaunchState"
 
     var mainWindowOpen: Bool
-    /// `ContentViewModel.topTabBarSelection`.
+    /// `ContentNavigation.topTabBarSelection`.
     var tab: Int
     var selectedWallpapers: [URL]
     var settingsOpen: Bool

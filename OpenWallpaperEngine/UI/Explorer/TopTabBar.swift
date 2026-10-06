@@ -9,7 +9,7 @@ import SwiftUI
 
 /// The main window's tabs, as a segmented control in the window toolbar.
 struct TopTabBar: SubviewOfContentView {
-    @ObservedObject var viewModel: ContentViewModel
+    var viewModel: ContentViewModel
 
     init(contentViewModel viewModel: ContentViewModel) {
         self.viewModel = viewModel
@@ -17,13 +17,13 @@ struct TopTabBar: SubviewOfContentView {
 
     var body: some View {
         Picker("Section", selection: Binding(
-            get: { viewModel.topTabBarSelection },
+            get: { viewModel.navigation.topTabBarSelection },
             set: { tab in
                 // A tab switch swaps the columns' contents at once; animating the Details
                 // inspector in and out on every switch read as lag.
                 var transaction = Transaction()
                 transaction.disablesAnimations = true
-                withTransaction(transaction) { viewModel.topTabBarSelection = tab }
+                withTransaction(transaction) { viewModel.navigation.topTabBarSelection = tab }
             }
         )) {
             segment("Installed", systemImage: "square.and.arrow.down.fill").tag(0)

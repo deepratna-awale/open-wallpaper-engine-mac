@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ExplorerItemMenu: SubviewOfContentView {
     
-    @ObservedObject var viewModel: ContentViewModel
+    var viewModel: ContentViewModel
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     @ObservedObject private var favorites = FavoritesStore.shared
 
@@ -35,7 +35,7 @@ struct ExplorerItemMenu: SubviewOfContentView {
                     } else {
                         ForEach(wallpaperViewModel.playlists) { playlist in
                             Button {
-                                let selected = viewModel.selectedWallpaperItems()
+                                let selected = viewModel.library.selectedWallpaperItems()
                                 let wallpapers = selected.isEmpty ? [hoveredWallpaper] : selected
                                 wallpaperViewModel.addToPlaylist(wallpapers, playlistID: playlist.id)
                             } label: {
@@ -45,16 +45,16 @@ struct ExplorerItemMenu: SubviewOfContentView {
                     }
                 }
                 Button {
-                    viewModel.hoveredWallpaper = hoveredWallpaper
-                    viewModel.isUnsubscribeConfirming = true
+                    viewModel.presentation.hoveredWallpaper = hoveredWallpaper
+                    viewModel.presentation.isUnsubscribeConfirming = true
                 } label: {
                     Label("Unsubscribe", systemImage: "xmark")
                 }
-                if viewModel.selectedWallpapers.count > 1 {
+                if viewModel.library.selectedWallpapers.count > 1 {
                     Button(role: .destructive) {
-                        viewModel.isBatchUnsubscribeConfirming = true
+                        viewModel.presentation.isBatchUnsubscribeConfirming = true
                     } label: {
-                        Label("Unsubscribe Selected (\(viewModel.selectedWallpapers.count))", systemImage: "xmark.circle")
+                        Label("Unsubscribe Selected (\(viewModel.library.selectedWallpapers.count))", systemImage: "xmark.circle")
                     }
                 }
                 Button {

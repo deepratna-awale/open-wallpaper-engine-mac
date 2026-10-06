@@ -21,19 +21,6 @@ extension SceneLayer.Kind {
         case .other: return L("Object")
         }
     }
-
-    var symbol: String {
-        switch self {
-        case .image: return "photo"
-        case .text: return "textformat"
-        case .particle: return "sparkles"
-        case .sound: return "speaker.wave.2"
-        case .light: return "lightbulb"
-        case .model: return "cube"
-        case .group: return "folder"
-        case .other: return "square.dashed"
-        }
-    }
 }
 
 extension SceneLayer {

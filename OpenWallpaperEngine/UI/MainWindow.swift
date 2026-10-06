@@ -49,13 +49,13 @@ class MainWindowController: NSWindowController, NSWindowDelegate {
     }
     
     func windowWillClose(_ notification: Notification) {
-        AppDelegate.shared.contentViewModel.isStaging = false
+        AppDelegate.shared.contentViewModel.navigation.isStaging = false
     }
     
     func windowDidBecomeKey(_ notification: Notification) {
         DispatchQueue.main.async {
             withAnimation {
-                AppDelegate.shared.contentViewModel.isStaging = true
+                AppDelegate.shared.contentViewModel.navigation.isStaging = true
             }
         }
     }

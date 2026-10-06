@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ExplorerGlobalMenu: SubviewOfContentView {
     
-    @ObservedObject var viewModel: ContentViewModel
+    var viewModel: ContentViewModel
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     
     init(contentViewModel viewModel: ContentViewModel, wallpaperViewModel: WallpaperViewModel) {
@@ -26,7 +26,7 @@ struct ExplorerGlobalMenu: SubviewOfContentView {
             }
             Menu("View") {
                 Section {
-                    Picker("Icon Size", selection: $viewModel.explorerIconSize) {
+                    Picker("Icon Size", selection: Bindable(viewModel.navigation).explorerIconSize) {
                         Text("Small Icons").tag(Double(100))
                         Text("Medium Icons").tag(Double(125))
                         Text("Large Icons").tag(Double(150))

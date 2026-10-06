@@ -236,7 +236,7 @@ final class InstalledWorkshopTagsTests: XCTestCase {
     // MARK: Filters
 
     func testGenreOptionsAreWEsGenreTagsInOrder() {
-        XCTAssertEqual(FRTag.allOptions.count, WorkshopTags.genres.count)
+        XCTAssertEqual(FRTag.optionKeys.count, WorkshopTags.genres.count)
         XCTAssertEqual(InstalledTagFilter.genreTags([.pixelArt, .unspecifiedGenre, .anime]), ["Anime", "Pixel art", "Unspecified"])
     }
 

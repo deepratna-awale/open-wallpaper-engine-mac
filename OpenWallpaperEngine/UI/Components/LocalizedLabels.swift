@@ -4,7 +4,7 @@ import Foundation
 /// rating from `project.json`, and the filter options, which are WE's Workshop tags. The stored
 /// value stays English; only the label is translated.
 enum LocalizedLabels {
-    /// The label of a filter option or Workshop tag (`FR*.allOptions`, `WorkshopTags`,
+    /// The label of a filter option or Workshop tag (`FilterOption.key`, `WorkshopTags`,
     /// `WEResolutionTags`). An unknown value (a resolution, a tag from a newer WE) shows as is.
     static func filterOption(_ option: String) -> LocalizedStringResource {
         switch option {

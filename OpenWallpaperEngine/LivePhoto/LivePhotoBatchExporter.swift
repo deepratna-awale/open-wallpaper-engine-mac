@@ -51,16 +51,16 @@ final class LivePhotoBatchExporter: LivePhotoBatchWorking {
         return files
     }
 
-    /// The size the crop is measured in: a scene's drawn size (`SceneWallpaperViewModel.sceneSize`,
-    /// as the mode frames it), a video's picture as it plays.
+    /// The size the crop is measured in: a scene's drawn size (`SceneDrawnSize`, as the mode frames
+    /// it), a video's picture as it plays.
     static func size(of wallpaper: WEWallpaper) async throws -> SIMD2<Double> {
         if ScreenSaverVideoSource.isEligible(wallpaper) {
             guard let size = await SceneEditorModes.videoSize(of: wallpaper.mediaURL) else { throw LivePhotoVideoFrames.Failure.noVideoTrack }
             return size
         }
         return try await Task.detached(priority: .userInitiated) {
-            let scene = try JSONDecoder().decode(WEScene.self, from: AndroidPackageBuilder.sceneData(wallpaper))
-            return SIMD2<Double>(SceneWallpaperViewModel.sceneSize(of: scene))
+            try SceneDrawnSize.of(sceneData: AndroidPackageBuilder.sceneData(wallpaper),
+                                  overlay: SceneDrawnSize.savedOverlay(of: wallpaper))
         }.value
     }
 

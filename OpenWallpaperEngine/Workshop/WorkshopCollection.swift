@@ -97,7 +97,7 @@ struct WorkshopImportCandidate: Identifiable, Equatable {
     var isApplication: Bool { type?.caseInsensitiveCompare("application") == .orderedSame }
 
     /// Shown under the rating filter. An item without a rating is always shown, as the Installed
-    /// tab's rating filter does (`ContentViewModel`); only a known Questionable or Mature rating
+    /// tab's rating filter does (`InstalledLibraryModel`); only a known Questionable or Mature rating
     /// hides an item.
     func isAllowed(byRatings ratings: Set<String>) -> Bool {
         guard let contentRating else { return true }

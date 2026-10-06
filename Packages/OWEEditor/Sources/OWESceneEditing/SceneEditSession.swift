@@ -177,6 +177,13 @@ public final class SceneEditSession: ObservableObject {
         value("visible", of: layerID)?.boolValue ?? true
     }
 
+    /// A parent (or its parent…) is hidden: WE draws an object only while it and every parent are
+    /// visible (wallpaper64.exe 0x140185010), so hiding a group hides what's in it, and each layer
+    /// keeps its own switch for when the group shows again.
+    public func isHiddenByParent(_ layerID: Int) -> Bool {
+        outline.ancestors(of: layerID).contains { !isVisible($0.id) }
+    }
+
     public func isLocked(_ layerID: Int) -> Bool { overlay.isLocked(layerID) }
 
     public func isEdited(_ layerID: Int) -> Bool { overlay.hasEdits(layerID) }

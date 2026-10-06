@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct WallpaperExplorer: SubviewOfContentView {
-    @ObservedObject var viewModel: ContentViewModel
+    var viewModel: ContentViewModel
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     @State private var isCreatePlaylistPresented = false
     @State private var footerHeight: CGFloat = 44
@@ -19,16 +19,16 @@ struct WallpaperExplorer: SubviewOfContentView {
     }
 
     private func recomputePageSize(in geometry: GeometryProxy) {
-        viewModel.updateInstalledItemsPerPage(for: CGSize(
+        viewModel.library.updateInstalledItemsPerPage(for: CGSize(
             width: geometry.size.width,
             height: max(geometry.size.height - footerHeight - 8, 1)
-        ))
+        ), itemSize: viewModel.navigation.explorerIconSize)
     }
     
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 8) {
-                if viewModel.displayedWallpapers.isEmpty {
+                if viewModel.library.displayedWallpapers.isEmpty {
                     // GeometryReader places its content top-leading, so the message takes the
                     // whole area to sit in its centre.
                     Text("No wallpapers found for your search.")
@@ -40,13 +40,13 @@ struct WallpaperExplorer: SubviewOfContentView {
                     LazyVGrid(columns: [
                         GridItem(
                             .adaptive(
-                                minimum: viewModel.explorerIconSize,
-                                maximum: viewModel.explorerIconSize
+                                minimum: viewModel.navigation.explorerIconSize,
+                                maximum: viewModel.navigation.explorerIconSize
                             ),
                             spacing: 8
                         )
                     ], alignment: .leading, spacing: 8) {
-                        ForEach(Array(viewModel.displayedWallpapers.enumerated()), id: \.0) { (_, wallpaper) in
+                        ForEach(Array(viewModel.library.displayedWallpapers.enumerated()), id: \.0) { (_, wallpaper) in
                             ExplorerItem(viewModel: viewModel, wallpaperViewModel: wallpaperViewModel, wallpaper: wallpaper)
                                 .contextMenu {
                                     ExplorerItemMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel, current: wallpaper)
@@ -68,7 +68,7 @@ struct WallpaperExplorer: SubviewOfContentView {
                                 Label("Create Playlist", systemImage: "rectangle.stack.badge.plus")
                             }
                             .glassButtonStyle()
-                            .disabled(viewModel.selectedWallpapers.isEmpty)
+                            .disabled(viewModel.library.selectedWallpapers.isEmpty)
                             EditWallpaperButton(wallpaperViewModel: wallpaperViewModel)
                         }
                     }
@@ -82,21 +82,21 @@ struct WallpaperExplorer: SubviewOfContentView {
             }
             .onAppear {
                 recomputePageSize(in: geometry)
-                viewModel.clampCurrentPage()
+                viewModel.library.clampCurrentPage()
             }
             .onChange(of: geometry.size) { recomputePageSize(in: geometry) }
             // Tile size changes the row/column count, so the page size has to be recomputed too;
             // otherwise the grid overflows and pushes the footer controls out of view.
-            .onChange(of: viewModel.explorerIconSize) { recomputePageSize(in: geometry) }
+            .onChange(of: viewModel.navigation.explorerIconSize) { recomputePageSize(in: geometry) }
             .onChange(of: footerHeight) { recomputePageSize(in: geometry) }
             // Removing wallpapers or narrowing the search or filters can leave the current page past the last one.
-            .onChange(of: viewModel.maxPage) { viewModel.clampCurrentPage() }
+            .onChange(of: viewModel.library.maxPage) { viewModel.library.clampCurrentPage() }
             .sheet(isPresented: $isCreatePlaylistPresented) {
                 CreatePlaylistSheet(
-                    wallpapers: viewModel.selectedWallpaperItems(),
+                    wallpapers: viewModel.library.selectedWallpaperItems(),
                     wallpaperViewModel: wallpaperViewModel,
                     onComplete: {
-                        viewModel.clearSelection()
+                        viewModel.library.clearSelection()
                         isCreatePlaylistPresented = false
                     }
                 )
@@ -148,20 +148,20 @@ private struct CreatePlaylistSheet: View {
 }
 
 private struct InstalledPagination: View {
-    @ObservedObject var viewModel: ContentViewModel
+    var viewModel: ContentViewModel
 
     var body: some View {
         HStack(spacing: 6) {
             Button {
-                viewModel.currentPage -= 1
+                viewModel.library.currentPage -= 1
             } label: {
                 Image(systemName: "chevron.left")
             }
             .accessibilityLabel(Text("Previous Page"))
-            .disabled(viewModel.currentPage <= 1)
+            .disabled(viewModel.library.currentPage <= 1)
 
             ForEach(pageNumbers, id: \.self) { page in
-                if page == viewModel.currentPage {
+                if page == viewModel.library.currentPage {
                     pageButton(page)
                         .glassButtonStyle(.prominent)
                 } else {
@@ -171,22 +171,22 @@ private struct InstalledPagination: View {
             }
 
             Button {
-                viewModel.currentPage += 1
+                viewModel.library.currentPage += 1
             } label: {
                 Image(systemName: "chevron.right")
             }
             .accessibilityLabel(Text("Next Page"))
-            .disabled(!viewModel.hasNextWallpaperPage)
+            .disabled(!viewModel.library.hasNextWallpaperPage)
         }
     }
 
     private var pageNumbers: [Int] {
-        InstalledPageWindow.pageNumbers(current: viewModel.currentPage, total: viewModel.maxPage)
+        InstalledPageWindow.pageNumbers(current: viewModel.library.currentPage, total: viewModel.library.maxPage)
     }
 
     private func pageButton(_ page: Int) -> some View {
         Button("\(page)") {
-            viewModel.currentPage = page
+            viewModel.library.currentPage = page
         }
     }
 }

@@ -38,3 +38,16 @@ extension SceneLayer {
     /// The SceneScript that writes its text each frame (a clock), if any.
     public var textScript: String? { fields["text"]?["script"]?.stringValue }
 }
+
+extension SceneLayer {
+    /// The SF Symbol the layer lists show: the kind's, or a solid, composition or fullscreen
+    /// layer's own.
+    public var listSymbol: String {
+        switch imageRole {
+        case .solid?: return "square.fill"
+        case .composition?: return "square.on.square.dashed"
+        case .fullscreen?: return "rectangle.inset.filled"
+        default: return kind.symbol
+        }
+    }
+}
