@@ -1549,7 +1549,7 @@ class SceneWallpaperViewModel: ObservableObject {
         case .data(let bytes, _)?:
             data = bytes
         case nil:
-            OWELog.error(.scene, "Font \"\(path)\" not found in the wallpaper, WE assets or workshop items; using the system font")
+            OWELog.error(.scene, "Font \"\(path)\" not found in the wallpaper, WE assets or workshop items; using Arial, as WE does")
             return path
         }
         guard let descriptors = CTFontManagerCreateFontDescriptorsFromData(data as CFData) as? [CTFontDescriptor],

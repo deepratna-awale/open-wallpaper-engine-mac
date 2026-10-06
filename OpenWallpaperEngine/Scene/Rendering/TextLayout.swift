@@ -176,7 +176,7 @@ struct SceneTextLayout {
         let ctLine = CTLineCreateWithAttributedString(NSAttributedString(string: text, attributes: attributes))
         let utf16 = Array(text.utf16)
         var placed: [(font: CTFont, glyph: CGGlyph, offset: CGPoint, advance: CGFloat, box: CGRect, isWhitespace: Bool)] = []
-        let requested = attributes[.font] as? NSFont ?? NSFont.systemFont(ofSize: 12)
+        let requested = attributes[.font] as? NSFont ?? SceneTextFallbackFont.font(size: 12)
         for run in CTLineGetGlyphRuns(ctLine) as? [CTRun] ?? [] {
             let count = CTRunGetGlyphCount(run)
             guard count > 0 else { continue }

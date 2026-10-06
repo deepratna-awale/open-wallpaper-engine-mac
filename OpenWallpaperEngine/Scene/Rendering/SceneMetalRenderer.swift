@@ -4114,7 +4114,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         }
         // A changed string is rasterised on a pool job while the previous raster keeps drawing.
         let request = SceneTextRasterRequest(text: text, value: value,
-                                             fontName: fontName.isEmpty ? (text.font ?? "System") : fontName,
+                                             fontName: fontName.isEmpty ? (text.font ?? "") : fontName,
                                              pointSize: sizeValue, bold: bold, italic: italic,
                                              rasterScale: rasterScale, fill: fill)
         guard let (result, isNew) = textRaster.raster(key: cacheKey, slot: slot, request: request) else {
