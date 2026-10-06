@@ -171,25 +171,33 @@ struct WallpaperPreview: SubviewOfContentView {
                                 TextField("Wallpaper Title", text: $title)
                                     .onSubmit {
                                         var wallpaper = wallpaperViewModel.displayedWallpaper
-                                        
-                                        wallpaper.project.title = title
-                                        
+                                        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+                                        // An empty or unchanged title keeps the current one.
+                                        guard !trimmed.isEmpty, trimmed != wallpaper.project.title else {
+                                            isEditingId = ""
+                                            return
+                                        }
+                                        wallpaper.project.title = trimmed
+
                                         guard WallpaperProjectFileEdit.setLogging(["title": wallpaper.project.title], inProjectAt: wallpaper.wallpaperDirectory) else { return }
-                                        
+
                                         wallpaperViewModel.inspect(wallpaper)
-                                        
+
                                         isEditingId = ""
                                     }
+                                    .onExitCommand { isEditingId = "" }
                             } else {
                                 Text(verbatim: wallpaperViewModel.displayedWallpaper.project.displayTitle)
                                     .frame(minWidth: 50)
                                     .id("title")
                                     .lineLimit(1)
-                                    .onTapGesture(count: 2) {
-                                        title = wallpaperViewModel.displayedWallpaper.project.title
-                                        isEditingId = "title"
-                                    }
-                                Image(systemName: "square.and.pencil")
+                                    .onTapGesture(count: 2, perform: beginTitleEdit)
+                                Button(action: beginTitleEdit) {
+                                    Label("Rename", systemImage: "square.and.pencil")
+                                        .labelStyle(.iconOnly)
+                                }
+                                .buttonStyle(.plain)
+                                .help("Rename")
                             }
                             
                         }
@@ -591,6 +599,11 @@ struct WallpaperPreview: SubviewOfContentView {
         }
         .font(.footnote)
         .lineLimit(1)
+    }
+
+    private func beginTitleEdit() {
+        title = wallpaperViewModel.displayedWallpaper.project.title
+        isEditingId = "title"
     }
 
     private func formatCount(_ count: Int) -> String {
