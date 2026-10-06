@@ -165,7 +165,7 @@ struct WallpaperPreview: SubviewOfContentView {
                             .background(Color(nsColor: NSColor.controlBackgroundColor))
                             .frame(width: 280, height: 280)
                             .clipShape(RoundedRectangle(cornerRadius: 16.0))
-                            .border(Color.white, width: 4)
+                            .overlay { RoundedRectangle(cornerRadius: 16.0).strokeBorder(Color.white, lineWidth: 4) }
                         HStack {
                             if isEditingId == "title" {
                                 TextField("Wallpaper Title", text: $title)
