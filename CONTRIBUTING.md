@@ -1,6 +1,6 @@
 # Contributing
 
-This is the one contributor guide; `.github/` links here. Read [`docs/architecture.md`](docs/architecture.md) first for the module layout. The goal is to run every Wallpaper Engine wallpaper except the `application` type, following WE's own behaviour ([`docs/roadmap.md`](docs/roadmap.md) has the order of work).
+This is the one contributor guide; `.github/` links here. Read [`docs/architecture.md`](docs/architecture.md) first for the module layout. The goal is to run every Wallpaper Engine wallpaper except the `application` type, following WE's own behaviour. Comments that cite "… notes" (for example "editor-plan notes §3") refer to the maintainers' planning notes, which are kept outside the repository.
 
 ## Quick start
 

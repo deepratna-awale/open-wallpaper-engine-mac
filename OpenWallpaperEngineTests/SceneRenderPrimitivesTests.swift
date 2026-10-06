@@ -16,7 +16,7 @@ final class SceneRenderPrimitivesTests: XCTestCase {
     }
 
     /// A rate change changes the next step, never the time already run: every frame advances by
-    /// its own wall step × its rate, so the time is continuous across the change (roadmap 8.4).
+    /// its own wall step × its rate, so the time is continuous across the change (roadmap notes 8.4).
     func testSpeedChangeDoesNotJump() {
         var clock = SceneClock()
         clock.advance(to: 100, speed: 1)

@@ -1,6 +1,6 @@
 /// The layers whose image other layers' effects sample as `_rt_imageLayerComposite_<id>_a`, and
 /// the order the renderer prepares layers in so each sampled layer is ready before its readers
-/// (docs/models-plan.md §4.3, roadmap §8 item 14).
+/// (docs/models-plan.md §4.3, roadmap notes §8 item 14).
 ///
 /// WE registers a layer's first composite buffer, its image after its effects, in the texture
 /// manager under that name (0x1401ea7a3 → 0x1400d3198), so a material of another layer that names

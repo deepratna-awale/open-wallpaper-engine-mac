@@ -2,7 +2,7 @@ import XCTest
 import MetalKit
 @testable import OpenWallpaperEngine
 
-/// What adaptive rate and idle skipping save on real wallpapers (docs/efficiency-plan-2d.md WP2-C
+/// What adaptive rate and idle skipping save on real wallpapers (efficiency-plan-2d notes WP2-C
 /// metrics): each scene in `OWE_LIBRARY` runs in real time with a still cursor and no audio, once
 /// at a fixed rate drawing every frame and once paced, and the drawn rate and GPU time per second
 /// are compared. Runs with `OWE_PACING_METRICS=1`; `OWE_PACING_FPS` (default 30) and

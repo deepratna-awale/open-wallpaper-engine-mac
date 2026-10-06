@@ -1,7 +1,7 @@
 import AppKit
 
 extension AppDelegate {
-    /// Opens `wallpaper` in the Wallpaper Editor (docs/editor-plan.md), which is an app of its own:
+    /// Opens `wallpaper` in the Wallpaper Editor (editor-plan notes), which is an app of its own:
     /// quitting Open Wallpaper Engine leaves it open, and closing it leaves the app as it was.
     /// Scene wallpapers only.
     func showWallpaperEditor(for wallpaper: WEWallpaper) {

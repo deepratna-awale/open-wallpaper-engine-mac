@@ -109,7 +109,7 @@ struct DiagnosticsPage: SettingsPage {
                     }
                     .tint(Color.red)
                     .glassButtonStyle(.prominent)
-                    .help("Puts the General, Performance, Optimizations, Diagnostics and Screen Saver settings back to their defaults. Your wallpapers and library aren't touched.")
+                    .help("Puts the settings of every tab back to their defaults, Updates included. Your wallpapers and library aren't touched.")
                 }
             } header: {
                 Label("Reset", systemImage: "exclamationmark.triangle.fill")

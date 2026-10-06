@@ -500,7 +500,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// The last drawn frame's camera motion and text sizes (by layer id), for the next script frame.
     private var lastCameraMotion: CameraMotion?
     /// Per-layer dependencies, coverage, class and this frame's dirty state
-    /// (docs/efficiency-plan-2d.md WP1-A); built with the content, off the main thread.
+    /// (efficiency-plan-2d notes WP1-A); built with the content, off the main thread.
     private(set) var layerAnalysis: SceneLayerAnalysis?
     /// Keeps system audio capture on while the content reacts to audio (`needsAudio`).
     private var audioCaptureLease: AudioCaptureLease?

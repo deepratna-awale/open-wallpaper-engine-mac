@@ -8,7 +8,7 @@ without a Gatekeeper warning.
 Publishing the draft runs `.github/workflows/appcast.yml`, which adds the release to the
 **Sparkle** update feed, `site/appcast.xml`, served by GitHub Pages at
 <https://openwallpaperengine.app/appcast.xml> (the app's `SUFeedURL`, which `release.yml`
-checks). Installed copies update themselves from it (Settings › General › Updates).
+checks). Installed copies update themselves from it (Settings › Updates).
 
 ## The domain: openwallpaperengine.app
 
@@ -190,7 +190,8 @@ certificate into a temporary keychain → archive (manual signing, hardened runt
 `--timestamp`, no `get-task-allow`, `SPARKLE_PUBLIC_ED_KEY` and `OWE_VERSION_LABEL` set) →
 export (`developer-id`) → verify every Mach-O is Developer ID + runtime + timestamp, the
 version, label, `SUPublicEDKey` and `SUFeedURL`, and that the only executables besides the app
-are Sparkle's → notarize the app (`notarytool submit --wait`; on failure it prints
+are the known ones (Sparkle's, the framework, the Wallpaper Editor, `owe-mcp`, the Chromium
+helpers and the screen saver) → notarize the app (`notarytool submit --wait`; on failure it prints
 `notarytool log`) → staple → zip → DMG (signed, notarized, stapled) → verify with
 `codesign`, `spctl` and `stapler validate` → sign the zip with `sign_update` into
 `<zip>.sparkle.json` → draft release named *Open Wallpaper Engine 1.1.0 Beta 1* (for
@@ -242,7 +243,7 @@ everyone.
 
 ## Updating installed copies
 
-- **Update automatically** (on by default) checks daily, downloads in the background and
+- **Update automatically** (on by default) checks every four hours, downloads in the background and
   installs: on quit, or once the Mac has been idle for 10 minutes, or at the latest a day after
   the download (`PendingUpdateInstallPolicy`). The relaunch takes a few seconds and restores
   the wallpapers, and the windows, tab and Settings page that were open
@@ -344,14 +345,17 @@ validation are unchanged.
 
 `OpenWallpaperEngine/OpenWallpaperEngine.entitlements`: not sandboxed,
 `cs.allow-jit` (JavaScriptCore in SceneScript), network client, user-selected files,
-Downloads read-only. Metal, WebKit (out of process), system audio capture (a TCC prompt,
+Downloads read-only, Photos library (for "Also Save to Photos Album"). Metal, WebKit (out of process), system audio capture (a TCC prompt,
 not an entitlement) and running `/usr/bin/perl` with the bundled `nowPlayingAdapter.pl`
 (a resource, not an executable) need nothing more under the hardened runtime.
 
-The only nested code is `Sparkle.framework` (Swift package, embedded by Xcode) with its
-`Autoupdate` tool, `Updater.app` and two XPC services. The app isn't sandboxed, so it doesn't
-use the XPC services; they ship inside the framework, signed. Xcode's `developer-id` export
-re-signs all of it with the Developer ID identity, hardened runtime and a timestamp; the verify
-step checks every Mach-O for that, checks each Sparkle component with
+The nested code is the app's own (`OpenWallpaperEngine.framework`, `Wallpaper Editor.app` and
+`owe-mcp` in `Contents/Helpers`, the `owe-chromium-helper` XPC service and its four
+`OWE Chromium Helper` apps, and `Open Wallpaper Engine.saver` in `Contents/Resources`) and
+`Sparkle.framework` (Swift package, embedded by Xcode) with its `Autoupdate` tool, `Updater.app`
+and two XPC services. The app isn't sandboxed, so it doesn't use Sparkle's XPC services; they
+ship inside the framework, signed. Xcode's `developer-id` export re-signs all of it with the
+Developer ID identity, hardened runtime and a timestamp; the verify step checks every Mach-O for
+that, checks the Sparkle components, the framework and the saver with
 `codesign --verify --strict`, and fails on any other executable. No `--deep` signing is used
 (Apple advises against it); `codesign --verify --deep --strict` checks the whole bundle.

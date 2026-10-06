@@ -4,7 +4,7 @@ import JavaScriptCore
 
 /// Every default, range, step and option the app shows or uses comes from WE's own data: shader
 /// annotations, project.json properties, the scene's `general` block and `createScriptProperties`.
-/// See docs/we-values-audit.md.
+/// See we-values-audit notes.
 final class WEAuthoredValuesTests: XCTestCase {
     private static let libraryRoot = LibrarySweepTests.libraryRoot
 

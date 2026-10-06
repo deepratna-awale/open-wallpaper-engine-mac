@@ -1,6 +1,6 @@
 import Foundation
 
-/// How fast a scene's picture changes this frame (docs/efficiency-plan-2d.md WP2-C), slowest first.
+/// How fast a scene's picture changes this frame (efficiency-plan-2d notes WP2-C), slowest first.
 enum FrameDemand: Int, Comparable, CaseIterable {
     /// Nothing visible changed: the frame is neither encoded nor presented.
     case idle
@@ -115,7 +115,7 @@ struct FrameDemandInputs: Equatable {
     }
 }
 
-/// Adaptive frame rate and idle skipping for one scene (docs/efficiency-plan-2d.md WP2-C, item 9).
+/// Adaptive frame rate and idle skipping for one scene (efficiency-plan-2d notes WP2-C, item 9).
 ///
 /// Each frame the renderer classifies what changed (`classify`) and asks whether to draw
 /// (`record`): an idle frame is neither encoded nor presented, and the display keeps the last one.

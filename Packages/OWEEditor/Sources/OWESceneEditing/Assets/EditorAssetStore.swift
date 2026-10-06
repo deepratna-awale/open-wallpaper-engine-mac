@@ -4,7 +4,7 @@ import ImageIO
 import UniformTypeIdentifiers
 
 /// The files the editor adds to a wallpaper (imported images, sounds and fonts, painted masks),
-/// kept in the overlay's own folder beside its edits, never in the wallpaper (docs/editor-plan.md
+/// kept in the overlay's own folder beside its edits, never in the wallpaper (editor-plan notes
 /// §3). Paths inside it are the scene's own (`materials/editor/…`, `models/editor/…`,
 /// `sounds/editor/…`, `fonts/editor/…`, `materials/masks/…`), which the scene loader finds there
 /// after the wallpaper's own files; Save as Local Wallpaper copies them into the copy.

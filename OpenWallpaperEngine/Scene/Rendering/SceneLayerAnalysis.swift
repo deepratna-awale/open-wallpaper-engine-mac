@@ -1,7 +1,7 @@
 import AppKit
 import simd
 
-/// The time-varying inputs a layer's pixels can follow (docs/efficiency-plan-2d.md WP1-A).
+/// The time-varying inputs a layer's pixels can follow (efficiency-plan-2d notes WP1-A).
 struct SceneLayerDependencies: OptionSet, Hashable, CustomStringConvertible {
     let rawValue: UInt32
 
@@ -92,7 +92,7 @@ struct SceneLayerFrameInputs {
 
 /// Per-layer dependencies, coverage, content class and per-frame dirty state of one prepared
 /// scene: the foundation flattening, culling and the adaptive frame rate build on
-/// (docs/efficiency-plan-2d.md WP1-A).
+/// (efficiency-plan-2d notes WP1-A).
 ///
 /// Conservative throughout: an input the analysis can't prove static makes the layer dynamic, and a
 /// bound it can't prove makes the coverage the whole scene. A layer it has never seen (one a script

@@ -9,165 +9,71 @@ Open Wallpaper Engine es un reproductor gratuito y de código abierto para macOS
 
 > **Nota:** Este proyecto NO está afiliado al Wallpaper Engine comercial de Steam. Es una app de código abierto para macOS que puede mostrar recursos de fondos de pantalla del Steam Workshop de Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
-**Wiki:** las guías y la documentación están en la [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
+**Sitio web:** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki:** [guías y solución de problemas](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-**Sitio web:** las descargas, la política de privacidad y las condiciones de uso están en [openwallpaperengine.app](https://openwallpaperengine.app/).
+![La biblioteca](../../docs/images/library.png)
 
-## Requisitos
+## Lo más destacado
 
-### Obligatorios
-- **macOS 14.0 o posterior** (Sonoma). Tanto la captura de audio con ScreenCaptureKit como el renderizado de escenas con Metal dependen de ello.
+- **Fondos de pantalla de escena, de vídeo y web**: las escenas se dibujan con los propios sombreadores de Wallpaper Engine de cada fondo, traducidos a Metal, con efectos, partículas, modelos 3D, luces, líneas de tiempo, SceneScript y visuales que reaccionan al audio. Los fondos web se ejecutan en WebKit o en el motor Chromium opcional.
+- **Steam Workshop**: explora, filtra y descarga fondos del Workshop sin salir de la app, o importa carpetas y archivos zip de fondos de pantalla.
+- **Editor de escenas (en vivo)**: cambia en vivo en el escritorio las capas y los efectos del fondo que se está reproduciendo, graba con él tu propio salvapantallas o expórtalo como pantalla de bloqueo Live Photo para iPhone y iPad o como paquete para la app de Android de Wallpaper Engine.
 
-### Opcionales: necesarios para funciones concretas
+  ![Editor de escenas (en vivo)](../../docs/images/scene-editor-live.png)
 
-| Función | Requisito | Instalación |
-|---------|-------------|---------|
-| Explorar y descargar desde el Steam Workshop | `steamcmd` | Automático (opcional: `brew install steamcmd`) |
-| Visualizadores de audio y SceneScript que reacciona al audio | Permiso de Grabación del audio del sistema (antes de macOS 14.2: Grabación de pantalla y del audio del sistema) | Ajustes → Permisos |
+- **Editor de fondos de pantalla**: un editor al estilo del de Wallpaper Engine, con capas, efectos con vista previa, línea de tiempo, SceneScript, propiedades de usuario, partículas y Puppet Warp. Tus cambios se guardan junto al fondo de pantalla, nunca en sus archivos.
 
-#### Sombreadores
+  ![Editor de fondos de pantalla](../../docs/images/wallpaper-editor.png)
 
-Wallpaper Engine incluye sus efectos en GLSL. glslang y SPIRV-Cross, integrados en la app (`Vendor/ShaderToolchain`), los traducen a Metal (GLSL → SPIR-V → MSL) la primera vez que un fondo de pantalla los usa y después los almacenan en caché en el disco. No hace falta instalar nada. Un sombreador cuya traducción bloqueó la app, o la hizo fallar dos veces, se omite en los siguientes arranques, y todos los demás sombreadores se siguen traduciendo.
+- **Pantallas**: un fondo por pantalla, uno estirado a lo largo de todas o clonado en cada una, grupos, divisiones y perfiles, como en Wallpaper Engine.
 
-#### Recursos de Wallpaper Engine
+  ![Pantallas](../../docs/images/displays.png)
 
-Las escenas usan los efectos, materiales, sombreadores, tipos de letra y el entorno de ejecución de SceneScript compartidos de tu propia copia de Wallpaper Engine en Steam; la app no los incluye. Instálalos en *Ajustes → Recursos*: la app descarga tu copia con steamcmd (la cuenta debe tener Wallpaper Engine), conserva solo los recursos y los fondos de pantalla predeterminados, y elimina el resto. También puedes elegir una carpeta de Wallpaper Engine existente. Los fondos de pantalla de vídeo y web funcionan sin ellos.
+- **Playlists**: cambia de fondo con un temporizador, al iniciar sesión, según la hora del día o el día de la semana, con las transiciones de Wallpaper Engine.
 
-## Compilar desde el código fuente
+  ![Ajustes de playlists](../../docs/images/playlists.png)
 
-### Requisitos previos
-- macOS >= 14.0
-- Xcode >= 26.3 (SDK de macOS 26)
-- Herramientas de línea de comandos de Xcode
+- **Exportación**: pantallas de bloqueo Live Photo para iPhone y iPad y paquetes de Android de Wallpaper Engine, enviados al teléfono por Wi-Fi con un código QR.
 
-### Pasos
-```sh
-git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
-cd open-wallpaper-engine-mac
-open "OpenWallpaperEngine.xcodeproj"
-```
+  ![Enviar por Wi-Fi](../../docs/images/send-over-wifi.png)
 
-En Xcode, cambia el certificado de firma por el tuyo o selecciona «Sign to Run Locally» y, después, pulsa `Cmd + R` para compilar y ejecutar.
+- **Temas**: la barra de menús, el color de acento y las carpetas teñidas siguen los colores del fondo de pantalla.
 
-Al compilar desde el código fuente, la primera compilación descarga el paquete Swift Sparkle. Las compilaciones desde el código fuente no buscan actualizaciones.
+  ![Temas](../../docs/images/theming.png)
 
-## Uso
+- **Plugin Servidor MCP**: los clientes MCP pueden establecer fondos de pantalla, playlists y ajustes, y editar escenas, a través de una conexión local que solo tu cuenta puede abrir.
 
-### Explorar y descargar desde el Steam Workshop
+  ![Plugin Servidor MCP](../../docs/images/mcp-plugin.png)
 
-1. No hay que instalar nada: la app descarga SteamCMD de Valve en segundo plano la primera vez que se necesita (desde Valve, no viene incluido). Homebrew (`brew install steamcmd`) es opcional; si encuentra un steamcmd existente (Homebrew, Steam o el que elijas), lo usa
-2. Cambia a la pestaña **Workshop** e inicia sesión con tu cuenta de Steam (debes tener Wallpaper Engine)
-3. Introduce una [clave de la API web de Steam](https://steamcommunity.com/dev/apikey) cuando se te pida, o en *Ajustes → General*. Se comprueba con Steam y se guarda en tu llavero; tu contraseña de Steam nunca se almacena (steamcmd reutiliza su propia sesión en caché)
-4. Busca, filtra y haz clic en **Descargar** en cualquier fondo de pantalla
+Todo lo demás, área por área: [docs/features.md](../../docs/features.md).
 
-### Importar desde archivos locales
+## Instalación
 
-- **Carpeta:** Archivo > Importar > Fondo de pantalla desde carpeta: selecciona carpetas de fondos de pantalla que contengan `project.json`
-- **Zip:** Archivo > Importar, o arrastra y suelta un archivo `.zip` que contenga paquetes de fondos de pantalla
-- **Manual:** copia las carpetas de fondos de pantalla directamente en `~/Documents/Open Wallpaper Engine/`
+1. Descarga la última versión desde [openwallpaperengine.app](https://openwallpaperengine.app/) o [GitHub Releases](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases). Está firmada y notarizada, y se actualiza sola.
+2. Abre el DMG y arrastra **Open Wallpaper Engine** a Aplicaciones.
 
-## Novedades de la versión 1.0.0-beta.5
+Necesitas **macOS 14.0 (Sonoma) o posterior**. Algunas funciones requieren una versión más reciente de macOS, un permiso o un plugin: consulta [Primeros pasos](../../docs/getting-started.md#requirements).
 
-- **Editor de escenas (Live)** con las pestañas Fondo de pantalla, Salvapantallas y Exportación para iPhone y iPad; el **Editor de fondos de pantalla** (⌥⌘E) es una app propia: capas, efectos, línea de tiempo, SceneScript, propiedades de usuario, partículas y Puppet Warp; mapas de profundidad ([depth-maps.md](../../docs/depth-maps.md)).
-- **Disposiciones de pantallas** como en Wallpaper Engine: un fondo por pantalla, estirado, clonado, grupos, divisiones y perfiles ([display-layouts.md](../../docs/display-layouts.md)).
-- **Exportación**: Live Photos para iPhone y iPad ([iphone-ipad-export.md](../../docs/iphone-ipad-export.md)) y paquetes `.mpkg` para Wallpaper Engine en Android, con envío por Wi-Fi ([android-export.md](../../docs/android-export.md)).
-- **Salvapantallas** e imagen de la pantalla bloqueada ([screen-saver.md](../../docs/screen-saver.md)).
-- Plugin **Servidor MCP** ([mcp.md](../../docs/mcp.md)) y **Temas** de macOS con el color del fondo de pantalla ([theming.md](../../docs/theming.md)).
-- Reglas de aplicaciones, atajos globales, capturas de pantalla, Descubrir, carpetas de biblioteca. Todos los cambios: [CHANGELOG.md](../../CHANGELOG.md).
+## Inicio rápido
 
-## Funciones compatibles de la versión 1.0.0
+1. Abre la app. El asistente de configuración establece el idioma, SteamCMD, tu inicio de sesión de Steam y los recursos de Wallpaper Engine; todos los pasos se pueden omitir.
+2. Instala los recursos de Wallpaper Engine (*Ajustes › Recursos*) si quieres fondos de pantalla de escena. Proceden de tu propia copia de Wallpaper Engine en Steam; los fondos de vídeo y web funcionan sin ellos.
+3. Busca fondos de pantalla en la pestaña **Workshop**, o importa una carpeta o un archivo zip de fondo de pantalla (*Archivo › Importar fondo de pantalla desde carpeta…*, ⌘I).
+4. Haz clic en un fondo de pantalla de la biblioteca y luego en **Establecer fondo de pantalla** en sus detalles. Sus propiedades aparecen debajo.
 
-### Configuración, biblioteca y actualizaciones
-- **Asistente de configuración**: en el primer inicio, unos pocos pasos que se pueden omitir eligen el idioma, muestran las notas de privacidad, configuran SteamCMD, el inicio de sesión de Steam y una clave opcional de la Web API de Steam, instalan los recursos de Wallpaper Engine y traen tus fondos de pantalla.
-- **SteamCMD se configura solo**: si no encuentra ninguno, la app descarga SteamCMD de Valve; si existe uno de Homebrew o de Steam, lo usa.
-- **Recursos de Wallpaper Engine desde tu propia copia de Steam**: se instalan con SteamCMD tras iniciar sesión, opcionalmente con los fondos predeterminados de Wallpaper Engine.
-- **Importaciones**: tus colecciones y suscripciones del Workshop (desde la Web API de Steam), los elementos del Workshop de una biblioteca de Steam existente y carpetas de fondos de pantalla.
-- **La [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)**: guías, referencia de ajustes y solución de problemas; «Soporte y preguntas frecuentes» en la app la abre.
-- **Actualizaciones automáticas**: las actualizaciones firmadas se instalan solas (al salir, tras 10 minutos de ausencia o en un día como máximo, y un reinicio rápido restaura tus fondos). En Ajustes › General › Actualizaciones puedes solo buscarlas, desactivar la búsqueda y recibir versiones beta. «Buscar actualizaciones…» está en el menú de la app y en el menú de la barra de menús.
-
-### Renderizado de escenas
-- **Los sombreadores propios de Wallpaper Engine**: las capas, los efectos y los materiales se dibujan ahora con los sombreadores originales de cada fondo de pantalla, traducidos a Metal, incluidos los efectos creados por los autores del Workshop.
-- Capas de composición, de pantalla completa y de color sólido, capas que muestrean otras capas, los 33 modos de fusión y más máscaras de efecto.
-- **Maquetación fiel del texto**: el texto se dimensiona, alinea y coloca como en Wallpaper Engine, con efectos de fuente de contorno, desenfoque y sombra paralela.
-- **Líneas de tiempo**: las animaciones de fotogramas clave y de texturas siguen las reglas de Wallpaper Engine para reproducción única, en bucle y en espejo.
-- Tablas de consulta de color, la corrección de color de Wallpaper Engine y las opciones de filtro de imagen y de color en las propiedades de un fondo de pantalla.
-- Imágenes con **Puppet Warp** animadas por sus animaciones, con física de huesos (muelles, gravedad, límites) y objetos sujetos a sus huesos.
-
-### 3D e iluminación
-- **Modelos 3D** con skinning, capas de animación, morph targets y root motion.
-- Cámaras de escena en perspectiva con trayectorias, fundidos y vibración; las capas 2D se sitúan en profundidad.
-- **Luces de escena** con cookies de luz, sombras, reflejos planos, niebla por distancia y por altura, y luces volumétricas.
-- **HDR**: las escenas HDR se renderizan con el bloom HDR de Wallpaper Engine, y la calidad «Ultra (HDR de pantalla)» genera EDR en las pantallas que pueden mostrarlo.
-
-### Partículas
-- **Partículas en la GPU**: cada sistema de partículas se simula en la GPU, en 3D, con puntos de control 3D.
-- Sistemas hijos, incluidos los que activan las partículas de su padre; ráfagas de emisión, retardos y emisión periódica; emisión desde la imagen de una capa.
-- Colisiones, también con los huesos de un modelo, respuesta al audio y rotación en todos los ejes.
-- Ajustes de partículas vinculados a las propiedades de usuario de un fondo de pantalla.
-
-### SceneScript y multimedia
-- Un **entorno de ejecución de SceneScript** completo: módulos, el modelo de objetos de escena/capa/efecto/material, eventos de animación, `localStorage` y detección del cursor, con los scripts de cada fondo de pantalla en su propio hilo.
-- Los scripts pueden crear capas, sistemas de partículas y sonidos, mover la niebla, controlar el bloom y posar marionetas y modelos.
-- **Ahora suena**: los fondos de pantalla de escena y web reciben la pista actual y el estado de reproducción (macOS 15.4 o posterior).
-- Los fondos de pantalla web reciben sus propiedades de usuario y el audio en directo.
-
-### Audio
-- El espectro de audio se calcula como lo calcula Wallpaper Engine, en estéreo.
-- Las **capas de sonido** se reproducen al ritmo del reloj de la escena, con **sonido espacial** situado como en Wallpaper Engine.
-
-### Pantallas y reproducción
-- **Pausar por pantalla** o **Pausar todas**, con las reglas de reproducción evaluadas para cada pantalla, incluida la regla de Wallpaper Engine para ventanas maximizadas.
-- Propiedades de usuario por pantalla, con «Sincronizar propiedades entre pantallas».
-- Un fondo de pantalla que se muestra en varias pantallas se renderiza una sola vez y se presenta en cada una.
-- Nuevos ajustes de calidad: Resolución de renderizado, Resolución de texturas, nivel de detalle de escena ajustado a la pantalla, reflejos, sombras y volumétricos.
-- **Reinicio seguro**: un fondo de pantalla que bloqueó la app o la hizo fallar se omite en el siguiente arranque y se marca en la biblioteca.
-
-### Workshop y biblioteca
-- Los filtros del Workshop de Wallpaper Engine: Mostrar solo, un filtro de resolución, géneros combinados con Y/O y etiquetas en cada tarjeta.
-- **Vistas previas animadas** — las miniaturas de los fondos de pantalla en la biblioteca reproducen su animación de vista previa del Workshop (GIF), para que veas un fondo de pantalla en movimiento antes de aplicarlo. Solo se reproducen mientras están visibles y se pausan cuando la ventana está oculta o en modo de bajo consumo.
-- Los fondos de pantalla instalados muestran sus etiquetas del Workshop y se pueden filtrar por ellas; los elementos que solo son recursos o dependencias no aparecen en Instalados.
-- Las dependencias del Workshop que faltan se descargan automáticamente, y las que ya no se usan se eliminan tras un borrado. Cada descarga va a la carpeta Almacenamiento de fondos de pantalla.
-- **Restablecer** en Detalles devuelve las propiedades de un fondo de pantalla, y sus cambios en el Inspector de escenas, a los valores por defecto que fijó su autor.
-- Se respetan las condiciones de propiedades, las filas de texto y los formatos de los reguladores definidos en los ajustes del fondo de pantalla.
-- Las contraseñas de Steam nunca se guardan, y la clave de la API web de Steam se guarda en el llavero.
-
-### Interfaz e idiomas
-- **Liquid Glass** en macOS 26: una vista dividida nativa con barra de herramientas, inspector y controles de cristal. Las versiones anteriores de macOS mantienen el aspecto de siempre.
-- **15 idiomas nuevos**: alemán, francés, español, portugués de Brasil, italiano, japonés, coreano, chino simplificado y tradicional, ruso, polaco, turco, ucraniano, árabe e hindi, que se eligen en el selector de idioma de los ajustes.
-- Un nuevo icono de la app y un icono de la barra de menús que sigue el aspecto de la barra de menús.
-
-## Tipos de fondos de pantalla compatibles
-
-| Tipo | Estado |
-|------|--------|
-| Vídeo (.mp4, .webm) | Funciona |
-| Web (HTML/WebGL) | Funciona |
-| Escena: capas de imagen y líneas de tiempo | Funciona (Metal) |
-| Escena: texturas DXT1/DXT3/DXT5 | Funciona (descodificación en la GPU con Metal) |
-| Escena: sprites TEXS / líneas de tiempo de alfa | Funciona |
-| Escena: partículas de sprites | Funciona |
-| Escena: partículas avanzadas | Parcial (consulta Limitaciones) |
-| Escena: efectos de Wallpaper Engine y del Workshop (los propios sombreadores de WE) | Funciona |
-| Escena: SceneScript | Parcial (consulta Limitaciones) |
-| Escena: modelos 3D / rigging / deformación de marioneta | Funciona |
-| Aplicación | No compatible |
+Más información: [Primeros pasos](../../docs/getting-started.md) y la [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
 ## Privacidad
 
-Todo lo que guarda Open Wallpaper Engine se queda en tu Mac: tus ajustes, tu biblioteca, la caché y el inicio de sesión de SteamCMD. Open Wallpaper Engine no tiene servidor y no recopila datos ni analíticas. Se comunica con Valve (con Steam cuando usas el Workshop o instalas los recursos, y con el servidor de Valve para descargar SteamCMD) y con GitHub, para buscar actualizaciones de la app (el appcast en GitHub Pages) y descargarlas de GitHub Releases, sin enviar ningún dato personal. La búsqueda de actualizaciones se puede desactivar en Ajustes › General. Los fondos de pantalla web pueden cargar su propio contenido en línea. Tu contraseña de Steam y tu código de Steam Guard van directamente a SteamCMD y nunca se guardan, se registran ni se envían a ningún otro sitio; solo se recuerda tu nombre de cuenta, para reutilizar el inicio de sesión guardado de SteamCMD.
+Todo lo que guarda la app se queda en tu Mac, y no recopila datos ni analíticas. Se conecta a Steam (para el Workshop y los recursos) y a GitHub (para las actualizaciones), y los plugins solo se descargan cuando los instalas. Detalles: [a qué se conecta la app](../../docs/getting-started.md#what-the-app-connects-to) y la [política de privacidad](../../docs/legal/privacy-policy.md).
 
-## Estructura del proyecto
+## Documentación
 
-- `OpenWallpaperEngine/Scene/Format/`: analizadores y modelos de PKG, TEX/TEXS y scene.json
-- `OpenWallpaperEngine/Scene/Shaders/`: traducción GLSL → SPIR-V → MSL (`ShaderVariant.swift`, `InProcessShaderCompiler.swift`), almacenamiento en caché y el archivo de pipelines
-- `Vendor/ShaderToolchain/`: código fuente de glslang y SPIRV-Cross, integrado en la app como paquete local
-- `OpenWallpaperEngine/Scene/Scripting/`: entorno de ejecución de SceneScript y vinculaciones de audio/FFT
-- `OpenWallpaperEngine/Audio/AudioLevelTap.swift`: captura del audio del sistema con ScreenCaptureKit
-- `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal`: el renderizador de escenas Metal y la biblioteca de sombreadores
-- `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift`: exploración del Steam Workshop y descargas
-- `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift`: almacenamiento de la biblioteca, importación y conversión de paquetes
-- `Scripts/fill-assets-cache.sh`: utilidad de desarrollo que copia los recursos de una instalación de Wallpaper Engine en una carpeta local o en la caché del almacenamiento de fondos de pantalla
-- `Scripts/scene-api-coverage.py`: indica qué API de SceneScript usan los fondos de pantalla instalados en comparación con las que están implementadas
+- [Primeros pasos](../../docs/getting-started.md): requisitos, recursos, el Workshop y la importación
+- [Funciones](../../docs/features.md): todo lo que admite la app y cómo usarlo
+- Guías: [disposiciones de pantallas](../../docs/display-layouts.md) · [playlists](../../docs/playlists.md) · [salvapantallas](../../docs/screen-saver.md) · [exportación a iPhone y iPad](../../docs/iphone-ipad-export.md) · [exportación a Android](../../docs/android-export.md) · [mapas de profundidad](../../docs/depth-maps.md) · [temas](../../docs/theming.md) · [Servidor MCP](../../docs/mcp.md) · [motor web Chromium](../../docs/chromium-engine.md)
+- [Desarrollo](../../docs/development.md): compilar desde el código fuente y la estructura del proyecto; [CONTRIBUTING.md](../../CONTRIBUTING.md) y [arquitectura](../../docs/architecture.md)
+- [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki): guías, referencia de ajustes y solución de problemas
 
 ## Proyectos relacionados
 
@@ -185,3 +91,24 @@ Este proyecto se basa en el trabajo de:
 - **[Deepratna Awale](https://github.com/deepratna-awale)**: renderizador de escenas Metal y pipeline de efectos, traducción y almacenamiento en caché de sombreadores GLSL→MSL, entorno de ejecución de SceneScript, renderizado que reacciona al audio, renovación del Workshop y las descargas, ajustes de colocación y rendimiento, rediseño del logotipo
 
 Con licencia [GPL-3.0](../../LICENSE), igual que el proyecto original.
+
+## Aviso legal
+
+[Condiciones de uso](../../docs/legal/terms-of-use.md) · [Política de privacidad](../../docs/legal/privacy-policy.md) · [Política de seguridad](../../SECURITY.md)
+
+- **English:** Please read the Terms of Use and the Privacy Policy.
+- **Deutsch:** Bitte lesen Sie die Nutzungsbedingungen und die Datenschutzrichtlinie.
+- **Français :** Veuillez lire les conditions d’utilisation et la politique de confidentialité.
+- **Español:** Lee las condiciones de uso y la política de privacidad.
+- **Português (Brasil):** Leia os Termos de Uso e a Política de Privacidade.
+- **Italiano:** Leggi le condizioni d’uso e l’informativa sulla privacy.
+- **日本語：** 利用規約とプライバシーポリシーをお読みください。
+- **한국어:** 이용 약관과 개인정보 처리방침을 읽어 주십시오.
+- **简体中文：** 请阅读使用条款和隐私政策。
+- **繁體中文：** 請閱讀使用條款和隱私權政策。
+- **Русский:** Прочитайте условия использования и политику конфиденциальности.
+- **Polski:** Przeczytaj warunki korzystania i politykę prywatności.
+- **Türkçe:** Lütfen Kullanım Koşulları’nı ve Gizlilik Politikası’nı okuyun.
+- **Українська:** Прочитайте умови використання та політику приватності.
+- **العربية:** يُرجى قراءة شروط الاستخدام وسياسة الخصوصية.
+- **हिन्दी:** कृपया उपयोग की शर्तें और गोपनीयता नीति पढ़ें।

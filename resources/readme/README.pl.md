@@ -9,165 +9,71 @@ Open Wallpaper Engine to darmowy odtwarzacz open source dla macOS, który wyświ
 
 > **Uwaga:** Ten projekt NIE jest powiązany z komercyjnym programem Wallpaper Engine dostępnym w Steam. To aplikacja open source dla macOS, która potrafi wyświetlać zasoby tapet z Warsztatu Steam programu Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
-**Wiki:** poradniki i dokumentacja są w [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
+**Strona internetowa:** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki:** [poradniki i rozwiązywanie problemów](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-**Strona:** pobieranie, polityka prywatności i warunki korzystania są na [openwallpaperengine.app](https://openwallpaperengine.app/).
+![Biblioteka](../../docs/images/library.png)
 
-## Wymagania
+## Najważniejsze funkcje
 
-### Wymagane
-- **macOS 14.0 lub nowszy** (Sonoma). Wymagają go zarówno przechwytywanie dźwięku przez ScreenCaptureKit, jak i renderowanie scen w Metal.
+- **Tapety typu scena, wideo i internetowe** — sceny są rysowane własnymi shaderami Wallpaper Engine każdej tapety, przetłumaczonymi na Metal, z efektami, cząsteczkami, modelami 3D, światłami, osiami czasu, SceneScript i wizualizacjami reagującymi na dźwięk. Tapety internetowe działają w WebKit lub w opcjonalnym silniku Chromium.
+- **Warsztat Steam** — przeglądaj, filtruj i pobieraj tapety z Warsztatu bezpośrednio w aplikacji albo importuj foldery i pliki zip z tapetami.
+- **Edytor sceny (na żywo)** — zmieniaj na żywo, na biurku, warstwy i efekty działającej tapety, nagraj z niej własny wygaszacz ekranu albo wyeksportuj ją jako ekran blokady Live Photo dla iPhone’a i iPada lub jako pakiet dla aplikacji Wallpaper Engine na Androida.
 
-### Opcjonalne — potrzebne do określonych funkcji
+  ![Edytor sceny (na żywo)](../../docs/images/scene-editor-live.png)
 
-| Funkcja | Wymaganie | Instalacja |
-|---------|-------------|---------|
-| Przeglądanie i pobieranie z Warsztatu Steam | `steamcmd` | Automatycznie (opcjonalnie: `brew install steamcmd`) |
-| Wizualizatory dźwięku i SceneScript reagujący na dźwięk | Uprawnienie Nagrywanie dźwięku systemowego (przed macOS 14.2: Nagrywanie ekranu i dźwięku systemowego) | Ustawienia → Uprawnienia |
+- **Edytor tapet** — edytor wzorowany na edytorze Wallpaper Engine: warstwy, efekty z podglądem, oś czasu, SceneScript, właściwości użytkownika, cząsteczki i Puppet Warp. Twoje zmiany są zapisywane obok tapety, nigdy w jej plikach.
 
-#### Shadery
+  ![Edytor tapet](../../docs/images/wallpaper-editor.png)
 
-Wallpaper Engine dostarcza swoje efekty w postaci GLSL. Są one tłumaczone na Metal (GLSL → SPIR-V → MSL) przez biblioteki glslang i SPIRV-Cross wbudowane w aplikację (`Vendor/ShaderToolchain`) przy pierwszym użyciu przez tapetę, a następnie buforowane na dysku. Nie trzeba niczego instalować. Shader, którego tłumaczenie zawiesiło aplikację lub dwukrotnie spowodowało jej awarię, jest pomijany przy kolejnych uruchomieniach, a wszystkie pozostałe shadery są nadal tłumaczone.
+- **Wyświetlacze** — osobna tapeta na każdym wyświetlaczu, jedna rozciągnięta na wszystkie lub sklonowana na każdy, grupy, podziały i profile, tak jak w Wallpaper Engine.
 
-#### Zasoby Wallpaper Engine
+  ![Wyświetlacze](../../docs/images/displays.png)
 
-Sceny korzystają ze wspólnych efektów, materiałów, shaderów, czcionek i środowiska uruchomieniowego SceneScript z Twojej kopii Wallpaper Engine w Steam; aplikacja ich nie zawiera. Zainstaluj je w *Ustawienia → Zasoby*: aplikacja pobiera Twoją kopię przez steamcmd (konto musi posiadać Wallpaper Engine), zachowuje tylko zasoby i domyślne tapety, a resztę usuwa. Możesz też wybrać istniejący folder Wallpaper Engine. Tapety wideo i sieciowe działają bez nich.
+- **Playlisty** — zmieniaj tapety według minutnika, przy logowaniu, o określonej porze dnia lub w wybrane dni tygodnia, z przejściami z Wallpaper Engine.
 
-## Kompilowanie ze źródeł
+  ![Ustawienia playlisty](../../docs/images/playlists.png)
 
-### Wymagania wstępne
-- macOS >= 14.0
-- Xcode >= 26.3 (macOS 26 SDK)
-- Narzędzia wiersza poleceń Xcode
+- **Eksport** — ekrany blokady Live Photo dla iPhone’a i iPada oraz pakiety Wallpaper Engine na Androida, wysyłane na telefon przez Wi-Fi za pomocą kodu QR.
 
-### Kroki
-```sh
-git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
-cd open-wallpaper-engine-mac
-open "OpenWallpaperEngine.xcodeproj"
-```
+  ![Wysyłanie przez Wi-Fi](../../docs/images/send-over-wifi.png)
 
-W Xcode zmień certyfikat podpisywania na własny lub wybierz „Sign to Run Locally”, a następnie naciśnij `Cmd + R`, aby skompilować i uruchomić aplikację.
+- **Motywy** — pasek menu, kolor akcentu i zabarwione foldery dopasowują się do kolorów tapety.
 
-Pierwsza kompilacja ze źródeł pobiera pakiet Swift Sparkle. Wersje zbudowane ze źródeł nie sprawdzają aktualizacji.
+  ![Motywy](../../docs/images/theming.png)
 
-## Użycie
+- **Wtyczka Serwer MCP** — klienty MCP mogą ustawiać tapety, playlisty i ustawienia oraz edytować sceny przez lokalne połączenie, które może otworzyć tylko Twoje konto.
 
-### Przeglądanie i pobieranie z Warsztatu Steam
+  ![Wtyczka Serwer MCP](../../docs/images/mcp-plugin.png)
 
-1. Nie trzeba nic instalować: przy pierwszej potrzebie aplikacja pobiera w tle SteamCMD od Valve (z serwerów Valve, nie jest dołączony). Homebrew (`brew install steamcmd`) jest opcjonalny; jeśli zostanie znaleziony istniejący steamcmd (Homebrew, Steam lub wskazany przez Ciebie), jest używany
-2. Przejdź na kartę **Warsztat** i zaloguj się na swoje konto Steam (konto musi mieć Wallpaper Engine)
-3. Po wyświetleniu monitu lub w *Ustawienia → Ogólne* wprowadź [klucz Steam Web API](https://steamcommunity.com/dev/apikey). Jest on weryfikowany w Steam i przechowywany w pęku kluczy; hasło do Steam nigdy nie jest zapisywane (steamcmd korzysta z własnej zapisanej sesji)
-4. Wyszukaj i przefiltruj tapety, a następnie kliknij **Pobierz** przy dowolnej z nich
+Wszystko inne, obszar po obszarze: [docs/features.md](../../docs/features.md).
 
-### Import z plików lokalnych
+## Instalacja
 
-- **Folder:** Plik > Importuj z folderu — wybierz foldery tapet zawierające `project.json`
-- **Zip:** Plik > Importuj lub przeciągnij i upuść plik `.zip` zawierający pakiety tapet
-- **Ręcznie:** skopiuj foldery tapet bezpośrednio do `~/Documents/Open Wallpaper Engine/`
+1. Pobierz najnowsze wydanie ze strony [openwallpaperengine.app](https://openwallpaperengine.app/) lub z [GitHub Releases](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases). Jest podpisane i poświadczone notarialnie przez Apple, a do tego samo się aktualizuje.
+2. Otwórz plik DMG i przeciągnij **Open Wallpaper Engine** do folderu Aplikacje.
 
-## Nowości w wersji 1.0.0-beta.5
+Potrzebujesz **macOS 14.0 (Sonoma) lub nowszego**. Niektóre funkcje wymagają nowszej wersji macOS, uprawnienia lub wtyczki: zobacz [Pierwsze kroki](../../docs/getting-started.md#requirements).
 
-- **Edytor sceny (Live)** z kartami Tapeta, Wygaszacz ekranu i Eksport na iPhone’a i iPada; **Edytor tapet** (⌥⌘E) działa jako osobna aplikacja: warstwy, efekty, oś czasu, SceneScript, właściwości użytkownika, cząsteczki i Puppet Warp; mapy głębi ([depth-maps.md](../../docs/depth-maps.md)).
-- **Układy monitorów** jak w Wallpaper Engine: tapeta na każdy monitor, rozciągnięta, sklonowana, grupy, podziały i profile ([display-layouts.md](../../docs/display-layouts.md)).
-- **Eksport**: Live Photos na iPhone’a i iPada ([iphone-ipad-export.md](../../docs/iphone-ipad-export.md)) oraz pakiety `.mpkg` dla Wallpaper Engine na Androidzie, z wysyłaniem przez Wi-Fi ([android-export.md](../../docs/android-export.md)).
-- **Wygaszacz ekranu** i obraz ekranu blokady ([screen-saver.md](../../docs/screen-saver.md)).
-- Wtyczka **Serwer MCP** ([mcp.md](../../docs/mcp.md)) i **motywy** macOS w kolorze tapety ([theming.md](../../docs/theming.md)).
-- Reguły aplikacji, globalne skróty, zrzuty ekranu, Odkrywaj, foldery biblioteki. Wszystkie zmiany: [CHANGELOG.md](../../CHANGELOG.md).
+## Szybki start
 
-## Co obsługuje wersja 1.0.0
+1. Otwórz aplikację. Asystent konfiguracji ustawia język, SteamCMD, logowanie do Steam i zasoby Wallpaper Engine; każdy krok można pominąć.
+2. Zainstaluj zasoby Wallpaper Engine (*Ustawienia › Zasoby*), jeśli chcesz korzystać z tapet typu scena. Pochodzą one z Twojej własnej kopii Wallpaper Engine w Steam; tapety wideo i internetowe działają bez nich.
+3. Znajdź tapety na karcie **Warsztat** albo zaimportuj folder lub plik zip z tapetą (*Plik › Importuj tapetę z folderu…*, ⌘I).
+4. Kliknij tapetę w bibliotece, a następnie **Ustaw tapetę** w jej szczegółach. Jej właściwości są wymienione poniżej.
 
-### Konfiguracja, biblioteka i aktualizacje
-- **Asystent konfiguracji** — przy pierwszym uruchomieniu kilka kroków, które można pominąć, ustawia język, pokazuje informacje o prywatności, konfiguruje SteamCMD, logowanie do Steam i opcjonalny klucz Steam Web API, instaluje zasoby Wallpaper Engine i sprowadza Twoje tapety.
-- **SteamCMD konfiguruje się sam** — jeśli go nie znajdzie, aplikacja pobiera SteamCMD od Valve; używa istniejącego z Homebrew lub Steam.
-- **Zasoby Wallpaper Engine z Twojej kopii na Steam** — instalowane przez SteamCMD po zalogowaniu, opcjonalnie z domyślnymi tapetami Wallpaper Engine.
-- **Importy** — Twoje kolekcje i subskrypcje z Warsztatu (z Web API Steam), elementy Warsztatu z istniejącej biblioteki Steam i foldery z tapetami.
-- **[wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)** — poradniki, opis ustawień i rozwiązywanie problemów; otwiera ją „Pomoc i FAQ” w aplikacji.
-- **Automatyczne aktualizacje** — podpisane aktualizacje instalują się same (przy zamknięciu, po 10 minutach nieobecności lub w ciągu doby, a szybkie ponowne uruchomienie przywraca tapety). W Ustawienia › Ogólne › Aktualizacje możesz tylko sprawdzać, wyłączyć sprawdzanie i otrzymywać wersje beta. „Sprawdź uaktualnienia…” jest w menu aplikacji i w menu na pasku menu.
-
-### Renderowanie scen
-- **Własne shadery Wallpaper Engine** — warstwy, efekty i materiały są teraz rysowane oryginalnymi shaderami każdej tapety, przetłumaczonymi na Metal, w tym efekty stworzone samodzielnie przez autorów z Warsztatu.
-- Warstwy kompozycji, pełnoekranowe i jednolite, warstwy próbkujące inne warstwy, wszystkie 33 tryby mieszania i więcej masek efektów.
-- **Wierny układ tekstu** — tekst ma taki rozmiar, wyrównanie i położenie jak w Wallpaper Engine, z efektami czcionki: kontur, rozmycie i cień.
-- **Osie czasu** — animacje klatek kluczowych i tekstur działają według reguł Wallpaper Engine dla odtwarzania jednokrotnego, w pętli i lustrzanego.
-- Tablice korekcji kolorów (LUT), korekcja kolorów Wallpaper Engine oraz opcje filtra obrazu i koloru we właściwościach tapety.
-- Obrazy **Puppet Warp** poruszane własnymi animacjami, z fizyką kości (sprężyny, grawitacja, ograniczenia) i obiektami przyczepionymi do kości.
-
-### 3D i oświetlenie
-- **Modele 3D** ze skinningiem, warstwami animacji, morph targetami i root motion.
-- Perspektywiczne kamery sceny ze ścieżkami, przejściami i drganiem; warstwy 2D są umieszczane w głębi.
-- **Światła sceny** z maskami światła (cookies), cieniami, odbiciami planarnymi, mgłą zależną od odległości i wysokości oraz światłami wolumetrycznymi.
-- **HDR** — sceny HDR są renderowane z poświatą HDR Wallpaper Engine, a jakość „Ultra (HDR wyświetlacza)” wysyła obraz EDR na wyświetlacze, które mogą go pokazać.
-
-### Cząsteczki
-- **Cząsteczki na GPU** — każdy system cząsteczek jest symulowany na GPU, w 3D, z punktami kontrolnymi 3D.
-- Systemy potomne, w tym uruchamiane przez cząsteczki systemu nadrzędnego; serie emisji, opóźnienia i emisja okresowa; emisja z obrazu warstwy.
-- Kolizje, także z kośćmi modelu, reakcja na dźwięk i obrót wokół każdej osi.
-- Ustawienia cząsteczek powiązane z właściwościami użytkownika tapety.
-
-### SceneScript i multimedia
-- Pełne **środowisko uruchomieniowe SceneScript** — moduły, model obiektowy sceny/warstwy/efektu/materiału, zdarzenia animacji, `localStorage` i wykrywanie obiektu pod kursorem; skrypty każdej tapety działają we własnym wątku.
-- Skrypty mogą tworzyć warstwy, systemy cząsteczek i dźwięki, przesuwać mgłę, sterować poświatą oraz ustawiać pozy marionetek i modeli.
-- **Teraz odtwarzane** — tapety typu scena i tapety internetowe otrzymują bieżący utwór i stan odtwarzania (macOS 15.4 lub nowszy).
-- Tapety internetowe otrzymują swoje właściwości użytkownika i dźwięk na żywo.
-
-### Dźwięk
-- Widmo dźwięku jest obliczane tak, jak oblicza je Wallpaper Engine, w stereo.
-- **Warstwy dźwiękowe** są odtwarzane według zegara sceny, z **dźwiękiem przestrzennym** rozmieszczonym jak w Wallpaper Engine.
-
-### Wyświetlacze i odtwarzanie
-- **Wstrzymaj na danym wyświetlaczu** lub **Wstrzymaj wszystkie**; reguły odtwarzania są sprawdzane dla każdego wyświetlacza, w tym reguła Wallpaper Engine dla zmaksymalizowanych okien.
-- Właściwości użytkownika dla każdego wyświetlacza oraz opcja „Synchronizuj właściwości między wyświetlaczami”.
-- Tapeta pokazywana na kilku wyświetlaczach jest renderowana raz i wyświetlana na każdym z nich.
-- Nowe ustawienia jakości: rozdzielczość renderowania, rozdzielczość tekstur, szczegółowość sceny dopasowana do wyświetlacza, odbicia, cienie i efekty wolumetryczne.
-- **Bezpieczne ponowne uruchomienie** — tapeta, która zablokowała aplikację lub spowodowała jej awarię, jest pomijana przy następnym uruchomieniu i oznaczana w bibliotece.
-
-### Warsztat i biblioteka
-- Filtry Warsztatu z Wallpaper Engine: Pokaż tylko, filtr rozdzielczości, gatunki łączone przez I/LUB oraz tagi na każdej karcie.
-- **Animowane podglądy** — kafelki tapet w bibliotece odtwarzają animację podglądu z Warsztatu (GIF), więc tapetę można zobaczyć w ruchu przed jej zastosowaniem. Są odtwarzane tylko wtedy, gdy są widoczne, i wstrzymują się, gdy okno jest ukryte lub włączony jest tryb niskiego zużycia energii.
-- Zainstalowane tapety pokazują swoje tagi z Warsztatu i można je według nich filtrować; elementy zawierające wyłącznie zasoby lub zależności nie trafiają do sekcji Zainstalowane.
-- Brakujące zależności z Warsztatu są pobierane automatycznie, a nieużywane są usuwane po usunięciu tapety. Każde pobranie trafia do folderu Magazyn tapet.
-- **Resetuj** w Szczegółach przywraca właściwości tapety, a także jej zmiany w inspektorze sceny, do wartości domyślnych ustawionych przez autora.
-- Uwzględniane są warunki właściwości, wiersze tekstu i formaty suwaków z ustawień tapety.
-- Hasła Steam nigdy nie są zapisywane, a klucz Steam Web API jest przechowywany w pęku kluczy.
-
-### Interfejs i języki
-- **Liquid Glass** w macOS 26 — natywny widok dzielony z paskiem narzędzi, inspektorem i szklanymi elementami sterującymi. Starsze wersje macOS zachowują dotychczasowy wygląd.
-- **15 nowych języków**: niemiecki, francuski, hiszpański, portugalski (Brazylia), włoski, japoński, koreański, chiński uproszczony i tradycyjny, rosyjski, polski, turecki, ukraiński, arabski i hindi, do wyboru w ustawieniach języka.
-- Nowa ikona aplikacji i ikona na pasku menu, która dopasowuje się do wyglądu paska menu.
-
-## Obsługiwane typy tapet
-
-| Typ | Stan |
-|------|--------|
-| Wideo (.mp4, .webm) | Działa |
-| Sieć (HTML/WebGL) | Działa |
-| Scena — warstwy obrazów i osie czasu | Działa (Metal) |
-| Scena — tekstury DXT1/DXT3/DXT5 | Działa (dekodowanie na GPU w Metal) |
-| Scena — sprite’y TEXS / osie czasu alfa | Działa |
-| Scena — cząsteczki sprite’ów | Działa |
-| Scena — zaawansowane cząsteczki | Częściowo (zobacz Ograniczenia) |
-| Scena — efekty Wallpaper Engine i z Warsztatu (własne shadery WE) | Działa |
-| Scena — SceneScript | Częściowo (zobacz Ograniczenia) |
-| Scena — modele 3D / rigging / puppet warp | Działa |
-| Aplikacja | Nieobsługiwane |
+Więcej: [Pierwsze kroki](../../docs/getting-started.md) i [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
 ## Prywatność
 
-Wszystko, co zapisuje Open Wallpaper Engine, zostaje na Twoim Macu: ustawienia, biblioteka, pamięć podręczna i logowanie SteamCMD. Open Wallpaper Engine nie ma serwera i nie zbiera żadnych danych ani statystyk. Łączy się z Valve (ze Steam, gdy korzystasz z Warsztatu lub instalujesz zasoby, oraz z serwerem Valve, aby pobrać SteamCMD) i z GitHubem, aby sprawdzać aktualizacje aplikacji (appcast w GitHub Pages) i pobierać je z GitHub Releases, bez wysyłania jakichkolwiek danych osobowych. Sprawdzanie aktualizacji można wyłączyć w Ustawienia › Ogólne. Tapety internetowe mogą wczytywać własne treści online. Twoje hasło Steam i kod Steam Guard trafiają bezpośrednio do SteamCMD i nigdy nie są zapisywane, rejestrowane ani wysyłane nigdzie indziej; zapamiętywana jest tylko nazwa konta, aby ponownie użyć zapisanego logowania SteamCMD.
+Wszystko, co zapisuje aplikacja, zostaje na Twoim Macu, a ona sama nie zbiera żadnych danych ani statystyk. Łączy się ze Steam (w celu obsługi Warsztatu i zasobów) i z GitHubem (w celu aktualizacji), a wtyczki są pobierane dopiero wtedy, gdy je zainstalujesz. Szczegóły: [z czym łączy się aplikacja](../../docs/getting-started.md#what-the-app-connects-to) oraz [polityka prywatności](../../docs/legal/privacy-policy.md).
 
-## Struktura projektu
+## Dokumentacja
 
-- `OpenWallpaperEngine/Scene/Format/` — parsery i modele PKG, TEX/TEXS i scene.json
-- `OpenWallpaperEngine/Scene/Shaders/` — tłumaczenie GLSL → SPIR-V → MSL (`ShaderVariant.swift`, `InProcessShaderCompiler.swift`), buforowanie i archiwum potoków
-- `Vendor/ShaderToolchain/` — źródła glslang i SPIRV-Cross, wbudowywane w aplikację jako lokalny pakiet
-- `OpenWallpaperEngine/Scene/Scripting/` — środowisko uruchomieniowe SceneScript i powiązania dźwięku/FFT
-- `OpenWallpaperEngine/Audio/AudioLevelTap.swift` — przechwytywanie dźwięku systemowego za pomocą ScreenCaptureKit
-- `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal` — renderer scen Metal i biblioteka shaderów
-- `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift` — przeglądanie Warsztatu Steam i pobieranie
-- `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — przechowywanie biblioteki, import i konwersja pakietów
-- `Scripts/fill-assets-cache.sh` — narzędzie dla programistów: kopiuje zasoby instalacji Wallpaper Engine do lokalnego folderu lub pamięci podręcznej magazynu tapet
-- `Scripts/scene-api-coverage.py` — raportuje, których interfejsów API SceneScript używają zainstalowane tapety w porównaniu z tym, co zostało zaimplementowane
+- [Pierwsze kroki](../../docs/getting-started.md) — wymagania, zasoby, Warsztat i importowanie
+- [Funkcje](../../docs/features.md) — wszystko, co obsługuje aplikacja, i jak z tego korzystać
+- Poradniki: [układy wyświetlaczy](../../docs/display-layouts.md) · [playlisty](../../docs/playlists.md) · [wygaszacz ekranu](../../docs/screen-saver.md) · [eksport na iPhone’a i iPada](../../docs/iphone-ipad-export.md) · [eksport na Androida](../../docs/android-export.md) · [mapy głębi](../../docs/depth-maps.md) · [motywy](../../docs/theming.md) · [Serwer MCP](../../docs/mcp.md) · [silnik internetowy Chromium](../../docs/chromium-engine.md)
+- [Rozwój](../../docs/development.md) — kompilowanie ze źródeł i struktura projektu; [CONTRIBUTING.md](../../CONTRIBUTING.md) i [architektura](../../docs/architecture.md)
+- [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki) — poradniki, opis ustawień i rozwiązywanie problemów
 
 ## Powiązane projekty
 
@@ -185,3 +91,24 @@ Ten projekt powstał na bazie pracy następujących osób:
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — renderer scen i potok efektów w Metal, tłumaczenie shaderów GLSL→MSL i ich buforowanie, środowisko uruchomieniowe SceneScript, renderowanie reagujące na dźwięk, przebudowa Warsztatu i pobierania, ustawienia rozmieszczenia i wydajności, przeprojektowanie logo
 
 Projekt jest udostępniany na licencji [GPL-3.0](../../LICENSE), tak samo jak projekt oryginalny.
+
+## Informacje prawne
+
+[Warunki korzystania](../../docs/legal/terms-of-use.md) · [Polityka prywatności](../../docs/legal/privacy-policy.md) · [Zasady bezpieczeństwa](../../SECURITY.md)
+
+- **English:** Please read the Terms of Use and the Privacy Policy.
+- **Deutsch:** Bitte lesen Sie die Nutzungsbedingungen und die Datenschutzrichtlinie.
+- **Français :** Veuillez lire les conditions d’utilisation et la politique de confidentialité.
+- **Español:** Lee las condiciones de uso y la política de privacidad.
+- **Português (Brasil):** Leia os Termos de Uso e a Política de Privacidade.
+- **Italiano:** Leggi le condizioni d’uso e l’informativa sulla privacy.
+- **日本語：** 利用規約とプライバシーポリシーをお読みください。
+- **한국어:** 이용 약관과 개인정보 처리방침을 읽어 주십시오.
+- **简体中文：** 请阅读使用条款和隐私政策。
+- **繁體中文：** 請閱讀使用條款和隱私權政策。
+- **Русский:** Прочитайте условия использования и политику конфиденциальности.
+- **Polski:** Przeczytaj warunki korzystania i politykę prywatności.
+- **Türkçe:** Lütfen Kullanım Koşulları’nı ve Gizlilik Politikası’nı okuyun.
+- **Українська:** Прочитайте умови використання та політику приватності.
+- **العربية:** يُرجى قراءة شروط الاستخدام وسياسة الخصوصية.
+- **हिन्दी:** कृपया उपयोग की शर्तें और गोपनीयता नीति पढ़ें।

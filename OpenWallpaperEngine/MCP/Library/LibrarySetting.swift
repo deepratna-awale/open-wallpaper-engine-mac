@@ -127,7 +127,7 @@ struct LibrarySetting: Equatable {
         "launch_at_login": "Launch at login \(security): Settings › General › Start with macOS.",
         "start_with_macos": "Launch at login \(security): Settings › General › Start with macOS.",
         "restart_after_crashing": "Restart after crashing \(security): Settings › Optimizations › Restart after crashing.",
-        "crash_reporting": "Crash reporting \(security): Settings › Privacy.",
+        "crash_reporting": "Open Wallpaper Engine has no crash reporting: it sends no crash reports anywhere, so there is nothing to change.",
         "update_channel": "Updates are security-relevant, so they stay the user's to change in the app: Settings › Updates.",
         "automatic_updates": "Updates are security-relevant, so they stay the user's to change in the app: Settings › Updates.",
         "web_wallpaper_trust": "Trusting a web wallpaper \(security): apply it once in the app and answer its question.",

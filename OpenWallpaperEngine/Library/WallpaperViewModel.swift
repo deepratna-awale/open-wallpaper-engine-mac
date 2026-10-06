@@ -827,6 +827,25 @@ class WallpaperViewModel: ObservableObject {
         didSet { refreshDisplayPlayback(); updatePlaylistPause() }
     }
 
+    /// The displays applications' windows hide (`DesktopWindowLayout.coveredDisplays`), set by the
+    /// app delegate's `DisplayPlaybackMonitor`. Their scenes keep their last frame, as a display
+    /// whose window the window server reports covered does, until a window moves away. Not
+    /// published: the scenes follow `coveredScreensDidChange`, and the library doesn't redraw.
+    var coveredScreens: Set<String> = [] {
+        didSet {
+            guard coveredScreens != oldValue else { return }
+            NotificationCenter.default.post(name: .coveredScreensDidChange, object: self)
+        }
+    }
+
+    /// Whether windows hide `screenId`, or the display a region of it (a split display) is on.
+    func isCovered(_ screenId: String) -> Bool {
+        if coveredScreens.contains(screenId) { return true }
+        return layoutResolution.regions.contains { screen, regions in
+            coveredScreens.contains(screen) && regions.contains { $0.id == screenId }
+        }
+    }
+
     /// Each display's playback: the playback rules', and muted where the display is muted
     /// (`DisplayLayoutConfiguration.muted`). Empty in the Workshop preview: every display plays.
     @Published private(set) var displayPlayback: [String: DisplayPlayback] = [:]
@@ -1176,4 +1195,9 @@ class WallpaperViewModel: ObservableObject {
             UserDefaults.app.set(data, forKey: "CurrentWallpaper")
         }
     }
+}
+
+extension Notification.Name {
+    /// `WallpaperViewModel.coveredScreens` changed.
+    static let coveredScreensDidChange = Notification.Name("OWECoveredScreensDidChange")
 }

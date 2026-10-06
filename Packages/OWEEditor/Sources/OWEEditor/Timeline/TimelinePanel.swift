@@ -3,7 +3,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 import OWESceneEditing
 
-/// The timeline under the canvas (docs/editor-plan.md P4): transport and time on top, the
+/// The timeline under the canvas (editor-plan notes P4): transport and time on top, the
 /// animated properties of the selected layer (every layer's with none selected) on the left, their
 /// keyframes on a time ruler or, in Curves, the focused track's curves. Space plays and pauses,
 /// ←/→ step a frame, Delete removes keyframes, ⌘C/⌘X/⌘V copy, cut and paste at the playhead,
