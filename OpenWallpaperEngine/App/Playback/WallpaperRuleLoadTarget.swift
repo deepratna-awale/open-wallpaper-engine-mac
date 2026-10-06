@@ -42,7 +42,7 @@ final class WallpaperRuleLoadTarget: ApplicationRuleLoadTarget {
         switch load.kind {
         case .wallpaper:
             guard let wallpaper = library().first(where: { $0.identityPath == load.file }) else { return false }
-            if WallpaperViewModel.needsTrust(wallpaper) {
+            if !WallpaperViewModel.mayRunWithoutAsking(wallpaper) {
                 OWELog.info(.app, "Application rules: \"\(wallpaper.project.title)\" runs code and isn't trusted yet; apply it once by hand to trust it")
                 return true
             }
