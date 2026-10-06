@@ -120,9 +120,4 @@ public struct TimelineSceneIndex: Sendable {
         }
         return constants[target.layer]?.first { $0.target == target }
     }
-
-    /// Every property scene.json animates, in scene order.
-    public var authoredTimelines: [TimelineTarget] {
-        layers.flatMap { id in properties(of: id).map(\.target).filter { authoredClips[$0] != nil } }
-    }
 }

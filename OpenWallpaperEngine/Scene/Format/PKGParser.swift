@@ -84,9 +84,6 @@ class PKGParser {
         entries.map(\.path)
     }
 
-    /// The entries in the table's order, with their offsets.
-    var entryTable: [PKGEntry] { entries }
-
     func extractFile(named name: String) -> Data? {
         guard let entry = entriesByPath[name] else { return nil }
         let start = dataBaseOffset + Int(entry.offset)

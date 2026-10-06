@@ -30,8 +30,6 @@ public struct TimelineTarget: Codable, Hashable, Comparable, Sendable {
         TimelineTarget(layer: layer, effect: effect, pass: pass, key: key)
     }
 
-    public var isEffectConstant: Bool { effect != nil }
-
     /// Layer, then its own fields in `fieldOrder`, then its effects' constants.
     public static func < (lhs: TimelineTarget, rhs: TimelineTarget) -> Bool {
         if lhs.layer != rhs.layer { return lhs.layer < rhs.layer }
