@@ -60,6 +60,22 @@ final class AndroidWiFiSendTests: XCTestCase {
         }
     }
 
+    /// Without a random nonce the page isn't served (a fixed one would weaken its CSP): 500, plain text.
+    func testThePageFailsWithoutANonce() throws {
+        struct NoRandom: Error {}
+        let router = AndroidWiFiRouter(token: token, files: try files(), expiry: .distantFuture,
+                                       nonceSource: { throw NoRandom() })
+        let response = router.response(to: request("/\(token)/"), now: Date())
+        XCTAssertEqual(response.status, 500)
+        XCTAssertEqual(response.header("Content-Type"), "text/plain; charset=utf-8")
+        XCTAssertNil(response.header("Content-Security-Policy"))
+        XCTAssertEqual(response.body, .data(Data("500 Internal Server Error\n".utf8)))
+        XCTAssertEqual(router.response(to: request("/\(token)/list"), now: Date()).status, 200, "only the page needs a nonce")
+        let working = AndroidWiFiRouter(token: token, files: try files(), expiry: .distantFuture, nonceSource: { "n0nce" })
+        XCTAssertEqual(working.response(to: request("/\(token)/"), now: Date()).header("Content-Security-Policy")?
+            .contains("script-src 'nonce-n0nce'"), true)
+    }
+
     func testAnExpiredTokenIsNotFound() throws {
         let expiry = Date()
         let router = AndroidWiFiRouter(token: token, files: try files(), expiry: expiry)

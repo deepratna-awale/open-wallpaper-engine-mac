@@ -87,9 +87,6 @@ final class AndroidWiFiServer: @unchecked Sendable {
         self.onEvent = onEvent
     }
 
-    /// Whether the listener is up.
-    var isListening: Bool { queue.sync { listener != nil && stopReason == nil } }
-
     // MARK: Lifecycle
 
     /// Starts listening on `address` and returns the port macOS chose.

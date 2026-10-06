@@ -14,11 +14,6 @@ struct WPImportError: LocalizedError {
     var helpAnchor: String?
     var recoverySuggestion: String?
     
-    static let permissionDenied         = WPImportError(errorDescription: String(localized: "Permission Denied"),
-                                                failureReason: String(localized: "Open Wallpaper Engine doesn't have permission to access the selected folders."),
-                                                helpAnchor: "File Permission",
-                                                recoverySuggestion: String(localized: "Allow access in System Settings > Privacy & Security."))
-    
     static let doesNotContainWallpaper  = WPImportError(errorDescription: String(localized: "No Wallpapers Inside"),
                                                        failureReason: String(localized: "The selected folders don't contain any wallpapers."),
                                                        helpAnchor: "Contents in Folder(s)",

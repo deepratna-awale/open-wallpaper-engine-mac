@@ -137,10 +137,9 @@ private final class SceneInspectorModel: ObservableObject {
     private(set) var versionProperties: [SceneVersionProperty] = []
     /// Each property's authored value, for the ones the stores don't hold yet.
     private var propertyDefaults: [String: String] = [:]
-    private(set) var sceneSize = SIMD2<Double>(1920, 1080)
-    /// The size the renderer draws the scene at (`SceneWallpaperViewModel.sceneSize(of:)`): the
-    /// iPhone & iPad Export's crop frames the drawn scene, in its preview and its render alike.
-    private(set) var renderSceneSize = SIMD2<Double>(1920, 1080)
+    /// The size the renderer draws the scene at (`SceneDrawnSize`): the iPhone & iPad and Android
+    /// Exports' crops frame the drawn scene, in their previews and their renders alike.
+    private(set) var sceneSize = SIMD2<Double>(SceneWallpaperViewModel.defaultCanvas)
 
     private let directory: URL
     private let package: PKGParser?
@@ -182,10 +181,9 @@ private final class SceneInspectorModel: ObservableObject {
             }
             return
         }
-        sceneSize = Self.sceneSize(for: scene)
+        sceneSize = Self.drawnSize(of: sceneData, scene: scene, wallpaper: wallpaper, storedValues: targets.storedValues)
         outline = try? SceneOutline(sceneData: sceneData)
         objectTree = outline?.tree() ?? []
-        renderSceneSize = SIMD2<Double>(SceneWallpaperViewModel.sceneSize(of: scene))
 
         let storedValues: [String: String] = targets.storedValues
         let definitions = WallpaperEngineShareJSON.definitions(in: directory)
@@ -646,8 +644,17 @@ private final class SceneInspectorModel: ObservableObject {
         persist(values)
     }
 
-    private static func sceneSize(for scene: WEScene) -> SIMD2<Double> {
-        LivePhotoSceneSize.of(scene)
+    /// The scene as the renderer draws it, its saved overlay and edits applied; the authored
+    /// scene's size when those can't be applied (logged).
+    private static func drawnSize(of sceneData: Data, scene: WEScene, wallpaper: WEWallpaper,
+                                  storedValues: [String: String]) -> SIMD2<Double> {
+        do {
+            return try SceneDrawnSize.of(sceneData: sceneData, overlay: SceneDrawnSize.savedOverlay(of: wallpaper),
+                                         edits: ScenePreparation.split(storedValues: storedValues).edits)
+        } catch {
+            OWELog.error(.ui, "Scene Editor: no drawn size for \(wallpaper.wallpaperDirectory.lastPathComponent), framing the authored scene: \(error)")
+            return SIMD2<Double>(SceneWallpaperViewModel.sceneSize(of: scene))
+        }
     }
 
     private static func rawObject(_ rawObject: String, settingOrigin origin: String) -> String {
@@ -1062,7 +1069,7 @@ struct SceneInspectorView: View {
                     // A file AVFoundation can't read (WebM, a remote video) has no export to frame.
                     var size: SIMD2<Double>?
                     if ScreenSaverVideoSource.isEligible(wallpaper) { size = await SceneEditorModes.videoSize(of: wallpaper.mediaURL) }
-                    videoSize = size ?? LivePhotoSceneSize.fallback
+                    videoSize = size ?? SIMD2<Double>(SceneWallpaperViewModel.defaultCanvas)
                 }
         } else if let exportModel {
             SceneInspectorContent(wallpaper: wallpaper, scopes: [exportModel.session.scope], isolated: exportModel.session,
@@ -1489,7 +1496,7 @@ private struct SceneInspectorContent: View {
         let entries = SceneEditorModes.entries(for: wallpaper)
         return Picker("Mode", selection: Binding(get: { mode }, set: { newValue in
             guard newValue != mode else { return }
-            onModeChange(newValue, model.renderSceneSize)
+            onModeChange(newValue, model.sceneSize)
         })) {
             ForEach(entries, id: \.mode) { entry in
                 Text(entry.mode.title).tag(entry.mode)
