@@ -11,7 +11,7 @@ struct SystemExportDefaults: Equatable {
     var photosAccess: String
 }
 
-/// One Android export of one or more wallpapers, as the "Export for Android…" sheet would set it.
+/// One Android export of one or more wallpapers, as the Scene Editor (Live)'s Android Export would set it.
 struct SystemAndroidRequest: Equatable {
     var wallpapers: [ControlWallpaper]
     var options: AndroidExportOptions

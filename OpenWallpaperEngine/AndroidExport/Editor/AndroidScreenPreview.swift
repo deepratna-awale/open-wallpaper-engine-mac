@@ -24,7 +24,13 @@ struct AndroidScreenPreview: View {
         let corner = min(frame.width, frame.height) * (kind == .tablet ? 0.04 : 0.09)
         return ZStack(alignment: .topLeading) {
             Color.black
-            if !model.session.isEnded {
+            if model.isVideo {
+                // The phone fills its screen with the video, centred: the default crop.
+                let layout = LockScreenPreview.Layout(window: window, sceneSize: model.sceneSize, scale: scale)
+                LockScreenPreview.pinned(LoopingVideoFileView(url: model.wallpaper.mediaURL, gravity: .resize),
+                                         size: layout.sceneViewSize, at: layout.sceneViewOffset, in: frame)
+                    .allowsHitTesting(false)
+            } else if !model.session.isEnded {
                 let layout = LockScreenPreview.Layout(window: window, sceneSize: model.sceneSize, scale: scale)
                 LockScreenPreview.pinned(IsolatedSceneView(session: model.session, presentation: model.presentation,
                                                            onContent: { [weak model = self.model] in model?.sceneLoaded($0) }),
@@ -58,7 +64,7 @@ struct AndroidScreenPreview: View {
                 model.zoom = start * value.magnification
             }
             .onEnded { _ in zoomStart = nil })
-        .help("Drag to move the picture; pinch to zoom")
+        .help(model.isVideo ? Text("The phone fills its screen with the video") : Text("Drag to move the picture; pinch to zoom"))
         .accessibilityLabel(Text("Android screen preview"))
     }
 }

@@ -12,39 +12,77 @@ struct AndroidExportSettingsView<Layer: View>: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
-                deviceSection
-                Divider()
-                zoomSection
-                if let followsPointer = model.followsPointer {
-                    Divider()
-                    parallaxSection(followsPointer)
-                }
-                Divider()
-                outputSection
-                if showsExportButtons {
-                    Divider()
-                    exportSection
-                }
-                if let error = model.errorMessage {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Divider()
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Layer Adjustments")
-                        .font(.headline)
-                    layer()
-                }
-                Divider()
-                Text("Only this export changes. The wallpaper on your desktop keeps its properties and edits.")
+            if model.isVideo { videoBody } else { sceneBody }
+        }
+    }
+
+    /// A video is packed as it is: nothing to frame, bake or choose.
+    private var videoBody: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 6) {
+                Label("The video as Wallpaper Engine exports it", systemImage: "film")
+                    .font(.headline)
+                Text("The package holds the video file exactly as it is, its preview and a short project.json, as Wallpaper Engine's own export does. The phone fills its screen with the video, so there is nothing to set here.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                SceneUserPropertiesView(wallpaper: model.wallpaper, scopes: [model.session.scope])
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding()
+            if showsExportButtons {
+                Divider()
+                exportSection
+            }
+            if let error = model.errorMessage {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding()
+    }
+
+    private var sceneBody: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            deviceSection
+            Divider()
+            zoomSection
+            if let followsPointer = model.followsPointer {
+                Divider()
+                parallaxSection(followsPointer)
+            }
+            Divider()
+            outputSection
+            if showsExportButtons {
+                Divider()
+                exportSection
+            }
+            if let error = model.errorMessage {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Divider()
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Layer Adjustments")
+                    .font(.headline)
+                layer()
+            }
+            Divider()
+            Text("Only this export changes. The wallpaper on your desktop keeps its properties and edits.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            SceneUserPropertiesView(wallpaper: model.wallpaper, scopes: [model.session.scope])
+        }
+        .padding()
+    }
+
+    /// WE's name for a quality button.
+    static func label(_ mode: AndroidExportOptions.Mode) -> LocalizedStringKey {
+        switch mode {
+        case .highQuality: return "High Quality"
+        case .balanced: return "Balanced"
+        case .preRendered: return "High Performance"
         }
     }
 
@@ -197,8 +235,8 @@ struct AndroidExportSettingsView<Layer: View>: View {
     @ViewBuilder
     private var dynamicSettings: some View {
         Picker("Quality", selection: Binding(get: { model.options.mode }, set: { model.chooseMode($0) })) {
-            Text(AndroidExportSheet.label(.highQuality)).tag(AndroidExportOptions.Mode.highQuality)
-            Text(AndroidExportSheet.label(.balanced)).tag(AndroidExportOptions.Mode.balanced)
+            Text(Self.label(.highQuality)).tag(AndroidExportOptions.Mode.highQuality)
+            Text(Self.label(.balanced)).tag(AndroidExportOptions.Mode.balanced)
         }
         Toggle("Pixel art optimization", isOn: $model.options.pixelArt)
         Picker("Texture Reduction", selection: $model.options.textureReduction) {
@@ -231,9 +269,18 @@ private struct AndroidEditorExportButtons: View {
     @ObservedObject var model: AndroidExportEditorModel
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack { buttons(fill: false) }
-            VStack(alignment: .leading) { buttons(fill: true) }
+        VStack(alignment: .leading, spacing: 6) {
+            ViewThatFits(in: .horizontal) {
+                HStack { buttons(fill: false) }
+                VStack(alignment: .leading) { buttons(fill: true) }
+            }
+            Button {
+                model.showBatch()
+            } label: {
+                Label("Export More with These Settings…", systemImage: "square.stack.3d.down.right")
+            }
+            .glassButtonStyle()
+            .help("Pick more wallpapers from your library and export them as .mpkg packages with this device, output, quality and frame rate")
         }
     }
 
@@ -385,6 +432,9 @@ private struct AndroidExportSheetPresenter<Layer: View>: ViewModifier {
         content
             .sheet(item: $model.sheet, onDismiss: onClose) { sheet in
                 AndroidExportSettingsSheetView(model: model, sheet: sheet, layer: layer)
+            }
+            .sheet(isPresented: $model.isBatchPresented, onDismiss: { model.closeBatch() }) {
+                AndroidBatchExportSheet(model: model)
             }
     }
 }
