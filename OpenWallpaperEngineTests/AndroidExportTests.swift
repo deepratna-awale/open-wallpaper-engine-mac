@@ -3,7 +3,7 @@ import Foundation
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// "Export for Android…": the dialog's options and what they map to, the pre-rendered crop, the
+/// Android export: WE's dialog's options and what they map to, the pre-rendered crop, the
 /// batch queue (order, skips, names, cancellation) and a short real pre-render.
 @MainActor
 final class AndroidExportTests: XCTestCase {

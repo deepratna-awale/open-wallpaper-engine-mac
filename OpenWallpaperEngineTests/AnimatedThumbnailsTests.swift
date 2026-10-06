@@ -1,4 +1,5 @@
 import AppKit
+import ImageIO
 import XCTest
 @testable import OpenWallpaperEngine
 
@@ -88,15 +89,66 @@ final class AnimatedThumbnailsTests: XCTestCase {
         XCTAssertFalse(view.isAnimating)
     }
 
-    /// A wide preview fills a square tile centred, uncropped, so all its frames still play.
-    func testFillFrameCoversTheTile() {
-        let bounds = CGRect(x: 0, y: 0, width: 100, height: 100)
-        let wide = PreviewImageView.imageFrame(for: CGSize(width: 320, height: 180), in: bounds, fills: true)
-        XCTAssertEqual(wide.height, 100, accuracy: 0.001)
-        XCTAssertEqual(wide.width, 3200.0 / 18, accuracy: 0.001)
-        XCTAssertEqual(wide.midX, 50, accuracy: 0.001)
-        XCTAssertEqual(wide.midY, 50, accuracy: 0.001)
-        XCTAssertEqual(PreviewImageView.imageFrame(for: CGSize(width: 320, height: 180), in: bounds, fills: false), bounds)
-        XCTAssertEqual(PreviewImageView.imageFrame(for: nil, in: bounds, fills: true), bounds)
+    /// A preview in a window that isn't on screen never joins the shared animator, so offscreen
+    /// tiles cost no decoding and no commits.
+    func testOffscreenPreviewDoesNotJoinTheAnimator() throws {
+        let before = PreviewAnimator.shared.playingCount
+        let view = PreviewImageView(frame: NSRect(x: 0, y: 0, width: 100, height: 100))
+        view.animationURL = try Self.makeGIF(frames: 3, size: 64)
+        view.wantsAnimation = true
+        XCTAssertFalse(view.isAnimating)
+        XCTAssertEqual(PreviewAnimator.shared.playingCount, before)
+    }
+
+    /// Frames are decoded at the size the tile shows them: a large GIF is scaled down to fill
+    /// (or fit) the tile's pixels, a small one is never scaled up.
+    func testFramesAreDecodedAtTheTileSize() throws {
+        let tile = CGSize(width: 400, height: 400)
+        XCTAssertEqual(PreviewFrameSequence.decodedSize(of: CGSize(width: 800, height: 450), shownIn: tile, fills: true),
+                       CGSize(width: 711, height: 400))
+        XCTAssertEqual(PreviewFrameSequence.decodedSize(of: CGSize(width: 800, height: 450), shownIn: tile, fills: false),
+                       CGSize(width: 400, height: 225))
+        XCTAssertEqual(PreviewFrameSequence.decodedSize(of: CGSize(width: 256, height: 256), shownIn: tile, fills: true),
+                       CGSize(width: 256, height: 256))
+
+        let url = try Self.makeGIF(frames: 4, size: 600)
+        let sequence = try XCTUnwrap(PreviewFrameSequence(url: url, fitting: CGSize(width: 200, height: 200), fills: true))
+        XCTAssertEqual(sequence.frameCount, 4)
+        XCTAssertEqual(sequence.pixelSize, CGSize(width: 200, height: 200))
+        let frame = try XCTUnwrap(sequence.decode(2))
+        XCTAssertEqual(frame.width, 200)
+        XCTAssertEqual(frame.height, 200)
+        XCTAssertTrue(sequence.keepsFrames)
+    }
+
+    /// Frames follow the GIF's delays and loop; a delay under 11 ms shows as 100 ms, as browsers do.
+    func testFrameIndexFollowsTheDelays() throws {
+        let sequence = try XCTUnwrap(PreviewFrameSequence(url: try Self.makeGIF(frames: 3, size: 32, delay: 0.05),
+                                                          fitting: CGSize(width: 32, height: 32), fills: true))
+        XCTAssertEqual(sequence.frameIndex(at: 0), 0)
+        XCTAssertEqual(sequence.frameIndex(at: 0.06), 1)
+        XCTAssertEqual(sequence.frameIndex(at: 0.12), 2)
+        XCTAssertEqual(sequence.frameIndex(at: 0.16), 0)
+        let fast = try XCTUnwrap(PreviewFrameSequence(url: try Self.makeGIF(frames: 2, size: 32, delay: 0),
+                                                      fitting: CGSize(width: 32, height: 32), fills: true))
+        XCTAssertEqual(fast.delays, [0.1, 0.1])
+    }
+
+    /// A GIF of `frames` solid frames, `size` pixels square.
+    private static func makeGIF(frames: Int, size: Int, delay: Double = 0.04) throws -> URL {
+        let url = FileManager.default.temporaryDirectory.appending(path: "owe-preview-\(UUID().uuidString).gif")
+        let destination = try XCTUnwrap(CGImageDestinationCreateWithURL(url as CFURL, "com.compuserve.gif" as CFString, frames, nil))
+        for index in 0..<frames {
+            let context = try XCTUnwrap(CGContext(data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: 0,
+                                                  space: CGColorSpaceCreateDeviceRGB(),
+                                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+            context.setFillColor(CGColor(red: CGFloat(index) / CGFloat(frames), green: 0.5, blue: 0.2, alpha: 1))
+            context.fill(CGRect(x: 0, y: 0, width: size, height: size))
+            CGImageDestinationAddImage(destination, try XCTUnwrap(context.makeImage()), [
+                kCGImagePropertyGIFDictionary: [kCGImagePropertyGIFUnclampedDelayTime: delay, kCGImagePropertyGIFDelayTime: delay]
+            ] as CFDictionary)
+        }
+        XCTAssertTrue(CGImageDestinationFinalize(destination))
+        return url
     }
 }

@@ -9,165 +9,71 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 
 > **Not:** Bu proje, Steam’deki ticari Wallpaper Engine ile bağlantılı DEĞİLDİR. Wallpaper Engine’in Steam Atölyesi’ndeki duvar kâğıdı varlıklarını görüntüleyebilen açık kaynaklı bir macOS uygulamasıdır. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
-**Wiki:** kılavuzlar ve belgeler [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)’de.
+**Web sitesi:** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki:** [kılavuzlar ve sorun giderme](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-**Web sitesi:** indirmeler, gizlilik politikası ve kullanım koşulları [openwallpaperengine.app](https://openwallpaperengine.app/)’de.
+![Kitaplık](../../docs/images/library.png)
 
-## Gereksinimler
+## Öne Çıkanlar
 
-### Gerekli
-- **macOS 14.0 veya sonrası** (Sonoma). ScreenCaptureKit ile ses yakalama ve Metal ile sahne işleme bu sürüme bağlıdır.
+- **Sahne, video ve web duvar kâğıtları** — sahneler, her duvar kâğıdının Metal’e çevrilmiş kendi Wallpaper Engine gölgelendiricileriyle çizilir; efektler, parçacıklar, 3B modeller, ışıklar, zaman çizelgeleri, SceneScript ve sese duyarlı görseller desteklenir. Web duvar kâğıtları WebKit’te veya isteğe bağlı Chromium motorunda çalışır.
+- **Steam Atölyesi** — Atölye’ye uygulamanın içinden göz atın, filtreleyin ve indirin ya da duvar kâğıdı klasörlerini ve zip dosyalarını içe aktarın.
+- **Sahne Düzenleyicisi (Canlı)** — çalışan duvar kâğıdının katmanlarını ve efektlerini doğrudan masaüstünde canlı olarak değiştirin, ondan kendi ekran koruyucunuzu kaydedin ya da onu iPhone ve iPad için Live Photo kilit ekranı veya Wallpaper Engine’in Android uygulaması için bir paket olarak dışa aktarın.
 
-### İsteğe bağlı — belirli özellikler için gereklidir
+  ![Sahne Düzenleyicisi (Canlı)](../../docs/images/scene-editor-live.png)
 
-| Özellik | Gereksinim | Kurulum |
-|---------|-------------|---------|
-| Steam Atölyesi’ne göz atma / Steam Atölyesi’nden indirme | `steamcmd` | Otomatik (isteğe bağlı: `brew install steamcmd`) |
-| Ses görselleştiricileri ve sese duyarlı SceneScript | Sistem Ses Kaydı izni (macOS 14.2’den önce: Ekran ve Sistem Sesi Kaydı) | Ayarlar → İzinler |
+- **Duvar Kâğıdı Düzenleyici** — Wallpaper Engine’in düzenleyicisinin ruhunu taşıyan bir düzenleyici: katmanlar, önizlemeli efektler, zaman çizelgesi, SceneScript, kullanıcı özellikleri, parçacıklar ve Puppet Warp. Düzenlemeleriniz duvar kâğıdının yanında saklanır, hiçbir zaman onun dosyalarına yazılmaz.
 
-#### Gölgelendiriciler
+  ![Duvar Kâğıdı Düzenleyici](../../docs/images/wallpaper-editor.png)
 
-Wallpaper Engine efektlerini GLSL olarak sunar. Bu efektler, bir duvar kâğıdı onları ilk kez kullandığında uygulamaya yerleşik glslang ve SPIRV-Cross (`Vendor/ShaderToolchain`) tarafından Metal’e (GLSL → SPIR-V → MSL) çevrilir ve ardından diskte önbelleğe alınır. Hiçbir şey kurmanız gerekmez. Çevirisi uygulamayı kilitleyen veya iki kez çökerten bir gölgelendirici sonraki açılışlarda atlanır; diğer tüm gölgelendiriciler çevrilmeye devam eder.
+- **Ekranlar** — Wallpaper Engine’deki gibi her ekrana ayrı bir duvar kâğıdı, tüm ekranlara yayılan ya da her birine kopyalanan tek bir duvar kâğıdı; ayrıca gruplar, bölmeler ve profiller.
 
-#### Wallpaper Engine varlıkları
+  ![Ekranlar](../../docs/images/displays.png)
 
-Sahneler, Steam’deki kendi Wallpaper Engine kopyanızdaki paylaşılan efektleri, malzemeleri, gölgelendiricileri, fontları ve SceneScript çalışma zamanını kullanır; uygulama bunları içermez. Bunları *Ayarlar → Varlıklar*’dan yükleyin: uygulama kopyanızı steamcmd ile indirir (hesabın Wallpaper Engine’e sahip olması gerekir), yalnızca varlıkları ve varsayılan duvar kâğıtlarını tutar, gerisini siler. Mevcut bir Wallpaper Engine klasörünü de seçebilirsiniz. Video ve web duvar kâğıtları onlarsız çalışır.
+- **Çalma listeleri** — duvar kâğıtlarını zamanlayıcıyla, oturum açılışında, günün saatine veya haftanın gününe göre, Wallpaper Engine’in geçişleriyle değiştirin.
 
-## Kaynaktan Derleme
+  ![Çalma listesi ayarları](../../docs/images/playlists.png)
 
-### Ön koşullar
-- macOS >= 14.0
-- Xcode >= 26.3 (macOS 26 SDK)
-- Xcode Komut Satırı Araçları
+- **Dışa aktarma** — iPhone ve iPad için Live Photo kilit ekranları ve Wallpaper Engine’in Android paketleri; bir QR koduyla Wi-Fi üzerinden telefona gönderilir.
 
-### Adımlar
-```sh
-git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
-cd open-wallpaper-engine-mac
-open "OpenWallpaperEngine.xcodeproj"
-```
+  ![Wi-Fi üzerinden gönder](../../docs/images/send-over-wifi.png)
 
-Xcode’da imzalama sertifikasını kendi sertifikanızla değiştirin veya “Sign to Run Locally” seçeneğini belirleyin, ardından derleyip çalıştırmak için `Cmd + R` tuşlarına basın.
+- **Temalar** — menü çubuğu, vurgu rengi ve renklendirilmiş klasörler duvar kâğıdının renklerine uyar.
 
-Kaynaktan ilk derleme Sparkle Swift paketini indirir. Kaynaktan derlenen sürümler güncelleme denetlemez.
+  ![Temalar](../../docs/images/theming.png)
 
-## Kullanım
+- **MCP Sunucusu eklentisi** — MCP istemcileri duvar kâğıtlarını, çalma listelerini ve ayarları belirleyebilir ve sahneleri düzenleyebilir; bunu yalnızca sizin hesabınızın açabildiği yerel bir bağlantı üzerinden yapar.
 
-### Steam Atölyesi’ne Göz Atma ve Steam Atölyesi’nden İndirme
+  ![MCP Sunucusu eklentisi](../../docs/images/mcp-plugin.png)
 
-1. Kurulacak bir şey yok: uygulama, Valve’ın SteamCMD’sini ilk gerektiğinde arka planda indirir (Valve’dan, uygulamayla birlikte gelmez). Homebrew (`brew install steamcmd`) isteğe bağlıdır; mevcut bir steamcmd (Homebrew, Steam veya sizin seçtiğiniz) bulunursa o kullanılır
-2. **Atölye** sekmesine geçin ve Steam hesabınızla giriş yapın (hesabın Wallpaper Engine’e sahip olması gerekir)
-3. İstendiğinde veya *Ayarlar → Genel* bölümünde bir [Steam Web API anahtarı](https://steamcommunity.com/dev/apikey) girin. Anahtar Steam ile doğrulanır ve anahtar zincirinizde saklanır; Steam parolanız hiçbir zaman kaydedilmez (steamcmd kendi önbelleğe alınmış oturumunu yeniden kullanır)
-4. Arayın, filtreleyin ve istediğiniz duvar kâğıdında **İndir**’e tıklayın
+Geri kalan her şey, alan alan: [docs/features.md](../../docs/features.md).
 
-### Yerel Dosyalardan İçe Aktarma
+## Yükleme
 
-- **Klasör:** Dosya > Klasörden İçe Aktar — `project.json` içeren duvar kâğıdı klasörlerini seçin
-- **Zip:** Dosya > İçe Aktar’ı kullanın veya duvar kâğıdı paketleri içeren bir `.zip` dosyasını sürükleyip bırakın
-- **Elle:** Duvar kâğıdı klasörlerini doğrudan `~/Documents/Open Wallpaper Engine/` içine kopyalayın
+1. En son sürümü [openwallpaperengine.app](https://openwallpaperengine.app/) adresinden veya [GitHub Releases](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases) sayfasından indirin. Uygulama imzalı ve noter onaylıdır, kendini kendisi günceller.
+2. DMG’yi açın ve **Open Wallpaper Engine**’i Uygulamalar klasörüne sürükleyin.
 
-## 1.0.0-beta.5 Sürümündeki Yenilikler
+**macOS 14.0 (Sonoma) veya daha yeni bir sürüm** gerekir. Bazı özellikler daha yeni bir macOS, bir izin ya da bir eklenti gerektirir: bkz. [Başlarken](../../docs/getting-started.md#requirements).
 
-- Duvar Kâğıdı, Ekran Koruyucu ve iPhone ve iPad’e Dışa Aktar sekmeleriyle **Sahne Düzenleyicisi (Live)**; **Duvar Kâğıdı Düzenleyici** (⌥⌘E) ayrı bir uygulama olarak çalışır: katmanlar, efektler, zaman çizelgesi, SceneScript, kullanıcı özellikleri, parçacıklar ve Puppet Warp; derinlik haritaları ([depth-maps.md](../../docs/depth-maps.md)).
-- Wallpaper Engine’deki gibi **ekran düzenleri**: her ekrana ayrı, uzatılmış, kopyalanmış, gruplar, bölmeler ve profiller ([display-layouts.md](../../docs/display-layouts.md)).
-- **Dışa aktarma**: iPhone ve iPad için Live Photos ([iphone-ipad-export.md](../../docs/iphone-ipad-export.md)) ve Android’deki Wallpaper Engine için Wi-Fi ile gönderilebilen `.mpkg` paketleri ([android-export.md](../../docs/android-export.md)).
-- **Ekran koruyucu** ve kilit ekranı resmi ([screen-saver.md](../../docs/screen-saver.md)).
-- **MCP Sunucusu** eklentisi ([mcp.md](../../docs/mcp.md)) ve macOS’i duvar kâğıdının rengine uyduran **temalar** ([theming.md](../../docs/theming.md)).
-- Uygulama kuralları, genel kısayollar, ekran görüntüleri, Keşfet, arşiv klasörleri. Tüm değişiklikler: [CHANGELOG.md](../../CHANGELOG.md).
+## Hızlı Başlangıç
 
-## 1.0.0 Sürümünün Destekledikleri
+1. Uygulamayı açın. Kurulum yardımcısı dili, SteamCMD’yi, Steam oturumunuzu ve Wallpaper Engine varlıklarını ayarlar; her adım atlanabilir.
+2. Sahne duvar kâğıtlarını kullanmak istiyorsanız Wallpaper Engine varlıklarını yükleyin (*Ayarlar › Varlıklar*). Bunlar Steam’deki kendi Wallpaper Engine kopyanızdan gelir; video ve web duvar kâğıtları bunlar olmadan da çalışır.
+3. **Atölye** sekmesinde duvar kâğıdı bulun ya da bir duvar kâğıdı klasörünü veya zip dosyasını içe aktarın (*Dosya › Klasörden Duvar Kâğıdı İçe Aktar…*, ⌘I).
+4. Kitaplıkta bir duvar kâğıdına tıklayın, ardından ayrıntılarında **Duvar Kâğıdı Yap**’a tıklayın. Özellikleri hemen altında listelenir.
 
-### Kurulum, kitaplık ve güncellemeler
-- **Kurulum yardımcısı** — ilk açılışta, atlanabilen birkaç adım dili seçer, gizlilik notlarını gösterir, SteamCMD’yi, Steam oturumunu ve isteğe bağlı bir Steam Web API anahtarını ayarlar, Wallpaper Engine varlıklarını yükler ve duvar kâğıtlarınızı getirir.
-- **SteamCMD kendini kurar** — bulunamazsa uygulama Valve’ın SteamCMD’sini indirir; Homebrew’un veya Steam’inki varsa o kullanılır.
-- **Kendi Steam kopyanızdan Wallpaper Engine varlıkları** — oturum açtıktan sonra SteamCMD ile yüklenir, isteğe bağlı olarak Wallpaper Engine’in varsayılan duvar kâğıtlarıyla.
-- **İçe aktarma** — Atölye koleksiyonlarınız ve abonelikleriniz (Steam Web API’sinden), mevcut bir Steam kitaplığının Atölye öğeleri ve duvar kâğıdı klasörleri.
-- **[wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)** — kılavuzlar, ayar başvurusu ve sorun giderme; uygulamadaki Destek ve SSS onu açar.
-- **Otomatik güncellemeler** — imzalı güncellemeler kendiliğinden yüklenir (çıkışta, Mac’ten 10 dakika uzak kalındığında veya bir gün içinde; ardından hızlı bir yeniden başlatma duvar kâğıtlarınızı geri getirir). Ayarlar › Genel › Güncellemeler’de yalnızca denetlemeyi seçebilir, denetimi kapatabilir ve beta güncellemelerini alabilirsiniz. “Güncellemeleri Denetle…” uygulama menüsünde ve menü çubuğu menüsündedir.
-
-### Sahne işleme
-- **Wallpaper Engine’in kendi gölgelendiricileri** — katmanlar, efektler ve malzemeler artık her duvar kâğıdının Metal’e çevrilmiş özgün gölgelendiricileriyle çiziliyor; Atölye yazarlarının kendi yaptığı efektler de buna dahil.
-- Kompozisyon, tam ekran ve düz renk katmanları, başka katmanları örnekleyen katmanlar, 33 karışım modunun tümü ve daha fazla efekt maskesi.
-- **Özgününe sadık metin yerleşimi** — metin, Wallpaper Engine’deki gibi boyutlandırılır, hizalanır ve konumlandırılır; kontur, bulanıklık ve gölge yazı tipi efektleri de desteklenir.
-- **Zaman çizelgeleri** — ana kare ve doku animasyonları, Wallpaper Engine’in tek seferlik, döngü ve ayna oynatma kurallarına uyar.
-- Renk arama tabloları, Wallpaper Engine’in renk düzeltmesi ve bir duvar kâğıdının özelliklerindeki görüntü filtresi ve renk seçenekleri.
-- Kendi animasyonlarıyla hareket eden **Puppet Warp** görüntüleri; kemik fiziği (yaylar, yerçekimi, sınırlar) ve kemiklere bağlı nesnelerle birlikte.
-
-### 3D ve aydınlatma
-- Skinning, animasyon katmanları, morph hedefleri ve root motion destekli **3D modeller**.
-- Kamera yolları, geçişler ve sarsıntı destekli perspektif sahne kameraları; 2D katmanlar da derinlikte yer alır.
-- Işık maskeleri (cookie), gölgeler, düzlemsel yansımalar, mesafe ve yükseklik sisi ile hacimsel ışıklar destekli **sahne ışıkları**.
-- **HDR** — HDR sahneler Wallpaper Engine’in HDR parlamasıyla işlenir ve “Ultra (Ekran HDR)” kalitesi, gösterebilen ekranlara EDR çıktısı verir.
-
-### Parçacıklar
-- **GPU parçacıkları** — her parçacık sistemi GPU’da, 3D olarak ve 3D kontrol noktalarıyla simüle edilir.
-- Üst sistemin parçacıklarıyla tetiklenenler dahil alt sistemler; yayıcı patlamaları, gecikmeler ve periyodik yayım; bir katmanın görüntüsünden yayım.
-- Bir modelin kemikleriyle de çarpışma, sese tepki ve her eksen etrafında dönme.
-- Bir duvar kâğıdının kullanıcı özelliklerine bağlı parçacık ayarları.
-
-### SceneScript ve medya
-- Eksiksiz bir **SceneScript çalışma zamanı** — modüller, sahne/katman/efekt/malzeme nesne modeli, animasyon olayları, `localStorage` ve imleç isabet testi; her duvar kâğıdının betikleri kendi iş parçacığında çalışır.
-- Betikler katman, parçacık sistemi ve ses oluşturabilir, sisi hareket ettirebilir, parlamayı yönetebilir, kuklalara ve modellere poz verebilir.
-- **Şu An Çalıyor** — sahne ve web duvar kâğıtları çalan parçayı ve oynatma durumunu alır (macOS 15.4 veya sonrası).
-- Web duvar kâğıtları kendi kullanıcı özelliklerini ve canlı sesi alır.
-
-### Ses
-- Ses spektrumu, Wallpaper Engine’in hesapladığı şekilde ve stereo olarak hesaplanır.
-- **Ses katmanları** sahnenin saatine göre çalar; **uzamsal ses** Wallpaper Engine’deki gibi konumlandırılır.
-
-### Ekranlar ve oynatma
-- **Ekran Başına Duraklat** veya **Tümünü Duraklat**; oynatma kuralları, Wallpaper Engine’in büyütülmüş pencere kuralı dahil her ekran için ayrı değerlendirilir.
-- Ekran başına kullanıcı özellikleri ve “Özellikleri ekranlar arasında eşitle”.
-- Birden fazla ekranda gösterilen bir duvar kâğıdı bir kez işlenir ve her ekranda gösterilir.
-- Yeni kalite ayarları: İşleme Çözünürlüğü, Doku Çözünürlüğü, ekrana göre sahne ayrıntısı, yansımalar, gölgeler ve hacimsel efektler.
-- **Güvenli yeniden başlatma** — uygulamayı kilitleyen ya da çökerten bir duvar kâğıdı sonraki açılışta atlanır ve arşivde işaretlenir.
-
-### Atölye ve arşiv
-- Wallpaper Engine’in Atölye filtreleri: Yalnızca Şunları Göster, bir çözünürlük filtresi, VE/VEYA ile birleştirilen türler ve her kartta etiketler.
-- **Hareketli önizlemeler** — arşivdeki duvar kâğıdı kutucukları Atölye önizleme animasyonlarını (GIF) oynatır; böylece bir duvar kâğıdını uygulamadan önce hareket hâlinde görebilirsiniz. Yalnızca görünürken oynatılır; pencere gizliyken veya Düşük Güç Modu’nda duraklatılır.
-- Yüklü duvar kâğıtları Atölye etiketlerini gösterir ve bunlara göre filtrelenebilir; yalnızca varlık ya da bağımlılık içeren öğeler Yüklü bölümünde görünmez.
-- Eksik Atölye bağımlılıkları otomatik olarak indirilir, artık kullanılmayanlar silme işleminden sonra kaldırılır. Her indirme Duvar Kâğıdı Deposu klasörüne kaydedilir.
-- Ayrıntılar’daki **Sıfırla**, bir duvar kâğıdının özelliklerini ve Sahne Denetçisi’ndeki düzenlemelerini yazarının belirlediği varsayılanlara döndürür.
-- Duvar kâğıdının ayarlarındaki özellik koşulları, metin satırları ve sürgü biçimleri dikkate alınır.
-- Steam parolaları asla saklanmaz, Steam Web API anahtarı Anahtar Zinciri’nde tutulur.
-
-### Arayüz ve diller
-- macOS 26’da **Liquid Glass** — araç çubuğu, denetçi ve cam denetimleriyle yerel bölünmüş görünüm. Daha eski macOS sürümleri alışılmış görünümü korur.
-- **15 yeni dil**: Almanca, Fransızca, İspanyolca, Brezilya Portekizcesi, İtalyanca, Japonca, Korece, Basitleştirilmiş ve Geleneksel Çince, Rusça, Lehçe, Türkçe, Ukraynaca, Arapça ve Hintçe; Ayarlar’daki dil seçiciden seçilebilir.
-- Yeni bir uygulama simgesi ve menü çubuğunun görünümüne uyan bir menü çubuğu simgesi.
-
-## Desteklenen Duvar Kâğıdı Türleri
-
-| Tür | Durum |
-|------|--------|
-| Video (.mp4, .webm) | Çalışıyor |
-| Web (HTML/WebGL) | Çalışıyor |
-| Sahne — görüntü katmanları ve zaman çizelgeleri | Çalışıyor (Metal) |
-| Sahne — DXT1/DXT3/DXT5 dokuları | Çalışıyor (Metal ile GPU’da çözme) |
-| Sahne — TEXS hareketli grafikleri / alfa zaman çizelgeleri | Çalışıyor |
-| Sahne — hareketli grafik parçacıkları | Çalışıyor |
-| Sahne — gelişmiş parçacıklar | Kısmen (bkz. Sınırlamalar) |
-| Sahne — Wallpaper Engine ve Atölye efektleri (WE’nin kendi gölgelendiricileri) | Çalışıyor |
-| Sahne — SceneScript | Kısmen (bkz. Sınırlamalar) |
-| Sahne — 3B modeller / iskelet donatımı / kukla bükme | Çalışıyor |
-| Uygulama | Desteklenmiyor |
+Daha fazlası: [Başlarken](../../docs/getting-started.md) ve [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
 ## Gizlilik
 
-Open Wallpaper Engine’in kaydettiği her şey Mac’inizde kalır: ayarlarınız, kitaplığınız, önbellek ve SteamCMD oturum bilgisi. Open Wallpaper Engine’in sunucusu yoktur ve hiçbir veri ya analiz toplamaz. Valve ile (Atölye’yi kullandığınızda veya varlıkları yüklediğinizde Steam ile, SteamCMD’yi indirmek için de Valve’ın sunucusuyla) ve uygulama güncellemelerini denetlemek (GitHub Pages’teki appcast) ve bunları GitHub Releases’ten indirmek için GitHub ile iletişim kurar; hiçbir kişisel veri gönderilmez. Güncelleme denetimi Ayarlar › Genel’den kapatılabilir. Web duvar kâğıtları kendi çevrimiçi içeriklerini yükleyebilir. Steam parolanız ve Steam Guard kodunuz doğrudan SteamCMD’ye gider; hiçbir zaman saklanmaz, günlüğe kaydedilmez veya başka bir yere gönderilmez. SteamCMD’nin kayıtlı oturumunu yeniden kullanmak için yalnızca hesap adınız hatırlanır.
+Uygulamanın kaydettiği her şey Mac’inizde kalır; uygulama hiçbir veri ya analiz toplamaz. Steam (Atölye ve varlıklar için) ve GitHub (güncellemeler için) ile iletişim kurar; eklentiler yalnızca siz yüklediğinizde indirilir. Ayrıntılar: [uygulamanın bağlandığı yerler](../../docs/getting-started.md#what-the-app-connects-to) ve [Gizlilik Politikası](../../docs/legal/privacy-policy.md).
 
-## Proje Yapısı
+## Belgeler
 
-- `OpenWallpaperEngine/Scene/Format/` — PKG, TEX/TEXS ve scene.json ayrıştırıcıları ve modelleri
-- `OpenWallpaperEngine/Scene/Shaders/` — GLSL → SPIR-V → MSL çevirisi (`ShaderVariant.swift`, `InProcessShaderCompiler.swift`), önbelleğe alma ve ardışık düzen arşivi
-- `Vendor/ShaderToolchain/` — uygulamaya yerel bir paket olarak derlenen glslang ve SPIRV-Cross kaynakları
-- `OpenWallpaperEngine/Scene/Scripting/` — SceneScript çalışma zamanı ve ses/FFT bağlamaları
-- `OpenWallpaperEngine/Audio/AudioLevelTap.swift` — ScreenCaptureKit ile sistem sesi yakalama
-- `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal` — Metal sahne işleyicisi ve gölgelendirici kitaplığı
-- `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift` — Steam Atölyesi’ne göz atma ve indirmeler
-- `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — arşiv depolama, içe aktarma ve paket dönüştürme
-- `Scripts/fill-assets-cache.sh` — geliştirme yardımcısı: bir Wallpaper Engine kurulumunun varlıklarını yerel bir klasöre veya Duvar Kâğıdı Deposu önbelleğine kopyalar
-- `Scripts/scene-api-coverage.py` — kurulu duvar kâğıtlarının hangi SceneScript API’lerini kullandığını ve bunlardan hangilerinin uygulandığını raporlar
+- [Başlarken](../../docs/getting-started.md) — gereksinimler, varlıklar, Atölye ve içe aktarma
+- [Özellikler](../../docs/features.md) — uygulamanın desteklediği her şey ve nasıl kullanılacağı
+- Kılavuzlar: [ekran düzenleri](../../docs/display-layouts.md) · [çalma listeleri](../../docs/playlists.md) · [ekran koruyucu](../../docs/screen-saver.md) · [iPhone ve iPad’e dışa aktarma](../../docs/iphone-ipad-export.md) · [Android’e dışa aktarma](../../docs/android-export.md) · [derinlik haritaları](../../docs/depth-maps.md) · [temalar](../../docs/theming.md) · [MCP Sunucusu](../../docs/mcp.md) · [Chromium web motoru](../../docs/chromium-engine.md)
+- [Geliştirme](../../docs/development.md) — kaynaktan derleme ve proje yapısı; ayrıca [CONTRIBUTING.md](../../CONTRIBUTING.md) ve [mimari](../../docs/architecture.md)
+- [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki) — kılavuzlar, ayar başvurusu ve sorun giderme
 
 ## İlgili Projeler
 
@@ -185,3 +91,24 @@ Bu proje aşağıdaki kişilerin çalışmaları üzerine inşa edilmiştir:
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal sahne işleyicisi ve efekt ardışık düzeni, GLSL→MSL gölgelendirici çevirisi ve önbelleğe alma, SceneScript çalışma zamanı, sese duyarlı işleme, Atölye ve İndirilenler bölümlerinin yenilenmesi, yerleşim ve performans ayarları, logo yeniden tasarımı
 
 Orijinal projeyle aynı şekilde [GPL-3.0](../../LICENSE) lisansı altında lisanslanmıştır.
+
+## Yasal
+
+[Kullanım Koşulları](../../docs/legal/terms-of-use.md) · [Gizlilik Politikası](../../docs/legal/privacy-policy.md) · [Güvenlik Politikası](../../SECURITY.md)
+
+- **English:** Please read the Terms of Use and the Privacy Policy.
+- **Deutsch:** Bitte lesen Sie die Nutzungsbedingungen und die Datenschutzrichtlinie.
+- **Français :** Veuillez lire les conditions d’utilisation et la politique de confidentialité.
+- **Español:** Lee las condiciones de uso y la política de privacidad.
+- **Português (Brasil):** Leia os Termos de Uso e a Política de Privacidade.
+- **Italiano:** Leggi le condizioni d’uso e l’informativa sulla privacy.
+- **日本語：** 利用規約とプライバシーポリシーをお読みください。
+- **한국어:** 이용 약관과 개인정보 처리방침을 읽어 주십시오.
+- **简体中文：** 请阅读使用条款和隐私政策。
+- **繁體中文：** 請閱讀使用條款和隱私權政策。
+- **Русский:** Прочитайте условия использования и политику конфиденциальности.
+- **Polski:** Przeczytaj warunki korzystania i politykę prywatności.
+- **Türkçe:** Lütfen Kullanım Koşulları’nı ve Gizlilik Politikası’nı okuyun.
+- **Українська:** Прочитайте умови використання та політику приватності.
+- **العربية:** يُرجى قراءة شروط الاستخدام وسياسة الخصوصية.
+- **हिन्दी:** कृपया उपयोग की शर्तें और गोपनीयता नीति पढ़ें।

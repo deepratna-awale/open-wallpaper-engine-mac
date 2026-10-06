@@ -104,7 +104,7 @@ struct PerceptualMask: Equatable {
     }
 }
 
-/// SSIM and CIEDE2000 comparison with the efficiency plan's thresholds (docs/efficiency-plan-2d.md §4).
+/// SSIM and CIEDE2000 comparison with the efficiency plan's thresholds (efficiency-plan-2d notes §4).
 enum PerceptualCompare {
     /// Kinds of change, each with its own pass bar.
     enum ChangeKind {

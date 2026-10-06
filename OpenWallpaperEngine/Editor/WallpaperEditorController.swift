@@ -27,7 +27,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     private let userPropertyUndo: EditorUserPropertyUndo
     /// The effects, files, fonts and properties the editor offers.
     private let resources: EditorWallpaperResources
-    /// The timeline (docs/editor-plan.md P4) and the canvas it drives.
+    /// The timeline (editor-plan notes P4) and the canvas it drives.
     let timeline: SceneTimelineEditor
     private let timelineCanvas: EditorTimelineCanvas
     /// What the wallpaper's scripts log, for the script editor's console.

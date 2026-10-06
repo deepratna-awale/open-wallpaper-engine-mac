@@ -234,7 +234,10 @@ final class SceneWallpaperInstance {
         for (id, display) in displays {
             guard let view = display.view else { continue }
             SceneViewSnapshots.refresh(view)
-            let hidden = view.window.map { !$0.occlusionState.contains(.visible) } ?? false
+            // Asleep or covered: by the window server's occlusion, or by windows tiling the
+            // display, which the window server still counts as showing it (`isCovered`).
+            let hidden = (view.window.map { !$0.occlusionState.contains(.visible) } ?? false)
+                || wallpapers.isCovered(display.screenID)
             playback.displays[id] = SceneRenderLoop.DisplayState(plays: wallpapers.playback(onScreen: display.screenID).rendersFrames,
                                                                  hidden: hidden, refresh: Self.refreshRate(of: view))
         }
@@ -367,6 +370,9 @@ final class SceneWallpaperInstance {
                 guard let self, self.displays.values.contains(where: { $0.view?.window === window }) else { return }
                 self.update()
             }
+        })
+        observers.append(center.addObserver(forName: .coveredScreensDidChange, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.update() }
         })
         // N10: thermal state and Low Power Mode move the slider's effective stop.
         powerObserver = PowerPolicyMonitor.shared.observe { [weak self] _ in

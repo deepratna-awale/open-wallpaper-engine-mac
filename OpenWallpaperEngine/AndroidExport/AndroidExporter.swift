@@ -42,7 +42,7 @@ final class AndroidExporter: AndroidExportWorking {
                 framing = given
             } else {
                 let sceneSize = try await Task.detached(priority: .userInitiated) { try AndroidPackageBuilder.sceneSize(wallpaper) }.value
-                framing = AndroidVideoFraming(crop: item.options.crop(sceneSize: sceneSize))
+                framing = item.framing(sceneSize: sceneSize)
             }
             let job = Self.videoJob(item, framing: framing, output: video)
             let jobFile = directory.appending(path: "job.json")

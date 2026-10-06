@@ -2,7 +2,7 @@ import MetalKit
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// The per-layer dependency / coverage / dirty analysis (docs/efficiency-plan-2d.md WP1-A).
+/// The per-layer dependency / coverage / dirty analysis (efficiency-plan-2d notes WP1-A).
 final class SceneLayerAnalysisTests: XCTestCase {
     // MARK: - Synthetic content
 

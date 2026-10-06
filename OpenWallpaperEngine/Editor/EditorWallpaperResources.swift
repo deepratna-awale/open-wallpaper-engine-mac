@@ -3,7 +3,7 @@ import OWEEditor
 import OWESceneEditing
 
 /// What the Wallpaper Editor reads of the wallpaper and of Wallpaper Engine's assets
-/// (docs/editor-plan.md, phases 2–3): the effects it can add, what each effect lets it change
+/// (editor-plan notes, phases 2–3): the effects it can add, what each effect lets it change
 /// (from the effect's shaders, as the Scene Inspector reads them), the wallpaper's files, its
 /// textures as pictures, its fonts and its user properties.
 @MainActor

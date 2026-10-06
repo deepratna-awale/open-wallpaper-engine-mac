@@ -10,7 +10,7 @@ import SwiftUI
 import ImageIO
 
 struct GifImage: NSViewRepresentable {
-    private static let imageCache = NSCache<NSString, NSImage>()
+    private static let imageCache = NSCache<NSString, StillImage>()
 
     var gifName: String?
     var gifUrl: URL?
@@ -57,73 +57,54 @@ struct GifImage: NSViewRepresentable {
 
     func sizeThatFits(_ proposal: ProposedViewSize, nsView: PreviewImageView, context: Context) -> CGSize? {
         if !self.isResizable {
-            return nsView.imageView.sizeThatFits(nsView.frame.size)
+            return nsView.still.map { CGSize(width: $0.width, height: $0.height) }
         } else {
             guard let width = proposal.width, let height = proposal.height else { return nil }
             return CGSize(width: width, height: height)
         }
     }
 
-    /// Loads a downsampled still, or every frame once the image is to play. A paused image keeps
-    /// its frames; a still is replaced when the image starts playing.
+    /// Loads the downsampled still the view shows until (and unless) it plays; a playing view
+    /// decodes its frames itself (`PreviewFrameSequence`).
     private func loadImage(into nsView: PreviewImageView, coordinator: Coordinator) {
         let url = gifUrl ?? gifName.flatMap { AppBundleLayout.framework.url(forResource: $0, withExtension: "gif") }
         guard let url else { return }
-        let animatedKey = url.path + "#animated"
-        if !animates, coordinator.loadedKey == animatedKey { return }
-        let crops = contentMode == .fill
-        let key = animates ? animatedKey : url.path + (crops ? "#still-fill" : "#still-fit")
+        nsView.animationURL = url
+        let key = url.path + "#still"
         guard coordinator.loadedKey != key else { return }
         if let cached = Self.imageCache.object(forKey: key as NSString) {
-            nsView.image = cached
+            nsView.still = cached.image
             coordinator.loadedKey = key
             coordinator.loadingKey = nil
             return
         }
         guard coordinator.loadingKey != key else { return }
         coordinator.loadingKey = key
-        let animated = animates
         DispatchQueue.global(qos: .userInitiated).async {
-            let image: NSImage?
-            if animated {
-                // Uncropped: drawing a crop keeps only the first frame. The view fills instead.
-                image = NSImage(contentsOf: url)
-            } else {
-                image = Self.downsampledImage(at: url, maxPixelSize: 512)
-                    .map { crops ? Self.centeredSquareCrop($0) : $0 }
-            }
-            guard let image else { return }
-            Self.imageCache.setObject(image, forKey: key as NSString)
+            guard let image = Self.downsampledImage(at: url, maxPixelSize: 512) else { return }
+            Self.imageCache.setObject(StillImage(image: image), forKey: key as NSString)
             DispatchQueue.main.async {
                 guard coordinator.loadingKey == key else { return }
-                nsView.image = image
+                nsView.still = image
                 coordinator.loadedKey = key
                 coordinator.loadingKey = nil
             }
         }
     }
 
-    private static func downsampledImage(at url: URL, maxPixelSize: Int) -> NSImage? {
-        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
-              let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
-                kCGImageSourceCreateThumbnailFromImageAlways: true,
-                kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
-                kCGImageSourceCreateThumbnailWithTransform: true
-              ] as CFDictionary) else { return nil }
-        return NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
+    private final class StillImage {
+        let image: CGImage
+        init(image: CGImage) { self.image = image }
     }
 
-    private static func centeredSquareCrop(_ image: NSImage) -> NSImage {
-        let width = image.size.width
-        let height = image.size.height
-        guard width > height, height > 0 else { return image }
-        let cropRect = NSRect(x: (width - height) / 2, y: 0, width: height, height: height)
-        let cropped = NSImage(size: NSSize(width: height, height: height))
-        cropped.lockFocus()
-        image.draw(in: NSRect(origin: .zero, size: cropped.size),
-                   from: cropRect, operation: .copy, fraction: 1)
-        cropped.unlockFocus()
-        return cropped
+    private static func downsampledImage(at url: URL, maxPixelSize: Int) -> CGImage? {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCacheImmediately: true
+        ] as CFDictionary)
     }
 
     func resizable(capInsets: EdgeInsets = EdgeInsets(), resizingMode: Image.ResizingMode = .stretch) -> Self {
@@ -139,25 +120,46 @@ struct GifImage: NSViewRepresentable {
     }
 }
 
-/// The image view `GifImage` shows, in a clipping container that scales it to fill (cropping the
-/// overflow) or to fit. It plays only while asked to and while its window is on screen
-/// (`ThumbnailAnimation.windowShows`), so the previews of a hidden or minimized window stand still.
+/// The preview `GifImage` shows: a layer that scales the picture to fill its bounds (cropping the
+/// overflow) or to fit inside them. It shows the still until it plays; it plays only while asked
+/// to and while its window is on screen (`ThumbnailAnimation.windowShows`), from the shared
+/// `PreviewAnimator`, with its frames decoded off the main thread at the size it shows them
+/// (`PreviewFrameSequence`). A preview that stops keeps the frame it shows.
 final class PreviewImageView: NSView {
-    let imageView = NSImageView()
+    let imageLayer = CALayer()
     private var windowObservers: [NSObjectProtocol] = []
+    private var sequence: PreviewFrameSequence?
+    private var shownFrame: Int?
+    /// `animationURL` isn't an animation (one frame, or unreadable): the still stays.
+    private var isStillOnly = false
 
-    var image: NSImage? {
-        get { imageView.image }
-        set {
-            imageView.image = newValue
-            needsLayout = true
+    /// The first frame, downsampled: shown until a frame plays.
+    var still: CGImage? {
+        didSet {
+            guard still !== oldValue, shownFrame == nil else { return }
+            setContents(still)
+        }
+    }
+
+    /// The animated preview to play.
+    var animationURL: URL? {
+        didSet {
+            guard animationURL != oldValue else { return }
+            sequence = nil
+            shownFrame = nil
+            isStillOnly = false
+            setContents(still)
             updateAnimation()
         }
     }
 
     /// Scale to fill the bounds (cropping) rather than fit inside them.
     var fills = true {
-        didSet { if fills != oldValue { needsLayout = true } }
+        didSet {
+            guard fills != oldValue else { return }
+            imageLayer.contentsGravity = fills ? .resizeAspectFill : .resizeAspect
+            sequence = nil
+        }
     }
 
     /// Whether the image is to play while its window shows.
@@ -166,16 +168,21 @@ final class PreviewImageView: NSView {
     }
 
     /// Whether the image is playing now.
-    var isAnimating: Bool { imageView.animates }
+    private(set) var isAnimating = false
+
+    /// The frames' decode size: what the view covers in pixels.
+    var shownPixelSize: CGSize {
+        let scale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
+        return CGSize(width: (bounds.width * scale).rounded(.up), height: (bounds.height * scale).rounded(.up))
+    }
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
         layer?.masksToBounds = true
-        imageView.canDrawSubviewsIntoLayer = true
-        imageView.imageScaling = .scaleProportionallyUpOrDown
-        imageView.animates = false
-        addSubview(imageView)
+        imageLayer.contentsGravity = .resizeAspectFill
+        imageLayer.actions = ["contents": NSNull(), "bounds": NSNull(), "position": NSNull()]
+        layer?.addSublayer(imageLayer)
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
@@ -186,16 +193,17 @@ final class PreviewImageView: NSView {
 
     override func layout() {
         super.layout()
-        imageView.frame = Self.imageFrame(for: imageView.image?.size, in: bounds, fills: fills)
+        imageLayer.frame = bounds
+        // A tile that grew past what its frames were decoded for decodes them again.
+        if let sequence, sequence.pixelSize.width < min(shownPixelSize.width, sequence.sourceSize.width) - 1,
+           sequence.pixelSize.height < min(shownPixelSize.height, sequence.sourceSize.height) - 1 {
+            self.sequence = nil
+        }
     }
 
-    /// The image's frame: the bounds when fitting, else the aspect-filled rect centred on them.
-    static func imageFrame(for imageSize: CGSize?, in bounds: CGRect, fills: Bool) -> CGRect {
-        guard fills, let size = imageSize, size.width > 0, size.height > 0,
-              bounds.width > 0, bounds.height > 0 else { return bounds }
-        let scale = max(bounds.width / size.width, bounds.height / size.height)
-        let width = size.width * scale, height = size.height * scale
-        return CGRect(x: bounds.midX - width / 2, y: bounds.midY - height / 2, width: width, height: height)
+    override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        imageLayer.contentsScale = window?.backingScaleFactor ?? 2
     }
 
     override func viewDidMoveToWindow() {
@@ -206,14 +214,45 @@ final class PreviewImageView: NSView {
             for name in [NSWindow.didChangeOcclusionStateNotification, NSWindow.didMiniaturizeNotification,
                          NSWindow.didDeminiaturizeNotification] {
                 windowObservers.append(NotificationCenter.default.addObserver(
-                    forName: name, object: window, queue: .main) { [weak self] _ in self?.updateAnimation() })
+                    forName: name, object: window, queue: .main) { [weak self] _ in
+                        MainActor.assumeIsolated { self?.updateAnimation() }
+                    })
             }
         }
         updateAnimation()
     }
 
     private func updateAnimation() {
-        let plays = wantsAnimation && ThumbnailAnimation.windowShows(window)
-        if imageView.animates != plays { imageView.animates = plays }
+        let plays = wantsAnimation && animationURL != nil && !isStillOnly && ThumbnailAnimation.windowShows(window)
+        guard plays != isAnimating else { return }
+        isAnimating = plays
+        if plays { PreviewAnimator.shared.add(self) } else { PreviewAnimator.shared.remove(self) }
+    }
+
+    /// From `PreviewAnimator`: shows the frame for `time` once it is decoded.
+    func showFrame(at time: Double) {
+        guard let url = animationURL else { return }
+        if sequence == nil {
+            let size = shownPixelSize
+            guard size.width > 0, size.height > 0 else { return }
+            // Nil for a still picture: it keeps showing the still.
+            sequence = PreviewFrameSequence(url: url, fitting: size, fills: fills)
+            guard sequence != nil else {
+                isStillOnly = true
+                return updateAnimation()
+            }
+        }
+        guard let sequence,
+              let next = sequence.frameToShow(at: time, nextTick: time + 1 / PreviewAnimator.maximumRate),
+              next.index != shownFrame else { return }
+        shownFrame = next.index
+        setContents(next.image)
+    }
+
+    private func setContents(_ image: CGImage?) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        imageLayer.contents = image
+        CATransaction.commit()
     }
 }

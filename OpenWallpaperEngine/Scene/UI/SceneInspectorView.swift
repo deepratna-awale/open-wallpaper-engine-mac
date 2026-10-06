@@ -960,13 +960,19 @@ extension AppDelegate {
 /// The Scene Editor (Live): its mode, and the editor for it. The Wallpaper mode edits the stores
 /// the running wallpaper reads; the Screen Saver and iPhone & iPad Export modes each edit an
 /// isolated copy of them made when the mode opens (`IsolatedSceneEditSession`), shown by the
-/// mode's private instance and recorded or exported, and dropped when it closes.
+/// mode's private instance and recorded or exported, and dropped when it closes. Every export
+/// happens here, so a video opens it too, with the modes that apply to it (`SceneEditorModes`).
 struct SceneInspectorView: View {
     private let wallpaper: WEWallpaper
     private let scopes: [WallpaperPropertyScope]
     @State private var exportModel: LivePhotoExportModel?
     @State private var screenSaverModel: ScreenSaverEditorModel?
     @State private var androidModel: AndroidExportEditorModel?
+    @State private var videoScreenSaver: VideoScreenSaverModel?
+    /// A mode shown but unavailable for this wallpaper, while it is chosen.
+    @State private var unavailableMode: SceneInspectorMode?
+    /// A video's picture size as it plays, which its export modes frame; read when the editor opens.
+    @State private var videoSize: SIMD2<Double>?
     /// The mode the editor opens in, entered once its scene size is known.
     private let initialMode: SceneInspectorMode
     @State private var didEnterInitialMode = false
@@ -974,11 +980,23 @@ struct SceneInspectorView: View {
     init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope] = [.shared], initialMode: SceneInspectorMode = .wallpaper) {
         self.wallpaper = wallpaper
         self.scopes = scopes
-        self.initialMode = initialMode
+        self.initialMode = SceneEditorModes.initialMode(initialMode, for: wallpaper)
     }
 
+    private var isVideo: Bool { SceneEditorModes.isVideo(wallpaper) }
+
     var body: some View {
-        if let exportModel {
+        if isVideo, videoSize == nil {
+            ProgressView()
+                .frame(minWidth: 1120, minHeight: 560)
+                .frostedWindowBackground()
+                .task {
+                    // A file AVFoundation can't read (WebM, a remote video) has no export to frame.
+                    var size: SIMD2<Double>?
+                    if ScreenSaverVideoSource.isEligible(wallpaper) { size = await SceneEditorModes.videoSize(of: wallpaper.mediaURL) }
+                    videoSize = size ?? LivePhotoSceneSize.fallback
+                }
+        } else if let exportModel {
             SceneInspectorContent(wallpaper: wallpaper, scopes: [exportModel.session.scope], isolated: exportModel.session,
                                   exportModel: exportModel, screenSaverModel: nil, onModeChange: setMode,
                                   initialMode: .deviceExport)
@@ -993,6 +1011,14 @@ struct SceneInspectorView: View {
                                   isolated: screenSaverModel.session, exportModel: nil, screenSaverModel: screenSaverModel,
                                   onModeChange: setMode, initialMode: .screenSaver)
                 .id(SceneInspectorMode.screenSaver)
+        } else if let videoScreenSaver {
+            SceneInspectorContent(wallpaper: wallpaper, scopes: scopes, isolated: nil, exportModel: nil, screenSaverModel: nil,
+                                  videoScreenSaver: videoScreenSaver, onModeChange: setMode, initialMode: .screenSaver)
+                .id(SceneInspectorMode.screenSaver)
+        } else if let unavailableMode {
+            SceneInspectorContent(wallpaper: wallpaper, scopes: scopes, isolated: nil, exportModel: nil, screenSaverModel: nil,
+                                  unavailableMode: unavailableMode, onModeChange: setMode, initialMode: unavailableMode)
+                .id("unavailable-\(unavailableMode)")
         } else {
             SceneInspectorContent(wallpaper: wallpaper, scopes: scopes, isolated: nil, exportModel: nil,
                                   screenSaverModel: nil, onModeChange: setMode,
@@ -1007,6 +1033,13 @@ struct SceneInspectorView: View {
     private func setMode(_ mode: SceneInspectorMode, sceneSize: SIMD2<Double>) {
         didEnterInitialMode = true
         leaveIsolatedModes(except: mode)
+        if case .unavailable = SceneEditorModes.availability(of: mode, for: wallpaper) {
+            unavailableMode = mode
+            return
+        }
+        unavailableMode = nil
+        // A video's modes frame its picture as it plays.
+        let sceneSize = isVideo ? videoSize ?? sceneSize : sceneSize
         switch mode {
         case .deviceExport:
             guard exportModel == nil else { return }
@@ -1018,6 +1051,9 @@ struct SceneInspectorView: View {
             let session = IsolatedSceneEditSession(wallpaper: wallpaper, purpose: AndroidExportEditorModel.purpose,
                                                    seededFrom: scopes)
             androidModel = AndroidExportEditorModel(session: session, sceneSize: sceneSize)
+        case .screenSaver where isVideo:
+            guard videoScreenSaver == nil else { return }
+            videoScreenSaver = VideoScreenSaverModel(wallpaper: wallpaper, recordings: AppDelegate.shared.screenSaverRecordings)
         case .screenSaver:
             guard screenSaverModel == nil else { return }
             let session = IsolatedSceneEditSession(wallpaper: wallpaper, purpose: ScreenSaverEditorModel.purpose,
@@ -1032,9 +1068,11 @@ struct SceneInspectorView: View {
     }
 
     private func leaveIsolatedModes(except mode: SceneInspectorMode) {
+        if mode != .screenSaver { videoScreenSaver = nil }
         if mode != .deviceExport, let model = exportModel {
             exportModel = nil
             model.cancel()
+            model.closeBatch()
             DispatchQueue.main.async { model.session.end() }
         }
         if mode != .screenSaver, let model = screenSaverModel {
@@ -1045,6 +1083,7 @@ struct SceneInspectorView: View {
         if mode != .androidExport, let model = androidModel {
             androidModel = nil
             model.cancel()
+            model.closeBatch()
             DispatchQueue.main.async { model.session.end() }
         }
     }
@@ -1059,7 +1098,7 @@ private struct SceneInspectorContent: View {
     @State private var didCopyPath = false
     @State private var isMovementPresented = true
     @State private var isConfirmingReset = false
-    @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var columnVisibility: NavigationSplitViewVisibility
     /// Moves when the Export Settings sheet closes, so the panel reads the properties it changed.
     @State private var exportPanelRevision = 0
     @FocusState private var isSearchFocused: Bool
@@ -1072,21 +1111,37 @@ private struct SceneInspectorContent: View {
     private let exportModel: LivePhotoExportModel?
     private let screenSaverModel: ScreenSaverEditorModel?
     private let androidModel: AndroidExportEditorModel?
+    private let videoScreenSaver: VideoScreenSaverModel?
+    /// A mode shown but unavailable for this wallpaper (`SceneEditorModes`), while it is chosen.
+    private let unavailableMode: SceneInspectorMode?
     private let onModeChange: (SceneInspectorMode, SIMD2<Double>) -> Void
     /// The mode to enter once the scene's size is known (`showSceneInspector(…mode:)`). An isolated
     /// mode's content passes its own mode, so appearing doesn't switch straight back to Wallpaper.
     private let initialMode: SceneInspectorMode
 
     private var mode: SceneInspectorMode {
+        if let unavailableMode { return unavailableMode }
         if exportModel != nil { return .deviceExport }
         if androidModel != nil { return .androidExport }
-        return screenSaverModel == nil ? .wallpaper : .screenSaver
+        return screenSaverModel == nil && videoScreenSaver == nil ? .wallpaper : .screenSaver
+    }
+
+    /// Why the chosen mode can't be used for this wallpaper; nil when it can.
+    private var unavailableReason: String? {
+        guard let unavailableMode, case .unavailable(let reason) = SceneEditorModes.availability(of: unavailableMode, for: wallpaper)
+        else { return nil }
+        return reason
     }
 
     init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope], isolated: IsolatedSceneEditSession?,
          exportModel: LivePhotoExportModel?, screenSaverModel: ScreenSaverEditorModel?, androidModel: AndroidExportEditorModel? = nil,
+         videoScreenSaver: VideoScreenSaverModel? = nil, unavailableMode: SceneInspectorMode? = nil,
          onModeChange: @escaping (SceneInspectorMode, SIMD2<Double>) -> Void, initialMode: SceneInspectorMode = .wallpaper) {
         self.initialMode = initialMode
+        self.videoScreenSaver = videoScreenSaver
+        self.unavailableMode = unavailableMode
+        // A video has no layers to list: its modes open on their preview alone.
+        _columnVisibility = State(initialValue: SceneEditorModes.isVideo(wallpaper) ? .detailOnly : .all)
         wallpaperDirectory = wallpaper.wallpaperDirectory
         self.wallpaper = wallpaper
         self.scopes = scopes
@@ -1127,7 +1182,9 @@ private struct SceneInspectorContent: View {
             .onAppear {
                 selectedID = model.initiallySelectedID
                 loadSelectedTextures()
-                if initialMode != mode, LivePhotoExportModel.isEligible(wallpaper) { onModeChange(initialMode, model.sceneSize) }
+                if initialMode != mode, SceneEditorModes.availability(of: initialMode, for: wallpaper) != nil {
+                    onModeChange(initialMode, model.sceneSize)
+                }
             }
             .onChange(of: selectedID) { _, _ in loadSelectedTextures() }
             .onDisappear {
@@ -1187,6 +1244,14 @@ private struct SceneInspectorContent: View {
                             ScreenSaverEditorPanel(model: screenSaverModel) {
                                 layerAdjustments(for: model.items.first(where: { $0.id == selectedID }))
                             }
+                        } else if let videoScreenSaver {
+                            VideoScreenSaverPanel(model: videoScreenSaver)
+                        } else if let unavailableReason {
+                            Text(unavailableReason)
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                                .padding()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                         } else {
                             movementColumn(for: model.items.first(where: { $0.id == selectedID }))
                         }
@@ -1281,6 +1346,15 @@ private struct SceneInspectorContent: View {
             AndroidScreenPreview(model: androidModel)
         } else if let screenSaverModel {
             ScreenSaverEditorPreview(model: screenSaverModel)
+        } else if videoScreenSaver != nil {
+            VideoScreenSaverPreview(wallpaper: wallpaper)
+        } else if let unavailableMode, let unavailableReason {
+            ContentUnavailableView {
+                Label { Text(unavailableMode.title) } icon: { Image(systemName: "nosign") }
+            } description: {
+                Text(unavailableReason)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             detailColumn
         }
@@ -1333,6 +1407,8 @@ private struct SceneInspectorContent: View {
             }
             .disabled(screenSaverModel.isRecording)
             .help("Record a seamless loop of this version of the wallpaper and make it the screen saver")
+        } else if videoScreenSaver != nil || unavailableMode != nil {
+            EmptyView()
         } else {
             Button {
                 isConfirmingReset = true
@@ -1343,22 +1419,20 @@ private struct SceneInspectorContent: View {
         }
     }
 
-    /// The modes; only a scene wallpaper can leave the Wallpaper mode (a screen saver recording and
-    /// a Live Photo are rendered from a scene).
+    /// The modes this wallpaper shows (`SceneEditorModes`): all of them for a scene, a video's
+    /// screen saver and exports, a web wallpaper's Wallpaper mode and its unavailable Android Export.
     private var modePicker: some View {
-        let eligible = LivePhotoExportModel.isEligible(wallpaper)
+        let entries = SceneEditorModes.entries(for: wallpaper)
         return Picker("Mode", selection: Binding(get: { mode }, set: { newValue in
             guard newValue != mode else { return }
             onModeChange(newValue, model.renderSceneSize)
         })) {
-            ForEach(SceneInspectorMode.allCases, id: \.self) { mode in
-                Text(mode.title).tag(mode)
+            ForEach(entries, id: \.mode) { entry in
+                Text(entry.mode.title).tag(entry.mode)
             }
         }
         .pickerStyle(.segmented)
-        .disabled(!eligible)
-        .help(eligible ? Text("Edit the running wallpaper, record it as your screen saver, preview it as an iPhone or iPad lock screen and export a Live Photo, or frame it for an Android device and export a .mpkg, without changing your desktop")
-                       : Text("Only scene wallpapers can be made into a screen saver here or exported to iPhone, iPad or Android for now"))
+        .help(Text("Edit the running wallpaper, record it as your screen saver, preview it as an iPhone or iPad lock screen and export a Live Photo, or frame it for an Android device and export a .mpkg, without changing your desktop"))
     }
 
     /// ⌘K. macOS 15 focuses a search field through `searchFocused`; macOS 14 has no API for it,

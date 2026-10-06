@@ -185,6 +185,25 @@ final class DisplayPlaybackMonitorTests: XCTestCase {
         spin(until: { false }, timeout: 0.2)
         XCTAssertEqual(applied, [["1": .run, "2": .run]], "only the latest rules' answer is applied")
     }
+
+    /// With coverage followed, the displays windows tile are handed on, and the monitor polls
+    /// for windows moving away even with every rule off.
+    func testCoveredDisplaysAreHandedOn() {
+        var covered: [Set<String>] = []
+        monitor = DisplayPlaybackMonitor(sources: makeSources(), scanQueue: nil,
+                                         onCoverage: { covered.append($0) }, apply: { [weak self] in self?.applied.append($0) })
+        monitor.setRules(PlaybackRules())
+        XCTAssertFalse(monitor.isPolling)
+        desktop.windows = [DesktopWindow(ownerPID: 100, bounds: CGRect(x: 1920, y: 25, width: 960, height: 1055)),
+                           DesktopWindow(ownerPID: 200, bounds: CGRect(x: 2880, y: 25, width: 960, height: 1055))]
+        monitor.watchesCoverage = true
+        XCTAssertTrue(monitor.isPolling)
+        XCTAssertEqual(covered, [["2"]])
+        XCTAssertEqual(applied.last, ["1": .run, "2": .run], "covering isn't a playback rule")
+        desktop.windows.removeLast()
+        monitor.evaluate()
+        XCTAssertEqual(covered, [["2"], []])
+    }
 }
 
 private final class LockedFlag: @unchecked Sendable {

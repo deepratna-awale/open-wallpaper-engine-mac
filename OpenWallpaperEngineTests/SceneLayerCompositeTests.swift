@@ -3,7 +3,7 @@ import Metal
 @testable import OpenWallpaperEngine
 
 /// Layers sampling other layers' images (`_rt_imageLayerComposite_<id>_a` in scene.json pass
-/// `textures`, roadmap §8 item 14): WE registers a layer's first composite buffer under that name
+/// `textures`, roadmap notes §8 item 14): WE registers a layer's first composite buffer under that name
 /// (0x1401ea7a3 → 0x1400d3198) and a material's texture lookup finds it (0x14014cf90); `_b` is
 /// never registered. The renderer prepares every sampled layer, hidden or not, before its readers.
 final class SceneLayerCompositeTests: XCTestCase {

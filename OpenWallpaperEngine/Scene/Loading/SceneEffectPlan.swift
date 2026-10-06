@@ -125,7 +125,7 @@ struct SceneEffectPlanBuilder {
     /// references), without the WE assets; nil reads through `readFile`. WE resolves an effect's
     /// `materials/…` and `shaders/…` at the project root, then the assets root, and never inside
     /// `assets/effects/<name>/`: a project without its copy of a built-in effect's material logs
-    /// "Failed opening" and drops the effect (docs/we-values-audit.md §8). So an effect's own
+    /// "Failed opening" and drops the effect (we-values-audit notes §8). So an effect's own
     /// folder is searched only when the wallpaper has the effect (a Workshop effect's item keeps
     /// its materials there), and only in the wallpaper's files.
     var readWallpaperFile: ((String) -> Data?)? = nil

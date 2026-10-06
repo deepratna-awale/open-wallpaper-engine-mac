@@ -6516,7 +6516,7 @@
    }
   },
   "deprecated": true,
-  "note": "No display name in the editor's locale, so it is deprecated (not offered in the add dialog); its VM entry does nothing (wallpaper64.exe 0x140240279, docs/we-values-audit.md \u00a79.8). Editor-observed on a legacy project: Bounce, factor 0.5."
+  "note": "No display name in the editor's locale, so it is deprecated (not offered in the add dialog); its VM entry does nothing (wallpaper64.exe 0x140240279, we-values-audit notes \u00a79.8). Editor-observed on a legacy project: Bounce, factor 0.5."
  },
  "operator:collisionbounds": {
   "display_name": "Collision bounds",
@@ -7222,7 +7222,7 @@
   "display_name": "Particle Instance (the particle layer's panel; scene.json object instanceoverride)",
   "panel": "editor-observed (UIA, legacy_panels.json 'Particle Instance (layer) sliders')",
   "filler": "none: an absent key is 1",
-  "note": "Sliders with a free number box, like the component sliders; a Color picker (colorn) and the 'Collision model' drop slot follow. The runtime clamps none of them (docs/we-values-audit.md \u00a76).",
+  "note": "Sliders with a free number box, like the component sliders; a Color picker (colorn) and the 'Collision model' drop slot follow. The runtime clamps none of them (we-values-audit notes \u00a76).",
   "fields": {
    "alpha": {
     "label": "Opacity",

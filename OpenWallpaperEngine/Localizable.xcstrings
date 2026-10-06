@@ -1722,6 +1722,194 @@
         }
       }
     },
+    "%@ · %@ · %@ s. Only “%@” keeps its crop and edits; the others are centred and export as authored." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@ ث. تحتفظ ”%4$@“ وحدها بالاقتصاص والتعديلات؛ ويُوسَّط الباقي ويُصدَّر كما أُنشئ."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@ s. Nur „%4$@“ behält Ausschnitt und Bearbeitungen; die anderen werden zentriert und wie veröffentlicht exportiert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@ s. Solo «%4$@» conserva su recorte y sus cambios; los demás se centran y se exportan tal como se crearon."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@ s. Seul « %4$@ » garde son recadrage et ses modifications ; les autres sont centrés et exportés tels qu’ils ont été créés."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@ से. केवल “%4$@” अपना क्रॉप और बदलाव रखता है; बाकी बीच में रखकर जैसे बनाए गए थे वैसे ही एक्सपोर्ट होते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@ s. Solo “%4$@” mantiene ritaglio e modifiche; gli altri vengono centrati ed esportati così come sono stati creati."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@秒。切り取りと編集が反映されるのは“%4$@”だけです。ほかの壁紙は中央に合わせ、作成されたとおりに書き出されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@초. 자르기와 편집 내용은 ‘%4$@’에만 적용되며, 나머지는 가운데에 맞춰 원래 만들어진 대로 내보내집니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@ s. Tylko „%4$@” zachowuje swój kadr i zmiany; pozostałe są wyśrodkowane i eksportowane w oryginalnej postaci."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@ s. Somente “%4$@” mantém o recorte e as edições; os outros são centralizados e exportados como foram criados."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@ с. Кадрирование и изменения сохраняет только «%4$@»; остальные центрируются и экспортируются в исходном виде."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@ sn. Yalnızca “%4$@” kırpmasını ve düzenlemelerini korur; diğerleri ortalanır ve oluşturuldukları gibi dışa aktarılır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@ с. Кадрування та зміни зберігає лише «%4$@»; решта центруються й експортуються у первісному вигляді."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@ 秒。只有“%4$@”保留其裁剪和编辑；其他墙纸居中并按原样导出。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@ 秒。只有「%4$@」保留其裁切和編輯；其他背景圖片置中並按原樣輸出。"
+          }
+        }
+      }
+    },
+    "%@ · %@. Only “%@” keeps its edits; the others export as authored." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@. تحتفظ ”%3$@“ وحدها بتعديلاتها؛ ويُصدَّر الباقي كما أُنشئ."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@. Nur „%3$@“ behält seine Bearbeitungen; die anderen werden wie veröffentlicht exportiert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@. Solo «%3$@» conserva sus cambios; los demás se exportan tal como se crearon."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@. Seul « %3$@ » garde ses modifications ; les autres sont exportés tels qu’ils ont été créés."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@. केवल “%3$@” अपने बदलाव रखता है; बाकी जैसे बनाए गए थे वैसे ही एक्सपोर्ट होते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@. Solo “%3$@” mantiene le modifiche; gli altri vengono esportati così come sono stati creati."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@。編集が反映されるのは“%3$@”だけです。ほかの壁紙は作成されたとおりに書き出されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@. 편집 내용은 ‘%3$@’에만 적용되며, 나머지는 원래 만들어진 대로 내보내집니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@. Tylko „%3$@” zachowuje swoje zmiany; pozostałe są eksportowane w oryginalnej postaci."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@. Somente “%3$@” mantém suas edições; os outros são exportados como foram criados."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@. Изменения сохраняет только «%3$@»; остальные экспортируются в исходном виде."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@. Yalnızca “%3$@” düzenlemelerini korur; diğerleri oluşturuldukları gibi dışa aktarılır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@. Зміни зберігає лише «%3$@»; решта експортуються у первісному вигляді."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@。只有“%3$@”保留其编辑；其他墙纸按原样导出。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@。只有「%3$@」保留其編輯；其他背景圖片按原樣輸出。"
+          }
+        }
+      }
+    },
     "%lld" : {
       "shouldTranslate" : false,
       "localizations" : {}
@@ -2377,6 +2565,334 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld 個必要的工作坊項目無法使用"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld selected" : {
+      "localizations" : {
+        "ar" : {
+          "variations" : {
+            "plural" : {
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "لم يُحدَّد شيء"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "تم تحديد عنصر واحد"
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "تم تحديد عنصرين"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "تم تحديد %lld عناصر"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "تم تحديد %lld عنصرًا"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "تم تحديد %lld عنصر"
+                }
+              }
+            }
+          }
+        },
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ausgewählt"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ausgewählt"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld selected"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld selected"
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld seleccionado"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld seleccionados"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld sélectionné"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld sélectionnés"
+                }
+              }
+            }
+          }
+        },
+        "hi" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld चुना गया"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld चुने गए"
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld selezionato"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld selezionati"
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld件を選択中"
+                }
+              }
+            }
+          }
+        },
+        "ko" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld개 선택됨"
+                }
+              }
+            }
+          }
+        },
+        "pl" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zaznaczono %lld"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zaznaczono %lld"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zaznaczono %lld"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zaznaczono %lld"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld selecionado"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld selecionados"
+                }
+              }
+            }
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Выбран %lld"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Выбрано %lld"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Выбрано %lld"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Выбрано %lld"
+                }
+              }
+            }
+          }
+        },
+        "tr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld seçili"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld seçili"
+                }
+              }
+            }
+          }
+        },
+        "uk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Вибрано %lld"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Вибрано %lld"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Вибрано %lld"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Вибрано %lld"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "已选择 %lld 个"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hant" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "已選擇 %lld 個"
                 }
               }
             }
@@ -4453,6 +4969,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "預設組合需要名稱。"
+          }
+        }
+      }
+    },
+    "A video wallpaper's screen saver is its own video file, played as it is and filling each display. Nothing is recorded, so it looks exactly like the wallpaper." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شاشة التوقف لخلفية الفيديو هي ملف الفيديو الخاص بها، يُشغَّل كما هو ويملأ كل شاشة عرض. لا يُسجَّل شيء، لذا تبدو تمامًا مثل الخلفية."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Bildschirmschoner eines Video-Hintergrundbilds ist seine eigene Videodatei, unverändert abgespielt und bildschirmfüllend auf jedem Display. Es wird nichts aufgenommen, daher sieht er genau wie das Hintergrundbild aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El salvapantallas de un fondo de vídeo es su propio archivo de vídeo, reproducido tal cual y llenando cada pantalla. No se graba nada, así que se ve exactamente como el fondo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’économiseur d’écran d’un fond d’écran vidéo est son propre fichier vidéo, lu tel quel et remplissant chaque écran. Rien n’est enregistré : il est identique au fond d’écran."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वीडियो वॉलपेपर का स्क्रीन सेवर उसकी अपनी वीडियो फ़ाइल है, जो जैसी है वैसी ही हर डिस्प्ले को भरते हुए चलती है। कुछ भी रिकॉर्ड नहीं होता, इसलिए यह बिल्कुल वॉलपेपर जैसा दिखता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il salvaschermo di uno sfondo video è il suo stesso file video, riprodotto così com’è e a riempire ogni schermo. Non viene registrato nulla, quindi appare esattamente come lo sfondo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ビデオ壁紙のスクリーンセーバは、そのビデオファイルそのものを、各ディスプレイいっぱいにそのまま再生します。録画は行わないため、壁紙とまったく同じに見えます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비디오 배경화면의 화면 보호기는 해당 비디오 파일 자체로, 각 디스플레이를 채우며 그대로 재생됩니다. 아무것도 녹화하지 않으므로 배경화면과 똑같이 보입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wygaszaczem ekranu tapety wideo jest jej własny plik wideo, odtwarzany bez zmian i wypełniający każdy wyświetlacz. Nic nie jest nagrywane, więc wygląda dokładnie jak tapeta."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O protetor de tela de um papel de parede de vídeo é o próprio arquivo de vídeo, reproduzido como está e preenchendo cada tela. Nada é gravado, então ele fica exatamente igual ao papel de parede."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставка видеообоев — это их собственный видеофайл, который воспроизводится как есть и заполняет каждый дисплей. Ничего не записывается, поэтому она выглядит точно как обои."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video duvar kâğıdının ekran koruyucusu, olduğu gibi oynatılan ve her ekranı dolduran kendi video dosyasıdır. Hiçbir şey kaydedilmez, bu yüzden duvar kâğıdıyla tamamen aynı görünür."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставка відеошпалер — це їхній власний відеофайл, що відтворюється як є і заповнює кожен дисплей. Нічого не записується, тож вона виглядає точно як шпалери."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "视频墙纸的屏幕保护程序就是其视频文件本身，按原样播放并填满每台显示器。不会进行录制，因此与墙纸完全一样。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "影片背景圖片的螢幕保護程式就是其影片檔案本身，按原樣播放並填滿每台顯示器。不會進行錄製，因此與背景圖片完全相同。"
           }
         }
       }
@@ -8132,6 +8742,194 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "年齡分級"
+          }
+        }
+      }
+    },
+    "AirDrop" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隔空投送"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop"
+          }
+        }
+      }
+    },
+    "AirDrop All" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إرسال الكل عبر AirDrop"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle per AirDrop senden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar todo con AirDrop"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout envoyer avec AirDrop"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सभी AirDrop से भेजें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia tutto con AirDrop"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべてをAirDropで送信"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모두 AirDrop으로 보내기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyślij wszystko przez AirDrop"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar Tudo por AirDrop"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправить все через AirDrop"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tümünü AirDrop ile Gönder"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надіслати все через AirDrop"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部通过隔空投送发送"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部透過 AirDrop 傳送"
           }
         }
       }
@@ -20138,6 +20936,100 @@
         }
       }
     },
+    "Cancelled" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم الإلغاء"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgebrochen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annulé"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रद्द किया गया"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annullato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャンセル済み"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "취소됨"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anulowano"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelado"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменено"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İptal Edildi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасовано"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已取消"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已取消"
+          }
+        }
+      }
+    },
     "Cartoon" : {
       "comment" : "Workshop genre tag",
       "localizations" : {
@@ -21934,6 +22826,100 @@
         }
       }
     },
+    "Choose" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختيار"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auswählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "चुनें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolher"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выбрать"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seç"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вибрати"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选取"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇"
+          }
+        }
+      }
+    },
     "Choose Another" : {
       "localizations" : {
         "ar" : {
@@ -23065,6 +24051,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "選擇 Wallpaper Engine 檔案夾或其 assets 檔案夾。"
+          }
+        }
+      }
+    },
+    "Choose a folder for the Live Photos’ photos and movies." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر مجلدًا لصور Live Photo وأفلامها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wählen Sie einen Ordner für Fotos und Filme der Live Photos."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige una carpeta para las fotos y los vídeos de las Live Photos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez un dossier pour les photos et les vidéos des Live Photos."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo की फ़ोटो और मूवी के लिए फ़ोल्डर चुनें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli una cartella per le foto e i filmati delle Live Photo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photoの写真とムービーを保存するフォルダを選択してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo의 사진과 동영상을 저장할 폴더를 선택하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz folder na zdjęcia i filmy Live Photo."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha uma pasta para as fotos e os vídeos das Live Photos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите папку для фото и видео Live Photo."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo’ların fotoğrafları ve filmleri için bir klasör seçin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть папку для фото й відео Live Photo."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选取用于存储实况照片的照片和影片的文件夹。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇用於儲存原況照片之照片和影片的檔案夾。"
           }
         }
       }
@@ -43456,6 +44536,288 @@
         }
       }
     },
+    "Export %lld" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تصدير %lld"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar %lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporter %lld"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld एक्सपोर्ट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esporta %lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld件を書き出す"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld개 내보내기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksportuj: %lld"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar %lld"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экспортировать: %lld"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Öğeyi Dışa Aktar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортувати: %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出 %lld 个"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輸出 %lld 個"
+          }
+        }
+      }
+    },
+    "Export More with These Settings" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تصدير المزيد بهذه الإعدادات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weitere mit diesen Einstellungen exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar más con estos ajustes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporter d’autres éléments avec ces réglages"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इन सेटिंग्स से और एक्सपोर्ट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esporta altri con queste impostazioni"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この設定でほかの壁紙も書き出す"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 설정으로 더 내보내기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksportuj więcej z tymi ustawieniami"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar Mais com Estes Ajustes"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экспортировать ещё с этими настройками"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu Ayarlarla Daha Fazlasını Dışa Aktar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортувати ще з цими параметрами"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以这些设置导出更多"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以這些設定輸出更多"
+          }
+        }
+      }
+    },
+    "Export More with These Settings…" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تصدير المزيد بهذه الإعدادات…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weitere mit diesen Einstellungen exportieren …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar más con estos ajustes…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporter d’autres éléments avec ces réglages…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इन सेटिंग्स से और एक्सपोर्ट करें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esporta altri con queste impostazioni…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この設定でほかの壁紙も書き出す…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 설정으로 더 내보내기…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksportuj więcej z tymi ustawieniami…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar Mais com Estes Ajustes…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экспортировать ещё с этими настройками…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu Ayarlarla Daha Fazlasını Dışa Aktar…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортувати ще з цими параметрами…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以这些设置导出更多…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以這些設定輸出更多⋯"
+          }
+        }
+      }
+    },
     "Export Settings" : {
       "localizations" : {
         "ar" : {
@@ -44018,6 +45380,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "匯出 %@ 以在 Android 上使用"
+          }
+        }
+      }
+    },
+    "Exporting…" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ التصدير…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportieren …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportando…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportation…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक्सपोर्ट हो रहा है…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esportazione…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書き出し中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내보내는 중…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksportowanie…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportando…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экспорт…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dışa aktarılıyor…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експорт…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在导出…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在輸出⋯"
           }
         }
       }
@@ -66917,6 +68373,194 @@
         }
       }
     },
+    "Live Photos can be made only from MP4, M4V or MOV video files in your library." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يمكن إنشاء صور Live Photo إلا من ملفات الفيديو بتنسيق MP4 أو M4V أو MOV الموجودة في مكتبتك."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photos können nur aus MP4-, M4V- oder MOV-Videodateien aus Ihrer Mediathek erstellt werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las Live Photos solo se pueden crear a partir de archivos de vídeo MP4, M4V o MOV de tu biblioteca."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les Live Photos ne peuvent être créées qu’à partir de fichiers vidéo MP4, M4V ou MOV de votre bibliothèque."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo केवल आपकी लाइब्रेरी की MP4, M4V या MOV वीडियो फ़ाइलों से बनाई जा सकती हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le Live Photo si possono creare solo da file video MP4, M4V o MOV della tua libreria."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photoは、ライブラリ内のMP4、M4V、MOVビデオファイルからのみ作成できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo는 보관함의 MP4, M4V 또는 MOV 비디오 파일로만 만들 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo można utworzyć tylko z plików wideo MP4, M4V lub MOV z Twojej biblioteki."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As Live Photos só podem ser criadas a partir de arquivos de vídeo MP4, M4V ou MOV da sua biblioteca."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo можно создать только из видеофайлов MP4, M4V или MOV из вашей библиотеки."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo’lar yalnızca arşivinizdeki MP4, M4V veya MOV video dosyalarından oluşturulabilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo можна створити лише з відеофайлів MP4, M4V або MOV з вашої бібліотеки."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只能用资源库中的 MP4、M4V 或 MOV 视频文件制作实况照片。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只能使用資料庫中的 MP4、M4V 或 MOV 影片檔案製作原況照片。"
+          }
+        }
+      }
+    },
+    "Live Photos can be made only from scenes and from MP4, M4V or MOV video files in your library." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يمكن إنشاء صور Live Photo إلا من المشاهد ومن ملفات الفيديو بتنسيق MP4 أو M4V أو MOV الموجودة في مكتبتك."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photos können nur aus Szenen und aus MP4-, M4V- oder MOV-Videodateien aus Ihrer Mediathek erstellt werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las Live Photos solo se pueden crear a partir de escenas y de archivos de vídeo MP4, M4V o MOV de tu biblioteca."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les Live Photos ne peuvent être créées qu’à partir de scènes et de fichiers vidéo MP4, M4V ou MOV de votre bibliothèque."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo केवल आपकी लाइब्रेरी के सीन और MP4, M4V या MOV वीडियो फ़ाइलों से बनाई जा सकती हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le Live Photo si possono creare solo da scene e da file video MP4, M4V o MOV della tua libreria."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photoは、ライブラリ内のシーンとMP4、M4V、MOVビデオファイルからのみ作成できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo는 보관함의 장면과 MP4, M4V 또는 MOV 비디오 파일로만 만들 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo można utworzyć tylko ze scen oraz plików wideo MP4, M4V lub MOV z Twojej biblioteki."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As Live Photos só podem ser criadas a partir de cenas e de arquivos de vídeo MP4, M4V ou MOV da sua biblioteca."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo можно создать только из сцен и видеофайлов MP4, M4V или MOV из вашей библиотеки."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo’lar yalnızca arşivinizdeki sahnelerden ve MP4, M4V veya MOV video dosyalarından oluşturulabilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo можна створити лише зі сцен і відеофайлів MP4, M4V або MOV з вашої бібліотеки."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只能用资源库中的场景以及 MP4、M4V 或 MOV 视频文件制作实况照片。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只能使用資料庫中的場景以及 MP4、M4V 或 MOV 影片檔案製作原況照片。"
+          }
+        }
+      }
+    },
     "Load" : {
       "localizations" : {
         "ar" : {
@@ -70703,6 +72347,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "為直握或橫握的平板電腦製作桌布"
+          }
+        }
+      }
+    },
+    "Make this video the screen saver" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اجعل هذا الفيديو شاشة التوقف"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Video als Bildschirmschoner verwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar este vídeo como salvapantallas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faire de cette vidéo l’économiseur d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस वीडियो को स्क्रीन सेवर बनाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa questo video come salvaschermo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このビデオをスクリーンセーバにします"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 비디오를 화면 보호기로 사용"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ustaw to wideo jako wygaszacz ekranu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar este vídeo como protetor de tela"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сделать это видео заставкой"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu videoyu ekran koruyucu yap"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зробити це відео заставкою"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将此视频用作屏幕保护程序"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將此影片用作螢幕保護程式"
           }
         }
       }
@@ -94114,6 +95852,194 @@
         }
       }
     },
+    "Pick more wallpapers from your library and export them as .mpkg packages with this device, output, quality and frame rate" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر مزيدًا من الخلفيات من مكتبتك وصدّرها كحزم ‎.mpkg بهذا الجهاز والإخراج والجودة ومعدل الإطارات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weitere Hintergrundbilder aus Ihrer Mediathek auswählen und mit diesem Gerät, dieser Ausgabe, Qualität und Bildrate als MPKG-Pakete exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige más fondos de tu biblioteca y expórtalos como paquetes .mpkg con este dispositivo, esta salida, esta calidad y esta frecuencia de fotogramas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir d’autres fonds d’écran dans votre bibliothèque et les exporter en paquets .mpkg avec cet appareil, cette sortie, cette qualité et cette fréquence d’images"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपनी लाइब्रेरी से और वॉलपेपर चुनें और उन्हें इस डिवाइस, आउटपुट, क्वालिटी और फ़्रेम रेट के साथ .mpkg पैकेज के रूप में एक्सपोर्ट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli altri sfondi dalla libreria ed esportali come pacchetti .mpkg con questo dispositivo, questa uscita, questa qualità e questa frequenza fotogrammi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライブラリからほかの壁紙を選び、このデバイス、出力、品質、フレームレートで.mpkgパッケージとして書き出します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보관함에서 배경화면을 더 골라 이 기기, 출력, 품질, 프레임률로 .mpkg 패키지로 내보냅니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz więcej tapet z biblioteki i wyeksportuj je jako pakiety .mpkg z tym urządzeniem, wyjściem, jakością i liczbą klatek na sekundę"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha mais papéis de parede da sua biblioteca e exporte-os como pacotes .mpkg com este dispositivo, esta saída, esta qualidade e esta taxa de quadros"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите другие обои в библиотеке и экспортируйте их как пакеты .mpkg с этим устройством, выводом, качеством и частотой кадров"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arşivinizden daha fazla duvar kâğıdı seçin ve bunları bu aygıt, çıktı, kalite ve kare hızıyla .mpkg paketleri olarak dışa aktarın"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть інші шпалери в бібліотеці й експортуйте їх як пакети .mpkg з цим пристроєм, виводом, якістю та частотою кадрів"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从资源库中选取更多墙纸，并以此设备、输出、质量和帧率将其导出为 .mpkg 包"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從資料庫中選擇更多背景圖片，並以此裝置、輸出、品質和影格速率將其輸出為 .mpkg 套件"
+          }
+        }
+      }
+    },
+    "Pick more wallpapers from your library and export them as Live Photos with this device, quality and clip" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر مزيدًا من الخلفيات من مكتبتك وصدّرها كصور Live Photo بهذا الجهاز وهذه الجودة وهذا المقطع"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weitere Hintergrundbilder aus Ihrer Mediathek auswählen und mit diesem Gerät, dieser Qualität und diesem Clip als Live Photos exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige más fondos de tu biblioteca y expórtalos como Live Photos con este dispositivo, esta calidad y este clip"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir d’autres fonds d’écran dans votre bibliothèque et les exporter en Live Photos avec cet appareil, cette qualité et cet extrait"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपनी लाइब्रेरी से और वॉलपेपर चुनें और उन्हें इस डिवाइस, क्वालिटी और क्लिप के साथ Live Photo के रूप में एक्सपोर्ट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli altri sfondi dalla libreria ed esportali come Live Photo con questo dispositivo, questa qualità e questa clip"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライブラリからほかの壁紙を選び、このデバイス、品質、クリップでLive Photoとして書き出します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보관함에서 배경화면을 더 골라 이 기기, 품질, 클립으로 Live Photo로 내보냅니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz więcej tapet z biblioteki i wyeksportuj je jako Live Photo z tym urządzeniem, jakością i klipem"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha mais papéis de parede da sua biblioteca e exporte-os como Live Photos com este dispositivo, esta qualidade e este clipe"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите другие обои в библиотеке и экспортируйте их как Live Photo с этим устройством, качеством и фрагментом"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arşivinizden daha fazla duvar kâğıdı seçin ve bunları bu aygıt, kalite ve kliple Live Photo olarak dışa aktarın"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть інші шпалери в бібліотеці й експортуйте їх як Live Photo з цим пристроєм, якістю та фрагментом"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从资源库中选取更多墙纸，并以此设备、质量和片段将其导出为实况照片"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從資料庫中選擇更多背景圖片，並以此裝置、品質和片段將其輸出為原況照片"
+          }
+        }
+      }
+    },
     "Pick the frame rate, anti-aliasing and texture quality that suit your Mac, and check the Diagnostics page to see the impact." : {
       "localizations" : {
         "ar" : {
@@ -97746,6 +99672,100 @@
         }
       }
     },
+    "Pre-Rendered, %lld FPS" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مرندرة مسبقًا، %lld إطار/ث"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorgerendert, %lld FPS"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preprocesado, %lld FPS"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prerendu, %lld i/s"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्री-रेंडर्ड, %lld FPS"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pre-renderizzato, %lld FPS"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プリレンダリング済、%lld FPS"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사전 렌더링, %lld FPS"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prerenderowana, %lld FPS"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pré-renderizado, %lld FPS"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пререндеринг, %lld кадр/с"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceden İşlenmiş, %lld FPS"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перед-відмальовані, %lld кадр/с"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预渲染，%lld FPS"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "預先轉譯，%lld FPS"
+          }
+        }
+      }
+    },
     "Pre-Rendered: a fixed video loop of this version, framed as the preview shows it." : {
       "localizations" : {
         "ar" : {
@@ -101049,96 +103069,96 @@
         }
       }
     },
-    "Puts the General, Performance, Optimizations, Diagnostics and Screen Saver settings back to their defaults. Your wallpapers and library aren't touched." : {
+    "Puts the settings of every tab back to their defaults, Updates included. Your wallpapers and library aren't touched." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يعيد إعدادات «عام» و«الأداء» و«التحسينات» و«التشخيص» وشاشة التوقف إلى قيمها الافتراضية. ولا تتأثر خلفياتك ومكتبتك."
+            "value" : "يعيد إعدادات كل علامات التبويب إلى قيمها الافتراضية، بما فيها «التحديثات». ولا تتأثر خلفياتك ومكتبتك."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Setzt die Einstellungen von Allgemein, Leistung, Optimierungen, Diagnose und Bildschirmschoner auf die Standardwerte zurück. Ihre Hintergrundbilder und Ihre Mediathek bleiben unverändert."
+            "value" : "Setzt die Einstellungen aller Tabs auf die Standardwerte zurück, auch die von Updates. Ihre Hintergrundbilder und Ihre Mediathek bleiben unverändert."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Restablece los valores predeterminados de los ajustes de General, Rendimiento, Optimizaciones, Diagnóstico y Salvapantallas. Tus fondos de pantalla y tu biblioteca no cambian."
+            "value" : "Restablece los valores predeterminados de los ajustes de todas las pestañas, incluida Actualizaciones. Tus fondos de pantalla y tu biblioteca no cambian."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rétablit les valeurs par défaut des réglages Général, Performances, Optimisations, Diagnostic et Économiseur d’écran. Vos fonds d’écran et votre bibliothèque ne sont pas modifiés."
+            "value" : "Rétablit les valeurs par défaut des réglages de tous les onglets, y compris Mises à jour. Vos fonds d’écran et votre bibliothèque ne sont pas modifiés."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "सामान्य, परफ़ॉर्मेंस, ऑप्टिमाइज़ेशन, डायग्नॉस्टिक और स्क्रीन सेवर सेटिंग्ज़ को डिफ़ॉल्ट पर वापस लाता है। आपके वॉलपेपर और लाइब्रेरी पर असर नहीं पड़ता।"
+            "value" : "सभी टैब की सेटिंग्ज़ को डिफ़ॉल्ट पर वापस लाता है, अपडेट समेत। आपके वॉलपेपर और लाइब्रेरी पर असर नहीं पड़ता।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ripristina i valori predefiniti delle impostazioni Generali, Prestazioni, Ottimizzazioni, Diagnosi e Salvaschermo. I tuoi sfondi e la libreria restano invariati."
+            "value" : "Ripristina i valori predefiniti delle impostazioni di tutti i pannelli, Aggiornamenti compreso. I tuoi sfondi e la libreria restano invariati."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「一般」「パフォーマンス」「最適化」「診断」とスクリーンセーバの設定をデフォルトに戻します。壁紙とライブラリには影響しません。"
+            "value" : "「アップデート」を含むすべてのタブの設定をデフォルトに戻します。壁紙とライブラリには影響しません。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "일반, 성능, 최적화, 진단 및 화면 보호기 설정을 기본값으로 되돌립니다. 배경화면과 보관함은 변경되지 않습니다."
+            "value" : "업데이트를 포함한 모든 탭의 설정을 기본값으로 되돌립니다. 배경화면과 보관함은 변경되지 않습니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Przywraca domyślne ustawienia sekcji Ogólne, Wydajność, Optymalizacje, Diagnostyka i wygaszacza ekranu. Twoje tapety i biblioteka pozostają bez zmian."
+            "value" : "Przywraca domyślne ustawienia wszystkich kart, łącznie z kartą Uaktualnienia. Twoje tapety i biblioteka pozostają bez zmian."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Restaura os padrões dos ajustes de Geral, Desempenho, Otimizações, Diagnóstico e Protetor de Tela. Suas imagens de fundo e sua biblioteca não são alteradas."
+            "value" : "Restaura os padrões dos ajustes de todas as abas, inclusive Atualizações. Suas imagens de fundo e sua biblioteca não são alteradas."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Возвращает настройки разделов «Основные», «Производительность», «Оптимизации», «Диагностика» и заставки к значениям по умолчанию. Обои и медиатека не затрагиваются."
+            "value" : "Возвращает настройки всех вкладок, включая «Обновления», к значениям по умолчанию. Обои и медиатека не затрагиваются."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Genel, Performans, Optimizasyonlar, Tanılar ve Ekran Koruyucu ayarlarını varsayılanlara döndürür. Duvar kâğıtlarınız ve arşiviniz değişmez."
+            "value" : "Güncellemeler dahil tüm sekmelerin ayarlarını varsayılanlara döndürür. Duvar kâğıtlarınız ve arşiviniz değişmez."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Повертає типові значення параметрів розділів «Загальні», «Продуктивність», «Оптимізації», «Діагностика» та заставки. Шпалери та бібліотеку не змінено."
+            "value" : "Повертає типові значення параметрів усіх вкладок, зокрема «Оновлення». Шпалери та бібліотеку не змінено."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "将“通用”“性能”“优化”“诊断”和屏幕保护程序设置恢复为默认值。你的墙纸和资料库不受影响。"
+            "value" : "将所有标签页的设置（包括“更新”）恢复为默认值。你的墙纸和资料库不受影响。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "將「一般」「效能」「最佳化」「診斷」和螢幕保護程式設定回復為預設值。你的背景圖片和資料庫不受影響。"
+            "value" : "將所有標籤頁的設定（包括「更新項目」）回復為預設值。你的背景圖片和資料庫不受影響。"
           }
         }
       }
@@ -115621,6 +117641,100 @@
         }
       }
     },
+    "Save to Folder" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حفظ في مجلد"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Ordner sichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar en una carpeta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer dans un dossier"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ोल्डर में सेव करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva in una cartella"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォルダに保存"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "폴더에 저장"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisz w folderze"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvar em Pasta"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранить в папку"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klasöre Kaydet"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти в папку"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存储到文件夹"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "儲存至檔案夾"
+          }
+        }
+      }
+    },
     "Save to Folder…" : {
       "comment" : "Send over Wi-Fi sheet: copy the packages into a folder",
       "localizations" : {
@@ -120811,6 +122925,100 @@
         }
       }
     },
+    "Select All Shown" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحديد كل المعروض"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle angezeigten auswählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccionar todo lo mostrado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sélectionner tout ce qui est affiché"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दिखाए गए सभी चुनें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleziona tutti quelli mostrati"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "表示中のものをすべて選択"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "표시된 항목 모두 선택"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaznacz wszystkie widoczne"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecionar Todos os Exibidos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выбрать все показанные"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gösterilenlerin Tümünü Seç"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вибрати всі показані"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全选所显示项"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全選所顯示項目"
+          }
+        }
+      }
+    },
     "Select None" : {
       "localizations" : {
         "ar" : {
@@ -121848,6 +124056,100 @@
         }
       }
     },
+    "Send every exported Live Photo with one AirDrop share" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إرسال كل صور Live Photo المُصدَّرة بمشاركة AirDrop واحدة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle exportierten Live Photos mit einer AirDrop-Freigabe senden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar todas las Live Photos exportadas en un solo envío por AirDrop"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyer toutes les Live Photos exportées en un seul partage AirDrop"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक्सपोर्ट की गई सभी Live Photo एक ही AirDrop शेयर में भेजें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia tutte le Live Photo esportate con un’unica condivisione AirDrop"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書き出したすべてのLive Photoを1回のAirDropで送信"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내보낸 모든 Live Photo를 한 번의 AirDrop으로 보내기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyślij wszystkie wyeksportowane Live Photo jednym udostępnieniem AirDrop"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar todas as Live Photos exportadas em um só compartilhamento por AirDrop"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправить все экспортированные Live Photo одной передачей AirDrop"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dışa aktarılan tüm Live Photo’ları tek bir AirDrop paylaşımıyla gönder"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надіслати всі експортовані Live Photo одним надсиланням AirDrop"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通过一次隔空投送发送所有导出的实况照片"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "透過一次 AirDrop 傳送所有輸出的原況照片"
+          }
+        }
+      }
+    },
     "Send over Wi-Fi" : {
       "comment" : "Send over Wi-Fi sheet: title",
       "localizations" : {
@@ -122034,6 +124336,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "透過 Wi-Fi 傳送⋯"
+          }
+        }
+      }
+    },
+    "Send this Live Photo with AirDrop" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إرسال صورة Live Photo هذه عبر AirDrop"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Live Photo per AirDrop senden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar esta Live Photo con AirDrop"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyer cette Live Photo avec AirDrop"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह Live Photo AirDrop से भेजें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia questa Live Photo con AirDrop"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このLive PhotoをAirDropで送信"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 Live Photo를 AirDrop으로 보내기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyślij to Live Photo przez AirDrop"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar esta Live Photo por AirDrop"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправить это Live Photo через AirDrop"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu Live Photo’yu AirDrop ile gönder"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надіслати це Live Photo через AirDrop"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通过隔空投送发送此实况照片"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "透過 AirDrop 傳送此原況照片"
           }
         }
       }
@@ -123072,6 +125468,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "設為主要複製顯示器"
+          }
+        }
+      }
+    },
+    "Set as Screen Saver" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعيين كشاشة توقف"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als Bildschirmschoner verwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar como salvapantallas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Définir comme économiseur d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीन सेवर बनाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imposta come salvaschermo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンセーバに設定"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 보호기로 설정"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ustaw jako wygaszacz ekranu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Definir como Protetor de Tela"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сделать заставкой"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran Koruyucu Yap"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зробити заставкою"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设为屏幕保护程序"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設為螢幕保護程式"
           }
         }
       }
@@ -141775,96 +144265,96 @@
         }
       }
     },
-    "The app contacts only Valve (Steam and SteamCMD) and GitHub (app updates). Web wallpapers may load their own online content." : {
+    "The app contacts Valve (Steam and SteamCMD), GitHub (app updates) and, when you install an optional plugin, its publisher. Web wallpapers and URLs you add load their own online content." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "لا يتصل التطبيق إلا بـ Valve (‏Steam وSteamCMD) وGitHub (تحديثات التطبيق). قد تحمّل خلفيات الويب محتواها الخاص عبر الإنترنت."
+            "value" : "يتصل التطبيق بـ Valve (‏Steam وSteamCMD) وGitHub (تحديثات التطبيق)، وبناشر أي مكوّن إضافي اختياري عند تثبيته. تحمّل خلفيات الويب والروابط التي تضيفها محتواها الخاص عبر الإنترنت."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die App kontaktiert nur Valve (Steam und SteamCMD) und GitHub (App-Updates). Web-Hintergrundbilder können eigene Online-Inhalte laden."
+            "value" : "Die App kontaktiert Valve (Steam und SteamCMD), GitHub (App-Updates) und, wenn Sie ein optionales Plug-in installieren, dessen Anbieter. Web-Hintergrundbilder und von Ihnen hinzugefügte URLs laden eigene Online-Inhalte."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La app solo contacta con Valve (Steam y SteamCMD) y GitHub (actualizaciones de la app). Los fondos de pantalla web pueden cargar su propio contenido en línea."
+            "value" : "La app contacta con Valve (Steam y SteamCMD), GitHub (actualizaciones de la app) y, cuando instalas un plugin opcional, con su editor. Los fondos de pantalla web y las URL que añades cargan su propio contenido en línea."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "L’app ne contacte que Valve (Steam et SteamCMD) et GitHub (mises à jour de l’app). Les fonds d’écran Web peuvent charger leur propre contenu en ligne."
+            "value" : "L’app contacte Valve (Steam et SteamCMD), GitHub (mises à jour de l’app) et, lorsque vous installez un module optionnel, son éditeur. Les fonds d’écran Web et les URL que vous ajoutez chargent leur propre contenu en ligne."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ऐप केवल Valve (Steam और SteamCMD) और GitHub (ऐप अपडेट) से संपर्क करता है। वेब वॉलपेपर अपनी ऑनलाइन सामग्री लोड कर सकते हैं।"
+            "value" : "ऐप Valve (Steam और SteamCMD), GitHub (ऐप अपडेट) से और कोई वैकल्पिक प्लग-इन इंस्टॉल करने पर उसके प्रकाशक से संपर्क करता है। वेब वॉलपेपर और आपके जोड़े गए URL अपनी ऑनलाइन सामग्री लोड करते हैं।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "L’app contatta solo Valve (Steam e SteamCMD) e GitHub (aggiornamenti dell’app). Gli sfondi web possono caricare contenuti online propri."
+            "value" : "L’app contatta Valve (Steam e SteamCMD), GitHub (aggiornamenti dell’app) e, quando installi un plug-in facoltativo, il suo editore. Gli sfondi web e gli URL che aggiungi caricano contenuti online propri."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "アプリが通信するのはValve（SteamとSteamCMD）とGitHub（アプリのアップデート）だけです。Web壁紙は独自のオンラインコンテンツを読み込む場合があります。"
+            "value" : "アプリが通信するのはValve（SteamとSteamCMD）、GitHub（アプリのアップデート）、そしてオプションのプラグインをインストールするときのその配布元です。Web壁紙と追加したURLは独自のオンラインコンテンツを読み込みます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "앱은 Valve(Steam 및 SteamCMD)와 GitHub(앱 업데이트)에만 연결합니다. 웹 배경화면은 자체 온라인 콘텐츠를 불러올 수 있습니다."
+            "value" : "앱은 Valve(Steam 및 SteamCMD), GitHub(앱 업데이트)에 연결하며, 선택 사항인 플러그인을 설치할 때는 해당 배포처에 연결합니다. 웹 배경화면과 추가한 URL은 자체 온라인 콘텐츠를 불러옵니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aplikacja łączy się tylko z Valve (Steam i SteamCMD) oraz GitHubem (uaktualnienia aplikacji). Tapety internetowe mogą wczytywać własne treści online."
+            "value" : "Aplikacja łączy się z Valve (Steam i SteamCMD), GitHubem (uaktualnienia aplikacji) oraz, gdy instalujesz opcjonalną wtyczkę, z jej wydawcą. Tapety internetowe i dodane przez Ciebie adresy URL wczytują własne treści online."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O app só se conecta à Valve (Steam e SteamCMD) e ao GitHub (atualizações do app). Imagens de fundo da web podem carregar seu próprio conteúdo online."
+            "value" : "O app se conecta à Valve (Steam e SteamCMD), ao GitHub (atualizações do app) e, quando você instala um plug-in opcional, ao seu distribuidor. Imagens de fundo da web e URLs que você adiciona carregam seu próprio conteúdo online."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Приложение связывается только с Valve (Steam и SteamCMD) и GitHub (обновления приложения). Веб-обои могут загружать собственный онлайн-контент."
+            "value" : "Приложение связывается с Valve (Steam и SteamCMD), GitHub (обновления приложения) и, когда вы устанавливаете дополнительный плагин, с его издателем. Веб-обои и добавленные вами URL-адреса загружают собственный онлайн-контент."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uygulama yalnızca Valve (Steam ve SteamCMD) ve GitHub (uygulama güncellemeleri) ile iletişim kurar. Web duvar kâğıtları kendi çevrimiçi içeriklerini yükleyebilir."
+            "value" : "Uygulama Valve (Steam ve SteamCMD), GitHub (uygulama güncellemeleri) ve isteğe bağlı bir eklenti yüklediğinizde onun yayıncısı ile iletişim kurar. Web duvar kâğıtları ve eklediğiniz URL'ler kendi çevrimiçi içeriklerini yükler."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Програма звертається лише до Valve (Steam і SteamCMD) та GitHub (оновлення програми). Вебшпалери можуть завантажувати власний онлайн-вміст."
+            "value" : "Програма звертається до Valve (Steam і SteamCMD), GitHub (оновлення програми) і, коли ви встановлюєте додатковий плагін, до його видавця. Вебшпалери та додані вами URL-адреси завантажують власний онлайн-вміст."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "App 仅联系 Valve（Steam 和 SteamCMD）和 GitHub（App 更新）。网页墙纸可能会加载自己的在线内容。"
+            "value" : "App 会联系 Valve（Steam 和 SteamCMD）、GitHub（App 更新），以及你安装可选插件时该插件的发布者。网页墙纸和你添加的 URL 会加载自己的在线内容。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "App 僅會連線至 Valve（Steam 和 SteamCMD）及 GitHub（App 更新項目）。網頁背景圖片可能會載入自己的線上內容。"
+            "value" : "App 會連線至 Valve（Steam 和 SteamCMD）、GitHub（App 更新項目），以及你安裝選用外掛程式時該外掛程式的發佈者。網頁背景圖片和你加入的 URL 會載入自己的線上內容。"
           }
         }
       }
@@ -143191,6 +145681,288 @@
         }
       }
     },
+    "The package holds the video file exactly as it is, its preview and a short project.json, as Wallpaper Engine's own export does. The phone fills its screen with the video, so there is nothing to set here." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحتوي الحزمة على ملف الفيديو كما هو تمامًا ومعاينته وملف project.json قصير، كما في تصدير Wallpaper Engine نفسه. يملأ الهاتف شاشته بالفيديو، لذا لا يوجد ما يُضبط هنا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Paket enthält die Videodatei unverändert, ihre Vorschau und eine kurze project.json, wie beim Export von Wallpaper Engine selbst. Das Telefon füllt seinen Bildschirm mit dem Video, daher gibt es hier nichts einzustellen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El paquete contiene el archivo de vídeo tal cual, su previsualización y un breve project.json, como la exportación del propio Wallpaper Engine. El teléfono llena su pantalla con el vídeo, así que aquí no hay nada que ajustar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le paquet contient le fichier vidéo tel quel, son aperçu et un court project.json, comme l’exportation de Wallpaper Engine. Le téléphone remplit son écran avec la vidéo : il n’y a donc rien à régler ici."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine के अपने एक्सपोर्ट की तरह, पैकेज में वीडियो फ़ाइल जैसी है वैसी, उसका प्रीव्यू और एक छोटी project.json होती है। फ़ोन वीडियो से अपनी स्क्रीन भरता है, इसलिए यहाँ कुछ सेट करने को नहीं है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il pacchetto contiene il file video così com’è, la sua anteprima e un breve project.json, come l’esportazione di Wallpaper Engine. Il telefono riempie lo schermo con il video, quindi qui non c’è nulla da impostare."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "パッケージには、Wallpaper Engine自体の書き出しと同様に、ビデオファイルそのもの、そのプレビュー、短いproject.jsonが含まれます。電話は画面いっぱいにビデオを表示するため、ここで設定する項目はありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "패키지에는 Wallpaper Engine 자체의 내보내기와 같이 비디오 파일 그대로와 미리보기, 짧은 project.json이 들어 있습니다. 휴대폰이 비디오로 화면을 채우므로 여기에서 설정할 것은 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pakiet zawiera plik wideo w niezmienionej postaci, jego podgląd i krótki plik project.json, tak jak eksport samego Wallpaper Engine. Telefon wypełnia ekran wideo, więc nie ma tu nic do ustawienia."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O pacote contém o arquivo de vídeo exatamente como está, sua pré-visualização e um project.json curto, como a exportação do próprio Wallpaper Engine. O telefone preenche a tela com o vídeo, então não há nada a ajustar aqui."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пакет содержит видеофайл в неизменном виде, его предварительный просмотр и короткий project.json, как при экспорте самой Wallpaper Engine. Телефон заполняет экран видео, поэтому здесь нечего настраивать."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paket, Wallpaper Engine’in kendi dışa aktarmasında olduğu gibi video dosyasının tam olduğu hâlini, önizlemesini ve kısa bir project.json dosyasını içerir. Telefon ekranını videoyla doldurur, bu nedenle burada ayarlanacak bir şey yoktur."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пакет містить відеофайл у незмінному вигляді, його попередній перегляд і короткий project.json, як під час експорту самої Wallpaper Engine. Телефон заповнює екран відео, тож тут нічого налаштовувати."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "与 Wallpaper Engine 自身的导出一样，包中包含原样的视频文件、其预览和一个简短的 project.json。手机会用视频填满屏幕，因此此处无需设置。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "與 Wallpaper Engine 本身的輸出一樣，套件中包含原樣的影片檔案、其預覽和一個簡短的 project.json。手機會用影片填滿螢幕，因此此處無需設定。"
+          }
+        }
+      }
+    },
+    "The packages are in the Android exports list." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحزم موجودة في قائمة تصديرات Android."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Pakete sind in der Liste der Android-Exporte."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los paquetes están en la lista de exportaciones a Android."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les paquets se trouvent dans la liste des exportations Android."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पैकेज Android एक्सपोर्ट सूची में हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I pacchetti si trovano nell’elenco delle esportazioni per Android."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "パッケージはAndroid書き出しリストにあります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "패키지가 Android 내보내기 목록에 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pakiety są na liście eksportów na Androida."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os pacotes estão na lista de exportações para Android."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пакеты находятся в списке экспорта для Android."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paketler Android dışa aktarma listesinde."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пакети є в списку експорту для Android."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这些包位于 Android 导出列表中。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這些套件位於 Android 輸出列表中。"
+          }
+        }
+      }
+    },
+    "The phone fills its screen with the video" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يملأ الهاتف شاشته بالفيديو"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Telefon füllt seinen Bildschirm mit dem Video"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El teléfono llena su pantalla con el vídeo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le téléphone remplit son écran avec la vidéo"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ोन वीडियो से अपनी स्क्रीन भरता है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il telefono riempie lo schermo con il video"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "電話は画面いっぱいにビデオを表示します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "휴대폰이 비디오로 화면을 채웁니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telefon wypełnia ekran wideo"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O telefone preenche a tela com o vídeo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Телефон заполняет экран видео"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telefon ekranını videoyla doldurur"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Телефон заповнює екран відео"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手机会用视频填满屏幕"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手機會用影片填滿螢幕"
+          }
+        }
+      }
+    },
     "The playlist moves on after the duration, or when a video ends." : {
       "comment" : "Playlist Settings: what On a timer does",
       "localizations" : {
@@ -144229,6 +147001,100 @@
         }
       }
     },
+    "The screen saver can play only MP4, M4V or MOV video files in your library." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يمكن لشاشة التوقف تشغيل ملفات الفيديو بتنسيق MP4 أو M4V أو MOV الموجودة في مكتبتك فقط."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Bildschirmschoner kann nur MP4-, M4V- oder MOV-Videodateien aus Ihrer Mediathek abspielen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El salvapantallas solo puede reproducir archivos de vídeo MP4, M4V o MOV de tu biblioteca."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’économiseur d’écran ne peut lire que les fichiers vidéo MP4, M4V ou MOV de votre bibliothèque."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीन सेवर आपकी लाइब्रेरी की केवल MP4, M4V या MOV वीडियो फ़ाइलें चला सकता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il salvaschermo può riprodurre solo file video MP4, M4V o MOV della tua libreria."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンセーバで再生できるのは、ライブラリ内のMP4、M4V、MOVビデオファイルだけです。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 보호기는 보관함의 MP4, M4V 또는 MOV 비디오 파일만 재생할 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wygaszacz ekranu może odtwarzać tylko pliki wideo MP4, M4V lub MOV z Twojej biblioteki."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O protetor de tela só pode reproduzir arquivos de vídeo MP4, M4V ou MOV da sua biblioteca."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставка может воспроизводить только видеофайлы MP4, M4V или MOV из вашей библиотеки."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran koruyucu yalnızca arşivinizdeki MP4, M4V veya MOV video dosyalarını oynatabilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставка може відтворювати лише відеофайли MP4, M4V або MOV з вашої бібліотеки."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屏幕保护程序只能播放资源库中的 MP4、M4V 或 MOV 视频文件。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "螢幕保護程式只能播放資料庫中的 MP4、M4V 或 MOV 影片檔案。"
+          }
+        }
+      }
+    },
     "The screen saver couldn't be recorded. The logs say why." : {
       "localizations" : {
         "ar" : {
@@ -144508,6 +147374,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "螢幕保護程式播放 H.264 或 HEVC 編碼的 MP4 和 MOV 影片，並錄製 WebM 影片"
+          }
+        }
+      }
+    },
+    "The screen saver plays this video" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تشغّل شاشة التوقف هذا الفيديو"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Bildschirmschoner spielt dieses Video ab"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El salvapantallas reproduce este vídeo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’économiseur d’écran lit cette vidéo"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीन सेवर यह वीडियो चलाता है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il salvaschermo riproduce questo video"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンセーバはこのビデオを再生します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 보호기가 이 비디오를 재생합니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wygaszacz ekranu odtwarza to wideo"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O protetor de tela reproduz este vídeo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставка воспроизводит это видео"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran koruyucu bu videoyu oynatır"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставка відтворює це відео"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屏幕保护程序播放此视频"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "螢幕保護程式會播放此影片"
           }
         }
       }
@@ -144885,6 +147845,288 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "所選的檔案夾不含任何背景圖片。"
+          }
+        }
+      }
+    },
+    "The video as Wallpaper Engine exports it" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الفيديو كما يصدّره Wallpaper Engine"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Video, wie Wallpaper Engine es exportiert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El vídeo tal como lo exporta Wallpaper Engine"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La vidéo telle que Wallpaper Engine l’exporte"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वीडियो, जैसे Wallpaper Engine उसे एक्सपोर्ट करता है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il video come lo esporta Wallpaper Engine"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engineと同じように書き出したビデオ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine이 내보내는 방식 그대로의 비디오"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wideo w postaci, w jakiej eksportuje je Wallpaper Engine"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O vídeo como o Wallpaper Engine o exporta"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видео в том виде, в каком его экспортирует Wallpaper Engine"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine’in dışa aktardığı biçimde video"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відео в тому вигляді, у якому його експортує Wallpaper Engine"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按 Wallpaper Engine 的方式导出的视频"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按 Wallpaper Engine 的方式輸出的影片"
+          }
+        }
+      }
+    },
+    "The video couldn't be read for the Live Photo." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذرت قراءة الفيديو لـ Live Photo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Video konnte für das Live Photo nicht gelesen werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido leer el vídeo para la Live Photo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de lire la vidéo pour la Live Photo."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo के लिए वीडियो पढ़ा नहीं जा सका।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile leggere il video per la Live Photo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo用にビデオを読み込めませんでした。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo용 비디오를 읽을 수 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można odczytać wideo dla Live Photo."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível ler o vídeo para a Live Photo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось прочитать видео для Live Photo."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo için video okunamadı."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося прочитати відео для Live Photo."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法为实况照片读取视频。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法為原況照片讀取影片。"
+          }
+        }
+      }
+    },
+    "The video couldn't be set as the screen saver. The logs say why." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذر تعيين الفيديو كشاشة توقف. توضح السجلات السبب."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Video konnte nicht als Bildschirmschoner festgelegt werden. Die Protokolle nennen den Grund."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido usar el vídeo como salvapantallas. Los registros indican el motivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de définir la vidéo comme économiseur d’écran. Les journaux indiquent pourquoi."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वीडियो को स्क्रीन सेवर नहीं बनाया जा सका। कारण लॉग में है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile impostare il video come salvaschermo. I log indicano il motivo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ビデオをスクリーンセーバに設定できませんでした。理由はログに記録されています。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비디오를 화면 보호기로 설정할 수 없습니다. 로그에서 이유를 확인하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można ustawić wideo jako wygaszacza ekranu. Przyczyna jest w dziennikach."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível definir o vídeo como protetor de tela. Os registros informam o motivo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось сделать видео заставкой. Причина указана в журналах."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video ekran koruyucu yapılamadı. Nedeni günlüklerde yazıyor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося зробити відео заставкою. Причину вказано в журналах."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法将视频设为屏幕保护程序。日志中有原因。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法將影片設為螢幕保護程式。記錄中有原因。"
           }
         }
       }
@@ -147714,6 +150956,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此快速鍵可能無法運作：另一個 App 使用了它。"
+          }
+        }
+      }
+    },
+    "This video is your screen saver." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هذا الفيديو هو شاشة التوقف لديك."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Video ist Ihr Bildschirmschoner."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este vídeo es tu salvapantallas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette vidéo est votre économiseur d’écran."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह वीडियो आपका स्क्रीन सेवर है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo video è il tuo salvaschermo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このビデオがスクリーンセーバになっています。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 비디오가 화면 보호기입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To wideo jest Twoim wygaszaczem ekranu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este vídeo é o seu protetor de tela."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Это видео — ваша заставка."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu video ekran koruyucunuzdur."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Це відео — ваша заставка."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此视频是你的屏幕保护程序。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此影片是你的螢幕保護程式。"
           }
         }
       }
@@ -158974,6 +162310,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "WE 著色器會在場景首次使用時，依每種選項組合進行轉譯，之後重複使用。"
+          }
+        }
+      }
+    },
+    "Waiting" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "في الانتظار"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wartet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En espera"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्रतीक्षा में"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待機中"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "대기 중"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oczekiwanie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aguardando"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ожидание"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bekliyor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очікування"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在等待"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在等待"
           }
         }
       }
