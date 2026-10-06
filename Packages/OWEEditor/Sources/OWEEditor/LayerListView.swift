@@ -2,25 +2,11 @@ import AppKit
 import SwiftUI
 import OWESceneEditing
 
-/// A layer and the layers parented to it, as the list nests them.
-struct LayerNode: Identifiable {
-    let id: Int
-    let layer: SceneLayer
-    let children: [LayerNode]?
+/// A layer and the layers parented to it, as the list nests them (`SceneOutline.tree()`).
+typealias LayerNode = SceneOutline.Node
 
-    /// The scene's layers as a tree, the topmost (drawn last) first at every level, as Photoshop,
-    /// Pixelmator Pro, Motion and Figma list layers.
-    static func tree(_ outline: SceneOutline) -> [LayerNode] {
-        var placed = Set<Int>()
-        func nodes(under parent: Int?) -> [LayerNode] {
-            outline.children(of: parent).reversed().compactMap { layer in
-                guard placed.insert(layer.id).inserted else { return nil }
-                let children = nodes(under: layer.id)
-                return LayerNode(id: layer.id, layer: layer, children: children.isEmpty ? nil : children)
-            }
-        }
-        return nodes(under: nil)
-    }
+extension SceneOutline.Node {
+    static func tree(_ outline: SceneOutline) -> [SceneOutline.Node] { outline.tree() }
 }
 
 /// The sidebar: the layer hierarchy (scene.json's objects and their parents) with visibility and
@@ -122,10 +108,13 @@ private struct LayerRow: View {
 
     var body: some View {
         let visible = session.isVisible(layer.id)
+        // Shown only when it and its groups are: a hidden group dims everything in it.
+        let shown = visible && !session.isHiddenByParent(layer.id)
         let locked = session.isLocked(layer.id)
         HStack(spacing: 6) {
             Image(systemName: symbol)
                 .foregroundStyle(.secondary)
+                .opacity(shown ? 1 : 0.5)
                 .frame(width: 18)
                 .accessibilityLabel(layer.kind.title)
             if tools.renaming == layer.id {
@@ -143,7 +132,7 @@ private struct LayerRow: View {
                 Text(layer.title)
                     .lineLimit(1)
                     .truncationMode(.middle)
-                    .foregroundStyle(visible ? .primary : .secondary)
+                    .foregroundStyle(shown ? .primary : .secondary)
                     .onTapGesture(count: 2) {
                         if session.isEditable("name", of: layer.id) { tools.renaming = layer.id }
                     }
@@ -172,14 +161,7 @@ private struct LayerRow: View {
     }
 
     /// The kind's symbol; solid, composition and fullscreen layers have their own.
-    private var symbol: String {
-        switch layer.imageRole {
-        case .solid?: return "square.fill"
-        case .composition?: return "square.on.square.dashed"
-        case .fullscreen?: return "rectangle.inset.filled"
-        default: return layer.kind.symbol
-        }
-    }
+    private var symbol: String { layer.listSymbol }
 
     private func commitName() {
         guard tools.renaming == layer.id else { return }

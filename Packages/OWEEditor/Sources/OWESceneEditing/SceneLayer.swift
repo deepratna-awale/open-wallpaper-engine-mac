@@ -46,6 +46,20 @@ public struct SceneLayerEffect: Identifiable, Hashable, Sendable {
 public struct SceneLayer: Identifiable, Hashable, Sendable {
     public enum Kind: String, Sendable, CaseIterable {
         case image, text, particle, sound, light, model, group, other
+
+        /// The SF Symbol the layer lists show for the kind.
+        public var symbol: String {
+            switch self {
+            case .image: return "photo"
+            case .text: return "textformat"
+            case .particle: return "sparkles"
+            case .sound: return "speaker.wave.2"
+            case .light: return "lightbulb"
+            case .model: return "cube"
+            case .group: return "folder"
+            case .other: return "square.dashed"
+            }
+        }
     }
 
     /// Its `id`, or its index when it has none (as the Scene Inspector and the overlay key it).
