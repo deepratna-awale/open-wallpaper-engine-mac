@@ -52,7 +52,7 @@ enum WEResolutionTags {
     static let all: [String] = groups.flatMap(\.tags)
 }
 
-/// The Workshop tab's "Show only" options, in the Installed tab's order (`FRShowOnly.allOptions`).
+/// The Workshop tab's "Show only" options, in the Installed tab's order (`FRShowOnly.options`).
 enum WorkshopShowOnly: Int, CaseIterable, Hashable {
     case approved, favourites, mobileCompatible, audioResponsive, customizable
 

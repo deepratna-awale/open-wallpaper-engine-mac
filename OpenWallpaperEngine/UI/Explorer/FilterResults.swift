@@ -9,7 +9,7 @@ import SwiftUI
 
 /// The Installed tab's filters, in the main window's sidebar.
 struct FilterResults: View {
-    @ObservedObject var viewModel: FilterResultsViewModel
+    var viewModel: FilterResultsViewModel
 
     @State private var expandedSections: Set<String> = ["Show Only", "Type", "Category", "Age Rating", "Resolution", "Source", "Tags"]
 
@@ -80,7 +80,7 @@ struct FilterResults: View {
     private func toggles<Option: FilterResultsModel>(
         _ keyPath: ReferenceWritableKeyPath<FilterResultsViewModel, Option>, name: String
     ) -> some View {
-        ForEach(Array(zip(Option.allOptions.indices, Option.allOptions)), id: \.0) { (i, option) in
+        ForEach(Array(Option.options.enumerated()), id: \.offset) { i, option in
             Toggle(isOn: Binding<Bool>(get: {
                 viewModel[keyPath: keyPath].contains(Option(rawValue: 1 << i))
             }, set: {
@@ -91,7 +91,7 @@ struct FilterResults: View {
                 }
                 OWELog.debug(.ui, "Filter viewModel.\(name) = \(String(describing: viewModel[keyPath: keyPath]))")
             })) {
-                Text(LocalizedLabels.filterOption(option))
+                Text(option.label)
             }
         }
     }
@@ -126,14 +126,14 @@ struct FilterResults: View {
     private func bit<Option: FilterResultsModel>(
         _ keyPath: ReferenceWritableKeyPath<FilterResultsViewModel, Option>, _ tag: String
     ) -> Bool? {
-        guard let index = Option.allOptions.firstIndex(of: tag) else { return nil }
+        guard let index = Option.optionKeys.firstIndex(of: tag) else { return nil }
         return viewModel[keyPath: keyPath].contains(Option(rawValue: 1 << index))
     }
 
     private func setBit<Option: FilterResultsModel>(
         _ keyPath: ReferenceWritableKeyPath<FilterResultsViewModel, Option>, _ tag: String, _ isOn: Bool
     ) -> Bool {
-        guard let index = Option.allOptions.firstIndex(of: tag) else { return false }
+        guard let index = Option.optionKeys.firstIndex(of: tag) else { return false }
         if isOn {
             viewModel[keyPath: keyPath].insert(Option(rawValue: 1 << index))
         } else {

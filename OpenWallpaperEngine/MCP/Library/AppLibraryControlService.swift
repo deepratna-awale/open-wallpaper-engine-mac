@@ -110,7 +110,7 @@ final class AppLibraryControlService: LibraryControlService {
         }
         // Unsubscribe's own steps: the folder, the library index and snapshots, the displays
         // showing it, and the Workshop dependencies nothing else uses.
-        if let failure = await app.contentViewModel.deleteWallpapersNow(at: [directory], toTrash: toTrash,
+        if let failure = await app.contentViewModel.library.deleteWallpapersNow(at: [directory], toTrash: toTrash,
                                                                            wallpaperViewModel: wallpaperViewModel) {
             throw ControlError(.failed, "\"\(wallpaper.title)\" couldn't be deleted: \(failure.failureReason ?? "unknown reason").")
         }

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct WorkshopView: SubviewOfContentView {
-    @ObservedObject var viewModel: ContentViewModel
+    var viewModel: ContentViewModel
 
     init(contentViewModel viewModel: ContentViewModel) {
         self.viewModel = viewModel
@@ -165,7 +165,7 @@ private struct SteamLoginView: View {
 
 private struct WorkshopBrowserView: View {
     @ObservedObject var viewModel: WorkshopViewModel
-    @ObservedObject var contentViewModel: ContentViewModel
+    var contentViewModel: ContentViewModel
     @State private var hasAPIKey = true
     /// Measured, so the page size leaves room for the pagination row whatever its style.
     @State private var footerHeight: CGFloat = 44
@@ -173,7 +173,7 @@ private struct WorkshopBrowserView: View {
     private func updateItemsPerPage(in geometry: GeometryProxy) {
         let size = CGSize(width: geometry.size.width, height: max(geometry.size.height - footerHeight - 8, 1))
         Task {
-            await viewModel.updateItemsPerPage(for: size, itemSize: contentViewModel.explorerIconSize - 5)
+            await viewModel.updateItemsPerPage(for: size, itemSize: contentViewModel.navigation.explorerIconSize - 5)
         }
     }
 
@@ -260,7 +260,7 @@ private struct WorkshopBrowserView: View {
         }
         ToolbarItem {
             Button {
-                contentViewModel.isCollectionImportPresented = true
+                contentViewModel.presentation.isCollectionImportPresented = true
             } label: {
                 Label("Import Workshop Collection…", systemImage: "square.stack.3d.down.right")
             }
@@ -335,8 +335,8 @@ private struct WorkshopBrowserView: View {
                         LazyVGrid(columns: [
                             GridItem(
                                 .adaptive(
-                                    minimum: contentViewModel.explorerIconSize - 5,
-                                    maximum: contentViewModel.explorerIconSize - 5
+                                    minimum: contentViewModel.navigation.explorerIconSize - 5,
+                                    maximum: contentViewModel.navigation.explorerIconSize - 5
                                 ),
                                 spacing: 13
                             )
@@ -356,7 +356,7 @@ private struct WorkshopBrowserView: View {
                     .onPreferenceChange(WorkshopFooterHeightKey.self) { footerHeight = $0 }
                     .onAppear { updateItemsPerPage(in: geometry) }
                     .onChange(of: geometry.size) { updateItemsPerPage(in: geometry) }
-                    .onChange(of: contentViewModel.explorerIconSize) { updateItemsPerPage(in: geometry) }
+                    .onChange(of: contentViewModel.navigation.explorerIconSize) { updateItemsPerPage(in: geometry) }
                     .onChange(of: footerHeight) { updateItemsPerPage(in: geometry) }
                 }
             }

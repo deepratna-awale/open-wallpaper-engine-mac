@@ -5,17 +5,17 @@ import Foundation
 /// the Workshop tab; a group with everything checked doesn't filter, and one with nothing checked
 /// matches nothing, like the Type and Age Rating groups.
 enum InstalledTagFilter {
-    /// The checked options of `options`, as their `allOptions` strings (option `i` is bit `1 << i`).
+    /// The checked options of `options`, as their `optionKeys` (option `i` is bit `1 << i`).
     static func checked<Option: FilterResultsModel>(_ options: Option) -> [String] {
-        Option.allOptions.indices
+        Option.optionKeys.indices
             .filter { options.contains(Option(rawValue: 1 << $0)) }
-            .map { Option.allOptions[$0] }
+            .map { Option.optionKeys[$0] }
     }
 
     /// The genre tags of the checked `FRTag` options. `FRTag`'s options are WE's genres in
     /// `WorkshopTags.genres` order, with UI spellings ("PixelArt"); the tags are WE's ("Pixel art").
     static func genreTags(_ options: FRTag) -> [String] {
-        FRTag.allOptions.indices
+        FRTag.optionKeys.indices
             .filter { options.contains(FRTag(rawValue: 1 << $0)) && $0 < WorkshopTags.genres.count }
             .map { WorkshopTags.genres[$0] }
     }

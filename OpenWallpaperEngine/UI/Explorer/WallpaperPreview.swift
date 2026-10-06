@@ -9,7 +9,7 @@ import SwiftUI
 import OWEInspectorKit
 
 struct WallpaperPreview: SubviewOfContentView {
-    @ObservedObject var viewModel: ContentViewModel
+    var viewModel: ContentViewModel
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     
     @Environment(\.undoManager) var undoManager
@@ -159,7 +159,7 @@ struct WallpaperPreview: SubviewOfContentView {
                     VStack(spacing: 10) {
                         GifImage(contentsOf: wallpaperViewModel.displayedWallpaper.previewURL
                                     ?? AppBundleLayout.wallpaperNotFoundURL,
-                                 animates: viewModel.isApplicationActive)
+                                 animates: viewModel.navigation.isApplicationActive)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .background(Color(nsColor: NSColor.controlBackgroundColor))
@@ -216,7 +216,7 @@ struct WallpaperPreview: SubviewOfContentView {
                         let authorID = wallpaperViewModel.inspectedAuthor?.steamId ?? wallpaperViewModel.inspectedWorkshopItem?.creatorId
                         if let authorID {
                             Button {
-                                viewModel.topTabBarSelection = 1
+                                viewModel.navigation.topTabBarSelection = 1
                                 viewModel.workshopVM.showAuthor(authorID)
                             } label: {
                                 Text(wallpaperViewModel.inspectedAuthor?.personaName ?? authorID)
@@ -312,8 +312,8 @@ struct WallpaperPreview: SubviewOfContentView {
                                 .glassButtonStyle(.prominent)
 
                                 Button(role: .destructive) {
-                                    viewModel.hoveredWallpaper = wallpaperViewModel.displayedWallpaper
-                                    viewModel.isUnsubscribeConfirming = true
+                                    viewModel.presentation.hoveredWallpaper = wallpaperViewModel.displayedWallpaper
+                                    viewModel.presentation.isUnsubscribeConfirming = true
                                 } label: {
                                     Label("Delete wallpaper", systemImage: "trash")
                                         .labelStyle(.iconOnly)
@@ -532,7 +532,7 @@ struct WallpaperPreview: SubviewOfContentView {
     /// item's. Only project.json's can be removed here.
     var tags: some View {
         HStack {
-            let tags = viewModel.tags(of: wallpaperViewModel.displayedWallpaper)
+            let tags = viewModel.library.tags(of: wallpaperViewModel.displayedWallpaper)
             let projectTags = wallpaperViewModel.displayedWallpaper.project.tags ?? []
             if !tags.isEmpty {
                 ForEach(tags, id: \.self) { tag in

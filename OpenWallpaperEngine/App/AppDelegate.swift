@@ -501,7 +501,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
-        contentViewModel.isApplicationActive = true
+        contentViewModel.navigation.isApplicationActive = true
         // Picks up a steamcmd installed meanwhile, e.g. with Homebrew.
         if !steamCmdInstaller.isBusy {
             contentViewModel.steamCmd.detectSteamCmd()
@@ -509,7 +509,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     func applicationDidResignActive(_ notification: Notification) {
-        contentViewModel.isApplicationActive = false
+        contentViewModel.navigation.isApplicationActive = false
     }
     
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -570,7 +570,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     /// The Workshop tab, where Steam's login form is.
     @objc func openSteamLogin() {
-        contentViewModel.topTabBarSelection = 1
+        contentViewModel.navigation.topTabBarSelection = 1
         openMainWindow()
     }
 
@@ -582,7 +582,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     @MainActor @objc func toggleFilter() {
-        self.contentViewModel.toggleFilter()
+        self.contentViewModel.navigation.toggleFilter()
     }
 
     /// Posted at most once per launch by `AudioCapturePermissionGate`, and never after
@@ -643,7 +643,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         self.settingsWindow.toolbar = toolbar
         let ruleLibrary = ApplicationRuleLibrary(
-            wallpapers: { [weak self] in self?.contentViewModel.allWallpapers ?? [] },
+            wallpapers: { [weak self] in self?.contentViewModel.library.allWallpapers ?? [] },
             playlists: { [weak self] in self?.wallpaperViewModel.playlists ?? [] },
             profiles: { [weak self] in self?.displayProfiles ?? UnavailableDisplayProfiles() })
         self.settingsWindow.contentView = NSHostingView(rootView: SettingsView()

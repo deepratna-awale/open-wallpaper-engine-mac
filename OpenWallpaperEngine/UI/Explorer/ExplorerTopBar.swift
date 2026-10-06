@@ -10,7 +10,7 @@ import SwiftUI
 /// The Installed tab's search and toolbar items, attached to the tab's content so they show in the
 /// window toolbar only while that tab is selected.
 struct ExplorerTopBar: ViewModifier {
-    @ObservedObject var viewModel: ContentViewModel
+    var viewModel: ContentViewModel
 
     @EnvironmentObject var globalSettingsViewModel: GlobalSettingsViewModel
 
@@ -24,7 +24,7 @@ struct ExplorerTopBar: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .searchable(text: $viewModel.searchText, placement: .toolbar, prompt: "Search")
+            .searchable(text: Bindable(viewModel.library).searchText, placement: .toolbar, prompt: "Search")
             .toolbar {
                 ToolbarItem {
                     Menu {
@@ -37,10 +37,10 @@ struct ExplorerTopBar: ViewModifier {
                         Button("Add Video/Image URL…", systemImage: "link", action: onAddURL)
                         Divider()
                         Button("Import Workshop Collection…", systemImage: "square.stack.3d.down.right") {
-                            viewModel.isCollectionImportPresented = true
+                            viewModel.presentation.isCollectionImportPresented = true
                         }
                         Button("Import from Steam Library…", systemImage: "externaldrive.badge.person.crop") {
-                            viewModel.isSteamLibraryImportPresented = true
+                            viewModel.presentation.isSteamLibraryImportPresented = true
                         }
                     } label: {
                         Label("Add Wallpaper", systemImage: "plus")
@@ -48,11 +48,11 @@ struct ExplorerTopBar: ViewModifier {
                     .help("Open a wallpaper, or add a video or an image")
                 }
                 ToolbarItemGroup {
-                    if !viewModel.selectedWallpapers.isEmpty {
+                    if !viewModel.library.selectedWallpapers.isEmpty {
                         Button(role: .destructive) {
-                            viewModel.isBatchUnsubscribeConfirming = true
+                            viewModel.presentation.isBatchUnsubscribeConfirming = true
                         } label: {
-                            Label("Delete Selected (\(viewModel.selectedWallpapers.count))", systemImage: "trash")
+                            Label("Delete Selected (\(viewModel.library.selectedWallpapers.count))", systemImage: "trash")
                         }
                         .labelStyle(.titleAndIcon)
                         .help("Unsubscribe from the selected wallpapers")
@@ -68,21 +68,21 @@ struct ExplorerTopBar: ViewModifier {
                 }
                 ToolbarItemGroup {
                     Button {
-                        if viewModel.sortingSequence == .decrease {
-                            viewModel.sortingSequence = .increase
+                        if viewModel.library.sortingSequence == .decrease {
+                            viewModel.library.sortingSequence = .increase
                         } else {
-                            viewModel.sortingSequence = .decrease
+                            viewModel.library.sortingSequence = .decrease
                         }
                     } label: {
-                        Label(viewModel.sortingSequence == .increase ? "Ascending" : "Descending",
-                              systemImage: viewModel.sortingSequence == .increase ?
+                        Label(viewModel.library.sortingSequence == .increase ? "Ascending" : "Descending",
+                              systemImage: viewModel.library.sortingSequence == .increase ?
                               "arrowtriangle.down.fill" : "arrowtriangle.up.fill")
                     }
                     .labelStyle(.titleAndIcon)
-                    .help(viewModel.sortingSequence == .increase
+                    .help(viewModel.library.sortingSequence == .increase
                           ? "Sorted ascending. Click to sort descending."
                           : "Sorted descending. Click to sort ascending.")
-                    SortByMenu(selection: $viewModel.sortingBy)
+                    SortByMenu(selection: Bindable(viewModel.library).sortingBy)
                 }
             }
     }

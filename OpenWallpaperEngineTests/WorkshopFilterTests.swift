@@ -247,9 +247,9 @@ final class WorkshopFilterTests: XCTestCase {
     }
 
     func testInstalledResolutionOptionsAreTheSameTags() {
-        let installed = FRWidescreenResolution.allOptions + FRUltraWidescreenResolution.allOptions
-            + FRDualscreenResolution.allOptions + FRTriplescreenResolution.allOptions
-            + FRPortraitScreenResolution.allOptions + FRMiscResolution.allOptions
+        let installed = FRWidescreenResolution.optionKeys + FRUltraWidescreenResolution.optionKeys
+            + FRDualscreenResolution.optionKeys + FRTriplescreenResolution.optionKeys
+            + FRPortraitScreenResolution.optionKeys + FRMiscResolution.optionKeys
         XCTAssertEqual(Set(installed), Set(WEResolutionTags.all))
     }
 }

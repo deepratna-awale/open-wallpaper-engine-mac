@@ -28,7 +28,7 @@ extension AppDelegate {
     func makeApplicationRuleLoader() -> ApplicationRuleLoader<WallpaperRuleLoadTarget> {
         let target = WallpaperRuleLoadTarget(
             viewModel: wallpaperViewModel,
-            library: { [weak self] in self?.contentViewModel.allWallpapers ?? [] },
+            library: { [weak self] in self?.contentViewModel.library.allWallpapers ?? [] },
             profiles: { [weak self] in self?.displayProfiles ?? UnavailableDisplayProfiles() })
         return ApplicationRuleLoader(target: target)
     }
