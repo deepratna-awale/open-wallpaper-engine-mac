@@ -19,6 +19,12 @@ struct UnsafeWallpaper: View {
         self.wallpaper = wallpaper
     }
     
+    /// `trusted` with `path` added once, earlier duplicates dropped, in the order trust was given.
+    static func trustList(_ trusted: [String], adding path: String) -> [String] {
+        var seen = Set<String>()
+        return (trusted + [path]).filter { seen.insert($0).inserted }
+    }
+
     private var title: LocalizedStringKey {
         switch wallpaper.project.type.lowercased() {
         case "web": return "Opening an Unknown Web Page"
@@ -69,12 +75,9 @@ struct UnsafeWallpaper: View {
                     ChromiumFeatureAdvisor.shared.wallpaperApplied(AppDelegate.shared.wallpaperViewModel.nextCurrentWallpaper)
 
                     if isIgnored {
-                        var trustedWallpapers =
-                        UserDefaults.app.array(forKey: "TrustedWallpapers") as? [String] ?? [String]()
-                        
-                        trustedWallpapers.append(AppDelegate.shared.wallpaperViewModel.nextCurrentWallpaper.wallpaperDirectory.path(percentEncoded: false))
-                        
-                        UserDefaults.app.set(trustedWallpapers, forKey: "TrustedWallpapers")
+                        let trusted = UserDefaults.app.array(forKey: "TrustedWallpapers") as? [String] ?? []
+                        let path = AppDelegate.shared.wallpaperViewModel.nextCurrentWallpaper.wallpaperDirectory.path(percentEncoded: false)
+                        UserDefaults.app.set(Self.trustList(trusted, adding: path), forKey: "TrustedWallpapers")
                     }
                     
                     dismiss()
