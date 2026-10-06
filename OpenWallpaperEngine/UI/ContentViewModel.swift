@@ -61,11 +61,17 @@ class ContentViewModel: ObservableObject, DropDelegate {
     @Published var androidExport: AndroidExportSelection?
     private var selectionAnchor: URL?
 
+    /// Only whether steamcmd is there and logged in reaches this model (the main window's Workshop
+    /// tab and sidebar depend on it). The Workshop and Downloads views observe the service itself,
+    /// so a download's progress doesn't redraw the window or re-sort the library.
     lazy var steamCmd: SteamCmdService = {
         let svc = SteamCmdService()
-        steamCmdCancellable = svc.objectWillChange.sink { [weak self] _ in
-            self?.objectWillChange.send()
-        }
+        steamCmdCancellable = svc.$isLoggedIn
+            .combineLatest(svc.$steamCmdPath.map { $0 != nil })
+            .map { [$0, $1] }
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] _ in self?.objectWillChange.send() }
         return svc
     }()
     /// Workshop wallpapers and authors hidden from the Workshop and Discover tabs.
