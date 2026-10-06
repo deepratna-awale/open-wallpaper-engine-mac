@@ -201,36 +201,18 @@ class ContentViewModel: ObservableObject, DropDelegate {
         }
     }
     
-    private var searchedWallpapers: [WEWallpaper] {
-        allWallpapers.filter { wallpaper in
-            let project = wallpaper.project
-            let searchText = searchText.lowercased()
-            
-            guard !searchText.isEmpty else { return true }
-            
-            guard !project.title.lowercased().contains(searchText) else { return true }
-            
-            guard !project.type.lowercased().contains(searchText) else { return true }
-            
-            if let description = project.description?.lowercased() {
-                guard !description.contains(searchText) else { return true }
-            }
-            
-            guard !tags(of: wallpaper).contains(where: { $0.lowercased().contains(searchText) })
-            else { return true }
-            
-            if let workshopid = project.workshopid {
-                guard !workshopid.rawValue.contains(searchText) else { return true }
-            }
-            
-            guard !wallpaper.wallpaperDirectory.lastPathComponent
-                .lowercased()
-                .contains(searchText) else { return true }
-            
-            return false
-        }
+    /// Whether `wallpaper` matches the search `query` (non-empty): its title, type, description,
+    /// tags, Workshop id or folder name contains it, ignoring case and diacritics as Finder does.
+    static func matchesSearch(_ query: String, wallpaper: WEWallpaper, tags: [String]) -> Bool {
+        let project = wallpaper.project
+        return project.title.localizedStandardContains(query)
+            || project.type.localizedStandardContains(query)
+            || project.description?.localizedStandardContains(query) == true
+            || tags.contains { $0.localizedStandardContains(query) }
+            || project.workshopid?.rawValue.contains(query) == true
+            || wallpaper.wallpaperDirectory.lastPathComponent.localizedStandardContains(query)
     }
-    
+
     private var filteredWallpapers: [WEWallpaper] {
         let resolutionGroups: [[String]] = [
             InstalledTagFilter.checked(widescreenResolution), InstalledTagFilter.checked(ultraWidescreenResolution),
@@ -238,8 +220,10 @@ class ContentViewModel: ObservableObject, DropDelegate {
             InstalledTagFilter.checked(potraitscreenResolution), InstalledTagFilter.checked(miscResolution),
         ]
         let resolutions = Set<String>(resolutionGroups.joined())
-        return searchedWallpapers.filter { wallpaper in
+        let query = searchText
+        return allWallpapers.filter { wallpaper in
             let wallpaperTags = self.tags(of: wallpaper)
+            guard query.isEmpty || Self.matchesSearch(query, wallpaper: wallpaper, tags: wallpaperTags) else { return false }
 
             // Show Only
             var showOnly = FRShowOnly.none
