@@ -56,6 +56,7 @@ final class ModelsOpenPointsCaptureTests: XCTestCase {
             "Scenes/lights/scene.json #901 [light]",
             "Scenes/multipass/scene.json #1 Layer [image]",
             "Scenes/scripted-objects/scene.json #2 Tone [sound]",
+            "Scenes/start-frame/scene.json #9 Motion blur [image]",
             "Timeline/animation-set-scene.json #- Sparks [particle]",
             "Timeline/animation-set-scene.json #12 Thumbnail [image]",
             "Workshop/wallpaper/scene.json #- [none]",
