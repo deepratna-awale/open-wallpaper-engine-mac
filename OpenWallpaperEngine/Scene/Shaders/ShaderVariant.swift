@@ -239,7 +239,8 @@ final class ShaderVariantTranslator {
             let pair = ShaderPairRewriter.rewrite(
                 vertex: ShaderPrelude.fixupAfterPreprocess(vertexText),
                 fragment: ShaderPrelude.fixupAfterPreprocess(fragmentText),
-                stageLocal: ShaderUniformDeclaration.stageLocalNames(vertex: vertex.uniforms, fragment: fragment.uniforms))
+                stageLocal: ShaderUniformDeclaration.stageLocalNames(vertex: vertex.uniforms, fragment: fragment.uniforms),
+                label: label)
             step = (vertex, pair.vertex)
             let vertexOut = try compiler.compileToMSL(pair.vertex, stage: .vertex)
             step = (fragment, pair.fragment)

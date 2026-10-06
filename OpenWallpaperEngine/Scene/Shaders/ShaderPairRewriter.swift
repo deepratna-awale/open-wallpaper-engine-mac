@@ -43,7 +43,9 @@ enum ShaderPairRewriter {
     /// `stageLocal` names uniforms both stages declare differently
     /// (`ShaderUniformDeclaration.stageLocalNames`): the fragment stage's is renamed with
     /// `ShaderUniformDeclaration.fragmentSuffix`, so each stage reads a member of its own.
-    static func rewrite(vertex: String, fragment: String, stageLocal: Set<String> = []) -> Result {
+    /// `label` names the pair in the log line for slots it had to guess (an attribute outside
+    /// `attributeLocations` at 15, a sampler that isn't `g_TextureN` at 16 and up).
+    static func rewrite(vertex: String, fragment: String, stageLocal: Set<String> = [], label: String = "") -> Result {
         var fragment = fragment
         for name in stageLocal.sorted() {
             let pattern = NSRegularExpression.shader(#"(?<![\w.])"# + NSRegularExpression.escapedPattern(for: name) + #"(?!\w)"#)
@@ -94,6 +96,7 @@ enum ShaderPairRewriter {
         let block = members.isEmpty ? "" : "layout(std140, binding = 0) uniform \(uniformBlockName) {\n"
             + members.map { "    \($0.type) \($0.name)\($0.arrayCount.map { "[\($0)]" } ?? "");\n" }.joined() + "};\n"
         var slots = Set<Int>()
+        var extraSamplers: [String] = []
 
         func decorate(_ text: String, stage: ShaderStage) -> String {
             var result = replace(uniformPattern, in: text) { _ in "" }
@@ -107,6 +110,7 @@ enum ShaderPairRewriter {
                 } else {
                     slot = extraSampler
                     extraSampler += 1
+                    extraSamplers.append("\(name) → \(slot)")
                 }
                 return "layout(binding = \(slot)) uniform \(group(match, 1, result)!) \(name);"
             }
@@ -156,6 +160,10 @@ enum ShaderPairRewriter {
         for match in varyingPattern.matches(in: vertex, range: NSRange(vertex.startIndex..., in: vertex)) {
             let name = group(match, 4, vertex)!
             if group(match, 2, vertex) == "in", name.hasPrefix("a_") { attributes[name] = attributeLocations[name] ?? 15 }
+        }
+        let unknownAttributes = attributes.keys.filter { attributeLocations[$0] == nil }.sorted()
+        if !unknownAttributes.isEmpty || !extraSamplers.isEmpty {
+            OWELog.debug(.shader, "\(label): guessed slots: attributes \(unknownAttributes) at location 15 (no mesh stream feeds them), samplers \(extraSamplers)")
         }
         return Result(vertex: decoratedVertex, fragment: decoratedFragment, uniforms: members,
                       textureSlots: slots.sorted(), attributes: attributes)
