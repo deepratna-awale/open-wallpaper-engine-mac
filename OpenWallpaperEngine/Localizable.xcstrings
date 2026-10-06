@@ -6575,6 +6575,101 @@
         }
       }
     },
+    "Add Tag" : {
+      "comment" : "Button in the Details inspector that adds a tag to the wallpaper",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إضافة وسم"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir etiqueta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un tag"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टैग जोड़ें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi tag"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグを追加"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "태그 추가"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodaj tag"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar Etiqueta"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить тег"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etiket Ekle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати тег"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加标签"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加入標籤"
+          }
+        }
+      }
+    },
     "Add Video Wallpaper…" : {
       "localizations" : {
         "ar" : {
@@ -19413,7 +19508,7 @@
         }
       }
     },
-    "Browse..." : {
+    "Browse…" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -36133,100 +36228,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "要還原場景編輯器（即時）對「%@」所做的所有編輯嗎？其屬性會保留。"
-          }
-        }
-      }
-    },
-    "Do you want to undo every Scene Editor edit of “%@”? Its properties are kept." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "هل تريد التراجع عن كل تعديلات محرر المشهد على «%@»؟ يتم الاحتفاظ بخصائصها."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Möchten Sie alle Änderungen an „%@“ im Szeneneditor widerrufen? Die Eigenschaften bleiben erhalten."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¿Quieres deshacer todos los cambios del Editor de escenas en «%@»? Sus propiedades se conservan."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voulez-vous annuler toutes les modifications de « %@ » faites dans l’Éditeur de scène ? Ses propriétés sont conservées."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "क्या आप “%@” में सीन एडिटर के हर बदलाव को पहले जैसा करना चाहते हैं? इसकी प्रॉपर्टी बनी रहेंगी।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vuoi annullare ogni modifica a “%@” fatta nell’Editor scena? Le sue proprietà vengono mantenute."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "「%@」へのシーンエディタでの編集をすべて取り消しますか？プロパティは保持されます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "‘%@’에 대한 장면 편집기 편집 내용을 모두 취소하시겠습니까? 속성은 유지됩니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Czy chcesz cofnąć wszystkie zmiany „%@” wprowadzone w Edytorze sceny? Jej właściwości zostaną zachowane."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deseja desfazer todas as edições do Editor de Cena em “%@”? As propriedades são mantidas."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отменить все изменения «%@», сделанные в Редакторе сцены? Свойства сохранятся."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@” için tüm Sahne Düzenleyicisi düzenlemelerini geri almak istiyor musunuz? Özellikleri korunur."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Скасувати всі зміни «%@», зроблені в Редакторі сцени? Властивості збережуться."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "要撤销场景编辑器对“%@”所做的所有编辑吗？其属性会保留。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "要還原場景編輯器對「%@」所做的所有編輯嗎？其屬性會保留。"
           }
         }
       }
@@ -62612,100 +62613,6 @@
         }
       }
     },
-    "Inspect every layer, texture and effect in a wallpaper, tweak parameters live, and nudge or align objects." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "افحص كل طبقة ونسيج وتأثير في الخلفية، وعدّل المعلمات مباشرةً، وحرّك الكائنات قليلًا أو حاذِها."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Untersuchen Sie jede Ebene, Textur und jeden Effekt eines Hintergrundbilds, passen Sie Parameter live an und verschieben oder richten Sie Objekte aus."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inspecciona cada capa, textura y efecto de un fondo de pantalla, ajusta parámetros en directo y desplaza o alinea objetos."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inspectez chaque calque, texture et effet d’un fond d’écran, ajustez les paramètres en direct, puis déplacez ou alignez les objets."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "किसी वॉलपेपर की हर लेयर, टेक्सचर और इफ़ेक्ट की जाँच करें, पैरामीटर लाइव बदलें, और ऑब्जेक्ट को खिसकाएँ या अलाइन करें."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esamina ogni livello, texture ed effetto di uno sfondo, modifica i parametri in tempo reale e sposta o allinea gli oggetti."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "壁紙のすべてのレイヤー、テクスチャ、エフェクトを調べ、パラメータをリアルタイムで調整し、オブジェクトを微調整したり整列したりできます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "배경화면의 모든 레이어, 텍스처 및 효과를 검사하고, 매개변수를 실시간으로 조정하며, 객체를 미세하게 이동하거나 정렬할 수 있습니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sprawdzaj każdą warstwę, teksturę i efekt tapety, zmieniaj parametry na żywo oraz przesuwaj i wyrównuj obiekty."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inspecione cada camada, textura e efeito de uma imagem de fundo, ajuste parâmetros em tempo real e mova ou alinhe objetos."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Изучайте каждый слой, текстуру и эффект в обоях, настраивайте параметры на лету, сдвигайте и выравнивайте объекты."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bir duvar kâğıdındaki her katmanı, dokuyu ve efekti inceleyin, parametreleri canlı olarak ayarlayın, nesneleri kaydırın veya hizalayın."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Досліджуйте кожен шар, текстуру й ефект шпалери, змінюйте параметри наживо та пересувайте або вирівнюйте обʼєкти."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "检查墙纸中的每个图层、纹理和效果，实时调整参数，以及微移或对齐对象。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "檢視背景圖片中的每個圖層、紋理和效果，即時微調參數，並微移或對齊物件。"
-          }
-        }
-      }
-    },
     "Inspector" : {
       "localizations" : {
         "ar" : {
@@ -64215,101 +64122,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "全螢幕顯示時"
-          }
-        }
-      }
-    },
-    "Is Fullscreen or Maximized" : {
-      "comment" : "Application Rules condition: one of the application's windows fills a display",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "بملء الشاشة أو مكبّر"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Im Vollbildmodus oder maximiert"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Está a pantalla completa o maximizada"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Est en plein écran ou agrandie"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "फ़ुल स्क्रीन या मैक्सिमाइज़ है"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "È a schermo intero o ingrandita"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "フルスクリーンまたは最大化"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "전체 화면 또는 최대화됨"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jest na pełnym ekranie lub zmaksymalizowana"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Está em Tela Cheia ou Maximizado"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "На весь экран или развёрнуто"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tam Ekran veya Büyütülmüş"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "На весь екран або розгорнута"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "全屏或最大化"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "全螢幕或最大化"
           }
         }
       }
@@ -95003,101 +94815,6 @@
         }
       }
     },
-    "Pause, stop or mute the wallpaper while an application is running, focused or fullscreen. These rules combine with the Playback settings; the most restrictive action wins." : {
-      "comment" : "Application Rules sheet: explanation under the title",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "أوقف الخلفية مؤقتًا أو أوقفها أو اكتم صوتها أثناء تشغيل تطبيق أو عندما يكون في المقدمة أو بملء الشاشة. تعمل هذه القواعد مع إعدادات التشغيل، ويُطبَّق الإجراء الأكثر تقييدًا."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pausiert, stoppt oder stummschaltet das Hintergrundbild, während eine App ausgeführt wird, im Vordergrund ist oder im Vollbildmodus läuft. Diese Regeln wirken mit den Wiedergabe-Einstellungen zusammen; die strengste Aktion gilt."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pausa, detén o silencia el fondo de pantalla mientras una app está abierta, activa o a pantalla completa. Estas reglas se combinan con los ajustes de reproducción; gana la acción más restrictiva."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mettez en pause, arrêtez ou coupez le son du fond d’écran lorsqu’une application est ouverte, au premier plan ou en plein écran. Ces règles s’ajoutent aux réglages de lecture ; l’action la plus restrictive l’emporte."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "कोई ऐप चलने, फ़ोकस में होने या फ़ुल स्क्रीन होने पर वॉलपेपर को पॉज़ करें, रोकें या म्यूट करें। ये नियम प्लेबैक सेटिंग्स के साथ मिलकर काम करते हैं; सबसे सख़्त कार्रवाई लागू होती है।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Metti in pausa, ferma o disattiva l’audio dello sfondo mentre un’applicazione è aperta, attiva o a schermo intero. Queste regole si combinano con le impostazioni di riproduzione; vince l’azione più restrittiva."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アプリケーションが実行中、アクティブ、またはフルスクリーンのあいだ、壁紙を一時停止、停止、または消音します。これらのルールは再生の設定と組み合わされ、最も制限の強いアクションが優先されます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "응용 프로그램이 실행 중이거나 활성화되었거나 전체 화면일 때 배경화면을 일시 정지, 정지 또는 소리 끔합니다. 이 규칙은 재생 설정과 함께 적용되며 가장 제한적인 동작이 우선합니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wstrzymuj, zatrzymuj lub wyciszaj tapetę, gdy aplikacja jest uruchomiona, aktywna lub na pełnym ekranie. Te reguły działają razem z ustawieniami odtwarzania; wygrywa najbardziej restrykcyjne działanie."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pause, pare ou silencie a imagem de fundo enquanto um aplicativo está aberto, em foco ou em tela cheia. Estas regras se combinam com os ajustes de reprodução; vale a ação mais restritiva."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Приостанавливайте, останавливайте или выключайте звук обоев, пока приложение запущено, активно или открыто на весь экран. Эти правила действуют вместе с настройками воспроизведения; применяется самое строгое действие."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bir uygulama çalışırken, etkinken veya tam ekrandayken duvar kâğıdını duraklatın, durdurun veya sesini kapatın. Bu kurallar Oynatma ayarlarıyla birlikte uygulanır; en kısıtlayıcı eylem geçerli olur."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Призупиняйте, зупиняйте або вимикайте звук шпалер, поки програма запущена, активна або на весь екран. Ці правила діють разом із налаштуваннями відтворення; застосовується найсуворіша дія."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在应用程序运行、成为焦点或全屏时暂停、停止墙纸或将其静音。这些规则与播放设置共同作用，以最严格的操作为准。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在應用程式執行、為使用中或全螢幕時暫停、停止背景圖片或將其靜音。這些規則與播放設定共同作用，以最嚴格的動作為準。"
-          }
-        }
-      }
-    },
     "Pause, stop or mute wallpapers, or load a wallpaper, playlist or profile, while an application is running, focused, maximized, fullscreen or playing audio. Pausing, stopping and muting combine with the Playback settings; the most restrictive wins. When several rules load something, the first in the list wins, and what was shown before comes back once no rule matches." : {
       "comment" : "Application Rules sheet: what the rules do and how several combine",
       "localizations" : {
@@ -108542,6 +108259,101 @@
         }
       }
     },
+    "Remove Tag" : {
+      "comment" : "Button in the Details inspector that removes a tag from the wallpaper",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إزالة الوسم"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar etiqueta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer le tag"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टैग हटाएं"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rimuovi tag"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグを削除"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "태그 제거"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuń tag"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remover Etiqueta"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить тег"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etiketi Kaldır"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучити тег"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除标签"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除標籤"
+          }
+        }
+      }
+    },
     "Remove from Favorites" : {
       "localizations" : {
         "ar" : {
@@ -112450,100 +112262,6 @@
         }
       }
     },
-    "Reset Scene Editor Edits" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إعادة تعيين تعديلات محرر المشهد"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Änderungen im Szeneneditor zurücksetzen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restablecer cambios del Editor de escenas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Réinitialiser les modifications de l’Éditeur de scène"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "सीन एडिटर के बदलाव रीसेट करें"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ripristina modifiche dell’Editor scena"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "シーンエディタの編集をリセット"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "장면 편집기 편집 내용 재설정"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Resetuj zmiany z Edytora sceny"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Redefinir Edições do Editor de Cena"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сбросить изменения Редактора сцены"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sahne Düzenleyicisi Düzenlemelerini Sıfırla"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Скинути зміни Редактора сцени"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重置场景编辑器编辑"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重置場景編輯器編輯"
-          }
-        }
-      }
-    },
     "Reset this wallpaper's properties to the defaults its author set" : {
       "comment" : "Help for the Details panel's Reset button",
       "localizations" : {
@@ -115278,100 +114996,6 @@
         }
       }
     },
-    "Right-click a display to group it with the selected displays, choose the main clone display, flip a clone or mute a display." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "انقر بزر الماوس الأيمن على شاشة عرض لتجميعها مع شاشات العرض المحددة، أو لتعيين الشاشة الرئيسية التي يُنسخ منها، أو لقلب النسخة، أو لكتم صوت شاشة العرض."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Klicke mit der rechten Maustaste auf ein Display, um es mit den ausgewählten Displays zu gruppieren, den Hauptbildschirm zum Klonen festzulegen, einen Klon zu spiegeln oder ein Display stummzuschalten."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Haz clic con el botón derecho en una pantalla para agruparla con las pantallas seleccionadas, elegir la pantalla clonable, girar un clon o silenciar una pantalla."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cliquez sur un moniteur avec le bouton droit pour le grouper avec les moniteurs sélectionnés, choisir l’affichage clone principal, retourner un clone ou couper le son d’un moniteur."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "किसी डिस्प्ले को चुने गए डिस्प्ले के साथ समूह में रखने, मुख्य क्लोन डिस्प्ले चुनने, क्लोन फ़्लिप करने या डिस्प्ले म्यूट करने के लिए उस पर राइट-क्लिक करें।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fai clic con il tasto destro su uno schermo per raggrupparlo con gli schermi selezionati, scegliere lo schermo principale da clonare, capovolgere un clone o disattivare l’audio di uno schermo."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ディスプレイを右クリックすると、選択したディスプレイとグループ化したり、メイン複製ディスプレイを選んだり、クローンを反転したり、ディスプレイを消音したりできます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "디스플레이를 오른쪽 클릭하여 선택한 디스플레이와 그룹으로 묶거나, 주 복제 디스플레이를 지정하거나, 복제를 반전하거나, 디스플레이의 소리를 끌 수 있습니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kliknij wyświetlacz prawym przyciskiem, aby zgrupować go z zaznaczonymi wyświetlaczami, wybrać główny ekran klonowania, obrócić klon lub wyciszyć wyświetlacz."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clique com o botão direito em uma tela para agrupá-la com as telas selecionadas, escolher a tela clone principal, virar um clone ou silenciar uma tela."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Нажмите на дисплей правой кнопкой, чтобы сгруппировать его с выбранными дисплеями, выбрать основной дисплей клона, отразить клон или выключить звук дисплея."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bir ekranı seçili ekranlarla gruplamak, ana kopya ekranı seçmek, bir kopyayı ters çevirmek veya bir ekranın sesini kapatmak için ekrana sağ tıklayın."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Клацніть дисплей правою кнопкою, щоб згрупувати його з вибраними дисплеями, вибрати головний екран клонування, віддзеркалити клон або вимкнути звук дисплея."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "右键点按显示器可将它与所选显示器编组、选取主克隆显示器、翻转克隆或将显示器静音。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "按一下顯示器右鍵可將其與所選顯示器組成群組、選擇主要複製顯示器、翻轉複製畫面或將顯示器靜音。"
-          }
-        }
-      }
-    },
     "Right-click a display to stretch or clone it with the selected displays, split it, choose the main clone display, flip a clone or mute a display." : {
       "localizations" : {
         "ar" : {
@@ -118020,101 +117644,6 @@
         }
       }
     },
-    "Saves the current properties and Scene Editor edits. A preset with the same name is replaced." : {
-      "comment" : "Message of the prompt that names a new wallpaper preset",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يحفظ الخصائص الحالية وتعديلات محرر المشهد. يُستبدل الإعداد المسبق الذي يحمل الاسم نفسه."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sichert die aktuellen Eigenschaften und Änderungen im Szeneneditor. Eine Voreinstellung mit demselben Namen wird ersetzt."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Guarda las propiedades actuales y los cambios del Editor de escenas. Se reemplaza el preajuste con el mismo nombre."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enregistre les propriétés actuelles et les modifications de l’Éditeur de scène. Un préréglage du même nom est remplacé."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "मौजूदा प्रॉपर्टी और सीन एडिटर के बदलाव सहेजता है। इसी नाम का प्रीसेट बदल दिया जाता है।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Salva le proprietà attuali e le modifiche dell’Editor scena. Un preset con lo stesso nome viene sostituito."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "現在のプロパティとシーンエディタでの編集を保存します。同じ名前のプリセットは置き換えられます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "현재 속성과 장면 편집기 편집 내용을 저장합니다. 이름이 같은 사전 설정은 대치됩니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zapisuje bieżące właściwości i zmiany z Edytora sceny. Ustawienie wstępne o tej samej nazwie zostanie zastąpione."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Salva as propriedades atuais e as edições do Editor de Cena. Uma predefinição com o mesmo nome é substituída."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сохраняет текущие свойства и изменения в Редакторе сцены. Пресет с таким же именем будет заменён."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geçerli özellikleri ve Sahne Düzenleyicisi düzenlemelerini kaydeder. Aynı adlı hazır ayar değiştirilir."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Зберігає поточні властивості та зміни в Редакторі сцени. Пресет із такою самою назвою буде замінено."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "保存当前属性和场景编辑器中的编辑。同名预设将被替换。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "儲存目前屬性與場景編輯器中的編輯。同名的預設組合會被取代。"
-          }
-        }
-      }
-    },
     "Saves the wallpaper on the display under the pointer, without desktop icons or windows." : {
       "localizations" : {
         "ar" : {
@@ -119341,101 +118870,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "場景編輯器（即時）的編輯也會被重置。"
-          }
-        }
-      }
-    },
-    "Scene Editor edits are reset too." : {
-      "comment" : "Reset confirmation: the Scene Editor's edits go as well",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تتم إعادة تعيين تعديلات محرر المشهد أيضًا."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Änderungen im Szeneneditor werden ebenfalls zurückgesetzt."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "También se restablecen los cambios del Editor de escenas."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les modifications de l’Éditeur de scène sont aussi réinitialisées."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "सीन एडिटर के बदलाव भी रीसेट होंगे।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vengono ripristinate anche le modifiche dell’Editor scena."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "シーンエディタでの変更もリセットされます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "장면 편집기에서 편집한 내용도 재설정됩니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zmiany wprowadzone w Edytorze sceny również zostaną zresetowane."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "As edições do Editor de Cena também são redefinidas."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Изменения, сделанные в Редакторе сцены, тоже сбрасываются."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sahne Düzenleyicisi düzenlemeleri de sıfırlanır."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Зміни, зроблені в Редакторі сцени, теж скидаються."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "场景编辑器中的编辑也会被重置。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "場景編輯器中的編輯也會重置。"
           }
         }
       }
@@ -122360,7 +121794,7 @@
         }
       }
     },
-    "Searching Workshop..." : {
+    "Searching Workshop…" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -133117,6 +132551,101 @@
         }
       }
     },
+    "Some Items Weren't Imported" : {
+      "comment" : "Alert title after a drag-and-drop import",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يتم استيراد بعض العناصر"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einige Objekte wurden nicht importiert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algunos ítems no se han importado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certains éléments n’ont pas été importés"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कुछ आइटम इंपोर्ट नहीं किए गए"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alcuni elementi non sono stati importati"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一部の項目が読み込まれませんでした"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일부 항목을 가져오지 못함"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niektóre elementy nie zostały zaimportowane"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alguns Itens Não Foram Importados"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Некоторые объекты не импортированы"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bazı Öğeler İçe Aktarılmadı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Деякі обʼєкти не імпортовано"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分项目未导入"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分項目未匯入"
+          }
+        }
+      }
+    },
     "Some features only available on Chromium" : {
       "comment" : "Badge in a web wallpaper's details: it uses web APIs only the Chromium engine has",
       "localizations" : {
@@ -135285,6 +134814,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Steam API 傳回 HTTP %lld"
+          }
+        }
+      }
+    },
+    "Steam API returned an unexpected response." : {
+      "comment" : "Workshop error when Steam's answer can't be read",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أعادت واجهة Steam API استجابة غير متوقعة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam-API hat eine unerwartete Antwort zurückgegeben."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La API de Steam ha devuelto una respuesta inesperada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’API Steam a renvoyé une réponse inattendue."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam API ने अनपेक्षित जवाब लौटाया।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’API di Steam ha restituito una risposta imprevista."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam APIが予期しない応答を返しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam API가 예상치 못한 응답을 반환했습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam API zwróciło nieoczekiwaną odpowiedź."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A API do Steam retornou uma resposta inesperada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam API вернул неожиданный ответ."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam API’si beklenmeyen bir yanıt döndürdü."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam API повернув неочікувану відповідь."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam API 返回了意外的响应。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam API 傳回非預期的回應。"
           }
         }
       }
@@ -138971,100 +138595,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "延展單一背景圖片"
-          }
-        }
-      }
-    },
-    "Stretch single wallpaper (Coming soon)" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "توسيع خلفية واحدة (قريبًا)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ein Hintergrundbild strecken (in Kürze)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Extender un solo fondo de pantalla (próximamente)"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Étirer un seul fond d’écran (bientôt)"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "एक वॉलपेपर फैलाएँ (जल्द आ रहा है)"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Estendi un singolo sfondo (in arrivo)"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ひとつの壁紙をストレッチ（近日対応）"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "단일 배경화면 늘이기(곧 제공 예정)"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rozciągnij jedną tapetę (wkrótce)"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esticar uma única imagem de fundo (em breve)"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Растянуть одни обои (скоро)"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tek duvar kâğıdını uzat (yakında)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Розтягнути одну шпалеру (незабаром)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "拉伸单个墙纸（即将推出）"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "延展單一背景圖片（即將推出）"
           }
         }
       }
@@ -170634,6 +170164,386 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "×8 MSAA 僅建議用於效能強大的高階桌上型顯示卡。"
+          }
+        }
+      }
+    },
+    "“%@” couldn't be copied: %@" : {
+      "comment" : "Drag-and-drop import problem; the dropped item's name, then the system's reason",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذر نسخ ”%1$@“: %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%1$@“ konnte nicht kopiert werden: %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido copiar «%1$@»: %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« %1$@ » n’a pas pu être copié : %2$@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%1$@” को कॉपी नहीं किया जा सका: %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile copiare “%1$@”: %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%1$@」をコピーできませんでした: %2$@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%1$@’을(를) 복사할 수 없습니다: %2$@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można skopiować „%1$@”: %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível copiar “%1$@”: %2$@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось скопировать «%1$@»: %2$@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%1$@” kopyalanamadı: %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося скопіювати «%1$@»: %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法拷贝“%1$@”：%2$@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法拷貝「%1$@」：%2$@"
+          }
+        }
+      }
+    },
+    "“%@” has no wallpaper inside." : {
+      "comment" : "Drag-and-drop import problem; the dropped folder's or zip file's name",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يحتوي ”%@“ على خلفية."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ enthält kein Hintergrundbild."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%@» no contiene ningún fondo de pantalla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« %@ » ne contient aucun fond d’écran."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” में कोई वॉलपेपर नहीं है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” non contiene alcuno sfondo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」には壁紙が含まれていません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’에 배경화면이 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@” nie zawiera tapety."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” não contém nenhuma imagem de fundo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В «%@» нет обоев."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” içinde duvar kâğıdı yok."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У «%@» немає шпалер."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@”中没有墙纸。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」中沒有背景圖片。"
+          }
+        }
+      }
+    },
+    "“%@” is already in your library." : {
+      "comment" : "Drag-and-drop import problem; the dropped item's name",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "”%@“ موجود بالفعل في مكتبتك."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ ist schon in Ihrer Mediathek."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%@» ya está en tu biblioteca."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« %@ » est déjà dans votre bibliothèque."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” पहले से आपकी लाइब्रेरी में है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” è già nella tua libreria."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」はすでにライブラリにあります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’은(는) 이미 라이브러리에 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@” jest już w Twojej bibliotece."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” já está na sua biblioteca."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%@» уже в вашей библиотеке."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” zaten kütüphanenizde."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%@» уже у вашій бібліотеці."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@”已在资料库中。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」已在資料庫中。"
+          }
+        }
+      }
+    },
+    "“%@” isn't a wallpaper folder, zip file or video." : {
+      "comment" : "Drag-and-drop import problem; the dropped file's name",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "”%@“ ليس مجلد خلفية أو ملف zip أو فيديو."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ ist weder ein Hintergrundbild-Ordner noch eine ZIP-Datei oder ein Video."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%@» no es una carpeta de fondo de pantalla, un archivo zip ni un vídeo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« %@ » n’est ni un dossier de fond d’écran, ni un fichier zip, ni une vidéo."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” वॉलपेपर फ़ोल्डर, zip फ़ाइल या वीडियो नहीं है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” non è una cartella di sfondo, un file zip o un video."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」は壁紙フォルダ、zipファイル、ビデオのいずれでもありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’은(는) 배경화면 폴더, zip 파일 또는 비디오가 아닙니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@” nie jest folderem tapety, plikiem zip ani wideo."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” não é uma pasta de imagem de fundo, um arquivo zip nem um vídeo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%@» не является папкой обоев, zip-файлом или видео."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” bir duvar kâğıdı klasörü, zip dosyası veya video değil."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%@» не є папкою шпалер, zip-файлом або відео."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@”不是墙纸文件夹、zip 文件或视频。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」不是背景圖片檔案夾、zip 檔案或影片。"
           }
         }
       }

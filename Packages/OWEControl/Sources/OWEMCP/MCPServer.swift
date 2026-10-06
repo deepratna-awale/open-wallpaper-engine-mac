@@ -29,8 +29,6 @@ extension ControlChannel {
 ///   message saying why and what to do. An unknown tool or method is a JSON-RPC error.
 public final class MCPServer {
     public static let protocolVersion = MCPProtocolVersion.latest
-    /// The versions a client may ask for; any other gets `protocolVersion`.
-    public static let supportedVersions = MCPProtocolVersion.supported
     public static let libraryResource = "owe://library"
     public static let statusResource = "owe://status"
 

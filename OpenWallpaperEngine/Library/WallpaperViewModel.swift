@@ -1139,8 +1139,7 @@ class WallpaperViewModel: ObservableObject {
         // display shows its own.
         if let data = UserDefaults.app.data(forKey: "ScreenWallpapers"),
            let saved = try? JSONDecoder().decode([String: WEWallpaper].self, from: data) {
-            // Filter out any compound keys (screenId_spaceId) from previous per-space experiment
-            self.wallpapers = saved.filter { !$0.key.contains("_") }
+            self.wallpapers = saved
         }
         // Migrate legacy single wallpaper
         else if let json = UserDefaults.app.data(forKey: "CurrentWallpaper"),

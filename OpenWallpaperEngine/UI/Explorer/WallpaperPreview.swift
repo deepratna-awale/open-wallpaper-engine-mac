@@ -165,31 +165,39 @@ struct WallpaperPreview: SubviewOfContentView {
                             .background(Color(nsColor: NSColor.controlBackgroundColor))
                             .frame(width: 280, height: 280)
                             .clipShape(RoundedRectangle(cornerRadius: 16.0))
-                            .border(Color.white, width: 4)
+                            .overlay { RoundedRectangle(cornerRadius: 16.0).strokeBorder(Color.white, lineWidth: 4) }
                         HStack {
                             if isEditingId == "title" {
                                 TextField("Wallpaper Title", text: $title)
                                     .onSubmit {
                                         var wallpaper = wallpaperViewModel.displayedWallpaper
-                                        
-                                        wallpaper.project.title = title
-                                        
+                                        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+                                        // An empty or unchanged title keeps the current one.
+                                        guard !trimmed.isEmpty, trimmed != wallpaper.project.title else {
+                                            isEditingId = ""
+                                            return
+                                        }
+                                        wallpaper.project.title = trimmed
+
                                         guard WallpaperProjectFileEdit.setLogging(["title": wallpaper.project.title], inProjectAt: wallpaper.wallpaperDirectory) else { return }
-                                        
+
                                         wallpaperViewModel.inspect(wallpaper)
-                                        
+
                                         isEditingId = ""
                                     }
+                                    .onExitCommand { isEditingId = "" }
                             } else {
                                 Text(verbatim: wallpaperViewModel.displayedWallpaper.project.displayTitle)
                                     .frame(minWidth: 50)
                                     .id("title")
                                     .lineLimit(1)
-                                    .onTapGesture(count: 2) {
-                                        title = wallpaperViewModel.displayedWallpaper.project.title
-                                        isEditingId = "title"
-                                    }
-                                Image(systemName: "square.and.pencil")
+                                    .onTapGesture(count: 2, perform: beginTitleEdit)
+                                Button(action: beginTitleEdit) {
+                                    Label("Rename", systemImage: "square.and.pencil")
+                                        .labelStyle(.iconOnly)
+                                }
+                                .buttonStyle(.plain)
+                                .help("Rename")
                             }
                             
                         }
@@ -281,20 +289,11 @@ struct WallpaperPreview: SubviewOfContentView {
                                         isEditingId = ""
                                     }
                                     
-                                    guard !newTag.isEmpty else { return }
-                                    
                                     var wallpaper = wallpaperViewModel.displayedWallpaper
-                                    
-                                    var tags = wallpaper.project.tags ?? []
-                                    
-                                    tags = Array(Set(tags)) // remove duplicate items
-                                    
-                                    tags.append(newTag)
-                                    
-                                    tags = Array(Set(tags)) // remove duplicate items
-                                    
-                                    wallpaper.project.tags = tags.sorted()
-                                    
+                                    let tags = ProjectTagList.adding(newTag, to: wallpaper.project.tags ?? [])
+                                    guard tags != wallpaper.project.tags else { return }
+                                    wallpaper.project.tags = tags
+
                                     guard WallpaperProjectFileEdit.setLogging(["tags": wallpaper.project.tags], inProjectAt: wallpaper.wallpaperDirectory) else { return }
                                     
                                     wallpaperViewModel.inspect(wallpaper)
@@ -551,24 +550,19 @@ struct WallpaperPreview: SubviewOfContentView {
                             if hoveredTag == tag, projectTags.contains(tag) {
                                 Button {
                                     var wallpaper = wallpaperViewModel.displayedWallpaper
-                                    
-                                    guard var tags = wallpaper.project.tags else { return } // else case seems impossible, however much safer
-                                    
-                                    tags = Array(Set(tags)) // remove duplicate items
-                                    
-                                    guard let index = tags.firstIndex(where: { $0 == tag }) else { return }
-                                    
-                                    tags.remove(at: index)
-                                    
-                                    wallpaper.project.tags = tags
-                                    
+                                    // Optional lookup: the button shows only for project.json's own tags.
+                                    guard let tags = wallpaper.project.tags else { return }
+                                    wallpaper.project.tags = ProjectTagList.removing(tag, from: tags)
+
                                     guard WallpaperProjectFileEdit.setLogging(["tags": wallpaper.project.tags], inProjectAt: wallpaper.wallpaperDirectory) else { return }
                                     
                                     wallpaperViewModel.inspect(wallpaper)
                                 } label: {
-                                    Image(systemName: "xmark.circle.fill")
+                                    Label("Remove Tag", systemImage: "xmark.circle.fill")
+                                        .labelStyle(.iconOnly)
                                 }
                                 .buttonStyle(.plain)
+                                .help("Remove Tag")
                                 .foregroundStyle(.white, .red)
                                 .symbolRenderingMode(.palette)
                                 .offset(x: 5, y: -2.5)
@@ -591,14 +585,21 @@ struct WallpaperPreview: SubviewOfContentView {
                 Button {
                     isEditingId = "tags"
                 } label: {
-                    Image(systemName: "plus")
+                    Label("Add Tag", systemImage: "plus")
+                        .labelStyle(.iconOnly)
                         .font(.body)
                 }
                 .buttonStyle(.plain)
+                .help("Add Tag")
             }
         }
         .font(.footnote)
         .lineLimit(1)
+    }
+
+    private func beginTitleEdit() {
+        title = wallpaperViewModel.displayedWallpaper.project.title
+        isEditingId = "title"
     }
 
     private func formatCount(_ count: Int) -> String {
@@ -766,19 +767,29 @@ extension URL {
         return try checkResourceIsReachable()
     }
 
-    /// returns total allocated size of a the directory including its subFolders or not
+    /// The allocated size of the regular files in the directory, and in its subfolders when
+    /// `includingSubfolders`; nil when it isn't a reachable directory. Entries that can't be read
+    /// are left out (logged) instead of losing the whole size.
     func directoryTotalAllocatedSize(includingSubfolders: Bool = false) throws -> Int? {
         guard try isDirectoryAndReachable() else { return nil }
-        if includingSubfolders {
-            guard
-                let urls = FileManager.default.enumerator(at: self, includingPropertiesForKeys: nil)?.allObjects as? [URL] else { return nil }
-            return try urls.lazy.reduce(0) {
-                    (try $1.resourceValues(forKeys: [.totalFileAllocatedSizeKey]).totalFileAllocatedSize ?? 0) + $0
+        let keys: Set<URLResourceKey> = [.isRegularFileKey, .totalFileAllocatedSizeKey]
+        guard let enumerator = FileManager.default.enumerator(
+            at: self, includingPropertiesForKeys: Array(keys),
+            options: includingSubfolders ? [] : [.skipsSubdirectoryDescendants],
+            errorHandler: { url, error in
+                OWELog.debug(.library, "Size of \(url.path) left out: \(error)")
+                return true
+            }) else { return nil }
+        var total = 0
+        for case let url as URL in enumerator {
+            do {
+                let values = try url.resourceValues(forKeys: keys)
+                guard values.isRegularFile == true else { continue }
+                total += values.totalFileAllocatedSize ?? 0
+            } catch {
+                OWELog.debug(.library, "Size of \(url.path) left out: \(error)")
             }
         }
-        return try FileManager.default.contentsOfDirectory(at: self, includingPropertiesForKeys: nil).lazy.reduce(0) {
-                 (try $1.resourceValues(forKeys: [.totalFileAllocatedSizeKey])
-                    .totalFileAllocatedSize ?? 0) + $0
-        }
+        return total
     }
 }

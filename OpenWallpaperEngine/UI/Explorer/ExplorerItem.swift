@@ -17,7 +17,6 @@ struct ExplorerItem: SubviewOfContentView {
     @State var isHovered = false
 
     var wallpaper: WEWallpaper
-    var index: Int
 
     /// The tile's corner radius, which its selection stroke follows.
     static let cornerRadius: CGFloat = 8
@@ -51,7 +50,7 @@ struct ExplorerItem: SubviewOfContentView {
                                                         isLowPowerMode: lowPowerMode.isEnabled,
                                                         isHovered: isHovered))
             .resizable()
-            .scaleEffect((viewModel.imageScaleIndex == index ? 1.2 : 1.0) * 1.08)
+            .scaleEffect(1.08)
             .aspectRatio(1.0, contentMode: .fill)
             .clipped()
             
@@ -68,9 +67,9 @@ struct ExplorerItem: SubviewOfContentView {
             }
             .frame(maxWidth: .infinity, minHeight: 30)
             .padding(4)
-            .background(Color(white: 0, opacity: viewModel.imageScaleIndex == index ? 0.4 : 0.2))
+            .background(Color(white: 0, opacity: 0.2))
             .multilineTextAlignment(.center)
-            .foregroundStyle(Color(white: viewModel.imageScaleIndex == index ? 0.9 : 0.7))
+            .foregroundStyle(Color(white: 0.7))
         }
         .clipShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
         .onHover { isHovered = $0 }
@@ -100,7 +99,6 @@ struct ExplorerItem: SubviewOfContentView {
                     .help("Open Wallpaper Engine didn't quit cleanly twice in a row while this wallpaper was showing")
             }
         }
-        .border(Color.accentColor, width: viewModel.imageScaleIndex == index ? 1.0 : 0)
         .onTapGesture {
             viewModel.selectWallpaper(
                 wallpaper,

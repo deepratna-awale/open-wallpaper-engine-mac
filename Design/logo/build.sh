@@ -33,9 +33,7 @@ for pt in 16 32 128 256 512; do
   "$TMP/render" frame "$TMP/full.png" $SET/icon_${pt}x${pt}@2x.png $((pt * 2))
 done
 
-# 3. In-app images: we.logo is the app icon, we.placeholder and the docs art the flat logo.
-"$TMP/render" frame "$TMP/full.png" $XCASSETS/we.logo.imageset/we.logo.png 512
-"$TMP/render" frame "$TMP/full.png" $XCASSETS/we.logo.imageset/we.logo@2x.png 1024
+# 3. In-app images: we.placeholder and the docs art, the flat logo.
 "$TMP/render" svg svg/logo-flat.svg $XCASSETS/we.placeholder.imageset/we.placeholder.png 512
 "$TMP/render" svg svg/logo-flat.svg $XCASSETS/we.placeholder.imageset/we.placeholder@2x.png 1024
 "$TMP/render" svg svg/logo-flat.svg \

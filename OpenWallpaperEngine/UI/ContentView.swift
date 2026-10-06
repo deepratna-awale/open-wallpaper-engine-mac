@@ -123,8 +123,11 @@ struct ContentView: View {
         } message: {
             batchUnsubscribeMessage
         }
-        .alert(isPresented: $viewModel.importAlertPresented, error: viewModel.importAlertError) {
-
+        .alert(isPresented: $viewModel.importAlertPresented, error: viewModel.importAlertError) { _ in
+        } message: { error in
+            // Already localized: the reason, then what to do about it.
+            Text(verbatim: [error.failureReason, error.recoverySuggestion]
+                .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "\n\n"))
         }
         .alert(isPresented: $viewModel.deletionAlertPresented, error: viewModel.deletionAlertError) {
 
@@ -378,7 +381,9 @@ private struct RemoteWallpaperURLSheet: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView(viewModel: .init(isStaging: true), wallpaperViewModel: .init())
+        let viewModel = ContentViewModel()
+        viewModel.isStaging = true
+        return ContentView(viewModel: viewModel, wallpaperViewModel: .init())
             .environmentObject(GlobalSettingsViewModel())
     }
 }

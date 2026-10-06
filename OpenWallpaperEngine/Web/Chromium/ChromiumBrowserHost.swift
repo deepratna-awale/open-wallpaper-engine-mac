@@ -51,9 +51,6 @@ final class ChromiumBrowserHost: NSObject, ChromiumBrowserHostProtocol, @uncheck
         self.engine = engine
     }
 
-    /// Browsers open now.
-    var browserCount: Int { lock.withLock { clients.count } }
-
     private func helper(onError: @escaping (Error) -> Void) -> ChromiumBrowserHelperProtocol? {
         let connection: NSXPCConnection = lock.withLock {
             if let connection = self.connection { return connection }

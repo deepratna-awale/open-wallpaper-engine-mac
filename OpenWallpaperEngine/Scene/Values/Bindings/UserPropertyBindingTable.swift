@@ -110,11 +110,6 @@ final class UserPropertyBindingTable {
         lock.withLock { !(bindingsByDocument[document] ?? []).isEmpty }
     }
 
-    /// Every user property some binding reads.
-    var propertyNames: Set<String> {
-        lock.withLock { Set(bindingsByDocument.values.flatMap { $0.map(\.name) }) }
-    }
-
     /// Whose state `binding` belongs to: its own owner in scene.json, every object that read an
     /// asset document.
     func owners(of binding: UserPropertyBinding) -> Set<UserPropertyBindingOwner> {

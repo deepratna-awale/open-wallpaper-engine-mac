@@ -248,9 +248,6 @@ public struct ParticleMaterial: Hashable, Sendable {
 
     /// The blendings a particle material draws with (`WEMaterialBlending.particleSystem`).
     public static let blendings = ["normal", "translucent", "additive"]
-    /// WE's material panel's choices for depth test, depth write and culling.
-    public static let depthModes = ["enabled", "disabled"]
-    public static let cullModes = ["normal", "nocull"]
     public static let overbrightKey = "ui_editor_properties_overbright"
 
     private var pass: [String: SceneJSONValue] {
