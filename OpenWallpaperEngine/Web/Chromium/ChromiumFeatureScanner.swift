@@ -193,13 +193,24 @@ enum ChromiumFeatureScanner {
         return SHA256.hash(data: Data(lines.utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
     }
 
-    /// Scans every page and script in `directory`. Off the main thread: it reads files.
+    /// Scans every page and script in `directory`. Off the main thread: it reads files. A cap
+    /// that cuts the scan short is logged.
     static func scan(directory: URL) -> Result {
         let files = files(in: directory)
+        if files.count >= maxFiles {
+            OWELog.debug(.web, "Feature scan of \(directory.lastPathComponent): stopped listing at \(maxFiles) files")
+        }
         var found = Set<String>()
         var total = 0
-        for file in files where file.size <= maxFileSize {
-            guard total + file.size <= maxTotalSize else { break }
+        for file in files {
+            guard file.size <= maxFileSize else {
+                OWELog.debug(.web, "Feature scan of \(directory.lastPathComponent): skipped \(file.relativePath) (\(file.size) bytes, over \(maxFileSize))")
+                continue
+            }
+            guard total + file.size <= maxTotalSize else {
+                OWELog.debug(.web, "Feature scan of \(directory.lastPathComponent): stopped at \(file.relativePath), \(maxTotalSize) bytes read")
+                break
+            }
             total += file.size
             guard let data = try? Data(contentsOf: file.url) else { continue }
             let text = String(decoding: data, as: UTF8.self)
