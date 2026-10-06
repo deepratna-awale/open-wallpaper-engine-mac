@@ -292,8 +292,8 @@ class ContentViewModel: ObservableObject, DropDelegate {
             case .name:
                 return Self.precedes($0.project.title, $1.project.title, in: sortingSequence)
             case .rating:
-                return Self.precedes($0.project.contentrating ?? "0", $1.project.contentrating ?? "0",
-                                     in: sortingSequence)
+                return Self.precedes(Self.ratingRank($0.project.contentrating),
+                                     Self.ratingRank($1.project.contentrating), in: sortingSequence)
             case .fileSize:
                 return Self.precedes(library.size(of: $0), library.size(of: $1), in: sortingSequence)
             case .dateAdded:
@@ -307,6 +307,17 @@ class ContentViewModel: ObservableObject, DropDelegate {
         }
     }
     
+    /// The content rating's place in the Rating sort: Everyone, then Questionable (partial
+    /// nudity), then Mature; no or an unknown rating comes before all of them.
+    static func ratingRank(_ contentRating: String?) -> Int {
+        switch contentRating?.trimmingCharacters(in: .whitespaces).lowercased() {
+        case "everyone": return 1
+        case "questionable": return 2
+        case "mature": return 3
+        default: return 0
+        }
+    }
+
     /// Whether `lhs` sorts before `rhs` for the title, rating and file size orders: `.increase` puts
     /// the larger value first and `.decrease` the smaller, as the library has always ordered them.
     static func precedes<Value: Comparable>(_ lhs: Value, _ rhs: Value,
