@@ -13,12 +13,17 @@ final class EffectResolutionPolicyTests: XCTestCase {
         SceneEffectPlan(file: file, fbos: fbos, passes: [])
     }
 
-    func testBlurLikeEffectsAreFoundByNameOrDownsampledBuffers() throws {
+    func testBlurLikeEffectsAreFoundByTheirDownsampledBuffersOnly() throws {
         let half = try fbo(#"{"name":"a","scale":2,"format":"rgba8888"}"#)
         let full = try fbo(#"{"name":"a","scale":1,"format":"rgba8888"}"#)
-        XCTAssertTrue(EffectResolutionPolicy.isBlurLike(effect("effects/blurprecise/effect.json", fbos: [full])))
-        XCTAssertTrue(EffectResolutionPolicy.isBlurLike(effect("effects/godrays/effect.json", fbos: [])))
+        let fixedHalf = try fbo(#"{"name":"a","scale":2,"format":"rgba8888","width":256,"height":256}"#)
         XCTAssertTrue(EffectResolutionPolicy.isBlurLike(effect("effects/custom/effect.json", fbos: [half])))
+        XCTAssertTrue(EffectResolutionPolicy.isBlurLike(effect("effects/anything/effect.json", fbos: [full, half])))
+        // The name says nothing: a "blur" with only full-size buffers keeps its size.
+        XCTAssertFalse(EffectResolutionPolicy.isBlurLike(effect("effects/blurprecise/effect.json", fbos: [full])))
+        XCTAssertFalse(EffectResolutionPolicy.isBlurLike(effect("effects/godrays/effect.json", fbos: [])))
+        XCTAssertFalse(EffectResolutionPolicy.isBlurLike(effect("effects/custom/effect.json", fbos: [fixedHalf])),
+                       "a fixed-size buffer is a tile, not a downsample")
         XCTAssertFalse(EffectResolutionPolicy.isBlurLike(effect("effects/waterripple/effect.json", fbos: [full])))
     }
 
@@ -35,7 +40,8 @@ final class EffectResolutionPolicyTests: XCTestCase {
         let fixed = try fbo(#"{"name":"a","scale":1,"format":"rgba8888","width":256,"height":256}"#)
         let tiled = try fbo(#"{"name":"b","scale":1,"format":"rgba8888","uvs":"repeat"}"#)
         let policy = EffectResolutionPolicy(divisor: 2)
-        let blur = effect("effects/blur/effect.json", fbos: [fixed, tiled])
+        let half = try fbo(#"{"name":"h","scale":2,"format":"rgba8888"}"#)
+        let blur = effect("effects/blur/effect.json", fbos: [fixed, tiled, half])
         XCTAssertEqual(policy.divisor(for: fixed, in: blur), 1)
         XCTAssertEqual(policy.divisor(for: tiled, in: blur), 1)
         let copy = SceneEffectPassPlan(command: .copy(source: "previous", target: "b"), variantKey: "", variant: nil,
