@@ -290,7 +290,7 @@ Call sites:
 
 1. **Context per key.** The context is keyed by `"<layerId|global>:<full source>"`. Particle and effect scripts have no layer id, so identical sources on different objects share one context and its state.
 2. **Rebuilt every call.** Every `evaluate*` call re-sets about 15 globals: `engine` rebuilt from a Swift dictionary, `input`, `__layers` (a JSON copy of *every* layer's state), `shared`, `thisScene` (a new object literal, evaluated from a string), `thisLayer` (another copy), plus `registerAudioBuffers`. Every layer is then re-decorated with about 60 closures.
-3. **Script source.** The source goes through regex rewriting: `export` is stripped and `import * as` / `import {}` become `__requireModule`. It is evaluated once; then `init(input)` runs, `applyUserProperties(all)` runs when the property revision changed, then `__dispatchRuntimeEvents` (cursor, enter/leave, animation stubs, timers), then `update(input)`.
+3. **Script source.** The legacy engine rewrote the source with regexes: `export` was stripped and `import * as` / `import {}` became `__requireModule`. (This is gone: since WP3 the module compiler in `Scripting/Modules/` reads the source with a real tokenizer, `SceneScriptTokenizer`, which skips strings, comments, regex and template literals, and `SceneScriptModuleScanner` / `SceneScriptModuleTransformer` rewrite the top-level imports and exports; see §4.2.) It is evaluated once; then `init(input)` runs, `applyUserProperties(all)` runs when the property revision changed, then `__dispatchRuntimeEvents` (cursor, enter/leave, animation stubs, timers), then `update(input)`.
 4. **Read-back.** Afterwards `__layers.toDictionary()` and `shared.toDictionary()` are copied back into Swift and replace the global state. Pending creations, orders and removals are drained, and `__camerashake` is read.
 
 The measured cost in the snapshot is about 0.3 ms plus 0.12 ms per layer, per script, per frame: roughly 400 ms per frame for 3453730450.
@@ -301,7 +301,7 @@ Legend: ✅ works like WE · 🟡 partial or wrong in a way the corpus hits · �
 
 | API | WE semantics | Ours | Corpus (scripts/sites/wp) |
 |---|---|---|---|
-| ES module syntax | real modules, own scope per script | 🟡 regex rewrite; top-level `let` collides in the shared visibility context | all 281 |
+| ES module syntax | real modules, own scope per script | 🟡 regex rewrite (before WP3; now a tokenizer-based module compiler, own scope per script); top-level `let` collides in the shared visibility context | all 281 |
 | imports `WEMath/WEColor/WEVector` | WE jsmodules | ✅ via the bundled WE files | 18/37/9 |
 | `update(value)` return → property | chained: the next call receives the current value; no return = unchanged; number broadcast to vectors | 🟡 input is always the authored/base value, so accumulators never move; `undefined` → `"undefined"` text or (0,0,0) vectors; a number `n` returned for a vector becomes `(n, 0, 0)` through `parseVector3`, not `(n, n, n)` | 213/357/43 |
 | `init(value)` return → property | applied | ❌ return ignored | 79/115/23 |
