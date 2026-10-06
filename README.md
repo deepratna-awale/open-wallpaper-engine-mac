@@ -17,7 +17,7 @@ Open Wallpaper Engine is a free, open-source macOS player for Wallpaper Engine w
 
 - **Scene, video and web wallpapers** — scenes draw through each wallpaper's own Wallpaper Engine shaders, translated to Metal, with effects, particles, 3D models, lights, timelines, SceneScript and audio-reactive visuals. Web wallpapers run in WebKit or the optional Chromium engine.
 - **Steam Workshop** — browse, filter and download from the Workshop inside the app, or import wallpaper folders and zips.
-- **Scene Editor (Live)** — change the running wallpaper's layers and effects live on the desktop, record your own screen saver from it, or export it as a Live Photo lock screen for iPhone and iPad.
+- **Scene Editor (Live)** — change the running wallpaper's layers and effects live on the desktop, record your own screen saver from it, or export it as a Live Photo lock screen for iPhone and iPad or as a package for Wallpaper Engine's Android app.
 
   ![Scene Editor (Live)](docs/images/scene-editor-live.png)
 
@@ -58,7 +58,7 @@ You need **macOS 14.0 (Sonoma) or later**. Some features need a later macOS, a p
 
 1. Open the app. The setup assistant sets the language, SteamCMD, your Steam login and the Wallpaper Engine assets; every step can be skipped.
 2. Install the Wallpaper Engine assets (*Settings › Assets*) if you want scene wallpapers. They come from your own copy of Wallpaper Engine on Steam; video and web wallpapers work without them.
-3. Find wallpapers in the **Workshop** tab, or import a wallpaper folder or zip (*File › Import*).
+3. Find wallpapers in the **Workshop** tab, or import a wallpaper folder or zip (*File › Import Wallpaper from Folder…*, ⌘I).
 4. Click a wallpaper in the library, then **Set Wallpaper** in its details. Its properties are listed below it.
 
 More: [Getting started](docs/getting-started.md) and the [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).

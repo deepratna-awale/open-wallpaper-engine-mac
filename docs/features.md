@@ -22,7 +22,7 @@ Everything Open Wallpaper Engine does, by area. The [README](../README.md) has t
 
 ### Edit Wallpapers
 
-- **Scene Editor (Live)** (Details › Scene Editor (Live), ⌥⌘I) has three tabs. **Wallpaper** edits the running wallpaper: show, hide, move, resize, recolour and fade layers and change effects, live on the desktop. **Screen Saver** records a version of the wallpaper as your screen saver ([docs/screen-saver.md](screen-saver.md)). **iPhone & iPad Export** turns it into a Live Photo lock screen ([docs/iphone-ipad-export.md](iphone-ipad-export.md)).
+- **Scene Editor (Live)** (Details › Scene Editor (Live), ⌥⌘I) has four tabs. **Wallpaper** edits the running wallpaper: show, hide, move, resize, recolour and fade layers and change effects, live on the desktop. **Screen Saver** records a version of the wallpaper as your screen saver ([docs/screen-saver.md](screen-saver.md)). **iPhone & iPad Export** turns it into a Live Photo lock screen ([docs/iphone-ipad-export.md](iphone-ipad-export.md)). **Android Export** writes it as a package for Wallpaper Engine's Android app ([docs/android-export.md](android-export.md)).
 - **Wallpaper Editor** (Edit Wallpaper in the library's bottom bar, ⌥⌘E) is an editor in the spirit of Wallpaper Engine's, running as an app of its own: add, arrange and group layers; add effects from Wallpaper Engine's catalog with rendered previews; animate on a timeline; write SceneScript with autocomplete; author user properties; edit particle systems and Puppet Warp rigs. Edits are kept beside the wallpaper, never in its files, can all be undone, and show on the desktop as you make them; **Save as Local Wallpaper** writes a copy with them.
 - **Depth maps** — with the Depth Map Generation plugin, both editors make a depth map of a layer or the whole scene on your Mac and apply Wallpaper Engine's Depth Parallax effect to it ([docs/depth-maps.md](depth-maps.md)).
 
@@ -51,7 +51,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - **Wallpaper Engine assets from your own Steam copy** — installed through SteamCMD after you sign in, optionally with Wallpaper Engine's default wallpapers.
 - **Imports** — your Workshop collections and subscriptions (read from Steam's Web API), the Workshop items of an existing Steam library, and wallpaper folders.
 - **The [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)** — guides, settings reference and troubleshooting; Support & FAQ in the app opens it.
-- **Automatic updates** — signed updates install by themselves (on quit, after 10 minutes away, or within a day, then a quick relaunch restores your wallpapers). Settings › General › Updates lets you only check, or turn checks off, and opt into beta updates. Check for Updates… is in the app menu and the menu bar menu.
+- **Automatic updates** — signed updates install by themselves (on quit, after 10 minutes away, or within a day, then a quick relaunch restores your wallpapers). Settings › Updates lets you only check, or turn checks off, and opt into beta updates. Check for Updates… is in the app menu and the menu bar menu.
 
 ### Scene rendering
 - **Wallpaper Engine's own shaders** — layers, effects and materials now draw through each wallpaper's original shaders, translated to Metal, including effects that Workshop authors made themselves.
@@ -118,5 +118,5 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 
 ### Interface & languages
 - **Liquid Glass** on macOS 26 — a native split view, toolbar and inspector with glass controls. Earlier macOS versions keep the familiar look.
-- **15 new languages**: German, French, Spanish, Brazilian Portuguese, Italian, Japanese, Korean, Simplified and Traditional Chinese, Russian, Polish, Turkish, Ukrainian, Arabic and Hindi, chosen from the Language picker in Settings.
+- **15 languages besides English**: German, French, Spanish, Brazilian Portuguese, Italian, Japanese, Korean, Simplified and Traditional Chinese, Russian, Polish, Turkish, Ukrainian, Arabic and Hindi, chosen from the Language picker in Settings.
 - A new app icon, and a menu bar icon that follows the menu bar's appearance.
