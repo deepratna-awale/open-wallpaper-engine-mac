@@ -150584,6 +150584,101 @@
         }
       }
     },
+    "This wallpaper changed since you trusted it." : {
+      "comment" : "Trust prompt for a web or application wallpaper: its files changed (a Workshop update, another item in its folder) since the user chose not to be asked again",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تغيّرت هذه الخلفية منذ أن وثقت بها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Hintergrundbild hat sich geändert, seit Sie ihm vertraut haben."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este fondo de pantalla ha cambiado desde que confiaste en él."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce fond d’écran a changé depuis que vous lui avez fait confiance."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपके भरोसा करने के बाद से यह वॉलपेपर बदल गया है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo sfondo è cambiato da quando lo hai considerato attendibile."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この壁紙は、信頼した後に変更されています。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 배경화면은 신뢰한 이후 변경되었습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta tapeta zmieniła się, odkąd uznałeś ją za zaufaną."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta imagem de fundo mudou desde que você confiou nela."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эти обои изменились с тех пор, как вы им доверились."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu duvar kâğıdı, güvendiğinizden beri değişti."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ця шпалера змінилася відтоді, як ви їй довірилися."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此墙纸在你信任后已更改。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此背景圖片在你信任後已變更。"
+          }
+        }
+      }
+    },
     "This wallpaper needs %lld other Workshop items to render correctly." : {
       "localizations" : {
         "ar" : {

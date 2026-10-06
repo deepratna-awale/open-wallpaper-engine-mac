@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Web and application wallpapers ask again when their content changes.** "Don't ask again for this wallpaper" now trusts the folder's files as they were when you answered: after a Workshop update, or another item downloaded into the same folder, the prompt asks again and says the wallpaper changed. Renaming or tagging the wallpaper in the library doesn't count as a change. Wallpapers trusted before this version keep their trust and are bound to their files the first time they are applied.
+
+### Fixed
+
+- A web or application wallpaper whose trust prompt was cancelled no longer stays behind as the wallpaper to apply.
+
 ## [1.0.0-beta.6] - 2026-10-06
 
 ### Added

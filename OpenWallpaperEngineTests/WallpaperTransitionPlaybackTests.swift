@@ -86,7 +86,7 @@ final class WallpaperTransitionPlaybackTests: XCTestCase {
         let transitions = DeferringTransitions()
         model.transitions = transitions
         model.selectedScreenIds = ["1"]
-        model.nextCurrentWallpaper = wallpaper("c")
+        model.apply(wallpaper("c"))
         XCTAssertEqual(transitions.performed.map(\.kind), [.door])
         XCTAssertEqual(model.wallpaper(for: "1").project.title, "a", "the outgoing picture is captured first")
         model.setWallpaper(wallpaper("d"), for: "2")

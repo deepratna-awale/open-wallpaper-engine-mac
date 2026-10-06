@@ -9,20 +9,22 @@ import SwiftUI
 
 struct UnsafeWallpaper: View {
     @Environment(\.dismiss) var dismiss
-    
-    var wallpaper: WEWallpaper
-    
+
+    @ObservedObject var model: WallpaperViewModel
+    /// The request shown: kept while the sheet closes after it is answered, and replaced (with
+    /// the countdown restarted) when another wallpaper asks while it is up.
+    @State private var request: WallpaperTrustRequest?
+
     @State var seconds: Int = 5
     @State var isIgnored = false
-    
-    init(wallpaper: WEWallpaper) {
-        self.wallpaper = wallpaper
+
+    init(model: WallpaperViewModel) {
+        self.model = model
+        _request = State(initialValue: model.trustRequest)
     }
-    
-    /// `trusted` with `path` added once, earlier duplicates dropped, in the order trust was given.
-    static func trustList(_ trusted: [String], adding path: String) -> [String] {
-        var seen = Set<String>()
-        return (trusted + [path]).filter { seen.insert($0).inserted }
+
+    private var wallpaper: WEWallpaper {
+        request?.wallpaper ?? WEWallpaper(using: .invalid, where: AppBundleLayout.wallpaperNotFoundURL)
     }
 
     private var title: LocalizedStringKey {
@@ -59,6 +61,10 @@ struct UnsafeWallpaper: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text(intro)
                     Text(verbatim: wallpaper.wallpaperDirectory.appending(path: wallpaper.project.file).path(percentEncoded: false)).bold()
+                    if request?.contentChanged == true {
+                        Text("This wallpaper changed since you trusted it.",
+                             comment: "Trust prompt for a web or application wallpaper: its files changed (a Workshop update, another item in its folder) since the user chose not to be asked again")
+                    }
                     Text("Open Wallpaper Engine has no control over this file. Make sure it comes from a reliable source before proceeding.")
                     Text(seconds > 0 ? "Please wait \(seconds) seconds." : "Please be aware of malware.")
                     Toggle("Don't ask again for this wallpaper", isOn: $isIgnored)
@@ -70,16 +76,7 @@ struct UnsafeWallpaper: View {
             Divider()
             HStack {
                 Button {
-                    AppDelegate.shared.wallpaperViewModel.currentWallpaper =
-                    AppDelegate.shared.wallpaperViewModel.nextCurrentWallpaper
-                    ChromiumFeatureAdvisor.shared.wallpaperApplied(AppDelegate.shared.wallpaperViewModel.nextCurrentWallpaper)
-
-                    if isIgnored {
-                        let trusted = UserDefaults.app.array(forKey: "TrustedWallpapers") as? [String] ?? []
-                        let path = AppDelegate.shared.wallpaperViewModel.nextCurrentWallpaper.wallpaperDirectory.path(percentEncoded: false)
-                        UserDefaults.app.set(Self.trustList(trusted, adding: path), forKey: "TrustedWallpapers")
-                    }
-                    
+                    model.proceedWithTrustRequest(remember: isIgnored)
                     dismiss()
                 } label: {
                     Text("Proceed")
@@ -90,6 +87,7 @@ struct UnsafeWallpaper: View {
                 .tint(.red)
                 .disabled(seconds > 0 ? true : false)
                 Button {
+                    model.endTrustRequest()
                     dismiss()
                 } label: {
                     Text("Cancel")
@@ -101,8 +99,15 @@ struct UnsafeWallpaper: View {
             .padding()
             .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        // Counts down while the sheet is shown, in every run-loop mode, and stops with it.
-        .task {
+        .onChange(of: model.trustRequest) { _, newRequest in
+            guard let newRequest, newRequest != request else { return }
+            request = newRequest
+            seconds = 5
+            isIgnored = false
+        }
+        // Counts down while the sheet is shown, in every run-loop mode, and stops with it; again
+        // for another request.
+        .task(id: request) {
             while seconds > 0 {
                 do {
                     try await Task.sleep(for: .seconds(1))
