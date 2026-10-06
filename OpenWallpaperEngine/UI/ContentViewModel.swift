@@ -44,10 +44,7 @@ class ContentViewModel: ObservableObject, DropDelegate {
     /// The Installed tab's Details inspector.
     @Published var isDetailsReveal = true
     
-    @Published var imageScaleIndex: Int = -1
     @Published var isApplicationActive = true
-    
-    @Published var wallpapers = [WEWallpaper]()
     
     @Published var isUnsafeWallpaperWarningPresented = false
     
@@ -119,16 +116,6 @@ class ContentViewModel: ObservableObject, DropDelegate {
         } else {
             DispatchQueue.main.async { [weak self] in self?.sortedMemo = nil }
         }
-    }
-    
-    convenience init(isStaging: Bool, topTabBarSelection: Int = 0) {
-        self.init()
-        
-        let wallpapers = autoRefreshWallpapers
-        
-        self.isStaging = isStaging
-        self.topTabBarSelection = topTabBarSelection
-        self.wallpapers = wallpapers
     }
     
     /// current page index number is starting from '1'
@@ -500,8 +487,10 @@ class ContentViewModel: ObservableObject, DropDelegate {
         return true
     }
     
+    /// The library changed on disk: the next read lists and sorts it again.
     public func refresh() {
-        self.wallpapers = autoRefreshWallpapers
+        sortedMemo = nil
+        objectWillChange.send()
     }
     
     /// Provide a filter reset to default function, usually being used to show all wallpapers without filtered

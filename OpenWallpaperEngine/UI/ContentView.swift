@@ -384,7 +384,9 @@ private struct RemoteWallpaperURLSheet: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView(viewModel: .init(isStaging: true), wallpaperViewModel: .init())
+        let viewModel = ContentViewModel()
+        viewModel.isStaging = true
+        return ContentView(viewModel: viewModel, wallpaperViewModel: .init())
             .environmentObject(GlobalSettingsViewModel())
     }
 }
