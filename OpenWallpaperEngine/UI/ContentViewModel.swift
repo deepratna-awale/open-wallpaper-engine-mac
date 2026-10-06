@@ -432,54 +432,53 @@ class ContentViewModel: ObservableObject, DropDelegate {
         return proposal
     }
 
+    /// Imports every dropped file: videos as video wallpapers, wallpaper folders and zips copied
+    /// into the library off the main thread. What wasn't imported is shown in one alert.
     func performDrop(info: DropInfo) -> Bool {
-        guard let itemProvider = info.itemProviders(for: [UTType.fileURL]).first
-        else {
+        let providers = info.itemProviders(for: [UTType.fileURL])
+        guard !providers.isEmpty else {
             alertImportModal(which: .unkown)
             return false
         }
-        itemProvider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { [weak self] item, _ in
-            guard let data = item as? Data, let url = URL(dataRepresentation: data, relativeTo: nil)
-            else {
-                self?.alertImportModal(which: .unkown)
-                return
+        Task { @MainActor [weak self] in
+            var urls: [URL] = []
+            for provider in providers {
+                if let url = await Self.fileURL(from: provider) { urls.append(url) }
             }
-            // Do something with the file url
-            // remember to dispatch on main in case of a @State change
-            guard let wallpaper = try? FileWrapper(url: url)
-            else{
-                self?.alertImportModal(which: .unkown)
-                return
-            }
-            
-            if wallpaper.isDirectory {
-                guard wallpaper.fileWrappers?["project.json"] != nil
-                else{
-                    self?.alertImportModal(which: .doesNotContainWallpaper)
-                    return
-                }
-                DispatchQueue.main.async {
-                    let destination = FileManager.default.wallpapersDirectory.appending(path: url.lastPathComponent)
-                    do {
-                        try ImportedFolderLinks.copyWithoutLinks(from: url, to: destination)
-                    } catch {
-                        OWELog.error(.importer, "Can't import dropped folder \(url.path): \(error)")
-                    }
-                }
-            } else if wallpaper.isRegularFile, url.pathExtension.lowercased() == "zip" {
-                DispatchQueue.main.async {
-                    let count = ZipImporter.importZip(at: url)
-                    if count == 0 {
-                        self?.alertImportModal(which: .doesNotContainWallpaper)
-                    }
-                }
-            } else if wallpaper.isRegularFile {
-                guard wallpaper.filename != nil,
-                      ["mp4", "mov", "m4v"].contains(url.pathExtension.lowercased()) else { return }
-                AppDelegate.shared.wallpaperViewModel.importVideoWallpaper(from: url)
-            }
+            self?.importDropped(urls, droppedCount: providers.count)
         }
         return true
+    }
+
+    /// The file URL a dropped item carries; nil (logged) when it can't be read.
+    private static func fileURL(from provider: NSItemProvider) async -> URL? {
+        await withCheckedContinuation { continuation in
+            provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, error in
+                guard let data = item as? Data, let url = URL(dataRepresentation: data, relativeTo: nil) else {
+                    OWELog.error(.importer, "Can't read a dropped item's file URL: \(String(describing: error))")
+                    return continuation.resume(returning: nil)
+                }
+                continuation.resume(returning: url)
+            }
+        }
+    }
+
+    @MainActor private func importDropped(_ urls: [URL], droppedCount: Int) {
+        guard !urls.isEmpty else { return alertImportModal(which: .unkown) }
+        for video in DroppedFileImport.videos(in: urls) {
+            AppDelegate.shared.wallpaperViewModel.importVideoWallpaper(from: video)
+        }
+        let library = FileManager.default.wallpapersDirectory
+        Task { @MainActor [weak self] in
+            let problems = await Task.detached(priority: .userInitiated) {
+                DroppedFileImport.importWallpapers(urls, into: library)
+            }.value
+            if let error = DroppedFileImport.error(for: problems) {
+                self?.alertImportModal(which: error)
+            } else if urls.count < droppedCount {
+                self?.alertImportModal(which: .unkown)
+            }
+        }
     }
     
     /// The library changed on disk: the next read lists and sorts it again.
