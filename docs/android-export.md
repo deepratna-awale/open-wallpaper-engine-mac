@@ -28,10 +28,11 @@ Pick the performance rating that suits the device:
 - **Dynamic, High Quality**: the scene itself, rendered live on the device. Everything a scene
   does keeps working there: animation, particles, effects, scripts, clocks and dates, audio
   response, touch and its user properties. Textures are converted to the compressed format
-  phones read (ETC2), at full size. Shaders get the same small GLSL ES edits Wallpaper Engine
+  phones read (ETC2), at full size (half for wallpapers over 1920×1080). Shaders get the same small GLSL ES edits Wallpaper Engine
   makes. **Pixel art optimization** keeps textures full-size, uncompressed and sharp-edged;
   **Texture Reduction** sets full, half or a quarter of the resolution.
-- **Dynamic, Balanced**: as High Quality, with the textures at half their resolution. This is the
+- **Dynamic, Balanced**: as High Quality, with the textures at half their resolution (a quarter
+  over 1920×1080; full size for pixel art). This is the
   tab's default.
 - **Pre-Rendered** (Wallpaper Engine's High Performance): the scene recorded as a seamless H.264
   video loop, which any device plays cheaply, framed as the preview shows it: the device's screen

@@ -1,7 +1,7 @@
 import Foundation
 import OWESceneEditing
 
-/// The Wallpaper Editor's live channel (docs/editor-plan.md §3): a layer's transform, opacity and
+/// The Wallpaper Editor's live channel (editor-plan notes §3): a layer's transform, opacity and
 /// colour and an effect's visibility and constants follow the editor every frame, without reading
 /// the scene again. The loaded scene was read with one overlay (`loadedEditOverlay`); the editor's
 /// latest is drawn as the difference (`SceneEditLiveValues`), which a later read folds in.

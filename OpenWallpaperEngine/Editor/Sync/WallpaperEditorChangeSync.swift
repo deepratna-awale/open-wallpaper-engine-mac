@@ -1,7 +1,7 @@
 import Foundation
 import OWESceneEditing
 
-/// Keeps Open Wallpaper Engine and the Wallpaper Editor's process (docs/editor-plan.md,
+/// Keeps Open Wallpaper Engine and the Wallpaper Editor's process (editor-plan notes,
 /// "Separate process") showing the same wallpaper: what one saves, the other's running
 /// wallpapers apply as if it had been saved in their own process.
 ///

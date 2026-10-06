@@ -73,7 +73,7 @@ final class ScenePostProcessTests: XCTestCase {
         XCTAssertEqual(ScenePostProcess.bloomStrength(bloom, extras: .init(bloom: -1)), 0)
     }
 
-    // MARK: - Composite skip (docs/efficiency-plan-2d.md WP3-A, S2)
+    // MARK: - Composite skip (efficiency-plan-2d notes WP3-A, S2)
 
     /// The composite is a copy only for a quad exactly covering the output with every adjustment at identity.
     func testTheCompositeCopiesOnlyAnExactIdentityPlacement() {

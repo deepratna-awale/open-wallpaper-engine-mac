@@ -103069,96 +103069,96 @@
         }
       }
     },
-    "Puts the General, Performance, Optimizations, Diagnostics and Screen Saver settings back to their defaults. Your wallpapers and library aren't touched." : {
+    "Puts the settings of every tab back to their defaults, Updates included. Your wallpapers and library aren't touched." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يعيد إعدادات «عام» و«الأداء» و«التحسينات» و«التشخيص» وشاشة التوقف إلى قيمها الافتراضية. ولا تتأثر خلفياتك ومكتبتك."
+            "value" : "يعيد إعدادات كل علامات التبويب إلى قيمها الافتراضية، بما فيها «التحديثات». ولا تتأثر خلفياتك ومكتبتك."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Setzt die Einstellungen von Allgemein, Leistung, Optimierungen, Diagnose und Bildschirmschoner auf die Standardwerte zurück. Ihre Hintergrundbilder und Ihre Mediathek bleiben unverändert."
+            "value" : "Setzt die Einstellungen aller Tabs auf die Standardwerte zurück, auch die von Updates. Ihre Hintergrundbilder und Ihre Mediathek bleiben unverändert."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Restablece los valores predeterminados de los ajustes de General, Rendimiento, Optimizaciones, Diagnóstico y Salvapantallas. Tus fondos de pantalla y tu biblioteca no cambian."
+            "value" : "Restablece los valores predeterminados de los ajustes de todas las pestañas, incluida Actualizaciones. Tus fondos de pantalla y tu biblioteca no cambian."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rétablit les valeurs par défaut des réglages Général, Performances, Optimisations, Diagnostic et Économiseur d’écran. Vos fonds d’écran et votre bibliothèque ne sont pas modifiés."
+            "value" : "Rétablit les valeurs par défaut des réglages de tous les onglets, y compris Mises à jour. Vos fonds d’écran et votre bibliothèque ne sont pas modifiés."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "सामान्य, परफ़ॉर्मेंस, ऑप्टिमाइज़ेशन, डायग्नॉस्टिक और स्क्रीन सेवर सेटिंग्ज़ को डिफ़ॉल्ट पर वापस लाता है। आपके वॉलपेपर और लाइब्रेरी पर असर नहीं पड़ता।"
+            "value" : "सभी टैब की सेटिंग्ज़ को डिफ़ॉल्ट पर वापस लाता है, अपडेट समेत। आपके वॉलपेपर और लाइब्रेरी पर असर नहीं पड़ता।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ripristina i valori predefiniti delle impostazioni Generali, Prestazioni, Ottimizzazioni, Diagnosi e Salvaschermo. I tuoi sfondi e la libreria restano invariati."
+            "value" : "Ripristina i valori predefiniti delle impostazioni di tutti i pannelli, Aggiornamenti compreso. I tuoi sfondi e la libreria restano invariati."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「一般」「パフォーマンス」「最適化」「診断」とスクリーンセーバの設定をデフォルトに戻します。壁紙とライブラリには影響しません。"
+            "value" : "「アップデート」を含むすべてのタブの設定をデフォルトに戻します。壁紙とライブラリには影響しません。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "일반, 성능, 최적화, 진단 및 화면 보호기 설정을 기본값으로 되돌립니다. 배경화면과 보관함은 변경되지 않습니다."
+            "value" : "업데이트를 포함한 모든 탭의 설정을 기본값으로 되돌립니다. 배경화면과 보관함은 변경되지 않습니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Przywraca domyślne ustawienia sekcji Ogólne, Wydajność, Optymalizacje, Diagnostyka i wygaszacza ekranu. Twoje tapety i biblioteka pozostają bez zmian."
+            "value" : "Przywraca domyślne ustawienia wszystkich kart, łącznie z kartą Uaktualnienia. Twoje tapety i biblioteka pozostają bez zmian."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Restaura os padrões dos ajustes de Geral, Desempenho, Otimizações, Diagnóstico e Protetor de Tela. Suas imagens de fundo e sua biblioteca não são alteradas."
+            "value" : "Restaura os padrões dos ajustes de todas as abas, inclusive Atualizações. Suas imagens de fundo e sua biblioteca não são alteradas."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Возвращает настройки разделов «Основные», «Производительность», «Оптимизации», «Диагностика» и заставки к значениям по умолчанию. Обои и медиатека не затрагиваются."
+            "value" : "Возвращает настройки всех вкладок, включая «Обновления», к значениям по умолчанию. Обои и медиатека не затрагиваются."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Genel, Performans, Optimizasyonlar, Tanılar ve Ekran Koruyucu ayarlarını varsayılanlara döndürür. Duvar kâğıtlarınız ve arşiviniz değişmez."
+            "value" : "Güncellemeler dahil tüm sekmelerin ayarlarını varsayılanlara döndürür. Duvar kâğıtlarınız ve arşiviniz değişmez."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Повертає типові значення параметрів розділів «Загальні», «Продуктивність», «Оптимізації», «Діагностика» та заставки. Шпалери та бібліотеку не змінено."
+            "value" : "Повертає типові значення параметрів усіх вкладок, зокрема «Оновлення». Шпалери та бібліотеку не змінено."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "将“通用”“性能”“优化”“诊断”和屏幕保护程序设置恢复为默认值。你的墙纸和资料库不受影响。"
+            "value" : "将所有标签页的设置（包括“更新”）恢复为默认值。你的墙纸和资料库不受影响。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "將「一般」「效能」「最佳化」「診斷」和螢幕保護程式設定回復為預設值。你的背景圖片和資料庫不受影響。"
+            "value" : "將所有標籤頁的設定（包括「更新項目」）回復為預設值。你的背景圖片和資料庫不受影響。"
           }
         }
       }
@@ -144265,96 +144265,96 @@
         }
       }
     },
-    "The app contacts only Valve (Steam and SteamCMD) and GitHub (app updates). Web wallpapers may load their own online content." : {
+    "The app contacts Valve (Steam and SteamCMD), GitHub (app updates) and, when you install an optional plugin, its publisher. Web wallpapers and URLs you add load their own online content." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "لا يتصل التطبيق إلا بـ Valve (‏Steam وSteamCMD) وGitHub (تحديثات التطبيق). قد تحمّل خلفيات الويب محتواها الخاص عبر الإنترنت."
+            "value" : "يتصل التطبيق بـ Valve (‏Steam وSteamCMD) وGitHub (تحديثات التطبيق)، وبناشر أي مكوّن إضافي اختياري عند تثبيته. تحمّل خلفيات الويب والروابط التي تضيفها محتواها الخاص عبر الإنترنت."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die App kontaktiert nur Valve (Steam und SteamCMD) und GitHub (App-Updates). Web-Hintergrundbilder können eigene Online-Inhalte laden."
+            "value" : "Die App kontaktiert Valve (Steam und SteamCMD), GitHub (App-Updates) und, wenn Sie ein optionales Plug-in installieren, dessen Anbieter. Web-Hintergrundbilder und von Ihnen hinzugefügte URLs laden eigene Online-Inhalte."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La app solo contacta con Valve (Steam y SteamCMD) y GitHub (actualizaciones de la app). Los fondos de pantalla web pueden cargar su propio contenido en línea."
+            "value" : "La app contacta con Valve (Steam y SteamCMD), GitHub (actualizaciones de la app) y, cuando instalas un plugin opcional, con su editor. Los fondos de pantalla web y las URL que añades cargan su propio contenido en línea."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "L’app ne contacte que Valve (Steam et SteamCMD) et GitHub (mises à jour de l’app). Les fonds d’écran Web peuvent charger leur propre contenu en ligne."
+            "value" : "L’app contacte Valve (Steam et SteamCMD), GitHub (mises à jour de l’app) et, lorsque vous installez un module optionnel, son éditeur. Les fonds d’écran Web et les URL que vous ajoutez chargent leur propre contenu en ligne."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ऐप केवल Valve (Steam और SteamCMD) और GitHub (ऐप अपडेट) से संपर्क करता है। वेब वॉलपेपर अपनी ऑनलाइन सामग्री लोड कर सकते हैं।"
+            "value" : "ऐप Valve (Steam और SteamCMD), GitHub (ऐप अपडेट) से और कोई वैकल्पिक प्लग-इन इंस्टॉल करने पर उसके प्रकाशक से संपर्क करता है। वेब वॉलपेपर और आपके जोड़े गए URL अपनी ऑनलाइन सामग्री लोड करते हैं।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "L’app contatta solo Valve (Steam e SteamCMD) e GitHub (aggiornamenti dell’app). Gli sfondi web possono caricare contenuti online propri."
+            "value" : "L’app contatta Valve (Steam e SteamCMD), GitHub (aggiornamenti dell’app) e, quando installi un plug-in facoltativo, il suo editore. Gli sfondi web e gli URL che aggiungi caricano contenuti online propri."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "アプリが通信するのはValve（SteamとSteamCMD）とGitHub（アプリのアップデート）だけです。Web壁紙は独自のオンラインコンテンツを読み込む場合があります。"
+            "value" : "アプリが通信するのはValve（SteamとSteamCMD）、GitHub（アプリのアップデート）、そしてオプションのプラグインをインストールするときのその配布元です。Web壁紙と追加したURLは独自のオンラインコンテンツを読み込みます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "앱은 Valve(Steam 및 SteamCMD)와 GitHub(앱 업데이트)에만 연결합니다. 웹 배경화면은 자체 온라인 콘텐츠를 불러올 수 있습니다."
+            "value" : "앱은 Valve(Steam 및 SteamCMD), GitHub(앱 업데이트)에 연결하며, 선택 사항인 플러그인을 설치할 때는 해당 배포처에 연결합니다. 웹 배경화면과 추가한 URL은 자체 온라인 콘텐츠를 불러옵니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aplikacja łączy się tylko z Valve (Steam i SteamCMD) oraz GitHubem (uaktualnienia aplikacji). Tapety internetowe mogą wczytywać własne treści online."
+            "value" : "Aplikacja łączy się z Valve (Steam i SteamCMD), GitHubem (uaktualnienia aplikacji) oraz, gdy instalujesz opcjonalną wtyczkę, z jej wydawcą. Tapety internetowe i dodane przez Ciebie adresy URL wczytują własne treści online."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O app só se conecta à Valve (Steam e SteamCMD) e ao GitHub (atualizações do app). Imagens de fundo da web podem carregar seu próprio conteúdo online."
+            "value" : "O app se conecta à Valve (Steam e SteamCMD), ao GitHub (atualizações do app) e, quando você instala um plug-in opcional, ao seu distribuidor. Imagens de fundo da web e URLs que você adiciona carregam seu próprio conteúdo online."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Приложение связывается только с Valve (Steam и SteamCMD) и GitHub (обновления приложения). Веб-обои могут загружать собственный онлайн-контент."
+            "value" : "Приложение связывается с Valve (Steam и SteamCMD), GitHub (обновления приложения) и, когда вы устанавливаете дополнительный плагин, с его издателем. Веб-обои и добавленные вами URL-адреса загружают собственный онлайн-контент."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uygulama yalnızca Valve (Steam ve SteamCMD) ve GitHub (uygulama güncellemeleri) ile iletişim kurar. Web duvar kâğıtları kendi çevrimiçi içeriklerini yükleyebilir."
+            "value" : "Uygulama Valve (Steam ve SteamCMD), GitHub (uygulama güncellemeleri) ve isteğe bağlı bir eklenti yüklediğinizde onun yayıncısı ile iletişim kurar. Web duvar kâğıtları ve eklediğiniz URL'ler kendi çevrimiçi içeriklerini yükler."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Програма звертається лише до Valve (Steam і SteamCMD) та GitHub (оновлення програми). Вебшпалери можуть завантажувати власний онлайн-вміст."
+            "value" : "Програма звертається до Valve (Steam і SteamCMD), GitHub (оновлення програми) і, коли ви встановлюєте додатковий плагін, до його видавця. Вебшпалери та додані вами URL-адреси завантажують власний онлайн-вміст."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "App 仅联系 Valve（Steam 和 SteamCMD）和 GitHub（App 更新）。网页墙纸可能会加载自己的在线内容。"
+            "value" : "App 会联系 Valve（Steam 和 SteamCMD）、GitHub（App 更新），以及你安装可选插件时该插件的发布者。网页墙纸和你添加的 URL 会加载自己的在线内容。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "App 僅會連線至 Valve（Steam 和 SteamCMD）及 GitHub（App 更新項目）。網頁背景圖片可能會載入自己的線上內容。"
+            "value" : "App 會連線至 Valve（Steam 和 SteamCMD）、GitHub（App 更新項目），以及你安裝選用外掛程式時該外掛程式的發佈者。網頁背景圖片和你加入的 URL 會載入自己的線上內容。"
           }
         }
       }

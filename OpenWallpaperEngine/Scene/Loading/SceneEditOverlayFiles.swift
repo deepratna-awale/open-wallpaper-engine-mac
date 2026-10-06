@@ -18,7 +18,7 @@ extension Notification.Name {
 
 /// The Wallpaper Editor's overlays (`SceneEditOverlay`) on disk, one per wallpaper under
 /// `<AppStorageLocation.supportDirectory>/editor`, named by the wallpaper's settings identity
-/// (docs/editor-plan.md §3), with the files the editor added beside each (`<identity>.assets`).
+/// (editor-plan notes §3), with the files the editor added beside each (`<identity>.assets`).
 /// The scene loader applies a wallpaper's overlay wherever it runs and finds its files.
 enum SceneEditOverlayFiles {
     static var defaultStore: SceneEditOverlayStore {

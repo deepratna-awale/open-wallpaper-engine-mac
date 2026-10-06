@@ -133,7 +133,7 @@ final class SceneValueTests: XCTestCase {
     }
 
     /// Every way an effect parameter's value is bound keeps its binding under an inspector edit
-    /// (roadmap 8.11): a timeline, a script, and a user property (whose edit WE's editor doesn't offer).
+    /// (roadmap notes 8.11): a timeline, a script, and a user property (whose edit WE's editor doesn't offer).
     func testInspectorEditsKeepBindings() throws {
         let uniform = [ShaderUniformDeclaration(type: "float", name: "g_Speed", arrayCount: nil, annotation: ["material": "speed"])]
         let edit: (String) -> SceneEffectOverride? = { _ in SceneEffectOverride(property: "edit", value: "2") }

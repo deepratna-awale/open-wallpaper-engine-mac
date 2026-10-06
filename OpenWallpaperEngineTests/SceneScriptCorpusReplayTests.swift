@@ -22,7 +22,7 @@ final class SceneScriptCorpusReplayTests: XCTestCase {
     private static let roots = SceneScriptCorpus.roots
 
     /// Findings of the corpus replay that are known. Findings RF*n* are written up in
-    /// docs/scenescript-replay-findings.md.
+    /// scenescript-replay-findings notes.
     static let expectedFailures: [ExpectedFailure] = [
         ExpectedFailure(key: "8bb9b9a54120", check: .exception,
                         reason: "3802509485's string literal broken across two lines: V8 rejects it too, so WE never runs it"),
@@ -44,7 +44,7 @@ final class SceneScriptCorpusReplayTests: XCTestCase {
         ExpectedFailure(key: "11844b104b6a", check: .change,
                         reason: "3677897732/3803728810 bind it to a constant authored as 0, which it multiplies by the "
                             + "audio level: constant in WE too"),
-        // Wallpapers downloaded on 2026-09-26 (docs/scenescript-replay-findings.md, "Expanded corpus").
+        // Wallpapers downloaded on 2026-09-26 (scenescript-replay-findings notes, "Expanded corpus").
         ExpectedFailure(key: "98ec4669d182", check: .change,
                         reason: "2350874185's bloom smooths at 2/s and returns the user value while the frame-420 flip "
                             + "turns audio off, so the frozen tone-time level only starts decaying at 540: WE too"),

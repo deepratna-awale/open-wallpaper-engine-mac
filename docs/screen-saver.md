@@ -6,9 +6,10 @@ seamless loop of the wallpaper and installs a screen saver that plays it. How it
 
 ## The Screen Saver plugin
 
-Settings › Plugins › **Screen Saver** (off by default) installs the Open Wallpaper Engine screen
-saver in `~/Library/Screen Savers` and opens System Settings' Screen Saver pane, where you choose
-it. The app never changes the system's screen saver setting itself. Turning the plugin off
+Settings › Plugins › **Screen Saver** (on by default) installs the Open Wallpaper Engine screen
+saver in `~/Library/Screen Savers`. **Open Screen Saver Settings…** opens the System Settings pane
+that holds the screen savers (Screen Saver, or Wallpaper on newer macOS), where you choose it. The
+app never changes the system's screen saver setting itself. Turning the plugin off
 removes the screen saver and its videos.
 
 While it is on, the loop of the wallpaper you are showing is recorded in the background, at low
@@ -25,14 +26,16 @@ priority, waiting while the Mac is on battery or hot:
 
 The loop is recorded at the largest display's size, in points under Render Resolution Display and
 in pixels under Retina and Full. The Details panel shows whether a wallpaper's screen saver is
-**Available**, **Rendering** or **Not Available**, with the reason in its tooltip.
+available (**Screen Saver Available**), being made (**Rendering Screen Saver**) or not
+(**Screen Saver Not Available**, with the reason in its tooltip).
 
 A loop is a recording: clocks, dates, media info and audio-reactive parts show the moment it was
 recorded.
 
 ## The Screen Saver tab
 
-The Scene Editor (Live)'s middle tab (Wallpaper | Screen Saver | iPhone & iPad Export) makes the
+The Scene Editor (Live)'s second tab (Wallpaper | Screen Saver | iPhone & iPad Export | Android
+Export) makes the
 screen saver from a scene wallpaper's own version:
 
 - It runs a private copy of the wallpaper. Turning layers on or off, adjusting them and changing

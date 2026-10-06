@@ -9,165 +9,71 @@ Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・We
 
 > **注意：** 本プロジェクトは Steam の商用版 Wallpaper Engine とは一切関係ありません。Wallpaper Engine の Steam ワークショップにある壁紙アセットを表示できる、オープンソースの macOS アプリです。 → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
-**Wiki：** ガイドとドキュメントは [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki) にあります。
+**Web サイト：** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki：** [ガイドとトラブルシューティング](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-**ウェブサイト：** ダウンロード、プライバシーポリシー、利用規約は[openwallpaperengine.app](https://openwallpaperengine.app/) にあります。
+![ライブラリ](../../docs/images/library.png)
 
-## 必要条件
+## 主な機能
 
-### 必須
-- **macOS 14.0 以降**（Sonoma）。ScreenCaptureKit によるオーディオキャプチャと Metal によるシーンのレンダリングは、いずれもこれに依存しています。
+- **シーン・動画・Web 壁紙** — シーンは各壁紙が持つ Wallpaper Engine 独自のシェーダーを Metal に変換して描画し、エフェクト、パーティクル、3D モデル、ライト、タイムライン、SceneScript、オーディオ連動ビジュアルに対応します。Web 壁紙は WebKit またはオプションの Chromium エンジンで動作します。
+- **Steam ワークショップ** — アプリ内でワークショップを閲覧・絞り込み・ダウンロードできるほか、壁紙のフォルダや zip を読み込むこともできます。
+- **シーンエディタ（ライブ）** — 再生中の壁紙のレイヤーやエフェクトをデスクトップ上でリアルタイムに変更し、そこから自分だけのスクリーンセーバーを録画したり、iPhone・iPad 用の Live Photo ロック画面や、Wallpaper Engine の Android アプリ用パッケージとして書き出したりできます。
 
-### オプション — 特定の機能に必要
+  ![シーンエディタ（ライブ）](../../docs/images/scene-editor-live.png)
 
-| 機能 | 必要条件 | インストール |
-|---------|-------------|---------|
-| Steam ワークショップのブラウズ／ダウンロード | `steamcmd` | 自動（任意：`brew install steamcmd`） |
-| オーディオビジュアライザとオーディオに反応する SceneScript | システムオーディオ録音の許可（macOS 14.2 より前は画面収録とシステムオーディオ録音） | 設定 → アクセス権 |
+- **壁紙エディタ** — Wallpaper Engine のエディタにならったエディタです。レイヤー、プレビュー付きのエフェクト、タイムライン、SceneScript、ユーザープロパティ、パーティクル、Puppet Warp を扱えます。編集内容は壁紙のファイルではなく、壁紙の横に保存されます。
 
-#### シェーダー
+  ![壁紙エディタ](../../docs/images/wallpaper-editor.png)
 
-Wallpaper Engine のエフェクトは GLSL で提供されています。これらは、壁紙で初めて使用されるときに、アプリに組み込まれた glslang と SPIRV-Cross（`Vendor/ShaderToolchain`）によって Metal に変換され（GLSL → SPIR-V → MSL）、その後ディスクにキャッシュされます。追加でインストールするものはありません。変換中にアプリが応答しなくなったシェーダーや、アプリが 2 回クラッシュしたシェーダーは以降の起動時にスキップされ、それ以外のシェーダーは引き続き変換されます。
+- **ディスプレイ** — Wallpaper Engine と同じく、ディスプレイごとの壁紙、複数ディスプレイへの引き伸ばしや複製、グループ、分割、プロファイルに対応します。
 
-#### Wallpaper Engine のアセット
+  ![ディスプレイ](../../docs/images/displays.png)
 
-シーンは、お持ちの Steam 版 Wallpaper Engine に含まれる共有のエフェクト、マテリアル、シェーダー、フォント、SceneScript ランタイムを使います。アプリにはこれらは同梱されていません。「設定 → アセット」でインストールしてください。アプリは steamcmd でお持ちのコピーをダウンロードし（アカウントが Wallpaper Engine を所有している必要があります）、アセットとデフォルトの壁紙だけを残して残りを削除します。既存の Wallpaper Engine フォルダを選択することもできます。ビデオと Web の壁紙はアセットなしで動作します。
+- **プレイリスト** — タイマー、ログイン時、時間帯、曜日に応じて壁紙を切り替えます。Wallpaper Engine のトランジションも使えます。
 
-## ソースからビルド
+  ![プレイリストの設定](../../docs/images/playlists.png)
 
-### 前提条件
-- macOS >= 14.0
-- Xcode >= 26.3（macOS 26 SDK）
-- Xcode Command Line Tools
+- **書き出し** — iPhone・iPad 用の Live Photo ロック画面と Wallpaper Engine の Android パッケージを作成し、QR コードを使って Wi-Fi 経由でスマートフォンに送信できます。
 
-### 手順
-```sh
-git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
-cd open-wallpaper-engine-mac
-open "OpenWallpaperEngine.xcodeproj"
-```
+  ![Wi-Fi で送信](../../docs/images/send-over-wifi.png)
 
-Xcode で署名証明書を自分のものに変更するか「Sign to Run Locally」を選択し、`Cmd + R` を押してビルドおよび実行します。
+- **テーマ** — メニューバー、アクセントカラー、フォルダの色合いが壁紙の色に合わせて変わります。
 
-ソースからの初回ビルドでは Swift パッケージの Sparkle を取得します。ソースからビルドしたアプリはアップデートを確認しません。
+  ![テーマ](../../docs/images/theming.png)
 
-## 使い方
+- **MCP サーバープラグイン** — MCP クライアントから壁紙、プレイリスト、設定を変更したり、シーンを編集したりできます。接続はローカルのみで、あなたのアカウントからしか開けません。
 
-### Steam ワークショップからブラウズ／ダウンロードする
+  ![MCP サーバープラグイン](../../docs/images/mcp-plugin.png)
 
-1. インストールは不要です。初めて必要になったときに、アプリが Valve の SteamCMD をバックグラウンドでダウンロードします（Valve から取得、同梱はしていません）。Homebrew（`brew install steamcmd`）は任意で、既存の steamcmd（Homebrew、Steam、または自分で選んだもの）が見つかればそれを使います
-2. **ワークショップ**タブに切り替え、Steam アカウントでログインします（Wallpaper Engine を所有している必要があります）
-3. 求められたら、または *設定 → 一般* で [Steam Web API キー](https://steamcommunity.com/dev/apikey)を入力します。キーは Steam で確認されたうえでキーチェーンに保管されます。Steam のパスワードが保存されることはありません（steamcmd は独自のキャッシュ済みセッションを再利用します）
-4. 検索やフィルタを行い、任意の壁紙で **ダウンロード** をクリックします
+そのほかの機能の分野別一覧：[docs/features.md](../../docs/features.md)
 
-### ローカルファイルから読み込む
+## インストール
 
-- **フォルダ：** ファイル > 読み込む > フォルダから壁紙を読み込む — `project.json` を含む壁紙フォルダを選択します
-- **zip：** ファイル > 読み込む、または壁紙パッケージを含む `.zip` ファイルをドラッグ＆ドロップします
-- **手動：** 壁紙フォルダを `~/Documents/Open Wallpaper Engine/` に直接コピーします
+1. [openwallpaperengine.app](https://openwallpaperengine.app/) または [GitHub Releases](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases) から最新版をダウンロードします。署名と公証済みで、自動的にアップデートされます。
+2. DMG を開き、**Open Wallpaper Engine** を「アプリケーション」フォルダにドラッグします。
 
-## 1.0.0-beta.5 の新機能
+**macOS 14.0（Sonoma）以降**が必要です。一部の機能には、より新しい macOS、アクセス許可、またはプラグインが必要です。詳しくは[はじめに](../../docs/getting-started.md#requirements)を参照してください。
 
-- **シーンエディタ（Live）**：壁紙、スクリーンセーバ、iPhone/iPad 書き出しの各タブ。**壁紙エディタ**（⌥⌘E）は独立した App として動作し、レイヤー、エフェクト、タイムライン、SceneScript、ユーザープロパティ、パーティクル、Puppet Warp を編集できます。深度マップにも対応（[depth-maps.md](../../docs/depth-maps.md)）。
-- Wallpaper Engine と同じ**ディスプレイレイアウト**：ディスプレイごと、引き伸ばし、クローン、グループ、分割、プロファイル（[display-layouts.md](../../docs/display-layouts.md)）。
-- **書き出し**：iPhone と iPad 用の Live Photos（[iphone-ipad-export.md](../../docs/iphone-ipad-export.md)）、Android 版 Wallpaper Engine 用の `.mpkg` パッケージと Wi-Fi 経由の送信（[android-export.md](../../docs/android-export.md)）。
-- **スクリーンセーバ**とロック画面の画像（[screen-saver.md](../../docs/screen-saver.md)）。
-- **MCP サーバ**プラグイン（[mcp.md](../../docs/mcp.md)）と、壁紙の色に macOS を合わせる**テーマ**（[theming.md](../../docs/theming.md)）。
-- アプリケーションルール、グローバルショートカット、スクリーンショット、ディスカバー、ライブラリフォルダ。すべての変更：[CHANGELOG.md](../../CHANGELOG.md)。
+## クイックスタート
 
-## 1.0.0 の対応機能
+1. アプリを開きます。セットアップアシスタントで、言語、SteamCMD、Steam へのログイン、Wallpaper Engine のアセットを設定します。どの手順もスキップできます。
+2. シーン壁紙を使う場合は、Wallpaper Engine のアセットをインストールします（*設定 › アセット*）。アセットはお持ちの Steam 版 Wallpaper Engine から取得します。動画壁紙と Web 壁紙はアセットなしで動作します。
+3. **ワークショップ**タブで壁紙を探すか、壁紙のフォルダや zip を読み込みます（*ファイル › フォルダから壁紙を読み込む…*、⌘I）。
+4. ライブラリで壁紙をクリックし、詳細の **壁紙を設定** をクリックします。その下に壁紙のプロパティが表示されます。
 
-### セットアップ・ライブラリ・アップデート
-- **セットアップアシスタント** — 初回起動時に、スキップ可能な数ステップで言語の選択、プライバシーの説明、SteamCMD・Steam ログイン・任意の Steam Web API キーの設定、Wallpaper Engine アセットのインストール、壁紙の取り込みを行います。
-- **SteamCMD の自動セットアップ** — 見つからない場合は Valve の SteamCMD をダウンロードします。Homebrew や Steam のものがあればそれを使います。
-- **自分の Steam コピーからの Wallpaper Engine アセット** — サインイン後に SteamCMD でインストールします。Wallpaper Engine のデフォルト壁紙も任意で追加できます。
-- **インポート** — ワークショップのコレクションとサブスクリプション（Steam の Web API から）、既存の Steam ライブラリのワークショップアイテム、壁紙フォルダ。
-- **[wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)** — ガイド、設定リファレンス、トラブルシューティング。アプリの「サポートと FAQ」から開けます。
-- **自動アップデート** — 署名済みのアップデートが自動でインストールされます（終了時、Mac から 10 分離れたとき、または 1 日以内。その後の短い再起動で壁紙が復元されます）。設定 › 一般 › アップデート で確認のみ・確認オフ・ベータ版の受け取りを選べます。「アップデートを確認…」はアプリメニューとメニューバーのメニューにあります。
-
-### シーンのレンダリング
-- **Wallpaper Engine 本来のシェーダー** — レイヤー、エフェクト、マテリアルを、各壁紙のオリジナルのシェーダーを Metal に変換して描画するようになりました。ワークショップの作者が独自に作ったエフェクトにも対応しています。
-- コンポジション、フルスクリーン、単色の各レイヤー、ほかのレイヤーをサンプリングするレイヤー、33 種類すべての描画モード、さらに多くのエフェクトマスク。
-- **忠実なテキストレイアウト** — テキストのサイズ、揃え、位置を Wallpaper Engine と同じように決定し、アウトライン、ぼかし、ドロップシャドウのフォントエフェクトにも対応しています。
-- **タイムライン** — キーフレームとテクスチャのアニメーションが、Wallpaper Engine の 1 回再生、ループ、ミラーの規則に従います。
-- カラールックアップテーブル、Wallpaper Engine の色補正、壁紙のプロパティにある画像フィルタとカラーのオプション。
-- アニメーションで動く **Puppet Warp** 画像。ボーンの物理（スプリング、重力、制限）と、ボーンに取り付けられたオブジェクトに対応しています。
-
-### 3D とライティング
-- スキニング、アニメーションレイヤー、モーフターゲット、ルートモーションに対応した **3D モデル**。
-- カメラパス、フェード、シェイクに対応した透視投影のシーンカメラ。2D レイヤーも奥行きの中に配置されます。
-- ライトクッキー、影、平面反射、距離フォグと高さフォグ、ボリューメトリックライトに対応した **シーンのライト**。
-- **HDR** — HDR シーンを Wallpaper Engine の HDR ブルームでレンダリングし、「ウルトラ（ディスプレイHDR）」の品質では、表示できるディスプレイに EDR で出力します。
-
-### パーティクル
-- **GPU パーティクル** — すべてのパーティクルシステムを GPU 上で 3D シミュレーションし、3D のコントロールポイントに対応しています。
-- 親のパーティクルをきっかけに発生するものを含む子システム、エミッタのバースト、遅延、周期的な放出、レイヤーの画像からの放出。
-- モデルのボーンとの衝突を含む衝突判定、オーディオへの反応、すべての軸を中心とした回転。
-- 壁紙のユーザプロパティに連動するパーティクルの設定。
-
-### SceneScript とメディア
-- 完全な **SceneScript ランタイム** — モジュール、シーン／レイヤー／エフェクト／マテリアルのオブジェクトモデル、アニメーションイベント、`localStorage`、カーソルのヒットテストに対応し、各壁紙のスクリプトは専用のスレッドで動作します。
-- スクリプトからレイヤー、パーティクルシステム、サウンドの作成、フォグの移動、ブルームの制御、パペットやモデルのポーズ付けができます。
-- **再生中の情報** — シーン壁紙と Web 壁紙が、再生中の曲と再生状態を受け取ります（macOS 15.4 以降）。
-- Web 壁紙が、ユーザプロパティとライブオーディオを受け取ります。
-
-### オーディオ
-- オーディオスペクトルを Wallpaper Engine と同じ方法で、ステレオで算出します。
-- **サウンドレイヤー**をシーンの時計に合わせて再生し、Wallpaper Engine と同じように配置される**空間オーディオ**に対応しています。
-
-### ディスプレイと再生
-- **ディスプレイごとに一時停止**または**すべて一時停止**。再生の規則はディスプレイごとに判定され、Wallpaper Engine の最大化ウインドウの規則にも対応しています。
-- ディスプレイごとのユーザプロパティと、「ディスプレイ間でプロパティを同期」。
-- 複数のディスプレイに表示する壁紙は 1 回だけレンダリングされ、それぞれに表示されます。
-- 新しい品質設定：レンダリング解像度、テクスチャ解像度、「ディスプレイに合わせる」シーンの詳細度、反射、影、ボリューメトリック。
-- **セーフリスタート** — アプリを停止させたりクラッシュさせたりした壁紙は、次回の起動時にスキップされ、ライブラリで印が付きます。
-
-### ワークショップとライブラリ
-- Wallpaper Engine のワークショップフィルタ：表示する項目、解像度フィルタ、AND／OR で組み合わせるジャンル、各カードのタグ。
-- **アニメーションプレビュー** — ライブラリの壁紙タイルがワークショップのプレビューアニメーション（GIF）を再生するので、適用する前に壁紙の動きを確認できます。再生されるのは表示中のタイルだけで、ウインドウが隠れているときや低電力モードでは一時停止します。
-- インストール済みの壁紙はワークショップのタグを表示し、タグで絞り込めます。アセットや依存関係だけの項目は「インストール済み」に表示されません。
-- 不足しているワークショップの依存関係は自動的にダウンロードされ、使われなくなったものは削除時に取り除かれます。すべてのダウンロードは「壁紙の保存場所」フォルダに保存されます。
-- 「詳細」の**リセット**で、壁紙のプロパティとシーンインスペクタでの編集を作者が設定したデフォルトに戻せます。
-- 壁紙の設定にあるプロパティの条件、テキスト行、スライダの書式に従います。
-- Steam のパスワードは保存されず、Steam Web API キーはキーチェーンに保管されます。
-
-### インターフェイスと言語
-- macOS 26 の **Liquid Glass** — ツールバー、インスペクタ、ガラスのコントロールを備えたネイティブの分割表示。それ以前の macOS では従来の外観のままです。
-- **15 の新しい言語**：ドイツ語、フランス語、スペイン語、ポルトガル語（ブラジル）、イタリア語、日本語、韓国語、中国語（簡体字・繁体字）、ロシア語、ポーランド語、トルコ語、ウクライナ語、アラビア語、ヒンディー語。設定の言語ピッカーで選べます。
-- 新しいアプリアイコンと、メニューバーの外観に合わせて変わるメニューバーアイコン。
-
-## 対応している壁紙の種類
-
-| 種類 | 状態 |
-|------|--------|
-| ビデオ（.mp4、.webm） | 動作 |
-| Web（HTML/WebGL） | 動作 |
-| シーン — 画像レイヤーとタイムライン | 動作（Metal） |
-| シーン — DXT1/DXT3/DXT5 テクスチャ | 動作（Metal による GPU デコード） |
-| シーン — TEXS スプライト／アルファのタイムライン | 動作 |
-| シーン — スプライトパーティクル | 動作 |
-| シーン — 高度なパーティクル | 一部対応（「制限事項」を参照） |
-| シーン — Wallpaper Engine とワークショップのエフェクト（WE 自身のシェーダー） | 動作 |
-| シーン — SceneScript | 一部対応（「制限事項」を参照） |
-| シーン — 3D モデル／リギング／パペットワープ | 動作 |
-| アプリケーション | 非対応 |
+詳しくは[はじめに](../../docs/getting-started.md)と [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki) をご覧ください。
 
 ## プライバシー
 
-Open Wallpaper Engine が保存するものはすべてお使いの Mac に残ります：設定、ライブラリ、キャッシュ、SteamCMD のログイン情報。Open Wallpaper Engine はサーバを持たず、データや分析情報を一切収集しません。通信する相手は Valve（ワークショップを使うときやアセットをインストールするときは Steam、SteamCMD をダウンロードするときは Valve のサーバ）と GitHub です。GitHub にはアプリのアップデートの確認（GitHub Pages 上の appcast）と、GitHub Releases からのダウンロードのためにアクセスし、個人データは送信しません。アップデートの確認は 設定 › 一般 でオフにできます。Web 壁紙は独自のオンラインコンテンツを読み込むことがあります。Steam のパスワードと Steam Guard コードは SteamCMD に直接渡され、保存・記録されることも、ほかの場所に送信されることもありません。SteamCMD の保存済みログインを再利用するため、アカウント名だけが記憶されます。
+アプリが保存するものはすべてお使いの Mac に残り、データや分析情報は一切収集しません。通信先は Steam（ワークショップとアセット用）と GitHub（アップデート用）で、プラグインはインストールしたときにだけダウンロードされます。詳細：[アプリの通信先](../../docs/getting-started.md#what-the-app-connects-to)と[プライバシーポリシー](../../docs/legal/privacy-policy.md)
 
-## プロジェクトの構成
+## ドキュメント
 
-- `OpenWallpaperEngine/Scene/Format/` — PKG、TEX/TEXS、scene.json のパーサーとモデル
-- `OpenWallpaperEngine/Scene/Shaders/` — GLSL → SPIR-V → MSL の変換（`ShaderVariant.swift`、`InProcessShaderCompiler.swift`）、キャッシュ、パイプラインアーカイブ
-- `Vendor/ShaderToolchain/` — glslang と SPIRV-Cross のソース。ローカルパッケージとしてアプリに組み込まれます
-- `OpenWallpaperEngine/Scene/Scripting/` — SceneScript ランタイムとオーディオ／FFT のバインディング
-- `OpenWallpaperEngine/Audio/AudioLevelTap.swift` — ScreenCaptureKit によるシステムオーディオのキャプチャ
-- `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`、`SceneShaders.metal` — Metal シーンレンダラーとシェーダーライブラリ
-- `OpenWallpaperEngine/Workshop/SteamCmdService.swift`、`WorkshopAPIService.swift`、`WorkshopViewModel.swift` — Steam ワークショップのブラウズとダウンロード
-- `OpenWallpaperEngine/Library/WallpaperDirectory.swift`、`ZipImporter.swift`、`WallpaperPackageConverter.swift` — ライブラリの保存、読み込み、パッケージの変換
-- `Scripts/fill-assets-cache.sh` — 開発用ツール: Wallpaper Engine のインストールからアセットをローカルフォルダまたは壁紙の保存場所のキャッシュにコピーします
-- `Scripts/scene-api-coverage.py` — インストール済みの壁紙が使用している SceneScript API と、実装済みの API を比較して報告します
+- [はじめに](../../docs/getting-started.md) — 必要条件、アセット、ワークショップ、読み込み
+- [機能](../../docs/features.md) — アプリが対応しているすべての機能と使い方
+- ガイド：[ディスプレイレイアウト](../../docs/display-layouts.md) · [プレイリスト](../../docs/playlists.md) · [スクリーンセーバー](../../docs/screen-saver.md) · [iPhone・iPad への書き出し](../../docs/iphone-ipad-export.md) · [Android への書き出し](../../docs/android-export.md) · [深度マップ](../../docs/depth-maps.md) · [テーマ](../../docs/theming.md) · [MCP サーバー](../../docs/mcp.md) · [Chromium Web エンジン](../../docs/chromium-engine.md)
+- [開発](../../docs/development.md) — ソースからのビルドとプロジェクトの構成。[CONTRIBUTING.md](../../CONTRIBUTING.md) と[アーキテクチャ](../../docs/architecture.md)も参照
+- [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki) — ガイド、設定リファレンス、トラブルシューティング
 
 ## 関連プロジェクト
 
@@ -185,3 +91,24 @@ Open Wallpaper Engine が保存するものはすべてお使いの Mac に残�
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal シーンレンダラーとエフェクトパイプライン、GLSL→MSL シェーダー変換とキャッシュ、SceneScript ランタイム、オーディオレスポンスのレンダリング、ワークショップ／ダウンロードの全面改良、配置とパフォーマンスの設定、ロゴのリデザイン
 
 オリジナルのプロジェクトと同じく、[GPL-3.0](../../LICENSE) のもとでライセンスされています。
+
+## 法的事項
+
+[利用規約](../../docs/legal/terms-of-use.md) · [プライバシーポリシー](../../docs/legal/privacy-policy.md) · [セキュリティポリシー](../../SECURITY.md)
+
+- **English:** Please read the Terms of Use and the Privacy Policy.
+- **Deutsch:** Bitte lesen Sie die Nutzungsbedingungen und die Datenschutzrichtlinie.
+- **Français :** Veuillez lire les conditions d’utilisation et la politique de confidentialité.
+- **Español:** Lee las condiciones de uso y la política de privacidad.
+- **Português (Brasil):** Leia os Termos de Uso e a Política de Privacidade.
+- **Italiano:** Leggi le condizioni d’uso e l’informativa sulla privacy.
+- **日本語：** 利用規約とプライバシーポリシーをお読みください。
+- **한국어:** 이용 약관과 개인정보 처리방침을 읽어 주십시오.
+- **简体中文：** 请阅读使用条款和隐私政策。
+- **繁體中文：** 請閱讀使用條款和隱私權政策。
+- **Русский:** Прочитайте условия использования и политику конфиденциальности.
+- **Polski:** Przeczytaj warunki korzystania i politykę prywatności.
+- **Türkçe:** Lütfen Kullanım Koşulları’nı ve Gizlilik Politikası’nı okuyun.
+- **Українська:** Прочитайте умови використання та політику приватності.
+- **العربية:** يُرجى قراءة شروط الاستخدام وسياسة الخصوصية.
+- **हिन्दी:** कृपया उपयोग की शर्तें और गोपनीयता नीति पढ़ें।

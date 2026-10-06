@@ -2,7 +2,7 @@ import Combine
 import SwiftUI
 import OWESceneEditing
 
-/// The Wallpaper Editor window (docs/editor-plan.md): the layer list on the left, the live canvas
+/// The Wallpaper Editor window (editor-plan notes): the layer list on the left, the live canvas
 /// in the middle, the selected layer's inspector on the right, and the document actions (undo,
 /// redo, Revert, Save as Local Wallpaper) in the toolbar.
 public struct WallpaperEditorView: View {
