@@ -99,13 +99,15 @@ struct UnsafeWallpaper: View {
             .padding()
             .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .onAppear {
-            let _ = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
-                if self.seconds <= 0 {
-                    timer.invalidate()
-                } else {
-                    self.seconds -= 1
+        // Counts down while the sheet is shown, in every run-loop mode, and stops with it.
+        .task {
+            while seconds > 0 {
+                do {
+                    try await Task.sleep(for: .seconds(1))
+                } catch {
+                    return
                 }
+                seconds -= 1
             }
         }
     }
