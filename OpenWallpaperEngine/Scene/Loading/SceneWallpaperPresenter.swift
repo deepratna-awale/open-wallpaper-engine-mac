@@ -71,7 +71,7 @@ final class ScenePreviewPlaceholder {
     nonisolated static let previewNames = ["preview.jpg", "preview.png", "preview.gif", "preview.webp"]
     /// Its own serial queue: the global queues are busy with the scene's loading, which kept the
     /// picture (a few milliseconds of work) waiting about a second on an empty view.
-    nonisolated private static let imageQueue = DispatchQueue(label: "com.winddog.wallpaper-engine.scene-preview",
+    nonisolated private static let imageQueue = DispatchQueue(label: "app.openwallpaperengine.scene-preview",
                                                               qos: .userInteractive)
 
     let layer = CALayer()
