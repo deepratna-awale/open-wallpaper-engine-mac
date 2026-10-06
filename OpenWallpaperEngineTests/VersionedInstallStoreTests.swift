@@ -42,6 +42,17 @@ final class VersionedInstallStoreTests: XCTestCase {
 
     // MARK: SHA-256
 
+    /// No `.state.json` is no install; a corrupt one reads as none too (and is logged), and a
+    /// written one reads back.
+    func testStateReadsMissingCorruptAndWritten() throws {
+        XCTAssertEqual(VersionedInstallState.read(in: root), VersionedInstallState())
+        try Data("{not json".utf8).write(to: root.appending(path: VersionedInstallState.fileName))
+        XCTAssertEqual(VersionedInstallState.read(in: root), VersionedInstallState())
+        let state = VersionedInstallState(active: "2", previous: "1")
+        try state.write(in: root)
+        XCTAssertEqual(VersionedInstallState.read(in: root), state)
+    }
+
     func testVerifyComparesTheWholeFile() throws {
         let file = root.appending(path: "file")
         try Data("abc".utf8).write(to: file)
