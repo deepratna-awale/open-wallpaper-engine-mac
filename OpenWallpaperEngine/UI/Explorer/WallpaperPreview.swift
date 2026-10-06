@@ -774,19 +774,29 @@ extension URL {
         return try checkResourceIsReachable()
     }
 
-    /// returns total allocated size of a the directory including its subFolders or not
+    /// The allocated size of the regular files in the directory, and in its subfolders when
+    /// `includingSubfolders`; nil when it isn't a reachable directory. Entries that can't be read
+    /// are left out (logged) instead of losing the whole size.
     func directoryTotalAllocatedSize(includingSubfolders: Bool = false) throws -> Int? {
         guard try isDirectoryAndReachable() else { return nil }
-        if includingSubfolders {
-            guard
-                let urls = FileManager.default.enumerator(at: self, includingPropertiesForKeys: nil)?.allObjects as? [URL] else { return nil }
-            return try urls.lazy.reduce(0) {
-                    (try $1.resourceValues(forKeys: [.totalFileAllocatedSizeKey]).totalFileAllocatedSize ?? 0) + $0
+        let keys: Set<URLResourceKey> = [.isRegularFileKey, .totalFileAllocatedSizeKey]
+        guard let enumerator = FileManager.default.enumerator(
+            at: self, includingPropertiesForKeys: Array(keys),
+            options: includingSubfolders ? [] : [.skipsSubdirectoryDescendants],
+            errorHandler: { url, error in
+                OWELog.debug(.library, "Size of \(url.path) left out: \(error)")
+                return true
+            }) else { return nil }
+        var total = 0
+        for case let url as URL in enumerator {
+            do {
+                let values = try url.resourceValues(forKeys: keys)
+                guard values.isRegularFile == true else { continue }
+                total += values.totalFileAllocatedSize ?? 0
+            } catch {
+                OWELog.debug(.library, "Size of \(url.path) left out: \(error)")
             }
         }
-        return try FileManager.default.contentsOfDirectory(at: self, includingPropertiesForKeys: nil).lazy.reduce(0) {
-                 (try $1.resourceValues(forKeys: [.totalFileAllocatedSizeKey])
-                    .totalFileAllocatedSize ?? 0) + $0
-        }
+        return total
     }
 }
