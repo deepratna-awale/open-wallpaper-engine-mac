@@ -133178,6 +133178,101 @@
         }
       }
     },
+    "Steam API returned an unexpected response." : {
+      "comment" : "Workshop error when Steam's answer can't be read",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أعادت واجهة Steam API استجابة غير متوقعة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam-API hat eine unerwartete Antwort zurückgegeben."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La API de Steam ha devuelto una respuesta inesperada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’API Steam a renvoyé une réponse inattendue."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam API ने अनपेक्षित जवाब लौटाया।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’API di Steam ha restituito una risposta imprevista."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam APIが予期しない応答を返しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam API가 예상치 못한 응답을 반환했습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam API zwróciło nieoczekiwaną odpowiedź."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A API do Steam retornou uma resposta inesperada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam API вернул неожиданный ответ."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam API’si beklenmeyen bir yanıt döndürdü."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam API повернув неочікувану відповідь."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam API 返回了意外的响应。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam API 傳回非預期的回應。"
+          }
+        }
+      }
+    },
     "Steam Guard Code" : {
       "localizations" : {
         "ar" : {

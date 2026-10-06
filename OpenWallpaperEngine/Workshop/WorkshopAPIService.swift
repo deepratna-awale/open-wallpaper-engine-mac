@@ -246,29 +246,43 @@ class WorkshopAPIService {
 
     /// Get details for specific workshop items by their IDs.
     func getItemDetails(workshopIds: [String]) async throws -> [WorkshopItem] {
+        guard let body = Self.itemDetailsBody(workshopIds: workshopIds) else { return [] }
         let url = URL(string: "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/")!
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-
-        var bodyParts = [
-            "itemcount=\(workshopIds.count)",
-            "includetags=true",
-            "includevotes=true",
-            "includeshortdescription=true"
-        ]
-        for (index, id) in workshopIds.enumerated() {
-            bodyParts.append("publishedfileids[\(index)]=\(id)")
-        }
-        request.httpBody = bodyParts.joined(separator: "&").data(using: .utf8)
+        request.httpBody = body
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
 
         let (data, httpResponse) = try await send(request)
-        guard httpResponse.statusCode == 200 else { throw WorkshopAPIError.requestFailed }
+        guard httpResponse.statusCode == 200 else { throw WorkshopAPIError.httpError(httpResponse.statusCode) }
 
         let items = try Self.parseItems(from: data)
         WorkshopMetadataStore.shared.save(items)
         return items
+    }
+
+    /// The form body of GetPublishedFileDetails for the Workshop ids among `workshopIds` (ASCII
+    /// digits; anything else, e.g. a hand-edited project.json `workshopid`, is left out), percent
+    /// encoded; nil when none is an id.
+    static func itemDetailsBody(workshopIds: [String]) -> Data? {
+        let ids = workshopIds.filter(WorkshopCollection.isID)
+        if ids.count < workshopIds.count {
+            OWELog.debug(.workshop, "Left \(workshopIds.count - ids.count) invalid Workshop ids out of a details request")
+        }
+        guard !ids.isEmpty else { return nil }
+        let fields = [
+            ("itemcount", String(ids.count)),
+            ("includetags", "true"),
+            ("includevotes", "true"),
+            ("includeshortdescription", "true"),
+        ] + ids.enumerated().map { ("publishedfileids[\($0.offset)]", $0.element) }
+        // Form encoding: everything but unreserved characters, so "&", "=" and "+" can't split a field.
+        let unreserved = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~")
+        let body = fields.map { name, value in
+            [name, value].map { $0.addingPercentEncoding(withAllowedCharacters: unreserved) ?? "" }.joined(separator: "=")
+        }.joined(separator: "&")
+        return Data(body.utf8)
     }
 
     /// The items of a public Workshop collection, in its order (keyless: GetCollectionDetails,
@@ -444,11 +458,13 @@ class WorkshopAPIService {
     /// The items in a QueryFiles or GetPublishedFileDetails response.
     static func parseItems(from data: Data) throws -> [WorkshopItem] {
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let response = json["response"] as? [String: Any],
-              let files = response["publishedfiledetails"] as? [[String: Any]]
+              let response = json["response"] as? [String: Any]
         else {
-            return []
+            // A Steam error page or another shape isn't "no results".
+            throw WorkshopAPIError.unexpectedResponse
         }
+        // A query with no results has a response without files.
+        guard let files = response["publishedfiledetails"] as? [[String: Any]] else { return [] }
 
         return files.compactMap { parseFileDict($0) }
     }
@@ -461,7 +477,7 @@ class WorkshopAPIService {
         let previewURL = dict["preview_url"] as? String
         let tags = parseTags(from: dict["tags"])
         let subscriptions = dict["subscriptions"] as? Int ?? dict["lifetime_subscriptions"] as? Int ?? 0
-        let fileSize = dict["file_size"] as? Int ?? 0
+        let fileSize = int64(dict["file_size"]) ?? 0
         let creatorAppId = dict["creator_app_id"] as? Int
         let creatorId = dict["creator"] as? String
         let description = dict["short_description"] as? String ?? dict["description"] as? String
@@ -484,6 +500,14 @@ class WorkshopAPIService {
             timeUpdated: dict["time_updated"] as? Int,
             dependencyIds: parseChildren(from: dict["children"])
         )
+    }
+
+    /// A number Steam sends either as a JSON number or, for 64-bit fields such as `file_size`, as
+    /// a numeric string.
+    static func int64(_ value: Any?) -> Int? {
+        if let text = value as? String { return Int(text) }
+        if let number = value as? NSNumber { return number.intValue }
+        return nil
     }
 
     /// `children` as `[{"publishedfileid": …, "sortorder": …, "file_type": …}]`; nil when absent.
@@ -528,6 +552,8 @@ enum WorkshopAPIError: LocalizedError {
     case noAPIKey
     case invalidAPIKey
     case httpError(Int)
+    /// The answer isn't the shape Steam's API answers with.
+    case unexpectedResponse
 
     var errorDescription: String? {
         switch self {
@@ -536,6 +562,8 @@ enum WorkshopAPIError: LocalizedError {
         case .noAPIKey: return String(localized: "Steam Web API key required.\nGet a free key at steamcommunity.com/dev/apikey\nthen enter it below.")
         case .invalidAPIKey: return String(localized: "Invalid API key.\nGet a valid key at steamcommunity.com/dev/apikey")
         case .httpError(let code): return String(localized: "Steam API returned HTTP \(code)", comment: "%lld is an HTTP status code")
+        case .unexpectedResponse: return String(localized: "Steam API returned an unexpected response.",
+                                                comment: "Workshop error when Steam's answer can't be read")
         }
     }
 }
