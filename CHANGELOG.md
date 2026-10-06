@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.6] - 2026-10-06
+
 ### Added
 
 - **Playlists change wallpaper as Wallpaper Engine's do.** Configure in a playlist's header opens its Playlist Settings: change wallpaper on a timer, when logging in (one step each time the app starts), by time of day (each wallpaper from its start time, slots edited per wallpaper and snapped to 5 minutes) or by day of week (up to seven wallpapers share the week from its first day), or never. The timer's options are Wallpaper Engine's: change when a video ends, allow changing while paused (otherwise the timer stands still while the wallpaper is paused), always begin with the first wallpaper, and the first wallpaper played at startup only. Scheduled playlists look again when the Mac wakes and when the clock, time zone or day changes, without polling ([docs/playlists.md](docs/playlists.md)).
