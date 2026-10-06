@@ -68,6 +68,8 @@ final class LivePhotoExportModel: NSObject, ObservableObject, NSSharingServiceDe
     @Published var sheet: LivePhotoExportSheet?
     /// "Export More with These Settings…": its sheet is open, and the batch it started.
     @Published var isBatchPresented = false
+    /// Export More was picked in the Export Settings sheet: the batch opens once that sheet has closed.
+    var opensBatchWhenSheetCloses = false
     @Published var batch: LivePhotoBatchQueue?
     /// The batch's last save to Photos, or why it failed.
     @Published var batchPhotosNotice: String?

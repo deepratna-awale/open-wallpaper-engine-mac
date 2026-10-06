@@ -77,6 +77,28 @@ public struct SceneOutline: Sendable {
         }
     }
 
+    /// A layer and the layers parented to it, as the editors' layer lists nest them.
+    public struct Node: Identifiable, Sendable {
+        public let id: Int
+        public let layer: SceneLayer
+        /// nil for a layer with no children (a leaf in `OutlineGroup`).
+        public let children: [Node]?
+    }
+
+    /// The layers as a tree, the topmost (drawn last) first at every level, as Photoshop,
+    /// Pixelmator Pro, Motion and Figma list layers. A layer appears once, also when parents loop.
+    public func tree() -> [Node] {
+        var placed = Set<Int>()
+        func nodes(under parent: Int?) -> [Node] {
+            children(of: parent).reversed().compactMap { layer in
+                guard placed.insert(layer.id).inserted else { return nil }
+                let children = nodes(under: layer.id)
+                return Node(id: layer.id, layer: layer, children: children.isEmpty ? nil : children)
+            }
+        }
+        return nodes(under: nil)
+    }
+
     /// Parent first, up to the top level; a cycle stops the walk.
     public func ancestors(of id: Int) -> [SceneLayer] {
         var chain: [SceneLayer] = []

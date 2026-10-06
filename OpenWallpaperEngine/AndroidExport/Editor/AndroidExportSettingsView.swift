@@ -2,13 +2,11 @@ import SwiftUI
 
 /// The Android Export mode's Export Settings: the device (or a custom size) and the status bar
 /// guide, the crop's zoom, where the pointer rests, the output (Pre-Rendered's video size, frame
-/// rate and length, or Dynamic's quality), then the selected layer's adjustments and the user
-/// properties, all of them the mode's own (`IsolatedSceneEditSession`). The same view is the
-/// mode's right-hand panel and the sheet shown before an export.
-struct AndroidExportSettingsView<Layer: View>: View {
+/// rate and length, or Dynamic's quality), then the user properties, all of them the mode's own
+/// (`IsolatedSceneEditSession`). It is the Export Settings sheet's body; the selected layer's
+/// adjustments are the mode's right-hand panel (`AndroidExportLayerPanel`).
+struct AndroidExportSettingsView: View {
     @ObservedObject var model: AndroidExportEditorModel
-    var showsExportButtons = true
-    @ViewBuilder let layer: () -> Layer
 
     var body: some View {
         ScrollView {
@@ -26,10 +24,6 @@ struct AndroidExportSettingsView<Layer: View>: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-            }
-            if showsExportButtons {
-                Divider()
-                exportSection
             }
             if let error = model.errorMessage {
                 Text(error)
@@ -52,21 +46,11 @@ struct AndroidExportSettingsView<Layer: View>: View {
             }
             Divider()
             outputSection
-            if showsExportButtons {
-                Divider()
-                exportSection
-            }
             if let error = model.errorMessage {
                 Text(error)
                     .font(.caption)
                     .foregroundStyle(.red)
                     .fixedSize(horizontal: false, vertical: true)
-            }
-            Divider()
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Layer Adjustments")
-                    .font(.headline)
-                layer()
             }
             Divider()
             Text("Only this export changes. The wallpaper on your desktop keeps its properties and edits.")
@@ -251,56 +235,32 @@ struct AndroidExportSettingsView<Layer: View>: View {
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
     }
-
-    // MARK: Export
-
-    @ViewBuilder private var exportSection: some View {
-        if let queue = model.queue {
-            AndroidEditorExportProgress(queue: queue, model: model)
-        } else {
-            AndroidEditorExportButtons(model: model)
-        }
-    }
 }
 
-/// "Save .mpkg…" and "Send over Wi-Fi…", each after the Export Settings sheet: side by side, or
-/// stacked at full width when the panel is too narrow for both labels.
-private struct AndroidEditorExportButtons: View {
+/// The Android Export mode's right-hand panel: the selected layer's adjustments, on the mode's
+/// isolated store, and the export's progress and results. The settings and the exports are in the
+/// Export Settings sheet (the toolbar's Export Settings button).
+struct AndroidExportLayerPanel<Layer: View>: View {
     @ObservedObject var model: AndroidExportEditorModel
+    @ViewBuilder let layer: () -> Layer
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            ViewThatFits(in: .horizontal) {
-                HStack { buttons(fill: false) }
-                VStack(alignment: .leading) { buttons(fill: true) }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                if let queue = model.queue {
+                    AndroidEditorExportProgress(queue: queue, model: model)
+                    Divider()
+                }
+                if let error = model.errorMessage {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                ExportLayerAdjustments(isVideo: model.isVideo, layer: layer)
             }
-            Button {
-                model.showBatch()
-            } label: {
-                Label("Export More with These Settings…", systemImage: "square.stack.3d.down.right")
-            }
-            .glassButtonStyle()
-            .help("Pick more wallpapers from your library and export them as .mpkg packages with this device, output, quality and frame rate")
+            .padding()
         }
-    }
-
-    @ViewBuilder private func buttons(fill: Bool) -> some View {
-        Button {
-            model.requestExport(.wifi)
-        } label: {
-            Label("Send over Wi-Fi…", systemImage: "wifi")
-                .frame(maxWidth: fill ? .infinity : nil)
-        }
-        .glassButtonStyle(.prominent)
-        .help("Review the export settings, then export the .mpkg and serve it to your Android device on this network")
-        Button {
-            model.requestExport(.save)
-        } label: {
-            Text("Save .mpkg…")
-                .frame(maxWidth: fill ? .infinity : nil)
-        }
-        .glassButtonStyle()
-        .help("Review the export settings, then export the .mpkg to a file")
     }
 }
 
@@ -317,15 +277,10 @@ private struct AndroidEditorExportProgress: View {
                 }
                 Button("Cancel", role: .cancel) { model.cancel() }
             }
-        } else {
-            VStack(alignment: .leading, spacing: 6) {
-                AndroidEditorExportButtons(model: model)
-                if let batch = model.batch, !batch.outputs.isEmpty {
-                    ViewThatFits(in: .horizontal) {
-                        HStack { outputButtons(batch) }
-                        VStack(alignment: .leading) { outputButtons(batch) }
-                    }
-                }
+        } else if let batch = model.batch, !batch.outputs.isEmpty {
+            ViewThatFits(in: .horizontal) {
+                HStack { outputButtons(batch) }
+                VStack(alignment: .leading) { outputButtons(batch) }
             }
         }
     }
@@ -346,11 +301,10 @@ private struct AndroidEditorExportProgress: View {
 }
 
 /// The Export Settings as a sheet: before an export (Cancel, and the export as the confirm
-/// button), or opened from the toolbar (Done, and both exports).
-struct AndroidExportSettingsSheetView<Layer: View>: View {
+/// button), or opened from the toolbar (Done, both exports and Export More).
+struct AndroidExportSettingsSheetView: View {
     @ObservedObject var model: AndroidExportEditorModel
     let sheet: AndroidEditorSheet
-    @ViewBuilder let layer: () -> Layer
 
     var body: some View {
         VStack(spacing: 0) {
@@ -364,15 +318,26 @@ struct AndroidExportSettingsSheetView<Layer: View>: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding([.horizontal, .top])
-            AndroidExportSettingsView(model: model, showsExportButtons: false, layer: layer)
+            AndroidExportSettingsView(model: model)
             Divider()
-            footer
+            VStack(spacing: 0) { footer }
                 .padding()
         }
         .frame(width: 440, height: 680)
     }
 
     @ViewBuilder private var footer: some View {
+        if sheet == .settings {
+            Button {
+                model.showBatchAfterSheet()
+            } label: {
+                Label("Export More with These Settings…", systemImage: "square.stack.3d.down.right")
+            }
+            .glassButtonStyle()
+            .help("Pick more wallpapers from your library and export them as .mpkg packages with this device, output, quality and frame rate")
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, 8)
+        }
         HStack {
             Spacer()
             switch sheet {
@@ -409,29 +374,30 @@ struct AndroidExportSettingsSheetView<Layer: View>: View {
 
 /// Presents the Android Export Settings sheet and the Wi-Fi sheet while `model` asks for them;
 /// `onClose` runs when the settings sheet closes. Without a model (another mode) it does nothing.
-struct AndroidExportSheetHost<Layer: View>: ViewModifier {
+struct AndroidExportSheetHost: ViewModifier {
     let model: AndroidExportEditorModel?
     let onClose: () -> Void
-    @ViewBuilder let layer: () -> Layer
 
     func body(content: Content) -> some View {
         if let model {
-            content.modifier(AndroidExportSheetPresenter(model: model, onClose: onClose, layer: layer))
+            content.modifier(AndroidExportSheetPresenter(model: model, onClose: onClose))
         } else {
             content
         }
     }
 }
 
-private struct AndroidExportSheetPresenter<Layer: View>: ViewModifier {
+private struct AndroidExportSheetPresenter: ViewModifier {
     @ObservedObject var model: AndroidExportEditorModel
     let onClose: () -> Void
-    @ViewBuilder let layer: () -> Layer
 
     func body(content: Content) -> some View {
         content
-            .sheet(item: $model.sheet, onDismiss: onClose) { sheet in
-                AndroidExportSettingsSheetView(model: model, sheet: sheet, layer: layer)
+            .sheet(item: $model.sheet, onDismiss: {
+                onClose()
+                model.sheetDidClose()
+            }) { sheet in
+                AndroidExportSettingsSheetView(model: model, sheet: sheet)
             }
             .sheet(isPresented: $model.isBatchPresented, onDismiss: { model.closeBatch() }) {
                 AndroidBatchExportSheet(model: model)

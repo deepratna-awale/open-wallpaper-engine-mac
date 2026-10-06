@@ -50,9 +50,10 @@ since the lock screen draws its own, and the export is silent.
 
 ## Exporting
 
-**Send with AirDrop** or **Save…** first show the Export Settings: everything above, plus the
-layer adjustments and the user properties. The same panel is the tab's right-hand column and the
-Export Settings toolbar button.
+The tab's right-hand panel is the selected layer's **Layer Adjustments**, and the export's
+progress while it renders. Everything above, the user properties and the exports are in
+**Export Settings** (the toolbar's share button): **Send with AirDrop**, **Save…** and
+**Export More with These Settings…**.
 
 **Also Save to Photos Album** (off by default) also adds each export to an album in the Mac's
 Photos library ("Open Wallpaper Engine" unless you name another; made when missing). With
@@ -63,7 +64,7 @@ regular album.
 
 ## Export More with These Settings
 
-**Export More with These Settings…** (under the export buttons) makes Live Photos of other
+**Export More with These Settings…** (in Export Settings) makes Live Photos of other
 wallpapers with the tab's device, quality and clip length. Pick them from the library (search, a
 type filter, tick as many as you like; the wallpaper being edited starts ticked, and wallpapers that
 can't be made into a Live Photo are shown with why), then where they go: **Save to Folder** (the

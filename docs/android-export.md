@@ -45,9 +45,14 @@ The tab runs a private copy of the wallpaper, so nothing on your desktop changes
 and user properties are the export's own: a pre-render records them, and Dynamic bakes them into
 the package's scene.json and project.json.
 
+The tab's right-hand panel is the selected layer's **Layer Adjustments**, and the export's
+progress and results. The output settings, the user properties and the exports are in
+**Export Settings** (the toolbar's share button): **Send over Wi-Fi…**, **Save .mpkg…** and
+**Export More with These Settings…**.
+
 ## Export More with These Settings
 
-**Export More with These Settings…** (under the export buttons) exports other wallpapers with the
+**Export More with These Settings…** (in Export Settings) exports other wallpapers with the
 tab's settings. Pick them from the library (search, a type filter, tick as many as you like; the
 wallpaper being edited starts ticked, and types Android can't play are shown with why). Every
 scene gets the tab's output, quality, frame rate, video size and length; a pre-render is framed

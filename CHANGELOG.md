@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The Scene Editor (Live)'s sidebar lists objects as the Wallpaper Editor does:** the scene's hierarchy, groups as folders, with "Clock Location: Middle" under the layers a property option shows. **Versions** is one dropdown per such property (Language, Clock Location…), only for the properties that apply, instead of a list of option names.
+- **The export tabs' right-hand panel is the selected layer's Layer Adjustments.** The export settings, Save, Send and Export More with These Settings are behind the toolbar's Export Settings button, now a share icon.
+- **Hiding a group dims everything in it** in both editors; each layer keeps its own switch for when the group shows again.
 - **Web and application wallpapers ask again when their content changes.** "Don't ask again for this wallpaper" now trusts the folder's files as they were when you answered: after a Workshop update, or another item downloaded into the same folder, the prompt asks again and says the wallpaper changed. Renaming or tagging the wallpaper in the library doesn't count as a change. Wallpapers trusted before this version keep their trust and are bound to their files the first time they are applied.
 
 ### Fixed

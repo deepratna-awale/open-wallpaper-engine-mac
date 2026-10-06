@@ -1,6 +1,7 @@
 import SwiftUI
 import AVFoundation
 import OWEInspectorKit
+import OWESceneEditing
 
 private struct SceneInspectorItem: Identifiable {
     let id: String
@@ -22,6 +23,17 @@ private struct SceneInspectorItem: Identifiable {
 
     var isVersion: Bool { version != nil }
     var versionName: String? { version?.title }
+}
+
+/// A combo user property that switches whole layers (`SceneLayerVersion`): one Versions row in the
+/// sidebar, with the property's options, as WE's properties sidebar shows it.
+private struct SceneVersionProperty: Identifiable {
+    /// The property's key.
+    let id: String
+    let title: String
+    let options: [(value: String, title: String)]
+    /// project.json `condition`: the row shows only while it holds (a property for one language).
+    let condition: UserPropertyConditionExpression?
 }
 
 private struct SceneInspectorEffect: Identifiable {
@@ -116,6 +128,15 @@ private final class SceneInspectorModel: ObservableObject {
     @Published var decodedItemID: String?
     @Published var loadingItemID: String?
     private(set) var initiallySelectedID: String?
+    /// The scene's objects as the Wallpaper Editor's layer list nests them (`SceneOutline.tree()`);
+    /// empty for a video, whose layers are described without a scene.json.
+    private(set) var objectTree: [SceneOutline.Node] = []
+    /// The objects' parents, for dimming what a hidden group hides.
+    private var outline: SceneOutline?
+    /// The combo properties that switch layers, in project.json's order.
+    private(set) var versionProperties: [SceneVersionProperty] = []
+    /// Each property's authored value, for the ones the stores don't hold yet.
+    private var propertyDefaults: [String: String] = [:]
     /// The size the renderer draws the scene at (`SceneDrawnSize`): the iPhone & iPad and Android
     /// Exports' crops frame the drawn scene, in their previews and their renders alike.
     private(set) var sceneSize = SIMD2<Double>(SceneWallpaperViewModel.defaultCanvas)
@@ -161,6 +182,8 @@ private final class SceneInspectorModel: ObservableObject {
             return
         }
         sceneSize = Self.drawnSize(of: sceneData, scene: scene, wallpaper: wallpaper, storedValues: targets.storedValues)
+        outline = try? SceneOutline(sceneData: sceneData)
+        objectTree = outline?.tree() ?? []
 
         let storedValues: [String: String] = targets.storedValues
         let definitions = WallpaperEngineShareJSON.definitions(in: directory)
@@ -207,6 +230,18 @@ private final class SceneInspectorModel: ObservableObject {
                                       visible: visible,
                                       version: version, effects: effects)
         }
+        propertyDefaults = definitions.compactMapValues(\.value)
+        let versionKeys = Set(items.compactMap { $0.version?.choice.property })
+        versionProperties = definitions.values
+            .filter { versionKeys.contains($0.key) }
+            .sorted { ($0.order ?? .max, $0.key) < ($1.order ?? .max, $1.key) }
+            .map { definition in
+                let title = { (text: String) in labels.translation(text) ?? UserPropertyHTML.plainText(text) }
+                let condition = definition.condition?.trimmingCharacters(in: .whitespaces)
+                return SceneVersionProperty(id: definition.key, title: title(definition.text),
+                                            options: definition.options.map { ($0.value, title($0.label)) },
+                                            condition: condition.flatMap { $0.isEmpty ? nil : UserPropertyConditionExpression($0) })
+            }
         // The version the property's current value (else its default) shows.
         initiallySelectedID = items.first { item in
             guard let version = item.version?.choice else { return false }
@@ -821,9 +856,42 @@ private final class SceneInspectorModel: ObservableObject {
 
     func useVersion(_ item: SceneInspectorItem) {
         guard let version = item.version?.choice else { return }
+        setProperty(version.property, to: version.value)
+    }
+
+    /// A property's current value: the stores', else the authored one.
+    func propertyValue(_ key: String) -> String {
+        storedValues[key] ?? propertyDefaults[key] ?? ""
+    }
+
+    func setProperty(_ key: String, to value: String) {
         var values = storedValues
-        values[version.property] = version.value
+        values[key] = value
         persist(values)
+    }
+
+    /// The Versions rows whose property shows for the current values (its `condition`), as in WE's
+    /// properties sidebar: a wallpaper with a copy of the property per language shows only the
+    /// language's.
+    var shownVersionProperties: [SceneVersionProperty] {
+        let values = propertyDefaults.merging(storedValues) { $1 }
+        return versionProperties.filter { $0.condition?.evaluate(values) ?? true }
+    }
+
+    /// A parent (or its parent…) is hidden, which hides the object too (WE's visibility chain,
+    /// wallpaper64.exe 0x140185010); its own switch stays as it is.
+    func isHiddenByParent(_ item: SceneInspectorItem) -> Bool {
+        guard let id = Int(item.id), let outline else { return false }
+        return outline.ancestors(of: id).contains { parent in
+            items.first { $0.id == String(parent.id) }.map { !$0.visible } ?? false
+        }
+    }
+
+    /// "Clock Location: Middle" under a layer that one option of a Versions property shows.
+    func versionCaption(_ item: SceneInspectorItem) -> String? {
+        guard let version = item.version else { return nil }
+        let property = versionProperties.first { $0.id == version.choice.property }
+        return property.map { "\($0.title): \(version.title)" } ?? version.title
     }
 
     func loadTextures(for item: SceneInspectorItem) {
@@ -1238,12 +1306,12 @@ private struct SceneInspectorContent: View {
                 .inspector(isPresented: $isMovementPresented) {
                     Group {
                         if let exportModel {
-                            LivePhotoExportSettingsView(model: exportModel) {
+                            LivePhotoExportLayerPanel(model: exportModel) {
                                 layerAdjustments(for: model.items.first(where: { $0.id == selectedID }))
                             }
                             .id(exportPanelRevision)
                         } else if let androidModel {
-                            AndroidExportSettingsView(model: androidModel) {
+                            AndroidExportLayerPanel(model: androidModel) {
                                 layerAdjustments(for: model.items.first(where: { $0.id == selectedID }))
                             }
                             .id(exportPanelRevision)
@@ -1265,12 +1333,8 @@ private struct SceneInspectorContent: View {
                     }
                     .inspectorColumnWidth(min: 260, ideal: Self.sidebarWidth, max: 400)
                 }
-                .modifier(LivePhotoExportSheetHost(model: exportModel, onClose: { exportPanelRevision += 1 }) {
-                    layerAdjustments(for: model.items.first(where: { $0.id == selectedID }))
-                })
-                .modifier(AndroidExportSheetHost(model: androidModel, onClose: { exportPanelRevision += 1 }) {
-                    layerAdjustments(for: model.items.first(where: { $0.id == selectedID }))
-                })
+                .modifier(LivePhotoExportSheetHost(model: exportModel, onClose: { exportPanelRevision += 1 }))
+                .modifier(AndroidExportSheetHost(model: androidModel, onClose: { exportPanelRevision += 1 }))
                 .toolbar {
                     ToolbarItem(placement: .navigation) {
                         sidebarToggle
@@ -1367,7 +1431,7 @@ private struct SceneInspectorContent: View {
         }
     }
 
-    /// Shows or hides the right-hand panel: Move & Align, or the Export Settings.
+    /// Shows or hides the right-hand panel: Move & Align, the Screen Saver panel, or an export mode's Layer Adjustments.
     private var panelToggle: some View {
         Button {
             withAnimation { isMovementPresented.toggle() }
@@ -1375,7 +1439,7 @@ private struct SceneInspectorContent: View {
             switch mode {
             case .wallpaper: Label("Move & Align", systemImage: "sidebar.right")
             case .screenSaver: Label("Screen Saver Panel", systemImage: "sidebar.right")
-            case .deviceExport, .androidExport: Label("Export Settings Panel", systemImage: "sidebar.right")
+            case .deviceExport, .androidExport: Label("Layer Adjustments Panel", systemImage: "sidebar.right")
             }
         }
         .help(panelToggleHelp)
@@ -1385,7 +1449,7 @@ private struct SceneInspectorContent: View {
         switch mode {
         case .wallpaper: return Text("Show or hide the move, size and align controls")
         case .screenSaver: return Text("Show or hide the Screen Saver panel")
-        case .deviceExport, .androidExport: return Text("Show or hide the Export Settings panel")
+        case .deviceExport, .androidExport: return Text("Show or hide the Layer Adjustments panel")
         }
     }
 
@@ -1396,16 +1460,16 @@ private struct SceneInspectorContent: View {
             Button {
                 exportModel.showSettings()
             } label: {
-                Label("Export Settings", systemImage: "slider.horizontal.3")
+                Label("Export Settings", systemImage: "square.and.arrow.up")
             }
-            .help("Open the export settings: device, crop, clip, quality, layers and properties")
+            .help("Open the export settings and export: device, crop, clip, quality and properties")
         } else if let androidModel {
             Button {
                 androidModel.showSettings()
             } label: {
-                Label("Export Settings", systemImage: "slider.horizontal.3")
+                Label("Export Settings", systemImage: "square.and.arrow.up")
             }
-            .help("Open the export settings: device, crop, output, layers and properties")
+            .help("Open the export settings and export: device, crop, output and properties")
         } else if let screenSaverModel {
             Button {
                 screenSaverModel.record()
@@ -1465,11 +1529,20 @@ private struct SceneInspectorContent: View {
 
     /// A row's name takes the width beside its switch, cut in the middle (names often differ only
     /// at their ends), with the whole name in its tooltip.
-    private static func rowTitle(_ name: String, systemImage: String) -> some View {
+    private static func rowTitle(_ name: String, caption: String? = nil, systemImage: String) -> some View {
         Label {
-            Text(verbatim: name)
-                .lineLimit(1)
-                .truncationMode(.middle)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(verbatim: name)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                if let caption {
+                    Text(verbatim: caption)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+            }
         } icon: {
             Image(systemName: systemImage)
         }
@@ -1480,33 +1553,60 @@ private struct SceneInspectorContent: View {
 
     private var sidebarColumn: some View {
         List(selection: $selectedID) {
-            let versions = model.items.filter(\.isVersion).filter(matches)
+            let versions = model.shownVersionProperties.filter { searchText.isEmpty || $0.title.localizedCaseInsensitiveContains(searchText) }
             if !versions.isEmpty {
                 Section("Versions") {
-                    ForEach(versions) { item in
-                        Self.rowTitle(item.versionName ?? item.name, systemImage: "square.stack.3d.up")
-                            .tag(item.id)
+                    ForEach(versions) { property in
+                        HStack(spacing: 8) {
+                            Self.rowTitle(property.title, systemImage: "square.stack.3d.up")
+                            Picker(property.title, selection: Binding(
+                                get: { model.propertyValue(property.id) },
+                                set: { model.setProperty(property.id, to: $0) }
+                            )) {
+                                ForEach(property.options, id: \.value) { option in
+                                    Text(verbatim: option.title).tag(option.value)
+                                }
+                            }
+                            .labelsHidden()
+                            .pickerStyle(.menu)
+                            .fixedSize()
+                        }
                     }
                 }
             }
             Section("Scene Objects") {
-                ForEach(model.items.filter { !$0.isVersion }.filter(matches)) { item in
-                    HStack(spacing: 8) {
-                        Self.rowTitle(item.name, systemImage: Self.kindSymbol(item.kind))
-                        Toggle("Visible", isOn: Binding(
-                            get: { item.visible },
-                            set: { model.setObjectVisible($0, item: item) }
-                        ))
-                        .labelsHidden()
-                        .toggleStyle(.switch)
-                        .fixedSize()
-                        .help(item.visible ? "Hide object" : "Show object")
+                // The hierarchy as the Wallpaper Editor lists it; a search lists the matches flat.
+                if searchText.isEmpty, !model.objectTree.isEmpty {
+                    OutlineGroup(model.objectTree, children: \.children) { node in
+                        if let item = model.items.first(where: { $0.id == String(node.id) }) {
+                            objectRow(item, symbol: node.layer.listSymbol)
+                        }
                     }
-                    .contentShape(Rectangle())
-                    .tag(item.id)
+                } else {
+                    ForEach(model.items.filter(matches)) { item in
+                        objectRow(item, symbol: Self.kindSymbol(item.kind))
+                    }
                 }
             }
         }
+    }
+
+    /// A scene object: its name (with the version it belongs to, if any) and its visibility switch.
+    private func objectRow(_ item: SceneInspectorItem, symbol: String) -> some View {
+        HStack(spacing: 8) {
+            Self.rowTitle(item.name, caption: model.versionCaption(item), systemImage: symbol)
+                .opacity(item.visible && !model.isHiddenByParent(item) ? 1 : 0.5)
+            Toggle("Visible", isOn: Binding(
+                get: { item.visible },
+                set: { model.setObjectVisible($0, item: item) }
+            ))
+            .labelsHidden()
+            .toggleStyle(.switch)
+            .fixedSize()
+            .help(item.visible ? "Hide object" : "Show object")
+        }
+        .contentShape(Rectangle())
+        .tag(item.id)
     }
 
     private var detailColumn: some View {
