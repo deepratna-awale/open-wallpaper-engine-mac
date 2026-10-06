@@ -8,7 +8,7 @@ import OWESceneEditing
 @MainActor
 final class MCPAddLayerDefaultsTests: XCTestCase {
     private func scene(_ general: String, objects: String = "[]") -> Data {
-        Data(#"{"general": \#(general), "objects": \#(objects)}"#.utf8)
+        Data(#"{"camera": {}, "general": \#(general), "objects": \#(objects)}"#.utf8)
     }
 
     func testCanvasIsTheRenderersSceneSize() throws {
