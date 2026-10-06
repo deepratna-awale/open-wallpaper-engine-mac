@@ -51,6 +51,15 @@ enum WorkshopId: Codable, Equatable, Hashable, RawRepresentable {
         guard rawValue.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
         self = .string(rawValue)
     }
+
+    /// project.json writes the id as a number or a string; both name the same item.
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.rawValue == rhs.rawValue
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(rawValue)
+    }
     
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()

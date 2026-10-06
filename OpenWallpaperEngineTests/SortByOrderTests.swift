@@ -16,4 +16,13 @@ final class SortByOrderTests: XCTestCase {
         XCTAssertFalse(ContentViewModel.precedes(5, 5, in: .increase))
         XCTAssertFalse(ContentViewModel.precedes(5, 5, in: .decrease))
     }
+
+    func testRatingsSortEveryoneQuestionableMature() {
+        let ratings: [String?] = ["Mature", nil, "Questionable", "Everyone"]
+        let decreasing = ratings.sorted {
+            ContentViewModel.precedes(ContentViewModel.ratingRank($0), ContentViewModel.ratingRank($1), in: .decrease)
+        }
+        XCTAssertEqual(decreasing, [nil, "Everyone", "Questionable", "Mature"])
+        XCTAssertEqual(ContentViewModel.ratingRank(" mature"), ContentViewModel.ratingRank("Mature"))
+    }
 }

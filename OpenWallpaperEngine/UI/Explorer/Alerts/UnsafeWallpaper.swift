@@ -19,6 +19,12 @@ struct UnsafeWallpaper: View {
         self.wallpaper = wallpaper
     }
     
+    /// `trusted` with `path` added once, earlier duplicates dropped, in the order trust was given.
+    static func trustList(_ trusted: [String], adding path: String) -> [String] {
+        var seen = Set<String>()
+        return (trusted + [path]).filter { seen.insert($0).inserted }
+    }
+
     private var title: LocalizedStringKey {
         switch wallpaper.project.type.lowercased() {
         case "web": return "Opening an Unknown Web Page"
@@ -52,7 +58,7 @@ struct UnsafeWallpaper: View {
                     .frame(maxWidth: 100)
                 VStack(alignment: .leading, spacing: 10) {
                     Text(intro)
-                    Text(verbatim: wallpaper.wallpaperDirectory.path(percentEncoded: false) + wallpaper.project.file).bold()
+                    Text(verbatim: wallpaper.wallpaperDirectory.appending(path: wallpaper.project.file).path(percentEncoded: false)).bold()
                     Text("Open Wallpaper Engine has no control over this file. Make sure it comes from a reliable source before proceeding.")
                     Text(seconds > 0 ? "Please wait \(seconds) seconds." : "Please be aware of malware.")
                     Toggle("Don't ask again for this wallpaper", isOn: $isIgnored)
@@ -69,12 +75,9 @@ struct UnsafeWallpaper: View {
                     ChromiumFeatureAdvisor.shared.wallpaperApplied(AppDelegate.shared.wallpaperViewModel.nextCurrentWallpaper)
 
                     if isIgnored {
-                        var trustedWallpapers =
-                        UserDefaults.app.array(forKey: "TrustedWallpapers") as? [String] ?? [String]()
-                        
-                        trustedWallpapers.append(AppDelegate.shared.wallpaperViewModel.nextCurrentWallpaper.wallpaperDirectory.path(percentEncoded: false))
-                        
-                        UserDefaults.app.set(trustedWallpapers, forKey: "TrustedWallpapers")
+                        let trusted = UserDefaults.app.array(forKey: "TrustedWallpapers") as? [String] ?? []
+                        let path = AppDelegate.shared.wallpaperViewModel.nextCurrentWallpaper.wallpaperDirectory.path(percentEncoded: false)
+                        UserDefaults.app.set(Self.trustList(trusted, adding: path), forKey: "TrustedWallpapers")
                     }
                     
                     dismiss()
@@ -92,17 +95,21 @@ struct UnsafeWallpaper: View {
                     Text("Cancel")
                         .padding(.horizontal, 10)
                 }
+                .glassButtonStyle()
+                .keyboardShortcut(.cancelAction)
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .onAppear {
-            let _ = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
-                if self.seconds <= 0 {
-                    timer.invalidate()
-                } else {
-                    self.seconds -= 1
+        // Counts down while the sheet is shown, in every run-loop mode, and stops with it.
+        .task {
+            while seconds > 0 {
+                do {
+                    try await Task.sleep(for: .seconds(1))
+                } catch {
+                    return
                 }
+                seconds -= 1
             }
         }
     }
