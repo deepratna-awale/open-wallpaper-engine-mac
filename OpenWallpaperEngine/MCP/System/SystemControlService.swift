@@ -17,7 +17,7 @@ protocol SystemControlService: AnyObject {
 
     // MARK: Android export
 
-    /// Exports the wallpapers as `.mpkg` packages as the library's "Export for Android…" does,
+    /// Exports the wallpapers as `.mpkg` packages as the Scene Editor (Live)'s Android Export does,
     /// and waits for them.
     func exportAndroid(_ request: SystemAndroidRequest) async throws -> AndroidExportBatch
 

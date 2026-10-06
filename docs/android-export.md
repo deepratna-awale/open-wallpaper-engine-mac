@@ -1,9 +1,10 @@
-# Export for Android
+# Android Export
 
-**Export for Android…** writes Wallpaper Engine's `.mpkg` packages for its Android app, as
-Wallpaper Engine's own "Export .mpkg" does. It is in the library's context menu (for one
-wallpaper or a whole selection) and in the Details panel. Copy the packages to the phone or
-tablet, or send them over Wi-Fi (below), and import them in the Wallpaper Engine app.
+**Android Export** is a tab of the Scene Editor (Live) (Details › Scene Editor (Live), ⌥⌘I). It
+writes Wallpaper Engine's `.mpkg` packages for its Android app, as Wallpaper Engine's own "Export
+.mpkg" does. All exporting happens in the Scene Editor (Live); the library has no export command.
+Copy the packages to the phone or tablet, or send them over Wi-Fi (below), and import them in the
+Wallpaper Engine app.
 
 The packages have the layout, files and JSON of Wallpaper Engine 2.8.42's own exports. How they
 are built: [`architecture.md`](architecture.md), "Android export".
@@ -13,58 +14,60 @@ are built: [`architecture.md`](architecture.md), "Android export".
 | Type | Export |
 |---|---|
 | Scene | **Dynamic** or **Pre-Rendered** (below) |
-| Video | The video file as it is, with its preview. Videos over 4 GB can't be packed. |
-| Web, application | Skipped: "Wallpaper type not supported on Android devices", as in Wallpaper Engine. |
+| Video | The video file exactly as it is, byte for byte, with its preview and a minimal project.json, as Wallpaper Engine packs it. Videos over 4 GB can't be packed. |
+| Web, application | The tab is shown but unavailable: "Wallpaper type not supported on Android devices", as in Wallpaper Engine. |
 
-A selection lists what it will skip and why before it starts.
+A video opens the Scene Editor (Live) on its export and screen saver tabs (it has no Wallpaper
+tab). Its Android Export tab plays the video in the device's screen, filled as the phone fills
+it; there is nothing to set, so it only has the export buttons.
 
-## Modes for scenes
+## Output for scenes
 
-The sheet is Wallpaper Engine's dialog: pick the performance rating that suits the device, per
-wallpaper.
+Pick the performance rating that suits the device:
 
-- **High Quality** (Dynamic): the scene itself, rendered live on the device. Everything a scene
+- **Dynamic, High Quality**: the scene itself, rendered live on the device. Everything a scene
   does keeps working there: animation, particles, effects, scripts, clocks and dates, audio
   response, touch and its user properties. Textures are converted to the compressed format
   phones read (ETC2), at full size. Shaders get the same small GLSL ES edits Wallpaper Engine
-  makes.
-- **Balanced** (Dynamic): as High Quality, with the textures at half their resolution. This is
-  the default, both in the sheet and in the Scene Editor (Live)'s Android Export tab.
-- **High Performance** (Pre-Rendered): the scene recorded as a seamless 30-second H.264 video,
-  which any device plays cheaply. As Wallpaper Engine warns, the scene's dynamic parts are
-  baked in: clocks and dates show the time of the recording, and touch, audio response and
-  properties no longer change anything.
+  makes. **Pixel art optimization** keeps textures full-size, uncompressed and sharp-edged;
+  **Texture Reduction** sets full, half or a quarter of the resolution.
+- **Dynamic, Balanced**: as High Quality, with the textures at half their resolution. This is the
+  tab's default.
+- **Pre-Rendered** (Wallpaper Engine's High Performance): the scene recorded as a seamless H.264
+  video loop, which any device plays cheaply, framed as the preview shows it: the device's screen
+  (or a custom size), the crop you drag and zoom, the parallax position, **Video Size**, **FPS**
+  (24, 30 or 60) and **Length** (30 s by default). As Wallpaper Engine warns, the scene's dynamic
+  parts are baked in: clocks and dates show the time of the recording, and touch, audio response
+  and properties no longer change anything.
 
-**Show advanced settings** adds, for Dynamic: **Pixel art optimization** (textures stay
-full-size, uncompressed and sharp-edged) and **Texture Reduction** (full, half or a quarter of
-the resolution). For Pre-Rendered:
+The tab runs a private copy of the wallpaper, so nothing on your desktop changes. Its layer edits
+and user properties are the export's own: a pre-render records them, and Dynamic bakes them into
+the package's scene.json and project.json.
 
-- **Video Cropping**: **Fit to phone screen** (a 9:16 portrait crop) or **Keep original aspect
-  ratio**.
-- **Video Preset**: Original, Full HD or 4K UHD.
-- **FPS**: 24, 30 or 60.
-- An alignment slider moves the portrait crop across the scene, over a live preview.
+## Export More with These Settings
 
-The preview runs a private copy of the wallpaper, so nothing on your desktop changes. The
-pre-rendered video uses the wallpaper's current user properties.
+**Export More with These Settings…** (under the export buttons) exports other wallpapers with the
+tab's settings. Pick them from the library (search, a type filter, tick as many as you like; the
+wallpaper being edited starts ticked, and types Android can't play are shown with why). Every
+scene gets the tab's output, quality, frame rate, video size and length; a pre-render is framed
+for the tab's device, centred. Only the wallpaper being edited keeps its edits (hidden layers,
+properties, crop, parallax position); the others export as authored. Videos are packed as they
+are.
 
-## Batches
-
-A selection exports as a queue, with overall and per-wallpaper progress, and can be cancelled.
+The batch runs as a queue with overall and per-wallpaper progress, and can be cancelled.
 Pre-rendered videos render one at a time (they use the GPU) while the other packages are written
-beside them. Each package is named `<title>.mpkg`, made unique within the batch and the folder.
-**Save to the Same Folder Each Time** skips the folder panel, for example to export straight
-into an iCloud Drive folder.
+beside them. Each package is named `<title>.mpkg`, made unique within the batch, and goes into the
+Android exports list, ready for **Send over Wi-Fi…**.
 
 ## Send over Wi-Fi
 
-Every Android export (from the library's sheet, the Scene Editor's Android Export tab or MCP) is
+Every Android export (from the Scene Editor's Android Export tab, its batches or MCP) is
 also added to the **Android exports** list, with its title, type, size, the device it was framed
 for, the date and a copy of the wallpaper's preview. The list is kept in
 `~/Library/Application Support/Open Wallpaper Engine/Android Exports/`; entries whose file is gone
 are dropped.
 
-**Send over Wi-Fi…** (after an export, in the export sheets, or **File › Send Android Exports over
+**Send over Wi-Fi…** (after an export, in the export sheets, after a batch, or **File › Send Android Exports over
 Wi-Fi…** and the menu bar icon's menu) opens a window with the whole list as a grid of previews.
 Everything not downloaded yet starts selected. **Add .mpkg Files…** adds packages exported
 earlier; each tile's menu has **Show in Finder** and **Remove from List**. **Start Sharing** lets
