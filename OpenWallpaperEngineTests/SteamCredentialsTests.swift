@@ -106,7 +106,7 @@ final class SteamCredentialsTests: XCTestCase {
         XCTAssertEqual(SteamSecretRedactor.redact(#"headers: ["x-webapi-key": "ABCDEF"]"#),
                        #"headers: ["x-webapi-key": "<redacted>"]"#)
         XCTAssertEqual(SteamSecretRedactor.redact("Logging in user 'me' hunter2 / 12345", secrets: ["hunter2", "12345", ""]),
-                       "Logging in user 'me' <redacted> / <redacted>")
+                       "Logging in user '<redacted>' <redacted> / <redacted>", "the account name too")
         XCTAssertEqual(SteamSecretRedactor.redact("monkey=banana&apikey=1"), "monkey=banana&apikey=1",
                        "only a parameter named exactly `key`")
         let once = SteamSecretRedactor.redact(url)

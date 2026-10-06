@@ -318,7 +318,7 @@ class SteamCmdService: ObservableObject {
                     self.loginSucceeded.send()
                     completion?(true)
                 } else {
-                    OWELog.error(.workshop, "steamcmd cached login failed (exit \(exitCode)):\n\(output)")
+                    OWELog.error(.workshop, "steamcmd cached login failed (exit \(exitCode)):\n\(SteamSecretRedactor.redact(output))")
                     self.isLoggedIn = false
                     self.loginError = failureMessage
                         ?? String(localized: "Cached session expired. Please log in with password.")
@@ -457,7 +457,7 @@ class SteamCmdService: ObservableObject {
                 }
             }
         }
-        OWELog.info(.workshop, "steamcmd download [\(workshopId)] exit=\(run.exitCode)\n\(run.output)")
+        OWELog.info(.workshop, "steamcmd download [\(workshopId)] exit=\(run.exitCode)\n\(SteamSecretRedactor.redact(run.output))")
 
         let downloaded = WorkshopItemInstaller.contentDirectory(inSteamCmdRoot: staging, workshopId: workshopId)
         guard FileManager.default.fileExists(atPath: downloaded.path) else {
