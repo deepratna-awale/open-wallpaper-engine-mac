@@ -215,8 +215,9 @@ class SteamCmdService: ObservableObject {
             pathError = String(localized: "File not found at selected path.")
             return
         }
-        // Make executable if needed (e.g. steamcmd.sh from Steam package)
-        if !FileManager.default.isExecutableFile(atPath: path) {
+        // Valve's package can lose the executable bit (steamcmd.sh unpacked by hand); only a file
+        // with steamcmd's name is made executable, since the program picked gets the password.
+        if !FileManager.default.isExecutableFile(atPath: path), Self.mayMakeExecutable(path) {
             do {
                 try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: path)
             } catch {
@@ -231,6 +232,11 @@ class SteamCmdService: ObservableObject {
         pathError = nil
         UserDefaults.app.set(path, forKey: SteamCmdLocator.customPathKey)
         steamCmdPath = path
+    }
+
+    /// Whether `setCustomPath` may make the file at `path` executable: only steamcmd itself.
+    static func mayMakeExecutable(_ path: String) -> Bool {
+        ["steamcmd", "steamcmd.sh"].contains(URL(fileURLWithPath: path).lastPathComponent)
     }
 
     /// Attempt login with username and password. Steam Guard code is optional.
