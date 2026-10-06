@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **The Wallpaper Editor's previews are ready the first time you open Add Effect or Add Particle System.** Once Wallpaper Engine's assets are installed (in the setup assistant or Settings › Assets), the app renders every effect's and particle system's preview in the background, effects first, at low priority; it waits on battery below 30 % and while the Mac is critically hot. A browser opened meanwhile gets its visible tiles first. An assets update renders again only the previews whose files changed, and app updates keep them.
+
 ### Changed
 
 - **Web and application wallpapers ask again when their content changes.** "Don't ask again for this wallpaper" now trusts the folder's files as they were when you answered: after a Workshop update, or another item downloaded into the same folder, the prompt asks again and says the wallpaper changed. Renaming or tagging the wallpaper in the library doesn't count as a change. Wallpapers trusted before this version keep their trust and are bound to their files the first time they are applied.
