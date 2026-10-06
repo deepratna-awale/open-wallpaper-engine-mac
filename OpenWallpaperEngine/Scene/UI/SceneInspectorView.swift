@@ -14,12 +14,14 @@ private struct SceneInspectorItem: Identifiable {
     var rawMaterial: String?
     var rawParticle: String?
     let visible: Bool
-    let isVersion: Bool
-    let versionName: String?
-    let versionValue: String?
+    /// The alternative version the layer is (`SceneLayerVersion`), with its title.
+    let version: (choice: SceneLayerVersion, title: String)?
     let effects: [SceneInspectorEffect]
     /// Video wallpapers have no authored object behind the layer, so it is description-only.
     var isSynthetic = false
+
+    var isVersion: Bool { version != nil }
+    var versionName: String? { version?.title }
 }
 
 private struct SceneInspectorEffect: Identifiable {
@@ -159,10 +161,12 @@ private final class SceneInspectorModel: ObservableObject {
             }
             return
         }
-                sceneSize = Self.sceneSize(for: scene)
+        sceneSize = Self.sceneSize(for: scene)
         renderSceneSize = SIMD2<Double>(SceneWallpaperViewModel.sceneSize(of: scene))
 
         let storedValues: [String: String] = targets.storedValues
+        let definitions = WallpaperEngineShareJSON.definitions(in: directory)
+        let labels = WallpaperEngineLabels.load()
         items = scene.objects.enumerated().map { index, object in
             let objectID = object.id ?? index
             var rawObject = rawObjects.indices.contains(index) ? prettyJSON(rawObjects[index]) : "{}"
@@ -172,7 +176,7 @@ private final class SceneInspectorModel: ObservableObject {
             let visible = storedValues[sceneObjectVisibilityKey(objectID: objectID)].map { $0 != "false" }
                 ?? object.visible ?? true
             let effects = makeEffects(object.effects ?? [], objectID: objectID, storedValues: storedValues)
-            let version = Self.versionName(from: object.name)
+            let version = SceneLayerVersion(object: object, definitions: definitions).map { (choice: $0, title: $0.title(labels: labels)) }
             if let imagePath = object.image {
                 let model: WEModel? = data(imagePath).flatMap { try? JSONDecoder().decode(WEModel.self, from: $0) }
                 let materialPath = model?.material
@@ -184,8 +188,7 @@ private final class SceneInspectorModel: ObservableObject {
                                           shaderPaths: passes.compactMap(\.shader), rawObject: rawObject,
                                           rawMaterial: materialPath.flatMap(rawJSON), rawParticle: nil,
                                           visible: visible,
-                                          isVersion: version != nil, versionName: version,
-                                          versionValue: object.visibleCondition, effects: effects)
+                                          version: version, effects: effects)
             }
             if let particlePath = object.particle {
                 let particle: WEParticleSystem? = data(particlePath).flatMap { try? JSONDecoder().decode(WEParticleSystem.self, from: $0) }
@@ -198,22 +201,19 @@ private final class SceneInspectorModel: ObservableObject {
                                           shaderPaths: passes.compactMap(\.shader), rawObject: rawObject,
                                           rawMaterial: materialPath.flatMap(rawJSON), rawParticle: rawJSON(particlePath),
                                           visible: visible,
-                                          isVersion: false, versionName: nil, versionValue: nil, effects: effects)
+                                          version: version, effects: effects)
             }
             return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? String(localized: "Object \(index + 1)", comment: "Scene Editor: a scene object without a name"),
                                       kind: "Other", sourcePath: "", materialPath: nil, texturePaths: [], shaderPaths: [],
                                       rawObject: rawObject, rawMaterial: nil, rawParticle: nil,
                                       visible: visible,
-                                      isVersion: false, versionName: nil, versionValue: nil, effects: effects)
+                                      version: version, effects: effects)
         }
-                        let selectedVersion = storedValues["version"]
-                        initiallySelectedID = items.first { $0.versionValue == selectedVersion }?.id ?? items.first?.id
-    }
-
-    private static func versionName(from name: String?) -> String? {
-        guard let name, let range = name.range(of: #"_(\d+)$"#, options: .regularExpression) else { return nil }
-        let number = name[range].dropFirst()
-        return String(localized: "Version \(String(number))", comment: "Scene Editor: one of a layer's alternative versions")
+        // The version the property's current value (else its default) shows.
+        initiallySelectedID = items.first { item in
+            guard let version = item.version?.choice else { return false }
+            return version.value == (storedValues[version.property] ?? definitions[version.property]?.defaultValue)
+        }?.id ?? items.first?.id
     }
 
     /// Wallpaper Engine renders a video through its `scenes/videoplayer` scene, and the Metal path
@@ -230,7 +230,7 @@ private final class SceneInspectorModel: ObservableObject {
                                materialPath: nil, texturePaths: [], shaderPaths: [],
                                rawObject: prettyJSON(["file": file, "status": String(localized: "Reading media…")]),
                                rawMaterial: nil, rawParticle: nil, visible: true,
-                               isVersion: false, versionName: nil, versionValue: nil,
+                               version: nil,
                                effects: [], isSynthetic: true),
             SceneInspectorItem(id: "effects", name: String(localized: "Effects"), kind: "Effect Stack", sourcePath: "",
                                materialPath: nil, texturePaths: [], shaderPaths: [],
@@ -239,7 +239,7 @@ private final class SceneInspectorModel: ObservableObject {
                                    "note": String(localized: "Scene effects are toggled under User Scene Settings.")
                                ]),
                                rawMaterial: nil, rawParticle: nil, visible: true,
-                               isVersion: false, versionName: nil, versionValue: nil,
+                               version: nil,
                                effects: [], isSynthetic: true)
         ]
         initiallySelectedID = "video"
@@ -272,7 +272,7 @@ private final class SceneInspectorModel: ObservableObject {
                                                materialPath: nil, texturePaths: [], shaderPaths: [],
                                                rawObject: prettyJSON(audioSummary),
                                                rawMaterial: nil, rawParticle: nil, visible: true,
-                                               isVersion: false, versionName: nil, versionValue: nil,
+                                               version: nil,
                                                effects: [], isSynthetic: true)
                 self.items.insert(audio, at: 1)
             }
@@ -518,8 +518,7 @@ private final class SceneInspectorModel: ObservableObject {
                                               texturePaths: item.texturePaths, shaderPaths: item.shaderPaths,
                                               rawObject: item.rawObject, rawMaterial: item.rawMaterial,
                                               rawParticle: item.rawParticle, visible: visible,
-                                              isVersion: item.isVersion, versionName: item.versionName,
-                                              versionValue: item.versionValue, effects: item.effects)
+                                              version: item.version, effects: item.effects)
         }
     }
 
@@ -814,9 +813,9 @@ private final class SceneInspectorModel: ObservableObject {
     }
 
     func useVersion(_ item: SceneInspectorItem) {
-        guard let value = item.versionValue else { return }
+        guard let version = item.version?.choice else { return }
         var values = storedValues
-        values["version"] = value
+        values[version.property] = version.value
         persist(values)
     }
 
