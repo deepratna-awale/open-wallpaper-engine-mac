@@ -110,6 +110,8 @@ class WallpaperViewModel: ObservableObject {
     @Published var inspectedAuthor: SteamPlayer?
     /// Guards against firing a second Steam request for a lookup already in progress.
     private var inFlightWorkshopId: String?
+    /// The wallpaper `inspectedWorkshopItem` and `inspectedAuthor` belong to.
+    private var workshopDetailsDirectory: URL?
 
     @Published var wallpaperPlacement: WallpaperPlacement = .fill {
         didSet {
@@ -272,11 +274,22 @@ class WallpaperViewModel: ObservableObject {
     func inspect(_ wallpaper: WEWallpaper) {
         var wallpaper = wallpaper
         wallpaper.project.applyTaggedContentRating()
+        inspectedWallpaper = wallpaper
+        loadWorkshopDetails(of: wallpaper)
+    }
+
+    /// Looks up the Workshop item and author of the wallpaper the Details panel shows. Until a
+    /// tile is inspected that is the current wallpaper, which nothing else looks up at launch.
+    func loadDisplayedWorkshopDetails() {
+        loadWorkshopDetails(of: displayedWallpaper)
+    }
+
+    private func loadWorkshopDetails(of wallpaper: WEWallpaper) {
         // A tile tap inspects twice (once via selectWallpaper, once from the tile itself). Clearing
         // and refetching on the second call raced the first request, and Steam rejected the
         // duplicate, so the metadata stayed empty until a later visit read it from cache.
-        let isSameWallpaper = inspectedWallpaper?.wallpaperDirectory == wallpaper.wallpaperDirectory
-        inspectedWallpaper = wallpaper
+        let isSameWallpaper = workshopDetailsDirectory == wallpaper.wallpaperDirectory
+        workshopDetailsDirectory = wallpaper.wallpaperDirectory
         if !isSameWallpaper {
             inspectedWorkshopItem = nil
             inspectedAuthor = nil
