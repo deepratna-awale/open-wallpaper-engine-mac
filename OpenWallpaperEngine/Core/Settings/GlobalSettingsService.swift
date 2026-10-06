@@ -51,7 +51,7 @@ class GlobalSettingsViewModel: ObservableObject {
     /// bar tint and lock-screen pictures, the screen saver) start following the app's wallpaper.
     /// Only Open Wallpaper Engine's own settings do; the Wallpaper Editor's process reads them.
     init(followsLaunch: Bool = true) {
-        let loaded: GlobalSettings = Self.loadSettings(from: UserDefaults.app.data(forKey: "GlobalSettings"),
+        let loaded: GlobalSettings = Self.loadSettings(from: UserDefaults.app.data(forKey: Self.defaultsKey),
                                                        backupDirectory: AppStorageLocation.current.supportDirectory)
         self.settings = loaded
         languageChange = LanguageChange(atLaunch: loaded.language)
@@ -73,18 +73,24 @@ class GlobalSettingsViewModel: ObservableObject {
         do {
             return try JSONDecoder().decode(GlobalSettings.self, from: data)
         } catch {
-            let formatter = DateFormatter()
-            formatter.locale = Locale(identifier: "en_US_POSIX")
-            formatter.dateFormat = "yyyyMMdd-HHmmss"
-            let backup: URL = backupDirectory.appending(path: "settings.corrupt-\(formatter.string(from: now)).json")
-            do {
-                try FileManager.default.createDirectory(at: backupDirectory, withIntermediateDirectories: true)
-                try data.write(to: backup, options: .atomic)
-                OWELog.error(.settings, "Settings can't be read and are reset to the defaults; the stored copy is at \(backup.path): \(error)")
-            } catch let backupError {
-                OWELog.error(.settings, "Settings can't be read and are reset to the defaults (\(error)); backing up the stored copy failed: \(backupError)")
-            }
+            backUpUnreadableSettings(data, error: error, backupDirectory: backupDirectory, now: now)
             return GlobalSettings()
+        }
+    }
+
+    /// Copies stored settings that can't be read to `settings.corrupt-<date>.json` in
+    /// `backupDirectory`, before a save replaces them.
+    nonisolated private static func backUpUnreadableSettings(_ data: Data, error: Error, backupDirectory: URL, now: Date) {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyyMMdd-HHmmss"
+        let backup: URL = backupDirectory.appending(path: "settings.corrupt-\(formatter.string(from: now)).json")
+        do {
+            try FileManager.default.createDirectory(at: backupDirectory, withIntermediateDirectories: true)
+            try data.write(to: backup, options: .atomic)
+            OWELog.error(.settings, "Settings can't be read; the stored copy is at \(backup.path): \(error)")
+        } catch let backupError {
+            OWELog.error(.settings, "Settings can't be read (\(error)); backing up the stored copy failed: \(backupError)")
         }
     }
 
@@ -148,63 +154,111 @@ class GlobalSettingsViewModel: ObservableObject {
         AppDelegate.shared.setPlacehoderWallpaper(with: newValue)
     }
     
-    func reset() {
-        settings = (try? JSONDecoder()
-            .decode(GlobalSettings.self,
-                from: UserDefaults.app.data(forKey: "GlobalSettings")
-            ?? Data()))
-        ?? GlobalSettings()
-    }
-    
-    func save() {
-        let data = try! JSONEncoder().encode(settings)
-        OWELog.debug(.settings, "Saved settings: \(String(describing: String(data: data, encoding: .utf8)))")
-        UserDefaults.app.set(data, forKey: "GlobalSettings")
+    /// The settings when the Settings window opened: Cancel (or closing the window) goes back to
+    /// them, OK keeps the changes, and the window's "Edited" badge compares against them. Changes
+    /// still apply and save as they are made. Nil while the window isn't being edited.
+    @Published private(set) var editSnapshot: GlobalSettings?
+
+    /// Whether the settings differ from those the Settings window opened with.
+    var hasUnconfirmedEdits: Bool { editSnapshot.map { $0 != settings } ?? false }
+
+    /// The Settings window opened: remembers the settings Cancel goes back to. Kept when already
+    /// editing, so reopening or refocusing the window doesn't confirm anything.
+    func beginEditing() {
+        if editSnapshot == nil { editSnapshot = settings }
     }
 
-    func setQuality(_ quality: GSQuality) {
-        self.settings.shadows = quality.shadows
-        self.settings.volumetrics = quality.volumetrics
-        self.settings.qualityEfficiency = QualityEfficiency(preset: quality).stop
-        self.settings.fps = quality.fps
-        self.settings.fpsSetByUser = false
-        self.settings.applyResolutionPreset(quality)
-        switch quality {
-        case .low:
-            self.settings.antiAliasing = .none
-            self.settings.postProcessing = .disabled
-            self.settings.textureResolution = .highQuality
-            self.settings.reflections = false
-            self.settings.particleBudget = .low
-        case .medium:
-            self.settings.antiAliasing = .none
-            self.settings.postProcessing = .enabled
-            self.settings.textureResolution = .highQuality
-            self.settings.reflections = true
-            self.settings.particleBudget = .medium
-        case .high:
-            self.settings.antiAliasing = .msaa_x2
-            self.settings.postProcessing = .enabled
-            self.settings.textureResolution = .highQuality
-            self.settings.reflections = true
-            self.settings.particleBudget = .high
-        case .ultra:
-            self.settings.antiAliasing = .msaa_x2
-            self.settings.postProcessing = .ultra
-            self.settings.textureResolution = .highQuality
-            self.settings.reflections = true
-            self.settings.particleBudget = .unlimited
+    /// OK: keeps the changes.
+    func commitEdits() {
+        editSnapshot = nil
+    }
+
+    /// Cancel, or the window closing without OK: back to the settings the window opened with.
+    /// Without a snapshot, the stored settings are read again; stored data that can't be read is
+    /// backed up and the settings in use are kept, so a failed read never replaces the stored
+    /// settings with the defaults.
+    func reset() {
+        if let snapshot = editSnapshot {
+            editSnapshot = nil
+            if settings != snapshot { settings = snapshot }
+            return
+        }
+        guard let data = UserDefaults.app.data(forKey: Self.defaultsKey) else { return }
+        do {
+            let stored = try JSONDecoder().decode(GlobalSettings.self, from: data)
+            if settings != stored { settings = stored }
+        } catch {
+            Self.backUpUnreadableSettings(data, error: error,
+                                          backupDirectory: AppStorageLocation.current.supportDirectory, now: Date())
         }
     }
-    
-    private func validate() {
-        switch settings.appearance {
-        case .light:
-            NSApp.appearance = NSAppearance(named: .aqua)
-        case .dark:
-            NSApp.appearance = NSAppearance(named: .darkAqua)
-        case .followSystem:
-            NSApp.appearance = nil
+
+    /// The `UserDefaults.app` key the settings are stored under.
+    nonisolated static let defaultsKey = "GlobalSettings"
+
+    func save() {
+        do {
+            let data = try JSONEncoder().encode(settings)
+            OWELog.debug(.settings, "Saved settings: \(String(describing: String(data: data, encoding: .utf8)))")
+            UserDefaults.app.set(data, forKey: Self.defaultsKey)
+        } catch {
+            OWELog.error(.settings, "Saving the settings failed: \(error)")
         }
+    }
+
+    /// Applies `quality`'s preset in one change: one save, and one update of whatever follows the
+    /// settings.
+    func setQuality(_ quality: GSQuality) {
+        settings = Self.applying(quality, to: settings)
+    }
+
+    /// `settings` with `quality`'s preset applied.
+    nonisolated static func applying(_ quality: GSQuality, to settings: GlobalSettings) -> GlobalSettings {
+        var settings = settings
+        settings.shadows = quality.shadows
+        settings.volumetrics = quality.volumetrics
+        settings.qualityEfficiency = QualityEfficiency(preset: quality).stop
+        settings.fps = quality.fps
+        settings.fpsSetByUser = false
+        settings.applyResolutionPreset(quality)
+        switch quality {
+        case .low:
+            settings.antiAliasing = .none
+            settings.postProcessing = .disabled
+            settings.textureResolution = .highQuality
+            settings.reflections = false
+            settings.particleBudget = .low
+        case .medium:
+            settings.antiAliasing = .none
+            settings.postProcessing = .enabled
+            settings.textureResolution = .highQuality
+            settings.reflections = true
+            settings.particleBudget = .medium
+        case .high:
+            settings.antiAliasing = .msaa_x2
+            settings.postProcessing = .enabled
+            settings.textureResolution = .highQuality
+            settings.reflections = true
+            settings.particleBudget = .high
+        case .ultra:
+            settings.antiAliasing = .msaa_x2
+            settings.postProcessing = .ultra
+            settings.textureResolution = .highQuality
+            settings.reflections = true
+            settings.particleBudget = .unlimited
+        }
+        return settings
+    }
+    
+    /// Applies the appearance setting to the app, only when it differs from what the app has:
+    /// setting `NSApp.appearance` redraws every window.
+    private func validate() {
+        let appearance: NSAppearance? = switch settings.appearance {
+        case .light: NSAppearance(named: .aqua)
+        case .dark: NSAppearance(named: .darkAqua)
+        case .followSystem: nil
+        }
+        guard NSApp.appearance?.name != appearance?.name else { return }
+        NSApp.appearance = appearance
     }
 }
