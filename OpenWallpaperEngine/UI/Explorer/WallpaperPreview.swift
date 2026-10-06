@@ -278,20 +278,11 @@ struct WallpaperPreview: SubviewOfContentView {
                                         isEditingId = ""
                                     }
                                     
-                                    guard !newTag.isEmpty else { return }
-                                    
                                     var wallpaper = wallpaperViewModel.displayedWallpaper
-                                    
-                                    var tags = wallpaper.project.tags ?? []
-                                    
-                                    tags = Array(Set(tags)) // remove duplicate items
-                                    
-                                    tags.append(newTag)
-                                    
-                                    tags = Array(Set(tags)) // remove duplicate items
-                                    
-                                    wallpaper.project.tags = tags.sorted()
-                                    
+                                    let tags = ProjectTagList.adding(newTag, to: wallpaper.project.tags ?? [])
+                                    guard tags != wallpaper.project.tags else { return }
+                                    wallpaper.project.tags = tags
+
                                     guard WallpaperProjectFileEdit.setLogging(["tags": wallpaper.project.tags], inProjectAt: wallpaper.wallpaperDirectory) else { return }
                                     
                                     wallpaperViewModel.inspect(wallpaper)
@@ -559,17 +550,10 @@ struct WallpaperPreview: SubviewOfContentView {
                             if hoveredTag == tag, projectTags.contains(tag) {
                                 Button {
                                     var wallpaper = wallpaperViewModel.displayedWallpaper
-                                    
-                                    guard var tags = wallpaper.project.tags else { return } // else case seems impossible, however much safer
-                                    
-                                    tags = Array(Set(tags)) // remove duplicate items
-                                    
-                                    guard let index = tags.firstIndex(where: { $0 == tag }) else { return }
-                                    
-                                    tags.remove(at: index)
-                                    
-                                    wallpaper.project.tags = tags
-                                    
+                                    // Optional lookup: the button shows only for project.json's own tags.
+                                    guard let tags = wallpaper.project.tags else { return }
+                                    wallpaper.project.tags = ProjectTagList.removing(tag, from: tags)
+
                                     guard WallpaperProjectFileEdit.setLogging(["tags": wallpaper.project.tags], inProjectAt: wallpaper.wallpaperDirectory) else { return }
                                     
                                     wallpaperViewModel.inspect(wallpaper)
