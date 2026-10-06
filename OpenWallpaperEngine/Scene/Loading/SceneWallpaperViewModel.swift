@@ -613,9 +613,11 @@ class SceneWallpaperViewModel: ObservableObject {
         }
     }
 
+    /// project.json's `preview`, then the usual preview file names.
     private func loadPreviewImage(wallpaperDir: URL) -> NSImage? {
-        for name in ["preview.jpg", "preview.png", "preview.gif"] {
-            let url = wallpaperDir.appending(path: name)
+        let named = currentWallpaper.project.previewURL(in: wallpaperDir)
+        let candidates = [named].compactMap { $0 } + ["preview.jpg", "preview.png", "preview.gif"].map { wallpaperDir.appending(path: $0) }
+        for url in candidates {
             if let image = NSImage(contentsOf: url) { return image }
         }
         return nil
