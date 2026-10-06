@@ -584,10 +584,13 @@ struct WorkshopItemCard: View {
                 Button {
                     viewModel.selectItem(item)
                 } label: {
-                    Image(systemName: viewModel.selectedItemIds.contains(item.id) ? "checkmark.circle.fill" : "circle")
+                    Label("Select item",
+                          systemImage: viewModel.selectedItemIds.contains(item.id) ? "checkmark.circle.fill" : "circle")
+                        .labelStyle(.iconOnly)
                         .foregroundStyle(viewModel.selectedItemIds.contains(item.id) ? Color.accentColor : .white)
                 }
                 .buttonStyle(.plain)
+                .accessibilityAddTraits(viewModel.selectedItemIds.contains(item.id) ? .isSelected : [])
                 .padding(6)
                 .shadow(color: .black.opacity(0.8), radius: 3, x: 0, y: 1)
                 .help("Select item")
@@ -633,7 +636,8 @@ struct WorkshopItemCard: View {
                 Button {
                     viewModel.download(item: item)
                 } label: {
-                    Image(systemName: "arrow.down.circle.fill")
+                    Label("Download", systemImage: "arrow.down.circle.fill")
+                        .labelStyle(.iconOnly)
                         .font(.title3)
                 }
                 .buttonStyle(.plain)
