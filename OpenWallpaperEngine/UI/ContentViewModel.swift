@@ -435,7 +435,12 @@ class ContentViewModel: ObservableObject, DropDelegate {
         self.importAlertPresented = true
     }
     
+    /// Asks whether to trust `wallpaper` before it runs its code. The sheet is on the main window,
+    /// which comes forward first: a wallpaper picked from the menu bar's Recent Wallpapers with the
+    /// window closed would otherwise wait for an answer no one can see.
     func warningUnsafeWallpaperModal(which wallpaper: WEWallpaper) {
+        OWELog.info(.library, "Asking to trust \(wallpaper.wallpaperDirectory.lastPathComponent) (\(wallpaper.project.type)) before it runs")
+        AppDelegate.shared.openMainWindow()
         self.isUnsafeWallpaperWarningPresented = true
     }
     
