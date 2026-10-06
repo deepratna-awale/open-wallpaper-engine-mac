@@ -82,20 +82,27 @@ private struct SteamCmdNotInstalledView: View {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString("brew install steamcmd", forType: .string)
                 isCopied = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { isCopied = false }
             } label: {
                 Label(isCopied ? "Copied" : "Copy", systemImage: isCopied ? "checkmark" : "doc.on.doc")
                     .labelStyle(.iconOnly)
             }
             .glassButtonStyle()
             .help(isCopied ? "Copied" : "Copy the command")
+            // Back to "Copy" after a moment; cancelled with the view.
+            .task(id: isCopied) {
+                guard isCopied else { return }
+                do {
+                    try await Task.sleep(for: .seconds(2))
+                    isCopied = false
+                } catch {}
+            }
         }
 
         Text("Or locate an existing steamcmd binary:")
             .font(.callout)
             .foregroundStyle(.secondary)
 
-        Button("Browse...") {
+        Button("Browse…") {
             let panel = NSOpenPanel()
             panel.canChooseFiles = true
             panel.canChooseDirectories = false
@@ -285,7 +292,7 @@ private struct WorkshopBrowserView: View {
             // Results
             if viewModel.isLoading && viewModel.items.isEmpty {
                 Spacer()
-                ProgressView("Searching Workshop...")
+                ProgressView("Searching Workshop…")
                 Spacer()
             } else if let error = viewModel.errorMessage, viewModel.items.isEmpty {
                 Spacer()
