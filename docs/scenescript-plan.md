@@ -2,7 +2,7 @@
 
 **Note (2026-09-28):** `Vendor/we-assets` no longer exists. Wallpaper Engine's assets now come from the user's own Steam copy (Settings › Assets, cached in `<Wallpaper Storage>/.owe-assets`) or a chosen Wallpaper Engine folder, and tests read them from `OWE_ASSETS`. Mentions of `we-assets` below describe the tree as it was when this was written.
 
-**Status: 2026-09-26, WP0 (from evidence) and WP1–WP11 done: the app runs every scene's scripts on `SceneScriptRuntime`, one per display, and the legacy `AudioReactiveScriptEngine` scripting is deleted. WP11's gaps are closed (sound layers, desktop clicks, no frame of latency, `createLayer` of every kind, `brightness`/`size`) and the optimisation pass is done (see "After WP11"). WP12 (timelines and animation APIs) is next.** Roadmap area 4 (Phase 6). This document is the evidence and the plan for making our SceneScript runtime run *every* script users have. It replaces §5 and P5 of [`progress-snapshot.md`](progress-snapshot.md) as the source of truth for scripting.
+**Status: 2026-09-26, WP0 (from evidence) and WP1–WP11 done: the app runs every scene's scripts on `SceneScriptRuntime`, one per display, and the legacy `AudioReactiveScriptEngine` scripting is deleted. WP11's gaps are closed (sound layers, desktop clicks, no frame of latency, `createLayer` of every kind, `brightness`/`size`) and the optimisation pass is done (see "After WP11"). WP12 (timelines and animation APIs) is next.** Roadmap area 4 (Phase 6). This document is the evidence and the plan for making our SceneScript runtime run *every* script users have. It replaces §5 and P5 of the progress-snapshot notes as the source of truth for scripting.
 
 Sources, in order of authority:
 
@@ -290,7 +290,7 @@ Call sites:
 
 1. **Context per key.** The context is keyed by `"<layerId|global>:<full source>"`. Particle and effect scripts have no layer id, so identical sources on different objects share one context and its state.
 2. **Rebuilt every call.** Every `evaluate*` call re-sets about 15 globals: `engine` rebuilt from a Swift dictionary, `input`, `__layers` (a JSON copy of *every* layer's state), `shared`, `thisScene` (a new object literal, evaluated from a string), `thisLayer` (another copy), plus `registerAudioBuffers`. Every layer is then re-decorated with about 60 closures.
-3. **Script source.** The source goes through regex rewriting: `export` is stripped and `import * as` / `import {}` become `__requireModule`. It is evaluated once; then `init(input)` runs, `applyUserProperties(all)` runs when the property revision changed, then `__dispatchRuntimeEvents` (cursor, enter/leave, animation stubs, timers), then `update(input)`.
+3. **Script source.** The legacy engine rewrote the source with regexes: `export` was stripped and `import * as` / `import {}` became `__requireModule`. (This is gone: since WP3 the module compiler in `Scripting/Modules/` reads the source with a real tokenizer, `SceneScriptTokenizer`, which skips strings, comments, regex and template literals, and `SceneScriptModuleScanner` / `SceneScriptModuleTransformer` rewrite the top-level imports and exports; see §4.2.) It is evaluated once; then `init(input)` runs, `applyUserProperties(all)` runs when the property revision changed, then `__dispatchRuntimeEvents` (cursor, enter/leave, animation stubs, timers), then `update(input)`.
 4. **Read-back.** Afterwards `__layers.toDictionary()` and `shared.toDictionary()` are copied back into Swift and replace the global state. Pending creations, orders and removals are drained, and `__camerashake` is read.
 
 The measured cost in the snapshot is about 0.3 ms plus 0.12 ms per layer, per script, per frame: roughly 400 ms per frame for 3453730450.
@@ -301,7 +301,7 @@ Legend: ✅ works like WE · 🟡 partial or wrong in a way the corpus hits · �
 
 | API | WE semantics | Ours | Corpus (scripts/sites/wp) |
 |---|---|---|---|
-| ES module syntax | real modules, own scope per script | 🟡 regex rewrite; top-level `let` collides in the shared visibility context | all 281 |
+| ES module syntax | real modules, own scope per script | 🟡 regex rewrite (before WP3; now a tokenizer-based module compiler, own scope per script); top-level `let` collides in the shared visibility context | all 281 |
 | imports `WEMath/WEColor/WEVector` | WE jsmodules | ✅ via the bundled WE files | 18/37/9 |
 | `update(value)` return → property | chained: the next call receives the current value; no return = unchanged; number broadcast to vectors | 🟡 input is always the authored/base value, so accumulators never move; `undefined` → `"undefined"` text or (0,0,0) vectors; a number `n` returned for a vector becomes `(n, 0, 0)` through `parseVector3`, not `(n, n, n)` | 213/357/43 |
 | `init(value)` return → property | applied | ❌ return ignored | 79/115/23 |
@@ -367,7 +367,7 @@ Legend: ✅ works like WE · 🟡 partial or wrong in a way the corpus hits · �
 8. The engine reads `NSEvent.pressedMouseButtons`/`mouseLocation` on the render thread and ties cursor state to one global `__lastCursor` per context.
 9. `localStorage` writes `UserDefaults.standard` (CONTRIBUTING rule 3) and uses `dictionaryRepresentation()` scans for `clear`.
 10. `BrowserMediaIntegration` runs AppleScript against eight browsers every 2 s. That triggers Automation permission prompts, reports tab titles rather than media, and never dispatches events.
-11. Effects hidden at load (`isEffectVisible`) are not built at all, so no script or user property can show them later. The same holds for objects (roadmap area 8 item 3 and item 10).
+11. Effects hidden at load (`isEffectVisible`) are not built at all, so no script or user property can show them later. The same holds for objects (roadmap notes area 8 item 3 and item 10).
 12. Particle scripts use the particle system's elapsed time as `engine.runtime`, while layer scripts use scene time.
 13. `SceneValueContext` has a `properties` parameter that `LiveSceneValueContext` ignores (its doc comment says so), so `scriptproperties` never reach effect, particle or visible scripts.
 14. The audio capture, FFT, property store and the render-side property reads (`userPropertyValue`, `_owe_*`) all live in the script engine file. The script runtime can't be extracted or tested without them.
@@ -443,7 +443,7 @@ The corpus uses only `export function|let|var|const NAME` and `import * as X fro
 
 **The renderer** stops calling `layerValue`/`evaluate*` per draw. It reads the table after the script phase. `SceneObjectMotion`, `ParticleFrameInputs` and `LiveSceneValueContext.evaluateScript` read the resolved field from the table instead of running scripts themselves.
 
-**Hidden objects** stay in the table and the draw list with `visible = 0`. Their scripts keep running (P6). Hidden effects are built and skipped. This closes roadmap area 8 items 3 and 10 for scripts.
+**Hidden objects** stay in the table and the draw list with `visible = 0`. Their scripts keep running (P6). Hidden effects are built and skipped. This closes roadmap notes area 8 items 3 and 10 for scripts.
 
 ### 4.4 Frame order
 

@@ -84,14 +84,6 @@ struct ExplorerItemMenu: SubviewOfContentView {
                     .help("Opens the wallpaper's Steam Workshop page, where you can report it to Steam")
                 }
                 Button {
-                    viewModel.androidExport = AndroidExportSelection(wallpapers: exportSelection)
-                } label: {
-                    Label("Export for Android…", systemImage: "iphone.and.arrow.forward")
-                }
-                .disabled(exportSelection.allSatisfy { AndroidPackageBuilder.kind(of: $0) == nil })
-                .help(AndroidPackageBuilder.kind(of: hoveredWallpaper) == nil
-                      ? String(localized: "Wallpaper type not supported on Android devices") : "")
-                Button {
                     NSWorkspace.shared.selectFile(nil,
                                                   inFileViewerRootedAtPath: hoveredWallpaper.wallpaperDirectory.path(percentEncoded: false))
                 } label: {
@@ -100,12 +92,6 @@ struct ExplorerItemMenu: SubviewOfContentView {
             }
         }
         .labelStyle(.titleAndIcon)
-    }
-
-    /// What "Export for Android…" exports: the selection when the item is in it, else the item.
-    private var exportSelection: [WEWallpaper] {
-        let selected = viewModel.selectedWallpaperItems()
-        return selected.contains(where: { $0.isSameWallpaper(as: hoveredWallpaper) }) ? selected : [hoveredWallpaper]
     }
 
     /// The wallpaper whose Workshop presets "Browse Presets" lists: a preset item's base, else a

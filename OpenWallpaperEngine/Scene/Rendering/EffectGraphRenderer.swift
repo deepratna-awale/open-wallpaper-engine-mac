@@ -339,7 +339,7 @@ final class EffectGraphRenderer {
 
     /// Runs `effects` on `input` up to their last pass, which the caller draws into the scene with
     /// `encode(_:into:scene:context:commandBuffer:)`, as WE draws a layer's last effect pass
-    /// (docs/phase2-plan.md §2; `lastScenePass`). nil when nothing can be drawn: the chain has no
+    /// (phase2-plan notes §2; `lastScenePass`). nil when nothing can be drawn: the chain has no
     /// such pass, or its pipelines are still compiling.
     func applyDrawingLastPass(_ effects: [SceneEffectPlan], to image: MTLTexture, layerID: String,
                               context: Context, commandBuffer: MTLCommandBuffer) -> DrawnLastPass? {

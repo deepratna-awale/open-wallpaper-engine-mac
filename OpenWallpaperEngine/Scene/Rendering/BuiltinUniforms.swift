@@ -211,7 +211,7 @@ enum BuiltinUniforms {
         case .frametime: return [Float(frame.frameTime)]
         // WE's pointer is y-down, as the Windows cursor: its shaders flip it "to match texture
         // space Y" (cursor ripple, x-ray, fluid simulation), as its camera parallax does (§3 of
-        // docs/we-values-audit.md). Ours is y-up.
+        // we-values-audit notes). Ours is y-up.
         case .pointerPosition: return [frame.pointer.x, 1 - frame.pointer.y]
         case .pointerPositionLast: return [frame.pointerLast.x, 1 - frame.pointerLast.y]
         case .pointerState: return flat(frame.pointerState)

@@ -40,14 +40,15 @@ enum LivePhotoHelper {
 
     /// Renders the Live Photo of `wallpaper` with `properties` (the isolated store's values,
     /// `IsolatedSceneEditSession.values`) as `settings` say, into a new folder under `cacheDirectory`.
-    /// `progress` gets 0…1 on the main actor.
+    /// The files are named `name` (the wallpaper's title by default). `progress` gets 0…1 on the
+    /// main actor.
     @MainActor
     static func export(_ wallpaper: WEWallpaper, properties: [String: String], settings: LivePhotoExportSettings,
-                       progress: @escaping @MainActor (Double) -> Void) async throws -> Files {
+                       name: String? = nil, progress: @escaping @MainActor (Double) -> Void) async throws -> Files {
         let identifier = UUID().uuidString
         let directory = cacheDirectory.appending(path: identifier, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let base = LivePhotoRenderer.fileName(wallpaper.project.displayTitle)
+        let base = name ?? LivePhotoRenderer.fileName(wallpaper.project.displayTitle)
         let files = Files(directory: directory, still: directory.appending(path: base + ".HEIC"),
                           movie: directory.appending(path: base + ".MOV"), identifier: identifier)
         let job = exportJob(wallpaper, properties: properties, settings: settings, files: files)

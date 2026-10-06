@@ -35,6 +35,8 @@ final class AndroidExportEditorModel: ObservableObject {
     static let deviceKey = "AndroidExportEditorDevice"
     static let customSizeKey = "AndroidExportEditorCustomSize"
     static let customID = "custom"
+    /// The folder a package was last saved to.
+    static let folderKey = "AndroidExportFolder"
     /// The loop's length: WE's 30 s by default.
     static let lengths = 5...60
 
@@ -74,6 +76,9 @@ final class AndroidExportEditorModel: ObservableObject {
     @Published private(set) var batch: AndroidExportBatch?
     @Published var errorMessage: String?
     @Published var sheet: AndroidEditorSheet?
+    /// "Export More with These Settings…": its sheet is open, and the batch it started.
+    @Published var isBatchPresented = false
+    @Published private(set) var batchQueue: AndroidExportQueue?
 
     init(session: IsolatedSceneEditSession, sceneSize: SIMD2<Double>, defaults: UserDefaults = .app,
          worker: AndroidExportWorking? = nil) {
@@ -157,10 +162,11 @@ final class AndroidExportEditorModel: ObservableObject {
 
     var zoom: Double {
         get { crop.zoom }
-        set { crop.setZoom(newValue) }
+        set { if !isVideo { crop.setZoom(newValue) } }
     }
 
-    func pan(by delta: SIMD2<Double>) { crop.pan(by: delta) }
+    /// A video fills the screen as the phone shows it: its picture doesn't move.
+    func pan(by delta: SIMD2<Double>) { if !isVideo { crop.pan(by: delta) } }
 
     func setParallaxPosition(_ position: SIMD2<Double>) {
         let position = LivePhotoParallax.clamped(position)
@@ -192,10 +198,15 @@ final class AndroidExportEditorModel: ObservableObject {
 
     func setSeconds(_ value: Int) { seconds = min(max(value, Self.lengths.lowerBound), Self.lengths.upperBound) }
 
+    /// A video wallpaper: packed as Wallpaper Engine packs it (the file as it is, its preview and a
+    /// minimal project.json), so the mode has nothing to frame or bake for it.
+    var isVideo: Bool { AndroidPackageBuilder.kind(of: wallpaper) == .video }
+
     /// The package's item: this version's values and framing (Pre-Rendered), or the values baked
-    /// into its files (Dynamic).
+    /// into its files (Dynamic); a video as it is.
     var item: AndroidExportItem {
         var item = AndroidExportItem(wallpaper: wallpaper, options: options)
+        guard !isVideo else { return item }
         let values = session.values
         if isPreRendered {
             item.properties = values
@@ -240,11 +251,11 @@ final class AndroidExportEditorModel: ObservableObject {
         panel.nameFieldStringValue = AndroidExportNaming.uniqueNames([wallpaper.project.displayTitle], taken: []).first ?? ""
         panel.allowedContentTypes = [UTType(filenameExtension: AndroidExportNaming.fileExtension) ?? .data]
         panel.canCreateDirectories = true
-        if let folder = defaults.string(forKey: AndroidExportModel.folderKey) {
+        if let folder = defaults.string(forKey: Self.folderKey) {
             panel.directoryURL = URL(filePath: folder, directoryHint: .isDirectory)
         }
         guard panel.runModal() == .OK, let url = panel.url else { return }
-        defaults.set(url.deletingLastPathComponent().path(percentEncoded: false), forKey: AndroidExportModel.folderKey)
+        defaults.set(url.deletingLastPathComponent().path(percentEncoded: false), forKey: Self.folderKey)
         export(to: url.deletingLastPathComponent(), name: url.lastPathComponent, then: nil)
     }
 
@@ -279,6 +290,59 @@ final class AndroidExportEditorModel: ObservableObject {
     }
 
     func cancel() { queue?.cancel() }
+
+    // MARK: Export More with These Settings…
+
+    /// The batch's items for `wallpapers` (in that order, once each) and the ones skipped, with
+    /// why: the mode's options for every scene, a pre-render made for the mode's screen and
+    /// length; the edited wallpaper with its own edits (`item`), the others as authored.
+    func batchPlan(_ wallpapers: [WEWallpaper]) -> (items: [AndroidExportItem], skipped: [AndroidExportBatch.Skipped]) {
+        let options = options
+        let screen = AndroidVideoScreen(pixels: outputPixels, seconds: seconds)
+        let plan = AndroidExportPlan.make(wallpapers, options: { _ in options })
+        let items = plan.items.map { other -> AndroidExportItem in
+            if other.wallpaper.isSameWallpaper(as: wallpaper) { return item }
+            var other = other
+            if other.usesGPU { other.screen = screen }
+            return other
+        }
+        return (items, plan.skipped)
+    }
+
+    func showBatch() {
+        guard !isExporting else { return }
+        isBatchPresented = true
+    }
+
+    var isBatchRunning: Bool { batchQueue?.isRunning == true }
+
+    /// Exports `wallpapers` into the export cache: their packages go into the Android exports
+    /// list, for Send over Wi-Fi.
+    func exportMore(_ wallpapers: [WEWallpaper]) {
+        guard !isBatchRunning else { return }
+        let plan = batchPlan(wallpapers)
+        guard !plan.items.isEmpty else { return }
+        let folder = AndroidExporter.cacheDirectory.appending(path: "Packages", directoryHint: .isDirectory)
+        do {
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        } catch {
+            errorMessage = error.localizedDescription
+            return
+        }
+        let queue = AndroidExportQueue(items: plan.items, skipped: plan.skipped, folder: folder, worker: worker)
+        queue.device = device?.name
+        batchQueue = queue
+        Task { _ = await queue.run() }
+    }
+
+    func cancelBatch() { batchQueue?.cancel() }
+
+    /// The sheet closed: a running batch stops (what it finished stays in the exports list).
+    func closeBatch() {
+        batchQueue?.cancel()
+        batchQueue = nil
+        isBatchPresented = false
+    }
 
     func showInFinder() {
         guard let batch, !batch.urls.isEmpty else { return }

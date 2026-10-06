@@ -144,7 +144,7 @@ final class SceneAnimationSet {
         return frame
     }
 
-    /// The Wallpaper Editor's playhead (docs/editor-plan.md P4), in place of an advance: every
+    /// The Wallpaper Editor's playhead (editor-plan notes P4), in place of an advance: every
     /// clock owner stands where its mode puts `seconds` (`SceneTimelineClock.scrub`) and every
     /// site is sampled there. No clock advances and no event fires; the frame counter moves, as a
     /// frame's does.

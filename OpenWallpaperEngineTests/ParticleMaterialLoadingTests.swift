@@ -26,7 +26,7 @@ final class ParticleMaterialLoadingTests: XCTestCase {
     }
 
     /// A particle texture that loads from nowhere isn't replaced by one generated from its name
-    /// (a soft dot for `*halo*`, a streak for `particle/drop`; roadmap 8.9): the system is logged
+    /// (a soft dot for `*halo*`, a streak for `particle/drop`; roadmap notes 8.9): the system is logged
     /// and not built, as a missing effect texture is. Systems whose texture loads are built as usual.
     func testAMissingParticleTextureIsNotGeneratedFromItsName() throws {
         _ = try Fixtures.assets()

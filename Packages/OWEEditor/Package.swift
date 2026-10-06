@@ -1,5 +1,5 @@
 // swift-tools-version:5.9
-// The Wallpaper Editor (docs/editor-plan.md), kept out of the app target:
+// The Wallpaper Editor (editor-plan notes), kept out of the app target:
 // - OWESceneEditing: the edit model, Foundation only (the overlay over scene.json, the layer
 //   outline, gizmo and canvas math, undo, Save as Local Wallpaper). The app's scene loader applies
 //   the overlay through it, so the editor and the renderer can't disagree about an edit.

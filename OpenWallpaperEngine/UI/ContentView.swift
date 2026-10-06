@@ -170,12 +170,6 @@ struct ContentView: View {
                 .frame(width: 500, height: 180)
                 .presentationBackground(.regularMaterial)
         }
-        .sheet(item: $viewModel.androidExport) { selection in
-            AndroidExportSheet(model: AndroidExportModel(wallpapers: selection.wallpapers,
-                                                         scopes: { wallpaperViewModel.editedPropertyScopes(of: $0) }),
-                               dismiss: { viewModel.androidExport = nil })
-                .presentationBackground(.regularMaterial)
-        }
         .sheet(isPresented: $viewModel.isDisplaySettingsReveal) {
             DisplaySettings(viewModel: viewModel)
                 .padding()

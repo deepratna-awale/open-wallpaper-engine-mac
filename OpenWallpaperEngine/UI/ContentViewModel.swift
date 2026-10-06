@@ -54,8 +54,6 @@ class ContentViewModel: ObservableObject, DropDelegate {
 
     @Published var selectedWallpapers = Set<URL>()
     @Published var isBatchUnsubscribeConfirming = false
-    /// The wallpapers "Export for Android…" opened its sheet for.
-    @Published var androidExport: AndroidExportSelection?
     private var selectionAnchor: URL?
 
     /// Only whether steamcmd is there and logged in reaches this model (the main window's Workshop

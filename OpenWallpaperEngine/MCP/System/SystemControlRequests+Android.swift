@@ -1,7 +1,7 @@
 import Foundation
 import OWEControlProtocol
 
-/// "Export for Android…": WE's `.mpkg` packages for its Android app, one per wallpaper
+/// Android export: WE's `.mpkg` packages for its Android app, one per wallpaper
 /// (`AndroidExportOptions`, `AndroidExportQueue`).
 extension SystemControlRequests {
     func exportAndroid(_ params: ControlParameters, lookup: ControlLookup) async throws -> JSONValue {

@@ -2,7 +2,7 @@ import XCTest
 @testable import OpenWallpaperEngine
 
 /// Objects without an `id` are known by their index in `objects`, everywhere: parent links, text
-/// property keys, visibility and the spatial content (docs/roadmap.md item 23).
+/// property keys, visibility and the spatial content (roadmap notes item 23).
 @MainActor
 final class SceneIDLessObjectTests: XCTestCase {
     private let json = #"""

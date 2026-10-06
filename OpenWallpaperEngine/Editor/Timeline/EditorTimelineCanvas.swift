@@ -1,7 +1,7 @@
 import Foundation
 import OWESceneEditing
 
-/// The Wallpaper Editor's playhead on its canvas (docs/editor-plan.md P4): while the timeline is
+/// The Wallpaper Editor's playhead on its canvas (editor-plan notes P4): while the timeline is
 /// open, the canvas's scene clock is held (time-driven shaders, particles and scripts stand
 /// still) and every property timeline shows the playhead's time; closing the timeline lets the
 /// scene run again from there.
