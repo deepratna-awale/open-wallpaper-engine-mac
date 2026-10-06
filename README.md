@@ -75,7 +75,7 @@ Building from source fetches the Sparkle Swift package on first build. Builds fr
 
 ### Edit Wallpapers
 
-- **Scene Editor (Live)** (Details › Scene Editor (Live), ⌥⌘I) has three tabs. **Wallpaper** edits the running wallpaper: show, hide, move, resize, recolour and fade layers and change effects, live on the desktop. **Screen Saver** records a version of the wallpaper as your screen saver ([docs/screen-saver.md](docs/screen-saver.md)). **iPhone & iPad Export** turns it into a Live Photo lock screen ([docs/iphone-ipad-export.md](docs/iphone-ipad-export.md)).
+- **Scene Editor (Live)** (Details › Scene Editor (Live), ⌥⌘I) has four tabs, and every export happens there. **Wallpaper** edits the running wallpaper: show, hide, move, resize, recolour and fade layers and change effects, live on the desktop. **Screen Saver** records a version of the wallpaper as your screen saver ([docs/screen-saver.md](docs/screen-saver.md)). **iPhone & iPad Export** turns it into a Live Photo lock screen ([docs/iphone-ipad-export.md](docs/iphone-ipad-export.md)). **Android Export** packs it for Wallpaper Engine's Android app ([docs/android-export.md](docs/android-export.md)). A video wallpaper opens it on its screen saver and export tabs.
 - **Wallpaper Editor** (Edit Wallpaper in the library's bottom bar, ⌥⌘E) is an editor in the spirit of Wallpaper Engine's, running as an app of its own: add, arrange and group layers; add effects from Wallpaper Engine's catalog with rendered previews; animate on a timeline; write SceneScript with autocomplete; author user properties; edit particle systems and Puppet Warp rigs. Edits are kept beside the wallpaper, never in its files, can all be undone, and show on the desktop as you make them; **Save as Local Wallpaper** writes a copy with them. The plan and its phases: [docs/editor-plan.md](docs/editor-plan.md).
 - **Depth maps** — with the Depth Map Generation plugin, both editors make a depth map of a layer or the whole scene on your Mac and apply Wallpaper Engine's Depth Parallax effect to it ([docs/depth-maps.md](docs/depth-maps.md)).
 
@@ -85,8 +85,8 @@ Building from source fetches the Sparkle Swift package on first build. Builds fr
 
 ### Export to iPhone, iPad and Android
 
-- **iPhone & iPad** — the Scene Editor (Live)'s export tab frames a scene as any of 63 iPhones' and iPads' lock screens and exports a Live Photo, with AirDrop, to a folder or into a Photos album, without changing your desktop. [docs/iphone-ipad-export.md](docs/iphone-ipad-export.md)
-- **Android** — **Export for Android…** (the library's context menu) writes Wallpaper Engine's `.mpkg` packages for its Android app, for one wallpaper or a selection: scenes as live **Dynamic** scenes or a **Pre-Rendered** video, videos as they are. **Send over Wi-Fi** lets the device download them from the Mac with a QR code. [docs/android-export.md](docs/android-export.md)
+- **iPhone & iPad** — the Scene Editor (Live)'s iPhone & iPad Export tab frames a scene or a video as any of 63 iPhones' and iPads' lock screens and exports a Live Photo, with AirDrop, to a folder or into a Photos album, without changing your desktop. **Export More with These Settings…** makes Live Photos of other wallpapers from the library in one batch, with **AirDrop All**. [docs/iphone-ipad-export.md](docs/iphone-ipad-export.md)
+- **Android** — the Scene Editor (Live)'s Android Export tab writes Wallpaper Engine's `.mpkg` packages for its Android app: scenes as live **Dynamic** scenes or a **Pre-Rendered** video, videos byte for byte as they are. **Export More with These Settings…** packs other wallpapers from the library in one batch, and **Send over Wi-Fi** lets the device download them from the Mac with a QR code. [docs/android-export.md](docs/android-export.md)
 
 ### Theme macOS
 
@@ -164,8 +164,8 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - Installed wallpapers show and filter by their Workshop tags; asset-only and dependency-only items stay out of Installed.
 - Missing Workshop dependencies download automatically, and unused ones are removed after a delete. Every download lands in the Wallpaper Storage folder.
 - **Reset** in Details returns a wallpaper's properties, and its Scene Editor (Live) edits, to the defaults its author set.
-- **iPhone & iPad Export** in the Scene Editor (Live) turns a scene wallpaper into a Live Photo lock screen for any iPhone or iPad that shows one, with AirDrop, to a folder or into a Photos album, without changing your desktop.
-- **Export for Android…** writes Wallpaper Engine's `.mpkg` packages for its Android app, sent to the device over Wi-Fi or copied.
+- **iPhone & iPad Export** in the Scene Editor (Live) turns a scene or video wallpaper into a Live Photo lock screen for any iPhone or iPad that shows one, with AirDrop, to a folder or into a Photos album, without changing your desktop, one wallpaper or a batch.
+- **Android Export** in the Scene Editor (Live) writes Wallpaper Engine's `.mpkg` packages for its Android app, one wallpaper or a batch, sent to the device over Wi-Fi or copied.
 - Property conditions, text rows and slider formats from the wallpaper's settings are honoured.
 - Steam passwords are never stored, and the Steam Web API key is kept in the Keychain.
 
