@@ -28,8 +28,8 @@ final class SettingsTransferTests: XCTestCase {
         return settings
     }
 
-    /// What goes out comes back, and no secret goes out: the API key and the Steam account (here
-    /// left in the defaults where old builds kept them) are never read.
+    /// What goes out comes back, and no secret goes out: an API key or Steam account under those
+    /// names in the defaults is never read.
     func testExportImportRoundTripWithoutSecrets() throws {
         defaults.set(true, forKey: "ReclaimOriginalPackages")
         defaults.set(true, forKey: "HidesReleaseNotesAfterUpdate")

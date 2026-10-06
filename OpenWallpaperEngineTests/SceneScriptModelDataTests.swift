@@ -47,7 +47,6 @@ final class SceneScriptModelDataTests: XCTestCase {
         guard case .configuration(let alone)? = f.host.described.last else { return XCTFail("no configuration described") }
         XCTAssertEqual(alone, #"{"model":\#(token)}"#)
         XCTAssertTrue(f.scriptHost.errors.isEmpty, "\(f.scriptHost.errors)")
-        XCTAssertFalse(f.model.unsupportedMembers.contains("IScene.createModelData"))
     }
 
     func testTheConfigurationIsCheckedWithWEsMessages() throws {

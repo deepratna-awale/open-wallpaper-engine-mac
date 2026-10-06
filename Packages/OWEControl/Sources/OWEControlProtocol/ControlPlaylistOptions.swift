@@ -20,7 +20,6 @@ public enum ControlPlaylistOptions {
     /// a random one from the pool, or one transition.
     public static let transitionChoices = ["none_reduce_flicker", "none", "random"] + transitionKinds
 
-    /// `transition_time_ms`' range and step.
+    /// `transition_time_ms`' range.
     public static let transitionTimeRange = 0...3000
-    public static let transitionTimeStep = 50
 }

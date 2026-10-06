@@ -44,10 +44,7 @@ class ContentViewModel: ObservableObject, DropDelegate {
     /// The Installed tab's Details inspector.
     @Published var isDetailsReveal = true
     
-    @Published var imageScaleIndex: Int = -1
     @Published var isApplicationActive = true
-    
-    @Published var wallpapers = [WEWallpaper]()
     
     @Published var isUnsafeWallpaperWarningPresented = false
     
@@ -59,11 +56,17 @@ class ContentViewModel: ObservableObject, DropDelegate {
     @Published var isBatchUnsubscribeConfirming = false
     private var selectionAnchor: URL?
 
+    /// Only whether steamcmd is there and logged in reaches this model (the main window's Workshop
+    /// tab and sidebar depend on it). The Workshop and Downloads views observe the service itself,
+    /// so a download's progress doesn't redraw the window or re-sort the library.
     lazy var steamCmd: SteamCmdService = {
         let svc = SteamCmdService()
-        steamCmdCancellable = svc.objectWillChange.sink { [weak self] _ in
-            self?.objectWillChange.send()
-        }
+        steamCmdCancellable = svc.$isLoggedIn
+            .combineLatest(svc.$steamCmdPath.map { $0 != nil })
+            .map { [$0, $1] }
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] _ in self?.objectWillChange.send() }
         return svc
     }()
     /// Workshop wallpapers and authors hidden from the Workshop and Discover tabs.
@@ -111,16 +114,6 @@ class ContentViewModel: ObservableObject, DropDelegate {
         } else {
             DispatchQueue.main.async { [weak self] in self?.sortedMemo = nil }
         }
-    }
-    
-    convenience init(isStaging: Bool, topTabBarSelection: Int = 0) {
-        self.init()
-        
-        let wallpapers = autoRefreshWallpapers
-        
-        self.isStaging = isStaging
-        self.topTabBarSelection = topTabBarSelection
-        self.wallpapers = wallpapers
     }
     
     /// current page index number is starting from '1'
@@ -206,36 +199,18 @@ class ContentViewModel: ObservableObject, DropDelegate {
         }
     }
     
-    private var searchedWallpapers: [WEWallpaper] {
-        allWallpapers.filter { wallpaper in
-            let project = wallpaper.project
-            let searchText = searchText.lowercased()
-            
-            guard !searchText.isEmpty else { return true }
-            
-            guard !project.title.lowercased().contains(searchText) else { return true }
-            
-            guard !project.type.lowercased().contains(searchText) else { return true }
-            
-            if let description = project.description?.lowercased() {
-                guard !description.contains(searchText) else { return true }
-            }
-            
-            guard !tags(of: wallpaper).contains(where: { $0.lowercased().contains(searchText) })
-            else { return true }
-            
-            if let workshopid = project.workshopid {
-                guard !workshopid.rawValue.contains(searchText) else { return true }
-            }
-            
-            guard !wallpaper.wallpaperDirectory.lastPathComponent
-                .lowercased()
-                .contains(searchText) else { return true }
-            
-            return false
-        }
+    /// Whether `wallpaper` matches the search `query` (non-empty): its title, type, description,
+    /// tags, Workshop id or folder name contains it, ignoring case and diacritics as Finder does.
+    static func matchesSearch(_ query: String, wallpaper: WEWallpaper, tags: [String]) -> Bool {
+        let project = wallpaper.project
+        return project.title.localizedStandardContains(query)
+            || project.type.localizedStandardContains(query)
+            || project.description?.localizedStandardContains(query) == true
+            || tags.contains { $0.localizedStandardContains(query) }
+            || project.workshopid?.rawValue.contains(query) == true
+            || wallpaper.wallpaperDirectory.lastPathComponent.localizedStandardContains(query)
     }
-    
+
     private var filteredWallpapers: [WEWallpaper] {
         let resolutionGroups: [[String]] = [
             InstalledTagFilter.checked(widescreenResolution), InstalledTagFilter.checked(ultraWidescreenResolution),
@@ -243,8 +218,10 @@ class ContentViewModel: ObservableObject, DropDelegate {
             InstalledTagFilter.checked(potraitscreenResolution), InstalledTagFilter.checked(miscResolution),
         ]
         let resolutions = Set<String>(resolutionGroups.joined())
-        return searchedWallpapers.filter { wallpaper in
+        let query = searchText
+        return allWallpapers.filter { wallpaper in
             let wallpaperTags = self.tags(of: wallpaper)
+            guard query.isEmpty || Self.matchesSearch(query, wallpaper: wallpaper, tags: wallpaperTags) else { return false }
 
             // Show Only
             var showOnly = FRShowOnly.none
@@ -313,8 +290,8 @@ class ContentViewModel: ObservableObject, DropDelegate {
             case .name:
                 return Self.precedes($0.project.title, $1.project.title, in: sortingSequence)
             case .rating:
-                return Self.precedes($0.project.contentrating ?? "0", $1.project.contentrating ?? "0",
-                                     in: sortingSequence)
+                return Self.precedes(Self.ratingRank($0.project.contentrating),
+                                     Self.ratingRank($1.project.contentrating), in: sortingSequence)
             case .fileSize:
                 return Self.precedes(library.size(of: $0), library.size(of: $1), in: sortingSequence)
             case .dateAdded:
@@ -328,6 +305,17 @@ class ContentViewModel: ObservableObject, DropDelegate {
         }
     }
     
+    /// The content rating's place in the Rating sort: Everyone, then Questionable (partial
+    /// nudity), then Mature; no or an unknown rating comes before all of them.
+    static func ratingRank(_ contentRating: String?) -> Int {
+        switch contentRating?.trimmingCharacters(in: .whitespaces).lowercased() {
+        case "everyone": return 1
+        case "questionable": return 2
+        case "mature": return 3
+        default: return 0
+        }
+    }
+
     /// Whether `lhs` sorts before `rhs` for the title, rating and file size orders: `.increase` puts
     /// the larger value first and `.decrease` the smaller, as the library has always ordered them.
     static func precedes<Value: Comparable>(_ lhs: Value, _ rhs: Value,
@@ -442,58 +430,59 @@ class ContentViewModel: ObservableObject, DropDelegate {
         return proposal
     }
 
+    /// Imports every dropped file: videos as video wallpapers, wallpaper folders and zips copied
+    /// into the library off the main thread. What wasn't imported is shown in one alert.
     func performDrop(info: DropInfo) -> Bool {
-        guard let itemProvider = info.itemProviders(for: [UTType.fileURL]).first
-        else {
+        let providers = info.itemProviders(for: [UTType.fileURL])
+        guard !providers.isEmpty else {
             alertImportModal(which: .unkown)
             return false
         }
-        itemProvider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { [weak self] item, _ in
-            guard let data = item as? Data, let url = URL(dataRepresentation: data, relativeTo: nil)
-            else {
-                self?.alertImportModal(which: .unkown)
-                return
+        Task { @MainActor [weak self] in
+            var urls: [URL] = []
+            for provider in providers {
+                if let url = await Self.fileURL(from: provider) { urls.append(url) }
             }
-            // Do something with the file url
-            // remember to dispatch on main in case of a @State change
-            guard let wallpaper = try? FileWrapper(url: url)
-            else{
-                self?.alertImportModal(which: .unkown)
-                return
-            }
-            
-            if wallpaper.isDirectory {
-                guard wallpaper.fileWrappers?["project.json"] != nil
-                else{
-                    self?.alertImportModal(which: .doesNotContainWallpaper)
-                    return
-                }
-                DispatchQueue.main.async {
-                    let destination = FileManager.default.wallpapersDirectory.appending(path: url.lastPathComponent)
-                    do {
-                        try ImportedFolderLinks.copyWithoutLinks(from: url, to: destination)
-                    } catch {
-                        OWELog.error(.importer, "Can't import dropped folder \(url.path): \(error)")
-                    }
-                }
-            } else if wallpaper.isRegularFile, url.pathExtension.lowercased() == "zip" {
-                DispatchQueue.main.async {
-                    let count = ZipImporter.importZip(at: url)
-                    if count == 0 {
-                        self?.alertImportModal(which: .doesNotContainWallpaper)
-                    }
-                }
-            } else if wallpaper.isRegularFile {
-                guard wallpaper.filename != nil,
-                      ["mp4", "mov", "m4v"].contains(url.pathExtension.lowercased()) else { return }
-                AppDelegate.shared.wallpaperViewModel.importVideoWallpaper(from: url)
-            }
+            self?.importDropped(urls, droppedCount: providers.count)
         }
         return true
     }
+
+    /// The file URL a dropped item carries; nil (logged) when it can't be read.
+    private static func fileURL(from provider: NSItemProvider) async -> URL? {
+        await withCheckedContinuation { continuation in
+            provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, error in
+                guard let data = item as? Data, let url = URL(dataRepresentation: data, relativeTo: nil) else {
+                    OWELog.error(.importer, "Can't read a dropped item's file URL: \(String(describing: error))")
+                    return continuation.resume(returning: nil)
+                }
+                continuation.resume(returning: url)
+            }
+        }
+    }
+
+    @MainActor private func importDropped(_ urls: [URL], droppedCount: Int) {
+        guard !urls.isEmpty else { return alertImportModal(which: .unkown) }
+        for video in DroppedFileImport.videos(in: urls) {
+            AppDelegate.shared.wallpaperViewModel.importVideoWallpaper(from: video)
+        }
+        let library = FileManager.default.wallpapersDirectory
+        Task { @MainActor [weak self] in
+            let problems = await Task.detached(priority: .userInitiated) {
+                DroppedFileImport.importWallpapers(urls, into: library)
+            }.value
+            if let error = DroppedFileImport.error(for: problems) {
+                self?.alertImportModal(which: error)
+            } else if urls.count < droppedCount {
+                self?.alertImportModal(which: .unkown)
+            }
+        }
+    }
     
+    /// The library changed on disk: the next read lists and sorts it again.
     public func refresh() {
-        self.wallpapers = autoRefreshWallpapers
+        sortedMemo = nil
+        objectWillChange.send()
     }
     
     /// Provide a filter reset to default function, usually being used to show all wallpapers without filtered

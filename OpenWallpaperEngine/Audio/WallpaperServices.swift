@@ -14,7 +14,7 @@ extension Notification.Name {
 final class WallpaperServices {
     static let shared = WallpaperServices()
 
-    /// System audio capture: the level, the legacy spectrum and WE's spectrum analyzer.
+    /// System audio capture: the level and WE's spectrum analyzer.
     let audioCapture: SystemAudioCapture
     /// Per-wallpaper user properties and their music-synced modulation.
     let propertyService: SceneUserPropertyService

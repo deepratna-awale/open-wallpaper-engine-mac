@@ -19,7 +19,6 @@ final class SceneScriptParityTests: XCTestCase {
         XCTAssertEqual(wallpaper.sites.count, 5)
         XCTAssertTrue(result.errors.isEmpty, result.errors.map(\.description).joined(separator: "\n"))
         XCTAssertFalse(result.halted)
-        XCTAssertTrue(result.unsupportedMembers.isEmpty, "\(result.unsupportedMembers)")
 
         let shared = result.sharedNumbers
         XCTAssertEqual(shared["probeOK"], 1)
@@ -119,8 +118,6 @@ final class SceneScriptParityTests: XCTestCase {
         let library = LibrarySweepTests.libraryRoot
         try XCTSkipUnless(FileManager.default.fileExists(atPath: library.path), "wallpaper library not present")
         let prelude = SceneScriptPrelude.load()
-        let pendingStubs: Set<String> = ["ILayer.rotateObjectSpace", "ILayer.lookAt", "ILayer.lookAtYaw", "ILayer.setParent",
-                                         "IEffectLayer.transformAttachmentToTexture", "IImageLayer.getVideoTexture"]
         let knownScriptBugs = Set(SceneScriptCorpusReplayTests.expectedFailures.filter { $0.check == .exception }.map(\.key))
         let unknownAPI = try NSRegularExpression(
             pattern: "is not a function|is undefined|undefined is not an object|null is not an object|Can't find variable|is not a constructor|not supported",
@@ -145,9 +142,6 @@ final class SceneScriptParityTests: XCTestCase {
                    !knownScriptBugs.contains(hashByID[error.scriptID] ?? "") {
                     failures.append(line)
                 }
-            }
-            for member in result.unsupportedMembers.subtracting(pendingStubs) {
-                failures.append("\(id): reached the stub \(member)")
             }
         }
         XCTContext.runActivity(named: "SceneScript library errors (\(scenes) scenes)") { activity in

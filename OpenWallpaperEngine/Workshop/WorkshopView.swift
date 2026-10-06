@@ -82,20 +82,27 @@ private struct SteamCmdNotInstalledView: View {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString("brew install steamcmd", forType: .string)
                 isCopied = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { isCopied = false }
             } label: {
                 Label(isCopied ? "Copied" : "Copy", systemImage: isCopied ? "checkmark" : "doc.on.doc")
                     .labelStyle(.iconOnly)
             }
             .glassButtonStyle()
             .help(isCopied ? "Copied" : "Copy the command")
+            // Back to "Copy" after a moment; cancelled with the view.
+            .task(id: isCopied) {
+                guard isCopied else { return }
+                do {
+                    try await Task.sleep(for: .seconds(2))
+                    isCopied = false
+                } catch {}
+            }
         }
 
         Text("Or locate an existing steamcmd binary:")
             .font(.callout)
             .foregroundStyle(.secondary)
 
-        Button("Browse...") {
+        Button("Browse…") {
             let panel = NSOpenPanel()
             panel.canChooseFiles = true
             panel.canChooseDirectories = false
@@ -285,7 +292,7 @@ private struct WorkshopBrowserView: View {
             // Results
             if viewModel.isLoading && viewModel.items.isEmpty {
                 Spacer()
-                ProgressView("Searching Workshop...")
+                ProgressView("Searching Workshop…")
                 Spacer()
             } else if let error = viewModel.errorMessage, viewModel.items.isEmpty {
                 Spacer()
@@ -533,21 +540,9 @@ struct WorkshopItemCard: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            AsyncImage(url: item.previewImageURL) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(1, contentMode: .fill)
-                case .failure:
-                    placeholder
-                default:
-                    placeholder
-                        .overlay(ProgressView().controlSize(.small))
-                }
-            }
-            .aspectRatio(1, contentMode: .fit)
-            .clipped()
+            WorkshopThumbnail(url: item.previewImageURL, loader: viewModel.thumbnails)
+                .aspectRatio(1, contentMode: .fit)
+                .clipped()
 
             VStack(spacing: 2) {
                 Text(item.title)
@@ -577,10 +572,13 @@ struct WorkshopItemCard: View {
                 Button {
                     viewModel.selectItem(item)
                 } label: {
-                    Image(systemName: viewModel.selectedItemIds.contains(item.id) ? "checkmark.circle.fill" : "circle")
+                    Label("Select item",
+                          systemImage: viewModel.selectedItemIds.contains(item.id) ? "checkmark.circle.fill" : "circle")
+                        .labelStyle(.iconOnly)
                         .foregroundStyle(viewModel.selectedItemIds.contains(item.id) ? Color.accentColor : .white)
                 }
                 .buttonStyle(.plain)
+                .accessibilityAddTraits(viewModel.selectedItemIds.contains(item.id) ? .isSelected : [])
                 .padding(6)
                 .shadow(color: .black.opacity(0.8), radius: 3, x: 0, y: 1)
                 .help("Select item")
@@ -626,7 +624,8 @@ struct WorkshopItemCard: View {
                 Button {
                     viewModel.download(item: item)
                 } label: {
-                    Image(systemName: "arrow.down.circle.fill")
+                    Label("Download", systemImage: "arrow.down.circle.fill")
+                        .labelStyle(.iconOnly)
                         .font(.title3)
                 }
                 .buttonStyle(.plain)
@@ -644,6 +643,36 @@ struct WorkshopItemCard: View {
     private var shownTags: [String] {
         item.tags.filter { $0.caseInsensitiveCompare("Wallpaper") != .orderedSame }
             .map { String(localized: LocalizedLabels.filterOption($0)) }
+    }
+
+}
+
+/// A Workshop card's preview from `WorkshopThumbnailLoader`, with a placeholder while it loads.
+private struct WorkshopThumbnail: View {
+    let url: URL?
+    let loader: WorkshopThumbnailLoader
+    @State private var loaded: (url: URL, image: NSImage?)?
+
+    var body: some View {
+        // A cached image draws at once, without a loading frame.
+        let image = url.flatMap { url in loaded?.url == url ? loaded?.image : loader.cachedImage(for: url) }
+        Group {
+            if let image {
+                Image(nsImage: image)
+                    .resizable()
+                    .aspectRatio(1, contentMode: .fill)
+            } else if url != nil, loaded?.url != url {
+                placeholder.overlay(ProgressView().controlSize(.small))
+            } else {
+                placeholder
+            }
+        }
+        .task(id: url) {
+            guard let url, loader.cachedImage(for: url) == nil else { return }
+            let image = await loader.image(for: url)
+            guard !Task.isCancelled else { return }
+            loaded = (url, image)
+        }
     }
 
     private var placeholder: some View {

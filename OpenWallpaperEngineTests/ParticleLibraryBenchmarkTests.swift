@@ -42,10 +42,9 @@ final class ParticleLibraryBenchmarkTests: XCTestCase {
                   let data = FileManager.default.contents(atPath: directory.appending(path: "project.json").path),
                   let project = try? JSONDecoder().decode(WEProject.self, from: data) else { continue } // decoding is covered elsewhere
             let identity = WallpaperSettingsIdentity.resolve(directory: directory)
-            var keys: [String] = ["SceneAdditionalControlsVersion." + directory.path]
+            var keys: [String] = []
             for family in WallpaperSettingsIdentity.Family.allCases {
                 keys.append(identity.key(family))
-                keys.append(family.rawValue + directory.path)
             }
             let hadSettings = keys.contains { UserDefaults.app.object(forKey: $0) != nil }
             defer {

@@ -213,10 +213,7 @@ final class SceneRendererParticleTests: XCTestCase {
         var layer = SceneMetalLayer(
             id: id, name: id, source: .image(image(color)), position: center, size: size, scale: SIMD2(1, 1), opacity: 1,
             brightness: 1, color: SIMD4(repeating: 1), text: nil,
-            parallaxDepth: .zero, perspective: false, rotation: 0,
-            effects: SceneMaterialEffects(brightness: 1, contrast: 1, saturation: 1, bloom: 0, blur: 0, exposure: 0,
-                                          gamma: 1, hue: 0, bloomThreshold: 0.7, transformAngle: 0, transformOffset: .zero,
-                                          transformScale: SIMD2(1, 1)))
+            parallaxDepth: .zero, perspective: false, rotation: 0)
         layer.order = order
         return layer
     }

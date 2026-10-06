@@ -17,4 +17,9 @@ final class WallpaperTrustPromptTests: XCTestCase {
         model.nextCurrentWallpaper = WEWallpaper(using: WEProject(file: "a.mp4", title: "Clip", type: "Video"), where: folder)
         XCTAssertEqual(model.wallpapers[screen]?.project.title, "Clip")
     }
+
+    func testTrustingAWallpaperAgainDoesNotGrowTheList() {
+        XCTAssertEqual(UnsafeWallpaper.trustList(["/a", "/b"], adding: "/a"), ["/a", "/b"])
+        XCTAssertEqual(UnsafeWallpaper.trustList(["/a", "/a"], adding: "/c"), ["/a", "/c"])
+    }
 }
