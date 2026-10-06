@@ -186,6 +186,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         desktopWallpaper: { [unowned self] in wallpaperViewModel.currentWallpaper }))
     /// The screen saver's daily re-recording, while the app runs.
     lazy var screenSaverSchedule = ScreenSaverDailyScheduler(service: screenSaverRecordings)
+    /// Renders the Wallpaper Editor's browser previews in the background once WE's assets are there.
+    private(set) lazy var editorPreviewPrewarm = EditorPreviewPrewarm(environment: .live)
     lazy var sceneScriptServices: SceneScriptServices = {
         if !SceneScriptJIT.isEnabled {
             OWELog.info(.script, "JavaScriptCore runs without its JIT (no \(SceneScriptJIT.entitlement)): scripts run several times slower")
@@ -290,6 +292,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             self.sceneScriptServices.reloadPrelude()
             self.contentViewModel.refresh()
             self.rebuildWallpaperWindows()
+            self.editorPreviewPrewarm.start(reason: "assets changed")
         }
 
         wallpaperViewModel.keepWorkshopPreview = { [steamCmd = contentViewModel.steamCmd] in try steamCmd.keepPreview($0) }
@@ -448,6 +451,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         // The screen saver's daily re-recording: catches up a run missed while the app was quit.
         screenSaverSchedule.start()
+        // The Wallpaper Editor's browser previews, when any is missing.
+        editorPreviewPrewarm.start(reason: "launch", after: EditorPreviewPrewarm.launchDelay)
 
         // Workshop downloads need SteamCMD; set it up from Valve in the background when it's missing.
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in

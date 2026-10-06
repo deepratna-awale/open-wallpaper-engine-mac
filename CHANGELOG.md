@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **The Wallpaper Editor's previews are ready the first time you open Add Effect or Add Particle System.** Once Wallpaper Engine's assets are installed (in the setup assistant or Settings › Assets), the app renders every effect's and particle system's preview in the background, effects first, at low priority; it waits on battery below 30 % and while the Mac is critically hot. A browser opened meanwhile gets its visible tiles first. An assets update renders again only the previews whose files changed, and app updates keep them.
+
 ### Changed
 
 - **The Scene Editor (Live)'s sidebar lists objects as the Wallpaper Editor does:** the scene's hierarchy, groups as folders, with "Clock Location: Middle" under the layers a property option shows. **Versions** is one dropdown per such property (Language, Clock Location…), only for the properties that apply, instead of a list of option names.

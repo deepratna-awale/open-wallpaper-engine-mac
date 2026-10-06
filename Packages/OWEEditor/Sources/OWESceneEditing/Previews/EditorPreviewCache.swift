@@ -3,11 +3,41 @@ import Foundation
 /// The editor's previews of effects and particle systems on disk:
 /// `<Caches>/EditorPreviews/<assets build>-r<revision>/<subject>.heic` for a still preview, `.mov`
 /// (HEVC) for a moving one. A preview shows WE's files, so the folder is keyed by the build of WE's
-/// assets it was rendered from: another build gets a folder of its own, and opening it removes
-/// the others (`prune`). `revision` is bumped whenever the rendering changes.
+/// assets it was rendered from: another build gets a folder of its own. The background pre-warm
+/// carries each preview whose inputs didn't change into it (`carryOver`, by the fingerprints in
+/// each folder's `.inputs.json`, `EditorPreviewInputs`) and then removes the others (`prune`).
+/// Each kind's revision is bumped whenever its rendering changes; the app's version isn't part of
+/// the key, so an app update keeps the previews.
 public struct EditorPreviewCache: Sendable {
-    /// Bump when what a preview shows changes (its scene, size, length or encoding).
-    public static let revision = 2
+    /// Bump when what an effect's preview shows changes (its scene, test card, size, length or
+    /// encoding).
+    public static let effectRevision = 2
+    /// Bump when what a particle system's preview shows changes.
+    public static let particleRevision = 2
+    /// The folder's revision, both kinds': a bump of one kind's carries the other's previews over.
+    public static var revision: String { "\(effectRevision).\(particleRevision)" }
+
+    /// The revision of the subject's kind.
+    public static func revision(of subject: EditorPreviewSubject) -> Int {
+        subject.isParticle ? particleRevision : effectRevision
+    }
+
+    /// What a folder's `.inputs.json` holds for one preview (by its `cacheName`).
+    public struct InputRecord: Codable, Equatable, Sendable {
+        /// `EditorPreviewInputs.fingerprint(of:)` of the assets it was rendered from; empty for a
+        /// preview without one (a Workshop effect).
+        public var fingerprint: String
+        /// When rendering it failed: it isn't tried again in the background until its inputs change.
+        public var failedAt: Date?
+
+        public init(fingerprint: String, failedAt: Date? = nil) {
+            self.fingerprint = fingerprint
+            self.failedAt = failedAt
+        }
+    }
+
+    /// The file in each folder recording its previews' inputs.
+    public static let inputsFileName = ".inputs.json"
     /// A preview's file types: a still, a loop.
     public static let stillExtension = "heic"
     public static let movieExtension = "mov"
@@ -47,14 +77,80 @@ public struct EditorPreviewCache: Sendable {
         return nil
     }
 
-    /// Removes the previews of every other build and revision.
+    /// Removes the previews of every other build and revision. Hidden files of the root (the
+    /// pre-warm's lock) stay.
     public func prune(fileManager: FileManager = .default) throws {
-        guard fileManager.fileExists(atPath: root.path(percentEncoded: false)) else { return }
-        let keep = directory.standardizedFileURL.lastPathComponent
-        for folder in try fileManager.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
-        where folder.lastPathComponent != keep {
-            try fileManager.removeItem(at: folder)
+        for folder in try otherFolders(fileManager: fileManager) { try fileManager.removeItem(at: folder) }
+    }
+
+    // MARK: Inputs
+
+    /// This folder's records, by `cacheName`; empty when it has none or they can't be read.
+    public func inputs() -> [String: InputRecord] {
+        Self.inputs(in: directory)
+    }
+
+    /// Adds `records` to this folder's, replacing those of the same names.
+    public func record(_ records: [String: InputRecord], fileManager: FileManager = .default) throws {
+        guard !records.isEmpty else { return }
+        var all = inputs()
+        all.merge(records) { _, new in new }
+        try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+        try encoder.encode(all).write(to: directory.appending(path: Self.inputsFileName), options: .atomic)
+    }
+
+    /// Moves into this folder each preview of another build's or revision's folder whose recorded
+    /// fingerprint is the subject's in `fingerprints` (its inputs didn't change), with its record.
+    /// Returns the subjects carried over.
+    @discardableResult
+    public func carryOver(_ fingerprints: [EditorPreviewSubject: String],
+                          fileManager: FileManager = .default) throws -> Set<EditorPreviewSubject> {
+        var carried = Set<EditorPreviewSubject>()
+        var records: [String: InputRecord] = [:]
+        for folder in try otherFolders(fileManager: fileManager) {
+            let old = Self.inputs(in: folder)
+            guard !old.isEmpty else { continue }
+            for (subject, fingerprint) in fingerprints where !fingerprint.isEmpty && !carried.contains(subject) {
+                let name = subject.cacheName
+                guard let record = old[name], record.fingerprint == fingerprint,
+                      cachedPreview(for: subject, fileManager: fileManager) == nil else { continue }
+                if record.failedAt != nil {
+                    records[name] = record
+                    continue
+                }
+                for fileExtension in [Self.stillExtension, Self.movieExtension] {
+                    let source = folder.appending(path: name).appendingPathExtension(fileExtension)
+                    guard fileManager.fileExists(atPath: source.path(percentEncoded: false)) else { continue }
+                    try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+                    try fileManager.moveItem(at: source, to: outputBase(for: subject).appendingPathExtension(fileExtension))
+                    records[name] = record
+                    carried.insert(subject)
+                    break
+                }
+            }
         }
+        try record(records, fileManager: fileManager)
+        return carried
+    }
+
+    /// The other builds' and revisions' folders.
+    private func otherFolders(fileManager: FileManager) throws -> [URL] {
+        guard fileManager.fileExists(atPath: root.path(percentEncoded: false)) else { return [] }
+        let keep = directory.standardizedFileURL.lastPathComponent
+        return try fileManager.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
+            .filter { $0.lastPathComponent != keep && !$0.lastPathComponent.hasPrefix(".") }
+    }
+
+    private static func inputs(in folder: URL) -> [String: InputRecord] {
+        // Optional: a folder without records (rendered before they were kept) carries nothing over.
+        guard let data = try? Data(contentsOf: folder.appending(path: inputsFileName)) else { return [:] }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        // Optional: unreadable records only cost a render.
+        return (try? decoder.decode([String: InputRecord].self, from: data)) ?? [:]
     }
 
     // MARK: The assets build

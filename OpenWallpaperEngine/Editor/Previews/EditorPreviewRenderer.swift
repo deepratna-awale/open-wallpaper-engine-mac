@@ -1,4 +1,5 @@
 import CoreGraphics
+import Darwin
 import Foundation
 import ImageIO
 import Metal
@@ -59,27 +60,92 @@ final class EditorPreviewRenderer {
     /// The helper's work: renders each item of `job`, writing a `done` line for each; 0 when
     /// every preview was written.
     static func run(_ job: EditorPreviewJob) -> Int32 {
+        run(items: AsyncStream<EditorPreviewJob.Item?> { continuation in
+            for item in job.items { continuation.yield(item) }
+            continuation.finish()
+        })
+    }
+
+    /// The helper's work with `-`: renders each item read from `input` (`EditorPreviewJob.streamLine`)
+    /// as it arrives, until `input` is closed, writing a `done` line for each (also for a line that
+    /// can't be read); 0 when every preview was written. The process is in the background state
+    /// (CPU, I/O and GPU at background priority) except while it renders an item a browser shows
+    /// (`isUrgent`), which then renders as fast as a browser's own helper.
+    static func runStream(input: FileHandle = .standardInput) -> Int32 {
+        let (items, continuation) = AsyncStream<EditorPreviewJob.Item?>.makeStream()
+        Thread.detachNewThread {
+            var buffer = Data()
+            while true {
+                let data = input.availableData
+                guard !data.isEmpty else { break }
+                buffer.append(data)
+                while let newline = buffer.firstIndex(of: UInt8(ascii: "\n")) {
+                    let line = Data(buffer[buffer.startIndex..<newline])
+                    buffer.removeSubrange(buffer.startIndex...newline)
+                    guard !line.isEmpty else { continue }
+                    do {
+                        continuation.yield(try JSONDecoder().decode(EditorPreviewJob.Item.self, from: line))
+                    } catch {
+                        OWELog.error(.scene, "Editor previews: unreadable item \(String(decoding: line, as: UTF8.self)): \(error)")
+                        continuation.yield(nil)
+                    }
+                }
+            }
+            continuation.finish()
+        }
+        return run(items: items, prioritize: { isUrgent in
+            if setpriority(PRIO_DARWIN_PROCESS, 0, isUrgent ? 0 : PRIO_DARWIN_BG) != 0 {
+                OWELog.error(.scene, "Editor previews: can't set the helper's priority: \(String(cString: strerror(errno)))")
+            }
+        })
+    }
+
+    private static func run<Items: AsyncSequence & Sendable>(items: Items, prioritize: @escaping (Bool) -> Void = { _ in })
+        -> Int32 where Items.Element == EditorPreviewJob.Item? {
         let scratch = FileManager.default.temporaryDirectory
             .appending(path: "owe-editor-previews-\(ProcessInfo.processInfo.processIdentifier)", directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: scratch) } // Optional: a scratch folder.
         let renderer = EditorPreviewRenderer(scratch: scratch)
+        let started = Date()
         var status: Int32?
         Task { @MainActor in
             var failed = 0
-            for (index, item) in job.items.enumerated() {
-                do {
-                    let url = try await renderer.render(item.subject, outputBase: URL(filePath: item.outputBase))
-                    OWELog.debug(.scene, "Editor preview: wrote \(url.lastPathComponent)")
-                } catch {
-                    failed += 1
-                    OWELog.error(.scene, "Editor preview of \(item.subject) failed: \(error.localizedDescription)")
+            var index = 0
+            do {
+                for try await item in items {
+                    if let item {
+                        prioritize(item.isUrgent ?? false)
+                        do {
+                            let url = try await renderer.render(item.subject, outputBase: URL(filePath: item.outputBase))
+                            OWELog.debug(.scene, "Editor preview: wrote \(url.lastPathComponent)")
+                        } catch {
+                            failed += 1
+                            OWELog.error(.scene, "Editor preview of \(item.subject) failed: \(error.localizedDescription)")
+                        }
+                    } else {
+                        failed += 1
+                    }
+                    FileHandle.standardOutput.write(Data(EditorPreviewJob.doneLine(index).utf8))
+                    index += 1
                 }
-                FileHandle.standardOutput.write(Data(EditorPreviewJob.doneLine(index).utf8))
+            } catch {
+                failed += 1
+                OWELog.error(.scene, "Editor previews: reading the items failed: \(error)")
             }
             status = failed == 0 ? 0 : 1
+            OWELog.info(.scene, "Editor previews: helper rendered \(index) previews (\(failed) failed) in "
+                        + String(format: "%.1f s, CPU %.1f s", Date().timeIntervalSince(started), cpuSeconds()))
         }
         while status == nil { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
         return status ?? 1
+    }
+
+    /// This process's CPU time, user and system.
+    static func cpuSeconds() -> Double {
+        var usage = rusage()
+        getrusage(RUSAGE_SELF, &usage)
+        return Double(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec)
+            + Double(usage.ru_utime.tv_usec + usage.ru_stime.tv_usec) / 1_000_000
     }
 
     // MARK: Rendering

@@ -46,20 +46,11 @@ final class EditorWallpaperResources {
     func effectCatalog(outline: SceneOutline) -> [EffectCatalogEntry] {
         // Read again until WE's assets are installed: the browser offers to install them.
         if catalog?.isEmpty ?? true {
-            var entries: [EffectCatalogEntry] = []
-            for directory in WallpaperEngineAssets.searchDirectories {
-                for file in EffectCatalog.builtInEffectFiles(in: directory) {
-                    let folder = directory.appending(path: (file as NSString).deletingLastPathComponent, directoryHint: .isDirectory)
-                    guard !entries.contains(where: { $0.file == file }),
-                          let entry = entry(file, preview: Self.preview(in: folder), isWorkshop: false) else { continue }
-                    entries.append(entry)
-                }
-            }
-            catalog = entries
+            catalog = Self.builtInEffects(labels: labels, read: { self.data($0) })
         }
         let builtIn = Set((catalog ?? []).map(\.folderName))
         let workshop = EffectCatalog.workshopEffects(in: outline, builtIn: builtIn).compactMap { file in
-            entry(file, preview: nil, isWorkshop: true).map { entry in
+            Self.entry(file, data: data(file), labels: labels, preview: nil, isWorkshop: true).map { entry in
                 var entry = entry
                 entry.wallpaperDirectory = wallpaper.wallpaperDirectory.path(percentEncoded: false)
                 return entry
@@ -68,8 +59,27 @@ final class EditorWallpaperResources {
         return (catalog ?? []) + workshop
     }
 
-    private func entry(_ file: String, preview: URL?, isWorkshop: Bool) -> EffectCatalogEntry? {
-        guard let data = data(file), let document = try? decodeTolerant(EffectDocument.self, from: data) else { return nil }
+    /// WE's built-in effects (`effects/*/effect.json` in its assets), titled with `labels`; `read`
+    /// reads an effect's file (the wallpaper's own copy first, in an editor window). The browser's
+    /// entries, and the background pre-warm's (`EditorPreviewPrewarm`).
+    nonisolated static func builtInEffects(labels: WallpaperEngineLabels, read: (String) -> Data?) -> [EffectCatalogEntry] {
+        var entries: [EffectCatalogEntry] = []
+        for directory in WallpaperEngineAssets.searchDirectories {
+            for file in EffectCatalog.builtInEffectFiles(in: directory) {
+                let folder = directory.appending(path: (file as NSString).deletingLastPathComponent, directoryHint: .isDirectory)
+                guard !entries.contains(where: { $0.file == file }),
+                      let entry = entry(file, data: read(file), labels: labels, preview: preview(in: folder), isWorkshop: false)
+                else { continue }
+                entries.append(entry)
+            }
+        }
+        return entries
+    }
+
+    nonisolated private static func entry(_ file: String, data: Data?, labels: WallpaperEngineLabels, preview: URL?,
+                                          isWorkshop: Bool) -> EffectCatalogEntry? {
+        // Optional: an effect file that can't be read or decoded isn't offered.
+        guard let data, let document = try? decodeTolerant(EffectDocument.self, from: data) else { return nil }
         let folder = ((file as NSString).deletingLastPathComponent as NSString).lastPathComponent
         let title = document.name.flatMap(labels.translation) ?? document.name.map(SceneEffectParameters.title)
             ?? folder.replacingOccurrences(of: "_", with: " ").capitalized
@@ -98,7 +108,7 @@ final class EditorWallpaperResources {
     }
 
     /// An effect's picture, where its folder has one.
-    private static func preview(in folder: URL) -> URL? {
+    nonisolated private static func preview(in folder: URL) -> URL? {
         for name in ["preview/preview.gif", "preview/preview.jpg", "preview/preview.png", "preview.gif", "preview.jpg", "preview.png"] {
             let url = folder.appending(path: name)
             if FileManager.default.fileExists(atPath: url.path) { return url }
