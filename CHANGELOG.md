@@ -7,23 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- **The Wallpaper Editor's previews are ready the first time you open Add Effect or Add Particle System.** Once Wallpaper Engine's assets are installed (in the setup assistant or Settings › Assets), the app renders every effect's and particle system's preview in the background, effects first, at low priority; it waits on battery below 30 % and while the Mac is critically hot. A browser opened meanwhile gets its visible tiles first. An assets update renders again only the previews whose files changed, and app updates keep them.
-
-### Changed
-
-- **The Scene Editor (Live)'s sidebar lists objects as the Wallpaper Editor does:** the scene's hierarchy, groups as folders, with "Clock Location: Middle" under the layers a property option shows. **Versions** is one dropdown per such property (Language, Clock Location…), only for the properties that apply, instead of a list of option names.
-- **The export tabs' right-hand panel is the selected layer's Layer Adjustments.** The export settings, Save, Send and Export More with These Settings are behind the toolbar's Export Settings button, now a share icon.
-- **Hiding a group dims everything in it** in both editors; each layer keeps its own switch for when the group shows again.
-- **Web and application wallpapers ask again when their content changes.** "Don't ask again for this wallpaper" now trusts the folder's files as they were when you answered: after a Workshop update, or another item downloaded into the same folder, the prompt asks again and says the wallpaper changed. Renaming or tagging the wallpaper in the library doesn't count as a change. Wallpapers trusted before this version keep their trust and are bound to their files the first time they are applied.
-
-### Fixed
-
-- A web or application wallpaper whose trust prompt was cancelled no longer stays behind as the wallpaper to apply.
-- **iPhone & iPad and Android exports frame the scene as it is drawn.** The Scene Editor (Live)'s export modes, Export More with These Settings… and the MCP exports measured a 3D scene by its objects' positions and ignored `auto`-sized scenes, so the crop could miss the picture; they now use the canvas the wallpaper renders at, with the Wallpaper Editor's saved edits applied. The editor's Align buttons snap to that canvas too.
-- **Send over Wi-Fi no longer serves its page with a weak security policy.** If macOS can't supply random bytes for the page's script nonce, the page answers with an error (and the log says why) instead of falling back to a fixed nonce.
-
 ## [1.0.0-beta.6] - 2026-10-06
 
 ### Added
@@ -38,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The Wi-Fi link has a name, and the QR code the app's icon.** The share is advertised as `owe-fileshare.<your Mac's name>.local` (with the IP address link underneath, and a toggle to put it in the QR code), and the QR code has rounded corners and modules with the app icon in the centre.
 - **Take Screenshot works for web wallpapers in the Chromium engine.**
 - **Camera layers and camera paths in orthographic scenes**, as Wallpaper Engine plays them.
+- **The Wallpaper Editor's previews are ready the first time you open Add Effect or Add Particle System.** Once Wallpaper Engine's assets are installed (in the setup assistant or Settings › Assets), the app renders every effect's and particle system's preview in the background, effects first, at low priority; it waits on battery below 30 % and while the Mac is critically hot. A browser opened meanwhile gets its visible tiles first. An assets update renders again only the previews whose files changed, and app updates keep them.
 
 ### Changed
 
@@ -48,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A scene's music fades in when the wallpaper starts** (loaded, switched to, or at launch), over about 0.75 s with the same ease as pause and resume, instead of starting at full volume. This is Open Wallpaper Engine's own touch; Wallpaper Engine starts at full volume. Loop points don't fade, nothing fades out on a switch or quit, and mute, `startsilent` and the volume work as before.
 - **Privacy policy 1.1.** It names the new update feed at openwallpaperengine.app and the MCP Server plugin's local connection. The app asks you to review it once.
 - **A project cleanup** removed dead code, unused strings and images, migrations that no longer run, and a stub SceneScript framework, and made the renderer's safety nets log what they catch.
+- **The Scene Editor (Live)'s sidebar lists objects as the Wallpaper Editor does:** the scene's hierarchy, groups as folders, with "Clock Location: Middle" under the layers a property option shows. **Versions** is one dropdown per such property (Language, Clock Location…), only for the properties that apply, instead of a list of option names.
+- **The export tabs' right-hand panel is the selected layer's Layer Adjustments.** The export settings, Save, Send and Export More with These Settings are behind the toolbar's Export Settings button, now a share icon.
+- **Hiding a group dims everything in it** in both editors; each layer keeps its own switch for when the group shows again.
+- **Web and application wallpapers ask again when their content changes.** "Don't ask again for this wallpaper" now trusts the folder's files as they were when you answered: after a Workshop update, or another item downloaded into the same folder, the prompt asks again and says the wallpaper changed. Renaming or tagging the wallpaper in the library doesn't count as a change. Wallpapers trusted before this version keep their trust and are bound to their files the first time they are applied.
 
 ### Fixed
 
@@ -69,6 +57,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Text layers whose font is missing are set in Arial**, as Wallpaper Engine does, and new text layers start at Wallpaper Engine's 32 points.
 - **The library and the Workshop scroll more smoothly:** card previews are decoded at card size and cached, folder sizes are measured lazily, and download progress no longer redraws the whole window.
 - **The Steam account name stays out of logged steamcmd output.**
+- A web or application wallpaper whose trust prompt was cancelled no longer stays behind as the wallpaper to apply.
+- **iPhone & iPad and Android exports frame the scene as it is drawn.** The Scene Editor (Live)'s export modes, Export More with These Settings… and the MCP exports measured a 3D scene by its objects' positions and ignored `auto`-sized scenes, so the crop could miss the picture; they now use the canvas the wallpaper renders at, with the Wallpaper Editor's saved edits applied. The editor's Align buttons snap to that canvas too.
+- **Send over Wi-Fi no longer serves its page with a weak security policy.** If macOS can't supply random bytes for the page's script nonce, the page answers with an error (and the log says why) instead of falling back to a fixed nonce.
 
 ## [1.0.0-beta.5] - 2026-10-04
 
