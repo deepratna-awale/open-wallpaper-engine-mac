@@ -41,7 +41,8 @@ enum ShaderPrewarmCommand {
 
     /// `--render-editor-previews <job.json>` renders the Wallpaper Editor's previews of effects
     /// and particle systems (`EditorPreviewJob`, `EditorPreviewRenderer`), writing a line to
-    /// standard output as each is done.
+    /// standard output as each is done; `--render-editor-previews -` reads them from standard
+    /// input until it closes (the background pre-warm, `EditorPreviewPrewarm`).
     static let editorPreviewArgument = "--render-editor-previews"
 
     static func isHelperRun(arguments: [String]) -> Bool {
@@ -158,6 +159,10 @@ enum ShaderPrewarmCommand {
             guard index + 1 < arguments.count else {
                 OWELog.error(.app, "Editor previews: no job file")
                 return 2
+            }
+            if arguments[index + 1] == EditorPreviewJob.streamArgument {
+                // The background pre-warm's lane: in the background state but for a browser's tiles.
+                return EditorPreviewRenderer.runStream()
             }
             let jobFile = URL(filePath: arguments[index + 1], directoryHint: .notDirectory)
             do {
