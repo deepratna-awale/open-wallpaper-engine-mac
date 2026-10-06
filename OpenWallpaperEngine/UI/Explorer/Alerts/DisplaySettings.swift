@@ -102,10 +102,10 @@ struct DisplaySettings: SubviewOfContentView {
                                                         placement: wallpaperViewModel.wallpaperPlacement)
 
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(wp.project.title.isEmpty ? String(localized: "No wallpaper") : wp.project.title)
+                                    Text(DisplaySettings.title(of: wp))
                                         .font(.callout)
                                         .fontWeight(.medium)
-                                    Text(verbatim: wp.project.type.isEmpty ? "—" : LocalizedLabels.wallpaperType(wp.project.type))
+                                    Text(verbatim: wp.project == .invalid || wp.project.type.isEmpty ? "—" : LocalizedLabels.wallpaperType(wp.project.type))
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -141,5 +141,12 @@ struct DisplaySettings: SubviewOfContentView {
             }
         }
         .padding(.horizontal, 40)
+    }
+
+    /// The name shown for a display's wallpaper; "No wallpaper" for the placeholder a display
+    /// without one has (titled "Error" in its project).
+    static func title(of wallpaper: WEWallpaper) -> String {
+        wallpaper.project == .invalid || wallpaper.project.title.isEmpty
+            ? String(localized: "No wallpaper") : wallpaper.project.title
     }
 }

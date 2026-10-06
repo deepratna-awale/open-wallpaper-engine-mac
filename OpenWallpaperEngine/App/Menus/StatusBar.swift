@@ -43,7 +43,7 @@ extension AppDelegate {
 
     func buildRecentWallpapersMenu() -> NSMenu {
         let menu = NSMenu(title: String(localized: "Recent Wallpapers"))
-        let recents = wallpaperViewModel.recentWallpapers
+        let recents = wallpaperViewModel.availableRecentWallpapers()
 
         if recents.isEmpty {
             menu.addItem(NSMenuItem(title: String(localized: "No recent wallpapers"), action: nil, keyEquivalent: ""))
@@ -66,6 +66,7 @@ extension AppDelegate {
     func setStatusMenu() {
         // Recent Wallpapers Submenu
         let recentWallpapersMenuItem = NSMenuItem(title: String(localized: "Recent Wallpapers"), action: nil, keyEquivalent: "")
+        recentWallpapersMenuItem.identifier = Self.recentWallpapersMenuItem
         recentWallpapersMenuItem.submenu = buildRecentWallpapersMenu()
 
         let menu = NSMenu()
@@ -83,6 +84,7 @@ extension AppDelegate {
             } else {
                 button.image = NSImage(systemSymbolName: "play.desktopcomputer", accessibilityDescription: nil)
             }
+            button.setAccessibilityLabel(String(localized: "Open Wallpaper Engine"))
         }
         showStoppedState()
     }
@@ -131,13 +133,14 @@ extension AppDelegate {
 
 extension AppDelegate: NSMenuDelegate {
     static let setUpAssetsMenuItem = NSUserInterfaceItemIdentifier("setUpAssets")
+    static let recentWallpapersMenuItem = NSUserInterfaceItemIdentifier("recentWallpapers")
 
     func menuWillOpen(_ menu: NSMenu) {
         // Offered only while scenes are missing their assets.
         assets.refresh()
         menu.items.first { $0.identifier == Self.setUpAssetsMenuItem }?.isHidden = !assets.isMissing
         // Update the Recent Wallpapers submenu each time the status bar menu opens
-        if let recentItem = menu.items.first(where: { $0.title == String(localized: "Recent Wallpapers") }) {
+        if let recentItem = menu.items.first(where: { $0.identifier == Self.recentWallpapersMenuItem }) {
             recentItem.submenu = buildRecentWallpapersMenu()
         }
     }

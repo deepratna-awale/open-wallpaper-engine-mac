@@ -189,6 +189,11 @@ extension AppDelegate: NSMenuItemValidation {
                 ? String(localized: "Resume Wallpapers") : String(localized: "Pause Wallpapers")
             // While stopped, Stop's item reads Resume and does what this would.
             menuItem.isHidden = wallpaperViewModel.isStopped
+            // The status menu's item (and the Dock menu's copy) has a symbol; the menu bar's has none.
+            if menuItem.image != nil {
+                menuItem.image = NSImage(systemSymbolName: wallpaperViewModel.playRate == 0 || videoMemoryWatch.exhausted
+                                         ? "play.fill" : "pause.fill", accessibilityDescription: nil)
+            }
             return true
         case #selector(toggleStopWallpapers):
             menuItem.title = wallpaperViewModel.isStopped
@@ -205,6 +210,10 @@ extension AppDelegate: NSMenuItemValidation {
             return false
         case #selector(toggleMuteWallpapers):
             menuItem.title = wallpaperViewModel.playVolume == 0 ? String(localized: "Unmute") : String(localized: "Mute")
+            if menuItem.image != nil {
+                menuItem.image = NSImage(systemSymbolName: wallpaperViewModel.playVolume == 0 ? "speaker.fill" : "speaker.slash.fill",
+                                         accessibilityDescription: nil)
+            }
             return true
         case #selector(nextWallpaper):
             Self.labelStepItem(menuItem, next: true, inPlaylist: wallpaperViewModel.stepsThroughPlaylist)
