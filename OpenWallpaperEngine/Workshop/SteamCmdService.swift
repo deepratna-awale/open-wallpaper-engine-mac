@@ -447,8 +447,14 @@ class SteamCmdService: ObservableObject {
             let percentage = self?.parseDownloadPercentage(chunk)
             guard status != nil || percentage != nil else { return }
             DispatchQueue.main.async {
-                if let status { self?.downloadProgress[workshopId] = .downloading(status: status) }
-                if let percentage { self?.downloadPercentages[workshopId] = percentage }
+                guard let self else { return }
+                // Only changed values are published: steamcmd repeats its status in every chunk.
+                if let status, self.downloadProgress[workshopId] != .downloading(status: status) {
+                    self.downloadProgress[workshopId] = .downloading(status: status)
+                }
+                if let percentage, self.downloadPercentages[workshopId] != percentage {
+                    self.downloadPercentages[workshopId] = percentage
+                }
             }
         }
         OWELog.info(.workshop, "steamcmd download [\(workshopId)] exit=\(run.exitCode)\n\(run.output)")
