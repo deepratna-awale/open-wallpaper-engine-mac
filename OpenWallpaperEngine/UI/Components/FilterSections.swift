@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The "Show only" checkboxes, shared by the Installed and Workshop filter sidebars. Option `i` is
-/// `FRShowOnly.allOptions[i]` (and `WorkshopShowOnly(rawValue: i)`).
+/// `FRShowOnly.options[i]` (and `WorkshopShowOnly(rawValue: i)`).
 struct ShowOnlyFilterRows: View {
     let isOn: (Int) -> Bool
     let set: (Int, Bool) -> Void
@@ -9,12 +9,12 @@ struct ShowOnlyFilterRows: View {
     private static let colors: [Color] = [.green, .pink, .orange]
 
     var body: some View {
-        ForEach(Array(FRShowOnly.allOptions.enumerated()), id: \.offset) { index, option in
+        ForEach(Array(FRShowOnly.options.enumerated()), id: \.offset) { index, option in
             Toggle(isOn: Binding(get: { isOn(index) }, set: { set(index, $0) })) {
                 HStack(spacing: 2) {
-                    Image(systemName: option.1)
+                    Image(systemName: option.systemImage ?? "")
                         .foregroundStyle(index < Self.colors.count ? Self.colors[index] : Color.accentColor)
-                    Text(LocalizedLabels.filterOption(option.0))
+                    Text(option.label)
                 }
             }
             .toggleStyle(.checkbox)

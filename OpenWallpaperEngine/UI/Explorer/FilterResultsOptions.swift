@@ -9,21 +9,48 @@ import SwiftUI
 
 typealias FilterResultsViewModel = ContentViewModel
 
+/// One checkbox of a filter. `key` is the option's stored spelling: WE's tag, matched against the
+/// wallpapers' tags and never shown; `label` is what the sidebar shows, in the user's language.
+/// Option `i` of a filter is bit `1 << i` of its stored value, so the order of a filter's options
+/// is part of what is saved.
+struct FilterOption: Equatable, ExpressibleByStringLiteral {
+    let key: String
+    /// The symbol shown before the label, if any.
+    var systemImage: String?
+
+    init(key: String, systemImage: String? = nil) {
+        self.key = key
+        self.systemImage = systemImage
+    }
+
+    init(stringLiteral key: String) {
+        self.init(key: key)
+    }
+
+    var label: LocalizedStringResource { LocalizedLabels.filterOption(key) }
+}
+
+/// A filter of the Installed tab's sidebar: one bit per option of `options`.
 protocol FilterResultsModel: OptionSet where Element == Self, RawValue == Int {
-    static var allOptions: [String] { get }
+    static var options: [FilterOption] { get }
     static var all: Self { get }
     static var none: Self { get }
 }
 
-struct FRShowOnly: OptionSet {
+extension FilterResultsModel {
+    /// The options' keys, in bit order.
+    static var optionKeys: [String] { options.map(\.key) }
+}
+
+struct FRShowOnly: FilterResultsModel {
     let rawValue: Int
     
-    static let allOptions = [
-        ("Approved", "trophy.fill"),
-        ("My Favourites", "heart.fill"),
-        ("Mobile Compatible", "iphone.gen3"),
-        ("Audio Responsive", "waveform"),
-        ("Customizable", "slider.horizontal.3")
+    static let options: [FilterOption] = [
+        FilterOption(key: "Approved", systemImage: "trophy.fill"),
+        FilterOption(key: "My Favourites", systemImage: "heart.fill"),
+        FilterOption(key: "Mobile Compatible", systemImage: "iphone.gen3"),
+        FilterOption(key: "Audio Responsive", systemImage: "waveform"),
+        FilterOption(key: "Customizable", systemImage: "slider.horizontal.3")
     ]
     
     static let approved             = FRShowOnly(rawValue: 1 << 0)
@@ -39,7 +66,7 @@ struct FRShowOnly: OptionSet {
 struct FRType: FilterResultsModel {
     let rawValue: Int
     
-    static let allOptions = [
+    static let options: [FilterOption] = [
         "Scene",
         "Video",
         "Web",
@@ -60,7 +87,7 @@ struct FRType: FilterResultsModel {
 struct FRCategory: FilterResultsModel {
     let rawValue: Int
 
-    static let allOptions = WorkshopTags.categories
+    static let options = WorkshopTags.categories.map { FilterOption(key: $0) }
 
     static let wallpaper        = FRCategory(rawValue: 1 << 0)
     static let preset           = FRCategory(rawValue: 1 << 1)
@@ -77,7 +104,7 @@ struct FRCategory: FilterResultsModel {
 struct FRAgeRating: FilterResultsModel {
     let rawValue: Int
     
-    static let allOptions = [
+    static let options: [FilterOption] = [
         "Everyone",
         "Partial Nudity",
         "Mature"
@@ -96,7 +123,7 @@ struct FRWidescreenResolution: FilterResultsModel {
     
     /// WE's tags (`WEResolutionTags`), in bit order; 1366 x 768 came last so stored bits keep
     /// their meaning.
-    static let allOptions = [
+    static let options: [FilterOption] = [
         "Standard Definition",
         "1280 x 720",
         "1920 x 1080",
@@ -120,7 +147,7 @@ struct FRUltraWidescreenResolution: FilterResultsModel {
     let rawValue: Int
     
     
-    static let allOptions: [String] = [
+    static let options: [FilterOption] = [
         "Ultrawide Standard Definition",
         "Ultrawide 2560 x 1080",
         "Ultrawide 3440 x 1440",
@@ -137,7 +164,7 @@ struct FRUltraWidescreenResolution: FilterResultsModel {
 struct FRDualscreenResolution: FilterResultsModel {
     let rawValue: Int
     
-    static let allOptions: [String] = [
+    static let options: [FilterOption] = [
         "Dual Standard Definition",
         "Dual 3840 x 1080",
         "Dual 5120 x 1440",
@@ -156,7 +183,7 @@ struct FRDualscreenResolution: FilterResultsModel {
 struct FRTriplescreenResolution: FilterResultsModel {
     let rawValue: Int
     
-    static let allOptions: [String] = [
+    static let options: [FilterOption] = [
             "Triple Standard Definition",
             "Triple 4096 x 768",
             "Triple 5760 x 1080",
@@ -177,7 +204,7 @@ struct FRTriplescreenResolution: FilterResultsModel {
 struct FRPortraitScreenResolution: FilterResultsModel {
     let rawValue: Int
     
-    static let allOptions = [
+    static let options: [FilterOption] = [
         "Portrait Standard Definition",
         "Portrait 720 x 1280",
         "Portrait 1080 x 1920",
@@ -198,7 +225,7 @@ struct FRPortraitScreenResolution: FilterResultsModel {
 struct FRMiscResolution: FilterResultsModel {
     let rawValue: Int
     
-    static let allOptions = [
+    static let options: [FilterOption] = [
         "Other resolution",
         "Dynamic resolution"
     ]
@@ -213,7 +240,7 @@ struct FRMiscResolution: FilterResultsModel {
 struct FRSource: FilterResultsModel {
     let rawValue: Int
     
-    static let allOptions = [
+    static let options: [FilterOption] = [
         "Official",
         "Workshop",
         "MyWallpapers"
@@ -230,7 +257,7 @@ struct FRSource: FilterResultsModel {
 struct FRTag: FilterResultsModel {
     let rawValue: Int
     
-    static let allOptions = [
+    static let options: [FilterOption] = [
         "Abstract",
         "Animal",
         "Anime",
