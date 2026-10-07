@@ -55,6 +55,12 @@ progress while it renders. Everything above, the user properties and the exports
 **Export Settings** (the toolbar's share button): **Send with AirDrop**, **Save…** and
 **Export More with These Settings…**.
 
+**Send with AirDrop** sends the Live Photo as one Live Photo bundle (a `.pvt` package with the
+photo, the movie and a `metadata.plist`, as Photos sends one), which Photos on the iPhone or
+iPad imports as a Live Photo; the photo and the movie sent as two files would arrive as a separate
+photo and video. **Save…** writes the photo and the movie as two files; import both into Photos
+together to get the Live Photo.
+
 **Also Save to Photos Album** (off by default) also adds each export to an album in the Mac's
 Photos library ("Open Wallpaper Engine" unless you name another; made when missing). With
 iCloud Photos on, it reaches your iPhone and iPad. Photos access is asked for only when you turn
@@ -76,8 +82,8 @@ its own window with the most motion.
 The batch runs as a queue with overall and per-wallpaper progress, and can be cancelled. Scenes
 render one at a time (they use the GPU) while videos are read beside them. Names are the
 wallpapers' titles, made unique within the batch and the folder. **AirDrop All** sends every
-finished Live Photo in one AirDrop share, each photo with its movie, so Photos on the iPhone or
-iPad imports them as Live Photos; each finished one also has its own AirDrop button.
+finished Live Photo in one AirDrop share, each as its Live Photo bundle, so Photos on the iPhone
+or iPad imports them as Live Photos; each finished one also has its own AirDrop button.
 
 On the iPhone or iPad, open the photo, then Share › Use as Wallpaper, and turn Live Photo on.
 

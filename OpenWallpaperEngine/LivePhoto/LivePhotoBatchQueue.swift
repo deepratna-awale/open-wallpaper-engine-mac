@@ -137,16 +137,16 @@ final class LivePhotoBatchQueue: ObservableObject {
         entries.compactMap { $0.status == .done ? $0.files : nil }
     }
 
-    /// What "AirDrop All" shares: every finished Live Photo's photo and then its movie, pair by
-    /// pair in the batch's order, each pair under one name, so Photos on the receiving device
-    /// pairs them by their content identifier and imports Live Photos.
+    /// What "AirDrop All" shares: every finished Live Photo as one Live Photo bundle
+    /// (`LivePhotoBundle`), in the batch's order, which Photos on the receiving device imports as
+    /// Live Photos.
     var airDropItems: [URL] {
         exported.flatMap(Self.airDropItems)
     }
 
-    /// One Live Photo's AirDrop items: its photo, then its movie.
+    /// One Live Photo's AirDrop items: its bundle (else its photo, then its movie).
     static func airDropItems(_ files: LivePhotoHelper.Files) -> [URL] {
-        [files.still, files.movie]
+        LivePhotoBundle.airDropItems(files)
     }
 
     /// Removes the batch's files from the export cache (the sheet closed).

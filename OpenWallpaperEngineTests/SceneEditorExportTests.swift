@@ -404,8 +404,8 @@ final class SceneEditorExportTests: XCTestCase {
         XCTAssertEqual(derived.clip, LivePhotoClip(start: 4, length: 2))
     }
 
-    /// AirDrop All shares every finished Live Photo's photo and movie, pair by pair, in the
-    /// batch's order; a failed one is left out. Each item's own AirDrop is its pair.
+    /// AirDrop All shares every finished Live Photo, in the batch's order; a failed one is left
+    /// out. These fake exports have no files, so each falls back to its photo and movie.
     func testAirDropAllKeepsEachPhotoWithItsMovie() async throws {
         let worker = FakeLivePhotoWorker(folder: directory)
         worker.fails = ["B"]
@@ -418,6 +418,30 @@ final class SceneEditorExportTests: XCTestCase {
         let files = try XCTUnwrap(queue.entries[2].files)
         XCTAssertEqual(LivePhotoBatchQueue.airDropItems(files), [files.still, files.movie])
         XCTAssertEqual(LivePhotoBatchQueue.uniqueNames(["A", "a"], taken: ["A"]), ["A 2", "a 3"], "names in the folder are taken")
+    }
+
+    /// AirDrop sends a Live Photo as Apple's Live Photo bundle, which iPhone imports as one Live
+    /// Photo (the two files arrive as a photo and a video): a `.pvt` package in the export's folder
+    /// with the photo, the movie and Photos' metadata.plist, made once.
+    func testAirDropSendsALivePhotoBundle() throws {
+        let folder = directory.appending(path: "export", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let files = LivePhotoHelper.Files(directory: folder, still: folder.appending(path: "Snowy Plains.HEIC"),
+                                          movie: folder.appending(path: "Snowy Plains.MOV"), identifier: "id")
+        try Data("photo".utf8).write(to: files.still)
+        try Data("movie".utf8).write(to: files.movie)
+
+        let items = LivePhotoBatchQueue.airDropItems(files)
+        XCTAssertEqual(items.map(\.lastPathComponent), ["Snowy Plains.pvt"])
+        let bundle = try XCTUnwrap(items.first)
+        XCTAssertEqual(bundle.deletingLastPathComponent().standardizedFileURL, folder.standardizedFileURL, "removed with the export")
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: bundle.path(percentEncoded: false)).sorted(),
+                       ["Snowy Plains.HEIC", "Snowy Plains.MOV", "metadata.plist"])
+        XCTAssertEqual(try Data(contentsOf: bundle.appending(path: "Snowy Plains.MOV")), Data("movie".utf8))
+        let plist = try PropertyListSerialization.propertyList(from: Data(contentsOf: bundle.appending(path: "metadata.plist")),
+                                                               format: nil) as? [String: String]
+        XCTAssertEqual(plist, ["PFVideoComplementMetadataVersionKey": "1"])
+        XCTAssertEqual(LivePhotoBatchQueue.airDropItems(files), items, "made once")
     }
 
     func testTheLibraryPickerFiltersSearchesAndOrdersTheBatch() throws {
