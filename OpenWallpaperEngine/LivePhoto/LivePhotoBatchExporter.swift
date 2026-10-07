@@ -60,7 +60,8 @@ final class LivePhotoBatchExporter: LivePhotoBatchWorking {
         }
         return try await Task.detached(priority: .userInitiated) {
             try SceneDrawnSize.of(sceneData: AndroidPackageBuilder.sceneData(wallpaper),
-                                  overlay: SceneDrawnSize.savedOverlay(of: wallpaper))
+                                  overlay: SceneDrawnSize.savedOverlay(of: wallpaper),
+                                  readAsset: SceneImageSize.reader(for: wallpaper))
         }.value
     }
 

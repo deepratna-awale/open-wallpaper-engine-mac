@@ -1106,26 +1106,30 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// The scene's size in scene units (`Self.sceneSize(of:)`).
     private func metalSceneSize(for scene: WEScene) -> SIMD2<Float> {
-        if case .orthographicAuto = scene.general.projection, Self.firstImage(of: scene)?.size?.parseVector2() == nil {
-            // Its image takes its texture's size and the scene stays 1920×1080 (§5.21).
-            OWELog.debug(.scene, "\(loadedWallpaperDirectory?.lastPathComponent ?? "?"): orthogonalprojection auto "
-                         + "without an image size; the scene is 1920×1080")
+        guard let directory = loadedWallpaperDirectory else { return Self.sceneSize(of: scene) }
+        return Self.sceneSize(of: scene) { model in
+            SceneImageSize.of(model: model) { self.rawAssetData(named: $0, wallpaperDir: directory) }
         }
-        return Self.sceneSize(of: scene)
     }
 
     /// The scene's size in scene units (`general.orthogonalprojection` as WE reads it,
     /// docs/models-plan.md §2.1): an orthographic scene's width and height; `{"auto": true}`'s
-    /// first image's size (0x14018b2c0); a perspective scene, whose objects are in world units,
-    /// WE's default canvas. What the renderer draws the scene at, so anything framing the drawn
-    /// scene (the iPhone & iPad Export's crop) measures it with this (`SceneDrawnSize`).
-    static func sceneSize(of scene: WEScene) -> SIMD2<Float> {
+    /// first image's size (0x14018b2c0), which is its texture's when the object has no `size`
+    /// (`imageSize`, `SceneImageSize`; WE's GIF template writes none); a perspective scene, whose
+    /// objects are in world units, WE's default canvas. What the renderer draws the scene at, so
+    /// anything framing the drawn scene (the iPhone & iPad Export's crop) measures it with this
+    /// (`SceneDrawnSize`).
+    static func sceneSize(of scene: WEScene, imageSize: ((String) -> SIMD2<Double>?)? = nil) -> SIMD2<Float> {
         switch scene.general.projection {
         case .orthographic(let width, let height):
             return SIMD2<Float>(Float(width), Float(height))
         case .orthographicAuto:
-            if let size = firstImage(of: scene)?.size?.parseVector2(), size.0 != 0, size.1 != 0 {
+            guard let image = firstImage(of: scene) else { return defaultCanvas }
+            if let size = image.size?.parseVector2(), size.0 != 0, size.1 != 0 {
                 return SIMD2<Float>(Float(size.0), Float(size.1))
+            }
+            if let model = image.image, let size = imageSize?(model), size.x > 0, size.y > 0 {
+                return SIMD2<Float>(size)
             }
             return defaultCanvas
         case .perspective:
@@ -1133,7 +1137,7 @@ class SceneWallpaperViewModel: ObservableObject {
         }
     }
 
-    /// WE's default canvas: a perspective scene's, and `auto`'s without an image size.
+    /// WE's default canvas: a perspective scene's, and `auto`'s when its image's size can't be read.
     static let defaultCanvas = SIMD2<Float>(1920, 1080)
 
     /// `{"auto": true}` sizes the scene from its first image object, which WE puts at the

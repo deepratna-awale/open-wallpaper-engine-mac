@@ -8,10 +8,15 @@ import OWESceneEditing
 /// measures in.
 enum SceneDrawnSize {
     /// `sceneData`'s drawn size with `overlay` and `edits` (stored `_owe_scene_object_…` values)
-    /// applied (`ScenePreparation.resolvedScene`).
-    static func of(sceneData: Data, overlay: SceneEditOverlay?, edits: [String: String] = [:]) throws -> SIMD2<Double> {
+    /// applied (`ScenePreparation.resolvedScene`). `readAsset` reads the wallpaper's files, for an
+    /// `auto` scene whose image has no `size` (`SceneImageSize`).
+    static func of(sceneData: Data, overlay: SceneEditOverlay?, edits: [String: String] = [:],
+                   readAsset: ((String) -> Data?)? = nil) throws -> SIMD2<Double> {
         let resolved = try ScenePreparation.resolvedScene(sceneData, edits: edits, overlay: overlay)
-        return SIMD2<Double>(SceneWallpaperViewModel.sceneSize(of: try JSONDecoder().decode(WEScene.self, from: resolved)))
+        let scene = try JSONDecoder().decode(WEScene.self, from: resolved)
+        return SIMD2<Double>(SceneWallpaperViewModel.sceneSize(of: scene, imageSize: readAsset.map { read in
+            { model in SceneImageSize.of(model: model, readAsset: read) }
+        }))
     }
 
     /// The overlay the renderer applies to `wallpaper`: the one saved for its settings identity.
