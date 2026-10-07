@@ -232,7 +232,7 @@ final class InstalledLibraryModel {
     /// A wallpaper's rating for the Installed filter: project.json's, else the Workshop tags'. A
     /// wallpaper made before WE had ratings has neither and is Everyone, as the Details panel
     /// shows it; rated "none" it matched no checkbox and never showed.
-    static func ageRating(of wallpaper: WEWallpaper, tags: [String]) -> FRAgeRating {
+    nonisolated static func ageRating(of wallpaper: WEWallpaper, tags: [String]) -> FRAgeRating {
         switch wallpaper.project.contentrating ?? InstalledWorkshopTags.contentRating(in: tags) ?? "Everyone" {
         case "Everyone": return .everyone
         case "Questionable": return .partialNudity
