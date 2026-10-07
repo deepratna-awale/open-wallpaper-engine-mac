@@ -42,7 +42,7 @@ struct LayerListView: View {
         return List(selection: $session.selection) {
             Section {
                 OutlineGroup(tree, children: \.children) { node in
-                    LayerRow(session: session, tools: tools, layer: node.layer, actions: actions)
+                    LayerRow(session: session, tools: tools, services: services, layer: node.layer, actions: actions)
                         .tag(node.id)
                         .contextMenu { LayerContextMenu(session: session, layer: node.layer, actions: actions) }
                         .draggable(LayerDrag.token(node.id))
@@ -100,6 +100,7 @@ enum LayerDrag {
 private struct LayerRow: View {
     @ObservedObject var session: SceneEditSession
     @ObservedObject var tools: EditorTools
+    let services: WallpaperEditorServices
     let layer: SceneLayer
     let actions: LayerActions
     @State private var isHovering = false
@@ -186,7 +187,8 @@ private struct LayerRow: View {
     }
 
     private func help(on: Bool, property: String?) -> String {
-        guard let property else { return on ? L("Hide Layer") : L("Show Layer") }
+        guard let key = property else { return on ? L("Hide Layer") : L("Show Layer") }
+        let property = services.userPropertyTitle(key, properties: session.overlay.authoring?.properties)
         return on ? L("Hide this layer; “\(property)” sets it again when you show it")
             : L("Show this layer; “\(property)” sets it again")
     }
