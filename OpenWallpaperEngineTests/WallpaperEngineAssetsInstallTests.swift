@@ -177,6 +177,15 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
         XCTAssertEqual(WEProject.impliedType(file: "assets.json", category: "Asset"), "")
     }
 
+    /// WE marks its own default projects `"official": true`; the Details panel names their
+    /// author Wallpaper Engine. Workshop items leave it out.
+    func testAnOfficialProjectIsMarked() throws {
+        let official = try JSONDecoder().decode(WEProject.self, from: Data(#"{"title":"Dino Run","file":"scene.json","official":true}"#.utf8))
+        XCTAssertEqual(official.official, true)
+        let workshop = try JSONDecoder().decode(WEProject.self, from: Data(#"{"title":"A","file":"scene.json"}"#.utf8))
+        XCTAssertNil(workshop.official)
+    }
+
     // MARK: Service
 
     @MainActor
