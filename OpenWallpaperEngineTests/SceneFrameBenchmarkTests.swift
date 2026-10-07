@@ -75,9 +75,11 @@ final class SceneFrameBenchmarkTests: XCTestCase {
     }
 
     /// The render settings `OWE_SCENE_BENCH_MODES` asks for, by name (comma separated): `half` (WE's
-    /// texture reduction), `match` (scene detail matched to the display), `authored` (render
-    /// resolution Full: the scene's authored size), `display` (render resolution Display: the display's points), `metalfx50` (drawn at 50% and upscaled), `textures` ("Optimise textures" on: BC7 colour images, `TexturePreparation`), and `+`
-    /// joins them (`match+metalfx50`). With the variable set, only these and `full` are drawn.
+    /// texture reduction), `match` (Effect Detail Match Display), the render resolutions as the app
+    /// draws them, without the authored-size floor (`yourdisplay`: the drawable's pixels, `uhd4k`:
+    /// 4K at its shape, `authored`: Full, the scene's authored size), `metalfx50` (drawn at 50% and
+    /// upscaled), `textures` ("Optimise textures" on: BC7 colour images, `TexturePreparation`), and
+    /// `+` joins them (`yourdisplay+metalfx50`). With the variable set, only these and `full` are drawn.
     /// `OWE_SCENE_BENCH_TEXTURES=1` adds the `textures` row to the default variants, so the rows
     /// show the setting off (`full`) and on.
     private static func renderModes(_ request: String) -> [Variant] {
@@ -88,8 +90,15 @@ final class SceneFrameBenchmarkTests: XCTestCase {
                 switch part {
                 case "half": settings.textureReduction = 2
                 case "match": settings.sceneDetail = .matchDisplay
-                case "authored": settings.renderResolution = .full
-                case "display": settings.renderResolution = .display
+                case "yourdisplay":
+                    settings.renderResolution = .yourDisplay
+                    settings.floorsAtAuthoredSize = false
+                case "uhd4k":
+                    settings.renderResolution = .uhd4K
+                    settings.floorsAtAuthoredSize = false
+                case "authored":
+                    settings.renderResolution = .full
+                    settings.floorsAtAuthoredSize = false
                 case "metalfx50":
                     settings.upscaling = .metalFX
                     settings.renderScale = .percent50

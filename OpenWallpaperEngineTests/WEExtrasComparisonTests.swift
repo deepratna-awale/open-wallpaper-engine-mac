@@ -90,7 +90,7 @@ final class WEExtrasComparisonTests: XCTestCase {
         settings.particleBudget = .unlimited
         settings.textureReduction = 1
         settings.sceneDetail = .full
-        settings.renderResolution = .retina
+        settings.renderResolution = .yourDisplay
         settings.antiAliasing = .msaa_x2
         let renderer = WEReferenceRenderer(directory: directory, project: project, settings: settings,
                                            storage: scratch.appending(path: "storage-\(directory.lastPathComponent)"))

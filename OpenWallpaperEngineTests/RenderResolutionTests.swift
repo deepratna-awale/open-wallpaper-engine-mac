@@ -1,82 +1,134 @@
 import XCTest
 import Metal
+import OWEControlProtocol
 @testable import OpenWallpaperEngine
 
 /// Settings → Performance → Render Resolution (`GSRenderResolution`), Upscaling and Render Scale:
-/// the scene target sized for the displays' points or pixels, or the scene's authored size, drawn at the
-/// render scale and scaled up (`SceneUpscaler`).
+/// the scene target sized for the displays' backing pixels (Your Display), 4K at their shape, or
+/// the scene's authored size (Full), whatever the scene's size, then drawn at the render scale and
+/// scaled up (`SceneUpscaler`).
 final class RenderResolutionTests: XCTestCase {
-    private let retina = SceneViewport(drawableSize: SIMD2(3840, 2160), pointSize: SIMD2(1920, 1080), cursor: nil, frameRateLimit: 30)
-    private let plain = SceneViewport(drawableSize: SIMD2(1920, 1080), pointSize: SIMD2(1920, 1080), cursor: nil, frameRateLimit: 30)
+    private func viewport(_ pixels: SIMD2<Float>, scale: Float = 1) -> SceneViewport {
+        SceneViewport(drawableSize: pixels, pointSize: pixels / scale, cursor: nil, frameRateLimit: 30)
+    }
+    private var plain: SceneViewport { viewport(SIMD2(1920, 1080)) }
+    private var retina: SceneViewport { viewport(SIMD2(3840, 2160), scale: 2) }
+    private var fiveK: SceneViewport { viewport(SIMD2(5120, 2880), scale: 2) }
+    private var ultrawide: SceneViewport { viewport(SIMD2(3440, 1440)) }
+    private var macBookAir: SceneViewport { viewport(SIMD2(2880, 1800), scale: 2) }
+    private let uhdScene = SIMD2<Float>(3840, 2160)
+    private let qhdScene = SIMD2<Float>(2560, 1440)
+    private let hdScene = SIMD2<Float>(1920, 1080)
 
+    /// The live wallpaper's target: Render Resolution alone, no authored-size floor.
     private func target(_ scene: SIMD2<Float>, _ viewports: [SceneViewport], _ resolution: GSRenderResolution,
-                        match: Bool, scale: Float = 1) -> SIMD2<Int> {
+                        scale: Float = 1) -> SIMD2<Int> {
         let drawable = SceneRenderResolution.drawableSize(viewports, resolution: resolution, sceneSize: scene)
-        let full = SceneRenderResolution.pixelsPerUnit(sceneSize: scene, drawableSize: drawable, matchDisplay: match)
+        let full = SceneRenderResolution.pixelsPerUnit(sceneSize: scene, drawableSize: drawable)
         return SceneRenderResolution.targetSize(sceneSize: scene,
                                                 pixelsPerUnit: SceneRenderResolution.drawnPixelsPerUnit(full, scale: scale))
     }
 
-    func testDisplayIsThePointsAndRetinaTheBackingPixels() {
-        XCTAssertEqual(SceneRenderResolution.drawableSize([retina], resolution: .display, sceneSize: SIMD2(1920, 1080)),
-                       SIMD2(1920, 1080), "points, not pixels, on a 2× display")
-        XCTAssertEqual(SceneRenderResolution.drawableSize([retina], resolution: .retina, sceneSize: SIMD2(1920, 1080)),
-                       SIMD2(3840, 2160))
-        XCTAssertEqual(SceneRenderResolution.drawableSize([plain], resolution: .display, sceneSize: SIMD2(1920, 1080)),
-                       SIMD2(1920, 1080))
-        XCTAssertEqual(SceneRenderResolution.drawableSize([retina, plain], resolution: .retina, sceneSize: SIMD2(1, 1)),
-                       SIMD2(3840, 2160))
-        let unsized = SceneViewport(drawableSize: SIMD2(800, 600), pointSize: .zero, cursor: nil, frameRateLimit: 30)
-        XCTAssertEqual(SceneRenderResolution.drawableSize([unsized], resolution: .display, sceneSize: SIMD2(1, 1)),
-                       SIMD2(800, 600), "a view without a size yet falls back to its drawable")
-    }
-
-    func testEachModeSizesTheTarget() {
-        let scene = SIMD2<Float>(1920, 1080)
-        XCTAssertEqual(target(scene, [retina], .display, match: true), SIMD2(1920, 1080), "a quarter of the pixels")
-        XCTAssertEqual(target(scene, [retina], .retina, match: true), SIMD2(3840, 2160))
-        XCTAssertEqual(target(scene, [plain], .display, match: true), SIMD2(1920, 1080))
-        XCTAssertEqual(target(scene, [plain], .retina, match: true), SIMD2(1920, 1080))
-        XCTAssertEqual(target(scene, [retina], .full, match: true), SIMD2(1920, 1080), "the authored size, placed onto the display")
-        XCTAssertEqual(target(scene, [plain], .full, match: false), SIMD2(1920, 1080))
-        // A 4K scene on a 1× 1080p display: Full keeps its authored size.
-        XCTAssertEqual(target(SIMD2(3840, 2160), [plain], .full, match: true), SIMD2(3840, 2160))
-    }
-
-    func testAWideSceneCoversTheDisplay() {
-        let wide = SIMD2<Float>(5120, 1440)
-        // Covering a 3840×2160 display needs 1.5 pixels per unit (its height).
-        XCTAssertEqual(target(wide, [retina], .retina, match: true), SIMD2(7680, 2160))
-        XCTAssertEqual(target(wide, [retina], .display, match: true), SIMD2(3840, 1080))
-        XCTAssertEqual(target(wide, [plain], .display, match: true), SIMD2(3840, 1080))
-        XCTAssertEqual(target(wide, [retina], .full, match: true), SIMD2(5120, 1440))
-    }
-
-    func testMatchDisplayIsNotScaledTwice() {
-        // A scene the display's shape: exactly the drawable (Retina) or the points (Display).
-        for (scene, viewport) in [(SIMD2<Float>(1920, 1080), retina), (SIMD2<Float>(1920, 1080), plain),
-                                  (SIMD2<Float>(3840, 2160), plain), (SIMD2<Float>(2560, 1440), retina)] {
-            XCTAssertEqual(target(scene, [viewport], .retina, match: true),
-                           SIMD2(Int(viewport.drawableSize.x), Int(viewport.drawableSize.y)), "\(scene) on \(viewport.drawableSize)")
-            XCTAssertEqual(target(scene, [viewport], .display, match: true),
-                           SIMD2(Int(viewport.pointSize.x), Int(viewport.pointSize.y)), "\(scene) on \(viewport.pointSize)")
+    func testYourDisplayIsTheBackingPixelsWhateverTheScenesSize() {
+        for scene in [uhdScene, qhdScene, hdScene] {
+            XCTAssertEqual(target(scene, [plain], .yourDisplay), SIMD2(1920, 1080), "\(scene) on a 1× 1080p display")
+            XCTAssertEqual(target(scene, [retina], .yourDisplay), SIMD2(3840, 2160), "\(scene) on a 2× 4K display")
         }
+        // 5K: the backing pixels, quantised up to an eighth of a pixel per unit (no resize churn).
+        XCTAssertEqual(SceneRenderResolution.drawableSize([fiveK], resolution: .yourDisplay, sceneSize: uhdScene),
+                       SIMD2(5120, 2880))
+        XCTAssertEqual(target(hdScene, [fiveK], .yourDisplay), SIMD2(5280, 2970))
+        // Ultrawide: a 16:9 scene covers it, its height cropped by the placement.
+        XCTAssertEqual(target(uhdScene, [ultrawide], .yourDisplay), SIMD2(3480, 1958))
+        XCTAssertEqual(target(qhdScene, [ultrawide], .yourDisplay), SIMD2(3520, 1980))
+        // Several displays: the largest one's pixels.
+        XCTAssertEqual(SceneRenderResolution.drawableSize([plain, retina], resolution: .yourDisplay, sceneSize: hdScene),
+                       SIMD2(3840, 2160))
+    }
+
+    func testUHD4KIs4KAtTheDisplaysShapeWhateverTheScenesSize() {
+        XCTAssertEqual(SceneRenderResolution.drawableSize([plain], resolution: .uhd4K, sceneSize: hdScene), SIMD2(3840, 2160))
+        XCTAssertEqual(SceneRenderResolution.drawableSize([macBookAir], resolution: .uhd4K, sceneSize: hdScene),
+                       SIMD2(3840, 2400), "16:10")
+        XCTAssertEqual(SceneRenderResolution.drawableSize([ultrawide], resolution: .uhd4K, sceneSize: hdScene),
+                       SIMD2(3840, 1607), "21:9")
+        XCTAssertEqual(SceneRenderResolution.drawableSize([fiveK], resolution: .uhd4K, sceneSize: hdScene),
+                       SIMD2(3840, 2160), "a larger display gets 4K too, scaled up by the composite")
+        XCTAssertEqual(SceneRenderResolution.uhd4KSize(shapedLike: .zero), SIMD2(3840, 2160), "no display yet")
+        for display in [plain, retina, fiveK] {
+            // A 2K scene is drawn at 4K too: text, particles and procedural effects get the pixels.
+            XCTAssertEqual(target(qhdScene, [display], .uhd4K), SIMD2(3840, 2160), "\(display.drawableSize)")
+            XCTAssertEqual(target(uhdScene, [display], .uhd4K), SIMD2(3840, 2160), "\(display.drawableSize)")
+            XCTAssertEqual(target(hdScene, [display], .uhd4K), SIMD2(3840, 2160), "\(display.drawableSize)")
+        }
+        XCTAssertEqual(target(uhdScene, [ultrawide], .uhd4K), SIMD2(3840, 2160))
+    }
+
+    func testFullIsTheAuthoredSize() {
+        for display in [plain, retina, fiveK, ultrawide] {
+            XCTAssertEqual(target(uhdScene, [display], .full), SIMD2(3840, 2160), "\(display.drawableSize)")
+            XCTAssertEqual(target(qhdScene, [display], .full), SIMD2(2560, 1440), "\(display.drawableSize)")
+        }
+        XCTAssertEqual(target(SIMD2(20000, 20000), [plain], .full), SIMD2(16384, 16384), "only the GPU's texture limit caps it")
+        XCTAssertEqual(target(SIMD2(20000, 20000), [plain], .uhd4K), SIMD2(4063, 4063), "4K covered, rounded up to a 64th")
+    }
+
+    func testEffectDetailNoLongerSizesTheTarget() {
+        // Effect Detail Full used to keep a 4K scene at 4K on a 1080p display; the target is now
+        // Render Resolution's alone, and the floor belongs to the exports and settings-less renderers.
+        var settings = GlobalSettings()
+        settings.sceneDetail = .full
+        let render = SceneRenderSettings(settings)
+        XCTAssertFalse(render.floorsAtAuthoredSize)
+        let drawable = SceneRenderResolution.drawableSize([plain], resolution: render.renderResolution, sceneSize: uhdScene)
+        XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: uhdScene, drawableSize: drawable,
+                                                           floorsAtAuthoredSize: render.floorsAtAuthoredSize), 0.5)
+        XCTAssertTrue(SceneRenderSettings().floorsAtAuthoredSize, "a settings-less renderer draws at least the authored size")
     }
 
     func testRenderScaleSizes() {
-        let scene = SIMD2<Float>(1920, 1080)
-        XCTAssertEqual(target(scene, [retina], .retina, match: true, scale: GSRenderScale.percent50.factor), SIMD2(1920, 1080))
-        XCTAssertEqual(target(scene, [retina], .retina, match: true, scale: GSRenderScale.percent67.factor), SIMD2(2560, 1440))
-        XCTAssertEqual(target(scene, [retina], .retina, match: true, scale: GSRenderScale.percent75.factor), SIMD2(2880, 1620))
-        XCTAssertEqual(target(scene, [retina], .display, match: true, scale: GSRenderScale.percent50.factor), SIMD2(960, 540),
-                       "MetalFX draws below the chosen target")
-        XCTAssertEqual(target(scene, [plain], .full, match: true, scale: 0.5), SIMD2(960, 540))
+        XCTAssertEqual(target(hdScene, [retina], .yourDisplay, scale: GSRenderScale.percent50.factor), SIMD2(1920, 1080))
+        XCTAssertEqual(target(hdScene, [retina], .yourDisplay, scale: GSRenderScale.percent67.factor), SIMD2(2560, 1440))
+        XCTAssertEqual(target(hdScene, [retina], .yourDisplay, scale: GSRenderScale.percent75.factor), SIMD2(2880, 1620))
+        XCTAssertEqual(target(qhdScene, [plain], .uhd4K, scale: GSRenderScale.percent50.factor), SIMD2(1920, 1080),
+                       "MetalFX draws below the chosen target and rebuilds it")
+        XCTAssertEqual(target(hdScene, [plain], .full, scale: 0.5), SIMD2(960, 540))
         XCTAssertEqual(SceneRenderResolution.drawnPixelsPerUnit(2, scale: 1), 2)
         var settings = SceneRenderSettings()
         XCTAssertEqual(settings.drawnScale, 1, "upscaling off draws the full target")
         settings.upscaling = .metalFX
         settings.renderScale = .percent67
         XCTAssertEqual(settings.drawnScale, 2.0 / 3)
+    }
+
+    func testAutomaticTextureResolutionWeighsTheSizeDrawnFor() {
+        var settings = GlobalSettings()
+        settings.textureResolution = .automatic
+        let display = SIMD2<Float>(1920, 1080)
+        settings.renderResolution = .yourDisplay
+        XCTAssertEqual(SceneRenderSettings(settings, outputPixels: display, sceneSize: uhdScene).textureReduction, 2,
+                       "WE's automatic: a 4K scene on a 1080p window halves its textures")
+        settings.renderResolution = .uhd4K
+        XCTAssertEqual(SceneRenderSettings(settings, outputPixels: display, sceneSize: uhdScene).textureReduction, 1)
+        settings.renderResolution = .full
+        XCTAssertEqual(SceneRenderSettings(settings, outputPixels: display, sceneSize: uhdScene).textureReduction, 1)
+        XCTAssertEqual(SceneRenderSettings.renderedPixels(.full, outputPixels: display, sceneSize: nil), display,
+                       "a perspective scene has no authored size to weigh")
+    }
+
+    func testThePickerNamesTheSizes() {
+        let sizes = RenderResolutionSizes(screens: [.init(points: CGSize(width: 1920, height: 1080), pixels: CGSize(width: 3840, height: 2160)),
+                                                    .init(points: CGSize(width: 3440, height: 1440), pixels: CGSize(width: 3440, height: 1440))])
+        XCTAssertEqual(sizes.yourDisplayList, "3840×2160, 3440×1440")
+        XCTAssertEqual(sizes.uhd4KList, "3840×2160, 3840×1607")
+        XCTAssertEqual(sizes.mainPixels, "3840×2160")
+        XCTAssertEqual(sizes.mainUHD4K, "3840×2160")
+        for resolution in GSRenderResolution.allCases {
+            XCTAssertFalse(sizes.label(resolution).isEmpty)
+            XCTAssertFalse(sizes.summary(resolution).isEmpty)
+        }
+        XCTAssertTrue(sizes.label(.yourDisplay).contains("3840×2160, 3440×1440"))
+        XCTAssertTrue(sizes.summary(.uhd4K).contains("3840×2160"))
     }
 
     func testUpscalingPathFallsBackToBilinear() {
@@ -121,54 +173,127 @@ final class RenderResolutionTests: XCTestCase {
 
     func testTheSettingReachesTheRenderer() {
         var settings = GlobalSettings()
-        XCTAssertEqual(settings.renderResolution, .display, "the display's points by default")
+        XCTAssertEqual(settings.renderResolution, .yourDisplay, "the display's own pixels by default")
         XCTAssertEqual(settings.upscaling, .off)
-        settings.renderResolution = .full
+        settings.renderResolution = .uhd4K
         settings.upscaling = .metalFX
         settings.renderScale = .percent50
         let render = SceneRenderSettings(settings)
-        XCTAssertEqual(render.renderResolution, .full)
+        XCTAssertEqual(render.renderResolution, .uhd4K)
         XCTAssertEqual(render.upscaling, .metalFX)
         XCTAssertEqual(render.renderScale, .percent50)
-        XCTAssertEqual(SceneRenderSettings().renderResolution, .retina, "a settings-less renderer draws as WE does")
+        XCTAssertEqual(SceneRenderSettings().renderResolution, .yourDisplay, "a settings-less renderer draws as WE does")
     }
 
-    func testSavedAndExportedSettingsMigrate() throws {
-        func decoded(_ value: String) throws -> GlobalSettings {
-            try JSONDecoder().decode(GlobalSettings.self, from: Data("{\"renderResolution\":\"\(value)\"}".utf8))
+    private func decoded(_ json: String, backingScale: Double? = nil) throws -> (GlobalSettings, migrated: Bool) {
+        let migration = backingScale.map(GlobalSettingsMigration.init(mainBackingScale:))
+        let settings = try (migration?.decoder() ?? JSONDecoder()).decode(GlobalSettings.self, from: Data(json.utf8))
+        return (settings, migration?.migrated ?? false)
+    }
+
+    func testStoredValuesMigrate() throws {
+        func resolution(_ value: String) throws -> GSRenderResolution {
+            try decoded("{\"renderResolution\":\"\(value)\"}").0.renderResolution
         }
-        XCTAssertEqual(try decoded("desktop").renderResolution, .display, "the points-based Desktop becomes Display")
-        XCTAssertEqual(try decoded("native").renderResolution, .retina, "the backing-pixel Native becomes Retina")
-        XCTAssertEqual(try decoded("retina").renderResolution, .retina)
-        XCTAssertEqual(try decoded("full").renderResolution, .full)
-        XCTAssertEqual(try decoded("display").renderResolution, .display, "the earlier backing-pixel Display moves to points")
-        XCTAssertEqual(try decoded("bogus").renderResolution, .display, "an unknown value keeps the default")
+        XCTAssertEqual(try resolution("retina"), .yourDisplay, "the backing pixels")
+        XCTAssertEqual(try resolution("native"), .yourDisplay, "the backing pixels, as stored before Retina")
+        XCTAssertEqual(try resolution("display"), .yourDisplay, "the points, now Your Display (plus Upscaling)")
+        XCTAssertEqual(try resolution("desktop"), .yourDisplay)
+        XCTAssertEqual(try resolution("full"), .full)
+        XCTAssertEqual(try resolution("uhd4K"), .uhd4K)
+        XCTAssertEqual(try resolution("yourDisplay"), .yourDisplay)
+        XCTAssertEqual(try resolution("bogus"), .yourDisplay, "an unknown value keeps the default")
         var settings = GlobalSettings()
-        settings.renderResolution = .full
+        settings.renderResolution = .uhd4K
         settings.upscaling = .metalFX
         settings.renderScale = .percent67
-        let roundTrip = try JSONDecoder().decode(GlobalSettings.self, from: JSONEncoder().encode(settings))
-        XCTAssertEqual(roundTrip.renderResolution, .full)
-        XCTAssertEqual(roundTrip.upscaling, .metalFX)
-        XCTAssertEqual(roundTrip.renderScale, .percent67)
+        let roundTrip = try decoded(String(decoding: JSONEncoder().encode(settings), as: UTF8.self), backingScale: 2)
+        XCTAssertEqual(roundTrip.0, settings)
+        XCTAssertFalse(roundTrip.migrated, "a saved value of today's is read as it is")
+    }
+
+    /// The points-based Display on a Retina display keeps its cost: MetalFX at 50 % draws a quarter
+    /// of the backing pixels, as Display drew, and web wallpapers stay at standard resolution.
+    func testDisplayOnRetinaTurnsOnMetalFXAtHalfOnce() throws {
+        let (retina, migrated) = try decoded(#"{"renderResolution":"display","upscaling":"off","renderScale":"percent75"}"#,
+                                             backingScale: 2)
+        XCTAssertTrue(migrated)
+        XCTAssertEqual(retina.renderResolution, .yourDisplay)
+        XCTAssertEqual(retina.upscaling, .metalFX)
+        XCTAssertEqual(retina.renderScale, .percent50)
+        XCTAssertTrue(retina.webStandardResolution)
+        XCTAssertEqual(target(hdScene, [self.retina], retina.renderResolution, scale: SceneRenderSettings(retina).drawnScale),
+                       SIMD2(1920, 1080), "the pixels Display drew")
+        // Saved, it reads as it is: the migration happens once.
+        let again = try decoded(String(decoding: JSONEncoder().encode(retina), as: UTF8.self), backingScale: 2)
+        XCTAssertFalse(again.migrated)
+        XCTAssertEqual(again.0, retina)
+
+        // Upscaling already on keeps the user's scale.
+        let upscaled = try decoded(#"{"renderResolution":"desktop","upscaling":"metalFX","renderScale":"percent67"}"#,
+                                   backingScale: 2).0
+        XCTAssertEqual(upscaled.upscaling, .metalFX)
+        XCTAssertEqual(upscaled.renderScale, .percent67)
+        // On a 1× display Display and Your Display are the same size: nothing else changes.
+        let (plain, plainMigrated) = try decoded(#"{"renderResolution":"display"}"#, backingScale: 1)
+        XCTAssertTrue(plainMigrated, "still saved, so it isn't migrated again on a later Retina display")
+        XCTAssertEqual(plain.renderResolution, .yourDisplay)
+        XCTAssertEqual(plain.upscaling, .off)
+        XCTAssertFalse(plain.webStandardResolution)
+        // Retina drew the backing pixels: nothing to carry over.
+        let (pixels, pixelsMigrated) = try decoded(#"{"renderResolution":"retina"}"#, backingScale: 2)
+        XCTAssertFalse(pixelsMigrated)
+        XCTAssertEqual(pixels.upscaling, .off)
+    }
+
+    func testLoadingStoredSettingsMigrates() {
+        let migration = GlobalSettingsMigration(mainBackingScale: 2)
+        let loaded = GlobalSettingsViewModel.loadSettings(from: Data(#"{"renderResolution":"display"}"#.utf8),
+                                                          backupDirectory: FileManager.default.temporaryDirectory,
+                                                          migration: migration)
+        XCTAssertTrue(migration.migrated)
+        XCTAssertEqual(loaded.upscaling, .metalFX)
+        XCTAssertEqual(loaded.renderScale, .percent50)
     }
 
     func testPresets() {
         var settings = GlobalSettings()
         settings.renderResolution = .full
         settings.applyResolutionPreset(.low)
+        XCTAssertEqual(settings.renderResolution, .yourDisplay)
         XCTAssertEqual(settings.upscaling, .metalFX)
         XCTAssertEqual(settings.renderScale, .percent50)
         // The user's own choice stands until a preset is applied again.
         settings.renderScale = .percent75
         XCTAssertEqual(settings.renderScale, .percent75)
         for quality in [GSQuality.medium, .high, .ultra] {
+            settings.renderResolution = .uhd4K
             settings.applyResolutionPreset(.low)
             settings.applyResolutionPreset(quality)
             XCTAssertEqual(settings.upscaling, .off, "\(quality)")
-            XCTAssertEqual(settings.renderResolution, .display, "\(quality)")
+            XCTAssertEqual(settings.renderResolution, .yourDisplay, "\(quality)")
         }
         settings.applyResolutionPreset(.low)
         XCTAssertEqual(settings.renderScale, .percent50, "applying Low again overrides the user's scale")
+        let low = GlobalSettingsViewModel.applying(.low, to: GlobalSettings())
+        XCTAssertEqual(low.renderResolution, .yourDisplay)
+        XCTAssertEqual(low.upscaling, .metalFX)
+    }
+
+    @MainActor
+    func testMCPNamesAndEarlierValues() throws {
+        let setting = try LibrarySetting.named("render_resolution")
+        XCTAssertEqual(setting.kind, .choice(["your_display", "uhd4k", "full"]))
+        for (given, expected) in [("your_display", "your_display"), ("UHD4K", "uhd4k"), ("4k", "uhd4k"), ("full", "full"),
+                                  ("display", "your_display"), ("retina", "your_display"), ("Retina", "your_display")] {
+            XCTAssertEqual(try setting.parse(.string(given)), .string(expected), given)
+        }
+        XCTAssertThrowsError(try setting.parse(.string("native")))
+        XCTAssertThrowsError(try setting.parse(.string("8k")))
+        for resolution in GSRenderResolution.allCases {
+            XCTAssertEqual(try AppLibraryControlService.renderResolution(AppLibraryControlService.name(resolution)), resolution)
+        }
+        XCTAssertEqual(AppLibraryControlService.name(.uhd4K), "uhd4k")
+        XCTAssertThrowsError(try AppLibraryControlService.renderResolution("retina"), "the setting maps earlier names first")
     }
 }

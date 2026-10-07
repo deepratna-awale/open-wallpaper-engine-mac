@@ -147,7 +147,8 @@ final class SceneRenderPrimitivesTests: XCTestCase {
             Case(scene: SIMD2(1920, 1080), drawable: SIMD2(.nan, .infinity)),
         ]
         for item in cases {
-            let scale = SceneRenderResolution.pixelsPerUnit(sceneSize: item.scene, drawableSize: item.drawable)
+            let scale = SceneRenderResolution.pixelsPerUnit(sceneSize: item.scene, drawableSize: item.drawable,
+                                                            floorsAtAuthoredSize: true)
             let size = SceneRenderResolution.targetSize(sceneSize: item.scene, pixelsPerUnit: scale)
             let label = "scene \(item.scene), drawable \(item.drawable)"
             XCTAssertTrue(scale.isFinite && scale > 0, label)
@@ -172,8 +173,9 @@ final class SceneRenderPrimitivesTests: XCTestCase {
         let scene = SIMD2<Float>(1920, 1080)
         XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: scene, drawableSize: SIMD2(3840, 2160)), 2)
         XCTAssertEqual(SceneRenderResolution.targetSize(sceneSize: scene, pixelsPerUnit: 2), SIMD2(3840, 2160))
-        // Never below the authored size (thumbnails, small windows).
-        XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: scene, drawableSize: SIMD2(640, 360)), 1)
+        // Floored, never below the authored size (thumbnails, small windows, the exports).
+        XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: scene, drawableSize: SIMD2(640, 360),
+                                                           floorsAtAuthoredSize: true), 1)
     }
 
     /// Only the hardware limits the target: no memory budget caps the density.

@@ -22,7 +22,7 @@ final class LightingFrameBenchmarkTests: XCTestCase {
         func mode(_ name: String, _ change: (inout SceneRenderSettings) -> Void) -> Mode {
             var settings = SceneRenderSettings()
             settings.sceneDetail = .full
-            settings.renderResolution = .retina
+            settings.renderResolution = .yourDisplay
             settings.postProcessing = .ultra
             change(&settings)
             return Mode(name: name, settings: settings)
