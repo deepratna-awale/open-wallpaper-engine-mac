@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Switch off layers a user property shows, in both editors.** The Wallpaper Editor's eye and the Scene Editor (Live)'s switch now work on a layer or group whose visibility a user property sets (such as a clock that a Clock Location option shows): switching it off hides it, and what's in it, whatever the property says; switching it on again hands it back to the property. The scene's binding is kept, so Revert and the property work as before. In the Wallpaper Editor it is an undoable edit, and Save as Local Wallpaper writes the layer as hidden (`"visible": false`).
+
 ## [1.0.0-beta.6] - 2026-10-06
 
 ### Added
