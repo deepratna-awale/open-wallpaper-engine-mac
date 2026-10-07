@@ -14,12 +14,17 @@ private struct SceneInspectorItem: Identifiable {
     var rawObject: String
     var rawMaterial: String?
     var rawParticle: String?
-    let visible: Bool
+    /// Drawn, as far as its own switch and authored `visible` say (dims the row and its children).
+    var visible: Bool
     /// The alternative version the layer is (`SceneLayerVersion`), with its title.
     let version: (choice: SceneLayerVersion, title: String)?
     let effects: [SceneInspectorEffect]
     /// Video wallpapers have no authored object behind the layer, so it is description-only.
     var isSynthetic = false
+    /// The object's visibility switch; nil for a synthetic layer.
+    var visibility: SceneObjectVisibilitySwitch?
+    /// The switch is on: shown, or, on an object a user property shows, not hidden by hand.
+    var isSwitchedOn = true
 
     var isVersion: Bool { version != nil }
     var versionName: String? { version?.title }
@@ -194,8 +199,10 @@ private final class SceneInspectorModel: ObservableObject {
             if let origin = storedValues["_owe_scene_object_\(objectID)_origin"] {
                 rawObject = Self.rawObject(rawObject, settingOrigin: origin)
             }
-            let visible = storedValues[sceneObjectVisibilityKey(objectID: objectID)].map { $0 != "false" }
-                ?? object.visible ?? true
+            let visibility = SceneObjectVisibilitySwitch(objectID: objectID, property: object.visibleUserProperty,
+                                                         authored: object.visible ?? true)
+            let visible = visibility.isShown(storedValues)
+            let switchedOn = visibility.isOn(storedValues)
             let effects = makeEffects(object.effects ?? [], objectID: objectID, storedValues: storedValues)
             let version = SceneLayerVersion(object: object, definitions: definitions).map { (choice: $0, title: $0.title(labels: labels)) }
             if let imagePath = object.image {
@@ -209,7 +216,8 @@ private final class SceneInspectorModel: ObservableObject {
                                           shaderPaths: passes.compactMap(\.shader), rawObject: rawObject,
                                           rawMaterial: materialPath.flatMap(rawJSON), rawParticle: nil,
                                           visible: visible,
-                                          version: version, effects: effects)
+                                          version: version, effects: effects,
+                                          visibility: visibility, isSwitchedOn: switchedOn)
             }
             if let particlePath = object.particle {
                 let particle: WEParticleSystem? = data(particlePath).flatMap { try? JSONDecoder().decode(WEParticleSystem.self, from: $0) }
@@ -222,13 +230,15 @@ private final class SceneInspectorModel: ObservableObject {
                                           shaderPaths: passes.compactMap(\.shader), rawObject: rawObject,
                                           rawMaterial: materialPath.flatMap(rawJSON), rawParticle: rawJSON(particlePath),
                                           visible: visible,
-                                          version: version, effects: effects)
+                                          version: version, effects: effects,
+                                          visibility: visibility, isSwitchedOn: switchedOn)
             }
             return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? String(localized: "Object \(index + 1)", comment: "Scene Editor: a scene object without a name"),
                                       kind: "Other", sourcePath: "", materialPath: nil, texturePaths: [], shaderPaths: [],
                                       rawObject: rawObject, rawMaterial: nil, rawParticle: nil,
                                       visible: visible,
-                                      version: version, effects: effects)
+                                      version: version, effects: effects,
+                                      visibility: visibility, isSwitchedOn: switchedOn)
         }
         propertyDefaults = definitions.compactMapValues(\.value)
         let versionKeys = Set(items.compactMap { $0.version?.choice.property })
@@ -540,18 +550,17 @@ private final class SceneInspectorModel: ObservableObject {
         persist(values)
     }
 
-    func setObjectVisible(_ visible: Bool, item: SceneInspectorItem) {
-        let objectID = Int(item.id) ?? 0
-        var values = storedValues
-        values[sceneObjectVisibilityKey(objectID: objectID)] = visible ? "true" : "false"
-        persist(values)
+    /// The object's switch (`SceneObjectVisibilitySwitch`): on an object a user property shows,
+    /// off hides it whatever the property says and on hands it back to the property.
+    func setObjectVisible(_ on: Bool, item: SceneInspectorItem) {
+        let visibility = item.visibility
+            ?? SceneObjectVisibilitySwitch(objectID: Int(item.id) ?? 0, property: nil, authored: item.visible)
+        let values = visibility.values(storedValues, settingOn: on)
+        // A dropped key must leave the running stores too.
+        persist(values, replacing: values[visibility.key] == nil)
         if let index = items.firstIndex(where: { $0.id == item.id }) {
-            items[index] = SceneInspectorItem(id: item.id, name: item.name, kind: item.kind,
-                                              sourcePath: item.sourcePath, materialPath: item.materialPath,
-                                              texturePaths: item.texturePaths, shaderPaths: item.shaderPaths,
-                                              rawObject: item.rawObject, rawMaterial: item.rawMaterial,
-                                              rawParticle: item.rawParticle, visible: visible,
-                                              version: item.version, effects: item.effects)
+            items[index].visible = visibility.isShown(values)
+            items[index].isSwitchedOn = visibility.isOn(values)
         }
     }
 
@@ -1597,16 +1606,28 @@ private struct SceneInspectorContent: View {
             Self.rowTitle(item.name, caption: model.versionCaption(item), systemImage: symbol)
                 .opacity(item.visible && !model.isHiddenByParent(item) ? 1 : 0.5)
             Toggle("Visible", isOn: Binding(
-                get: { item.visible },
+                get: { item.isSwitchedOn },
                 set: { model.setObjectVisible($0, item: item) }
             ))
             .labelsHidden()
             .toggleStyle(.switch)
             .fixedSize()
-            .help(item.visible ? "Hide object" : "Show object")
+            .help(Self.visibilityHelp(item))
         }
         .contentShape(Rectangle())
         .tag(item.id)
+    }
+
+    /// The switch's help; on an object a user property shows, what showing it again does.
+    private static func visibilityHelp(_ item: SceneInspectorItem) -> String {
+        guard let property = item.visibility?.property else {
+            return item.isSwitchedOn ? String(localized: "Hide object") : String(localized: "Show object")
+        }
+        return item.isSwitchedOn
+            ? String(localized: "Hide this object; “\(property)” sets it again when you show it",
+                     comment: "Scene Editor: help of the switch of an object a user property shows; the property's key")
+            : String(localized: "Show this object; “\(property)” sets it again",
+                     comment: "Scene Editor: help of the switch of an object hidden over the user property that shows it; the property's key")
     }
 
     private var detailColumn: some View {
@@ -1953,13 +1974,13 @@ private struct SceneInspectorContent: View {
     @ViewBuilder private func layerAdjustments(for item: SceneInspectorItem?) -> some View {
         if let item, !item.isSynthetic {
             VStack(alignment: .leading, spacing: 12) {
-                Toggle(isOn: Binding(get: { item.visible }, set: { model.setObjectVisible($0, item: item) })) {
+                Toggle(isOn: Binding(get: { item.isSwitchedOn }, set: { model.setObjectVisible($0, item: item) })) {
                     Text(verbatim: item.name)
                         .font(.headline)
                         .lineLimit(1)
                 }
                 .toggleStyle(.switch)
-                .help(item.visible ? "Hide object" : "Show object")
+                .help(Self.visibilityHelp(item))
                 movementControls(for: item)
                 scaleControls(for: item)
                 alignmentControls(for: item)

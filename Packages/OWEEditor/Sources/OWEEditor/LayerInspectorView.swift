@@ -29,6 +29,12 @@ private struct LayerForm: View {
     let layer: SceneLayer
     @State private var isScaleLinked = true
 
+    /// "Set by the user property “Clock Location”", by the property's label.
+    private func boundHelp(_ key: String) -> String {
+        let name = services.userPropertyTitle(key, properties: session.overlay.authoring?.properties)
+        return L("Set by the user property “\(name)”")
+    }
+
     var body: some View {
         Form {
             Section {
@@ -221,7 +227,7 @@ private struct LayerForm: View {
                     }
                     .toggleStyle(.checkbox)
                     .disabled(bound != nil)
-                    .help(bound.map { L("Set by the user property “\($0)”") } ?? "")
+                    .help(bound.map { boundHelp($0) } ?? "")
                     InfoTip(services.effectHelp(effect.folderName))
                 }
                 .fieldAuthoring(layer: layer.id, path: .effect(effect.id))
@@ -235,7 +241,7 @@ private struct LayerForm: View {
         Group {
             if case .userProperty(let name) = session.binding(field, of: layer.id) {
                 LabeledContent(title) {
-                    Text(L("Set by the user property “\(name)”"))
+                    Text(boundHelp(name))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.trailing)
                 }

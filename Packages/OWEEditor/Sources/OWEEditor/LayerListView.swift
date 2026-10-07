@@ -42,7 +42,7 @@ struct LayerListView: View {
         return List(selection: $session.selection) {
             Section {
                 OutlineGroup(tree, children: \.children) { node in
-                    LayerRow(session: session, tools: tools, layer: node.layer, actions: actions)
+                    LayerRow(session: session, tools: tools, services: services, layer: node.layer, actions: actions)
                         .tag(node.id)
                         .contextMenu { LayerContextMenu(session: session, layer: node.layer, actions: actions) }
                         .draggable(LayerDrag.token(node.id))
@@ -100,6 +100,7 @@ enum LayerDrag {
 private struct LayerRow: View {
     @ObservedObject var session: SceneEditSession
     @ObservedObject var tools: EditorTools
+    let services: WallpaperEditorServices
     let layer: SceneLayer
     let actions: LayerActions
     @State private var isHovering = false
@@ -169,24 +170,26 @@ private struct LayerRow: View {
         if name != (layer.name ?? "") { session.rename(layer.id, to: name, actionName: L("Rename Layer")) }
     }
 
+    /// The eye. On a layer a user property shows, it hides the layer whatever the property says,
+    /// and shows it again by handing it back to the property (`SceneEditSession.setVisible`).
     @ViewBuilder private func visibilityButton(visible: Bool) -> some View {
-        let editable = session.isEditable("visible", of: layer.id)
+        let property = session.visibilityProperty(of: layer.id)
+        let on = property == nil ? visible : !session.isHiddenOverProperty(layer.id)
         Button {
-            session.setVisible(!visible, layer.id, actionName: visible ? L("Hide Layer") : L("Show Layer"))
+            session.setVisible(!on, layer.id, actionName: on ? L("Hide Layer") : L("Show Layer"))
         } label: {
-            Label(visible ? L("Hide Layer") : L("Show Layer"), systemImage: visible ? "eye" : "eye.slash")
+            Label(on ? L("Hide Layer") : L("Show Layer"), systemImage: on ? "eye" : "eye.slash")
                 .labelStyle(.iconOnly)
-                .foregroundStyle(visible ? .primary : .secondary)
+                .foregroundStyle(on ? .primary : .secondary)
         }
         .buttonStyle(.borderless)
-        .disabled(!editable)
-        .help(editable ? (visible ? L("Hide Layer") : L("Show Layer")) : boundHelp)
+        .help(help(on: on, property: property))
     }
 
-    private var boundHelp: String {
-        if case .userProperty(let name) = session.binding("visible", of: layer.id) {
-            return L("Set by the user property “\(name)”")
-        }
-        return ""
+    private func help(on: Bool, property: String?) -> String {
+        guard let key = property else { return on ? L("Hide Layer") : L("Show Layer") }
+        let property = services.userPropertyTitle(key, properties: session.overlay.authoring?.properties)
+        return on ? L("Hide this layer; “\(property)” sets it again when you show it")
+            : L("Show this layer; “\(property)” sets it again")
     }
 }

@@ -177,6 +177,18 @@ public final class SceneEditSession: ObservableObject {
         value("visible", of: layerID)?.boolValue ?? true
     }
 
+    /// The user property that sets the layer's `visible`, if one does.
+    public func visibilityProperty(of layerID: Int) -> String? {
+        if case .userProperty(let name) = binding("visible", of: layerID) { return name }
+        return nil
+    }
+
+    /// Hidden by hand over the user property that sets its `visible` (`setVisible`): hidden
+    /// whatever the property says.
+    public func isHiddenOverProperty(_ layerID: Int) -> Bool {
+        visibilityProperty(of: layerID) != nil && overlay.field("visible", of: layerID)?.boolValue == false
+    }
+
     /// A parent (or its parent…) is hidden: WE draws an object only while it and every parent are
     /// visible (wallpaper64.exe 0x140185010), so hiding a group hides what's in it, and each layer
     /// keeps its own switch for when the group shows again.
@@ -282,8 +294,17 @@ public final class SceneEditSession: ObservableObject {
         setTransform(preview.transform, of: preview.layer, actionName: actionName)
     }
 
+    /// Shows or hides the layer. A layer a user property shows is hidden by an override the scene
+    /// applies as a plain `false` (`SceneEditOverlay.apply`), whatever the property says; showing
+    /// it drops the override, and the property sets it again. The authored binding stays.
     public func setVisible(_ visible: Bool, _ layerID: Int, actionName: String) {
-        setValue(.bool(visible), for: "visible", of: layerID, actionName: actionName)
+        guard visibilityProperty(of: layerID) != nil else {
+            setValue(.bool(visible), for: "visible", of: layerID, actionName: actionName)
+            return
+        }
+        var next = overlay
+        next.setField("visible", to: visible ? nil : .bool(false), of: layerID)
+        commit(next, actionName: actionName, coalescingKey: nil)
     }
 
     public func setLocked(_ locked: Bool, _ layerID: Int, actionName: String) {

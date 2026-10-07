@@ -195,9 +195,11 @@ struct LayerTextSection: View {
     /// The field's control, or, for one a user property sets, which property.
     @ViewBuilder private func fieldRow<Control: View>(_ field: String, title: String,
                                                       @ViewBuilder control: () -> Control) -> some View {
-        if case .userProperty(let name) = session.binding(field, of: layer.id) {
+        if case .userProperty(let key) = session.binding(field, of: layer.id) {
+            let name = services.userPropertyTitle(key, properties: session.overlay.authoring?.properties)
             LabeledContent(title) {
-                Text(L("Set by the user property “\(name)”")).foregroundStyle(.secondary)
+                Text(L("Set by the user property “\(name)”"))
+                    .foregroundStyle(.secondary)
             }
         } else {
             LabeledContent(title) { control() }

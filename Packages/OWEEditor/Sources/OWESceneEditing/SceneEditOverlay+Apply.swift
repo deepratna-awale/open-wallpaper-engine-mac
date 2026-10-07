@@ -61,6 +61,12 @@ extension SceneEditOverlay {
                     // Null drops the field (a layer taken out of its group loses `parent`).
                     if value == .null {
                         objects[index].removeValue(forKey: name)
+                    } else if name == "visible", value == .bool(false), Self.isUserBound(objects[index][name]) {
+                        // Hidden by hand over the user property that shows it
+                        // (`SceneEditSession.setVisible`). WE reads a bound `visible` from the
+                        // property, its `value` only while the property has none, so the one way
+                        // to keep it hidden is a plain `false`.
+                        objects[index][name] = false
                     } else {
                         objects[index][name] = Self.merged(objects[index][name], with: value.any)
                     }
@@ -186,6 +192,11 @@ extension SceneEditOverlay {
         }
         passes[0] = pass
         effect["passes"] = passes
+    }
+
+    /// `{"user": …}` (with or without a `value`).
+    static func isUserBound(_ value: Any?) -> Bool {
+        (value as? [String: Any])?["user"] != nil
     }
 
     static func authoredKey(_ key: String, in dictionary: [String: Any]) -> String {
