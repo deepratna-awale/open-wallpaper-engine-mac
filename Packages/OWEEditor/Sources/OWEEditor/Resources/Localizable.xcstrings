@@ -14645,6 +14645,101 @@
         }
       }
     },
+    "Hide this layer; “%@” sets it again when you show it" : {
+      "comment" : "Layer list: help of the eye of a layer a user property shows; hiding it overrides the property, showing it hands it back. %@ is the property's key",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إخفاء هذه الطبقة؛ تحددها خاصية المستخدم ”%@“ مجددًا عند إظهارها"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Ebene ausblenden; „%@“ legt sie wieder fest, wenn Sie sie einblenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar esta capa; «%@» la vuelve a definir cuando la muestre"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masquer ce calque ; « %@ » le définit à nouveau quand vous l’affichez"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह लेयर छिपाएँ; दिखाने पर “%@” इसे फिर से सेट करेगी"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nascondi questo livello; “%@” lo imposta di nuovo quando lo mostri"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このレイヤーを非表示にします。表示に戻すと「%@」で再び設定されます"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 레이어 가리기. 다시 보면 ‘%@’에서 다시 설정됨"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ukryj tę warstwę; „%@” ustawi ją znowu, gdy ją pokażesz"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar esta camada; “%@” volta a defini-la quando você a mostrar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрыть этот слой; когда вы покажете его, его снова задаст «%@»"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu katmanı gizle; gösterdiğinizde “%@” onu yeniden belirler"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приховати цей шар; коли ви його покажете, його знову задаватиме «%@»"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏此图层；再次显示时由“%@”重新设定"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隱藏此圖層；再次顯示時由「%@」重新設定"
+          }
+        }
+      }
+    },
     "ID" : {
       "localizations" : {
         "ar" : {
@@ -25872,6 +25967,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示或隱藏檢閱器"
+          }
+        }
+      }
+    },
+    "Show this layer; “%@” sets it again" : {
+      "comment" : "Layer list: help of the eye of a layer hidden over the user property that shows it; showing it hands it back to the property. %@ is the property's key",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إظهار هذه الطبقة؛ تحددها خاصية المستخدم ”%@“ مجددًا"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Ebene einblenden; „%@“ legt sie wieder fest"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar esta capa; «%@» la vuelve a definir"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher ce calque ; « %@ » le définit à nouveau"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह लेयर दिखाएँ; “%@” इसे फिर से सेट करेगी"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra questo livello; “%@” lo imposta di nuovo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このレイヤーを表示します。再び「%@」で設定されます"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 레이어 보기. ‘%@’에서 다시 설정됨"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokaż tę warstwę; „%@” znowu ją ustawia"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar esta camada; “%@” volta a defini-la"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать этот слой; его снова задаёт «%@»"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu katmanı göster; “%@” onu yeniden belirler"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати цей шар; його знову задаватиме «%@»"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示此图层；由“%@”重新设定"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示此圖層；由「%@」重新設定"
           }
         }
       }
