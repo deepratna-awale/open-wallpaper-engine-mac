@@ -216,7 +216,9 @@ final class LivePhotoExportModel: NSObject, ObservableObject, NSSharingServiceDe
             }
             self.sharedFiles = files
             service.delegate = self
-            service.perform(withItems: [files.still, files.movie])
+            // As one Live Photo bundle: the photo and the movie as two files arrive on iPhone as a
+            // separate photo and video.
+            service.perform(withItems: LivePhotoBundle.airDropItems(files))
         }
     }
 
