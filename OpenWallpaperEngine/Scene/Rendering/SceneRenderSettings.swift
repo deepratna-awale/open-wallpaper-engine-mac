@@ -24,13 +24,20 @@ struct SceneRenderSettings: Equatable {
     /// Large additive particle systems of a scene without depth draw into a half-resolution target
     /// that is added back in their place: a quarter of their fragments, softer edges. Off by default.
     var reducedResolutionParticles = false
-    /// What the scene target is sized for: the displays' points or pixels, or the scene's authored
-    /// size. A settings-less renderer draws at the backing pixels, as WE does.
-    var renderResolution = GSRenderResolution.retina
+    /// What the scene target is sized for (`GSRenderResolution`): the displays' backing pixels, 4K
+    /// at their shape, or the scene's authored size. A settings-less renderer draws at the backing
+    /// pixels, as WE does.
+    var renderResolution = GSRenderResolution.yourDisplay
+    /// The scene target is never smaller than the scene's authored size (`SceneRenderResolution`):
+    /// a settings-less renderer's and the exports' floor (`LivePhotoRenderer.renderSettings`), so
+    /// a smaller output is a downsampled full-size frame, as WE's captures are. Off for the user's
+    /// settings, where Render Resolution alone sizes the target.
+    var floorsAtAuthoredSize = true
     /// Draw the scene at `renderScale` of its target and scale it up (`SceneUpscaler`).
     var upscaling = GSUpscaling.off
     var renderScale = GSRenderScale.percent75
-    /// Draw as WE does (`full`, what a settings-less renderer does) or no more than the display shows.
+    /// Effect Detail: layers' effects at their texture size as WE runs them (`full`, what a
+    /// settings-less renderer does), or at most at the layer's size on screen.
     var sceneDetail = GSSceneDetail.full
     /// WE's `msaa`: the scene pass's samples per pixel.
     var antiAliasing = GSAntiAliasingQuality.none
@@ -45,6 +52,7 @@ struct SceneRenderSettings: Equatable {
         cheaperShadows = settings.cheaperShadows
         particleBudget = settings.particleBudget
         renderResolution = settings.renderResolution
+        floorsAtAuthoredSize = false
         sceneDetail = settings.sceneDetail
         upscaling = settings.upscaling
         renderScale = settings.renderScale
@@ -74,11 +82,29 @@ struct SceneRenderSettings: Equatable {
 
     /// `settings` with the texture reduction WE's `resolution` setting gives on displays whose
     /// largest drawable is `outputPixels` (zero while none is known), for a scene of orthographic
-    /// size `sceneSize` (`TextureReduction.orthographicSize(of:)`; nil when it has none).
+    /// size `sceneSize` (`TextureReduction.orthographicSize(of:)`; nil when it has none). WE weighs
+    /// the window it draws into; here that is the size Render Resolution draws for
+    /// (`renderedPixels`), so 4K or Full doesn't halve the textures it draws larger for.
     init(_ settings: GlobalSettings, outputPixels: SIMD2<Float>, sceneSize: SIMD2<Float>? = nil) {
         self.init(settings)
-        textureReduction = TextureReduction.factor(settings.textureResolution, outputPixels: outputPixels,
+        let rendered = Self.renderedPixels(settings.renderResolution, outputPixels: outputPixels, sceneSize: sceneSize)
+        textureReduction = TextureReduction.factor(settings.textureResolution, outputPixels: rendered,
                                                    sceneSize: sceneSize)
+    }
+
+    /// The pixels `resolution` draws a scene for on displays whose largest drawable is
+    /// `outputPixels` (zero while none is known): those, 4K at their shape, or the scene's
+    /// orthographic size `sceneSize` (the displays' where it has none).
+    static func renderedPixels(_ resolution: GSRenderResolution, outputPixels: SIMD2<Float>,
+                               sceneSize: SIMD2<Float>?) -> SIMD2<Float> {
+        guard outputPixels.x > 0, outputPixels.y > 0 else { return outputPixels }
+        switch resolution {
+        case .yourDisplay: return outputPixels
+        case .uhd4K: return SceneRenderResolution.uhd4KSize(shapedLike: outputPixels)
+        case .full:
+            guard let sceneSize, sceneSize.x > 0, sceneSize.y > 0 else { return outputPixels }
+            return sceneSize
+        }
     }
 }
 

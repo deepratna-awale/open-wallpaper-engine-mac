@@ -85,9 +85,8 @@ final class ScreenSaverPlugin: ObservableObject {
     /// The view model whose displays the plan follows (`observe(_:)`).
     private weak var viewModel: WallpaperViewModel?
     private var observation: AnyCancellable?
-    /// The current plan and the Render Resolution it was made with; nil while none is followed.
+    /// The current plan; nil while none is followed.
     private var plan: ScreenSaverLayoutPlan?
-    private var planResolution: GSRenderResolution?
     /// The plan's loops as the manifest lists them.
     private var entries: [Entry] = []
     /// The prepared video wallpapers' files' sizes, by file name.
@@ -166,14 +165,13 @@ final class ScreenSaverPlugin: ObservableObject {
 
     /// The video names `wallpaper` needs on `screens`; empty for a video played from its own file.
     nonisolated static func targets(for wallpaper: WEWallpaper, screens: [(pixels: SIMD2<Int>, points: SIMD2<Int>)],
-                        properties: [String: String], resolution: GSRenderResolution = .display) -> [Target] {
+                        properties: [String: String]) -> [Target] {
         guard !ScreenSaverVideoSource.isEligible(wallpaper), let key = statusKey(for: wallpaper, properties: properties) else { return [] }
         let wallpaperKey = key.wallpaperKey, contentKey = key.contentKey, hash = key.propertyHash
-        // One video at the largest display's size, which every display plays scaled to fill: one
-        // render and one file. Its sharpness follows Render Resolution like the live wallpaper:
-        // Display renders the size in points (1920×1080 on a 4K panel at 2×); Retina and Full
-        // render the backing pixels, at several times the render time and storage.
-        let sizes = screens.map { resolution == .display ? $0.points : $0.pixels }
+        // One video at the largest display's backing pixels, which every display plays scaled to
+        // fill: one render and one file. The scene in it is drawn as Render Resolution and
+        // Upscaling draw the live wallpaper (`ScreenSaverLoopRenderer`), then fitted to the video.
+        let sizes = screens.map(\.pixels)
         guard let largest = sizes.max(by: { $0.x * $0.y < $1.x * $1.y }),
               let points = screens.map(\.points).max(by: { $0.x * $0.y < $1.x * $1.y }) else { return [] }
         return [Target(pixelSize: largest, pointSize: points,
@@ -204,12 +202,10 @@ final class ScreenSaverPlugin: ObservableObject {
         // A recording set as the screen saver (or being made) plays instead; its manifest stays.
         guard recordings == 0, settingsStore.selection == nil, viewModel != nil || wallpaper != nil else { return }
         let (plan, wallpapers) = currentPlan(fallback: wallpaper)
-        let resolution = AppDelegate.shared.globalSettingsViewModel.settings.renderResolution
         self.plan = plan
-        planResolution = resolution
         let generation = generation
         Self.fileQueue.async { [weak self] in
-            let work = Self.work(for: plan, wallpapers: wallpapers, resolution: resolution, store: store)
+            let work = Self.work(for: plan, wallpapers: wallpapers, store: store)
             Task { @MainActor in self?.start(work, generation: generation) }
         }
     }
@@ -230,8 +226,7 @@ final class ScreenSaverPlugin: ObservableObject {
 
     private func replanIfChanged() {
         guard isEnabled, recordings == 0, settingsStore.selection == nil else { return }
-        let resolution = AppDelegate.shared.globalSettingsViewModel.settings.renderResolution
-        guard currentPlan(fallback: nil).plan != plan || resolution != planResolution else { return }
+        guard currentPlan(fallback: nil).plan != plan else { return }
         update(enabled: true, wallpaper: nil)
     }
 
@@ -298,7 +293,7 @@ final class ScreenSaverPlugin: ObservableObject {
     /// no render); every other loop renders once at the largest of its sizes. Reads the
     /// wallpapers' content keys: never call it on the main thread.
     nonisolated static func work(for plan: ScreenSaverLayoutPlan, wallpapers: [String: WEWallpaper],
-                                 resolution: GSRenderResolution, store: ScreenSaverVideoStore) -> Work {
+                                 store: ScreenSaverVideoStore) -> Work {
         var work = Work()
         for loop in plan.loops {
             guard let wallpaper = wallpapers[loop.content.id] else { continue }
@@ -311,8 +306,8 @@ final class ScreenSaverPlugin: ObservableObject {
             }
             let screens = loop.sizes.map { (pixels: $0.pixels, points: $0.points) }
             guard let key = statusKey(for: wallpaper, properties: loop.content.properties),
-                  let target = targets(for: wallpaper, screens: screens, properties: loop.content.properties,
-                                       resolution: resolution).first else { continue }
+                  let target = targets(for: wallpaper, screens: screens, properties: loop.content.properties).first
+            else { continue }
             work.entries.append(Entry(loop: loop, file: target.fileName, size: target.pixelSize))
             guard !work.renders.contains(where: { $0.target.fileName == target.fileName }) else { continue }
             work.renders.append((key, target, wallpaper.wallpaperDirectory))

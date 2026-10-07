@@ -6,17 +6,18 @@ import Metal
 import OWETheming
 
 extension GlobalSettings {
-    /// The render resolution and upscaling a quality preset sets: Low draws half of each side and
-    /// upscales it with MetalFX; the others draw at the displays' pixels without upscaling. A
-    /// later choice of the user's stands until a preset is applied again.
+    /// The render resolution and upscaling a quality preset sets: every preset draws for the
+    /// displays' own pixels (Your Display); Low draws half of each side of that and upscales it
+    /// with MetalFX, the others draw it all. A later choice of the user's stands until a preset is
+    /// applied again.
     mutating func applyResolutionPreset(_ quality: GSQuality) {
+        renderResolution = .yourDisplay
         switch quality {
         case .low:
             upscaling = .metalFX
             renderScale = .percent50
         case .medium, .high, .ultra:
             upscaling = .off
-            renderResolution = .display
         }
     }
 }
@@ -138,26 +139,37 @@ enum GSTextureResolutionQuality: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-/// What the scene target is sized for (`SceneRenderResolution`): `display` draws at the
-/// displays' size in points (a 2× display's looks-like size, a quarter of its pixels) and the
-/// composite scales the frame up to the backing pixels; `retina` draws at the backing pixels, 1:1;
-/// `full` draws at the wallpaper's authored size and scales that onto the display with WE's
-/// placement. Earlier stored values: "native" reads as `retina`, "desktop" as `display`
-/// (`init(storedValue:)`).
+/// What the scene target is sized for (`SceneRenderResolution`); Render Resolution alone decides
+/// it. `yourDisplay` draws at the displays' backing pixels (1920×1080 on a 1× 1080p display,
+/// 5120×2880 on a 5K iMac), whatever the wallpaper's size; `uhd4K` draws at 4K, the long side 3840
+/// at the display's shape, and the composite fits that to the display; `full` draws at the
+/// wallpaper's authored size and places that onto the display as WE does. Upscaling then draws a
+/// share of whichever target (`GSUpscaling`, `GSRenderScale`).
+///
+/// Earlier stored values (`init(storedValue:)`): "retina" and "native" (the backing pixels) and
+/// "display" and "desktop" (the display's points, scaled up; `GlobalSettings.migrateFromPoints`
+/// keeps their cost on a Retina display) all read as `yourDisplay`.
 enum GSRenderResolution: String, CaseIterable, Identifiable, Codable {
     var id: Self { self }
-    case display, retina, full
+    case yourDisplay, uhd4K, full
+
+    /// The long side `uhd4K` draws at.
+    static let uhd4KLongSide: Float = 3840
 
     /// The choice a stored value means, including the values earlier versions wrote; nil for an
     /// unknown value.
     init?(storedValue value: String) {
         switch value {
-        case "display", "desktop": self = .display
-        case "retina", "native": self = .retina
+        case "yourDisplay", "retina", "native", "display", "desktop": self = .yourDisplay
+        case "uhd4K": self = .uhd4K
         case "full": self = .full
         default: return nil
         }
     }
+
+    /// Whether `value` is an earlier stored value that drew at the display's points: one target
+    /// pixel per point, a quarter of the pixels on a 2× display.
+    static func isPointsValue(_ value: String) -> Bool { value == "display" || value == "desktop" }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
@@ -190,10 +202,9 @@ enum GSRenderScale: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-/// How much detail a scene is drawn with (`SceneDetail`). `full` draws as WE does: the scene
-/// target never below its authored size, and effects at their layer's texture size. `matchDisplay`
-/// draws no more than the display shows: the scene target at most the display's size, and each
-/// layer's effects at most its on-screen size.
+/// "Effect Detail": the size a layer's effects run at (`SceneEffectDetail`). `full` runs them at
+/// the layer's texture size, as WE does; `matchDisplay` at most at the layer's size on screen in
+/// the scene target. The scene target's own size is Render Resolution's alone (`GSRenderResolution`).
 enum GSSceneDetail: String, CaseIterable, Identifiable, Codable {
     var id: Self { self }
     case matchDisplay, full
@@ -320,12 +331,12 @@ struct GlobalSettings: Codable, Equatable {
     var postProcessing = GSPostProcessingQuality.enabled
     var textureResolution = GSTextureResolutionQuality.automatic
     /// What the scene target is sized for (`GSRenderResolution`).
-    var renderResolution = GSRenderResolution.display
+    var renderResolution = GSRenderResolution.yourDisplay
     /// "Upscaling" (`GSUpscaling`): off draws the scene at its full size.
     var upscaling = GSUpscaling.off
     /// "Render scale" while upscaling (`GSRenderScale`).
     var renderScale = GSRenderScale.percent75
-    /// The scene's detail (`GSSceneDetail`); drawing no more than the display shows is the default.
+    /// Effect Detail (`GSSceneDetail`); effects no larger than their layers on screen is the default.
     var sceneDetail = GSSceneDetail.matchDisplay
     /// WE's `reflection` setting (default on): the screen-space reflection copy.
     var reflections = true
@@ -485,6 +496,10 @@ extension GlobalSettings {
         read(.postProcessing, &postProcessing)
         read(.textureResolution, &textureResolution)
         read(.renderResolution, &renderResolution)
+        // The raw value, read again: an earlier points value also carries its cost over. Its
+        // errors were reported by the read above.
+        let fromPoints = ((try? container.decodeIfPresent(String.self, forKey: .renderResolution)) ?? nil)
+            .map(GSRenderResolution.isPointsValue) ?? false
         read(.sceneDetail, &sceneDetail)
         read(.upscaling, &upscaling)
         read(.renderScale, &renderScale)
@@ -529,5 +544,10 @@ extension GlobalSettings {
         read(.theming, &theming)
         read(.browseTransition, &browseTransition)
         audioRecordingThreshold = min(max(audioRecordingThreshold, 0), 10)
+        if fromPoints {
+            let migration = decoder.userInfo[.settingsMigration] as? GlobalSettingsMigration
+            migrateFromPoints(backingScale: migration?.mainBackingScale ?? 1)
+            migration?.migrated = true
+        }
     }
 }

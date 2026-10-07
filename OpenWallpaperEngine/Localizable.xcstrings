@@ -3840,6 +3840,101 @@
         }
       }
     },
+    "4K (%@)" : {
+      "comment" : "Render resolution option: 4K at the display's shape, e.g. 3840×2160",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K (%@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K (%@)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K (%@)"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K (%@)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K (%@)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K（%@）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K (%@)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K (%@)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K (%@)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K (%@)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K (%@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K (%@)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K（%@）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K（%@）"
+          }
+        }
+      }
+    },
     "4K UHD" : {
       "comment" : "Android export: Wallpaper Engine's own wording (ui_browse_mobile_upload_modal_video_preset_2160)",
       "localizations" : {
@@ -34912,101 +35007,6 @@
         }
       }
     },
-    "Display (%@)" : {
-      "comment" : "Render resolution: the display's size in points, e.g. 1920×1080",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "شاشة العرض (%@)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Display (%@)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pantalla (%@)"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Moniteur (%@)"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "डिस्प्ले (%@)"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schermo (%@)"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ディスプレイ（%@）"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "디스플레이 (%@)"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyświetlacz (%@)"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tela (%@)"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Дисплей (%@)"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ekran (%@)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Дисплей (%@)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "显示器（%@）"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "顯示器（%@）"
-          }
-        }
-      }
-    },
     "Display Settings" : {
       "localizations" : {
         "ar" : {
@@ -35285,100 +35285,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "「顯示器」會以顯示器本身的像素儲存背景圖片。4K 和 8K 會以該尺寸作為顯示器的長邊、依顯示器的比例重新算繪。"
-          }
-        }
-      }
-    },
-    "Display, the default, renders at the display's size in points (a quarter of the pixels on Retina) and scales up; web wallpapers then draw at standard resolution too. Retina renders the native pixels one for one, and Full renders the wallpaper's authored size scaled to fit." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يعرض خيار «شاشة العرض»، وهو الافتراضي، بحجم شاشة العرض بالنقاط (ربع وحدات البكسل على Retina) ثم يكبّر، وعندها تُرسم خلفيات الويب أيضًا بالدقة القياسية. ويعرض «Retina» وحدات البكسل الأصلية واحدًا لواحد، ويعرض «كامل» الحجم الأصلي للخلفية مع تحجيمه ليلائم الشاشة."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Display, die Standardeinstellung, rendert in der Größe des Displays in Punkten (ein Viertel der Pixel bei Retina) und skaliert hoch; Web-Hintergrundbilder werden dann ebenfalls in Standardauflösung gezeichnet. Retina rendert die nativen Pixel eins zu eins, und Voll rendert die vom Hintergrundbild vorgesehene Größe, passend skaliert."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pantalla, la opción predeterminada, renderiza al tamaño de la pantalla en puntos (una cuarta parte de los píxeles en Retina) y escala; los fondos de pantalla web también se dibujan entonces a resolución estándar. Retina renderiza los píxeles nativos uno a uno, y Completo renderiza el tamaño original del fondo de pantalla, escalado para encajar."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Moniteur, le réglage par défaut, effectue le rendu à la taille du moniteur en points (un quart des pixels sur Retina) puis agrandit ; les fonds d’écran web sont alors aussi dessinés en résolution standard. Retina effectue le rendu des pixels natifs un pour un, et Complet à la taille prévue du fond d’écran, mise à l’échelle pour tenir."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "डिफ़ॉल्ट डिस्प्ले विकल्प डिस्प्ले के पॉइंट साइज़ (Retina पर एक चौथाई पिक्सेल) पर रेंडर करके बड़ा करता है; तब वेब वॉलपेपर भी स्टैंडर्ड रेज़ोल्यूशन पर बनते हैं। Retina नेटिव पिक्सेल एक-से-एक रेंडर करता है, और पूर्ण वॉलपेपर के मूल साइज़ पर रेंडर करके उसे फ़िट करता है।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schermo, l’opzione predefinita, esegue il rendering alle dimensioni dello schermo in punti (un quarto dei pixel su Retina) e ingrandisce; anche gli sfondi web vengono allora disegnati a risoluzione standard. Retina esegue il rendering dei pixel nativi uno a uno, e Completo alle dimensioni originali dello sfondo, adattate allo schermo."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "デフォルトの「ディスプレイ」は、ディスプレイのポイントサイズ（Retina ではピクセル数の 4 分の 1）でレンダリングして拡大し、Web 壁紙も標準解像度で描画します。「Retina」はネイティブのピクセルを等倍でレンダリングし、「フル」は壁紙の本来のサイズでレンダリングして画面に合わせます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "기본값인 디스플레이는 디스플레이의 포인트 크기(Retina에서는 픽셀의 4분의 1)로 렌더링한 후 확대하며, 이때 웹 배경화면도 표준 해상도로 그립니다. Retina는 기본 픽셀을 1:1로 렌더링하고, 전체는 배경화면의 원래 크기로 렌더링해 화면에 맞춥니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyświetlacz, ustawienie domyślne, renderuje w rozmiarze wyświetlacza w punktach (jedna czwarta pikseli na Retinie) i skaluje w górę; tapety internetowe są wtedy też rysowane w standardowej rozdzielczości. Retina renderuje natywne piksele jeden do jednego, a Pełne renderuje oryginalny rozmiar tapety dopasowany do ekranu."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tela, o padrão, renderiza no tamanho da tela em pontos (um quarto dos pixels na Retina) e amplia; as imagens de fundo web também são desenhadas em resolução padrão. Retina renderiza os pixels nativos um a um, e Completo renderiza o tamanho original da imagem de fundo, ajustado à tela."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "«Дисплей» (по умолчанию) отрисовывает в размере дисплея в точках (четверть пикселей на Retina) и масштабирует вверх; веб-обои тогда тоже рисуются в стандартном разрешении. «Retina» отрисовывает собственные пиксели один к одному, а «Полная» — в исходном размере обоев с масштабированием по экрану."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Varsayılan Ekran seçeneği, ekranın nokta boyutunda (Retina’da piksellerin dörtte biri) işler ve büyütür; web duvar kâğıtları da bu durumda standart çözünürlükte çizilir. Retina doğal pikselleri bire bir işler, Tam ise duvar kâğıdının özgün boyutunu sığacak şekilde ölçekleyerek işler."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "«Дисплей» (типово) відтворює в розмірі дисплея в точках (чверть пікселів на Retina) і масштабує вгору; вебшпалери тоді теж малюються у стандартній роздільності. «Retina» відтворює власні пікселі один до одного, а «Повна» — в авторському розмірі шпалери з масштабуванням під екран."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "默认的“显示器”以显示器的点尺寸（在 Retina 上为四分之一的像素）渲染后放大，此时网页墙纸也以标准分辨率绘制。“Retina”按原生像素一比一渲染，“完整”以墙纸的原始尺寸渲染并缩放以适合屏幕。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "預設的「顯示器」以顯示器的點尺寸（在 Retina 上為四分之一的像素）渲染後放大，此時網頁背景圖片也會以標準解析度繪製。「Retina」依原生像素一比一渲染，「完整」以背景圖片的原始尺寸渲染並縮放以符合螢幕。"
           }
         }
       }
@@ -40290,6 +40196,291 @@
         }
       }
     },
+    "Draws at 4K (%@) and fits that to your display: text, particles and effects get sharper on a smaller display, for more GPU work. Images can't show more detail than they have." : {
+      "comment" : "Render resolution 4K, described under the picker; 4K at the main display's shape, e.g. 3840×2160",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يرسم بدقة 4K (%@) ثم يلائمها مع شاشة العرض لديك: يصبح النص والجسيمات والتأثيرات أوضح على شاشة عرض أصغر، مقابل عمل أكبر لوحدة GPU. لا يمكن للصور أن تعرض تفاصيل أكثر مما فيها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeichnet in 4K (%@) und passt das an Ihr Display an: Text, Partikel und Effekte werden auf einem kleineren Display schärfer, bei mehr GPU-Last. Bilder können nicht mehr Details zeigen, als sie haben."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dibuja en 4K (%@) y lo ajusta a tu pantalla: el texto, las partículas y los efectos se ven más nítidos en una pantalla más pequeña, con más trabajo de la GPU. Las imágenes no pueden mostrar más detalle del que tienen."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dessine en 4K (%@) puis l’adapte à votre moniteur : le texte, les particules et les effets gagnent en netteté sur un moniteur plus petit, au prix d’un travail accru du GPU. Les images ne peuvent pas montrer plus de détails qu’elles n’en ont."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K (%@) पर बनाता है और उसे आपके डिस्प्ले में फ़िट करता है: छोटे डिस्प्ले पर टेक्स्ट, पार्टिकल और इफ़ेक्ट ज़्यादा शार्प होते हैं, पर GPU का काम बढ़ता है। इमेज अपने से ज़्यादा डिटेल नहीं दिखा सकतीं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disegna in 4K (%@) e lo adatta al tuo schermo: testo, particelle ed effetti diventano più nitidi su uno schermo più piccolo, con più lavoro per la GPU. Le immagini non possono mostrare più dettagli di quelli che hanno."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K（%@）で描画してディスプレイに合わせます。小さいディスプレイではテキスト、パーティクル、エフェクトがより鮮明になりますが、GPU の負荷は増えます。画像は元の解像度以上の細部を表示できません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K(%@)로 그린 다음 디스플레이에 맞춥니다. 더 작은 디스플레이에서는 텍스트, 파티클, 효과가 더 선명해지지만 GPU 작업이 늘어납니다. 이미지는 원래 가진 것보다 더 세밀하게 표시할 수 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rysuje w 4K (%@) i dopasowuje to do Twojego wyświetlacza: tekst, cząsteczki i efekty stają się ostrzejsze na mniejszym wyświetlaczu, kosztem większego obciążenia GPU. Obrazy nie pokażą więcej szczegółów, niż mają."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desenha em 4K (%@) e ajusta isso à sua tela: texto, partículas e efeitos ficam mais nítidos em uma tela menor, com mais trabalho da GPU. Imagens não podem mostrar mais detalhes do que têm."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рисует в 4K (%@) и подгоняет под ваш дисплей: на меньшем дисплее текст, частицы и эффекты становятся чётче ценой большей нагрузки на ГП. Изображения не могут показать больше деталей, чем в них есть."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "4K’da (%@) çizer ve bunu ekranınıza sığdırır: daha küçük bir ekranda metin, parçacıklar ve efektler daha net olur, ancak GPU daha çok çalışır. Görüntüler sahip olduklarından fazla ayrıntı gösteremez."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Малює в 4K (%@) і припасовує до вашого дисплея: на меншому дисплеї текст, частинки й ефекти стають чіткішими ціною більшого навантаження на ГП. Зображення не можуть показати більше деталей, ніж у них є."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以 4K（%@）绘制，再适配到你的显示器：在较小的显示器上，文字、粒子和效果会更清晰，但 GPU 工作量更大。图像无法显示超出其本身的细节。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以 4K（%@）繪製，再調整至你的顯示器：在較小的顯示器上，文字、粒子和效果會更清晰，但 GPU 的工作量較大。影像無法顯示超出其本身的細節。"
+          }
+        }
+      }
+    },
+    "Draws at the size the wallpaper was made at and places that on your display, as Wallpaper Engine does." : {
+      "comment" : "Render resolution Full, described under the picker",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يرسم بالحجم الذي صُنعت به خلفية الشاشة ثم يضعها على شاشة العرض لديك، كما يفعل Wallpaper Engine."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeichnet in der Größe, in der das Hintergrundbild erstellt wurde, und platziert es auf Ihrem Display, wie Wallpaper Engine."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dibuja al tamaño con que se creó el fondo de pantalla y lo coloca en tu pantalla, como hace Wallpaper Engine."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dessine à la taille à laquelle le fond d’écran a été créé et le place sur votre moniteur, comme Wallpaper Engine."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "उसी आकार पर बनाता है जिस पर वॉलपेपर बनाया गया था और उसे आपके डिस्प्ले पर रखता है, जैसा Wallpaper Engine करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disegna alle dimensioni con cui è stato creato lo sfondo e lo posiziona sul tuo schermo, come Wallpaper Engine."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙が作成されたサイズで描画し、Wallpaper Engine と同様にディスプレイ上に配置します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면이 만들어진 크기로 그린 다음 Wallpaper Engine처럼 디스플레이에 배치합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rysuje w rozmiarze, w jakim utworzono tapetę, i umieszcza ją na Twoim wyświetlaczu, tak jak Wallpaper Engine."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desenha no tamanho em que a imagem de fundo foi feita e a posiciona na sua tela, como faz o Wallpaper Engine."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рисует в том размере, в котором сделаны обои, и размещает их на вашем дисплее, как Wallpaper Engine."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıdının yapıldığı boyutta çizer ve Wallpaper Engine’in yaptığı gibi ekranınıza yerleştirir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Малює в тому розмірі, в якому зроблено шпалери, і розміщує їх на вашому дисплеї, як це робить Wallpaper Engine."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按墙纸制作时的尺寸绘制，并像 Wallpaper Engine 一样将其放置到你的显示器上。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以背景圖片製作時的尺寸繪製，並如同 Wallpaper Engine 一樣將其放置到你的顯示器上。"
+          }
+        }
+      }
+    },
+    "Draws at your display's own pixels (%@), whatever size the wallpaper was made at." : {
+      "comment" : "Render resolution Your Display, described under the picker; the main display's pixels, e.g. 1920×1080",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يرسم بوحدات البكسل الخاصة بشاشة العرض لديك (%@)، أيًّا كان الحجم الذي صُنعت به خلفية الشاشة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeichnet mit den eigenen Pixeln Ihres Displays (%@), unabhängig davon, in welcher Größe das Hintergrundbild erstellt wurde."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dibuja con los píxeles de tu pantalla (%@), sea cual sea el tamaño con que se creó el fondo de pantalla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dessine avec les pixels de votre moniteur (%@), quelle que soit la taille à laquelle le fond d’écran a été créé."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपके डिस्प्ले के अपने पिक्सेल (%@) पर बनाता है, चाहे वॉलपेपर किसी भी आकार में बनाया गया हो।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disegna con i pixel del tuo schermo (%@), qualunque sia la dimensione con cui è stato creato lo sfondo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙が作成されたサイズにかかわらず、お使いのディスプレイ本来のピクセル（%@）で描画します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면이 어떤 크기로 만들어졌든 사용 중인 디스플레이의 실제 픽셀(%@)로 그립니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rysuje w pikselach Twojego wyświetlacza (%@), niezależnie od rozmiaru, w jakim utworzono tapetę."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desenha com os pixels da sua tela (%@), seja qual for o tamanho em que a imagem de fundo foi feita."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рисует в собственных пикселях вашего дисплея (%@), независимо от того, в каком размере сделаны обои."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıdı hangi boyutta yapılmış olursa olsun, ekranınızın kendi piksellerinde (%@) çizer."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Малює у власних пікселях вашого дисплея (%@), незалежно від того, в якому розмірі зроблено шпалери."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按你的显示器自身的像素（%@）绘制，无论墙纸以何种尺寸制作。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以你的顯示器本身的像素（%@）繪製，無論背景圖片是以何種尺寸製作。"
+          }
+        }
+      }
+    },
     "Draws bars that rise and fall with the audio you are hearing. Needs Screen & System Audio Recording permission." : {
       "comment" : "Scene Editor tooltip for the audiobars effect",
       "localizations" : {
@@ -40475,6 +40666,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "以一半尺寸繪製陰影貼圖，陰影工作量降至四分之一，邊緣仍保持柔和。關閉時按 Wallpaper Engine 的方式繪製。"
+          }
+        }
+      }
+    },
+    "Draws web wallpapers at standard resolution, a quarter of the pixels on Retina, for less GPU." : {
+      "comment" : "Help for Settings › Optimizations › Render web wallpapers at standard resolution",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يرسم خلفيات الويب بالدقة القياسية، أي ربع وحدات البكسل على Retina، لتقليل استهلاك GPU."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeichnet Web-Hintergrundbilder in Standardauflösung, mit einem Viertel der Pixel bei Retina, für weniger GPU-Last."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dibuja los fondos de pantalla web a resolución estándar, una cuarta parte de los píxeles en Retina, para usar menos GPU."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dessine les fonds d’écran web en résolution standard, un quart des pixels sur Retina, pour moins solliciter le GPU."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कम GPU के लिए वेब वॉलपेपर को स्टैंडर्ड रेज़ोल्यूशन पर बनाता है, यानी Retina पर एक चौथाई पिक्सेल।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disegna gli sfondi web a risoluzione standard, un quarto dei pixel su Retina, per usare meno GPU."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web 壁紙を標準解像度（Retina ではピクセル数の 4 分の 1）で描画し、GPU の負荷を減らします。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "웹 배경화면을 표준 해상도(Retina에서는 픽셀의 4분의 1)로 그려 GPU 사용을 줄입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rysuje tapety internetowe w standardowej rozdzielczości, jedną czwartą pikseli na Retinie, aby mniej obciążać GPU."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desenha as imagens de fundo web em resolução padrão, um quarto dos pixels na Retina, para usar menos GPU."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рисует веб-обои в стандартном разрешении — четверть пикселей на Retina — для меньшей нагрузки на ГП."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daha az GPU için web duvar kâğıtlarını standart çözünürlükte, Retina’da piksellerin dörtte biriyle çizer."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Малює вебшпалери у стандартній роздільності — чверть пікселів на Retina — для меншого навантаження на ГП."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以标准分辨率（在 Retina 上为四分之一的像素）绘制网页墙纸，以减少 GPU 占用。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以標準解析度（在 Retina 上為四分之一的像素）繪製網頁背景圖片，以減少 GPU 使用量。"
           }
         }
       }
@@ -42176,6 +42462,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已編輯"
+          }
+        }
+      }
+    },
+    "Effect Detail" : {
+      "comment" : "Settings › Performance: the picker for the size each layer's effects run at",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تفاصيل التأثيرات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effektdetails"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detalle de los efectos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Détail des effets"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इफ़ेक्ट डिटेल"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dettaglio effetti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エフェクトの詳細度"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "효과 세부 수준"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szczegółowość efektów"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detalhe dos Efeitos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Детализация эффектов"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efekt Ayrıntısı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Деталізація ефектів"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "效果细节"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "效果細節"
           }
         }
       }
@@ -72165,96 +72546,97 @@
         }
       }
     },
-    "Match Display draws no more detail than the display shows: a scene larger than the display is drawn at the display's size, and each layer's effects at the size the layer appears on screen. Full draws every effect at its texture's full size, as Wallpaper Engine does." : {
+    "Match Display runs each layer's effects at no more than the size the layer appears on screen. Full runs them at the layer's full texture size, as Wallpaper Engine does. Render Resolution sets the size of the scene itself." : {
+      "comment" : "Help for Settings › Performance › Effect Detail and its two options",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يرسم خيار «مطابقة شاشة العرض» تفاصيل لا تتجاوز ما تعرضه شاشة العرض: يُرسم المشهد الأكبر من شاشة العرض بحجمها، وتُرسم تأثيرات كل طبقة بالحجم الذي تظهر به الطبقة على الشاشة. أما خيار «كامل» فيرسم كل تأثير بالحجم الكامل لنسيجه، كما يفعل Wallpaper Engine."
+            "value" : "يشغّل خيار «مطابقة شاشة العرض» تأثيرات كل طبقة بحجم لا يتجاوز الحجم الذي تظهر به الطبقة على الشاشة. أما خيار «كامل» فيشغّلها بالحجم الكامل لنسيج الطبقة، كما يفعل Wallpaper Engine. ودقة الرسم هي التي تحدد حجم المشهد نفسه."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "„Wie Display“ zeichnet nicht mehr Details, als das Display zeigt: Eine Szene, die größer als das Display ist, wird in Displaygröße gezeichnet, und die Effekte jeder Ebene in der Größe, in der die Ebene auf dem Bildschirm erscheint. „Voll“ zeichnet jeden Effekt in der vollen Größe seiner Textur, wie Wallpaper Engine."
+            "value" : "„Wie Display“ führt die Effekte jeder Ebene höchstens in der Größe aus, in der die Ebene auf dem Bildschirm erscheint. „Voll“ führt sie in der vollen Größe der Textur der Ebene aus, wie Wallpaper Engine. Die Größe der Szene selbst legt die Renderauflösung fest."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Igual que la pantalla no dibuja más detalle del que muestra la pantalla: una escena mayor que la pantalla se dibuja al tamaño de esta, y los efectos de cada capa al tamaño con que la capa aparece en pantalla. Completo dibuja cada efecto al tamaño completo de su textura, como hace Wallpaper Engine."
+            "value" : "Igual que la pantalla ejecuta los efectos de cada capa como máximo al tamaño con que la capa aparece en pantalla. Completo los ejecuta al tamaño completo de la textura de la capa, como hace Wallpaper Engine. La Resolución de renderizado fija el tamaño de la propia escena."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "« Selon le moniteur » ne dessine pas plus de détails que le moniteur n’en affiche : une scène plus grande que le moniteur est dessinée à la taille de celui-ci, et les effets de chaque calque à la taille à laquelle le calque apparaît à l’écran. « Complet » dessine chaque effet à la taille réelle de sa texture, comme Wallpaper Engine."
+            "value" : "« Selon le moniteur » exécute les effets de chaque calque à la taille à laquelle le calque apparaît à l’écran, sans la dépasser. « Complet » les exécute à la taille réelle de la texture du calque, comme Wallpaper Engine. La taille de la scène elle-même est fixée par la Résolution de rendu."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "डिस्प्ले के अनुसार, डिस्प्ले जितना दिखाता है उससे ज़्यादा डिटेल नहीं बनाता: डिस्प्ले से बड़ा सीन डिस्प्ले के आकार पर बनाया जाता है, और हर लेयर के इफ़ेक्ट उस आकार पर जिसमें लेयर स्क्रीन पर दिखती है. पूर्ण हर इफ़ेक्ट को उसके टेक्सचर के पूरे आकार पर बनाता है, जैसा Wallpaper Engine करता है."
+            "value" : "डिस्प्ले के अनुसार, हर लेयर के इफ़ेक्ट को ज़्यादा से ज़्यादा उस आकार पर चलाता है जिसमें लेयर स्क्रीन पर दिखती है. पूर्ण उन्हें लेयर के टेक्सचर के पूरे आकार पर चलाता है, जैसा Wallpaper Engine करता है. सीन का अपना आकार रेंडर रिज़ोल्यूशन तय करता है."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“Come lo schermo” non disegna più dettagli di quelli mostrati dallo schermo: una scena più grande dello schermo viene disegnata alle dimensioni dello schermo, e gli effetti di ogni livello alle dimensioni in cui il livello appare. “Completo” disegna ogni effetto alle dimensioni piene della sua texture, come Wallpaper Engine."
+            "value" : "“Come lo schermo” esegue gli effetti di ogni livello al massimo alle dimensioni in cui il livello appare. “Completo” li esegue alle dimensioni piene della texture del livello, come Wallpaper Engine. La Risoluzione di rendering imposta le dimensioni della scena stessa."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「ディスプレイに合わせる」は、ディスプレイに表示される以上の細部は描画しません。ディスプレイより大きいシーンはディスプレイのサイズで描画され、各レイヤーのエフェクトは画面上でのそのレイヤーのサイズで描画されます。「フル」は、Wallpaper Engineと同様に、すべてのエフェクトをテクスチャのフルサイズで描画します。"
+            "value" : "「ディスプレイに合わせる」は、各レイヤーのエフェクトを画面上でのそのレイヤーのサイズ以下で実行します。「フル」は、Wallpaper Engine と同様に、レイヤーのテクスチャのフルサイズで実行します。シーン自体のサイズはレンダリング解像度で決まります。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "디스플레이에 맞춤은 디스플레이에 표시되는 것보다 더 세밀하게 그리지 않습니다. 디스플레이보다 큰 장면은 디스플레이 크기로 그리고, 각 레이어의 효과는 해당 레이어가 화면에 표시되는 크기로 그립니다. 전체는 Wallpaper Engine처럼 모든 효과를 텍스처의 원래 크기로 그립니다."
+            "value" : "디스플레이에 맞춤은 각 레이어의 효과를 해당 레이어가 화면에 표시되는 크기 이하로 실행합니다. 전체는 Wallpaper Engine처럼 레이어 텍스처의 원래 크기로 실행합니다. 장면 자체의 크기는 렌더링 해상도가 정합니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "„Jak wyświetlacz” rysuje nie więcej szczegółów, niż pokazuje wyświetlacz: scena większa od wyświetlacza jest rysowana w jego rozmiarze, a efekty każdej warstwy w rozmiarze, w jakim warstwa jest widoczna na ekranie. „Pełne” rysuje każdy efekt w pełnym rozmiarze tekstury, tak jak Wallpaper Engine."
+            "value" : "„Jak wyświetlacz” wykonuje efekty każdej warstwy najwyżej w rozmiarze, w jakim warstwa jest widoczna na ekranie. „Pełne” wykonuje je w pełnym rozmiarze tekstury warstwy, tak jak Wallpaper Engine. Rozmiar samej sceny ustala Rozdzielczość renderowania."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Igual à Tela não desenha mais detalhes do que a tela exibe: uma cena maior que a tela é desenhada no tamanho da tela, e os efeitos de cada camada no tamanho em que a camada aparece na tela. Completo desenha todos os efeitos no tamanho total da textura, como faz o Wallpaper Engine."
+            "value" : "Igual à Tela executa os efeitos de cada camada no máximo no tamanho em que a camada aparece na tela. Completo os executa no tamanho total da textura da camada, como faz o Wallpaper Engine. A Resolução de Renderização define o tamanho da própria cena."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "«По дисплею» не рисует больше деталей, чем показывает дисплей: сцена крупнее дисплея рисуется в размере дисплея, а эффекты каждого слоя — в том размере, в котором слой виден на экране. «Полная» рисует каждый эффект в полном размере его текстуры, как Wallpaper Engine."
+            "value" : "«По дисплею» выполняет эффекты каждого слоя не крупнее того размера, в котором слой виден на экране. «Полная» выполняет их в полном размере текстуры слоя, как Wallpaper Engine. Размер самой сцены задаёт разрешение рендеринга."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ekranla Eşleştir, ekranın gösterdiğinden daha fazla ayrıntı çizmez: ekrandan büyük bir sahne ekran boyutunda, her katmanın efektleri de katmanın ekranda göründüğü boyutta çizilir. Tam, Wallpaper Engine’in yaptığı gibi her efekti dokusunun tam boyutunda çizer."
+            "value" : "Ekranla Eşleştir, her katmanın efektlerini en fazla katmanın ekranda göründüğü boyutta çalıştırır. Tam, Wallpaper Engine’in yaptığı gibi onları katmanın tam doku boyutunda çalıştırır. Sahnenin kendi boyutunu İşleme Çözünürlüğü belirler."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "«Як на дисплеї» малює не більше деталей, ніж показує дисплей: сцена, більша за дисплей, малюється в розмірі дисплея, а ефекти кожного шару — в тому розмірі, в якому шар видно на екрані. «Повна» малює кожен ефект у повному розмірі його текстури, як це робить Wallpaper Engine."
+            "value" : "«Як на дисплеї» виконує ефекти кожного шару не більшими за розмір, у якому шар видно на екрані. «Повна» виконує їх у повному розмірі текстури шару, як це робить Wallpaper Engine. Розмір самої сцени задає роздільність рендерингу."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“匹配显示器”绘制的细节不会超过显示器所能显示的：大于显示器的场景以显示器尺寸绘制，每个图层的效果以该图层在屏幕上显示的尺寸绘制。“完整”则与 Wallpaper Engine 一样，以纹理的完整尺寸绘制每个效果。"
+            "value" : "“匹配显示器”以不超过图层在屏幕上显示尺寸的大小运行每个图层的效果。“完整”则与 Wallpaper Engine 一样，以图层纹理的完整尺寸运行这些效果。场景本身的尺寸由渲染分辨率决定。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「符合顯示器」繪製的細節不會超過顯示器能呈現的範圍：大於顯示器的場景會以顯示器的尺寸繪製，而各圖層的效果則以該圖層在螢幕上顯示的尺寸繪製。「完整」會如同 Wallpaper Engine 一樣，以紋理的完整尺寸繪製每個效果。"
+            "value" : "「符合顯示器」會以不超過圖層在螢幕上顯示尺寸的大小執行各圖層的效果。「完整」則如同 Wallpaper Engine 一樣，以圖層紋理的完整尺寸執行這些效果。場景本身的尺寸由渲染解析度決定。"
           }
         }
       }
@@ -112359,196 +112741,6 @@
         }
       }
     },
-    "Retina" : {
-      "comment" : "Render resolution: the display's native backing pixels",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina"
-          }
-        }
-      }
-    },
-    "Retina (%@)" : {
-      "comment" : "Render resolution: the display's native backing pixels, e.g. 3840×2160",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina (%@)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina (%@)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina (%@)"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina (%@)"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina (%@)"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina (%@)"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina（%@）"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina (%@)"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina (%@)"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina (%@)"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina (%@)"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina (%@)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina (%@)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina（%@）"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina（%@）"
-          }
-        }
-      }
-    },
     "Retro" : {
       "comment" : "Workshop genre tag",
       "localizations" : {
@@ -116613,100 +116805,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "場景（預先轉譯）"
-          }
-        }
-      }
-    },
-    "Scene Detail" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تفاصيل المشهد"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Szenendetails"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Detalle de la escena"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Détail des scènes"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "सीन डिटेल"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dettaglio scena"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "シーンの詳細度"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "장면 세부 수준"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Szczegółowość sceny"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Detalhe da Cena"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Детализация сцены"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sahne Ayrıntısı"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Деталізація сцени"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "场景细节"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "場景細節"
           }
         }
       }
@@ -146254,96 +146352,97 @@
         }
       }
     },
-    "These settings are for scene wallpapers. FPS and Render Resolution apply to web wallpapers too." : {
+    "These settings are for scene wallpapers. FPS applies to web wallpapers too." : {
+      "comment" : "Footer of Settings › Performance › Quality",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "هذه الإعدادات لخلفيات المشاهد. ينطبق معدل الإطارات (FPS) ودقة الرسم على خلفيات الويب أيضًا."
+            "value" : "هذه الإعدادات لخلفيات المشاهد. ينطبق معدل الإطارات (FPS) على خلفيات الويب أيضًا."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Diese Einstellungen gelten für Szenen-Hintergrundbilder. FPS und Renderauflösung gelten auch für Web-Hintergrundbilder."
+            "value" : "Diese Einstellungen gelten für Szenen-Hintergrundbilder. FPS gilt auch für Web-Hintergrundbilder."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Estos ajustes son para fondos de pantalla de escena. FPS y Resolución de renderizado también se aplican a los fondos de pantalla web."
+            "value" : "Estos ajustes son para fondos de pantalla de escena. FPS también se aplica a los fondos de pantalla web."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ces réglages concernent les fonds d’écran de scène. FPS et Résolution de rendu s’appliquent aussi aux fonds d’écran web."
+            "value" : "Ces réglages concernent les fonds d’écran de scène. FPS s’applique aussi aux fonds d’écran web."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ये सेटिंग्स सीन वॉलपेपर के लिए हैं। FPS और रेंडर रिज़ोल्यूशन वेब वॉलपेपर पर भी लागू होते हैं।"
+            "value" : "ये सेटिंग्स सीन वॉलपेपर के लिए हैं। FPS वेब वॉलपेपर पर भी लागू होता है।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Queste impostazioni sono per gli sfondi di scena. FPS e Risoluzione di rendering valgono anche per gli sfondi web."
+            "value" : "Queste impostazioni sono per gli sfondi di scena. FPS vale anche per gli sfondi web."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "これらの設定はシーン壁紙用です。FPS とレンダリング解像度は Web 壁紙にも適用されます。"
+            "value" : "これらの設定はシーン壁紙用です。FPS は Web 壁紙にも適用されます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "이 설정은 장면 배경화면용입니다. FPS와 렌더링 해상도는 웹 배경화면에도 적용됩니다."
+            "value" : "이 설정은 장면 배경화면용입니다. FPS는 웹 배경화면에도 적용됩니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Te ustawienia dotyczą tapet scen. FPS i Rozdzielczość renderowania dotyczą też tapet internetowych."
+            "value" : "Te ustawienia dotyczą tapet scen. FPS dotyczy też tapet internetowych."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Estes ajustes são para papéis de parede de cena. FPS e Resolução de Renderização também se aplicam a papéis de parede web."
+            "value" : "Estes ajustes são para papéis de parede de cena. FPS também se aplica a papéis de parede web."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Эти настройки предназначены для обоев-сцен. FPS и разрешение рендеринга действуют и на веб-обои."
+            "value" : "Эти настройки предназначены для обоев-сцен. FPS действует и на веб-обои."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu ayarlar sahne duvar kâğıtları içindir. FPS ve İşleme Çözünürlüğü web duvar kâğıtlarına da uygulanır."
+            "value" : "Bu ayarlar sahne duvar kâğıtları içindir. FPS web duvar kâğıtlarına da uygulanır."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ці налаштування призначені для шпалер-сцен. FPS і роздільність рендерингу діють і на вебшпалери."
+            "value" : "Ці налаштування призначені для шпалер-сцен. FPS діє і на вебшпалери."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "这些设置适用于场景壁纸。帧速率和渲染分辨率也适用于网页壁纸。"
+            "value" : "这些设置适用于场景壁纸。帧速率也适用于网页壁纸。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "這些設定適用於場景桌布。FPS 與渲染解析度也適用於網頁桌布。"
+            "value" : "這些設定適用於場景桌布。FPS 也適用於網頁桌布。"
           }
         }
       }
@@ -153050,100 +153149,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "解除封鎖 %@"
-          }
-        }
-      }
-    },
-    "Under the Retina or Full render resolution, draws web wallpapers at standard resolution, a quarter of the pixels on Retina, for less GPU. Under Display they already draw this way." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "عند دقة العرض «Retina» أو «كامل»، يرسم خلفيات الويب بالدقة القياسية، أي ربع وحدات البكسل على Retina، لتقليل استهلاك GPU. وعند «شاشة العرض» تُرسم بهذه الطريقة أصلًا."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zeichnet Web-Hintergrundbilder bei der Renderauflösung Retina oder Voll in Standardauflösung, mit einem Viertel der Pixel bei Retina, für weniger GPU-Last. Bei Display werden sie bereits so gezeichnet."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Con la resolución de renderizado Retina o Completo, dibuja los fondos de pantalla web a resolución estándar, una cuarta parte de los píxeles en Retina, para usar menos GPU. Con Pantalla ya se dibujan así."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Avec la résolution de rendu Retina ou Complet, dessine les fonds d’écran web en résolution standard, un quart des pixels sur Retina, pour moins solliciter le GPU. Avec Moniteur, ils sont déjà dessinés ainsi."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina या पूर्ण रेंडर रेज़ोल्यूशन पर, कम GPU के लिए वेब वॉलपेपर को स्टैंडर्ड रेज़ोल्यूशन पर बनाता है, यानी Retina पर एक चौथाई पिक्सेल। डिस्प्ले पर वे पहले से ऐसे ही बनते हैं।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Con la risoluzione di rendering Retina o Completo, disegna gli sfondi web a risoluzione standard, un quarto dei pixel su Retina, per usare meno GPU. Con Schermo vengono già disegnati così."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "レンダリング解像度が「Retina」または「フル」のとき、Web 壁紙を標準解像度（Retina ではピクセル数の 4 分の 1）で描画し、GPU の負荷を減らします。「ディスプレイ」では、すでにこの方法で描画されます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "렌더링 해상도가 Retina 또는 전체일 때 웹 배경화면을 표준 해상도(Retina에서는 픽셀의 4분의 1)로 그려 GPU 사용을 줄입니다. 디스플레이에서는 이미 이렇게 그립니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Przy rozdzielczości renderowania Retina lub Pełne rysuje tapety internetowe w standardowej rozdzielczości, jedną czwartą pikseli na Retinie, aby mniej obciążać GPU. Przy Wyświetlacz są już rysowane w ten sposób."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Com a resolução de renderização Retina ou Completo, desenha as imagens de fundo web em resolução padrão, um quarto dos pixels na Retina, para usar menos GPU. Com Tela, elas já são desenhadas assim."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "При разрешении отрисовки «Retina» или «Полная» рисует веб-обои в стандартном разрешении — четверть пикселей на Retina — для меньшей нагрузки на ГП. При «Дисплей» они уже рисуются так."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retina veya Tam işleme çözünürlüğünde, daha az GPU için web duvar kâğıtlarını standart çözünürlükte, Retina’da piksellerin dörtte biriyle çizer. Ekran seçeneğinde zaten bu şekilde çizilirler."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "За роздільності відтворення «Retina» або «Повна» малює вебшпалери у стандартній роздільності — чверть пікселів на Retina — для меншого навантаження на ГП. За «Дисплей» вони вже малюються так."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在“Retina”或“完整”渲染分辨率下，以标准分辨率（在 Retina 上为四分之一的像素）绘制网页墙纸，以减少 GPU 占用。在“显示器”下本来就是这样绘制的。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在「Retina」或「完整」渲染解析度下，以標準解析度（在 Retina 上為四分之一的像素）繪製網頁背景圖片，以減少 GPU 使用量。在「顯示器」下本來就是這樣繪製。"
           }
         }
       }
@@ -165907,6 +165912,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "一切就緒"
+          }
+        }
+      }
+    },
+    "Your Display (%@)" : {
+      "comment" : "Render resolution option: the displays' own pixels, e.g. 1920×1080",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شاشة العرض لديك (%@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihr Display (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu pantalla (%@)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre moniteur (%@)"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपका डिस्प्ले (%@)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo schermo (%@)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お使いのディスプレイ（%@）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용 중인 디스플레이 (%@)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twój wyświetlacz (%@)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sua tela (%@)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш дисплей (%@)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekranınız (%@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш дисплей (%@)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的显示器（%@）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的顯示器（%@）"
           }
         }
       }

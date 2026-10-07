@@ -2,9 +2,9 @@ import simd
 
 /// Which "detail" layers draw at the output's backing pixels instead of in the scene pass.
 ///
-/// Under Render Resolution "Display" (or a MetalFX render scale below 1) the scene target has
-/// fewer pixels than the output and is scaled up onto it, which stretches text and the media
-/// artwork 2×. A detail layer (text, or an image whose texture is the now-playing artwork) whose
+/// When the scene target has fewer pixels than the output (a MetalFX render scale below 1, or
+/// Render Resolution 4K or Full on a larger display) it is scaled up onto it, which stretches
+/// text and the media artwork. A detail layer (text, or an image whose texture is the now-playing artwork) whose
 /// pixels nothing after it reads or covers can instead be drawn onto the output once the scene is
 /// placed there: the same quad, opacity, colour and blend over the same pixels beneath it, so the
 /// frame layers exactly as before, only sharper. Everything else stays in the scene pass.

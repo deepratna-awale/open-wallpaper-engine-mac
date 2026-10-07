@@ -1,49 +1,57 @@
 import simd
 
-/// How many render-target pixels one scene unit gets. The scene is drawn at the output's
-/// density, as WE draws at the display's resolution, so Retina text and edges stay sharp rather
-/// than being upscaled. As WE draws it (`GSSceneDetail.full`) it is never drawn below its
-/// authored size, unless that exceeds what Metal can allocate; matched to the display
-/// (`matchDisplay`) it is drawn at the display's size even when that is smaller.
+/// How many render-target pixels one scene unit gets. Render Resolution (`GSRenderResolution`)
+/// alone chooses the size the target is drawn for (`drawableSize`): the displays' backing pixels,
+/// 4K at their shape, or the scene's authored size; the scene covers it (`pixelsPerUnit`), larger
+/// or smaller than authored. A renderer that floors the target at the authored size
+/// (`SceneRenderSettings.floorsAtAuthoredSize`: a settings-less renderer and the exports) never
+/// draws below it, as WE's captures don't. The GPU's largest texture caps every target.
 enum SceneRenderResolution {
-    /// The least pixels per unit a scene matched to its display gets (a 16× smaller display).
-    static let minimumMatchedPixelsPerUnit: Float = 1.0 / 16
+    /// The least pixels per unit a scene gets (a display 16× smaller than the scene).
+    static let minimumPixelsPerUnit: Float = 1.0 / 16
     /// The largest 2D texture side every Mac GPU the app runs on can allocate. A target that
     /// would be larger is fitted into it rather than failing to allocate every frame.
     static let maximumTextureDimension: Float = 16384
 
-    /// Pixels per scene unit for a scene of `sceneSize` shown on `drawableSize` pixels.
+    /// Pixels per scene unit for a scene of `sceneSize` covering `drawableSize` pixels.
     /// Quantised to eighths so a live window resize doesn't reallocate the target every frame
-    /// (to 64ths below 1, where an eighth is a large step). `matchDisplay` lets a display smaller
-    /// than the scene draw it smaller.
-    static func pixelsPerUnit(sceneSize: SIMD2<Float>, drawableSize: SIMD2<Float>, matchDisplay: Bool = false) -> Float {
+    /// (to 64ths below 1, where an eighth is a large step). `floorsAtAuthoredSize` never draws
+    /// below the authored size, unless that exceeds what Metal can allocate.
+    static func pixelsPerUnit(sceneSize: SIMD2<Float>, drawableSize: SIMD2<Float>, floorsAtAuthoredSize: Bool = false) -> Float {
         let scene = simd_max(sceneSize, SIMD2(1, 1))
         let fitsTexture = maximumTextureDimension / max(scene.x, scene.y)
         guard fitsTexture.isFinite, fitsTexture > 0 else { return 1 }
-        // The hardware limit is the only thing that draws a scene below its authored size.
-        guard fitsTexture >= 1 else { return fitsTexture }
-        guard drawableSize.x > 0, drawableSize.y > 0 else { return 1 }
-        let wanted = max(drawableSize.x / scene.x, drawableSize.y / scene.y)
-        guard wanted.isFinite else { return 1 }
-        if matchDisplay, wanted < 1 {
-            return max(minimumMatchedPixelsPerUnit, (wanted * 64).rounded(.up) / 64)
-        }
-        let quantized = (max(wanted, 1) * 8).rounded(.up) / 8
-        return quantized > fitsTexture ? max(1, (fitsTexture * 8).rounded(.down) / 8) : quantized
+        // The hardware limit is the only thing that draws a floored scene below its authored size.
+        if floorsAtAuthoredSize, fitsTexture < 1 { return fitsTexture }
+        guard drawableSize.x > 0, drawableSize.y > 0 else { return min(1, fitsTexture) }
+        var wanted = max(drawableSize.x / scene.x, drawableSize.y / scene.y)
+        guard wanted.isFinite else { return min(1, fitsTexture) }
+        if floorsAtAuthoredSize { wanted = max(wanted, 1) }
+        let quantized = wanted < 1 ? max(minimumPixelsPerUnit, (wanted * 64).rounded(.up) / 64) : (wanted * 8).rounded(.up) / 8
+        guard quantized > fitsTexture else { return quantized }
+        return fitsTexture >= 1 ? max(1, (fitsTexture * 8).rounded(.down) / 8) : fitsTexture
     }
 
-    /// The size, in pixels, a scene target is sized for: the largest of `viewports`' sizes in
-    /// points for `GSRenderResolution.display` (one target pixel per point, scaled up to the
-    /// backing pixels by the final composite), their backing pixels for `retina` (one target pixel
-    /// per display pixel, never scaled twice), or the scene's authored size for `full` (placed onto
-    /// each display by the final composite, as WE places it).
+    /// The size, in pixels, the scene target is drawn for (`GSRenderResolution`): the largest of
+    /// `viewports`' backing pixels for `yourDisplay` (one target pixel per display pixel), 4K at
+    /// their shape for `uhd4K` (fitted to each display by the final composite: downsampled on a
+    /// smaller one, scaled up on a larger one), or the scene's authored size for `full` (placed
+    /// onto each display by the final composite, as WE places it).
     static func drawableSize(_ viewports: [SceneViewport], resolution: GSRenderResolution,
                              sceneSize: SIMD2<Float>) -> SIMD2<Float> {
         switch resolution {
-        case .display: return SceneViewport.largestPointSize(viewports)
-        case .retina: return SceneViewport.largestDrawable(viewports)
+        case .yourDisplay: return SceneViewport.largestDrawable(viewports)
+        case .uhd4K: return uhd4KSize(shapedLike: SceneViewport.largestDrawable(viewports))
         case .full: return simd_max(sceneSize, SIMD2(1, 1))
         }
+    }
+
+    /// 4K at `display`'s shape: its long side `GSRenderResolution.uhd4KLongSide` (16:9 3840×2160,
+    /// 16:10 3840×2400); 3840×2160 for a display without a size yet.
+    static func uhd4KSize(shapedLike display: SIMD2<Float>) -> SIMD2<Float> {
+        let longSide = GSRenderResolution.uhd4KLongSide
+        guard display.x > 0, display.y > 0 else { return SIMD2(longSide, longSide * 9 / 16) }
+        return (display * (longSide / max(display.x, display.y))).rounded(.toNearestOrAwayFromZero)
     }
 
     /// The pixels per unit the scene pass draws at when it draws `scale` of each side of a target

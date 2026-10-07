@@ -54,13 +54,15 @@ final class LivePhotoRenderer {
         self.defaults = defaults
     }
 
-    /// The export's quality: the user's settings with WE's full scene detail, no upscaling and
-    /// full-size textures. The scene target is sized for the export's drawable, which
-    /// `LivePhotoCrop` sizes to the scene's authored size or more ("Full" render resolution's
-    /// floor, raised to the device's pixels when they need more).
+    /// The export's quality: the user's settings with WE's full effect detail, no upscaling and
+    /// full-size textures, whatever Render Resolution draws the displays at. The scene target is
+    /// sized for the export's drawable, never below the scene's authored size
+    /// (`floorsAtAuthoredSize`); `LivePhotoCrop` sizes the drawable to the authored size or more,
+    /// raised to the device's pixels when they need more.
     nonisolated static func renderSettings(from settings: GlobalSettings) -> SceneRenderSettings {
         var render = SceneRenderSettings(settings)
-        render.renderResolution = .retina
+        render.renderResolution = .yourDisplay
+        render.floorsAtAuthoredSize = true
         render.sceneDetail = .full
         render.upscaling = .off
         render.textureReduction = 1

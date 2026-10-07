@@ -18,11 +18,14 @@ struct LibrarySetting: Equatable {
     let kind: Kind
     /// What it does, in one line.
     let summary: String
+    /// Earlier names of a choice's values, by the value they now set (lowercase); not listed.
+    let aliases: [String: String]
 
-    private init(_ key: String, _ kind: Kind, _ summary: String) {
+    private init(_ key: String, _ kind: Kind, _ summary: String, aliases: [String: String] = [:]) {
         self.key = key
         self.kind = kind
         self.summary = summary
+        self.aliases = aliases
     }
 
     // MARK: - The allow-list
@@ -58,9 +61,10 @@ struct LibrarySetting: Equatable {
         LibrarySetting("texture_resolution", .choice(["high_quality", "high_performance", "automatic"]),
                        "Wallpaper Engine's Texture Resolution: high_performance loads textures and runs effects at half size."),
         LibrarySetting("scene_detail", .choice(["match_display", "full"]),
-                       "match_display draws no more detail than the display shows; full draws every effect at its texture's size."),
-        LibrarySetting("render_resolution", .choice(["display", "retina", "full"]),
-                       "What scenes render at: the display's size in points, its native pixels, or the wallpaper's authored size."),
+                       "Effect Detail: match_display runs each layer's effects at most at its size on screen; full runs them at the texture's size."),
+        LibrarySetting("render_resolution", .choice(["your_display", "uhd4k", "full"]),
+                       "The size scenes are drawn at: your_display the display's own pixels, uhd4k 4K at the display's shape fitted to it, full the wallpaper's authored size.",
+                       aliases: ["display": "your_display", "retina": "your_display", "4k": "uhd4k"]),
         LibrarySetting("upscaling", .choice(["off", "metalfx"]),
                        "metalfx draws scenes at render_scale and scales them up."),
         LibrarySetting("render_scale", .choice(["50", "67", "75"]),
@@ -93,7 +97,7 @@ struct LibrarySetting: Equatable {
         LibrarySetting("optimise_textures", .bool, "Compresses scenes' images once in the background to save GPU memory."),
         LibrarySetting("cheaper_shadows", .bool, "Draws shadow maps at half size."),
         LibrarySetting("web_standard_resolution", .bool,
-                       "Under the retina or full render resolution, draws web wallpapers at standard resolution."),
+                       "Draws web wallpapers at standard resolution, a quarter of the pixels on Retina."),
         LibrarySetting("reduced_resolution_particles", .bool,
                        "Draws large glowing particle effects of 2D scenes at half resolution."),
         LibrarySetting("process_priority", .choice(["normal", "below_normal"]),
@@ -179,7 +183,8 @@ struct LibrarySetting: Equatable {
             }
             return .number(number)
         case let .choice(values), let .action(values):
-            let given = text ?? value.doubleValue.map(Self.format) ?? ""
+            let written = text ?? value.doubleValue.map(Self.format) ?? ""
+            let given = aliases[written.lowercased()] ?? written
             guard let match = values.first(where: { $0.caseInsensitiveCompare(given) == .orderedSame }) else {
                 throw ControlError(.invalidParams, "\(key) takes one of: \(values.joined(separator: ", ")).")
             }

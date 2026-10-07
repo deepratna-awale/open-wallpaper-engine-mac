@@ -72,7 +72,7 @@ struct ChromiumWebWallpaperView: NSViewRepresentable {
         }
         nsView.page.evaluate(WebWallpaperView.placementScript(wallpaperViewModel.wallpaperPlacement))
         let settings = AppDelegate.shared.globalSettingsViewModel.settings
-        nsView.standardResolution = settings.webStandardResolution || settings.renderResolution == .display
+        nsView.standardResolution = settings.webStandardResolution
         let key = WallpaperInstanceKey(selectedWallpaper)
         viewModel.setPaused(!wallpaperViewModel.playback(onScreen: screenId).rendersFrames)
         viewModel.setMuted(!wallpaperViewModel.shouldPlayAudio(on: screenId) || wallpaperViewModel.playVolume == 0

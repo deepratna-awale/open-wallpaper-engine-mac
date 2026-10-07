@@ -6,10 +6,9 @@ import Foundation
 /// Scene units are the scene's authored pixels, origin top-left. At zoom 1 the window is the
 /// largest rectangle at the device's aspect the scene covers (cover-fit); zoom (up to
 /// `maximumZoom`) shrinks it about its centre. The centre is kept so the window never leaves the
-/// scene. The scene is rendered whole at `renderScale` of its authored size: at least 1 (WE's
-/// "Full" render resolution, the authored size) and at least what makes the window cover the
-/// output's pixels, so the output is never upscaled; the window is then cut out and drawn at the
-/// output's exact size.
+/// scene. The scene is rendered whole at `renderScale` of its authored size: at least 1 (the
+/// authored size) and at least what makes the window cover the output's pixels, so the output is
+/// never upscaled; the window is then cut out and drawn at the output's exact size.
 struct LivePhotoCrop: Equatable {
     static let maximumZoom = 3.0
     /// The largest texture side the renderer allocates (`SceneRenderResolution.maximumTextureDimension`).

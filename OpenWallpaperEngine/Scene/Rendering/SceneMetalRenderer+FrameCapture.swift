@@ -43,7 +43,8 @@ extension SceneMetalRenderer {
 
     /// A screenshot (WE's "Take screenshot"): the scene's current moment drawn again, without
     /// stepping it (`redrawShared`), at `pixelSize` and 1 pixel per point, so every pass renders at
-    /// that size rather than scaling up a display's frame, then copied as `captureSharedFrame` does.
+    /// that size (whatever Render Resolution is) rather than scaling up a display's frame, then
+    /// copied as `captureSharedFrame` does.
     /// `restoring` are the displays' viewports when several share the frame: their frame is drawn
     /// again after; with none, the extra frame is freed. False (and no completion) when there is
     /// no content or the copy can't start. Render thread.
@@ -52,8 +53,13 @@ extension SceneMetalRenderer {
         guard hasContent, pixelSize.x > 0, pixelSize.y > 0 else { return false }
         let size = SIMD2<Float>(Float(pixelSize.x), Float(pixelSize.y))
         let frameRate = viewports.map(\.frameRateLimit).max() ?? 60
+        // The screenshot sets its own size: drawn for its pixels whatever Render Resolution draws
+        // the displays at (4K or the wallpaper's size).
+        let live = renderSettings
+        renderSettings.renderResolution = .yourDisplay
         redrawShared([SceneViewport(drawableSize: size, pointSize: size, cursor: nil, frameRateLimit: frameRate)])
         let started = captureSharedFrame(pixelSize: pixelSize, pixelsPerPoint: 1, completion: completion)
+        renderSettings = live
         if viewports.isEmpty { releaseSharedFrame() } else { redrawShared(viewports) }
         return started
     }

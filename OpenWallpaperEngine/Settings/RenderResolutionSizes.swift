@@ -6,8 +6,9 @@
 import AppKit
 import Combine
 
-/// The sizes the Render Resolution picker shows beside Display and Retina: each display's size in
-/// points (what macOS lists under Displays, and what Display renders at) and its backing pixels.
+/// The sizes the Render Resolution picker shows (`GSRenderResolution`): each display's backing
+/// pixels (what Your Display draws at) and 4K at its shape (what 4K draws at), and the main
+/// display's for the option's description.
 struct RenderResolutionSizes: Equatable {
     struct Screen: Equatable {
         /// `NSScreen.frame.size`.
@@ -16,6 +17,7 @@ struct RenderResolutionSizes: Equatable {
         var pixels: CGSize
     }
 
+    /// The displays, the main one (with the menu bar) first.
     var screens: [Screen]
 
     /// "2560×1440, 1920×1080": distinct sizes, largest first.
@@ -28,19 +30,44 @@ struct RenderResolutionSizes: Equatable {
         return distinct.map { "\($0[0])×\($0[1])" }.joined(separator: ", ")
     }
 
-    var displayList: String { Self.list(screens.map(\.points)) }
-    var retinaList: String { Self.list(screens.map(\.pixels)) }
-
-    var displayLabel: String {
-        String(localized: "Display (\(displayList))", comment: "Render resolution: the display's size in points, e.g. 1920×1080")
+    /// 4K at `pixels`' shape (`SceneRenderResolution.uhd4KSize`).
+    static func uhd4K(_ pixels: CGSize) -> CGSize {
+        let size = SceneRenderResolution.uhd4KSize(shapedLike: SIMD2(Float(pixels.width), Float(pixels.height)))
+        return CGSize(width: CGFloat(size.x), height: CGFloat(size.y))
     }
 
-    var retinaLabel: String {
-        String(localized: "Retina (\(retinaList))", comment: "Render resolution: the display's native backing pixels, e.g. 3840×2160")
+    var yourDisplayList: String { Self.list(screens.map(\.pixels)) }
+    var uhd4KList: String { Self.list(screens.map { Self.uhd4K($0.pixels) }) }
+    /// The main display's backing pixels and 4K at its shape ("1920×1080", "3840×2160").
+    var mainPixels: String { Self.list(screens.prefix(1).map(\.pixels)) }
+    var mainUHD4K: String { Self.list(screens.prefix(1).map { Self.uhd4K($0.pixels) }) }
+
+    func label(_ resolution: GSRenderResolution) -> String {
+        switch resolution {
+        case .yourDisplay:
+            String(localized: "Your Display (\(yourDisplayList))",
+                   comment: "Render resolution option: the displays' own pixels, e.g. 1920×1080")
+        case .uhd4K:
+            String(localized: "4K (\(uhd4KList))",
+                   comment: "Render resolution option: 4K at the display's shape, e.g. 3840×2160")
+        case .full:
+            String(localized: "Full (wallpaper's size)", comment: "Render resolution: the wallpaper's authored size")
+        }
     }
 
-    static var fullLabel: String {
-        String(localized: "Full (wallpaper's size)", comment: "Render resolution: the wallpaper's authored size")
+    /// What `resolution` does, for the main display.
+    func summary(_ resolution: GSRenderResolution) -> String {
+        switch resolution {
+        case .yourDisplay:
+            String(localized: "Draws at your display's own pixels (\(mainPixels)), whatever size the wallpaper was made at.",
+                   comment: "Render resolution Your Display, described under the picker; the main display's pixels, e.g. 1920×1080")
+        case .uhd4K:
+            String(localized: "Draws at 4K (\(mainUHD4K)) and fits that to your display: text, particles and effects get sharper on a smaller display, for more GPU work. Images can't show more detail than they have.",
+                   comment: "Render resolution 4K, described under the picker; 4K at the main display's shape, e.g. 3840×2160")
+        case .full:
+            String(localized: "Draws at the size the wallpaper was made at and places that on your display, as Wallpaper Engine does.",
+                   comment: "Render resolution Full, described under the picker")
+        }
     }
 
     static func screen(_ screen: NSScreen) -> Screen {
