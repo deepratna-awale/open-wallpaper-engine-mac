@@ -225,7 +225,7 @@ final class ScreenSaverEditorTests: XCTestCase {
         let target = try XCTUnwrap(runs.targets.first)
         XCTAssertTrue(target.isRecording)
         XCTAssertEqual(target.properties, values)
-        XCTAssertEqual(target.pixelSize, SIMD2(1920, 1080), "Render Resolution Display records the points")
+        XCTAssertEqual(target.pixelSize, SIMD2(3840, 2160), "the display's pixels")
         let selection = try XCTUnwrap(store.selection)
         XCTAssertEqual(selection.fileName, target.fileName)
         XCTAssertTrue(selection.fileName.contains("-rec"))

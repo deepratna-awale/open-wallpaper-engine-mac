@@ -163,8 +163,9 @@ final class SceneRenderPrimitivesTests: XCTestCase {
         XCTAssertEqual(fiveK, 2.75, accuracy: 1e-6)
         let sixK = SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(1920, 1080), drawableSize: SIMD2(6016, 3384))
         XCTAssertEqual(sixK, 3.25, accuracy: 1e-6)
-        // A scene bigger than Metal's largest texture is fitted into it rather than failing to allocate.
-        let huge = SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(20000, 20000), drawableSize: SIMD2(3840, 2160))
+        // A floored scene bigger than Metal's largest texture is fitted into it rather than failing to allocate.
+        let huge = SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(20000, 20000), drawableSize: SIMD2(3840, 2160),
+                                                       floorsAtAuthoredSize: true)
         XCTAssertEqual(SceneRenderResolution.targetSize(sceneSize: SIMD2(20000, 20000), pixelsPerUnit: huge),
                        SIMD2(16384, 16384))
     }
