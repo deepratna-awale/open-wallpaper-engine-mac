@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Render Resolution's choices now mean exactly what they say**, and Render Resolution alone decides the size scenes are drawn at:
+  - **Your Display** draws at your display's own pixels (1920×1080 on a 1080p display, 5120×2880 on a 5K iMac), whatever size the wallpaper was made at: a 4K wallpaper on a 1080p display is drawn at 1920×1080.
+  - **4K** draws at 4K at your display's shape (3840×2160 at 16:9, 3840×2400 at 16:10) and fits that to the display, whatever the wallpaper's size: text, particles, clocks and effects get sharper on a smaller display, for more GPU work. Images can't show more detail than they have.
+  - **Full** draws at the wallpaper's own size and places it on the display, as Wallpaper Engine does.
+  - **Upscaling** stays separate: MetalFX (or smooth scaling) draws 75, 67 or 50 % of each side of the size chosen above and rebuilds it. The Low preset is Your Display with MetalFX at 50 %; the other presets are Your Display without upscaling.
+  - **Scene Detail is now Effect Detail**: it only sets the size each layer's effects run at (Match Display, at most the layer's size on screen; Full, as Wallpaper Engine). It no longer keeps a large wallpaper at its own size on a smaller display: before, Full scene detail could draw a 4K wallpaper at 4K on a 1080p display under Display.
+  - **Your settings are carried over once.** Retina becomes Your Display and Full stays Full. The old Display (one pixel per point, scaled up) becomes Your Display; on a Retina display, Upscaling is turned on at MetalFX 50 % if it was off, and web wallpapers stay at standard resolution, so the GPU's work stays about the same. The MCP server's `render_resolution` takes `your_display`, `uhd4k` and `full`, and still accepts `display` and `retina`.
+  - Automatic Texture Resolution weighs the size the scene is drawn at, so 4K and Full no longer halve a 4K wallpaper's textures on a 1080p display.
+  - The screen saver's loop is recorded at the display's pixels, and screenshots are drawn at their own size, whatever Render Resolution is.
+
 ## [1.0.0-beta.6] - 2026-10-06
 
 ### Added
