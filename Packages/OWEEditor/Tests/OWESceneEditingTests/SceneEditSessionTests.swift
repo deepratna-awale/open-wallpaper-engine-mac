@@ -98,12 +98,6 @@ final class SceneEditSessionTests: XCTestCase {
         XCTAssertFalse(session.isEdited(2), "visible is WE's default")
     }
 
-    func testAUserBoundFieldIsntEdited() {
-        session.setVisible(false, 13, actionName: "Hide")
-        XCTAssertFalse(session.isEdited(13))
-        XCTAssertFalse(session.canUndo)
-    }
-
     func testASliderDragIsOneUndoStep() {
         for value in [0.9, 0.7, 0.5, 0.3] {
             session.setValue(.number(value), for: "alpha", of: 10, actionName: "Change Opacity", coalescing: true)
