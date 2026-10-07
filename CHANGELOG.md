@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Live Photos sent with AirDrop arrive on iPhone and iPad as Live Photos.** Send with AirDrop and AirDrop All sent the photo and the movie as two files, which Photos imported as a separate photo and video; each Live Photo now goes as one Live Photo bundle, as Photos sends it.
 - **A scene starts cleanly.** Setting, switching to or launching with a scene wallpaper showed about a second of black before its loading picture, then a dark or half-drawn frame, and on some wallpapers stray rectangles (on the rain wallpaper's road) that motion blur dragged out for half a second. The loading picture now shows at once and stays until the scene has drawn a frame with all its effects, effect history (motion blur and the like) starts with that frame, and an effect drawing over a fresh buffer starts from transparent black, as in Wallpaper Engine.
 - **Rotate automatically, Shuffle and Repeat survive a restart.** Loading the active playlist saved the playlist settings before the rest were read, so the app always started with the playlist stopped; a timer playlist now also starts its timer at launch.
 - **A locally built Release now launches.** Release builds sign with Apple Development under the project's team, as Debug builds do, instead of ad hoc, which library validation rejected for the app's own framework and Sparkle. Published releases are still signed with Developer ID and notarized.
