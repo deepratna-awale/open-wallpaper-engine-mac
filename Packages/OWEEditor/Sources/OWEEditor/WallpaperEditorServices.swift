@@ -134,6 +134,17 @@ public struct EditorFont: Hashable, Identifiable, Sendable {
     }
 }
 
+extension WallpaperEditorServices {
+    /// A user property's label as the property panels show it: the app's title for it (WE's
+    /// translation of a localisation key, HTML dropped; `userPropertyChoices`), else the label of
+    /// one the editor added (`properties`), else its key.
+    func userPropertyTitle(_ key: String, properties: [UserPropertyDraft]? = nil) -> String {
+        if let choice = userPropertyChoices().first(where: { $0.key == key }) { return choice.title }
+        if let draft = properties?.first(where: { $0.key == key }) { return PropertyTitle.title(draft) }
+        return key
+    }
+}
+
 /// A user property a value can follow.
 public struct EditorUserPropertyChoice: Hashable, Identifiable, Sendable {
     public var key: String

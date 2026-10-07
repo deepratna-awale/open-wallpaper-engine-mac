@@ -52481,6 +52481,101 @@
         }
       }
     },
+    "Hide this object; “%@” sets it again when you show it" : {
+      "comment" : "Scene Editor: help of the switch of an object a user property shows; the property's key",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إخفاء هذا الكائن؛ تحدده خاصية المستخدم ”%@“ مجددًا عند إظهاره"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Objekt ausblenden; „%@“ legt es wieder fest, wenn Sie es einblenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar este objeto; «%@» lo vuelve a definir cuando lo muestre"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masquer cet objet ; « %@ » le définit à nouveau quand vous l’affichez"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह ऑब्जेक्ट छिपाएँ; दिखाने पर “%@” इसे फिर से सेट करेगी"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nascondi questo oggetto; “%@” lo imposta di nuovo quando lo mostri"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このオブジェクトを非表示にします。表示に戻すと「%@」で再び設定されます"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 객체 가리기. 다시 보면 ‘%@’에서 다시 설정됨"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ukryj ten obiekt; „%@” ustawi go znowu, gdy go pokażesz"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar este objeto; “%@” volta a defini-lo quando você o mostrar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрыть этот объект; когда вы покажете его, его снова задаст «%@»"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu nesneyi gizle; gösterdiğinizde “%@” onu yeniden belirler"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сховати цей обʼєкт; коли ви його покажете, його знову задаватиме «%@»"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏此对象；再次显示时由“%@”重新设定"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隱藏此物件；再次顯示時由「%@」重新設定"
+          }
+        }
+      }
+    },
     "Hides this author's wallpapers from the Workshop and Discover tabs on this Mac" : {
       "localizations" : {
         "ar" : {
@@ -127453,6 +127548,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示 iPad 橫放時可見的圖片部分"
+          }
+        }
+      }
+    },
+    "Show this object; “%@” sets it again" : {
+      "comment" : "Scene Editor: help of the switch of an object hidden over the user property that shows it; the property's key",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إظهار هذا الكائن؛ تحدده خاصية المستخدم ”%@“ مجددًا"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Objekt einblenden; „%@“ legt es wieder fest"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar este objeto; «%@» lo vuelve a definir"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher cet objet ; « %@ » le définit à nouveau"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह ऑब्जेक्ट दिखाएँ; “%@” इसे फिर से सेट करेगी"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra questo oggetto; “%@” lo imposta di nuovo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このオブジェクトを表示します。再び「%@」で設定されます"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 객체 보기. ‘%@’에서 다시 설정됨"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokaż ten obiekt; „%@” znowu go ustawia"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar este objeto; “%@” volta a defini-lo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать этот объект; его снова задаёт «%@»"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu nesneyi göster; “%@” onu yeniden belirler"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати цей обʼєкт; його знову задаватиме «%@»"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示此对象；由“%@”重新设定"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示此物件；由「%@」重新設定"
           }
         }
       }

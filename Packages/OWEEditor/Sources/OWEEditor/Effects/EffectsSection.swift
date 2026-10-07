@@ -71,7 +71,10 @@ struct EffectsSection: View {
             }
             .toggleStyle(.checkbox)
             .disabled(bound != nil)
-            .help(bound.map { L("Set by the user property “\($0)”") } ?? "")
+            .help(bound.map { key in
+                let name = services.userPropertyTitle(key, properties: session.overlay.authoring?.properties)
+                return L("Set by the user property “\(name)”")
+            } ?? "")
             Spacer(minLength: 4)
             InfoTip(services.effectHelp(effect.folderName))
             Menu {
@@ -318,7 +321,7 @@ struct EffectParametersView: View {
     }
 
     private func propertyTitle(_ key: String) -> String {
-        services.userPropertyChoices().first { $0.key == key }?.title ?? key
+        services.userPropertyTitle(key, properties: session.overlay.authoring?.properties)
     }
 
     // MARK: Textures
