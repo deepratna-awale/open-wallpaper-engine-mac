@@ -203,7 +203,7 @@ final class ScreenSaverStorageTests: XCTestCase {
         XCTAssertNil(ShaderPrewarmCommand.size("0x10"))
     }
 
-    func testOneLoopAtTheLargestDisplaysPointSize() throws {
+    func testOneLoopForEveryDisplay() throws {
         let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: folder) }
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -215,7 +215,7 @@ final class ScreenSaverStorageTests: XCTestCase {
                       (pixels: SIMD2(2560, 1600), points: SIMD2(2560, 1600)),
                       (pixels: SIMD2(1920, 1080), points: SIMD2(1920, 1080))],
             properties: [:])
-        XCTAssertEqual(targets.map(\.pixelSize), [SIMD2(2560, 1600)], "one video, at the largest display's points")
+        XCTAssertEqual(targets.map(\.pixelSize), [SIMD2(3840, 2160)], "one video, at the largest display's pixels")
         XCTAssertEqual(targets.first?.pointSize, SIMD2(2560, 1600))
     }
 
