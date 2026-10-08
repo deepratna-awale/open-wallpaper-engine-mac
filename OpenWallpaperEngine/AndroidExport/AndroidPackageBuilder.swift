@@ -156,7 +156,8 @@ enum AndroidPackageBuilder {
     /// pre-rendered crop is measured in.
     static func sceneSize(_ wallpaper: WEWallpaper) throws -> SIMD2<Double> {
         do {
-            return try SceneDrawnSize.of(sceneData: sceneData(wallpaper), overlay: SceneDrawnSize.savedOverlay(of: wallpaper))
+            return try SceneDrawnSize.of(sceneData: sceneData(wallpaper), overlay: SceneDrawnSize.savedOverlay(of: wallpaper),
+                                         readAsset: SceneImageSize.reader(for: wallpaper))
         } catch let failure as Failure {
             throw failure
         } catch {

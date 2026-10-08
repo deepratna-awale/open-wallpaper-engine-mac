@@ -219,25 +219,25 @@ final class InstalledLibraryModel {
             guard checkedType.contains(type) else { return false }
             guard checkedCategory.contains(FRCategory.of(wallpaper)) else { return false }
 
-            // Age Rating
-            var ageRating: FRAgeRating
-            switch wallpaper.project.contentrating ?? InstalledWorkshopTags.contentRating(in: wallpaperTags) {
-            case "Everyone":
-                ageRating = .everyone
-            case "Questionable":
-                ageRating = .partialNudity
-            case "Mature":
-                ageRating = .mature
-            default:
-                ageRating = .none
-            }
-            guard checkedAgeRating.contains(ageRating) else { return false }
+            guard checkedAgeRating.contains(Self.ageRating(of: wallpaper, tags: wallpaperTags)) else { return false }
 
             guard InstalledTagFilter.matchesResolutions(wallpaperTags, checked: resolutions) else { return false }
             guard InstalledTagFilter.matchesGenres(wallpaperTags, checked: checkedTags) else { return false }
 
             // Finish Filtering
             return true
+        }
+    }
+
+    /// A wallpaper's rating for the Installed filter: project.json's, else the Workshop tags'. A
+    /// wallpaper made before WE had ratings has neither and is Everyone, as the Details panel
+    /// shows it; rated "none" it matched no checkbox and never showed.
+    nonisolated static func ageRating(of wallpaper: WEWallpaper, tags: [String]) -> FRAgeRating {
+        switch wallpaper.project.contentrating ?? InstalledWorkshopTags.contentRating(in: tags) ?? "Everyone" {
+        case "Everyone": return .everyone
+        case "Questionable": return .partialNudity
+        case "Mature": return .mature
+        default: return .none
         }
     }
 
