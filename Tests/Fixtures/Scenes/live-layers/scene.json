@@ -1,0 +1,22 @@
+{
+	"general" : { "orthogonalprojection" : { "width" : 128, "height" : 64 } },
+	"objects" : [
+		{ "id" : 1, "name" : "Clock", "text" : { "value" : "", "script" : "export function update() { return new Date().toLocaleTimeString(); }" } },
+		{ "id" : 2, "name" : "Bars", "image" : "models/bars.json" },
+		{ "id" : 3, "name" : "Beat on", "image" : "models/plain.json",
+		  "effects" : [ { "id" : 30, "file" : "effects/beat/effect.json", "visible" : true,
+		                  "passes" : [ { "id" : 31, "combos" : { "audioprocessing" : 3 } } ] } ] },
+		{ "id" : 4, "name" : "Beat off", "image" : "models/plain.json",
+		  "effects" : [ { "id" : 40, "file" : "effects/beat/effect.json", "visible" : true } ] },
+		{ "id" : 5, "name" : "Sparks", "particle" : "particles/parent.json" },
+		{ "id" : 6, "name" : "Background", "image" : "models/plain.json" },
+		{ "id" : 7, "name" : "Visualiser", "text" : { "value" : "", "script" : "const audio = engine.registerAudioBuffers(engine.AUDIO_RESOLUTION_16);\nexport function update() { return String(audio.left[0]); }" } },
+		{ "id" : 8, "name" : "Title", "text" : "Static" },
+		{ "id" : 9, "name" : "Beat hidden", "image" : "models/plain.json",
+		  "effects" : [ { "id" : 90, "file" : "effects/beat/effect.json", "visible" : false,
+		                  "passes" : [ { "id" : 91, "combos" : { "AUDIOPROCESSING" : 1 } } ] } ] },
+		{ "id" : 10, "name" : "Day", "text" : { "value" : "", "script" : "export function update() { return ['Sun','Mon'][new Date().getDay() % 2]; }" } },
+		{ "id" : 11, "name" : "Calm sparks", "particle" : "particles/calm.json" }
+	],
+	"version" : 1
+}

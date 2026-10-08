@@ -1,0 +1,1 @@
+{ "passes" : [ { "shader" : "effects/beat", "blending" : "normal" } ] }

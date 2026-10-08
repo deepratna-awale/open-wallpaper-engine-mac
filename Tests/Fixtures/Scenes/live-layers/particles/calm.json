@@ -1,0 +1,2 @@
+{ "material" : "materials/plain.json", "emitter" : [ { "name" : "boxrandom", "rate" : 10, "audioprocessingmode" : 0 } ],
+  "initializer" : [ { "name" : "colorrandom" } ] }
