@@ -323,6 +323,13 @@ class WallpaperViewModel: ObservableObject {
         }
     }
 
+    /// "Set as Wallpaper" from a menu: the wallpaper becomes the Details panel's, which then
+    /// applies it as its Set Wallpaper button does.
+    func inspectAndApply(_ wallpaper: WEWallpaper) {
+        inspect(wallpaper)
+        applyInspectedWallpaper()
+    }
+
     func applyInspectedWallpaper() {
         let wallpaper: WEWallpaper
         do {
