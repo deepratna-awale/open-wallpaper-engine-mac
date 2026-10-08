@@ -120,7 +120,12 @@ final class WallpaperTransitionCoordinator: WallpaperTransitionPerforming {
                     kind: kind, duration: duration, target: geometry.target, outgoing: texture,
                     pixelSize: geometry.pixelSize, renderer: renderer, queue: queue, startTime: requested,
                     overlays: overlays)
-                try player.showFirstFrame()
+                do {
+                    try player.showFirstFrame()
+                } catch {
+                    player.stop()
+                    throw error
+                }
                 started.append(player)
             } catch {
                 OWELog.error(.app, "Transition \(kind) on \(geometry.target) can't start: \(error)")

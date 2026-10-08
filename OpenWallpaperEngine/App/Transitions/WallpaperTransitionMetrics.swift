@@ -29,6 +29,10 @@ final class WallpaperTransitionMetrics: @unchecked Sendable {
         self.refreshInterval = max(refreshInterval, 1.0 / 1000)
     }
 
+    deinit {
+        probe?.cancel()
+    }
+
     /// Starts probing the main thread.
     func start() {
         let timer = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
