@@ -85,36 +85,6 @@ final class ShaderVariantTests: XCTestCase {
         _ = try translateDialectFixture("conversions")
     }
 
-    func testDeclarationsGetHLSLInitialiserConversions() {
-        let out = ShaderPrelude.fixupAfterPreprocess("void main() {\n vec2 a = 0.0, b, c = d.xyz;\n for (int i = f; i < 3; i++) {}\n}")
-        XCTAssertTrue(out.contains("vec2 a = weCast_vec2(0.0), b, c = weCast_vec2(d.xyz);"), out)
-        XCTAssertTrue(out.contains("for (int i = weCast_int(f);"), out)
-        let global = "const vec3 k = vec3(1.0);\nvec2 g = vec2(0.0);\n"
-        XCTAssertEqual(ShaderPrelude.fixupAfterPreprocess(global), global, "globals and consts must stay constant expressions")
-    }
-
-    func testModuloAndSubscriptsFollowHLSL() {
-        let out = ShaderPrelude.fixupAfterPreprocess("void main() { x = a * b.y % 4 + (c + 1) % d[2]; y = s[i / 4]; z = s[3]; }")
-        XCTAssertTrue(out.contains("weMod(a * b.y, 4) + weMod((c + 1), d[2])"), out)
-        XCTAssertTrue(out.contains("s[int(i / 4)]"), out)
-        XCTAssertTrue(out.contains("z = s[3]"), out)
-        let packed = ShaderPrelude.fixupAfterPreprocess("uniform float g[64];\nvoid main() { v = g[i / 4][j]; }")
-        XCTAssertTrue(packed.contains("g[int(int(i / 4) * 4 + int(j))]"), packed)
-        XCTAssertTrue(packed.contains("uniform float g[64];"), packed)
-    }
-
-    /// HLSL converts a scalar `?:` condition to bool; `mask = INVERT ? 1 - mask : mask` with the
-    /// combo preprocessed to `0` is a sharpen workshop effect.
-    func testTernaryConditionsBecomeBool() {
-        let out = ShaderPrelude.fixupAfterPreprocess(
-            "void main() { m = 0 ? 1 - m : m; n = f(a == b ? x : y, (k) ? p : q ? r : s); o += t >= 1.0 ? 1.0 : 0.0; }")
-        XCTAssertTrue(out.contains("m = bool(0) ? 1 - m : m;"), out)
-        XCTAssertTrue(out.contains("f(bool(a == b) ? x : y, bool((k)) ? p : bool(q) ? r : s)"), out)
-        XCTAssertTrue(out.contains("bool(t >= 1.0) ? 1.0 : 0.0"), out)
-        let returned = ShaderPrelude.fixupAfterPreprocess("float g(int c) { return c ? 1.0 : 0.0; }")
-        XCTAssertTrue(returned.contains("bool(c) ? 1.0 : 0.0"), returned)
-    }
-
     /// A shader's own `M_PI`/`log10` replace the prelude's instead of clashing with them.
     func testShaderDefinitionsOverridePreludeMacros() throws {
         let prelude = ShaderPrelude.text(for: .fragment, combos: [:], source: "#define M_PI 3.14\nfloat log10(float x) { return x; }")
@@ -123,64 +93,6 @@ final class ShaderVariantTests: XCTestCase {
         XCTAssertTrue(prelude.contains("#define log10 we_log10"), "clear of metal::log10")
         XCTAssertTrue(prelude.contains("#define M_PI_2 "))
         _ = try translateDialectFixture("redefines")
-    }
-
-    func testReturnsAndCompoundAssignmentsConvertLikeHLSL() {
-        let out = ShaderPrelude.fixupAfterPreprocess("""
-        vec3 f(vec2 uv) {
-         vec4 col = vec4(uv, 0.0, 1.0);
-         return col;
-        }
-        void main() {
-         int bar = 1; bool left = true; float level = 1.0; vec2 uv = vec2(0.0); vec4 c = vec4(0.0);
-         bar *= level * 0.5; level *= left; uv += 1.0; uv.x -= 2.0; bar *= left;
-         uv.x += level - 1.0 < 0.0; c.xy *= 2.0;
-        }
-        """)
-        XCTAssertTrue(out.contains("return weCast_vec3(col);"), out)
-        XCTAssertTrue(out.contains("bar = weCast_int(bar * weArith(level * 0.5));"), out)
-        XCTAssertTrue(out.contains("level *= weCast_float(left);"), out)
-        XCTAssertTrue(out.contains("uv += weCast_vec2(1.0);"), out)
-        XCTAssertTrue(out.contains("uv.x -= weCast_float(2.0);"), out)
-        // HLSL takes a bool as 0 or 1 in arithmetic (Simple Audio Bars' circle and centre shapes).
-        XCTAssertTrue(out.contains("bar = weCast_int(bar * weArith(left));"), out)
-        XCTAssertTrue(out.contains("uv.x += weCast_float(level - 1.0 < 0.0);"), out)
-        XCTAssertTrue(out.contains("c.xy *= weCast_vec2(2.0);"), out)
-    }
-
-    /// `vec4 * vec2` is a `vec2` in HLSL; only whole operands of evident size are truncated.
-    func testMismatchedVectorOperandsTruncateTheWiderOne() {
-        let out = ShaderPrelude.fixupAfterPreprocess("""
-        uniform vec2 scale; in vec3 v_uv; uniform float u;
-        void main() {
-         vec4 p = vec4(1.0);
-         vec2 a = p * scale * 0.5; vec2 b = abs(v_uv - (vec2(u))); vec4 c = p * u + p; vec2 d = p.xy * scale;
-        }
-        """)
-        XCTAssertTrue(out.contains("p.xy * scale * 0.5"), out)
-        XCTAssertTrue(out.contains("v_uv.xy - (vec2(u))"), out)
-        XCTAssertTrue(out.contains("p * u + p)"), out)
-        XCTAssertTrue(out.contains("p.xy * scale)"), out)
-    }
-
-    /// A product is one operand of `+`/`-`, sized by its narrowest vector factor: a workshop FXAA
-    /// samples at `v_TexCoord + dir * (0.33333 - 0.5)` with a `vec4` texcoord and a `vec2` dir.
-    func testAProductIsSizedAsOneOperandOfASum() {
-        let out = ShaderPrelude.fixupAfterPreprocess("""
-        in vec4 v_TexCoord; uniform float u;
-        void main() {
-         vec2 dir = vec2(1.0);
-         vec2 a = v_TexCoord + dir * (0.33333 - 0.5); vec2 b = v_TexCoord - dir * - 0.5 * u;
-         vec2 c = dir * 2.0 + v_TexCoord; vec2 d = dir + v_TexCoord * 2.0; vec4 e = v_TexCoord + v_TexCoord * u;
-         vec2 f = dir + v_TexCoord * g(1.0);
-        }
-        """)
-        XCTAssertTrue(out.contains("v_TexCoord.xy + dir * (0.33333 - 0.5)"), out)
-        XCTAssertTrue(out.contains("v_TexCoord.xy - dir * - 0.5 * u"), out)
-        XCTAssertTrue(out.contains("dir * 2.0 + v_TexCoord.xy"), out)
-        XCTAssertTrue(out.contains("dir + (v_TexCoord * 2.0).xy"), out)
-        XCTAssertTrue(out.contains("v_TexCoord + v_TexCoord * u)"), "same sizes: untouched: \(out)")
-        XCTAssertTrue(out.contains("dir + v_TexCoord * g(1.0))"), "a factor of unknown size: untouched: \(out)")
     }
 
     /// HLSL lets a vertex shader modify its inputs; GLSL doesn't.

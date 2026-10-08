@@ -92,6 +92,13 @@ enum ShaderPairRewriter {
                   output.type != input.type, vectorSize(output.type) != nil, vectorSize(input.type) != nil else { continue }
             resized[input.name] = (output.type, input.type)
         }
+        // HLSL passes a pixel shader's inputs as parameters it may assign to (a Workshop effect's
+        // `v_TexCoord.y = 1.0 - v_TexCoord.y;`); GLSL inputs are read-only, so a written input is
+        // read into a global of the same name, as a resized one is.
+        for input in fragmentInputs where input.arrayCount == nil && resized[input.name] == nil
+            && isAssigned(input.name, in: fragment) {
+            resized[input.name] = (input.type, input.type)
+        }
 
         let block = members.isEmpty ? "" : "layout(std140, binding = 0) uniform \(uniformBlockName) {\n"
             + members.map { "    \($0.type) \($0.name)\($0.arrayCount.map { "[\($0)]" } ?? "");\n" }.joined() + "};\n"
@@ -143,7 +150,7 @@ enum ShaderPairRewriter {
             }
             if stage == .fragment, !resized.isEmpty {
                 result = insertAtMainEntry(result, resized.sorted { $0.key < $1.key }.map { name, types in
-                    "\(name) = \(convert("\(name)_weVarying", from: types.vertexType, to: types.fragmentType));"
+                    "\(name) = \(types.vertexType == types.fragmentType ? "\(name)_weVarying" : convert("\(name)_weVarying", from: types.vertexType, to: types.fragmentType));"
                 }.joined(separator: " "))
             }
             if stage == .vertex, !missing.isEmpty {

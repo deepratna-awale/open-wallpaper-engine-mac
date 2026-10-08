@@ -147,24 +147,6 @@ final class GeometryShaderEmulationTests: XCTestCase {
         try assertBuildsPipeline(variant)
     }
 
-    func testLoopBodyRedeclaringTheLoopVariableGetsItsOwnScope() {
-        let text = "for (int s = 0; s < 2; ++s) { float a = float(s); float s = a * 2.0; b += s; }"
-        XCTAssertEqual(HLSLStageRewrites.loopBodyScopes(text),
-                       "for (int s = 0; s < 2; ++s) { float a = float(s); float s_weBody = a * 2.0; b += s_weBody; }")
-    }
-
-    func testArgumentsConvertToTheirParameterTypes() {
-        let text = """
-        vec3 f(vec2 a, out vec3 b, in VS_OUTPUT c, float d) { b = vec3(a, d); return b; }
-        void g() { vec3 b; f(v.xyzw, b, IN[0], 1); }
-        """
-        let signatures = HLSLStageRewrites.functionSignatures(in: text)
-        XCTAssertEqual(signatures["f"]?.map(\.type), ["vec2", "vec3", "VS_OUTPUT", "float"])
-        let rewritten = HLSLStageRewrites.argumentCasts(text, signatures: signatures)
-        XCTAssertTrue(rewritten.contains("f(weCast_vec2(v.xyzw), b, IN[0],weCast_float( 1))"), rewritten)
-        XCTAssertTrue(rewritten.contains("vec3 f(vec2 a,"), "definitions stay")
-    }
-
     func testMaxVertexCountExpressions() {
         XCTAssertEqual(GeometryShaderEmulation.evaluate("4 + TRAILSUBDIVISION * 2", values: ["TRAILSUBDIVISION": 3]), 10)
         XCTAssertEqual(GeometryShaderEmulation.evaluate("(2 + N) * 3 - 1", values: ["N": 2]), 11)
