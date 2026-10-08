@@ -12,7 +12,7 @@ final class SceneControlRequests: ControlRequestGroup {
         "scene_get", "scene_apply_edits", "scene_undo", "scene_redo", "scene_save", "scene_save_as_local_wallpaper",
         "scene_revert", "effects_catalog", "particles_catalog", "particles_get", "particles_restart", "puppets_list",
         "timeline_get", "timeline_preview", "script_get", "script_set", "script_check", "user_properties_get",
-        "depth_generate", "depth_apply", "depth_remove", "editor_close", "editor_set_tab",
+        "depth_generate", "depth_apply", "depth_remove", "use_depth_map_as_mask", "editor_close", "editor_set_tab",
     ]
 
     /// The tabs `editor_set_tab` names, and the Scene Editor (Live)'s modes they are.
@@ -84,6 +84,7 @@ final class SceneControlRequests: ControlRequestGroup {
         case "depth_generate": return try await depthGenerate(params, document)
         case "depth_apply": return try depthApply(params, document)
         case "depth_remove": return try depthRemove(params, document)
+        case "use_depth_map_as_mask": return try useDepthMapAsMask(params, document)
         default:
             throw ControlError(.unknownMethod, "The app doesn't know \"\(method)\".")
         }
@@ -220,7 +221,7 @@ final class SceneControlRequests: ControlRequestGroup {
         let layer = try params.int("layer")
         if let layer, document.session.outline.layer(layer) == nil { throw ControlError(.notFound, "No layer \(layer).") }
         guard let model = document.depthModel(layer: layer) else { throw ControlError(.unavailable, "Depth maps can't be made here.") }
-        guard model.isSupported else { throw ControlError(.unsupported, "This kind of layer can't have depth parallax.") }
+        guard model.isSupported else { throw ControlError(.unsupported, "Only image and text layers can have a mask from a depth map.") }
         return model
     }
 
@@ -233,16 +234,22 @@ final class SceneControlRequests: ControlRequestGroup {
         await model.generate()
         if let problem = model.problem { throw ControlError(.failed, "The depth map couldn't be made: \(problem)") }
         if try params.bool("apply") == true { return try depthApply(params, document) }
+        let next = model.layerID == nil ? "depth_apply puts WE's Depth Parallax on the scene with it."
+            : "use_depth_map_as_mask writes it as the mask of one of the layer's effects."
         return [
             "texture": model.generatedTexture.map { .string($0) } ?? .null, "one_frame": .bool(model.isOneFrame),
             "applied": .bool(model.isApplied),
             "message": .string(model.isApplied ? "Made a new depth map; the applied depth parallax now uses it."
-                : "Made the depth map; depth_apply puts WE's Depth Parallax on with it."),
+                : "Made the depth map; " + next),
         ]
     }
 
     private func depthApply(_ params: ControlParameters, _ document: HeadlessSceneDocument) throws -> JSONValue {
         let model = try depthModel(params, document)
+        // Depth parallax is the scene's; a layer's depth map makes masks.
+        if model.layerID != nil, try !model.isApplied || params.double("strength") == nil {
+            throw ControlError(.refused, "Depth parallax goes on the whole scene: call depth_apply without layer. A layer's depth map becomes an effect's mask with use_depth_map_as_mask.")
+        }
         if let strength = try params.double("strength") {
             guard SceneDepthParallax.strengthRange.contains(strength) else {
                 throw ControlError(.invalidParams, "strength must be from \(SceneDepthParallax.strengthRange.lowerBound) to \(SceneDepthParallax.strengthRange.upperBound).")
@@ -260,6 +267,40 @@ final class SceneControlRequests: ControlRequestGroup {
         if let problem = model.problem { throw ControlError(.failed, "Depth parallax couldn't be applied: \(problem)") }
         return ["applied": .bool(model.isApplied), "texture": model.appliedTexture.map { .string($0) } ?? .null,
                 "message": .string("Applied WE's Depth Parallax with the depth map; it follows the pointer.")]
+    }
+
+    private func useDepthMapAsMask(_ params: ControlParameters, _ document: HeadlessSceneDocument) throws -> JSONValue {
+        guard let layer = try params.int("layer") else { throw ControlError(.invalidParams, "layer is required.") }
+        let model = try depthModel(params, document)
+        guard model.generatedTexture != nil else {
+            throw ControlError(.refused, "There is no depth map for the layer yet; depth_generate makes one.")
+        }
+        let targets = model.maskTargets
+        guard !targets.isEmpty else {
+            throw ControlError(.refused, "The layer has no effect with a mask; add one first (add_effect), such as Shake, Water Ripple or Tint.")
+        }
+        let effect = try params.required("effect")
+        let slot = try params.int("slot")
+        let matching = targets.filter { $0.effectKey == effect && (slot == nil || $0.slot.slot == slot) }
+        guard let target = matching.first, matching.count == 1 else {
+            let known = targets.map { "effect \"\($0.effectKey)\" slot \($0.slot.slot) (\($0.title))" }.joined(separator: ", ")
+            throw ControlError(matching.isEmpty ? .notFound : .invalidParams,
+                               (matching.isEmpty ? "No mask to fill there. " : "The effect has several masks; give slot. ") + "Masks: \(known).")
+        }
+        let contrast = try params.double("contrast") ?? DepthMask.defaultContrast
+        guard DepthMask.contrastRange.contains(contrast) else {
+            throw ControlError(.invalidParams, "contrast must be from \(DepthMask.contrastRange.lowerBound) to \(DepthMask.contrastRange.upperBound).")
+        }
+        model.maskInverted = try params.bool("invert") ?? false
+        model.maskContrast = contrast
+        model.useAsMask(target)
+        if let problem = model.problem { throw ControlError(.failed, "The mask couldn't be written: \(problem)") }
+        let mask = document.session.effectTexture(target.slot.slot, pass: target.slot.pass, effect: target.effectKey, of: layer)
+        return ["layer": .number(Double(layer)), "effect": .string(target.effectKey), "slot": .number(Double(target.slot.slot)),
+                "mask": mask.map { .string($0) } ?? .null, "replaced": target.currentMask.map { .string($0) } ?? .null,
+                "message": .string(target.replacesMask
+                    ? "Replaced the effect's mask with the depth map (scene_undo brings the old one back; its file is kept)."
+                    : "The depth map is now the effect's mask.")]
     }
 
     private func depthRemove(_ params: ControlParameters, _ document: HeadlessSceneDocument) throws -> JSONValue {
