@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Diffs two shader comparison runs (ShaderComparisonSuiteTests, Scripts/shader-compare.sh).
 
-    Scripts/shader-compare-diff.py <before run> <after run> [--mean-abs 2.0] [--ssim 0.98] [-o diff.json]
+    Scripts/shader-compare-diff.py <before run> <after run> [--mean-abs 2.0] [--ssim 0.98] [--noise <run>] [-o diff.json]
 
 Reads each run's shaders.json, and the after run's renders.json (compared with the before run
 when it was rendered with OWE_SHADER_COMPARE_BASELINE=<before run>), and prints a JSON summary:
@@ -26,6 +26,8 @@ def main():
     parser.add_argument("after")
     parser.add_argument("--mean-abs", type=float, default=2.0)
     parser.add_argument("--ssim", type=float, default=0.98)
+    parser.add_argument("--noise", help="a repeat run of the before build against it: scenes past the "
+                        "threshold there differ run to run and are listed apart")
     parser.add_argument("-o", "--output")
     args = parser.parse_args()
 
@@ -45,7 +47,12 @@ def main():
     for key in sorted(set(after) - set(before)):
         added.append({"shader": key, "ok": after[key]["ok"], "error": after[key].get("error")})
 
-    renders = {"compared": 0, "past_threshold": [], "failed": [], "newly_failed": []}
+    noisy = set()
+    if args.noise:
+        for name, record in load(os.path.join(args.noise, "renders.json"))["scenes"].items():
+            if record.get("meanAbs") is not None and (record["meanAbs"] > args.mean_abs or record["ssim"] < args.ssim):
+                noisy.add(name)
+    renders = {"compared": 0, "past_threshold": [], "noisy_past_threshold": [], "failed": [], "newly_failed": []}
     renders_path = os.path.join(args.after, "renders.json")
     if os.path.exists(renders_path):
         after_renders = load(renders_path)["scenes"]
@@ -61,8 +68,8 @@ def main():
                 continue
             renders["compared"] += 1
             if record["meanAbs"] > args.mean_abs or record["ssim"] < args.ssim:
-                renders["past_threshold"].append(
-                    {"scene": name, "meanAbs": round(record["meanAbs"], 3), "ssim": round(record["ssim"], 4)})
+                entry = {"scene": name, "meanAbs": round(record["meanAbs"], 3), "ssim": round(record["ssim"], 4)}
+                renders["noisy_past_threshold" if name in noisy else "past_threshold"].append(entry)
 
     def counts(items):
         ok = sum(1 for r in items.values() if r["ok"])
