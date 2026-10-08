@@ -48,6 +48,8 @@ struct ParticleSystemBrowserView: View {
         }
         .frame(minWidth: 640, idealWidth: 760, minHeight: 480, idealHeight: 600)
         .task { catalog = services.catalog() }
+        .onAppear { services.previews?.beginOpen(.particleSystems) }
+        .onDisappear { services.previews?.endOpen() }
     }
 
     @ViewBuilder private var content: some View {
