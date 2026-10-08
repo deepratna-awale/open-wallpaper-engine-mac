@@ -1,0 +1,191 @@
+import XCTest
+import MetalKit
+@testable import OpenWallpaperEngine
+
+/// An image in a padded `.tex` (the picture in the top-left of a power-of-two texture, as WE's
+/// editor stores most imported pictures) with an effect and a mask, placed on a 1920×1080 display.
+/// The picture is a test pattern: red counts its columns, green its rows, blue marks its bottom
+/// band, and the padding is magenta. The frame must show the scene's rows and columns that the
+/// placement keeps, whatever the texture's allocation.
+final class EffectPaddedImagePlacementTests: XCTestCase {
+    static let image = SIMD2(1000, 601)
+    static let display = SIMD2(1920, 1080)
+    /// Rows from here down are the bottom band (blue).
+    static let bandRow = 571
+
+    struct Variant {
+        var padded: Bool
+        var effect: Bool
+    }
+
+    /// What a display pixel shows: the source column and row its colour encodes, and whether it is
+    /// the bottom band or the padding.
+    struct Sample: CustomStringConvertible {
+        var column: Float
+        var row: Float
+        var band: Bool
+        var padding: Bool
+        var description: String { "col \(column) row \(row)\(band ? " band" : "")\(padding ? " padding" : "")" }
+    }
+
+    /// 2294569625: a 1000×601 image in a 1024×1024 `.tex` with WE's shake on it, its direction map
+    /// a padded mask. The chain ran on the image cut out of its allocation, but its last pass, drawn
+    /// into the scene, still sampled the buffers through the image's share of the allocation, so the
+    /// layer showed only its top-left 976×353 texels, stretched: under Fill the bottom of the picture
+    /// was cut off. Every variant must show the same rows and columns, those the placement keeps.
+    func testPaddedImageWithAnEffectShowsThePlacedRowsAndColumns() throws {
+        _ = try Fixtures.assets()
+        for variant in [Variant(padded: true, effect: true), Variant(padded: true, effect: false),
+                        Variant(padded: false, effect: true), Variant(padded: false, effect: false)] {
+            try assertPlacement(variant, .fill)
+            try assertPlacement(variant, .fit)
+        }
+    }
+
+    /// Fill scales the 1000×601 scene by 1.92 to 1920×1154 and trims 37 px (19 rows) off its top
+    /// and bottom; Fit scales it by 1.797 to 1797×1080 with 61 px bars left and right.
+    private func assertPlacement(_ variant: Variant, _ placement: WallpaperPlacement,
+                                 file: StaticString = #filePath, line: UInt = #line) throws {
+        let frame = try render(variant, placement: placement)
+        let name = "\(placement) padded \(variant.padded) effect \(variant.effect)"
+        let tolerance: Float = 3
+        let fill = placement == .fill
+        // Columns and rows the placement keeps, sampled a few pixels in from the picture's edges.
+        let (left, right) = fill ? (4, 1915) : (66, 1853)
+        let (firstColumn, lastColumn): (Float, Float) = fill ? (2, 997) : (2.5, 996)
+        let (top, bottom) = (4, 1075)
+        let (firstRow, lastRow): (Float, Float) = fill ? (21.3, 579.5) : (2.4, 598.4)
+        func check(_ sample: Sample, column: Float? = nil, row: Float? = nil, band: Bool? = nil, _ what: String) {
+            if let column { XCTAssertEqual(sample.column, column, accuracy: tolerance, "\(name) \(what): \(sample)", file: file, line: line) }
+            if let row { XCTAssertEqual(sample.row, row, accuracy: tolerance, "\(name) \(what): \(sample)", file: file, line: line) }
+            if let band { XCTAssertEqual(sample.band, band, "\(name) \(what): \(sample)", file: file, line: line) }
+            XCTAssertFalse(sample.padding, "\(name) \(what) shows the texture's padding: \(sample)", file: file, line: line)
+        }
+        check(frame(960, 540), column: 500, row: 300, band: false, "centre")
+        check(frame(960, top), column: 500, row: firstRow, band: false, "top")
+        check(frame(960, bottom), column: 500, row: lastRow, band: true, "bottom")
+        check(frame(left, 540), column: firstColumn, row: 300, "left")
+        check(frame(right, 540), column: lastColumn, row: 300, "right")
+    }
+
+    // MARK: - Rendering
+
+    /// Renders the fixture once it has settled and returns a reader of its display pixels.
+    func render(_ variant: Variant, placement: WallpaperPlacement) throws -> (Int, Int) -> Sample {
+        let directory = try Self.writeFixture(variant)
+        defer {
+            Fixtures.removeStoredSettings(for: directory)
+            try? FileManager.default.removeItem(at: directory) // scratch cleanup
+        }
+        let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
+        let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
+        let layer = try XCTUnwrap(content.layers.first)
+        XCTAssertEqual(layer.weEffects.isEmpty, !variant.effect, "effects built")
+        let size = Self.display
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        let view = MTKView(frame: CGRect(x: 0, y: 0, width: size.x, height: size.y), device: device)
+        view.colorPixelFormat = .bgra8Unorm
+        view.framebufferOnly = false
+        view.autoResizeDrawable = false
+        view.drawableSize = CGSize(width: size.x, height: size.y)
+        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "padded-effect"))
+        defer { renderer.releaseContent() }
+        view.isPaused = true
+        renderer.setPlacement(placement)
+        renderer.setContent(content)
+        var bytes = [UInt8](repeating: 0, count: size.x * size.y * 4)
+        var previous: [UInt8] = []
+        var stable = 0
+        let deadline = Date().addingTimeInterval(60)
+        repeat {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+            let passes = renderer.effectPassesEncoded
+            renderer.draw(in: view)
+            renderer.lastCommandBuffer?.waitUntilCompleted()
+            // Until its effect pipelines compile the layer draws plain; only its effects' frame counts.
+            guard renderer.hasContent, !variant.effect || renderer.effectPassesEncoded > passes else { continue }
+            view.currentDrawable?.texture.getBytes(&bytes, bytesPerRow: size.x * 4,
+                                                   from: MTLRegionMake2D(0, 0, size.x, size.y), mipmapLevel: 0)
+            stable = bytes == previous ? stable + 1 : 0
+            previous = bytes
+        } while stable < 3 && Date() < deadline
+        XCTAssertGreaterThanOrEqual(stable, 3, "the frame never settled with its effects drawn")
+        let frame = bytes
+        return { x, y in
+            let i = (y * size.x + x) * 4
+            let (b, g, r) = (Float(frame[i]), Float(frame[i + 1]), Float(frame[i + 2]))
+            return Sample(column: r / 255 * Float(Self.image.x - 1), row: g / 255 * Float(Self.image.y - 1),
+                          band: b > 200 && g > 100, padding: r > 200 && b > 200 && g < 50)
+        }
+    }
+
+    // MARK: - Fixture
+
+    /// The fixture's scene: one autosized image, sized and placed as WE's editor writes it, with
+    /// WE's shake effect whose direction map is a padded mask, on a scene the image's size.
+    static func writeFixture(_ variant: Variant) throws -> URL {
+        let assets = try Fixtures.assets()
+        let directory = FileManager.default.temporaryDirectory.appending(path: "owe-padded-effect-\(UUID().uuidString)")
+        let files = FileManager.default
+        for folder in ["models", "materials/masks"] {
+            try files.createDirectory(at: directory.appending(path: folder), withIntermediateDirectories: true)
+        }
+        func write(_ text: String, _ path: String) throws { try Data(text.utf8).write(to: directory.appending(path: path)) }
+        // WE's editor packs an effect's material and shaders into the wallpaper; copied from WE's assets.
+        for path in ["materials/effects/shake.json", "shaders/effects/shake.frag", "shaders/effects/shake.vert"] {
+            let target = directory.appending(path: path)
+            try files.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try files.copyItem(at: assets.appending(path: "effects/shake/\(path)"), to: target)
+        }
+        try write(#"{"file": "scene.json", "title": "Padded image with an effect", "type": "scene"}"#, "project.json")
+        try write(#"{"autosize": true, "material": "materials/picture.json"}"#, "models/picture.json")
+        try write(#"""
+        {"passes": [{"blending": "translucent", "combos": {"version": 2}, "cullmode": "nocull",
+                     "depthtest": "disabled", "depthwrite": "disabled", "shader": "genericimage2",
+                     "textures": ["picture"]}]}
+        """#, "materials/picture.json")
+        let effects = variant.effect ? #"""
+        "effects": [{"file": "effects/shake/effect.json", "id": 18, "name": "", "visible": true,
+                     "passes": [{"id": 19, "constantshadervalues": {"speed": 0.68, "strength": 0.11},
+                                 "textures": [null, "masks/shake_mask_test", "util/white"]}]}],
+        """# : ""
+        try write("""
+        {"camera": {"center": "0 0 -1", "eye": "0 0 0", "up": "0 1 0"},
+         "general": {"clearcolor": "0.7 0.7 0.7", "clearenabled": true, "bloom": false,
+                     "orthogonalprojection": {"width": \(image.x), "height": \(image.y)}},
+         "objects": [{"alignment": "center", "alpha": 1, "angles": "0 0 0", "color": "1 1 1",
+                      "colorBlendMode": 0, "copybackground": true, \(effects)
+                      "id": 13, "image": "models/picture.json", "ledsource": false, "locktransforms": true,
+                      "name": "picture", "origin": "500 300.5 0", "parallaxDepth": "1 1", "perspective": false,
+                      "scale": "1 1 1", "size": "\(image.x) \(image.y)", "solid": true, "visible": true}]}
+        """, "scene.json")
+        let allocated = variant.padded ? SIMD2(1024, 1024) : image
+        try tex(allocated: allocated, image: image) { x, y in
+            let band: UInt8 = y >= bandRow ? 255 : 0
+            return [UInt8((Float(x) / Float(image.x - 1) * 255).rounded()),
+                    UInt8((Float(y) / Float(image.y - 1) * 255).rounded()), band, 255]
+        }.write(to: directory.appending(path: "materials/picture.tex"))
+        // A neutral direction map (no flow), padded like the wallpaper's: 500×300 in 512×512.
+        let mask = variant.padded ? SIMD2(512, 512) : SIMD2(500, 300)
+        try tex(allocated: mask, image: SIMD2(500, 300)) { _, _ in [128, 128, 0, 255] }
+            .write(to: directory.appending(path: "materials/masks/shake_mask_test.tex"))
+        return directory
+    }
+
+    /// An LZ4-compressed RGBA8888 `.tex`: `pixel` inside `image`, magenta padding around it.
+    static func tex(allocated: SIMD2<Int>, image: SIMD2<Int>, pixel: (Int, Int) -> [UInt8]) -> Data {
+        var bytes = [UInt8](repeating: 0, count: allocated.x * allocated.y * 4)
+        for y in 0..<allocated.y {
+            for x in 0..<allocated.x {
+                let value: [UInt8] = x < image.x && y < image.y ? pixel(x, y) : [255, 0, 255, 255]
+                bytes.replaceSubrange((y * allocated.x + x) * 4..<(y * allocated.x + x) * 4 + 4, with: value)
+            }
+        }
+        let stored = LZ4BlockEncoder.compress(bytes)
+        return TEXWriter.data(TEXWriter.Texture(
+            format: 0, flags: 2, textureWidth: allocated.x, textureHeight: allocated.y,
+            imageWidth: image.x, imageHeight: image.y, colorWord: 0,
+            mipmaps: [TEXWriter.Mipmap(width: allocated.x, height: allocated.y, compression: 1,
+                                       uncompressedSize: bytes.count, stored: Data(stored))]))
+    }
+}
