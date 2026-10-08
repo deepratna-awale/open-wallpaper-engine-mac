@@ -13,11 +13,14 @@ enum SceneRenderResolution {
     /// would be larger is fitted into it rather than failing to allocate every frame.
     static let maximumTextureDimension: Float = 16384
 
-    /// Pixels per scene unit for a scene of `sceneSize` covering `drawableSize` pixels.
-    /// Quantised to eighths so a live window resize doesn't reallocate the target every frame
-    /// (to 64ths below 1, where an eighth is a large step). `floorsAtAuthoredSize` never draws
-    /// below the authored size, unless that exceeds what Metal can allocate.
-    static func pixelsPerUnit(sceneSize: SIMD2<Float>, drawableSize: SIMD2<Float>, floorsAtAuthoredSize: Bool = false) -> Float {
+    /// Pixels per scene unit for a scene of `sceneSize` covering `drawableSize` pixels: exactly,
+    /// so a scene of the drawable's shape gets a target of exactly its size (a desktop window's
+    /// size is fixed). `quantised` (a target that follows a live-resizing window: the editors'
+    /// previews) rounds up to eighths, to 64ths below 1, so a resize doesn't reallocate the
+    /// target every frame. `floorsAtAuthoredSize` never draws below the authored size, unless that
+    /// exceeds what Metal can allocate.
+    static func pixelsPerUnit(sceneSize: SIMD2<Float>, drawableSize: SIMD2<Float>, floorsAtAuthoredSize: Bool = false,
+                              quantised: Bool = false) -> Float {
         let scene = simd_max(sceneSize, SIMD2(1, 1))
         let fitsTexture = maximumTextureDimension / max(scene.x, scene.y)
         guard fitsTexture.isFinite, fitsTexture > 0 else { return 1 }
@@ -27,6 +30,7 @@ enum SceneRenderResolution {
         var wanted = max(drawableSize.x / scene.x, drawableSize.y / scene.y)
         guard wanted.isFinite else { return min(1, fitsTexture) }
         if floorsAtAuthoredSize { wanted = max(wanted, 1) }
+        guard quantised else { return min(max(wanted, minimumPixelsPerUnit), fitsTexture) }
         let quantized = wanted < 1 ? max(minimumPixelsPerUnit, (wanted * 64).rounded(.up) / 64) : (wanted * 8).rounded(.up) / 8
         guard quantized > fitsTexture else { return quantized }
         return fitsTexture >= 1 ? max(1, (fitsTexture * 8).rounded(.down) / 8) : fitsTexture
@@ -52,6 +56,16 @@ enum SceneRenderResolution {
         let longSide = GSRenderResolution.uhd4KLongSide
         guard display.x > 0, display.y > 0 else { return SIMD2(longSide, longSide * 9 / 16) }
         return (display * (longSide / max(display.x, display.y))).rounded(.toNearestOrAwayFromZero)
+    }
+
+    /// The most pixels a scene target has at which Upscaling is skipped: 1920×1200 (2.3 MP). At
+    /// that size MetalFX's fixed cost outweighs drawing a share of the pixels (Snowy Plains at
+    /// 1920×1080: 3.70 ms median with MetalFX at 50 %, 1.38 ms native).
+    static let upscalingMinimumPixels = 1920 * 1200
+
+    /// Whether drawing a share of a `targetSize` target and upscaling it beats drawing it natively.
+    static func upscalingPays(targetSize: SIMD2<Int>) -> Bool {
+        targetSize.x * targetSize.y > upscalingMinimumPixels
     }
 
     /// The pixels per unit the scene pass draws at when it draws `scale` of each side of a target

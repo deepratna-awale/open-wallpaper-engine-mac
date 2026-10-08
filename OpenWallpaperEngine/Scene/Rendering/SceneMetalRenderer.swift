@@ -433,6 +433,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var reportedCollisionTargets = Set<String>()
     /// The user's quality settings (post-processing, reflection, shadows, volumetrics); the view sets them.
     var renderSettings = SceneRenderSettings()
+    /// The target follows a live-resizing window (the editors' previews): its pixels per unit are
+    /// quantised so a resize doesn't reallocate it every frame (`SceneRenderResolution`). Off, the
+    /// target is exactly the size Render Resolution asks for. Set before the first frame.
+    var followsLiveResize = false
+    /// The target size Upscaling was last skipped at (`SceneRenderResolution.upscalingPays`), logged once.
+    private var loggedUpscalingSkip: SIMD2<Int>?
     private var sceneRenderTarget: MTLTexture?
     /// The scene pass's multisampled target with WE's MSAA setting, resolved into `sceneRenderTarget`
     /// at the end of every stretch of the pass (WE's `_rt_FullFrameBufferMultiSampled`).
@@ -1447,7 +1453,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
               layers.contains(where: { $0.layer.text != nil || $0.layer.systemImage != nil }) else { return false }
         let pixelsPerUnit = SceneRenderResolution.pixelsPerUnit(
             sceneSize: sceneSize, drawableSize: SceneViewport.largestDrawable(viewports),
-            floorsAtAuthoredSize: renderSettings.floorsAtAuthoredSize)
+            floorsAtAuthoredSize: renderSettings.floorsAtAuthoredSize, quantised: followsLiveResize)
         return SceneNativeDetailLayers.gainsDetail(scenePixelsPerUnit: Float(sceneTargetSize.x) / max(sceneSize.x, 1),
                                                    outputPixelsPerUnit: pixelsPerUnit)
     }
@@ -1510,7 +1516,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let renderDrawable = SceneRenderResolution.drawableSize(viewports, resolution: renderSettings.renderResolution,
                                                                 sceneSize: sceneSize)
         renderPixelsPerUnit = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable,
-                                                                  floorsAtAuthoredSize: renderSettings.floorsAtAuthoredSize)
+                                                                  floorsAtAuthoredSize: renderSettings.floorsAtAuthoredSize, quantised: followsLiveResize)
         // The target the frame is upscaled to when drawn at the render scale (`GSUpscaling`).
         var upscaledTargetSize: SIMD2<Int>?
         // A scene that is one plain video draws it at exactly the display's density, so a target the
@@ -1519,14 +1525,21 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         if let exact = videoOnlyPixelsPerUnit(renderDrawable) {
             renderPixelsPerUnit = exact
         } else if renderSettings.drawnScale < 1 {
-            upscaledTargetSize = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: renderPixelsPerUnit)
-            renderPixelsPerUnit = SceneRenderResolution.drawnPixelsPerUnit(renderPixelsPerUnit, scale: renderSettings.drawnScale)
+            let target = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: renderPixelsPerUnit)
+            // Upscaling only where it pays: at 1920×1200 or less, drawing natively is faster.
+            if SceneRenderResolution.upscalingPays(targetSize: target) {
+                upscaledTargetSize = target
+                renderPixelsPerUnit = SceneRenderResolution.drawnPixelsPerUnit(renderPixelsPerUnit, scale: renderSettings.drawnScale)
+            } else if loggedUpscalingSkip != target {
+                loggedUpscalingSkip = target
+                OWELog.info(.scene, "Upscaling skipped: a \(target.x)×\(target.y) scene target is drawn natively, which is faster at this size")
+            }
         }
         drawsAtRenderScale = upscaledTargetSize != nil
         // A scene drawn smaller than its authored size, or at the render scale, is below full
         // detail: what its buffers stand for.
         fullDetailScale = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable,
-                                                              floorsAtAuthoredSize: true) / renderPixelsPerUnit
+                                                              floorsAtAuthoredSize: true, quantised: followsLiveResize) / renderPixelsPerUnit
         // A content drawn in HDR draws into RGBA16F (docs/lighting-plan.md §2.6).
         let scenePixelFormat: MTLPixelFormat = postProcess.drawsHDR ? .rgba16Float : destination.pixelFormat
         let sceneTargetSize = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: renderPixelsPerUnit)
@@ -2369,7 +2382,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         case .shared(let viewports):
             let pixelsPerUnit = SceneRenderResolution.pixelsPerUnit(
                 sceneSize: sceneSize, drawableSize: SceneViewport.largestDrawable(viewports),
-                floorsAtAuthoredSize: renderSettings.floorsAtAuthoredSize)
+                floorsAtAuthoredSize: renderSettings.floorsAtAuthoredSize, quantised: followsLiveResize)
             let size = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: pixelsPerUnit)
             plan.sharedSize = size
             outputSize = SIMD2(Float(size.x), Float(size.y))

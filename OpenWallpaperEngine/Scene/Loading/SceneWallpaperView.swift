@@ -24,9 +24,11 @@ struct SceneWallpaperView: NSViewRepresentable {
         let environment = Self.environment(of: wallpaperViewModel)
         let screenId = screenId
         let key = wallpaperViewModel.instanceKey(for: screenId)
+        // Desktop windows have fixed sizes; the previews' windows (Workshop, Wallpaper Editor) resize.
+        let resizes = !wallpaperViewModel.persistsWallpapers
         let lease = SceneWallpaperPresenter.Lease(wallpaperViewModel.sceneInstances, key: key) {
             SceneWallpaperInstance(wallpaper: wallpaper, environment: environment, screenID: screenId,
-                                   properties: key.properties)
+                                   properties: key.properties, followsLiveResize: resizes)
         }
         context.coordinator.show(lease, in: view, screenID: screenId)
         return view

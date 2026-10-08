@@ -104,14 +104,17 @@ final class SceneWallpaperInstance {
 
     /// `screenID` is the display that starts it; its scripts keep their per-display storage there.
     /// `properties` is the store of user properties it runs with (`WallpaperInstanceKey.properties`).
+    /// `followsLiveResize`: it is shown in a resizable window, not on a desktop
+    /// (`SceneMetalRenderer.followsLiveResize`).
     init(wallpaper: WEWallpaper, environment: SceneWallpaperEnvironment, screenID: String,
-         properties: WallpaperPropertyScope = .shared) {
+         properties: WallpaperPropertyScope = .shared, followsLiveResize: Bool = false) {
         key = WallpaperInstanceKey(wallpaper, properties: properties)
         // Loaded on the preparation pool: the displays show the preview until the scene is ready.
         viewModel = SceneWallpaperViewModel(wallpaper: wallpaper, propertyScope: properties, loadsInBackground: true)
         self.environment = environment
         let renderer = SceneMetalRenderer(pixelFormat: .bgra8Unorm, scriptServices: environment.scriptServices,
                                           screenID: screenID)
+        renderer?.followsLiveResize = followsLiveResize
         hasRenderer = renderer != nil
         if renderer == nil {
             OWELog.error(.scene, "\(wallpaper.project.title): Metal renderer unavailable; the wallpaper can't be drawn")
