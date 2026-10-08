@@ -208,6 +208,10 @@ private struct WorkshopBrowserView: View {
     }
 
     @ToolbarContentBuilder private var browserToolbar: some ToolbarContent {
+        // The search field leads the tab's items, as in Installed.
+        if #available(macOS 26, *) {
+            DefaultToolbarItem(kind: .search)
+        }
         ToolbarItemGroup {
             if let base = viewModel.presetBase {
                 Label {

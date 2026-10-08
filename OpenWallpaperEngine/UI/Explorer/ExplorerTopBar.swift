@@ -26,6 +26,11 @@ struct ExplorerTopBar: ViewModifier {
         content
             .searchable(text: Bindable(viewModel.library).searchText, placement: .toolbar, prompt: "Search")
             .toolbar {
+                // The search field leads the tab's items, so the window's Details toggle stays at
+                // the trailing edge (left to itself, macOS 26 puts the search field last).
+                if #available(macOS 26, *) {
+                    DefaultToolbarItem(kind: .search)
+                }
                 ToolbarItem {
                     Menu {
                         Button("Open Wallpaper…", systemImage: "arrow.up.bin.fill") {
