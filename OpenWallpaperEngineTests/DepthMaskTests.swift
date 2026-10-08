@@ -39,7 +39,7 @@ final class DepthMaskTests: XCTestCase {
         XCTAssertEqual(header.mipmaps.count, 1)
         XCTAssertEqual([mipmap.width, mipmap.height, mipmap.uncompressedSize], [width, height, pixels.count])
         XCTAssertEqual(mipmap.compression, 1, "LZ4")
-        let stored = [UInt8](data[mipmap.stored.offset(by: data.startIndex)])
+        let stored = [UInt8](data.subdata(in: mipmap.stored)) // The writer's data starts at index 0.
         var output = [UInt8](repeating: 0, count: pixels.count)
         XCTAssertEqual(compression_decode_buffer(&output, output.count, stored, stored.count, nil, COMPRESSION_LZ4_RAW), pixels.count)
         XCTAssertEqual(output, pixels)
