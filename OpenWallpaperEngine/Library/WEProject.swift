@@ -101,6 +101,9 @@ struct WEProject: Codable, Equatable, Hashable {
     var workshopurl: String?
     var type: String
     var version: Int?
+    /// `"official": true`: one of Wallpaper Engine's own default wallpapers (not a Workshop item),
+    /// whose author is Wallpaper Engine.
+    var official: Bool? = nil
     
     static let invalid = Self(file: "",
                               title: "Error",
@@ -129,7 +132,7 @@ struct WEProject: Codable, Equatable, Hashable {
 extension WEProject {
     private enum DecodingKeys: String, CodingKey {
         case approved, contentrating, description, file, general, preview, tags, title, visibility
-        case workshopid, workshopurl, type, version, category
+        case workshopid, workshopurl, type, version, category, official
     }
 
     /// Decodes as the synthesized decoder would, except that a project without `type` (WE's own
@@ -156,7 +159,8 @@ extension WEProject {
                   type: try container.decodeIfPresent(String.self, forKey: .type)
                       ?? Self.impliedType(file: file,
                                           category: try container.decodeIfPresent(String.self, forKey: .category)),
-                  version: try container.decodeIfPresent(Int.self, forKey: .version))
+                  version: try container.decodeIfPresent(Int.self, forKey: .version),
+                  official: try container.decodeIfPresent(Bool.self, forKey: .official))
     }
 
     /// `file` as the app uses it: a remote wallpaper's http(s) URL as written, an empty one as it
