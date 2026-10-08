@@ -2234,17 +2234,18 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                              effectOutput: MTLTexture?, drawnLastPass: EffectGraphRenderer.DrawnLastPass? = nil,
                              snapshot layerSnapshot: MTLTexture?, frame: BuiltinFrameContext,
                              target: LayerTarget, encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer) {
-        // Effects that started from the frame cut out of the atlas (`effectInput`) made one frame:
-        // the layer draws their output whole.
-        let textureFrame = effectOutput != nil && spriteFrameVersions[entry.layer.id] != nil
-            ? RenderTextureFrame(texture: image.texture, duration: image.duration, uvOrigin: .zero,
+        // Effects that started from the frame cut out of the atlas or the padded texture
+        // (`effectInput`) made one image: the layer draws their output, or their last pass samples
+        // their buffers, whole.
+        let wholeFrame = spriteFrameVersions[entry.layer.id] == nil ? image
+            : RenderTextureFrame(texture: image.texture, duration: image.duration, uvOrigin: .zero,
                                  uvAxisX: SIMD2(1, 0), uvAxisY: SIMD2(0, 1))
-            : image
+        let textureFrame = effectOutput != nil ? wholeFrame : image
         // The effects' last pass draws the layer: through its quad, with its material's blending and
         // depth state (`runEffectsDrawingLastPass`).
         if let drawnLastPass, let effectGraph, let plan = entry.layer.imageMaterial {
             target.depth?.apply(layerRaster(entry), to: encoder)
-            let placement = lastPassPlacement(plan, draw: draw, image: textureFrame, sceneFormat: target.pixelFormat)
+            let placement = lastPassPlacement(plan, draw: draw, image: wholeFrame, sceneFormat: target.pixelFormat)
             let context = effectContext(entry, draw: draw, input: drawnLastPass.input, snapshot: nil, frame: frame)
             let drew = effectGraph.encode(drawnLastPass, into: encoder, scene: placement, context: context,
                                           commandBuffer: commandBuffer)
@@ -3574,7 +3575,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     /// What a layer's effects start from: its image, or for a sprite sheet its current frame cut out
-    /// of the atlas, as WE's base pass draws it into the layer's buffer (`SceneSpriteFrameInputs`).
+    /// of the atlas (for an image in a padded .tex, the image cut out of its allocation), as WE's
+    /// base pass draws it into the layer's buffer (`SceneSpriteFrameInputs`).
     private func effectInput(_ entry: PreparedLayer, image: RenderTextureFrame, commandBuffer: MTLCommandBuffer) -> MTLTexture {
         guard entry.layer.puppet == nil, let cut = spriteFrameInputs.input(image, layerID: entry.layer.id, commandBuffer: commandBuffer)
         else { return image.texture }
