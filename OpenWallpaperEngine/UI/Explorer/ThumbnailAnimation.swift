@@ -2,9 +2,10 @@ import AppKit
 import Combine
 
 /// Animated library previews: a tile plays its Workshop preview GIF. Built in and always on (it
-/// was the Animated Thumbnails plugin). It costs nothing where nobody sees it: the library is
-/// paged, so only the shown page's tiles exist; `GifImage` holds a tile still while its window is
-/// hidden, minimized or covered; and in Low Power Mode a tile plays only under the pointer.
+/// was the Animated Thumbnails plugin). It costs nothing where nobody sees it: the library scrolls
+/// in a lazy grid, and `GifImage` plays a tile only while some of it is in the scroll view's
+/// visible part and its window shows (not hidden, minimized or covered), letting a scrolled-away
+/// tile's decoded frames go; in Low Power Mode a tile plays only under the pointer.
 enum ThumbnailAnimation {
     /// The retired plugin's on/off preference. Ignored, and removed at launch.
     static let retiredPreferenceKey = "TestAnimates"

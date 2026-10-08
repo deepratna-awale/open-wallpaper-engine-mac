@@ -23,10 +23,6 @@ final class InstalledLibraryModel {
         didSet { invalidateSortedMemo() }
     }
 
-    /// current page index number is starting from '1'
-    var currentPage: Int = 1
-    private(set) var installedItemsPerPage = 21
-
     var selectedWallpapers = Set<URL>()
     @ObservationIgnored private var selectionAnchor: URL?
 
@@ -45,7 +41,7 @@ final class InstalledLibraryModel {
         return cache
     }()
     /// `sortedWallpapers` for the current update: the Installed tab reads it many times per redraw
-    /// (grid, page count, pagination, selection). Cleared whenever the search, filters or sorting
+    /// (grid, selection). Cleared whenever the search, filters or sorting
     /// change, when favourites or stored preferences change, when the library changes, and after
     /// the current main-queue turn, so a redraw never sees stale data. Main thread only, like every
     /// reader of the list.
@@ -295,44 +291,14 @@ final class InstalledLibraryModel {
         }
     }
 
-    /// Provide wallpapers information for UI, being filtered by FilterResults and divided in pages
+    /// The Installed list as the grid shows it: filtered by the filters and the search, and
+    /// sorted. The grid scrolls through all of it (lazily), so there are no pages.
     var autoRefreshWallpapers: [WEWallpaper] {
         sortedWallpapers
     }
 
     var displayedWallpapers: [WEWallpaper] {
-        let startIndex = (InstalledPageWindow.clamp(currentPage, total: maxPage) - 1) * installedItemsPerPage
-        guard startIndex < sortedWallpapers.count else { return [] }
-        let endIndex = min(startIndex + installedItemsPerPage, sortedWallpapers.count)
-        return Array(sortedWallpapers[startIndex..<endIndex])
-    }
-
-    var hasNextWallpaperPage: Bool {
-        currentPage < maxPage
-    }
-
-    /// The page size that fills `size` with tiles of side `itemSize`.
-    func updateInstalledItemsPerPage(for size: CGSize, itemSize: Double) {
-        let itemSize = max(itemSize, 1)
-        let spacing: CGFloat = 8
-        let columns = max(1, Int((size.width + spacing) / (itemSize + spacing)))
-        let rows = max(1, Int((size.height + spacing) / (itemSize + spacing)))
-        let pageSize = columns * rows
-        guard installedItemsPerPage != pageSize else { return }
-        installedItemsPerPage = pageSize
-        clampCurrentPage()
-    }
-
-    /// Keeps the current page inside the library after the page count changed (wallpapers
-    /// removed, a search or filter narrowed the list, a new page size).
-    func clampCurrentPage() {
-        let page = InstalledPageWindow.clamp(currentPage, total: maxPage)
-        if page != currentPage { currentPage = page }
-    }
-
-    /// Caculates the maximium possible page index for all wallpapers in your application wallpaper directory
-    var maxPage: Int {
-        max(1, Int(ceil(Double(sortedWallpapers.count) / Double(installedItemsPerPage))))
+        sortedWallpapers
     }
 
     func toggleSelection(for wallpaper: WEWallpaper) {

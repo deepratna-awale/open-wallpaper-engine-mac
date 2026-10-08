@@ -128,6 +128,8 @@ struct GifImage: NSViewRepresentable {
 final class PreviewImageView: NSView {
     let imageLayer = CALayer()
     private var windowObservers: [NSObjectProtocol] = []
+    /// The enclosing scroll view's clip view, watched so a tile scrolled out of sight stops.
+    private var scrollObserver: NSObjectProtocol?
     private var sequence: PreviewFrameSequence?
     private var shownFrame: Int?
     /// `animationURL` isn't an animation (one frame, or unreadable): the still stays.
@@ -189,11 +191,13 @@ final class PreviewImageView: NSView {
 
     deinit {
         windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        if let scrollObserver { NotificationCenter.default.removeObserver(scrollObserver) }
     }
 
     override func layout() {
         super.layout()
         imageLayer.frame = bounds
+        updateAnimation() // Moved or resized into or out of the visible part of its scroll view.
         // A tile that grew past what its frames were decoded for decodes them again.
         if let sequence, sequence.pixelSize.width < min(shownPixelSize.width, sequence.sourceSize.width) - 1,
            sequence.pixelSize.height < min(shownPixelSize.height, sequence.sourceSize.height) - 1 {
@@ -219,14 +223,33 @@ final class PreviewImageView: NSView {
                     })
             }
         }
+        if let scrollObserver { NotificationCenter.default.removeObserver(scrollObserver) }
+        scrollObserver = nil
+        if window != nil, let clip = enclosingScrollView?.contentView {
+            clip.postsBoundsChangedNotifications = true
+            scrollObserver = NotificationCenter.default.addObserver(
+                forName: NSView.boundsDidChangeNotification, object: clip, queue: .main) { [weak self] _ in
+                    MainActor.assumeIsolated { self?.updateAnimation() }
+                }
+        }
         updateAnimation()
     }
 
+    /// Plays only while its window shows and some of it is inside its scroll view's visible part:
+    /// a scrolled-away tile stops and lets its decoded frames go (it keeps the frame it shows, and
+    /// decodes again, off the main thread, if it scrolls back).
     private func updateAnimation() {
         let plays = wantsAnimation && animationURL != nil && !isStillOnly && ThumbnailAnimation.windowShows(window)
+            && !visibleRect.isEmpty
         guard plays != isAnimating else { return }
         isAnimating = plays
-        if plays { PreviewAnimator.shared.add(self) } else { PreviewAnimator.shared.remove(self) }
+        if plays {
+            PreviewAnimator.shared.add(self)
+        } else {
+            PreviewAnimator.shared.remove(self)
+            sequence = nil
+            shownFrame = nil
+        }
     }
 
     /// From `PreviewAnimator`: shows the frame for `time` once it is decoded.
