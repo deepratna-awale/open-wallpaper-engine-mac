@@ -29,6 +29,8 @@ final class WallpaperTransitionPlayer {
     private let startTime: CFTimeInterval
     private var frameInFlight = false
     private var onFinish: ((WallpaperTransitionPlayer) -> Void)?
+    /// Its frame and main-thread measurements, at the Verbose log level only.
+    private let metrics: WallpaperTransitionMetrics?
 
     static let surfaceCount = 3
     /// WE's lead-in (wallpaper64's transition window): progress stays 0 for this long after the
@@ -63,6 +65,8 @@ final class WallpaperTransitionPlayer {
         self.queue = queue
         self.seed = seed
         self.overlays = overlays
+        let refresh = overlays.first?.window?.screen?.minimumRefreshInterval ?? 1.0 / 60
+        metrics = WallpaperTransitionMetrics.isEnabled ? WallpaperTransitionMetrics(refreshInterval: refresh) : nil
         guard let commandBuffer = queue.makeCommandBuffer() else { throw Failure.commandBuffer }
         commandBuffer.label = "Transition outgoing"
         self.outgoing = try renderer.prepareOutgoing(outgoing, for: kind, commandBuffer: commandBuffer)
@@ -70,6 +74,7 @@ final class WallpaperTransitionPlayer {
         for _ in 0..<Self.surfaceCount {
             surfaces.append(try Self.makeSurface(pixelSize, device: renderer.device))
         }
+        metrics?.start()
     }
 
     /// Draws the first frame (progress 0: the outgoing picture) and waits for it, so the overlays
@@ -114,6 +119,7 @@ final class WallpaperTransitionPlayer {
                         guard let self, !self.isFinished else { return }
                         self.frameInFlight = false
                         self.present(index)
+                        self.metrics?.recordPresent(at: CACurrentMediaTime())
                     }
                 }
             }
@@ -144,6 +150,9 @@ final class WallpaperTransitionPlayer {
 
     /// Ends it: the overlays leave the windows and the frames and the outgoing picture are freed.
     func stop() {
+        if let metrics, !isFinished {
+            OWELog.debug(.perf, "Transition \(kind) on \(target): \(metrics.finish())")
+        }
         displayLink?.invalidate()
         displayLink = nil
         ticker = nil
