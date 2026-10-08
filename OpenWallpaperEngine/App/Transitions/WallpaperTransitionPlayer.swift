@@ -32,7 +32,6 @@ final class WallpaperTransitionPlayer {
     /// Its frame and main-thread measurements, at the Verbose log level only.
     private let metrics: WallpaperTransitionMetrics?
 
-    static let surfaceCount = 3
     /// WE's lead-in (wallpaper64's transition window): progress stays 0 for this long after the
     /// transition was asked for, the window's and the shader's setup included, then runs over the
     /// duration: `max(0, elapsed - 0.1) / duration`.
@@ -40,12 +39,10 @@ final class WallpaperTransitionPlayer {
 
     /// Errors setting one up: the change then applies without it.
     enum Failure: Error, CustomStringConvertible {
-        case surface(SIMD2<Int>)
         case commandBuffer
 
         var description: String {
             switch self {
-            case .surface(let size): return "can't allocate a \(size.x)×\(size.y) frame"
             case .commandBuffer: return "no command buffer"
             }
         }
@@ -71,8 +68,8 @@ final class WallpaperTransitionPlayer {
         commandBuffer.label = "Transition outgoing"
         self.outgoing = try renderer.prepareOutgoing(outgoing, for: kind, commandBuffer: commandBuffer)
         commandBuffer.commit()
-        for _ in 0..<Self.surfaceCount {
-            surfaces.append(try Self.makeSurface(pixelSize, device: renderer.device))
+        for _ in 0..<WallpaperTransitionSurface.count {
+            surfaces.append(try WallpaperTransitionSurface.make(pixelSize, device: renderer.device))
         }
         metrics?.start()
     }
@@ -163,38 +160,5 @@ final class WallpaperTransitionPlayer {
         let finish = onFinish
         onFinish = nil
         finish?(self)
-    }
-
-    /// A BGRA IOSurface of `size` in sRGB and a render target over it.
-    static func makeSurface(_ size: SIMD2<Int>, device: MTLDevice) throws -> (surface: IOSurface, texture: MTLTexture) {
-        let properties: [IOSurfacePropertyKey: Any] = [
-            .width: size.x, .height: size.y, .bytesPerElement: 4,
-            .pixelFormat: kCVPixelFormatType_32BGRA,
-        ]
-        guard let surface = IOSurface(properties: properties) else { throw Failure.surface(size) }
-        if let space = CGColorSpace(name: CGColorSpace.sRGB)?.copyPropertyList() {
-            IOSurfaceSetValue(surface, kIOSurfaceColorSpace, space)
-        }
-        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: size.x,
-                                                                  height: size.y, mipmapped: false)
-        descriptor.usage = [.renderTarget, .shaderRead]
-        descriptor.storageMode = device.hasUnifiedMemory ? .shared : .managed
-        guard let texture = device.makeTexture(descriptor: descriptor, iosurface: surface, plane: 0) else {
-            throw Failure.surface(size)
-        }
-        return (surface, texture)
-    }
-}
-
-/// The display link's target: calls the player without keeping it alive.
-final class WallpaperTransitionTicker: NSObject {
-    private let action: @MainActor (CADisplayLink) -> Void
-
-    init(_ action: @escaping @MainActor (CADisplayLink) -> Void) {
-        self.action = action
-    }
-
-    @objc func tick(_ link: CADisplayLink) {
-        MainActor.assumeIsolated { action(link) }
     }
 }

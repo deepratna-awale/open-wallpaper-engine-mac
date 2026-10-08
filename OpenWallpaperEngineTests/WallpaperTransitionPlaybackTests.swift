@@ -136,7 +136,7 @@ final class WallpaperTransitionPlaybackTests: XCTestCase {
                                                        overlays: [overlay])
             try player.showFirstFrame()
             XCTAssertNotNil(overlay.layer?.contents, "the first frame shows before the change")
-            XCTAssertEqual(player.surfaces.count, WallpaperTransitionPlayer.surfaceCount)
+            XCTAssertEqual(player.surfaces.count, WallpaperTransitionSurface.count)
             frame = player.surfaces.first?.texture
             player.run { finished.append($0) }
             player.stop()

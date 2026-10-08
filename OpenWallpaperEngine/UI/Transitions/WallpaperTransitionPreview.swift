@@ -109,8 +109,8 @@ final class WallpaperTransitionPreviewView: NSView {
         do {
             renderer = try WallpaperTransitionRenderer(device: device)
             queue = device.makeCommandQueue()
-            surfaces = try (0..<WallpaperTransitionPlayer.surfaceCount).map { _ in
-                try WallpaperTransitionPlayer.makeSurface(Self.pixelSize, device: device)
+            surfaces = try (0..<WallpaperTransitionSurface.count).map { _ in
+                try WallpaperTransitionSurface.make(Self.pixelSize, device: device)
             }
             return device
         } catch {
