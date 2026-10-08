@@ -74,18 +74,27 @@ public struct DepthMapEditorServices {
     public var texture: @MainActor (String) -> CGImage?
     /// Opens Settings › Plugins.
     public var openPlugins: @MainActor () -> Void
+    /// An effect's texture slots (`effects/<name>/effect.json`), for the masks a depth map can fill.
+    public var effectSchema: @MainActor (String) -> EffectSchema?
+    /// A mask's `.tex` file as WE's editor writes one: `width` × `height` grey values, rows top
+    /// to bottom (the app's `TEXWriter.effectMask`).
+    public var encodeMask: (_ pixels: [UInt8], _ width: Int, _ height: Int) -> Data
 
     public init(generator: DepthMapGenerator, assetStore: EditorAssetStore,
                 source: @escaping @MainActor (DepthMapSourceRequest) async throws -> DepthMapSource,
                 prepareEffect: @escaping @MainActor () throws -> Void,
                 texture: @escaping @MainActor (String) -> CGImage?,
-                openPlugins: @escaping @MainActor () -> Void) {
+                openPlugins: @escaping @MainActor () -> Void,
+                effectSchema: @escaping @MainActor (String) -> EffectSchema? = { _ in nil },
+                encodeMask: @escaping (_ pixels: [UInt8], _ width: Int, _ height: Int) -> Data) {
         self.generator = generator
         self.assetStore = assetStore
         self.source = source
         self.prepareEffect = prepareEffect
         self.texture = texture
         self.openPlugins = openPlugins
+        self.effectSchema = effectSchema
+        self.encodeMask = encodeMask
     }
 }
 

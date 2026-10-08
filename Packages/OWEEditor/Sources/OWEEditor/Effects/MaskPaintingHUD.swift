@@ -64,7 +64,7 @@ struct MaskPaintingHUD: View {
         guard let store = services.assetStore, let png = painting.pngData else { return }
         do {
             let path = try store.saveMask(png, title: painting.effectTitle)
-            session.setEffectTexture(path, slot: painting.slot.slot, effect: painting.effectKey, of: painting.layer,
+            session.setEffectTexture(path, slot: painting.slot.slot, pass: painting.slot.pass, effect: painting.effectKey, of: painting.layer,
                                      combo: painting.slot.combo, actionName: L("Paint Mask"))
         } catch {
             tools.problem = L("The mask couldn’t be saved: \(error.localizedDescription)")

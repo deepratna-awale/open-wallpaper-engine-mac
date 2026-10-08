@@ -52,7 +52,7 @@ public enum ControlSceneEdits {
         .init(name: "set_effect_visible", parameters: "layer, effect, visible", summary: "Turns the effect on or off."),
         .init(name: "set_effect_constant", parameters: "layer, effect, constant, value", summary: "Sets a parameter (a number, or \"x y z\" for a vector or colour), checked against the effect's parameters."),
         .init(name: "set_effect_combo", parameters: "layer, effect, combo, value", summary: "Sets a combo (a whole number from its options)."),
-        .init(name: "set_effect_texture", parameters: "layer, effect, slot, texture", summary: "Sets a texture slot (a texture path such as masks/…; empty for the shader's default)."),
+        .init(name: "set_effect_texture", parameters: "layer, effect, slot, pass?, texture", summary: "Sets a texture slot (a texture path such as masks/…; empty for the shader's default); pass picks the effect pass of a slot a later pass samples (effects_catalog lists each slot's pass)."),
         .init(name: "bind_effect_constant", parameters: "layer, effect, constant, property", summary: "Binds a parameter to a user property (empty property frees it)."),
         // Particles
         .init(name: "add_particle_system", parameters: "system, name?", summary: "Adds a system from particles_catalog (id system:… or preset:…/…). Returns its layer id."),

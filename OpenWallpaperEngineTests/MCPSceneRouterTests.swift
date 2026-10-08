@@ -318,6 +318,10 @@ final class MCPSceneRouterTests: XCTestCase {
         let refused = await error("depth_generate", ["wallpaper_id": "fixture", "layer": 4])
         XCTAssertEqual(refused?.code, .unavailable)
         XCTAssertTrue(refused?.message.contains("Settings › Plugins") ?? false)
+        let mask = await error("use_depth_map_as_mask", ["wallpaper_id": "fixture", "layer": 4, "effect": "0"])
+        XCTAssertEqual(mask?.code, .unavailable)
+        let noLayer = await error("use_depth_map_as_mask", ["wallpaper_id": "fixture", "effect": "0"])
+        XCTAssertEqual(noLayer?.code, .invalidParams)
     }
 
     // MARK: Someone else's edits

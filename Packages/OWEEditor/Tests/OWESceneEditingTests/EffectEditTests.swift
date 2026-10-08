@@ -208,4 +208,43 @@ final class EffectEditTests: XCTestCase {
         XCTAssertTrue(EffectSchema.requirementsHold(combo) { _ in 1 })
         XCTAssertFalse(EffectSchema.requirementsHold(combo) { _ in 0 })
     }
+
+    /// A mask a later pass samples is named in that pass's `textures`, as WE's scenes name Blur's
+    /// (`passes[3].textures[1]`), with no combo written: the bound texture switches it on.
+    func testAMaskOfALaterPassGoesInThatPass() throws {
+        let scene = Data("""
+        {"objects": [{"id": 1, "image": "models/a.json", "effects": [
+          {"file": "effects/blur/effect.json"},
+          {"file": "effects/tint/effect.json", "passes": [{"textures": [null, "masks/tint_mask_old"]}]}
+        ]}]}
+        """.utf8)
+        let undoManager = UndoManager()
+        undoManager.groupsByEvent = false
+        let session = SceneEditSession(outline: try SceneOutline(sceneData: scene), undoManager: undoManager)
+        session.setEffectTexture("masks/blur_combine_mask_abc", slot: 1, pass: 3, effect: "0", of: 1, combo: "MASK", actionName: "Mask")
+        XCTAssertEqual(session.effectTexture(1, pass: 3, effect: "0", of: 1), "masks/blur_combine_mask_abc")
+        XCTAssertNil(session.effectTexture(1, effect: "0", of: 1), "not the first pass's slot")
+        session.setEffectTexture("masks/tint_mask_new", slot: 1, effect: "1", of: 1, combo: "MASK", actionName: "Mask")
+
+        let applied = try XCTUnwrap(JSONSerialization.jsonObject(with: session.overlay.applied(to: scene)) as? [String: Any])
+        let effects = try XCTUnwrap(((applied["objects"] as? [[String: Any]])?.first?["effects"]) as? [[String: Any]])
+        let blurPasses = try XCTUnwrap(effects[0]["passes"] as? [[String: Any]])
+        XCTAssertEqual(blurPasses.count, 4)
+        let combine = try XCTUnwrap(blurPasses[3]["textures"] as? [Any])
+        XCTAssertTrue(combine[0] is NSNull)
+        XCTAssertEqual(combine[1] as? String, "masks/blur_combine_mask_abc")
+        XCTAssertNil(blurPasses[0]["combos"], "a later pass's combo follows its texture")
+        let tintPass = try XCTUnwrap((effects[1]["passes"] as? [[String: Any]])?.first)
+        XCTAssertEqual((tintPass["textures"] as? [Any])?[1] as? String, "masks/tint_mask_new")
+        XCTAssertNil(tintPass["combos"], "a mask replacing an authored one leaves the combo as authored")
+
+        // Read back from the applied scene, as the next session sees it.
+        let reread = SceneEditSession(outline: try SceneOutline(sceneData: try session.overlay.applied(to: scene)))
+        XCTAssertEqual(reread.effectTexture(1, pass: 3, effect: "0", of: 1), "masks/blur_combine_mask_abc")
+
+        session.undo()
+        XCTAssertEqual(session.effectTexture(1, effect: "1", of: 1), "masks/tint_mask_old", "the replaced mask comes back")
+        session.undo()
+        XCTAssertNil(session.effectTexture(1, pass: 3, effect: "0", of: 1))
+    }
 }
