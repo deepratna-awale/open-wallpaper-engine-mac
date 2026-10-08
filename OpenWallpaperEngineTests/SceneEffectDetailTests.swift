@@ -34,23 +34,25 @@ final class SceneEffectDetailTests: XCTestCase {
 
     // MARK: - Scene target
 
-    func testMatchingTheDisplayDrawsALargerSceneAtTheDisplaysSize() {
+    func testALargerSceneIsDrawnAtTheDisplaysSize() {
         let tsunade = SIMD2<Float>(3840, 2987), fullHD = SIMD2<Float>(1920, 1080)
-        XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: tsunade, drawableSize: fullHD), 1,
-                       "as WE: never below the authored size")
-        XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: tsunade, drawableSize: fullHD, matchDisplay: true), 0.5,
+        XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: tsunade, drawableSize: fullHD, floorsAtAuthoredSize: true), 1,
+                       "floored as WE's captures: never below the authored size")
+        XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: tsunade, drawableSize: fullHD), 0.5,
                        "the display's size, rounded up to a 64th")
-        XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(1920, 1080), drawableSize: SIMD2(3840, 2160),
-                                                           matchDisplay: true), 2, "a smaller scene still gets the display's density")
+        XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(1920, 1080), drawableSize: SIMD2(3840, 2160)), 2,
+                       "a smaller scene still gets the display's density")
+        let narrow = SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(100_000, 100), drawableSize: SIMD2(10, 10))
+        XCTAssertLessThanOrEqual(narrow, SceneRenderResolution.maximumTextureDimension / 100_000, "the texture limit still rules")
         XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(100_000, 100), drawableSize: SIMD2(10, 10),
-                                                           matchDisplay: true),
-                       SceneRenderResolution.maximumTextureDimension / 100_000, "the texture limit still rules")
+                                                           floorsAtAuthoredSize: true),
+                       SceneRenderResolution.maximumTextureDimension / 100_000, "a floored scene is fitted to the texture limit")
     }
 
     func testSettingsReachTheRenderer() {
         var settings = GlobalSettings()
-        XCTAssertEqual(settings.sceneDetail, .matchDisplay, "the app draws no more than the display shows by default")
-        XCTAssertEqual(settings.renderResolution, .display)
+        XCTAssertEqual(settings.sceneDetail, .matchDisplay, "effects no larger than on screen by default")
+        XCTAssertEqual(settings.renderResolution, .yourDisplay)
         settings.sceneDetail = .full
         settings.renderResolution = .full
         let render = SceneRenderSettings(settings)

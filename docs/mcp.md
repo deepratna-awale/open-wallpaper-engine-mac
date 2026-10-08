@@ -432,8 +432,8 @@ return the playlist as `list_playlists` writes it, plus `change_when_video_ends`
 | `anti_aliasing` | `none`, `msaa_x2`, `msaa_x4`, `msaa_x8` | Anti-aliasing |
 | `post_processing` | `disabled`, `enabled`, `ultra`, `display_hdr` (only with an HDR display) | Post-Processing |
 | `texture_resolution` | `high_quality`, `high_performance`, `automatic` | Texture Resolution |
-| `scene_detail` | `match_display`, `full` | Scene Detail |
-| `render_resolution` | `display`, `retina`, `full` | Render Resolution |
+| `scene_detail` | `match_display`, `full` | Effect Detail |
+| `render_resolution` | `your_display`, `uhd4k`, `full` (the earlier `display` and `retina` set `your_display`, `4k` sets `uhd4k`) | Render Resolution |
 | `upscaling` | `off`, `metalfx` | Upscaling |
 | `render_scale` | `50`, `67`, `75` | Render Scale |
 | `shadows`, `volumetrics` | `disabled`, `low`, `medium`, `high`, `ultra` | Shadows, Volumetrics |

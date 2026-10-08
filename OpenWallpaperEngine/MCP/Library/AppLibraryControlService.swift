@@ -144,7 +144,7 @@ final class AppLibraryControlService: LibraryControlService {
         case "post_processing": return .string(settings.postProcessing == .displayhdr ? "display_hdr" : settings.postProcessing.rawValue)
         case "texture_resolution": return .string(Self.snakeCase(settings.textureResolution.rawValue))
         case "scene_detail": return .string(Self.snakeCase(settings.sceneDetail.rawValue))
-        case "render_resolution": return .string(settings.renderResolution.rawValue)
+        case "render_resolution": return .string(Self.name(settings.renderResolution))
         case "upscaling": return .string(settings.upscaling.rawValue.lowercased())
         case "render_scale": return .string(String(settings.renderScale.rawValue.dropFirst("percent".count)))
         case "shadows": return .string(settings.shadows.rawValue)
@@ -197,7 +197,7 @@ final class AppLibraryControlService: LibraryControlService {
             viewModel.settings.postProcessing = quality
         case "texture_resolution": viewModel.settings.textureResolution = try Self.choice(GSTextureResolutionQuality.self, text)
         case "scene_detail": viewModel.settings.sceneDetail = try Self.choice(GSSceneDetail.self, text)
-        case "render_resolution": viewModel.settings.renderResolution = try Self.choice(GSRenderResolution.self, text)
+        case "render_resolution": viewModel.settings.renderResolution = try Self.renderResolution(text)
         case "upscaling": viewModel.settings.upscaling = try Self.choice(GSUpscaling.self, text)
         case "render_scale": viewModel.settings.renderScale = try Self.choice(GSRenderScale.self, "percent" + text)
         case "shadows": viewModel.settings.shadows = try Self.choice(GSLightingQuality.self, text)
@@ -262,6 +262,23 @@ final class AppLibraryControlService: LibraryControlService {
     }
 
     private static func name(_ playback: GSPlayback) -> String { snakeCase(playback.rawValue) }
+
+    /// `render_resolution`'s names: `your_display`, `uhd4k`, `full`.
+    static func name(_ resolution: GSRenderResolution) -> String {
+        switch resolution {
+        case .yourDisplay: return "your_display"
+        case .uhd4K: return "uhd4k"
+        case .full: return "full"
+        }
+    }
+
+    /// A `render_resolution` name (`LibrarySetting` maps the earlier ones to these).
+    static func renderResolution(_ text: String) throws -> GSRenderResolution {
+        guard let resolution = GSRenderResolution.allCases.first(where: { name($0) == text }) else {
+            throw ControlError(.invalidParams, "\"\(text)\" isn't one of render_resolution's values.")
+        }
+        return resolution
+    }
 
     private static func playback(_ text: String) throws -> GSPlayback { try choice(GSPlayback.self, text) }
 

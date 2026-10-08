@@ -28,7 +28,7 @@ struct IsolatedSceneView: NSViewRepresentable {
         let onContent = onContent
         let lease = SceneWallpaperPresenter.Lease(session.instances, key: key) {
             let instance = SceneWallpaperInstance(wallpaper: wallpaper, environment: environment, screenID: Self.screenID,
-                                                  properties: key.properties)
+                                                  properties: key.properties, followsLiveResize: true)
             instance.presentation = presentation
             instance.onContent = onContent
             return instance

@@ -115,7 +115,7 @@ struct PerformancePage: SettingsPage {
                     }
                     .fixedSize()
                 }
-                .help("Sets the quality settings below, the frame rate and the Quality ↔ Efficiency slider in one step. Low also turns on MetalFX upscaling from half size.")
+                .help("Sets the quality settings below, the frame rate and the Quality ↔ Efficiency slider in one step.")
                 Picker(selection: $viewModel.settings.antiAliasing) {
                     Text("None").tag(GSAntiAliasingQuality.none)
                     Text("MSAA x2").tag(GSAntiAliasingQuality.msaa_x2)
@@ -153,25 +153,33 @@ struct PerformancePage: SettingsPage {
                 }
                 .changedFromDefault(viewModel.isChanged(\.textureResolution))
                 .help("Wallpaper Engine's setting: High Performance loads textures at half their size and runs effects at half size too; Automatic does so for a scene with more than 3.9 times the display's pixels (a 4K scene on a 1080p display), and for a 3D scene on a display smaller than 1080p.")
-                Picker("Scene Detail", selection: $viewModel.settings.sceneDetail) {
+                Picker("Effect Detail", selection: $viewModel.settings.sceneDetail) {
                     Text("Match Display").tag(GSSceneDetail.matchDisplay)
                     Text("Full (Wallpaper Engine)").tag(GSSceneDetail.full)
                 }
                 .changedFromDefault(viewModel.isChanged(\.sceneDetail))
-                .help("Match Display draws no more detail than the display shows: a scene larger than the display is drawn at the display's size, and each layer's effects at the size the layer appears on screen. Full draws every effect at its texture's full size, as Wallpaper Engine does.")
+                .help("Match Display runs each layer's effects at no more than the size the layer appears on screen. Full runs them at the layer's full texture size, as Wallpaper Engine does. Render Resolution sets the size of the scene itself.")
                 Picker("Render Resolution", selection: $viewModel.settings.renderResolution) {
-                    Text(verbatim: renderSizes.sizes.displayLabel).tag(GSRenderResolution.display)
-                    Text(verbatim: renderSizes.sizes.retinaLabel).tag(GSRenderResolution.retina)
-                    Text(verbatim: RenderResolutionSizes.fullLabel).tag(GSRenderResolution.full)
+                    ForEach(GSRenderResolution.allCases) { resolution in
+                        Text(verbatim: renderSizes.sizes.label(resolution)).tag(resolution)
+                    }
                 }
                 .changedFromDefault(viewModel.isChanged(\.renderResolution))
-                .help("Display, the default, renders at the display's size in points (a quarter of the pixels on Retina) and scales up; web wallpapers then draw at standard resolution too. Retina renders the native pixels one for one, and Full renders the wallpaper's authored size scaled to fit.")
+                .help(Text(verbatim: renderSizes.sizes.summary(viewModel.settings.renderResolution)))
+                Text(verbatim: renderSizes.sizes.summary(viewModel.settings.renderResolution))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 Picker("Upscaling", selection: $viewModel.settings.upscaling) {
                     Text("Off", comment: "Upscaling: none").tag(GSUpscaling.off)
                     Text("MetalFX").tag(GSUpscaling.metalFX)
                 }
                 .changedFromDefault(viewModel.isChanged(\.upscaling))
                 .help("MetalFX draws the scene at the render scale and scales it up to full size, for less work. Where MetalFX isn't available, or for HDR, the frame is scaled smoothly instead.")
+                if viewModel.settings.upscaling != .off {
+                    Text("Not used at 1920×1200 or smaller, where drawing natively is faster.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 if viewModel.settings.upscaling != .off {
                     Picker("Render Scale", selection: $viewModel.settings.renderScale) {
                         ForEach(GSRenderScale.allCases) { scale in
@@ -245,7 +253,7 @@ struct PerformancePage: SettingsPage {
                 .help("Lets scenes draw their reflection effects, such as water or glass. Off skips that work in scenes that use them.")
             } header: {
                 Label("Quality", systemImage: "memorychip.fill")
-                Text("These settings are for scene wallpapers. FPS and Render Resolution apply to web wallpapers too.")
+                Text("These settings are for scene wallpapers. FPS applies to web wallpapers too.")
             }
             .settingsAnchor(SettingsAnchor.quality)
         }

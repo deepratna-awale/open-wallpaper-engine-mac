@@ -51,27 +51,34 @@ class GlobalSettingsViewModel: ObservableObject {
     /// bar tint and lock-screen pictures, the screen saver) start following the app's wallpaper.
     /// Only Open Wallpaper Engine's own settings do; the Wallpaper Editor's process reads them.
     init(followsLaunch: Bool = true) {
+        let migration = GlobalSettingsMigration.current()
         let loaded: GlobalSettings = Self.loadSettings(from: UserDefaults.app.data(forKey: Self.defaultsKey),
-                                                       backupDirectory: AppStorageLocation.current.supportDirectory)
+                                                       backupDirectory: AppStorageLocation.current.supportDirectory,
+                                                       migration: migration)
         self.settings = loaded
         languageChange = LanguageChange(atLaunch: loaded.language)
         OWELog.apply(logLevel: settings.logLevel)
 
         // Add observers
         guard followsLaunch else { return }
+        // A carried-over Render Resolution is saved at once, so it is carried over once, for the
+        // display the app first ran on.
+        if migration.migrated { save() }
         self.didFinishLaunchingNotificationCancellable =
         NotificationCenter.default.publisher(for: NSApplication.didFinishLaunchingNotification)
             .sink { [weak self] _ in self?.didFinishLaunchingNotification() }
     }
 
-    /// The stored settings. `GlobalSettings` reads each key on its own, so this only fails when
+    /// The stored settings, an earlier Render Resolution carried over for `migration`'s display.
+    /// `GlobalSettings` reads each key on its own, so this only fails when
     /// the data isn't a settings object at all. The defaults are used then, and as the next save
     /// replaces the stored data, it is first copied to `settings.corrupt-<date>.json` in
     /// `backupDirectory`.
-    nonisolated static func loadSettings(from data: Data?, backupDirectory: URL, now: Date = Date()) -> GlobalSettings {
+    nonisolated static func loadSettings(from data: Data?, backupDirectory: URL, now: Date = Date(),
+                                         migration: GlobalSettingsMigration? = nil) -> GlobalSettings {
         guard let data else { return GlobalSettings() }
         do {
-            return try JSONDecoder().decode(GlobalSettings.self, from: data)
+            return try (migration?.decoder() ?? JSONDecoder()).decode(GlobalSettings.self, from: data)
         } catch {
             backUpUnreadableSettings(data, error: error, backupDirectory: backupDirectory, now: now)
             return GlobalSettings()
@@ -119,15 +126,14 @@ class GlobalSettingsViewModel: ObservableObject {
         
         self.didChangeScreenSaverCancellable =
         self.$settings
-            .map { [$0.screenSaver as AnyHashable, $0.renderResolution] }
+            .map(\.screenSaver)
             .removeDuplicates()
             .dropFirst()
             .sink { [weak self] _ in
                 // `$settings` publishes before the property changes: the plugin reads the new
-                // settings (on or off, Render Resolution) once they are set.
+                // setting once it is set.
                 DispatchQueue.main.async {
                     guard let enabled = self?.settings.screenSaver else { return }
-                    // The loop follows Render Resolution, so a change re-renders it.
                     AppDelegate.shared.screenSaver.update(enabled: enabled,
                                                           wallpaper: AppDelegate.shared.wallpaperViewModel.currentWallpaper)
                 }

@@ -186,7 +186,7 @@ final class ScreenSaverWebLoopRecorder: NSObject, WKNavigationDelegate {
         window.orderBack(nil)
         self.webView = webView
         self.window = window
-        // Pixels at the points' size: the page draws at a scale of 1, as with Render Resolution "Display".
+        // Pixels at the points' size: the page draws at a scale of 1, as at standard resolution.
         WebPageScale.apply(standardResolution: pixelSize.x <= pointSize.x, to: webView)
 
         let page = wallpaper.wallpaperDirectory.appending(path: wallpaper.project.file)

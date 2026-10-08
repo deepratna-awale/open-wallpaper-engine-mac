@@ -65,11 +65,12 @@ struct SettingsTransfer: Codable, Equatable {
     }
 
     /// Reads an exported file. Unknown preferences are dropped; settings missing from an older
-    /// file keep their defaults (`GlobalSettings.init(from:)`).
-    static func decode(_ data: Data) throws -> SettingsTransfer {
+    /// file keep their defaults (`GlobalSettings.init(from:)`); an earlier Render Resolution is
+    /// carried over for `migration`'s display.
+    static func decode(_ data: Data, migration: GlobalSettingsMigration? = nil) throws -> SettingsTransfer {
         let transfer: SettingsTransfer
         do {
-            transfer = try JSONDecoder().decode(SettingsTransfer.self, from: data)
+            transfer = try (migration?.decoder() ?? JSONDecoder()).decode(SettingsTransfer.self, from: data)
         } catch {
             throw TransferError.notSettingsFile
         }

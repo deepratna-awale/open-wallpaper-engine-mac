@@ -34,13 +34,6 @@ struct SceneViewport {
     static func largestDrawable(_ viewports: [SceneViewport]) -> SIMD2<Float> {
         viewports.reduce(SIMD2<Float>(repeating: 0)) { simd_max($0, $1.drawableSize) }
     }
-
-    /// The largest view of `viewports` in points (its drawable where the view has no size yet).
-    static func largestPointSize(_ viewports: [SceneViewport]) -> SIMD2<Float> {
-        viewports.reduce(SIMD2<Float>(repeating: 0)) {
-            simd_max($0, $1.pointSize.x > 0 && $1.pointSize.y > 0 ? $1.pointSize : $1.drawableSize)
-        }
-    }
 }
 
 extension SceneViewport {

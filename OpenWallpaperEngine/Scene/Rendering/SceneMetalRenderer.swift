@@ -104,9 +104,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private lazy var effectGraph = EffectGraphRenderer(device: device, pipelineArchiveDirectory: pipelineArchiveDirectory)
     /// Where the effect pipeline archive lives (`EffectGraphRenderer`); nil keeps none.
     private let pipelineArchiveDirectory: URL?
-    /// How much larger full detail would draw this frame's scene target (1 unless the scene is
-    /// matched to a display smaller than it, `GSSceneDetail.matchDisplay`): the size effects on
-    /// scene regions and text, and the bloom, stand for.
+    /// How much larger full detail (at least the authored size) would draw this frame's scene
+    /// target: 1 unless Render Resolution draws the scene smaller than authored or Upscaling draws
+    /// it at the render scale. The size effects on scene regions, and the bloom, stand for.
     private var fullDetailScale: Float = 1
     /// Scales a scene drawn at the render scale up to its target (`GSUpscaling`).
     private lazy var upscaler = SceneUpscaler(device: device)
@@ -433,6 +433,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var reportedCollisionTargets = Set<String>()
     /// The user's quality settings (post-processing, reflection, shadows, volumetrics); the view sets them.
     var renderSettings = SceneRenderSettings()
+    /// The target follows a live-resizing window (the editors' previews): its pixels per unit are
+    /// quantised so a resize doesn't reallocate it every frame (`SceneRenderResolution`). Off, the
+    /// target is exactly the size Render Resolution asks for. Set before the first frame.
+    var followsLiveResize = false
+    /// The target size Upscaling was last skipped at (`SceneRenderResolution.upscalingPays`), logged once.
+    private var loggedUpscalingSkip: SIMD2<Int>?
     private var sceneRenderTarget: MTLTexture?
     /// The scene pass's multisampled target with WE's MSAA setting, resolved into `sceneRenderTarget`
     /// at the end of every stretch of the pass (WE's `_rt_FullFrameBufferMultiSampled`).
@@ -1447,7 +1453,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
               layers.contains(where: { $0.layer.text != nil || $0.layer.systemImage != nil }) else { return false }
         let pixelsPerUnit = SceneRenderResolution.pixelsPerUnit(
             sceneSize: sceneSize, drawableSize: SceneViewport.largestDrawable(viewports),
-            matchDisplay: renderSettings.sceneDetail == .matchDisplay)
+            floorsAtAuthoredSize: renderSettings.floorsAtAuthoredSize, quantised: followsLiveResize)
         return SceneNativeDetailLayers.gainsDetail(scenePixelsPerUnit: Float(sceneTargetSize.x) / max(sceneSize.x, 1),
                                                    outputPixelsPerUnit: pixelsPerUnit)
     }
@@ -1510,7 +1516,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let renderDrawable = SceneRenderResolution.drawableSize(viewports, resolution: renderSettings.renderResolution,
                                                                 sceneSize: sceneSize)
         renderPixelsPerUnit = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable,
-                                                                  matchDisplay: renderSettings.sceneDetail == .matchDisplay)
+                                                                  floorsAtAuthoredSize: renderSettings.floorsAtAuthoredSize, quantised: followsLiveResize)
         // The target the frame is upscaled to when drawn at the render scale (`GSUpscaling`).
         var upscaledTargetSize: SIMD2<Int>?
         // A scene that is one plain video draws it at exactly the display's density, so a target the
@@ -1519,12 +1525,21 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         if let exact = videoOnlyPixelsPerUnit(renderDrawable) {
             renderPixelsPerUnit = exact
         } else if renderSettings.drawnScale < 1 {
-            upscaledTargetSize = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: renderPixelsPerUnit)
-            renderPixelsPerUnit = SceneRenderResolution.drawnPixelsPerUnit(renderPixelsPerUnit, scale: renderSettings.drawnScale)
+            let target = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: renderPixelsPerUnit)
+            // Upscaling only where it pays: at 1920×1200 or less, drawing natively is faster.
+            if SceneRenderResolution.upscalingPays(targetSize: target) {
+                upscaledTargetSize = target
+                renderPixelsPerUnit = SceneRenderResolution.drawnPixelsPerUnit(renderPixelsPerUnit, scale: renderSettings.drawnScale)
+            } else if loggedUpscalingSkip != target {
+                loggedUpscalingSkip = target
+                OWELog.info(.scene, "Upscaling skipped: a \(target.x)×\(target.y) scene target is drawn natively, which is faster at this size")
+            }
         }
         drawsAtRenderScale = upscaledTargetSize != nil
-        // A scene matched to a smaller display is drawn below full detail: what its buffers stand for.
-        fullDetailScale = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable) / renderPixelsPerUnit
+        // A scene drawn smaller than its authored size, or at the render scale, is below full
+        // detail: what its buffers stand for.
+        fullDetailScale = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable,
+                                                              floorsAtAuthoredSize: true, quantised: followsLiveResize) / renderPixelsPerUnit
         // A content drawn in HDR draws into RGBA16F (docs/lighting-plan.md §2.6).
         let scenePixelFormat: MTLPixelFormat = postProcess.drawsHDR ? .rgba16Float : destination.pixelFormat
         let sceneTargetSize = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: renderPixelsPerUnit)
@@ -2367,7 +2382,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         case .shared(let viewports):
             let pixelsPerUnit = SceneRenderResolution.pixelsPerUnit(
                 sceneSize: sceneSize, drawableSize: SceneViewport.largestDrawable(viewports),
-                matchDisplay: renderSettings.sceneDetail == .matchDisplay)
+                floorsAtAuthoredSize: renderSettings.floorsAtAuthoredSize, quantised: followsLiveResize)
             let size = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: pixelsPerUnit)
             plan.sharedSize = size
             outputSize = SIMD2(Float(size.x), Float(size.y))
@@ -2732,18 +2747,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func submitScriptFrame(viewports: [SceneViewport],
                                    cursor: (position: SIMD2<Float>, onDisplay: Bool), leftDown: Bool,
                                    animationEvents: [SceneAnimationEvent]) {
-        // The screen the scene is drawn for: its points under Render Resolution "Display".
-        let toScreen = scriptScreenScale(viewports[0])
-        let drawableSize = viewports[0].drawableSize * toScreen
+        let drawableSize = viewports[0].drawableSize
         var input = SceneScriptFrameInput()
         input.deltaTime = clock.delta
         timelines.describe(into: &input, events: animationEvents)
         input.environment = SceneScriptEngineEnvironment(
             screenResolution: SIMD2(Double(drawableSize.x), Double(drawableSize.y)),
             canvasSize: SIMD2(Double(sceneSize.x), Double(sceneSize.y)), placement: placement,
-            pixelsPerPoint: Double(drawablePixelsPerPoint * toScreen), isScreensaver: rendersScreenSaver)
+            pixelsPerPoint: Double(drawablePixelsPerPoint), isScreensaver: rendersScreenSaver)
         input.environment.zoom = frameZoom
-        input.input = SceneScriptInput(cursorScreenPosition: cursorScreenPixels(viewports) * Double(toScreen),
+        input.input = SceneScriptInput(cursorScreenPosition: cursorScreenPixels(viewports),
                                        cursorLeftDown: leftDown)
         // The cursor tracks the drawn plane; scripts and their hit tests see WE's world under it.
         input.cursorScenePosition = frameZoom.worldPoint(drawn: cursor.position)
@@ -2800,13 +2813,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// The cursor in display pixels from the top-left of the wallpaper's view on the display it is
     /// on (`input.cursorScreenPosition`); where it was last seen while it is on none of them.
-    /// Screen pixels the scripts see per drawable pixel: 1 / pixels per point when the scene is
-    /// drawn at the display's points (`GSRenderResolution.display`), else 1.
-    private func scriptScreenScale(_ viewport: SceneViewport) -> Float {
-        guard renderSettings.renderResolution == .display, viewport.pixelsPerPoint > 0 else { return 1 }
-        return 1 / viewport.pixelsPerPoint
-    }
-
     private func cursorScreenPixels(_ viewports: [SceneViewport]) -> SIMD2<Double> {
         if let fixedPointer, let drawable = viewports.first?.drawableSize {
             // The fixed pointer on the drawn scene, from the drawable's top-left.
@@ -3631,15 +3637,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         if entry.layer.puppet != nil { context.inputVersion = puppets?.albedoVersion(entry.layer.id) ?? 0 }
         // A sprite sheet's frames are cut into the same texture as it plays.
         if let version = spriteFrameVersions[entry.layer.id] { context.inputVersion = version }
+        // Effect Detail: Match Display runs a layer's effects at most at its size on screen.
         if renderSettings.sceneDetail == .matchDisplay {
             context.footprint = effectFootprint(entry, draw: draw, input: input)
-            // Scene regions are drawn at the scene target's density, below full detail when the
-            // target is matched to a smaller display; solid fills and text with effects are at
-            // WE's own buffer size.
-            if context.footprint == nil, fullDetailScale > 1, entry.layer.solidFill == nil, entry.layer.text == nil {
-                let standIn = (SIMD2(Float(input.width), Float(input.height)) * fullDetailScale).rounded(.toNearestOrAwayFromZero)
-                context.inputStandInSize = SIMD2(Int(standIn.x), Int(standIn.y))
-            }
+        }
+        // Scene regions are drawn at the scene target's density, below full detail when the target
+        // is smaller than the scene's authored size; solid fills and text with effects are at WE's
+        // own buffer size.
+        if context.footprint == nil, fullDetailScale > 1, entry.layer.solidFill == nil, entry.layer.text == nil {
+            let standIn = (SIMD2(Float(input.width), Float(input.height)) * fullDetailScale).rounded(.toNearestOrAwayFromZero)
+            context.inputStandInSize = SIMD2(Int(standIn.x), Int(standIn.y))
         }
         return context
     }

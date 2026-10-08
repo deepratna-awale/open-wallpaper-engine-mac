@@ -2,9 +2,11 @@ import XCTest
 import simd
 @testable import OpenWallpaperEngine
 
-/// Under Render Resolution "Display" the scene is drawn at the display's points and scaled up to its
-/// backing pixels; text and the media artwork whose pixels nothing after them reads or covers are
-/// drawn over the output after that instead (`SceneNativeDetailLayers`), at its backing pixels.
+/// Under Render Resolution Full on a 2× display the fixtures' scenes (authored at the display's
+/// points) are drawn at their authored size and scaled up to the backing pixels, as the earlier
+/// points-based "Display" drew them; text and the media artwork whose pixels nothing after them
+/// reads or covers are drawn over the output after that instead (`SceneNativeDetailLayers`), at
+/// its backing pixels. Your Display draws everything at the backing pixels ("Retina" below).
 final class SceneNativeDetailLayersTests: XCTestCase {
     private typealias Rect = SceneSnapshotTracker.Rect
     private typealias Item = SceneNativeDetailLayers.Item
@@ -234,9 +236,9 @@ final class SceneNativeDetailLayersTests: XCTestCase {
 
     func testTextOnTopAtDisplayIsAsSharpAsRetinaAndTheRestIsDisplay() throws {
         _ = try Fixtures.assets()
-        let display = try render("layered.json", .display)
-        let retina = try render("layered.json", .retina)
-        let plain = try render("layered.json", .display, promotes: false)
+        let display = try render("layered.json", .full)
+        let retina = try render("layered.json", .yourDisplay)
+        let plain = try render("layered.json", .full, promotes: false)
         try SceneRegionTransformTests.write(display, name: "native-detail-display")
         XCTAssertEqual(display.promoted, 1, "the text is drawn at the backing pixels")
         XCTAssertEqual(plain.promoted, 0)
@@ -265,24 +267,24 @@ final class SceneNativeDetailLayersTests: XCTestCase {
 
     func testTextWithALayerAboveItStaysInTheScenePass() throws {
         _ = try Fixtures.assets()
-        let display = try render("covered.json", .display)
+        let display = try render("covered.json", .full)
         XCTAssertEqual(display.promoted, 0)
-        let plain = try render("covered.json", .display, promotes: false)
+        let plain = try render("covered.json", .full, promotes: false)
         XCTAssertEqual(display.width, plain.width, "nothing promoted: the frame is the plain Display one")
         XCTAssertEqual(display.pixels, plain.pixels)
     }
 
     func testTheAlbumArtIsPromoted() throws {
         _ = try Fixtures.assets()
-        let display = try render("album-art.json", .display)
+        let display = try render("album-art.json", .full)
         XCTAssertEqual(display.promoted, 1)
         // Without a media session it shows its own (white) image, where Retina draws it.
-        let retina = try render("album-art.json", .retina)
+        let retina = try render("album-art.json", .yourDisplay)
         XCTAssertEqual(display.width, retina.width)
         let art = compareWithRetina(display, retina, in: artBox)
         XCTAssertLessThan(art.differing, art.compared / 100, "\(art.differing) of \(art.compared) differ from Retina")
         // The rest (the turned square's edges among it) is the upscaled scene, as without promotion.
-        let plain = try render("album-art.json", .display, promotes: false)
+        let plain = try render("album-art.json", .full, promotes: false)
         let elsewhere = compareWithPlain(display, plain, awayFrom: artBox)
         XCTAssertGreaterThan(elsewhere.compared, 50_000)
         XCTAssertEqual(elsewhere.differing, 0)
@@ -290,7 +292,7 @@ final class SceneNativeDetailLayersTests: XCTestCase {
 
     func testRetinaPromotesNothing() throws {
         _ = try Fixtures.assets()
-        XCTAssertEqual(try render("layered.json", .retina).promoted, 0)
+        XCTAssertEqual(try render("layered.json", .yourDisplay).promoted, 0)
     }
 
     // MARK: - Frames through the post-process
@@ -301,10 +303,10 @@ final class SceneNativeDetailLayersTests: XCTestCase {
     func testTextUnderBloomIsSharpAndStillGlows() throws {
         _ = try Fixtures.assets()
         let folder = "Scenes/text-native-post"
-        let display = try render("bloom.json", .display, in: folder)
-        let plain = try render("bloom.json", .display, promotes: false, in: folder)
-        let retina = try render("bloom.json", .retina, in: folder)
-        let unbloomed = try render("bloom.json", .display, promotes: false, in: folder, postProcessing: .disabled)
+        let display = try render("bloom.json", .full, in: folder)
+        let plain = try render("bloom.json", .full, promotes: false, in: folder)
+        let retina = try render("bloom.json", .yourDisplay, in: folder)
+        let unbloomed = try render("bloom.json", .full, promotes: false, in: folder, postProcessing: .disabled)
         try SceneRegionTransformTests.write(display, name: "native-detail-bloom")
         XCTAssertEqual(display.promoted, 1, "bloom keeps the text out of the scene pass's upscale")
         XCTAssertEqual(display.width, retina.width)
@@ -358,9 +360,9 @@ final class SceneNativeDetailLayersTests: XCTestCase {
     func testTextThroughColourCorrectionIsAsSharpAsRetina() throws {
         _ = try Fixtures.assets()
         let folder = "Scenes/text-native-cc"
-        let display = try render("scene.json", .display, in: folder)
-        let retina = try render("scene.json", .retina, in: folder)
-        let plain = try render("scene.json", .display, promotes: false, in: folder)
+        let display = try render("scene.json", .full, in: folder)
+        let retina = try render("scene.json", .yourDisplay, in: folder)
+        let plain = try render("scene.json", .full, promotes: false, in: folder)
         try SceneRegionTransformTests.write(display, name: "native-detail-cc")
         XCTAssertEqual(display.promoted, 1, "colour correction keeps the text out of the scene pass's upscale")
         XCTAssertEqual(display.width, retina.width)

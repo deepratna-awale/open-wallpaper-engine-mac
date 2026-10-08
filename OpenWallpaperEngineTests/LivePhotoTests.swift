@@ -183,9 +183,11 @@ final class LivePhotoTests: XCTestCase {
         var settings = GlobalSettings()
         settings.sceneDetail = .matchDisplay
         settings.upscaling = GSUpscaling.allCases.last ?? .off
-        settings.renderResolution = .display
+        settings.renderResolution = .uhd4K
         let render = LivePhotoRenderer.renderSettings(from: settings)
         XCTAssertEqual(render.sceneDetail, .full)
+        XCTAssertEqual(render.renderResolution, .yourDisplay, "sized for the export's own drawable")
+        XCTAssertTrue(render.floorsAtAuthoredSize, "never below the scene's authored size")
         XCTAssertEqual(render.upscaling, .off)
         XCTAssertEqual(render.textureReduction, 1)
         XCTAssertEqual(render.drawnScale, 1)
