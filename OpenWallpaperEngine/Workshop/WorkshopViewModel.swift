@@ -33,6 +33,9 @@ class WorkshopViewModel: ObservableObject {
     let thumbnails = WorkshopThumbnailLoader()
     /// Brings the Workshop browser to the front: "Related Wallpapers" from another tab opens there.
     var showsBrowser: () -> Void = {}
+    /// The menus' Set as Wallpaper and Set as Screen Saver (`attach(setAs:)`); nil until the app attaches it.
+    private(set) var setAs: WorkshopSetAsFlow?
+    private var setAsCancellable: AnyCancellable?
     private let api = WorkshopAPIService()
     /// One QueryFiles page: search text, filter, sort, page, page size.
     typealias PageSearch = (String, WorkshopQuery, WorkshopSortOrder, Int, Int) async throws -> [WorkshopItem]
@@ -148,6 +151,13 @@ class WorkshopViewModel: ObservableObject {
             subscriptions: item.subscriptions,
             fileSize: item.fileSize
         )
+    }
+
+    /// The cards redraw as the flow's runs move on.
+    @MainActor
+    func attach(setAs flow: WorkshopSetAsFlow) {
+        setAs = flow
+        setAsCancellable = flow.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
     }
 
     func showAuthor(_ steamId: String) {

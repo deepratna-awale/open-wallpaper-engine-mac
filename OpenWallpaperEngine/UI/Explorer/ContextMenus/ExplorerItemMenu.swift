@@ -29,6 +29,31 @@ struct ExplorerItemMenu: SubviewOfContentView {
     var body: some View {
         Group {
             Section {
+                Button {
+                    wallpaperViewModel.inspectAndApply(hoveredWallpaper)
+                } label: {
+                    Label {
+                        Text("Set as Wallpaper", comment: "Context menu: applies the wallpaper to the selected displays")
+                    } icon: {
+                        Image(systemName: "checkmark.circle")
+                    }
+                }
+                .disabled(!WallpaperSetAsRules.canSetWallpaper(hoveredWallpaper))
+                Button {
+                    AppDelegate.shared.showSceneInspector(for: hoveredWallpaper,
+                                                          scopes: wallpaperViewModel.editedPropertyScopes(of: hoveredWallpaper),
+                                                          mode: .screenSaver)
+                } label: {
+                    Label {
+                        Text("Set as Screen Saver", comment: "Context menu: sets the wallpaper as the screen saver (Installed: opens the Scene Editor (Live)'s Screen Saver mode)")
+                    } icon: {
+                        Image(systemName: "play.rectangle")
+                    }
+                }
+                .disabled(!WallpaperSetAsRules.canSetScreenSaver(hoveredWallpaper))
+            }
+
+            Section {
                 Menu("Add to Playlist") {
                     if wallpaperViewModel.playlists.isEmpty {
                         Text("Create a playlist first")
