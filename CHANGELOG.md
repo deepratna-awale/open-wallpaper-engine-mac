@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The Wallpaper Editor names bound user properties by their labels everywhere**: the script and binding menu's help and its Unbind item, and the particle panel's instance override, now say “Clock Location” rather than `clocklocation`, as the layer and effect panels already did.
 - **Wallpaper Engine's default wallpapers show Wallpaper Engine as their author**, as in Wallpaper Engine, instead of Unknown Author: they aren't Workshop items, and their project marks them official.
 - **Wallpapers without a content rating show in Installed.** Wallpapers made before Wallpaper Engine had ratings were left out of the Installed list unless the Workshop's tags were cached; they count as Everyone, as the Details panel shows them.
 - **GIF wallpapers fill the screen.** A wallpaper made with Wallpaper Engine's GIF template (such as Aesthetic City) was drawn at its GIF's size in the middle of a 1920×1080 canvas instead of filling the display: its scene takes its size from the GIF, as in Wallpaper Engine.
