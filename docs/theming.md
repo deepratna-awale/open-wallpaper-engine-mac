@@ -40,7 +40,7 @@ pane and of SkyLight on macOS 27; nothing was written while finding them.
 
 | Checkbox | What it changes | Values |
 |---|---|---|
-| Menu Bar | The top of each wallpaper window and of the desktop picture OWE sets: the menu bar's strip is filled with the colour. No preference. | — |
+| Menu Bar | The top of each wallpaper window and of the desktop picture OWE sets: the colour fades out downwards from the menu bar. No preference. | — |
 | Accent Color | `AppleAccentColor` (Appearance › Color) | integer: −1 Graphite, 0 Red, 1 Orange, 2 Yellow, 3 Green, 4 Blue, 5 Purple, 6 Pink; absent is Multicolor |
 | | `AppleHighlightColor` (Appearance › Text highlight color) | `"r g b Other"`, a custom colour |
 | Tinted Icon Color | `AppleIconAppearanceTheme` (Appearance › Icon & widget style) | `Tinted` + the current variant (`Automatic`, `Light`, `Dark`); the other styles are `Regular…` and `Clear…` |
@@ -52,13 +52,15 @@ pane and of SkyLight on macOS 27; nothing was written while finding them.
 
 macOS has no API for the menu bar's colour. On macOS 26 and later the bar is transparent with no
 tint of its own: it shows whatever is directly behind it, which is OWE's wallpaper window (it covers
-the desktop picture). So the strip is drawn twice:
+the desktop picture). The strip is the colour fading out downwards: full at the top, gone at three
+menu bar heights (`MenuBarStrip.fadeStops`), so the bar stays mostly solid behind its text and the
+colour dissolves into the wallpaper. It is drawn twice:
 
-- **The wallpaper window.** Each display's wallpaper window gets a plain layer of the colour over
-  its top, as tall as the display's menu bar (`WallpaperWindowContentView.menuBarStrip`). The
+- **The wallpaper window.** Each display's wallpaper window gets a gradient layer over its top
+  (`WallpaperWindowContentView.menuBarStrip`). The
   compositor draws it; nothing renders again. This is what the menu bar shows.
 - **The desktop picture**, which shows where no wallpaper window does (and on the lock screen). Each
-  desktop picture OWE sets gets its top strip filled with the colour: the menu bar's height on that
+  desktop picture OWE sets gets the same fade drawn over its top, based on the menu bar's height on that
   display (the frame's top minus the visible frame's top, or the safe area's top inset when taller),
   mapped into the picture as macOS's default "Fill Screen" shows it (`MenuBarStrip`). It is drawn by
   one hook in OWE's per-display desktop pictures (`DesktopPictureSync`): over each display's
