@@ -14,6 +14,7 @@ final class WallpaperTransitionMetrics: @unchecked Sendable {
     private let lock = NSLock()
     // Guarded by `lock`.
     private var presents: [CFTimeInterval] = []
+    private var submitted = 0
     private var stalls: [CFTimeInterval] = []
     private var probe: DispatchSourceTimer?
     private var probeOutstanding = false
@@ -50,17 +51,27 @@ final class WallpaperTransitionMetrics: @unchecked Sendable {
         }
     }
 
+    /// A frame was handed to the GPU to be presented; it may not reach the screen (a covered window).
+    func recordSubmitted() {
+        lock.withLock {
+            if !finished { submitted += 1 }
+        }
+    }
+
     /// Stops measuring and returns what it measured.
     func finish() -> WallpaperTransitionFrameSummary {
-        let (presents, stalls, probe) = lock.withLock { () -> ([CFTimeInterval], [CFTimeInterval], DispatchSourceTimer?) in
+        let (presents, submitted, stalls, probe) = lock.withLock {
+            () -> ([CFTimeInterval], Int, [CFTimeInterval], DispatchSourceTimer?) in
             finished = true
             let probe = self.probe
             self.probe = nil
-            return (self.presents, self.stalls, probe)
+            return (self.presents, self.submitted, self.stalls, probe)
         }
         probe?.cancel()
-        return WallpaperTransitionFrameSummary(presents: presents.sorted(), stalls: stalls,
-                                               refreshInterval: refreshInterval)
+        var summary = WallpaperTransitionFrameSummary(presents: presents.sorted(), stalls: stalls,
+                                                      refreshInterval: refreshInterval)
+        summary.submitted = submitted
+        return summary
     }
 
     /// Posts one probe to the main queue unless one is still waiting, and records how late it ran

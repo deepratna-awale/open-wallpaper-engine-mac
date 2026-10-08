@@ -3,6 +3,8 @@ import QuartzCore
 /// What `WallpaperTransitionMetrics` measured for one transition.
 struct WallpaperTransitionFrameSummary: Equatable, CustomStringConvertible {
     var frames: Int
+    /// Frames handed to the GPU to present, when that is counted apart from `frames`.
+    var submitted: Int?
     /// From the first presented frame to the last.
     var span: CFTimeInterval
     var p50: CFTimeInterval
@@ -19,6 +21,7 @@ struct WallpaperTransitionFrameSummary: Equatable, CustomStringConvertible {
     init(presents: [CFTimeInterval], stalls: [CFTimeInterval], refreshInterval: CFTimeInterval) {
         let intervals = zip(presents.dropFirst(), presents).map { $0 - $1 }.sorted()
         frames = presents.count
+        submitted = nil
         span = (presents.last ?? 0) - (presents.first ?? 0)
         p50 = Self.percentile(intervals, 0.5)
         p95 = Self.percentile(intervals, 0.95)
@@ -39,7 +42,8 @@ struct WallpaperTransitionFrameSummary: Equatable, CustomStringConvertible {
 
     var description: String {
         func ms(_ value: CFTimeInterval) -> String { String(format: "%.1f", value * 1000) }
-        return "\(frames) frames over \(ms(span)) ms, interval p50 \(ms(p50)) p95 \(ms(p95)) max \(ms(maxInterval)) ms, "
+        let handed = submitted.map { " (\($0) submitted)" } ?? ""
+        return "\(frames) frames\(handed) over \(ms(span)) ms, interval p50 \(ms(p50)) p95 \(ms(p95)) max \(ms(maxInterval)) ms, "
             + "\(dropped) dropped (refresh \(ms(refreshInterval)) ms); main thread: \(stallCount) stalls, "
             + "max \(ms(stallMax)) ms, total \(ms(stallTotal)) ms"
     }
