@@ -605,7 +605,7 @@ struct WorkshopItemCard: View {
                 .controlSize(.small)
                 .help("Preparing preview")
         } else {
-        let state = viewModel.downloadState(for: item)
+        let state = viewModel.setAs?.downloadState(for: item.id) ?? viewModel.downloadState(for: item)
         switch state {
         case .downloading(let status):
             ProgressView()
@@ -689,6 +689,31 @@ private struct WorkshopItemMenu: View {
     @ObservedObject var viewModel: WorkshopViewModel
 
     var body: some View {
+        if let setAs = viewModel.setAs {
+            Button {
+                setAs.run(.wallpaper, for: item)
+            } label: {
+                Label {
+                    Text("Set as Wallpaper", comment: "Context menu: applies the wallpaper to the selected displays")
+                } icon: {
+                    Image(systemName: "checkmark.circle")
+                }
+            }
+            .disabled(!setAs.canRun(.wallpaper, for: item))
+            Button {
+                setAs.run(.screenSaver, for: item)
+            } label: {
+                Label {
+                    Text("Set as Screen Saver", comment: "Context menu: sets the wallpaper as the screen saver (Installed: opens the Scene Editor (Live)'s Screen Saver mode)")
+                } icon: {
+                    Image(systemName: "play.rectangle")
+                }
+            }
+            .disabled(!setAs.canRun(.screenSaver, for: item))
+
+            Divider()
+        }
+
         Button {
             viewModel.download(item: item)
         } label: {
