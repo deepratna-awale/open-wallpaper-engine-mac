@@ -120,6 +120,7 @@ public struct SceneOutline: Sendable {
                                       key: effect[SceneEditOverlay.effectKeyMarker] as? String)
         let passes = effect["passes"] as? [[String: Any]] ?? []
         result.passCount = passes.count
+        result.passTextures = passes.map { pass in (pass["textures"] as? [Any] ?? []).map { SceneJSONValue(any: $0) ?? .null } }
         if let pass = passes.first {
             let constants = pass["constantshadervalues"] as? [String: Any] ?? pass["constants"] as? [String: Any] ?? [:]
             for (key, value) in constants { result.constants[key] = SceneJSONValue(any: value) }

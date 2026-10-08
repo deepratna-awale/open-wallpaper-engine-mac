@@ -53,7 +53,9 @@ enum DepthMapPlugin {
                 try resources.prepareEffect(DepthMapPlugin.effectEntry)
             },
             texture: { resources.texture($0) },
-            openPlugins: openPlugins)
+            openPlugins: openPlugins,
+            effectSchema: { resources.effectSchema($0) },
+            encodeMask: { TEXWriter.effectMask($0, width: $1, height: $2) })
     }
 
     /// A still image layer's own texture as it is; anything else drawn (`DepthMapSceneCapture`).

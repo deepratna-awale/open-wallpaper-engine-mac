@@ -108,10 +108,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// target: 1 unless Render Resolution draws the scene smaller than authored or Upscaling draws
     /// it at the render scale. The size effects on scene regions, and the bloom, stand for.
     private var fullDetailScale: Float = 1
-    /// Scales a scene drawn at the render scale up to its target (`GSUpscaling`).
-    private lazy var upscaler = SceneUpscaler(device: device)
-    /// This frame is drawn below its target size and scaled up after the scene pass, so it
-    /// can't be drawn straight into the output.
+    /// This frame is drawn below its target size (`GSUpscaling`) and the final composite scales
+    /// it up, so it can't be drawn straight into the output.
     private var drawsAtRenderScale = false
     /// Bumped for every prelit image an effect chain starts from (`runEffects`).
     private var prelitVersion: UInt64 = 0
@@ -441,8 +439,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// quantised so a resize doesn't reallocate it every frame (`SceneRenderResolution`). Off, the
     /// target is exactly the size Render Resolution asks for. Set before the first frame.
     var followsLiveResize = false
-    /// The target size Upscaling was last skipped at (`SceneRenderResolution.upscalingPays`), logged once.
-    private var loggedUpscalingSkip: SIMD2<Int>?
     private var sceneRenderTarget: MTLTexture?
     /// The scene pass's multisampled target with WE's MSAA setting, resolved into `sceneRenderTarget`
     /// at the end of every stretch of the pass (WE's `_rt_FullFrameBufferMultiSampled`).
@@ -1523,25 +1519,17 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                                                 sceneSize: sceneSize)
         renderPixelsPerUnit = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable,
                                                                   floorsAtAuthoredSize: renderSettings.floorsAtAuthoredSize, quantised: followsLiveResize)
-        // The target the frame is upscaled to when drawn at the render scale (`GSUpscaling`).
-        var upscaledTargetSize: SIMD2<Int>?
+        // Drawn at the render scale (`GSUpscaling`): the composite scales the frame up bilinearly.
+        drawsAtRenderScale = false
         // A scene that is one plain video draws it at exactly the display's density, so a target the
         // size of the drawable lets the video draw straight into it in one pass (S2), not into a
         // larger target resampled again by the composite.
         if let exact = videoOnlyPixelsPerUnit(renderDrawable) {
             renderPixelsPerUnit = exact
         } else if renderSettings.drawnScale < 1 {
-            let target = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: renderPixelsPerUnit)
-            // Upscaling only where it pays: at 1920×1200 or less, drawing natively is faster.
-            if SceneRenderResolution.upscalingPays(targetSize: target) {
-                upscaledTargetSize = target
-                renderPixelsPerUnit = SceneRenderResolution.drawnPixelsPerUnit(renderPixelsPerUnit, scale: renderSettings.drawnScale)
-            } else if loggedUpscalingSkip != target {
-                loggedUpscalingSkip = target
-                OWELog.info(.scene, "Upscaling skipped: a \(target.x)×\(target.y) scene target is drawn natively, which is faster at this size")
-            }
+            drawsAtRenderScale = true
+            renderPixelsPerUnit = SceneRenderResolution.drawnPixelsPerUnit(renderPixelsPerUnit, scale: renderSettings.drawnScale)
         }
-        drawsAtRenderScale = upscaledTargetSize != nil
         // A scene drawn smaller than its authored size, or at the render scale, is below full
         // detail: what its buffers stand for.
         fullDetailScale = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable,
@@ -2072,25 +2060,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         stageContext.shadowAtlas = frameShadowAtlas
         for stage in frameStages { stage.encode(stageContext) }
         // The drawable (F1: taken now, after the frame's work is encoded) or the shared frame.
-        // Drawn at the render scale: scaled up to the full target before the post-process.
-        var postScene: MTLTexture = sceneTexture
-        var postFullDetailScale = fullDetailScale
-        if let upscaledTargetSize, !targets.sceneIsOutput,
-           upscaler.path(settings: renderSettings, format: sceneTexture.pixelFormat) == .metalFX,
-           let upscaled = upscaler.upscale(sceneTexture, to: upscaledTargetSize, commandBuffer: commandBuffer) {
-            postScene = upscaled
-            postFullDetailScale = fullDetailScale * Float(sceneTexture.width) / Float(max(upscaled.width, 1))
-        }
         // A shared frame that kept its own target for detail layers none of which was promoted is
         // the scene after all, as it would have been (`FrameTargets.deferredPassThrough`).
-        let passesThroughNow = targets.deferredPassThrough && native.layers.isEmpty && postScene === sceneTexture
+        let passesThroughNow = targets.deferredPassThrough && native.layers.isEmpty
         if passesThroughNow {
             sharedFrameTarget = nil
             compositesSkipped += 1
         }
         let (descriptor, drawable) = targets.output
             ?? (passesThroughNow ? Self.passThroughOutput(onto: sceneTexture)
-                : lateOutput(output, matching: postScene, size: native.sharedSize))
+                : lateOutput(output, matching: sceneTexture, size: native.sharedSize))
         if let descriptor {
             // What the post-process composites onto: the drawable, or the shared frame.
             let outputTexture = descriptor.colorAttachments[0].texture
@@ -2100,18 +2079,18 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             let placement = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: realDrawableSize,
                                          placement: destination.placement)
             let postFrame = ScenePostProcess.Frame(
-                scene: postScene, output: descriptor, commandBuffer: commandBuffer,
+                scene: sceneTexture, output: descriptor, commandBuffer: commandBuffer,
                 placement: placement,
                 bloom: liveBloom(), extras: appExtras(), settings: renderSettings,
                 colorCorrection: colorCorrection(),
-                effects: effectGraph, builtins: effectFrame, values: timelines.values, fullDetailScale: postFullDetailScale,
+                effects: effectGraph, builtins: effectFrame, values: timelines.values, fullDetailScale: fullDetailScale,
                 display: displayOutput, sceneIsOutput: targets.sceneIsOutput || passesThroughNow)
             // The promoted layers' patch, over the scene as the composite upscales it without them,
             // made before the post-process (the camera fade may draw onto the scene target).
             var patch: (texture: MTLTexture, rect: SceneSnapshotTracker.Rect)?
             if native.mode == .patch, !native.layers.isEmpty, let rect = native.patch, let outputTexture,
                outputTexture.width == native.outputSize.x, outputTexture.height == native.outputSize.y,
-               let base = native.feedsScene ? detailBase : Optional(postScene),
+               let base = native.feedsScene ? detailBase : Optional(sceneTexture),
                let texture = detailPatch(native, rect: rect, base: base, baseTexels: native.feedsScene ? native.baseTexels : nil,
                                          sceneTexels: SIMD2(sceneTexture.width, sceneTexture.height), composite: placement,
                                          draws: draws, image: nativeImage, frame: effectFrame, commandBuffer: commandBuffer) {
@@ -2376,10 +2355,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let feedsScene = mipMappedTarget != nil || ScenePostProcess.runsBloom(frameBloom, settings: renderSettings)
         if feedsScene {
             mode = .patch
-            // The patch's base would be MetalFX's upscale of the scene without the layers, which isn't made.
-            if drawsAtRenderScale, upscaler.path(settings: renderSettings, format: scene.pixelFormat) == .metalFX {
-                return plan
-            }
         }
         let outputSize: SIMD2<Float>
         switch output {

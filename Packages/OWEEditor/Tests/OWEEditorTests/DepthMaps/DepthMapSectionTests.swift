@@ -4,9 +4,10 @@ import XCTest
 @testable import OWESceneEditing
 
 /// The depth map section as both editors run it, with a fake model and pictures: Generate keeps
-/// the depth map with the editor's files, Apply adds WE's effect bound to it through the overlay,
-/// a new generation rebinds it, Strength and Remove change the overlay, each one undo step; and
-/// the picture each kind of layer is generated from.
+/// the depth map with the editor's files; the scene's Apply adds WE's effect bound to it through
+/// the overlay, a new generation rebinds it, Strength and Remove change the overlay, each one undo
+/// step; a layer's Create Mask from Depth Map writes it as an effect's mask; and the picture each
+/// kind of layer is generated from.
 @MainActor
 final class DepthMapSectionTests: XCTestCase {
     private static let scene = Data("""
@@ -17,7 +18,13 @@ final class DepthMapSectionTests: XCTestCase {
         {"id": 2, "name": "Title", "text": {"value": "Hello"}, "pointsize": 40, "origin": "300 200 0", "parent": 1},
         {"id": 3, "name": "Snow", "particle": "particles/snow.json", "origin": "960 540 0"},
         {"id": 4, "name": "Logo", "image": "models/logo.json", "origin": "1700 900 0", "size": "200 100"},
-        {"id": 5, "name": "Speaker", "sound": ["sounds/a.mp3"]}
+        {"id": 5, "name": "Speaker", "sound": ["sounds/a.mp3"]},
+        {"id": 6, "name": "Photo", "image": "models/photo.json", "origin": "960 540 0", "size": "200 100",
+         "effects": [
+           {"file": "effects/shake/effect.json"},
+           {"file": "effects/tint/effect.json", "passes": [{"textures": [null, "masks/tint_mask_painted"]}]},
+           {"file": "effects/scroll/effect.json"}
+         ]}
       ]
     }
     """.utf8)
@@ -68,13 +75,31 @@ final class DepthMapSectionTests: XCTestCase {
                 self.prepared += 1
             },
             texture: { _ in nil },
-            openPlugins: {})
+            openPlugins: {},
+            effectSchema: { file in Self.schemas[file] },
+            // A stand-in for the app's `.tex` writer: the size, then the grey values.
+            encodeMask: { pixels, width, height in Data([UInt8(width), UInt8(height)] + pixels) })
     }
+
+    /// WE's samplers for the effects on "Photo": Shake's flow mask and two grey masks, Tint's one,
+    /// Scroll none.
+    private static let schemas: [String: EffectSchema] = [
+        "effects/shake/effect.json": EffectSchema(textures: [
+            .init(slot: 1, title: "Direction", defaultTexture: "util/noflow", isMask: true, mode: "flowmask"),
+            .init(slot: 2, title: "Time Offset", defaultTexture: "util/black", isMask: true, combo: "TIMEOFFSET", mode: "opacitymask"),
+            .init(slot: 3, title: "Opacity", isMask: true, combo: "MASK", mode: "opacitymask"),
+        ]),
+        "effects/tint/effect.json": EffectSchema(textures: [
+            .init(slot: 1, title: "Opacity Mask", isMask: true, combo: "MASK", paintDefault: [0, 0, 0, 1], mode: "opacitymask"),
+        ]),
+        "effects/scroll/effect.json": EffectSchema(),
+    ]
 
     // MARK: A layer
 
-    func testGenerateApplyStrengthAndRemoveOnAnImageLayer() async throws {
+    func testALayerGeneratesButNoLongerAppliesDepthParallax() async throws {
         let model = DepthMapSectionModel(session: session, layerID: 4, services: services())
+        XCTAssertEqual(model.title, DL("Create Mask from Depth Map"))
         XCTAssertFalse(model.isApplied)
         await model.generate()
         XCTAssertNil(model.problem)
@@ -82,28 +107,27 @@ final class DepthMapSectionTests: XCTestCase {
         XCTAssertTrue(texture.hasPrefix("depth/editor_logo-"))
         XCTAssertNotNil(EditorAssetStore(directory: directory).depthMapURL(texture), "kept with the editor's files")
         XCTAssertNotNil(model.depthPreview)
+        XCTAssertNotNil(model.maskPreview, "a layer previews the mask")
         XCTAssertFalse(model.isOneFrame, "a still image's own texture")
         XCTAssertFalse(session.overlay.hasSceneEdits, "generating alone changes nothing")
 
-        model.pendingStrength = 0.7
         model.apply()
-        XCTAssertEqual(prepared, 1, "WE's effect files are copied in, as adding any built-in effect does")
-        XCTAssertTrue(model.isApplied)
-        XCTAssertEqual(session.depthParallaxTexture(of: 4), texture)
-        XCTAssertEqual(model.strength, 0.7, accuracy: 1e-9)
+        XCTAssertEqual(prepared, 0)
+        XCTAssertFalse(model.isApplied, "depth parallax is the scene's")
+        XCTAssertFalse(session.overlay.hasSceneEdits)
+    }
 
+    func testDepthParallaxAppliedToALayerBeforeFollowsANewMapAndCanBeRemoved() async throws {
+        await DepthMapSectionModel(session: session, layerID: 4, services: services()).generate()
+        _ = session.applyDepthParallax(texture: "depth/editor_old-000000000000", strength: 0.7, to: 4, actionName: "Apply")
+        let model = DepthMapSectionModel(session: session, layerID: 4, services: services())
+        XCTAssertTrue(model.isApplied)
         model.strength = 1.4
         XCTAssertEqual(try XCTUnwrap(session.depthParallaxStrength(of: 4)), 1.4, accuracy: 1e-9)
-
-        // A new generation (the layer changed, so another depth map) rebinds the applied effect.
         await model.generate()
         let second = try XCTUnwrap(model.generatedTexture)
-        XCTAssertNotEqual(second, texture)
-        XCTAssertEqual(session.depthParallaxTexture(of: 4), second)
-        XCTAssertEqual(session.outline.layer(4)?.effects.count, 1)
-
+        XCTAssertEqual(session.depthParallaxTexture(of: 4), second, "a new generation rebinds it")
         model.remove()
-        XCTAssertFalse(model.isApplied)
         XCTAssertNil(session.depthParallaxEffect(of: 4))
         session.undo()
         XCTAssertEqual(session.depthParallaxTexture(of: 4), second, "Remove is one undo step")
@@ -111,24 +135,78 @@ final class DepthMapSectionTests: XCTestCase {
 
     func testAMissingEffectIsAProblemAndChangesNothing() async throws {
         prepareFails = true
-        let model = DepthMapSectionModel(session: session, layerID: 4, services: services())
+        let model = DepthMapSectionModel(session: session, layerID: nil, services: services())
         await model.generate()
         model.apply()
         XCTAssertEqual(model.problem, "WE's assets are missing")
         XCTAssertFalse(session.overlay.hasSceneEdits)
     }
 
-    func testAParticleSystemGetsTheLayerAboveIt() async throws {
-        let model = DepthMapSectionModel(session: session, layerID: 3, services: services())
-        XCTAssertTrue(model.comesFromOneFrame)
+    func testAParticleSystemHasNoMaskSection() {
+        XCTAssertFalse(DepthMapSectionModel(session: session, layerID: 3, services: services()).isSupported,
+                       "it carries no effects; the scene's depth parallax covers it")
+    }
+
+    // MARK: Create Mask from Depth Map
+
+    func testTheMenuListsTheLayersGreyMasks() async throws {
+        let model = DepthMapSectionModel(session: session, layerID: 6, services: services())
+        let targets = model.maskTargets
+        XCTAssertEqual(targets.map(\.id), ["0:0:2", "0:0:3", "1:0:1"], "grey masks only: not Shake's flow mask, nothing of Scroll")
+        XCTAssertEqual(targets.map(\.title), ["Shake › Time Offset", "Shake › Opacity", "Tint"])
+        XCTAssertEqual(targets.map(\.replacesMask), [false, false, true], "Tint has a painted mask")
+        XCTAssertEqual(targets[2].currentMask, "masks/tint_mask_painted")
+        XCTAssertEqual(DepthMapSectionModel(session: session, layerID: 4, services: services()).maskTargets, [],
+                       "a layer without effects")
+    }
+
+    func testUseAsMaskWritesTheShapedDepthMapIntoTheEffectsSlot() async throws {
+        let model = DepthMapSectionModel(session: session, layerID: 6, services: services())
         await model.generate()
-        XCTAssertTrue(model.isOneFrame)
-        model.apply()
-        let above = try XCTUnwrap(session.depthParallaxLayer(above: 3))
-        XCTAssertEqual(model.effectLayer, above)
-        model.remove()
-        XCTAssertNil(session.depthParallaxLayer(above: 3))
-        XCTAssertNil(session.outline.layer(above), "its fullscreen layer goes with it")
+        let target = try XCTUnwrap(model.maskTargets.first { $0.id == "0:0:3" })
+        model.maskContrast = 2
+        model.useAsMask(target)
+        XCTAssertNil(model.problem)
+        let path = try XCTUnwrap(session.effectTexture(3, effect: "0", of: 6))
+        XCTAssertTrue(path.hasPrefix("masks/shake_mask_"), "WE's name for an effect's mask: \(path)")
+        XCTAssertEqual(session.effectCombo("MASK", effect: "0", of: 6, default: 0), 1, "the slot's combo goes on")
+        let file = try XCTUnwrap(EditorAssetStore(directory: directory).url(for: "materials/\(path).tex"))
+        let tex = [UInt8](try Data(contentsOf: file))
+        XCTAssertEqual(Array(tex.prefix(2)), [200, 100], "the layer's size (200 × 100)")
+        let pixels = Array(tex.dropFirst(2))
+        XCTAssertEqual(pixels.count, 200 * 100)
+        // The fake depth map is an edge: far on the left, near on the right; contrast 2 hardens it.
+        XCTAssertLessThanOrEqual(pixels[50 * 200 + 2], 5)
+        XCTAssertGreaterThanOrEqual(pixels[50 * 200 + 197], 250)
+        XCTAssertEqual(model.maskNotice, DL("The depth map is now the effect’s mask."))
+
+        // Inverted, into Tint's mask: replaced, undoable, and the mask it replaced is kept.
+        model.maskInverted = true
+        model.maskContrast = 1
+        let tint = try XCTUnwrap(model.maskTargets.first { $0.id == "1:0:1" })
+        XCTAssertTrue(tint.replacesMask)
+        model.useAsMask(tint)
+        let inverted = try XCTUnwrap(session.effectTexture(1, effect: "1", of: 6))
+        XCTAssertTrue(inverted.hasPrefix("masks/tint_mask_"))
+        XCTAssertNotEqual(inverted, "masks/tint_mask_painted")
+        let invertedPixels = Array(try Data(contentsOf: XCTUnwrap(EditorAssetStore(directory: directory)
+            .url(for: "materials/\(inverted).tex"))).dropFirst(2))
+        XCTAssertGreaterThan(invertedPixels[50 * 200 + 2], 200, "far is white once inverted")
+        XCTAssertLessThan(invertedPixels[50 * 200 + 197], 55)
+        XCTAssertEqual(model.maskNotice, DL("The effect’s mask was replaced. Undo brings the old one back; its file is kept."))
+        session.undo()
+        XCTAssertEqual(session.effectTexture(1, effect: "1", of: 6), "masks/tint_mask_painted", "one undo step")
+        XCTAssertEqual(session.effectTexture(3, effect: "0", of: 6), path)
+        XCTAssertNotNil(EditorAssetStore(directory: directory).url(for: "materials/\(inverted).tex"),
+                        "files are named by content and never deleted, so Redo finds it")
+        session.redo()
+        XCTAssertEqual(session.effectTexture(1, effect: "1", of: 6), inverted)
+    }
+
+    func testWithoutADepthMapThereIsNoMask() {
+        let model = DepthMapSectionModel(session: session, layerID: 6, services: services())
+        model.useAsMask(model.maskTargets[0])
+        XCTAssertFalse(session.overlay.hasSceneEdits)
     }
 
     func testTheWholeScene() async throws {
@@ -232,6 +310,6 @@ final class DepthMapLocalizationTests: XCTestCase {
             }
         }
         XCTAssertEqual(missing, [])
-        XCTAssertEqual(DL("Depth Map"), "Depth Map")
+        XCTAssertEqual(DL("Invert"), "Invert")
     }
 }

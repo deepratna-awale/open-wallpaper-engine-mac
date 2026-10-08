@@ -77,9 +77,9 @@ final class SceneFrameBenchmarkTests: XCTestCase {
     /// The render settings `OWE_SCENE_BENCH_MODES` asks for, by name (comma separated): `half` (WE's
     /// texture reduction), `match` (Effect Detail Match Display), the render resolutions as the app
     /// draws them, without the authored-size floor (`yourdisplay`: the drawable's pixels, `uhd4k`:
-    /// 4K at its shape, `authored`: Full, the scene's authored size), `metalfx50` (drawn at 50% and
-    /// upscaled; `metalfx67`, `metalfx75` likewise), `textures` ("Optimise textures" on: BC7 colour images, `TexturePreparation`), and
-    /// `+` joins them (`yourdisplay+metalfx50`). With the variable set, only these and `full` are drawn.
+    /// 4K at its shape, `authored`: Full, the scene's authored size), `scale50` (drawn at 50% and
+    /// upscaled; `scale67`, `scale75` likewise), `textures` ("Optimise textures" on: BC7 colour images, `TexturePreparation`), and
+    /// `+` joins them (`yourdisplay+scale50`). With the variable set, only these and `full` are drawn.
     /// `OWE_SCENE_BENCH_TEXTURES=1` adds the `textures` row to the default variants, so the rows
     /// show the setting off (`full`) and on.
     private static func renderModes(_ request: String) -> [Variant] {
@@ -99,9 +99,9 @@ final class SceneFrameBenchmarkTests: XCTestCase {
                 case "authored":
                     settings.renderResolution = .full
                     settings.floorsAtAuthoredSize = false
-                case "metalfx50", "metalfx67", "metalfx75":
-                    settings.upscaling = .metalFX
-                    settings.renderScale = part == "metalfx50" ? .percent50 : part == "metalfx67" ? .percent67 : .percent75
+                case "scale50", "scale67", "scale75":
+                    settings.upscaling = .bilinear
+                    settings.renderScale = part == "scale50" ? .percent50 : part == "scale67" ? .percent67 : .percent75
                 case "textures": settings.optimiseTextures = true
                 default: XCTFail("unknown render mode \(part)")
                 }

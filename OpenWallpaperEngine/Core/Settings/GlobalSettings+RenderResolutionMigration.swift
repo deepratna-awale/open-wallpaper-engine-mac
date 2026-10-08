@@ -7,7 +7,8 @@ final class GlobalSettingsMigration {
     /// The main display's backing scale when the settings are read (2 on Retina).
     let mainBackingScale: Double
     /// The settings read held the points-based Render Resolution ("display", "desktop") and were
-    /// carried over (`GlobalSettings.migrateFromPoints`): save them, so it happens once.
+    /// carried over (`GlobalSettings.migrateFromPoints`), or the removed MetalFX Upscaling
+    /// (`GlobalSettings.migrateMetalFX`): save them, so it happens once.
     var migrated = false
 
     init(mainBackingScale: Double) {
@@ -35,7 +36,7 @@ extension CodingUserInfoKey {
 extension GlobalSettings {
     /// Carries over the earlier points-based Render Resolution ("Display": one target pixel per
     /// point, scaled up), which now reads as Your Display, drawn natively (Upscaling is left as it
-    /// was: measured, MetalFX costs more than drawing the pixels). On a display of `backingScale`
+    /// was). On a display of `backingScale`
     /// above 1 web wallpapers keep drawing at standard resolution, as Display drew them. Logged.
     mutating func migrateFromPoints(backingScale: Double) {
         renderResolution = .yourDisplay
@@ -47,5 +48,13 @@ extension GlobalSettings {
             : "web wallpapers kept at standard resolution"
         webStandardResolution = true
         OWELog.info(.settings, "Render Resolution: Display (points) is now Your Display on a \(backingScale)× display; \(web)")
+    }
+
+    /// Carries over the removed MetalFX Upscaling, already read as `bilinear` (`GSUpscaling`): the
+    /// scene keeps drawing at the same render scale, scaled up bilinearly. Logged; the caller saves
+    /// the settings so it is logged once.
+    mutating func migrateMetalFX() {
+        upscaling = .bilinear
+        OWELog.info(.settings, "Upscaling: MetalFX was removed; scenes keep drawing at \(Int((renderScale.factor * 100).rounded())) % and are scaled up bilinearly")
     }
 }

@@ -40576,6 +40576,100 @@
         }
       }
     },
+    "Draws scenes at the render scale and scales them up smoothly to full size: fewer pixels to draw, a softer picture." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يرسم المشاهد بمقياس العرض ثم يكبّرها بسلاسة إلى الحجم الكامل: بكسلات أقل للرسم، وصورة أنعم."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeichnet Szenen in der Renderskalierung und skaliert sie weich auf volle Größe hoch: weniger Pixel zu zeichnen, ein weicheres Bild."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dibuja las escenas a la escala de renderizado y las amplía de forma suave al tamaño completo: menos píxeles que dibujar, una imagen más suave."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dessine les scènes à l’échelle de rendu et les agrandit de façon lissée à leur taille complète : moins de pixels à dessiner, une image plus douce."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन को रेंडर स्केल पर ड्रॉ करता है और उन्हें सहज रूप से पूर्ण आकार तक बढ़ाता है: ड्रॉ करने के लिए कम पिक्सेल, नरम तस्वीर।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disegna le scene alla scala di rendering e le ingrandisce in modo uniforme alla dimensione piena: meno pixel da disegnare, un’immagine più morbida."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーンをレンダリングスケールで描画し、フルサイズに滑らかに拡大します。描画するピクセルが減り、画像は柔らかくなります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면을 렌더링 배율로 그린 다음 전체 크기로 부드럽게 확대합니다. 그릴 픽셀이 줄고 화면은 더 부드러워집니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rysuje sceny w skali renderowania i płynnie skaluje je do pełnego rozmiaru: mniej pikseli do narysowania, bardziej miękki obraz."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desenha as cenas na escala de renderização e as amplia de forma suave para o tamanho completo: menos pixels para desenhar, uma imagem mais suave."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рисует сцены в масштабе отрисовки и сглаженно увеличивает их до полного размера: меньше пикселей для отрисовки, мягче изображение."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahneleri işleme ölçeğinde çizer ve tam boyuta yumuşak biçimde büyütür: çizilecek daha az piksel, daha yumuşak bir görüntü."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Малює сцени в масштабі відтворення і згладжено збільшує їх до повного розміру: менше пікселів для малювання, мʼякше зображення."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以渲染比例绘制场景，并平滑地放大到完整大小：需要绘制的像素更少，画面更柔和。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以渲染比例繪製場景，並平滑地放大到完整大小：需要繪製的像素更少，畫面更柔和。"
+          }
+        }
+      }
+    },
     "Draws shadow maps at half size, a quarter of the shadow work; the edges stay soft. Off draws them as Wallpaper Engine does." : {
       "localizations" : {
         "ar" : {
@@ -57601,96 +57695,96 @@
         }
       }
     },
-    "How large scenes render before MetalFX upscales them, per side. Lower is faster and softer." : {
+    "How large scenes render before they are scaled up, per side. Lower is faster and softer." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "الحجم الذي تُعرض به المشاهد، لكل ضلع، قبل أن يكبّرها MetalFX. القيمة الأقل أسرع وأنعم."
+            "value" : "الحجم الذي تُعرض به المشاهد، لكل ضلع، قبل تكبيرها. القيمة الأقل أسرع وأنعم."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wie groß Szenen pro Seite gerendert werden, bevor MetalFX sie hochskaliert. Kleiner ist schneller und weicher."
+            "value" : "Wie groß Szenen pro Seite gerendert werden, bevor sie hochskaliert werden. Kleiner ist schneller und weicher."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tamaño al que se renderizan las escenas, por lado, antes de que MetalFX las escale. Menos es más rápido y más suave."
+            "value" : "Tamaño al que se renderizan las escenas, por lado, antes de escalarlas. Menos es más rápido y más suave."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Taille de rendu des scènes, par côté, avant que MetalFX ne les agrandisse. Plus bas est plus rapide et plus flou."
+            "value" : "Taille de rendu des scènes, par côté, avant leur agrandissement. Plus bas est plus rapide et plus flou."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MetalFX से बड़ा करने से पहले सीन हर किनारे पर कितने बड़े रेंडर हों। कम मान तेज़ और नरम होता है।"
+            "value" : "बड़ा किए जाने से पहले सीन हर किनारे पर कितने बड़े रेंडर हों। कम मान तेज़ और नरम होता है।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dimensione, per lato, a cui vengono renderizzate le scene prima che MetalFX le ingrandisca. Più bassa è più veloce e più morbida."
+            "value" : "Dimensione, per lato, a cui vengono renderizzate le scene prima di essere ingrandite. Più bassa è più veloce e più morbida."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MetalFX でアップスケールする前にシーンをレンダリングする大きさ（各辺）です。低いほど速く、柔らかくなります。"
+            "value" : "拡大する前にシーンをレンダリングする大きさ（各辺）です。低いほど速く、柔らかくなります。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MetalFX가 업스케일하기 전에 장면을 렌더링하는 크기(변 기준)입니다. 낮을수록 빠르고 부드러워집니다."
+            "value" : "확대하기 전에 장면을 렌더링하는 크기(변 기준)입니다. 낮을수록 빠르고 부드러워집니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rozmiar, w jakim sceny są renderowane (na bok) przed skalowaniem przez MetalFX. Mniej to szybciej i miękciej."
+            "value" : "Rozmiar, w jakim sceny są renderowane (na bok) przed skalowaniem. Mniej to szybciej i miękciej."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O tamanho, por lado, em que as cenas são renderizadas antes de o MetalFX ampliá-las. Menor é mais rápido e mais suave."
+            "value" : "O tamanho, por lado, em que as cenas são renderizadas antes de serem ampliadas. Menor é mais rápido e mais suave."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Размер отрисовки сцен по каждой стороне до масштабирования MetalFX. Меньше — быстрее и мягче."
+            "value" : "Размер отрисовки сцен по каждой стороне до масштабирования. Меньше — быстрее и мягче."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sahnelerin MetalFX ile büyütülmeden önce kenar başına işlendiği boyut. Düşük değer daha hızlı ve daha yumuşaktır."
+            "value" : "Sahnelerin büyütülmeden önce kenar başına işlendiği boyut. Düşük değer daha hızlı ve daha yumuşaktır."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Розмір відтворення сцен за кожною стороною до масштабування MetalFX. Менше — швидше й мʼякше."
+            "value" : "Розмір відтворення сцен за кожною стороною до масштабування. Менше — швидше й мʼякше."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MetalFX 放大之前场景渲染的尺寸（按边长）。越低越快，画面越柔和。"
+            "value" : "放大之前场景渲染的尺寸（按边长）。越低越快，画面越柔和。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MetalFX 放大之前場景渲染的尺寸（按邊長）。越低越快，畫面越柔和。"
+            "value" : "放大之前場景渲染的尺寸（按邊長）。越低越快，畫面越柔和。"
           }
         }
       }
@@ -74149,194 +74243,6 @@
         }
       }
     },
-    "MetalFX" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        }
-      }
-    },
-    "MetalFX draws the scene at the render scale and scales it up to full size, for less work. Where MetalFX isn't available, or for HDR, the frame is scaled smoothly instead." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يرسم MetalFX المشهد بمقياس العرض ثم يكبّره إلى الحجم الكامل، لتقليل العمل. وحيث لا يتوفر MetalFX، أو مع HDR، يُكبَّر الإطار بسلاسة بدلًا من ذلك."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX zeichnet die Szene in der Renderskalierung und skaliert sie auf volle Größe hoch, für weniger Aufwand. Wo MetalFX nicht verfügbar ist oder bei HDR wird das Bild stattdessen weich skaliert."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX dibuja la escena a la escala de renderizado y la amplía al tamaño completo, con menos trabajo. Donde MetalFX no está disponible, o con HDR, el fotograma se escala de forma suave."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX dessine la scène à l’échelle de rendu et l’agrandit à sa taille complète, pour moins de travail. Là où MetalFX n’est pas disponible, ou en HDR, l’image est agrandie de façon lissée."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX दृश्य को रेंडर स्केल पर ड्रॉ करता है और उसे पूर्ण आकार तक बढ़ाता है, जिससे काम कम होता है। जहाँ MetalFX उपलब्ध नहीं है, या HDR में, फ़्रेम को सहज रूप से बढ़ाया जाता है।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX disegna la scena alla scala di rendering e la ingrandisce alla dimensione piena, con meno lavoro. Dove MetalFX non è disponibile, o in HDR, il fotogramma viene ingrandito in modo uniforme."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFXはシーンをレンダリングスケールで描画してフルサイズに拡大し、負荷を減らします。MetalFXを使用できない場合やHDRでは、フレームを滑らかに拡大します。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX는 장면을 렌더링 배율로 그린 다음 전체 크기로 확대하여 작업량을 줄입니다. MetalFX를 사용할 수 없거나 HDR에서는 프레임을 부드럽게 확대합니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX rysuje scenę w skali renderowania i skaluje ją do pełnego rozmiaru, przy mniejszym nakładzie pracy. Gdy MetalFX jest niedostępny lub przy HDR, klatka jest skalowana płynnie."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O MetalFX desenha a cena na escala de renderização e a amplia para o tamanho completo, com menos trabalho. Onde o MetalFX não está disponível, ou em HDR, o quadro é ampliado de forma suave."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX рисует сцену в масштабе отрисовки и увеличивает её до полного размера, снижая нагрузку. Если MetalFX недоступен или при HDR кадр увеличивается сглаженно."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX sahneyi işleme ölçeğinde çizer ve daha az iş için tam boyuta büyütür. MetalFX kullanılamadığında veya HDR’de kare yumuşak biçimde büyütülür."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX малює сцену в масштабі відтворення і збільшує її до повного розміру, зменшуючи навантаження. Якщо MetalFX недоступний або для HDR, кадр збільшується згладжено."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX 以渲染比例绘制场景并放大到完整大小，以减少工作量。在 MetalFX 不可用或使用 HDR 时，会平滑地放大画面。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX 以渲染比例繪製場景並放大到完整大小，以減少工作量。在無法使用 MetalFX 或使用 HDR 時，會平滑地放大畫面。"
-          }
-        }
-      }
-    },
     "Middle" : {
       "localizations" : {
         "ar" : {
@@ -83969,101 +83875,6 @@
         }
       }
     },
-    "Not used at 1920×1200 or smaller, where drawing natively is faster." : {
-      "comment" : "Note under Settings › Performance › Upscaling: it is skipped for small scene targets",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لا تُستخدم عند 1920×1200 أو أصغر، حيث يكون الرسم بالدقة الأصلية أسرع."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wird bei 1920×1200 oder kleiner nicht verwendet, da natives Zeichnen dort schneller ist."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No se usa a 1920×1200 o menos, donde dibujar a resolución nativa es más rápido."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Non utilisée en 1920×1200 ou moins, où dessiner en résolution native est plus rapide."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1920×1200 या उससे छोटे पर उपयोग नहीं होता, जहाँ नेटिव रूप से बनाना ज़्यादा तेज़ है।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Non usato a 1920×1200 o meno, dove disegnare in modo nativo è più veloce."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1920×1200 以下では使用されません。このサイズではネイティブで描画するほうが高速です。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1920×1200 이하에서는 사용되지 않습니다. 이 크기에서는 네이티브로 그리는 것이 더 빠릅니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nieużywane przy 1920×1200 lub mniej, gdzie rysowanie natywne jest szybsze."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Não é usado em 1920×1200 ou menos, onde desenhar de forma nativa é mais rápido."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не используется при 1920×1200 и меньше: там рисовать в исходном разрешении быстрее."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1920×1200 veya daha küçük boyutlarda kullanılmaz; orada doğal çözünürlükte çizmek daha hızlıdır."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не використовується за 1920×1200 і менше: там малювати в рідній роздільності швидше."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在 1920×1200 或更小尺寸下不使用，此时直接以原生分辨率绘制更快。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在 1920×1200 或更小尺寸下不使用，此時直接以原生解析度繪製更快。"
-          }
-        }
-      }
-    },
     "Not yet" : {
       "localizations" : {
         "ar" : {
@@ -84625,101 +84436,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "物件屬性"
-          }
-        }
-      }
-    },
-    "Off" : {
-      "comment" : "Upscaling: none",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إيقاف"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aus"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Desactivado"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Désactivé"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "बंद"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Disattivato"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "オフ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "끔"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyłączone"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Desativado"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Выкл."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kapalı"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Вимк."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "关闭"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "關閉"
           }
         }
       }

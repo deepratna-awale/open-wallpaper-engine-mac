@@ -16,6 +16,9 @@ public struct SceneLayerEffect: Identifiable, Hashable, Sendable {
     public var constants: [String: SceneJSONValue] = [:]
     public var combos: [String: Int] = [:]
     public var textures: [SceneJSONValue] = []
+    /// Every pass's `textures` as the scene has them (the first is `textures`): a multi-pass
+    /// effect's mask is named in the pass that samples it (Blur's in its fourth).
+    public var passTextures: [[SceneJSONValue]] = []
     /// How many passes the scene lists for it.
     public var passCount = 0
 

@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4923DF96305D13130038BE65 /* MetalFX.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4923DF94305D13130038BE65 /* MetalFX.framework */; };
 		4923DF97305D13130038BE65 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4923DF95305D13130038BE65 /* MetalKit.framework */; };
 		EE3000000000000000000001 /* ShaderToolchain in Frameworks */ = {isa = PBXBuildFile; productRef = EE3000000000000000000002 /* ShaderToolchain */; };
 		EE4000000000000000000011 /* CHANGELOG.md in Resources */ = {isa = PBXBuildFile; fileRef = EE4000000000000000000010 /* CHANGELOG.md */; };
@@ -88,7 +87,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		4923DF94305D13130038BE65 /* MetalFX.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalFX.framework; path = System/Library/Frameworks/MetalFX.framework; sourceTree = SDKROOT; };
 		4923DF95305D13130038BE65 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		5E1670732A88EBEF00D1B199 /* change-signing-certificate.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "change-signing-certificate.png"; sourceTree = "<group>"; };
 		5E1670742A88ED8400D1B199 /* import-menu.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "import-menu.png"; sourceTree = "<group>"; };
@@ -256,7 +254,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				4923DF97305D13130038BE65 /* MetalKit.framework in Frameworks */,
-				4923DF96305D13130038BE65 /* MetalFX.framework in Frameworks */,
 				EE3000000000000000000001 /* ShaderToolchain in Frameworks */,
 				EE4000000000000000000001 /* Sparkle in Frameworks */,
 				ED7000000000000000000031 /* OWEEditor in Frameworks */,
@@ -303,7 +300,6 @@
 		4923DF93305D13130038BE65 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				4923DF94305D13130038BE65 /* MetalFX.framework */,
 				4923DF95305D13130038BE65 /* MetalKit.framework */,
 			);
 			name = Frameworks;

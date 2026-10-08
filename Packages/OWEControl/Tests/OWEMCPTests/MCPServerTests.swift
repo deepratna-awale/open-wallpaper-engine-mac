@@ -91,7 +91,7 @@ final class MCPServerTests: XCTestCase {
             "scene_get", "scene_apply_edits", "scene_undo", "scene_redo", "scene_save", "scene_save_as_local_wallpaper",
             "scene_revert", "effects_catalog", "particles_catalog", "particles_get", "particles_restart", "puppets_list",
             "timeline_get", "timeline_preview", "script_get", "script_set", "script_check", "user_properties_get",
-            "depth_generate", "depth_apply", "depth_remove", "editor_close", "editor_set_tab",
+            "depth_generate", "depth_apply", "depth_remove", "use_depth_map_as_mask", "editor_close", "editor_set_tab",
         ]), "the scene and editors' tools")
         XCTAssertTrue(Set(names).isSuperset(of: [
             "playlist_create", "playlist_update", "playlist_add_items", "playlist_remove_items", "playlist_move_item",

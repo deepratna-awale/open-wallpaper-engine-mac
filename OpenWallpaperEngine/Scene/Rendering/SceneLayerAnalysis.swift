@@ -39,7 +39,7 @@ struct SceneLayerDependencies: OptionSet, Hashable, CustomStringConvertible {
     var description: String { Self.all.filter { contains($0.0) }.map(\.1).joined(separator: "|") }
 }
 
-/// What a layer's image looks like, for consumers that trade detail for cost (MetalFX, half-res
+/// What a layer's image looks like, for consumers that trade detail for cost (half-res
 /// blur): text and line art keep full resolution.
 enum SceneLayerContentClass: String {
     case text
