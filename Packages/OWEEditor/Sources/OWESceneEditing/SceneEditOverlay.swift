@@ -20,8 +20,8 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
         public var constants: [String: SceneJSONValue] = [:]
         /// Values of its first pass's `combos`, by the combo name (version 2).
         public var combos: [String: Int]?
-        /// Its first pass's `textures` by slot (`"1"` for `g_Texture1`): a texture path, or null for
-        /// the shader's default (version 2).
+        /// Its passes' `textures` by slot (`textureKey`: `"1"` for the first pass's `g_Texture1`,
+        /// `"3:1"` for the fourth's): a texture path, or null for the shader's default (version 2).
         public var textures: [String: SceneJSONValue]?
         /// Constants a user property sets, by the material key: the property's name, or `""` for a
         /// constant the scene binds that the editor set free again (version 2).
@@ -35,6 +35,23 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
         public var isEmpty: Bool {
             visible == nil && constants.isEmpty && (combos ?? [:]).isEmpty && (textures ?? [:]).isEmpty
                 && (bindings ?? [:]).isEmpty
+        }
+
+        /// The `textures` key of `slot` in pass `pass` (0, the first, keeps the plain slot number).
+        public static func textureKey(pass: Int, slot: Int) -> String {
+            pass == 0 ? String(slot) : "\(pass):\(slot)"
+        }
+
+        /// The pass and slot a `textures` key names; nil for one that names neither.
+        static func passAndSlot(_ key: String) -> (pass: Int, slot: Int)? {
+            let parts = key.split(separator: ":", omittingEmptySubsequences: false)
+            switch parts.count {
+            case 1: return Int(parts[0]).map { (0, $0) }
+            case 2:
+                guard let pass = Int(parts[0]), let slot = Int(parts[1]), pass >= 0 else { return nil }
+                return (pass, slot)
+            default: return nil
+            }
         }
 
         var needsVersion2: Bool { !(combos ?? [:]).isEmpty || !(textures ?? [:]).isEmpty || !(bindings ?? [:]).isEmpty }

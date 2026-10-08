@@ -46,11 +46,18 @@ extension SceneEditSession {
         return baseEffect(effectKey, of: layerID)?.combos.first { $0.key.caseInsensitiveCompare(name) == .orderedSame }?.value ?? fallback
     }
 
-    /// The texture in `slot` of the effect's first pass; nil for the shader's default.
-    public func effectTexture(_ slot: Int, effect effectKey: String, of layerID: Int) -> String? {
-        if let edit = overlay.effectEdit(effectKey, of: layerID)?.textures?[String(slot)] { return edit.stringValue }
-        guard let textures = baseEffect(effectKey, of: layerID)?.textures, textures.indices.contains(slot) else { return nil }
-        return textures[slot].stringValue
+    /// The texture in `slot` of the effect's pass `pass` (the first by default); nil for the
+    /// shader's default.
+    public func effectTexture(_ slot: Int, pass: Int = 0, effect effectKey: String, of layerID: Int) -> String? {
+        let key = SceneEditOverlay.EffectEdit.textureKey(pass: pass, slot: slot)
+        if let edit = overlay.effectEdit(effectKey, of: layerID)?.textures?[key] { return edit.stringValue }
+        return Self.authoredTexture(baseEffect(effectKey, of: layerID), pass: pass, slot: slot)
+    }
+
+    private static func authoredTexture(_ effect: SceneLayerEffect?, pass: Int, slot: Int) -> String? {
+        guard let effect else { return nil }
+        let textures = pass == 0 ? effect.textures : (effect.passTextures.indices.contains(pass) ? effect.passTextures[pass] : [])
+        return textures.indices.contains(slot) ? textures[slot].stringValue : nil
     }
 
     // MARK: Structure
@@ -166,18 +173,20 @@ extension SceneEditSession {
         commit(next, actionName: actionName, coalescingKey: nil)
     }
 
-    /// Sets the texture in `slot` (a texture path such as `masks/…`, nil for the shader's default).
-    /// A slot with a combo (`MASK`) switches it on while a texture is set, as WE does.
-    public func setEffectTexture(_ path: String?, slot: Int, effect effectKey: String, of layerID: Int,
+    /// Sets the texture in `slot` of pass `pass` (a texture path such as `masks/…`, nil for the
+    /// shader's default). A first-pass slot with a combo (`MASK`) switches it on while a texture is
+    /// set, as WE does; a later pass's combo follows its bound texture when the scene is drawn, as
+    /// WE's scenes leave it.
+    public func setEffectTexture(_ path: String?, slot: Int, pass: Int = 0, effect effectKey: String, of layerID: Int,
                                  combo: String? = nil, actionName: String) {
-        let authored = baseEffect(effectKey, of: layerID)?.textures
-        let authoredPath = authored.flatMap { $0.indices.contains(slot) ? $0[slot].stringValue : nil }
+        let authoredPath = Self.authoredTexture(baseEffect(effectKey, of: layerID), pass: pass, slot: slot)
         var next = overlay
         next.updateEffect(key: effectKey, of: layerID) { edit in
             var textures = edit.textures ?? [:]
-            textures[String(slot)] = path == authoredPath ? nil : (path.map(SceneJSONValue.string) ?? .null)
+            textures[SceneEditOverlay.EffectEdit.textureKey(pass: pass, slot: slot)] =
+                path == authoredPath ? nil : (path.map(SceneJSONValue.string) ?? .null)
             edit.textures = textures.isEmpty ? nil : textures
-            if let combo {
+            if pass == 0, let combo {
                 var combos = edit.combos ?? [:]
                 let authoredCombo = self.baseEffect(effectKey, of: layerID)?.combos
                     .first { $0.key.caseInsensitiveCompare(combo) == .orderedSame }?.value
