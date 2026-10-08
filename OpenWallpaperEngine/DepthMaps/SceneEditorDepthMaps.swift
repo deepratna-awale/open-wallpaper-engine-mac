@@ -70,8 +70,8 @@ final class SceneEditorDepthMapHost: ObservableObject {
     }
 }
 
-/// The Scene Editor's depth map boxes for one object: the object's own (when it can have depth
-/// parallax) and the whole scene's, with undo.
+/// The Scene Editor's depth map boxes for one object: its Create Mask from Depth Map (an image or
+/// text layer, whose effects' masks it fills) and the whole scene's Depth Parallax, with undo.
 struct SceneEditorDepthMapSection: View {
     @ObservedObject var host: SceneEditorDepthMapHost
     let objectID: Int
@@ -80,7 +80,7 @@ struct SceneEditorDepthMapSection: View {
         if let session = host.session, let services = host.services {
             let sessionID = ObjectIdentifier(session)
             VStack(alignment: .leading, spacing: 10) {
-                if let layer = session.outline.layer(objectID), SceneDepthParallax.placement(for: layer) != nil {
+                if let layer = session.outline.layer(objectID), SceneDepthParallax.placement(for: layer) == .onLayer {
                     DepthMapBox(session: session, layerID: objectID, services: services)
                         .id("\(sessionID.hashValue)-\(objectID)")
                 }

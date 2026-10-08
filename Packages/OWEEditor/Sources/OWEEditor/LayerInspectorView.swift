@@ -62,7 +62,7 @@ private struct LayerForm: View {
             } else if !layer.effects.isEmpty {
                 effectsSection
             }
-            if let depthMaps = services.depthMaps, SceneDepthParallax.placement(for: layer) != nil {
+            if let depthMaps = services.depthMaps, SceneDepthParallax.placement(for: layer) == .onLayer {
                 DepthMapSection(session: session, layerID: layer.id, services: depthMaps)
             }
             if layer.kind == .image, let assets = services.puppetAssets {
