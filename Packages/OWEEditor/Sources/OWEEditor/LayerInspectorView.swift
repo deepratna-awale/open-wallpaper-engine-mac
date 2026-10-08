@@ -52,7 +52,9 @@ private struct LayerForm: View {
                 LayerTextSection(session: session, tools: tools, services: services, layer: layer)
             }
             if layer.kind == .particle, let particles = services.particles {
-                ParticleSystemSections(services: particles, layer: layer)
+                ParticleSystemSections(services: particles, layer: layer) { key in
+                    services.userPropertyTitle(key, properties: session.overlay.authoring?.properties)
+                }
             }
             if layer.kind == .image || layer.kind == .text {
                 appearanceSection

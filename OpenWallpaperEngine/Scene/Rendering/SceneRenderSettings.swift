@@ -33,7 +33,7 @@ struct SceneRenderSettings: Equatable {
     /// a smaller output is a downsampled full-size frame, as WE's captures are. Off for the user's
     /// settings, where Render Resolution alone sizes the target.
     var floorsAtAuthoredSize = true
-    /// Draw the scene at `renderScale` of its target and scale it up (`SceneUpscaler`).
+    /// Draw the scene at `renderScale` of its target, which the composite scales up bilinearly.
     var upscaling = GSUpscaling.off
     var renderScale = GSRenderScale.percent75
     /// Effect Detail: layers' effects at their texture size as WE runs them (`full`, what a

@@ -14646,7 +14646,7 @@
       }
     },
     "Hide this layer; “%@” sets it again when you show it" : {
-      "comment" : "Layer list: help of the eye of a layer a user property shows; hiding it overrides the property, showing it hands it back. %@ is the property's key",
+      "comment" : "Layer list: help of the eye of a layer a user property shows; hiding it overrides the property, showing it hands it back. %@ is the property's label",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -25972,7 +25972,7 @@
       }
     },
     "Show this layer; “%@” sets it again" : {
-      "comment" : "Layer list: help of the eye of a layer hidden over the user property that shows it; showing it hands it back to the property. %@ is the property's key",
+      "comment" : "Layer list: help of the eye of a layer hidden over the user property that shows it; showing it hands it back to the property. %@ is the property's label",
       "localizations" : {
         "ar" : {
           "stringUnit" : {

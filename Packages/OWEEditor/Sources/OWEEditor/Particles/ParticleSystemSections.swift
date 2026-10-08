@@ -12,13 +12,16 @@ struct ParticleSystemSections: View {
     @ObservedObject var services: ParticleEditorServices
     @ObservedObject var model: ParticleEditingModel
     let layer: SceneLayer
+    /// A bound user property's label (`WallpaperEditorServices.userPropertyTitle`).
+    let propertyTitle: (String) -> String
     /// The child systems opened from the layer's system, the one shown last.
     @State private var childPath: [String] = []
 
-    init(services: ParticleEditorServices, layer: SceneLayer) {
+    init(services: ParticleEditorServices, layer: SceneLayer, propertyTitle: @escaping (String) -> String = { $0 }) {
         self.services = services
         model = services.model
         self.layer = layer
+        self.propertyTitle = propertyTitle
     }
 
     var body: some View {
@@ -26,7 +29,7 @@ struct ParticleSystemSections: View {
             let path = childPath.last ?? rootPath
             systemSection(root: rootPath, path: path)
             if childPath.isEmpty {
-                ParticleInstanceSection(model: model, layer: layer)
+                ParticleInstanceSection(model: model, layer: layer, propertyTitle: propertyTitle)
             }
             if let definition = model.definition(path) {
                 ParticleGeneralSection(services: services, model: model, path: path, definition: definition)
@@ -105,6 +108,7 @@ struct ParticleSystemSections: View {
 private struct ParticleInstanceSection: View {
     @ObservedObject var model: ParticleEditingModel
     let layer: SceneLayer
+    let propertyTitle: (String) -> String
 
     var body: some View {
         let values = model.instanceOverride(of: layer.id)
@@ -141,7 +145,8 @@ private struct ParticleInstanceSection: View {
     /// The control, or which user property sets the value.
     @ViewBuilder private func row<Control: View>(_ key: String, values: [String: SceneJSONValue],
                                                  @ViewBuilder control: () -> Control) -> some View {
-        if case .userProperty(let name) = SceneFieldBinding(values[key]) {
+        if case .userProperty(let property) = SceneFieldBinding(values[key]) {
+            let name = propertyTitle(property)
             LabeledContent(PLSchema(Self.labels[key] ?? key)) {
                 Text(PartL("Set by the user property “\(name)”"))
                     .foregroundStyle(.secondary)

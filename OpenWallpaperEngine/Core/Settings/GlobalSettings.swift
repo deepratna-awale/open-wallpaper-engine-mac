@@ -7,9 +7,7 @@ import OWETheming
 
 extension GlobalSettings {
     /// The render resolution and upscaling every quality preset sets: the displays' own pixels
-    /// (Your Display), drawn natively. Upscaling stays off: measured, MetalFX costs more than it
-    /// saves (Snowy Plains at 5120×2880: 5.3 ms against 1.6 ms native); Low saves through its
-    /// other settings. A later choice of the user's stands until a preset is applied again.
+    /// (Your Display), drawn natively. Upscaling stays off; Low saves through its other settings. A later choice of the user's stands until a preset is applied again.
     mutating func applyResolutionPreset(_ quality: GSQuality) {
         renderResolution = .yourDisplay
         upscaling = .off
@@ -175,11 +173,27 @@ enum GSRenderResolution: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-/// "Upscaling": the scene drawn at `GSRenderScale` of its size and scaled up to it, by MetalFX's
-/// spatial scaler where the GPU and the frame's format allow it, else bilinearly (`SceneUpscaler`).
+/// "Upscaling": the scene drawn at `GSRenderScale` of its size, which the final composite scales
+/// up bilinearly. The earlier MetalFX choice ("metalFX") reads as `bilinear` at the same scale
+/// (`GlobalSettings.migrateMetalFX`): measured, MetalFX cost more GPU time than drawing natively.
 enum GSUpscaling: String, CaseIterable, Identifiable, Codable {
     var id: Self { self }
-    case off, metalFX
+    case off, bilinear
+
+    /// The stored value of the removed MetalFX choice.
+    static let metalFXValue = "metalFX"
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        if value == Self.metalFXValue {
+            self = .bilinear
+        } else if let upscaling = GSUpscaling(rawValue: value) {
+            self = upscaling
+        } else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unknown upscaling \(value)")
+        }
+    }
 }
 
 /// "Render scale": the share of each side of the scene target drawn when upscaling.
@@ -496,6 +510,7 @@ extension GlobalSettings {
             .map(GSRenderResolution.isPointsValue) ?? false
         read(.sceneDetail, &sceneDetail)
         read(.upscaling, &upscaling)
+        let fromMetalFX = ((try? container.decodeIfPresent(String.self, forKey: .upscaling)) ?? nil) == GSUpscaling.metalFXValue
         read(.renderScale, &renderScale)
         read(.reflections, &reflections)
         read(.shadows, &shadows)
@@ -542,6 +557,10 @@ extension GlobalSettings {
             let migration = decoder.userInfo[.settingsMigration] as? GlobalSettingsMigration
             migrateFromPoints(backingScale: migration?.mainBackingScale ?? 1)
             migration?.migrated = true
+        }
+        if fromMetalFX {
+            migrateMetalFX()
+            (decoder.userInfo[.settingsMigration] as? GlobalSettingsMigration)?.migrated = true
         }
     }
 }
