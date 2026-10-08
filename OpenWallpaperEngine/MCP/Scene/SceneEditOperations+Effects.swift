@@ -137,13 +137,16 @@ extension SceneEditOperations {
         let layer = try Self.layer(edit, context)
         let effect = try Self.effect(edit, of: layer)
         let slotNumber = try edit.requiredInt("slot")
+        let passNumber = try edit.int("pass")
         let slots = context.resources.effectSchema(effect.file)?.textures ?? []
-        guard let slot = slots.first(where: { $0.slot == slotNumber }) else {
+        guard let slot = slots.first(where: { $0.slot == slotNumber && (passNumber == nil || $0.pass == passNumber) }) else {
             let known = slots.map { "\($0.slot) (\($0.title))" }.joined(separator: ", ")
             throw ControlError(.notFound, "The effect \(effect.title) has no texture slot \(slotNumber). " + (known.isEmpty ? "It has none to set." : "Its slots: \(known)."))
         }
         let texture = try edit.string("texture").flatMap { $0.isEmpty ? nil : $0 }
-        context.session.setEffectTexture(texture, slot: slot.slot, effect: effect.key, of: layer.id, combo: slot.combo, actionName: "")
-        return ["layer": .number(Double(layer.id)), "effect": .string(effect.key), "slot": .number(Double(slot.slot))]
+        context.session.setEffectTexture(texture, slot: slot.slot, pass: slot.pass, effect: effect.key, of: layer.id,
+                                         combo: slot.combo, actionName: "")
+        return ["layer": .number(Double(layer.id)), "effect": .string(effect.key), "slot": .number(Double(slot.slot)),
+                "pass": .number(Double(slot.pass))]
     }
 }

@@ -145,7 +145,8 @@ extension SceneEditOverlay {
         (added ?? [:]).keys.sorted { (Int($0.dropFirst()) ?? 0) < (Int($1.dropFirst()) ?? 0) }
     }
 
-    /// One effect's edit: `visible`, and its first pass's constants, combos, textures and bindings.
+    /// One effect's edit: `visible`, its first pass's constants, combos and bindings, and its
+    /// passes' textures.
     static func apply(_ edit: EffectEdit, to effect: inout [String: Any]) {
         if let visible = edit.visible {
             effect["visible"] = merged(effect["visible"], with: visible)
@@ -181,16 +182,15 @@ extension SceneEditOverlay {
             for (combo, value) in combos { passCombos[authoredKey(combo, in: passCombos)] = value }
             pass["combos"] = passCombos
         }
-        if !textures.isEmpty {
-            var slots = pass["textures"] as? [Any] ?? []
-            for (slot, value) in textures {
-                guard let index = Int(slot), (0..<32).contains(index) else { continue }
-                while slots.count <= index { slots.append(NSNull()) }
-                slots[index] = value.any
-            }
-            pass["textures"] = slots
-        }
         passes[0] = pass
+        for (key, value) in textures {
+            guard let (index, slot) = EffectEdit.passAndSlot(key), (0..<32).contains(slot), index < 64 else { continue }
+            while passes.count <= index { passes.append([:]) }
+            var slots = passes[index]["textures"] as? [Any] ?? []
+            while slots.count <= slot { slots.append(NSNull()) }
+            slots[slot] = value.any
+            passes[index]["textures"] = slots
+        }
         effect["passes"] = passes
     }
 
