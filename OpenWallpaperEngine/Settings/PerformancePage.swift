@@ -169,17 +169,11 @@ struct PerformancePage: SettingsPage {
                 Text(verbatim: renderSizes.sizes.summary(viewModel.settings.renderResolution))
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Picker("Upscaling", selection: $viewModel.settings.upscaling) {
-                    Text("Off", comment: "Upscaling: none").tag(GSUpscaling.off)
-                    Text("MetalFX").tag(GSUpscaling.metalFX)
-                }
+                Toggle("Upscaling", isOn: Binding(
+                    get: { viewModel.settings.upscaling != .off },
+                    set: { viewModel.settings.upscaling = $0 ? .bilinear : .off }))
                 .changedFromDefault(viewModel.isChanged(\.upscaling))
-                .help("MetalFX draws the scene at the render scale and scales it up to full size, for less work. Where MetalFX isn't available, or for HDR, the frame is scaled smoothly instead.")
-                if viewModel.settings.upscaling != .off {
-                    Text("Not used at 1920×1200 or smaller, where drawing natively is faster.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                .help("Draws scenes at the render scale and scales them up smoothly to full size: fewer pixels to draw, a softer picture.")
                 if viewModel.settings.upscaling != .off {
                     Picker("Render Scale", selection: $viewModel.settings.renderScale) {
                         ForEach(GSRenderScale.allCases) { scale in
@@ -187,7 +181,7 @@ struct PerformancePage: SettingsPage {
                         }
                     }
                     .changedFromDefault(viewModel.isChanged(\.renderScale))
-                    .help("How large scenes render before MetalFX upscales them, per side. Lower is faster and softer.")
+                    .help("How large scenes render before they are scaled up, per side. Lower is faster and softer.")
                 }
                 Picker("Shadows", selection: $viewModel.settings.shadows) {
                     Text("Disabled").tag(GSLightingQuality.disabled)
