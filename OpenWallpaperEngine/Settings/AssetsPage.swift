@@ -11,6 +11,7 @@ struct AssetsPage: SettingsPage {
     @ObservedObject private var assets: WallpaperEngineAssetsService
     @ObservedObject private var steamCmd: SteamCmdService
     private let installer: SteamCmdInstaller
+    private let editorPreviews: EditorPreviewPrewarm
     @State private var confirmsRemoval = false
     @State private var folderError: String?
 
@@ -19,6 +20,7 @@ struct AssetsPage: SettingsPage {
         self.assets = AppDelegate.shared.assets
         self.steamCmd = AppDelegate.shared.contentViewModel.steamCmd
         self.installer = AppDelegate.shared.steamCmdInstaller
+        self.editorPreviews = AppDelegate.shared.editorPreviewPrewarm
     }
 
     var body: some View {
@@ -108,6 +110,7 @@ struct AssetsPage: SettingsPage {
         if let free = status.freeSpace {
             row("Free space", Text(free.formatted(.byteCount(style: .file))))
         }
+        EditorPreviewPrewarmRow(prewarm: editorPreviews)
     }
 
     private func sourceName(_ source: WallpaperEngineAssets.Source) -> LocalizedStringKey {
@@ -182,6 +185,31 @@ struct AssetsPage: SettingsPage {
             folderError = nil
         } catch {
             folderError = error.localizedDescription
+        }
+    }
+}
+
+/// One line while the Wallpaper Editor's previews render in the background
+/// (`EditorPreviewPrewarm`): how many are done, or that the run is paused; nothing otherwise.
+private struct EditorPreviewPrewarmRow: View {
+    @ObservedObject var prewarm: EditorPreviewPrewarm
+
+    var body: some View {
+        if let progress = prewarm.progress {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Wallpaper Editor previews")
+                Spacer()
+                Group {
+                    if progress.isPaused {
+                        Text("Paused, \(progress.done) of \(progress.total)")
+                    } else {
+                        Text("Rendering, \(progress.done) of \(progress.total)")
+                    }
+                }
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+            }
+            .help("The previews of Add Effect and Add Particle System render in the background at low priority, so the browsers open at once. They wait while the Mac is on low battery or too hot.")
         }
     }
 }
