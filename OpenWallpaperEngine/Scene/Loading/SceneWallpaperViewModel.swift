@@ -1186,6 +1186,7 @@ class SceneWallpaperViewModel: ObservableObject {
         }
         if model.solidlayer == true {
             var layer = buildSolidLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
+            layer.solidBlending = blendingOverride(for: object)?.rawValue ?? material.passes?.first?.blending ?? "normal"
             // `flat` has no `BLENDMODE`: a blend mode composites the fill through WE's material for it.
             if let mode = object.colorBlendMode, mode != 0 {
                 layer.imageMaterial = buildBlendComposite(mode, object: object, wallpaperDir: wallpaperDir)

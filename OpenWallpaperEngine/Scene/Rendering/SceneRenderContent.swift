@@ -136,6 +136,10 @@ struct SceneMetalLayer {
     /// layer's `size`, rounded (`wallpaper64.exe` 0x140209206…0x14020923c), so its effects start
     /// from the fill at that size (`SceneMetalRenderer.solidEffectInput`).
     var solidFill: SIMD4<Float>? = nil
+    /// A solid layer's own material's blending (`flat` in `materials/util/solidlayer.json`), which
+    /// WE copies into the layer's last effect pass when that pass draws into the scene through the
+    /// layer's quad (`SceneMetalRenderer.lastPassDrawsIntoScene`). Nil for any other layer.
+    var solidBlending: String? = nil
     /// The layer's quad adds to the scene instead of blending over it. A `shape` object's blend
     /// state is WE's `additive` (the shape class's +0x108, `wallpaper64.exe` 0x140260790, writes
     /// blending 2, which `0x140157e0e` names `additive`), where an image's is its material's.
