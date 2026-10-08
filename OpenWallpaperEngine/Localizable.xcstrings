@@ -123691,96 +123691,96 @@
         }
       }
     },
-    "Sets the quality settings below, the frame rate and the Quality ↔ Efficiency slider in one step. Low also turns on MetalFX upscaling from two thirds of the size." : {
+    "Sets the quality settings below, the frame rate and the Quality ↔ Efficiency slider in one step." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يضبط إعدادات الجودة أدناه ومعدل الإطارات وشريط «الجودة ↔ الكفاءة» في خطوة واحدة. ويشغّل «منخفض» أيضًا الترقية عبر MetalFX من ثلثي الحجم."
+            "value" : "يضبط إعدادات الجودة أدناه ومعدل الإطارات وشريط «الجودة ↔ الكفاءة» في خطوة واحدة."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Setzt die Qualitätseinstellungen unten, die Bildrate und den Regler Qualität ↔ Effizienz in einem Schritt. Niedrig aktiviert außerdem die MetalFX-Hochskalierung ab zwei Dritteln der Größe."
+            "value" : "Setzt die Qualitätseinstellungen unten, die Bildrate und den Regler Qualität ↔ Effizienz in einem Schritt."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajusta de una vez los ajustes de calidad de abajo, la velocidad de fotogramas y el regulador Calidad ↔ Eficiencia. Baja también activa el escalado MetalFX desde dos tercios del tamaño."
+            "value" : "Ajusta de una vez los ajustes de calidad de abajo, la velocidad de fotogramas y el regulador Calidad ↔ Eficiencia."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Règle en une fois les réglages de qualité ci-dessous, la fréquence d’images et le curseur Qualité ↔ Efficacité. Faible active aussi la mise à l’échelle MetalFX depuis les deux tiers de la taille."
+            "value" : "Règle en une fois les réglages de qualité ci-dessous, la fréquence d’images et le curseur Qualité ↔ Efficacité."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "नीचे की क्वालिटी सेटिंग्ज़, फ़्रेम दर और गुणवत्ता ↔ दक्षता स्लाइडर को एक साथ सेट करता है। निम्न दो-तिहाई साइज़ से MetalFX अपस्केलिंग भी चालू करता है।"
+            "value" : "नीचे की क्वालिटी सेटिंग्ज़, फ़्रेम दर और गुणवत्ता ↔ दक्षता स्लाइडर को एक साथ सेट करता है।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Imposta in un solo passaggio le impostazioni di qualità sottostanti, la frequenza fotogrammi e il cursore Qualità ↔ Efficienza. Bassa attiva anche l’upscaling MetalFX da due terzi della dimensione."
+            "value" : "Imposta in un solo passaggio le impostazioni di qualità sottostanti, la frequenza fotogrammi e il cursore Qualità ↔ Efficienza."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "以下の画質設定、フレームレート、「品質 ↔ 効率」スライダをまとめて設定します。「低」では、3 分の 2 のサイズからの MetalFX アップスケーリングもオンになります。"
+            "value" : "以下の画質設定、フレームレート、「品質 ↔ 効率」スライダをまとめて設定します。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "아래 품질 설정, 프레임 속도, 품질 ↔ 효율 슬라이더를 한 번에 설정합니다. 낮음은 3분의 2 크기에서 MetalFX 업스케일링도 켭니다."
+            "value" : "아래 품질 설정, 프레임 속도, 품질 ↔ 효율 슬라이더를 한 번에 설정합니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ustawia jednym krokiem poniższe ustawienia jakości, liczbę klatek i suwak Jakość ↔ Wydajność. Niska włącza też skalowanie w górę MetalFX z dwóch trzecich rozmiaru."
+            "value" : "Ustawia jednym krokiem poniższe ustawienia jakości, liczbę klatek i suwak Jakość ↔ Wydajność."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Define de uma só vez os ajustes de qualidade abaixo, a taxa de quadros e o controle Qualidade ↔ Eficiência. Baixa também ativa o upscaling do MetalFX a partir de dois terços do tamanho."
+            "value" : "Define de uma só vez os ajustes de qualidade abaixo, a taxa de quadros e o controle Qualidade ↔ Eficiência."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Одним действием задает параметры качества ниже, частоту кадров и ползунок «Качество ↔ Эффективность». «Низкое» также включает масштабирование MetalFX с двух третей размера."
+            "value" : "Одним действием задает параметры качества ниже, частоту кадров и ползунок «Качество ↔ Эффективность»."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aşağıdaki kalite ayarlarını, kare hızını ve Kalite ↔ Verimlilik sürgüsünü tek adımda ayarlar. Düşük, üçte iki boyuttan MetalFX ölçek büyütmeyi de açar."
+            "value" : "Aşağıdaki kalite ayarlarını, kare hızını ve Kalite ↔ Verimlilik sürgüsünü tek adımda ayarlar."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Одним кроком задає параметри якості нижче, частоту кадрів і повзунок «Якість ↔ Ефективність». «Низька» також вмикає масштабування MetalFX з двох третин розміру."
+            "value" : "Одним кроком задає параметри якості нижче, частоту кадрів і повзунок «Якість ↔ Ефективність»."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "一次设置下方的画质设置、帧速率和“质量 ↔ 效率”滑块。“低”还会开启从三分之二尺寸开始的 MetalFX 放大。"
+            "value" : "一次设置下方的画质设置、帧速率和“质量 ↔ 效率”滑块。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "一次設定下方的畫質設定、畫面播放速率和「品質 ↔ 效率」滑桿。「低」還會開啟從三分之二尺寸開始的 MetalFX 放大。"
+            "value" : "一次設定下方的畫質設定、畫面播放速率和「品質 ↔ 效率」滑桿。"
           }
         }
       },

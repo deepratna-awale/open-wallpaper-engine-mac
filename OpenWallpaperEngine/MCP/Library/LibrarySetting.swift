@@ -53,7 +53,7 @@ struct LibrarySetting: Equatable {
     /// Settings › Performance › Quality.
     private static let quality: [LibrarySetting] = [
         LibrarySetting("quality_preset", .action(["low", "medium", "high", "ultra"]),
-                       "A preset button: sets the quality settings, the FPS and quality_efficiency in one step (low also turns on MetalFX upscaling from two thirds of the size)."),
+                       "A preset button: sets the quality settings, the FPS and quality_efficiency in one step."),
         LibrarySetting("anti_aliasing", .choice(["none", "msaa_x2", "msaa_x4", "msaa_x8"]),
                        "Multisampling of scenes' edges; more samples cost more GPU time and memory."),
         LibrarySetting("post_processing", .choice(["disabled", "enabled", "ultra", "display_hdr"]),

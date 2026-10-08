@@ -115,7 +115,7 @@ struct PerformancePage: SettingsPage {
                     }
                     .fixedSize()
                 }
-                .help("Sets the quality settings below, the frame rate and the Quality ↔ Efficiency slider in one step. Low also turns on MetalFX upscaling from two thirds of the size.")
+                .help("Sets the quality settings below, the frame rate and the Quality ↔ Efficiency slider in one step.")
                 Picker(selection: $viewModel.settings.antiAliasing) {
                     Text("None").tag(GSAntiAliasingQuality.none)
                     Text("MSAA x2").tag(GSAntiAliasingQuality.msaa_x2)

@@ -226,24 +226,25 @@ final class RenderResolutionTests: XCTestCase {
         XCTAssertFalse(roundTrip.migrated, "a saved value of today's is read as it is")
     }
 
-    /// The points-based Display on a Retina display keeps its cost down: MetalFX at 67 % draws under
-    /// half the backing pixels, and web wallpapers stay at standard resolution.
-    func testDisplayOnRetinaTurnsOnMetalFXAtTwoThirdsOnce() throws {
+    /// The points-based Display becomes Your Display drawn natively: Upscaling stays as it was
+    /// (MetalFX measured slower than native), and on a Retina display web wallpapers stay at
+    /// standard resolution, as Display drew them. Once.
+    func testDisplayOnRetinaBecomesYourDisplayOnce() throws {
         let (retina, migrated) = try decoded(#"{"renderResolution":"display","upscaling":"off","renderScale":"percent75"}"#,
                                              backingScale: 2)
         XCTAssertTrue(migrated)
         XCTAssertEqual(retina.renderResolution, .yourDisplay)
-        XCTAssertEqual(retina.upscaling, .metalFX)
-        XCTAssertEqual(retina.renderScale, .percent67)
+        XCTAssertEqual(retina.upscaling, .off)
+        XCTAssertEqual(retina.renderScale, .percent75)
         XCTAssertTrue(retina.webStandardResolution)
         XCTAssertEqual(target(hdScene, [self.retina], retina.renderResolution, scale: SceneRenderSettings(retina).drawnScale),
-                       SIMD2(2560, 1440), "drawn at two thirds of each side, rebuilt to 3840×2160")
+                       SIMD2(3840, 2160), "the backing pixels, natively")
         // Saved, it reads as it is: the migration happens once.
         let again = try decoded(String(decoding: JSONEncoder().encode(retina), as: UTF8.self), backingScale: 2)
         XCTAssertFalse(again.migrated)
         XCTAssertEqual(again.0, retina)
 
-        // Upscaling already on keeps the user's scale.
+        // Upscaling the user turned on stays on, at their scale.
         let upscaled = try decoded(#"{"renderResolution":"desktop","upscaling":"metalFX","renderScale":"percent67"}"#,
                                    backingScale: 2).0
         XCTAssertEqual(upscaled.upscaling, .metalFX)
@@ -257,7 +258,7 @@ final class RenderResolutionTests: XCTestCase {
         // Retina drew the backing pixels: nothing to carry over.
         let (pixels, pixelsMigrated) = try decoded(#"{"renderResolution":"retina"}"#, backingScale: 2)
         XCTAssertFalse(pixelsMigrated)
-        XCTAssertEqual(pixels.upscaling, .off)
+        XCTAssertFalse(pixels.webStandardResolution)
     }
 
     func testLoadingStoredSettingsMigrates() {
@@ -266,64 +267,56 @@ final class RenderResolutionTests: XCTestCase {
                                                           backupDirectory: FileManager.default.temporaryDirectory,
                                                           migration: migration)
         XCTAssertTrue(migration.migrated)
-        XCTAssertEqual(loaded.upscaling, .metalFX)
-        XCTAssertEqual(loaded.renderScale, .percent67)
+        XCTAssertEqual(loaded.renderResolution, .yourDisplay)
+        XCTAssertEqual(loaded.upscaling, .off)
+        XCTAssertTrue(loaded.webStandardResolution)
     }
 
-    /// A first launch (no stored settings) sets up for the main display, and is saved.
+    /// A first launch (no stored settings) draws natively at the display's pixels, on 1× and 2× alike.
     func testFirstLaunchDefaults() {
         let folder = FileManager.default.temporaryDirectory
-        let retinaLaunch = GlobalSettingsMigration(mainBackingScale: 2)
-        let retina = GlobalSettingsViewModel.loadSettings(from: nil, backupDirectory: folder, migration: retinaLaunch)
-        XCTAssertTrue(retinaLaunch.migrated, "saved at once")
-        XCTAssertEqual(retina.renderResolution, .yourDisplay)
-        XCTAssertEqual(retina.upscaling, .metalFX)
-        XCTAssertEqual(retina.renderScale, .percent75)
-        let plainLaunch = GlobalSettingsMigration(mainBackingScale: 1)
-        let plain = GlobalSettingsViewModel.loadSettings(from: nil, backupDirectory: folder, migration: plainLaunch)
-        XCTAssertEqual(plain.renderResolution, .yourDisplay)
-        XCTAssertEqual(plain.upscaling, .off)
-        XCTAssertEqual(plain, GlobalSettings())
-        XCTAssertEqual(GlobalSettingsViewModel.loadSettings(from: nil, backupDirectory: folder), GlobalSettings(),
-                       "without a display to set up for, the plain defaults")
+        for scale in [1.0, 2.0] {
+            let launch = GlobalSettingsMigration(mainBackingScale: scale)
+            let settings = GlobalSettingsViewModel.loadSettings(from: nil, backupDirectory: folder, migration: launch)
+            XCTAssertEqual(settings, GlobalSettings(), "\(scale)×")
+            XCTAssertEqual(settings.renderResolution, .yourDisplay, "\(scale)×")
+            XCTAssertEqual(settings.upscaling, .off, "\(scale)×")
+            XCTAssertFalse(launch.migrated, "\(scale)×: nothing to carry over")
+        }
     }
 
-    /// Upscaling only where it pays: at 1920×1200 (2.3 MP) or less the target is drawn natively.
+    /// Upscaling, when the user turns it on, only where it might pay: at 1920×1200 (2.3 MP) or less
+    /// the target is drawn natively.
     func testUpscalingIsSkippedForSmallTargets() {
         XCTAssertFalse(SceneRenderResolution.upscalingPays(targetSize: SIMD2(1920, 1080)))
         XCTAssertFalse(SceneRenderResolution.upscalingPays(targetSize: SIMD2(1920, 1200)))
         XCTAssertFalse(SceneRenderResolution.upscalingPays(targetSize: SIMD2(1440, 900)))
+        XCTAssertTrue(SceneRenderResolution.upscalingPays(targetSize: SIMD2(1921, 1200)))
         XCTAssertTrue(SceneRenderResolution.upscalingPays(targetSize: SIMD2(2560, 1440)))
-        XCTAssertTrue(SceneRenderResolution.upscalingPays(targetSize: SIMD2(2880, 1800)))
         XCTAssertTrue(SceneRenderResolution.upscalingPays(targetSize: SIMD2(5120, 2880)))
-        // Low on a 1080p display: MetalFX at 67 % is set, but the 1920×1080 target is drawn natively.
-        let low = GlobalSettingsViewModel.applying(.low, to: GlobalSettings())
-        XCTAssertFalse(SceneRenderResolution.upscalingPays(targetSize: target(hdScene, [plain], low.renderResolution)))
-        XCTAssertTrue(SceneRenderResolution.upscalingPays(targetSize: target(hdScene, [retina], low.renderResolution)))
+        XCTAssertFalse(SceneRenderResolution.upscalingPays(targetSize: target(hdScene, [plain], .yourDisplay)))
+        XCTAssertTrue(SceneRenderResolution.upscalingPays(targetSize: target(hdScene, [retina], .yourDisplay)))
     }
 
-    func testPresets() {
-        var settings = GlobalSettings()
-        settings.renderResolution = .full
-        settings.applyResolutionPreset(.low)
-        XCTAssertEqual(settings.renderResolution, .yourDisplay)
-        XCTAssertEqual(settings.upscaling, .metalFX)
-        XCTAssertEqual(settings.renderScale, .percent67)
-        // The user's own choice stands until a preset is applied again.
-        settings.renderScale = .percent75
-        XCTAssertEqual(settings.renderScale, .percent75)
-        for quality in [GSQuality.medium, .high, .ultra] {
+    func testPresetsDrawNatively() {
+        for quality in [GSQuality.low, .medium, .high, .ultra] {
+            var settings = GlobalSettings()
             settings.renderResolution = .uhd4K
-            settings.applyResolutionPreset(.low)
+            settings.upscaling = .metalFX
+            settings.renderScale = .percent50
             settings.applyResolutionPreset(quality)
-            XCTAssertEqual(settings.upscaling, .off, "\(quality)")
             XCTAssertEqual(settings.renderResolution, .yourDisplay, "\(quality)")
+            XCTAssertEqual(settings.upscaling, .off, "\(quality)")
+            let applied = GlobalSettingsViewModel.applying(quality, to: GlobalSettings())
+            XCTAssertEqual(applied.renderResolution, .yourDisplay, "\(quality)")
+            XCTAssertEqual(applied.upscaling, .off, "\(quality)")
         }
+        // The user's own choice stands until a preset is applied again.
+        var settings = GlobalSettingsViewModel.applying(.low, to: GlobalSettings())
+        settings.upscaling = .metalFX
+        XCTAssertEqual(settings.upscaling, .metalFX)
         settings.applyResolutionPreset(.low)
-        XCTAssertEqual(settings.renderScale, .percent67, "applying Low again overrides the user's scale")
-        let low = GlobalSettingsViewModel.applying(.low, to: GlobalSettings())
-        XCTAssertEqual(low.renderResolution, .yourDisplay)
-        XCTAssertEqual(low.upscaling, .metalFX)
+        XCTAssertEqual(settings.upscaling, .off, "applying a preset again overrides it")
     }
 
     @MainActor
