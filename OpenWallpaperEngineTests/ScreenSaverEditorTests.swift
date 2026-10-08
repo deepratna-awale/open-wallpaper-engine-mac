@@ -94,7 +94,7 @@ final class ScreenSaverEditorTests: XCTestCase {
         let recorder = ScreenSaverRecorder(stagingDirectory: directory.appending(path: "Staging"), runner: runner, installer: videos)
         let environment = ScreenSaverRecordingService.Environment(
             screens: { [(pixels: SIMD2(3840, 2160), points: SIMD2(1920, 1080))] },
-            renderResolution: { .display }, isPluginEnabled: { true }, enablePlugin: {}, desktopWallpaper: { nil })
+            isPluginEnabled: { true }, enablePlugin: {}, desktopWallpaper: { nil })
         return ScreenSaverRecordingService(plugin: plugin, environment: environment, store: store, recorder: recorder, videos: videos)
     }
 
@@ -225,7 +225,7 @@ final class ScreenSaverEditorTests: XCTestCase {
         let target = try XCTUnwrap(runs.targets.first)
         XCTAssertTrue(target.isRecording)
         XCTAssertEqual(target.properties, values)
-        XCTAssertEqual(target.pixelSize, SIMD2(1920, 1080), "Render Resolution Display records the points")
+        XCTAssertEqual(target.pixelSize, SIMD2(3840, 2160), "the display's pixels")
         let selection = try XCTUnwrap(store.selection)
         XCTAssertEqual(selection.fileName, target.fileName)
         XCTAssertTrue(selection.fileName.contains("-rec"))

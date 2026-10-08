@@ -8,11 +8,10 @@ import AppKit
 /// the selection again.
 @MainActor
 final class ScreenSaverRecordingService: ObservableObject {
-    /// What a recording needs from the app: the displays, Render Resolution, whether the screen
-    /// saver plugin is on, and the desktop's wallpaper.
+    /// What a recording needs from the app: the displays, whether the screen saver plugin is on,
+    /// and the desktop's wallpaper.
     struct Environment {
         var screens: @MainActor () -> [(pixels: SIMD2<Int>, points: SIMD2<Int>)]
-        var renderResolution: @MainActor () -> GSRenderResolution
         var isPluginEnabled: @MainActor () -> Bool
         /// Turns Settings › Plugins › Screen Saver on (it installs the saver).
         var enablePlugin: @MainActor () -> Void
@@ -59,8 +58,7 @@ final class ScreenSaverRecordingService: ObservableObject {
             completion(false)
             return
         }
-        guard var target = ScreenSaverPlugin.targets(for: wallpaper, screens: environment.screens(), properties: values,
-                                                     resolution: environment.renderResolution()).first else {
+        guard var target = ScreenSaverPlugin.targets(for: wallpaper, screens: environment.screens(), properties: values).first else {
             OWELog.error(.app, "Screen saver: \(wallpaper.wallpaperDirectory.lastPathComponent) can't be recorded (not a readable scene, or no display)")
             completion(false)
             return

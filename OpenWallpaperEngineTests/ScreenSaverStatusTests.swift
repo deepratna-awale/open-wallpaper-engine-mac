@@ -42,7 +42,7 @@ final class ScreenSaverStatusTests: XCTestCase {
         let web = wallpaper(type: "web", file: "index.html", directory: directory)
         let screens = [(pixels: SIMD2(3840, 2160), points: SIMD2(1920, 1080))]
         let target = try XCTUnwrap(Plugin.targets(for: web, screens: screens, properties: ["a": "1"]).first)
-        XCTAssertEqual(target.pixelSize, SIMD2(1920, 1080), "Render Resolution Display records the points")
+        XCTAssertEqual(target.pixelSize, SIMD2(3840, 2160), "the display's pixels")
         XCTAssertEqual(target.properties, ["a": "1"])
         XCTAssertEqual(Plugin.decodeProperties(Plugin.encodeProperties(["a": "1", "b": "x y"])), ["a": "1", "b": "x y"])
         XCTAssertEqual(Plugin.decodeProperties("not json"), [:])

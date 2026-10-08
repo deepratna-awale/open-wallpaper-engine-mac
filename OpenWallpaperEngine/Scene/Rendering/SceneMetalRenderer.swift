@@ -104,9 +104,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private lazy var effectGraph = EffectGraphRenderer(device: device, pipelineArchiveDirectory: pipelineArchiveDirectory)
     /// Where the effect pipeline archive lives (`EffectGraphRenderer`); nil keeps none.
     private let pipelineArchiveDirectory: URL?
-    /// How much larger full detail would draw this frame's scene target (1 unless the scene is
-    /// matched to a display smaller than it, `GSSceneDetail.matchDisplay`): the size effects on
-    /// scene regions and text, and the bloom, stand for.
+    /// How much larger full detail (at least the authored size) would draw this frame's scene
+    /// target: 1 unless Render Resolution draws the scene smaller than authored or Upscaling draws
+    /// it at the render scale. The size effects on scene regions, and the bloom, stand for.
     private var fullDetailScale: Float = 1
     /// Scales a scene drawn at the render scale up to its target (`GSUpscaling`).
     private lazy var upscaler = SceneUpscaler(device: device)
@@ -157,6 +157,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var effectAssetFrames: [String: [RenderTextureFrame]] = [:]
     /// Textureless layers' effect inputs (`solidEffectInput`), by layer id; once per content.
     private var solidEffectInputs: [String: MTLTexture] = [:]
+    /// Solid layers' base passes for a last pass drawn into the scene (`solidSceneBase`), by layer
+    /// id: the fill with the alpha it was made with, and its fill's count for `inputVersion`.
+    private var solidSceneBases: [String: (texture: MTLTexture, alpha: Float, version: UInt64)] = [:]
+    private var solidSceneBaseFills: UInt64 = 0
     /// The media system textures, while the content has a layer that shows one.
     private var mediaTextures: SceneMediaTextures?
     /// Scene-input layers drawn through a 3D camera get the scene under them through this.
@@ -433,6 +437,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var reportedCollisionTargets = Set<String>()
     /// The user's quality settings (post-processing, reflection, shadows, volumetrics); the view sets them.
     var renderSettings = SceneRenderSettings()
+    /// The target follows a live-resizing window (the editors' previews): its pixels per unit are
+    /// quantised so a resize doesn't reallocate it every frame (`SceneRenderResolution`). Off, the
+    /// target is exactly the size Render Resolution asks for. Set before the first frame.
+    var followsLiveResize = false
+    /// The target size Upscaling was last skipped at (`SceneRenderResolution.upscalingPays`), logged once.
+    private var loggedUpscalingSkip: SIMD2<Int>?
     private var sceneRenderTarget: MTLTexture?
     /// The scene pass's multisampled target with WE's MSAA setting, resolved into `sceneRenderTarget`
     /// at the end of every stretch of the pass (WE's `_rt_FullFrameBufferMultiSampled`).
@@ -658,6 +668,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             effectAssetTextures.removeAll()
             effectAssetFrames.removeAll()
             solidEffectInputs.removeAll()
+            solidSceneBases.removeAll()
             clearUploadedImages()
         }
         OWELog.info(.scene, "Memory pressure (\(level)): freed \((before - renderTargetPool.residentBytes) >> 20) MB of pooled targets")
@@ -717,6 +728,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         clearUploadedImages()
         effectAssetFrames.removeAll()
         solidEffectInputs.removeAll()
+        solidSceneBases.removeAll()
         mediaTextures = nil
         effectGraph?.releaseTargets()
         particleMaterials?.releaseAll()
@@ -1447,7 +1459,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
               layers.contains(where: { $0.layer.text != nil || $0.layer.systemImage != nil }) else { return false }
         let pixelsPerUnit = SceneRenderResolution.pixelsPerUnit(
             sceneSize: sceneSize, drawableSize: SceneViewport.largestDrawable(viewports),
-            matchDisplay: renderSettings.sceneDetail == .matchDisplay)
+            floorsAtAuthoredSize: renderSettings.floorsAtAuthoredSize, quantised: followsLiveResize)
         return SceneNativeDetailLayers.gainsDetail(scenePixelsPerUnit: Float(sceneTargetSize.x) / max(sceneSize.x, 1),
                                                    outputPixelsPerUnit: pixelsPerUnit)
     }
@@ -1510,7 +1522,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let renderDrawable = SceneRenderResolution.drawableSize(viewports, resolution: renderSettings.renderResolution,
                                                                 sceneSize: sceneSize)
         renderPixelsPerUnit = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable,
-                                                                  matchDisplay: renderSettings.sceneDetail == .matchDisplay)
+                                                                  floorsAtAuthoredSize: renderSettings.floorsAtAuthoredSize, quantised: followsLiveResize)
         // The target the frame is upscaled to when drawn at the render scale (`GSUpscaling`).
         var upscaledTargetSize: SIMD2<Int>?
         // A scene that is one plain video draws it at exactly the display's density, so a target the
@@ -1519,12 +1531,21 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         if let exact = videoOnlyPixelsPerUnit(renderDrawable) {
             renderPixelsPerUnit = exact
         } else if renderSettings.drawnScale < 1 {
-            upscaledTargetSize = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: renderPixelsPerUnit)
-            renderPixelsPerUnit = SceneRenderResolution.drawnPixelsPerUnit(renderPixelsPerUnit, scale: renderSettings.drawnScale)
+            let target = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: renderPixelsPerUnit)
+            // Upscaling only where it pays: at 1920×1200 or less, drawing natively is faster.
+            if SceneRenderResolution.upscalingPays(targetSize: target) {
+                upscaledTargetSize = target
+                renderPixelsPerUnit = SceneRenderResolution.drawnPixelsPerUnit(renderPixelsPerUnit, scale: renderSettings.drawnScale)
+            } else if loggedUpscalingSkip != target {
+                loggedUpscalingSkip = target
+                OWELog.info(.scene, "Upscaling skipped: a \(target.x)×\(target.y) scene target is drawn natively, which is faster at this size")
+            }
         }
         drawsAtRenderScale = upscaledTargetSize != nil
-        // A scene matched to a smaller display is drawn below full detail: what its buffers stand for.
-        fullDetailScale = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable) / renderPixelsPerUnit
+        // A scene drawn smaller than its authored size, or at the render scale, is below full
+        // detail: what its buffers stand for.
+        fullDetailScale = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable,
+                                                              floorsAtAuthoredSize: true, quantised: followsLiveResize) / renderPixelsPerUnit
         // A content drawn in HDR draws into RGBA16F (docs/lighting-plan.md §2.6).
         let scenePixelFormat: MTLPixelFormat = postProcess.drawsHDR ? .rgba16Float : destination.pixelFormat
         let sceneTargetSize = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: renderPixelsPerUnit)
@@ -2243,9 +2264,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let textureFrame = effectOutput != nil ? wholeFrame : image
         // The effects' last pass draws the layer: through its quad, with its material's blending and
         // depth state (`runEffectsDrawingLastPass`).
-        if let drawnLastPass, let effectGraph, let plan = entry.layer.imageMaterial {
+        if let drawnLastPass, let effectGraph, let blending = entry.layer.imageMaterial?.pass.blending ?? entry.layer.solidBlending {
             target.depth?.apply(layerRaster(entry), to: encoder)
-            let placement = lastPassPlacement(plan, draw: draw, image: wholeFrame, sceneFormat: target.pixelFormat)
+            let placement = lastPassPlacement(blending: blending, draw: draw, image: wholeFrame, sceneFormat: target.pixelFormat)
             let context = effectContext(entry, draw: draw, input: drawnLastPass.input, snapshot: nil, frame: frame)
             let drew = effectGraph.encode(drawnLastPass, into: encoder, scene: placement, context: context,
                                           commandBuffer: commandBuffer)
@@ -2368,7 +2389,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         case .shared(let viewports):
             let pixelsPerUnit = SceneRenderResolution.pixelsPerUnit(
                 sceneSize: sceneSize, drawableSize: SceneViewport.largestDrawable(viewports),
-                matchDisplay: renderSettings.sceneDetail == .matchDisplay)
+                floorsAtAuthoredSize: renderSettings.floorsAtAuthoredSize, quantised: followsLiveResize)
             let size = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: pixelsPerUnit)
             plan.sharedSize = size
             outputSize = SIMD2(Float(size.x), Float(size.y))
@@ -2733,18 +2754,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func submitScriptFrame(viewports: [SceneViewport],
                                    cursor: (position: SIMD2<Float>, onDisplay: Bool), leftDown: Bool,
                                    animationEvents: [SceneAnimationEvent]) {
-        // The screen the scene is drawn for: its points under Render Resolution "Display".
-        let toScreen = scriptScreenScale(viewports[0])
-        let drawableSize = viewports[0].drawableSize * toScreen
+        let drawableSize = viewports[0].drawableSize
         var input = SceneScriptFrameInput()
         input.deltaTime = clock.delta
         timelines.describe(into: &input, events: animationEvents)
         input.environment = SceneScriptEngineEnvironment(
             screenResolution: SIMD2(Double(drawableSize.x), Double(drawableSize.y)),
             canvasSize: SIMD2(Double(sceneSize.x), Double(sceneSize.y)), placement: placement,
-            pixelsPerPoint: Double(drawablePixelsPerPoint * toScreen), isScreensaver: rendersScreenSaver)
+            pixelsPerPoint: Double(drawablePixelsPerPoint), isScreensaver: rendersScreenSaver)
         input.environment.zoom = frameZoom
-        input.input = SceneScriptInput(cursorScreenPosition: cursorScreenPixels(viewports) * Double(toScreen),
+        input.input = SceneScriptInput(cursorScreenPosition: cursorScreenPixels(viewports),
                                        cursorLeftDown: leftDown)
         // The cursor tracks the drawn plane; scripts and their hit tests see WE's world under it.
         input.cursorScenePosition = frameZoom.worldPoint(drawn: cursor.position)
@@ -2801,13 +2820,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// The cursor in display pixels from the top-left of the wallpaper's view on the display it is
     /// on (`input.cursorScreenPosition`); where it was last seen while it is on none of them.
-    /// Screen pixels the scripts see per drawable pixel: 1 / pixels per point when the scene is
-    /// drawn at the display's points (`GSRenderResolution.display`), else 1.
-    private func scriptScreenScale(_ viewport: SceneViewport) -> Float {
-        guard renderSettings.renderResolution == .display, viewport.pixelsPerPoint > 0 else { return 1 }
-        return 1 / viewport.pixelsPerPoint
-    }
-
     private func cursorScreenPixels(_ viewports: [SceneViewport]) -> SIMD2<Double> {
         if let fixedPointer, let drawable = viewports.first?.drawableSize {
             // The fixed pointer on the drawn scene, from the drawable's top-left.
@@ -3499,27 +3511,52 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// (`EffectGraphRenderer.lastScenePass`): the shader runs once per pixel of the screen, not of
     /// the layer's buffer (docs/test-risks.md FX2). The chain starts from WE's base pass, the layer's
     /// material drawn into its buffer with the layer's colour, alpha and brightness
-    /// (`ImageMaterialRenderer.base`), which the last pass then carries into the scene. nil where
-    /// the effects composite through a buffer (`lastPassDrawsIntoScene`), or while a pipeline compiles.
+    /// (`ImageMaterialRenderer.base`), which the last pass then carries into the scene; a solid
+    /// layer's base is its `flat` fill with the layer's alpha (`solidSceneBase`). nil where the
+    /// effects composite through a buffer (`lastPassDrawsIntoScene`), or while a pipeline compiles.
     private func runEffectsDrawingLastPass(_ entry: PreparedLayer, draw: LayerDraw, input: MTLTexture, compositeSource: Bool,
                                            sceneFormat: MTLPixelFormat, frame: BuiltinFrameContext,
                                            commandBuffer: MTLCommandBuffer) -> EffectGraphRenderer.DrawnLastPass? {
-        guard let effectGraph, let imageMaterials, let plan = lastPassDrawsIntoScene(entry, compositeSource: compositeSource)
-        else { return nil }
+        guard let effectGraph, let base = lastPassDrawsIntoScene(entry, compositeSource: compositeSource) else { return nil }
         var context = effectContext(entry, draw: draw, input: input, snapshot: nil, frame: frame)
         let format = context.frameBufferFormat
-        let target = lastPassPlacement(plan, draw: draw, image: nil, sceneFormat: sceneFormat)
-        guard effectGraph.scenePassIsReady(entry.layer.weEffects, hidden: context.hiddenEffects, scene: target),
-              imageMaterials.baseIsReady(plan, layerID: entry.layer.id, format: format),
-              let base = imageMaterials.base(plan, materialDraw(entry, draw, texture: input, frame: frame),
-                                             inputVersion: context.inputVersion, format: format,
-                                             commandBuffer: commandBuffer) else { return nil }
-        context.inputVersion = base.version
-        return effectGraph.applyDrawingLastPass(entry.layer.weEffects, to: base.texture, layerID: entry.layer.id,
+        let target = lastPassPlacement(blending: base.blending, draw: draw, image: nil, sceneFormat: sceneFormat)
+        guard effectGraph.scenePassIsReady(entry.layer.weEffects, hidden: context.hiddenEffects, scene: target) else { return nil }
+        let baseTexture: MTLTexture
+        switch base {
+        case .material(let plan):
+            guard let imageMaterials, imageMaterials.baseIsReady(plan, layerID: entry.layer.id, format: format),
+                  let drawn = imageMaterials.base(plan, materialDraw(entry, draw, texture: input, frame: frame),
+                                                  inputVersion: context.inputVersion, format: format,
+                                                  commandBuffer: commandBuffer) else { return nil }
+            baseTexture = drawn.texture
+            context.inputVersion = drawn.version
+        case .solid:
+            guard let fill = solidSceneBase(entry.layer, alpha: draw.opacity, commandBuffer: commandBuffer) else { return nil }
+            baseTexture = fill.texture
+            context.inputVersion = fill.version
+        }
+        return effectGraph.applyDrawingLastPass(entry.layer.weEffects, to: baseTexture, layerID: entry.layer.id,
                                                 context: context, commandBuffer: commandBuffer)
     }
 
-    /// The layer's material when its effects' last pass draws into the scene (WE's rule for the
+    /// What a layer's last effect pass draws over in the layer's buffer before it goes into the
+    /// scene (WE's base pass), and the blending it draws into the scene with (the layer material's).
+    private enum LastPassBase {
+        /// The layer's material drawn into its buffer (`ImageMaterialRenderer.base`).
+        case material(ImageMaterialPlan)
+        /// A solid layer's `flat` fill (`SceneMetalLayer.solidBlending`).
+        case solid(blending: String)
+
+        var blending: String {
+            switch self {
+            case .material(let plan): plan.pass.blending
+            case .solid(let blending): blending
+            }
+        }
+    }
+
+    /// The layer's base when its effects' last pass draws into the scene (WE's rule for the
     /// last pass, below); nil when they composite through a buffer. WE sets an object's flag 0x10,
     /// which runs every pass into its buffers and draws them with a composite material
     /// (0x1401e9513, 0x1401ea06d…0x1401ea0c9), when:
@@ -3530,27 +3567,35 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// - it is lit with effects: its prelighting pass fills the buffer (0x140209b70…0x140209b79);
     /// - it is text (0x14020b1fa…0x14020b20d).
     /// Ours also composites through a buffer where it draws the layer another way: without the
-    /// layer's material pass (text, scene regions, solid fills, a material that draws no image),
+    /// layer's material pass (text, scene regions, shapes, a material that draws no image),
     /// with a `BLENDMODE` (31, which WE adds with), for effects that read the scene (WE copies the
     /// scene before the last pass, 0x1401ea0dd…0x1401ea114) and while a planar reflection draws
     /// the layers' images.
-    private func lastPassDrawsIntoScene(_ entry: PreparedLayer, compositeSource: Bool) -> ImageMaterialPlan? {
+    /// A solid layer (`solidBlending`, WE's `flat` material) draws its last pass into the scene
+    /// like an image: the pass's `a_Position` is the layer's quad in layer units, centred on it,
+    /// not the buffer's −1…1 (3141421197's ray-marcher takes its view rays from it).
+    private func lastPassDrawsIntoScene(_ entry: PreparedLayer, compositeSource: Bool) -> LastPassBase? {
         let layer = entry.layer
         // A puppet's last pass would draw its bind layout; its output is laid out by the posed mesh first.
-        guard let plan = layer.imageMaterial, plan.prelighting == nil, layer.text == nil, !layer.sceneInput, layer.puppet == nil,
-              layer.solidFill == nil, !layer.readsScene, !compositeSource,
-              (plan.pass.variant?.combos["BLENDMODE"] ?? 0) == 0,
-              !plan.pass.readsSceneSnapshot, !plan.pass.readsMipMappedFrameBuffer,
-              plan.pass.blending.lowercased() != "alphatocoverage",
+        guard layer.text == nil, !layer.sceneInput, layer.puppet == nil, !layer.readsScene, !compositeSource,
               !lighting.settings.fog.distance, !lighting.settings.fog.height,
               planarReflection?.isNeeded(spatial.models) != true else { return nil }
-        return plan
+        guard let plan = layer.imageMaterial else {
+            guard let blending = layer.solidBlending, layer.solidFill != nil,
+                  blending.lowercased() != "alphatocoverage" else { return nil }
+            return .solid(blending: blending)
+        }
+        guard plan.prelighting == nil, layer.solidFill == nil,
+              (plan.pass.variant?.combos["BLENDMODE"] ?? 0) == 0,
+              !plan.pass.readsSceneSnapshot, !plan.pass.readsMipMappedFrameBuffer,
+              plan.pass.blending.lowercased() != "alphatocoverage" else { return nil }
+        return .material(plan)
     }
 
     /// Where a layer's last effect pass draws: its quad, as its material draws it (`encodeLayer`),
     /// sampling the chain's buffers where `image` shows its picture (its sprite frame, or the
     /// content of a padded texture); nil `image` gives the pass only its target (`scenePassIsReady`).
-    private func lastPassPlacement(_ plan: ImageMaterialPlan, draw: LayerDraw, image: RenderTextureFrame?,
+    private func lastPassPlacement(blending: String, draw: LayerDraw, image: RenderTextureFrame?,
                                    sceneFormat: MTLPixelFormat) -> EffectGraphRenderer.ScenePlacement {
         let extent = draw.placement?.size ?? draw.quad.extent
         let positions = draw.placement?.quadPositions ?? ImageMaterialRenderer.quadPositions(extent: extent)
@@ -3570,7 +3615,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             positions: positions, texCoords: texCoords,
             model: draw.placement?.world ?? ImageMaterialRenderer.modelMatrix(draw.quad),
             view: draw.placement?.camera.view ?? matrix_identity_float4x4, viewProjection: viewProjection,
-            blending: plan.pass.blending, pixelFormat: sceneFormat, sampleCount: sceneSampleCount,
+            blending: blending, pixelFormat: sceneFormat, sampleCount: sceneSampleCount,
             depthFormat: frameDepth == nil ? .invalid : SceneDepthStates.format)
     }
 
@@ -3633,15 +3678,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         if entry.layer.puppet != nil { context.inputVersion = puppets?.albedoVersion(entry.layer.id) ?? 0 }
         // A sprite sheet's frames are cut into the same texture as it plays.
         if let version = spriteFrameVersions[entry.layer.id] { context.inputVersion = version }
+        // Effect Detail: Match Display runs a layer's effects at most at its size on screen.
         if renderSettings.sceneDetail == .matchDisplay {
             context.footprint = effectFootprint(entry, draw: draw, input: input)
-            // Scene regions are drawn at the scene target's density, below full detail when the
-            // target is matched to a smaller display; solid fills and text with effects are at
-            // WE's own buffer size.
-            if context.footprint == nil, fullDetailScale > 1, entry.layer.solidFill == nil, entry.layer.text == nil {
-                let standIn = (SIMD2(Float(input.width), Float(input.height)) * fullDetailScale).rounded(.toNearestOrAwayFromZero)
-                context.inputStandInSize = SIMD2(Int(standIn.x), Int(standIn.y))
-            }
+        }
+        // Scene regions are drawn at the scene target's density, below full detail when the target
+        // is smaller than the scene's authored size; solid fills and text with effects are at WE's
+        // own buffer size.
+        if context.footprint == nil, fullDetailScale > 1, entry.layer.solidFill == nil, entry.layer.text == nil {
+            let standIn = (SIMD2(Float(input.width), Float(input.height)) * fullDetailScale).rounded(.toNearestOrAwayFromZero)
+            context.inputStandInSize = SIMD2(Int(standIn.x), Int(standIn.y))
         }
         return context
     }
@@ -3946,11 +3992,39 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         guard let fill = layer.solidFill else { return nil }
         let size = SolidEffectInput.size(layer.size)
         if let cached = solidEffectInputs[layer.id], cached.width == size.x, cached.height == size.y { return cached }
+        guard let texture = solidFillTexture(layer, fill: fill, reusing: nil, commandBuffer: commandBuffer) else { return nil }
+        solidEffectInputs[layer.id] = texture
+        return texture
+    }
+
+    /// A solid layer's base pass when its last effect pass draws into the scene: its fill at the
+    /// effect input's size with the layer's `alpha` in its alpha, as WE's `flat` writes `g_Alpha`
+    /// into the layer's buffer and the last pass carries it into the scene. Refilled when the
+    /// alpha changes, with a new `version` for the chain's `inputVersion`.
+    private func solidSceneBase(_ layer: SceneMetalLayer, alpha: Float,
+                                commandBuffer: MTLCommandBuffer) -> (texture: MTLTexture, version: UInt64)? {
+        guard var fill = layer.solidFill else { return nil }
+        fill.w *= alpha
+        let size = SolidEffectInput.size(layer.size)
+        let cached = solidSceneBases[layer.id].flatMap { $0.texture.width == size.x && $0.texture.height == size.y ? $0 : nil }
+        if let cached, cached.alpha == fill.w { return (cached.texture, cached.version) }
+        guard let texture = solidFillTexture(layer, fill: fill, reusing: cached?.texture, commandBuffer: commandBuffer)
+        else { return nil }
+        solidSceneBaseFills &+= 1
+        solidSceneBases[layer.id] = (texture, fill.w, solidSceneBaseFills)
+        return (texture, solidSceneBaseFills)
+    }
+
+    /// `fill` (straight RGBA) over a texture of `layer`'s effect input size (`SolidEffectInput`):
+    /// `reusing`, or a new one.
+    private func solidFillTexture(_ layer: SceneMetalLayer, fill: SIMD4<Float>, reusing: MTLTexture?,
+                                  commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+        let size = SolidEffectInput.size(layer.size)
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: size.x,
                                                                   height: size.y, mipmapped: false)
         descriptor.usage = [.renderTarget, .shaderRead]
         descriptor.storageMode = .private
-        guard let texture = device.makeTexture(descriptor: descriptor) else {
+        guard let texture = reusing ?? device.makeTexture(descriptor: descriptor) else {
             OWELog.error(.scene, "Layer \(layer.id): could not allocate its \(size.x)×\(size.y) effect input")
             return nil
         }
@@ -3962,7 +4036,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         pass.colorAttachments[0].storeAction = .store
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return nil }
         encoder.endEncoding()
-        solidEffectInputs[layer.id] = texture
         return texture
     }
 

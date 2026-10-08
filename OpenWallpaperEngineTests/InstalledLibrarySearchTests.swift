@@ -18,6 +18,16 @@ final class InstalledLibrarySearchTests: XCTestCase {
         XCTAssertFalse(InstalledLibraryModel.matchesSearch("day", wallpaper: cafe, tags: []))
     }
 
+    /// A wallpaper without a rating (made before WE had them) is Everyone, so the default filters
+    /// show it; project.json's rating wins, then the Workshop tags'.
+    func testAnUnratedWallpaperIsEveryone() {
+        var unrated = wallpaper(title: "Aesthetic City")
+        XCTAssertEqual(InstalledLibraryModel.ageRating(of: unrated, tags: []), .everyone)
+        XCTAssertEqual(InstalledLibraryModel.ageRating(of: unrated, tags: ["Mature"]), .mature, "the Workshop's tag")
+        unrated.project.contentrating = "Questionable"
+        XCTAssertEqual(InstalledLibraryModel.ageRating(of: unrated, tags: ["Mature"]), .partialNudity, "project.json's")
+    }
+
     func testMatchesEveryField() {
         let item = wallpaper(title: "Title", description: "Rainy street", folder: "my-folder")
         XCTAssertTrue(InstalledLibraryModel.matchesSearch("rainy", wallpaper: item, tags: []))

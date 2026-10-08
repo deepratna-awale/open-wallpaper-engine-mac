@@ -39,6 +39,7 @@ final class ContentViewModel {
     @ObservationIgnored lazy var workshopVM: WorkshopViewModel = {
         let model = WorkshopViewModel(steamCmd: steamCmdService, blockList: workshopBlockList)
         model.showsBrowser = { [weak self] in self?.navigation.topTabBarSelection = 1 }
+        model.attach(setAs: WorkshopSetAsFlow(environment: .app(workshop: model, library: library)))
         return model
     }()
     /// The Discover tab's lists.

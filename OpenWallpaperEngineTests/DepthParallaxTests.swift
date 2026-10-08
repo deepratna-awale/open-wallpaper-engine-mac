@@ -184,7 +184,7 @@ final class DepthParallaxTests: XCTestCase {
         settings.postProcessing = .enabled
         settings.textureReduction = 1
         settings.sceneDetail = .full
-        settings.renderResolution = .retina
+        settings.renderResolution = .yourDisplay
         let renderer = WEReferenceRenderer(directory: directory, project: project, settings: settings,
                                            storage: scratch.appending(path: "storage-\(UUID().uuidString)"))
         defer { Fixtures.removeStoredSettings(for: directory) }

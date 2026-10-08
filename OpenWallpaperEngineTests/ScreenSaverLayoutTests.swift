@@ -181,7 +181,7 @@ final class ScreenSaverLayoutTests: XCTestCase {
         let plan = plan(ScreenSaverDisplayLayout(sameAsWallpaper: false, layout: .stretch), displays: [a, b],
                         shown: ["1": content])
         let store = ScreenSaverVideoStore(directory: directory.appending(path: "Store"))
-        let work = Plugin.work(for: plan, wallpapers: [content.id: video], resolution: .display, store: store)
+        let work = Plugin.work(for: plan, wallpapers: [content.id: video], store: store)
         XCTAssertTrue(work.renders.isEmpty, "a video plays its own file: nothing is rendered")
         XCTAssertEqual(work.videos.count, 1)
         let entry = try XCTUnwrap(work.entries.first)
@@ -214,7 +214,7 @@ final class ScreenSaverLayoutTests: XCTestCase {
         let content = Plan.Content(id: directory.standardizedFileURL.path)
         let plan = plan(ScreenSaverDisplayLayout(), displays: [a, b], shown: ["1": content, "2": content])
         let store = ScreenSaverVideoStore(directory: directory.appending(path: "Store"))
-        let work = Plugin.work(for: plan, wallpapers: [content.id: scene], resolution: .retina, store: store)
+        let work = Plugin.work(for: plan, wallpapers: [content.id: scene], store: store)
         XCTAssertEqual(work.renders.count, 1)
         XCTAssertEqual(work.renders.first?.target.pixelSize, SIMD2(3840, 2160), "the largest of both displays")
         XCTAssertEqual(work.entries.first?.size, SIMD2(3840, 2160))

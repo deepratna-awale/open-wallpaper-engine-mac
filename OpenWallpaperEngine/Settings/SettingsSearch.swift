@@ -84,7 +84,7 @@ struct SettingsSearch {
             entry("Anti-aliasing", .performance, SettingsAnchor.quality),
             entry("Post-Processing", .performance, SettingsAnchor.quality),
             entry("Texture Resolution", .performance, SettingsAnchor.quality),
-            entry("Scene Detail", .performance, SettingsAnchor.quality),
+            entry("Effect Detail", .performance, SettingsAnchor.quality),
             entry("Render Resolution", .performance, SettingsAnchor.quality),
             entry("Shadows", .performance, SettingsAnchor.quality),
             entry("Volumetrics", .performance, SettingsAnchor.quality),

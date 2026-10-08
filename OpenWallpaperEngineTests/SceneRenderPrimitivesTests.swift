@@ -147,7 +147,8 @@ final class SceneRenderPrimitivesTests: XCTestCase {
             Case(scene: SIMD2(1920, 1080), drawable: SIMD2(.nan, .infinity)),
         ]
         for item in cases {
-            let scale = SceneRenderResolution.pixelsPerUnit(sceneSize: item.scene, drawableSize: item.drawable)
+            let scale = SceneRenderResolution.pixelsPerUnit(sceneSize: item.scene, drawableSize: item.drawable,
+                                                            floorsAtAuthoredSize: true)
             let size = SceneRenderResolution.targetSize(sceneSize: item.scene, pixelsPerUnit: scale)
             let label = "scene \(item.scene), drawable \(item.drawable)"
             XCTAssertTrue(scale.isFinite && scale > 0, label)
@@ -157,13 +158,18 @@ final class SceneRenderPrimitivesTests: XCTestCase {
             XCTAssertEqual(Float(size.x) / Float(size.y), item.scene.x / item.scene.y,
                            accuracy: 0.01 * item.scene.x / item.scene.y, label)
         }
-        // WE draws at the display's resolution: 5K and 6K get their full density (eighths, rounded up).
+        // WE draws at the display's resolution: 5K and 6K get exactly their density, or eighths
+        // rounded up for a target that follows a live-resizing window.
         let fiveK = SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(1920, 1080), drawableSize: SIMD2(5120, 2880))
-        XCTAssertEqual(fiveK, 2.75, accuracy: 1e-6)
-        let sixK = SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(1920, 1080), drawableSize: SIMD2(6016, 3384))
+        XCTAssertEqual(SceneRenderResolution.targetSize(sceneSize: SIMD2(1920, 1080), pixelsPerUnit: fiveK), SIMD2(5120, 2880))
+        XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(1920, 1080), drawableSize: SIMD2(5120, 2880),
+                                                           quantised: true), 2.75, accuracy: 1e-6)
+        let sixK = SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(1920, 1080), drawableSize: SIMD2(6016, 3384),
+                                                       quantised: true)
         XCTAssertEqual(sixK, 3.25, accuracy: 1e-6)
-        // A scene bigger than Metal's largest texture is fitted into it rather than failing to allocate.
-        let huge = SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(20000, 20000), drawableSize: SIMD2(3840, 2160))
+        // A floored scene bigger than Metal's largest texture is fitted into it rather than failing to allocate.
+        let huge = SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(20000, 20000), drawableSize: SIMD2(3840, 2160),
+                                                       floorsAtAuthoredSize: true)
         XCTAssertEqual(SceneRenderResolution.targetSize(sceneSize: SIMD2(20000, 20000), pixelsPerUnit: huge),
                        SIMD2(16384, 16384))
     }
@@ -172,8 +178,9 @@ final class SceneRenderPrimitivesTests: XCTestCase {
         let scene = SIMD2<Float>(1920, 1080)
         XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: scene, drawableSize: SIMD2(3840, 2160)), 2)
         XCTAssertEqual(SceneRenderResolution.targetSize(sceneSize: scene, pixelsPerUnit: 2), SIMD2(3840, 2160))
-        // Never below the authored size (thumbnails, small windows).
-        XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: scene, drawableSize: SIMD2(640, 360)), 1)
+        // Floored, never below the authored size (thumbnails, small windows, the exports).
+        XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: scene, drawableSize: SIMD2(640, 360),
+                                                           floorsAtAuthoredSize: true), 1)
     }
 
     /// Only the hardware limits the target: no memory budget caps the density.
@@ -181,7 +188,8 @@ final class SceneRenderPrimitivesTests: XCTestCase {
         let scale = SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(1920, 1080), drawableSize: SIMD2(15360, 8640))
         XCTAssertEqual(scale, 8)
         XCTAssertEqual(SceneRenderResolution.targetSize(sceneSize: SIMD2(1920, 1080), pixelsPerUnit: scale), SIMD2(15360, 8640))
-        let beyond = SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(1920, 1080), drawableSize: SIMD2(30720, 17280))
+        let beyond = SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(1920, 1080), drawableSize: SIMD2(30720, 17280),
+                                                         quantised: true)
         XCTAssertEqual(beyond, 8.5, "the largest eighth whose target fits 16384 px")
         XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: SIMD2(7680, 4320), drawableSize: SIMD2(7680, 4320)), 1)
     }

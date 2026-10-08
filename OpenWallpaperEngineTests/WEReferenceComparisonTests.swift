@@ -123,7 +123,7 @@ final class WEReferenceComparisonTests: XCTestCase {
         settings.particleBudget = .unlimited
         // WE's own detail, whatever the app's default, one pixel per point.
         settings.sceneDetail = .full
-        settings.renderResolution = .retina
+        settings.renderResolution = .yourDisplay
         if let value = capture.postProcessing {
             settings.postProcessing = GSPostProcessingQuality(rawValue: value) ?? settings.postProcessing
             XCTAssertNotNil(GSPostProcessingQuality(rawValue: value), "post-processing \(value)")

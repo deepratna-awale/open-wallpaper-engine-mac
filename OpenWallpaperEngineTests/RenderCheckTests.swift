@@ -118,6 +118,56 @@ final class RenderCheckTests: XCTestCase {
         XCTAssertEqual(right.z, 255, "the fill's blue under the ramp")
     }
 
+    /// A solid layer's last effect pass draws into the scene through the layer's quad, as an
+    /// image's does: its `a_Position` is the quad in layer units, centred (±64 × ±32 here), not the
+    /// buffer's −1…1. 3141421197's ray-marcher takes its rays from it over `g_Texture0Resolution`;
+    /// with −1…1 every pixel looked down the tunnel's dark centre and the wallpaper was black.
+    func testSolidLayerLastPassSeesTheLayersPositions() throws {
+        _ = try Fixtures.assets()
+        let size = SIMD2(128, 64)
+        let directory = Fixtures.url("Scenes/solid-position-effect")
+        let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/solid-position-effect/project.json"))
+        defer { Fixtures.removeStoredSettings(for: directory) }
+        let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
+        let layer = try XCTUnwrap(content.layers.first)
+        XCTAssertEqual(layer.solidBlending, "translucent", "WE's solidlayer material's blending")
+        try XCTSkipIf(layer.weEffects.isEmpty, "no shader toolchain for the fixture's effect")
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        let view = MTKView(frame: CGRect(x: 0, y: 0, width: size.x, height: size.y), device: device)
+        view.colorPixelFormat = .bgra8Unorm
+        view.framebufferOnly = false
+        view.autoResizeDrawable = false
+        view.drawableSize = CGSize(width: size.x, height: size.y)
+        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "solid-position-effect"))
+        defer { renderer.releaseContent() }
+        view.isPaused = true
+        renderer.setPlacement(.stretch)
+        renderer.setContent(content)
+        var bytes = [UInt8](repeating: 0, count: size.x * size.y * 4)
+        // (r, g, b) at a view pixel.
+        func rgb(_ x: Int, _ y: Int) -> SIMD3<UInt8> {
+            let i = (y * size.x + x) * 4
+            return SIMD3(bytes[i + 2], bytes[i + 1], bytes[i])
+        }
+        let deadline = Date().addingTimeInterval(60)
+        repeat {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+            renderer.draw(in: view)
+            renderer.lastCommandBuffer?.waitUntilCompleted()
+            view.currentDrawable?.texture.getBytes(&bytes, bytesPerRow: size.x * 4,
+                                                   from: MTLRegionMake2D(0, 0, size.x, size.y), mipmapLevel: 0)
+            // The white fill shows until the effect's pipelines are compiled.
+        } while rgb(64, 32).x == 255 && Date() < deadline
+        // x = −59.5 and +59.5 layer units: red 0.035 and 0.965; y = +27.5 (top) and −27.5: green 0.93 and 0.07.
+        let topLeft = rgb(4, 4), bottomRight = rgb(size.x - 4, size.y - 4), centre = rgb(64, 32)
+        XCTAssertEqual(Int(topLeft.x), 9, accuracy: 4, "top left \(topLeft)")
+        XCTAssertEqual(Int(topLeft.y), 237, accuracy: 4, "top left \(topLeft)")
+        XCTAssertEqual(Int(bottomRight.x), 246, accuracy: 4, "bottom right \(bottomRight)")
+        XCTAssertEqual(Int(bottomRight.y), 18, accuracy: 4, "bottom right \(bottomRight)")
+        XCTAssertEqual(Int(centre.x), 128, accuracy: 4, "centre \(centre)")
+        XCTAssertEqual(centre.z, 255, "the fill's blue, sampled from the framebuffer")
+    }
+
     /// WE multiplies a layer's colour by its `brightness` only under the `ultra` (or `displayhdr`)
     /// post-processing setting (engine flag 0x2000, 0x140207a2b). 2321732083's background
     /// (brightness 0.89) is as bright in WE's capture, taken with post-processing enabled, as

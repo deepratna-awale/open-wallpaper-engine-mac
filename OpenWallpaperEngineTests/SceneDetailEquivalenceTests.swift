@@ -11,8 +11,9 @@ import simd
 ///
 /// Only runs when asked: `OWE_SCENE_DETAIL` (`TEST_RUNNER_OWE_SCENE_DETAIL`) lists workshop ids;
 /// `OWE_SCENE_DETAIL_SIZE` is the drawable (default 3840x2160, a 4K display at 2×) and
-/// `OWE_SCENE_DETAIL_MODES` the matched settings (`match`, `match+desktop`, `desktop`, `half`, as the
-/// frame benchmark names them). Particle systems are left out: two renderers' GPU simulations
+/// `OWE_SCENE_DETAIL_MODES` the matched settings (`match`: Effect Detail Match Display;
+/// `your-display`: the target at the drawable's pixels, not floored at the authored size, as the
+/// app draws Your Display; `half`; joined with `+`, e.g. `match+your-display`). Particle systems are left out: two renderers' GPU simulations
 /// don't draw the same particles. Frames, and an amplified difference, are written under
 /// `OWE_SCENE_DETAIL_OUT` when set.
 final class SceneDetailEquivalenceTests: XCTestCase {
@@ -102,8 +103,9 @@ final class SceneDetailEquivalenceTests: XCTestCase {
         for part in mode.split(separator: "+") {
             switch part {
             case "match": settings.sceneDetail = .matchDisplay
-            case "desktop", "display": settings.renderResolution = .display
-            case "retina": settings.renderResolution = .retina
+            case "your-display":
+                settings.renderResolution = .yourDisplay
+                settings.floorsAtAuthoredSize = false
             case "half": settings.textureReduction = 2
             default: XCTFail("unknown mode \(part)")
             }

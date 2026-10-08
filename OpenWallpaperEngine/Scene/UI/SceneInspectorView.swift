@@ -205,12 +205,15 @@ private final class SceneInspectorModel: ObservableObject {
             let switchedOn = visibility.isOn(storedValues)
             let effects = makeEffects(object.effects ?? [], objectID: objectID, storedValues: storedValues)
             let version = SceneLayerVersion(object: object, definitions: definitions).map { (choice: $0, title: $0.title(labels: labels)) }
+            // An empty or blank name is no name ("name": "" in WE's GIF template), as the Wallpaper
+            // Editor's list treats it.
+            let authoredName = object.name.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 }
             if let imagePath = object.image {
                 let model: WEModel? = data(imagePath).flatMap { try? JSONDecoder().decode(WEModel.self, from: $0) }
                 let materialPath = model?.material
                 let material: WEMaterial? = materialPath.flatMap { data($0) }.flatMap { try? JSONDecoder().decode(WEMaterial.self, from: $0) }
                 let passes = material?.passes ?? []
-                return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? String(localized: "Image \(index + 1)", comment: "Scene Editor: an image layer without a name"),
+                return SceneInspectorItem(id: String(object.id ?? index), name: authoredName ?? String(localized: "Image \(index + 1)", comment: "Scene Editor: an image layer without a name"),
                                           kind: "Image", sourcePath: imagePath, materialPath: materialPath,
                                           texturePaths: passes.flatMap { $0.textures?.compactMap { $0 } ?? [] },
                                           shaderPaths: passes.compactMap(\.shader), rawObject: rawObject,
@@ -224,7 +227,7 @@ private final class SceneInspectorModel: ObservableObject {
                 let materialPath = particle?.material
                 let material: WEMaterial? = materialPath.flatMap { data($0) }.flatMap { try? JSONDecoder().decode(WEMaterial.self, from: $0) }
                 let passes = material?.passes ?? []
-                return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? String(localized: "Particle \(index + 1)", comment: "Scene Editor: a particle system without a name"),
+                return SceneInspectorItem(id: String(object.id ?? index), name: authoredName ?? String(localized: "Particle \(index + 1)", comment: "Scene Editor: a particle system without a name"),
                                           kind: "Particle", sourcePath: particlePath, materialPath: materialPath,
                                           texturePaths: passes.flatMap { $0.textures?.compactMap { $0 } ?? [] },
                                           shaderPaths: passes.compactMap(\.shader), rawObject: rawObject,
@@ -233,7 +236,7 @@ private final class SceneInspectorModel: ObservableObject {
                                           version: version, effects: effects,
                                           visibility: visibility, isSwitchedOn: switchedOn)
             }
-            return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? String(localized: "Object \(index + 1)", comment: "Scene Editor: a scene object without a name"),
+            return SceneInspectorItem(id: String(object.id ?? index), name: authoredName ?? String(localized: "Object \(index + 1)", comment: "Scene Editor: a scene object without a name"),
                                       kind: "Other", sourcePath: "", materialPath: nil, texturePaths: [], shaderPaths: [],
                                       rawObject: rawObject, rawMaterial: nil, rawParticle: nil,
                                       visible: visible,
@@ -659,10 +662,12 @@ private final class SceneInspectorModel: ObservableObject {
                                   storedValues: [String: String]) -> SIMD2<Double> {
         do {
             return try SceneDrawnSize.of(sceneData: sceneData, overlay: SceneDrawnSize.savedOverlay(of: wallpaper),
-                                         edits: ScenePreparation.split(storedValues: storedValues).edits)
+                                         edits: ScenePreparation.split(storedValues: storedValues).edits,
+                                         readAsset: SceneImageSize.reader(for: wallpaper))
         } catch {
             OWELog.error(.ui, "Scene Editor: no drawn size for \(wallpaper.wallpaperDirectory.lastPathComponent), framing the authored scene: \(error)")
-            return SIMD2<Double>(SceneWallpaperViewModel.sceneSize(of: scene))
+            let read = SceneImageSize.reader(for: wallpaper)
+            return SIMD2<Double>(SceneWallpaperViewModel.sceneSize(of: scene) { SceneImageSize.of(model: $0, readAsset: read) })
         }
     }
 

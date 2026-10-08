@@ -180,7 +180,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                  points: SIMD2(Int(screen.frame.width), Int(screen.frame.height)))
             }
         },
-        renderResolution: { [unowned self] in globalSettingsViewModel.settings.renderResolution },
         isPluginEnabled: { [unowned self] in globalSettingsViewModel.settings.screenSaver },
         enablePlugin: { [unowned self] in globalSettingsViewModel.settings.screenSaver = true },
         desktopWallpaper: { [unowned self] in wallpaperViewModel.currentWallpaper }))

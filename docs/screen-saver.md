@@ -24,8 +24,8 @@ priority, waiting while the Mac is on battery or hot:
 - Audio-reactive wallpapers hear a steady beat while they are recorded, so they still move.
 - Application wallpapers can't be used.
 
-The loop is recorded at the largest display's size, in points under Render Resolution Display and
-in pixels under Retina and Full. The Details panel shows whether a wallpaper's screen saver is
+The loop is recorded at the largest display's pixels; the scene in it is drawn as Render
+Resolution and Upscaling draw the live wallpaper, then fitted to the video. The Details panel shows whether a wallpaper's screen saver is
 available (**Screen Saver Available**), being made (**Rendering Screen Saver**) or not
 (**Screen Saver Not Available**, with the reason in its tooltip).
 

@@ -200,7 +200,7 @@ struct SettingsView: View {
         panel.allowsMultipleSelection = false
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
-            let transfer = try SettingsTransfer.decode(Data(contentsOf: url))
+            let transfer = try SettingsTransfer.decode(Data(contentsOf: url), migration: .current())
             viewModel.settings = transfer.settings
             // The other preferences it sets stay, so Cancel goes back to the imported settings.
             viewModel.commitEdits()

@@ -5,7 +5,9 @@ import simd
 /// `{"auto": true}` scenes and unsized images against WE 2.8 (docs/models-plan.md §5.21,
 /// tools/peer/requests/owe-beta3/models-open/521-auto-size/README.md): an `autosize` image a script
 /// moves follows the script (about 59 px/s for 60 px/s set, no per-frame re-centring); an image
-/// without `size` takes its texture's size, and the scene keeps its 1920×1080.
+/// without `size` takes its texture's size, and an `auto` scene takes that size from it (WE's GIF
+/// template, `assets/scenes/gifs/gifscene.json`, writes no `size`; the 521 capture had a fixed
+/// projection, so its 1920×1080 was the projection's, not `auto`'s).
 final class OrthographicAutoSceneTests: XCTestCase {
     private var directory: URL!
     private var storage: URL!
@@ -32,13 +34,24 @@ final class OrthographicAutoSceneTests: XCTestCase {
         XCTAssertEqual(layer.size, SIMD2(400, 200))
     }
 
-    /// Without `size` the image is its texture's size and the scene stays 1920×1080.
-    func testAnUnsizedImageTakesItsTexturesSize() throws {
+    /// Without `size` the image is its texture's size, and the scene is that size, the image
+    /// filling it: a GIF wallpaper made with WE's template fills the display.
+    func testAnUnsizedImageSizesTheSceneFromItsTexture() throws {
         let content = try content(image: #""origin": "5 5 0""#)
-        XCTAssertEqual(content.size, SIMD2(1920, 1080))
+        XCTAssertEqual(content.size, SIMD2(8, 4), "the texture's size")
         let layer = try XCTUnwrap(content.layers.first { $0.id == "1" })
         XCTAssertEqual(layer.size, SIMD2(8, 4), "the texture's size")
-        XCTAssertEqual(layer.position, SIMD2(960, 540))
+        XCTAssertEqual(layer.position, SIMD2(4, 2), "centred in it")
+    }
+
+    /// The exports and the Scene Editor measure the same size from the wallpaper's files.
+    func testTheDrawnSizeReadsTheTexture() throws {
+        _ = try content(image: #""origin": "5 5 0""#)
+        let sceneData = try Data(contentsOf: directory.appending(path: "scene.json"))
+        let read: (String) -> Data? = { try? Data(contentsOf: self.directory.appending(path: $0)) }
+        XCTAssertEqual(try SceneDrawnSize.of(sceneData: sceneData, overlay: nil, readAsset: read), SIMD2(8, 4))
+        XCTAssertEqual(try SceneDrawnSize.of(sceneData: sceneData, overlay: nil), SIMD2(1920, 1080),
+                       "without the files, WE's default canvas")
     }
 
     /// The renderer reports the centred origin; a script's `x = 960 + 60·t` wins every frame, and

@@ -25,22 +25,8 @@ enum SceneAddLayerDefaults {
         return (size, scene.general.projection == .perspective ? .zero : size / 2)
     }
 
-    /// An image model's size as the renderer gives a layer without one: the model's `width` and
-    /// `height`, else its material's first texture's image size; nil when neither can be read.
+    /// An image model's size as the renderer gives a layer without one (`SceneImageSize`).
     static func imageSize(ofModel model: String, readAsset: (String) -> Data?) -> SIMD2<Double>? {
-        guard let modelData = readAsset(model) else { return nil }
-        do {
-            let decoded = try JSONDecoder().decode(WEModel.self, from: modelData)
-            if let declared = decoded.declaredSize { return SIMD2<Double>(declared) }
-            guard let materialPath = decoded.material, let materialData = readAsset(materialPath) else { return nil }
-            let material = try JSONDecoder().decode(WEMaterial.self, from: materialData)
-            guard let texture = material.passes?.first?.textures?.first ?? nil,
-                  let data = readAsset("materials/\(texture).tex"), let header = TEXFileHeader(data),
-                  header.imageWidth > 0, header.imageHeight > 0 else { return nil }
-            return SIMD2(Double(header.imageWidth), Double(header.imageHeight))
-        } catch {
-            OWELog.debug(.app, "MCP: add_layer can't read \(model)'s size: \(error)")
-            return nil
-        }
+        SceneImageSize.of(model: model, readAsset: readAsset)
     }
 }

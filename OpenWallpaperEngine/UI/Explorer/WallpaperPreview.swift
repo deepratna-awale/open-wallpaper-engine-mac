@@ -224,6 +224,9 @@ struct WallpaperPreview: SubviewOfContentView {
                             }
                             .buttonStyle(.link)
                             .help("View this author's Workshop items")
+                        } else if wallpaperViewModel.displayedWallpaper.project.official == true {
+                            // WE's own default wallpapers: no Workshop author, made by Wallpaper Engine.
+                            Text(verbatim: "Wallpaper Engine")
                         } else {
                             Text("Unknown Author")
                         }
