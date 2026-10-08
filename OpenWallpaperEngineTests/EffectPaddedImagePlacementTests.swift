@@ -1,5 +1,6 @@
 import XCTest
 import MetalKit
+import simd
 @testable import OpenWallpaperEngine
 
 /// An image in a padded `.tex` (the picture in the top-left of a power-of-two texture, as WE's
@@ -68,11 +69,47 @@ final class EffectPaddedImagePlacementTests: XCTestCase {
         check(frame(right, 540), column: lastColumn, row: 300, "right")
     }
 
+    /// The same image as DXT1 in a 1024×1024 allocation, blue with a red bottom band, tinted green by
+    /// WE's tint effect where its padded mask (500×300 in 512×512) is white: rows 75…224 of the
+    /// mask, the picture's rows 150…449. A DXT texture can't be blitted texel by texel, so its
+    /// effects ran over the whole allocation and the mask's band landed on rows 256…767.
+    func testPaddedDXTImageMaskLinesUpWithThePicture() throws {
+        _ = try Fixtures.assets()
+        for placement in [WallpaperPlacement.fit, .fill] {
+            let frame = try render(Self.writeDXTFixture(), effect: true, placement: placement)
+            // The colour at the display's centre column of a picture row.
+            func colour(_ row: Float) -> SIMD3<UInt8> {
+                let (scale, top): (Float, Float) = placement == .fill ? (1.92, 36.96) : (1080 / 601, 0)
+                let y = Int((row + 0.5) * scale - top)
+                let i = (y * Self.display.x + 960) * 4
+                return SIMD3(frame[i + 2], frame[i + 1], frame[i])
+            }
+            let blue = SIMD3<UInt8>(0, 0, 255), green = SIMD3<UInt8>(0, 255, 0), red = SIMD3<UInt8>(255, 0, 0)
+            for (row, expected) in [(30, blue), (140, blue), (160, green), (300, green), (440, green), (460, blue),
+                                    (560, blue), (578, red)] as [(Float, SIMD3<UInt8>)] {
+                let got = colour(row)
+                let difference = simd_reduce_max(simd_abs(SIMD3<Int32>(truncatingIfNeeded: got) &- SIMD3<Int32>(truncatingIfNeeded: expected)))
+                XCTAssertLessThanOrEqual(difference, 8, "\(placement) row \(row): \(got), expected \(expected)")
+            }
+        }
+    }
+
     // MARK: - Rendering
 
     /// Renders the fixture once it has settled and returns a reader of its display pixels.
     func render(_ variant: Variant, placement: WallpaperPlacement) throws -> (Int, Int) -> Sample {
-        let directory = try Self.writeFixture(variant)
+        let frame = try render(Self.writeFixture(variant), effect: variant.effect, placement: placement)
+        return { x, y in
+            let i = (y * Self.display.x + x) * 4
+            let (b, g, r) = (Float(frame[i]), Float(frame[i + 1]), Float(frame[i + 2]))
+            return Sample(column: r / 255 * Float(Self.image.x - 1), row: g / 255 * Float(Self.image.y - 1),
+                          band: b > 200 && g > 100, padding: r > 200 && b > 200 && g < 50)
+        }
+    }
+
+    /// The scene in `directory` drawn on the display once it has settled with its effects, as BGRA
+    /// bytes from the top-left; removes `directory`.
+    func render(_ directory: URL, effect: Bool, placement: WallpaperPlacement) throws -> [UInt8] {
         defer {
             Fixtures.removeStoredSettings(for: directory)
             try? FileManager.default.removeItem(at: directory) // scratch cleanup
@@ -80,7 +117,7 @@ final class EffectPaddedImagePlacementTests: XCTestCase {
         let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
         let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
         let layer = try XCTUnwrap(content.layers.first)
-        XCTAssertEqual(layer.weEffects.isEmpty, !variant.effect, "effects built")
+        XCTAssertEqual(layer.weEffects.isEmpty, !effect, "effects built")
         let size = Self.display
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let view = MTKView(frame: CGRect(x: 0, y: 0, width: size.x, height: size.y), device: device)
@@ -99,24 +136,18 @@ final class EffectPaddedImagePlacementTests: XCTestCase {
         let deadline = Date().addingTimeInterval(60)
         repeat {
             RunLoop.main.run(until: Date().addingTimeInterval(0.01))
-            let passes = renderer.effectPassesEncoded
             renderer.draw(in: view)
             renderer.lastCommandBuffer?.waitUntilCompleted()
             // Until its effect pipelines compile the layer draws plain; only its effects' frame counts.
-            guard renderer.hasContent, !variant.effect || renderer.effectPassesEncoded > passes else { continue }
+            guard renderer.hasContent,
+                  !effect || (renderer.effectPassesEncoded > 0 && !renderer.hasPendingEffectPipelines) else { continue }
             view.currentDrawable?.texture.getBytes(&bytes, bytesPerRow: size.x * 4,
                                                    from: MTLRegionMake2D(0, 0, size.x, size.y), mipmapLevel: 0)
             stable = bytes == previous ? stable + 1 : 0
             previous = bytes
         } while stable < 3 && Date() < deadline
         XCTAssertGreaterThanOrEqual(stable, 3, "the frame never settled with its effects drawn")
-        let frame = bytes
-        return { x, y in
-            let i = (y * size.x + x) * 4
-            let (b, g, r) = (Float(frame[i]), Float(frame[i + 1]), Float(frame[i + 2]))
-            return Sample(column: r / 255 * Float(Self.image.x - 1), row: g / 255 * Float(Self.image.y - 1),
-                          band: b > 200 && g > 100, padding: r > 200 && b > 200 && g < 50)
-        }
+        return bytes
     }
 
     // MARK: - Fixture
@@ -170,6 +201,70 @@ final class EffectPaddedImagePlacementTests: XCTestCase {
         try tex(allocated: mask, image: SIMD2(500, 300)) { _, _ in [128, 128, 0, 255] }
             .write(to: directory.appending(path: "materials/masks/shake_mask_test.tex"))
         return directory
+    }
+
+    /// The DXT fixture's scene (`testPaddedDXTImageMaskLinesUpWithThePicture`), laid out as
+    /// `writeFixture`'s with WE's tint effect.
+    static func writeDXTFixture() throws -> URL {
+        let assets = try Fixtures.assets()
+        let directory = FileManager.default.temporaryDirectory.appending(path: "owe-padded-dxt-\(UUID().uuidString)")
+        let files = FileManager.default
+        for folder in ["models", "materials/masks"] {
+            try files.createDirectory(at: directory.appending(path: folder), withIntermediateDirectories: true)
+        }
+        func write(_ text: String, _ path: String) throws { try Data(text.utf8).write(to: directory.appending(path: path)) }
+        for path in ["materials/effects/tint.json", "shaders/effects/tint.frag", "shaders/effects/tint.vert"] {
+            let target = directory.appending(path: path)
+            try files.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try files.copyItem(at: assets.appending(path: "effects/tint/\(path)"), to: target)
+        }
+        try write(#"{"file": "scene.json", "title": "Padded DXT image with a masked effect", "type": "scene"}"#, "project.json")
+        try write(#"{"autosize": true, "material": "materials/picture.json"}"#, "models/picture.json")
+        try write(#"""
+        {"passes": [{"blending": "translucent", "combos": {"version": 2}, "cullmode": "nocull",
+                     "depthtest": "disabled", "depthwrite": "disabled", "shader": "genericimage2",
+                     "textures": ["picture"]}]}
+        """#, "materials/picture.json")
+        try write("""
+        {"camera": {"center": "0 0 -1", "eye": "0 0 0", "up": "0 1 0"},
+         "general": {"clearcolor": "0.7 0.7 0.7", "clearenabled": true, "bloom": false,
+                     "orthogonalprojection": {"width": \(image.x), "height": \(image.y)}},
+         "objects": [{"alignment": "center", "alpha": 1, "angles": "0 0 0", "color": "1 1 1", "colorBlendMode": 0,
+                      "effects": [{"file": "effects/tint/effect.json", "id": 18, "name": "", "visible": true,
+                                   "passes": [{"id": 19, "combos": {"BLENDMODE": 0},
+                                               "constantshadervalues": {"alpha": 1, "color": "0 1 0"},
+                                               "textures": [null, "masks/tint_mask_test"]}]}],
+                      "id": 13, "image": "models/picture.json", "name": "picture", "origin": "500 300.5 0",
+                      "scale": "1 1 1", "size": "\(image.x) \(image.y)", "visible": true}]}
+        """, "scene.json")
+        try dxt1(allocated: SIMD2(1024, 1024), image: image) { _, y in y >= 572 ? (255, 0, 0) : (0, 0, 255) }
+            .write(to: directory.appending(path: "materials/picture.tex"))
+        try tex(allocated: SIMD2(512, 512), image: SIMD2(500, 300)) { _, y in
+            let white: UInt8 = (75..<225).contains(y) ? 255 : 0
+            return [white, white, white, 255]
+        }.write(to: directory.appending(path: "materials/masks/tint_mask_test.tex"))
+        return directory
+    }
+
+    /// An uncompressed DXT1 `.tex` whose 4×4 blocks are each one colour: `colour` of the block's
+    /// first texel inside `image`, magenta in the padding.
+    static func dxt1(allocated: SIMD2<Int>, image: SIMD2<Int>, colour: (Int, Int) -> (Int, Int, Int)) -> Data {
+        var blocks = Data()
+        func word(_ value: UInt16) { withUnsafeBytes(of: value.littleEndian) { blocks.append(contentsOf: $0) } }
+        for by in stride(from: 0, to: allocated.y, by: 4) {
+            for bx in stride(from: 0, to: allocated.x, by: 4) {
+                let (r, g, b) = bx < image.x && by < image.y ? colour(bx, by) : (255, 0, 255)
+                let packed = UInt16(r >> 3) << 11 | UInt16(g >> 2) << 5 | UInt16(b >> 3)
+                word(packed)
+                word(packed)
+                blocks.append(contentsOf: [0, 0, 0, 0])
+            }
+        }
+        return TEXWriter.data(TEXWriter.Texture(
+            format: 7, flags: 2, textureWidth: allocated.x, textureHeight: allocated.y,
+            imageWidth: image.x, imageHeight: image.y, colorWord: 0,
+            mipmaps: [TEXWriter.Mipmap(width: allocated.x, height: allocated.y, compression: 0,
+                                       uncompressedSize: blocks.count, stored: blocks)]))
     }
 
     /// An LZ4-compressed RGBA8888 `.tex`: `pixel` inside `image`, magenta padding around it.
