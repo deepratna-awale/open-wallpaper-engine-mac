@@ -143,7 +143,9 @@ final class EffectPaddedImagePlacementTests: XCTestCase {
                   !effect || (renderer.effectPassesEncoded > 0 && !renderer.hasPendingEffectPipelines) else { continue }
             view.currentDrawable?.texture.getBytes(&bytes, bytesPerRow: size.x * 4,
                                                    from: MTLRegionMake2D(0, 0, size.x, size.y), mipmapLevel: 0)
-            stable = bytes == previous ? stable + 1 : 0
+            // The shake moves by under a hundredth of a texel: settled is within a couple of levels.
+            let settled = bytes.count == previous.count && !zip(bytes, previous).contains { abs(Int($0) - Int($1)) > 2 }
+            stable = settled ? stable + 1 : 0
             previous = bytes
         } while stable < 3 && Date() < deadline
         XCTAssertGreaterThanOrEqual(stable, 3, "the frame never settled with its effects drawn")
@@ -198,7 +200,7 @@ final class EffectPaddedImagePlacementTests: XCTestCase {
         }.write(to: directory.appending(path: "materials/picture.tex"))
         // A neutral direction map (no flow), padded like the wallpaper's: 500×300 in 512×512.
         let mask = variant.padded ? SIMD2(512, 512) : SIMD2(500, 300)
-        try tex(allocated: mask, image: SIMD2(500, 300)) { _, _ in [128, 128, 0, 255] }
+        try tex(allocated: mask, image: SIMD2(500, 300)) { _, _ in [127, 127, 0, 255] }
             .write(to: directory.appending(path: "materials/masks/shake_mask_test.tex"))
         return directory
     }
