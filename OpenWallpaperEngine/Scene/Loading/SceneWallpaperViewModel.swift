@@ -2126,12 +2126,9 @@ class SceneWallpaperViewModel: ObservableObject {
         return !folder.isEmpty && folder.allSatisfy({ $0.isASCII && $0.isNumber }) ? folder : nil
     }
 
-    private func sharedAssetData(named path: String) -> Data? {
-        let assetsDirectories = WallpaperEngineAssets.searchDirectories
-        guard !assetsDirectories.isEmpty else {
-            Self.logDetail("Shared asset lookup skipped: no Wallpaper Engine assets available")
-            return nil
-        }
+    /// Where WE's assets may keep the file a scene names `path`: the path itself, a `.tex` for a
+    /// texture named without one, and under `materials/` (a preset's `materials/presets/…` without it).
+    static func sharedAssetPaths(for path: String) -> [String] {
         let normalizedPath = path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         var relativePaths = [normalizedPath]
         if URL(fileURLWithPath: normalizedPath).pathExtension.isEmpty {
@@ -2142,7 +2139,17 @@ class SceneWallpaperViewModel: ObservableObject {
         } else if !normalizedPath.hasPrefix("materials/") {
             relativePaths.append("materials/\(normalizedPath)")
         }
-        guard let candidate = WallpaperEngineAssets.locate(relativePaths, in: assetsDirectories) else { return nil }
+        return relativePaths
+    }
+
+    private func sharedAssetData(named path: String) -> Data? {
+        let assetsDirectories = WallpaperEngineAssets.searchDirectories
+        guard !assetsDirectories.isEmpty else {
+            Self.logDetail("Shared asset lookup skipped: no Wallpaper Engine assets available")
+            return nil
+        }
+        guard let candidate = WallpaperEngineAssets.locate(Self.sharedAssetPaths(for: path), in: assetsDirectories)
+        else { return nil }
         do {
             let data = try AssetPathResolver.readRegularFile(at: candidate)
             Self.logDetail("Using shared asset '\(candidate.path)'")
