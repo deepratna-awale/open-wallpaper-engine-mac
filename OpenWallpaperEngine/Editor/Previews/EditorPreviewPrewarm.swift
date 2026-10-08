@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import OWEEditor
 import OWESceneEditing
@@ -21,8 +22,9 @@ import OWESceneEditing
 ///   on battery only above 30 %, never while critically hot. It pauses between previews (the
 ///   helpers exit, the lock is released so an editor renders on its own) and checks again every
 ///   `pauseRecheck`. Each start, pause, resume and finish is logged.
+/// - **Progress:** `progress` while a run renders, for a line in Settings › Assets.
 @MainActor
-final class EditorPreviewPrewarm {
+final class EditorPreviewPrewarm: ObservableObject {
     struct Environment {
         /// The asset tree in use; nil without WE's assets.
         var assets: () -> URL?
@@ -65,10 +67,21 @@ final class EditorPreviewPrewarm {
         var carriedOver = 0
     }
 
+    /// How far a run is: previews of the browsers' catalog that are done (cached, rendered, or
+    /// failed and waiting for new assets) out of all of them, and whether it is paused.
+    struct Progress: Equatable {
+        var done: Int
+        var total: Int
+        var isPaused = false
+    }
+
     private let environment: Environment
     private var task: Task<Void, Never>?
     private(set) var isRunning = false
     private(set) var lastSummary: Summary?
+    /// The progress of the run that renders now; nil when none does (none started, nothing was
+    /// missing, or it ended).
+    @Published private(set) var progress: Progress?
 
     init(environment: Environment) {
         self.environment = environment
@@ -197,6 +210,9 @@ final class EditorPreviewPrewarm {
             return
         }
         defer { state.lock.unlock() }
+        let total = plan.cached + plan.carriedOver + plan.failedBefore + plan.order.count
+        progress = Progress(done: total - plan.order.count, total: total)
+        defer { progress = nil }
         environment.log("pre-warm started (\(reason)): \(plan.order.count) to render on \(environment.laneCount) lanes; "
                         + "\(plan.cached) cached, \(plan.carriedOver) carried over, \(plan.failedBefore) failed before")
         await withTaskGroup(of: Void.self) { group in
@@ -258,6 +274,11 @@ final class EditorPreviewPrewarm {
             record = EditorPreviewCache.InputRecord(fingerprint: fingerprint, failedAt: environment.now())
         }
         state.records[subject.cacheName] = record
+        if var current = progress {
+            // A browser's tile the catalog doesn't list (a Workshop effect) doesn't count past it.
+            current.done = min(current.total, current.done + 1)
+            progress = current
+        }
         do {
             try state.cache.record([subject.cacheName: record])
         } catch {
@@ -271,6 +292,7 @@ final class EditorPreviewPrewarm {
         while !policy.allowsEditorPreviewPrewarm {
             if !state.paused {
                 state.paused = true
+                progress?.isPaused = true
                 state.lock.unlock()
                 environment.log("pre-warm paused: \(Self.reason(policy)); \(state.queue.count) previews left")
             }
@@ -282,6 +304,7 @@ final class EditorPreviewPrewarm {
         }
         if state.paused {
             state.paused = false
+            progress?.isPaused = false
             guard state.lock.lock() else {
                 environment.log("pre-warm stopped: another copy of the app took over the previews")
                 return false

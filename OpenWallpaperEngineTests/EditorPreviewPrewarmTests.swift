@@ -70,6 +70,25 @@ final class EditorPreviewPrewarmTests: XCTestCase {
         XCTAssertTrue(second.logs.contains { $0.contains("all 4 previews are cached") }, "\(second.logs)")
     }
 
+    func testProgressCountsTheWholeCatalogAndClearsWhenTheRunEnds() async throws {
+        let cache = EditorPreviewCache(cachesDirectory: scratch, build: EditorPreviewCache.assetsBuild(of: assets))
+        try FileManager.default.createDirectory(at: cache.directory, withIntermediateDirectories: true)
+        try Data().write(to: cache.outputBase(for: blur).appendingPathExtension("heic"))
+
+        let harness = Harness(test: self, lanes: 1)
+        var seen: [EditorPreviewPrewarm.Progress?] = []
+        harness.onRender = { [unowned harness] _, _ in seen.append(harness.prewarm.progress) }
+        await harness.run()
+        XCTAssertEqual(seen, [1, 2, 3].map { EditorPreviewPrewarm.Progress(done: $0, total: 4) },
+                       "the cached one counts as done from the start")
+        XCTAssertNil(harness.prewarm.progress, "no line once the run ends")
+
+        let second = Harness(test: self, lanes: 1)
+        await second.run()
+        XCTAssertEqual(second.rendered, [])
+        XCTAssertNil(second.prewarm.progress, "a run with nothing to render shows nothing")
+    }
+
     // MARK: Incremental
 
     func testAnAssetsUpdateRendersOnlyTheChangedPreviews() async throws {
@@ -161,8 +180,15 @@ final class EditorPreviewPrewarmTests: XCTestCase {
         // Allowed for the first preview, then held back for two checks.
         harness.policies = [ac, low, hot, ac]
         var lockHeldWhilePaused: Bool?
-        harness.onSleep = { cache in lockHeldWhilePaused = EditorPreviewPrewarmLock.isHeld(for: cache) }
+        var progressWhilePaused: EditorPreviewPrewarm.Progress?
+        harness.onSleep = { [unowned harness] cache in
+            lockHeldWhilePaused = EditorPreviewPrewarmLock.isHeld(for: cache)
+            progressWhilePaused = harness.prewarm.progress
+        }
         await harness.run()
+        XCTAssertEqual(progressWhilePaused, EditorPreviewPrewarm.Progress(done: 1, total: 4, isPaused: true),
+                       "Settings › Assets shows the run as paused")
+        XCTAssertNil(harness.prewarm.progress)
         XCTAssertEqual(harness.rendered, catalog)
         XCTAssertEqual(harness.sleeps, [EditorPreviewPrewarm.pauseRecheck, EditorPreviewPrewarm.pauseRecheck])
         XCTAssertEqual(lockHeldWhilePaused, false, "an editor renders on its own while the pre-warm is paused")
