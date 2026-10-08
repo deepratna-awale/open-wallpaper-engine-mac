@@ -236,7 +236,7 @@ final class EffectEditTests: XCTestCase {
         XCTAssertNil(blurPasses[0]["combos"], "a later pass's combo follows its texture")
         let tintPass = try XCTUnwrap((effects[1]["passes"] as? [[String: Any]])?.first)
         XCTAssertEqual((tintPass["textures"] as? [Any])?[1] as? String, "masks/tint_mask_new")
-        XCTAssertEqual((tintPass["combos"] as? [String: Any])?["MASK"] as? Int, 1)
+        XCTAssertNil(tintPass["combos"], "a mask replacing an authored one leaves the combo as authored")
 
         // Read back from the applied scene, as the next session sees it.
         let reread = SceneEditSession(outline: try SceneOutline(sceneData: try session.overlay.applied(to: scene)))
