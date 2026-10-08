@@ -2,7 +2,7 @@ import simd
 
 /// Which "detail" layers draw at the output's backing pixels instead of in the scene pass.
 ///
-/// When the scene target has fewer pixels than the output (a MetalFX render scale below 1, or
+/// When the scene target has fewer pixels than the output (an Upscaling render scale below 1, or
 /// Render Resolution 4K or Full on a larger display) it is scaled up onto it, which stretches
 /// text and the media artwork. A detail layer (text, or an image whose texture is the now-playing artwork) whose
 /// pixels nothing after it reads or covers can instead be drawn onto the output once the scene is
@@ -19,8 +19,7 @@ import simd
 /// bloom works per pixel, so the patch is what the low-resolution path shows there, drawn at the
 /// output's pixels. Not promoted: frames drawn in HDR or to EDR (`combine_hdr` samples the bloom
 /// around each pixel and the frame converts), with WE's volumetrics running (they add light over
-/// the finished scene from its depth), under the app's blur (not per pixel), and with MetalFX
-/// upscaling a scene the promoted layers must stay in (its upscale isn't the composite's filter).
+/// the finished scene from its depth), and under the app's blur (not per pixel).
 enum SceneNativeDetailLayers {
     typealias Rect = SceneSnapshotTracker.Rect
 

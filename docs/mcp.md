@@ -434,7 +434,7 @@ return the playlist as `list_playlists` writes it, plus `change_when_video_ends`
 | `texture_resolution` | `high_quality`, `high_performance`, `automatic` | Texture Resolution |
 | `scene_detail` | `match_display`, `full` | Effect Detail |
 | `render_resolution` | `your_display`, `uhd4k`, `full` (the earlier `display` and `retina` set `your_display`, `4k` sets `uhd4k`) | Render Resolution |
-| `upscaling` | `off`, `metalfx` | Upscaling |
+| `upscaling` | `off`, `bilinear` (the earlier `metalfx` sets `bilinear`: MetalFX was removed) | Upscaling |
 | `render_scale` | `50`, `67`, `75` | Render Scale |
 | `shadows`, `volumetrics` | `disabled`, `low`, `medium`, `high`, `ultra` | Shadows, Volumetrics |
 | `fps` | 10–240, whole (240: no limit) | FPS slider (also marks the rate as the user's own, as the slider does) |

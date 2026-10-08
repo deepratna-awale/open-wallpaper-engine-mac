@@ -94,7 +94,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - Per-wallpaper **position, zoom and flip** on each display, and a video's playback rate.
 - Per-display user properties, with "Sync properties across displays".
 - A wallpaper shown on several displays renders once and is presented on each.
-- Quality settings: Render Resolution (Your Display, 4K, Full) with MetalFX upscaling, Texture Resolution, Effect Detail (Match Display), reflections, shadows and volumetrics.
+- Quality settings: Render Resolution (Your Display, 4K, Full) with Upscaling (Render Scale 50–75 %), Texture Resolution, Effect Detail (Match Display), reflections, shadows and volumetrics.
 - **Safe restart** — a wallpaper that stalled or crashed the app is skipped on the next launch and marked in the library.
 
 ### Screen saver, lock screen & theming
