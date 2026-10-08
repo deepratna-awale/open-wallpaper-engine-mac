@@ -53,7 +53,7 @@ struct LibrarySetting: Equatable {
     /// Settings › Performance › Quality.
     private static let quality: [LibrarySetting] = [
         LibrarySetting("quality_preset", .action(["low", "medium", "high", "ultra"]),
-                       "A preset button: sets the quality settings, the FPS and quality_efficiency in one step (low also turns on MetalFX upscaling from half size)."),
+                       "A preset button: sets the quality settings, the FPS and quality_efficiency in one step (low also turns on MetalFX upscaling from two thirds of the size)."),
         LibrarySetting("anti_aliasing", .choice(["none", "msaa_x2", "msaa_x4", "msaa_x8"]),
                        "Multisampling of scenes' edges; more samples cost more GPU time and memory."),
         LibrarySetting("post_processing", .choice(["disabled", "enabled", "ultra", "display_hdr"]),
@@ -66,7 +66,7 @@ struct LibrarySetting: Equatable {
                        "The size scenes are drawn at: your_display the display's own pixels, uhd4k 4K at the display's shape fitted to it, full the wallpaper's authored size.",
                        aliases: ["display": "your_display", "retina": "your_display", "4k": "uhd4k"]),
         LibrarySetting("upscaling", .choice(["off", "metalfx"]),
-                       "metalfx draws scenes at render_scale and scales them up."),
+                       "metalfx draws scenes at render_scale and scales them up; skipped for targets of 1920×1200 or less, where drawing natively is faster."),
         LibrarySetting("render_scale", .choice(["50", "67", "75"]),
                        "The percentage of each side scenes render at while upscaling."),
         LibrarySetting("shadows", .choice(["disabled", "low", "medium", "high", "ultra"]),

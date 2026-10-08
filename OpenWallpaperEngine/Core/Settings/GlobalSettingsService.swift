@@ -51,7 +51,10 @@ class GlobalSettingsViewModel: ObservableObject {
     /// bar tint and lock-screen pictures, the screen saver) start following the app's wallpaper.
     /// Only Open Wallpaper Engine's own settings do; the Wallpaper Editor's process reads them.
     init(followsLaunch: Bool = true) {
-        let migration = GlobalSettingsMigration.current()
+        // The test host starts from the 1× defaults whatever the Mac's display, so tests don't
+        // depend on it.
+        let migration = AppStorageLocation.current.isolationTag == AppStorageLocation.testsTag
+            ? GlobalSettingsMigration(mainBackingScale: 1) : GlobalSettingsMigration.current()
         let loaded: GlobalSettings = Self.loadSettings(from: UserDefaults.app.data(forKey: Self.defaultsKey),
                                                        backupDirectory: AppStorageLocation.current.supportDirectory,
                                                        migration: migration)
@@ -76,7 +79,12 @@ class GlobalSettingsViewModel: ObservableObject {
     /// `backupDirectory`.
     nonisolated static func loadSettings(from data: Data?, backupDirectory: URL, now: Date = Date(),
                                          migration: GlobalSettingsMigration? = nil) -> GlobalSettings {
-        guard let data else { return GlobalSettings() }
+        guard let data else {
+            // A first launch: set up for the main display, and saved.
+            guard let migration else { return GlobalSettings() }
+            migration.migrated = true
+            return GlobalSettings.firstLaunch(backingScale: migration.mainBackingScale)
+        }
         do {
             return try (migration?.decoder() ?? JSONDecoder()).decode(GlobalSettings.self, from: data)
         } catch {

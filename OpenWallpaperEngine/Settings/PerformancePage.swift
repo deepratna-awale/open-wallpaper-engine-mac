@@ -115,7 +115,7 @@ struct PerformancePage: SettingsPage {
                     }
                     .fixedSize()
                 }
-                .help("Sets the quality settings below, the frame rate and the Quality ↔ Efficiency slider in one step. Low also turns on MetalFX upscaling from half size.")
+                .help("Sets the quality settings below, the frame rate and the Quality ↔ Efficiency slider in one step. Low also turns on MetalFX upscaling from two thirds of the size.")
                 Picker(selection: $viewModel.settings.antiAliasing) {
                     Text("None").tag(GSAntiAliasingQuality.none)
                     Text("MSAA x2").tag(GSAntiAliasingQuality.msaa_x2)
@@ -175,6 +175,11 @@ struct PerformancePage: SettingsPage {
                 }
                 .changedFromDefault(viewModel.isChanged(\.upscaling))
                 .help("MetalFX draws the scene at the render scale and scales it up to full size, for less work. Where MetalFX isn't available, or for HDR, the frame is scaled smoothly instead.")
+                if viewModel.settings.upscaling != .off {
+                    Text("Not used at 1920×1200 or smaller, where drawing natively is faster.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 if viewModel.settings.upscaling != .off {
                     Picker("Render Scale", selection: $viewModel.settings.renderScale) {
                         ForEach(GSRenderScale.allCases) { scale in

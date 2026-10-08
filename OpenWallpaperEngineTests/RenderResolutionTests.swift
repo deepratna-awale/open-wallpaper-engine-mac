@@ -34,13 +34,14 @@ final class RenderResolutionTests: XCTestCase {
             XCTAssertEqual(target(scene, [plain], .yourDisplay), SIMD2(1920, 1080), "\(scene) on a 1× 1080p display")
             XCTAssertEqual(target(scene, [retina], .yourDisplay), SIMD2(3840, 2160), "\(scene) on a 2× 4K display")
         }
-        // 5K: the backing pixels, quantised up to an eighth of a pixel per unit (no resize churn).
-        XCTAssertEqual(SceneRenderResolution.drawableSize([fiveK], resolution: .yourDisplay, sceneSize: uhdScene),
-                       SIMD2(5120, 2880))
-        XCTAssertEqual(target(hdScene, [fiveK], .yourDisplay), SIMD2(5280, 2970))
-        // Ultrawide: a 16:9 scene covers it, its height cropped by the placement.
-        XCTAssertEqual(target(uhdScene, [ultrawide], .yourDisplay), SIMD2(3480, 1958))
-        XCTAssertEqual(target(qhdScene, [ultrawide], .yourDisplay), SIMD2(3520, 1980))
+        // 5K: exactly the backing pixels, whatever the scene's size.
+        for scene in [uhdScene, qhdScene, hdScene] {
+            XCTAssertEqual(target(scene, [fiveK], .yourDisplay), SIMD2(5120, 2880), "\(scene) on a 2× 5K display")
+        }
+        XCTAssertEqual(target(SIMD2(3440, 1440), [ultrawide], .yourDisplay), SIMD2(3440, 1440), "a scene of its shape")
+        // Ultrawide: a 16:9 scene covers it exactly across, its height cropped by the placement.
+        XCTAssertEqual(target(uhdScene, [ultrawide], .yourDisplay), SIMD2(3440, 1935))
+        XCTAssertEqual(target(qhdScene, [ultrawide], .yourDisplay), SIMD2(3440, 1935))
         // Several displays: the largest one's pixels.
         XCTAssertEqual(SceneRenderResolution.drawableSize([plain, retina], resolution: .yourDisplay, sceneSize: hdScene),
                        SIMD2(3840, 2160))
@@ -62,6 +63,7 @@ final class RenderResolutionTests: XCTestCase {
             XCTAssertEqual(target(hdScene, [display], .uhd4K), SIMD2(3840, 2160), "\(display.drawableSize)")
         }
         XCTAssertEqual(target(uhdScene, [ultrawide], .uhd4K), SIMD2(3840, 2160))
+        XCTAssertEqual(target(SIMD2(1440, 900), [macBookAir], .uhd4K), SIMD2(3840, 2400), "exactly 4K at 16:10")
     }
 
     func testFullIsTheAuthoredSize() {
@@ -70,7 +72,19 @@ final class RenderResolutionTests: XCTestCase {
             XCTAssertEqual(target(qhdScene, [display], .full), SIMD2(2560, 1440), "\(display.drawableSize)")
         }
         XCTAssertEqual(target(SIMD2(20000, 20000), [plain], .full), SIMD2(16384, 16384), "only the GPU's texture limit caps it")
-        XCTAssertEqual(target(SIMD2(20000, 20000), [plain], .uhd4K), SIMD2(4063, 4063), "4K covered, rounded up to a 64th")
+        XCTAssertEqual(target(SIMD2(20000, 20000), [plain], .uhd4K), SIMD2(3840, 3840), "4K covered exactly")
+    }
+
+    /// Only a target that follows a live-resizing window (the editors' previews) is quantised, so
+    /// a resize doesn't reallocate it every frame.
+    func testOnlyALiveResizingWindowQuantisesTheTarget() {
+        let drawable = SIMD2<Float>(5120, 2880)
+        let exact = SceneRenderResolution.pixelsPerUnit(sceneSize: hdScene, drawableSize: drawable)
+        let windowed = SceneRenderResolution.pixelsPerUnit(sceneSize: hdScene, drawableSize: drawable, quantised: true)
+        XCTAssertEqual(SceneRenderResolution.targetSize(sceneSize: hdScene, pixelsPerUnit: exact), SIMD2(5120, 2880))
+        XCTAssertEqual(SceneRenderResolution.targetSize(sceneSize: hdScene, pixelsPerUnit: windowed), SIMD2(5280, 2970))
+        // A window a pixel larger keeps the same quantised target.
+        XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: hdScene, drawableSize: drawable + 1, quantised: true), windowed)
     }
 
     func testEffectDetailNoLongerSizesTheTarget() {
@@ -212,18 +226,18 @@ final class RenderResolutionTests: XCTestCase {
         XCTAssertFalse(roundTrip.migrated, "a saved value of today's is read as it is")
     }
 
-    /// The points-based Display on a Retina display keeps its cost: MetalFX at 50 % draws a quarter
-    /// of the backing pixels, as Display drew, and web wallpapers stay at standard resolution.
-    func testDisplayOnRetinaTurnsOnMetalFXAtHalfOnce() throws {
+    /// The points-based Display on a Retina display keeps its cost down: MetalFX at 67 % draws under
+    /// half the backing pixels, and web wallpapers stay at standard resolution.
+    func testDisplayOnRetinaTurnsOnMetalFXAtTwoThirdsOnce() throws {
         let (retina, migrated) = try decoded(#"{"renderResolution":"display","upscaling":"off","renderScale":"percent75"}"#,
                                              backingScale: 2)
         XCTAssertTrue(migrated)
         XCTAssertEqual(retina.renderResolution, .yourDisplay)
         XCTAssertEqual(retina.upscaling, .metalFX)
-        XCTAssertEqual(retina.renderScale, .percent50)
+        XCTAssertEqual(retina.renderScale, .percent67)
         XCTAssertTrue(retina.webStandardResolution)
         XCTAssertEqual(target(hdScene, [self.retina], retina.renderResolution, scale: SceneRenderSettings(retina).drawnScale),
-                       SIMD2(1920, 1080), "the pixels Display drew")
+                       SIMD2(2560, 1440), "drawn at two thirds of each side, rebuilt to 3840×2160")
         // Saved, it reads as it is: the migration happens once.
         let again = try decoded(String(decoding: JSONEncoder().encode(retina), as: UTF8.self), backingScale: 2)
         XCTAssertFalse(again.migrated)
@@ -253,7 +267,39 @@ final class RenderResolutionTests: XCTestCase {
                                                           migration: migration)
         XCTAssertTrue(migration.migrated)
         XCTAssertEqual(loaded.upscaling, .metalFX)
-        XCTAssertEqual(loaded.renderScale, .percent50)
+        XCTAssertEqual(loaded.renderScale, .percent67)
+    }
+
+    /// A first launch (no stored settings) sets up for the main display, and is saved.
+    func testFirstLaunchDefaults() {
+        let folder = FileManager.default.temporaryDirectory
+        let retinaLaunch = GlobalSettingsMigration(mainBackingScale: 2)
+        let retina = GlobalSettingsViewModel.loadSettings(from: nil, backupDirectory: folder, migration: retinaLaunch)
+        XCTAssertTrue(retinaLaunch.migrated, "saved at once")
+        XCTAssertEqual(retina.renderResolution, .yourDisplay)
+        XCTAssertEqual(retina.upscaling, .metalFX)
+        XCTAssertEqual(retina.renderScale, .percent75)
+        let plainLaunch = GlobalSettingsMigration(mainBackingScale: 1)
+        let plain = GlobalSettingsViewModel.loadSettings(from: nil, backupDirectory: folder, migration: plainLaunch)
+        XCTAssertEqual(plain.renderResolution, .yourDisplay)
+        XCTAssertEqual(plain.upscaling, .off)
+        XCTAssertEqual(plain, GlobalSettings())
+        XCTAssertEqual(GlobalSettingsViewModel.loadSettings(from: nil, backupDirectory: folder), GlobalSettings(),
+                       "without a display to set up for, the plain defaults")
+    }
+
+    /// Upscaling only where it pays: at 1920×1200 (2.3 MP) or less the target is drawn natively.
+    func testUpscalingIsSkippedForSmallTargets() {
+        XCTAssertFalse(SceneRenderResolution.upscalingPays(targetSize: SIMD2(1920, 1080)))
+        XCTAssertFalse(SceneRenderResolution.upscalingPays(targetSize: SIMD2(1920, 1200)))
+        XCTAssertFalse(SceneRenderResolution.upscalingPays(targetSize: SIMD2(1440, 900)))
+        XCTAssertTrue(SceneRenderResolution.upscalingPays(targetSize: SIMD2(2560, 1440)))
+        XCTAssertTrue(SceneRenderResolution.upscalingPays(targetSize: SIMD2(2880, 1800)))
+        XCTAssertTrue(SceneRenderResolution.upscalingPays(targetSize: SIMD2(5120, 2880)))
+        // Low on a 1080p display: MetalFX at 67 % is set, but the 1920×1080 target is drawn natively.
+        let low = GlobalSettingsViewModel.applying(.low, to: GlobalSettings())
+        XCTAssertFalse(SceneRenderResolution.upscalingPays(targetSize: target(hdScene, [plain], low.renderResolution)))
+        XCTAssertTrue(SceneRenderResolution.upscalingPays(targetSize: target(hdScene, [retina], low.renderResolution)))
     }
 
     func testPresets() {
@@ -262,7 +308,7 @@ final class RenderResolutionTests: XCTestCase {
         settings.applyResolutionPreset(.low)
         XCTAssertEqual(settings.renderResolution, .yourDisplay)
         XCTAssertEqual(settings.upscaling, .metalFX)
-        XCTAssertEqual(settings.renderScale, .percent50)
+        XCTAssertEqual(settings.renderScale, .percent67)
         // The user's own choice stands until a preset is applied again.
         settings.renderScale = .percent75
         XCTAssertEqual(settings.renderScale, .percent75)
@@ -274,7 +320,7 @@ final class RenderResolutionTests: XCTestCase {
             XCTAssertEqual(settings.renderResolution, .yourDisplay, "\(quality)")
         }
         settings.applyResolutionPreset(.low)
-        XCTAssertEqual(settings.renderScale, .percent50, "applying Low again overrides the user's scale")
+        XCTAssertEqual(settings.renderScale, .percent67, "applying Low again overrides the user's scale")
         let low = GlobalSettingsViewModel.applying(.low, to: GlobalSettings())
         XCTAssertEqual(low.renderResolution, .yourDisplay)
         XCTAssertEqual(low.upscaling, .metalFX)

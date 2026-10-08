@@ -7,15 +7,15 @@ import OWETheming
 
 extension GlobalSettings {
     /// The render resolution and upscaling a quality preset sets: every preset draws for the
-    /// displays' own pixels (Your Display); Low draws half of each side of that and upscales it
-    /// with MetalFX, the others draw it all. A later choice of the user's stands until a preset is
-    /// applied again.
+    /// displays' own pixels (Your Display); Low draws two thirds of each side of that and upscales
+    /// it with MetalFX (natively at 1920×1200 or less, `SceneRenderResolution.upscalingPays`), the
+    /// others draw it all. A later choice of the user's stands until a preset is applied again.
     mutating func applyResolutionPreset(_ quality: GSQuality) {
         renderResolution = .yourDisplay
         switch quality {
         case .low:
             upscaling = .metalFX
-            renderScale = .percent50
+            renderScale = .percent67
         case .medium, .high, .ultra:
             upscaling = .off
         }

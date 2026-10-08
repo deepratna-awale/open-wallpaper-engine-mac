@@ -83969,6 +83969,101 @@
         }
       }
     },
+    "Not used at 1920×1200 or smaller, where drawing natively is faster." : {
+      "comment" : "Note under Settings › Performance › Upscaling: it is skipped for small scene targets",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا تُستخدم عند 1920×1200 أو أصغر، حيث يكون الرسم بالدقة الأصلية أسرع."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird bei 1920×1200 oder kleiner nicht verwendet, da natives Zeichnen dort schneller ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se usa a 1920×1200 o menos, donde dibujar a resolución nativa es más rápido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non utilisée en 1920×1200 ou moins, où dessiner en résolution native est plus rapide."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1920×1200 या उससे छोटे पर उपयोग नहीं होता, जहाँ नेटिव रूप से बनाना ज़्यादा तेज़ है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non usato a 1920×1200 o meno, dove disegnare in modo nativo è più veloce."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1920×1200 以下では使用されません。このサイズではネイティブで描画するほうが高速です。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1920×1200 이하에서는 사용되지 않습니다. 이 크기에서는 네이티브로 그리는 것이 더 빠릅니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieużywane przy 1920×1200 lub mniej, gdzie rysowanie natywne jest szybsze."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não é usado em 1920×1200 ou menos, onde desenhar de forma nativa é mais rápido."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не используется при 1920×1200 и меньше: там рисовать в исходном разрешении быстрее."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1920×1200 veya daha küçük boyutlarda kullanılmaz; orada doğal çözünürlükte çizmek daha hızlıdır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не використовується за 1920×1200 і менше: там малювати в рідній роздільності швидше."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 1920×1200 或更小尺寸下不使用，此时直接以原生分辨率绘制更快。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 1920×1200 或更小尺寸下不使用，此時直接以原生解析度繪製更快。"
+          }
+        }
+      }
+    },
     "Not yet" : {
       "localizations" : {
         "ar" : {
@@ -123596,99 +123691,100 @@
         }
       }
     },
-    "Sets the quality settings below, the frame rate and the Quality ↔ Efficiency slider in one step. Low also turns on MetalFX upscaling from half size." : {
+    "Sets the quality settings below, the frame rate and the Quality ↔ Efficiency slider in one step. Low also turns on MetalFX upscaling from two thirds of the size." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يضبط إعدادات الجودة أدناه ومعدل الإطارات وشريط «الجودة ↔ الكفاءة» في خطوة واحدة. ويشغّل «منخفض» أيضًا الترقية عبر MetalFX من نصف الحجم."
+            "value" : "يضبط إعدادات الجودة أدناه ومعدل الإطارات وشريط «الجودة ↔ الكفاءة» في خطوة واحدة. ويشغّل «منخفض» أيضًا الترقية عبر MetalFX من ثلثي الحجم."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Setzt die Qualitätseinstellungen unten, die Bildrate und den Regler Qualität ↔ Effizienz in einem Schritt. Niedrig aktiviert außerdem die MetalFX-Hochskalierung ab halber Größe."
+            "value" : "Setzt die Qualitätseinstellungen unten, die Bildrate und den Regler Qualität ↔ Effizienz in einem Schritt. Niedrig aktiviert außerdem die MetalFX-Hochskalierung ab zwei Dritteln der Größe."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajusta de una vez los ajustes de calidad de abajo, la velocidad de fotogramas y el regulador Calidad ↔ Eficiencia. Baja también activa el escalado MetalFX desde la mitad del tamaño."
+            "value" : "Ajusta de una vez los ajustes de calidad de abajo, la velocidad de fotogramas y el regulador Calidad ↔ Eficiencia. Baja también activa el escalado MetalFX desde dos tercios del tamaño."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Règle en une fois les réglages de qualité ci-dessous, la fréquence d’images et le curseur Qualité ↔ Efficacité. Faible active aussi la mise à l’échelle MetalFX depuis la moitié de la taille."
+            "value" : "Règle en une fois les réglages de qualité ci-dessous, la fréquence d’images et le curseur Qualité ↔ Efficacité. Faible active aussi la mise à l’échelle MetalFX depuis les deux tiers de la taille."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "नीचे की क्वालिटी सेटिंग्ज़, फ़्रेम दर और गुणवत्ता ↔ दक्षता स्लाइडर को एक साथ सेट करता है। निम्न आधे साइज़ से MetalFX अपस्केलिंग भी चालू करता है।"
+            "value" : "नीचे की क्वालिटी सेटिंग्ज़, फ़्रेम दर और गुणवत्ता ↔ दक्षता स्लाइडर को एक साथ सेट करता है। निम्न दो-तिहाई साइज़ से MetalFX अपस्केलिंग भी चालू करता है।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Imposta in un solo passaggio le impostazioni di qualità sottostanti, la frequenza fotogrammi e il cursore Qualità ↔ Efficienza. Bassa attiva anche l’upscaling MetalFX da metà dimensione."
+            "value" : "Imposta in un solo passaggio le impostazioni di qualità sottostanti, la frequenza fotogrammi e il cursore Qualità ↔ Efficienza. Bassa attiva anche l’upscaling MetalFX da due terzi della dimensione."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "以下の画質設定、フレームレート、「品質 ↔ 効率」スライダをまとめて設定します。「低」では、半分のサイズからの MetalFX アップスケーリングもオンになります。"
+            "value" : "以下の画質設定、フレームレート、「品質 ↔ 効率」スライダをまとめて設定します。「低」では、3 分の 2 のサイズからの MetalFX アップスケーリングもオンになります。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "아래 품질 설정, 프레임 속도, 품질 ↔ 효율 슬라이더를 한 번에 설정합니다. 낮음은 절반 크기에서 MetalFX 업스케일링도 켭니다."
+            "value" : "아래 품질 설정, 프레임 속도, 품질 ↔ 효율 슬라이더를 한 번에 설정합니다. 낮음은 3분의 2 크기에서 MetalFX 업스케일링도 켭니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ustawia jednym krokiem poniższe ustawienia jakości, liczbę klatek i suwak Jakość ↔ Wydajność. Niska włącza też skalowanie w górę MetalFX z połowy rozmiaru."
+            "value" : "Ustawia jednym krokiem poniższe ustawienia jakości, liczbę klatek i suwak Jakość ↔ Wydajność. Niska włącza też skalowanie w górę MetalFX z dwóch trzecich rozmiaru."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Define de uma só vez os ajustes de qualidade abaixo, a taxa de quadros e o controle Qualidade ↔ Eficiência. Baixa também ativa o upscaling do MetalFX a partir de metade do tamanho."
+            "value" : "Define de uma só vez os ajustes de qualidade abaixo, a taxa de quadros e o controle Qualidade ↔ Eficiência. Baixa também ativa o upscaling do MetalFX a partir de dois terços do tamanho."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Одним действием задает параметры качества ниже, частоту кадров и ползунок «Качество ↔ Эффективность». «Низкое» также включает масштабирование MetalFX с половинного размера."
+            "value" : "Одним действием задает параметры качества ниже, частоту кадров и ползунок «Качество ↔ Эффективность». «Низкое» также включает масштабирование MetalFX с двух третей размера."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aşağıdaki kalite ayarlarını, kare hızını ve Kalite ↔ Verimlilik sürgüsünü tek adımda ayarlar. Düşük, yarım boyuttan MetalFX ölçek büyütmeyi de açar."
+            "value" : "Aşağıdaki kalite ayarlarını, kare hızını ve Kalite ↔ Verimlilik sürgüsünü tek adımda ayarlar. Düşük, üçte iki boyuttan MetalFX ölçek büyütmeyi de açar."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Одним кроком задає параметри якості нижче, частоту кадрів і повзунок «Якість ↔ Ефективність». «Низька» також вмикає масштабування MetalFX з половинного розміру."
+            "value" : "Одним кроком задає параметри якості нижче, частоту кадрів і повзунок «Якість ↔ Ефективність». «Низька» також вмикає масштабування MetalFX з двох третин розміру."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "一次设置下方的画质设置、帧速率和“质量 ↔ 效率”滑块。“低”还会开启从一半尺寸开始的 MetalFX 放大。"
+            "value" : "一次设置下方的画质设置、帧速率和“质量 ↔ 效率”滑块。“低”还会开启从三分之二尺寸开始的 MetalFX 放大。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "一次設定下方的畫質設定、畫面播放速率和「品質 ↔ 效率」滑桿。「低」還會開啟從一半尺寸開始的 MetalFX 放大。"
+            "value" : "一次設定下方的畫質設定、畫面播放速率和「品質 ↔ 效率」滑桿。「低」還會開啟從三分之二尺寸開始的 MetalFX 放大。"
           }
         }
-      }
+      },
+      "comment" : "Help for Settings › Performance › Quality presets"
     },
     "Setting Up SteamCMD" : {
       "comment" : "Title of the SteamCMD install screen",
