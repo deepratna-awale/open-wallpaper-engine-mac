@@ -1359,7 +1359,7 @@ private struct SceneInspectorContent: View {
                     ToolbarItem(placement: .navigation) {
                         modePicker
                     }
-                    // Two separate items at the trailing end: on macOS 26 a fixed spacer keeps them
+                    // Separate items at the trailing end: on macOS 26 a fixed spacer keeps them
                     // from sharing one glass capsule.
                     if #available(macOS 26, *) {
                         ToolbarSpacer(.flexible)
@@ -1371,13 +1371,15 @@ private struct SceneInspectorContent: View {
                         ToolbarSpacer(.fixed)
                     }
                     ToolbarItem(placement: .automatic) {
-                        panelToggle
+                        modeAction
                     }
                     if #available(macOS 26, *) {
                         ToolbarSpacer(.fixed)
                     }
+                    // The right-hand panel's toggle is the last item, at the trailing edge of the
+                    // window, as macOS places an inspector toggle.
                     ToolbarItem(placement: .automatic) {
-                        modeAction
+                        panelToggle
                     }
                 }
                 .alert("Reset Scene Editor (Live) Edits", isPresented: $isConfirmingReset) {
