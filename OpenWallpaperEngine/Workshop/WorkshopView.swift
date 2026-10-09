@@ -713,7 +713,7 @@ private struct WorkshopItemMenu: View {
                 setAs.run(.screenSaver, for: item)
             } label: {
                 Label {
-                    Text("Set as Screen Saver", comment: "Context menu: sets the wallpaper as the screen saver (Installed: opens the Scene Editor (Live)'s Screen Saver mode)")
+                    Text("Set as Screen Saver", comment: "Context menu: sets the wallpaper as the screen saver (Installed: opens Scene Edit / Export's Screen Saver mode)")
                 } icon: {
                     Image(systemName: "play.rectangle")
                 }

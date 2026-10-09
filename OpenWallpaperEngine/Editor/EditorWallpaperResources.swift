@@ -4,7 +4,7 @@ import OWESceneEditing
 
 /// What the Wallpaper Editor reads of the wallpaper and of Wallpaper Engine's assets
 /// (editor-plan notes, phases 2–3): the effects it can add, what each effect lets it change
-/// (from the effect's shaders, as the Scene Inspector reads them), the wallpaper's files, its
+/// (from the effect's shaders, as Scene Edit / Export reads them), the wallpaper's files, its
 /// textures as pictures, its fonts and its user properties.
 @MainActor
 final class EditorWallpaperResources {
@@ -116,7 +116,7 @@ final class EditorWallpaperResources {
         return nil
     }
 
-    /// The effect's constants, combos and texture slots, from its shaders (as the Scene Inspector
+    /// The effect's constants, combos and texture slots, from its shaders (as Scene Edit / Export
     /// reads them: `SceneEffectParameters`), titled with WE's labels.
     func effectSchema(_ file: String) -> EffectSchema? {
         if let cached = schemas[file] { return cached }

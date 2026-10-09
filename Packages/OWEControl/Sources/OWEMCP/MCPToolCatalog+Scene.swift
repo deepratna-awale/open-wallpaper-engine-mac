@@ -2,7 +2,7 @@ import Foundation
 import OWEControlProtocol
 
 /// The scene and both editors (`docs/mcp.md`, "Scene and editors"): the edit model of the
-/// Wallpaper Editor and the Scene Editor (Live), driven through the app's own edit sessions, the
+/// Wallpaper Editor and Scene Edit / Export, driven through the app's own edit sessions, the
 /// read tools, SceneScript, depth maps and the editors' windows.
 extension MCPToolCatalog {
     static let sceneTools: [MCPTool] = sceneEditing + sceneReading + sceneAuthoring + sceneWindows
@@ -258,13 +258,13 @@ extension MCPToolCatalog {
 
     private static let sceneWindows: [MCPTool] = [
         MCPTool("editor_close", title: "Close Editor",
-                description: "Closes the Scene Editor (Live) (\"scene\"), or the Wallpaper Editor's window of a wallpaper (\"wallpaper\", which needs wallpaper_id). Edits are kept: they are saved as they are made.",
+                description: "Closes Scene Edit / Export (\"scene\"), or the Wallpaper Editor's window of a wallpaper (\"wallpaper\", which needs wallpaper_id). Edits are kept: they are saved as they are made.",
                 input: JSONSchema.object([
                     "editor": JSONSchema.string("Which editor.", oneOf: ["scene", "wallpaper"]),
                     "wallpaper_id": JSONSchema.string("The wallpaper whose Wallpaper Editor window to close.", minLength: 1),
                 ], required: ["editor"]), annotations: .idempotent) { message($0) },
-        MCPTool("editor_set_tab", title: "Switch Scene Editor Tab",
-                description: "Opens the Scene Editor (Live) on a scene wallpaper in one of its tabs: Wallpaper (edits the running wallpaper), Screen Saver, iPhone & iPad Export, or Android Export (frames it for an Android device or a custom size and exports a .mpkg: a pre-rendered loop of the edited version, or the scene with its edits baked in).",
+        MCPTool("editor_set_tab", title: "Switch Scene Edit / Export Tab",
+                description: "Opens Scene Edit / Export on a scene wallpaper in one of its tabs: Wallpaper (edits the running wallpaper), Screen Saver, iPhone & iPad Export, or Android Export (frames it for an Android device or a custom size and exports a .mpkg: a pre-rendered loop of the edited version, or the scene with its edits baked in).",
                 input: JSONSchema.object([
                     "wallpaper_id": sceneWallpaper,
                     "tab": JSONSchema.string("The tab.", oneOf: ["wallpaper", "screen_saver", "iphone_ipad_export", "android_export"]),

@@ -17,9 +17,9 @@ Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・We
 
 - **シーン・動画・Web 壁紙** — シーンは各壁紙が持つ Wallpaper Engine 独自のシェーダーを Metal に変換して描画し、エフェクト、パーティクル、3D モデル、ライト、タイムライン、SceneScript、オーディオ連動ビジュアルに対応します。Web 壁紙は WebKit またはオプションの Chromium エンジンで動作します。
 - **Steam ワークショップ** — アプリ内でワークショップを閲覧・絞り込み・ダウンロードできるほか、壁紙のフォルダや zip を読み込むこともできます。
-- **シーンエディタ（ライブ）** — 再生中の壁紙のレイヤーやエフェクトをデスクトップ上でリアルタイムに変更し、そこから自分だけのスクリーンセーバーを録画したり、iPhone・iPad 用の Live Photo ロック画面や、Wallpaper Engine の Android アプリ用パッケージとして書き出したりできます。
+- **シーン編集/書き出し** — 再生中の壁紙のレイヤーやエフェクトをデスクトップ上でリアルタイムに変更し、そこから自分だけのスクリーンセーバーを録画したり、iPhone・iPad 用の Live Photo ロック画面や、Wallpaper Engine の Android アプリ用パッケージとして書き出したりできます。
 
-  ![シーンエディタ（ライブ）](../../docs/images/scene-editor-live.png)
+  ![シーン編集/書き出し](../../docs/images/scene-editor-live.png)
 
 - **壁紙エディタ** — Wallpaper Engine のエディタにならったエディタです。レイヤー、プレビュー付きのエフェクト、タイムライン、SceneScript、ユーザープロパティ、パーティクル、Puppet Warp を扱えます。編集内容は壁紙のファイルではなく、壁紙の横に保存されます。
 

@@ -86,7 +86,7 @@ private struct SceneInspectorTexture: Identifiable {
     let image: NSImage
 }
 
-/// The Scene Editor (Live)'s modes: the wallpaper's objects, edited on the running wallpaper, or
+/// Scene Edit / Export's modes: the wallpaper's objects, edited on the running wallpaper, or
 /// the Screen Saver mode's recording, the iPhone & iPad Export mode's lock screen or the Android
 /// Export mode's screen, each edited on the mode's own copy (`IsolatedSceneEditSession`). The
 /// picker lists them in this order.
@@ -95,10 +95,10 @@ enum SceneInspectorMode: CaseIterable {
 
     var title: LocalizedStringResource {
         switch self {
-        case .wallpaper: return LocalizedStringResource("Wallpaper", comment: "Scene Editor (Live): the mode that edits the running wallpaper")
-        case .screenSaver: return LocalizedStringResource("Screen Saver", comment: "Scene Editor (Live): the mode that records the screen saver")
-        case .deviceExport: return LocalizedStringResource("iPhone & iPad Export", comment: "Scene Editor (Live): the mode that exports a Live Photo")
-        case .androidExport: return LocalizedStringResource("Android Export", comment: "Scene Editor (Live): the mode that exports a .mpkg for Wallpaper Engine's Android app")
+        case .wallpaper: return LocalizedStringResource("Wallpaper", comment: "Scene Edit / Export: the mode that edits the running wallpaper")
+        case .screenSaver: return LocalizedStringResource("Screen Saver", comment: "Scene Edit / Export: the mode that records the screen saver")
+        case .deviceExport: return LocalizedStringResource("iPhone & iPad Export", comment: "Scene Edit / Export: the mode that exports a Live Photo")
+        case .androidExport: return LocalizedStringResource("Android Export", comment: "Scene Edit / Export: the mode that exports a .mpkg for Wallpaper Engine's Android app")
         }
     }
 }
@@ -213,7 +213,7 @@ private final class SceneInspectorModel: ObservableObject {
                 let materialPath = model?.material
                 let material: WEMaterial? = materialPath.flatMap { data($0) }.flatMap { try? JSONDecoder().decode(WEMaterial.self, from: $0) }
                 let passes = material?.passes ?? []
-                return SceneInspectorItem(id: String(object.id ?? index), name: authoredName ?? String(localized: "Image \(index + 1)", comment: "Scene Editor: an image layer without a name"),
+                return SceneInspectorItem(id: String(object.id ?? index), name: authoredName ?? String(localized: "Image \(index + 1)", comment: "Scene Edit / Export: an image layer without a name"),
                                           kind: "Image", sourcePath: imagePath, materialPath: materialPath,
                                           texturePaths: passes.flatMap { $0.textures?.compactMap { $0 } ?? [] },
                                           shaderPaths: passes.compactMap(\.shader), rawObject: rawObject,
@@ -227,7 +227,7 @@ private final class SceneInspectorModel: ObservableObject {
                 let materialPath = particle?.material
                 let material: WEMaterial? = materialPath.flatMap { data($0) }.flatMap { try? JSONDecoder().decode(WEMaterial.self, from: $0) }
                 let passes = material?.passes ?? []
-                return SceneInspectorItem(id: String(object.id ?? index), name: authoredName ?? String(localized: "Particle \(index + 1)", comment: "Scene Editor: a particle system without a name"),
+                return SceneInspectorItem(id: String(object.id ?? index), name: authoredName ?? String(localized: "Particle \(index + 1)", comment: "Scene Edit / Export: a particle system without a name"),
                                           kind: "Particle", sourcePath: particlePath, materialPath: materialPath,
                                           texturePaths: passes.flatMap { $0.textures?.compactMap { $0 } ?? [] },
                                           shaderPaths: passes.compactMap(\.shader), rawObject: rawObject,
@@ -236,7 +236,7 @@ private final class SceneInspectorModel: ObservableObject {
                                           version: version, effects: effects,
                                           visibility: visibility, isSwitchedOn: switchedOn)
             }
-            return SceneInspectorItem(id: String(object.id ?? index), name: authoredName ?? String(localized: "Object \(index + 1)", comment: "Scene Editor: a scene object without a name"),
+            return SceneInspectorItem(id: String(object.id ?? index), name: authoredName ?? String(localized: "Object \(index + 1)", comment: "Scene Edit / Export: a scene object without a name"),
                                       kind: "Other", sourcePath: "", materialPath: nil, texturePaths: [], shaderPaths: [],
                                       rawObject: rawObject, rawMaterial: nil, rawParticle: nil,
                                       visible: visible,
@@ -665,7 +665,7 @@ private final class SceneInspectorModel: ObservableObject {
                                          edits: ScenePreparation.split(storedValues: storedValues).edits,
                                          readAsset: SceneImageSize.reader(for: wallpaper))
         } catch {
-            OWELog.error(.ui, "Scene Editor: no drawn size for \(wallpaper.wallpaperDirectory.lastPathComponent), framing the authored scene: \(error)")
+            OWELog.error(.ui, "Scene Edit / Export: no drawn size for \(wallpaper.wallpaperDirectory.lastPathComponent), framing the authored scene: \(error)")
             let read = SceneImageSize.reader(for: wallpaper)
             return SIMD2<Double>(SceneWallpaperViewModel.sceneSize(of: scene) { SceneImageSize.of(model: $0, readAsset: read) })
         }
@@ -1013,7 +1013,7 @@ extension AppDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = String(localized: "Scene Editor (Live)")
+        window.title = String(localized: "Scene Edit / Export")
         // The title names the window in the Window menu; the toolbar's mode picker already shows
         // where the editor is, so the title isn't repeated beside it.
         window.titleVisibility = .hidden
@@ -1047,7 +1047,7 @@ extension AppDelegate {
     }
 }
 
-/// The Scene Editor (Live): its mode, and the editor for it. The Wallpaper mode edits the stores
+/// Scene Edit / Export: its mode, and the editor for it. The Wallpaper mode edits the stores
 /// the running wallpaper reads; the Screen Saver and iPhone & iPad Export modes each edit an
 /// isolated copy of them made when the mode opens (`IsolatedSceneEditSession`), shown by the
 /// mode's private instance and recorded or exported, and dropped when it closes. Every export
@@ -1299,12 +1299,12 @@ private struct SceneInspectorContent: View {
     /// The name shown for an item's kind; `kind` itself stays English, as the code matches on it.
     private static func kindLabel(_ kind: String) -> String {
         switch kind {
-        case "Image": return String(localized: "Image", comment: "Scene Editor: the kind of a scene object")
-        case "Particle": return String(localized: "Particle System", comment: "Scene Editor: the kind of a scene object")
+        case "Image": return String(localized: "Image", comment: "Scene Edit / Export: the kind of a scene object")
+        case "Particle": return String(localized: "Particle System", comment: "Scene Edit / Export: the kind of a scene object")
         case "Video": return String(localized: "Video")
         case "Audio": return String(localized: "Audio")
-        case "Effect Stack": return String(localized: "Effect Stack", comment: "Scene Editor: the effects applied to a video")
-        default: return String(localized: "Other", comment: "Scene Editor: the kind of a scene object that is neither an image nor particles")
+        case "Effect Stack": return String(localized: "Effect Stack", comment: "Scene Edit / Export: the effects applied to a video")
+        default: return String(localized: "Other", comment: "Scene Edit / Export: the kind of a scene object that is neither an image nor particles")
         }
     }
 
@@ -1383,7 +1383,7 @@ private struct SceneInspectorContent: View {
                         panelToggle
                     }
                 }
-                .alert("Reset Scene Editor (Live) Edits", isPresented: $isConfirmingReset) {
+                .alert("Reset Scene Edits", isPresented: $isConfirmingReset) {
                     Button("Reset", role: .destructive) {
                         model.removeEdits()
                         // Rebuilt from the stored values, now without the edits, once this view's
@@ -1393,7 +1393,7 @@ private struct SceneInspectorContent: View {
                     }
                     Button("Cancel", role: .cancel) { }
                 } message: {
-                    Text("Do you want to undo every Scene Editor (Live) edit of “\(wallpaper.project.displayTitle)”? Its properties are kept.")
+                    Text("Do you want to undo every scene edit of “\(wallpaper.project.displayTitle)”? Its properties are kept.")
                 }
         }
         .searchable(text: $searchText, placement: .sidebar, prompt: "Search")
@@ -1503,7 +1503,7 @@ private struct SceneInspectorContent: View {
             } label: {
                 Label("Reset Edits", systemImage: "arrow.triangle.2.circlepath")
             }
-            .help("Undo every change made to this wallpaper in the Scene Editor (Live)")
+            .help("Undo every change made to this wallpaper in Scene Edit / Export")
         }
     }
 
@@ -1633,9 +1633,9 @@ private struct SceneInspectorContent: View {
         }
         return item.isSwitchedOn
             ? String(localized: "Hide this object; “\(property)” sets it again when you show it",
-                     comment: "Scene Editor: help of the switch of an object a user property shows; the property's key")
+                     comment: "Scene Edit / Export: help of the switch of an object a user property shows; the property's key")
             : String(localized: "Show this object; “\(property)” sets it again",
-                     comment: "Scene Editor: help of the switch of an object hidden over the user property that shows it; the property's key")
+                     comment: "Scene Edit / Export: help of the switch of an object hidden over the user property that shows it; the property's key")
     }
 
     private var detailColumn: some View {

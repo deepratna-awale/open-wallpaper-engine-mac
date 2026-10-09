@@ -311,7 +311,7 @@ struct EditorCanvasView: View {
         return abs(local.x) <= half.x && abs(local.y) <= half.y ? local : nil
     }
 
-    /// Arrow keys nudge the selection as the Scene Inspector's do: 10 units, Shift 50, Control 1.
+    /// Arrow keys nudge the selection as Scene Edit / Export's do: 10 units, Shift 50, Control 1.
     /// Escape clears the selection (or ends text editing); Delete deletes the selected layer.
     private func key(_ event: NSEvent) -> Bool {
         if event.keyCode == 53 {

@@ -3,7 +3,7 @@
 // - OWESceneEditing: the edit model, Foundation only (the overlay over scene.json, the layer
 //   outline, gizmo and canvas math, undo, Save as Local Wallpaper). The app's scene loader applies
 //   the overlay through it, so the editor and the renderer can't disagree about an edit.
-// - OWEInspectorKit: controls the Scene Inspector and the editor share.
+// - OWEInspectorKit: controls Scene Edit / Export and the editor share.
 // - OWEEditor: the editor window's views; the app hands it the live canvas and its services.
 import PackageDescription
 

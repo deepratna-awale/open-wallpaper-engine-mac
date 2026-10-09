@@ -4,7 +4,7 @@ import OWESceneEditing
 /// The size a scene wallpaper is drawn at, in scene units: WE's canvas
 /// (`SceneWallpaperViewModel.sceneSize(of:)`, 0x14018b2c0) of its scene.json with the Wallpaper
 /// Editor's overlay and the per-object edits applied, as the renderer loads it. What anything
-/// framing the drawn scene (the Scene Editor (Live), the iPhone & iPad and Android exports)
+/// framing the drawn scene (Scene Edit / Export, the iPhone & iPad and Android exports)
 /// measures in.
 enum SceneDrawnSize {
     /// `sceneData`'s drawn size with `overlay` and `edits` (stored `_owe_scene_object_…` values)

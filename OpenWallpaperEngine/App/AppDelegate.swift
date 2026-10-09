@@ -175,7 +175,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         ])
         return MCPServerPlugin(handler: { request in await router.handle(request) })
     }()
-    /// The Scene Editor (Live)'s Screen Saver mode's recordings, set as the screen saver.
+    /// Scene Edit / Export's Screen Saver mode's recordings, set as the screen saver.
     lazy var screenSaverRecordings = ScreenSaverRecordingService(plugin: screenSaver, environment: .init(
         screens: {
             NSScreen.screens.map { screen in

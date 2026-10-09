@@ -99,7 +99,7 @@ the colour at 30% over white, which is how light macOS's own highlights are.
 **The app's own windows.** AppKit has no API for an app's accent other than the static asset
 colour in its Info.plist, so the tint is SwiftUI's: every window's root (the main window, Settings,
 About, the legal documents, What's New, the safe restart notice, the Workshop preview, Send over
-Wi-Fi, the Scene Editor (Live) and its Scene Edit and Export modes, and the Wallpaper Editor)
+Wi-Fi, Scene Edit / Export and the Wallpaper Editor)
 applies `appAccentTint()` (`AppAccentTint`), which sets `.tint` (buttons, switches, sliders, links,
 progress) and `appAccentColor` (`OWEInspectorKit`), which the app's own selection marks, gizmos and
 indicators draw with instead of `Color.accentColor`; `SelectionHighlight` reads the tint too.

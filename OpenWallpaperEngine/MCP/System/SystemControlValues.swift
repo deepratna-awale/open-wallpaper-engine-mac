@@ -11,7 +11,7 @@ struct SystemExportDefaults: Equatable {
     var photosAccess: String
 }
 
-/// One Android export of one or more wallpapers, as the Scene Editor (Live)'s Android Export would set it.
+/// One Android export of one or more wallpapers, as Scene Edit / Export's Android Export would set it.
 struct SystemAndroidRequest: Equatable {
     var wallpapers: [ControlWallpaper]
     var options: AndroidExportOptions
@@ -82,7 +82,7 @@ struct SystemLivePhotoResult: Equatable {
     var photos: Photos
 }
 
-/// A scene layer, as the Scene Editor (Live)'s list shows it.
+/// A scene layer, as Scene Edit / Export's list shows it.
 struct SystemSceneLayer: Equatable {
     /// scene.json's object id (its index when it has none), which layer edits are keyed by.
     var id: Int
@@ -95,7 +95,7 @@ struct SystemSceneLayer: Equatable {
 
 /// The values a wallpaper's screen saver version is recorded with.
 struct SystemScreenSaverValues: Equatable {
-    /// User properties and the Scene Editor's layer edits.
+    /// User properties and Scene Edit / Export's layer edits.
     var values: [String: String]
     /// The screen saver has its own saved choices for the wallpaper (else these are the wallpaper's).
     var isOwn: Bool

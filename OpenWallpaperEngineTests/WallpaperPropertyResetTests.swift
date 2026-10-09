@@ -2,7 +2,7 @@ import XCTest
 @testable import OpenWallpaperEngine
 
 /// The Details panel's Reset (WE's `callbackResetCurrentWallpaperProperties`): each property back
-/// to project.json's value in the edited stores, with the Scene Inspector's edits, applied live.
+/// to project.json's value in the edited stores, with Scene Edit / Export's edits, applied live.
 final class WallpaperPropertyResetTests: XCTestCase {
     private var defaults: UserDefaults!
     private var suite: String!
@@ -30,7 +30,7 @@ final class WallpaperPropertyResetTests: XCTestCase {
         "speed_musicSync": "true", "speed_musicAmount": "0.4", "_owe_speed": "1.8", "_owe_hue": "0.5",
     ]
 
-    /// The Scene Inspector's edits: object visibility, JSON and an authored effect override.
+    /// Scene Edit / Export's edits: object visibility, JSON and an authored effect override.
     private static let inspectorEdits: [String: String] = [
         "_owe_scene_object_12_visible": "false",
         "_owe_scene_object_12_json": "{}",

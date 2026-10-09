@@ -1,15 +1,15 @@
 # iPhone & iPad Export
 
-**iPhone & iPad Export** is a tab of the Scene Editor (Live) (Wallpaper | Screen Saver |
+**iPhone & iPad Export** is a tab of Scene Edit / Export (Wallpaper | Screen Saver |
 iPhone & iPad Export | Android Export). It frames a scene or video wallpaper as an iPhone or iPad
 lock screen and exports it as a Live Photo, which iOS and iPadOS 17 or later can set as a moving
-lock screen. All exporting happens in the Scene Editor (Live); the library has no export command.
+lock screen. All exporting happens in Scene Edit / Export; the library has no export command.
 Web wallpapers don't show the tab. How it is built: [`architecture.md`](architecture.md),
 "Isolated edits" and "Live Photo export".
 
 ## Videos
 
-A video wallpaper (an MP4, M4V or MOV file in the library) opens the Scene Editor (Live) on its
+A video wallpaper (an MP4, M4V or MOV file in the library) opens Scene Edit / Export on its
 export and screen saver tabs; it has no Wallpaper tab. Its Live Photo is made the same way as a
 scene's, from the video's own frames instead of a render: the crop (drag and zoom), the clip with
 the most motion, the sharpest still and the blend at both ends all apply, and the clip loops back
@@ -19,7 +19,7 @@ those sections aren't shown. A WebM or remote video shows the tab with why it ca
 ## Your desktop doesn't change
 
 The tab runs its own private copy of the wallpaper, started from the wallpaper's properties and
-Scene Editor (Live) edits when it opens. Changing user properties, hiding, moving, resizing,
+scene edits when it opens. Changing user properties, hiding, moving, resizing,
 recolouring or fading layers, blending and effects there changes only the preview and the
 export. The desktop, its properties and the Wallpaper Editor's edits stay as they were.
 

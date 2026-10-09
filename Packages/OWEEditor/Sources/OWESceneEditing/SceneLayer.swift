@@ -38,7 +38,7 @@ public struct SceneLayerEffect: Identifiable, Hashable, Sendable {
         ((file as NSString).deletingLastPathComponent as NSString).lastPathComponent.lowercased()
     }
 
-    /// The authored name, else the folder's, as the Scene Inspector titles it.
+    /// The authored name, else the folder's, as Scene Edit / Export titles it.
     public var title: String {
         if let name, !name.isEmpty { return name }
         return folderName.replacingOccurrences(of: "_", with: " ").capitalized
@@ -65,7 +65,7 @@ public struct SceneLayer: Identifiable, Hashable, Sendable {
         }
     }
 
-    /// Its `id`, or its index when it has none (as the Scene Inspector and the overlay key it).
+    /// Its `id`, or its index when it has none (as Scene Edit / Export and the overlay key it).
     public let id: Int
     /// Its position in scene.json's `objects`: the draw order, later on top.
     public let index: Int

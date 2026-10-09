@@ -15,7 +15,7 @@ final class SceneControlRequests: ControlRequestGroup {
         "depth_generate", "depth_apply", "depth_remove", "use_depth_map_as_mask", "editor_close", "editor_set_tab",
     ]
 
-    /// The tabs `editor_set_tab` names, and the Scene Editor (Live)'s modes they are.
+    /// The tabs `editor_set_tab` names, and Scene Edit / Export's modes they are.
     static let tabs: [String: SceneInspectorMode] = [
         "wallpaper": .wallpaper, "screen_saver": .screenSaver, "iphone_ipad_export": .deviceExport, "android_export": .androidExport,
     ]
@@ -321,7 +321,7 @@ final class SceneControlRequests: ControlRequestGroup {
     private func editorClose(_ params: ControlParameters, _ lookup: ControlLookup) throws -> JSONValue {
         if try editor(params) == "scene" {
             let closed = editors.closeSceneEditor()
-            return ["closed": .bool(closed), "message": .string(closed ? "Closed the Scene Editor (Live)." : "The Scene Editor (Live) wasn't open.")]
+            return ["closed": .bool(closed), "message": .string(closed ? "Closed Scene Edit / Export." : "Scene Edit / Export wasn't open.")]
         }
         let wallpaper = try lookup.sceneWallpaper(try params.required("wallpaper_id"))
         let sent = editors.closeWallpaperEditor(wallpaper)
@@ -336,7 +336,7 @@ final class SceneControlRequests: ControlRequestGroup {
         }
         let wallpaper = try lookup.sceneWallpaper(try params.required("wallpaper_id"))
         try editors.showSceneEditor(wallpaper, mode: mode)
-        return ["tab": .string(name), "message": .string("The Scene Editor (Live) shows \"\(wallpaper.title)\" on its \(name) tab.")]
+        return ["tab": .string(name), "message": .string("Scene Edit / Export shows \"\(wallpaper.title)\" on its \(name) tab.")]
     }
 
     private func timelinePreview(_ params: ControlParameters, _ lookup: ControlLookup) throws -> JSONValue {

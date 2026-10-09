@@ -2,7 +2,7 @@ import Metal
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// The Scene Inspector's material blending (`WEMaterialBlending`, `sceneObjectBlendingKey`): the
+/// Scene Edit / Export's material blending (`WEMaterialBlending`, `sceneObjectBlendingKey`): the
 /// values it offers are the ones the renderer draws, and a change reaches the layer's pipeline.
 final class WEMaterialBlendingTests: XCTestCase {
     private struct BlendState: Hashable {
