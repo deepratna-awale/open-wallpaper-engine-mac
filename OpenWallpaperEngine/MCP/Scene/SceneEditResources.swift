@@ -27,6 +27,13 @@ protocol SceneEditResources: AnyObject {
     func particleCatalog() -> ParticleCatalog
     /// The depth map section's services; nil where depth maps can't be made (tests).
     func depthMapServices() -> DepthMapEditorServices?
+    /// The wallpaper's user-property stores, whose Wallpaper Editor draft a save saves too; nil
+    /// leaves the properties out (tests).
+    var propertyTargets: WallpaperPropertyTargets? { get }
+}
+
+extension SceneEditResources {
+    var propertyTargets: WallpaperPropertyTargets? { nil }
 }
 
 /// A library wallpaper's resources, read as the Wallpaper Editor's window reads them.
@@ -64,6 +71,7 @@ final class WallpaperSceneEditResources: SceneEditResources {
 
     var folder: URL { wallpaper.wallpaperDirectory }
     var assetStore: EditorAssetStore { resources.assets }
+    var propertyTargets: WallpaperPropertyTargets? { WallpaperPropertyTargets(wallpaper: wallpaper, scopes: [.shared]) }
 
     func effectCatalog(outline: SceneOutline) -> [EffectCatalogEntry] { resources.effectCatalog(outline: outline) }
     func effectSchema(_ file: String) -> EffectSchema? { resources.effectSchema(file) }

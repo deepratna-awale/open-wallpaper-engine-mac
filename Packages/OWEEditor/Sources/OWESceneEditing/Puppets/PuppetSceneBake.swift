@@ -1,6 +1,6 @@
 import Foundation
 
-/// Save as Local Wallpaper for the editor's puppets: each layer's rig written as a WE `.mdl`
+/// Save as New Wallpaper for the editor's puppets: each layer's rig written as a WE `.mdl`
 /// (`PuppetMDLWriter`), a model JSON naming it (`"puppet"`, as WE's image models do,
 /// docs/models-plan.md §2.13) and the layer pointed at that model with its `animationlayers`.
 /// New files get names of their own, so a model or rig other layers share is never changed.

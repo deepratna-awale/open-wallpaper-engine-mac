@@ -7,10 +7,10 @@ import simd
 /// live incoming one; nothing samples the incoming wallpaper. CRT and Ice also need the outgoing
 /// picture's blurred mip chain, built once per transition by `prepareOutgoing`.
 ///
-/// Not thread-safe except `preparePipelines`, which may run on any thread: the pipelines, the
-/// textures and the facet mesh are built outside `lock` and stored under it. Callers encode from
-/// one thread.
-final class WallpaperTransitionRenderer {
+/// Thread-safe: each transition encodes its frames on its own thread. The pipelines, the
+/// textures and the facet mesh are built outside `lock` and stored under it; everything else is
+/// set once in `init`.
+final class WallpaperTransitionRenderer: @unchecked Sendable {
     struct RenderError: Error, CustomStringConvertible {
         /// The transition, or nil for what all of them share (the Metal library).
         let kind: WallpaperTransitionKind?
@@ -44,7 +44,6 @@ final class WallpaperTransitionRenderer {
     private let library: MTLLibrary
     private let viewProjection: simd_float4x4
     private let viewProjectionInverse: simd_float4x4
-    private let passDescriptor = MTLRenderPassDescriptor()
 
     private let lock = NSLock()
     // Guarded by `lock`.
@@ -65,8 +64,6 @@ final class WallpaperTransitionRenderer {
         }
         viewProjection = Self.shatterCamera()
         viewProjectionInverse = viewProjection.inverse
-        passDescriptor.colorAttachments[0].storeAction = .store
-        passDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
     }
 
     // MARK: - Preparing
@@ -104,11 +101,13 @@ final class WallpaperTransitionRenderer {
                                 width: Float(target.width), height: Float(target.height),
                                 viewProjection: viewProjection, viewProjectionInverse: viewProjectionInverse)
 
+        let passDescriptor = MTLRenderPassDescriptor()
         let attachment = passDescriptor.colorAttachments[0]!
         attachment.texture = target
+        attachment.storeAction = .store
+        attachment.clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
         // The quad effects write every pixel, so only the meshes need the clear.
         attachment.loadAction = Self.drawsMesh(kind) ? .clear : .dontCare
-        defer { attachment.texture = nil }
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: passDescriptor) else {
             throw RenderError(kind: kind, reason: "no render command encoder")
         }

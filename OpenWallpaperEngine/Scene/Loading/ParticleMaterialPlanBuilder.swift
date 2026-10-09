@@ -25,7 +25,7 @@ struct ParticleMaterialPlanBuilder {
     let loadTexture: (_ name: String, _ materialPath: String) -> SceneMetalTextureSource?
     /// The combos WE's engine lays over every material of the scene (`SceneEngineCombos`).
     var sceneEngineCombos = SceneEngineCombos()
-    /// The system's blending in place of its material's first pass's (the Scene Inspector's,
+    /// The system's blending in place of its material's first pass's (Scene Edit / Export's,
     /// `sceneObjectBlendingKey`); nil keeps the material's.
     var blending: WEMaterialBlending?
 

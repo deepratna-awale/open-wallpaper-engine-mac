@@ -17,9 +17,9 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 
 - **Sahne, video ve web duvar kâğıtları** — sahneler, her duvar kâğıdının Metal’e çevrilmiş kendi Wallpaper Engine gölgelendiricileriyle çizilir; efektler, parçacıklar, 3B modeller, ışıklar, zaman çizelgeleri, SceneScript ve sese duyarlı görseller desteklenir. Web duvar kâğıtları WebKit’te veya isteğe bağlı Chromium motorunda çalışır.
 - **Steam Atölyesi** — Atölye’ye uygulamanın içinden göz atın, filtreleyin ve indirin ya da duvar kâğıdı klasörlerini ve zip dosyalarını içe aktarın.
-- **Sahne Düzenleyicisi (Canlı)** — çalışan duvar kâğıdının katmanlarını ve efektlerini doğrudan masaüstünde canlı olarak değiştirin, ondan kendi ekran koruyucunuzu kaydedin ya da onu iPhone ve iPad için Live Photo kilit ekranı veya Wallpaper Engine’in Android uygulaması için bir paket olarak dışa aktarın.
+- **Sahne Düzenle/Dışa Aktar** — çalışan duvar kâğıdının katmanlarını ve efektlerini doğrudan masaüstünde canlı olarak değiştirin, ondan kendi ekran koruyucunuzu kaydedin ya da onu iPhone ve iPad için Live Photo kilit ekranı veya Wallpaper Engine’in Android uygulaması için bir paket olarak dışa aktarın.
 
-  ![Sahne Düzenleyicisi (Canlı)](../../docs/images/scene-editor-live.png)
+  ![Sahne Düzenle/Dışa Aktar](../../docs/images/scene-editor-live.png)
 
 - **Duvar Kâğıdı Düzenleyici** — Wallpaper Engine’in düzenleyicisinin ruhunu taşıyan bir düzenleyici: katmanlar, önizlemeli efektler, zaman çizelgesi, SceneScript, kullanıcı özellikleri, parçacıklar ve Puppet Warp. Düzenlemeleriniz duvar kâğıdının yanında saklanır, hiçbir zaman onun dosyalarına yazılmaz.
 

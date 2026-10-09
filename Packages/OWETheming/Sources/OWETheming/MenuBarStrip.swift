@@ -4,6 +4,22 @@ import CoreGraphics
 /// is translucent over the desktop picture, so the picture's top strip, filled with the colour,
 /// shows through it.
 public enum MenuBarStrip {
+    /// The strip fades out downwards over this many menu bar heights, from `peakOpacity` at the
+    /// top to nothing, so the colour tints the bar and dissolves into the wallpaper.
+    public static let fadeHeightRatio: CGFloat = 1.5
+
+    /// The strip's opacity at its top: a tint over the wallpaper rather than a solid band.
+    public static let peakOpacity: CGFloat = 0.4
+
+    /// The fade's stops, top to bottom: (location in the strip, opacity).
+    public static let fadeStops: [(location: CGFloat, alpha: CGFloat)] =
+        [(0, 1), (0.3, 0.9), (0.65, 0.35), (1, 0)].map { ($0.0, $0.1 * peakOpacity) }
+
+    /// The faded strip's height for a menu bar `height` points tall.
+    public static func fadeHeight(menuBarHeight height: CGFloat) -> CGFloat {
+        height * fadeHeightRatio
+    }
+
     /// The menu bar's height on a display, in points: what the visible frame leaves at the top,
     /// or the safe area's top inset (the camera housing) when that is taller. 0 when the menu bar
     /// hides itself.

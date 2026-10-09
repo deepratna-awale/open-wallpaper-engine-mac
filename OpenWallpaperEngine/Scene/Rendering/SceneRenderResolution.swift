@@ -58,18 +58,8 @@ enum SceneRenderResolution {
         return (display * (longSide / max(display.x, display.y))).rounded(.toNearestOrAwayFromZero)
     }
 
-    /// The most pixels a scene target has at which Upscaling is skipped: 1920×1200 (2.3 MP). At
-    /// that size MetalFX's fixed cost outweighs drawing a share of the pixels (Snowy Plains at
-    /// 1920×1080: 3.70 ms median with MetalFX at 50 %, 1.38 ms native).
-    static let upscalingMinimumPixels = 1920 * 1200
-
-    /// Whether drawing a share of a `targetSize` target and upscaling it beats drawing it natively.
-    static func upscalingPays(targetSize: SIMD2<Int>) -> Bool {
-        targetSize.x * targetSize.y > upscalingMinimumPixels
-    }
-
     /// The pixels per unit the scene pass draws at when it draws `scale` of each side of a target
-    /// of `pixelsPerUnit` and is upscaled to it (`SceneUpscaler`); `pixelsPerUnit` when not scaled.
+    /// of `pixelsPerUnit` and is upscaled to it by the composite; `pixelsPerUnit` when not scaled.
     static func drawnPixelsPerUnit(_ pixelsPerUnit: Float, scale: Float) -> Float {
         guard scale.isFinite, scale > 0, scale < 1 else { return pixelsPerUnit }
         return pixelsPerUnit * scale

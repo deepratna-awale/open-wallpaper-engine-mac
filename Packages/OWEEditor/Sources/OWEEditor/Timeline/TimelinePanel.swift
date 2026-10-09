@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import OWEInspectorKit
 import UniformTypeIdentifiers
 import OWESceneEditing
 
@@ -9,6 +10,7 @@ import OWESceneEditing
 /// ←/→ step a frame, Delete removes keyframes, ⌘C/⌘X/⌘V copy, cut and paste at the playhead,
 /// ⌘A selects every keyframe.
 struct TimelinePanel: View {
+    @Environment(\.appAccentColor) private var accentColor
     @ObservedObject var timeline: SceneTimelineEditor
     @ObservedObject var session: SceneEditSession
     @State private var expanded: Set<TimelineTarget> = []
@@ -121,7 +123,7 @@ struct TimelinePanel: View {
         .font(.callout)
         .padding(.horizontal, 6)
         .frame(height: TimelineRow.height)
-        .background(isActive ? Color.accentColor.opacity(0.08) : Color.clear)
+        .background(isActive ? accentColor.opacity(0.08) : Color.clear)
         .contentShape(Rectangle())
         .onTapGesture {
             timeline.focused = row.target

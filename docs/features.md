@@ -22,8 +22,8 @@ Everything Open Wallpaper Engine does, by area. The [README](../README.md) has t
 
 ### Edit Wallpapers
 
-- **Scene Editor (Live)** (Details › Scene Editor (Live), ⌥⌘I) has four tabs, and every export happens there. **Wallpaper** edits the running wallpaper: show, hide, move, resize, recolour and fade layers and change effects, live on the desktop. **Screen Saver** records a version of the wallpaper as your screen saver ([docs/screen-saver.md](screen-saver.md)). **iPhone & iPad Export** turns it into a Live Photo lock screen ([docs/iphone-ipad-export.md](iphone-ipad-export.md)). **Android Export** writes it as a package for Wallpaper Engine's Android app ([docs/android-export.md](android-export.md)). A video wallpaper opens it on its screen saver and export tabs.
-- **Wallpaper Editor** (Edit Wallpaper in the library's bottom bar, ⌥⌘E) is an editor in the spirit of Wallpaper Engine's, running as an app of its own: add, arrange and group layers; add effects and particle systems from Wallpaper Engine's catalogs, with previews the app renders in the background once its assets are installed; animate on a timeline; write SceneScript with autocomplete; author user properties; edit particle systems and Puppet Warp rigs. Edits are kept beside the wallpaper, never in its files, can all be undone, and show on the desktop as you make them; **Save as Local Wallpaper** writes a copy with them.
+- **Scene Edit / Export** (Details › Scene Edit / Export, ⌥⌘I) has four tabs, and every export happens there. **Wallpaper** edits the running wallpaper: show, hide, move, resize, recolour and fade layers and change effects, live on the desktop. **Screen Saver** records a version of the wallpaper as your screen saver ([docs/screen-saver.md](screen-saver.md)). **iPhone & iPad Export** turns it into a Live Photo lock screen ([docs/iphone-ipad-export.md](iphone-ipad-export.md)). **Android Export** writes it as a package for Wallpaper Engine's Android app ([docs/android-export.md](android-export.md)). A video wallpaper opens it on its screen saver and export tabs.
+- **Wallpaper Editor** (Edit Wallpaper in the library's bottom bar, ⌥⌘E) is an editor in the spirit of Wallpaper Engine's, running as an app of its own: add, arrange and group layers; add effects and particle systems from Wallpaper Engine's catalogs, with previews the app renders in the background once its assets are installed; animate on a timeline; write SceneScript with autocomplete; author user properties; edit particle systems and Puppet Warp rigs. The editor works on a draft: edits show in its canvas and can all be undone, and nothing else runs them (the desktop, the screen saver, playlists) until **File › Save** (⌘S), which every display showing the wallpaper then shows; **Save as New Wallpaper** (⇧⌘S) adds a new wallpaper with them to the library instead, and **Revert to Saved** goes back to the last save. Closing or quitting with unsaved changes asks to save them, and a draft survives a crash: the editor offers to resume it. Edits are kept beside the wallpaper, never in its files.
 - **Depth maps** — with the Depth Map Generation plugin, both editors make a depth map of a layer or the whole scene on your Mac and apply Wallpaper Engine's Depth Parallax effect to it ([docs/depth-maps.md](depth-maps.md)).
 
 ### Several Displays
@@ -32,8 +32,8 @@ Everything Open Wallpaper Engine does, by area. The [README](../README.md) has t
 
 ### Export to iPhone, iPad and Android
 
-- **iPhone & iPad** — the Scene Editor (Live)'s iPhone & iPad Export tab frames a scene or a video as any of 63 iPhones' and iPads' lock screens and exports a Live Photo, with AirDrop, to a folder or into a Photos album, without changing your desktop. **Export More with These Settings…** makes Live Photos of other wallpapers from the library in one batch, with **AirDrop All**. [docs/iphone-ipad-export.md](iphone-ipad-export.md)
-- **Android** — the Scene Editor (Live)'s Android Export tab writes Wallpaper Engine's `.mpkg` packages for its Android app: scenes as live **Dynamic** scenes or a **Pre-Rendered** video, videos byte for byte as they are. **Export More with These Settings…** packs other wallpapers from the library in one batch, and **Send over Wi-Fi** lets the device download them from the Mac with a QR code. [docs/android-export.md](android-export.md)
+- **iPhone & iPad** — Scene Edit / Export's iPhone & iPad Export tab frames a scene or a video as any of 63 iPhones' and iPads' lock screens and exports a Live Photo, with AirDrop, to a folder or into a Photos album, without changing your desktop. **Export More with These Settings…** makes Live Photos of other wallpapers from the library in one batch, with **AirDrop All**. [docs/iphone-ipad-export.md](iphone-ipad-export.md)
+- **Android** — Scene Edit / Export's Android Export tab writes Wallpaper Engine's `.mpkg` packages for its Android app: scenes as live **Dynamic** scenes or a **Pre-Rendered** video, videos byte for byte as they are. **Export More with These Settings…** packs other wallpapers from the library in one batch, and **Send over Wi-Fi** lets the device download them from the Mac with a QR code. [docs/android-export.md](android-export.md)
 
 ### Theme macOS
 
@@ -41,7 +41,7 @@ Settings › General › **Theming** lets the menu bar, the accent and highlight
 
 ### Control from MCP Clients
 
-Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI assistants and other tools that speak the Model Context Protocol) can do what the app's own controls do, through a local connection only your account can open: set wallpapers, playback, volume, user properties, playlists and settings; edit scenes through the Wallpaper Editor's edit model (shown live in open editors, with Undo); export Live Photos; and set up the screen saver and the lock-screen picture. Setup, every tool and the security model: [docs/mcp.md](mcp.md).
+Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI assistants and other tools that speak the Model Context Protocol) can do what the app's own controls do, through a local connection only your account can open: set wallpapers, playback, volume, user properties, playlists and settings; edit scenes through the Wallpaper Editor's edit model (in its draft, shown in an open editor window, with Undo, and on the displays once saved); export Live Photos; and set up the screen saver and the lock-screen picture. Setup, every tool and the security model: [docs/mcp.md](mcp.md).
 
 ## Everything that is supported
 
@@ -94,11 +94,11 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - Per-wallpaper **position, zoom and flip** on each display, and a video's playback rate.
 - Per-display user properties, with "Sync properties across displays".
 - A wallpaper shown on several displays renders once and is presented on each.
-- Quality settings: Render Resolution (Your Display, 4K, Full) with MetalFX upscaling, Texture Resolution, Effect Detail (Match Display), reflections, shadows and volumetrics.
+- Quality settings: Render Resolution (Your Display, 4K, Full) with Upscaling (Render Scale 50–75 %), Texture Resolution, Effect Detail (Match Display), reflections, shadows and volumetrics.
 - **Safe restart** — a wallpaper that stalled or crashed the app is skipped on the next launch and marked in the library.
 
 ### Screen saver, lock screen & theming
-- **Screen saver** — a plugin records a seamless loop of a scene, web or WebM wallpaper (videos play their own file) and installs a macOS screen saver that plays it; the Scene Editor (Live)'s Screen Saver tab records your own version and can re-record it daily ([docs/screen-saver.md](screen-saver.md)).
+- **Screen saver** — a plugin records a seamless loop of a scene, web or WebM wallpaper (videos play their own file) and installs a macOS screen saver that plays it; Scene Edit / Export's Screen Saver tab records your own version and can re-record it daily ([docs/screen-saver.md](screen-saver.md)).
 - **Lock screen** — each display's desktop picture, which the lock screen shows, is a picture of its wallpaper.
 - **Theming** — the menu bar, accent, tinted icons and folders follow the wallpaper's colour ([docs/theming.md](theming.md)).
 
@@ -110,9 +110,9 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - **Animated previews** — wallpaper tiles in the library play their Workshop preview animation (GIF), so you can see a wallpaper move before applying it. They play only while visible, and pause when the window is hidden or in Low Power Mode.
 - Installed wallpapers show and filter by their Workshop tags; asset-only and dependency-only items stay out of Installed.
 - Missing Workshop dependencies download automatically, and unused ones are removed after a delete. Every download lands in the Wallpaper Storage folder.
-- **Reset** in Details returns a wallpaper's properties, and its Scene Editor (Live) edits, to the defaults its author set.
-- **iPhone & iPad Export** in the Scene Editor (Live) turns a scene or video wallpaper into a Live Photo lock screen for any iPhone or iPad that shows one, with AirDrop, to a folder or into a Photos album, without changing your desktop, one wallpaper or a batch.
-- **Android Export** in the Scene Editor (Live) writes Wallpaper Engine's `.mpkg` packages for its Android app, one wallpaper or a batch, sent to the device over Wi-Fi or copied.
+- **Reset** in Details returns a wallpaper's properties, and its scene edits, to the defaults its author set.
+- **iPhone & iPad Export** in Scene Edit / Export turns a scene or video wallpaper into a Live Photo lock screen for any iPhone or iPad that shows one, with AirDrop, to a folder or into a Photos album, without changing your desktop, one wallpaper or a batch.
+- **Android Export** in Scene Edit / Export writes Wallpaper Engine's `.mpkg` packages for its Android app, one wallpaper or a batch, sent to the device over Wi-Fi or copied.
 - Property conditions, text rows and slider formats from the wallpaper's settings are honoured.
 - Steam passwords are never stored, and the Steam Web API key is kept in the Keychain.
 

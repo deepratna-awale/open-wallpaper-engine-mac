@@ -1,7 +1,7 @@
 import AVFoundation
 import Foundation
 
-/// Which of the Scene Editor (Live)'s modes a wallpaper shows, and why one it shows can't be
+/// Which of Scene Edit / Export's modes a wallpaper shows, and why one it shows can't be
 /// used. All exporting happens in the editor, so a video opens it too:
 ///
 /// - **Scene:** every mode.
@@ -74,7 +74,7 @@ enum SceneEditorModes {
             guard abs(rect.width) > 0, abs(rect.height) > 0 else { return nil }
             return SIMD2(abs(rect.width).rounded(), abs(rect.height).rounded())
         } catch {
-            OWELog.error(.app, "Scene Editor: can't read the video size of \(url.lastPathComponent): \(error)")
+            OWELog.error(.app, "Scene Edit / Export: can't read the video size of \(url.lastPathComponent): \(error)")
             return nil
         }
     }

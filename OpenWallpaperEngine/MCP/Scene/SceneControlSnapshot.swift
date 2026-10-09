@@ -20,6 +20,7 @@ enum SceneControlSnapshot {
                 .merging((session.overlay.general ?? [:]).mapValues(SceneControlValues.json)) { _, edited in edited }),
             "layers": .array(outline.layers.map { layer(session, $0, resources: document.resources) }),
             "edited": .bool(session.overlay.hasSceneEdits),
+            "unsaved": .bool(document.hasUnsavedChanges),
             "undo": undoState(session),
             "user_properties": .array(UserPropertyAuthoring(session: session, projectJSON: document.resources.projectJSON)
                 .properties.map(userProperty)),
@@ -100,9 +101,17 @@ enum SceneControlSnapshot {
         for key in Set(effect.constants.keys).union(editedBindings) {
             if let property = session.effectBinding(key, effect: effect.key, of: layerID) { bindings[key] = .string(property) }
         }
+        // By slot for the first pass ("1"), "pass:slot" for a later one ("3:1", Blur's mask).
         var textures: [String: JSONValue] = [:]
-        for slot in 0..<max(effect.textures.count, 1 + (edits?.textures?.keys.compactMap(Int.init).max() ?? 0)) {
-            if let texture = session.effectTexture(slot, effect: effect.key, of: layerID) { textures[String(slot)] = .string(texture) }
+        for (pass, authored) in (effect.passTextures.isEmpty ? [effect.textures] : effect.passTextures).enumerated() {
+            for slot in 0..<authored.count {
+                if let texture = session.effectTexture(slot, pass: pass, effect: effect.key, of: layerID) {
+                    textures[SceneEditOverlay.EffectEdit.textureKey(pass: pass, slot: slot)] = .string(texture)
+                }
+            }
+        }
+        for (key, value) in edits?.textures ?? [:] where textures[key] == nil {
+            if let texture = value.stringValue { textures[key] = .string(texture) }
         }
         return [
             "key": .string(effect.key), "file": .string(effect.file), "title": .string(effect.title),
@@ -251,7 +260,8 @@ enum SceneControlSnapshot {
                         ]
                     }),
                     "textures": .array((schema?.textures ?? []).map { slot in
-                        ["slot": .number(Double(slot.slot)), "title": .string(slot.title), "mask": .bool(slot.isMask),
+                        ["slot": .number(Double(slot.slot)), "pass": .number(Double(slot.pass)), "title": .string(slot.title),
+                         "mask": .bool(slot.isMask),
                          "default": slot.defaultTexture.map { .string($0) } ?? .null]
                     }),
                 ]

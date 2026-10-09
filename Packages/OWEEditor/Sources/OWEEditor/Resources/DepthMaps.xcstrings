@@ -2,7 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "A depth map is already being generated." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -97,7 +97,7 @@
       }
     },
     "Adds Wallpaper Engine’s Depth Parallax effect, bound to this depth map." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -192,7 +192,7 @@
       }
     },
     "Apply Depth Parallax" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -287,7 +287,7 @@
       }
     },
     "Cancel" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -382,7 +382,7 @@
       }
     },
     "Change Depth Parallax Strength" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -476,103 +476,8 @@
         }
       }
     },
-    "Depth Map" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "خريطة العمق"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tiefenkarte"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mapa de profundidad"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Carte de profondeur"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "डेप्थ मैप"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mappa di profondità"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "深度マップ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "깊이 맵"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mapa głębi"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mapa de Profundidade"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Карта глубины"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Derinlik Haritası"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Карта глибини"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "深度图"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "深度圖"
-          }
-        }
-      }
-    },
     "Depth Map Generation isn’t installed. Install it in Settings › Plugins." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -666,103 +571,8 @@
         }
       }
     },
-    "Depth Parallax" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "اختلاف منظر العمق"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tiefenparallaxe"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paralaje de profundidad"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Parallaxe de profondeur"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "डेप्थ पैरालैक्स"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Parallasse di profondità"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "深度視差"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "깊이 시차"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paralaksa głębi"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paralaxe de Profundidade"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Параллакс глубины"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Derinlik Paralaksı"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Паралакс глибини"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "深度视差"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "深度視差"
-          }
-        }
-      }
-    },
     "Depth map preview" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -857,7 +667,7 @@
       }
     },
     "Estimates the depth of the picture on this Mac. Nothing is uploaded." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -952,7 +762,7 @@
       }
     },
     "Estimating depth…" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1047,7 +857,7 @@
       }
     },
     "Evens out the depth map’s flat areas while keeping the picture’s edges. Applies to the next generation." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1142,7 +952,7 @@
       }
     },
     "Generate" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1237,7 +1047,7 @@
       }
     },
     "Generate Again" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1332,7 +1142,7 @@
       }
     },
     "Generate a depth map with on-device machine learning to give this depth parallax that follows the pointer." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1427,7 +1237,7 @@
       }
     },
     "How far the picture shifts with the pointer." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1522,7 +1332,7 @@
       }
     },
     "Install Depth Map Generation" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1617,7 +1427,7 @@
       }
     },
     "Loading the model…" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1712,7 +1522,7 @@
       }
     },
     "Opens Settings › Plugins, where Depth Map Generation can be installed." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1807,7 +1617,7 @@
       }
     },
     "Preparing…" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1902,7 +1712,7 @@
       }
     },
     "Preview Depth Map" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1997,7 +1807,7 @@
       }
     },
     "Refining edges…" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2092,7 +1902,7 @@
       }
     },
     "Remove Depth Parallax" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2187,7 +1997,7 @@
       }
     },
     "Scene Depth Parallax" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2282,7 +2092,7 @@
       }
     },
     "Shows the depth map: white is near, black is far." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2377,7 +2187,7 @@
       }
     },
     "Smoothing" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2472,7 +2282,7 @@
       }
     },
     "Strength" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2567,7 +2377,7 @@
       }
     },
     "The depth comes from one frame of the scene." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2662,7 +2472,7 @@
       }
     },
     "The depth model gave a result this app can’t read." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2757,7 +2567,7 @@
       }
     },
     "The depth model isn’t one this app can use. Reinstall Depth Map Generation in Settings › Plugins." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2852,7 +2662,7 @@
       }
     },
     "The layer’s picture can’t be read." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2946,103 +2756,8 @@
         }
       }
     },
-    "This kind of layer can’t have depth parallax." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لا يمكن إضافة اختلاف منظر العمق إلى هذا النوع من الطبقات."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diese Art von Ebene kann keine Tiefenparallaxe haben."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Este tipo de capa no admite paralaje de profundidad."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce type de calque ne peut pas avoir de parallaxe de profondeur."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "इस तरह की लेयर में डेप्थ पैरालैक्स नहीं हो सकता।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Questo tipo di livello non può avere la parallasse di profondità."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "この種類のレイヤーには深度視差を付けられません。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이 종류의 레이어에는 깊이 시차를 적용할 수 없습니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ten rodzaj warstwy nie może mieć paralaksy głębi."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Este tipo de camada não pode ter paralaxe de profundidade."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Для слоя такого типа параллакс глубины недоступен."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bu tür bir katmanda derinlik paralaksı olamaz."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Для шару такого типу паралакс глибини недоступний."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此类图层不能使用深度视差。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "此類圖層無法使用深度視差。"
-          }
-        }
-      }
-    },
     "Update Depth Map" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -3132,6 +2847,1526 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "更新深度圖"
+          }
+        }
+      }
+    },
+    "Create Mask from Depth Map" : {
+      "comment" : "Title of a layer's depth map section in Scene Edit / Export and the Wallpaper Editor: it turns the layer's depth map into a mask for one of its effects",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إنشاء قناع من خريطة العمق"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maske aus Tiefenkarte erstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crear máscara a partir del mapa de profundidad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer un masque à partir de la carte de profondeur"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डेप्थ मैप से मास्क बनाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea maschera dalla mappa di profondità"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深度マップからマスクを作成"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "깊이 맵으로 마스크 만들기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utwórz maskę z mapy głębi"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Criar Máscara a partir do Mapa de Profundidade"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Создать маску из карты глубины"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derinlik Haritasından Maske Oluştur"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створити маску з карти глибини"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从深度图创建蒙版"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從深度圖建立遮罩"
+          }
+        }
+      }
+    },
+    "Use as Mask for…" : {
+      "comment" : "Menu in a layer's Create Mask from Depth Map section listing the layer's effects that have a mask; choosing one writes the depth map as that effect's mask",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استخدام كقناع لـ…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als Maske verwenden für …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar como máscara para…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser comme masque pour…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इसके मास्क के रूप में उपयोग करें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa come maschera per…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "マスクとして使用…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다음의 마스크로 사용…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Użyj jako maski dla…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar como Máscara para…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Использовать как маску для…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şunun İçin Maske Olarak Kullan…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використати як маску для…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用作以下效果的蒙版…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用作以下效果的遮罩…"
+          }
+        }
+      }
+    },
+    "Replaces the current mask" : {
+      "comment" : "Header in the Use as Mask for… menu above the effects that already have a mask, which the depth map will replace",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستبدل القناع الحالي"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ersetzt die aktuelle Maske"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sustituye la máscara actual"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remplace le masque actuel"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मौजूदा मास्क को बदल देता है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sostituisce la maschera attuale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在のマスクを置き換えます"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 마스크를 대체함"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zastępuje bieżącą maskę"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Substitui a máscara atual"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заменяет текущую маску"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçerli maskenin yerini alır"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Замінює поточну маску"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将替换当前蒙版"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將取代目前的遮罩"
+          }
+        }
+      }
+    },
+    "Invert" : {
+      "comment" : "Checkbox in a layer's Create Mask from Depth Map section: swaps near and far in the mask",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عكس"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invertieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invertir"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverser"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "उलटें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反転"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "반전"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odwróć"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverter"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Инвертировать"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ters Çevir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інвертувати"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反转"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反轉"
+          }
+        }
+      }
+    },
+    "Contrast" : {
+      "comment" : "Slider in a layer's Create Mask from Depth Map section: how hard the mask's edge between near and far is",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التباين"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontrast"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contraste"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contraste"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कंट्रास्ट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contrasto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コントラスト"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "대비"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontrast"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contraste"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контраст"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Karşıtlık"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контрастність"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "对比度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "對比度"
+          }
+        }
+      }
+    },
+    "Swaps near and far, so the effect shows on the background instead of what is near." : {
+      "comment" : "Help for the Invert checkbox of a layer's depth mask",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يبدّل القريب والبعيد، فيظهر التأثير على الخلفية بدلًا من الأشياء القريبة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vertauscht nah und fern, sodass der Effekt auf dem Hintergrund statt auf Nahem erscheint."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intercambia lo cercano y lo lejano, para que el efecto se vea en el fondo en lugar de en lo cercano."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permute le proche et le lointain : l’effet s’affiche sur l’arrière-plan plutôt que sur ce qui est proche."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पास और दूर को आपस में बदल देता है, ताकि इफ़ेक्ट पास की चीज़ों के बजाय बैकग्राउंड पर दिखे।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scambia vicino e lontano, così l’effetto compare sullo sfondo invece che su ciò che è vicino."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "近くと遠くを入れ替え、エフェクトを近くのものではなく背景に表示します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "가까운 곳과 먼 곳을 바꿔, 효과가 가까운 부분 대신 배경에 나타나게 합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zamienia bliskie z dalekim, aby efekt był widoczny na tle zamiast na tym, co blisko."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Troca perto e longe, para que o efeito apareça no fundo em vez do que está perto."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Меняет местами близкое и далёкое, чтобы эффект был виден на фоне, а не на близких объектах."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yakın ile uzağı değiştirir; efekt yakındakiler yerine arka planda görünür."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Міняє місцями близьке й далеке, щоб ефект було видно на тлі, а не на близьких об’єктах."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "交换近处和远处，让效果显示在背景上，而不是近处。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "交換近處與遠處，讓效果顯示在背景上，而非近處。"
+          }
+        }
+      }
+    },
+    "Pushes the mask toward black and white; below 100% it is softer." : {
+      "comment" : "Help for the Contrast slider of a layer's depth mask",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يدفع القناع نحو الأبيض والأسود؛ وتحت 100٪ يصبح أنعم."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Treibt die Maske Richtung Schwarz und Weiß; unter 100 % wird sie weicher."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lleva la máscara hacia el blanco y negro; por debajo del 100 % es más suave."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pousse le masque vers le noir et blanc ; en dessous de 100 %, il est plus doux."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मास्क को काले और सफ़ेद की ओर ले जाता है; 100% से कम पर यह नरम होता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spinge la maschera verso il bianco e nero; sotto il 100% è più morbida."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "マスクを白黒に近づけます。100% 未満ではより柔らかくなります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "마스크를 흑백에 가깝게 만듭니다. 100% 미만에서는 더 부드러워집니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przesuwa maskę w stronę czerni i bieli; poniżej 100% jest łagodniejsza."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leva a máscara em direção ao preto e branco; abaixo de 100% ela fica mais suave."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Делает маску ближе к чёрно-белой; ниже 100 % она мягче."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maskeyi siyah ve beyaza doğru iter; %100’ün altında daha yumuşaktır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Робить маску ближчою до чорно-білої; нижче 100 % вона м’якша."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "让蒙版更接近黑白；低于 100% 时更柔和。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "讓遮罩更接近黑白；低於 100% 時更柔和。"
+          }
+        }
+      }
+    },
+    "Writes the depth map as the mask of one of this layer’s effects: the effect shows where the mask is white." : {
+      "comment" : "Help for the Use as Mask for… menu",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يكتب خريطة العمق كقناع لأحد تأثيرات هذه الطبقة: يظهر التأثير حيث يكون القناع أبيض."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schreibt die Tiefenkarte als Maske eines Effekts dieser Ebene: Der Effekt erscheint, wo die Maske weiß ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escribe el mapa de profundidad como máscara de uno de los efectos de esta capa: el efecto se ve donde la máscara es blanca."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Écrit la carte de profondeur comme masque d’un des effets de ce calque : l’effet s’affiche là où le masque est blanc."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डेप्थ मैप को इस लेयर के किसी इफ़ेक्ट के मास्क के रूप में लिखता है: इफ़ेक्ट वहाँ दिखता है जहाँ मास्क सफ़ेद है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scrive la mappa di profondità come maschera di uno degli effetti di questo livello: l’effetto compare dove la maschera è bianca."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深度マップをこのレイヤーのエフェクトのマスクとして書き込みます。マスクが白い部分にエフェクトが表示されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "깊이 맵을 이 레이어 효과 중 하나의 마스크로 기록합니다. 마스크가 흰색인 곳에 효과가 나타납니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisuje mapę głębi jako maskę jednego z efektów tej warstwy: efekt jest widoczny tam, gdzie maska jest biała."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grava o mapa de profundidade como máscara de um dos efeitos desta camada: o efeito aparece onde a máscara é branca."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записывает карту глубины как маску одного из эффектов этого слоя: эффект виден там, где маска белая."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derinlik haritasını bu katmanın efektlerinden birinin maskesi olarak yazar: efekt, maskenin beyaz olduğu yerde görünür."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записує карту глибини як маску одного з ефектів цього шару: ефект видно там, де маска біла."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将深度图写入为此图层某个效果的蒙版：蒙版为白色处显示效果。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將深度圖寫入為此圖層某個效果的遮罩：遮罩為白色處顯示效果。"
+          }
+        }
+      }
+    },
+    "Add an effect with a mask, such as Shake, Water Ripple or Tint, to this layer first." : {
+      "comment" : "Shown under Use as Mask for… when the layer has no effect with a mask; the effect names are Wallpaper Engine's",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أضف أولًا إلى هذه الطبقة تأثيرًا له قناع، مثل اهتزاز أو تموج الماء أو لون خفيف."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füge dieser Ebene zuerst einen Effekt mit Maske hinzu, etwa Schütteln, Wasserplätschern oder Farbton."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade primero a esta capa un efecto con máscara, como Agitación, Onda de agua o Tinte."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajoutez d’abord à ce calque un effet avec masque, comme Secousse, Ondulation de l’eau ou Teinte."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पहले इस लेयर में मास्क वाला कोई इफ़ेक्ट जोड़ें, जैसे Shake, Water Ripple या Tint।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi prima a questo livello un effetto con maschera, come Scuotimento, Ondulazione dell’acqua o Tinta."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先にこのレイヤーにマスクのあるエフェクト（シェイク、水の波紋、薄塗りなど）を追加してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "먼저 이 레이어에 세이크, 잔물결, 색조처럼 마스크가 있는 효과를 추가하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najpierw dodaj do tej warstwy efekt z maską, np. Potrząsanie, Zmarszczki na wodzie lub Odcień."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primeiro adicione a esta camada um efeito com máscara, como Balanço, Ondulação de água ou Tingir."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сначала добавьте к этому слою эффект с маской, например «Встряска», «Водная рябь» или «Оттенок»."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önce bu katmana Sallama, Su Dalgalanması veya Renk Tonu gibi maskesi olan bir efekt ekleyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спочатку додайте до цього шару ефект із маскою, наприклад «Тряска», «Водна брижа» або «Відтінок»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先为此图层添加带蒙版的效果，例如摇动、水波纹或着色。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請先為此圖層加入帶遮罩的效果，例如晃動、漣漪或淡塗。"
+          }
+        }
+      }
+    },
+    "Use Depth Map as Mask" : {
+      "comment" : "Undo action name: a depth map written as an effect's mask",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استخدام خريطة العمق كقناع"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiefenkarte als Maske verwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar mapa de profundidad como máscara"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser la carte de profondeur comme masque"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डेप्थ मैप को मास्क के रूप में उपयोग करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa mappa di profondità come maschera"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深度マップをマスクとして使用"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "깊이 맵을 마스크로 사용"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Użycie mapy głębi jako maski"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar Mapa de Profundidade como Máscara"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Использование карты глубины как маски"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derinlik Haritasını Maske Olarak Kullan"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використання карти глибини як маски"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将深度图用作蒙版"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將深度圖用作遮罩"
+          }
+        }
+      }
+    },
+    "The effect’s mask was replaced. Undo brings the old one back; its file is kept." : {
+      "comment" : "Shown after a depth map replaced an effect's existing mask",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم استبدال قناع التأثير. يعيد التراجع القناع القديم؛ ويُحتفظ بملفه."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Maske des Effekts wurde ersetzt. Widerrufen holt die alte zurück; ihre Datei bleibt erhalten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se ha sustituido la máscara del efecto. Deshacer recupera la anterior; su archivo se conserva."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le masque de l’effet a été remplacé. Annuler rétablit l’ancien ; son fichier est conservé."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इफ़ेक्ट का मास्क बदल दिया गया। पहले जैसा करें से पुराना मास्क वापस आ जाता है; उसकी फ़ाइल रखी जाती है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La maschera dell’effetto è stata sostituita. Annulla ripristina quella precedente; il suo file viene conservato."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エフェクトのマスクを置き換えました。取り消すと元のマスクに戻ります。そのファイルは残ります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "효과의 마스크가 대체되었습니다. 실행 취소하면 이전 마스크로 돌아갑니다. 해당 파일은 유지됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maska efektu została zastąpiona. Cofnij przywraca poprzednią; jej plik jest zachowywany."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A máscara do efeito foi substituída. Desfazer traz a anterior de volta; o arquivo dela é mantido."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Маска эффекта заменена. Отмена вернёт прежнюю; её файл сохраняется."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efektin maskesi değiştirildi. Geri Al eskisini geri getirir; dosyası saklanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Маску ефекту замінено. Скасування поверне попередню; її файл зберігається."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "效果的蒙版已被替换。撤销可恢复旧蒙版；其文件会保留。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "效果的遮罩已被取代。還原可恢復舊遮罩；其檔案會保留。"
+          }
+        }
+      }
+    },
+    "The depth map is now the effect’s mask." : {
+      "comment" : "Shown after a depth map was written as an effect's mask",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أصبحت خريطة العمق الآن قناع التأثير."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Tiefenkarte ist jetzt die Maske des Effekts."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El mapa de profundidad es ahora la máscara del efecto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La carte de profondeur est maintenant le masque de l’effet."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डेप्थ मैप अब इफ़ेक्ट का मास्क है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mappa di profondità è ora la maschera dell’effetto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深度マップがエフェクトのマスクになりました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "깊이 맵이 이제 효과의 마스크입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mapa głębi jest teraz maską efektu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O mapa de profundidade agora é a máscara do efeito."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карта глубины теперь служит маской эффекта."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derinlik haritası artık efektin maskesi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карта глибини тепер є маскою ефекту."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深度图现在是该效果的蒙版。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深度圖現在是該效果的遮罩。"
+          }
+        }
+      }
+    },
+    "The depth map couldn’t be read to make the mask." : {
+      "comment" : "Error in a layer's Create Mask from Depth Map section: the generated depth map file couldn't be read",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّرت قراءة خريطة العمق لإنشاء القناع."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Tiefenkarte konnte nicht gelesen werden, um die Maske zu erstellen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido leer el mapa de profundidad para crear la máscara."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de lire la carte de profondeur pour créer le masque."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मास्क बनाने के लिए डेप्थ मैप पढ़ा नहीं जा सका।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile leggere la mappa di profondità per creare la maschera."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "マスクを作成するための深度マップを読み込めませんでした。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "마스크를 만들기 위해 깊이 맵을 읽을 수 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można odczytać mapy głębi, aby utworzyć maskę."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível ler o mapa de profundidade para criar a máscara."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось прочитать карту глубины для создания маски."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maskeyi oluşturmak için derinlik haritası okunamadı."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося прочитати карту глибини для створення маски."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法读取深度图来创建蒙版。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法讀取深度圖來建立遮罩。"
+          }
+        }
+      }
+    },
+    "Generate a depth map with on-device machine learning to make a mask for this layer’s effects." : {
+      "comment" : "Shown in a layer's Create Mask from Depth Map section before the Depth Map Generation plugin is installed",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أنشئ خريطة عمق باستخدام التعلّم الآلي على الجهاز لصنع قناع لتأثيرات هذه الطبقة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erzeuge mit maschinellem Lernen auf dem Gerät eine Tiefenkarte, um eine Maske für die Effekte dieser Ebene zu erstellen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genera un mapa de profundidad con aprendizaje automático en el dispositivo para crear una máscara para los efectos de esta capa."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Générez une carte de profondeur par apprentissage automatique sur l’appareil pour créer un masque pour les effets de ce calque."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस लेयर के इफ़ेक्ट्स के लिए मास्क बनाने हेतु डिवाइस पर मशीन लर्निंग से डेप्थ मैप बनाएँ।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genera una mappa di profondità con l’apprendimento automatico sul dispositivo per creare una maschera per gli effetti di questo livello."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デバイス上の機械学習で深度マップを生成し、このレイヤーのエフェクト用のマスクを作成します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기기 내 머신 러닝으로 깊이 맵을 생성하여 이 레이어 효과용 마스크를 만듭니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wygeneruj mapę głębi za pomocą uczenia maszynowego na urządzeniu, aby utworzyć maskę dla efektów tej warstwy."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gere um mapa de profundidade com aprendizado de máquina no dispositivo para criar uma máscara para os efeitos desta camada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Создайте карту глубины с помощью машинного обучения на устройстве, чтобы сделать маску для эффектов этого слоя."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu katmanın efektleri için maske oluşturmak üzere cihaz üzerinde makine öğrenimiyle bir derinlik haritası oluşturun."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створіть карту глибини за допомогою машинного навчання на пристрої, щоб зробити маску для ефектів цього шару."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用设备端机器学习生成深度图，为此图层的效果创建蒙版。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用裝置端機器學習產生深度圖，為此圖層的效果建立遮罩。"
+          }
+        }
+      }
+    },
+    "Only image and text layers can have a mask from a depth map." : {
+      "comment" : "Shown in the depth map section of a layer that can't carry effects",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يمكن إنشاء قناع من خريطة العمق لطبقات الصور والنصوص فقط."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur Bild- und Textebenen können eine Maske aus einer Tiefenkarte haben."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo las capas de imagen y de texto pueden tener una máscara a partir de un mapa de profundidad."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seuls les calques d’image et de texte peuvent avoir un masque issu d’une carte de profondeur."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सिर्फ़ इमेज और टेक्स्ट लेयर में डेप्थ मैप से बना मास्क हो सकता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo i livelli immagine e testo possono avere una maschera da una mappa di profondità."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深度マップからのマスクを使えるのは画像レイヤーとテキストレイヤーだけです。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "깊이 맵 마스크는 이미지 레이어와 텍스트 레이어에만 사용할 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tylko warstwy obrazu i tekstu mogą mieć maskę z mapy głębi."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Somente camadas de imagem e de texto podem ter uma máscara de um mapa de profundidade."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Маску из карты глубины могут иметь только слои изображений и текста."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yalnızca görüntü ve metin katmanları derinlik haritasından maske alabilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Маску з карти глибини можуть мати лише шари зображень і тексту."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只有图像和文本图层可以使用来自深度图的蒙版。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只有影像和文字圖層可以使用來自深度圖的遮罩。"
+          }
+        }
+      }
+    },
+    "Shows the mask: white is where the effect shows, black where it doesn’t." : {
+      "comment" : "Help for the Preview Depth Map checkbox in a layer's Create Mask from Depth Map section",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يعرض القناع: الأبيض حيث يظهر التأثير والأسود حيث لا يظهر."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt die Maske: Weiß ist, wo der Effekt erscheint, Schwarz, wo nicht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra la máscara: el blanco es donde se ve el efecto y el negro, donde no."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Affiche le masque : le blanc est là où l’effet s’affiche, le noir là où il ne s’affiche pas."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मास्क दिखाता है: सफ़ेद वहाँ है जहाँ इफ़ेक्ट दिखता है, काला वहाँ जहाँ नहीं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra la maschera: il bianco è dove l’effetto compare, il nero dove non compare."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "マスクを表示します。白はエフェクトが表示される部分、黒は表示されない部分です。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "마스크를 표시합니다. 흰색은 효과가 나타나는 곳, 검은색은 나타나지 않는 곳입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokazuje maskę: biel to miejsca, gdzie efekt jest widoczny, czerń — gdzie nie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra a máscara: branco é onde o efeito aparece, preto onde não aparece."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывает маску: белое — там, где виден эффект, чёрное — где нет."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maskeyi gösterir: beyaz efektin göründüğü, siyah görünmediği yerdir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує маску: біле — там, де видно ефект, чорне — де ні."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示蒙版：白色为显示效果处，黑色为不显示处。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示遮罩：白色為顯示效果處，黑色為不顯示處。"
           }
         }
       }

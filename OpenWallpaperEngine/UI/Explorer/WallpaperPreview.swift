@@ -9,6 +9,7 @@ import SwiftUI
 import OWEInspectorKit
 
 struct WallpaperPreview: SubviewOfContentView {
+    @Environment(\.appAccentColor) private var accentColor
     var viewModel: ContentViewModel
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     
@@ -328,11 +329,11 @@ struct WallpaperPreview: SubviewOfContentView {
                                 AppDelegate.shared.showSceneInspector(for: wallpaperViewModel.displayedWallpaper,
                                                                       scopes: wallpaperViewModel.editedPropertyScopes(of: wallpaperViewModel.displayedWallpaper))
                             } label: {
-                                Label("Scene Editor (Live)", systemImage: "square.stack.3d.up")
+                                Label("Scene Edit / Export", systemImage: "square.stack.3d.up")
                                     .frame(maxWidth: .infinity)
                             }
                             .glassButtonStyle()
-                            .help("Scene Editor (Live)", shortcut: .sceneInspector)
+                            .help("Scene Edit / Export", shortcut: .sceneInspector)
                         }
                     }
                     // MARK: Properties
@@ -427,7 +428,7 @@ struct WallpaperPreview: SubviewOfContentView {
                             VStack {
                                 Divider()
                                     .frame(height: 1)
-                                    .overlay(Color.accentColor)
+                                    .overlay(accentColor)
                             }
                         }
                         WallpaperPresetsSection(wallpaper: wallpaperViewModel.displayedWallpaper,

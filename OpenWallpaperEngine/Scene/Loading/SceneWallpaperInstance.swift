@@ -39,7 +39,7 @@ final class SceneWallpaperInstance {
     var renderer: SceneMetalRenderer? { renderLoop.renderer }
     /// A display drew the live scene (set on main after the render thread's first frame).
     var hasContent = false
-    /// Screens that only preview the wallpaper (the Scene Inspector's iPhone mode): they never make
+    /// Screens that only preview the wallpaper (Scene Edit / Export's iPhone mode): they never make
     /// it audible.
     static let previewScreenIDs: Set<String> = ["iphone-preview"]
 
@@ -428,9 +428,10 @@ final class SceneWallpaperInstance {
             let directory = info?["wallpaperDirectory"] as? URL
             let overlay = info?["overlay"] as? SceneEditOverlay, base = info?["base"] as? SceneOutline
             let transient = info?["transient"] as? Bool ?? false
+            let draft = info?["draft"] as? Bool ?? false
             MainActor.assumeIsolated {
                 guard let self,
-                      self.runsWallpaper(in: directory) else { return }
+                      self.runsWallpaper(in: directory), self.runsEditorDraft == draft else { return }
                 self.snapshotCapture?.rearm()
                 self.wakePacing(.slow)
                 if self.applyEditorEdits(overlay: overlay, base: base) { return }
@@ -446,9 +447,10 @@ final class SceneWallpaperInstance {
             let assets = notification.userInfo?["assets"] as? [String: Data] ?? [:]
             let paths = Set(notification.userInfo?["paths"] as? [String] ?? [])
             let objectIDs = Set(notification.userInfo?["objectIDs"] as? [Int] ?? [])
+            let draft = notification.userInfo?["draft"] as? Bool ?? false
             MainActor.assumeIsolated {
                 guard let self,
-                      self.runsWallpaper(in: directory) else { return }
+                      self.runsWallpaper(in: directory), self.runsEditorDraft == draft else { return }
                 self.viewModel.setEditorAssets(assets)
                 self.snapshotCapture?.rearm()
                 self.wakePacing(.slow)

@@ -2,7 +2,7 @@ import SwiftUI
 import OWEEditor
 import OWESceneEditing
 
-/// Depth maps in the Scene Editor (the app's scene inspector). Its own edits are user-property
+/// Depth maps in Scene Edit / Export (the app's scene inspector). Its own edits are user-property
 /// style values (`WallpaperPropertyTargets`), which can't hold an added effect or a texture, so
 /// depth parallax is stored where the Wallpaper Editor keeps its edits: the wallpaper's overlay
 /// (`SceneEditOverlayFiles`), through an edit session of its own. Both editors then read and
@@ -32,7 +32,7 @@ final class SceneEditorDepthMapHost: ObservableObject {
                                                 openPlugins: { AppDelegate.shared.openSettings(for: .depthMaps) })
             makeSession(overlay: SceneEditOverlayFiles.overlay(for: identity) ?? SceneEditOverlay())
         } catch {
-            OWELog.error(.ui, "Scene Editor: no depth maps for \(wallpaper.wallpaperDirectory.lastPathComponent): \(error)")
+            OWELog.error(.ui, "Scene Edit / Export: no depth maps for \(wallpaper.wallpaperDirectory.lastPathComponent): \(error)")
             return
         }
         let directory = wallpaper.wallpaperDirectory.standardizedFileURL
@@ -70,8 +70,8 @@ final class SceneEditorDepthMapHost: ObservableObject {
     }
 }
 
-/// The Scene Editor's depth map boxes for one object: the object's own (when it can have depth
-/// parallax) and the whole scene's, with undo.
+/// Scene Edit / Export's depth map boxes for one object: its Create Mask from Depth Map (an image or
+/// text layer, whose effects' masks it fills) and the whole scene's Depth Parallax, with undo.
 struct SceneEditorDepthMapSection: View {
     @ObservedObject var host: SceneEditorDepthMapHost
     let objectID: Int
@@ -80,7 +80,7 @@ struct SceneEditorDepthMapSection: View {
         if let session = host.session, let services = host.services {
             let sessionID = ObjectIdentifier(session)
             VStack(alignment: .leading, spacing: 10) {
-                if let layer = session.outline.layer(objectID), SceneDepthParallax.placement(for: layer) != nil {
+                if let layer = session.outline.layer(objectID), SceneDepthParallax.placement(for: layer) == .onLayer {
                     DepthMapBox(session: session, layerID: objectID, services: services)
                         .id("\(sessionID.hashValue)-\(objectID)")
                 }

@@ -2,7 +2,7 @@ import AVFoundation
 import Combine
 import Foundation
 
-/// The Scene Editor (Live)'s Screen Saver mode: the wallpaper's screen saver version in the mode's
+/// Scene Edit / Export's Screen Saver mode: the wallpaper's screen saver version in the mode's
 /// private instance (`IsolatedSceneEditSession`), its layer and property choices, recording it as
 /// the screen saver, the daily re-recording, and playing the last recording.
 ///

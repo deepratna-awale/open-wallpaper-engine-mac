@@ -474,100 +474,6 @@
         }
       }
     },
-    "A copy of the wallpaper with your edits is added to the library. The original stays as it is." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تُضاف نسخة من الخلفية مع تعديلاتك إلى المكتبة، ويبقى الأصل كما هو."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eine Kopie des Hintergrundbilds mit Ihren Änderungen wird zur Mediathek hinzugefügt. Das Original bleibt unverändert."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Se añade a la biblioteca una copia del fondo de pantalla con tus cambios. El original no se modifica."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Une copie du fond d’écran avec vos modifications est ajoutée à la bibliothèque. L’original reste tel quel."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "आपके बदलावों वाली वॉलपेपर की एक कॉपी लाइब्रेरी में जोड़ी जाती है। मूल वैसा ही रहता है।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Una copia dello sfondo con le tue modifiche viene aggiunta alla libreria. L’originale resta invariato."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "編集を反映した壁紙のコピーがライブラリに追加されます。元の壁紙はそのままです。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "편집 내용이 적용된 배경화면 사본이 라이브러리에 추가됩니다. 원본은 그대로 유지됩니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopia tapety z Twoimi zmianami zostanie dodana do biblioteki. Oryginał pozostanie bez zmian."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uma cópia da imagem de fundo com suas alterações é adicionada à biblioteca. O original continua como está."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Копия обоев с вашими изменениями добавляется в библиотеку. Оригинал остаётся без изменений."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Düzenlemelerinizi içeren duvar kâğıdının bir kopyası kütüphaneye eklenir. Orijinali olduğu gibi kalır."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Копію шпалери з вашими змінами буде додано до бібліотеки. Оригінал залишиться без змін."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "带有你所做编辑的墙纸副本会添加到资料库。原墙纸保持不变。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "含有你所做編輯的背景圖片拷貝會加入資料庫。原始背景圖片保持不變。"
-          }
-        }
-      }
-    },
     "A label can be a localisation key. Conditions and bindings compare the value." : {
       "localizations" : {
         "ar" : {
@@ -658,6 +564,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "標籤可以是在地化鍵值。條件和綁定比較的是值。"
+          }
+        }
+      }
+    },
+    "A new wallpaper with your edits is added to the library. The original stays as it was last saved, and you go on editing it." : {
+      "comment" : "Wallpaper Editor: explains Save as New Wallpaper in the sheet that names it",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تُضاف خلفية جديدة مع تعديلاتك إلى المكتبة. يبقى الأصل كما حُفظ آخر مرة، وتواصل تحريره."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein neues Hintergrundbild mit Ihren Änderungen wird zur Mediathek hinzugefügt. Das Original bleibt, wie es zuletzt gesichert wurde, und Sie bearbeiten es weiter."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se añade a la biblioteca un nuevo fondo de pantalla con tus cambios. El original queda como se guardó por última vez y sigues editándolo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un nouveau fond d’écran avec vos modifications est ajouté à la bibliothèque. L’original reste tel qu’il a été enregistré pour la dernière fois, et vous continuez à le modifier."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपके बदलावों वाला एक नया वॉलपेपर लाइब्रेरी में जोड़ा जाता है। मूल वैसा ही रहता है जैसा पिछली बार सहेजा गया था, और आप उसे एडिट करते रहते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un nuovo sfondo con le tue modifiche viene aggiunto alla libreria. L’originale resta come è stato salvato l’ultima volta e continui a modificarlo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "編集を反映した新しい壁紙がライブラリに追加されます。元の壁紙は最後に保存した状態のままで、引き続き編集できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "편집 내용이 적용된 새 배경화면이 라이브러리에 추가됩니다. 원본은 마지막으로 저장된 상태로 유지되며 계속 편집할 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nowa tapeta z Twoimi zmianami zostanie dodana do biblioteki. Oryginał pozostanie w ostatnio zachowanej wersji, a Ty edytujesz go dalej."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uma nova imagem de fundo com suas alterações é adicionada à biblioteca. O original continua como foi salvo pela última vez, e você continua a editá-lo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В библиотеку добавляются новые обои с вашими изменениями. Оригинал остается в последней сохраненной версии, и вы продолжаете его редактировать."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Düzenlemelerinizi içeren yeni bir duvar kâğıdı kütüphaneye eklenir. Orijinali en son kaydedildiği gibi kalır ve onu düzenlemeyi sürdürürsünüz."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "До бібліотеки буде додано нову шпалеру з вашими змінами. Оригінал залишиться в останній збереженій версії, і ви продовжите його редагувати."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "带有你所做编辑的新墙纸会添加到资料库。原墙纸保持上次保存时的样子，你可以继续编辑它。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "含有你所做編輯的新背景圖片會加入資料庫。原始背景圖片保持上次儲存時的樣子，你可以繼續編輯它。"
           }
         }
       }
@@ -11151,96 +11152,97 @@
         }
       }
     },
-    "Drop every edit made in the editor" : {
+    "Drop every change since the last save" : {
+      "comment" : "Wallpaper Editor: help for the Revert to Saved toolbar button",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تجاهل كل التعديلات التي أُجريت في المحرر"
+            "value" : "تجاهل كل التغييرات منذ آخر حفظ"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alle Änderungen aus dem Editor verwerfen"
+            "value" : "Alle Änderungen seit dem letzten Sichern verwerfen"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Descartar todos los cambios hechos en el editor"
+            "value" : "Descartar todos los cambios desde la última vez que se guardó"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Supprimer toutes les modifications faites dans l’éditeur"
+            "value" : "Supprimer toutes les modifications depuis le dernier enregistrement"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "एडिटर में किए गए सभी बदलाव हटाएँ"
+            "value" : "पिछली बार सहेजने के बाद के सभी बदलाव हटाएँ"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elimina tutte le modifiche fatte nell’editor"
+            "value" : "Elimina tutte le modifiche dall’ultimo salvataggio"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "エディタで行ったすべての編集を破棄します"
+            "value" : "最後に保存してからのすべての変更を破棄します"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "편집기에서 한 모든 편집 내용을 버립니다"
+            "value" : "마지막으로 저장한 이후의 모든 변경 사항을 버립니다"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odrzuć wszystkie zmiany wprowadzone w edytorze"
+            "value" : "Odrzuć wszystkie zmiany od ostatniego zachowania"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Descartar todas as alterações feitas no editor"
+            "value" : "Descartar todas as alterações desde o último salvamento"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Отменить все изменения, сделанные в редакторе"
+            "value" : "Отменить все изменения с последнего сохранения"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Düzenleyicide yapılan tüm düzenlemeleri at"
+            "value" : "Son kaydetmeden bu yana yapılan tüm değişiklikleri at"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Відкинути всі зміни, зроблені в редакторі"
+            "value" : "Відкинути всі зміни з часу останнього збереження"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "丢弃在编辑器中所做的所有编辑"
+            "value" : "丢弃上次保存以来的所有更改"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "丟棄在編輯器中所做的所有編輯"
+            "value" : "丟棄上次儲存以來的所有更動"
           }
         }
       }
@@ -12850,96 +12852,97 @@
         }
       }
     },
-    "Every edit made in the editor is dropped. You can undo this." : {
+    "Every change since the last save is dropped. You can undo this." : {
+      "comment" : "Wallpaper Editor: under the question before Revert to Saved",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ستُتجاهل كل التعديلات التي أُجريت في المحرر. يمكنك التراجع عن ذلك."
+            "value" : "ستُتجاهل كل التغييرات منذ آخر حفظ. يمكنك التراجع عن ذلك."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alle Änderungen aus dem Editor werden verworfen. Sie können dies widerrufen."
+            "value" : "Alle Änderungen seit dem letzten Sichern werden verworfen. Sie können dies widerrufen."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Se descartan todos los cambios hechos en el editor. Puedes deshacerlo."
+            "value" : "Se descartan todos los cambios desde la última vez que se guardó. Puedes deshacerlo."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toutes les modifications faites dans l’éditeur sont supprimées. Vous pouvez annuler cette action."
+            "value" : "Toutes les modifications depuis le dernier enregistrement sont supprimées. Vous pouvez annuler cette action."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "एडिटर में किए गए सभी बदलाव हटा दिए जाते हैं। आप इसे पहले जैसा कर सकते हैं।"
+            "value" : "पिछली बार सहेजने के बाद के सभी बदलाव हटा दिए जाते हैं। आप इसे पहले जैसा कर सकते हैं।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tutte le modifiche fatte nell’editor vengono eliminate. Puoi annullare l’operazione."
+            "value" : "Tutte le modifiche dall’ultimo salvataggio vengono eliminate. Puoi annullare l’operazione."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "エディタで行ったすべての編集が破棄されます。この操作は取り消せます。"
+            "value" : "最後に保存してからのすべての変更が破棄されます。この操作は取り消せます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "편집기에서 한 모든 편집 내용이 사라집니다. 실행 취소할 수 있습니다."
+            "value" : "마지막으로 저장한 이후의 모든 변경 사항이 사라집니다. 실행 취소할 수 있습니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wszystkie zmiany wprowadzone w edytorze zostaną odrzucone. Możesz to cofnąć."
+            "value" : "Wszystkie zmiany od ostatniego zachowania zostaną odrzucone. Możesz to cofnąć."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Todas as alterações feitas no editor serão descartadas. Você pode desfazer isso."
+            "value" : "Todas as alterações desde o último salvamento serão descartadas. Você pode desfazer isso."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Все изменения, сделанные в редакторе, будут отменены. Это действие можно отменить."
+            "value" : "Все изменения с последнего сохранения будут отменены. Это действие можно отменить."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Düzenleyicide yapılan tüm düzenlemeler atılır. Bunu geri alabilirsiniz."
+            "value" : "Son kaydetmeden bu yana yapılan tüm değişiklikler atılır. Bunu geri alabilirsiniz."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Усі зміни, зроблені в редакторі, буде відкинуто. Цю дію можна відмінити."
+            "value" : "Усі зміни з часу останнього збереження буде відкинуто. Цю дію можна відмінити."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在编辑器中所做的所有编辑都将被丢弃。你可以撤销此操作。"
+            "value" : "上次保存以来的所有更改都将被丢弃。你可以撤销此操作。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在編輯器中所做的所有編輯都會被丟棄。你可以還原此操作。"
+            "value" : "上次儲存以來的所有更動都會被丟棄。你可以還原此操作。"
           }
         }
       }
@@ -14646,7 +14649,7 @@
       }
     },
     "Hide this layer; “%@” sets it again when you show it" : {
-      "comment" : "Layer list: help of the eye of a layer a user property shows; hiding it overrides the property, showing it hands it back. %@ is the property's key",
+      "comment" : "Layer list: help of the eye of a layer a user property shows; hiding it overrides the property, showing it hands it back. %@ is the property's label",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -22764,101 +22767,6 @@
         }
       }
     },
-    "Revert" : {
-      "comment" : "Wallpaper Editor: drop every edit made in the editor (toolbar button and undo action)",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إرجاع"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zurücksetzen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Revertir"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Revenir"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "वापस लाएँ"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ripristina"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "元に戻す"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "되돌리기"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odrzuć zmiany"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reverter"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Вернуть"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geri Döndür"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Повернути"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "复原"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "回復"
-          }
-        }
-      }
-    },
     "Revert User Properties" : {
       "localizations" : {
         "ar" : {
@@ -22953,96 +22861,192 @@
         }
       }
     },
-    "Revert to the Original?" : {
+    "Revert to Saved" : {
+      "comment" : "Wallpaper Editor toolbar and alert: go back to the wallpaper as it was last saved",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "هل تريد العودة إلى الأصل؟"
+            "value" : "الرجوع إلى النسخة المحفوظة"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zum Original zurückkehren?"
+            "value" : "Auf zuletzt gesicherte Version zurücksetzen"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "¿Volver al original?"
+            "value" : "Volver a la versión guardada"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Revenir à l’original ?"
+            "value" : "Revenir à la version enregistrée"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "मूल पर वापस जाएँ?"
+            "value" : "सहेजे गए संस्करण पर वापस जाएँ"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tornare all’originale?"
+            "value" : "Ripristina la versione salvata"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "オリジナルに戻しますか？"
+            "value" : "保存済みの状態に戻す"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "원본으로 되돌리겠습니까?"
+            "value" : "저장된 상태로 되돌리기"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Przywrócić oryginał?"
+            "value" : "Przywróć zachowaną wersję"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reverter para o Original?"
+            "value" : "Reverter para a Versão Salva"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Вернуть исходный вариант?"
+            "value" : "Вернуть к сохраненной версии"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Orijinale Döndürülsün mü?"
+            "value" : "Kaydedilen Sürüme Geri Döndür"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Повернути оригінал?"
+            "value" : "Повернути до збереженої версії"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "要复原为原始状态吗？"
+            "value" : "复原为上次保存的版本"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "要回復成原始狀態嗎？"
+            "value" : "回復成上次儲存的版本"
+          }
+        }
+      }
+    },
+    "Revert to the Saved Version?" : {
+      "comment" : "Wallpaper Editor: asks before Revert to Saved",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل تريد الرجوع إلى النسخة المحفوظة؟"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf die gesicherte Version zurücksetzen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Volver a la versión guardada?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revenir à la version enregistrée ?"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सहेजे गए संस्करण पर वापस जाएँ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristinare la versione salvata?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存済みの状態に戻しますか？"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "저장된 상태로 되돌리겠습니까?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przywrócić zachowaną wersję?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reverter para a Versão Salva?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вернуть сохраненную версию?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaydedilen Sürüme Geri Döndürülsün mü?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повернути збережену версію?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要复原为上次保存的版本吗？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要回復成上次儲存的版本嗎？"
           }
         }
       }
@@ -23800,190 +23804,287 @@
         }
       }
     },
-    "Save as Local Wallpaper" : {
+    "Save as New Wallpaper" : {
+      "comment" : "Wallpaper Editor: heading of the sheet that names a new wallpaper saved with the edits",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "حفظ كخلفية محلية"
+            "value" : "حفظ كخلفية جديدة"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Als lokales Hintergrundbild sichern"
+            "value" : "Als neues Hintergrundbild sichern"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Guardar como fondo de pantalla local"
+            "value" : "Guardar como nuevo fondo de pantalla"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enregistrer comme fond d’écran local"
+            "value" : "Enregistrer comme nouveau fond d’écran"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "लोकल वॉलपेपर के रूप में सहेजें"
+            "value" : "नए वॉलपेपर के रूप में सहेजें"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salva come sfondo locale"
+            "value" : "Salva come nuovo sfondo"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ローカル壁紙として保存"
+            "value" : "新規壁紙として保存"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "로컬 배경화면으로 저장"
+            "value" : "새 배경화면으로 저장"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zachowaj jako lokalną tapetę"
+            "value" : "Zachowaj jako nową tapetę"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salvar como Imagem de Fundo Local"
+            "value" : "Salvar como Nova Imagem de Fundo"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Сохранить как локальные обои"
+            "value" : "Сохранить как новые обои"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Yerel Duvar Kâğıdı Olarak Kaydet"
+            "value" : "Yeni Duvar Kâğıdı Olarak Kaydet"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Зберегти як локальну шпалеру"
+            "value" : "Зберегти як нову шпалеру"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "保存为本地墙纸"
+            "value" : "保存为新墙纸"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "儲存為本機背景圖片"
+            "value" : "儲存為新背景圖片"
           }
         }
       }
     },
-    "Save as Local Wallpaper…" : {
+    "Save as New Wallpaper…" : {
+      "comment" : "Wallpaper Editor toolbar: saves a new wallpaper with the edits to the library, leaving the original as it was saved",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "حفظ كخلفية محلية…"
+            "value" : "حفظ كخلفية جديدة…"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Als lokales Hintergrundbild sichern …"
+            "value" : "Als neues Hintergrundbild sichern …"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Guardar como fondo de pantalla local…"
+            "value" : "Guardar como nuevo fondo de pantalla…"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enregistrer comme fond d’écran local…"
+            "value" : "Enregistrer comme nouveau fond d’écran…"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "लोकल वॉलपेपर के रूप में सहेजें…"
+            "value" : "नए वॉलपेपर के रूप में सहेजें…"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salva come sfondo locale…"
+            "value" : "Salva come nuovo sfondo…"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ローカル壁紙として保存…"
+            "value" : "新規壁紙として保存…"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "로컬 배경화면으로 저장…"
+            "value" : "새 배경화면으로 저장…"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zachowaj jako lokalną tapetę…"
+            "value" : "Zachowaj jako nową tapetę…"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salvar como Imagem de Fundo Local…"
+            "value" : "Salvar como Nova Imagem de Fundo…"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Сохранить как локальные обои…"
+            "value" : "Сохранить как новые обои…"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Yerel Duvar Kâğıdı Olarak Kaydet…"
+            "value" : "Yeni Duvar Kâğıdı Olarak Kaydet…"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Зберегти як локальну шпалеру…"
+            "value" : "Зберегти як нову шпалеру…"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "保存为本地墙纸…"
+            "value" : "保存为新墙纸…"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "儲存為本機背景圖片⋯"
+            "value" : "儲存為新背景圖片⋯"
+          }
+        }
+      }
+    },
+    "Save the changes to the wallpaper" : {
+      "comment" : "Wallpaper Editor: help for the Save toolbar button; the displays showing the wallpaper then show the changes",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حفظ التغييرات في الخلفية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Änderungen im Hintergrundbild sichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar los cambios en el fondo de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer les modifications dans le fond d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बदलाव वॉलपेपर में सहेजें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva le modifiche nello sfondo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "変更内容を壁紙に保存します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "변경 사항을 배경화면에 저장합니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowaj zmiany w tapecie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvar as alterações na imagem de fundo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранить изменения в обоях"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Değişiklikleri duvar kâğıdına kaydet"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти зміни в шпалері"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将更改保存到墙纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將更動儲存到背景圖片"
           }
         }
       }
@@ -24932,96 +25033,97 @@
         }
       }
     },
-    "Select a layer in the list or on the canvas to edit it. Edits apply wherever this wallpaper runs; its own files are never changed." : {
+    "Select a layer in the list or on the canvas to edit it. Edits show here until you save them, then wherever this wallpaper runs; its own files are never changed." : {
+      "comment" : "Wallpaper Editor inspector, with no layer selected: edits stay in the window's draft until File › Save",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "اختر طبقة في القائمة أو على اللوحة لتحريرها. تنطبق التعديلات أينما تعمل هذه الخلفية، ولا تتغير ملفاتها الأصلية أبدًا."
+            "value" : "اختر طبقة في القائمة أو على اللوحة لتحريرها. تظهر التعديلات هنا حتى تحفظها، ثم أينما تعمل هذه الخلفية، ولا تتغير ملفاتها الأصلية أبدًا."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wählen Sie eine Ebene in der Liste oder auf der Arbeitsfläche aus, um sie zu bearbeiten. Änderungen gelten überall, wo dieses Hintergrundbild läuft; seine eigenen Dateien werden nie verändert."
+            "value" : "Wählen Sie eine Ebene in der Liste oder auf der Arbeitsfläche aus, um sie zu bearbeiten. Änderungen sind hier zu sehen, bis Sie sie sichern, danach überall, wo dieses Hintergrundbild läuft; seine eigenen Dateien werden nie verändert."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Selecciona una capa en la lista o en el lienzo para editarla. Los cambios se aplican allí donde se use este fondo de pantalla; sus propios archivos nunca se modifican."
+            "value" : "Selecciona una capa en la lista o en el lienzo para editarla. Los cambios se ven aquí hasta que los guardes y, después, allí donde se use este fondo de pantalla; sus propios archivos nunca se modifican."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sélectionnez un calque dans la liste ou sur le canevas pour le modifier. Les modifications s’appliquent partout où ce fond d’écran est utilisé ; ses propres fichiers ne sont jamais modifiés."
+            "value" : "Sélectionnez un calque dans la liste ou sur le canevas pour le modifier. Les modifications s’affichent ici jusqu’à leur enregistrement, puis partout où ce fond d’écran est utilisé ; ses propres fichiers ne sont jamais modifiés."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "बदलने के लिए सूची या कैनवस में कोई लेयर चुनें। बदलाव वहाँ लागू होते हैं जहाँ भी यह वॉलपेपर चलता है; इसकी अपनी फ़ाइलें कभी नहीं बदलतीं।"
+            "value" : "बदलने के लिए सूची या कैनवस में कोई लेयर चुनें। बदलाव सहेजने तक यहीं दिखते हैं, फिर वहाँ जहाँ भी यह वॉलपेपर चलता है; इसकी अपनी फ़ाइलें कभी नहीं बदलतीं।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Seleziona un livello nell’elenco o sulla tela per modificarlo. Le modifiche valgono ovunque venga usato questo sfondo; i suoi file non vengono mai cambiati."
+            "value" : "Seleziona un livello nell’elenco o sulla tela per modificarlo. Le modifiche si vedono qui finché non le salvi, poi ovunque venga usato questo sfondo; i suoi file non vengono mai cambiati."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "編集するには、リストまたはキャンバスでレイヤーを選択します。編集はこの壁紙が表示されるすべての場所に適用され、壁紙自体のファイルは変更されません。"
+            "value" : "編集するには、リストまたはキャンバスでレイヤーを選択します。編集は保存するまでここにだけ表示され、保存後はこの壁紙が表示されるすべての場所に適用されます。壁紙自体のファイルは変更されません。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "편집하려면 목록이나 캔버스에서 레이어를 선택하십시오. 편집 내용은 이 배경화면이 실행되는 모든 곳에 적용되며, 배경화면 자체의 파일은 변경되지 않습니다."
+            "value" : "편집하려면 목록이나 캔버스에서 레이어를 선택하십시오. 편집 내용은 저장할 때까지 여기에만 표시되고, 저장하면 이 배경화면이 실행되는 모든 곳에 적용되며, 배경화면 자체의 파일은 변경되지 않습니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zaznacz warstwę na liście lub na płótnie, aby ją edytować. Zmiany obowiązują wszędzie, gdzie działa ta tapeta; jej własne pliki nigdy nie są zmieniane."
+            "value" : "Zaznacz warstwę na liście lub na płótnie, aby ją edytować. Zmiany są widoczne tutaj, dopóki ich nie zachowasz, a potem wszędzie, gdzie działa ta tapeta; jej własne pliki nigdy nie są zmieniane."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Selecione uma camada na lista ou na tela para editá-la. As alterações valem onde quer que esta imagem de fundo seja exibida; os arquivos dela nunca são modificados."
+            "value" : "Selecione uma camada na lista ou na tela para editá-la. As alterações aparecem aqui até você salvá-las e, depois, onde quer que esta imagem de fundo seja exibida; os arquivos dela nunca são modificados."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Выберите слой в списке или на холсте, чтобы изменить его. Изменения действуют везде, где показываются эти обои; их собственные файлы никогда не меняются."
+            "value" : "Выберите слой в списке или на холсте, чтобы изменить его. Изменения видны здесь, пока вы их не сохраните, а затем везде, где показываются эти обои; их собственные файлы никогда не меняются."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Düzenlemek için listede veya tuvalde bir katman seçin. Düzenlemeler bu duvar kâğıdının çalıştığı her yerde geçerli olur; kendi dosyaları hiçbir zaman değiştirilmez."
+            "value" : "Düzenlemek için listede veya tuvalde bir katman seçin. Düzenlemeler kaydedene kadar burada, sonra bu duvar kâğıdının çalıştığı her yerde görünür; kendi dosyaları hiçbir zaman değiştirilmez."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Виберіть шар у списку або на полотні, щоб редагувати його. Зміни діють усюди, де працює ця шпалера; її власні файли ніколи не змінюються."
+            "value" : "Виберіть шар у списку або на полотні, щоб редагувати його. Зміни видно тут, доки ви їх не збережете, а потім усюди, де працює ця шпалера; її власні файли ніколи не змінюються."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在列表或画布中选择一个图层进行编辑。编辑会应用于此墙纸运行的所有位置；墙纸自身的文件永远不会被更改。"
+            "value" : "在列表或画布中选择一个图层进行编辑。编辑在保存前只显示在这里，保存后会应用于此墙纸运行的所有位置；墙纸自身的文件永远不会被更改。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在列表或畫布中選擇一個圖層來編輯。編輯會套用到此背景圖片執行的所有位置；背景圖片本身的檔案永遠不會被更改。"
+            "value" : "在列表或畫布中選擇一個圖層來編輯。編輯在儲存前只會顯示在這裡，儲存後會套用到此背景圖片執行的所有位置；背景圖片本身的檔案永遠不會被更改。"
           }
         }
       }
@@ -25972,7 +26074,7 @@
       }
     },
     "Show this layer; “%@” sets it again" : {
-      "comment" : "Layer list: help of the eye of a layer hidden over the user property that shows it; showing it hands it back to the property. %@ is the property's key",
+      "comment" : "Layer list: help of the eye of a layer hidden over the user property that shows it; showing it hands it back to the property. %@ is the property's label",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -27951,6 +28053,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "紋理"
+          }
+        }
+      }
+    },
+    "The changes couldn’t be saved: %@" : {
+      "comment" : "Wallpaper Editor: saving the window's changes failed; the reason",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذر حفظ التغييرات: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Änderungen konnten nicht gesichert werden: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se han podido guardar los cambios: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les modifications n’ont pas pu être enregistrées : %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बदलाव सहेजे नहीं जा सके: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile salvare le modifiche: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "変更内容を保存できませんでした：%@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "변경 사항을 저장할 수 없습니다: %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można zachować zmian: %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível salvar as alterações: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось сохранить изменения: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Değişiklikler kaydedilemedi: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося зберегти зміни: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法保存更改：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法儲存更動：%@"
           }
         }
       }

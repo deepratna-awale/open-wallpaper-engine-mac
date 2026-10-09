@@ -1,3 +1,4 @@
+import OWEInspectorKit
 import SwiftUI
 
 struct DownloadsView: View {
@@ -51,6 +52,7 @@ struct DownloadsView: View {
 }
 
 private struct DownloadRow: View {
+    @Environment(\.appAccentColor) private var accentColor
     let workshopId: String
     @ObservedObject var steamCmd: SteamCmdService
 
@@ -157,11 +159,11 @@ private struct DownloadRow: View {
     }
 
     private var progressColor: Color {
-        guard let state = steamCmd.downloadProgress[workshopId] else { return .accentColor }
+        guard let state = steamCmd.downloadProgress[workshopId] else { return accentColor }
         switch state {
         case .completed: return .green
         case .failed: return .red
-        case .downloading: return .accentColor
+        case .downloading: return accentColor
         }
     }
 

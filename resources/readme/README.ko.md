@@ -17,9 +17,9 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 
 - **장면, 동영상, 웹 배경화면** — 장면은 각 배경화면에 포함된 Wallpaper Engine 셰이더를 Metal로 변환해 그리며, 효과, 파티클, 3D 모델, 조명, 타임라인, SceneScript, 오디오 반응형 비주얼을 지원합니다. 웹 배경화면은 WebKit 또는 선택 사항인 Chromium 엔진에서 실행됩니다.
 - **Steam 창작마당** — 앱 안에서 창작마당을 둘러보고, 필터링하고, 다운로드하거나 배경화면 폴더와 zip 파일을 가져올 수 있습니다.
-- **장면 편집기(라이브)** — 실행 중인 배경화면의 레이어와 효과를 데스크탑에서 실시간으로 바꾸고, 이를 녹화해 나만의 화면 보호기를 만들거나, iPhone 및 iPad용 Live Photo 잠금 화면 또는 Wallpaper Engine Android 앱용 패키지로 내보낼 수 있습니다.
+- **장면 편집/내보내기** — 실행 중인 배경화면의 레이어와 효과를 데스크탑에서 실시간으로 바꾸고, 이를 녹화해 나만의 화면 보호기를 만들거나, iPhone 및 iPad용 Live Photo 잠금 화면 또는 Wallpaper Engine Android 앱용 패키지로 내보낼 수 있습니다.
 
-  ![장면 편집기(라이브)](../../docs/images/scene-editor-live.png)
+  ![장면 편집/내보내기](../../docs/images/scene-editor-live.png)
 
 - **배경화면 편집기** — Wallpaper Engine 편집기를 본뜬 편집기입니다. 레이어, 미리보기가 있는 효과, 타임라인, SceneScript, 사용자 속성, 파티클, Puppet Warp를 다룰 수 있습니다. 편집 내용은 배경화면 파일이 아니라 배경화면 옆에 따로 저장됩니다.
 

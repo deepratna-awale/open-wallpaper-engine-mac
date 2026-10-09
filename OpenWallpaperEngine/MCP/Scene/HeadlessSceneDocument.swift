@@ -4,25 +4,27 @@ import OWEEditor
 import OWESceneEditing
 
 /// One wallpaper edited without a window: an edit session (`SceneEditSession`) over the
-/// wallpaper's editor overlay, as the Wallpaper Editor's window holds one, with its own undo
-/// stack. Every change is saved and applied as the window saves it (`WallpaperEditorController`):
-/// the running instances draw a value change live or reload, a particle document change rebuilds
-/// only its systems, and `announce` tells the Wallpaper Editor's process, whose open window of the
-/// wallpaper takes the change as an undo step of its own.
+/// wallpaper's Wallpaper Editor draft (`WallpaperEditorDraft`), as the editor's window holds one,
+/// with its own undo stack. Every change goes into the draft, which only the editor's canvas runs:
+/// `announce` tells the Wallpaper Editor's process, whose open window of the wallpaper takes the
+/// change as an undo step of its own. `save()` (`wallpaper_editor_save`) makes the draft the
+/// wallpaper's, as File › Save does: the running instances draw a value change live or reload, a
+/// particle document change rebuilds only its systems.
 ///
-/// An overlay saved by someone else since (an editor window, or its Undo) is adopted at the next
+/// A draft changed by someone else since (an editor window, or its Undo) is adopted at the next
 /// request with a fresh undo history (`refresh`), so an MCP Undo never undoes the user's work.
 @MainActor
 final class HeadlessSceneDocument {
     struct Dependencies {
-        var store: SceneEditOverlayStore
+        var store: SceneEditDraftStore
         /// This process's own notifications: the running instances listen there.
         var center: NotificationCenter
-        /// Tells the Wallpaper Editor's process (and the app's change sync) that the overlay of the
-        /// wallpaper in `folder` was saved here, with the undo step's name and whether it was that
-        /// step, or its Undo or Redo.
-        var announce: @MainActor (_ folder: URL, _ overlay: SceneEditOverlay, _ actionName: String,
-                                  _ step: AppProcessChannel.OverlayStep) -> Void
+        /// Tells the Wallpaper Editor's process that the draft of the wallpaper in `folder` changed
+        /// here, with the undo step's name and whether it was that step, or its Undo or Redo.
+        var announce: @MainActor (_ folder: URL, _ actionName: String, _ step: AppProcessChannel.OverlayStep) -> Void
+        /// Tells the app's change sync and the Wallpaper Editor's process that the draft of the
+        /// wallpaper in `folder` was saved here, as `overlay`.
+        var announceSave: @MainActor (_ folder: URL, _ overlay: SceneEditOverlay) -> Void
         var particleSchema: () throws -> ParticleEditorSchema
     }
 
@@ -32,9 +34,8 @@ final class HeadlessSceneDocument {
     private(set) var session: SceneEditSession
     private let authoredOutline: SceneOutline
     private let dependencies: Dependencies
-    /// The overlay as last saved here or adopted: a change of anything else is someone else's.
-    private var savedOverlay: SceneEditOverlay
-    private var savedSceneDigest: String
+    /// The draft as last written here or adopted: a draft of anything else is someone else's.
+    private var draftOverlay: SceneEditOverlay
     /// The name of the step being saved, for the editor window that takes it.
     private var pendingActionName: String?
     /// Whether the change being saved is a new step, or an Undo or Redo of one.
@@ -59,8 +60,7 @@ final class HeadlessSceneDocument {
         }
         timelineIndex = Self.timelineIndex(resources.sceneData, title: wallpaper.title)
         let overlay = try Self.storedOverlay(resources.identity, store: dependencies.store, title: wallpaper.title)
-        savedOverlay = overlay
-        savedSceneDigest = Self.sceneDigest(overlay)
+        draftOverlay = overlay
         session = Self.session(authoredOutline, overlay)
         attach(session)
     }
@@ -74,10 +74,11 @@ final class HeadlessSceneDocument {
         }
     }
 
-    private static func storedOverlay(_ identity: WallpaperSettingsIdentity, store: SceneEditOverlayStore,
+    /// The wallpaper's draft, else its saved overlay.
+    private static func storedOverlay(_ identity: WallpaperSettingsIdentity, store: SceneEditDraftStore,
                                       title: String) throws -> SceneEditOverlay {
         do {
-            return try store.overlay(for: identity.rawValue) ?? SceneEditOverlay()
+            return try store.overlay(for: identity.rawValue)
         } catch {
             throw ControlError(.failed, "The edits of \"\(title)\" can't be read: \(error.localizedDescription)")
         }
@@ -92,19 +93,18 @@ final class HeadlessSceneDocument {
     }
 
     private func attach(_ session: SceneEditSession) {
-        session.onChange = { [weak self] overlay in self?.save(overlay) }
+        session.onChange = { [weak self] overlay in self?.write(overlay) }
     }
 
     // MARK: Someone else's edits
 
-    /// Adopts an overlay saved elsewhere since this document last saved or read it; its undo
+    /// Adopts a draft written elsewhere since this document last wrote or read it; its undo
     /// history starts again. True when there was one.
     @discardableResult
     func refresh() throws -> Bool {
         let stored = try Self.storedOverlay(resources.identity, store: dependencies.store, title: wallpaper.title)
-        guard stored != savedOverlay else { return false }
-        savedOverlay = stored
-        savedSceneDigest = Self.sceneDigest(stored)
+        guard stored != draftOverlay else { return false }
+        draftOverlay = stored
         depthModels = [:]
         session = Self.session(authoredOutline, stored)
         attach(session)
@@ -171,11 +171,47 @@ final class HeadlessSceneDocument {
         change(session)
     }
 
-    /// Drops every edit (locks stay), one undo step, as File › Revert does.
-    func revert() {
-        pendingActionName = String(localized: "Revert", comment: "Undo menu: dropping every edit of the wallpaper")
-        session.revert(actionName: pendingActionName ?? "")
+    /// The draft back to the wallpaper as last saved, one undo step, as File › Revert to Saved
+    /// does. False when there was nothing unsaved.
+    func revertToSaved() -> Bool {
+        let saved = draft.savedOverlay
+        guard session.overlay != saved else { return false }
+        pendingActionName = String(localized: "Revert to Saved", comment: "Wallpaper Editor: Undo menu name of going back to the last save")
+        session.revert(to: saved, actionName: pendingActionName ?? "")
         pendingActionName = nil
+        return true
+    }
+
+    // MARK: The draft
+
+    /// The wallpaper's Wallpaper Editor draft: the overlay this document edits, and the user
+    /// properties an open editor window's Details panel set.
+    var draft: WallpaperEditorDraft {
+        WallpaperEditorDraft(overlayIdentity: resources.identity, properties: resources.propertyTargets, store: dependencies.store)
+    }
+
+    /// Whether the draft has anything `save()` would save.
+    var hasUnsavedChanges: Bool { draft.hasUnsavedChanges }
+
+    /// File › Save (`wallpaper_editor_save`): the draft becomes the wallpaper's, the running
+    /// instances apply it once, and the Wallpaper Editor's open window has nothing unsaved. False
+    /// when there was nothing to save.
+    func save() throws -> Bool {
+        let draft = self.draft
+        guard draft.hasUnsavedChanges else { return false }
+        let previous = draft.savedOverlay
+        let saved: SceneEditOverlay?
+        do {
+            saved = try draft.commit()
+        } catch {
+            throw ControlError(.failed, "The changes to \"\(wallpaper.title)\" couldn't be saved: \(error.localizedDescription)")
+        }
+        if let saved {
+            SceneEditOverlayFiles.postSaved(saved, previous: previous, base: session.baseOutline,
+                                            wallpaperDirectory: resources.folder, center: dependencies.center)
+        }
+        dependencies.announceSave(resources.folder, saved ?? previous)
+        return true
     }
 
     /// The depth map section's model for `layer` (nil: the scene), kept until the next refresh so a
@@ -189,37 +225,18 @@ final class HeadlessSceneDocument {
         return model
     }
 
-    // MARK: Saving
+    // MARK: Writing
 
-    /// Saves the overlay and has the running instances apply it, as the editor window saves it; then
-    /// the Wallpaper Editor's process hears of it.
-    private func save(_ overlay: SceneEditOverlay) {
-        let previous = savedOverlay
-        let digest = Self.sceneDigest(overlay)
-        let change = overlay.liveChange(from: previous)
+    /// Writes the draft, as the editor window does with each change; then the Wallpaper Editor's
+    /// process hears of it. Nothing that runs the wallpaper sees it until `save()`.
+    private func write(_ overlay: SceneEditOverlay) {
         do {
-            try dependencies.store.save(overlay, for: resources.identity.rawValue)
+            try dependencies.store.saveDraft(overlay, for: resources.identity.rawValue)
         } catch {
-            OWELog.error(.scene, "MCP: can't save the editor overlay of \(wallpaper.title): \(error)")
+            OWELog.error(.scene, "MCP: can't keep the Wallpaper Editor's draft of \(wallpaper.title): \(error)")
             return
         }
-        savedOverlay = overlay
-        // A puppet edit or a lock doesn't change the running scene (`SceneEditOverlay.digest`).
-        if digest != savedSceneDigest {
-            switch change {
-            case .scene:
-                SceneEditOverlayFiles.post(overlay, base: session.baseOutline, wallpaperDirectory: resources.folder,
-                                           transient: false, center: dependencies.center)
-            case .particleAssets(let paths):
-                SceneEditOverlayFiles.postParticles(overlay, wallpaperDirectory: resources.folder, paths: paths,
-                                                    center: dependencies.center)
-            }
-        }
-        savedSceneDigest = digest
-        dependencies.announce(resources.folder, overlay, pendingActionName ?? Self.defaultActionName, pendingStep)
-    }
-
-    private static func sceneDigest(_ overlay: SceneEditOverlay) -> String {
-        overlay.hasSceneEdits ? overlay.digest : ""
+        draftOverlay = overlay
+        dependencies.announce(resources.folder, pendingActionName ?? Self.defaultActionName, pendingStep)
     }
 }

@@ -1,8 +1,10 @@
+import OWEInspectorKit
 import SwiftUI
 
 /// The feature tour the first-run sheet showed, now a page of the setup assistant's welcome step:
 /// one page of highlights at a time, with arrows and dots to move between them.
 struct OnboardingTour: View {
+    @Environment(\.appAccentColor) private var accentColor
     @State private var pageIndex = 0
 
     private var pages: [Page] { Page.all }
@@ -25,7 +27,7 @@ struct OnboardingTour: View {
                 HStack(spacing: 5) {
                     ForEach(pages.indices, id: \.self) { index in
                         Circle()
-                            .fill(index == pageIndex ? Color.accentColor : Color.secondary.opacity(0.3))
+                            .fill(index == pageIndex ? accentColor : Color.secondary.opacity(0.3))
                             .frame(width: 6, height: 6)
                     }
                 }
@@ -93,7 +95,7 @@ extension OnboardingTour {
                             text: "Zoom, pace, tilt and saturation can pulse with audio. A wallpaper with its own soundtrack follows that; when it is silent, it follows whatever else is playing.",
                             systemImage: "waveform",
                             imageColor: .pink),
-                    Section(title: "Scene Editor (Live)",
+                    Section(title: "Scene Edit / Export",
                             text: "Edit layers and effects live on the running wallpaper, or switch to iPhone & iPad Export to make a Live Photo lock screen without changing your desktop.",
                             systemImage: "square.stack.3d.up",
                             imageColor: .orange)

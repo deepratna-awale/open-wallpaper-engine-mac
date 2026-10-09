@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import OWEInspectorKit
 import OWESceneEditing
 
 /// The canvas: the live wallpaper at the viewport's zoom and pan, with the selection's gizmo over
@@ -10,6 +11,7 @@ import OWESceneEditing
 /// deletes. Files dropped on it are imported (images become layers where they are dropped). While
 /// a mask is being painted, dragging over its layer paints.
 struct EditorCanvasView: View {
+    @Environment(\.appAccentColor) private var accentColor
     @ObservedObject var session: SceneEditSession
     @ObservedObject var tools: EditorTools
     let services: WallpaperEditorServices
@@ -71,7 +73,7 @@ struct EditorCanvasView: View {
             }
             if isDropTargeted {
                 Rectangle()
-                    .strokeBorder(Color.accentColor, style: StrokeStyle(lineWidth: 3, dash: [8, 5]))
+                    .strokeBorder(accentColor, style: StrokeStyle(lineWidth: 3, dash: [8, 5]))
                     .allowsHitTesting(false)
             }
         }
@@ -309,7 +311,7 @@ struct EditorCanvasView: View {
         return abs(local.x) <= half.x && abs(local.y) <= half.y ? local : nil
     }
 
-    /// Arrow keys nudge the selection as the Scene Inspector's do: 10 units, Shift 50, Control 1.
+    /// Arrow keys nudge the selection as Scene Edit / Export's do: 10 units, Shift 50, Control 1.
     /// Escape clears the selection (or ends text editing); Delete deletes the selected layer.
     private func key(_ event: NSEvent) -> Bool {
         if event.keyCode == 53 {
@@ -357,6 +359,7 @@ struct EditorCanvasView: View {
 /// The hovered layer's outline, the selection's gizmo, snapping guides and a mask being painted,
 /// drawn over the live canvas.
 private struct GizmoOverlay: View {
+    @Environment(\.appAccentColor) private var accentColor
     @ObservedObject var session: SceneEditSession
     @ObservedObject var tools: EditorTools
     let viewport: CanvasViewport
@@ -370,13 +373,13 @@ private struct GizmoOverlay: View {
                 return
             }
             if let hovered, hovered != session.selection, let geometry = session.geometry(of: hovered) {
-                context.stroke(outline(geometry), with: .color(.accentColor.opacity(0.6)), lineWidth: 1)
+                context.stroke(outline(geometry), with: .color(accentColor.opacity(0.6)), lineWidth: 1)
             }
             drawGuides(in: &context)
             guard let selected = session.selection, session.editingText != selected,
                   let geometry = session.geometry(of: selected) else { return }
             let locked = session.isLocked(selected)
-            context.stroke(outline(geometry), with: .color(.accentColor),
+            context.stroke(outline(geometry), with: .color(accentColor),
                            style: StrokeStyle(lineWidth: 1.5, dash: locked ? [4, 3] : []))
             guard !locked else { return }
             let corners = geometry.corners.map(viewport.canvasPoint)
@@ -385,14 +388,14 @@ private struct GizmoOverlay: View {
             var stem = Path()
             stem.move(to: CGPoint(top))
             stem.addLine(to: CGPoint(rotate))
-            context.stroke(stem, with: .color(.accentColor), lineWidth: 1)
+            context.stroke(stem, with: .color(accentColor), lineWidth: 1)
             for point in corners + [rotate] {
                 let isRotate = point == rotate
                 let size: Double = 8
                 let rect = CGRect(x: point.x - size / 2, y: point.y - size / 2, width: size, height: size)
                 let shape = isRotate ? Path(ellipseIn: rect) : Path(roundedRect: rect, cornerRadius: 1.5)
                 context.fill(shape, with: .color(.white))
-                context.stroke(shape, with: .color(.accentColor), lineWidth: 1.5)
+                context.stroke(shape, with: .color(accentColor), lineWidth: 1.5)
             }
             let pivot = viewport.canvasPoint(geometry.pivot)
             var cross = Path()
@@ -400,7 +403,7 @@ private struct GizmoOverlay: View {
             cross.addLine(to: CGPoint(x: pivot.x + 4, y: pivot.y))
             cross.move(to: CGPoint(x: pivot.x, y: pivot.y - 4))
             cross.addLine(to: CGPoint(x: pivot.x, y: pivot.y + 4))
-            context.stroke(cross, with: .color(.accentColor), lineWidth: 1)
+            context.stroke(cross, with: .color(accentColor), lineWidth: 1)
         }
     }
 
@@ -436,7 +439,7 @@ private struct GizmoOverlay: View {
         layer.concatenate(transform)
         layer.opacity = 0.55
         layer.draw(Image(decorative: image, scale: 1), in: CGRect(x: 0, y: 0, width: width, height: height))
-        context.stroke(outline(geometry), with: .color(.accentColor), lineWidth: 1.5)
+        context.stroke(outline(geometry), with: .color(accentColor), lineWidth: 1.5)
         if let pointer {
             let radius = painting.brushSize / 2 * viewport.scale * abs(geometry.world.determinant).squareRoot()
             let rect = CGRect(x: pointer.x - radius, y: pointer.y - radius, width: radius * 2, height: radius * 2)

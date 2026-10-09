@@ -4,8 +4,15 @@ import OWEInspectorKit
 import OWESceneEditing
 
 /// The state of one depth map section: the depth map made for the layer (or the scene) but not
-/// applied yet, its preview, and what went wrong. Applied depth maps live in the overlay
-/// (`SceneDepthParallax`); this only holds a generation until it is applied.
+/// applied yet, its preview, and what went wrong. Applied depth maps live in the overlay; this
+/// only holds a generation until it is applied.
+///
+/// The two sections have different jobs:
+/// - the scene's (`layerID` nil) applies WE's Depth Parallax on top of the scene
+///   (`SceneDepthParallax`);
+/// - a layer's, **Create Mask from Depth Map**, writes the depth map, inverted and with its
+///   contrast set, as the mask of one of the layer's effects (`useAsMask`, `DepthMask`). It no
+///   longer applies depth parallax; a layer's depth parallax added before can still be removed.
 @MainActor
 public final class DepthMapSectionModel: ObservableObject {
     public let session: SceneEditSession
@@ -22,6 +29,14 @@ public final class DepthMapSectionModel: ObservableObject {
     /// The strength a new depth parallax starts with.
     @Published public var pendingStrength = SceneDepthParallax.defaultStrength
     @Published public var problem: String?
+    /// The layer's mask: near and far swapped.
+    @Published public var maskInverted = false { didSet { refreshMaskPreview() } }
+    /// The layer's mask: its contrast (`DepthMask.contrastRange`).
+    @Published public var maskContrast = DepthMask.defaultContrast { didSet { refreshMaskPreview() } }
+    /// The depth preview as the mask will be (a layer's), smaller.
+    @Published public internal(set) var maskPreview: CGImage?
+    /// What the last Use as Mask did, to show under it.
+    @Published public internal(set) var maskNotice: String?
 
     public init(session: SceneEditSession, layerID: Int?, services: DepthMapEditorServices) {
         self.session = session
@@ -30,6 +45,7 @@ public final class DepthMapSectionModel: ObservableObject {
         if let texture = appliedTexture {
             depthPreview = services.texture(texture)
         }
+        refreshMaskPreview()
     }
 
     // MARK: What is applied
@@ -50,10 +66,11 @@ public final class DepthMapSectionModel: ObservableObject {
 
     public var appliedTexture: String? { effectLayer.flatMap(session.depthParallaxTexture) }
 
-    /// Whether the layer can take depth parallax at all.
+    /// Whether the section works here: always for the scene; for a layer, one with a rectangle of
+    /// its own that carries effects (an image or text layer), whose effects' masks it fills.
     public var isSupported: Bool {
         guard let layerID else { return true }
-        return session.outline.layer(layerID).flatMap(SceneDepthParallax.placement) != nil
+        return session.outline.layer(layerID).flatMap(SceneDepthParallax.placement) == .onLayer
     }
 
     /// Before generating: whether the picture will come from one rendered frame.
@@ -86,6 +103,8 @@ public final class DepthMapSectionModel: ObservableObject {
             let texture = try services.assetStore.saveDepthMap(result.png, title: title.isEmpty ? "layer" : title)
             generatedTexture = texture
             depthPreview = result.depth.grayImage()
+            refreshMaskPreview()
+            maskNotice = nil
             isOneFrame = source.isOneFrame
             showsDepthPreview = true
             if let effectLayer, session.depthParallaxTexture(of: effectLayer) != texture {
@@ -104,10 +123,10 @@ public final class DepthMapSectionModel: ObservableObject {
 
     // MARK: Applying
 
-    /// Adds WE's depth parallax effect bound to the generated depth map: on the layer, or on a
-    /// fullscreen layer above it (a particle system) or on top of the scene. One undo step.
+    /// The scene's: adds WE's depth parallax effect bound to the generated depth map on a
+    /// fullscreen layer on top of the scene. One undo step. A layer's section makes masks instead.
     public func apply() {
-        guard let texture = generatedTexture ?? appliedTexture else { return }
+        guard layerID == nil, let texture = generatedTexture ?? appliedTexture else { return }
         problem = nil
         do {
             try services.prepareEffect()
@@ -115,25 +134,12 @@ public final class DepthMapSectionModel: ObservableObject {
             problem = error.localizedDescription
             return
         }
-        let action = DL("Apply Depth Parallax")
-        guard let layerID else {
-            session.addDepthParallaxLayer(texture: texture, strength: pendingStrength, above: nil,
-                                          name: DL("Scene Depth Parallax"), actionName: action)
-            return
-        }
-        guard let layer = session.outline.layer(layerID) else { return }
-        switch SceneDepthParallax.placement(for: layer) {
-        case .onLayer:
-            session.applyDepthParallax(texture: texture, strength: pendingStrength, to: layerID, actionName: action)
-        case .layerAbove:
-            session.addDepthParallaxLayer(texture: texture, strength: pendingStrength, above: layerID,
-                                          name: DL("Depth Parallax"), actionName: action)
-        case nil:
-            break
-        }
+        session.addDepthParallaxLayer(texture: texture, strength: pendingStrength, above: nil,
+                                      name: DL("Scene Depth Parallax"), actionName: DL("Apply Depth Parallax"))
     }
 
-    /// Removes the effect (and the fullscreen layer that carried it). One undo step.
+    /// Removes the effect (and the fullscreen layer that carried it). One undo step. On a layer,
+    /// this takes off depth parallax an earlier version applied there.
     public func remove() {
         guard let effectLayer else { return }
         let action = DL("Remove Depth Parallax")
@@ -145,9 +151,9 @@ public final class DepthMapSectionModel: ObservableObject {
     }
 }
 
-/// The Depth Map controls, the same in both editors: Generate, a preview of the depth map,
-/// smoothing and strength, Apply Depth Parallax and Remove; or, without the plugin, the way to
-/// install it.
+/// The depth map controls, the same in both editors: Generate, a preview of the depth map and
+/// smoothing; then, for the scene, strength, Apply Depth Parallax and Remove, and for a layer,
+/// Invert, Contrast and Use as Mask for…; or, without the plugin, the way to install it.
 public struct DepthMapControls: View {
     @ObservedObject var model: DepthMapSectionModel
     @ObservedObject var session: SceneEditSession
@@ -163,7 +169,9 @@ public struct DepthMapControls: View {
     public var body: some View {
         if !generator.isInstalled {
             VStack(alignment: .leading, spacing: 6) {
-                Text(DL("Generate a depth map with on-device machine learning to give this depth parallax that follows the pointer."))
+                Text(model.layerID == nil
+                     ? DL("Generate a depth map with on-device machine learning to give this depth parallax that follows the pointer.")
+                     : DL("Generate a depth map with on-device machine learning to make a mask for this layer’s effects."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -171,21 +179,31 @@ public struct DepthMapControls: View {
                     .help(DL("Opens Settings › Plugins, where Depth Map Generation can be installed."))
             }
         } else if !model.isSupported {
-            Text(DL("This kind of layer can’t have depth parallax."))
+            Text(DL("Only image and text layers can have a mask from a depth map."))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         } else {
-            controls
+            generation
+            if model.layerID == nil {
+                parallaxControls
+            } else {
+                DepthMaskControls(model: model, session: session, isBusy: generator.isBusy)
+            }
+            if let problem = model.problem {
+                Label(problem, systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                    .font(.caption)
+            }
         }
     }
 
-    @ViewBuilder private var controls: some View {
+    @ViewBuilder private var generation: some View {
         if model.comesFromOneFrame || model.isOneFrame {
             Label(DL("The depth comes from one frame of the scene."), systemImage: "film")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        if let preview = model.depthPreview, model.showsDepthPreview {
+        if let preview = (model.layerID == nil ? nil : model.maskPreview) ?? model.depthPreview, model.showsDepthPreview {
             Image(decorative: preview, scale: 1)
                 .resizable()
                 .interpolation(.medium)
@@ -196,7 +214,8 @@ public struct DepthMapControls: View {
         }
         Toggle(DL("Preview Depth Map"), isOn: $model.showsDepthPreview)
             .disabled(model.depthPreview == nil)
-            .help(DL("Shows the depth map: white is near, black is far."))
+            .help(model.layerID == nil ? DL("Shows the depth map: white is near, black is far.")
+                  : DL("Shows the mask: white is where the effect shows, black where it doesn’t."))
         LabeledContent(DL("Smoothing")) {
             NumericSliderInput<Double>(value: $model.smoothing, range: 0...1, defaultValue: 0.25, step: 0.05,
                                        displayScale: 100, suffix: "%", fractionDigits: 0, fieldWidth: 44)
@@ -216,6 +235,10 @@ public struct DepthMapControls: View {
             }
             Spacer()
         }
+    }
+
+    /// The scene's: WE's Depth Parallax on top of the scene.
+    @ViewBuilder private var parallaxControls: some View {
         LabeledContent(DL("Strength")) {
             NumericSliderInput<Double>(value: Binding(get: { model.strength }, set: { model.strength = $0 }),
                                        range: SceneDepthParallax.strengthRange, defaultValue: SceneDepthParallax.defaultStrength,
@@ -232,11 +255,6 @@ public struct DepthMapControls: View {
             }
             Spacer()
         }
-        if let problem = model.problem {
-            Label(problem, systemImage: "exclamationmark.triangle.fill")
-                .foregroundStyle(.orange)
-                .font(.caption)
-        }
     }
 
     private var phaseTitle: String {
@@ -249,7 +267,64 @@ public struct DepthMapControls: View {
     }
 }
 
-/// The Depth Map section of the Wallpaper Editor's inspector (a layer) or of its scene form.
+/// A layer's mask controls: Invert, Contrast and the menu of the layer's effects with a grey
+/// mask slot. An effect whose mask is set already is listed under "Replaces the current mask".
+private struct DepthMaskControls: View {
+    @ObservedObject var model: DepthMapSectionModel
+    @ObservedObject var session: SceneEditSession
+    let isBusy: Bool
+
+    var body: some View {
+        Toggle(DL("Invert"), isOn: $model.maskInverted)
+            .help(DL("Swaps near and far, so the effect shows on the background instead of what is near."))
+        LabeledContent(DL("Contrast")) {
+            NumericSliderInput<Double>(value: $model.maskContrast, range: DepthMask.contrastRange,
+                                       defaultValue: DepthMask.defaultContrast, step: 0.05,
+                                       displayScale: 100, suffix: "%", fractionDigits: 0, fieldWidth: 44)
+        }
+        .help(DL("Pushes the mask toward black and white; below 100% it is softer."))
+        let targets = model.maskTargets
+        HStack {
+            Menu(DL("Use as Mask for…")) {
+                let fresh = targets.filter { !$0.replacesMask }
+                let replacing = targets.filter(\.replacesMask)
+                ForEach(fresh) { target in button(target) }
+                if !replacing.isEmpty {
+                    Section(DL("Replaces the current mask")) {
+                        ForEach(replacing) { target in button(target) }
+                    }
+                }
+            }
+            .fixedSize()
+            .disabled(model.generatedTexture == nil || isBusy || targets.isEmpty)
+            .help(DL("Writes the depth map as the mask of one of this layer’s effects: the effect shows where the mask is white."))
+            Spacer()
+        }
+        if targets.isEmpty {
+            Text(DL("Add an effect with a mask, such as Shake, Water Ripple or Tint, to this layer first."))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        if let notice = model.maskNotice {
+            Label(notice, systemImage: "checkmark.circle")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        if model.isApplied {
+            // Depth parallax an earlier version put on the layer; the scene's section adds it now.
+            Button(DL("Remove Depth Parallax"), role: .destructive) { model.remove() }
+        }
+    }
+
+    private func button(_ target: DepthMapSectionModel.MaskTarget) -> some View {
+        Button(target.title) { model.useAsMask(target) }
+    }
+}
+
+/// The Depth Map section of the Wallpaper Editor's inspector (a layer's Create Mask from Depth
+/// Map) or of its scene form (Scene Depth Parallax).
 struct DepthMapSection: View {
     @StateObject private var model: DepthMapSectionModel
 
@@ -258,14 +333,14 @@ struct DepthMapSection: View {
     }
 
     var body: some View {
-        Section(model.layerID == nil ? DL("Scene Depth Parallax") : DL("Depth Map")) {
+        Section(model.title) {
             DepthMapControls(model: model)
         }
     }
 }
 
 /// The same controls in a box, for a scrolling column (the Wallpaper Editor's scene form, the
-/// Scene Editor's object detail).
+/// Scene Edit / Export's object detail).
 public struct DepthMapBox: View {
     @StateObject private var model: DepthMapSectionModel
 
@@ -281,7 +356,7 @@ public struct DepthMapBox: View {
             .padding(4)
             .frame(maxWidth: .infinity, alignment: .leading)
         } label: {
-            Text(model.layerID == nil ? DL("Scene Depth Parallax") : DL("Depth Map")).font(.headline)
+            Text(model.title).font(.headline)
         }
     }
 }

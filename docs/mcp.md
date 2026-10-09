@@ -152,7 +152,7 @@ the sentence their summary shows.
 | `play_playlist` | `name`, `display?` | Makes the playlist active and starts rotating it, as its shortcut does. Names match case-insensitively. |
 | `next_wallpaper`, `previous_wallpaper` | `display?` | Next and Previous Wallpaper from the menu: the active playlist's next or previous item where it plays, else a random library wallpaper, skipping web wallpapers not trusted yet (next), or the one shown before (previous). |
 | `import_wallpaper` | `path` | File › Import Wallpaper from Folder…: a wallpaper folder (with `project.json`), a folder of them, or a `.zip`. Returns the `imported` wallpapers and what was `skipped`, with why (a folder of that name is already in the library, for example). |
-| `open_editor` | `id`, `editor` (`scene` or `wallpaper`) | Opens a scene wallpaper in the Scene Editor (Live) or the Wallpaper Editor, for you to edit. |
+| `open_editor` | `id`, `editor` (`scene` or `wallpaper`) | Opens a scene wallpaper in Scene Edit / Export or the Wallpaper Editor, for you to edit. |
 | `snapshot` | `display?` (the main display by default), `format?` (`image` by default, or `path`) | A PNG of the wallpaper on that display, at most 960 pixels wide, as image content (with `path`: saved to a temporary file whose path is returned). `source` says what it is: `loading_snapshot` (the scene's own frame, which the app captures for its loading screen), `video_frame`, or `preview` (the wallpaper's preview image, when there is no frame yet). |
 
 Playback and volume are app-wide in Open Wallpaper Engine (as in the menu bar), so `pause`,
@@ -160,34 +160,45 @@ Playback and volume are app-wide in Open Wallpaper Engine (as in the menu bar), 
 
 ### Scene and editors
 
-A client edits a scene wallpaper through the same edit model as the Wallpaper Editor and the
-Scene Editor (Live): the app keeps a **headless edit session** per wallpaper, over the wallpaper's
-editor overlay (`<support>/editor/<identity>.json`), with the editor's own undo semantics. Nothing
-is written into the wallpaper's files. Every change goes through the session calls the editors'
-controls make (with their checks), is saved as the editor saves it, and is applied live: the
-displays running the wallpaper draw a value change at once (transform, opacity, colour, effect
-values) or reload, and a particle document change rebuilds only its systems.
+A client edits a scene wallpaper through the same edit model as the Wallpaper Editor: the app
+keeps a **headless edit session** per wallpaper, over the wallpaper's **Wallpaper Editor draft**
+(`<support>/editor/Drafts/<identity>.json`, beside the saved overlay `<support>/editor/<identity>.json`),
+with the editor's own undo semantics. Nothing is written into the wallpaper's files. Every change
+goes through the session calls the editors' controls make (with their checks) and into the draft,
+as the editor's window keeps its own.
+
+**The draft is the editor's, until it is saved.** Nothing that runs the wallpaper sees the draft:
+not the displays, the screen saver, playlists, or the readers of the wallpaper (`snapshot`,
+`get_wallpaper`). An open Wallpaper Editor window of the wallpaper shows it in its canvas.
+`wallpaper_editor_save` (the editor's File › Save) makes it the wallpaper's edits: the displays
+running the wallpaper then draw a value change at once (transform, opacity, colour, effect values)
+or reload once, and a particle document change rebuilds only its systems. `scene_get`'s `unsaved`
+says whether the draft has anything to save. A draft left unsaved stays on disk: the Wallpaper
+Editor offers to resume or discard it when the wallpaper is opened.
 
 **Open editors see the changes.** After each change the app tells the Wallpaper Editor's process
 (`app.overlayDidSave`, with the undo step's name); its open window of the wallpaper takes the change
-as an undo step of its own, so **Undo in the window undoes the client's edit**, and that Undo comes
-back to the app like any editor save. An edit made in a window since the client's last request
-starts the client's session over with a fresh undo history, so `scene_undo` never undoes the
-user's work. The Scene Editor (Live)'s Wallpaper tab edits the running wallpaper, which shows the
-change at once.
+as an undo step of its own, so **Undo in the window undoes the client's edit**, and that Undo goes
+into the draft like any of the window's edits. The window's own changes go into the same draft, so
+`wallpaper_editor_save` saves them too, and the window then has nothing unsaved (`app.draftDidSave`).
+An edit made in a window since the client's last request starts the client's session over with a
+fresh undo history, so `scene_undo` never undoes the user's work. The Scene Edit / Export window's
+Wallpaper tab edits the running wallpaper, which shows the change at once.
 
 | Tool | Arguments | What it does |
 |---|---|---|
-| `scene_get` | `wallpaper_id` | The scene as the editors show it, edits included: `size`, `general` (scene settings), `layers` (each: `id`, `name`, `kind`, `image_role`, `order`, `parent`, `visible`, `locked`, `edited`, `fields`, `bindings` (field → user property), `scripts` (scripted fields), `effects` (`key`, `file`, `title`, `visible`, `added`, `constants`, `combos`, `textures`, `bindings`), `text`, `text_script`, `particle`, `puppet` (`none`, `authored`, `edited`)), the wallpaper's `user_properties`, and `undo` (`can_undo`, `can_redo`, `undo_action`, `redo_action`). |
-| `scene_apply_edits` | `wallpaper_id`, `edits`, `action_name?` | Applies the edits (below) in order, **all or nothing, as one undo step** (named `action_name`, "MCP Edit" by default). Returns each edit's `results` (new ids and keys) and `undo`. |
+| `scene_get` | `wallpaper_id` | The scene as the Wallpaper Editor shows it, the draft's edits included, with `unsaved` (whether the draft has anything `wallpaper_editor_save` would save): `size`, `general` (scene settings), `layers` (each: `id`, `name`, `kind`, `image_role`, `order`, `parent`, `visible`, `locked`, `edited`, `fields`, `bindings` (field → user property), `scripts` (scripted fields), `effects` (`key`, `file`, `title`, `visible`, `added`, `constants`, `combos`, `textures`, `bindings`), `text`, `text_script`, `particle`, `puppet` (`none`, `authored`, `edited`)), the wallpaper's `user_properties`, and `undo` (`can_undo`, `can_redo`, `undo_action`, `redo_action`). |
+| `scene_apply_edits` | `wallpaper_id`, `edits`, `action_name?` | Applies the edits (below) to the draft in order, **all or nothing, as one undo step** (named `action_name`, "MCP Edit" by default). Returns each edit's `results` (new ids and keys) and `undo`. |
 | `scene_undo`, `scene_redo` | `wallpaper_id` | Undoes or redoes the client's last step. `done` says whether there was one. |
-| `scene_save` | `wallpaper_id` | Confirms the edits are saved; every edit is saved as it is made. |
-| `scene_save_as_local_wallpaper` | `wallpaper_id`, `title?` | File › Save as Local Wallpaper: a copy with the edits baked in, added to the library. Returns its `id`. |
-| `scene_revert` | `wallpaper_id` | File › Revert: drops every edit (layer locks stay), one undo step. |
+| `wallpaper_editor_save` | `wallpaper_id` | File › Save: the draft (the client's edits and an open window's) becomes the wallpaper's edits, which every running copy of it applies once. `saved` is false when there was nothing to save. |
+| `wallpaper_editor_save_as_new` | `wallpaper_id`, `title?` | File › Save as New Wallpaper: a new wallpaper with the draft's edits baked in, added to the library; the wallpaper and its draft stay as they are. Returns its `id`. |
+| `scene_save` | `wallpaper_id` | **Deprecated:** the older name of `wallpaper_editor_save`, which it does exactly. |
+| `scene_save_as_local_wallpaper` | `wallpaper_id`, `title?` | **Deprecated:** the older name of `wallpaper_editor_save_as_new`, which it does exactly. |
+| `scene_revert` | `wallpaper_id` | File › Revert to Saved: the draft goes back to the wallpaper as last saved, one undo step. |
 | `effects_catalog` | `wallpaper_id`, `query?` | The effects `add_effect` takes (Wallpaper Engine's built-in effects and the Workshop effects the wallpaper uses), each with `file`, `title`, `group`, `passes` and its parameters: `constants` (`key`, `default`, `min`, `max`, `integer`, `color`), `combos` (`name`, `options`), `textures` (`slot`, `mask`). Empty without WE's assets. |
 | `particles_catalog` | `wallpaper_id`, `query?` | The systems `add_particle_system` takes: WE's default systems (`system:particles/…`) and every preset's variants (`preset:<preset>/<variant>`). Empty without WE's assets. |
 | `particles_get` | `wallpaper_id`, `layer` | A particle layer's definition as the particle editor shows it: `system`, `sections` (emitter, initializer, operator, renderer, children, controlpoint), `material`, `instance_override`, and the addable `components` with their field names. |
-| `particles_restart` | `wallpaper_id`, `layer` | Starts the system again from nothing on the displays running the wallpaper. |
+| `particles_restart` | `wallpaper_id`, `layer` | Starts the system again from nothing: in the open Wallpaper Editor window's canvas when there is one (the draft being edited; `in_editor` is true), else on the displays running the wallpaper, as saved. |
 | `puppets_list` | `wallpaper_id` | Each Puppet Warp rig: `bones` (`index`, `name`, `parent`, `x`, `y`, `angle` in degrees), `animations` (`name`, `mode`, `fps`, `frames`, `keys_by_bone`) and `animation_layers` (`animation`, `blend`, `rate`, `visible`, `additive`, `blend_in`, `blend_out`, `blend_time`). |
 | `timeline_get` | `wallpaper_id`, `layer?` | Per layer, each property timeline (`key` or `effect` + `pass` + `key`, `fps`, `frames`, `mode`, `relative`, `channels` of keyframes `frame`, `value`, `hold`) and what else it can animate (`animatable`). |
 | `timeline_preview` | `wallpaper_id`, `command` (`play`, `pause`, `seek`), `seconds?` | Drives the timeline of the wallpaper's open Wallpaper Editor window (its canvas follows the playhead). |
@@ -195,12 +206,13 @@ change at once.
 | `script_set` | `wallpaper_id`, `layer`, `field`, `script`, `script_properties?`, `action_name?` | The script editor's Apply: the syntax is checked first (errors come back with their lines and nothing changes), then the script is attached as one undo step; it runs from the wallpaper's reload. |
 | `script_check` | `script` | The syntax check alone: `valid` and `diagnostics` (`line`, `message`, `severity`). |
 | `user_properties_get` | `wallpaper_id` | The wallpaper's own user-property definitions as the editor authors them (`key`, `kind`, `label`, `value` (default), `min`, `max`, `step`, `whole_numbers`, `options`, `condition`), whether they were `edited`, and the `bound_fields` of each. `get_wallpaper` gives their current values; `set_user_property` changes a value. |
-| `depth_generate` | `wallpaper_id`, `layer?`, `smoothing?`, `apply?`, `strength?` | The Depth Map section's Generate, for a layer or (without `layer`) the scene, on this Mac. Needs the Depth Map Generation plugin; without it the call says to install it in Settings › Plugins (`plugin_status` shows it). With `apply`, WE's Depth Parallax is applied with it at once; an applied depth parallax follows the new map. |
-| `depth_apply` | `wallpaper_id`, `layer?`, `strength?` | Applies WE's Depth Parallax with the generated map (on the layer, or on a fullscreen layer above a particle system or the scene), or sets the applied one's strength (0.01–2). One undo step. |
+| `depth_generate` | `wallpaper_id`, `layer?`, `smoothing?`, `apply?`, `strength?` | Generate, on this Mac, for an image or text layer (Create Mask from Depth Map) or, without `layer`, the scene (Scene Depth Parallax). Needs the Depth Map Generation plugin; without it the call says to install it in Settings › Plugins (`plugin_status` shows it). For the scene, `apply` applies WE's Depth Parallax with it at once; an applied depth parallax follows the new map. |
+| `depth_apply` | `wallpaper_id`, `layer?`, `strength?` | Applies WE's Depth Parallax with the scene's generated map on a fullscreen layer on top of the scene, or sets the applied one's strength (0.01–2). A layer's map doesn't apply depth parallax (`use_depth_map_as_mask` makes it a mask); `layer` only sets the strength of a layer's depth parallax applied before. One undo step. |
 | `depth_remove` | `wallpaper_id`, `layer?` | Removes the depth parallax (and the fullscreen layer that carried it). One undo step. |
+| `use_depth_map_as_mask` | `wallpaper_id`, `layer`, `effect`, `slot?`, `invert?`, `contrast?` | Use as Mask for…: writes the layer's generated map as the mask of its effect `effect` (its key from `scene_get`) with a grey mask slot (`slot` when it has several), `invert` swapping near and far and `contrast` (0.25–4, 1 by default) hardening or softening it. Stored as WE stores a painted mask (an R8 `.tex` in `materials/masks`, named in the pass's `textures`). An existing mask is replaced (`replaced` names it; `scene_undo` brings it back, its file is kept). One undo step. |
 | `open_editor` | `id`, `editor` (`scene`, `wallpaper`) | Opens either editor on a scene wallpaper (above). |
-| `editor_close` | `editor`, `wallpaper_id?` | Closes the Scene Editor (Live), or the Wallpaper Editor's window of a wallpaper (`wallpaper_id`). Edits are kept. |
-| `editor_set_tab` | `wallpaper_id`, `tab` (`wallpaper`, `screen_saver`, `iphone_ipad_export`, `android_export`) | Opens the Scene Editor (Live) on the wallpaper in that tab. |
+| `editor_close` | `editor`, `wallpaper_id?` | Closes the Scene Edit / Export window, or the Wallpaper Editor's window of a wallpaper (`wallpaper_id`) without asking: its unsaved changes stay in the draft, which the editor offers to resume when the wallpaper is opened again. |
+| `editor_set_tab` | `wallpaper_id`, `tab` (`wallpaper`, `screen_saver`, `iphone_ipad_export`, `android_export`) | Opens Scene Edit / Export on the wallpaper in that tab. |
 
 #### Scene edits
 
@@ -254,7 +266,7 @@ the first that fails names its place (`edits[2] (set_effect_combo): …`) and no
 | `set_effect_visible` | `layer`, `effect`, `visible` | Turns the effect on or off. |
 | `set_effect_constant` | `layer`, `effect`, `constant`, `value` | Sets a parameter (a number, or "x y z" for a vector or colour), checked against the effect's parameters. |
 | `set_effect_combo` | `layer`, `effect`, `combo`, `value` | Sets a combo (a whole number from its options). |
-| `set_effect_texture` | `layer`, `effect`, `slot`, `texture` | Sets a texture slot (a texture path such as masks/…; empty for the shader's default). |
+| `set_effect_texture` | `layer`, `effect`, `slot`, `pass?`, `texture` | Sets a texture slot (a texture path such as masks/…; empty for the shader's default). `pass` picks a slot a later effect pass samples (`effects_catalog` lists each slot's pass; Blur's mask is in pass 3), written to that pass's `textures` as WE does. |
 | `bind_effect_constant` | `layer`, `effect`, `constant`, `property` | Binds a parameter to a user property (empty property frees it). |
 
 **Particles**
@@ -341,7 +353,13 @@ the first that fails names its place (`edits[2] (set_effect_combo): …`) and no
              {"op": "add_effect", "layer": 12, "effect": "+1", "file": "effects/blur/effect.json"},
              {"op": "set_effect_constant", "layer": 12, "effect": "+1", "constant": "strength", "value": 4}],
  "undo": {"can_undo": true, "can_redo": false, "undo_action": "Soften the clouds", "redo_action": null},
- "message": "Applied 4 edits to \"Clouds\" as one undo step; it shows on the displays running it and in its open editor."}
+ "message": "Applied 4 edits to the draft of \"Clouds\" as one undo step; it shows in its open Wallpaper Editor window, and on the displays once wallpaper_editor_save saves it."}
+```
+
+Then save the draft, so the displays show it:
+
+```json
+{"name": "wallpaper_editor_save", "arguments": {"wallpaper_id": "2984716315"}}
 ```
 
 Add a clock, a user property that hides it, and fade it in with a timeline:
@@ -434,7 +452,7 @@ return the playlist as `list_playlists` writes it, plus `change_when_video_ends`
 | `texture_resolution` | `high_quality`, `high_performance`, `automatic` | Texture Resolution |
 | `scene_detail` | `match_display`, `full` | Effect Detail |
 | `render_resolution` | `your_display`, `uhd4k`, `full` (the earlier `display` and `retina` set `your_display`, `4k` sets `uhd4k`) | Render Resolution |
-| `upscaling` | `off`, `metalfx` | Upscaling |
+| `upscaling` | `off`, `bilinear` (the earlier `metalfx` sets `bilinear`: MetalFX was removed) | Upscaling |
 | `render_scale` | `50`, `67`, `75` | Render Scale |
 | `shadows`, `volumetrics` | `disabled`, `low`, `medium`, `high`, `ultra` | Shadows, Volumetrics |
 | `fps` | 10–240, whole (240: no limit) | FPS slider (also marks the rate as the user's own, as the slider does) |
@@ -522,7 +540,7 @@ Example:
 
 ### Export, screen saver and lock screen
 
-The Scene Editor (Live)'s **iPhone & iPad Export** and **Screen Saver** modes, the screen saver's
+Scene Edit / Export's **iPhone & iPad Export** and **Screen Saver** modes, the screen saver's
 daily re-recording, and Settings › General's **Show Wallpaper on Lock Screen**. Each tool runs the
 code those controls run. None of them opens a window or System Settings, changes a system setting,
 or makes macOS ask for a permission.
@@ -532,7 +550,7 @@ or makes macOS ask for a permission.
 | `devices_list` | `query?` | The iPhones and iPads the export makes Live Photo lock screens for, newest first: `id` (the name), `name`, `family` (`iPhone`, `iPad`), `width`/`height` in pixels (portrait) and `year`. `query` narrows them as the mode's device search does (name, family, year, or a resolution such as `1320x2868`). |
 | `export_settings_get` | `wallpaper_id?` | What the export remembers: the `device`, `save_to_photos` ("Also Save to Photos Album"), `photos_album` and `photos_access` (`authorized`, `limited`, `denied`, `restricted`, `not_determined`; reading it never asks), and the ranges `export_live_photo` takes (`qualities`, `max_zoom`, `clip_lengths`, `clip_timeline_seconds`, `frame_rate`). With `wallpaper_id`, also the `scene`'s `width`/`height` in scene units, which the crop's centre is measured in. |
 | `export_live_photo` | `wallpaper_id`, `device?`, `crop?` (`zoom` 1–3, `center_x`, `center_y`), `clip?` (`start`, `length` 1–3 s), `settings?` (`quality`: `best`, `high`, `smaller`; `save_to_photos`), `output_folder?` | Renders a scene as a Live Photo (HEIC + MOV) as the mode's Save does, with the wallpaper's own property values and edits (what the mode copies when it opens), and waits for it. `device` defaults to the remembered one; the crop defaults to the whole-scene window, centred; without `clip.start` the clip is the window with the most motion, as the mode picks it. Returns the `photo` and `movie` paths, the `crop` and `clip` used, and `photos` (`off`, `skipped`, `saved`, `failed`, `needs_access`). Without `output_folder` the files stay in the app's cache (`in_cache`) until the mode's next export clears it; `output_folder` must be an existing absolute folder (files of the same name are replaced). |
-| `export_android` | `wallpaper_id` or `wallpaper_ids`, `mode?` (`high_quality`, `balanced`, `pre_rendered`), `options?` (`pixel_art`, `texture_reduction` 1/2/4, `cropping`: `phone`/`original`, `video_preset`: `original`/`full_hd`/`uhd_4k`, `fps` 24/30/60, `alignment` 0–1), `output_folder?` | The Scene Editor (Live)'s Android Export: one `<title>.mpkg` per wallpaper (unique names) for Wallpaper Engine's Android app, and waits for them. Videos are packed as they are; scenes are Dynamic (`balanced` by default) or a pre-rendered 30 s video. Returns the `folder`, each of the `packages` (`wallpaper_id`, `title`, `type`, `mode`, `path`, `size`, `preview`), and what was `skipped` (web and application wallpapers, with the reason) or `failed`. Without `output_folder` the packages go to the app's export cache folder. |
+| `export_android` | `wallpaper_id` or `wallpaper_ids`, `mode?` (`high_quality`, `balanced`, `pre_rendered`), `options?` (`pixel_art`, `texture_reduction` 1/2/4, `cropping`: `phone`/`original`, `video_preset`: `original`/`full_hd`/`uhd_4k`, `fps` 24/30/60, `alignment` 0–1), `output_folder?` | Scene Edit / Export's Android Export: one `<title>.mpkg` per wallpaper (unique names) for Wallpaper Engine's Android app, and waits for them. Videos are packed as they are; scenes are Dynamic (`balanced` by default) or a pre-rendered 30 s video. Returns the `folder`, each of the `packages` (`wallpaper_id`, `title`, `type`, `mode`, `path`, `size`, `preview`), and what was `skipped` (web and application wallpapers, with the reason) or `failed`. Without `output_folder` the packages go to the app's export cache folder. |
 | `android_send_wifi` | `package_paths` (from `export_android`) or `wallpaper_id` / `wallpaper_ids` (exported first, with `export_android`'s `mode?`, `options?`, `output_folder?`), `address?` | The Android export's "Send over Wi-Fi" without its sheet: serves only those packages on the Mac's local network behind a random 50-bit token, GET only, for 15 minutes, and returns the `url` (`http://owe-fileshare.<mac>.local:<port>/<token>/` while the name is advertised, else `http://<IPv4>:<port>/<token>/`), `expires_at`, `expires_in_seconds`, the Mac's local-network `addresses` (`address` picks one; the primary interface's by default), the `files` (`index`, `title`, `type`: `sceneDynamic`, `scenePreRendered`, `video`, `size`, `path`, `download_name`) and the `export` it made, if any. `package_paths` must be WE mobile packages (`.mpkg`, `PKGM`). A new call replaces the previous session. Refused with `unavailable` when the Mac has no local-network address. |
 | `screensaver_get` | `wallpaper_id?` | `plugin_enabled` (Settings › Plugins › Screen Saver), `recording`, the `selection` (the recording set as the screen saver: `wallpaper`, `folder`, `recorded`, `width`, `height`) and the `schedule`. With `wallpaper_id`, its screen saver version: `eligible` (scenes only), `is_screen_saver`, `own_choices` (the screen saver has its own saved choices; else it follows the wallpaper's values), the `layers` (`id`, `name`, `kind`, `visible` as the screen saver shows it, `authored_visible`) and the user `properties`. |
 | `screensaver_set_layers` | `wallpaper_id`, `layers?` (`[{layer, visible}]`, `layer` by id or name), `properties?` (`[{key, value}]`) | The Screen Saver mode's layer switches and user properties, saved as the screen saver's own choices for that scene (`ScreenSaverSettingsStore`), never touching the desktop. Values are checked as `set_user_property` checks them. Values equal to the wallpaper's own are not saved (`saved: false`): the screen saver follows the wallpaper until its choices first differ, as in the mode. The next recording uses them. |
@@ -647,7 +665,7 @@ What these tools don't do, and why:
   `lock_screen_refresh` is refused there; it is also refused while the setting is off.
 - **One at a time.** A second `export_live_photo` or `export_android` while one renders, or `screensaver_record` /
   `screensaver_stop_using` while a recording runs, is refused with `unavailable`.
-- **An open Screen Saver mode.** If the Scene Editor (Live) has the same wallpaper open in its
+- **An open Screen Saver mode.** If Scene Edit / Export has the same wallpaper open in its
   Screen Saver mode, its own copy of the choices replaces what `screensaver_set_layers` saved when
   the mode next saves (as it does after each change and when it closes).
 
@@ -694,7 +712,8 @@ with what to do once in the app instead.
   menus do, on the app's main thread: a web wallpaper still needs your trust in the app before a
   client can set it, safe restart still holds back a wallpaper that stopped the app, an import
   copies only wallpaper folders, as the Import button does, and a scene edit goes through the
-  editors' own edit model, undo included, into the overlay beside the wallpaper.
+  editors' own edit model, undo included, into the Wallpaper Editor's draft beside the wallpaper,
+  which the wallpaper runs only once the client or the user saves it.
 - **What a client can reach.** Anything running as your user could already change the app's
   settings files; the socket adds no access beyond that. Treat an MCP client like any program you
   run: it can change your wallpapers, their edits, playlists and settings, and import folders it

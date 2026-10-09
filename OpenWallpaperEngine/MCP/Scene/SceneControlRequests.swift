@@ -4,18 +4,19 @@ import OWEEditor
 import OWESceneEditing
 
 /// The control channel's requests for the scene and both editors (`docs/mcp.md`): the edit model
-/// through headless edit sessions on the editor overlay (`HeadlessSceneEditService`), the read
-/// tools, SceneScript, depth maps and the editors' windows.
+/// through headless edit sessions on the Wallpaper Editor's draft (`HeadlessSceneEditService`),
+/// saving it, the read tools, SceneScript, depth maps and the editors' windows.
 @MainActor
 final class SceneControlRequests: ControlRequestGroup {
     let methods: Set<String> = [
-        "scene_get", "scene_apply_edits", "scene_undo", "scene_redo", "scene_save", "scene_save_as_local_wallpaper",
+        "scene_get", "scene_apply_edits", "scene_undo", "scene_redo", "wallpaper_editor_save", "wallpaper_editor_save_as_new",
+        "scene_save", "scene_save_as_local_wallpaper",
         "scene_revert", "effects_catalog", "particles_catalog", "particles_get", "particles_restart", "puppets_list",
         "timeline_get", "timeline_preview", "script_get", "script_set", "script_check", "user_properties_get",
-        "depth_generate", "depth_apply", "depth_remove", "editor_close", "editor_set_tab",
+        "depth_generate", "depth_apply", "depth_remove", "use_depth_map_as_mask", "editor_close", "editor_set_tab",
     ]
 
-    /// The tabs `editor_set_tab` names, and the Scene Editor (Live)'s modes they are.
+    /// The tabs `editor_set_tab` names, and Scene Edit / Export's modes they are.
     static let tabs: [String: SceneInspectorMode] = [
         "wallpaper": .wallpaper, "screen_saver": .screenSaver, "iphone_ipad_export": .deviceExport, "android_export": .androidExport,
     ]
@@ -37,8 +38,11 @@ final class SceneControlRequests: ControlRequestGroup {
                 guard let found = model.find(wallpaper) else { throw AppControlModel.missing(wallpaper) }
                 return try WallpaperSceneEditResources(wallpaper: found, depthMapGenerator: DepthMapPlugin.generator)
             },
-            announce: { [unowned app] folder, overlay, actionName, step in
-                app.editorChangeSync.appOverlayDidSave(folder: folder, overlay: overlay, actionName: actionName, step: step)
+            announce: { [unowned app] folder, actionName, step in
+                app.editorChangeSync.appOverlayDidSave(folder: folder, actionName: actionName, step: step)
+            },
+            announceSave: { [unowned app] folder, overlay in
+                app.editorChangeSync.appDraftDidSave(folder: folder, overlay: overlay)
             }))
         return SceneControlRequests(service: service, editors: AppSceneEditorControl(app: app, model: model))
     }
@@ -57,15 +61,16 @@ final class SceneControlRequests: ControlRequestGroup {
         case "scene_get": return SceneControlSnapshot.scene(document)
         case "scene_apply_edits": return try applyEdits(params, document)
         case "scene_undo", "scene_redo": return undo(document, redo: method == "scene_redo")
-        case "scene_save": return saved(document)
-        case "scene_save_as_local_wallpaper": return try saveAsLocalWallpaper(params, document)
+        // The older names (deprecated) do the same, so existing clients keep working.
+        case "wallpaper_editor_save", "scene_save": return try save(document)
+        case "wallpaper_editor_save_as_new", "scene_save_as_local_wallpaper": return try saveAsNew(params, document)
         case "scene_revert": return revert(params, document)
         case "effects_catalog":
             return SceneControlSnapshot.effects(document, query: try params.string("query") ?? "")
         case "particles_catalog":
             return SceneControlSnapshot.particles(document, query: try params.string("query") ?? "")
         case "particles_get": return try particlesGet(params, document)
-        case "particles_restart": return try particlesRestart(params, document)
+        case "particles_restart": return try await particlesRestart(params, document)
         case "puppets_list": return SceneControlSnapshot.puppets(document)
         case "timeline_get": return SceneControlSnapshot.timelines(document, layer: try params.int("layer"))
         case "script_get": return try scriptGet(params, document)
@@ -84,6 +89,7 @@ final class SceneControlRequests: ControlRequestGroup {
         case "depth_generate": return try await depthGenerate(params, document)
         case "depth_apply": return try depthApply(params, document)
         case "depth_remove": return try depthRemove(params, document)
+        case "use_depth_map_as_mask": return try useDepthMapAsMask(params, document)
         default:
             throw ControlError(.unknownMethod, "The app doesn't know \"\(method)\".")
         }
@@ -99,7 +105,7 @@ final class SceneControlRequests: ControlRequestGroup {
         return [
             "results": .array(results),
             "undo": SceneControlSnapshot.undoState(document.session),
-            "message": .string("Applied \(count) edit\(count == 1 ? "" : "s") to \"\(document.wallpaper.title)\" as one undo step; it shows on the displays running it and in its open editor."),
+            "message": .string("Applied \(count) edit\(count == 1 ? "" : "s") to the draft of \"\(document.wallpaper.title)\" as one undo step; it shows in its open Wallpaper Editor window, and on the displays once wallpaper_editor_save saves it."),
         ]
     }
 
@@ -115,37 +121,39 @@ final class SceneControlRequests: ControlRequestGroup {
         ]
     }
 
-    private func saved(_ document: HeadlessSceneDocument) -> JSONValue {
-        [
-            "edited": .bool(document.session.overlay.hasSceneEdits),
-            "message": .string("The edits of \"\(document.wallpaper.title)\" are saved: every edit is saved as it is made, beside the wallpaper, which is never changed itself. scene_save_as_local_wallpaper writes a copy with them."),
+    private func save(_ document: HeadlessSceneDocument) throws -> JSONValue {
+        let saved = try document.save()
+        return [
+            "saved": .bool(saved), "unsaved": .bool(document.hasUnsavedChanges),
+            "message": .string(saved
+                ? "Saved the changes to \"\(document.wallpaper.title)\": the displays running it show them now (the wallpaper's own files aren't changed; the edits are kept beside it)."
+                : "\"\(document.wallpaper.title)\" has no unsaved changes."),
         ]
     }
 
-    private func saveAsLocalWallpaper(_ params: ControlParameters, _ document: HeadlessSceneDocument) throws -> JSONValue {
+    private func saveAsNew(_ params: ControlParameters, _ document: HeadlessSceneDocument) throws -> JSONValue {
         let title = try params.string("title").flatMap { $0.isEmpty ? nil : $0 }
             ?? String(localized: "\(document.wallpaper.title) (Edited)", comment: "Wallpaper Editor: the suggested title of a wallpaper saved with its edits")
         let folder: URL
         do {
-            folder = try editors.saveAsLocalWallpaper(document, title: title)
+            folder = try editors.saveAsNewWallpaper(document, title: title)
         } catch let error as ControlError {
             throw error
         } catch {
-            throw ControlError(.failed, "\"\(document.wallpaper.title)\" couldn't be saved as a local wallpaper: \(error.localizedDescription)")
+            throw ControlError(.failed, "\"\(document.wallpaper.title)\" couldn't be saved as a new wallpaper: \(error.localizedDescription)")
         }
         return [
             "id": .string(folder.lastPathComponent), "title": .string(title), "folder": .string(folder.path),
-            "message": .string("Saved \"\(title)\" to the library with the edits (id \(folder.lastPathComponent))."),
+            "message": .string("Saved \"\(title)\" to the library with the edits (id \(folder.lastPathComponent)). \"\(document.wallpaper.title)\" and its draft are as they were."),
         ]
     }
 
     private func revert(_ params: ControlParameters, _ document: HeadlessSceneDocument) -> JSONValue {
-        let had = document.session.overlay.hasSceneEdits
-        if had { document.revert() }
+        let reverted = document.revertToSaved()
         return [
-            "reverted": .bool(had), "undo": SceneControlSnapshot.undoState(document.session),
-            "message": .string(had ? "Dropped every edit of \"\(document.wallpaper.title)\" (scene_undo brings them back)."
-                : "\"\(document.wallpaper.title)\" has no edits."),
+            "reverted": .bool(reverted), "undo": SceneControlSnapshot.undoState(document.session),
+            "message": .string(reverted ? "The draft of \"\(document.wallpaper.title)\" is back to the last save (scene_undo brings the changes back)."
+                : "\"\(document.wallpaper.title)\" has no unsaved changes to its scene."),
         ]
     }
 
@@ -170,10 +178,15 @@ final class SceneControlRequests: ControlRequestGroup {
         return SceneControlSnapshot.particleSystem(document, layer: layer, schema: schema)
     }
 
-    private func particlesRestart(_ params: ControlParameters, _ document: HeadlessSceneDocument) throws -> JSONValue {
+    private func particlesRestart(_ params: ControlParameters, _ document: HeadlessSceneDocument) async throws -> JSONValue {
         let layer = try particleLayer(params, document)
-        editors.restartParticles(document, layer: layer.id)
-        return ["layer": .number(Double(layer.id)), "message": .string("Particle system \(layer.id) starts again from nothing.")]
+        let inEditor = await editors.restartParticles(document, layer: layer.id)
+        return [
+            "layer": .number(Double(layer.id)), "in_editor": .bool(inEditor),
+            "message": .string(inEditor
+                ? "Particle system \(layer.id) starts again from nothing in the open Wallpaper Editor window's canvas (the draft)."
+                : "Particle system \(layer.id) starts again from nothing on the displays running the wallpaper."),
+        ]
     }
 
     // MARK: Scripts
@@ -220,7 +233,7 @@ final class SceneControlRequests: ControlRequestGroup {
         let layer = try params.int("layer")
         if let layer, document.session.outline.layer(layer) == nil { throw ControlError(.notFound, "No layer \(layer).") }
         guard let model = document.depthModel(layer: layer) else { throw ControlError(.unavailable, "Depth maps can't be made here.") }
-        guard model.isSupported else { throw ControlError(.unsupported, "This kind of layer can't have depth parallax.") }
+        guard model.isSupported else { throw ControlError(.unsupported, "Only image and text layers can have a mask from a depth map.") }
         return model
     }
 
@@ -233,16 +246,22 @@ final class SceneControlRequests: ControlRequestGroup {
         await model.generate()
         if let problem = model.problem { throw ControlError(.failed, "The depth map couldn't be made: \(problem)") }
         if try params.bool("apply") == true { return try depthApply(params, document) }
+        let next = model.layerID == nil ? "depth_apply puts WE's Depth Parallax on the scene with it."
+            : "use_depth_map_as_mask writes it as the mask of one of the layer's effects."
         return [
             "texture": model.generatedTexture.map { .string($0) } ?? .null, "one_frame": .bool(model.isOneFrame),
             "applied": .bool(model.isApplied),
             "message": .string(model.isApplied ? "Made a new depth map; the applied depth parallax now uses it."
-                : "Made the depth map; depth_apply puts WE's Depth Parallax on with it."),
+                : "Made the depth map; " + next),
         ]
     }
 
     private func depthApply(_ params: ControlParameters, _ document: HeadlessSceneDocument) throws -> JSONValue {
         let model = try depthModel(params, document)
+        // Depth parallax is the scene's; a layer's depth map makes masks.
+        if model.layerID != nil, try !model.isApplied || params.double("strength") == nil {
+            throw ControlError(.refused, "Depth parallax goes on the whole scene: call depth_apply without layer. A layer's depth map becomes an effect's mask with use_depth_map_as_mask.")
+        }
         if let strength = try params.double("strength") {
             guard SceneDepthParallax.strengthRange.contains(strength) else {
                 throw ControlError(.invalidParams, "strength must be from \(SceneDepthParallax.strengthRange.lowerBound) to \(SceneDepthParallax.strengthRange.upperBound).")
@@ -260,6 +279,40 @@ final class SceneControlRequests: ControlRequestGroup {
         if let problem = model.problem { throw ControlError(.failed, "Depth parallax couldn't be applied: \(problem)") }
         return ["applied": .bool(model.isApplied), "texture": model.appliedTexture.map { .string($0) } ?? .null,
                 "message": .string("Applied WE's Depth Parallax with the depth map; it follows the pointer.")]
+    }
+
+    private func useDepthMapAsMask(_ params: ControlParameters, _ document: HeadlessSceneDocument) throws -> JSONValue {
+        guard let layer = try params.int("layer") else { throw ControlError(.invalidParams, "layer is required.") }
+        let model = try depthModel(params, document)
+        guard model.generatedTexture != nil else {
+            throw ControlError(.refused, "There is no depth map for the layer yet; depth_generate makes one.")
+        }
+        let targets = model.maskTargets
+        guard !targets.isEmpty else {
+            throw ControlError(.refused, "The layer has no effect with a mask; add one first (add_effect), such as Shake, Water Ripple or Tint.")
+        }
+        let effect = try params.required("effect")
+        let slot = try params.int("slot")
+        let matching = targets.filter { $0.effectKey == effect && (slot == nil || $0.slot.slot == slot) }
+        guard let target = matching.first, matching.count == 1 else {
+            let known = targets.map { "effect \"\($0.effectKey)\" slot \($0.slot.slot) (\($0.title))" }.joined(separator: ", ")
+            throw ControlError(matching.isEmpty ? .notFound : .invalidParams,
+                               (matching.isEmpty ? "No mask to fill there. " : "The effect has several masks; give slot. ") + "Masks: \(known).")
+        }
+        let contrast = try params.double("contrast") ?? DepthMask.defaultContrast
+        guard DepthMask.contrastRange.contains(contrast) else {
+            throw ControlError(.invalidParams, "contrast must be from \(DepthMask.contrastRange.lowerBound) to \(DepthMask.contrastRange.upperBound).")
+        }
+        model.maskInverted = try params.bool("invert") ?? false
+        model.maskContrast = contrast
+        model.useAsMask(target)
+        if let problem = model.problem { throw ControlError(.failed, "The mask couldn't be written: \(problem)") }
+        let mask = document.session.effectTexture(target.slot.slot, pass: target.slot.pass, effect: target.effectKey, of: layer)
+        return ["layer": .number(Double(layer)), "effect": .string(target.effectKey), "slot": .number(Double(target.slot.slot)),
+                "mask": mask.map { .string($0) } ?? .null, "replaced": target.currentMask.map { .string($0) } ?? .null,
+                "message": .string(target.replacesMask
+                    ? "Replaced the effect's mask with the depth map (scene_undo brings the old one back; its file is kept)."
+                    : "The depth map is now the effect's mask.")]
     }
 
     private func depthRemove(_ params: ControlParameters, _ document: HeadlessSceneDocument) throws -> JSONValue {
@@ -280,7 +333,7 @@ final class SceneControlRequests: ControlRequestGroup {
     private func editorClose(_ params: ControlParameters, _ lookup: ControlLookup) throws -> JSONValue {
         if try editor(params) == "scene" {
             let closed = editors.closeSceneEditor()
-            return ["closed": .bool(closed), "message": .string(closed ? "Closed the Scene Editor (Live)." : "The Scene Editor (Live) wasn't open.")]
+            return ["closed": .bool(closed), "message": .string(closed ? "Closed Scene Edit / Export." : "Scene Edit / Export wasn't open.")]
         }
         let wallpaper = try lookup.sceneWallpaper(try params.required("wallpaper_id"))
         let sent = editors.closeWallpaperEditor(wallpaper)
@@ -295,7 +348,7 @@ final class SceneControlRequests: ControlRequestGroup {
         }
         let wallpaper = try lookup.sceneWallpaper(try params.required("wallpaper_id"))
         try editors.showSceneEditor(wallpaper, mode: mode)
-        return ["tab": .string(name), "message": .string("The Scene Editor (Live) shows \"\(wallpaper.title)\" on its \(name) tab.")]
+        return ["tab": .string(name), "message": .string("Scene Edit / Export shows \"\(wallpaper.title)\" on its \(name) tab.")]
     }
 
     private func timelinePreview(_ params: ControlParameters, _ lookup: ControlLookup) throws -> JSONValue {

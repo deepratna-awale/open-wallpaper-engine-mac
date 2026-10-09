@@ -2,11 +2,12 @@ import Combine
 import SwiftUI
 import OWESceneEditing
 
-/// The Wallpaper Editor window (editor-plan notes): the layer list on the left, the live canvas
-/// in the middle, the selected layer's inspector on the right, and the document actions (undo,
-/// redo, Revert, Save as Local Wallpaper) in the toolbar.
+/// The Wallpaper Editor window (editor-plan notes): the layer list on the left, the canvas
+/// running the window's draft in the middle, the selected layer's inspector on the right, and the
+/// document actions (undo, redo, Revert to Saved, Save, Save as New Wallpaper) in the toolbar.
 public struct WallpaperEditorView: View {
     @ObservedObject private var session: SceneEditSession
+    @ObservedObject private var document: WallpaperEditorDocument
     private let services: WallpaperEditorServices
     @StateObject private var tools = EditorTools()
     @State private var isInspectorPresented = true
@@ -25,8 +26,10 @@ public struct WallpaperEditorView: View {
     public init(session: SceneEditSession, services: WallpaperEditorServices) {
         self.session = session
         self.services = services
+        document = services.document ?? WallpaperEditorDocument()
         _authoring = StateObject(wrappedValue: EditorAuthoringModel(session: session, projectJSON: services.projectJSON,
-                                                                    console: services.scriptConsole))
+                                                                    console: services.scriptConsole,
+                                                                    services: services))
     }
 
     public var body: some View {
@@ -68,9 +71,10 @@ public struct WallpaperEditorView: View {
         .onReceive(services.commands?.requests.eraseToAnyPublisher()
                    ?? Empty<WallpaperEditorCommands.Command, Never>().eraseToAnyPublisher()) { command in
             switch command {
-            case .saveAsLocalWallpaper: isSaving = true
-            case .revert:
-                guard session.overlay.hasSceneEdits || session.overlay.hasPuppetEdits else { return }
+            case .save: save()
+            case .saveAsNewWallpaper: isSaving = true
+            case .revertToSaved:
+                guard document.isEdited else { return }
                 isConfirmingRevert = true
             }
         }
@@ -80,16 +84,16 @@ public struct WallpaperEditorView: View {
         .sheet(isPresented: $authoring.isEditingProperties) {
             UserPropertiesEditorView(authoring: authoring)
         }
-        .alert(L("Revert to the Original?"), isPresented: $isConfirmingRevert) {
-            Button(L("Revert"), role: .destructive) { session.revert(actionName: L("Revert")) }
+        .alert(L("Revert to the Saved Version?"), isPresented: $isConfirmingRevert) {
+            Button(L("Revert to Saved"), role: .destructive) { document.revertToSaved() }
             Button(L("Cancel"), role: .cancel) {}
         } message: {
-            Text(L("Every edit made in the editor is dropped. You can undo this."))
+            Text(L("Every change since the last save is dropped. You can undo this."))
         }
         .sheet(isPresented: $isSaving) {
-            SaveAsLocalSheet(suggestedTitle: services.suggestedLocalTitle) { title in
+            SaveAsNewSheet(suggestedTitle: services.suggestedNewTitle) { title in
                 do {
-                    let saved = try services.saveAsLocalWallpaper(title)
+                    let saved = try services.saveAsNewWallpaper(title)
                     show(Notice(text: L("Saved “\(saved)” to the library."), isError: false))
                 } catch {
                     show(Notice(text: L("The wallpaper couldn’t be saved: \(error.localizedDescription)"), isError: true))
@@ -118,20 +122,29 @@ public struct WallpaperEditorView: View {
             ToolbarSpacer(.flexible)
         }
         authoringItems
-        ToolbarItem {
-            Button { isConfirmingRevert = true } label: {
-                Label(L("Revert"), systemImage: "arrow.counterclockwise")
+        if services.document != nil {
+            ToolbarItem {
+                Button { isConfirmingRevert = true } label: {
+                    Label(L("Revert to Saved"), systemImage: "arrow.counterclockwise")
+                }
+                .help(L("Drop every change since the last save"))
+                .disabled(!document.isEdited)
             }
-            .help(L("Drop every edit made in the editor"))
-            .disabled(!session.overlay.hasSceneEdits && !session.overlay.hasPuppetEdits)
         }
         if #available(macOS 26, *) {
             ToolbarSpacer(.fixed)
         }
-        ToolbarItem {
+        ToolbarItemGroup {
+            if services.document != nil {
+                Button(action: save) {
+                    Label(L("Save"), systemImage: "square.and.arrow.down")
+                        .labelStyle(.titleAndIcon)
+                }
+                .help(L("Save the changes to the wallpaper"))
+                .disabled(!document.isEdited)
+            }
             Button { isSaving = true } label: {
-                Label(L("Save as Local Wallpaper…"), systemImage: "square.and.arrow.down")
-                    .labelStyle(.titleAndIcon)
+                Label(L("Save as New Wallpaper…"), systemImage: "square.and.arrow.down.on.square")
             }
             .help(L("Save a copy of the wallpaper with these edits to the library"))
         }
@@ -186,6 +199,16 @@ public struct WallpaperEditorView: View {
         }
     }
 
+    /// File › Save; a failure shows in the banner.
+    private func save() {
+        guard document.isEdited else { return }
+        do {
+            try document.save()
+        } catch {
+            show(Notice(text: L("The changes couldn’t be saved: \(error.localizedDescription)"), isError: true))
+        }
+    }
+
     private func show(_ notice: Notice) {
         withAnimation { self.notice = notice }
         DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
@@ -194,8 +217,8 @@ public struct WallpaperEditorView: View {
     }
 }
 
-/// Names the copy before it is saved.
-private struct SaveAsLocalSheet: View {
+/// Names the new wallpaper before it is saved.
+private struct SaveAsNewSheet: View {
     let suggestedTitle: String
     let save: (String) -> Void
     @Environment(\.dismiss) private var dismiss
@@ -203,8 +226,8 @@ private struct SaveAsLocalSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(L("Save as Local Wallpaper")).font(.headline)
-            Text(L("A copy of the wallpaper with your edits is added to the library. The original stays as it is."))
+            Text(L("Save as New Wallpaper")).font(.headline)
+            Text(L("A new wallpaper with your edits is added to the library. The original stays as it was last saved, and you go on editing it."))
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

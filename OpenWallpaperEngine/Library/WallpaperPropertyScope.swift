@@ -15,14 +15,19 @@ extension Notification.Name {
 /// layout shows one wallpaper, with one set of properties, on every display. The sync setting is
 /// that choice for properties alone.
 ///
-/// `isolated` is a private copy one of the Scene Editor (Live)'s modes edits (the iPhone & iPad
+/// `isolated` is a private copy one of Scene Edit / Export's modes edits (the iPhone & iPad
 /// Export mode's, named by the mode), seeded from the edited store when the mode opens and dropped
 /// when it closes (`IsolatedSceneEditSession`): what it changes runs only in that mode's private
-/// instance and its offscreen render, never on a display.
+/// instance and its offscreen render, never on a display. `editorDraft` is the Wallpaper Editor's
+/// (`WallpaperEditorDraft`): its canvas runs the draft's properties and edit overlay alone until
+/// File › Save.
 enum WallpaperPropertyScope: Hashable, CustomStringConvertible {
     case shared
     case display(String)
     case isolated(String)
+
+    /// The Wallpaper Editor's draft of a wallpaper: what its canvas runs.
+    static let editorDraft = WallpaperPropertyScope.isolated("wallpaper-editor")
 
     /// No display runs this store (`isolated`).
     var isIsolated: Bool {

@@ -155,7 +155,7 @@ final class SceneFieldDriverTests: XCTestCase {
 
     func testRevertDropsScriptsAndBindings() {
         session.bind("alpha", of: 10, to: SceneUserBinding(name: "fade"), actionName: "Bind")
-        session.revert(actionName: "Revert")
+        session.revert(to: SceneEditOverlay(), actionName: "Revert to Saved")
         XCTAssertNil(session.overlay.authoring)
         XCTAssertTrue(session.overlay.isEmpty)
         session.undo()

@@ -85,6 +85,12 @@ public struct EffectSchema: Hashable, Sendable {
     public struct TextureSlot: Hashable, Sendable, Identifiable {
         /// `g_TextureN`'s N: its index in the pass's `textures`.
         public var slot: Int
+        /// The effect's pass whose shader samples it (`effect.json`'s `passes` index, which the
+        /// scene object's `passes` follow): 0 for most, 3 for Blur's mask.
+        public var pass: Int
+        /// That pass's material's name (`blur_combine` for `materials/effects/blur_combine.json`),
+        /// which WE's editor names the pass's masks after (`masks/blur_combine_mask_<hash>`).
+        public var materialName: String?
         public var title: String
         /// What fills it when nothing is set (`util/white`), if anything.
         public var defaultTexture: String?
@@ -94,17 +100,28 @@ public struct EffectSchema: Hashable, Sendable {
         public var combo: String?
         /// The colour a new mask is painted from (`paintdefaultcolor`), 0…1 RGBA.
         public var paintDefault: [Double]?
+        /// The sampler's `mode`, lowercased (`opacitymask`, `flowmask`, `depth`…), if it has one.
+        public var mode: String?
 
-        public var id: Int { slot }
+        public var id: Int { pass * 1000 + slot }
+
+        /// WE's grey mask (`"mode": "opacitymask"`): its red channel scales the effect, white
+        /// showing it, so a depth map can serve as one. A flow mask's channels are directions.
+        public var isOpacityMask: Bool { mode == Self.opacityMaskMode }
+
+        public static let opacityMaskMode = "opacitymask"
 
         public init(slot: Int, title: String, defaultTexture: String? = nil, isMask: Bool = false, combo: String? = nil,
-                    paintDefault: [Double]? = nil) {
+                    paintDefault: [Double]? = nil, mode: String? = nil, pass: Int = 0, materialName: String? = nil) {
             self.slot = slot
+            self.pass = pass
+            self.materialName = materialName
             self.title = title
             self.defaultTexture = defaultTexture
             self.isMask = isMask
             self.combo = combo
             self.paintDefault = paintDefault
+            self.mode = mode
         }
     }
 

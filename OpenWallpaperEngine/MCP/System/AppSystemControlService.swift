@@ -30,7 +30,7 @@ final class AppSystemControlService: SystemControlService {
         return found
     }
 
-    /// The values the Scene Editor (Live)'s isolated modes start from: the stores the editor edits.
+    /// The values Scene Edit / Export's isolated modes start from: the stores the editor edits.
     func wallpaperValues(of wallpaper: WEWallpaper) -> [String: String] {
         IsolatedSceneEditSession.seed(of: wallpaper, from: model.scopes(of: wallpaper), defaults: store.defaults)
     }

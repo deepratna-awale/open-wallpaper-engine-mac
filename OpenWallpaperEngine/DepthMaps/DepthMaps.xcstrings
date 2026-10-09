@@ -381,97 +381,97 @@
         }
       }
     },
-    "Generates depth maps for depth parallax in the Scene Editor (Live) and the Wallpaper Editor, on this Mac, with Depth Anything V2 Small (Apache License 2.0). The model is downloaded on demand from Apple’s Core ML release on Hugging Face and checked against the version this app expects." : {
+    "Generates depth maps for depth parallax in Scene Edit / Export and the Wallpaper Editor, on this Mac, with Depth Anything V2 Small (Apache License 2.0). The model is downloaded on demand from Apple’s Core ML release on Hugging Face and checked against the version this app expects." : {
       "comment" : "Settings › Plugins: what Depth Map Generation is",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ينشئ خرائط عمق لاختلاف منظر العمق في محرر المشهد (مباشر) ومحرر الخلفيات، على جهاز Mac هذا، باستخدام Depth Anything V2 Small (رخصة Apache 2.0). يُنزَّل النموذج عند الطلب من إصدار Core ML الخاص بـ Apple على Hugging Face ويُتحقق منه مقابل الإصدار الذي يتوقعه هذا التطبيق."
+            "value" : "ينشئ خرائط عمق لاختلاف منظر العمق في نافذة «تحرير/تصدير المشهد» ومحرر الخلفيات، على جهاز Mac هذا، باستخدام Depth Anything V2 Small (رخصة Apache 2.0). يُنزَّل النموذج عند الطلب من إصدار Core ML الخاص بـ Apple على Hugging Face ويُتحقق منه مقابل الإصدار الذي يتوقعه هذا التطبيق."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Erzeugt Tiefenkarten für die Tiefenparallaxe im Szeneneditor (Live) und im Hintergrundbild-Editor, auf diesem Mac, mit Depth Anything V2 Small (Apache-Lizenz 2.0). Das Modell wird bei Bedarf aus Apples Core-ML-Veröffentlichung auf Hugging Face geladen und mit der Version abgeglichen, die die App erwartet."
+            "value" : "Erzeugt Tiefenkarten für die Tiefenparallaxe im Fenster „Szene bearbeiten/exportieren“ und im Hintergrundbild-Editor, auf diesem Mac, mit Depth Anything V2 Small (Apache-Lizenz 2.0). Das Modell wird bei Bedarf aus Apples Core-ML-Veröffentlichung auf Hugging Face geladen und mit der Version abgeglichen, die die App erwartet."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Genera mapas de profundidad para el paralaje de profundidad en el Editor de escenas (en vivo) y el Editor de fondos de pantalla, en este Mac, con Depth Anything V2 Small (Licencia Apache 2.0). El modelo se descarga cuando se necesita desde la publicación de Core ML de Apple en Hugging Face y se comprueba con la versión que espera esta app."
+            "value" : "Genera mapas de profundidad para el paralaje de profundidad en la ventana «Editar/exportar escena» y el Editor de fondos de pantalla, en este Mac, con Depth Anything V2 Small (Licencia Apache 2.0). El modelo se descarga cuando se necesita desde la publicación de Core ML de Apple en Hugging Face y se comprueba con la versión que espera esta app."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Génère des cartes de profondeur pour la parallaxe de profondeur dans l’Éditeur de scène (en direct) et l’Éditeur de fond d’écran, sur ce Mac, avec Depth Anything V2 Small (licence Apache 2.0). Le modèle est téléchargé à la demande depuis la publication Core ML d’Apple sur Hugging Face et vérifié par rapport à la version attendue par cette app."
+            "value" : "Génère des cartes de profondeur pour la parallaxe de profondeur dans la fenêtre « Modifier/exporter la scène » et l’Éditeur de fond d’écran, sur ce Mac, avec Depth Anything V2 Small (licence Apache 2.0). Le modèle est téléchargé à la demande depuis la publication Core ML d’Apple sur Hugging Face et vérifié par rapport à la version attendue par cette app."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "सीन एडिटर (लाइव) और वॉलपेपर एडिटर में डेप्थ पैरालैक्स के लिए इसी Mac पर Depth Anything V2 Small (Apache License 2.0) से डेप्थ मैप बनाता है। मॉडल ज़रूरत पड़ने पर Hugging Face पर Apple की Core ML रिलीज़ से डाउनलोड होता है और इस ऐप के अपेक्षित वर्शन से मिलाकर जाँचा जाता है।"
+            "value" : "“सीन एडिट/एक्सपोर्ट” और वॉलपेपर एडिटर में डेप्थ पैरालैक्स के लिए इसी Mac पर Depth Anything V2 Small (Apache License 2.0) से डेप्थ मैप बनाता है। मॉडल ज़रूरत पड़ने पर Hugging Face पर Apple की Core ML रिलीज़ से डाउनलोड होता है और इस ऐप के अपेक्षित वर्शन से मिलाकर जाँचा जाता है।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Genera mappe di profondità per la parallasse di profondità nell’Editor scena (live) e nell’Editor sfondi, su questo Mac, con Depth Anything V2 Small (Licenza Apache 2.0). Il modello viene scaricato quando serve dalla pubblicazione Core ML di Apple su Hugging Face e verificato rispetto alla versione prevista dall’app."
+            "value" : "Genera mappe di profondità per la parallasse di profondità nella finestra “Modifica/esporta scena” e nell’Editor sfondi, su questo Mac, con Depth Anything V2 Small (Licenza Apache 2.0). Il modello viene scaricato quando serve dalla pubblicazione Core ML di Apple su Hugging Face e verificato rispetto alla versione prevista dall’app."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "シーンエディタ（ライブ）と壁紙エディタの深度視差に使う深度マップを、このMac上で Depth Anything V2 Small（Apache License 2.0）を使って生成します。モデルは必要なときに Hugging Face 上の Apple の Core ML リリースからダウンロードされ、このアプリが想定するバージョンと照合されます。"
+            "value" : "「シーン編集/書き出し」と壁紙エディタの深度視差に使う深度マップを、このMac上で Depth Anything V2 Small（Apache License 2.0）を使って生成します。モデルは必要なときに Hugging Face 上の Apple の Core ML リリースからダウンロードされ、このアプリが想定するバージョンと照合されます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "장면 편집기(라이브)와 배경화면 편집기의 깊이 시차에 쓰이는 깊이 맵을 이 Mac에서 Depth Anything V2 Small(Apache License 2.0)로 생성합니다. 모델은 필요할 때 Hugging Face에 있는 Apple의 Core ML 릴리스에서 다운로드되며, 이 앱이 예상하는 버전과 대조됩니다."
+            "value" : "‘장면 편집/내보내기’와 배경화면 편집기의 깊이 시차에 쓰이는 깊이 맵을 이 Mac에서 Depth Anything V2 Small(Apache License 2.0)로 생성합니다. 모델은 필요할 때 Hugging Face에 있는 Apple의 Core ML 릴리스에서 다운로드되며, 이 앱이 예상하는 버전과 대조됩니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Generuje mapy głębi do paralaksy głębi w Edytorze sceny (na żywo) i Edytorze tapet, na tym Macu, za pomocą Depth Anything V2 Small (Licencja Apache 2.0). Model jest pobierany na żądanie z publikacji Core ML firmy Apple w serwisie Hugging Face i sprawdzany względem wersji oczekiwanej przez aplikację."
+            "value" : "Generuje mapy głębi do paralaksy głębi w oknie „Edycja/eksport sceny” i w Edytorze tapet, na tym Macu, za pomocą Depth Anything V2 Small (Licencja Apache 2.0). Model jest pobierany na żądanie z publikacji Core ML firmy Apple w serwisie Hugging Face i sprawdzany względem wersji oczekiwanej przez aplikację."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gera mapas de profundidade para a paralaxe de profundidade no Editor de Cena (ao vivo) e no Editor de Imagem de Fundo, neste Mac, com o Depth Anything V2 Small (Licença Apache 2.0). O modelo é baixado sob demanda da versão Core ML da Apple no Hugging Face e verificado com a versão esperada pelo app."
+            "value" : "Gera mapas de profundidade para a paralaxe de profundidade na janela “Editar/Exportar Cena” e no Editor de Imagem de Fundo, neste Mac, com o Depth Anything V2 Small (Licença Apache 2.0). O modelo é baixado sob demanda da versão Core ML da Apple no Hugging Face e verificado com a versão esperada pelo app."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Создаёт карты глубины для параллакса глубины в редакторе сцены (вживую) и редакторе обоев прямо на этом Mac с помощью Depth Anything V2 Small (лицензия Apache 2.0). Модель загружается по запросу из публикации Core ML от Apple на Hugging Face и сверяется с версией, которую ожидает приложение."
+            "value" : "Создаёт карты глубины для параллакса глубины в окне «Правка/экспорт сцены» и в редакторе обоев прямо на этом Mac с помощью Depth Anything V2 Small (лицензия Apache 2.0). Модель загружается по запросу из публикации Core ML от Apple на Hugging Face и сверяется с версией, которую ожидает приложение."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sahne Düzenleyici (Canlı) ve Duvar Kâğıdı Düzenleyici’deki derinlik paralaksı için derinlik haritalarını bu Mac’te Depth Anything V2 Small (Apache Lisansı 2.0) ile oluşturur. Model, gerektiğinde Apple’ın Hugging Face’teki Core ML yayınından indirilir ve bu uygulamanın beklediği sürümle karşılaştırılır."
+            "value" : "“Sahne Düzenle/Dışa Aktar” penceresindeki ve Duvar Kâğıdı Düzenleyici’deki derinlik paralaksı için derinlik haritalarını bu Mac’te Depth Anything V2 Small (Apache Lisansı 2.0) ile oluşturur. Model, gerektiğinde Apple’ın Hugging Face’teki Core ML yayınından indirilir ve bu uygulamanın beklediği sürümle karşılaştırılır."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Створює карти глибини для паралаксу глибини в редакторі сцени (наживо) та редакторі шпалер просто на цьому Mac за допомогою Depth Anything V2 Small (ліцензія Apache 2.0). Модель завантажується за потреби з публікації Core ML від Apple на Hugging Face і звіряється з версією, яку очікує програма."
+            "value" : "Створює карти глибини для паралаксу глибини у вікні «Редагування/експорт сцени» та в редакторі шпалер просто на цьому Mac за допомогою Depth Anything V2 Small (ліцензія Apache 2.0). Модель завантажується за потреби з публікації Core ML від Apple на Hugging Face і звіряється з версією, яку очікує програма."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在这台 Mac 上使用 Depth Anything V2 Small（Apache 许可证 2.0）为场景编辑器（实时）和墙纸编辑器中的深度视差生成深度图。模型会在需要时从 Apple 在 Hugging Face 上发布的 Core ML 版本下载，并与此 App 所需的版本进行核对。"
+            "value" : "在这台 Mac 上使用 Depth Anything V2 Small（Apache 许可证 2.0）为“场景编辑/导出”和墙纸编辑器中的深度视差生成深度图。模型会在需要时从 Apple 在 Hugging Face 上发布的 Core ML 版本下载，并与此 App 所需的版本进行核对。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在這部 Mac 上使用 Depth Anything V2 Small（Apache 授權條款 2.0）為場景編輯器（即時）和背景圖片編輯器中的深度視差產生深度圖。模型會在需要時從 Apple 在 Hugging Face 上發布的 Core ML 版本下載，並與此 App 所需的版本核對。"
+            "value" : "在這部 Mac 上使用 Depth Anything V2 Small（Apache 授權條款 2.0）為「場景編輯/輸出」和背景圖片編輯器中的深度視差產生深度圖。模型會在需要時從 Apple 在 Hugging Face 上發布的 Core ML 版本下載，並與此 App 所需的版本核對。"
           }
         }
       }

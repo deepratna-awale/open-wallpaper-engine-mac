@@ -1,8 +1,10 @@
+import OWEInspectorKit
 import SwiftUI
 import AppKit
 
 /// A step's heading: icon, title and one line under it.
 struct OnboardingHeading: View {
+    @Environment(\.appAccentColor) private var accentColor
     let systemImage: String
     let title: LocalizedStringKey
     let subtitle: LocalizedStringKey
@@ -11,7 +13,7 @@ struct OnboardingHeading: View {
         VStack(spacing: 6) {
             Image(systemName: systemImage)
                 .font(.system(size: 34))
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(accentColor)
             Text(title)
                 .font(.largeTitle.bold())
                 .multilineTextAlignment(.center)

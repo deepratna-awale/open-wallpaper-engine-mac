@@ -24,7 +24,7 @@ extension AppDelegate {
         sheet.contentView = NSHostingView(rootView: WhatsNewView(version: pending.current, entries: pending.entries) {
             [weak window, weak sheet] in
             if let sheet { window?.endSheet(sheet) }
-        })
+        }.appAccentTint())
         window.beginSheet(sheet)
     }
 }

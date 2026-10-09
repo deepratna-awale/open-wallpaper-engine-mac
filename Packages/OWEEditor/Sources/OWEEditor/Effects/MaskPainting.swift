@@ -39,15 +39,20 @@ final class MaskPainting: ObservableObject {
 
     static let maximumSide = 2048
 
+    /// A mask's size in pixels for a layer of `layerSize` (its own units), kept under
+    /// `maximumSide`; nil for an empty layer. A depth map made into a mask is this size too.
+    static func pixelSize(for layerSize: SIMD2<Double>) -> SIMD2<Int>? {
+        guard layerSize.x > 0, layerSize.y > 0 else { return nil }
+        let scale: Double = min(1, Double(maximumSide) / max(layerSize.x, layerSize.y))
+        return SIMD2(max(Int((layerSize.x * scale).rounded()), 1), max(Int((layerSize.y * scale).rounded()), 1))
+    }
 
     /// `existing`: the mask the effect has, painted over; else a fill of the slot's default.
     init?(layer: Int, effectKey: String, effectTitle: String, slot: EffectSchema.TextureSlot, layerSize: SIMD2<Double>,
           existing: CGImage?) {
-        guard layerSize.x > 0, layerSize.y > 0 else { return nil }
+        guard let size = Self.pixelSize(for: layerSize) else { return nil }
         let longest: Double = max(layerSize.x, layerSize.y)
-        let scale: Double = min(1, Double(Self.maximumSide) / longest)
-        let width: Int = max(Int((layerSize.x * scale).rounded()), 1)
-        let height: Int = max(Int((layerSize.y * scale).rounded()), 1)
+        let width = size.x, height = size.y
         guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
                                       space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue) else {
             return nil

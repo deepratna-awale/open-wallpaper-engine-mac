@@ -15,7 +15,7 @@ import Combine
 ///   change renders the new key and the manifest moves to it once it exists.
 /// - Only the user's own copy installs the saver and writes where it reads
 ///   (`ScreenSaverInstaller.mayInstall`, `ScreenSaverVideoStore`'s isolated folder).
-/// - While a recording from the Scene Editor (Live)'s Screen Saver mode is set as the screen saver
+/// - While a recording from Scene Edit / Export's Screen Saver mode is set as the screen saver
 ///   (`ScreenSaverSettingsStore.selection`), or one is being made (`beginRecording`), the saver
 ///   plays that and nothing is rendered for the desktop's wallpaper (`ScreenSaverRecordingService`).
 @MainActor

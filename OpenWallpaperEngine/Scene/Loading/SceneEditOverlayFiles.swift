@@ -5,24 +5,43 @@ extension Notification.Name {
     /// A wallpaper's editor overlay changed; `userInfo["wallpaperDirectory"]` is its folder,
     /// `["overlay"]` the overlay and `["base"]` the scene with its structural edits
     /// (`SceneEditSession.baseOutline`), when the editor sent them; `["transient"]` is true for a
-    /// drag in progress, which isn't saved. Its running instances draw the change live when they
+    /// drag in progress, which isn't saved; `["draft"]` is true for the Wallpaper Editor's draft,
+    /// which only instances running it (its canvas, `WallpaperPropertyScope.editorDraft`) take, and
+    /// false for the saved overlay, which only the others take. They draw the change live when they
     /// can (`SceneEditLiveValues`), else reload the scene with it (`SceneWallpaperInstance`).
     static let sceneEditOverlayDidChange = Notification.Name("SceneEditOverlayDidChange")
     /// The particle editor changed only documents particle systems read, or restarts a system:
     /// `userInfo["wallpaperDirectory"]` is the wallpaper's folder, `["assets"]` the overlay's
     /// documents by path (`[String: Data]`), `["paths"]` the changed ones and `["objectIDs"]`
-    /// systems to build again in any case. Running instances build again only those systems
-    /// (`SceneWallpaperInstance`); the rest of the scene keeps running.
+    /// systems to build again in any case, `["draft"]` as for `sceneEditOverlayDidChange`. Running
+    /// instances build again only those systems (`SceneWallpaperInstance`); the rest of the scene
+    /// keeps running.
     static let sceneEditParticlesDidChange = Notification.Name("SceneEditParticlesDidChange")
 }
 
 /// The Wallpaper Editor's overlays (`SceneEditOverlay`) on disk, one per wallpaper under
 /// `<AppStorageLocation.supportDirectory>/editor`, named by the wallpaper's settings identity
 /// (editor-plan notes §3), with the files the editor added beside each (`<identity>.assets`).
-/// The scene loader applies a wallpaper's overlay wherever it runs and finds its files.
+/// The scene loader applies a wallpaper's overlay wherever it runs and finds its files. The
+/// Wallpaper Editor's unsaved edits are a draft beside it (`draftStore`), which only the editor's
+/// canvas runs.
 enum SceneEditOverlayFiles {
     static var defaultStore: SceneEditOverlayStore {
         SceneEditOverlayStore(directory: AppStorageLocation.current.supportDirectory.appending(path: "editor", directoryHint: .isDirectory))
+    }
+
+    /// The Wallpaper Editor's drafts, beside the saved overlays (`<editor>/Drafts`).
+    static var draftStore: SceneEditDraftStore { SceneEditDraftStore(saved: defaultStore) }
+
+    /// What the Wallpaper Editor's canvas runs: the wallpaper's draft, else its saved overlay; nil
+    /// when neither can be read (logged, as `overlay(for:)`).
+    static func editedOverlay(for identity: WallpaperSettingsIdentity, store: SceneEditDraftStore = draftStore) -> SceneEditOverlay? {
+        do {
+            return try store.overlay(for: identity.rawValue)
+        } catch {
+            OWELog.error(.scene, "Editor draft \(store.drafts.fileURL(for: identity.rawValue).path) can't be read; the editor's canvas runs without its edits: \(error)")
+            return nil
+        }
     }
 
     /// The wallpaper's overlay; nil when it has none or it can't be read (logged: the wallpaper
@@ -51,18 +70,30 @@ enum SceneEditOverlayFiles {
         }
     }
 
-    /// A change the running instances draw while it lasts (a gizmo drag), not saved.
-    static func preview(_ overlay: SceneEditOverlay, base: SceneOutline, wallpaperDirectory: URL) {
-        post(overlay, base: base, wallpaperDirectory: wallpaperDirectory, transient: true)
+    /// Has this process's instances running the saved overlay apply `saved`, which replaced
+    /// `previous` (File › Save): nothing when the running scene doesn't show the difference (a
+    /// lock, a puppet: `SceneEditOverlay.digest`), particle documents alone rebuilding only their
+    /// systems, anything else drawn live or reloaded.
+    static func postSaved(_ saved: SceneEditOverlay, previous: SceneEditOverlay, base: SceneOutline?, wallpaperDirectory: URL,
+                          center: NotificationCenter = .default) {
+        func digest(_ overlay: SceneEditOverlay) -> String { overlay.hasSceneEdits ? overlay.digest : "" }
+        guard digest(saved) != digest(previous) else { return }
+        switch saved.liveChange(from: previous) {
+        case .scene:
+            post(saved, base: base, wallpaperDirectory: wallpaperDirectory, transient: false, center: center)
+        case .particleAssets(let paths):
+            postParticles(saved, wallpaperDirectory: wallpaperDirectory, paths: paths, center: center)
+        }
     }
 
     /// Has this process's running instances of the wallpaper apply `overlay` (`transient`: a drag
-    /// in progress). The Wallpaper Editor's process reaches Open Wallpaper Engine's through
-    /// `WallpaperEditorChangeSync`, which posts the same here.
+    /// in progress; `draft`: the Wallpaper Editor's draft, for its canvas alone). The Wallpaper
+    /// Editor's process reaches Open Wallpaper Engine's through `WallpaperEditorChangeSync`, which
+    /// posts the same here.
     static func post(_ overlay: SceneEditOverlay, base: SceneOutline?, wallpaperDirectory: URL, transient: Bool,
-                     center: NotificationCenter = .default) {
+                     draft: Bool = false, center: NotificationCenter = .default) {
         var userInfo: [String: Any] = ["wallpaperDirectory": wallpaperDirectory.standardizedFileURL,
-                                       "overlay": overlay, "transient": transient]
+                                       "overlay": overlay, "transient": transient, "draft": draft]
         if let base { userInfo["base"] = base }
         center.post(name: .sceneEditOverlayDidChange, object: nil, userInfo: userInfo)
     }
@@ -70,12 +101,13 @@ enum SceneEditOverlayFiles {
     /// Has the running instances read the overlay's particle documents again and build the
     /// systems that read `paths`, and the systems `objectIDs` (a restart), again.
     static func postParticles(_ overlay: SceneEditOverlay, wallpaperDirectory: URL, paths: Set<String> = [],
-                              objectIDs: Set<Int> = [], center: NotificationCenter = .default) {
+                              objectIDs: Set<Int> = [], draft: Bool = false, center: NotificationCenter = .default) {
         center.post(name: .sceneEditParticlesDidChange, object: nil, userInfo: [
             "wallpaperDirectory": wallpaperDirectory.standardizedFileURL,
             "assets": overlay.particles?.assetData() ?? [:],
             "paths": Array(paths),
             "objectIDs": Array(objectIDs),
+            "draft": draft,
         ])
     }
 

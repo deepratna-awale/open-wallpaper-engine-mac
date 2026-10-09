@@ -1,14 +1,16 @@
 import AppKit
 
-/// The Wallpaper Editor process's menu bar: the app menu, File (Save as Local Wallpaper…,
-/// Revert…, Close), Edit, Window and Help. File's document actions go to the key editor window
-/// (`WallpaperEditorController`) through the responder chain.
+/// The Wallpaper Editor process's menu bar: the app menu, File (Close, Save, Save as New
+/// Wallpaper…, Revert to Saved…), Edit, Window and Help. File's document actions go to the key
+/// editor window (`WallpaperEditorController`) through the responder chain.
 @MainActor
 enum WallpaperEditorMenu {
-    /// File › Save as Local Wallpaper… (the key editor window answers it).
-    static let saveAsLocalWallpaper = #selector(WallpaperEditorController.saveAsLocalWallpaper(_:))
-    /// File › Revert… (the key editor window answers it).
-    static let revert = #selector(WallpaperEditorController.revertEdits(_:))
+    /// File › Save (the key editor window answers it).
+    static let save = #selector(WallpaperEditorController.saveDocument(_:))
+    /// File › Save as New Wallpaper… (the key editor window answers it).
+    static let saveAsNewWallpaper = #selector(WallpaperEditorController.saveAsNewWallpaper(_:))
+    /// File › Revert to Saved… (the key editor window answers it).
+    static let revertToSaved = #selector(WallpaperEditorController.revertToSaved(_:))
 
     static func make(helpTarget: AnyObject, help: Selector) -> NSMenu {
         func submenu(_ title: String, _ items: [NSMenuItem]) -> NSMenuItem {
@@ -36,10 +38,14 @@ enum WallpaperEditorMenu {
         ])
 
         let fileMenu = submenu(String(localized: "File"), [
-            plain(String(localized: "Save as Local Wallpaper…"), saveAsLocalWallpaper, key: "s", modifiers: [.command, .shift]),
-            plain(String(localized: "Revert…"), revert),
-            .separator(),
             plain(String(localized: "Close"), #selector(NSWindow.performClose(_:)), key: "w"),
+            plain(String(localized: "Save"), save, key: "s"),
+            plain(String(localized: "Save as New Wallpaper…",
+                         comment: "Wallpaper Editor File menu: saves a new wallpaper with the edits to the library, leaving the original as it was saved"),
+                  saveAsNewWallpaper, key: "s", modifiers: [.command, .shift]),
+            plain(String(localized: "Revert to Saved…",
+                         comment: "Wallpaper Editor File menu: asks before going back to the wallpaper as it was last saved"),
+                  revertToSaved),
         ])
 
         let editMenu = submenu(String(localized: "Edit"), [

@@ -20,6 +20,9 @@ final class ThemingController: ObservableObject {
     /// The icon style or tint changed since the Dock last started and the Dock doesn't restart by
     /// itself: Settings offers the button.
     @Published private(set) var needsDockRestart = false
+    /// The accent of the app's own windows: the colour while Accent Color is on and the app follows
+    /// the theme (`ThemingSettings.appTint`); nil for the system accent. `ThemeTintSync` applies it.
+    @Published private(set) var appTint: ThemeColor?
 
     private let writer: SystemAppearanceWriter
     private let applier: SystemThemeApplier
@@ -108,6 +111,7 @@ final class ThemingController: ObservableObject {
         observers.forEach(NotificationCenter.default.removeObserver)
         observers = []
         applier.endSession(restoring: settings.restoresOnQuit)
+        appTint = nil
         // A restore on quit, or a settle still pending, shows in the Dock now.
         if settings.restartsDockAutomatically { dock.settle() }
     }
@@ -166,6 +170,8 @@ final class ThemingController: ObservableObject {
         updateDock(iconsWritten: written.contains { $0.change == .iconAppearance })
         if color != newColor { color = newColor }
         if isDerivedColor != derived { isDerivedColor = derived }
+        let tint = settings.appTint(for: newColor)
+        if appTint != tint { appTint = tint }
 
         let newStrips: DesktopPictureStrips? = settings.wantsMenuBarStrip ? newColor.map {
             DesktopPictureStrips(color: $0, displays: Self.stripDisplays(NSScreen.screens))

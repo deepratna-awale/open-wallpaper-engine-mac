@@ -1,7 +1,7 @@
 import Foundation
 import OWEControlProtocol
 
-/// The screen saver: the Scene Editor (Live)'s Screen Saver mode (its layer and property choices,
+/// The screen saver: Scene Edit / Export's Screen Saver mode (its layer and property choices,
 /// Record and Set as Screen Saver, Stop Using as Screen Saver) and the daily re-recording.
 extension SystemControlRequests {
     /// Choosing it in macOS is the user's: OWE only opens that pane for them.

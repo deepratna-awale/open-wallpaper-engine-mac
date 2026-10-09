@@ -155,13 +155,18 @@ final class LocalizationCatalogTests: XCTestCase {
         XCTAssertTrue(problems.isEmpty, "\(problems.count) mismatches:\n" + problems.sorted().prefix(80).joined(separator: "\n"))
     }
 
-    /// The Scene Inspector is called the Scene Editor: no catalog (the app's or the editor
-    /// package's) names it the old way, in its keys, its English or any translation.
+    /// The Scene Inspector, later the Scene Editor (Live), is called Scene Edit / Export: no catalog
+    /// (the app's or the editor package's) names it an old way, in its keys, its English or any
+    /// translation, in any letter case.
     static let retiredSceneInspectorNames = [
         "Scene Inspector", "Szeneninspektor", "Inspector de escenas", "Inspecteur de scène", "Inspetor de Cena",
         "Inspector scena", "シーンインスペクタ", "장면 인스펙터", "场景检查器", "場景檢閱器", "Инспектор сцены",
         "Инспектора сцены", "Инспекторе сцены", "Inspektor sceny", "Inspektora sceny", "Inspektorze sceny",
         "Sahne Denetçisi", "Інспектор сцени", "Інспектора сцени", "Інспекторі сцени", "مراقب المشهد", "सीन इंस्पेक्टर",
+        "Scene Editor", "Szeneneditor", "Editor de escenas", "Éditeur de scène", "Editor de Cena", "Editor scena",
+        "シーンエディタ", "장면 편집기", "场景编辑器", "場景編輯器", "Редактор сцены", "Редактора сцены", "Редакторе сцены",
+        "Edytor sceny", "Edytora sceny", "Edytorze sceny", "Sahne Düzenleyici", "Редактор сцени", "Редактора сцени",
+        "Редакторі сцени", "محرر المشهد", "सीन एडिटर",
     ]
 
     static var allCatalogURLs: [URL] {
@@ -190,13 +195,13 @@ final class LocalizationCatalogTests: XCTestCase {
                     }
                 }
                 for (place, text) in texts {
-                    for name in Self.retiredSceneInspectorNames where text.contains(name) {
+                    for name in Self.retiredSceneInspectorNames where text.localizedCaseInsensitiveContains(name) {
                         problems.append("\(url.lastPathComponent): “\(key)” \(place) says “\(name)”")
                     }
                 }
             }
         }
-        XCTAssertTrue(problems.isEmpty, "Scene Inspector is now the Scene Editor:\n" + problems.sorted().joined(separator: "\n"))
+        XCTAssertTrue(problems.isEmpty, "The scene window is now Scene Edit / Export:\n" + problems.sorted().joined(separator: "\n"))
     }
 
     /// The built app carries every language, and plural lookups pick the language's form.

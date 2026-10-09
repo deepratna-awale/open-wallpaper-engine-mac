@@ -1,3 +1,4 @@
+import OWEInspectorKit
 import SwiftUI
 
 /// A settings page's grouped form. It scrolls to the setting `SettingsNavigation.highlight`
@@ -36,7 +37,7 @@ extension View {
         overlay(alignment: .leading) {
             if isChanged {
                 Circle()
-                    .fill(Color.accentColor)
+                    .fill(.tint)
                     .frame(width: 5, height: 5)
                     .offset(x: -10)
                     .help(Text("Changed from the default"))
@@ -48,13 +49,14 @@ extension View {
 
 private struct SettingsAnchorHighlight: ViewModifier {
     @EnvironmentObject private var navigation: SettingsNavigation
+    @Environment(\.appAccentColor) private var accentColor
     let anchor: String
 
     func body(content: Content) -> some View {
         content
             .id(anchor)
             .listRowBackground(navigation.highlight == anchor
-                               ? Color.accentColor.opacity(0.18) : nil)
+                               ? accentColor.opacity(0.18) : nil)
             .animation(.easeInOut(duration: 0.3), value: navigation.highlight)
     }
 }

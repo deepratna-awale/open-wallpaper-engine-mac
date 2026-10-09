@@ -44,7 +44,8 @@ final class ThemingSettingsTests: XCTestCase {
         XCTAssertTrue(DesktopPictureController.followsWallpapers(settings))
     }
 
-    /// The menu bar is transparent over the wallpaper window, so the window's top gets the strip.
+    /// The menu bar is transparent over the wallpaper window, so the window's top gets the strip:
+    /// the colour fading out over `MenuBarStrip.fadeHeightRatio` menu bar heights.
     @MainActor
     func testTheWallpaperWindowGetsTheStripOfItsDisplay() throws {
         let strips = DesktopPictureStrips(color: ThemeColor(red: 1, green: 0, blue: 0),
@@ -59,13 +60,17 @@ final class ThemingSettingsTests: XCTestCase {
         view.frame = NSRect(x: 0, y: 0, width: 400, height: 300)
         view.menuBarStrip = fill
         view.layoutSubtreeIfNeeded()
-        let strip = try XCTUnwrap(view.subviews.last)
-        XCTAssertFalse(strip === view.content, "the strip is above the wallpaper")
-        XCTAssertEqual(strip.frame, NSRect(x: 0, y: 270, width: 400, height: 30), "the top 30 points")
-        XCTAssertEqual(strip.layer?.backgroundColor, fill.cgColor)
+        let strip = try XCTUnwrap(view.layer?.sublayers?.last as? CAGradientLayer)
+        XCTAssertFalse(strip === view.content?.layer, "the strip is above the wallpaper")
+        XCTAssertEqual(strip.frame, CGRect(x: 0, y: 255, width: 400, height: 45), "the top 45 points: 1.5 menu bar heights")
+        XCTAssertEqual(strip.startPoint, CGPoint(x: 0.5, y: 1), "full colour at the top")
+        let colors = try XCTUnwrap(strip.colors as? [CGColor])
+        XCTAssertEqual(colors.first?.alpha ?? 0, 0.4, accuracy: 0.001, "40% at the top")
+        XCTAssertEqual(colors.last?.alpha, 0, "gone at the bottom")
+        XCTAssertEqual(colors.first?.components?.prefix(3), fill.cgColor.components?.prefix(3))
 
         view.menuBarStrip = nil
-        XCTAssertEqual(view.subviews.count, 1, "Menu Bar off: the strip goes")
+        XCTAssertFalse(view.layer?.sublayers?.contains { $0 is CAGradientLayer } ?? false, "Menu Bar off: the strip goes")
     }
 
     @MainActor
@@ -98,7 +103,10 @@ final class ThemingSettingsTests: XCTestCase {
                                    bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)
             reader?.draw(image, in: CGRect(x: 0, y: 0, width: 64, height: 64))
         }
-        XCTAssertGreaterThan(pixels[(4 * 64 + 10) * 4], 240, "the top quarter is the strip")
-        XCTAssertLessThan(pixels[(40 * 64 + 10) * 4], 15, "the rest is untouched")
+        // An 8 pt bar on a 32 pt display at 2 pixels a point fades over the top 24 rows, from 40%.
+        XCTAssertEqual(Double(pixels[(1 * 64 + 10) * 4]), 0.4 * 255, accuracy: 12, "40% of the colour at the top")
+        XCTAssertGreaterThan(pixels[(12 * 64 + 10) * 4], 10, "fading partway down")
+        XCTAssertLessThan(pixels[(12 * 64 + 10) * 4], pixels[(1 * 64 + 10) * 4])
+        XCTAssertLessThan(pixels[(30 * 64 + 10) * 4], 5, "below the fade the picture is untouched")
     }
 }

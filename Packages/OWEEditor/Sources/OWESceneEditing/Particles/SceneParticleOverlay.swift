@@ -4,7 +4,7 @@ import Foundation
 /// it added to the scene or deleted from it, and the JSON documents it wrote (particle definitions
 /// and their materials), all kept beside the wallpaper like every other edit. The scene loader
 /// applies the objects with the rest of the overlay and reads the documents in place of the
-/// wallpaper's (and WE's) files; Save as Local Wallpaper writes them into the copy.
+/// wallpaper's (and WE's) files; Save as New Wallpaper writes them into the copy.
 public struct SceneParticleOverlay: Codable, Hashable, Sendable {
     /// JSON documents by their path in the wallpaper (`particles/rain.json`,
     /// `materials/presets/rain.json`): definitions edited or added and the materials they use.

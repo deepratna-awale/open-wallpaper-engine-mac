@@ -3,7 +3,7 @@ import OWEEditor
 import OWESceneEditing
 @testable import OpenWallpaperEngine
 
-/// Depth parallax in the app: the Scene Editor's edits going to the overlay the Wallpaper Editor
+/// Depth parallax in the app: Scene Edit / Export's edits going to the overlay the Wallpaper Editor
 /// reads (one source of truth), the still frame's layers and crop, and WE's depth parallax effect
 /// bound to a generated depth map, rendered headlessly by the real renderer.
 @MainActor
@@ -44,7 +44,7 @@ final class DepthParallaxTests: XCTestCase {
         XCTAssertNotNil(host.services)
         let texture = "depth/editor_photo-0123456789ab"
 
-        // The Scene Editor applies it…
+        // Scene Edit / Export applies it…
         session.applyDepthParallax(texture: texture, strength: 0.8, to: 7, actionName: "Apply")
         let saved = try XCTUnwrap(SceneEditOverlayFiles.overlay(for: identity))
         XCTAssertEqual(saved, session.overlay, "saved where the Wallpaper Editor keeps its edits")
@@ -56,7 +56,7 @@ final class DepthParallaxTests: XCTestCase {
         XCTAssertEqual(editor.depthParallaxTexture(of: 7), texture)
         XCTAssertEqual(try XCTUnwrap(editor.depthParallaxStrength(of: 7)), 0.8, accuracy: 1e-9)
 
-        // …adds scene depth parallax and saves, and the Scene Editor follows.
+        // …adds scene depth parallax and saves, and Scene Edit / Export follows.
         editor.addDepthParallaxLayer(texture: texture, strength: 1, above: nil, name: "Scene Depth Parallax", actionName: "Apply")
         try SceneEditOverlayFiles.save(editor.overlay, for: identity, wallpaperDirectory: wallpaper.wallpaperDirectory,
                                        base: editor.baseOutline)
@@ -64,7 +64,7 @@ final class DepthParallaxTests: XCTestCase {
         XCTAssertNotNil(host.session?.depthParallaxLayer(above: nil))
         XCTAssertEqual(host.session?.overlay, editor.overlay)
 
-        // Removing in the Scene Editor is undoable there.
+        // Removing in Scene Edit / Export is undoable there.
         let current = try XCTUnwrap(host.session)
         current.removeDepthParallax(of: 7, actionName: "Remove")
         XCTAssertNil(SceneEditOverlayFiles.overlay(for: identity).flatMap { overlay in

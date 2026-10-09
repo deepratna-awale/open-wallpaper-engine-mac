@@ -1,9 +1,9 @@
 import Foundation
 import OWESceneEditing
 
-/// The Scene Editor (Live)'s Android Export mode, Dynamic: the mode's version of the wallpaper (its
+/// Scene Edit / Export's Android Export mode, Dynamic: the mode's version of the wallpaper (its
 /// isolated store's values, `IsolatedSceneEditSession.values`) baked into the package's files, as
-/// Save as Local Wallpaper bakes the editor's overlay into scene.json, so the phone renders the
+/// Save as New Wallpaper bakes the editor's overlay into scene.json, so the phone renders the
 /// edited scene with WE's own fields:
 ///
 /// - scene.json: an object's replaced JSON, origin and scale (`ScenePreparation.resolvedScene`),
