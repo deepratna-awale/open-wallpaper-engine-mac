@@ -4,7 +4,7 @@ import OWESceneEditing
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// Exporting in the Scene Editor (Live): the library has no export entry points, a video opens
+/// Exporting in Scene Edit / Export: the library has no export entry points, a video opens
 /// the editor with the modes that apply to it, its Android package is the video byte for byte,
 /// its Live Photo is a paired still and movie, and "Export More with These Settings…" runs its
 /// queue in order, cancels, applies the edits only to the edited wallpaper and hands AirDrop
@@ -130,7 +130,7 @@ final class SceneEditorExportTests: XCTestCase {
     // MARK: Library entry points
 
     /// The library, its menus and the Details panel no longer export: every export is in the
-    /// Scene Editor (Live). The sheet that did is gone.
+    /// Scene Edit / Export. The sheet that did is gone.
     func testTheLibraryHasNoExportEntryPoints() throws {
         let source = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .appending(path: "OpenWallpaperEngine", directoryHint: .isDirectory)

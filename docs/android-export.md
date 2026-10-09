@@ -1,8 +1,8 @@
 # Android Export
 
-**Android Export** is a tab of the Scene Editor (Live) (Details › Scene Editor (Live), ⌥⌘I). It
+**Android Export** is a tab of Scene Edit / Export (Details › Scene Edit / Export, ⌥⌘I). It
 writes Wallpaper Engine's `.mpkg` packages for its Android app, as Wallpaper Engine's own "Export
-.mpkg" does. All exporting happens in the Scene Editor (Live); the library has no export command.
+.mpkg" does. All exporting happens in Scene Edit / Export; the library has no export command.
 Copy the packages to the phone or tablet, or send them over Wi-Fi (below), and import them in the
 Wallpaper Engine app.
 
@@ -17,7 +17,7 @@ are built: [`architecture.md`](architecture.md), "Android export".
 | Video | The video file exactly as it is, byte for byte, with its preview and a minimal project.json, as Wallpaper Engine packs it. Videos over 4 GB can't be packed. |
 | Web, application | The tab is shown but unavailable: "Wallpaper type not supported on Android devices", as in Wallpaper Engine. |
 
-A video opens the Scene Editor (Live) on its export and screen saver tabs (it has no Wallpaper
+A video opens Scene Edit / Export on its export and screen saver tabs (it has no Wallpaper
 tab). Its Android Export tab plays the video in the device's screen, filled as the phone fills
 it; there is nothing to set, so it only has the export buttons.
 
@@ -67,7 +67,7 @@ Android exports list, ready for **Send over Wi-Fi…**.
 
 ## Send over Wi-Fi
 
-Every Android export (from the Scene Editor's Android Export tab, its batches or MCP) is
+Every Android export (from Scene Edit / Export's Android Export tab, its batches or MCP) is
 also added to the **Android exports** list, with its title, type, size, the device it was framed
 for, the date and a copy of the wallpaper's preview. The list is kept in
 `~/Library/Application Support/Open Wallpaper Engine/Android Exports/`; entries whose file is gone

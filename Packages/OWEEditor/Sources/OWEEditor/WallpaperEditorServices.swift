@@ -4,14 +4,14 @@ import OWEInspectorKit
 import OWESceneEditing
 
 /// What the editor needs from the app: the live scene drawn by the app's own renderer, and the
-/// pieces of the Scene Inspector it shows again (the user properties, WE's blend modes and effect
+/// pieces of Scene Edit / Export it shows again (the user properties, WE's blend modes and effect
 /// help), so the two never disagree.
 public struct WallpaperEditorServices {
     /// The live wallpaper, drawn by the app's renderer at the size it is given. Made once.
     public var makeCanvas: () -> AnyView
     /// The wallpaper's user properties, as the Details panel shows them; nil hides the section.
     public var userProperties: (() -> AnyView)?
-    /// The Blend Mode picker's title and WE's modes, as the Scene Inspector lists them.
+    /// The Blend Mode picker's title and WE's modes, as Scene Edit / Export lists them.
     public var blendModeTitle: String
     public var blendModes: [InspectorOption]
     /// Help for an effect, by its folder name (`waterripple`).

@@ -1,10 +1,10 @@
 import Foundation
 
-/// The Scene Editor (Live)'s Screen Saver mode's saved state, in the app's defaults
+/// Scene Edit / Export's Screen Saver mode's saved state, in the app's defaults
 /// (`UserDefaults.app`, so tests and isolated copies keep their own):
 /// - **Per wallpaper** (`ScreenSaverValues.<identity>`, `WallpaperSettingsIdentity`): the values the
-///   screen saver's version of a wallpaper is recorded with (its user properties and the Scene
-///   Editor's layer edits, as `IsolatedSceneEditSession.values` holds them). They are the screen
+///   screen saver's version of a wallpaper is recorded with (its user properties and Scene Edit /
+///   Export's layer edits, as `IsolatedSceneEditSession.values` holds them). They are the screen
 ///   saver's own, apart from the wallpaper's: the desktop never reads them, and editing the
 ///   wallpaper doesn't change them. Every recording of that wallpaper, by hand or on the daily
 ///   schedule, uses them.

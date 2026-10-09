@@ -17,9 +17,9 @@ O Open Wallpaper Engine é um player gratuito e de código aberto para macOS de 
 
 - **Imagens de fundo de cena, vídeo e web** — as cenas são desenhadas com os próprios shaders do Wallpaper Engine de cada imagem de fundo, traduzidos para Metal, com efeitos, partículas, modelos 3D, luzes, linhas do tempo, SceneScript e visuais reativos ao áudio. As imagens de fundo web rodam no WebKit ou no mecanismo Chromium opcional.
 - **Oficina Steam** — navegue, filtre e baixe da Oficina sem sair do app, ou importe pastas e arquivos zip de imagens de fundo.
-- **Editor de Cena (ao vivo)** — altere ao vivo, na área de trabalho, as camadas e os efeitos da imagem de fundo em execução, grave com ela seu próprio protetor de tela ou exporte-a como tela bloqueada Live Photo para iPhone e iPad ou como pacote para o app Android do Wallpaper Engine.
+- **Editar/Exportar Cena** — altere ao vivo, na área de trabalho, as camadas e os efeitos da imagem de fundo em execução, grave com ela seu próprio protetor de tela ou exporte-a como tela bloqueada Live Photo para iPhone e iPad ou como pacote para o app Android do Wallpaper Engine.
 
-  ![Editor de Cena (ao vivo)](../../docs/images/scene-editor-live.png)
+  ![Editar/Exportar Cena](../../docs/images/scene-editor-live.png)
 
 - **Editor de Imagem de Fundo** — um editor no estilo do Wallpaper Engine: camadas, efeitos com pré-visualização, linha do tempo, SceneScript, propriedades do usuário, partículas e Puppet Warp. Suas edições ficam guardadas ao lado da imagem de fundo, nunca nos arquivos dela.
 

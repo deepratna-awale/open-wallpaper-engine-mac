@@ -102,7 +102,7 @@ struct AppShortcut: Identifiable, Equatable {
 
         AppShortcut(name: .minimize, title: "Minimize", menu: .window, key: "m", modifiers: .command),
         AppShortcut(name: .wallpaperExplorer, title: "Wallpaper Explorer", menu: .window, key: "1", modifiers: [.command, .shift]),
-        AppShortcut(name: .sceneInspector, title: "Scene Editor (Live)", menu: .window, key: "i", modifiers: [.command, .option]),
+        AppShortcut(name: .sceneInspector, title: "Scene Edit / Export", menu: .window, key: "i", modifiers: [.command, .option]),
         AppShortcut(name: .wallpaperEditor, title: "Wallpaper Editor", menu: .window, key: "e", modifiers: [.command, .option]),
 
         AppShortcut(name: .help, title: "Open Wallpaper Engine Help", menu: .help, key: "?", modifiers: .command),
@@ -141,9 +141,9 @@ extension NSMenuItem {
 }
 
 extension View {
-    /// A tooltip that names the action and its keyboard shortcut, e.g. "Scene Editor (⌥⌘I)".
+    /// A tooltip that names the action and its keyboard shortcut, e.g. "Scene Edit / Export (⌥⌘I)".
     func help(_ title: LocalizedStringKey, shortcut name: AppShortcut.Name) -> some View {
         help(Text("\(Text(title)) (\(AppShortcut[name].symbols))",
-                  comment: "A tooltip: an action followed by its keyboard shortcut, e.g. Scene Editor (⌥⌘I)"))
+                  comment: "A tooltip: an action followed by its keyboard shortcut, e.g. Scene Edit / Export (⌥⌘I)"))
     }
 }

@@ -3,7 +3,7 @@ import SwiftUI
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// The Scene Editor (Live)'s Android Export mode: the device table, the custom size, the preview's
+/// Scene Edit / Export's Android Export mode: the device table, the custom size, the preview's
 /// shape, the crop, the isolation from the desktop, the pre-rendered loop and the Dynamic bake;
 /// and WE's preset table and sound-file rule the `.mpkg` writer follows.
 @MainActor

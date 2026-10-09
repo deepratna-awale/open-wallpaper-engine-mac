@@ -1,7 +1,7 @@
 import Foundation
 
 /// One wallpaper an Android export packages: its options (each scene can have its own mode) and,
-/// for a pre-rendered scene, the user-property values it renders with. The Scene Editor (Live)'s
+/// for a pre-rendered scene, the user-property values it renders with. Scene Edit / Export's
 /// Android Export mode also gives a pre-render its own framing, and a Dynamic scene the values to
 /// bake into its files.
 struct AndroidExportItem: Identifiable, Equatable {

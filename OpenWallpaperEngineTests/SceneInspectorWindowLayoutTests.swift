@@ -2,7 +2,7 @@ import SwiftUI
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// The Scene Editor (Live)'s object list keeps its width, also after it is hidden and shown, and
+/// Scene Edit / Export's object list keeps its width, also after it is hidden and shown, and
 /// its rows give the object's name the room beside the visibility switch. The list once opened at
 /// AppKit's default of about 140 points, its names cut to a single letter. Every mode shows the
 /// same list; the Wallpaper mode is the one a test host opens (the others start the app's

@@ -1,6 +1,6 @@
 import Foundation
 
-/// "Android exports": every package an Android export wrote (from the library, the Scene Editor's
+/// "Android exports": every package an Android export wrote (from the library, Scene Edit / Export's
 /// Android Export tab or MCP) and every `.mpkg` added by hand, so "Send over Wi-Fi" can share
 /// exports made one by one all at once. Kept in `<Application Support>/Android Exports/`:
 /// `exports.json` and each entry's preview picture (the wallpaper's own, so a GIF stays animated).

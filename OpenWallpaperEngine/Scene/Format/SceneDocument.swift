@@ -84,7 +84,7 @@ func sceneObjectVisibilityKey(objectID: Int) -> String {
     "_owe_scene_object_\(objectID)_visible"
 }
 
-/// The Scene Inspector's material blending for an object's image or particle system
+/// Scene Edit / Export's material blending for an object's image or particle system
 /// (`WEMaterialBlending`), in place of its material's first pass's.
 func sceneObjectBlendingKey(objectID: Int) -> String {
     "_owe_scene_object_\(objectID)_blending"

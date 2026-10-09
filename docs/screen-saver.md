@@ -34,7 +34,7 @@ recorded.
 
 ## The Screen Saver tab
 
-The Scene Editor (Live)'s second tab (Wallpaper | Screen Saver | iPhone & iPad Export | Android
+Scene Edit / Export's second tab (Wallpaper | Screen Saver | iPhone & iPad Export | Android
 Export) makes the
 screen saver from a scene wallpaper's own version:
 
@@ -54,7 +54,7 @@ screen saver from a scene wallpaper's own version:
   or the app was quit is recorded once at the next wake or launch. The tab shows when it was last
   recorded and when it will be next.
 
-A video wallpaper (MP4, M4V or MOV) opens the Scene Editor (Live) on this tab too, with the
+A video wallpaper (MP4, M4V or MOV) opens Scene Edit / Export on this tab too, with the
 video playing: its screen saver is the video itself, so there is nothing to record or adjust.
 **Set as Screen Saver** makes it the screen saver (turning the plugin on if it is off), and
 **Stop Using as Screen Saver** goes back to the desktop's wallpaper.

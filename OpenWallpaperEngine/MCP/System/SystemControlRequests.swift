@@ -3,7 +3,7 @@ import OWEControlProtocol
 
 /// The control channel's requests for the system features OWE drives: iPhone and iPad Live Photo
 /// export (`SystemControlRequests+Export`), the screen saver (`+ScreenSaver`) and the lock-screen
-/// picture (`docs/mcp.md`). Each does what the Scene Editor (Live)'s modes and the Settings
+/// picture (`docs/mcp.md`). Each does what Scene Edit / Export's modes and the Settings
 /// controls do, through `SystemControlService`; none opens System Settings or asks macOS for a
 /// permission, and the Screen Saver plugin is turned on only by a recording, as the mode does it.
 @MainActor

@@ -1,7 +1,7 @@
 import Foundation
 import OWEControlProtocol
 
-/// iPhone & iPad Export: the Scene Editor (Live)'s mode that renders a scene as a Live Photo for
+/// iPhone & iPad Export: Scene Edit / Export's mode that renders a scene as a Live Photo for
 /// a device's lock screen. The devices and their search are the mode's own (`DeviceModel`,
 /// `DeviceModelSearch`); the crop and clip are clamped as the mode clamps them.
 extension SystemControlRequests {
@@ -173,7 +173,7 @@ extension SystemControlRequests {
         case .failed(let album, let reason): return "It couldn't be saved to the \"\(album)\" album in Photos: \(reason)"
         case .needsAccess(let album, let access):
             let how = access == "not_determined"
-                ? "turn on Also Save to Photos Album once in the Scene Editor (Live)'s iPhone & iPad Export mode (Export Settings) and allow access"
+                ? "turn on Also Save to Photos Album once in Scene Edit / Export's iPhone & iPad Export mode (Export Settings) and allow access"
                 : "allow Open Wallpaper Engine full access in System Settings › Privacy & Security › Photos"
             return "Also Save to Photos Album is on, but Open Wallpaper Engine may not use Photos (access: \(access)), so it wasn't saved to \"\(album)\". To save there, \(how)."
         }
