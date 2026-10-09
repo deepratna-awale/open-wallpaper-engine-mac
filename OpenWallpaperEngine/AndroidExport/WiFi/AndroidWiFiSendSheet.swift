@@ -1,4 +1,5 @@
 import AppKit
+import OWEInspectorKit
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -9,6 +10,7 @@ import UniformTypeIdentifiers
 /// added or removed while it shares; the page follows. Closing the window stops the server and
 /// the link with it.
 struct AndroidWiFiSendSheet: View {
+    @Environment(\.appAccentColor) private var accentColor
     @ObservedObject var outbox: AndroidExportOutbox
     @ObservedObject var session: AndroidWiFiSession
     let dismiss: () -> Void
@@ -273,7 +275,7 @@ struct AndroidWiFiSendSheet: View {
         }
         .padding(8)
         .background(RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .strokeBorder(selected ? Color.accentColor : Color.secondary.opacity(0.25), lineWidth: selected ? 2 : 1))
+            .strokeBorder(selected ? accentColor : Color.secondary.opacity(0.25), lineWidth: selected ? 2 : 1))
         .contentShape(Rectangle())
         .onTapGesture {
             if selected { selection.remove(entry.number) } else { selection.insert(entry.number) }
@@ -402,7 +404,7 @@ enum AndroidWiFiShareWindow {
         window.title = String(localized: "Send over Wi-Fi")
         window.contentView = NSHostingView(rootView: AndroidWiFiSendSheet(outbox: .shared, session: session) { [weak window] in
             window?.close()
-        }.frostedWindowBackground())
+        }.frostedWindowBackground().appAccentTint())
         observer = NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: window, queue: .main) { _ in
             MainActor.assumeIsolated { close() }
         }

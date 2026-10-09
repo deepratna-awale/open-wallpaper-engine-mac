@@ -9,6 +9,7 @@ import SwiftUI
 import OWEInspectorKit
 
 struct WallpaperPreview: SubviewOfContentView {
+    @Environment(\.appAccentColor) private var accentColor
     var viewModel: ContentViewModel
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     
@@ -427,7 +428,7 @@ struct WallpaperPreview: SubviewOfContentView {
                             VStack {
                                 Divider()
                                     .frame(height: 1)
-                                    .overlay(Color.accentColor)
+                                    .overlay(accentColor)
                             }
                         }
                         WallpaperPresetsSection(wallpaper: wallpaperViewModel.displayedWallpaper,

@@ -1,3 +1,4 @@
+import OWEInspectorKit
 import SwiftUI
 
 /// The device picker: a combo box showing the chosen iPhone or iPad. Its drop-down lists every
@@ -38,6 +39,7 @@ struct DeviceComboBox: View {
 
 /// The combo box's drop-down: the search field and the matching models by family.
 private struct DeviceComboBoxList: View {
+    @Environment(\.appAccentColor) private var accentColor
     @Binding var selection: DeviceModel
     @Binding var query: String
     @Binding var isOpen: Bool
@@ -112,7 +114,7 @@ private struct DeviceComboBoxList: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .background(RoundedRectangle(cornerRadius: 6).fill(model == selection ? Color.accentColor.opacity(0.15) : .clear))
+        .background(RoundedRectangle(cornerRadius: 6).fill(model == selection ? accentColor.opacity(0.15) : .clear))
     }
 
     /// "2025 · 1320 × 2868"

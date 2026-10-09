@@ -1,3 +1,4 @@
+import OWEInspectorKit
 import SwiftUI
 
 /// Where the Done step's shortcuts go once the assistant closes.
@@ -11,6 +12,7 @@ enum OnboardingShortcut: Equatable {
 /// assets, bringing wallpapers in, and a summary. Every step can be skipped and visited again,
 /// here with Back or the step list, or later with Settings › General › "Run setup again…".
 struct OnboardingView: View {
+    @Environment(\.appAccentColor) private var accentColor
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var globalSettingsViewModel: GlobalSettingsViewModel
     @StateObject private var flow = OnboardingFlow()
@@ -63,8 +65,8 @@ struct OnboardingView: View {
                     .font(.callout)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .foregroundStyle(step == flow.step ? Color.accentColor : (flow.skipped.contains(step) ? Color.secondary : Color.primary))
-                    .background(step == flow.step ? Color.accentColor.opacity(0.15) : Color.clear, in: Capsule())
+                    .foregroundStyle(step == flow.step ? accentColor : (flow.skipped.contains(step) ? Color.secondary : Color.primary))
+                    .background(step == flow.step ? accentColor.opacity(0.15) : Color.clear, in: Capsule())
                 }
                 .buttonStyle(.plain)
                 .disabled(step != .notice && !noticeRead)

@@ -1,9 +1,11 @@
 import AppKit
+import OWEInspectorKit
 import SwiftUI
 
 /// A bundled legal document, read offline: its Markdown drawn block by block (headings,
 /// paragraphs, lists, the summary box and tables), with a link to the online copy.
 struct LegalDocumentView: View {
+    @Environment(\.appAccentColor) private var accentColor
     let document: LegalDocument
 
     var body: some View {
@@ -46,7 +48,7 @@ struct LegalDocumentView: View {
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.accentColor.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+            .background(accentColor.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
         } else {
             leaf(block)
         }
@@ -118,7 +120,7 @@ enum LegalDocumentWindow {
                               backing: .buffered, defer: false)
         window.title = String(localized: document.title)
         window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: LegalDocumentView(document: document))
+        window.contentView = NSHostingView(rootView: LegalDocumentView(document: document).appAccentTint())
         window.center()
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)

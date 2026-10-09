@@ -1,8 +1,10 @@
+import OWEInspectorKit
 import SwiftUI
 
 /// The "Show only" checkboxes, shared by the Installed and Workshop filter sidebars. Option `i` is
 /// `FRShowOnly.options[i]` (and `WorkshopShowOnly(rawValue: i)`).
 struct ShowOnlyFilterRows: View {
+    @Environment(\.appAccentColor) private var accentColor
     let isOn: (Int) -> Bool
     let set: (Int, Bool) -> Void
 
@@ -13,7 +15,7 @@ struct ShowOnlyFilterRows: View {
             Toggle(isOn: Binding(get: { isOn(index) }, set: { set(index, $0) })) {
                 HStack(spacing: 2) {
                     Image(systemName: option.systemImage ?? "")
-                        .foregroundStyle(index < Self.colors.count ? Self.colors[index] : Color.accentColor)
+                        .foregroundStyle(index < Self.colors.count ? Self.colors[index] : accentColor)
                     Text(option.label)
                 }
             }

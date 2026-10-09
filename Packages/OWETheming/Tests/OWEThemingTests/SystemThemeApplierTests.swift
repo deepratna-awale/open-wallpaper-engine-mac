@@ -15,7 +15,7 @@ final class SystemThemeApplierTests: XCTestCase {
     }
 
     private func plan(_ color: ThemeColor?, _ settings: ThemingSettings, _ writer: FakeAppearanceWriter)
-        -> [SystemPreferenceKey: PreferenceValue] {
+        -> [SystemPreferenceKey: PreferenceValue?] {
         ThemePlan.preferences(for: color, settings: settings, currentIconTheme: writer.value(for: .iconAppearanceTheme))
     }
 
@@ -174,8 +174,8 @@ final class SystemThemeApplierTests: XCTestCase {
     func testCustomTintColorFormat() {
         let values = ThemePlan.preferences(for: ThemeColor(red: 0.5, green: 0.25, blue: 1),
                                            settings: settings(tinted: true), currentIconTheme: nil)
-        XCTAssertEqual(values[.iconCustomTintColor], .string("0.500000 0.250000 1.000000 1.000000"))
-        XCTAssertEqual(values[.iconTintColor], .string("Other"))
+        XCTAssertEqual(values[.iconCustomTintColor] ?? nil, .string("0.500000 0.250000 1.000000 1.000000"))
+        XCTAssertEqual(values[.iconTintColor] ?? nil, .string("Other"))
     }
 
     func testJournalRoundTripsThroughUserDefaults() throws {

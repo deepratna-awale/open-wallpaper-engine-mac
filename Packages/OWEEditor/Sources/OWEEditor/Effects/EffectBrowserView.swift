@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import OWEInspectorKit
 import OWESceneEditing
 
 /// Add Effect: WE's built-in effects and the Workshop effects the wallpaper uses, searchable, in
@@ -93,6 +94,7 @@ struct EffectBrowserView: View {
 }
 
 private struct EffectTile: View {
+    @Environment(\.appAccentColor) private var accentColor
     let entry: EffectCatalogEntry
     let previews: EditorPreviewProvider?
     let isSelected: Bool
@@ -129,10 +131,10 @@ private struct EffectTile: View {
             }
         }
         .padding(8)
-        .background(isSelected ? Color.accentColor.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 10))
+        .background(isSelected ? accentColor.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 10))
         .overlay {
             RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(isSelected ? Color.accentColor : .clear, lineWidth: 1.5)
+                .strokeBorder(isSelected ? accentColor : .clear, lineWidth: 1.5)
         }
         .contentShape(Rectangle())
         .help(entry.summary)

@@ -1,9 +1,11 @@
+import OWEInspectorKit
 import SwiftUI
 
 /// Export Settings' Parallax Position pad: the device's screen as a small glass rounded rectangle,
 /// with a dot where the pointer rests over the wallpaper (`LivePhotoParallax`: normalised over the
 /// scene, y up). Dragging or clicking moves the dot; the arrow keys nudge it.
 struct LivePhotoParallaxPad: View {
+    @Environment(\.appAccentColor) private var accentColor
     let position: SIMD2<Double>
     /// The device's width over its height, portrait.
     let aspect: Double
@@ -26,7 +28,7 @@ struct LivePhotoParallaxPad: View {
             }
             .stroke(.secondary.opacity(0.35), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
             Circle()
-                .fill(Color.accentColor)
+                .fill(accentColor)
                 .overlay(Circle().strokeBorder(.white.opacity(0.9), lineWidth: 2))
                 .shadow(radius: 2)
                 .frame(width: Self.dot, height: Self.dot)

@@ -37,6 +37,7 @@ class MainWindowController: NSWindowController, NSWindowDelegate {
                 viewModel: AppDelegate.shared.contentViewModel,
                 wallpaperViewModel: AppDelegate.shared.wallpaperViewModel
             ).environmentObject(AppDelegate.shared.globalSettingsViewModel)
+            .appAccentTint()
         )
     }
     
