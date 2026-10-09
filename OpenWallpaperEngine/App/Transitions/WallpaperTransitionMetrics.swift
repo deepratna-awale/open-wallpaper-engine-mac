@@ -14,7 +14,7 @@ final class WallpaperTransitionMetrics: @unchecked Sendable {
     private let lock = NSLock()
     // Guarded by `lock`.
     private var presents: [CFTimeInterval] = []
-    private var submitted = 0
+    private var submits: [CFTimeInterval] = []
     private var stalls: [CFTimeInterval] = []
     private var probe: DispatchSourceTimer?
     private var probeOutstanding = false
@@ -43,7 +43,7 @@ final class WallpaperTransitionMetrics: @unchecked Sendable {
         timer.resume()
     }
 
-    /// A frame reached the screen (or was handed to it) at `time` (`CACurrentMediaTime`).
+    /// A frame reached the screen at `time` (`CACurrentMediaTime`).
     func recordPresent(at time: CFTimeInterval) {
         lock.withLock {
             guard !finished else { return }
@@ -51,27 +51,26 @@ final class WallpaperTransitionMetrics: @unchecked Sendable {
         }
     }
 
-    /// A frame was handed to the GPU to be presented; it may not reach the screen (a covered window).
-    func recordSubmitted() {
+    /// A frame was handed to the GPU to be presented at `time`; it may not reach the screen (a
+    /// covered window).
+    func recordSubmitted(at time: CFTimeInterval) {
         lock.withLock {
-            if !finished { submitted += 1 }
+            if !finished { submits.append(time) }
         }
     }
 
     /// Stops measuring and returns what it measured.
     func finish() -> WallpaperTransitionFrameSummary {
-        let (presents, submitted, stalls, probe) = lock.withLock {
-            () -> ([CFTimeInterval], Int, [CFTimeInterval], DispatchSourceTimer?) in
+        let (presents, submits, stalls, probe) = lock.withLock {
+            () -> ([CFTimeInterval], [CFTimeInterval], [CFTimeInterval], DispatchSourceTimer?) in
             finished = true
             let probe = self.probe
             self.probe = nil
-            return (self.presents, self.submitted, self.stalls, probe)
+            return (self.presents, self.submits, self.stalls, probe)
         }
         probe?.cancel()
-        var summary = WallpaperTransitionFrameSummary(presents: presents.sorted(), stalls: stalls,
-                                                      refreshInterval: refreshInterval)
-        summary.submitted = submitted
-        return summary
+        return WallpaperTransitionFrameSummary(submitted: submits, presented: presents, stalls: stalls,
+                                               refreshInterval: refreshInterval)
     }
 
     /// Posts one probe to the main queue unless one is still waiting, and records how late it ran

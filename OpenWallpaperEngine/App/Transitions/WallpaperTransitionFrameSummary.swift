@@ -2,31 +2,43 @@ import QuartzCore
 
 /// What `WallpaperTransitionMetrics` measured for one transition.
 struct WallpaperTransitionFrameSummary: Equatable, CustomStringConvertible {
-    var frames: Int
-    /// Frames handed to the GPU to present, when that is counted apart from `frames`.
-    var submitted: Int?
-    /// From the first presented frame to the last.
-    var span: CFTimeInterval
-    var p50: CFTimeInterval
-    var p95: CFTimeInterval
-    var maxInterval: CFTimeInterval
-    /// Refreshes that showed no new frame: an interval of n refreshes drops n - 1.
-    var dropped: Int
+    /// The intervals between a series of frame times.
+    struct Intervals: Equatable {
+        var frames: Int
+        /// From the first frame to the last.
+        var span: CFTimeInterval
+        var p50: CFTimeInterval
+        var p95: CFTimeInterval
+        var maxInterval: CFTimeInterval
+        /// Refreshes without a new frame: an interval of n refreshes drops n - 1.
+        var dropped: Int
+
+        init(_ times: [CFTimeInterval], refreshInterval: CFTimeInterval) {
+            let times = times.sorted()
+            let intervals = zip(times.dropFirst(), times).map { $0 - $1 }.sorted()
+            frames = times.count
+            span = (times.last ?? 0) - (times.first ?? 0)
+            p50 = WallpaperTransitionFrameSummary.percentile(intervals, 0.5)
+            p95 = WallpaperTransitionFrameSummary.percentile(intervals, 0.95)
+            maxInterval = intervals.last ?? 0
+            dropped = intervals.reduce(0) { $0 + max(Int(($1 / refreshInterval).rounded()) - 1, 0) }
+        }
+    }
+
+    /// When frames were handed to the GPU to present.
+    var submitted: Intervals
+    /// When frames reached the screen; fewer when the window was covered or the compositor skipped one.
+    var presented: Intervals
     var refreshInterval: CFTimeInterval
     /// Main-thread stalls of a refresh or more: how many, the longest and their sum.
     var stallCount: Int
     var stallMax: CFTimeInterval
     var stallTotal: CFTimeInterval
 
-    init(presents: [CFTimeInterval], stalls: [CFTimeInterval], refreshInterval: CFTimeInterval) {
-        let intervals = zip(presents.dropFirst(), presents).map { $0 - $1 }.sorted()
-        frames = presents.count
-        submitted = nil
-        span = (presents.last ?? 0) - (presents.first ?? 0)
-        p50 = Self.percentile(intervals, 0.5)
-        p95 = Self.percentile(intervals, 0.95)
-        maxInterval = intervals.last ?? 0
-        dropped = intervals.reduce(0) { $0 + max(Int(($1 / refreshInterval).rounded()) - 1, 0) }
+    init(submitted: [CFTimeInterval], presented: [CFTimeInterval], stalls: [CFTimeInterval],
+         refreshInterval: CFTimeInterval) {
+        self.submitted = Intervals(submitted, refreshInterval: refreshInterval)
+        self.presented = Intervals(presented, refreshInterval: refreshInterval)
         self.refreshInterval = refreshInterval
         stallCount = stalls.count
         stallMax = stalls.max() ?? 0
@@ -42,9 +54,11 @@ struct WallpaperTransitionFrameSummary: Equatable, CustomStringConvertible {
 
     var description: String {
         func ms(_ value: CFTimeInterval) -> String { String(format: "%.1f", value * 1000) }
-        let handed = submitted.map { " (\($0) submitted)" } ?? ""
-        return "\(frames) frames\(handed) over \(ms(span)) ms, interval p50 \(ms(p50)) p95 \(ms(p95)) max \(ms(maxInterval)) ms, "
-            + "\(dropped) dropped (refresh \(ms(refreshInterval)) ms); main thread: \(stallCount) stalls, "
-            + "max \(ms(stallMax)) ms, total \(ms(stallTotal)) ms"
+        func line(_ name: String, _ series: Intervals) -> String {
+            "\(name) \(series.frames) frames over \(ms(series.span)) ms, interval p50 \(ms(series.p50)) "
+                + "p95 \(ms(series.p95)) max \(ms(series.maxInterval)) ms, \(series.dropped) dropped"
+        }
+        return "\(line("submitted", submitted)); \(line("on screen", presented)) (refresh \(ms(refreshInterval)) ms); "
+            + "main thread: \(stallCount) stalls, max \(ms(stallMax)) ms, total \(ms(stallTotal)) ms"
     }
 }

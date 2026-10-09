@@ -179,7 +179,7 @@ extension WallpaperTransitionFrameLoop: CAMetalDisplayLinkDelegate {
             }
             for drawable in drawables { commandBuffer.present(drawable) }
             commandBuffer.commit()
-            metrics?.recordSubmitted()
+            metrics?.recordSubmitted(at: CACurrentMediaTime())
         } catch {
             OWELog.error(.app, "Transition \(kind) on \(target) stopped: \(error)")
             end(link)
