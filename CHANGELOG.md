@@ -61,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Effects added in the Wallpaper Editor show on a layer that Scene Edit / Export edited as JSON.** Its JSON edit, a copy of the layer as the wallpaper authors it, was laid over the Wallpaper Editor's edits, so the layer's added effects and other editor changes never drew, in the canvas or on the desktop. The Wallpaper Editor's edits now apply over it.
 - **Scene Edit / Export no longer crashes on opening** when the Depth Map Generation plugin is installed: the Create Mask from Depth Map menu made the window's layout loop.
 - **Shaders whose constants or varyings are named with words Metal reserves now compile.** Names such as `or`, `new` or a shader's own `log10` are renamed in the compiled shader rather than in its text, so they work everywhere, including for constants, which still take their values by Wallpaper Engine's names.
 - **Wallpaper transitions play smoothly.** Fade, Paint, Twister and the others drew their frames on the main thread, so the incoming wallpaper loading there made them stutter and jump; they now draw and present every frame on a thread of their own, keeping Wallpaper Engine's timing.
