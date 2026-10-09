@@ -48,22 +48,24 @@ enum ScenePreparation {
         return (edits, properties)
     }
 
-    /// The scene document with the Wallpaper Editor's overlay applied, then the saved per-object
-    /// Inspector edits (replaced objects, origin and scale), which stay the user's own on top of
-    /// the scene as edited; `data` itself when it isn't an object with an `objects` array.
+    /// The scene document with its edits: Scene Edit / Export's replaced objects (its JSON editor
+    /// edits an object as scene.json authors it), the Wallpaper Editor's overlay over them, then
+    /// the Inspector's origin and scale, which stay the user's own on top; `data` itself when it
+    /// isn't an object with an `objects` array.
+    ///
+    /// A replaced object goes under the overlay: on top, the replacement (a copy of the authored
+    /// object) would drop every Wallpaper Editor edit of the layer, its added effects included.
+    /// A layer only the overlay adds is replaced after it.
     static func resolvedScene(_ data: Data, edits values: [String: String],
                               overlay: SceneEditOverlay? = nil) throws -> Data {
         guard var root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              root["objects"] is [[String: Any]] else { return data }
+              var authored = root["objects"] as? [[String: Any]] else { return data }
+        var replaced = Set<Int>()
+        replaceObjects(&authored, edits: values, replaced: &replaced)
+        root["objects"] = authored
         if let overlay, overlay.hasSceneEdits { try overlay.apply(to: &root) }
         guard var objects = root["objects"] as? [[String: Any]] else { return data }
-        for index in objects.indices {
-            let objectID = SceneObjects.objectID(objects[index], index: index)
-            guard let override = values["_owe_scene_object_\(objectID)_json"],
-                  let overrideData = override.data(using: .utf8),
-                  let replacement = try? JSONSerialization.jsonObject(with: overrideData) as? [String: Any] else { continue }
-            objects[index] = replacement
-        }
+        replaceObjects(&objects, edits: values, replaced: &replaced)
         for index in objects.indices {
             let objectID = SceneObjects.objectID(objects[index], index: index)
             if let origin = values["_owe_scene_object_\(objectID)_origin"] {
@@ -75,5 +77,21 @@ enum ScenePreparation {
         }
         root["objects"] = objects
         return try JSONSerialization.data(withJSONObject: root)
+    }
+
+    /// Replaces each object Scene Edit / Export saved as JSON (`_owe_scene_object_<id>_json`) and
+    /// not yet `replaced`; the replacement keeps the object's id when it names none.
+    private static func replaceObjects(_ objects: inout [[String: Any]], edits values: [String: String],
+                                       replaced: inout Set<Int>) {
+        for index in objects.indices {
+            let objectID = SceneObjects.objectID(objects[index], index: index)
+            // Optional: a stored value that isn't a JSON object is left out, as before.
+            guard !replaced.contains(objectID), let override = values["_owe_scene_object_\(objectID)_json"],
+                  let overrideData = override.data(using: .utf8),
+                  var replacement = try? JSONSerialization.jsonObject(with: overrideData) as? [String: Any] else { continue }
+            if replacement["id"] == nil, let id = objects[index]["id"] { replacement["id"] = id }
+            objects[index] = replacement
+            replaced.insert(objectID)
+        }
     }
 }
