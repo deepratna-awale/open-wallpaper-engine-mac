@@ -1,9 +1,11 @@
+import OWEInspectorKit
 import OWETheming
 import SwiftUI
 
 /// Settings › General › Theming: macOS follows the scheme colour of the main display's wallpaper
 /// (`ThemingController`, docs/theming.md). A master switch and one checkbox per target, all off by
-/// default.
+/// default. Accent Color has two choices: what the system-wide accent becomes, and whether the
+/// app's own windows use the exact colour.
 struct ThemingSection: View {
     @ObservedObject var viewModel: GlobalSettingsViewModel
     @ObservedObject var controller: ThemingController
@@ -24,6 +26,8 @@ struct ThemingSection: View {
                     .help("Fills the top of the wallpaper behind the menu bar, and of the desktop picture Open Wallpaper Engine sets, with the color; the transparent menu bar shows it.")
                 Toggle("Accent Color", isOn: theming.accentColor)
                     .help("Sets System Settings › Appearance › Color to the closest of its colors, as macOS has no custom accent color, and the text highlight color to a light tint of the color.")
+                accentChoices
+                    .disabled(!viewModel.settings.theming.accentColor)
                 Toggle("Tinted Icon Color", isOn: theming.tintedIcons)
                     .help("Sets the icon and widget style to Tinted, in the color.")
                 Toggle("Folder Color", isOn: theming.folderColor)
@@ -52,6 +56,40 @@ struct ThemingSection: View {
             Text("Your own settings are saved before the first change and put back when an option is turned off. The menu bar is translucent, so its color is a tint, and the accent color is the closest of macOS's colors.")
         }
         .settingsAnchor(SettingsAnchor.theming)
+    }
+
+    /// The system-wide accent (`SystemAccentChoice`) and the app's own (`AppAccentChoice`).
+    @ViewBuilder private var accentChoices: some View {
+        LabeledContent {
+            HStack {
+                Picker(selection: theming.systemAccent) {
+                    Text("Nearest Apple Accent", comment: "Settings › Theming: the system accent becomes the closest of macOS's eight accent colors").tag(SystemAccentChoice.nearestApple)
+                    Text("Multicolor", comment: "Settings › Theming: the system accent is macOS's Multicolor, so each app uses its own accent").tag(SystemAccentChoice.multicolor)
+                } label: {
+                    Text("System Accent", comment: "Settings › Theming: picker label, what the accent color of every app becomes")
+                }
+                .labelsHidden()
+                .fixedSize()
+                InfoTip(String(localized: "macOS has only eight accent colors. Nearest Apple Accent uses the closest one, so every app matches, though not exactly. Multicolor lets each app use its own accent instead. Either way, the text highlight and Open Wallpaper Engine itself can use the exact color.", comment: "Settings › Theming: info tip of the System Accent picker"))
+            }
+        } label: {
+            Text("System Accent", comment: "Settings › Theming: picker label, what the accent color of every app becomes")
+        }
+        LabeledContent {
+            HStack {
+                Picker(selection: theming.appAccent) {
+                    Text("Exact Wallpaper Color", comment: "Settings › Theming: Open Wallpaper Engine's own controls use the wallpaper's color itself").tag(AppAccentChoice.themeColor)
+                    Text("Follow System Accent", comment: "Settings › Theming: Open Wallpaper Engine's own controls use the system accent color, like other apps").tag(AppAccentChoice.system)
+                } label: {
+                    Text("Open Wallpaper Engine's Accent", comment: "Settings › Theming: picker label, the accent color of Open Wallpaper Engine's own windows")
+                }
+                .labelsHidden()
+                .fixedSize()
+                InfoTip(String(localized: "Exact Wallpaper Color gives the buttons, switches, sliders, selections and links of every Open Wallpaper Engine window the wallpaper's color itself, which the system accent can't show. Follow System Accent uses the same accent as other apps.", comment: "Settings › Theming: info tip of the Open Wallpaper Engine's Accent picker"))
+            }
+        } label: {
+            Text("Open Wallpaper Engine's Accent", comment: "Settings › Theming: picker label, the accent color of Open Wallpaper Engine's own windows")
+        }
     }
 
     @ViewBuilder private var currentColor: some View {
