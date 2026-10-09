@@ -63,8 +63,9 @@ Where the depth comes from:
 ## Where depth maps are kept
 
 Every action is one undo step. Depth maps and masks are kept with the wallpaper's edits, beside it,
-never in its files, so both editors see the same ones. **Save as Local Wallpaper** writes them into
-the copy as normal effects and textures, which Wallpaper Engine reads as well.
+never in its files, so both editors see the same ones. In the Wallpaper Editor they are part of its
+draft, which only its canvas shows until File › Save. **Save as New Wallpaper** writes them into the
+new wallpaper as normal effects and textures, which Wallpaper Engine reads as well.
 
 A mask is stored as Wallpaper Engine's editor stores a painted effect mask in Workshop scenes:
 
