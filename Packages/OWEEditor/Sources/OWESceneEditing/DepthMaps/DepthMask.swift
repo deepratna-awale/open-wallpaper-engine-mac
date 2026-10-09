@@ -9,9 +9,23 @@ import Foundation
 ///   the mask gets harder, toward black and white; below 1 softer.
 ///
 /// The mask is stored as WE's editor stores a painted one (`EditorAssetStore.saveEffectMask`).
+///
+/// **Layer Opacity** writes it into WE's Opacity effect (`effects/opacity`), added when the layer
+/// has none: its shader multiplies the layer's alpha by `g_Texture1`'s red channel, a grey mask
+/// (`"mode": "opacitymask"`) behind the `MASK` combo, so the layer shows where the mask is white
+/// and is transparent where it is black.
 public enum DepthMask {
     public static let contrastRange = 0.25...4.0
     public static let defaultContrast = 1.0
+
+    /// WE's Opacity effect, which Layer Opacity adds when the layer has none.
+    public static let opacityEffect = EffectCatalogEntry(file: "effects/opacity/effect.json", title: "Opacity",
+                                                         group: "colorize", passCount: 1)
+
+    /// Whether `file` is WE's Opacity effect.
+    public static func isOpacityEffect(_ file: String) -> Bool {
+        file.caseInsensitiveCompare(opacityEffect.file) == .orderedSame
+    }
 
     /// `depth` (grey values, near is 255) shaped into the mask.
     public static func shaped(_ depth: [UInt8], invert: Bool, contrast: Double) -> [UInt8] {

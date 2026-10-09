@@ -24,6 +24,11 @@ final class DepthMapSectionTests: XCTestCase {
            {"file": "effects/shake/effect.json"},
            {"file": "effects/tint/effect.json", "passes": [{"textures": [null, "masks/tint_mask_painted"]}]},
            {"file": "effects/scroll/effect.json"}
+         ]},
+        {"id": 7, "name": "Faded", "image": "models/faded.json", "origin": "960 540 0", "size": "200 100",
+         "effects": [
+           {"file": "effects/opacity/effect.json", "passes": [{"textures": [null, "masks/opacity_mask_painted"]}]},
+           {"file": "effects/tint/effect.json"}
          ]}
       ]
     }
@@ -35,6 +40,7 @@ final class DepthMapSectionTests: XCTestCase {
     private var requests: [DepthMapSourceRequest] = []
     private var prepared = 0
     private var prepareFails = false
+    private var preparedEffects: [String] = []
 
     override func setUp() async throws {
         directory = FileManager.default.temporaryDirectory.appending(path: "owe-depthmap-section-\(UUID().uuidString)",
@@ -46,6 +52,7 @@ final class DepthMapSectionTests: XCTestCase {
         requests = []
         prepared = 0
         prepareFails = false
+        preparedEffects = []
     }
 
     override func tearDown() async throws {
@@ -77,12 +84,16 @@ final class DepthMapSectionTests: XCTestCase {
             texture: { _ in nil },
             openPlugins: {},
             effectSchema: { file in Self.schemas[file] },
+            prepareBuiltInEffect: { [unowned self] entry in
+                if self.prepareFails { throw PrepareFailure() }
+                self.preparedEffects.append(entry.file)
+            },
             // A stand-in for the app's `.tex` writer: the size, then the grey values.
             encodeMask: { pixels, width, height in Data([UInt8(width), UInt8(height)] + pixels) })
     }
 
     /// WE's samplers for the effects on "Photo": Shake's flow mask and two grey masks, Tint's one,
-    /// Scroll none.
+    /// Scroll none; and WE's Opacity effect's one (`effects/opacity`'s `g_Texture1`).
     private static let schemas: [String: EffectSchema] = [
         "effects/shake/effect.json": EffectSchema(textures: [
             .init(slot: 1, title: "Direction", defaultTexture: "util/noflow", isMask: true, mode: "flowmask"),
@@ -93,6 +104,10 @@ final class DepthMapSectionTests: XCTestCase {
             .init(slot: 1, title: "Opacity Mask", isMask: true, combo: "MASK", paintDefault: [0, 0, 0, 1], mode: "opacitymask"),
         ]),
         "effects/scroll/effect.json": EffectSchema(),
+        "effects/opacity/effect.json": EffectSchema(textures: [
+            .init(slot: 1, title: "Opacity Mask", isMask: true, combo: "MASK", paintDefault: [0, 0, 0, 1], mode: "opacitymask",
+                  materialName: "opacity"),
+        ]),
     ]
 
     // MARK: A layer
@@ -152,12 +167,82 @@ final class DepthMapSectionTests: XCTestCase {
     func testTheMenuListsTheLayersGreyMasks() async throws {
         let model = DepthMapSectionModel(session: session, layerID: 6, services: services())
         let targets = model.maskTargets
-        XCTAssertEqual(targets.map(\.id), ["0:0:2", "0:0:3", "1:0:1"], "grey masks only: not Shake's flow mask, nothing of Scroll")
-        XCTAssertEqual(targets.map(\.title), ["Shake › Time Offset", "Shake › Opacity", "Tint"])
-        XCTAssertEqual(targets.map(\.replacesMask), [false, false, true], "Tint has a painted mask")
-        XCTAssertEqual(targets[2].currentMask, "masks/tint_mask_painted")
-        XCTAssertEqual(DepthMapSectionModel(session: session, layerID: 4, services: services()).maskTargets, [],
-                       "a layer without effects")
+        XCTAssertEqual(targets.map(\.id), ["opacity:0:1", "0:0:2", "0:0:3", "1:0:1"],
+                       "Layer Opacity first, then grey masks only: not Shake's flow mask, nothing of Scroll")
+        XCTAssertEqual(targets.map(\.title), [DL("Layer Opacity"), "Shake › Time Offset", "Shake › Opacity", "Tint"])
+        XCTAssertEqual(targets.map(\.addsEffect), [true, false, false, false], "the layer has no Opacity effect")
+        XCTAssertEqual(targets.map(\.replacesMask), [false, false, false, true], "Tint has a painted mask")
+        XCTAssertEqual(targets[3].currentMask, "masks/tint_mask_painted")
+        XCTAssertEqual(DepthMapSectionModel(session: session, layerID: 4, services: services()).maskTargets.map(\.id), ["opacity:0:1"],
+                       "a layer without effects: Layer Opacity only")
+    }
+
+    // MARK: Layer Opacity
+
+    func testLayerOpacityAddsWEsOpacityEffectWithTheMaskInOneUndoStep() async throws {
+        let model = DepthMapSectionModel(session: session, layerID: 4, services: services())
+        await model.generate()
+        let target = try XCTUnwrap(model.maskTargets.first)
+        XCTAssertTrue(target.isLayerOpacity && target.addsEffect)
+        model.useAsMask(target)
+        XCTAssertNil(model.problem)
+        XCTAssertEqual(preparedEffects, [DepthMask.opacityEffect.file], "its files are copied as adding it from the browser does")
+        let effect = try XCTUnwrap(session.outline.layer(4)?.effects.last)
+        XCTAssertEqual(effect.file, "effects/opacity/effect.json")
+        let path = try XCTUnwrap(session.effectTexture(1, effect: effect.key, of: 4))
+        XCTAssertTrue(path.hasPrefix("masks/opacity_mask_"), "WE's name for the Opacity effect's mask: \(path)")
+        XCTAssertEqual(session.effectCombo("MASK", effect: effect.key, of: 4, default: 0), 1, "the mask's combo goes on")
+        let pixels = Array(try Data(contentsOf: XCTUnwrap(EditorAssetStore(directory: directory).url(for: "materials/\(path).tex"))).dropFirst(2))
+        XCTAssertLessThan(pixels[50 * 200 + 2], 60, "far fades")
+        XCTAssertGreaterThan(pixels[50 * 200 + 197], 200, "near shows")
+        XCTAssertEqual(model.maskNotice, DL("The depth map is now the layer’s opacity, through the Opacity effect added to it."))
+        let after = model.maskTargets
+        XCTAssertEqual(after.first?.effectKey, effect.key, "Layer Opacity is now the added effect's mask")
+        XCTAssertEqual(after.first?.replacesMask, true)
+        XCTAssertEqual(after.first?.addsEffect, false)
+
+        session.undo()
+        XCTAssertEqual(session.outline.layer(4)?.effects.count, 0, "one undo step: the effect and its mask")
+        XCTAssertFalse(session.overlay.hasSceneEdits)
+        session.redo()
+        XCTAssertEqual(session.effectTexture(1, effect: effect.key, of: 4), path)
+    }
+
+    func testLayerOpacityFillsAnExistingOpacityEffectsMask() async throws {
+        let model = DepthMapSectionModel(session: session, layerID: 7, services: services())
+        await model.generate()
+        let targets = model.maskTargets
+        XCTAssertEqual(targets.map(\.id), ["0:0:1", "1:0:1"])
+        XCTAssertEqual(targets.map(\.title), [DL("Layer Opacity"), "Tint"])
+        let opacity = targets[0]
+        XCTAssertTrue(opacity.isLayerOpacity)
+        XCTAssertFalse(opacity.addsEffect)
+        XCTAssertEqual(opacity.currentMask, "masks/opacity_mask_painted", "listed under Replaces the current mask")
+
+        model.maskInverted = true
+        model.maskContrast = 4
+        model.useAsMask(opacity)
+        XCTAssertEqual(preparedEffects, [], "nothing to add")
+        XCTAssertEqual(session.outline.layer(7)?.effects.count, 2)
+        let path = try XCTUnwrap(session.effectTexture(1, effect: "0", of: 7))
+        XCTAssertTrue(path.hasPrefix("masks/opacity_mask_"))
+        XCTAssertNotEqual(path, "masks/opacity_mask_painted")
+        let pixels = Array(try Data(contentsOf: XCTUnwrap(EditorAssetStore(directory: directory).url(for: "materials/\(path).tex"))).dropFirst(2))
+        XCTAssertEqual(pixels[50 * 200 + 2], 255, "inverted: far shows; contrast 4 makes it white")
+        XCTAssertEqual(pixels[50 * 200 + 197], 0, "and near fades to transparent")
+        XCTAssertEqual(model.maskNotice, DL("The effect’s mask was replaced. Undo brings the old one back; its file is kept."))
+        session.undo()
+        XCTAssertEqual(session.effectTexture(1, effect: "0", of: 7), "masks/opacity_mask_painted", "one undo step")
+    }
+
+    func testLayerOpacityWithoutWEsAssetsIsAProblemAndChangesNothing() async throws {
+        let model = DepthMapSectionModel(session: session, layerID: 4, services: services())
+        await model.generate()
+        prepareFails = true
+        model.useAsMask(try XCTUnwrap(model.maskTargets.first))
+        XCTAssertNotNil(model.problem)
+        XCTAssertEqual(session.outline.layer(4)?.effects.count, 0)
+        XCTAssertFalse(session.overlay.hasSceneEdits)
     }
 
     func testUseAsMaskWritesTheShapedDepthMapIntoTheEffectsSlot() async throws {

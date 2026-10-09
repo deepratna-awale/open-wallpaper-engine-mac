@@ -54,6 +54,28 @@ final class EffectEditTests: XCTestCase {
         XCTAssertFalse(session.overlay.hasSceneEdits)
     }
 
+    /// WE's Opacity effect with a mask in its slot, as Layer Opacity (Create Mask from Depth Map)
+    /// adds it: the pass's `textures` name the mask at its slot, `MASK` is on, and it is one undo step.
+    func testAddAnEffectWithAMaskIsOneUndoStep() throws {
+        let key = try XCTUnwrap(session.addEffect(DepthMask.opacityEffect, to: 13, texture: "masks/opacity_mask_abc", slot: 1,
+                                                  combo: "MASK", actionName: "Use Depth Map as Mask"))
+        XCTAssertEqual(key, "+1")
+        XCTAssertEqual(session.effectTexture(1, effect: key, of: 13), "masks/opacity_mask_abc")
+        XCTAssertEqual(session.effectCombo("MASK", effect: key, of: 13, default: 0), 1)
+        let added = try effects(of: 13)
+        XCTAssertEqual(added.map { $0["file"] as? String }, ["effects/opacity/effect.json"])
+        let pass = firstPass(added[0])
+        let textures = try XCTUnwrap(pass["textures"] as? [Any])
+        XCTAssertTrue(textures.first is NSNull, "the layer's own image, as WE writes it")
+        XCTAssertEqual(textures[1] as? String, "masks/opacity_mask_abc")
+        XCTAssertEqual((pass["combos"] as? [String: Any])?["MASK"] as? Int, 1)
+        try assertRoundTrips()
+        session.undo()
+        XCTAssertFalse(session.overlay.hasSceneEdits, "the effect and its mask in one step")
+        session.redo()
+        XCTAssertEqual(session.effectTexture(1, effect: key, of: 13), "masks/opacity_mask_abc")
+    }
+
     func testAddedEffectsGoAfterTheAuthoredOnes() throws {
         session.addEffect(Self.shake, to: 10, actionName: "Add Effect")
         XCTAssertEqual(session.outline.layer(10)?.effects.map(\.key), ["0", "1", "+1"])

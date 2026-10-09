@@ -289,13 +289,18 @@ final class SceneControlRequests: ControlRequestGroup {
         }
         let targets = model.maskTargets
         guard !targets.isEmpty else {
-            throw ControlError(.refused, "The layer has no effect with a mask; add one first (add_effect), such as Shake, Water Ripple or Tint.")
+            throw ControlError(.refused, "The layer has no effect with a mask, and WE's Opacity effect isn't available (Settings › Assets); add one first (add_effect), such as Shake, Water Ripple or Tint.")
         }
         let effect = try params.required("effect")
         let slot = try params.int("slot")
-        let matching = targets.filter { $0.effectKey == effect && (slot == nil || $0.slot.slot == slot) }
+        let layerOpacity = effect.caseInsensitiveCompare("opacity") == .orderedSame
+        let matching = layerOpacity ? targets.filter(\.isLayerOpacity)
+            : targets.filter { $0.effectKey == effect && (slot == nil || $0.slot.slot == slot) }
         guard let target = matching.first, matching.count == 1 else {
-            let known = targets.map { "effect \"\($0.effectKey)\" slot \($0.slot.slot) (\($0.title))" }.joined(separator: ", ")
+            let known = targets.map { target in
+                target.isLayerOpacity ? "effect \"opacity\" (\(target.title)\(target.addsEffect ? ", adds WE's Opacity effect" : ""))"
+                    : "effect \"\(target.effectKey)\" slot \(target.slot.slot) (\(target.title))"
+            }.joined(separator: ", ")
             throw ControlError(matching.isEmpty ? .notFound : .invalidParams,
                                (matching.isEmpty ? "No mask to fill there. " : "The effect has several masks; give slot. ") + "Masks: \(known).")
         }
@@ -307,12 +312,16 @@ final class SceneControlRequests: ControlRequestGroup {
         model.maskContrast = contrast
         model.useAsMask(target)
         if let problem = model.problem { throw ControlError(.failed, "The mask couldn't be written: \(problem)") }
-        let mask = document.session.effectTexture(target.slot.slot, pass: target.slot.pass, effect: target.effectKey, of: layer)
-        return ["layer": .number(Double(layer)), "effect": .string(target.effectKey), "slot": .number(Double(target.slot.slot)),
+        let effectKey = target.addsEffect ? (model.maskTargets.first(where: \.isLayerOpacity)?.effectKey ?? "") : target.effectKey
+        let mask = document.session.effectTexture(target.slot.slot, pass: target.slot.pass, effect: effectKey, of: layer)
+        let message = target.addsEffect ? "Added WE's Opacity effect with the depth map as its mask: the layer is now transparent where the mask is black (scene_undo takes both off)."
+            : target.replacesMask ? "Replaced the effect's mask with the depth map (scene_undo brings the old one back; its file is kept)."
+            : target.isLayerOpacity ? "The depth map is now the layer's opacity (its Opacity effect's mask)."
+            : "The depth map is now the effect's mask."
+        return ["layer": .number(Double(layer)), "effect": .string(effectKey), "slot": .number(Double(target.slot.slot)),
+                "layer_opacity": .bool(target.isLayerOpacity), "added_effect": .bool(target.addsEffect),
                 "mask": mask.map { .string($0) } ?? .null, "replaced": target.currentMask.map { .string($0) } ?? .null,
-                "message": .string(target.replacesMask
-                    ? "Replaced the effect's mask with the depth map (scene_undo brings the old one back; its file is kept)."
-                    : "The depth map is now the effect's mask.")]
+                "message": .string(message)]
     }
 
     private func depthRemove(_ params: ControlParameters, _ document: HeadlessSceneDocument) throws -> JSONValue {

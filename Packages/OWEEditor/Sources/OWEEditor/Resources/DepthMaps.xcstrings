@@ -3516,101 +3516,6 @@
         }
       }
     },
-    "Writes the depth map as the mask of one of this layer’s effects: the effect shows where the mask is white." : {
-      "comment" : "Help for the Use as Mask for… menu",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يكتب خريطة العمق كقناع لأحد تأثيرات هذه الطبقة: يظهر التأثير حيث يكون القناع أبيض."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schreibt die Tiefenkarte als Maske eines Effekts dieser Ebene: Der Effekt erscheint, wo die Maske weiß ist."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Escribe el mapa de profundidad como máscara de uno de los efectos de esta capa: el efecto se ve donde la máscara es blanca."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Écrit la carte de profondeur comme masque d’un des effets de ce calque : l’effet s’affiche là où le masque est blanc."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "डेप्थ मैप को इस लेयर के किसी इफ़ेक्ट के मास्क के रूप में लिखता है: इफ़ेक्ट वहाँ दिखता है जहाँ मास्क सफ़ेद है।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scrive la mappa di profondità come maschera di uno degli effetti di questo livello: l’effetto compare dove la maschera è bianca."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "深度マップをこのレイヤーのエフェクトのマスクとして書き込みます。マスクが白い部分にエフェクトが表示されます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "깊이 맵을 이 레이어 효과 중 하나의 마스크로 기록합니다. 마스크가 흰색인 곳에 효과가 나타납니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zapisuje mapę głębi jako maskę jednego z efektów tej warstwy: efekt jest widoczny tam, gdzie maska jest biała."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Grava o mapa de profundidade como máscara de um dos efeitos desta camada: o efeito aparece onde a máscara é branca."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Записывает карту глубины как маску одного из эффектов этого слоя: эффект виден там, где маска белая."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Derinlik haritasını bu katmanın efektlerinden birinin maskesi olarak yazar: efekt, maskenin beyaz olduğu yerde görünür."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Записує карту глибини як маску одного з ефектів цього шару: ефект видно там, де маска біла."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "将深度图写入为此图层某个效果的蒙版：蒙版为白色处显示效果。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "將深度圖寫入為此圖層某個效果的遮罩：遮罩為白色處顯示效果。"
-          }
-        }
-      }
-    },
     "Add an effect with a mask, such as Shake, Water Ripple or Tint, to this layer first." : {
       "comment" : "Shown under Use as Mask for… when the layer has no effect with a mask; the effect names are Wallpaper Engine's",
       "localizations" : {
@@ -4367,6 +4272,291 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示遮罩：白色為顯示效果處，黑色為不顯示處。"
+          }
+        }
+      }
+    },
+    "Layer Opacity" : {
+      "comment" : "Use as Mask for… menu item: the depth mask becomes the layer's opacity, through Wallpaper Engine's Opacity effect",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عتامة الطبقة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deckkraft der Ebene"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opacidad de la capa"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opacité du calque"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लेयर की अपारदर्शिता"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opacità del livello"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レイヤーの不透明度"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "레이어 불투명도"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Krycie warstwy"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opacidade da camada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Непрозрачность слоя"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Katman opaklığı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Непрозорість шару"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图层不透明度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "圖層不透明度"
+          }
+        }
+      }
+    },
+    "The depth map is now the layer’s opacity, through the Opacity effect added to it." : {
+      "comment" : "Notice after Use as Mask for… › Layer Opacity added Wallpaper Engine's Opacity effect with the depth mask",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أصبحت خريطة العمق عتامة الطبقة، عبر تأثير العتامة الذي أُضيف إليها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Tiefenkarte ist jetzt die Deckkraft der Ebene, über den hinzugefügten Effekt „Deckkraft“."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El mapa de profundidad es ahora la opacidad de la capa, mediante el efecto Opacidad que se le ha añadido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La carte de profondeur est désormais l’opacité du calque, grâce à l’effet Opacité qui lui a été ajouté."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डेप्थ मैप अब लेयर की अपारदर्शिता है, उसमें जोड़े गए अपारदर्शिता इफ़ेक्ट के ज़रिए।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mappa di profondità è ora l’opacità del livello, tramite l’effetto Opacità aggiunto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "追加された「不透明度」エフェクトにより、深度マップがレイヤーの不透明度になりました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "추가된 불투명도 효과를 통해 깊이 맵이 이제 레이어의 불투명도입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mapa głębi jest teraz kryciem warstwy dzięki dodanemu do niej efektowi Krycie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O mapa de profundidade agora é a opacidade da camada, pelo efeito Opacidade adicionado a ela."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карта глубины теперь задаёт непрозрачность слоя через добавленный к нему эффект «Непрозрачность»."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derinlik haritası artık katmana eklenen Opaklık efektiyle katmanın opaklığıdır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карта глибини тепер задає непрозорість шару через доданий до нього ефект «Непрозорість»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深度图现已通过添加的“不透明度”效果成为图层的不透明度。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深度圖現已透過新增的「不透明度」效果成為圖層的不透明度。"
+          }
+        }
+      }
+    },
+    "Writes the depth map as the layer’s opacity or as the mask of one of its effects: white shows, black hides." : {
+      "comment" : "Help for the Use as Mask for… menu",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يكتب خريطة العمق كعتامة للطبقة أو كقناع لأحد تأثيراتها: الأبيض يُظهر والأسود يُخفي."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schreibt die Tiefenkarte als Deckkraft der Ebene oder als Maske eines ihrer Effekte: Weiß zeigt, Schwarz verbirgt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escribe el mapa de profundidad como opacidad de la capa o como máscara de uno de sus efectos: el blanco muestra y el negro oculta."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Écrit la carte de profondeur comme opacité du calque ou comme masque d’un de ses effets : le blanc affiche, le noir masque."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डेप्थ मैप को लेयर की अपारदर्शिता या उसके किसी इफ़ेक्ट के मास्क के रूप में लिखता है: सफ़ेद दिखाता है, काला छिपाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scrive la mappa di profondità come opacità del livello o come maschera di uno dei suoi effetti: il bianco mostra, il nero nasconde."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深度マップをレイヤーの不透明度、またはそのエフェクトのマスクとして書き込みます。白は表示、黒は非表示になります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "깊이 맵을 레이어의 불투명도나 레이어 효과 중 하나의 마스크로 기록합니다. 흰색은 보이고 검은색은 숨깁니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisuje mapę głębi jako krycie warstwy lub maskę jednego z jej efektów: biel pokazuje, czerń ukrywa."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grava o mapa de profundidade como opacidade da camada ou como máscara de um dos efeitos dela: o branco mostra, o preto oculta."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записывает карту глубины как непрозрачность слоя или как маску одного из его эффектов: белое видно, чёрное скрыто."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derinlik haritasını katmanın opaklığı ya da efektlerinden birinin maskesi olarak yazar: beyaz gösterir, siyah gizler."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записує карту глибини як непрозорість шару або як маску одного з його ефектів: біле видно, чорне приховано."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将深度图写入为图层的不透明度或其某个效果的蒙版：白色显示，黑色隐藏。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將深度圖寫入為圖層的不透明度或其某個效果的遮罩：白色顯示，黑色隱藏。"
           }
         }
       }

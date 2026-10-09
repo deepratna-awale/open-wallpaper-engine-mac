@@ -254,11 +254,11 @@ extension MCPToolCatalog {
                     "layer": JSONSchema.integer("The layer; the whole scene when omitted."),
                 ], required: ["wallpaper_id"]), annotations: .destructive) { message($0) },
         MCPTool("use_depth_map_as_mask", title: "Use Depth Map as Mask",
-                description: "Create Mask from Depth Map › Use as Mask for…: writes the layer's depth map (depth_generate) as the mask of one of its effects with a grey mask slot (Shake, Water Ripple, Tint…), so the effect shows where the mask is white (near, unless inverted). It is stored as WE stores a painted mask (an R8 .tex in materials/masks, named in the effect's pass textures), so Save as New Wallpaper writes a normal WE wallpaper. An existing mask is replaced (the result's replaced names it; scene_undo brings it back and its file is kept). One undo step.",
+                description: "Create Mask from Depth Map › Use as Mask for…: writes the layer's depth map (depth_generate) as the mask of one of its effects with a grey mask slot (Shake, Water Ripple, Tint…), so the effect shows where the mask is white (near, unless inverted); or, with effect \"opacity\", as the layer's opacity: the mask of its WE Opacity effect, added with the mask in the same undo step when the layer has none, so the layer is transparent where the mask is black. It is stored as WE stores a painted mask (an R8 .tex in materials/masks, named in the effect's pass textures), so Save as New Wallpaper writes a normal WE wallpaper. An existing mask is replaced (the result's replaced names it; scene_undo brings it back and its file is kept). One undo step.",
                 input: JSONSchema.object([
                     "wallpaper_id": sceneWallpaper,
                     "layer": layerID,
-                    "effect": JSONSchema.string("The effect's key from scene_get (\"0\", \"+1\").", minLength: 1),
+                    "effect": JSONSchema.string("The effect's key from scene_get (\"0\", \"+1\"), or \"opacity\" for the layer's opacity (WE's Opacity effect, added if the layer has none).", minLength: 1),
                     "slot": JSONSchema.integer("The mask's texture slot, when the effect has several grey masks (scene_get lists them)."),
                     "invert": JSONSchema.boolean("Swap near and far, so the effect shows on what is far."),
                     "contrast": JSONSchema.number("The mask's contrast, 0.25 to 4 (1 by default): above 1 harder, below softer.", minimum: 0.25, maximum: 4),
