@@ -23,11 +23,14 @@ enum EditorPreviewHelper {
         return EditorPreviewCache(cachesDirectory: cachesDirectory, build: EditorPreviewCache.assetsBuild(of: assets))
     }
 
-    /// The provider of the editor window's previews; nil without WE's assets.
+    /// The provider of the editor window's previews; nil without WE's assets. Each browser's open
+    /// time is logged (`Editor previews: Add Effect opened in …`).
     @MainActor
     static func provider() -> EditorPreviewProvider? {
         cache().map { cache in
-            EditorPreviewProvider(cache: cache, renderer: { items, finished in await render(items, cache: cache, finished: finished) })
+            EditorPreviewProvider(cache: cache,
+                                  renderer: { items, finished in await render(items, cache: cache, finished: finished) },
+                                  log: { OWELog.info(.ui, "Editor previews: \($0)") })
         }
     }
 

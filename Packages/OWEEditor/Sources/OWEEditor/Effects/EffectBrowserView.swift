@@ -78,6 +78,8 @@ struct EffectBrowserView: View {
             .padding(14)
         }
         .frame(minWidth: 640, idealWidth: 760, minHeight: 480, idealHeight: 600)
+        .onAppear { previews?.beginOpen(.effects) }
+        .onDisappear { previews?.endOpen() }
     }
 
     private var selectedEntry: EffectCatalogEntry? { entries.first { $0.id == selection } }

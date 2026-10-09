@@ -17,8 +17,18 @@ public struct EditorPreviewRenderItem: Hashable, Sendable {
 /// (`EditorPreviewCache`), else rendered the first time a tile asks for it, off the main thread
 /// (the app renders them in its helper process, one batch at a time), then cached for the
 /// assets' build. A tile shows a spinner meanwhile.
+///
+/// Each browser's open is measured (`beginOpen`, `endOpen`): from the browser appearing until
+/// every tile it showed meanwhile has its preview (or its symbol), logged once through `log` with
+/// how many were cached, rendered or failed, so a cold open can be compared across builds.
 @MainActor
 public final class EditorPreviewProvider: ObservableObject {
+    /// The browsers whose opens are measured; the raw value names them in the log.
+    public enum Browser: String, Sendable {
+        case effects = "Add Effect"
+        case particleSystems = "Add Particle System"
+    }
+
     public enum State: Equatable, Sendable {
         case generating
         case ready(URL)
@@ -37,10 +47,28 @@ public final class EditorPreviewProvider: ObservableObject {
     /// Asked for and not yet in a batch, in the order they were asked for.
     private var queue: [EditorPreviewSubject] = []
     private var worker: Task<Void, Never>?
+    private let log: @MainActor (String) -> Void
+    private let now: @MainActor () -> Date
+    /// The browser open being measured, until its tiles are all shown.
+    private var opening: Opening?
 
-    public init(cache: EditorPreviewCache, renderer: @escaping Renderer) {
+    /// One browser open: when it started and its tiles, by how each was shown.
+    private struct Opening {
+        let browser: Browser
+        let started: Date
+        var waiting: Set<EditorPreviewSubject> = []
+        var shown: Set<EditorPreviewSubject> = []
+        var cached = 0
+        var rendered = 0
+        var failed = 0
+    }
+
+    public init(cache: EditorPreviewCache, renderer: @escaping Renderer,
+                log: @escaping @MainActor (String) -> Void = { _ in }, now: @escaping @MainActor () -> Date = { Date() }) {
         self.cache = cache
         self.renderer = renderer
+        self.log = log
+        self.now = now
     }
 
     public func state(of subject: EditorPreviewSubject) -> State? {
@@ -49,6 +77,7 @@ public final class EditorPreviewProvider: ObservableObject {
 
     /// Shows the subject's preview: at once when it is cached, else once it is rendered.
     public func request(_ subject: EditorPreviewSubject) {
+        noteAsked(subject)
         guard states[subject] == nil else { return }
         states[subject] = .generating
         let cache = cache
@@ -56,11 +85,70 @@ public final class EditorPreviewProvider: ObservableObject {
             let cached = await Task.detached(priority: .userInitiated) { cache.cachedPreview(for: subject) }.value
             if let cached {
                 states[subject] = .ready(cached)
+                noteShown(subject, cached: true)
             } else {
                 queue.append(subject)
                 startWorker()
             }
         }
+    }
+
+    // MARK: Measuring a browser's open
+
+    /// A browser appeared: its open is measured until the tiles it shows have their previews.
+    public func beginOpen(_ browser: Browser) {
+        endOpen()
+        opening = Opening(browser: browser, started: now())
+    }
+
+    /// The browser closed: an open whose tiles weren't all shown yet is logged as such.
+    public func endOpen() {
+        guard let open = opening else { return }
+        opening = nil
+        guard !open.waiting.isEmpty else { return }
+        log("\(open.browser.rawValue) closed after " + Self.seconds(now().timeIntervalSince(open.started))
+            + " with \(open.waiting.count) of \(open.waiting.count + open.shown.count) tiles still rendering")
+    }
+
+    private func noteAsked(_ subject: EditorPreviewSubject) {
+        guard var open = opening, !open.waiting.contains(subject), !open.shown.contains(subject) else { return }
+        switch states[subject] {
+        case .ready?, .failed?:
+            // Shown earlier in this window: as good as cached.
+            open.shown.insert(subject)
+            open.cached += 1
+            opening = open
+            // Checked once the other tiles laid out with this one have asked too.
+            Task { self.finishOpenIfShown() }
+        case .generating?, nil:
+            open.waiting.insert(subject)
+            opening = open
+        }
+    }
+
+    private func noteShown(_ subject: EditorPreviewSubject, cached: Bool) {
+        guard var open = opening, open.waiting.remove(subject) != nil else { return }
+        open.shown.insert(subject)
+        if cached {
+            open.cached += 1
+        } else if states[subject] == .failed {
+            open.failed += 1
+        } else {
+            open.rendered += 1
+        }
+        opening = open
+        finishOpenIfShown()
+    }
+
+    private func finishOpenIfShown() {
+        guard let open = opening, open.waiting.isEmpty, !open.shown.isEmpty else { return }
+        opening = nil
+        log("\(open.browser.rawValue) opened in " + Self.seconds(now().timeIntervalSince(open.started))
+            + ": \(open.shown.count) tiles shown, \(open.cached) cached, \(open.rendered) rendered, \(open.failed) failed")
+    }
+
+    private static func seconds(_ interval: TimeInterval) -> String {
+        String(format: "%.2f s", interval)
     }
 
     private func startWorker() {
@@ -95,6 +183,7 @@ public final class EditorPreviewProvider: ObservableObject {
         Task {
             let cached = await Task.detached(priority: .userInitiated) { cache.cachedPreview(for: subject) }.value
             states[subject] = cached.map(State.ready) ?? .failed
+            noteShown(subject, cached: false)
         }
     }
 }

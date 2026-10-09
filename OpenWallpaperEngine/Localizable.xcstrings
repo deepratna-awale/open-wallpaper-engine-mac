@@ -95020,6 +95020,101 @@
         }
       }
     },
+    "Paused, %lld of %lld" : {
+      "comment" : "Settings › Assets: the Wallpaper Editor's background preview rendering waits (on low battery or while the Mac is too hot); previews done of all of them, e.g. Paused, 120 of 400",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متوقف مؤقتًا، %1$lld من %2$lld"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausiert, %1$lld von %2$lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En pausa, %1$lld de %2$lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En pause, %1$lld sur %2$lld"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रुका हुआ, %2$lld में से %1$lld"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In pausa, %1$lld di %2$lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一時停止中（%2$lld 件中 %1$lld 件）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일시 정지됨, %2$lld개 중 %1$lld개"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wstrzymano, %1$lld z %2$lld"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausado, %1$lld de %2$lld"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приостановлено, %1$lld из %2$lld"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duraklatıldı, %2$lld içinden %1$lld"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Призупинено, %1$lld з %2$lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已暂停，%1$lld/%2$lld"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已暫停，%1$lld/%2$lld"
+          }
+        }
+      }
+    },
     "Paused: video memory is full" : {
       "localizations" : {
         "ar" : {
@@ -110486,6 +110581,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在渲染螢幕保護程式"
+          }
+        }
+      }
+    },
+    "Rendering, %lld of %lld" : {
+      "comment" : "Settings › Assets: the Wallpaper Editor's previews are rendering in the background; previews done of all of them, e.g. Rendering, 120 of 400",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ العرض، %1$lld من %2$lld"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird gerendert, %1$lld von %2$lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderizando, %1$lld de %2$lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendu en cours, %1$lld sur %2$lld"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रेंडर हो रहा है, %2$lld में से %1$lld"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendering in corso, %1$lld di %2$lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レンダリング中（%2$lld 件中 %1$lld 件）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "렌더링 중, %2$lld개 중 %1$lld개"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderowanie, %1$lld z %2$lld"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderizando, %1$lld de %2$lld"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рендеринг, %1$lld из %2$lld"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oluşturuluyor, %2$lld içinden %1$lld"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рендеринг, %1$lld з %2$lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在渲染，%1$lld/%2$lld"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在渲染，%1$lld/%2$lld"
           }
         }
       }
@@ -145235,6 +145425,101 @@
         }
       }
     },
+    "The previews of Add Effect and Add Particle System render in the background at low priority, so the browsers open at once. They wait while the Mac is on low battery or too hot." : {
+      "comment" : "Settings › Assets: help for the Wallpaper Editor previews row; Add Effect and Add Particle System are the editor's browsers",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تُعرض معاينات «إضافة تأثير» و«إضافة نظام جسيمات» في الخلفية بأولوية منخفضة، فتُفتح المتصفحات فورًا. وتنتظر عندما تكون بطارية الـ Mac منخفضة أو يكون ساخنًا جدًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Vorschauen von „Effekt hinzufügen“ und „Partikelsystem hinzufügen“ werden im Hintergrund mit niedriger Priorität gerendert, damit sich die Browser sofort öffnen. Bei niedrigem Akkustand oder wenn der Mac zu heiß ist, warten sie."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las previsualizaciones de Añadir efecto y Añadir sistema de partículas se renderizan en segundo plano con prioridad baja, para que los exploradores se abran al instante. Esperan mientras el Mac tiene poca batería o está demasiado caliente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les aperçus d’Ajouter un effet et d’Ajouter un système de particules sont rendus en arrière-plan avec une priorité basse, pour que les navigateurs s’ouvrent aussitôt. Ils attendent tant que la batterie du Mac est faible ou qu’il est trop chaud."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इफ़ेक्ट जोड़ें और पार्टिकल सिस्टम जोड़ें के प्रीव्यू कम प्राथमिकता पर बैकग्राउंड में रेंडर होते हैं, ताकि ब्राउज़र तुरंत खुलें। Mac की बैटरी कम होने या उसके बहुत गर्म होने पर वे रुक जाते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le anteprime di Aggiungi effetto e Aggiungi sistema di particelle vengono renderizzate in background con priorità bassa, così i browser si aprono subito. Attendono finché il Mac ha la batteria scarica o è troppo caldo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「エフェクトを追加」と「パーティクルシステムを追加」のプレビューは低い優先度でバックグラウンドでレンダリングされるため、ブラウザがすぐに開きます。Mac のバッテリー残量が少ないときや高温のときは待機します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "효과 추가 및 파티클 시스템 추가의 미리보기는 낮은 우선순위로 백그라운드에서 렌더링되므로 브라우저가 바로 열립니다. Mac의 배터리가 부족하거나 너무 뜨거울 때는 대기합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podglądy w oknach Dodaj efekt i Dodaj system cząsteczek są renderowane w tle z niskim priorytetem, dzięki czemu przeglądarki otwierają się od razu. Czekają, gdy bateria Maca jest słaba lub gdy jest on zbyt gorący."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As pré-visualizações de Adicionar Efeito e Adicionar Sistema de Partículas são renderizadas em segundo plano com prioridade baixa, para que os navegadores abram na hora. Elas aguardam enquanto o Mac está com pouca bateria ou quente demais."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предварительный просмотр в окнах «Добавить эффект» и «Добавить систему частиц» рендерится в фоне с низким приоритетом, чтобы они открывались сразу. Рендеринг ждёт, пока у Mac низкий заряд или он слишком горячий."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efekt Ekle ve Parçacık Sistemi Ekle önizlemeleri düşük öncelikle arka planda oluşturulur, böylece tarayıcılar hemen açılır. Mac’in pili azken veya Mac çok ısındığında beklerler."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередній перегляд у вікнах «Додати ефект» і «Додати систему частинок» рендериться у фоні з низьким пріоритетом, щоб вони відкривалися одразу. Рендеринг чекає, поки Mac має низький заряд або надто гарячий."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“添加效果”和“添加粒子系统”的预览会以低优先级在后台渲染，因此浏览器能立即打开。Mac 电量不足或过热时，渲染会等待。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「加入效果」和「加入粒子系統」的預覽會以低優先順序在背景渲染，因此瀏覽器能立即開啟。Mac 電量不足或過熱時，渲染會等待。"
+          }
+        }
+      }
+    },
     "The same shortcuts are shown in the menus. You can change them in System Settings › Keyboard › Keyboard Shortcuts › App Shortcuts." : {
       "localizations" : {
         "ar" : {
@@ -161302,6 +161587,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "背景圖片編輯器"
+          }
+        }
+      }
+    },
+    "Wallpaper Editor previews" : {
+      "comment" : "Settings › Assets: row title for the Wallpaper Editor's effect and particle system previews, which render in the background",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "معاينات محرر الخلفيات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorschauen des Hintergrundbild-Editors"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previsualizaciones del Editor de fondos de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aperçus de l’Éditeur de fond d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर एडिटर के प्रीव्यू"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anteprime dell’Editor sfondi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙エディタのプレビュー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면 편집기 미리보기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podglądy Edytora tapet"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pré-visualizações do Editor de Imagem de Fundo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предварительный просмотр в Редакторе обоев"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar Kâğıdı Düzenleyici önizlemeleri"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередній перегляд у Редакторі шпалер"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "墙纸编辑器预览"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景圖片編輯器預覽"
           }
         }
       }

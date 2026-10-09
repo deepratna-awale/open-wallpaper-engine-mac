@@ -53,6 +53,62 @@ final class EditorPreviewProviderTests: XCTestCase {
         XCTAssertEqual(batches.flatMap { $0 }.count, 2, "each one once")
     }
 
+    // MARK: Measuring a browser's open
+
+    func testABrowsersOpenIsLoggedOnceItsTilesAreShown() async throws {
+        let cache = EditorPreviewCache(cachesDirectory: scratch, build: "steam-1")
+        try FileManager.default.createDirectory(at: cache.directory, withIntermediateDirectories: true)
+        try Data("heic".utf8).write(to: cache.outputBase(for: tint).appendingPathExtension("heic"))
+        let broken = self.broken
+        let logs = LogLines()
+        let provider = EditorPreviewProvider(cache: cache, renderer: { items, finished in
+            for item in items where item.subject != broken {
+                FileManager.default.createFile(atPath: item.outputBase.appendingPathExtension("mov").path(percentEncoded: false),
+                                               contents: Data("mov".utf8))
+                finished(item.subject)
+            }
+        }, log: { logs.lines.append($0) }, now: { logs.tick() })
+        provider.beginOpen(.effects)
+        provider.request(tint)
+        provider.request(rain)
+        provider.request(broken)
+        try await waitUntil { !logs.lines.isEmpty }
+        XCTAssertEqual(logs.lines, ["Add Effect opened in 0.25 s: 3 tiles shown, 1 cached, 1 rendered, 1 failed"])
+
+        // A second open in the same window finds every tile shown already.
+        provider.endOpen()
+        provider.beginOpen(.effects)
+        provider.request(tint)
+        provider.request(rain)
+        try await waitUntil { logs.lines.count == 2 }
+        XCTAssertEqual(logs.lines.last, "Add Effect opened in 0.25 s: 2 tiles shown, 2 cached, 0 rendered, 0 failed")
+    }
+
+    func testABrowserClosedBeforeItsTilesAreShownSaysSo() {
+        let cache = EditorPreviewCache(cachesDirectory: scratch, build: "steam-1")
+        let logs = LogLines()
+        let provider = EditorPreviewProvider(cache: cache, renderer: { _, _ in }, log: { logs.lines.append($0) })
+        provider.beginOpen(.particleSystems)
+        provider.request(rain)
+        // Closed before the cache was even read.
+        provider.endOpen()
+        XCTAssertEqual(logs.lines.count, 1)
+        XCTAssertTrue(logs.lines[0].hasPrefix("Add Particle System closed after "), logs.lines[0])
+        XCTAssertTrue(logs.lines[0].hasSuffix(" with 1 of 1 tiles still rendering"), logs.lines[0])
+    }
+
+    func testNoOpenIsLoggedWithoutBeginOpen() async throws {
+        let cache = EditorPreviewCache(cachesDirectory: scratch, build: "steam-1")
+        try FileManager.default.createDirectory(at: cache.directory, withIntermediateDirectories: true)
+        try Data("heic".utf8).write(to: cache.outputBase(for: tint).appendingPathExtension("heic"))
+        let logs = LogLines()
+        let provider = EditorPreviewProvider(cache: cache, renderer: { _, _ in }, log: { logs.lines.append($0) })
+        provider.request(tint)
+        try await waitUntil { provider.state(of: tint) != .generating }
+        provider.endOpen()
+        XCTAssertEqual(logs.lines, [])
+    }
+
     private func waitUntil(_ condition: @MainActor () -> Bool) async throws {
         let deadline = Date().addingTimeInterval(5)
         while !condition() {
@@ -66,4 +122,16 @@ private actor RenderLog {
     private(set) var batches: [[EditorPreviewSubject]] = []
 
     func record(_ batch: [EditorPreviewSubject]) { batches.append(batch) }
+}
+
+/// What a provider logged, and a clock that moves a quarter second each time it is read.
+@MainActor
+private final class LogLines {
+    var lines: [String] = []
+    private var clock = Date(timeIntervalSince1970: 1_000)
+
+    func tick() -> Date {
+        clock.addTimeInterval(0.25)
+        return clock
+    }
 }
