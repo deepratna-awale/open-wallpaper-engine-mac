@@ -295,7 +295,9 @@ private struct DepthMaskControls: View {
                     }
                 }
             }
-            .fixedSize()
+            // No fixed size: inside Scene Edit / Export's split view a fixed-size menu fed its
+            // ideal size into the pane's limits, which never settled (an update-constraints loop
+            // that crashed the window whenever the depth map plugin was installed).
             .disabled(model.generatedTexture == nil || isBusy || targets.isEmpty)
             .help(DL("Writes the depth map as the mask of one of this layer’s effects: the effect shows where the mask is white."))
             Spacer()
