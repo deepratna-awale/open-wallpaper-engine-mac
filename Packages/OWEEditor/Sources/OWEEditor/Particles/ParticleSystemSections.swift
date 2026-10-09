@@ -289,6 +289,7 @@ struct ParticleTextureThumbnail: View {
 /// The textures a particle material can draw: the wallpaper's own and WE's particle sprites,
 /// sprite sheets marked with their frame count.
 struct ParticleTexturePicker: View {
+    @Environment(\.appAccentColor) private var accentColor
     @ObservedObject var services: ParticleEditorServices
     let selected: String?
     let pick: (String) -> Void
@@ -324,7 +325,7 @@ struct ParticleTexturePicker: View {
                         VStack(spacing: 3) {
                             ParticleTextureThumbnail(services: services, name: texture.name, size: 56)
                                 .overlay(RoundedRectangle(cornerRadius: 4)
-                                    .stroke(texture.name == selected ? Color.accentColor : .clear, lineWidth: 2))
+                                    .stroke(texture.name == selected ? accentColor : .clear, lineWidth: 2))
                             Text((texture.name as NSString).lastPathComponent)
                                 .font(.caption2).lineLimit(1).truncationMode(.middle)
                             if texture.frames > 1 {

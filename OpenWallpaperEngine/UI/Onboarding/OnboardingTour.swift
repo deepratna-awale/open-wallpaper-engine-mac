@@ -1,8 +1,10 @@
+import OWEInspectorKit
 import SwiftUI
 
 /// The feature tour the first-run sheet showed, now a page of the setup assistant's welcome step:
 /// one page of highlights at a time, with arrows and dots to move between them.
 struct OnboardingTour: View {
+    @Environment(\.appAccentColor) private var accentColor
     @State private var pageIndex = 0
 
     private var pages: [Page] { Page.all }
@@ -25,7 +27,7 @@ struct OnboardingTour: View {
                 HStack(spacing: 5) {
                     ForEach(pages.indices, id: \.self) { index in
                         Circle()
-                            .fill(index == pageIndex ? Color.accentColor : Color.secondary.opacity(0.3))
+                            .fill(index == pageIndex ? accentColor : Color.secondary.opacity(0.3))
                             .frame(width: 6, height: 6)
                     }
                 }

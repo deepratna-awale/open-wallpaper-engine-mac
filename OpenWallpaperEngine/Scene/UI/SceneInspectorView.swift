@@ -1040,7 +1040,8 @@ extension AppDelegate {
     /// out at their minimum and centred them, pushing their tops under the toolbar.
     private static func sceneInspectorContent(_ wallpaper: WEWallpaper, _ scopes: [WallpaperPropertyScope],
                                               _ mode: SceneInspectorMode) -> NSView {
-        let view = NSHostingView(rootView: SceneInspectorView(wallpaper: wallpaper, scopes: scopes, initialMode: mode))
+        let view = NSHostingView(rootView: SceneInspectorView(wallpaper: wallpaper, scopes: scopes, initialMode: mode)
+            .appAccentTint())
         view.sizingOptions = [.minSize]
         return view
     }

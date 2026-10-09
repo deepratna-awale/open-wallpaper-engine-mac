@@ -118,6 +118,7 @@ private struct PuppetTextureChannelsSection: View {
 
 /// The bones as a hierarchy, the selected one highlighted.
 private struct PuppetBoneList: View {
+    @Environment(\.appAccentColor) private var accentColor
     @ObservedObject var workspace: PuppetWorkspace
 
     var body: some View {
@@ -138,7 +139,7 @@ private struct PuppetBoneList: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .listRowBackground(workspace.selectedBone == entry.bone ? Color.accentColor.opacity(0.25) : nil)
+                .listRowBackground(workspace.selectedBone == entry.bone ? accentColor.opacity(0.25) : nil)
             }
         }
     }

@@ -1,3 +1,4 @@
+import OWEInspectorKit
 import SwiftUI
 
 struct WorkshopView: SubviewOfContentView {
@@ -542,6 +543,7 @@ struct WorkshopFiltersSidebar: View {
 /// A Workshop result in the Workshop and Discover tabs: its preview, title and tags, the download
 /// control and the item's context menu.
 struct WorkshopItemCard: View {
+    @Environment(\.appAccentColor) private var accentColor
     let item: WorkshopItem
     @ObservedObject var viewModel: WorkshopViewModel
 
@@ -582,7 +584,7 @@ struct WorkshopItemCard: View {
                     Label("Select item",
                           systemImage: viewModel.selectedItemIds.contains(item.id) ? "checkmark.circle.fill" : "circle")
                         .labelStyle(.iconOnly)
-                        .foregroundStyle(viewModel.selectedItemIds.contains(item.id) ? Color.accentColor : .white)
+                        .foregroundStyle(viewModel.selectedItemIds.contains(item.id) ? accentColor : .white)
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(viewModel.selectedItemIds.contains(item.id) ? .isSelected : [])

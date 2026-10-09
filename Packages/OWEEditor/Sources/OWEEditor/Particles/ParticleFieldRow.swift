@@ -284,6 +284,7 @@ struct ParticleOptionPicker: View {
 /// `colorchange`, the curve of `sizechange` and `alphachange` (start value until the start time,
 /// a straight change to the end value at the end time, then the end value).
 struct ParticleLifetimeRamp: View {
+    @Environment(\.appAccentColor) private var accentColor
     let name: String
     let item: [String: SceneJSONValue]
     let field: (String) -> SceneJSONValue?
@@ -316,7 +317,7 @@ struct ParticleLifetimeRamp: View {
                     path.addLine(to: CGPoint(x: min(max(start, 0), 1) * size.width, y: y(from)))
                     path.addLine(to: CGPoint(x: min(max(end, 0), 1) * size.width, y: y(to)))
                     path.addLine(to: CGPoint(x: size.width, y: y(to)))
-                    context.stroke(path, with: .color(.accentColor), lineWidth: 1.5)
+                    context.stroke(path, with: .color(accentColor), lineWidth: 1.5)
                 }
                 .frame(height: 30)
                 .background(RoundedRectangle(cornerRadius: 4).fill(.quaternary.opacity(0.4)))

@@ -23,7 +23,7 @@ final class SafeRestartNotice {
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        let notice = NoticeView(message: message, onRetry: onRetry, onDismiss: onDismiss)
+        let notice = NoticeView(message: message, onRetry: onRetry, onDismiss: onDismiss).appAccentTint()
         let hosting: NSView
         if #available(macOS 26, *) {
             hosting = NSHostingView(rootView: notice)

@@ -653,7 +653,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         self.settingsWindow.contentView = NSHostingView(rootView: SettingsView()
             .environmentObject(self.globalSettingsViewModel)
             .environmentObject(settingsNavigation)
-            .environment(\.applicationRuleLibrary, ruleLibrary))
+            .environment(\.applicationRuleLibrary, ruleLibrary)
+            .appAccentTint())
 
         // A saved frame is the size and place the user left the window at; only the first open
         // gets the computed size. The frame autosaves into UserDefaults.standard, which an
@@ -801,7 +802,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         window.title = wallpaper.project.title
         window.contentView = NSHostingView(rootView: WorkshopPreviewContent(
             wallpaperViewModel: previewViewModel
-        ))
+        ).appAccentTint())
         window.center()
         window.makeKeyAndOrderFront(nil)
 
