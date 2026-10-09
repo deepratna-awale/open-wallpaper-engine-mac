@@ -177,6 +177,54 @@ final class WallpaperEditorCoreEditingTests: XCTestCase {
         XCTAssertLessThan(green.z, 60)
     }
 
+    /// An effect the Wallpaper Editor adds to a layer Scene Edit / Export saved as JSON (its JSON
+    /// editor stores the whole authored object) draws in the editor's canvas: the replaced object
+    /// is the base the draft's edits apply to, not a copy laid over them.
+    func testAnEffectAddedToALayerSceneEditExportReplacedRendersInTheCanvas() throws {
+        let assets = try Fixtures.assets()
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: assets.appending(path: "effects/tint/materials/effects/tint.json").path),
+                          "WE's Tint effect isn't in the assets")
+        let (directory, identity) = try makeWallpaper()
+        var solid = SceneLayerFactory.solid(name: "Fill", color: SIMD3(1, 1, 1), size: SIMD2(480, 272), origin: SIMD2(240, 136))
+        solid["id"] = .number(1)
+        let object = try XCTUnwrap(SceneJSONValue.object(solid).any as? [String: Any])
+        var root = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(Self.sceneJSON.utf8)) as? [String: Any])
+        root["objects"] = [object]
+        try JSONSerialization.data(withJSONObject: root).write(to: directory.appending(path: "scene.json"))
+        // Scene Edit / Export's JSON editor saved the object as authored, with one field added.
+        var replaced = object
+        replaced["castshadow"] = false
+        let replacedJSON = String(decoding: try JSONSerialization.data(withJSONObject: replaced), as: UTF8.self)
+        let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
+        let wallpaper = WEWallpaper(using: project, where: directory)
+        WallpaperPropertyTargets(wallpaper: wallpaper, scopes: [.shared]).save(["_owe_scene_object_1_json": replacedJSON])
+        let draft = WallpaperEditorDraft(wallpaper: wallpaper)
+        draft.startProperties(resuming: false)
+        defer { try? draft.discard() } // Cleanup: the draft's overlay and properties.
+
+        // The editor adds a blue Tint to the layer; the draft keeps it, as the window's edits.
+        let session = try session(for: directory)
+        let tint = EffectCatalogEntry(file: "effects/tint/effect.json", title: "Tint")
+        try EditorWallpaperResources(wallpaper: wallpaper, package: nil, assets: SceneEditOverlayFiles.assets(for: identity))
+            .prepareEffect(tint)
+        let key = try XCTUnwrap(session.addEffect(tint, to: 1, actionName: "Add Effect"))
+        session.setEffectConstant("color", to: .string("0 0 1"), effect: key, of: 1, actionName: "Change Color")
+        try draft.saveOverlay(session.overlay)
+
+        let harness = try SceneFrameHarness(directory: directory, scope: .editorDraft, size: SIMD2(480, 272))
+        defer { harness.close() }
+        XCTAssertEqual(harness.model.loadedEditOverlay, session.overlay, "the canvas reads the draft")
+        // The effect's pipeline compiles off the render thread: the layer draws without it until then.
+        var blue = SIMD3(255, 255, 255)
+        for _ in 0..<60 where blue.x > 60 {
+            harness.draw(frames: 5)
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            blue = try XCTUnwrap(Self.pixel(harness, x: 240, y: 136))
+        }
+        XCTAssertGreaterThan(blue.z, 200, "the tint the editor added: \(blue)")
+        XCTAssertLessThan(blue.x, 60)
+    }
+
     /// An image imported in the editor and a text layer it added draw where the editor put them.
     func testAnImportedImageLayerAndATextLayerRender() throws {
         _ = try Fixtures.assets()
