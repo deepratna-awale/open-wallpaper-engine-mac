@@ -88,7 +88,7 @@ final class MCPServerTests: XCTestCase {
             "import_wallpaper", "open_editor", "snapshot",
         ]), "the basic tools stay")
         XCTAssertTrue(Set(names).isSuperset(of: [
-            "scene_get", "scene_apply_edits", "scene_undo", "scene_redo", "scene_save", "scene_save_as_local_wallpaper",
+            "scene_get", "scene_apply_edits", "scene_undo", "scene_redo", "wallpaper_editor_save", "wallpaper_editor_save_as_new", "scene_save", "scene_save_as_local_wallpaper",
             "scene_revert", "effects_catalog", "particles_catalog", "particles_get", "particles_restart", "puppets_list",
             "timeline_get", "timeline_preview", "script_get", "script_set", "script_check", "user_properties_get",
             "depth_generate", "depth_apply", "depth_remove", "use_depth_map_as_mask", "editor_close", "editor_set_tab",

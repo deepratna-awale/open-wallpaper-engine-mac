@@ -4,12 +4,13 @@ import OWEEditor
 import OWESceneEditing
 
 /// The control channel's requests for the scene and both editors (`docs/mcp.md`): the edit model
-/// through headless edit sessions on the editor overlay (`HeadlessSceneEditService`), the read
-/// tools, SceneScript, depth maps and the editors' windows.
+/// through headless edit sessions on the Wallpaper Editor's draft (`HeadlessSceneEditService`),
+/// saving it, the read tools, SceneScript, depth maps and the editors' windows.
 @MainActor
 final class SceneControlRequests: ControlRequestGroup {
     let methods: Set<String> = [
-        "scene_get", "scene_apply_edits", "scene_undo", "scene_redo", "scene_save", "scene_save_as_local_wallpaper",
+        "scene_get", "scene_apply_edits", "scene_undo", "scene_redo", "wallpaper_editor_save", "wallpaper_editor_save_as_new",
+        "scene_save", "scene_save_as_local_wallpaper",
         "scene_revert", "effects_catalog", "particles_catalog", "particles_get", "particles_restart", "puppets_list",
         "timeline_get", "timeline_preview", "script_get", "script_set", "script_check", "user_properties_get",
         "depth_generate", "depth_apply", "depth_remove", "use_depth_map_as_mask", "editor_close", "editor_set_tab",
@@ -37,8 +38,11 @@ final class SceneControlRequests: ControlRequestGroup {
                 guard let found = model.find(wallpaper) else { throw AppControlModel.missing(wallpaper) }
                 return try WallpaperSceneEditResources(wallpaper: found, depthMapGenerator: DepthMapPlugin.generator)
             },
-            announce: { [unowned app] folder, overlay, actionName, step in
-                app.editorChangeSync.appOverlayDidSave(folder: folder, overlay: overlay, actionName: actionName, step: step)
+            announce: { [unowned app] folder, actionName, step in
+                app.editorChangeSync.appOverlayDidSave(folder: folder, actionName: actionName, step: step)
+            },
+            announceSave: { [unowned app] folder, overlay in
+                app.editorChangeSync.appDraftDidSave(folder: folder, overlay: overlay)
             }))
         return SceneControlRequests(service: service, editors: AppSceneEditorControl(app: app, model: model))
     }
@@ -57,15 +61,16 @@ final class SceneControlRequests: ControlRequestGroup {
         case "scene_get": return SceneControlSnapshot.scene(document)
         case "scene_apply_edits": return try applyEdits(params, document)
         case "scene_undo", "scene_redo": return undo(document, redo: method == "scene_redo")
-        case "scene_save": return saved(document)
-        case "scene_save_as_local_wallpaper": return try saveAsLocalWallpaper(params, document)
+        // The older names (deprecated) do the same, so existing clients keep working.
+        case "wallpaper_editor_save", "scene_save": return try save(document)
+        case "wallpaper_editor_save_as_new", "scene_save_as_local_wallpaper": return try saveAsNew(params, document)
         case "scene_revert": return revert(params, document)
         case "effects_catalog":
             return SceneControlSnapshot.effects(document, query: try params.string("query") ?? "")
         case "particles_catalog":
             return SceneControlSnapshot.particles(document, query: try params.string("query") ?? "")
         case "particles_get": return try particlesGet(params, document)
-        case "particles_restart": return try particlesRestart(params, document)
+        case "particles_restart": return try await particlesRestart(params, document)
         case "puppets_list": return SceneControlSnapshot.puppets(document)
         case "timeline_get": return SceneControlSnapshot.timelines(document, layer: try params.int("layer"))
         case "script_get": return try scriptGet(params, document)
@@ -100,7 +105,7 @@ final class SceneControlRequests: ControlRequestGroup {
         return [
             "results": .array(results),
             "undo": SceneControlSnapshot.undoState(document.session),
-            "message": .string("Applied \(count) edit\(count == 1 ? "" : "s") to \"\(document.wallpaper.title)\" as one undo step; it shows on the displays running it and in its open editor."),
+            "message": .string("Applied \(count) edit\(count == 1 ? "" : "s") to the draft of \"\(document.wallpaper.title)\" as one undo step; it shows in its open Wallpaper Editor window, and on the displays once wallpaper_editor_save saves it."),
         ]
     }
 
@@ -116,37 +121,39 @@ final class SceneControlRequests: ControlRequestGroup {
         ]
     }
 
-    private func saved(_ document: HeadlessSceneDocument) -> JSONValue {
-        [
-            "edited": .bool(document.session.overlay.hasSceneEdits),
-            "message": .string("The edits of \"\(document.wallpaper.title)\" are saved: every edit is saved as it is made, beside the wallpaper, which is never changed itself. scene_save_as_local_wallpaper writes a copy with them."),
+    private func save(_ document: HeadlessSceneDocument) throws -> JSONValue {
+        let saved = try document.save()
+        return [
+            "saved": .bool(saved), "unsaved": .bool(document.hasUnsavedChanges),
+            "message": .string(saved
+                ? "Saved the changes to \"\(document.wallpaper.title)\": the displays running it show them now (the wallpaper's own files aren't changed; the edits are kept beside it)."
+                : "\"\(document.wallpaper.title)\" has no unsaved changes."),
         ]
     }
 
-    private func saveAsLocalWallpaper(_ params: ControlParameters, _ document: HeadlessSceneDocument) throws -> JSONValue {
+    private func saveAsNew(_ params: ControlParameters, _ document: HeadlessSceneDocument) throws -> JSONValue {
         let title = try params.string("title").flatMap { $0.isEmpty ? nil : $0 }
             ?? String(localized: "\(document.wallpaper.title) (Edited)", comment: "Wallpaper Editor: the suggested title of a wallpaper saved with its edits")
         let folder: URL
         do {
-            folder = try editors.saveAsLocalWallpaper(document, title: title)
+            folder = try editors.saveAsNewWallpaper(document, title: title)
         } catch let error as ControlError {
             throw error
         } catch {
-            throw ControlError(.failed, "\"\(document.wallpaper.title)\" couldn't be saved as a local wallpaper: \(error.localizedDescription)")
+            throw ControlError(.failed, "\"\(document.wallpaper.title)\" couldn't be saved as a new wallpaper: \(error.localizedDescription)")
         }
         return [
             "id": .string(folder.lastPathComponent), "title": .string(title), "folder": .string(folder.path),
-            "message": .string("Saved \"\(title)\" to the library with the edits (id \(folder.lastPathComponent))."),
+            "message": .string("Saved \"\(title)\" to the library with the edits (id \(folder.lastPathComponent)). \"\(document.wallpaper.title)\" and its draft are as they were."),
         ]
     }
 
     private func revert(_ params: ControlParameters, _ document: HeadlessSceneDocument) -> JSONValue {
-        let had = document.session.overlay.hasSceneEdits
-        if had { document.revert() }
+        let reverted = document.revertToSaved()
         return [
-            "reverted": .bool(had), "undo": SceneControlSnapshot.undoState(document.session),
-            "message": .string(had ? "Dropped every edit of \"\(document.wallpaper.title)\" (scene_undo brings them back)."
-                : "\"\(document.wallpaper.title)\" has no edits."),
+            "reverted": .bool(reverted), "undo": SceneControlSnapshot.undoState(document.session),
+            "message": .string(reverted ? "The draft of \"\(document.wallpaper.title)\" is back to the last save (scene_undo brings the changes back)."
+                : "\"\(document.wallpaper.title)\" has no unsaved changes to its scene."),
         ]
     }
 
@@ -171,10 +178,15 @@ final class SceneControlRequests: ControlRequestGroup {
         return SceneControlSnapshot.particleSystem(document, layer: layer, schema: schema)
     }
 
-    private func particlesRestart(_ params: ControlParameters, _ document: HeadlessSceneDocument) throws -> JSONValue {
+    private func particlesRestart(_ params: ControlParameters, _ document: HeadlessSceneDocument) async throws -> JSONValue {
         let layer = try particleLayer(params, document)
-        editors.restartParticles(document, layer: layer.id)
-        return ["layer": .number(Double(layer.id)), "message": .string("Particle system \(layer.id) starts again from nothing.")]
+        let inEditor = await editors.restartParticles(document, layer: layer.id)
+        return [
+            "layer": .number(Double(layer.id)), "in_editor": .bool(inEditor),
+            "message": .string(inEditor
+                ? "Particle system \(layer.id) starts again from nothing in the open Wallpaper Editor window's canvas (the draft)."
+                : "Particle system \(layer.id) starts again from nothing on the displays running the wallpaper."),
+        ]
     }
 
     // MARK: Scripts

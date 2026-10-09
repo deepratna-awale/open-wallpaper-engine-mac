@@ -933,16 +933,23 @@ class WallpaperViewModel: ObservableObject {
     private var settingsIdentities: [String: WallpaperSettingsIdentity] = [:]
     private var propertiesSavedObserver: NSObjectProtocol?
 
+    /// The store a preview runs and edits instead of the displays' rule (the Wallpaper Editor's
+    /// canvas: `WallpaperPropertyScope.editorDraft`); nil for the app's displays and the Workshop
+    /// preview.
+    var previewPropertyScope: WallpaperPropertyScope?
+
     /// The instance `screenId` shows.
     func instanceKey(for screenId: String) -> WallpaperInstanceKey {
-        instanceKeys[screenId] ?? WallpaperInstanceKey(wallpaper(for: screenId))
+        if let previewPropertyScope { return WallpaperInstanceKey(wallpaper(for: screenId), properties: previewPropertyScope) }
+        return instanceKeys[screenId] ?? WallpaperInstanceKey(wallpaper(for: screenId))
     }
 
     /// Whose properties editing `screenId`'s wallpaper changes: the shared store while synced
     /// (and in the Workshop preview, which has no real display), else the display's own.
     /// A display in a clone or stretch edits and runs its source display's.
     func propertyScope(for screenId: String) -> WallpaperPropertyScope {
-        syncsPropertiesAcrossDisplays || !persistsWallpapers ? .shared : .display(layoutResolution.source(of: screenId))
+        if let previewPropertyScope { return previewPropertyScope }
+        return syncsPropertiesAcrossDisplays || !persistsWallpapers ? .shared : .display(layoutResolution.source(of: screenId))
     }
 
     /// The scopes an edit of `wallpaper`'s properties in the sidebar or inspector goes to: the

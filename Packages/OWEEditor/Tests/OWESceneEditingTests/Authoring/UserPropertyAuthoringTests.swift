@@ -214,7 +214,7 @@ final class UserPropertyAuthoringTests: XCTestCase {
         XCTAssertEqual(entries["schemecolor"]?["value"] as? String, "0.1 0.2 0.3")
     }
 
-    /// Save as Local Wallpaper writes the bindings into scene.json and the properties into
+    /// Save as New Wallpaper writes the bindings into scene.json and the properties into
     /// project.json of the copy.
     func testSaveAsLocalWallpaperWritesPropertiesAndBindings() throws {
         let root = try Fixtures.temporaryDirectory()
@@ -250,8 +250,8 @@ final class UserPropertyAuthoringTests: XCTestCase {
         let before = session.overlay.digest
         authoring.add(.bool, label: "Clock", actionName: "Add")
         XCTAssertEqual(session.overlay.digest, before, "project.json only: the scene isn't parsed again")
-        XCTAssertTrue(session.overlay.hasSceneEdits, "but the wallpaper is edited (Revert, Save as Local Wallpaper)")
-        session.revert(actionName: "Revert")
+        XCTAssertTrue(session.overlay.hasSceneEdits, "but the wallpaper is edited (Revert, Save as New Wallpaper)")
+        session.revert(to: SceneEditOverlay(), actionName: "Revert to Saved")
         XCTAssertFalse(authoring.isEdited)
     }
 

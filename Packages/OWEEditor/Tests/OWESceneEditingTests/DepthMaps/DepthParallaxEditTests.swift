@@ -229,6 +229,6 @@ final class DepthParallaxEditTests: XCTestCase {
         XCTAssertEqual(url.lastPathComponent, "\((path as NSString).lastPathComponent).png")
         XCTAssertEqual(try Data(contentsOf: url), png)
         XCTAssertEqual(try store.saveDepthMap(png, title: "Logo"), path, "named by content")
-        XCTAssertTrue(store.assets().contains { $0.path == "materials/\(path).png" }, "Save as Local Wallpaper copies it")
+        XCTAssertTrue(store.assets().contains { $0.path == "materials/\(path).png" }, "Save as New Wallpaper copies it")
     }
 }

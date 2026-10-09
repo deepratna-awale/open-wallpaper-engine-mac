@@ -1,9 +1,9 @@
 import Foundation
 
 /// Undo for the user properties the Wallpaper Editor shows (the Details panel's own view,
-/// `SceneUserPropertiesView`, editing the shared store): each change it announces
-/// (`wallpaperUserPropertyChanged`) is registered on the editor's undo manager, beside the
-/// layer edits, and undoing writes the earlier value back through the same stores.
+/// `SceneUserPropertiesView`, editing the editor's draft store, `WallpaperPropertyScope.editorDraft`):
+/// each change it announces (`wallpaperUserPropertyChanged`) is registered on the editor's undo
+/// manager, beside the layer edits, and undoing writes the earlier value back through the same stores.
 @MainActor
 final class EditorUserPropertyUndo: ObservableObject {
     /// Moves when an undo or redo changed a value under the view, which then reads the store again.
@@ -15,11 +15,14 @@ final class EditorUserPropertyUndo: ObservableObject {
     /// The values as last seen, so a change knows what it replaced.
     private var values: [String: String]
     private var lastChange: (key: String, date: Date)?
+    /// After every change of the values, the user's, an undo's or a revert's.
+    var onChange: (() -> Void)?
     /// Set once in init and read again only in deinit, when nothing else can reach it.
     nonisolated(unsafe) private var observer: NSObjectProtocol?
 
-    init(wallpaper: WEWallpaper, undoManager: UndoManager, coalescingInterval: TimeInterval = 1) {
-        targets = WallpaperPropertyTargets(wallpaper: wallpaper, scopes: [.shared])
+    /// `scope`: the store the Details panel edits.
+    init(wallpaper: WEWallpaper, scope: WallpaperPropertyScope, undoManager: UndoManager, coalescingInterval: TimeInterval = 1) {
+        targets = WallpaperPropertyTargets(wallpaper: wallpaper, scopes: [scope])
         wallpaperPath = wallpaper.wallpaperDirectory.path
         self.undoManager = undoManager
         self.coalescingInterval = coalescingInterval
@@ -47,6 +50,7 @@ final class EditorUserPropertyUndo: ObservableObject {
         let previous = values[key]
         values[key] = value
         guard previous != value else { return }
+        onChange?()
         let continues = lastChange.map { $0.key == key && now.timeIntervalSince($0.date) < coalescingInterval } ?? false
         lastChange = (key, now)
         guard !continues else { return }
@@ -74,5 +78,33 @@ final class EditorUserPropertyUndo: ObservableObject {
         targets.save(stored)
         for runtimeKey in targets.runtimeKeys { WallpaperPropertyTargets.publishReplacing(runtimeKey, stored) }
         revision += 1
+        onChange?()
+    }
+
+    /// Revert to Saved: the user properties back to `saved` (the store's other values, layer edits,
+    /// kept), one undo step named `actionName` (grouped with the layer edits' revert of the same event).
+    func revert(to saved: [String: String], actionName: String) {
+        let stored = targets.storedValues
+        let next = WallpaperPropertyReset.sceneInspectorEdits(in: stored).merging(saved) { _, new in new }
+        guard next != stored else { return }
+        replace(with: next, actionName: actionName)
+    }
+
+    /// Every value at once, registering the way back.
+    private func replace(with next: [String: String], actionName: String) {
+        let previous = targets.storedValues
+        let grouped = !undoManager.isUndoing && !undoManager.isRedoing
+        if grouped { undoManager.beginUndoGrouping() }
+        undoManager.registerUndo(withTarget: self) { target in
+            MainActor.assumeIsolated { target.replace(with: previous, actionName: actionName) }
+        }
+        undoManager.setActionName(actionName)
+        if grouped { undoManager.endUndoGrouping() }
+        values = next
+        lastChange = nil
+        targets.save(next)
+        for runtimeKey in targets.runtimeKeys { WallpaperPropertyTargets.publishReplacing(runtimeKey, next) }
+        revision += 1
+        onChange?()
     }
 }

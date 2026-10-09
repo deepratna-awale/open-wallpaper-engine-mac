@@ -15,6 +15,17 @@ struct WallpaperPropertyTargets {
         self.scopes = scopes.isEmpty ? [.shared] : scopes
     }
 
+    private init(directory: URL, identity: WallpaperSettingsIdentity, scopes: [WallpaperPropertyScope]) {
+        self.directory = directory
+        self.identity = identity
+        self.scopes = scopes.isEmpty ? [.shared] : scopes
+    }
+
+    /// The same wallpaper's stores `scopes` (the Wallpaper Editor's draft beside the shared store).
+    func scoped(_ scopes: [WallpaperPropertyScope]) -> WallpaperPropertyTargets {
+        WallpaperPropertyTargets(directory: directory, identity: identity, scopes: scopes)
+    }
+
     /// The shown scope's saved values (the shared ones for a display that has none yet).
     var storedValues: [String: String] {
         identity.stored(.userProperties, scope: scopes[0]) as? [String: String] ?? [:]

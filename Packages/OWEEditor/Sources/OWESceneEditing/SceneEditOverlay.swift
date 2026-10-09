@@ -135,7 +135,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     }
 
     /// Something changes the scene (locks don't). Authored properties count: they are edits of
-    /// the wallpaper, and Save as Local Wallpaper writes them.
+    /// the wallpaper, and Save as New Wallpaper writes them.
     public var hasSceneEdits: Bool {
         objects.values.contains(where: \.hasSceneEdits) || hasStructureEdits || timelines?.isEmpty == false
             || authoring?.isEmpty == false || particles?.isEmpty == false || hasGeneralEdits

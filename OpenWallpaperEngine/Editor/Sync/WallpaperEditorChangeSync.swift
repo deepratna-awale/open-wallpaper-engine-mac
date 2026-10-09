@@ -5,17 +5,19 @@ import OWESceneEditing
 /// "Separate process") showing the same wallpaper: what one saves, the other's running
 /// wallpapers apply as if it had been saved in their own process.
 ///
-/// - **Editor → app.** The editor saves overlays where it always did (`SceneEditOverlayFiles`) and
-///   says so with a message naming the wallpaper (`AppProcessChannel`). The app reads the overlay
-///   and posts this process's `sceneEditOverlayDidChange` / `sceneEditParticlesDidChange` with it,
-///   so its instances draw the change live or reload, exactly as before. A drag in progress goes
-///   through a file beside the overlay (`SceneEditLiveFiles`), at most `previewInterval` apart.
-///   The app also watches the overlay folder (`DirectoryChangeWatcher`), so a save whose message
-///   was missed still arrives; the same overlay twice is applied once.
-/// - **App → editor.** An MCP client's edit, which the app saves and applies itself
+/// - **Editor → app.** The editor edits a draft its canvas alone runs (`WallpaperEditorDraft`);
+///   File › Save writes the overlay where it always was (`SceneEditOverlayFiles`) and says so with
+///   a message naming the wallpaper (`AppProcessChannel`). The app reads the overlay and posts
+///   this process's `sceneEditOverlayDidChange` / `sceneEditParticlesDidChange` with it, so its
+///   instances draw the change live or reload once. The app also watches the overlay folder
+///   (`DirectoryChangeWatcher`), so a save whose message was missed still arrives; the same
+///   overlay twice is applied once.
+/// - **App → editor.** An MCP client's edit, which the app writes into the draft
 ///   (`HeadlessSceneDocument`), is announced (`appOverlayDidSave`, with the undo step's name); the
 ///   editor's open window of the wallpaper takes it as an undo step of its own, so Undo there
-///   undoes it, and that Undo comes back to the app as any editor save does.
+///   undoes it, and that Undo goes into the draft as any edit does. The client's save of the
+///   draft, which the app applies to its own instances, is announced too (`appDraftDidSave`): the
+///   window has nothing unsaved after it.
 /// - **Both ways.** A wallpaper's saved user properties (`wallpaperPropertiesDidSave`) reach the
 ///   other process's running store, and a wallpaper added to the library (Save as Local
 ///   Wallpaper) refreshes the app's library.
@@ -37,11 +39,6 @@ final class WallpaperEditorChangeSync {
         var setRunningProperties: ([String: String], String) -> Void = {
             WallpaperServices.shared.setUserProperties($0, wallpaper: $1, replacing: false)
         }
-        /// When a throttled preview may go out.
-        var schedule: @MainActor (TimeInterval, @escaping @MainActor () -> Void) -> Void = { delay, work in
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { MainActor.assumeIsolated(work) }
-        }
-        var now: () -> Date = Date.init
         /// Whether Open Wallpaper Engine (isolated as this process is) runs.
         var appIsRunning: () -> Bool = {
             let app = AppBundleLayout.appIdentifier(for: Bundle.main.bundleIdentifier ?? AppStorageLocation.realBundleIdentifier)
@@ -54,7 +51,7 @@ final class WallpaperEditorChangeSync {
     /// What the process applies of the other's messages.
     struct Role: OptionSet {
         let rawValue: Int
-        /// Overlays the editor saved, and its drags and particle restarts (the app).
+        /// Overlays the editor saved (the app).
         static let appliesEditorChanges = Role(rawValue: 1 << 0)
         /// Library additions (the app).
         static let refreshesLibrary = Role(rawValue: 1 << 1)
@@ -62,20 +59,16 @@ final class WallpaperEditorChangeSync {
         static let appliesProperties = Role(rawValue: 1 << 2)
         /// Requests for a Settings page (Assets, Plugins › Depth Map Generation: the app).
         static let opensSettings = Role(rawValue: 1 << 3)
-        /// Overlays Open Wallpaper Engine saved for an MCP client, which an open window takes as an
-        /// undo step (the editor).
+        /// Drafts Open Wallpaper Engine changed for an MCP client, which an open window takes as an
+        /// undo step, and the client's saves of them (the editor).
         static let adoptsAppEdits = Role(rawValue: 1 << 4)
 
         static let app: Role = [.appliesEditorChanges, .refreshesLibrary, .appliesProperties, .opensSettings]
         static let editor: Role = [.appliesProperties, .adoptsAppEdits]
     }
 
-    /// The gap between two drag previews another process draws.
-    static let previewInterval: TimeInterval = 1.0 / 30
-
     private let dependencies: Dependencies
     private let role: Role
-    private let liveFiles: SceneEditLiveFiles
     private var tokens: [AnyObject] = []
     private var localObservers: [NSObjectProtocol] = []
     private var watcher: DirectoryChangeWatcher?
@@ -85,9 +78,12 @@ final class WallpaperEditorChangeSync {
     var onLibraryChange: (() -> Void)?
     /// The editor asked for a Settings page.
     var onOpenSettings: ((AppSettingsRequest) -> Void)?
-    /// Open Wallpaper Engine saved the overlay of the wallpaper in the folder for an MCP client, as
+    /// Open Wallpaper Engine changed the draft of the wallpaper in the folder for an MCP client, as
     /// the named undo step, or as its Undo or Redo (the editor's process).
     var onAppOverlay: ((URL, String, AppProcessChannel.OverlayStep) -> Void)?
+    /// Open Wallpaper Engine saved the draft of the wallpaper in the folder for an MCP client (the
+    /// editor's process).
+    var onAppDraftSave: ((URL) -> Void)?
 
     private var identities: [URL: WallpaperSettingsIdentity] = [:]
     /// Each wallpaper's overlay as last applied here: a message and the folder watcher reporting
@@ -95,17 +91,12 @@ final class WallpaperEditorChangeSync {
     private var applied: [URL: SceneEditOverlay] = [:]
     /// The last base measured per wallpaper, by the structure it was read with.
     private var bases: [URL: (structure: SceneEditOverlay, base: SceneOutline)] = [:]
-    /// The drag to send, and when the last one went.
-    private var pendingPreview: (overlay: SceneEditOverlay, folder: URL, identity: WallpaperSettingsIdentity)?
-    private var previewScheduled = false
-    private var lastPreview: Date = .distantPast
     /// A property save this process posts for the other's: not sent back.
     private var isApplyingRemoteProperties = false
 
     init(role: Role, dependencies: Dependencies) {
         self.role = role
         self.dependencies = dependencies
-        liveFiles = SceneEditLiveFiles(store: dependencies.store)
     }
 
     /// Listens for the other process's messages and forwards this one's property saves.
@@ -122,8 +113,6 @@ final class WallpaperEditorChangeSync {
         }
         if role.contains(.appliesEditorChanges) {
             on(.overlayDidSave) { sync, folder in folder.map { sync.applySavedOverlay(of: $0) } }
-            on(.overlayPreview) { sync, folder in folder.map { sync.applyPreview(of: $0) } }
-            on(.particlesRestart) { sync, folder in folder.map { sync.applyParticleRestart(of: $0) } }
             if watch {
                 let watcher = DirectoryChangeWatcher(directory: dependencies.store.directory) { [weak self] in
                     self?.overlayFolderChanged()
@@ -146,6 +135,7 @@ final class WallpaperEditorChangeSync {
                 let step = info[AppProcessChannel.stepKey].flatMap(AppProcessChannel.OverlayStep.init(rawValue:)) ?? .edit
                 self.onAppOverlay?(URL(filePath: path, directoryHint: .isDirectory), info[AppProcessChannel.actionKey] ?? "", step)
             })
+            on(.appDraftDidSave) { sync, folder in folder.map { sync.onAppDraftSave?($0) } }
         }
         if role.contains(.appliesProperties) {
             on(.propertiesDidSave) { sync, folder in folder.map { sync.applySavedProperties(of: $0) } }
@@ -178,59 +168,25 @@ final class WallpaperEditorChangeSync {
 
     // MARK: Sending (the editor)
 
-    /// The editor saved `folder`'s overlay: a drag still waiting is dropped, the saved overlay wins.
-    func overlayDidSave(folder: URL, identity: WallpaperSettingsIdentity) {
-        if pendingPreview?.folder == Self.normalized(folder) { pendingPreview = nil }
-        liveFiles.remove(for: identity, previewOnly: true)
+    /// The editor saved `folder`'s overlay (File › Save).
+    func overlayDidSave(folder: URL) {
         send(.overlayDidSave, folder: folder)
     }
 
-    /// A drag in progress, drawn by the other process at most `previewInterval` apart; the last
-    /// one always goes.
-    func preview(_ overlay: SceneEditOverlay, folder: URL, identity: WallpaperSettingsIdentity) {
-        pendingPreview = (overlay, Self.normalized(folder), identity)
-        guard !previewScheduled else { return }
-        let wait = lastPreview.addingTimeInterval(Self.previewInterval).timeIntervalSince(dependencies.now())
-        guard wait > 0 else { return flushPreview() }
-        previewScheduled = true
-        dependencies.schedule(wait) { [weak self] in
-            guard let self else { return }
-            self.previewScheduled = false
-            self.flushPreview()
-        }
-    }
-
-    private func flushPreview() {
-        guard let preview = pendingPreview else { return }
-        pendingPreview = nil
-        lastPreview = dependencies.now()
-        do {
-            try liveFiles.writePreview(preview.overlay, for: preview.identity)
-            send(.overlayPreview, folder: preview.folder)
-        } catch {
-            OWELog.error(.scene, "Can't hand the editor's drag of \(preview.folder.path) to Open Wallpaper Engine: \(error)")
-        }
-    }
-
-    /// The particle editor restarts systems `objectIDs`.
-    func restartParticles(_ objectIDs: Set<Int>, folder: URL, identity: WallpaperSettingsIdentity) {
-        do {
-            try liveFiles.writeRestart(objectIDs, for: identity)
-            send(.particlesRestart, folder: folder)
-        } catch {
-            OWELog.error(.scene, "Can't hand the particle restart of \(folder.path) to Open Wallpaper Engine: \(error)")
-        }
-    }
-
-    /// Open Wallpaper Engine saved `folder`'s overlay for an MCP client and applied it to its own
-    /// instances (`HeadlessSceneDocument`): the same overlay from the folder watcher isn't applied
-    /// again, and the editor's open window of the wallpaper takes it as the undo step `actionName`
-    /// (the client's Undo or Redo, `step`: undoes or redoes that step).
-    func appOverlayDidSave(folder: URL, overlay: SceneEditOverlay, actionName: String,
-                           step: AppProcessChannel.OverlayStep = .edit) {
-        applied[Self.normalized(folder)] = overlay
+    /// Open Wallpaper Engine changed `folder`'s draft for an MCP client (`HeadlessSceneDocument`):
+    /// the editor's open window of the wallpaper takes it as the undo step `actionName` (the
+    /// client's Undo or Redo, `step`: undoes or redoes that step).
+    func appOverlayDidSave(folder: URL, actionName: String, step: AppProcessChannel.OverlayStep = .edit) {
         send(.appOverlayDidSave, folder: folder,
              extra: [AppProcessChannel.actionKey: actionName, AppProcessChannel.stepKey: step.rawValue])
+    }
+
+    /// Open Wallpaper Engine saved `folder`'s draft for an MCP client and applied the saved overlay
+    /// to its own instances: the same overlay from the folder watcher isn't applied again, and the
+    /// editor's open window of the wallpaper has nothing unsaved.
+    func appDraftDidSave(folder: URL, overlay: SceneEditOverlay) {
+        applied[Self.normalized(folder)] = overlay
+        send(.appDraftDidSave, folder: folder)
     }
 
     /// A wallpaper was added to the library.
@@ -261,12 +217,6 @@ final class WallpaperEditorChangeSync {
         }
     }
 
-    /// The editor window of `folder` closed: what it left for the other process goes.
-    func editorDidClose(identity: WallpaperSettingsIdentity) {
-        pendingPreview = nil
-        liveFiles.remove(for: identity)
-    }
-
     private func send(_ message: AppProcessChannel.Message, folder: URL?, extra: [String: String] = [:]) {
         var info = extra
         if let folder { info[AppProcessChannel.folderKey] = Self.normalized(folder).path }
@@ -295,35 +245,6 @@ final class WallpaperEditorChangeSync {
         }
         SceneEditOverlayFiles.post(overlay, base: base(of: folder, for: overlay), wallpaperDirectory: folder,
                                    transient: false, center: dependencies.local)
-    }
-
-    func applyPreview(of folder: URL) {
-        let folder = Self.normalized(folder)
-        let overlay: SceneEditOverlay?
-        do {
-            overlay = try liveFiles.preview(for: identity(of: folder))
-        } catch {
-            OWELog.error(.scene, "The editor's drag of \(folder.path) can't be read: \(error)")
-            return
-        }
-        // Gone: the drag ended and its save follows.
-        guard let overlay, let base = base(of: folder, for: overlay) else { return }
-        SceneEditOverlayFiles.post(overlay, base: base, wallpaperDirectory: folder, transient: true,
-                                   center: dependencies.local)
-    }
-
-    func applyParticleRestart(of folder: URL) {
-        let folder = Self.normalized(folder)
-        let identity = self.identity(of: folder)
-        do {
-            let objectIDs = try liveFiles.restart(for: identity)
-            guard !objectIDs.isEmpty else { return }
-            let overlay = SceneEditOverlayFiles.overlay(for: identity, store: dependencies.store) ?? SceneEditOverlay()
-            SceneEditOverlayFiles.postParticles(overlay, wallpaperDirectory: folder, objectIDs: objectIDs,
-                                                center: dependencies.local)
-        } catch {
-            OWELog.error(.scene, "The editor's particle restart of \(folder.path) can't be read: \(error)")
-        }
     }
 
     /// The overlay folder changed: every running wallpaper's overlay is read again (the same

@@ -190,7 +190,7 @@ final class PuppetMDLRoundTripTests: XCTestCase {
         session.redo()
         XCTAssertEqual(session.puppet(of: 10), document)
         XCTAssertEqual(changes, 5)
-        session.revert(actionName: "Revert")
+        session.revert(to: SceneEditOverlay(), actionName: "Revert to Saved")
         XCTAssertNil(session.puppet(of: 10), "Revert drops the editor's puppets")
     }
 

@@ -11,13 +11,13 @@ final class MCPSceneRouterTests: XCTestCase {
     private var editors: FakeSceneEditorControl!
     private var service: HeadlessSceneEditService!
     private var router: ControlRequestRouter!
-    private var announced: [(URL, SceneEditOverlay, String)] = []
+    private var announced: [(URL, String)] = []
 
     override func setUp() async throws {
         fixture = try MCPSceneFixture()
         editors = FakeSceneEditorControl()
         announced = []
-        service = fixture.service(announce: { [weak self] folder, overlay, name, _ in self?.announced.append((folder, overlay, name)) })
+        service = fixture.service(announce: { [weak self] folder, name, _ in self?.announced.append((folder, name)) })
         let group = SceneControlRequests(service: service, editors: editors)
         router = ControlRequestRouter(model: MCPSceneAppModel([fixture.wallpaper]), groups: [group])
     }
@@ -45,8 +45,14 @@ final class MCPSceneRouterTests: XCTestCase {
         try await result("scene_apply_edits", ["wallpaper_id": "fixture", "edits": .array(edits)], file: file, line: line)
     }
 
+    /// The draft the client edits.
     private func overlay() throws -> SceneEditOverlay {
-        try fixture.store.overlay(for: fixture.identity.rawValue) ?? SceneEditOverlay()
+        try fixture.draftStore.overlay(for: fixture.identity.rawValue)
+    }
+
+    /// The wallpaper's saved overlay, which the displays run.
+    private func savedOverlay() throws -> SceneEditOverlay {
+        try fixture.draftStore.savedOverlay(for: fixture.identity.rawValue)
     }
 
     // MARK: Coverage
@@ -105,7 +111,7 @@ final class MCPSceneRouterTests: XCTestCase {
         XCTAssertEqual(stored.addedObject(added)?.object["name"], .string("Fill"))
         XCTAssertEqual(applied["undo"]?["can_undo"], true)
         XCTAssertEqual(announced.count, 1, "one save for the whole list")
-        XCTAssertEqual(announced.first?.2, HeadlessSceneDocument.defaultActionName)
+        XCTAssertEqual(announced.first?.1, HeadlessSceneDocument.defaultActionName)
 
         let undone = try await result("scene_undo", ["wallpaper_id": "fixture"])
         XCTAssertEqual(undone["done"], true)
@@ -194,8 +200,12 @@ final class MCPSceneRouterTests: XCTestCase {
             ["op": "set_particle_field", "layer": 6, "section": "emitter", "index": 0, "field": "nonsense", "value": "1"],
         ]])
         XCTAssertEqual(wrongField?.code, .notFound)
-        _ = try await result("particles_restart", ["wallpaper_id": "fixture", "layer": 6])
-        XCTAssertEqual(editors.restarted, [6])
+        let onDisplays = try await result("particles_restart", ["wallpaper_id": "fixture", "layer": 6])
+        XCTAssertEqual(onDisplays["in_editor"], false, "without an editor window, the displays restart it")
+        editors.editorWindowOpen = true
+        let inEditor = try await result("particles_restart", ["wallpaper_id": "fixture", "layer": 6])
+        XCTAssertEqual(inEditor["in_editor"], true, "an open editor window's canvas restarts it")
+        XCTAssertEqual(editors.restarted, [6, 6])
     }
 
     // MARK: Puppets
@@ -288,18 +298,44 @@ final class MCPSceneRouterTests: XCTestCase {
 
     // MARK: Saving and editors
 
-    func testRevertSaveAndCopy() async throws {
+    func testEditsStayInTheDraftUntilTheSaveTool() async throws {
+        _ = try await apply([["op": "set_alpha", "layer": 4, "alpha": 0.5]])
+        XCTAssertTrue(try savedOverlay().isEmpty, "the displays' overlay is untouched by an edit")
+        let before = try await result("scene_get", ["wallpaper_id": "fixture"])
+        XCTAssertEqual(before["unsaved"], true)
+        let saved = try await result("wallpaper_editor_save", ["wallpaper_id": "fixture"])
+        XCTAssertEqual(saved["saved"], true)
+        XCTAssertEqual(saved["unsaved"], false)
+        XCTAssertEqual(try savedOverlay().field("alpha", of: 4), .number(0.5))
+        XCTAssertFalse(fixture.draftStore.hasDraft(for: fixture.identity.rawValue))
+        let again = try await result("wallpaper_editor_save", ["wallpaper_id": "fixture"])
+        XCTAssertEqual(again["saved"], false, "nothing left to save")
+    }
+
+    func testTheOlderSaveToolsStillWork() async throws {
         _ = try await apply([["op": "set_alpha", "layer": 4, "alpha": 0.5]])
         let saved = try await result("scene_save", ["wallpaper_id": "fixture"])
-        XCTAssertEqual(saved["edited"], true)
+        XCTAssertEqual(saved["saved"], true, "scene_save saves the draft, as wallpaper_editor_save does")
+        XCTAssertEqual(try savedOverlay().field("alpha", of: 4), .number(0.5))
+        let copy = try await result("scene_save_as_local_wallpaper", ["wallpaper_id": "fixture", "title": "Old Name"])
+        XCTAssertEqual(copy["title"], "Old Name")
+        XCTAssertEqual(editors.savedCopies, ["Old Name"], "as wallpaper_editor_save_as_new does")
+    }
+
+    func testRevertToSavedAndSaveAsNew() async throws {
+        _ = try await apply([["op": "set_alpha", "layer": 4, "alpha": 0.5]])
+        _ = try await result("wallpaper_editor_save", ["wallpaper_id": "fixture"])
+        _ = try await apply([["op": "set_alpha", "layer": 4, "alpha": 0.25]])
         let reverted = try await result("scene_revert", ["wallpaper_id": "fixture"])
         XCTAssertEqual(reverted["reverted"], true)
-        XCTAssertTrue(try overlay().isEmpty)
+        XCTAssertEqual(try overlay().field("alpha", of: 4), .number(0.5), "back to the last save, not the original")
         _ = try await result("scene_undo", ["wallpaper_id": "fixture"])
-        XCTAssertEqual(try overlay().field("alpha", of: 4), .number(0.5), "Revert is undoable")
-        let copy = try await result("scene_save_as_local_wallpaper", ["wallpaper_id": "fixture", "title": "Mine"])
+        XCTAssertEqual(try overlay().field("alpha", of: 4), .number(0.25), "Revert to Saved is undoable")
+        let copy = try await result("wallpaper_editor_save_as_new", ["wallpaper_id": "fixture", "title": "Mine"])
         XCTAssertEqual(copy["title"], "Mine")
         XCTAssertEqual(editors.savedCopies, ["Mine"])
+        XCTAssertEqual(try savedOverlay().field("alpha", of: 4), .number(0.5), "Save as New leaves the wallpaper as saved")
+        XCTAssertEqual(try overlay().field("alpha", of: 4), .number(0.25), "and its draft as it was")
     }
 
     func testEditorWindows() async throws {
@@ -330,7 +366,7 @@ final class MCPSceneRouterTests: XCTestCase {
         _ = try await apply([["op": "set_alpha", "layer": 4, "alpha": 0.5]])
         var theirs = try overlay()
         theirs.setField("alpha", to: .number(0.75), of: 4)
-        try fixture.store.save(theirs, for: fixture.identity.rawValue)
+        try fixture.draftStore.saveDraft(theirs, for: fixture.identity.rawValue)
         let scene = try await result("scene_get", ["wallpaper_id": "fixture"])
         XCTAssertEqual(scene["layers"]?[0]?["fields"]?["alpha"], 0.75, "the editor window's edit is read")
         XCTAssertEqual(scene["undo"]?["can_undo"], false, "and the client can't undo over it")

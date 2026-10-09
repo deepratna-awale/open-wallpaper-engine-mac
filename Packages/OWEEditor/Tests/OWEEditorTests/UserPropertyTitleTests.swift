@@ -9,8 +9,8 @@ import OWESceneEditing
 final class UserPropertyTitleTests: XCTestCase {
     private func services(_ choices: [EditorUserPropertyChoice]) -> WallpaperEditorServices {
         var services = WallpaperEditorServices(makeCanvas: { AnyView(EmptyView()) }, blendModeTitle: "", blendModes: [],
-                                               effectHelp: { _ in "" }, suggestedLocalTitle: "",
-                                               saveAsLocalWallpaper: { $0 })
+                                               effectHelp: { _ in "" }, suggestedNewTitle: "",
+                                               saveAsNewWallpaper: { $0 })
         services.userPropertyChoices = { choices }
         return services
     }
