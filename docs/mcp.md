@@ -152,7 +152,7 @@ the sentence their summary shows.
 | `play_playlist` | `name`, `display?` | Makes the playlist active and starts rotating it, as its shortcut does. Names match case-insensitively. |
 | `next_wallpaper`, `previous_wallpaper` | `display?` | Next and Previous Wallpaper from the menu: the active playlist's next or previous item where it plays, else a random library wallpaper, skipping web wallpapers not trusted yet (next), or the one shown before (previous). |
 | `import_wallpaper` | `path` | File › Import Wallpaper from Folder…: a wallpaper folder (with `project.json`), a folder of them, or a `.zip`. Returns the `imported` wallpapers and what was `skipped`, with why (a folder of that name is already in the library, for example). |
-| `open_editor` | `id`, `editor` (`scene` or `wallpaper`) | Opens a scene wallpaper in the Scene Editor (Live) or the Wallpaper Editor, for you to edit. |
+| `open_editor` | `id`, `editor` (`scene` or `wallpaper`) | Opens a scene wallpaper in Scene Edit / Export or the Wallpaper Editor, for you to edit. |
 | `snapshot` | `display?` (the main display by default), `format?` (`image` by default, or `path`) | A PNG of the wallpaper on that display, at most 960 pixels wide, as image content (with `path`: saved to a temporary file whose path is returned). `source` says what it is: `loading_snapshot` (the scene's own frame, which the app captures for its loading screen), `video_frame`, or `preview` (the wallpaper's preview image, when there is no frame yet). |
 
 Playback and volume are app-wide in Open Wallpaper Engine (as in the menu bar), so `pause`,
@@ -161,7 +161,7 @@ Playback and volume are app-wide in Open Wallpaper Engine (as in the menu bar), 
 ### Scene and editors
 
 A client edits a scene wallpaper through the same edit model as the Wallpaper Editor and the
-Scene Editor (Live): the app keeps a **headless edit session** per wallpaper, over the wallpaper's
+Scene Edit / Export: the app keeps a **headless edit session** per wallpaper, over the wallpaper's
 editor overlay (`<support>/editor/<identity>.json`), with the editor's own undo semantics. Nothing
 is written into the wallpaper's files. Every change goes through the session calls the editors'
 controls make (with their checks), is saved as the editor saves it, and is applied live: the
@@ -173,7 +173,7 @@ values) or reload, and a particle document change rebuilds only its systems.
 as an undo step of its own, so **Undo in the window undoes the client's edit**, and that Undo comes
 back to the app like any editor save. An edit made in a window since the client's last request
 starts the client's session over with a fresh undo history, so `scene_undo` never undoes the
-user's work. The Scene Editor (Live)'s Wallpaper tab edits the running wallpaper, which shows the
+user's work. Scene Edit / Export's Wallpaper tab edits the running wallpaper, which shows the
 change at once.
 
 | Tool | Arguments | What it does |
@@ -200,8 +200,8 @@ change at once.
 | `depth_remove` | `wallpaper_id`, `layer?` | Removes the depth parallax (and the fullscreen layer that carried it). One undo step. |
 | `use_depth_map_as_mask` | `wallpaper_id`, `layer`, `effect`, `slot?`, `invert?`, `contrast?` | Use as Mask for…: writes the layer's generated map as the mask of its effect `effect` (its key from `scene_get`) with a grey mask slot (`slot` when it has several), `invert` swapping near and far and `contrast` (0.25–4, 1 by default) hardening or softening it. Stored as WE stores a painted mask (an R8 `.tex` in `materials/masks`, named in the pass's `textures`). An existing mask is replaced (`replaced` names it; `scene_undo` brings it back, its file is kept). One undo step. |
 | `open_editor` | `id`, `editor` (`scene`, `wallpaper`) | Opens either editor on a scene wallpaper (above). |
-| `editor_close` | `editor`, `wallpaper_id?` | Closes the Scene Editor (Live), or the Wallpaper Editor's window of a wallpaper (`wallpaper_id`). Edits are kept. |
-| `editor_set_tab` | `wallpaper_id`, `tab` (`wallpaper`, `screen_saver`, `iphone_ipad_export`, `android_export`) | Opens the Scene Editor (Live) on the wallpaper in that tab. |
+| `editor_close` | `editor`, `wallpaper_id?` | Closes Scene Edit / Export, or the Wallpaper Editor's window of a wallpaper (`wallpaper_id`). Edits are kept. |
+| `editor_set_tab` | `wallpaper_id`, `tab` (`wallpaper`, `screen_saver`, `iphone_ipad_export`, `android_export`) | Opens Scene Edit / Export on the wallpaper in that tab. |
 
 #### Scene edits
 
@@ -523,7 +523,7 @@ Example:
 
 ### Export, screen saver and lock screen
 
-The Scene Editor (Live)'s **iPhone & iPad Export** and **Screen Saver** modes, the screen saver's
+Scene Edit / Export's **iPhone & iPad Export** and **Screen Saver** modes, the screen saver's
 daily re-recording, and Settings › General's **Show Wallpaper on Lock Screen**. Each tool runs the
 code those controls run. None of them opens a window or System Settings, changes a system setting,
 or makes macOS ask for a permission.
@@ -533,7 +533,7 @@ or makes macOS ask for a permission.
 | `devices_list` | `query?` | The iPhones and iPads the export makes Live Photo lock screens for, newest first: `id` (the name), `name`, `family` (`iPhone`, `iPad`), `width`/`height` in pixels (portrait) and `year`. `query` narrows them as the mode's device search does (name, family, year, or a resolution such as `1320x2868`). |
 | `export_settings_get` | `wallpaper_id?` | What the export remembers: the `device`, `save_to_photos` ("Also Save to Photos Album"), `photos_album` and `photos_access` (`authorized`, `limited`, `denied`, `restricted`, `not_determined`; reading it never asks), and the ranges `export_live_photo` takes (`qualities`, `max_zoom`, `clip_lengths`, `clip_timeline_seconds`, `frame_rate`). With `wallpaper_id`, also the `scene`'s `width`/`height` in scene units, which the crop's centre is measured in. |
 | `export_live_photo` | `wallpaper_id`, `device?`, `crop?` (`zoom` 1–3, `center_x`, `center_y`), `clip?` (`start`, `length` 1–3 s), `settings?` (`quality`: `best`, `high`, `smaller`; `save_to_photos`), `output_folder?` | Renders a scene as a Live Photo (HEIC + MOV) as the mode's Save does, with the wallpaper's own property values and edits (what the mode copies when it opens), and waits for it. `device` defaults to the remembered one; the crop defaults to the whole-scene window, centred; without `clip.start` the clip is the window with the most motion, as the mode picks it. Returns the `photo` and `movie` paths, the `crop` and `clip` used, and `photos` (`off`, `skipped`, `saved`, `failed`, `needs_access`). Without `output_folder` the files stay in the app's cache (`in_cache`) until the mode's next export clears it; `output_folder` must be an existing absolute folder (files of the same name are replaced). |
-| `export_android` | `wallpaper_id` or `wallpaper_ids`, `mode?` (`high_quality`, `balanced`, `pre_rendered`), `options?` (`pixel_art`, `texture_reduction` 1/2/4, `cropping`: `phone`/`original`, `video_preset`: `original`/`full_hd`/`uhd_4k`, `fps` 24/30/60, `alignment` 0–1), `output_folder?` | The Scene Editor (Live)'s Android Export: one `<title>.mpkg` per wallpaper (unique names) for Wallpaper Engine's Android app, and waits for them. Videos are packed as they are; scenes are Dynamic (`balanced` by default) or a pre-rendered 30 s video. Returns the `folder`, each of the `packages` (`wallpaper_id`, `title`, `type`, `mode`, `path`, `size`, `preview`), and what was `skipped` (web and application wallpapers, with the reason) or `failed`. Without `output_folder` the packages go to the app's export cache folder. |
+| `export_android` | `wallpaper_id` or `wallpaper_ids`, `mode?` (`high_quality`, `balanced`, `pre_rendered`), `options?` (`pixel_art`, `texture_reduction` 1/2/4, `cropping`: `phone`/`original`, `video_preset`: `original`/`full_hd`/`uhd_4k`, `fps` 24/30/60, `alignment` 0–1), `output_folder?` | Scene Edit / Export's Android Export: one `<title>.mpkg` per wallpaper (unique names) for Wallpaper Engine's Android app, and waits for them. Videos are packed as they are; scenes are Dynamic (`balanced` by default) or a pre-rendered 30 s video. Returns the `folder`, each of the `packages` (`wallpaper_id`, `title`, `type`, `mode`, `path`, `size`, `preview`), and what was `skipped` (web and application wallpapers, with the reason) or `failed`. Without `output_folder` the packages go to the app's export cache folder. |
 | `android_send_wifi` | `package_paths` (from `export_android`) or `wallpaper_id` / `wallpaper_ids` (exported first, with `export_android`'s `mode?`, `options?`, `output_folder?`), `address?` | The Android export's "Send over Wi-Fi" without its sheet: serves only those packages on the Mac's local network behind a random 50-bit token, GET only, for 15 minutes, and returns the `url` (`http://owe-fileshare.<mac>.local:<port>/<token>/` while the name is advertised, else `http://<IPv4>:<port>/<token>/`), `expires_at`, `expires_in_seconds`, the Mac's local-network `addresses` (`address` picks one; the primary interface's by default), the `files` (`index`, `title`, `type`: `sceneDynamic`, `scenePreRendered`, `video`, `size`, `path`, `download_name`) and the `export` it made, if any. `package_paths` must be WE mobile packages (`.mpkg`, `PKGM`). A new call replaces the previous session. Refused with `unavailable` when the Mac has no local-network address. |
 | `screensaver_get` | `wallpaper_id?` | `plugin_enabled` (Settings › Plugins › Screen Saver), `recording`, the `selection` (the recording set as the screen saver: `wallpaper`, `folder`, `recorded`, `width`, `height`) and the `schedule`. With `wallpaper_id`, its screen saver version: `eligible` (scenes only), `is_screen_saver`, `own_choices` (the screen saver has its own saved choices; else it follows the wallpaper's values), the `layers` (`id`, `name`, `kind`, `visible` as the screen saver shows it, `authored_visible`) and the user `properties`. |
 | `screensaver_set_layers` | `wallpaper_id`, `layers?` (`[{layer, visible}]`, `layer` by id or name), `properties?` (`[{key, value}]`) | The Screen Saver mode's layer switches and user properties, saved as the screen saver's own choices for that scene (`ScreenSaverSettingsStore`), never touching the desktop. Values are checked as `set_user_property` checks them. Values equal to the wallpaper's own are not saved (`saved: false`): the screen saver follows the wallpaper until its choices first differ, as in the mode. The next recording uses them. |
@@ -648,7 +648,7 @@ What these tools don't do, and why:
   `lock_screen_refresh` is refused there; it is also refused while the setting is off.
 - **One at a time.** A second `export_live_photo` or `export_android` while one renders, or `screensaver_record` /
   `screensaver_stop_using` while a recording runs, is refused with `unavailable`.
-- **An open Screen Saver mode.** If the Scene Editor (Live) has the same wallpaper open in its
+- **An open Screen Saver mode.** If Scene Edit / Export has the same wallpaper open in its
   Screen Saver mode, its own copy of the choices replaces what `screensaver_set_layers` saved when
   the mode next saves (as it does after each change and when it closes).
 

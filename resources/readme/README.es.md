@@ -17,9 +17,9 @@ Open Wallpaper Engine es un reproductor gratuito y de código abierto para macOS
 
 - **Fondos de pantalla de escena, de vídeo y web**: las escenas se dibujan con los propios sombreadores de Wallpaper Engine de cada fondo, traducidos a Metal, con efectos, partículas, modelos 3D, luces, líneas de tiempo, SceneScript y visuales que reaccionan al audio. Los fondos web se ejecutan en WebKit o en el motor Chromium opcional.
 - **Steam Workshop**: explora, filtra y descarga fondos del Workshop sin salir de la app, o importa carpetas y archivos zip de fondos de pantalla.
-- **Editor de escenas (en vivo)**: cambia en vivo en el escritorio las capas y los efectos del fondo que se está reproduciendo, graba con él tu propio salvapantallas o expórtalo como pantalla de bloqueo Live Photo para iPhone y iPad o como paquete para la app de Android de Wallpaper Engine.
+- **Editar/exportar escena**: cambia en vivo en el escritorio las capas y los efectos del fondo que se está reproduciendo, graba con él tu propio salvapantallas o expórtalo como pantalla de bloqueo Live Photo para iPhone y iPad o como paquete para la app de Android de Wallpaper Engine.
 
-  ![Editor de escenas (en vivo)](../../docs/images/scene-editor-live.png)
+  ![Editar/exportar escena](../../docs/images/scene-editor-live.png)
 
 - **Editor de fondos de pantalla**: un editor al estilo del de Wallpaper Engine, con capas, efectos con vista previa, línea de tiempo, SceneScript, propiedades de usuario, partículas y Puppet Warp. Tus cambios se guardan junto al fondo de pantalla, nunca en sus archivos.
 
