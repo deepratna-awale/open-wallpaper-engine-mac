@@ -39,11 +39,16 @@ struct FieldAuthoringModifier: ViewModifier {
 
     /// What drives the field, a bound user property named by `propertyTitle` (its label).
     static func help(_ drivers: SceneFieldDrivers, propertyTitle: (String) -> String) -> String {
+        // The title is a local, so the catalog key is the plain "%@" form (EditorLocalizationTests).
         if let user = drivers.user, drivers.script != nil {
-            return L("A script and the user property “\(propertyTitle(user.name))” set this field")
+            let name = propertyTitle(user.name)
+            return L("A script and the user property “\(name)” set this field")
         }
         if drivers.script != nil { return L("A script sets this field") }
-        if let user = drivers.user { return L("Set by the user property “\(propertyTitle(user.name))”") }
+        if let user = drivers.user {
+            let name = propertyTitle(user.name)
+            return L("Set by the user property “\(name)”")
+        }
         return L("Add a script or bind a user property")
     }
 }
@@ -78,8 +83,9 @@ struct FieldAuthoringMenuItems: View {
         if EditorAuthoringModel.propertyKind(for: target.path) != nil {
             Divider()
             if let user = drivers.user {
+                let name = authoring.userPropertyTitle(user.name)
                 Button(L("Change User Property…")) { authoring.bindingTarget = target }
-                Button(L("Unbind “\(authoring.userPropertyTitle(user.name))”")) {
+                Button(L("Unbind “\(name)”")) {
                     authoring.session.unbind(target.path, of: target.layer, actionName: L("Unbind User Property"))
                 }
             } else {
