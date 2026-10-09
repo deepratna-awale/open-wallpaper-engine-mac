@@ -10,15 +10,11 @@ import Foundation
 /// processes isolated under the same tag, never to the user's own app.
 struct AppProcessChannel: Equatable {
     enum Message: String, CaseIterable {
-        /// The editor saved a wallpaper's overlay (`SceneEditOverlayFiles`).
+        /// The editor saved a wallpaper's overlay (File › Save, `SceneEditOverlayFiles`).
         case overlayDidSave = "editor.overlayDidSave"
-        /// A gizmo drag in progress: the editor wrote it beside the overlay (`SceneEditLiveFiles`).
-        case overlayPreview = "editor.overlayPreview"
-        /// The particle editor restarts systems (their ids beside the overlay).
-        case particlesRestart = "editor.particlesRestart"
         /// A wallpaper's user properties were saved (`Notification.Name.wallpaperPropertiesDidSave`).
         case propertiesDidSave = "properties.didSave"
-        /// A wallpaper was added to the library (Save as Local Wallpaper).
+        /// A wallpaper was added to the library (Save as New Wallpaper).
         case libraryDidChange = "library.didChange"
         /// Open (or bring forward) the editor window of a wallpaper.
         case openWallpaper = "editor.open"
@@ -29,10 +25,13 @@ struct AppProcessChannel: Equatable {
         /// Show the app's Settings › Plugins › Depth Map Generation, where the editor's depth map
         /// section sends the user to install its model.
         case openDepthMapSettings = "app.openDepthMapSettings"
-        /// Open Wallpaper Engine saved a wallpaper's overlay for an MCP client (`HeadlessSceneDocument`):
+        /// Open Wallpaper Engine changed a wallpaper's draft for an MCP client (`HeadlessSceneDocument`):
         /// the editor's open window of it takes the change as an undo step (`actionKey` names it), or
         /// undoes or redoes the step it took (`stepKey`).
         case appOverlayDidSave = "app.overlayDidSave"
+        /// Open Wallpaper Engine saved a wallpaper's draft for an MCP client (`wallpaper_editor_save`):
+        /// the editor's open window of it has nothing unsaved.
+        case appDraftDidSave = "app.draftDidSave"
         /// Close the editor window of a wallpaper.
         case closeWallpaper = "editor.close"
         /// Play, pause or seek the timeline of a wallpaper's editor window (`timelineCommandKey`,

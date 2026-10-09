@@ -43,6 +43,9 @@ final class MCPSceneFixture {
         defaults = UserDefaults(suiteName: suiteName) ?? .app
     }
 
+    /// The Wallpaper Editor's drafts beside the fixture's saved overlays.
+    var draftStore: SceneEditDraftStore { SceneEditDraftStore(saved: store) }
+
     func remove() {
         try? FileManager.default.removeItem(at: root) // Optional: a temporary folder.
         defaults.removePersistentDomain(forName: suiteName)
@@ -59,12 +62,13 @@ final class MCPSceneFixture {
         FakeSceneEditResources(folder: folder, identity: identity, assets: EditorAssetStore(directory: root.appending(path: "assets")))
     }
 
-    /// The headless service over the fixture, saving into its own store and posting on `center`.
+    /// The headless service over the fixture, editing the draft in its own store and posting saves on `center`.
     func service(center: NotificationCenter = NotificationCenter(),
-                 announce: @escaping @MainActor (URL, SceneEditOverlay, String, AppProcessChannel.OverlayStep) -> Void = { _, _, _, _ in }) -> HeadlessSceneEditService {
+                 announce: @escaping @MainActor (URL, String, AppProcessChannel.OverlayStep) -> Void = { _, _, _ in },
+                 announceSave: @escaping @MainActor (URL, SceneEditOverlay) -> Void = { _, _ in }) -> HeadlessSceneEditService {
         let resources = resources()
-        return HeadlessSceneEditService(dependencies: .init(store: store, center: center, resources: { _ in resources },
-                                                            announce: announce))
+        return HeadlessSceneEditService(dependencies: .init(store: draftStore, center: center, resources: { _ in resources },
+                                                            announce: announce, announceSave: announceSave))
     }
 }
 
@@ -162,7 +166,7 @@ final class FakeSceneEditorControl: SceneEditorControl {
 
     func restartParticles(_ document: HeadlessSceneDocument, layer: Int) { restarted.append(layer) }
 
-    func saveAsLocalWallpaper(_ document: HeadlessSceneDocument, title: String) throws -> URL {
+    func saveAsNewWallpaper(_ document: HeadlessSceneDocument, title: String) throws -> URL {
         savedCopies.append(title)
         return URL(fileURLWithPath: "/library/copy-\(savedCopies.count)")
     }

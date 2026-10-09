@@ -21,7 +21,7 @@ import Foundation
 ///
 /// The depth maps are PNGs the editor keeps with its files (`materials/depth/editor_<name>.png`,
 /// texture `depth/editor_<name>`), so the overlay is the one source of truth for both editors and
-/// Save as Local Wallpaper writes a normal WE effect and its texture.
+/// Save as New Wallpaper writes a normal WE effect and its texture.
 public enum SceneDepthParallax {
     public static let effectFile = "effects/depthparallax/effect.json"
     public static let folderName = "depthparallax"

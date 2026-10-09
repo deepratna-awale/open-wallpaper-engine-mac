@@ -25,7 +25,7 @@ struct PuppetInspectorSection: View {
             Text(PL("Puppet Warp"))
         } footer: {
             if session.puppet(of: layer.id) != nil {
-                Text(PL("Save as Local Wallpaper writes the puppet's files."))
+                Text(PL("Save as New Wallpaper writes the puppet's files."))
             }
         }
         .onAppear { rigPath = Self.rigPath(of: layer, assets: assets) }

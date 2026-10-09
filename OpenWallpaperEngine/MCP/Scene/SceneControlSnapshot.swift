@@ -20,6 +20,7 @@ enum SceneControlSnapshot {
                 .merging((session.overlay.general ?? [:]).mapValues(SceneControlValues.json)) { _, edited in edited }),
             "layers": .array(outline.layers.map { layer(session, $0, resources: document.resources) }),
             "edited": .bool(session.overlay.hasSceneEdits),
+            "unsaved": .bool(document.hasUnsavedChanges),
             "undo": undoState(session),
             "user_properties": .array(UserPropertyAuthoring(session: session, projectJSON: document.resources.projectJSON)
                 .properties.map(userProperty)),

@@ -7,7 +7,7 @@ import UniformTypeIdentifiers
 /// kept in the overlay's own folder beside its edits, never in the wallpaper (editor-plan notes
 /// §3). Paths inside it are the scene's own (`materials/editor/…`, `models/editor/…`,
 /// `sounds/editor/…`, `fonts/editor/…`, `materials/masks/…`), which the scene loader finds there
-/// after the wallpaper's own files; Save as Local Wallpaper copies them into the copy.
+/// after the wallpaper's own files; Save as New Wallpaper copies them into the copy.
 ///
 /// Every file is named by its content's hash, so an edit naming it always means the same bytes,
 /// the scene cache key (which covers the overlay) changes with them, and importing twice writes once.

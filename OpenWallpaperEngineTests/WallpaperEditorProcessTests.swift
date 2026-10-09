@@ -275,7 +275,6 @@ final class WallpaperEditorProcessTests: XCTestCase {
             messaging: messaging, channel: AppProcessChannel(isolationTag: "tests"), sender: sender,
             store: SceneEditOverlayStore(directory: storeDirectory), local: local, defaults: defaults)
         dependencies.readScene = { _ in Self.scene }
-        dependencies.schedule = { _, work in work() }
         if let properties {
             dependencies.runningProperties = { properties.running[$0] ?? [:] }
             dependencies.setRunningProperties = { values, key in properties.set.append((key, values)) }
@@ -298,7 +297,7 @@ final class WallpaperEditorProcessTests: XCTestCase {
         var overlay = SceneEditOverlay()
         overlay.setField("alpha", to: .number(0.5), of: 4)
         try SceneEditOverlayStore(directory: storeDirectory).save(overlay, for: identity.rawValue)
-        editor.overlayDidSave(folder: folder, identity: identity)
+        editor.overlayDidSave(folder: folder)
 
         XCTAssertEqual(received.notifications.count, 1)
         let info = try XCTUnwrap(received.notifications.first?.userInfo)
@@ -308,7 +307,7 @@ final class WallpaperEditorProcessTests: XCTestCase {
         XCTAssertEqual(info["transient"] as? Bool, false, "a saved change: the instance draws it live or reloads")
         XCTAssertEqual((info["base"] as? SceneOutline)?.layers.map(\.id), [4, 5], "measured against the scene's structure")
 
-        editor.overlayDidSave(folder: folder, identity: identity)
+        editor.overlayDidSave(folder: folder)
         XCTAssertEqual(received.notifications.count, 1, "the same overlay twice is applied once")
         XCTAssertTrue(messaging.posted.allSatisfy { !$0.userInfo.values.contains { $0.contains("alpha") } },
                       "messages name the wallpaper, never the edits")
@@ -325,13 +324,13 @@ final class WallpaperEditorProcessTests: XCTestCase {
         var overlay = SceneEditOverlay()
         overlay.setField("alpha", to: .number(0.5), of: 4)
         try store.save(overlay, for: identity.rawValue)
-        editor.overlayDidSave(folder: folder, identity: identity)
+        editor.overlayDidSave(folder: folder)
 
         let particles = NotificationLog(.sceneEditParticlesDidChange, in: appCenter)
         let scenes = NotificationLog(.sceneEditOverlayDidChange, in: appCenter)
         overlay.updateParticles { $0.assets["particles/rain.json"] = .object(["maxcount": .number(10)]) }
         try store.save(overlay, for: identity.rawValue)
-        editor.overlayDidSave(folder: folder, identity: identity)
+        editor.overlayDidSave(folder: folder)
 
         XCTAssertTrue(scenes.notifications.isEmpty, "the scene keeps running")
         XCTAssertEqual(particles.notifications.first?.userInfo?["paths"] as? [String], ["particles/rain.json"])
@@ -351,27 +350,6 @@ final class WallpaperEditorProcessTests: XCTestCase {
         // Saved by another process, with no message.
         try SceneEditOverlayStore(directory: storeDirectory).save(overlay, for: identity.rawValue)
         wait(for: [reloaded], timeout: 5)
-    }
-
-    func testADragInTheEditorIsDrawnByTheAppWhileItLasts() throws {
-        let messaging = FakeProcessMessaging()
-        let appCenter = NotificationCenter()
-        let app = makeSync(.app, sender: "app", messaging: messaging, local: appCenter)
-        let editor = makeSync(.editor, sender: "editor", messaging: messaging, local: NotificationCenter())
-        app.start()
-        defer { app.stop() }
-        let received = NotificationLog(.sceneEditOverlayDidChange, in: appCenter)
-
-        var dragged = SceneEditOverlay()
-        dragged.setField("origin", to: .string("5 5 0"), of: 4)
-        editor.preview(dragged, folder: folder, identity: identity)
-        XCTAssertEqual(received.notifications.last?.userInfo?["transient"] as? Bool, true)
-        XCTAssertEqual(received.notifications.last?.userInfo?["overlay"] as? SceneEditOverlay, dragged)
-
-        // The drag ends: its save replaces it, and no preview is left behind.
-        editor.overlayDidSave(folder: folder, identity: identity)
-        let live = SceneEditLiveFiles(store: SceneEditOverlayStore(directory: storeDirectory))
-        XCTAssertNil(try live.preview(for: identity))
     }
 
     func testUserPropertiesSavedInOneProcessReachTheOthersRunningWallpaper() {
@@ -439,7 +417,7 @@ final class WallpaperEditorProcessTests: XCTestCase {
         let wallpaper = try XCTUnwrap(InstalledLibrary.wallpaper(at: folder, hiding: []))
         let editor = try WallpaperEditorController(wallpaper: wallpaper, host: WallpaperEditorAppDelegate.makeSceneHost(),
                                                    sync: sync)
-        defer { editor.window.close() }
+        defer { try? editor.draft.discard(); editor.window.close() } // The isolated tests' draft.
         let services = editor.makeServices()
         let depthMaps = try XCTUnwrap(services.depthMaps)
         XCTAssertTrue(depthMaps.generator === DepthMapPlugin.generator, "the process's own generator")
@@ -450,13 +428,13 @@ final class WallpaperEditorProcessTests: XCTestCase {
     }
 
     /// What an MCP client drives in the editor's process (an edit taken, undone and redone, the
-    /// timeline, depth maps, Save as Local Wallpaper, the canvas's scene) never makes or uses Open
+    /// timeline, depth maps, Save as New Wallpaper, the canvas's scene) never makes or uses Open
     /// Wallpaper Engine's delegate.
     func testTheEditorsMCPPathsNeverReachTheAppsDelegate() throws {
         var reached = 0
         AppDelegate.sharedAccessProbe = { reached += 1 }
         defer { AppDelegate.sharedAccessProbe = nil }
-        // Save as Local Wallpaper writes into the library: a temporary one.
+        // Save as New Wallpaper writes into the library: a temporary one.
         let storageKey = "CustomWallpapersDirectory"
         let savedStorage = UserDefaults.app.string(forKey: storageKey)
         let library = folder.deletingLastPathComponent().appending(path: "library", directoryHint: .isDirectory)
@@ -472,7 +450,7 @@ final class WallpaperEditorProcessTests: XCTestCase {
         defer { try? SceneEditOverlayFiles.defaultStore.remove(identity.rawValue) } // The isolated tests' store.
         let editor = try WallpaperEditorController(wallpaper: wallpaper, host: WallpaperEditorAppDelegate.makeSceneHost(),
                                                    sync: sync)
-        defer { editor.window.close() }
+        defer { try? editor.draft.discard(); editor.window.close() } // The isolated tests' draft.
         func nextEvent() { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
 
         // The canvas's scene runs with the process's own host, and takes no loading snapshots.
@@ -486,7 +464,7 @@ final class WallpaperEditorProcessTests: XCTestCase {
         other.setValue(.number(0.5), for: "alpha", of: 4, actionName: "Opacity")
         edited = other.overlay
         for (overlay, step) in [(edited, AppProcessChannel.OverlayStep.edit), (SceneEditOverlay(), .undo), (edited, .redo)] {
-            try SceneEditOverlayFiles.defaultStore.save(overlay, for: identity.rawValue)
+            try SceneEditOverlayFiles.draftStore.saveDraft(overlay, for: identity.rawValue)
             editor.adoptSavedOverlay(actionName: "Opacity", step: step)
             nextEvent()
             XCTAssertEqual(editor.session.overlay, overlay)
@@ -495,10 +473,10 @@ final class WallpaperEditorProcessTests: XCTestCase {
         editor.controlTimeline(command: "play", seconds: nil)
         editor.controlTimeline(command: "seek", seconds: 1)
         editor.controlTimeline(command: "pause", seconds: nil)
-        // Depth maps and Save as Local Wallpaper, through the window's services.
+        // Depth maps and Save as New Wallpaper, through the window's services.
         let services = editor.makeServices()
         try XCTUnwrap(services.depthMaps).openPlugins()
-        _ = try services.saveAsLocalWallpaper("Process (Edited)")
+        _ = try services.saveAsNewWallpaper("Process (Edited)")
         XCTAssertTrue(messaging.posted.contains { $0.name.rawValue.hasSuffix("library.didChange") },
                       "the app's library hears of the copy through the channel")
         XCTAssertEqual(reached, 0, "AppDelegate.shared used from the editor's process")

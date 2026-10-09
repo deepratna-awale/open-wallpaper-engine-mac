@@ -9,7 +9,7 @@ import simd
 /// Coordinates are WE's: the image's pixels, centred on the image, y up (every library rig puts
 /// a vertex at `(uv − ½) · size`, v flipped). Bones are local to their parent, parents first.
 /// The document is a value; the editor keeps it in the overlay (`SceneEditOverlay.puppets`) and
-/// writes the files on Save as Local Wallpaper (`PuppetSceneBake`).
+/// writes the files on Save as New Wallpaper (`PuppetSceneBake`).
 public struct PuppetDocument: Codable, Hashable, Sendable {
     public static let currentVersion = 1
 

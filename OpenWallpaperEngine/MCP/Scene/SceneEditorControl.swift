@@ -20,8 +20,8 @@ protocol SceneEditorControl: AnyObject {
     func controlTimeline(_ wallpaper: ControlWallpaper, command: String, seconds: Double?) -> Bool
     /// Starts the particle system `layer` again in the running wallpaper.
     func restartParticles(_ document: HeadlessSceneDocument, layer: Int)
-    /// Save as Local Wallpaper; returns the copy's folder.
-    func saveAsLocalWallpaper(_ document: HeadlessSceneDocument, title: String) throws -> URL
+    /// Save as New Wallpaper; returns the new wallpaper's folder.
+    func saveAsNewWallpaper(_ document: HeadlessSceneDocument, title: String) throws -> URL
     /// Whether Depth Map Generation is installed (Settings › Plugins).
     var isDepthMapPluginInstalled: Bool { get }
 }
@@ -60,12 +60,13 @@ final class AppSceneEditorControl: SceneEditorControl {
     }
 
     func restartParticles(_ document: HeadlessSceneDocument, layer: Int) {
-        // The system is built again from nothing; the rest of the scene keeps running.
-        SceneEditOverlayFiles.postParticles(document.session.overlay, wallpaperDirectory: document.resources.folder,
+        // The system is built again from nothing, as saved (the draft's particle documents are
+        // the editor's canvas's alone); the rest of the scene keeps running.
+        SceneEditOverlayFiles.postParticles(document.draft.savedOverlay, wallpaperDirectory: document.resources.folder,
                                             objectIDs: [layer])
     }
 
-    func saveAsLocalWallpaper(_ document: HeadlessSceneDocument, title: String) throws -> URL {
+    func saveAsNewWallpaper(_ document: HeadlessSceneDocument, title: String) throws -> URL {
         guard let found = model.find(document.wallpaper) else { throw AppControlModel.missing(document.wallpaper) }
         let folder = try LocalWallpaperSave.save(found, overlay: document.session.overlay,
                                                  assetsDirectory: document.resources.assetStore.directory, title: title)

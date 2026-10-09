@@ -1,7 +1,7 @@
 import XCTest
 @testable import OWESceneEditing
 
-/// Save as Local Wallpaper: a new folder with the edits baked in; the source untouched.
+/// Save as New Wallpaper: a new folder with the edits baked in; the source untouched.
 final class LocalWallpaperWriterTests: XCTestCase {
     private var root: URL!
     private var source: URL!

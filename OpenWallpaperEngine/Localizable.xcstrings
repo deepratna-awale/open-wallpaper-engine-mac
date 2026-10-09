@@ -34723,6 +34723,101 @@
         }
       }
     },
+    "Discard" : {
+      "comment" : "Wallpaper Editor: drops a draft left from an earlier session",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تجاهل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwerfen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descartar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "छोड़ें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "破棄"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "폐기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odrzuć"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descartar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменить"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yok Say"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкинути"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放弃"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放棄"
+          }
+        }
+      }
+    },
     "Discover" : {
       "comment" : "Main window tab: curated Workshop lists",
       "localizations" : {
@@ -35762,6 +35857,101 @@
         }
       }
     },
+    "Do you want to save the changes you made to “%@”?" : {
+      "comment" : "Wallpaper Editor: asked when a window with unsaved changes closes or the editor quits; the wallpaper's title",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل تريد حفظ التغييرات التي أجريتها على ”%@“؟"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Möchten Sie die Änderungen an „%@“ sichern?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quieres guardar los cambios realizados en «%@»?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voulez-vous enregistrer les modifications apportées à « %@ » ?"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "क्या आप “%@” में किए गए बदलाव सहेजना चाहते हैं?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuoi salvare le modifiche apportate a “%@”?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」に加えた変更を保存しますか？"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’에 대한 변경 사항을 저장하겠습니까?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czy chcesz zachować zmiany wprowadzone w „%@”?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deseja salvar as alterações feitas em “%@”?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранить изменения, внесенные в «%@»?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” üzerinde yaptığınız değişiklikleri kaydetmek istiyor musunuz?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти зміни, внесені до «%@»?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要保存对“%@”所做的更改吗？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要儲存對「%@」所做的更動嗎？"
+          }
+        }
+      }
+    },
     "Do you want to undo every Scene Editor (Live) edit of “%@”? Its properties are kept." : {
       "localizations" : {
         "ar" : {
@@ -36229,6 +36419,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "完成"
+          }
+        }
+      }
+    },
+    "Don’t Save" : {
+      "comment" : "Wallpaper Editor: drops a window's unsaved changes as it closes",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عدم الحفظ"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht sichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No guardar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne pas enregistrer"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "न सहेजें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non salvare"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存しない"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "저장 안 함"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie zachowuj"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não Salvar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не сохранять"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaydetme"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не зберігати"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不保存"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不儲存"
           }
         }
       }
@@ -113120,192 +113405,192 @@
         }
       }
     },
-    "Revert" : {
-      "comment" : "Undo menu: dropping every edit of the wallpaper",
+    "Revert to Saved" : {
+      "comment" : "Wallpaper Editor: Undo menu name of going back to the last save",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "إرجاع"
+            "value" : "الرجوع إلى النسخة المحفوظة"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zurücksetzen"
+            "value" : "Auf zuletzt gesicherte Version zurücksetzen"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Revertir"
+            "value" : "Volver a la versión guardada"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Revenir"
+            "value" : "Revenir à la version enregistrée"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "वापस लाएँ"
+            "value" : "सहेजे गए संस्करण पर वापस जाएँ"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ripristina"
+            "value" : "Ripristina la versione salvata"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "元に戻す"
+            "value" : "保存済みの状態に戻す"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "되돌리기"
+            "value" : "저장된 상태로 되돌리기"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odrzuć zmiany"
+            "value" : "Przywróć zachowaną wersję"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reverter"
+            "value" : "Reverter para a Versão Salva"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Вернуть"
+            "value" : "Вернуть к сохраненной версии"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Geri Döndür"
+            "value" : "Kaydedilen Sürüme Geri Döndür"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Повернути"
+            "value" : "Повернути до збереженої версії"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "复原"
+            "value" : "复原为上次保存的版本"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "回復"
+            "value" : "回復成上次儲存的版本"
           }
         }
       }
     },
-    "Revert…" : {
-      "comment" : "Wallpaper Editor File menu: asks before dropping every edit made in the editor",
+    "Revert to Saved…" : {
+      "comment" : "Wallpaper Editor File menu: asks before going back to the wallpaper as it was last saved",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "إرجاع…"
+            "value" : "الرجوع إلى النسخة المحفوظة…"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zurücksetzen …"
+            "value" : "Auf zuletzt gesicherte Version zurücksetzen …"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Revertir…"
+            "value" : "Volver a la versión guardada…"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Revenir…"
+            "value" : "Revenir à la version enregistrée…"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "वापस लाएँ…"
+            "value" : "सहेजे गए संस्करण पर वापस जाएँ…"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ripristina…"
+            "value" : "Ripristina la versione salvata…"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "元に戻す…"
+            "value" : "保存済みの状態に戻す…"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "되돌리기…"
+            "value" : "저장된 상태로 되돌리기…"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Odrzuć zmiany…"
+            "value" : "Przywróć zachowaną wersję…"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reverter…"
+            "value" : "Reverter para a Versão Salva…"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Вернуть…"
+            "value" : "Вернуть к сохраненной версии…"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Geri Döndür…"
+            "value" : "Kaydedilen Sürüme Geri Döndür…"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Повернути…"
+            "value" : "Повернути до збереженої версії…"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "复原…"
+            "value" : "复原为上次保存的版本…"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "回復⋯"
+            "value" : "回復成上次儲存的版本⋯"
           }
         }
       }
@@ -115295,97 +115580,97 @@
         }
       }
     },
-    "Save as Local Wallpaper…" : {
-      "comment" : "Wallpaper Editor File menu: saves a copy of the wallpaper with the edits to the library",
+    "Save as New Wallpaper…" : {
+      "comment" : "Wallpaper Editor File menu: saves a new wallpaper with the edits to the library, leaving the original as it was saved",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "حفظ كخلفية محلية…"
+            "value" : "حفظ كخلفية جديدة…"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Als lokales Hintergrundbild sichern …"
+            "value" : "Als neues Hintergrundbild sichern …"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Guardar como fondo de pantalla local…"
+            "value" : "Guardar como nuevo fondo de pantalla…"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enregistrer comme fond d’écran local…"
+            "value" : "Enregistrer comme nouveau fond d’écran…"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "लोकल वॉलपेपर के रूप में सहेजें…"
+            "value" : "नए वॉलपेपर के रूप में सहेजें…"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salva come sfondo locale…"
+            "value" : "Salva come nuovo sfondo…"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ローカル壁紙として保存…"
+            "value" : "新規壁紙として保存…"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "로컬 배경화면으로 저장…"
+            "value" : "새 배경화면으로 저장…"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zachowaj jako lokalną tapetę…"
+            "value" : "Zachowaj jako nową tapetę…"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salvar como Imagem de Fundo Local…"
+            "value" : "Salvar como Nova Imagem de Fundo…"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Сохранить как локальные обои…"
+            "value" : "Сохранить как новые обои…"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Yerel Duvar Kâğıdı Olarak Kaydet…"
+            "value" : "Yeni Duvar Kâğıdı Olarak Kaydet…"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Зберегти як локальну шпалеру…"
+            "value" : "Зберегти як нову шпалеру…"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "保存为本地墙纸…"
+            "value" : "保存为新墙纸…"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "儲存為本機背景圖片⋯"
+            "value" : "儲存為新背景圖片⋯"
           }
         }
       }
@@ -141924,6 +142209,101 @@
         }
       }
     },
+    "The changes couldn’t be saved." : {
+      "comment" : "Wallpaper Editor: saving a window's changes failed",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذر حفظ التغييرات."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Änderungen konnten nicht gesichert werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se han podido guardar los cambios."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les modifications n’ont pas pu être enregistrées."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बदलाव सहेजे नहीं जा सके।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile salvare le modifiche."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "変更内容を保存できませんでした。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "변경 사항을 저장할 수 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można zachować zmian."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível salvar as alterações."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось сохранить изменения."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Değişiklikler kaydedilemedi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося зберегти зміни."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法保存更改。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法儲存更動。"
+          }
+        }
+      }
+    },
     "The cut-off where the effect starts to apply. Lower catches more of the image, higher restricts it to the strongest pixels." : {
       "comment" : "Scene Editor tooltip for an effect parameter named like threshold",
       "localizations" : {
@@ -147013,6 +147393,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "這些快速鍵在任何 App 中都有效，並會開始播放列表。在「播放列表」標籤頁的播放列表標題中設定。"
+          }
+        }
+      }
+    },
+    "They were kept from an earlier editing session. Resume editing them, or discard them and edit the wallpaper as it was last saved." : {
+      "comment" : "Wallpaper Editor: under the question about a draft left from an earlier session",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "احتُفظ بها من جلسة تحرير سابقة. استأنف تحريرها، أو تجاهلها وحرّر الخلفية كما حُفظت آخر مرة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sie stammen aus einer früheren Bearbeitung. Bearbeiten Sie sie weiter oder verwerfen Sie sie und bearbeiten Sie das Hintergrundbild so, wie es zuletzt gesichert wurde."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se conservaron de una sesión de edición anterior. Reanuda su edición o descártalos y edita el fondo de pantalla tal como se guardó por última vez."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elles ont été conservées d’une session de modification précédente. Reprenez-les, ou supprimez-les et modifiez le fond d’écran tel qu’il a été enregistré pour la dernière fois."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ये पिछले एडिटिंग सत्र से रखे गए थे। इन्हें एडिट करना जारी रखें, या इन्हें छोड़कर वॉलपेपर को वैसे एडिट करें जैसे वह पिछली बार सहेजा गया था।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sono state conservate da una sessione di modifica precedente. Riprendi a modificarle oppure eliminale e modifica lo sfondo così come è stato salvato l’ultima volta."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以前の編集セッションから保持されています。編集を再開するか、破棄して最後に保存した状態の壁紙を編集してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이전 편집 세션에서 보관된 변경 사항입니다. 계속 편집하거나, 변경 사항을 버리고 마지막으로 저장된 상태의 배경화면을 편집하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zostały zachowane z wcześniejszej sesji edycji. Wznów ich edycję albo odrzuć je i edytuj tapetę w ostatnio zachowanej wersji."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elas foram mantidas de uma sessão de edição anterior. Retome a edição ou descarte-as e edite a imagem de fundo como foi salva pela última vez."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Они сохранились с прошлого сеанса редактирования. Продолжите их редактировать или отмените их и редактируйте обои в последней сохраненной версии."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bunlar önceki bir düzenleme oturumundan saklandı. Düzenlemeyi sürdürün ya da bunları atıp duvar kâğıdını en son kaydedildiği haliyle düzenleyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Їх збережено з попереднього сеансу редагування. Поновіть їх редагування або відкиньте їх і редагуйте шпалеру в останній збереженій версії."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这些更改保留自之前的编辑会话。你可以继续编辑它们，或者放弃它们并编辑上次保存的墙纸。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這些更動保留自先前的編輯工作階段。你可以繼續編輯，或放棄這些更動並編輯上次儲存的背景圖片。"
           }
         }
       }
@@ -166771,6 +167246,101 @@
         }
       }
     },
+    "Your changes will be lost if you don’t save them." : {
+      "comment" : "Wallpaper Editor: under the question whether to save a window's changes",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ستفقد تغييراتك إذا لم تحفظها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihre Änderungen gehen verloren, wenn Sie sie nicht sichern."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si no los guardas, se perderán los cambios."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos modifications seront perdues si vous ne les enregistrez pas."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अगर आप बदलाव नहीं सहेजते, तो वे खो जाएँगे।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se non le salvi, le modifiche andranno perse."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存しないと、変更内容は失われます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "저장하지 않으면 변경 사항이 사라집니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeśli nie zachowasz zmian, zostaną one utracone."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suas alterações serão perdidas se você não salvá-las."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Если не сохранить изменения, они будут потеряны."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Değişikliklerinizi kaydetmezseniz kaybolacaklar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Якщо не зберегти зміни, їх буде втрачено."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "如果不保存，你的更改将丢失。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "如果不儲存，你的更動將會遺失。"
+          }
+        }
+      }
+    },
     "Your layer edits are baked into the package's scene.json, and the property values you set become its project.json defaults, so the phone starts with them. The phone renders the scene itself, so the crop and the parallax position don't apply." : {
       "localizations" : {
         "ar" : {
@@ -168487,6 +169057,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "「%@」中沒有背景圖片。"
+          }
+        }
+      }
+    },
+    "“%@” has unsaved changes." : {
+      "comment" : "Wallpaper Editor: a wallpaper opens with a draft left from an earlier session (the editor quit or crashed before it was saved); the wallpaper's title",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحتوي ”%@“ على تغييرات غير محفوظة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ hat nicht gesicherte Änderungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%@» tiene cambios sin guardar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« %@ » comporte des modifications non enregistrées."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” में बिना सहेजे बदलाव हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” ha modifiche non salvate."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」には保存されていない変更があります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’에 저장되지 않은 변경 사항이 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@” ma niezachowane zmiany."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” tem alterações não salvas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В «%@» есть несохраненные изменения."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” öğesinde kaydedilmemiş değişiklikler var."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У «%@» є незбережені зміни."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@”有未保存的更改。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」有尚未儲存的更動。"
           }
         }
       }

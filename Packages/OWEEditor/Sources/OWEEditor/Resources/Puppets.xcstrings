@@ -14536,192 +14536,192 @@
         }
       }
     },
-    "Save as Local Wallpaper writes the puppet once these are fixed." : {
+    "Save as New Wallpaper writes the puppet once these are fixed." : {
       "comment" : "Wallpaper Editor, Puppet Warp",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يكتب «حفظ كخلفية محلية» الدمية بعد إصلاح ما سبق."
+            "value" : "يكتب «حفظ كخلفية جديدة» الدمية بعد إصلاح ما سبق."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "„Als lokales Hintergrundbild sichern“ schreibt die Puppe, sobald dies behoben ist."
+            "value" : "„Als neues Hintergrundbild sichern“ schreibt die Puppe, sobald dies behoben ist."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Guardar como fondo local escribe la marioneta cuando esto se corrija."
+            "value" : "Guardar como nuevo fondo de pantalla escribe la marioneta cuando esto se corrija."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enregistrer comme fond d’écran local écrit la marionnette une fois ces points corrigés."
+            "value" : "Enregistrer comme nouveau fond d’écran écrit la marionnette une fois ces points corrigés."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "इन्हें ठीक करने पर “स्थानीय वॉलपेपर के रूप में सहेजें” पपेट लिखेगा।"
+            "value" : "इन्हें ठीक करने पर “नए वॉलपेपर के रूप में सहेजें” पपेट लिखेगा।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salva come sfondo locale scrive il pupazzo una volta risolti questi punti."
+            "value" : "Salva come nuovo sfondo scrive il pupazzo una volta risolti questi punti."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "これらを直すと「ローカル壁紙として保存」でパペットが書き出されます。"
+            "value" : "これらを直すと「新規壁紙として保存」でパペットが書き出されます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "이 문제를 고치면 ‘로컬 배경화면으로 저장’이 퍼펫을 기록합니다."
+            "value" : "이 문제를 고치면 ‘새 배경화면으로 저장’이 퍼펫을 기록합니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "„Zapisz jako lokalną tapetę” zapisze pacynkę po poprawieniu tych błędów."
+            "value" : "„Zachowaj jako nową tapetę” zapisze pacynkę po poprawieniu tych błędów."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salvar como papel de parede local grava o fantoche quando isso for corrigido."
+            "value" : "Salvar como Nova Imagem de Fundo grava o fantoche quando isso for corrigido."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "«Сохранить как локальные обои» запишет марионетку, когда это будет исправлено."
+            "value" : "«Сохранить как новые обои» запишет марионетку, когда это будет исправлено."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bunlar düzeltilince Yerel Duvar Kâğıdı Olarak Kaydet kuklayı yazar."
+            "value" : "Bunlar düzeltilince Yeni Duvar Kâğıdı Olarak Kaydet kuklayı yazar."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "«Зберегти як локальні шпалери» запише маріонетку, щойно це буде виправлено."
+            "value" : "«Зберегти як нову шпалеру» запише маріонетку, щойно це буде виправлено."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "修正这些问题后，“存储为本地壁纸”会写出木偶。"
+            "value" : "修正这些问题后，“保存为新墙纸”会写出木偶。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "修正這些問題後，「儲存為本機背景圖片」會寫出木偶。"
+            "value" : "修正這些問題後，「儲存為新背景圖片」會寫出木偶。"
           }
         }
       }
     },
-    "Save as Local Wallpaper writes the puppet's files." : {
+    "Save as New Wallpaper writes the puppet's files." : {
       "comment" : "Wallpaper Editor, Puppet Warp",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يكتب «حفظ كخلفية محلية» ملفات الدمية."
+            "value" : "يكتب «حفظ كخلفية جديدة» ملفات الدمية."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "„Als lokales Hintergrundbild sichern“ schreibt die Dateien der Puppe."
+            "value" : "„Als neues Hintergrundbild sichern“ schreibt die Dateien der Puppe."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Guardar como fondo local escribe los archivos de la marioneta."
+            "value" : "Guardar como nuevo fondo de pantalla escribe los archivos de la marioneta."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enregistrer comme fond d’écran local écrit les fichiers de la marionnette."
+            "value" : "Enregistrer comme nouveau fond d’écran écrit les fichiers de la marionnette."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“स्थानीय वॉलपेपर के रूप में सहेजें” पपेट की फ़ाइलें लिखता है।"
+            "value" : "“नए वॉलपेपर के रूप में सहेजें” पपेट की फ़ाइलें लिखता है।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salva come sfondo locale scrive i file del pupazzo."
+            "value" : "Salva come nuovo sfondo scrive i file del pupazzo."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「ローカル壁紙として保存」でパペットのファイルが書き出されます。"
+            "value" : "「新規壁紙として保存」でパペットのファイルが書き出されます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "‘로컬 배경화면으로 저장’이 퍼펫 파일을 기록합니다."
+            "value" : "‘새 배경화면으로 저장’이 퍼펫 파일을 기록합니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "„Zapisz jako lokalną tapetę” zapisze pliki pacynki."
+            "value" : "„Zachowaj jako nową tapetę” zapisze pliki pacynki."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salvar como papel de parede local grava os arquivos do fantoche."
+            "value" : "Salvar como Nova Imagem de Fundo grava os arquivos do fantoche."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "«Сохранить как локальные обои» запишет файлы марионетки."
+            "value" : "«Сохранить как новые обои» запишет файлы марионетки."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Yerel Duvar Kâğıdı Olarak Kaydet kuklanın dosyalarını yazar."
+            "value" : "Yeni Duvar Kâğıdı Olarak Kaydet kuklanın dosyalarını yazar."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "«Зберегти як локальні шпалери» запише файли маріонетки."
+            "value" : "«Зберегти як нову шпалеру» запише файли маріонетки."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“存储为本地壁纸”会写出木偶的文件。"
+            "value" : "“保存为新墙纸”会写出木偶的文件。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「儲存為本機背景圖片」會寫出木偶的檔案。"
+            "value" : "「儲存為新背景圖片」會寫出木偶的檔案。"
           }
         }
       }

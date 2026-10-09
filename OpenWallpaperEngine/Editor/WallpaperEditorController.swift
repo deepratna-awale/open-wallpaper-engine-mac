@@ -4,24 +4,28 @@ import OWEEditor
 import OWESceneEditing
 
 /// One Wallpaper Editor window: the editor module's view (`WallpaperEditorView`) over the app's
-/// own pieces. The canvas is the wallpaper running through the real renderer, in a preview of its
-/// own (as the Workshop preview runs one); edits are an overlay saved beside the wallpaper
-/// (`SceneEditOverlayFiles`), which every running instance of it reloads with: this process's
-/// directly, Open Wallpaper Engine's through `sync` (the editor runs in a process of its own,
-/// `WallpaperEditorAppDelegate`).
+/// own pieces. It edits a draft of the wallpaper (`WallpaperEditorDraft`), never the wallpaper
+/// itself: the canvas is the wallpaper running the draft through the real renderer, in a preview
+/// of its own (`WallpaperPropertyScope.editorDraft`), and nothing else runs the draft. File › Save
+/// makes the draft the wallpaper's overlay (`SceneEditOverlayFiles`), which every running instance
+/// of it reloads with once: Open Wallpaper Engine's through `sync` (the editor runs in a process of
+/// its own, `WallpaperEditorAppDelegate`).
 @MainActor
-final class WallpaperEditorController: NSObject, NSWindowDelegate {
+final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemValidation {
     let wallpaper: WEWallpaper
     let window: NSWindow
     let session: SceneEditSession
     /// The window closed; its owner lets go of the controller.
     var onClose: (() -> Void)?
     private let identity: WallpaperSettingsIdentity
-    /// Hands saves, drags, particle restarts and library additions to Open Wallpaper Engine's
-    /// process; nil keeps them in this one.
+    /// Hands saves and library additions to Open Wallpaper Engine's process; nil keeps them in this one.
     private let sync: WallpaperEditorChangeSync?
-    /// File › Save as Local Wallpaper… and Revert… for this window.
+    /// File › Save, Save as New Wallpaper… and Revert to Saved… for this window.
     private let commands = WallpaperEditorCommands()
+    /// What the window edits: its overlay and user properties, on disk as they change.
+    let draft: WallpaperEditorDraft
+    /// The draft's state for the toolbar (and the close button's dot), Save and Revert to Saved.
+    let document = WallpaperEditorDocument()
     /// The canvas's own wallpaper model, as the Workshop preview has: one display, muted.
     private let preview: WallpaperViewModel
     private let userPropertyUndo: EditorUserPropertyUndo
@@ -33,15 +37,23 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     /// What the wallpaper's scripts log, for the script editor's console.
     private let scriptConsole: SceneScriptConsoleFeed
     private var consoleToken: UUID?
-    /// The overlay's scene digest as last saved: a save that doesn't change it (a lock, the user
-    /// properties, which only Save as Local Wallpaper writes, a puppet) doesn't reload the wallpaper.
-    private var savedSceneDigest: String
+    /// The draft's scene digest as the canvas last took it: a change that doesn't change it (a
+    /// lock, the user properties, which only Save as New Wallpaper writes, a puppet) doesn't
+    /// reload the canvas.
+    private var appliedSceneDigest: String
     /// The files the particle editor reads (the wallpaper's, WE's), its textures and presets.
     private let particleAssets: WallpaperEditorParticleAssets
-    /// The overlay as last saved, which tells a particle document change from a scene change.
-    private var savedOverlay: SceneEditOverlay
-    /// Taking an overlay Open Wallpaper Engine saved (`adoptSavedOverlay`): applied here, not saved.
+    /// The draft as the canvas last took it, which tells a particle document change from a scene change.
+    private var appliedOverlay: SceneEditOverlay
+    /// The wallpaper's overlay as last saved: the draft is measured against it, Revert to Saved
+    /// goes back to it.
+    private(set) var savedOverlay: SceneEditOverlay
+    /// Taking a draft Open Wallpaper Engine wrote for an MCP client (`adoptSavedOverlay`): applied
+    /// here, not written again.
     private var isAdopting = false
+
+    /// Whether the window has changes File › Save hasn't saved.
+    var isEdited: Bool { document.isEdited }
 
     /// Only scene wallpapers have layers to edit.
     nonisolated static func canEdit(_ wallpaper: WEWallpaper) -> Bool {
@@ -49,19 +61,27 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     }
 
     /// `host`: the settings and script services the canvas runs with (nil: the app's).
-    init(wallpaper: WEWallpaper, host: SceneWallpaperHost? = nil, sync: WallpaperEditorChangeSync? = nil) throws {
+    /// `resumesDraft`: a draft left from an earlier session is edited on (else it is discarded and
+    /// the window starts from the wallpaper as last saved).
+    init(wallpaper: WEWallpaper, host: SceneWallpaperHost? = nil, sync: WallpaperEditorChangeSync? = nil,
+         resumesDraft: Bool = true) throws {
         self.wallpaper = wallpaper
         self.sync = sync
         let identity = WallpaperSettingsIdentity.resolve(directory: wallpaper.wallpaperDirectory)
         self.identity = identity
         let source = try WallpaperEditorSource.read(wallpaper)
+        let draft = WallpaperEditorDraft(wallpaper: wallpaper)
+        if !resumesDraft { Self.discard(draft, title: wallpaper.project.title) }
+        draft.startProperties(resuming: resumesDraft)
+        self.draft = draft
+        savedOverlay = draft.savedOverlay
         let session = SceneEditSession(outline: try SceneOutline(sceneData: source.scene),
-                                       overlay: SceneEditOverlayFiles.overlay(for: identity) ?? SceneEditOverlay())
+                                       overlay: SceneEditOverlayFiles.editedOverlay(for: identity) ?? SceneEditOverlay())
         self.session = session
         resources = EditorWallpaperResources(wallpaper: wallpaper, package: source.package,
                                              assets: SceneEditOverlayFiles.assets(for: identity))
-        savedSceneDigest = Self.sceneDigest(session.overlay)
-        savedOverlay = session.overlay
+        appliedSceneDigest = Self.sceneDigest(session.overlay)
+        appliedOverlay = session.overlay
         particleAssets = WallpaperEditorParticleAssets(wallpaper: wallpaper, package: source.package)
         let scriptConsole = SceneScriptConsoleFeed(
             wallpaperID: SceneScriptStorageKey.key(forWallpaperDirectory: wallpaper.wallpaperDirectory))
@@ -74,10 +94,12 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
                 }
             }
         }
-        userPropertyUndo = EditorUserPropertyUndo(wallpaper: wallpaper, undoManager: session.undoManager,
+        userPropertyUndo = EditorUserPropertyUndo(wallpaper: wallpaper, scope: .editorDraft, undoManager: session.undoManager,
                                                   coalescingInterval: session.coalescingInterval)
         let preview = WallpaperViewModel(persistsWallpapers: false)
         preview.sceneHost = host
+        // The canvas runs the draft: its properties' store, and its overlay (`SceneWallpaperViewModel`).
+        preview.previewPropertyScope = .editorDraft
         preview.setWallpaper(wallpaper, for: preview.selectedScreenId)
         preview.playVolume = 0
         // The canvas is framed to the scene's own aspect, so stretching is exact.
@@ -94,20 +116,23 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         window.isReleasedWhenClosed = false
         window.toolbarStyle = .unified
         window.delegate = self
-        session.onChange = { [weak self] overlay in self?.save(overlay) }
-        // A gizmo drag is drawn live by the running wallpaper while it lasts.
+        session.onChange = { [weak self] overlay in self?.draftDidChange(overlay) }
+        // A gizmo drag is drawn live by the canvas while it lasts.
         session.onLivePreview = { [weak self] overlay in
             guard let self else { return }
-            SceneEditOverlayFiles.preview(overlay, base: self.session.baseOutline,
-                                          wallpaperDirectory: self.wallpaper.wallpaperDirectory)
-            self.sync?.preview(overlay, folder: self.wallpaper.wallpaperDirectory, identity: self.identity)
+            SceneEditOverlayFiles.post(overlay, base: self.session.baseOutline, wallpaperDirectory: self.wallpaper.wallpaperDirectory,
+                                       transient: true, draft: true)
         }
+        userPropertyUndo.onChange = { [weak self] in self?.refreshEditedState() }
+        document.save = { [weak self] in try self?.saveDraft() }
+        document.revertToSaved = { [weak self] in self?.revertToSaved() }
         timeline.onCanvasTime = { [weak self] seconds in self?.timelineCanvas.show(seconds) }
         let content = NSHostingView(rootView: WallpaperEditorView(session: session, services: makeServices()))
         content.sizingOptions = [.minSize]
         window.contentView = content
         window.center()
         window.setFrameAutosaveName("WallpaperEditor")
+        refreshEditedState()
     }
 
     /// Internal for tests (`WallpaperEditorProcessTests`).
@@ -121,11 +146,11 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
             blendModeTitle: SceneBlendModeOptions.title(labels: labels),
             blendModes: SceneBlendModeOptions.options(labels: labels),
             effectHelp: { SceneHelp.effect($0) },
-            suggestedLocalTitle: String(localized: "\(wallpaper.project.displayTitle) (Edited)",
-                                        comment: "Wallpaper Editor: the suggested title of a wallpaper saved with its edits"),
-            saveAsLocalWallpaper: { [weak self] title in
+            suggestedNewTitle: String(localized: "\(wallpaper.project.displayTitle) (Edited)",
+                                      comment: "Wallpaper Editor: the suggested title of a wallpaper saved with its edits"),
+            saveAsNewWallpaper: { [weak self] title in
                 guard let self else { return title }
-                return try self.saveAsLocalWallpaper(title: title)
+                return try self.saveAsNewWallpaper(title: title)
             },
             projectJSON: try? Data(contentsOf: wallpaper.wallpaperDirectory.appending(path: "project.json")),
             scriptConsole: scriptConsole)
@@ -140,6 +165,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         services.timeline = timeline
         services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
         services.commands = commands
+        services.document = document
         // In the editor's own process the app's Settings are another process's (`sync`).
         let openSettings: @MainActor (AppSettingsRequest) -> Void = { [sync] request in
             if let sync { sync.openSettings(request) } else { AppDelegate.shared.openSettings(for: request) }
@@ -154,15 +180,14 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         services.hasWEAssets = hasWEAssets
         services.openAssetsSetup = openAssetsSetup
         let assets = particleAssets, directory = wallpaper.wallpaperDirectory
-        let sync = self.sync, identity = self.identity
         do {
             let particles = try ParticleEditorServices.make(
                 session: session, readAsset: { assets.data($0) }, catalog: { assets.catalog(labels: labels) },
                 textures: assets.textures(), thumbnail: { assets.thumbnail($0) },
                 restart: { layerID in
-                    // The system is built again from nothing; the rest of the scene keeps running.
-                    SceneEditOverlayFiles.postParticles(session.overlay, wallpaperDirectory: directory, objectIDs: [layerID])
-                    sync?.restartParticles([layerID], folder: directory, identity: identity)
+                    // The canvas builds the system again from nothing; the rest of the scene keeps running.
+                    SceneEditOverlayFiles.postParticles(session.overlay, wallpaperDirectory: directory, objectIDs: [layerID],
+                                                        draft: true)
                 })
             particles.previews = previews
             particles.hasWEAssets = hasWEAssets
@@ -174,42 +199,84 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         return services
     }
 
-    /// Saves the overlay; the running instances of the wallpaper (the canvas and the desktop)
-    /// reload with it.
-    private func save(_ overlay: SceneEditOverlay) {
+    /// Every change of the draft: kept on disk (as the editor's autosave, so a crash keeps it)
+    /// and run by the canvas alone, a value drawn live, particle documents rebuilding their
+    /// systems, anything else a reload of the canvas.
+    private func draftDidChange(_ overlay: SceneEditOverlay) {
         let digest = Self.sceneDigest(overlay)
         // A change of particle documents alone builds only the systems that read them.
-        let change = overlay.liveChange(from: savedOverlay)
-        savedOverlay = overlay
-        if isAdopting {
-            // The app saved it and applied it to its own instances; the canvas applies it here.
-            if digest != savedSceneDigest {
-                switch change {
-                case .scene:
-                    SceneEditOverlayFiles.post(overlay, base: session.baseOutline, wallpaperDirectory: wallpaper.wallpaperDirectory,
-                                               transient: false)
-                case .particleAssets(let paths):
-                    SceneEditOverlayFiles.postParticles(overlay, wallpaperDirectory: wallpaper.wallpaperDirectory, paths: paths)
-                }
+        let change = overlay.liveChange(from: appliedOverlay)
+        appliedOverlay = overlay
+        // A draft Open Wallpaper Engine wrote is on disk already.
+        if !isAdopting {
+            do {
+                try draft.saveOverlay(overlay)
+            } catch {
+                OWELog.error(.scene, "Can't keep the Wallpaper Editor's draft of \(wallpaper.project.title): \(error)")
             }
-            savedSceneDigest = digest
-            return
         }
-        do {
-            // A puppet edit doesn't change the running scene (`SceneEditOverlay.digest`): no reload.
-            if digest == savedSceneDigest {
-                try SceneEditOverlayFiles.defaultStore.save(overlay, for: identity.rawValue)
-            } else {
+        // A puppet edit doesn't change the running scene (`SceneEditOverlay.digest`): no reload.
+        if digest != appliedSceneDigest {
+            switch change {
+            case .scene:
                 // Scripts applied here run from this reload (the runtime has no in-place swap of
                 // one script: a site's id is only free again after its `destroy()`).
-                try SceneEditOverlayFiles.save(overlay, for: identity, wallpaperDirectory: wallpaper.wallpaperDirectory,
-                                               base: session.baseOutline, change: change)
+                SceneEditOverlayFiles.post(overlay, base: session.baseOutline, wallpaperDirectory: wallpaper.wallpaperDirectory,
+                                           transient: false, draft: true)
+            case .particleAssets(let paths):
+                SceneEditOverlayFiles.postParticles(overlay, wallpaperDirectory: wallpaper.wallpaperDirectory, paths: paths,
+                                                    draft: true)
             }
-            savedSceneDigest = digest
-            // Open Wallpaper Engine's instances read it and decide the same way.
-            sync?.overlayDidSave(folder: wallpaper.wallpaperDirectory, identity: identity)
+        }
+        appliedSceneDigest = digest
+        refreshEditedState()
+    }
+
+    /// The window's edited state, from the draft against the wallpaper as last saved.
+    private func refreshEditedState() {
+        let edited = session.overlay != savedOverlay || draft.propertiesDiffer
+        if document.isEdited != edited { document.isEdited = edited }
+        window.isDocumentEdited = edited
+    }
+
+    /// File › Save: the draft becomes the wallpaper's (its overlay, its user properties), and every
+    /// running instance of it reloads once: Open Wallpaper Engine's through `sync`, any here
+    /// directly. The canvas already shows it.
+    func saveDraft() throws {
+        let overlay = session.overlay
+        try draft.saveOverlay(overlay)
+        let previous = savedOverlay
+        if let saved = try draft.commit() {
+            savedOverlay = saved
+            SceneEditOverlayFiles.postSaved(saved, previous: previous, base: session.baseOutline,
+                                            wallpaperDirectory: wallpaper.wallpaperDirectory)
+            sync?.overlayDidSave(folder: wallpaper.wallpaperDirectory)
+        }
+        refreshEditedState()
+    }
+
+    /// File › Revert to Saved: the draft back to the last save, the layer edits and the Details
+    /// panel's user properties alike, as one undo step.
+    func revertToSaved() {
+        let name = String(localized: "Revert to Saved", comment: "Wallpaper Editor: Undo menu name of going back to the last save")
+        session.revert(to: savedOverlay, actionName: name)
+        userPropertyUndo.revert(to: draft.savedPropertyValues, actionName: name)
+        refreshEditedState()
+    }
+
+    /// Open Wallpaper Engine saved this wallpaper's draft for an MCP client (`wallpaper_editor_save`):
+    /// what it saved is the window's last save from now on.
+    func draftWasSaved() {
+        savedOverlay = draft.savedOverlay
+        refreshEditedState()
+    }
+
+    /// Don't Save or Discard: the draft goes; logged when it can't.
+    private static func discard(_ draft: WallpaperEditorDraft, title: String) {
+        do {
+            try draft.discard()
         } catch {
-            OWELog.error(.scene, "Can't save the editor overlay of \(wallpaper.project.title): \(error)")
+            OWELog.error(.scene, "Can't discard the Wallpaper Editor's draft of \(title): \(error)")
         }
     }
 
@@ -217,17 +284,17 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         overlay.hasSceneEdits ? overlay.digest : ""
     }
 
-    /// Open Wallpaper Engine saved an overlay of this wallpaper for an MCP client and applied it to
-    /// its own instances (`HeadlessSceneDocument`): the window takes it as the undo step
-    /// `actionName`, so Undo here undoes it (and that Undo is saved and reaches the app as any edit).
+    /// Open Wallpaper Engine changed this wallpaper's draft for an MCP client (`HeadlessSceneDocument`):
+    /// the window takes it as the undo step `actionName`, so Undo here undoes it (and that Undo
+    /// goes into the draft as any edit does).
     /// The client's Undo or Redo (`step`) of a step the window took undoes or redoes it here, so
     /// the history stays one step per client edit.
     func adoptSavedOverlay(actionName: String, step: AppProcessChannel.OverlayStep = .edit) {
         let stored: SceneEditOverlay
         do {
-            stored = try SceneEditOverlayFiles.defaultStore.overlay(for: identity.rawValue) ?? SceneEditOverlay()
+            stored = try draft.store.overlay(for: identity.rawValue)
         } catch {
-            OWELog.error(.scene, "The Wallpaper Editor can't read the edits Open Wallpaper Engine saved for \(wallpaper.project.title): \(error)")
+            OWELog.error(.scene, "The Wallpaper Editor can't read the draft Open Wallpaper Engine wrote for \(wallpaper.project.title): \(error)")
             return
         }
         guard stored != session.overlay else { return }
@@ -271,9 +338,9 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         }
     }
 
-    /// Save as Local Wallpaper: a copy in the library with the edits in its scene.json; the
-    /// wallpaper itself isn't touched.
-    private func saveAsLocalWallpaper(title: String) throws -> String {
+    /// Save as New Wallpaper: a new wallpaper in the library with the draft in its scene.json; the
+    /// wallpaper and its draft aren't touched, and the window goes on editing them.
+    private func saveAsNewWallpaper(title: String) throws -> String {
         _ = try LocalWallpaperSave.save(wallpaper, overlay: session.overlay, assetsDirectory: resources.assets.directory, title: title)
         // Open Wallpaper Engine's library lists it.
         sync?.libraryDidChange()
@@ -282,14 +349,59 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
 
     // MARK: Menu
 
-    /// File › Save as Local Wallpaper…
-    @objc func saveAsLocalWallpaper(_ sender: Any?) {
-        commands.send(.saveAsLocalWallpaper)
+    /// File › Save
+    @objc func saveDocument(_ sender: Any?) {
+        commands.send(.save)
     }
 
-    /// File › Revert…
-    @objc func revertEdits(_ sender: Any?) {
-        commands.send(.revert)
+    /// File › Save as New Wallpaper…
+    @objc func saveAsNewWallpaper(_ sender: Any?) {
+        commands.send(.saveAsNewWallpaper)
+    }
+
+    /// File › Revert to Saved…
+    @objc func revertToSaved(_ sender: Any?) {
+        commands.send(.revertToSaved)
+    }
+
+    /// Save and Revert to Saved need something unsaved.
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        guard let action = menuItem.action else { return true }
+        return action == WallpaperEditorMenu.save || action == WallpaperEditorMenu.revertToSaved ? isEdited : true
+    }
+
+    // MARK: Unsaved changes
+
+    /// Asks whether to save the window's changes, as a document's window asks when it closes:
+    /// Save, Don't Save or Cancel (`resolveUnsavedChanges`). Nothing to save answers true at once.
+    func confirmUnsavedChanges(_ done: @escaping @MainActor (Bool) -> Void) {
+        guard isEdited else { return done(true) }
+        let alert = WallpaperEditorDraftAlerts.unsavedChanges(title: wallpaper.project.displayTitle)
+        alert.beginSheetModal(for: window) { [weak self] response in
+            MainActor.assumeIsolated { done(self?.resolveUnsavedChanges(response) ?? false) }
+        }
+    }
+
+    /// The answer to the unsaved-changes question: Save (true once saved; a failure says why),
+    /// Don't Save (the draft goes; true) or Cancel (false). Internal for tests.
+    func resolveUnsavedChanges(_ response: NSApplication.ModalResponse) -> Bool {
+        switch response {
+        case .alertFirstButtonReturn:
+            do {
+                try saveDraft()
+                return true
+            } catch {
+                OWELog.error(.scene, "Can't save the Wallpaper Editor's draft of \(wallpaper.project.title): \(error)")
+                WallpaperEditorDraftAlerts.saveFailed(error).beginSheetModal(for: window, completionHandler: nil)
+                return false
+            }
+        case .alertThirdButtonReturn:
+            // The window closes next: the draft goes with it.
+            Self.discard(draft, title: wallpaper.project.title)
+            return true
+        default:
+            return false
+        }
     }
 
     // MARK: NSWindowDelegate
@@ -299,13 +411,23 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         session.undoManager
     }
 
+    /// Unsaved changes ask first (`confirmUnsavedChanges`).
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard isEdited else { return true }
+        confirmUnsavedChanges { [weak self] close in
+            if close { self?.window.close() }
+        }
+        return false
+    }
+
     func windowWillClose(_ notification: Notification) {
         // The timeline lets go of the canvas's clock (and its playback timer).
         timeline.isActive = false
         if let consoleToken { SceneScriptConsoleTap.stop(consoleToken) }
         consoleToken = nil
-        // A drag or restart left for Open Wallpaper Engine goes with the window.
-        sync?.editorDidClose(identity: identity)
+        // Nothing unsaved: the draft's store of properties goes. A window closed without asking
+        // (an MCP client's `editor_close`) leaves its draft, offered again when the wallpaper opens.
+        if !isEdited { draft.endProperties() }
         // The canvas's instance stops with its view.
         preview.playRate = 0
         window.contentView = nil
@@ -315,14 +437,14 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     }
 }
 
-/// The wallpaper's user properties, as the Details panel shows them, rebuilt after an undo
+/// The draft's user properties, as the Details panel shows a wallpaper's, rebuilt after an undo
 /// changed one under them.
 private struct EditorUserProperties: View {
     let wallpaper: WEWallpaper
     @ObservedObject var undo: EditorUserPropertyUndo
 
     var body: some View {
-        SceneUserPropertiesView(wallpaper: wallpaper, scopes: [.shared])
+        SceneUserPropertiesView(wallpaper: wallpaper, scopes: [.editorDraft])
             .id(undo.revision)
     }
 }
