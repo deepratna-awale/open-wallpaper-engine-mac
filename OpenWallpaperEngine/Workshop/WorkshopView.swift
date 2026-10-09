@@ -9,10 +9,13 @@ struct WorkshopView: SubviewOfContentView {
 
     var body: some View {
         VStack(spacing: 0) {
+            // The browser ends its toolbar with the window's items; setup and login have only those.
             if !viewModel.steamCmd.isInstalled {
                 SteamCmdNotInstalledView(steamCmd: viewModel.steamCmd)
+                    .toolbar { WindowActionsToolbar(viewModel: viewModel) }
             } else if !viewModel.steamCmd.isLoggedIn {
                 SteamLoginView(steamCmd: viewModel.steamCmd)
+                    .toolbar { WindowActionsToolbar(viewModel: viewModel) }
             } else {
                 WorkshopBrowserView(
                     viewModel: viewModel.workshopVM,
@@ -182,11 +185,6 @@ private struct WorkshopBrowserView: View {
             .padding(.horizontal)
             .padding(.top, 8)
             .onAppear { hasAPIKey = SteamCredentials.webAPIKey().load() != nil }
-            .searchable(text: $viewModel.searchText, placement: .toolbar, prompt: "Search wallpapers...")
-            .onSubmit(of: .search) {
-                viewModel.currentPage = 1
-                Task { await viewModel.search() }
-            }
             .onChange(of: viewModel.searchText) { oldText, newText in
                 // The field's clear button empties it: search again from the first page.
                 guard newText.isEmpty, !oldText.isEmpty else { return }
@@ -207,7 +205,15 @@ private struct WorkshopBrowserView: View {
             }
     }
 
+    /// Search first, then the browser's items, then the window's.
     @ToolbarContentBuilder private var browserToolbar: some ToolbarContent {
+        ToolbarSearchField.item(text: $viewModel.searchText, prompt: "Search wallpapers...") {
+            viewModel.currentPage = 1
+            Task { await viewModel.search() }
+        }
+        if #available(macOS 26, *) {
+            ToolbarSpacer(.fixed)
+        }
         ToolbarItemGroup {
             if let base = viewModel.presetBase {
                 Label {
@@ -279,6 +285,7 @@ private struct WorkshopBrowserView: View {
                 Task { await viewModel.search() }
             }
         }
+        WindowActionsToolbar(viewModel: contentViewModel)
     }
 
     private func searchWithNewKey() {
