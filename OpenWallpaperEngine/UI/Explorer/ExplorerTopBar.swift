@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// The Installed tab's search and toolbar items, attached to the tab's content so they show in the
+/// The Installed tab's toolbar: search, its own items, then the window's (`WindowActionsToolbar`), attached to the tab's content so they show in the
 /// window toolbar only while that tab is selected.
 struct ExplorerTopBar: ViewModifier {
     var viewModel: ContentViewModel
@@ -24,8 +24,12 @@ struct ExplorerTopBar: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .searchable(text: Bindable(viewModel.library).searchText, placement: .toolbar, prompt: "Search")
             .toolbar {
+                // Search first, then the tab's items, then the window's (Details last).
+                ToolbarSearchField.item(text: Bindable(viewModel.library).searchText, prompt: "Search")
+                if #available(macOS 26, *) {
+                    ToolbarSpacer(.fixed)
+                }
                 ToolbarItem {
                     Menu {
                         Button("Open Wallpaper…", systemImage: "arrow.up.bin.fill") {
@@ -84,6 +88,7 @@ struct ExplorerTopBar: ViewModifier {
                           : "Sorted descending. Click to sort ascending.")
                     SortByMenu(selection: Bindable(viewModel.library).sortingBy)
                 }
+                WindowActionsToolbar(viewModel: viewModel, showsDetails: true)
             }
     }
 }
