@@ -6,6 +6,7 @@ import SwiftUI
 struct WorkshopDiscoverView: View {
     @ObservedObject var model: WorkshopDiscoverViewModel
     @ObservedObject var workshop: WorkshopViewModel
+    var contentViewModel: ContentViewModel
     let cardSize: CGFloat
 
     var body: some View {
@@ -36,6 +37,7 @@ struct WorkshopDiscoverView: View {
                 }
                 .help("Load the lists again")
             }
+            WindowActionsToolbar(viewModel: contentViewModel)
         }
     }
 

@@ -66,13 +66,11 @@ extension AppDelegate {
         }
     }
 
-    /// The window's search field: the toolbar's search item, or one in its views.
+    /// The tab's toolbar search field (`ToolbarSearchField`), found in the window's views, which
+    /// include the toolbar's.
     private static func searchField(in window: NSWindow) -> NSSearchField? {
-        if let item = window.toolbar?.items.lazy.compactMap({ $0 as? NSSearchToolbarItem }).first {
-            return item.searchField
-        }
         func find(_ view: NSView) -> NSSearchField? {
-            if let field = view as? NSSearchField { return field }
+            if let field = view as? NSSearchField, field.identifier == ToolbarSearchField.identifier { return field }
             for subview in view.subviews { if let field = find(subview) { return field } }
             return nil
         }
