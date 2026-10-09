@@ -6,6 +6,69 @@
         <description>Open Wallpaper Engine updates. Items are added by .github/workflows/appcast.yml when a release is published.</description>
         <language>en</language>
         <item>
+            <title>1.0.0-beta.6</title>
+            <pubDate>Fri, 09 Oct 2026 23:45:51 +0000</pubDate>
+            <sparkle:version>9</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.6</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.6/OpenWallpaperEngine-1.0.0-beta.6.zip" length="85779034" type="application/octet-stream" sparkle:edSignature="pPbV6xnVL5lvEkmH3kYKRfU4msCosOlJ/qHupcZItkva21sHKkv3+M4RbBH94AOkikNB2JUtFet0RMmYoiBYCA==" />
+            <sparkle:deltas>
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.6/OpenWallpaperEngine-1.0.0-beta.6-from-7.delta" sparkle:deltaFrom="7" length="7578234" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="zbIk1f48G3vWfVgs5sqKu2AVLA1wj0vD3FrHIstr01hLHwCdv7bQYTyoP54PAb7u4gEy9sI3Lt47sj3nYmjfDg==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.6/OpenWallpaperEngine-1.0.0-beta.6-from-5.delta" sparkle:deltaFrom="5" length="18728214" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="VOXLi7XnGdsIbxDu+t+A50MaVqK70Vhhi/a6ardiZVKwBsGoK9rEaf54iU1EfLb/VHmAYs7GHQqodlMBrQHWAQ==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.6/OpenWallpaperEngine-1.0.0-beta.6-from-4.delta" sparkle:deltaFrom="4" length="18770698" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="lyk8KxvfVuKvLX7bAsDv96PeDGVNAwU0o9yHi6nhnARi2arpZ2TZBQVQUrG2q5OmUQuvyNUaywcAQUYxALUuDA==" />
+            </sparkle:deltas>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:fullReleaseNotesLink>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.6</sparkle:fullReleaseNotesLink>
+            <link>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.6</link>
+            <description>&lt;p dir="auto"&gt;Beta 6 is a big one: playlists and transitions that behave like Wallpaper Engine's, an editor that no longer touches your desktop while you work, sharper and lighter rendering, and a long list of fixes.&lt;/p&gt;
+&lt;h2 dir="auto"&gt;Highlights&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;Playlists and transitions, as in Wallpaper Engine.&lt;/strong&gt; Playlists change wallpaper on a timer, at login or by time of day, with Wallpaper Engine's 27 transitions (Fade, Mosaic, Burnt Paper, Paint, Twister and more). Transitions now draw on their own thread, so they stay smooth while the next wallpaper loads.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;The Wallpaper Editor works on a draft.&lt;/strong&gt; Your desktop, other displays and the screen saver keep the saved wallpaper while you edit. &lt;strong&gt;Save&lt;/strong&gt; (⌘S) applies your changes, &lt;strong&gt;Save as New Wallpaper&lt;/strong&gt; (⇧⌘S) makes a copy, and closing asks before discarding anything. A draft left behind by a crash is offered back when you reopen.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Render Resolution means what it says.&lt;/strong&gt; &lt;strong&gt;Your Display&lt;/strong&gt; draws at your display's own pixels, &lt;strong&gt;4K&lt;/strong&gt; at 4K fitted to your display, &lt;strong&gt;Full&lt;/strong&gt; at the wallpaper's own size. Your old setting is carried over once. MetalFX upscaling is gone, because it was slower than drawing natively in every measurement.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Masks from depth maps.&lt;/strong&gt; A layer's &lt;strong&gt;Create Mask from Depth Map&lt;/strong&gt; turns its depth map into the mask of any effect on it, with Invert and Contrast, or into the layer's own opacity, so far parts fade away. &lt;strong&gt;Scene › Depth Parallax&lt;/strong&gt; stays the one-click parallax.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;A new shader translator.&lt;/strong&gt; Wallpaper Engine's shaders are now translated by a single HLSL front end, following the rules Wallpaper Engine's own compiler applies. More Workshop shaders compile, and none that worked before broke.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Set as Wallpaper and Set as Screen Saver&lt;/strong&gt; in the Installed, Discover and Workshop menus. From Discover and Workshop it downloads the wallpaper first. For the screen saver, clocks and audio bars are left out of the recording.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 dir="auto"&gt;Added&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;Stop Wallpapers&lt;/strong&gt; beside Pause: in the menu bar menu, the Playback menu, a hotkey and the MCP server.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Videos open in Scene Edit / Export&lt;/strong&gt; for Android and iPhone &amp;amp; iPad exports, and &lt;strong&gt;Export More with These Settings…&lt;/strong&gt; exports other wallpapers with the same settings.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Send over Wi-Fi&lt;/strong&gt; shares your whole list of Android exports from one page. The link has a readable &lt;code class="notranslate"&gt;.local&lt;/code&gt; name, and the QR code carries the app's icon.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Theming's accent:&lt;/strong&gt; Open Wallpaper Engine uses the wallpaper's exact colour, and you choose what the rest of the Mac uses: the nearest of Apple's accent colours, or each app's own (Multicolor).&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Camera layers and camera paths&lt;/strong&gt; in orthographic scenes, and &lt;strong&gt;Take Screenshot&lt;/strong&gt; for web wallpapers in the Chromium engine.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Switch off layers a user property controls&lt;/strong&gt;, such as a clock its Clock Location option shows, in both editors.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;The editor's Add Effect and Add Particle System previews are ready the first time you open them.&lt;/strong&gt; They render in the background after the Wallpaper Engine assets are installed, and Settings › Assets shows the progress.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 dir="auto"&gt;Changed&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;The Scene Editor (Live) is now called Scene Edit / Export&lt;/strong&gt;, and all exporting happens there. The library's separate Export for Android… is gone.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Installed scrolls instead of paging.&lt;/strong&gt; Animated previews play only while they're on screen, so a big library stays light.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;The toolbars have a fixed order:&lt;/strong&gt; Search first, the panel toggles at the far right.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Theming's menu bar colour&lt;/strong&gt; is a soft 40% tint that fades into the wallpaper, instead of a hard band.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Effect Detail&lt;/strong&gt; (formerly Scene Detail) only sets the size effects run at.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Screen saver loops&lt;/strong&gt; are recorded at up to 30 fps and 30 s, so they're quicker to make and smaller on disk.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;A scene's music fades in&lt;/strong&gt; when it starts, instead of starting at full volume.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Web and application wallpapers ask again&lt;/strong&gt; after their files change, for example after a Workshop update.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;A new home:&lt;/strong&gt; &lt;a href="https://openwallpaperengine.app/" rel="nofollow"&gt;openwallpaperengine.app&lt;/a&gt; hosts the site, the privacy policy (now version 1.1), the terms and the update feed.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 dir="auto"&gt;Fixed&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;Scene Edit / Export&lt;/strong&gt; no longer crashes when the Depth Map Generation plugin is installed.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Effects added in the Wallpaper Editor&lt;/strong&gt; now show on layers that were edited as JSON in Scene Edit / Export.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;GIF wallpapers fill the screen&lt;/strong&gt;, and &lt;strong&gt;images with effects&lt;/strong&gt; are no longer drawn zoomed in or cropped.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Effects on solid-colour layers&lt;/strong&gt; draw at full resolution: shader-art wallpapers such as GraspOfTheAbyss no longer come out black.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Scenes start cleanly:&lt;/strong&gt; no second of black, no half-drawn frame, no stray rectangles. Puppets no longer show before they're ready.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Wallpapers without a content rating&lt;/strong&gt; appear in Installed, and &lt;strong&gt;Wallpaper Engine's own default wallpapers&lt;/strong&gt; show Wallpaper Engine as their author.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Live Photos sent with AirDrop&lt;/strong&gt; arrive on iPhone and iPad as Live Photos.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Shuffle, Repeat and Rotate automatically&lt;/strong&gt; survive a restart, &lt;strong&gt;displays you turned off&lt;/strong&gt; stay off after a wake, and &lt;strong&gt;Settings › Cancel&lt;/strong&gt; restores your settings.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;The wallpaper no longer lags&lt;/strong&gt; while the library window is open, and the library and the Workshop scroll more smoothly.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Editing a local wallpaper's title, tags or rating&lt;/strong&gt; keeps its settings and edits.&lt;/li&gt;
+&lt;li&gt;Plus fixes for crashes with CPU-simulated particles, Quit while a sheet is open, missing fonts (now Arial, as in Wallpaper Engine), 3D models missing data, and the Wi-Fi page's security policy. The Steam account name is no longer written to logs.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p dir="auto"&gt;The full list of changes is in the &lt;a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/blob/main/CHANGELOG.md"&gt;changelog&lt;/a&gt;.&lt;/p&gt;</description>
+        </item>
+        <item>
             <title>1.0.0-beta.5</title>
             <pubDate>Sun, 04 Oct 2026 21:56:26 +0000</pubDate>
             <sparkle:version>7</sparkle:version>
