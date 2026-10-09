@@ -5,9 +5,11 @@
 //  Created by Haren on 2023/8/25.
 //
 
+import OWEInspectorKit
 import SwiftUI
 
 struct ExplorerItem: SubviewOfContentView {
+    @Environment(\.appAccentColor) private var accentColor
     
     var viewModel: ContentViewModel
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
@@ -82,7 +84,7 @@ struct ExplorerItem: SubviewOfContentView {
                     viewModel.library.toggleSelection(for: wallpaper)
                 } label: {
                     Image(systemName: viewModel.library.isSelected(wallpaper) ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(viewModel.library.isSelected(wallpaper) ? Color.accentColor : .white)
+                        .foregroundStyle(viewModel.library.isSelected(wallpaper) ? accentColor : .white)
                 }
                 .buttonStyle(.plain)
                 .shadow(color: .black.opacity(0.8), radius: 3, x: 0, y: 1)

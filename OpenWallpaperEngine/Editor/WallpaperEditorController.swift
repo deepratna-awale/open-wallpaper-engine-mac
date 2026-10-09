@@ -127,7 +127,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         document.save = { [weak self] in try self?.saveDraft() }
         document.revertToSaved = { [weak self] in self?.revertToSaved() }
         timeline.onCanvasTime = { [weak self] seconds in self?.timelineCanvas.show(seconds) }
-        let content = NSHostingView(rootView: WallpaperEditorView(session: session, services: makeServices()))
+        let content = NSHostingView(rootView: WallpaperEditorView(session: session, services: makeServices())
+            .appAccentTint())
         content.sizingOptions = [.minSize]
         window.contentView = content
         window.center()

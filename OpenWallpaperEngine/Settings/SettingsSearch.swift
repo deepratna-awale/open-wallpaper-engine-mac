@@ -67,6 +67,8 @@ struct SettingsSearch {
             entry("Show Wallpaper on Lock Screen", .general, SettingsAnchor.macOS),
             entry("Theming", .general, SettingsAnchor.theming),
             entry("Accent Color", .general, SettingsAnchor.theming),
+            entry("System Accent", .general, SettingsAnchor.theming),
+            entry("Multicolor", .general, SettingsAnchor.theming),
             entry("Tinted Icon Color", .general, SettingsAnchor.theming),
             entry("Folder Color", .general, SettingsAnchor.theming),
             entry("Restart the Dock automatically", .general, SettingsAnchor.theming),

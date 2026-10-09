@@ -1,3 +1,4 @@
+import OWEInspectorKit
 import SwiftUI
 
 // MARK: - Monitor Layout View
@@ -151,11 +152,12 @@ struct MonitorLayoutView: View {
 /// A group's outline: solid around a stretch (one wallpaper over the canvas, gaps included),
 /// dashed around a clone, each labelled.
 private struct GroupOutline: View {
+    @Environment(\.appAccentColor) private var accentColor
     let rect: CGRect
     let isStretch: Bool
 
     var body: some View {
-        let color = isStretch ? Color.teal : Color.accentColor
+        let color = isStretch ? Color.teal : accentColor
         RoundedRectangle(cornerRadius: 10)
             .strokeBorder(color.opacity(0.75),
                           style: StrokeStyle(lineWidth: 2, dash: isStretch ? [] : [6, 4]))

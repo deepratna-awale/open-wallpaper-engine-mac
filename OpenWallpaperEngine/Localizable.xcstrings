@@ -44731,6 +44731,196 @@
         }
       }
     },
+    "Exact Wallpaper Color" : {
+      "comment" : "Settings › Theming: Open Wallpaper Engine's own controls use the wallpaper's color itself",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اللون الدقيق للخلفية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exakte Farbe des Hintergrundbilds"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color exacto del fondo de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couleur exacte du fond d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर का सटीक रंग"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colore esatto dello sfondo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙の正確なカラー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면의 정확한 색상"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokładny kolor tapety"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cor Exata da Imagem de Fundo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Точный цвет обоев"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar Kâğıdının Tam Rengi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Точний колір шпалер"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "墙纸的准确颜色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景圖片的準確顏色"
+          }
+        }
+      }
+    },
+    "Exact Wallpaper Color gives the buttons, switches, sliders, selections and links of every Open Wallpaper Engine window the wallpaper's color itself, which the system accent can't show. Follow System Accent uses the same accent as other apps." : {
+      "comment" : "Settings › Theming: info tip of the Open Wallpaper Engine's Accent picker",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يمنح «اللون الدقيق للخلفية» الأزرار والمفاتيح وأشرطة التمرير والتحديدات والروابط في كل نوافذ Open Wallpaper Engine لون الخلفية نفسه، الذي لا يستطيع لون تمييز النظام عرضه. ويستخدم «اتباع لون تمييز النظام» لون التمييز نفسه الذي تستخدمه التطبيقات الأخرى."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Exakte Farbe des Hintergrundbilds“ gibt den Tasten, Schaltern, Schiebereglern, Auswahlen und Links jedes Fensters von Open Wallpaper Engine die Farbe des Hintergrundbilds selbst, die der Systemakzent nicht darstellen kann. „Systemakzent verwenden“ nutzt denselben Akzent wie andere Apps."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Color exacto del fondo de pantalla» da a los botones, interruptores, reguladores, selecciones y enlaces de todas las ventanas de Open Wallpaper Engine el color del propio fondo de pantalla, que el acento del sistema no puede mostrar. «Seguir el acento del sistema» usa el mismo acento que las demás apps."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« Couleur exacte du fond d’écran » donne aux boutons, interrupteurs, curseurs, sélections et liens de chaque fenêtre d’Open Wallpaper Engine la couleur même du fond d’écran, que l’accentuation du système ne peut pas afficher. « Suivre l’accentuation du système » utilise la même accentuation que les autres apps."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“वॉलपेपर का सटीक रंग” Open Wallpaper Engine की हर विंडो के बटन, स्विच, स्लाइडर, चयन और लिंक को वॉलपेपर का अपना रंग देता है, जिसे सिस्टम एक्सेंट नहीं दिखा सकता। “सिस्टम एक्सेंट का पालन करें” अन्य ऐप जैसा ही एक्सेंट इस्तेमाल करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Colore esatto dello sfondo” dà a pulsanti, interruttori, cursori, selezioni e link di ogni finestra di Open Wallpaper Engine il colore stesso dello sfondo, che l’accento di sistema non può mostrare. “Segui l’accento di sistema” usa lo stesso accento delle altre app."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「壁紙の正確なカラー」では、Open Wallpaper Engineのすべてのウインドウのボタン、スイッチ、スライダ、選択範囲、リンクに、システムのアクセントでは表示できない壁紙の色そのものを使います。「システムのアクセントに従う」はほかのアプリと同じアクセントを使います。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "'배경화면의 정확한 색상'은 모든 Open Wallpaper Engine 윈도우의 버튼, 스위치, 슬라이더, 선택 항목 및 링크에 시스템 강조 색상으로는 표시할 수 없는 배경화면의 색상 그대로를 사용합니다. '시스템 강조 색상 따르기'는 다른 앱과 같은 강조 색상을 사용합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Dokładny kolor tapety” nadaje przyciskom, przełącznikom, suwakom, zaznaczeniom i linkom każdego okna Open Wallpaper Engine sam kolor tapety, którego akcent systemu nie może pokazać. „Jak w systemie” używa tego samego akcentu co inne aplikacje."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Cor Exata da Imagem de Fundo” dá aos botões, interruptores, controles deslizantes, seleções e links de todas as janelas do Open Wallpaper Engine a própria cor da imagem de fundo, que o destaque do sistema não consegue mostrar. “Seguir o Destaque do Sistema” usa o mesmo destaque que os outros apps."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Точный цвет обоев» окрашивает кнопки, переключатели, бегунки, выделение и ссылки во всех окнах Open Wallpaper Engine в сам цвет обоев, который системный акцент показать не может. «Как в системе» использует тот же акцент, что и другие приложения."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Duvar Kâğıdının Tam Rengi”, Open Wallpaper Engine’in tüm pencerelerindeki düğmelere, anahtarlara, sürgülere, seçimlere ve bağlantılara sistem vurgusunun gösteremediği duvar kâğıdı rengini verir. “Sistem Vurgusunu İzle” diğer uygulamalarla aynı vurguyu kullanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Точний колір шпалер» надає кнопкам, перемикачам, повзункам, виділенню і посиланням у всіх вікнах Open Wallpaper Engine сам колір шпалер, якого системний акцент показати не може. «Як у системі» використовує той самий акцент, що й інші програми."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“墙纸的准确颜色”让 Open Wallpaper Engine 所有窗口中的按钮、开关、滑块、所选内容和链接使用墙纸本身的颜色，这是系统强调色无法显示的。“跟随系统强调色”使用与其他 App 相同的强调色。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「背景圖片的準確顏色」讓 Open Wallpaper Engine 所有視窗中的按鈕、開關、滑桿、所選項目和連結使用背景圖片本身的顏色，這是系統強調色無法顯示的。「跟隨系統強調色」使用與其他 App 相同的強調色。"
+          }
+        }
+      }
+    },
     "Expires in %@" : {
       "comment" : "Send over Wi-Fi sheet: countdown, e.g. 14:32",
       "localizations" : {
@@ -49072,6 +49262,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "跟隨系統"
+          }
+        }
+      }
+    },
+    "Follow System Accent" : {
+      "comment" : "Settings › Theming: Open Wallpaper Engine's own controls use the system accent color, like other apps",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اتباع لون تمييز النظام"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Systemakzent verwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir el acento del sistema"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suivre l’accentuation du système"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सिस्टम एक्सेंट का पालन करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segui l’accento di sistema"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "システムのアクセントに従う"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시스템 강조 색상 따르기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jak w systemie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir o Destaque do Sistema"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Как в системе"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sistem Vurgusunu İzle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Як у системі"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随系统强调色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟隨系統強調色"
           }
         }
       }
@@ -78585,6 +78870,101 @@
         }
       }
     },
+    "Multicolor" : {
+      "comment" : "Settings › Theming: the system accent is macOS's Multicolor, so each app uses its own accent",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متعدد الألوان"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mehrfarbig"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multicolor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multicolore"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बहुरंगी"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multicolore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "マルチカラー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "멀티 컬러"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wielobarwny"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multicolorido"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Многоцветный"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çok Renkli"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Багатоколірний"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多色"
+          }
+        }
+      }
+    },
     "Multiplies the layer by a colour." : {
       "comment" : "Scene Edit / Export tooltip for the tint effect",
       "localizations" : {
@@ -79810,6 +80190,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "自然"
+          }
+        }
+      }
+    },
+    "Nearest Apple Accent" : {
+      "comment" : "Settings › Theming: the system accent becomes the closest of macOS's eight accent colors",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أقرب لون تمييز من Apple"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächster Apple-Akzent"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acento de Apple más cercano"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accentuation Apple la plus proche"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "निकटतम Apple एक्सेंट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accento Apple più vicino"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最も近いAppleのアクセント"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "가장 가까운 Apple 강조 색상"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najbliższy akcent Apple"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destaque da Apple Mais Próximo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ближайший акцент Apple"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En Yakın Apple Vurgusu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найближчий акцент Apple"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最接近的 Apple 强调色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最接近的 Apple 強調色"
           }
         }
       }
@@ -88217,6 +88692,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open Wallpaper Engine 會為螢幕保護程式錄製背景圖片的影片。日期、時間、星期和其他即時資料（時鐘、媒體資訊、隨音訊變化的部分）顯示的是錄製時的值，在螢幕保護程式執行時不會更新。請隱藏這些圖層，或開啟每日重新錄製。"
+          }
+        }
+      }
+    },
+    "Open Wallpaper Engine's Accent" : {
+      "comment" : "Settings › Theming: picker label, the accent color of Open Wallpaper Engine's own windows",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لون التمييز في Open Wallpaper Engine"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akzent von Open Wallpaper Engine"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acento de Open Wallpaper Engine"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accentuation d’Open Wallpaper Engine"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine का एक्सेंट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accento di Open Wallpaper Engine"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engineのアクセント"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 강조 색상"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akcent Open Wallpaper Engine"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destaque do Open Wallpaper Engine"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Акцент Open Wallpaper Engine"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine Vurgusu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Акцент Open Wallpaper Engine"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 的强调色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 的強調色"
           }
         }
       }
@@ -138333,6 +138903,101 @@
         }
       }
     },
+    "System Accent" : {
+      "comment" : "Settings › Theming: picker label, what the accent color of every app becomes",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لون التمييز للنظام"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Systemakzent"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acento del sistema"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accentuation du système"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सिस्टम एक्सेंट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accento di sistema"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "システムのアクセント"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시스템 강조 색상"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akcent systemu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destaque do Sistema"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Акцент системы"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sistem Vurgusu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Акцент системи"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统强调色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系統強調色"
+          }
+        }
+      }
+    },
     "System Audio Recording" : {
       "comment" : "Name of the macOS privacy setting that lets an app read system audio",
       "localizations" : {
@@ -167826,6 +168491,101 @@
     "macOS" : {
       "shouldTranslate" : false,
       "localizations" : {}
+    },
+    "macOS has only eight accent colors. Nearest Apple Accent uses the closest one, so every app matches, though not exactly. Multicolor lets each app use its own accent instead. Either way, the text highlight and Open Wallpaper Engine itself can use the exact color." : {
+      "comment" : "Settings › Theming: info tip of the System Accent picker",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحتوي macOS على ثمانية ألوان تمييز فقط. يستخدم «أقرب لون تمييز من Apple» اللون الأقرب، فتتطابق كل التطبيقات وإن لم يكن اللون دقيقًا. ويتيح «متعدد الألوان» لكل تطبيق استخدام لون التمييز الخاص به. وفي الحالتين، يمكن أن يستخدم لون تمييز النص وOpen Wallpaper Engine نفسه اللون الدقيق."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS hat nur acht Akzentfarben. „Nächster Apple-Akzent“ verwendet die ähnlichste, sodass alle Apps übereinstimmen, wenn auch nicht genau. „Mehrfarbig“ lässt jede App ihren eigenen Akzent verwenden. In beiden Fällen können die Textmarkierung und Open Wallpaper Engine selbst die exakte Farbe verwenden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS solo tiene ocho colores de acento. «Acento de Apple más cercano» usa el más parecido, así todas las apps coinciden, aunque no exactamente. «Multicolor» deja que cada app use su propio acento. En ambos casos, el resaltado del texto y el propio Open Wallpaper Engine pueden usar el color exacto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS ne propose que huit couleurs d’accentuation. « Accentuation Apple la plus proche » utilise la plus ressemblante, pour que toutes les apps s’accordent, sans être exactes. « Multicolore » laisse chaque app utiliser sa propre accentuation. Dans les deux cas, la couleur de surlignage et Open Wallpaper Engine lui-même peuvent utiliser la couleur exacte."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS में केवल आठ एक्सेंट रंग हैं। “निकटतम Apple एक्सेंट” सबसे मिलता-जुलता रंग इस्तेमाल करता है, ताकि सभी ऐप मेल खाएँ, भले ही रंग सटीक न हो। “बहुरंगी” हर ऐप को अपना एक्सेंट इस्तेमाल करने देता है। दोनों ही स्थितियों में, टेक्स्ट हाइलाइट और खुद Open Wallpaper Engine सटीक रंग इस्तेमाल कर सकते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS ha solo otto colori di accento. “Accento Apple più vicino” usa il più simile, così tutte le app corrispondono, anche se non esattamente. “Multicolore” lascia che ogni app usi il proprio accento. In entrambi i casi, l’evidenziazione del testo e Open Wallpaper Engine stesso possono usare il colore esatto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOSのアクセントカラーは8色だけです。「最も近いAppleのアクセント」は最も近い色を使うため、すべてのアプリがそろいますが、正確な色にはなりません。「マルチカラー」では各アプリが独自のアクセントを使います。どちらの場合も、テキストのハイライトとOpen Wallpaper Engine自体は正確な色を使えます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS의 강조 색상은 8가지뿐입니다. '가장 가까운 Apple 강조 색상'은 가장 비슷한 색상을 사용하므로 모든 앱이 일치하지만 정확하지는 않습니다. '멀티 컬러'는 각 앱이 자체 강조 색상을 사용하게 합니다. 어느 경우든 텍스트 하이라이트와 Open Wallpaper Engine 자체는 정확한 색상을 사용할 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS ma tylko osiem kolorów akcentu. „Najbliższy akcent Apple” używa najbardziej podobnego, więc wszystkie aplikacje pasują do siebie, choć nie dokładnie. „Wielobarwny” pozwala każdej aplikacji używać własnego akcentu. W obu przypadkach wyróżnienie tekstu i sam Open Wallpaper Engine mogą używać dokładnego koloru."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O macOS tem apenas oito cores de destaque. “Destaque da Apple Mais Próximo” usa a mais parecida, para que todos os apps combinem, embora não exatamente. “Multicolorido” deixa cada app usar o próprio destaque. Em ambos os casos, o realce de texto e o próprio Open Wallpaper Engine podem usar a cor exata."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В macOS всего восемь цветов акцента. «Ближайший акцент Apple» использует самый похожий, поэтому все приложения совпадают, хотя и не точно. «Многоцветный» позволяет каждому приложению использовать свой акцент. В обоих случаях цвет выделения текста и сам Open Wallpaper Engine могут использовать точный цвет."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS’te yalnızca sekiz vurgu rengi vardır. “En Yakın Apple Vurgusu” en yakın olanı kullanır; böylece tüm uygulamalar uyumlu olur ama renk tam olarak aynı olmaz. “Çok Renkli” her uygulamanın kendi vurgusunu kullanmasını sağlar. Her iki durumda da metin vurgulama rengi ve Open Wallpaper Engine’in kendisi tam rengi kullanabilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У macOS лише вісім кольорів акценту. «Найближчий акцент Apple» використовує найсхожіший, тож усі програми збігаються, хоча й не точно. «Багатоколірний» дає кожній програмі використовувати власний акцент. В обох випадках колір виділення тексту і сам Open Wallpaper Engine можуть використовувати точний колір."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 只有八种强调色。“最接近的 Apple 强调色”使用最相近的一种，让所有 App 保持一致，但并不完全准确。“多色”让每个 App 使用自己的强调色。无论哪种方式，文本高亮颜色和 Open Wallpaper Engine 本身都可以使用准确的颜色。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 只有八種強調色。「最接近的 Apple 強調色」會使用最相近的一種，讓所有 App 一致，但不完全準確。「多色」讓每個 App 使用自己的強調色。無論哪一種，文字反白顏色和 Open Wallpaper Engine 本身都可以使用準確的顏色。"
+          }
+        }
+      }
     },
     "macOS uses this shortcut for “%@”. Use Anyway saves it and opens Keyboard Shortcuts in System Settings, where you can turn the macOS one off." : {
       "localizations" : {

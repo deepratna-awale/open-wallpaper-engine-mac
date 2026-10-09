@@ -23,6 +23,8 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
     /// The settings the canvas runs with, read from the app's, and the process's own SceneScript
     /// services (`localStorage` is the app's folder; Now Playing registers per process).
     private lazy var sceneHost = Self.makeSceneHost()
+    /// Theming's tint of the app's windows, which the editor's windows follow.
+    private lazy var themeTint = ThemeTintSync(messaging: messaging, channel: channel)
 
     /// `messaging` nil: the login session's (`DistributedAppProcessMessaging`).
     init(initialFolder: URL?, messaging: AppProcessMessaging? = nil, channel: AppProcessChannel = .current) {
@@ -58,6 +60,7 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
             self?.editor(of: folder)?.draftWasSaved()
         }
         changeSync.start()
+        themeTint.follow()
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {

@@ -1,8 +1,10 @@
+import OWEInspectorKit
 import SwiftUI
 
 /// The measured motion of the scene's first seconds as bars, with the clip's window over them:
 /// the automatic pick (the most motion), which a click or drag moves.
 struct LivePhotoMotionTimeline: View {
+    @Environment(\.appAccentColor) private var accentColor
     @ObservedObject var model: LivePhotoExportModel
 
     var body: some View {
@@ -26,7 +28,7 @@ struct LivePhotoMotionTimeline: View {
             let width = geometry.size.width
             let seconds = max(motion.seconds, 0.001)
             Canvas { context, size in
-                Self.draw(motion, clip: model.clip, in: &context, size: size)
+                Self.draw(motion, clip: model.clip, accent: accentColor, in: &context, size: size)
             }
             .contentShape(Rectangle())
             .gesture(DragGesture(minimumDistance: 0).onChanged { value in
@@ -39,8 +41,8 @@ struct LivePhotoMotionTimeline: View {
         }
     }
 
-    private static func draw(_ motion: LivePhotoMotion.Analysis, clip: LivePhotoClip, in context: inout GraphicsContext,
-                             size: CGSize) {
+    private static func draw(_ motion: LivePhotoMotion.Analysis, clip: LivePhotoClip, accent: Color,
+                             in context: inout GraphicsContext, size: CGSize) {
         let count = motion.differences.count
         guard count > 0 else { return }
         let seconds = max(motion.seconds, 0.001)
@@ -58,7 +60,7 @@ struct LivePhotoMotionTimeline: View {
         let end = CGFloat(min(clip.end, seconds) / seconds) * size.width
         guard end > start else { return }
         let window = Path(roundedRect: CGRect(x: start, y: 0, width: end - start, height: size.height), cornerRadius: 4)
-        context.fill(window, with: .color(.accentColor.opacity(0.22)))
-        context.stroke(window, with: .color(.accentColor), lineWidth: 1.5)
+        context.fill(window, with: .color(accent.opacity(0.22)))
+        context.stroke(window, with: .color(accent), lineWidth: 1.5)
     }
 }

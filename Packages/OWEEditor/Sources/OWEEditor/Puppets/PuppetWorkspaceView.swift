@@ -1,5 +1,6 @@
 import OWESceneEditing
 import SwiftUI
+import OWEInspectorKit
 
 extension PuppetWorkspace.Tool {
     var title: String {
@@ -211,6 +212,7 @@ extension PuppetTimelineView {
 
 /// The clip's frames: ticks, key diamonds and the playhead; drag to scrub.
 struct PuppetFrameRuler: View {
+    @Environment(\.appAccentColor) private var accentColor
     @ObservedObject var workspace: PuppetWorkspace
 
     private var frames: Int { max(workspace.clip?.frames ?? 1, 1) }
@@ -265,7 +267,7 @@ struct PuppetFrameRuler: View {
         var head = Path()
         head.move(to: CGPoint(x: px, y: 0))
         head.addLine(to: CGPoint(x: px, y: height))
-        context.stroke(head, with: .color(.accentColor), lineWidth: 2)
+        context.stroke(head, with: .color(accentColor), lineWidth: 2)
     }
 
     private func scrub(width: Double, frames: Int) -> some Gesture {

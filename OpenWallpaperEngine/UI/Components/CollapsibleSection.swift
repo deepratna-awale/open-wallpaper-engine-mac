@@ -1,8 +1,10 @@
+import OWEInspectorKit
 import SwiftUI
 
 /// A section header with the accent-coloured rule used throughout the details sidebar, that also
 /// collapses its content.
 struct CollapsibleSection<Content: View>: View {
+    @Environment(\.appAccentColor) private var accentColor
     let title: LocalizedStringKey
     @State private var isExpanded: Bool
     private let content: () -> Content
@@ -23,7 +25,7 @@ struct CollapsibleSection<Content: View>: View {
                     VStack {
                         Divider()
                             .frame(height: 1)
-                            .overlay(Color.accentColor)
+                            .overlay(accentColor)
                     }
                 }
                 .contentShape(Rectangle())

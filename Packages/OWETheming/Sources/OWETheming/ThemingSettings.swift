@@ -6,8 +6,15 @@ public struct ThemingSettings: Equatable, Codable, Sendable {
     public var isEnabled = false
     /// Fills the menu bar's strip of the desktop picture OWE sets with the colour.
     public var menuBar = false
-    /// System Settings › Appearance › Color (the nearest palette entry) and the text highlight.
+    /// System Settings › Appearance › Color (`systemAccent`) and the text highlight, and the
+    /// accent of Open Wallpaper Engine's own windows (`appAccent`).
     public var accentColor = false
+    /// What Accent Color makes the system-wide accent: the nearest of macOS's eight (every app
+    /// follows it) or Multicolor (each app keeps its own). The nearest by default, as before.
+    public var systemAccent = SystemAccentChoice.nearestApple
+    /// Open Wallpaper Engine's own controls, selection and links: the colour itself, or the system
+    /// accent. The colour by default.
+    public var appAccent = AppAccentChoice.themeColor
     /// Appearance › Icon & widget style › Tinted, in the colour.
     public var tintedIcons = false
     /// Appearance › Icon, widget & folder color.
@@ -31,17 +38,24 @@ public struct ThemingSettings: Equatable, Codable, Sendable {
     /// Whether anything at all is themed, which is when the colour needs finding.
     public var wantsColor: Bool { wantsPreferences || wantsMenuBarStrip }
 
+    /// The tint of Open Wallpaper Engine's own windows for `color`: the colour itself while Accent
+    /// Color is on and the app follows the theme; nil (the system accent) otherwise.
+    public func appTint(for color: ThemeColor?) -> ThemeColor? {
+        guard isEnabled, accentColor, appAccent == .themeColor else { return nil }
+        return color
+    }
+
     enum CodingKeys: String, CodingKey {
         case isEnabled, menuBar, accentColor, tintedIcons, folderColor, usesDominantColor, restoresOnQuit
-        case restartsDockAutomatically
+        case restartsDockAutomatically, systemAccent, appAccent
     }
 
     /// Reads each key on its own: a missing or unreadable one keeps its default.
     public init(from decoder: Decoder) throws {
         self.init()
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        func read(_ key: CodingKeys, _ value: inout Bool) {
-            if let stored = try? container.decodeIfPresent(Bool.self, forKey: key) { value = stored } // Optional: a bad key keeps its default.
+        func read<Value: Decodable>(_ key: CodingKeys, _ value: inout Value) {
+            if let stored = try? container.decodeIfPresent(Value.self, forKey: key) { value = stored } // Optional: a bad key keeps its default.
         }
         read(.isEnabled, &isEnabled)
         read(.menuBar, &menuBar)
@@ -51,5 +65,24 @@ public struct ThemingSettings: Equatable, Codable, Sendable {
         read(.usesDominantColor, &usesDominantColor)
         read(.restoresOnQuit, &restoresOnQuit)
         read(.restartsDockAutomatically, &restartsDockAutomatically)
+        read(.systemAccent, &systemAccent)
+        read(.appAccent, &appAccent)
     }
+}
+
+/// What Accent Color makes System Settings › Appearance › Color. macOS has only eight accents and
+/// no custom one.
+public enum SystemAccentChoice: String, Codable, CaseIterable, Sendable {
+    /// `AppleAccentColor` is the palette entry closest to the colour: every app follows it.
+    case nearestApple
+    /// `AppleAccentColor` is removed (Multicolor): each app uses its own accent.
+    case multicolor
+}
+
+/// The accent of Open Wallpaper Engine's own windows while Accent Color is on.
+public enum AppAccentChoice: String, Codable, CaseIterable, Sendable {
+    /// The colour itself, which the system palette can't show.
+    case themeColor
+    /// The system accent, as other apps show it.
+    case system
 }

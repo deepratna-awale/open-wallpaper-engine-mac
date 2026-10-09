@@ -41,7 +41,7 @@ pane and of SkyLight on macOS 27; nothing was written while finding them.
 | Checkbox | What it changes | Values |
 |---|---|---|
 | Menu Bar | The top of each wallpaper window and of the desktop picture OWE sets: the colour fades out downwards from the menu bar. No preference. | — |
-| Accent Color | `AppleAccentColor` (Appearance › Color) | integer: −1 Graphite, 0 Red, 1 Orange, 2 Yellow, 3 Green, 4 Blue, 5 Purple, 6 Pink; absent is Multicolor |
+| Accent Color | `AppleAccentColor` (Appearance › Color) | integer: −1 Graphite, 0 Red, 1 Orange, 2 Yellow, 3 Green, 4 Blue, 5 Purple, 6 Pink; absent is Multicolor (System Accent › Multicolor removes it) |
 | | `AppleHighlightColor` (Appearance › Text highlight color) | `"r g b Other"`, a custom colour |
 | Tinted Icon Color | `AppleIconAppearanceTheme` (Appearance › Icon & widget style) | `Tinted` + the current variant (`Automatic`, `Light`, `Dark`); the other styles are `Regular…` and `Clear…` |
 | | `AppleIconAppearanceTintColor` | `Other` (the palette names Red … Graphite are the others; absent follows the accent colour) |
@@ -81,9 +81,34 @@ Limits:
 ### Accent Color
 
 macOS 27 still has a fixed accent palette: System Settings shows eight swatches and stores an
-integer, and there is no custom accent. The colour maps to the nearest swatch by OKLab distance
-(`AccentPalette`). The text highlight colour does take a custom colour (`Other`), so it is set to
-the colour at 30% over white, which is how light macOS's own highlights are. The keys go to the
+integer, and there is no custom accent. So Accent Color has two choices (`ThemingSettings`):
+
+- **System Accent** (`systemAccent`), what the system-wide accent becomes:
+  - **Nearest Apple Accent** (`nearestApple`, the default, as before): the colour maps to the
+    nearest swatch by OKLab distance (`AccentPalette`). Every app matches, in one of the eight.
+  - **Multicolor** (`multicolor`): `AppleAccentColor` is removed, which is System Settings'
+    Multicolor, so each app uses its own accent (an app without one shows Blue).
+- **Open Wallpaper Engine's Accent** (`appAccent`), the accent of the app's own windows:
+  - **Exact Wallpaper Color** (`themeColor`, the default): the colour itself, which the palette
+    can't show (`ThemingSettings.appTint`).
+  - **Follow System Accent** (`system`): the system accent, as other apps show it.
+
+The text highlight colour does take a custom colour (`Other`), so with either choice it is set to
+the colour at 30% over white, which is how light macOS's own highlights are.
+
+**The app's own windows.** AppKit has no API for an app's accent other than the static asset
+colour in its Info.plist, so the tint is SwiftUI's: every window's root (the main window, Settings,
+About, the legal documents, What's New, the safe restart notice, the Workshop preview, Send over
+Wi-Fi, Scene Edit / Export and the Wallpaper Editor)
+applies `appAccentTint()` (`AppAccentTint`), which sets `.tint` (buttons, switches, sliders, links,
+progress) and `appAccentColor` (`OWEInspectorKit`), which the app's own selection marks, gizmos and
+indicators draw with instead of `Color.accentColor`; `SelectionHighlight` reads the tint too.
+Without a tint (Theming or Accent Color off, Follow System Accent, or no colour) they are the system
+accent, as before. The Wallpaper Editor runs in its own process: the app keeps the tint in the
+defaults both share (`ThemingAppTint`, "r g b") and posts `themeTintDidChange` on the process
+channel after each change (`ThemeTintSync`); the editor reads it at launch and on each post. On
+quit the app clears it, so an editor left open goes back to the system accent. Menus, the menu bar
+and alerts are drawn by AppKit and keep the system accent. The keys go to the
 global domain through CFPreferences (`kCFPreferencesAnyApplication`, the current user, any host,
 then a synchronize), where System Settings keeps them. After writing, OWE posts the distributed
 notifications System Settings' Appearance pane posts (names from its binaries), delivered at once:
@@ -120,6 +145,11 @@ keys are restored when both are off.
 - **Before the first change** of a key, its value (or its absence) is saved in a journal under the
   app's defaults (`ThemingJournal`, `UserDefaultsJournalStore`), on disk before the write happens.
 - **Unchanged values aren't written**, and no notification is posted for them.
+- **A removed key counts as a value.** Multicolor removes `AppleAccentColor`; the journal keeps the
+  original from before the first change (a number, or absent when the user had Multicolor), and
+  switching between Nearest Apple Accent and Multicolor never replaces it. Restoring writes the
+  original back, or removes the key again when it was absent, as long as the key still holds what
+  OWE last wrote (absent, after Multicolor).
 - **Turning a checkbox off** restores its keys; **turning the master switch off** restores all of
   them. A key goes back only while it still holds what OWE wrote: if the user changed it in System
   Settings since, their choice stays.

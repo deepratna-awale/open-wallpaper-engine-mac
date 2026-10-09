@@ -42,6 +42,9 @@ struct AppProcessChannel: Equatable {
         case particlesRestart = "editor.particlesRestart"
         /// The editor restarted them: it has a window of the wallpaper.
         case particlesRestarted = "editor.particlesRestarted"
+        /// Theming's tint of the app's windows changed (`ThemeTintSync`, in the shared defaults):
+        /// the editor's windows take it too.
+        case themeTintDidChange = "app.themeTintDidChange"
     }
 
     /// The `userInfo` key of the wallpaper's folder.
