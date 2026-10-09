@@ -5,6 +5,12 @@ import XCTest
 /// Fixtures live in `Tests/Fixtures` at the repository root, outside the test target, so they are
 /// read from the source checkout instead of being flattened into the test bundle.
 enum Fixtures {
+    /// Fixture scene folders that aren't scenes to render: the one whose script hangs on purpose,
+    /// and `live-layers`, which only Set as Screen Saver's file scan reads (`ScreenSaverLiveLayersTests`):
+    /// it has no camera and its shaders are fragments, so it never loads as a scene. Every test that
+    /// walks `Scenes/` skips these.
+    static let unrenderableScenes: Set<String> = ["scripted-hang", "live-layers"]
+
     static let root = URL(fileURLWithPath: #filePath)
         .deletingLastPathComponent()
         .deletingLastPathComponent()

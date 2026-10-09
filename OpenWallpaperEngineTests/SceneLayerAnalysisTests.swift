@@ -273,14 +273,12 @@ final class SceneLayerAnalysisTests: XCTestCase {
 
     // MARK: - CI scenes
 
-    /// Every fixture scene that is a wallpaper folder, bar the one whose script hangs on purpose
-    /// and `live-layers`, which only Set as Screen Saver's file scan reads (`ScreenSaverLiveLayersTests`):
-    /// it has no camera and its shaders are fragments, so it never loads as a scene.
+    /// Every fixture scene that is a wallpaper folder, bar `Fixtures.unrenderableScenes`.
     private static var ciScenes: [String] {
         let root = Fixtures.url("Scenes")
         let names = (try? FileManager.default.contentsOfDirectory(atPath: root.path)) ?? []
         return names.sorted().filter { name in
-            !["scripted-hang", "live-layers"].contains(name)
+            !Fixtures.unrenderableScenes.contains(name)
                 && FileManager.default.fileExists(atPath: root.appending(path: "\(name)/project.json").path)
         }
     }

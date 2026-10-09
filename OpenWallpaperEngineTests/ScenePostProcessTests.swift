@@ -99,7 +99,7 @@ final class ScenePostProcessTests: XCTestCase {
         try SlowTests.require()
         let root = Fixtures.url("Scenes")
         var skipped = 0, compared = 0
-        for name in try FileManager.default.contentsOfDirectory(atPath: root.path).sorted() where name != "scripted-hang" {
+        for name in try FileManager.default.contentsOfDirectory(atPath: root.path).sorted() where !Fixtures.unrenderableScenes.contains(name) {
             let directory = root.appending(path: name)
             guard let data = FileManager.default.contents(atPath: directory.appending(path: "scene.json").path),
                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
