@@ -70,6 +70,8 @@ final class ShaderVariantCacheTests: XCTestCase {
         12: "cc9c735c67b115ac936d80245638bbf7b1b98d1a9e2b5a996917b81c3bd7067a",
         // Uniform blocks sized to their Metal struct (13): the MSL is revision 12's.
         13: "cc9c735c67b115ac936d80245638bbf7b1b98d1a9e2b5a996917b81c3bd7067a",
+        // HLSL's conversions as typed rules (`HLSLFrontEnd`) replace the `weCast_*` helpers (14).
+        14: "f777a1f881241c3d830a24ae93abab77da33e58d9998cce31a84c6212c21576a",
     ]
 
     /// Fails when translated output changes without a `revision` bump, which would let users keep
