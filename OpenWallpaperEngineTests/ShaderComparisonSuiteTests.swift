@@ -17,7 +17,8 @@ import CryptoKit
 ///   writes `shaders.json`: per shader and combo set, ok or failed, the error class and a hash of
 ///   the output.
 /// - `testRenderScenes` draws each scene folder listed in the file `OWE_SHADER_COMPARE_SCENES`
-///   (one per line) at `OWE_SHADER_COMPARE_TIME` seconds (2) and 960×540 through
+///   (one per line) at `OWE_SHADER_COMPARE_TIME` seconds (2), the local time of day
+///   `OWE_SHADER_COMPARE_LOCAL_TIME` (12:00, for scenes that read the clock) and 960×540 through
 ///   `WEReferenceRenderer`, writes `renders/<name>.png`, and with `OWE_SHADER_COMPARE_BASELINE`
 ///   (an earlier run's folder) compares each frame with the baseline's by `WEReferenceMetrics`
 ///   (mean absolute difference and SSIM, never byte equality) into `renders.json`.
@@ -260,6 +261,7 @@ final class ShaderComparisonSuiteTests: XCTestCase {
         let scenes = try String(contentsOfFile: list, encoding: .utf8).split(separator: "\n")
             .map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty && !$0.hasPrefix("#") }
         let time = Double(Self.environment["OWE_SHADER_COMPARE_TIME"] ?? "") ?? 2
+        let localTime = Self.environment["OWE_SHADER_COMPARE_LOCAL_TIME"].flatMap { $0.isEmpty ? nil : $0 } ?? "12:00"
         let baseline = Self.environment["OWE_SHADER_COMPARE_BASELINE"].flatMap { $0.isEmpty ? nil : URL(fileURLWithPath: $0) }
         let renders = output.appending(path: "renders", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: renders, withIntermediateDirectories: true)
@@ -272,7 +274,7 @@ final class ShaderComparisonSuiteTests: XCTestCase {
             // Folder names repeat across roots (a default project and a Workshop copy): keep the parent.
             let name = directory.deletingLastPathComponent().lastPathComponent + "_" + directory.lastPathComponent
             do {
-                let image = try Self.render(directory, time: time, storage: scratch.appending(path: name))
+                let image = try Self.render(directory, time: time, localTime: localTime, storage: scratch.appending(path: name))
                 let file = renders.appending(path: "\(name).png")
                 try image.write(to: file)
                 var record = RenderRecord(ok: true)
@@ -301,9 +303,9 @@ final class ShaderComparisonSuiteTests: XCTestCase {
         print("Shader compare renders: \(records.count) scenes, \(records.values.filter { !$0.ok }.count) failed → \(renders.path)")
     }
 
-    /// The scene at `time` with the default properties, WE's gallery quality settings and seeded
+    /// The scene at `time` (at `localTime` of day) with the default properties, WE's gallery quality settings and seeded
     /// particles (`WEReferenceRenderer`), at `renderSize`.
-    private static func render(_ directory: URL, time: Double, storage: URL) throws -> WEReferenceImage {
+    private static func render(_ directory: URL, time: Double, localTime: String, storage: URL) throws -> WEReferenceImage {
         let data = try Data(contentsOf: directory.appending(path: "project.json"))
         let project = try decodeTolerant(WEProject.self, from: data)
         var settings = SceneRenderSettings()
@@ -314,6 +316,7 @@ final class ShaderComparisonSuiteTests: XCTestCase {
         settings.renderResolution = .yourDisplay
         var renderer = WEReferenceRenderer(directory: directory, project: project, settings: settings, storage: storage)
         renderer.outputSize = renderSize
+        renderer.localTime = localTime
         let centre = SIMD2(Double(renderSize.x) / 2, Double(renderSize.y) / 2)
         let images = try renderer.render([WEReferenceRenderer.Shot(time: time, cursor: centre)])
         return try XCTUnwrap(images.first)
