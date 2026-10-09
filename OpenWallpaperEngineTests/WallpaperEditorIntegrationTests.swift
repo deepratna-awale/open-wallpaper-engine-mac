@@ -41,6 +41,37 @@ final class WallpaperEditorIntegrationTests: XCTestCase {
         XCTAssertEqual(decoded.objects.first?.alpha, 0.5, "the scene model reads the edit")
     }
 
+    /// Scene Edit / Export's JSON editor saves a whole object as scene.json authors it: the
+    /// Wallpaper Editor's edits of that layer (an added effect, a field) apply over it, and the
+    /// replacement keeps the object's id when it names none.
+    func testTheOverlayAppliesOverAnObjectSceneEditExportReplaced() throws {
+        let overlay = try JSONDecoder().decode(SceneEditOverlay.self, from: Data("""
+        {"version": 2, "objects": {"4": {"fields": {"alpha": 0.5}, "effects": {},
+          "addedEffects": {"+1": {"file": "effects/tint/effect.json", "visible": true}}}}}
+        """.utf8))
+        let replacement = #"{"image": "a.json", "origin": "3 3 0", "effects": [{"file": "effects/blur/effect.json", "visible": false}]}"#
+        let resolved = try ScenePreparation.resolvedScene(Self.scene, edits: ["_owe_scene_object_4_json": replacement,
+                                                                              "_owe_scene_object_4_scale": "2 2 1"],
+                                                          overlay: overlay)
+        let four = try object(4, in: resolved)
+        let effects = four["effects"] as? [[String: Any]]
+        XCTAssertEqual(effects?.compactMap { $0["file"] as? String }, ["effects/blur/effect.json", "effects/tint/effect.json"],
+                       "the added effect over the replaced object's")
+        XCTAssertEqual(effects?.first?["visible"] as? Bool, false, "the replacement's own value")
+        XCTAssertEqual((four["alpha"] as? NSNumber)?.doubleValue, 0.5, "the overlay's field")
+        XCTAssertEqual(four["origin"] as? String, "3 3 0")
+        XCTAssertEqual(four["scale"] as? String, "2 2 1", "the Inspector's scale stays on top")
+    }
+
+    /// A layer only the Wallpaper Editor adds is replaced once it is in the scene.
+    func testAnAddedLayerSceneEditExportReplacedTakesTheReplacement() throws {
+        var overlay = SceneEditOverlay()
+        overlay.added = [SceneEditOverlay.AddedObject(id: 9, object: .object(["image": .string("c.json"), "origin": .string("0 0 0")]))]
+        let resolved = try ScenePreparation.resolvedScene(Self.scene, edits: ["_owe_scene_object_9_json": #"{"image": "d.json"}"#],
+                                                          overlay: overlay)
+        XCTAssertEqual(try object(9, in: resolved)["image"] as? String, "d.json")
+    }
+
     func testWithoutAnOverlayTheInspectorsEditsResolveAsBefore() throws {
         let edits = ["_owe_scene_object_4_origin": "5 6 0", "_owe_scene_object_5_scale": "2 2 1"]
         let before = try ScenePreparation.resolvedScene(Self.scene, edits: edits)
