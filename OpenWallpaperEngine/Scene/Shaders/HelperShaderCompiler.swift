@@ -81,8 +81,17 @@ final class HelperShaderCompiler: ShaderCompiler {
         return (msl, reflection)
     }
 
+    func compilePairToMSL(vertex: String, fragment: String) throws -> CompiledShaderPair {
+        let response = try send(.compilePairToMSL, stage: .vertex, source: vertex, fragmentSource: fragment)
+        guard let vertexMSL = response.text, let vertexReflection = response.reflection,
+              let fragmentMSL = response.fragmentText, let fragmentReflection = response.fragmentReflection else {
+            throw ShaderCompilerError.failed(step: "glslang", output: "empty response")
+        }
+        return CompiledShaderPair(vertex: (vertexMSL, vertexReflection), fragment: (fragmentMSL, fragmentReflection))
+    }
+
     private func send(_ operation: ShaderCompileHelperMessage.Operation, stage: ShaderStage,
-                      source: String) throws -> ShaderCompileHelperMessage.Response {
+                      source: String, fragmentSource: String? = nil) throws -> ShaderCompileHelperMessage.Response {
         ThreadGuards.assertBackground("shader translation")
         let step = operation == .preprocess ? "preprocess" : "glslang"
         gate.enter(priority: Thread.current.qualityOfService.rawValue)
@@ -90,7 +99,8 @@ final class HelperShaderCompiler: ShaderCompiler {
         lock.lock()
         defer { lock.unlock() }
         nextID &+= 1
-        let request = ShaderCompileHelperMessage.Request(id: nextID, operation: operation, stage: stage, source: source)
+        let request = ShaderCompileHelperMessage.Request(id: nextID, operation: operation, stage: stage, source: source,
+                                                         fragmentSource: fragmentSource)
         let frame: Data
         do {
             frame = try ShaderCompileHelperFrame.encode(request)

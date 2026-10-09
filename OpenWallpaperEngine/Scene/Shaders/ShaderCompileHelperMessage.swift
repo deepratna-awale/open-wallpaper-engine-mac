@@ -10,13 +10,17 @@ enum ShaderCompileHelperMessage {
     enum Operation: String, Codable {
         case preprocess
         case compileToMSL
+        case compilePairToMSL
     }
 
     struct Request: Codable, Equatable {
         var id: UInt64
         var operation: Operation
         var stage: ShaderStage
+        /// `compilePairToMSL`: the vertex stage.
         var source: String
+        /// `compilePairToMSL`: the fragment stage.
+        var fragmentSource: String? = nil
     }
 
     struct Failure: Codable, Equatable {
@@ -32,6 +36,10 @@ enum ShaderCompileHelperMessage {
         var text: String?
         /// `compileToMSL`: SPIRV-Cross's reflection JSON.
         var reflection: Data?
+        /// `compilePairToMSL`: the fragment stage's MSL and reflection (the vertex stage's are
+        /// `text` and `reflection`).
+        var fragmentText: String? = nil
+        var fragmentReflection: Data? = nil
         var failure: Failure?
         /// Time the helper spent in the compiler, for the round-trip overhead
         /// (`HelperShaderCompiler.Statistics`).

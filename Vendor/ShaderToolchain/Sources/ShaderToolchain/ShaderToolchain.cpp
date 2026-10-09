@@ -4,6 +4,7 @@
 #include <cstring>
 #include <mutex>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "glslang/Public/ShaderLang.h"
@@ -18,7 +19,7 @@
 // version query). Keep in sync with README.md.
 #define OWE_SPIRV_CROSS_VERSION "vulkan-sdk-1.4.357.0"
 // The fixed options below; change this string whenever they change.
-#define OWE_SHADER_OPTIONS "E:none;G:opengl450-spv1.0-msgspv;msl20300+decoration-binding;vert:fixup-clipspace+flip-vert-y"
+#define OWE_SHADER_OPTIONS "E:none;G:opengl450-spv1.0-msgspv;pair:vulkan100-relaxed-linked-WEUniforms0-spv1.0;rename:metal-clashes-we_;msl20300+decoration-binding;vert:fixup-clipspace+flip-vert-y"
 
 namespace {
 
@@ -109,10 +110,121 @@ bool compileSpirv(const char *source, owe_shader_stage stage, std::vector<unsign
     return true;
 }
 
+// The pair as one program under glslang's relaxed Vulkan rules (GL_KHR_vulkan_glsl's relaxations,
+// `--relaxed-rules-vulkan`): WE declares its constants as loose uniforms, which strict GLSL for
+// SPIR-V rejects; relaxed, glslang gathers them into one default block, here named
+// `WEUniforms` at binding 0, and linking both stages merges the block, so each stage reads the
+// same std140 layout (vertex stage's members first). Uniform initialisers are ignored, as
+// WE's cbuffers have none.
+void configure(glslang::TShader &shader, EShLanguage lang, const char *const *strings, const char *const *names) {
+    shader.setStringsWithLengthsAndNames(strings, nullptr, names, 1);
+    shader.setPreamble("");
+    shader.setEnvInput(glslang::EShSourceGlsl, lang, glslang::EShClientVulkan, 100);
+    shader.setEnvInputVulkanRulesRelaxed();
+    shader.setEnvClient(glslang::EShClientVulkan, glslang::EShTargetVulkan_1_0);
+    shader.setEnvTarget(glslang::EShTargetSpv, glslang::EShTargetSpv_1_0);
+    shader.setGlobalUniformBlockName("WEUniforms");
+    shader.setGlobalUniformSet(0);
+    shader.setGlobalUniformBinding(0);
+}
+
+bool compilePairSpirv(const char *vertexSource, const char *fragmentSource, std::vector<unsigned int> &vertexSpirv,
+                      std::vector<unsigned int> &fragmentSpirv, std::string &log, int &failedStage) {
+    const char *vertexStrings[] = {vertexSource};
+    const char *fragmentStrings[] = {fragmentSource};
+    const char *vertexNames[] = {fileName(OWE_SHADER_STAGE_VERTEX)};
+    const char *fragmentNames[] = {fileName(OWE_SHADER_STAGE_FRAGMENT)};
+    glslang::TShader vertex(EShLangVertex);
+    glslang::TShader fragment(EShLangFragment);
+    configure(vertex, EShLangVertex, vertexStrings, vertexNames);
+    configure(fragment, EShLangFragment, fragmentStrings, fragmentNames);
+    NoIncluder includer;
+    const EShMessages messages = static_cast<EShMessages>(EShMsgSpvRules | EShMsgVulkanRules);
+    if (!vertex.parse(GetDefaultResources(), 100, false, messages, includer)) {
+        log = infoLog(vertex);
+        failedStage = OWE_SHADER_STAGE_VERTEX;
+        return false;
+    }
+    if (!fragment.parse(GetDefaultResources(), 100, false, messages, includer)) {
+        log = infoLog(fragment);
+        failedStage = OWE_SHADER_STAGE_FRAGMENT;
+        return false;
+    }
+    glslang::TProgram program;
+    program.addShader(&vertex);
+    program.addShader(&fragment);
+    if (!program.link(messages) || !program.mapIO()) {
+        log = infoLog(vertex) + infoLog(fragment) + program.getInfoLog() + program.getInfoDebugLog();
+        failedStage = -1;
+        return false;
+    }
+    glslang::SpvOptions options;
+    options.compilerSignature = "glslang";
+    spv::SpvBuildLogger logger;
+    glslang::GlslangToSpv(*program.getIntermediate(EShLangVertex), vertexSpirv, &logger, &options);
+    glslang::GlslangToSpv(*program.getIntermediate(EShLangFragment), fragmentSpirv, &logger, &options);
+    return true;
+}
+
+// Names GLSL lets a shader use that MSL (C++) reserves or Metal's standard library declares, so
+// a WE shader's own `or`, `this` or `log10` would not compile as MSL. They are renamed `we_<name>`
+// in the SPIR-V's debug names (OpName, OpMemberName) the MSL is written from; the reflection
+// reads the original SPIR-V, so constants still bind by WE's names. A function's name is
+// glslang's mangled `name(args`.
+const std::unordered_set<std::string> &metalClashes() {
+    static const std::unordered_set<std::string> names = {
+        "and", "or", "xor", "bitand", "bitor", "compl", "and_eq", "or_eq", "xor_eq", "not_eq",
+        "template", "namespace", "this", "new", "delete", "operator", "class", "typename", "private",
+        "public", "protected", "friend", "virtual", "register", "auto", "explicit", "mutable", "using",
+        "typedef", "union", "enum", "extern", "static", "goto", "try", "catch", "throw", "sizeof",
+        "alignas", "alignof", "decltype", "constexpr", "nullptr", "static_assert", "thread_local",
+        "noexcept", "char", "short", "long", "signed", "unsigned", "wchar_t", "typeid", "export",
+        "concept", "requires", "device", "constant", "thread", "threadgroup", "kernel", "vertex", "fragment",
+        // Metal standard library functions GLSL lacks: a shader's own definition is ambiguous.
+        "log10", "fmod", "rsqrt", "saturate", "fract2", "powr", "select", "median3",
+    };
+    return names;
+}
+
+std::vector<uint32_t> renameMetalClashes(const std::vector<uint32_t> &words) {
+    const uint32_t opName = 5, opMemberName = 6;
+    if (words.size() < 5) return words;
+    std::vector<uint32_t> result(words.begin(), words.begin() + 5);
+    result.reserve(words.size());
+    size_t index = 5;
+    while (index < words.size()) {
+        uint32_t count = words[index] >> 16, opcode = words[index] & 0xffff;
+        if (count == 0 || index + count > words.size()) {
+            result.insert(result.end(), words.begin() + index, words.end());
+            break;
+        }
+        size_t operands = opcode == opName ? 1 : opcode == opMemberName ? 2 : 0;
+        if (operands > 0 && count > operands + 1) {
+            const char *text = reinterpret_cast<const char *>(&words[index + 1 + operands]);
+            size_t limit = (count - 1 - operands) * 4;
+            std::string name(text, strnlen(text, limit));
+            if (metalClashes().count(name.substr(0, name.find('(')))) {
+                std::string renamed = "we_" + name;
+                std::vector<uint32_t> string(renamed.size() / 4 + 1, 0);
+                std::memcpy(string.data(), renamed.data(), renamed.size());
+                uint32_t total = static_cast<uint32_t>(1 + operands + string.size());
+                result.push_back(total << 16 | opcode);
+                result.insert(result.end(), words.begin() + index + 1, words.begin() + index + 1 + operands);
+                result.insert(result.end(), string.begin(), string.end());
+                index += count;
+                continue;
+            }
+        }
+        result.insert(result.end(), words.begin() + index, words.begin() + index + count);
+        index += count;
+    }
+    return result;
+}
+
 // spirv-cross main.cpp `compile_iteration` with the CLI defaults and our three flags.
 std::string compileMSL(std::vector<uint32_t> spirv, owe_shader_stage stage) {
     using namespace SPIRV_CROSS_NAMESPACE;
-    Parser parser(std::move(spirv));
+    Parser parser(renameMetalClashes(spirv));
     parser.parse();
     CompilerMSL compiler(std::move(parser.get_parsed_ir()));
 
@@ -245,6 +357,51 @@ extern "C" int owe_shader_compile_msl(const char *source, owe_shader_stage stage
     }
     *msl = copy(mslText);
     *reflection = copy(json);
+    return 1;
+}
+
+extern "C" int owe_shader_compile_pair_msl(const char *vertex, const char *fragment, char **vertex_msl,
+                                           char **vertex_reflection, char **fragment_msl, char **fragment_reflection,
+                                           char **log, const char **failed_step, int *failed_stage) {
+    std::lock_guard<std::mutex> guard(compileLock());
+    initializeOnce();
+    std::vector<unsigned int> vertexSpirv, fragmentSpirv;
+    std::string messages;
+    int stage = -1;
+    if (!compilePairSpirv(vertex, fragment, vertexSpirv, fragmentSpirv, messages, stage)) {
+        *failed_step = "glslang";
+        *failed_stage = stage;
+        *log = copy(messages);
+        return 0;
+    }
+    const std::vector<uint32_t> *spirvs[] = {nullptr, nullptr};
+    std::vector<uint32_t> vertexWords(vertexSpirv.begin(), vertexSpirv.end());
+    std::vector<uint32_t> fragmentWords(fragmentSpirv.begin(), fragmentSpirv.end());
+    spirvs[0] = &vertexWords;
+    spirvs[1] = &fragmentWords;
+    std::string msl[2], json[2];
+    for (int index = 0; index < 2; index++) {
+        owe_shader_stage current = index == 0 ? OWE_SHADER_STAGE_VERTEX : OWE_SHADER_STAGE_FRAGMENT;
+        *failed_stage = current;
+        try {
+            msl[index] = compileMSL(*spirvs[index], current);
+        } catch (const std::exception &error) {
+            *failed_step = "spirv-cross";
+            *log = copy(error.what());
+            return 0;
+        }
+        try {
+            json[index] = reflect(*spirvs[index]);
+        } catch (const std::exception &error) {
+            *failed_step = "reflect";
+            *log = copy(error.what());
+            return 0;
+        }
+    }
+    *vertex_msl = copy(msl[0]);
+    *vertex_reflection = copy(json[0]);
+    *fragment_msl = copy(msl[1]);
+    *fragment_reflection = copy(json[1]);
     return 1;
 }
 

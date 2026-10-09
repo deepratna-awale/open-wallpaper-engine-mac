@@ -28,6 +28,17 @@ protocol ShaderCompiler {
     /// Compiles preprocessed, fully decorated GLSL to MSL and returns it with SPIRV-Cross's
     /// reflection JSON.
     func compileToMSL(_ source: String, stage: ShaderStage) throws -> (msl: String, reflection: Data)
+    /// Compiles a preprocessed, decorated vertex/fragment pair as one linked program under
+    /// glslang's relaxed Vulkan rules, which gather both stages' loose uniforms into one
+    /// `WEUniforms` block, and returns each stage's MSL and reflection JSON. A failure's output
+    /// names the stage's file (`shader.vert` or `shader.frag`).
+    func compilePairToMSL(vertex: String, fragment: String) throws -> CompiledShaderPair
+}
+
+/// Both stages of a pair, compiled together (`ShaderCompiler.compilePairToMSL`).
+struct CompiledShaderPair {
+    let vertex: (msl: String, reflection: Data)
+    let fragment: (msl: String, reflection: Data)
 }
 
 /// Makes the app's shader compiler: the linked libraries, guarded against shaders that crashed

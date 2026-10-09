@@ -51,7 +51,7 @@ enum ShaderVariantError: Error, CustomStringConvertible {
 /// hundreds of thousands possible, so nothing is precompiled.
 final class ShaderVariantTranslator {
     /// Bump whenever translated output for the same input can change.
-    static let revision = 13
+    static let revision = 15
 
     let compiler: ShaderCompiler
     /// Root of the disk cache; variants go into its `generationDirectory`.
@@ -242,9 +242,15 @@ final class ShaderVariantTranslator {
                 stageLocal: ShaderUniformDeclaration.stageLocalNames(vertex: vertex.uniforms, fragment: fragment.uniforms),
                 label: label)
             step = (vertex, pair.vertex)
-            let vertexOut = try compiler.compileToMSL(pair.vertex, stage: .vertex)
-            step = (fragment, pair.fragment)
-            let fragmentOut = try compiler.compileToMSL(pair.fragment, stage: .fragment)
+            let compiled: CompiledShaderPair
+            do {
+                compiled = try compiler.compilePairToMSL(vertex: pair.vertex, fragment: pair.fragment)
+            } catch {
+                // The compiler names the stage it rejected by its file name.
+                if "\(error)".contains("shader.frag") { step = (fragment, pair.fragment) }
+                throw error
+            }
+            let vertexOut = compiled.vertex, fragmentOut = compiled.fragment
             step = nil
             let layout = try Self.uniformLayout(from: fragmentOut.reflection) ?? Self.uniformLayout(from: vertexOut.reflection)
             return TranslatedShaderVariant(vertexMSL: vertexOut.msl, fragmentMSL: fragmentOut.msl, uniforms: layout,

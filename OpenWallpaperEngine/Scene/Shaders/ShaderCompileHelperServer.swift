@@ -108,6 +108,12 @@ enum ShaderCompileHelperServer {
                 let output = try compiler.compileToMSL(request.source, stage: request.stage)
                 response.text = output.msl
                 response.reflection = output.reflection
+            case .compilePairToMSL:
+                let output = try compiler.compilePairToMSL(vertex: request.source, fragment: request.fragmentSource ?? "")
+                response.text = output.vertex.msl
+                response.reflection = output.vertex.reflection
+                response.fragmentText = output.fragment.msl
+                response.fragmentReflection = output.fragment.reflection
             }
         } catch ShaderCompilerError.failed(let step, let output) {
             response.failure = .init(step: step, output: output, quarantined: false)

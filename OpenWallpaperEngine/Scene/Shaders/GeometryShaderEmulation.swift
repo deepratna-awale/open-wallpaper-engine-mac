@@ -233,16 +233,16 @@ struct GeometryShaderEmulation {
         return Sources(vertex: vertexText, geometry: geometryText, path: "\(base).geom")
     }
 
-    /// Combines `sources` for one combo set. The geometry stage is preprocessed on its own first
-    /// and given HLSL's implicit conversions and scoping (`HLSLStageRewrites`): WE compiles it as
-    /// HLSL, and in one compile unit with its vertex stage and headers a name can have several types.
+    /// Combines `sources` for one combo set. The geometry stage is preprocessed on its own first;
+    /// HLSL's conversions and scoping are applied to the folded stage by the front end
+    /// (`HLSLFrontEnd`), which types each name in its own scope.
     static func make(_ sources: Sources, combos: [String: Int], compiler: ShaderCompiler) throws -> GeometryShaderEmulation {
         let header = (["#version 450", "#define GLSL 1"] + combos.sorted { $0.key < $1.key }.map { "#define \($0.key) \($0.value)" })
             .joined(separator: "\n") + "\n"
         let preprocessed = try compiler.preprocess(header + sources.geometry, stage: .vertex)
             .components(separatedBy: "\n").filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("#") }
             .joined(separator: "\n")
-        // HLSL attributes (`[maxvertexcount(4)]`) aren't expressions; they skip the rewrites.
+        // HLSL attributes (`[maxvertexcount(4)]`) go ahead of the stage.
         var body = preprocessed
         var attributes = ""
         for match in attributePattern.matches(in: preprocessed, range: NSRange(preprocessed.startIndex..., in: preprocessed)).reversed() {
@@ -250,9 +250,7 @@ struct GeometryShaderEmulation {
             attributes = body[range] + "\n" + attributes
             body.replaceSubrange(range, with: "")
         }
-        let signatures = HLSLStageRewrites.functionSignatures(in: sources.vertex + "\n" + body)
-        return try combine(vertex: sources.vertex, geometry: attributes + HLSLStageRewrites.apply(to: body, signatures: signatures),
-                           path: sources.path)
+        return try combine(vertex: sources.vertex, geometry: attributes + body, path: sources.path)
     }
 
     private static let attributePattern = NSRegularExpression.shader(#"\[\s*(?:maxvertexcount\s*\([^\]]*\)|input\s*:\s*\w+)\s*\]"#)
