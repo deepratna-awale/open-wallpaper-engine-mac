@@ -267,8 +267,9 @@ public struct DepthMapControls: View {
     }
 }
 
-/// A layer's mask controls: Invert, Contrast and the menu of the layer's effects with a grey
-/// mask slot. An effect whose mask is set already is listed under "Replaces the current mask".
+/// A layer's mask controls: Invert, Contrast and the menu of Layer Opacity and the layer's effects
+/// with a grey mask slot. An effect whose mask is set already is listed under "Replaces the
+/// current mask".
 private struct DepthMaskControls: View {
     @ObservedObject var model: DepthMapSectionModel
     @ObservedObject var session: SceneEditSession
@@ -299,7 +300,7 @@ private struct DepthMaskControls: View {
             // ideal size into the pane's limits, which never settled (an update-constraints loop
             // that crashed the window whenever the depth map plugin was installed).
             .disabled(model.generatedTexture == nil || isBusy || targets.isEmpty)
-            .help(DL("Writes the depth map as the mask of one of this layer’s effects: the effect shows where the mask is white."))
+            .help(DL("Writes the depth map as the layer’s opacity or as the mask of one of its effects: white shows, black hides."))
             Spacer()
         }
         if targets.isEmpty {

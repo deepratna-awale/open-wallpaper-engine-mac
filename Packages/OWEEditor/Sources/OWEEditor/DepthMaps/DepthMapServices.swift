@@ -76,6 +76,9 @@ public struct DepthMapEditorServices {
     public var openPlugins: @MainActor () -> Void
     /// An effect's texture slots (`effects/<name>/effect.json`), for the masks a depth map can fill.
     public var effectSchema: @MainActor (String) -> EffectSchema?
+    /// Copies a built-in effect's files into the project's edit files, as adding it from the
+    /// effect browser does (WE's Opacity effect, which Layer Opacity adds).
+    public var prepareBuiltInEffect: @MainActor (EffectCatalogEntry) throws -> Void
     /// A mask's `.tex` file as WE's editor writes one: `width` × `height` grey values, rows top
     /// to bottom (the app's `TEXWriter.effectMask`).
     public var encodeMask: (_ pixels: [UInt8], _ width: Int, _ height: Int) -> Data
@@ -86,6 +89,7 @@ public struct DepthMapEditorServices {
                 texture: @escaping @MainActor (String) -> CGImage?,
                 openPlugins: @escaping @MainActor () -> Void,
                 effectSchema: @escaping @MainActor (String) -> EffectSchema? = { _ in nil },
+                prepareBuiltInEffect: @escaping @MainActor (EffectCatalogEntry) throws -> Void = { _ in },
                 encodeMask: @escaping (_ pixels: [UInt8], _ width: Int, _ height: Int) -> Data) {
         self.generator = generator
         self.assetStore = assetStore
@@ -94,6 +98,7 @@ public struct DepthMapEditorServices {
         self.texture = texture
         self.openPlugins = openPlugins
         self.effectSchema = effectSchema
+        self.prepareBuiltInEffect = prepareBuiltInEffect
         self.encodeMask = encodeMask
     }
 }

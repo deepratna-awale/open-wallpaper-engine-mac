@@ -55,6 +55,7 @@ enum DepthMapPlugin {
             texture: { resources.texture($0) },
             openPlugins: openPlugins,
             effectSchema: { resources.effectSchema($0) },
+            prepareBuiltInEffect: { try resources.prepareEffect($0) },
             encodeMask: { TEXWriter.effectMask($0, width: $1, height: $2) })
     }
 
