@@ -67,6 +67,10 @@ final class SceneScriptCorpusReplayTests: XCTestCase {
         ExpectedFailure(key: "ecf70707afda", check: .exception,
                         reason: "3200298808's Progress Bar is a child of the root, and getParent() of a root is "
                             + "undefined (d.ts): the grandparent this script (from 3219510589) expects isn't there"),
+        ExpectedFailure(key: "d6b231e17ebf", check: .exception,
+                        reason: "3283959988's Progress Bar is a child of the root text layer 'D a y', so getParent() of "
+                            + "its parent is undefined (d.ts): the grandparent its visible script (from 3283687787) "
+                            + "expects isn't there, as ecf70707afda; throws in WE too"),
         ExpectedFailure(key: "87c158cf40fa", check: .change,
                         reason: "3219510589's scriptproperties turn on media-based detection, so the scale follows "
                             + "playback, not the tone, and each cursor enter/leave restarts its 1.25 s fade-out: WE too"),
