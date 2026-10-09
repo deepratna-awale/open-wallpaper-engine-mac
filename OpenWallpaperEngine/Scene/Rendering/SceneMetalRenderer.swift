@@ -123,7 +123,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Draws image layers through their own WE material.
     private lazy var imageMaterials = ImageMaterialRenderer(device: device, archive: effectGraph?.pipelineArchive)
     /// Draws Puppet Warp layers' meshes into their images (`ScenePuppetRenderer`).
-    private lazy var puppets = ScenePuppetRenderer(device: device, archive: effectGraph?.pipelineArchive)
+    private lazy var puppets: ScenePuppetRenderer? = {
+        self.puppetsMade = true
+        return ScenePuppetRenderer(device: self.device, archive: self.effectGraph?.pipelineArchive)
+    }()
+    /// Whether `puppets` was made: the pipeline checks ask it only then, so a scene without a
+    /// puppet never makes it.
+    private var puppetsMade = false
     /// Puppet layers' images this frame, by layer id: what `textureFrame(for:)` hands out for them.
     private var puppetAlbedos: [String: MTLTexture] = [:]
     /// Puppet layers' skeletons in motion, by layer id (`ScenePuppetAnimator`).
@@ -4206,15 +4212,18 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                             transformScaleY: 1)
     }
 
-    /// Compiles landed so far in the layer, effect and particle renderers.
+    /// Compiles landed so far in the layer, effect, particle and puppet mesh renderers.
     private var pipelinesLanded: Int {
         (effectGraph?.pipelinesLanded ?? 0) &+ (imageMaterials?.pipelinesLanded ?? 0) &+ (particleMaterials?.pipelinesLanded ?? 0)
+            &+ (puppetsMade ? puppets?.pipelinesLanded ?? 0 : 0)
     }
 
-    /// Whether any pipeline is still compiling off the render thread.
+    /// Whether any pipeline is still compiling off the render thread. A puppet's mesh pipeline
+    /// counts too: until it lands the puppet's image stays transparent (`ScenePuppetRenderer`).
     var pipelinesCompiling: Bool {
         hasPendingEffectPipelines || imageMaterials?.hasPendingPipelines == true
             || particleMaterials?.hasPendingPipelines == true || modelDrawing?.hasPendingPipelines == true
+            || (puppetsMade && puppets?.hasPendingPipelines == true)
     }
 
     /// The unquantised pixels per unit that sizes the scene target to `drawable` when the scene is

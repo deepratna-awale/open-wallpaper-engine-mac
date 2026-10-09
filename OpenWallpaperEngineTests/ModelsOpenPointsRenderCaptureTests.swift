@@ -97,6 +97,8 @@ final class ModelsOpenPointsRenderCaptureTests: XCTestCase {
                                             storage: scratch.appending(path: "storage", directoryHint: .isDirectory))
         defer { harness.close() }
         XCTAssertTrue(harness.waitForPipelines(), "the pipelines compile")
+        // The puppet's mesh pipeline is one of them: until it lands the image is transparent.
+        XCTAssertGreaterThan(harness.renderer.puppetMeshDraws, 0, "the puppet's mesh drew before the clock runs")
         var time = 0.0
         for shot in [1.0, 3, 5.5] {
             while time + 1.0 / 60 < shot {

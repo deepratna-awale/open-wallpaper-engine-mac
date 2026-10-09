@@ -109,6 +109,13 @@ final class DesktopPictureTests: XCTestCase {
         return Array(pixels[index..<index + 3])
     }
 
+    /// The top row of a menu bar strip in `strip` over `picture`: the fade's first stop,
+    /// `MenuBarStrip.peakOpacity` of the colour.
+    private static func strip(_ red: UInt8, _ green: UInt8, _ blue: UInt8, over picture: [UInt8]) -> [UInt8] {
+        let alpha = Double(MenuBarStrip.fadeStops[0].alpha)
+        return zip([red, green, blue], picture).map { UInt8((Double($0) * alpha + Double($1) * (1 - alpha)).rounded()) }
+    }
+
     private func assertColor(_ actual: [UInt8], _ expected: [UInt8], _ message: String = "",
                              file: StaticString = #filePath, line: UInt = #line) {
         let close = zip(actual, expected).allSatisfy { abs(Int($0) - Int($1)) <= 24 }
@@ -236,6 +243,8 @@ final class DesktopPictureTests: XCTestCase {
 
     /// Settings › Theming › Menu Bar: every display's picture gets its own menu bar strip in the
     /// scheme colour, stretched or split as well as plain; a new colour draws the pictures again.
+    /// The strip is a fade (`MenuBarStrip.fadeStops`): `peakOpacity` of the colour over the picture
+    /// at the top row, the picture untouched below `fadeHeightRatio` menu bar heights.
     func testThemingsMenuBarStripIsDrawnIntoEachDisplaysPicture() async throws {
         let a = try wallpaper("a")
         let b = try wallpaper("b")
@@ -247,12 +256,13 @@ final class DesktopPictureTests: XCTestCase {
         layout.addGroup(["UUID-A", "UUID-B"], layout: .stretch)
         await sync.update(plans(["1": a], layout: layout), placement: .fill, strips: white)
         for display: CGDirectDisplayID in [1, 2] {
-            assertColor(try color(setter.pictures[display], x: 0.5, y: 0.05), [255, 255, 255], "display \(display)'s strip")
+            assertColor(try color(setter.pictures[display], x: 0.5, y: 0), Self.strip(255, 255, 255, over: red), "display \(display)'s strip")
+            assertColor(try color(setter.pictures[display], x: 0.5, y: 0.35), red, "display \(display): below the fade")
             assertColor(try color(setter.pictures[display], x: 0.5, y: 0.6), red, "display \(display)'s part of the canvas")
         }
 
         await sync.update(plans(["1": a, "2": b]), placement: .fill, strips: white)
-        assertColor(try color(setter.pictures[2], x: 0.5, y: 0.05), [255, 255, 255], "a plain display gets its strip too")
+        assertColor(try color(setter.pictures[2], x: 0.5, y: 0), Self.strip(255, 255, 255, over: blue), "a plain display gets its strip too")
         assertColor(try color(setter.pictures[2], x: 0.5, y: 0.6), blue)
 
         let sets = setter.sets.count
@@ -264,10 +274,10 @@ final class DesktopPictureTests: XCTestCase {
             XCTAssertNotEqual(setter.pictures[display], whiteURLs[index],
                               "display \(display): a new colour is a new file name, which macOS doesn't cache")
         }
-        assertColor(try color(setter.pictures[1], x: 0.5, y: 0.05), self.green)
+        assertColor(try color(setter.pictures[1], x: 0.5, y: 0), Self.strip(0, 96, 0, over: red))
 
         await sync.update(plans(["1": a, "2": b]), placement: .fill)
-        assertColor(try color(setter.pictures[2], x: 0.5, y: 0.05), blue, "Menu Bar off: the strip goes")
+        assertColor(try color(setter.pictures[2], x: 0.5, y: 0), blue, "Menu Bar off: the strip goes")
     }
 
     /// macOS sets a picture on the current Space only, and a wake or a reconnection may reset it.

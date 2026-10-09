@@ -363,6 +363,12 @@ final class ScenePuppetRenderer {
     private var pipelines: [String: MTLRenderPipelineState] = [:]
     private var pending = Set<String>()
     private var failed = Set<String>()
+    private var landedPipelines = 0
+
+    /// Whether a mesh pipeline is still compiling: a frame drawn now lacks that puppet.
+    var hasPendingPipelines: Bool { pipelineLock.withLock { !pending.isEmpty } }
+    /// Compiles finished so far, however they ended: a frame drawn before one landed is redrawn.
+    var pipelinesLanded: Int { pipelineLock.withLock { landedPipelines } }
 
     /// The premultiplied draw every puppet shares, grown to the largest image drawn. Render thread only.
     private var scratch: MTLTexture?
@@ -919,6 +925,7 @@ final class ScenePuppetRenderer {
             guard let self else { return }
             self.pipelineLock.withLock {
                 self.pending.remove(key)
+                self.landedPipelines &+= 1
                 if let result { self.pipelines[key] = result } else { self.failed.insert(key) }
             }
         }
