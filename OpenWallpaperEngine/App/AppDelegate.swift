@@ -160,6 +160,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         applyMenuBarStrips()
         desktopPictures.refresh()
     }
+    /// Theming's tint of the app's own windows, here and in the Wallpaper Editor's process.
+    private lazy var themeTint = ThemeTintSync(messaging: DistributedAppProcessMessaging())
+    private var themeTintCancellable: AnyCancellable?
     /// Each display's desktop picture, which the lock screen and the menu bar's tint show.
     lazy var desktopPictures = DesktopPictureController.system()
     /// Settings › Plugins › MCP Server: MCP clients' control of the app while installed (`MCP/`).
@@ -444,6 +447,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         DesktopPictureTheming.provider = { [unowned self] in theming.strips }
         theming.start(settings: globalSettingsViewModel.$settings.map(\.theming).eraseToAnyPublisher(),
                       wallpapers: wallpaperViewModel)
+        themeTintCancellable = theming.$appTint.removeDuplicates().sink { [unowned self] in themeTint.publish($0) }
 
         // Launched into the menu bar only, the Dock icon goes until a window opens.
         dockPresence.start()
@@ -534,6 +538,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         updater.stopShaderPrewarm()
         // The system colours go back when the user chose "Restore on quit".
         theming.stop()
+        // The editor's windows go back to the system accent with the app.
+        themeTintCancellable = nil
+        themeTint.publish(nil)
         // The user's pictures go back where they still exist; OWE's pictures stay on disk, since
         // a Space macOS doesn't let OWE reach may still show one. Full-screen TIFFs earlier
         // versions left in Caches go to the Trash.
