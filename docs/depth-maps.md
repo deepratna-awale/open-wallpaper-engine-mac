@@ -1,7 +1,7 @@
 # Depth maps
 
-The **Depth Map Generation** plugin makes a depth map on your Mac, for two jobs, in the Scene
-Editor (Live) and in the Wallpaper Editor alike:
+The **Depth Map Generation** plugin makes a depth map on your Mac, for two jobs, in Scene Edit /
+Export and in the Wallpaper Editor alike:
 
 - **Scene › Depth Parallax** binds Wallpaper Engine's own **Depth Parallax** effect to a depth map
   of the whole scene, so a flat picture shifts in depth as the pointer moves, as in Wallpaper

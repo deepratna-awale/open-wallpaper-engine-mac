@@ -1,7 +1,7 @@
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// The Scene Editor (Live)'s Screen Saver mode: its isolated session never reaches the desktop,
+/// Scene Edit / Export's Screen Saver mode: its isolated session never reaches the desktop,
 /// its layer and property choices are saved per wallpaper apart from the wallpaper's own and
 /// reused, a recording is installed and set as the screen saver (which the plugin then keeps),
 /// and the installed video is replaced at once or not at all.

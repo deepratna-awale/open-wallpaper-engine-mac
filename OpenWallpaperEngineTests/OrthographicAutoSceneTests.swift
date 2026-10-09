@@ -44,7 +44,7 @@ final class OrthographicAutoSceneTests: XCTestCase {
         XCTAssertEqual(layer.position, SIMD2(4, 2), "centred in it")
     }
 
-    /// The exports and the Scene Editor measure the same size from the wallpaper's files.
+    /// The exports and Scene Edit / Export measure the same size from the wallpaper's files.
     func testTheDrawnSizeReadsTheTexture() throws {
         _ = try content(image: #""origin": "5 5 0""#)
         let sceneData = try Data(contentsOf: directory.appending(path: "scene.json"))

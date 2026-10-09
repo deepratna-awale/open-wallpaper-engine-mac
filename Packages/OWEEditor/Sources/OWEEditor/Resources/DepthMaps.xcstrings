@@ -2,7 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "A depth map is already being generated." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -97,7 +97,7 @@
       }
     },
     "Adds Wallpaper Engine’s Depth Parallax effect, bound to this depth map." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -192,7 +192,7 @@
       }
     },
     "Apply Depth Parallax" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -287,7 +287,7 @@
       }
     },
     "Cancel" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -382,7 +382,7 @@
       }
     },
     "Change Depth Parallax Strength" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -477,7 +477,7 @@
       }
     },
     "Depth Map Generation isn’t installed. Install it in Settings › Plugins." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -572,7 +572,7 @@
       }
     },
     "Depth map preview" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -667,7 +667,7 @@
       }
     },
     "Estimates the depth of the picture on this Mac. Nothing is uploaded." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -762,7 +762,7 @@
       }
     },
     "Estimating depth…" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -857,7 +857,7 @@
       }
     },
     "Evens out the depth map’s flat areas while keeping the picture’s edges. Applies to the next generation." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -952,7 +952,7 @@
       }
     },
     "Generate" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1047,7 +1047,7 @@
       }
     },
     "Generate Again" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1142,7 +1142,7 @@
       }
     },
     "Generate a depth map with on-device machine learning to give this depth parallax that follows the pointer." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1237,7 +1237,7 @@
       }
     },
     "How far the picture shifts with the pointer." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1332,7 +1332,7 @@
       }
     },
     "Install Depth Map Generation" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1427,7 +1427,7 @@
       }
     },
     "Loading the model…" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1522,7 +1522,7 @@
       }
     },
     "Opens Settings › Plugins, where Depth Map Generation can be installed." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1617,7 +1617,7 @@
       }
     },
     "Preparing…" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1712,7 +1712,7 @@
       }
     },
     "Preview Depth Map" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1807,7 +1807,7 @@
       }
     },
     "Refining edges…" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1902,7 +1902,7 @@
       }
     },
     "Remove Depth Parallax" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -1997,7 +1997,7 @@
       }
     },
     "Scene Depth Parallax" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2092,7 +2092,7 @@
       }
     },
     "Shows the depth map: white is near, black is far." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2187,7 +2187,7 @@
       }
     },
     "Smoothing" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2282,7 +2282,7 @@
       }
     },
     "Strength" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2377,7 +2377,7 @@
       }
     },
     "The depth comes from one frame of the scene." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2472,7 +2472,7 @@
       }
     },
     "The depth model gave a result this app can’t read." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2567,7 +2567,7 @@
       }
     },
     "The depth model isn’t one this app can use. Reinstall Depth Map Generation in Settings › Plugins." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2662,7 +2662,7 @@
       }
     },
     "The layer’s picture can’t be read." : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2757,7 +2757,7 @@
       }
     },
     "Update Depth Map" : {
-      "comment" : "Depth map section of the Scene Editor and the Wallpaper Editor",
+      "comment" : "Depth map section of Scene Edit / Export and the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -2852,7 +2852,7 @@
       }
     },
     "Create Mask from Depth Map" : {
-      "comment" : "Title of a layer's depth map section in the Scene Editor and the Wallpaper Editor: it turns the layer's depth map into a mask for one of its effects",
+      "comment" : "Title of a layer's depth map section in Scene Edit / Export and the Wallpaper Editor: it turns the layer's depth map into a mask for one of its effects",
       "localizations" : {
         "ar" : {
           "stringUnit" : {

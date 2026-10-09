@@ -18,7 +18,7 @@ enum WallpaperEngineShareJSON {
                           uniquingKeysWith: { first, _ in first })
     }
 
-    /// `values` as Share JSON: only the wallpaper's own properties (no Scene Inspector edits or
+    /// `values` as Share JSON: only the wallpaper's own properties (no Scene Edit / Export edits or
     /// app adjustments, which WE doesn't know), each in its WE type, pretty-printed as WE shows it.
     static func encode(_ values: [String: String], definitions: [String: UserPropertyDefinition]) throws -> Data {
         var object: [String: Any] = [:]

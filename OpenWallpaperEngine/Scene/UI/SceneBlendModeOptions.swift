@@ -2,8 +2,8 @@ import Foundation
 import OWEInspectorKit
 
 /// WE's image blend modes as its editor lists them (`WEImageBlendModes`): its 33 modes in its
-/// order, under its "Native (fast)" and "Emulated (slow)" groups, with WE's own labels. The Scene
-/// Inspector's and the Wallpaper Editor's Blend Mode pickers both show these.
+/// order, under its "Native (fast)" and "Emulated (slow)" groups, with WE's own labels. Scene Edit /
+/// Export's and the Wallpaper Editor's Blend Mode pickers both show these.
 enum SceneBlendModeOptions {
     /// The picker's title, WE's own.
     static func title(labels: WallpaperEngineLabels) -> String {

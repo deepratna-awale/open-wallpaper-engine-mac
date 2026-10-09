@@ -328,11 +328,11 @@ struct WallpaperPreview: SubviewOfContentView {
                                 AppDelegate.shared.showSceneInspector(for: wallpaperViewModel.displayedWallpaper,
                                                                       scopes: wallpaperViewModel.editedPropertyScopes(of: wallpaperViewModel.displayedWallpaper))
                             } label: {
-                                Label("Scene Editor (Live)", systemImage: "square.stack.3d.up")
+                                Label("Scene Edit / Export", systemImage: "square.stack.3d.up")
                                     .frame(maxWidth: .infinity)
                             }
                             .glassButtonStyle()
-                            .help("Scene Editor (Live)", shortcut: .sceneInspector)
+                            .help("Scene Edit / Export", shortcut: .sceneInspector)
                         }
                     }
                     // MARK: Properties

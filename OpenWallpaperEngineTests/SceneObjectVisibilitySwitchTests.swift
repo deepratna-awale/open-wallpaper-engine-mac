@@ -2,7 +2,7 @@ import XCTest
 import OWESceneEditing
 @testable import OpenWallpaperEngine
 
-/// Switching off an object whose `visible` a user property sets, in the Scene Editor (Live)'s store
+/// Switching off an object whose `visible` a user property sets, in Scene Edit / Export's store
 /// and in the Wallpaper Editor's overlay: hidden whatever the property says, and handed back to the
 /// property when shown again, as the renderer resolves it.
 final class SceneObjectVisibilitySwitchTests: XCTestCase {

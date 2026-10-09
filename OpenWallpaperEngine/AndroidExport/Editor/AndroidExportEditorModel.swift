@@ -22,7 +22,7 @@ enum AndroidEditorSheet: Identifiable, Equatable {
     }
 }
 
-/// The Scene Editor (Live)'s Android Export mode: the wallpaper as it plays in the mode's private
+/// Scene Edit / Export's Android Export mode: the wallpaper as it plays in the mode's private
 /// instance (`IsolatedSceneEditSession`), framed as the chosen Android device's screen (or a
 /// custom one), with the crop, the pointer and WE's `.mpkg` export (`AndroidExporter`):
 /// Pre-Rendered renders this version as a video loop at the screen's pixels; Dynamic bakes its

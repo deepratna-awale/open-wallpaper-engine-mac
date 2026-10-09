@@ -573,7 +573,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                                            replacing: true)
     }
 
-    /// The scene file as authored, without the Wallpaper Editor's and the Scene Inspector's edits;
+    /// The scene file as authored, without the Wallpaper Editor's and Scene Edit / Export's edits;
     /// nil, logged, when it can't be read.
     private func authoredScene(of wallpaper: WEWallpaper) -> WEScene? {
         let sceneFile = wallpaper.project.file
@@ -1730,7 +1730,7 @@ class SceneWallpaperViewModel: ObservableObject {
         WallpaperServices.shared.userPropertyString(name, wallpaper: propertyStoreKey)
     }
 
-    /// The Scene Inspector's blending for the object's material (`sceneObjectBlendingKey`); nil
+    /// Scene Edit / Export's blending for the object's material (`sceneObjectBlendingKey`); nil
     /// when it has none, or one its kind of layer doesn't draw with, which keeps the material's.
     private func blendingOverride(for object: WESceneObject) -> WEMaterialBlending? {
         guard let objectID = object.id, let value = userProperty(sceneObjectBlendingKey(objectID: objectID)) else { return nil }

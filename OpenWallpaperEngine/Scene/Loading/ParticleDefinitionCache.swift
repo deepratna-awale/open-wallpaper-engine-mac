@@ -7,7 +7,7 @@
 /// holds the scene lock: the scene's engine combos and user properties can't change during it.
 final class ParticleDefinitionCache {
     /// Everything the shared parts are built from besides the scene: the definition, its
-    /// material and the blending that replaces the material's (an object's Scene Inspector edit,
+    /// material and the blending that replaces the material's (an object's Scene Edit / Export edit,
     /// which only the object's own system takes). The renderers, flags and textures come from
     /// the definition and its material, which read the same throughout one build.
     struct Key: Hashable {

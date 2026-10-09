@@ -17,9 +17,9 @@ Open Wallpaper Engine 是一款免費、開源的 macOS 播放器，可播放 Wa
 
 - **場景、影片與網頁背景圖片** — 場景會使用每張背景圖片自己的 Wallpaper Engine 著色器繪製（轉換為 Metal），支援特效、粒子、3D 模型、光源、時間軸、SceneScript 與音訊響應視覺效果。網頁背景圖片在 WebKit 或選用的 Chromium 引擎中執行。
 - **Steam 工作坊** — 在 App 內瀏覽、篩選並下載工作坊內容，或輸入背景圖片檔案夾與 zip 檔。
-- **場景編輯器（即時）** — 直接在桌面上即時修改正在執行的背景圖片的圖層與效果，用它錄製你自己的螢幕保護程式，或將其輸出為 iPhone 與 iPad 的原況照片鎖定畫面，或 Android 版 Wallpaper Engine 的背景圖片套件。
+- **場景編輯/輸出** — 直接在桌面上即時修改正在執行的背景圖片的圖層與效果，用它錄製你自己的螢幕保護程式，或將其輸出為 iPhone 與 iPad 的原況照片鎖定畫面，或 Android 版 Wallpaper Engine 的背景圖片套件。
 
-  ![場景編輯器（即時）](../../docs/images/scene-editor-live.png)
+  ![場景編輯/輸出](../../docs/images/scene-editor-live.png)
 
 - **背景圖片編輯器** — 一款延續 Wallpaper Engine 編輯器精神的編輯器：圖層、附預覽的效果、時間軸、SceneScript、使用者屬性、粒子與 Puppet Warp。你的編輯會保存在背景圖片旁邊，絕不會寫入背景圖片本身的檔案。
 

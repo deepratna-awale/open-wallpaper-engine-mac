@@ -39,7 +39,7 @@ final class SceneWallpaperInstance {
     var renderer: SceneMetalRenderer? { renderLoop.renderer }
     /// A display drew the live scene (set on main after the render thread's first frame).
     var hasContent = false
-    /// Screens that only preview the wallpaper (the Scene Inspector's iPhone mode): they never make
+    /// Screens that only preview the wallpaper (Scene Edit / Export's iPhone mode): they never make
     /// it audible.
     static let previewScreenIDs: Set<String> = ["iphone-preview"]
 

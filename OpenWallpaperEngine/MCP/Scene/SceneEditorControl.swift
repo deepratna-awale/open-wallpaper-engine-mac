@@ -9,9 +9,9 @@ import OWESceneEditing
 /// a fake in tests.
 @MainActor
 protocol SceneEditorControl: AnyObject {
-    /// Opens the Scene Editor (Live) on the wallpaper in `mode` (its tab).
+    /// Opens Scene Edit / Export on the wallpaper in `mode` (its tab).
     func showSceneEditor(_ wallpaper: ControlWallpaper, mode: SceneInspectorMode) throws
-    /// Closes the Scene Editor (Live); false when it wasn't open.
+    /// Closes Scene Edit / Export; false when it wasn't open.
     func closeSceneEditor() -> Bool
     /// Asks the Wallpaper Editor to close the wallpaper's window; false when the editor doesn't run.
     func closeWallpaperEditor(_ wallpaper: ControlWallpaper) -> Bool

@@ -4,7 +4,7 @@ import OWEInspectorKit
 import OWESceneEditing
 
 /// The contextual inspector: the selected layer's transform, appearance and effects, or, with no
-/// selection, the scene and its user properties. Controls are the Scene Inspector's own
+/// selection, the scene and its user properties. Controls are Scene Edit / Export's own
 /// (`NumericSliderInput`, `InfoTip`, its blend-mode picker); a field a user property sets shows
 /// which one instead of a control, as WE's editor does.
 struct LayerInspectorView: View {

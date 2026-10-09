@@ -35,7 +35,7 @@ xcodebuild test -project OpenWallpaperEngine.xcodeproj -scheme OpenWallpaperEngi
 | Shader translation, reflection, caching | `Scene/Shaders/` |
 | Metal drawing, render passes, render targets | `Scene/Rendering/` |
 | A SceneScript API member | `Scene/Scripting/` (JS-side code in a bundled `.js` resource, not a Swift string) |
-| A settings control or Scene Editor (Live) UI | `Settings/` or `Scene/UI/`; the view model sits next to its view |
+| A settings control or Scene Edit / Export UI | `Settings/` or `Scene/UI/`; the view model sits next to its view |
 | Anything used by several features (logging, settings, asset paths) | `Core/` |
 
 There is **one type per file** unless the types are tiny and private to it. A file over about 600 lines, or a function over about 80 lines, needs a reason. Split along a real seam.
