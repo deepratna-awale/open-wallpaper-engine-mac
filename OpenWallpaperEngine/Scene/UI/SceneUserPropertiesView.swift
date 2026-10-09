@@ -101,7 +101,7 @@ final class SceneUserPropertiesModel: ObservableObject {
 
     /// WE's Reset (`WallpaperPropertyReset`): every property shown here back to its default (the
     /// author's project.json value; the app's own settings at theirs), in every edited store, and
-    /// applied to the running wallpapers at once, which rebuild what the dropped Scene Inspector
+    /// applied to the running wallpapers at once, which rebuild what the dropped Scene Edit / Export
     /// edits changed (`SceneChangeImpact`).
     func resetToDefaults() {
         pendingSave?.cancel()

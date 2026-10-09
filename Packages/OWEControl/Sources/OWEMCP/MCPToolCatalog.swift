@@ -181,13 +181,13 @@ public enum MCPToolCatalog {
 
     private static let windows: [MCPTool] = [
         MCPTool("open_editor", title: "Open Editor",
-                description: "Opens a scene wallpaper in the Scene Editor (\"scene\") or the Wallpaper Editor (\"wallpaper\") on this Mac, for the user to edit.",
+                description: "Opens a scene wallpaper in Scene Edit / Export (\"scene\") or the Wallpaper Editor (\"wallpaper\") on this Mac, for the user to edit.",
                 input: JSONSchema.object([
                     "id": wallpaperID,
                     "editor": JSONSchema.string("Which editor.", oneOf: ["scene", "wallpaper"]),
                 ], required: ["id", "editor"]), annotations: .idempotent) { result in
-            let editor = result["editor"]?.stringValue == "scene" ? "Scene Editor" : "Wallpaper Editor"
-            return "Opened \(result["title"]?.stringValue ?? "the wallpaper") in the \(editor)."
+            let editor = result["editor"]?.stringValue == "scene" ? "Scene Edit / Export" : "the Wallpaper Editor"
+            return "Opened \(result["title"]?.stringValue ?? "the wallpaper") in \(editor)."
         },
     ]
 

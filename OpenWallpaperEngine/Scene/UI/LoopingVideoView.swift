@@ -21,7 +21,7 @@ struct LoopingVideoView: NSViewRepresentable {
 }
 
 /// A video file looping silently, filling its frame, with no controls: a video wallpaper in the
-/// Scene Editor (Live)'s modes. The player stops with the view.
+/// Scene Edit / Export's modes. The player stops with the view.
 struct LoopingVideoFileView: View {
     let url: URL
     var gravity: AVLayerVideoGravity = .resizeAspectFill

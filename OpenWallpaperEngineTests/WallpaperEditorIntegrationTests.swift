@@ -3,8 +3,8 @@ import OWEInspectorKit
 import OWESceneEditing
 @testable import OpenWallpaperEngine
 
-/// The Wallpaper Editor in the app: its overlay applied where the scene loads, and the Scene
-/// Inspector left as it was (its edits, its keys, its pickers and its shortcut).
+/// The Wallpaper Editor in the app: its overlay applied where the scene loads, and Scene Edit /
+/// Export left as it was (its edits, its keys, its pickers and its shortcut).
 @MainActor
 final class WallpaperEditorIntegrationTests: XCTestCase {
     private static let scene = Data("""
@@ -86,7 +86,7 @@ final class WallpaperEditorIntegrationTests: XCTestCase {
         XCTAssertNil(SceneEditOverlayFiles.overlay(for: identity, store: store), "an unreadable overlay runs the scene as authored")
     }
 
-    // MARK: The Scene Inspector stays as it was
+    // MARK: Scene Edit / Export stays as it was
 
     func testTheInspectorsBlendModesAreWEsInWEsOrder() {
         let labels = WallpaperEngineLabels()

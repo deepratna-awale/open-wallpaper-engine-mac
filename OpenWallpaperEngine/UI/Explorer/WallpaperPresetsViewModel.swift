@@ -24,7 +24,7 @@ final class WallpaperPresetsViewModel: ObservableObject {
         perform("load the presets") { presets = try store.presets() }
     }
 
-    /// Saves the shown display's properties, with its Scene Inspector edits, as `name`.
+    /// Saves the shown display's properties, with its Scene Edit / Export edits, as `name`.
     func saveCurrent(named name: String) {
         perform("save preset \(name)") {
             try store.save(name: name, values: currentValues)

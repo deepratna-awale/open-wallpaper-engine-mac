@@ -39,7 +39,7 @@ struct SceneUserVisibility: Equatable {
             }
         }
 
-        /// The object's own visibility: the Scene Inspector's switch, the text switch, then `visible`.
+        /// The object's own visibility: Scene Edit / Export's switch, the text switch, then `visible`.
         func isShown(_ userProperty: (String) -> String?) -> Bool {
             if let override = userProperty(sceneObjectVisibilityKey(objectID: id)) { return override != "false" }
             if isText, userProperty("_owe_text_\(id)_enabled") == "false" { return false }

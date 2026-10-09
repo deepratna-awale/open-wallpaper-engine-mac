@@ -1,4 +1,4 @@
-/// The Scene Editor (Live)'s visibility switch of one scene object, kept in the wallpaper's store
+/// Scene Edit / Export's visibility switch of one scene object, kept in the wallpaper's store
 /// under `sceneObjectVisibilityKey`, which `SceneUserVisibility` reads before the object's `visible`.
 ///
 /// On an object a user property shows (`{"visible": {"user": …}}`), the switch works as the

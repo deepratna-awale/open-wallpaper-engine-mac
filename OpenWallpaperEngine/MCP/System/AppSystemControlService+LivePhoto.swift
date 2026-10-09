@@ -17,7 +17,7 @@ extension AppSystemControlService {
     }
 
     /// The scene as the renderer draws it, its saved overlay applied (`SceneDrawnSize`), which the
-    /// mode's crop frames, as the Scene Editor hands the mode its `sceneSize`.
+    /// mode's crop frames, as Scene Edit / Export hands the mode its `sceneSize`.
     func sceneSize(of wallpaper: ControlWallpaper) throws -> SIMD2<Double> {
         let item = try found(wallpaper)
         do {

@@ -340,7 +340,7 @@ struct DepthMapSection: View {
 }
 
 /// The same controls in a box, for a scrolling column (the Wallpaper Editor's scene form, the
-/// Scene Editor's object detail).
+/// Scene Edit / Export's object detail).
 public struct DepthMapBox: View {
     @StateObject private var model: DepthMapSectionModel
 

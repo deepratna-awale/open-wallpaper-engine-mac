@@ -17,7 +17,7 @@ enum DepthMapPlugin {
         }
     }
 
-    /// This process's one generator, made on first use: the Scene Editor's in the app, the
+    /// This process's one generator, made on first use: Scene Edit / Export's in the app, the
     /// editor windows' in the Wallpaper Editor's process. Its model is loaded only while it
     /// generates, and released when idle (`DepthMapGenerator.idleGrace`) in each process.
     static let generator = makeGenerator()

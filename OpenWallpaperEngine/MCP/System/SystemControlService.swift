@@ -1,7 +1,7 @@
 import Foundation
 
-/// What the control channel's system requests (`SystemControlRequests`) do in the app: the Scene
-/// Editor (Live)'s iPhone & iPad Export and Screen Saver modes, the screen saver's daily
+/// What the control channel's system requests (`SystemControlRequests`) do in the app: Scene Edit / Export's
+/// iPhone & iPad Export and Screen Saver modes, the screen saver's daily
 /// re-recording and Settings › General's lock-screen picture, through the code those use
 /// (`AppSystemControlService`), or a fake in tests. Every call is on the main actor.
 @MainActor
@@ -17,7 +17,7 @@ protocol SystemControlService: AnyObject {
 
     // MARK: Android export
 
-    /// Exports the wallpapers as `.mpkg` packages as the Scene Editor (Live)'s Android Export does,
+    /// Exports the wallpapers as `.mpkg` packages as Scene Edit / Export's Android Export does,
     /// and waits for them.
     func exportAndroid(_ request: SystemAndroidRequest) async throws -> AndroidExportBatch
 

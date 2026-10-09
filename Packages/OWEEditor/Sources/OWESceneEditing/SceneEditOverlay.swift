@@ -7,7 +7,7 @@ import Foundation
 /// Local Wallpaper bakes them into a copy.
 ///
 /// Objects are keyed by their scene.json `id` (their index when they have none), effects by their
-/// index in the object's `effects`, as the Scene Inspector's edits are.
+/// index in the object's `effects`, as Scene Edit / Export's edits are.
 public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// The newest version this app reads. A file is written as version 1 while it holds only what
     /// version 1 knew (field, effect visibility and constant edits), so an older app still reads it.

@@ -60,14 +60,14 @@ struct WallpaperPropertyTargets {
     }
 
     /// WE's Reset (`WallpaperPropertyReset`): each scope's properties go back to `defaultValues`,
-    /// and its Scene Inspector edits are dropped. Returns the shown scope's new values.
+    /// and its Scene Edit / Export edits are dropped. Returns the shown scope's new values.
     @discardableResult
     func reset(to defaultValues: [String: String], defaults: UserDefaults = .app,
                publish: (String, [String: String]) -> Void = Self.publishReplacing) -> [String: String] {
         rewrite(defaults: defaults, publish: publish) { WallpaperPropertyReset.values(resetting: $0, to: defaultValues) }
     }
 
-    /// Applies a preset ("Your Presets"): each scope's values become `values`, Scene Inspector
+    /// Applies a preset ("Your Presets"): each scope's values become `values`, Scene Edit / Export
     /// edits included, and a property the preset doesn't name falls back to its default. Returns
     /// the shown scope's new values.
     @discardableResult
@@ -76,7 +76,7 @@ struct WallpaperPropertyTargets {
         rewrite(defaults: defaults, publish: publish) { _ in values }
     }
 
-    /// The Scene Inspector's Reset: each scope's inspector edits are dropped, its other
+    /// Scene Edit / Export's Reset: each scope's inspector edits are dropped, its other
     /// properties kept. Returns the shown scope's new values.
     @discardableResult
     func removeSceneInspectorEdits(defaults: UserDefaults = .app,

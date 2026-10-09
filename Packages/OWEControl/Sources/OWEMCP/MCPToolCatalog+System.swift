@@ -1,7 +1,7 @@
 import Foundation
 import OWEControlProtocol
 
-/// The system features OWE drives (`docs/mcp.md`): the Scene Editor (Live)'s iPhone & iPad Export
+/// The system features OWE drives (`docs/mcp.md`): Scene Edit / Export's iPhone & iPad Export
 /// and Screen Saver modes, the screen saver's daily re-recording, and the lock-screen picture. None
 /// of them opens System Settings or makes macOS ask the user for a permission.
 extension MCPToolCatalog {
@@ -11,7 +11,7 @@ extension MCPToolCatalog {
 
     private static let exportTools: [MCPTool] = [
         MCPTool("devices_list", title: "List Export Devices",
-                description: "The iPhones and iPads the Scene Editor (Live)'s iPhone & iPad Export mode makes Live Photo lock screens for: each device's id (its name), family, screen size in pixels (portrait) and year, newest first. The query narrows them as the mode's device search does (name, family, year or resolution such as \"1320x2868\").",
+                description: "The iPhones and iPads Scene Edit / Export's iPhone & iPad Export mode makes Live Photo lock screens for: each device's id (its name), family, screen size in pixels (portrait) and year, newest first. The query narrows them as the mode's device search does (name, family, year or resolution such as \"1320x2868\").",
                 input: JSONSchema.object([
                     "query": JSONSchema.string("Words to find in the device's name, family, year or resolution."),
                 ]), annotations: .readOnly) { message($0) },
@@ -59,7 +59,7 @@ extension MCPToolCatalog {
 
     private static let androidTools: [MCPTool] = [
         MCPTool("export_android", title: "Export for Android",
-                description: "Wallpaper Engine's \"Export .mpkg\" for its Android app, as the Scene Editor (Live)'s Android Export does: writes one <title>.mpkg per wallpaper (unique names) into output_folder and waits for it (a pre-rendered scene takes a while). Videos are packed as they are; scenes are Dynamic (the scene itself, rendered on the device: high_quality or balanced) or pre_rendered (a 30 s H.264 loop of the scene). Web and application wallpapers are skipped with the reason. Returns each package's path, size and preview, and what was skipped or failed. The user copies the files to the device and imports them in the app.",
+                description: "Wallpaper Engine's \"Export .mpkg\" for its Android app, as Scene Edit / Export's Android Export does: writes one <title>.mpkg per wallpaper (unique names) into output_folder and waits for it (a pre-rendered scene takes a while). Videos are packed as they are; scenes are Dynamic (the scene itself, rendered on the device: high_quality or balanced) or pre_rendered (a 30 s H.264 loop of the scene). Web and application wallpapers are skipped with the reason. Returns each package's path, size and preview, and what was skipped or failed. The user copies the files to the device and imports them in the app.",
                 input: JSONSchema.object(androidExportChoices.merging([
                     "wallpaper_id": JSONSchema.string("A wallpaper's id from list_wallpapers. Give this or wallpaper_ids.", minLength: 1),
                     "wallpaper_ids": JSONSchema.stringArray("Several wallpapers' ids from list_wallpapers, exported in this order.", maxItems: 200),
@@ -85,7 +85,7 @@ extension MCPToolCatalog {
                     "wallpaper_id": JSONSchema.string("A wallpaper's id from list_wallpapers.", minLength: 1),
                 ]), annotations: .readOnly) { message($0) },
         MCPTool("screensaver_set_layers", title: "Set Screen Saver Layers",
-                description: "Shows or hides a scene's layers and sets its user properties in its screen saver version only, as the Scene Editor (Live)'s Screen Saver mode does: saved as the screen saver's own choices for that wallpaper, never touching the desktop. The next recording uses them.",
+                description: "Shows or hides a scene's layers and sets its user properties in its screen saver version only, as Scene Edit / Export's Screen Saver mode does: saved as the screen saver's own choices for that wallpaper, never touching the desktop. The next recording uses them.",
                 input: JSONSchema.object([
                     "wallpaper_id": JSONSchema.string("A scene wallpaper's id from list_wallpapers.", minLength: 1),
                     "layers": JSONSchema.objectArray("Layers to show or hide.", item: JSONSchema.object([

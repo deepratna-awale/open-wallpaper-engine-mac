@@ -1,6 +1,6 @@
 import Foundation
 
-/// A private copy of a wallpaper that one of the Scene Editor (Live)'s modes edits apart from the
+/// A private copy of a wallpaper that one of Scene Edit / Export's modes edits apart from the
 /// desktop (the iPhone & iPad Export mode's; any mode that previews and renders its own version).
 ///
 /// When the mode opens, the values of the store the editor edits (user properties and the
@@ -61,7 +61,7 @@ final class IsolatedSceneEditSession {
         targets.identity.stored(.userProperties, scope: scope, defaults: defaults) as? [String: String] ?? [:]
     }
 
-    /// The layer edits among `values` (the Scene Editor's keys, `WallpaperPropertyReset`).
+    /// The layer edits among `values` (Scene Edit / Export's keys, `WallpaperPropertyReset`).
     var layerEdits: [String: String] { WallpaperPropertyReset.sceneInspectorEdits(in: values) }
 
     /// The user properties among `values`.

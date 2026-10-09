@@ -53,7 +53,7 @@ final class WallpaperPresetTests: XCTestCase {
 
         let reloaded = try store().presets()
         XCTAssertEqual(reloaded, [saved], "a new store reads the file back")
-        XCTAssertEqual(reloaded.first?.values, Self.userValues, "Scene Inspector edits are kept with the properties")
+        XCTAssertEqual(reloaded.first?.values, Self.userValues, "Scene edits are kept with the properties")
         XCTAssertTrue(FileManager.default.fileExists(atPath: presetsDirectory.appending(path: "workshop-515151.json").path))
     }
 
