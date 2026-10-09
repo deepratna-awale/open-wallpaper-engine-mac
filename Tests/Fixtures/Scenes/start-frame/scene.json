@@ -16,8 +16,8 @@
 			"effects" : [
 				{ "id" : 7, "file" : "effects/halfcover/effect.json", "name" : "Half cover", "visible" : true,
 				  "passes" : [ { "id" : 8 } ] },
-				{ "id" : 2, "file" : "effects/blur/effect.json", "name" : "Blur", "visible" : true,
-				  "passes" : [ { "id" : 3 }, { "id" : 4 }, { "id" : 5 }, { "id" : 6 } ] }
+				{ "id" : 2, "file" : "effects/halfcover/effect.json", "name" : "Half cover again", "visible" : true,
+				  "passes" : [ { "id" : 3 } ] }
 			]
 		},
 		{

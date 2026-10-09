@@ -3,9 +3,11 @@ import MetalKit
 @testable import OpenWallpaperEngine
 
 /// A scene's first frames, which its loading picture covers until the renderer has drawn one with
-/// every pass in it (`SceneMetalRenderer.hasCompleteFrame`). The fixture's layer blends an effect
-/// at half alpha into a target nothing drew into yet, then blurs it through quarter-size buffers;
-/// a fullscreen layer over it runs motion blur, whose history carries from frame to frame.
+/// every pass in it (`SceneMetalRenderer.hasCompleteFrame`). The fixture's solid layer blends an
+/// effect at half alpha into a target nothing drew into yet, then runs it again as its last pass,
+/// which draws the layer into the scene with the layer's `translucent` blending (WE's last pass,
+/// `SceneMetalRenderer.lastPassDrawsIntoScene`). The fullscreen layer's motion blur, a built-in
+/// effect the fixture has no copy of the materials of, is dropped as WE drops it.
 @MainActor
 final class SceneStartFrameTests: XCTestCase {
     private struct Drawn {
@@ -26,12 +28,13 @@ final class SceneStartFrameTests: XCTestCase {
         let shown = frames[first]
         let later = frames[min(first + 2, frames.count - 1)]
         XCTAssertEqual(Self.mean(shown), Self.mean(later), accuracy: 0.5, "as bright as the frames after it")
-        // Inside the layer, away from the blur's edges: one colour. Over transparent black the half
-        // cover leaves half the colour at a quarter alpha, which the layer composites with.
+        // Inside the layer: one colour. Over transparent black the first half cover leaves half the
+        // colour at a quarter alpha; the second, the last pass, draws that half colour at half alpha
+        // into the scene.
         let inside = Self.channels(shown, x: shown.width / 4..<shown.width * 3 / 4, y: shown.height / 4..<shown.height * 3 / 4)
         for (channel, layer) in zip(inside, [0.8, 0.6, 0.2]) {
             XCTAssertLessThan(channel.deviation, 2, "no pattern inside the layer")
-            XCTAssertEqual(channel.mean / 255, layer / 8, accuracy: 0.01, "the half cover over transparent black")
+            XCTAssertEqual(channel.mean / 255, layer / 4, accuracy: 0.01, "the half cover over transparent black")
         }
     }
 
