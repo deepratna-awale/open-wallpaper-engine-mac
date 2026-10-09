@@ -30,6 +30,9 @@ final class ShaderVariantCacheTests: XCTestCase {
             compiles += 1
             return ("// \(marker)", Data("{}".utf8))
         }
+        func compilePairToMSL(vertex: String, fragment: String) throws -> CompiledShaderPair {
+            CompiledShaderPair(vertex: try compileToMSL(vertex, stage: .vertex), fragment: try compileToMSL(fragment, stage: .fragment))
+        }
     }
 
     private let vertex = ShaderSource(stage: .vertex, path: "v", text: "void main() {}", combos: [], uniforms: [])

@@ -44,7 +44,7 @@ final class ShaderStageUniformTests: XCTestCase {
         let fragment = "#version 450\nuniform float g_Speed;\nuniform float g_SpeedUp;\nout vec4 out_FragColor;\n"
             + "void main() { out_FragColor = vec4(g_Speed + g_SpeedUp); }\n"
         let pair = ShaderPairRewriter.rewrite(vertex: vertex, fragment: fragment, stageLocal: ["g_Speed"])
-        XCTAssertEqual(pair.uniforms.map(\.name), ["g_Speed", "g_Speed_weFragment", "g_SpeedUp"])
+        XCTAssertTrue(pair.fragment.contains("uniform float g_Speed_weFragment;"))
         XCTAssertTrue(pair.fragment.contains("vec4(g_Speed_weFragment + g_SpeedUp)"))
         XCTAssertTrue(pair.vertex.contains("vec4(g_Speed)"))
     }

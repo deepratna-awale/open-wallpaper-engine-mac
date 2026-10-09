@@ -66,6 +66,24 @@ final class InProcessShaderCompilerTests: XCTestCase {
         XCTAssertThrowsError(try InProcessShaderCompiler().preprocess("#if\n", stage: .vertex))
     }
 
+    /// WE declares constants as loose uniforms, which strict GLSL for SPIR-V rejects. glslang's
+    /// relaxed Vulkan rules gather both stages' into one `WEUniforms` block at binding 0, the
+    /// vertex stage's first, with the same layout in each stage; an initialiser is ignored.
+    func testAPairSharesOneUniformBlock() throws {
+        let vertex = "#version 450\nuniform float a;\nuniform vec4 b;\nlayout(location = 0) in vec4 p;\n"
+            + "void main() { gl_Position = p * a + b; }\n"
+        let fragment = "#version 450\nuniform vec4 b;\nuniform vec2 c = vec2(1.0);\nlayout(location = 0) out vec4 o;\n"
+            + "void main() { o = b + vec4(c, 0.0, 0.0); }\n"
+        let pair = try InProcessShaderCompiler().compilePairToMSL(vertex: vertex, fragment: fragment)
+        let vertexLayout = try XCTUnwrap(ShaderVariantTranslator.uniformLayout(from: pair.vertex.reflection))
+        let fragmentLayout = try XCTUnwrap(ShaderVariantTranslator.uniformLayout(from: pair.fragment.reflection))
+        XCTAssertEqual(vertexLayout, fragmentLayout)
+        XCTAssertEqual(vertexLayout.members["a"]?.offset, 0)
+        XCTAssertEqual(vertexLayout.members["b"]?.offset, 16)
+        XCTAssertEqual(vertexLayout.members["c"]?.offset, 32)
+        XCTAssertTrue(pair.fragment.msl.contains("[[buffer(0)]]"), pair.fragment.msl)
+    }
+
     /// glslang is not thread-safe; the library serializes calls, so parallel output equals serial.
     func testParallelTranslationMatchesSerial() throws {
         let jobs = Array(try Self.corpus().prefix(24))

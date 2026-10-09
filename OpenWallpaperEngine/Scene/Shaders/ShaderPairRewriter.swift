@@ -2,7 +2,8 @@ import Foundation
 
 /// Rewrites a preprocessed vertex/fragment pair so its Metal translation has a fixed, predictable
 /// interface:
-/// - every loose uniform of both stages lives in one std140 block `WEUniforms` at buffer 0;
+/// - loose uniforms stay as WE declares them: glslang's relaxed Vulkan rules gather both stages'
+///   into one std140 block `WEUniforms` at buffer 0 (`InProcessShaderCompiler.compilePairToMSL`);
 /// - `g_TextureN` is bound at texture/sampler N;
 /// - varyings get the same location in both stages (assigned by name);
 /// - vertex attributes get fixed locations (`a_Position` 0, `a_TexCoord` 1, ...).
@@ -24,8 +25,6 @@ enum ShaderPairRewriter {
     struct Result {
         let vertex: String
         let fragment: String
-        /// Uniform block members in declaration order (name, GLSL type, array count).
-        let uniforms: [(name: String, type: String, arrayCount: Int?)]
         /// `g_TextureN` slots the pair samples.
         let textureSlots: [Int]
         /// Attribute name → location, for the attributes the vertex stage reads.
@@ -33,8 +32,6 @@ enum ShaderPairRewriter {
     }
 
     private static let precision = #"(?:(?:lowp|mediump|highp)\s+)?"#
-    private static let uniformPattern = try! NSRegularExpression(
-        pattern: #"(?m)^[ \t]*uniform\s+"# + precision + #"(?!sampler)(\w+)\s+(\w+)\s*(?:\[\s*(\d+)\s*\])?\s*(?:=[^;]*)?;[ \t]*$"#)
     private static let samplerPattern = try! NSRegularExpression(
         pattern: #"(?m)^[ \t]*uniform\s+"# + precision + #"(sampler\w*)\s+(\w+)\s*;[ \t]*$"#)
     private static let varyingPattern = try! NSRegularExpression(
@@ -52,16 +49,6 @@ enum ShaderPairRewriter {
             fragment = pattern.stringByReplacingMatches(in: fragment, range: NSRange(fragment.startIndex..., in: fragment),
                                                         withTemplate: name + ShaderUniformDeclaration.fragmentSuffix)
         }
-        // Uniforms: union of both stages, vertex first, so the block is identical in each.
-        var members: [(name: String, type: String, arrayCount: Int?)] = []
-        for text in [vertex, fragment] {
-            for match in uniformPattern.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
-                let name = group(match, 2, text)!
-                guard !members.contains(where: { $0.name == name }) else { continue }
-                members.append((name, group(match, 1, text)!, group(match, 3, text).flatMap(Int.init)))
-            }
-        }
-
         // Varyings: vertex outputs and fragment inputs, located by name. Only a vertex input is an
         // attribute; a varying may be named `a_…` too (the default project dna_fragment's
         // `a_TexCloudsCoord`).
@@ -100,16 +87,13 @@ enum ShaderPairRewriter {
             resized[input.name] = (input.type, input.type)
         }
 
-        let block = members.isEmpty ? "" : "layout(std140, binding = 0) uniform \(uniformBlockName) {\n"
-            + members.map { "    \($0.type) \($0.name)\($0.arrayCount.map { "[\($0)]" } ?? "");\n" }.joined() + "};\n"
         var slots = Set<Int>()
         var extraSamplers: [String] = []
 
         func decorate(_ text: String, stage: ShaderStage) -> String {
-            var result = replace(uniformPattern, in: text) { _ in "" }
             var extraSampler = 16
-            result = replace(samplerPattern, in: result) { match in
-                let name = group(match, 2, result)!
+            var result = replace(samplerPattern, in: text) { match in
+                let name = group(match, 2, text)!
                 let slot: Int
                 if name.hasPrefix("g_Texture"), let n = Int(name.dropFirst("g_Texture".count)) {
                     slot = n
@@ -119,7 +103,7 @@ enum ShaderPairRewriter {
                     extraSampler += 1
                     extraSamplers.append("\(name) → \(slot)")
                 }
-                return "layout(binding = \(slot)) uniform \(group(match, 1, result)!) \(name);"
+                return "layout(binding = \(slot)) uniform \(group(match, 1, text)!) \(name);"
             }
             // HLSL vertex inputs are ordinary parameters that a shader may assign to; GLSL inputs
             // are read-only, so a written attribute is copied into a global of the same name.
@@ -158,7 +142,7 @@ enum ShaderPairRewriter {
                     "layout(location = \(locations[$0.name]!)) \($0.qualifier)out \($0.type) \($0.name)\($0.arrayCount.map { "[\($0)]" } ?? "");"
                 }.joined(separator: "\n") + "\n")
             }
-            return insertAfterHeader(result, block)
+            return result
         }
 
         let decoratedVertex = decorate(vertex, stage: .vertex)
@@ -172,8 +156,8 @@ enum ShaderPairRewriter {
         if !unknownAttributes.isEmpty || !extraSamplers.isEmpty {
             OWELog.debug(.shader, "\(label): guessed slots: attributes \(unknownAttributes) at location 15 (no mesh stream feeds them), samplers \(extraSamplers)")
         }
-        return Result(vertex: decoratedVertex, fragment: decoratedFragment, uniforms: members,
-                      textureSlots: slots.sorted(), attributes: attributes)
+        return Result(vertex: decoratedVertex, fragment: decoratedFragment, textureSlots: slots.sorted(),
+                      attributes: attributes)
     }
 
     /// Whether `name` (or a swizzle of it) is the target of `=` or a compound assignment.
