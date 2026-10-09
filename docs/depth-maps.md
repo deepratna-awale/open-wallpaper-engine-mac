@@ -6,9 +6,9 @@ Export and in the Wallpaper Editor alike:
 - **Scene › Depth Parallax** binds Wallpaper Engine's own **Depth Parallax** effect to a depth map
   of the whole scene, so a flat picture shifts in depth as the pointer moves, as in Wallpaper
   Engine.
-- **Layer › Create Mask from Depth Map** turns a layer's depth map into the mask of one of its
-  effects, so an effect (Shake, Water Ripple, Tint…) shows only on what is near, or only on what
-  is far.
+- **Layer › Create Mask from Depth Map** turns a layer's depth map into the layer's opacity, so
+  what is far fades out, or into the mask of one of its effects, so an effect (Shake, Water
+  Ripple, Tint…) shows only on what is near, or only on what is far.
 
 ## The plugin
 
@@ -44,11 +44,18 @@ as it will be: white where the effect shows, black where it doesn't.
 
 - **Invert** swaps near and far, so the effect shows on the background instead.
 - **Contrast** pushes the mask toward black and white (above 100%) or softens it (below).
-- **Use as Mask for…** lists the layer's effects that have a grey mask (WE's `opacitymask`
-  samplers; an effect with several lists each), and writes the depth map, shaped, as that
-  effect's mask. Effects that already have a mask are listed under **Replaces the current mask**:
-  the depth map replaces it, Undo brings it back, and its file stays.
-- Without such an effect, the section says to add one first (Effects › Add Effect…).
+- **Use as Mask for…** lists **Layer Opacity** first, then the layer's effects that have a grey
+  mask (WE's `opacitymask` samplers; an effect with several lists each), and writes the depth map,
+  shaped, as that effect's mask. Effects that already have a mask are listed under **Replaces the
+  current mask**: the depth map replaces it, Undo brings it back, and its file stays.
+- **Layer Opacity** makes the depth mask the layer's alpha through Wallpaper Engine's own
+  **Opacity** effect (`effects/opacity`), whose shader multiplies the layer's alpha by its grey
+  mask: near shows and far fades to transparent, and Invert swaps them. A layer without an Opacity
+  effect gets one, added with the mask as one undo step (its files are copied in as Effects › Add
+  Effect… copies them); a layer that has one has its mask filled (the first Opacity effect, when
+  there are several), under **Replaces the current mask** when it has one already.
+- Without Wallpaper Engine's assets or an effect with a grey mask, the section says to add one
+  first (Effects › Add Effect…).
 
 A layer section no longer applies depth parallax; the scene's does. Depth parallax an earlier
 version put on a layer still shows **Remove Depth Parallax** there.
@@ -76,7 +83,13 @@ A mask is stored as Wallpaper Engine's editor stores a painted effect mask in Wo
   `"effects": [{"file": "effects/shake/effect.json", "passes": [{"textures": [null, null, null,
   "masks/shake_mask_…"]}]}]`, with the sampler's combo (`MASK`) on.
 
+Layer Opacity is stored the same way, in the Opacity effect's `g_Texture1` slot (where Wallpaper
+Engine's own Opacity preview names its `masks/opacity_mask_…`): `{"file":
+"effects/opacity/effect.json", "passes": [{"textures": [null, "masks/opacity_mask_…"], "combos":
+{"MASK": 1}}]}`, with `effects/opacity/effect.json`, its
+material and its shaders copied into the wallpaper's edits as adding any built-in effect does.
+
 Files are named by their content and never deleted, so a replaced mask is still there for Undo.
 
 MCP clients get `depth_generate`, `depth_apply`, `depth_remove` and `use_depth_map_as_mask`
-([`mcp.md`](mcp.md)).
+(`effect: "opacity"` for Layer Opacity; [`mcp.md`](mcp.md)).
