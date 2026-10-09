@@ -1,3 +1,4 @@
+import OWEInspectorKit
 import SwiftUI
 import Combine
 
@@ -99,6 +100,7 @@ final class OnboardingImports: ObservableObject {
 // MARK: - 5. Bring your wallpapers
 
 struct OnboardingWallpapersStep: View {
+    @Environment(\.appAccentColor) private var accentColor
     @ObservedObject var steamCmd: SteamCmdService
     @ObservedObject var imports: OnboardingImports
     @State private var isCollectionPresented = false
@@ -153,7 +155,7 @@ struct OnboardingWallpapersStep: View {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: systemImage)
                     .font(.title)
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(accentColor)
                     .frame(width: 36)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title).font(.headline)
@@ -178,7 +180,7 @@ struct OnboardingWallpapersStep: View {
                 HStack(alignment: .top, spacing: 12) {
                     Image(systemName: "person.crop.rectangle.stack")
                         .font(.title)
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(accentColor)
                         .frame(width: 36)
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Download My Subscriptions").font(.headline)

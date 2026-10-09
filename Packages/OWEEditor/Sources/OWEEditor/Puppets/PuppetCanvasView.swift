@@ -2,6 +2,7 @@ import AppKit
 import OWESceneEditing
 import simd
 import SwiftUI
+import OWEInspectorKit
 
 /// Where the puppet's mesh space (the image's pixels, centred, y up) lands in the canvas.
 struct PuppetCanvasMapping: Equatable {
@@ -44,6 +45,7 @@ struct PuppetCanvasMapping: Equatable {
 /// The puppet editor's canvas: the picture through the posed mesh, the mesh, the bones, the
 /// weight heat map and the onion skin, and the pointer input of each tool.
 struct PuppetCanvasView: View {
+    @Environment(\.appAccentColor) private var accentColor
     @ObservedObject var workspace: PuppetWorkspace
     @State private var mapping = PuppetCanvasMapping()
     @State private var drag: Drag?
@@ -137,7 +139,7 @@ struct PuppetCanvasView: View {
                 let selected = workspace.selectedVertices.contains(index)
                 let size: Double = selected ? 7 : 5
                 let dot = Path(ellipseIn: CGRect(x: point.x - size / 2, y: point.y - size / 2, width: size, height: size))
-                context.fill(dot, with: .color(selected ? .accentColor : .white))
+                context.fill(dot, with: .color(selected ? accentColor : .white))
                 context.stroke(dot, with: .color(.black.opacity(0.6)), lineWidth: 0.75)
             }
         }
@@ -146,13 +148,13 @@ struct PuppetCanvasView: View {
         case let .marquee(start, current, _):
             let rect = CGRect(x: min(start.x, current.x), y: min(start.y, current.y), width: abs(current.x - start.x),
                               height: abs(current.y - start.y))
-            context.fill(Path(rect), with: .color(.accentColor.opacity(0.12)))
-            context.stroke(Path(rect), with: .color(.accentColor), lineWidth: 1)
+            context.fill(Path(rect), with: .color(accentColor.opacity(0.12)))
+            context.stroke(Path(rect), with: .color(accentColor), lineWidth: 1)
         case let .boneAdd(start, current):
             var line = Path()
             line.move(to: mapping.view(start))
             line.addLine(to: mapping.view(current))
-            context.stroke(line, with: .color(.accentColor), style: StrokeStyle(lineWidth: 2, dash: [5, 3]))
+            context.stroke(line, with: .color(accentColor), style: StrokeStyle(lineWidth: 2, dash: [5, 3]))
         default:
             break
         }
@@ -205,16 +207,16 @@ struct PuppetCanvasView: View {
             shape.addLine(to: CGPoint(x: shoulder.x - normal.x, y: shoulder.y - normal.y))
             shape.closeSubpath()
             let physics = document.bones.indices.contains(index) && document.bones[index].physics != nil
-            let fill: Color = selected ? .accentColor : physics ? .orange : .white
+            let fill: Color = selected ? accentColor : physics ? .orange : .white
             context.fill(shape, with: .color(fill.opacity(selected ? 0.85 : 0.6)))
             context.stroke(shape, with: .color(.black.opacity(0.7)), lineWidth: 1)
             let joint = Path(ellipseIn: CGRect(x: head.x - 5, y: head.y - 5, width: 10, height: 10))
-            context.fill(joint, with: .color(selected ? .accentColor : .white))
+            context.fill(joint, with: .color(selected ? accentColor : .white))
             context.stroke(joint, with: .color(.black.opacity(0.7)), lineWidth: 1)
             if selected, workspace.tool == .skeleton || workspace.tool == .animate {
                 let handle = Path(ellipseIn: CGRect(x: tail.x - 5, y: tail.y - 5, width: 10, height: 10))
                 context.fill(handle, with: .color(.white))
-                context.stroke(handle, with: .color(.accentColor), lineWidth: 2)
+                context.stroke(handle, with: .color(accentColor), lineWidth: 2)
             }
         }
     }

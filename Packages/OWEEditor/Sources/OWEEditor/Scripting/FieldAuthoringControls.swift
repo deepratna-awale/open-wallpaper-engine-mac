@@ -1,10 +1,12 @@
 import SwiftUI
+import OWEInspectorKit
 import OWESceneEditing
 
 /// A field's scripting and binding actions beside its control in the inspector, as WE's editor
 /// offers them on every property: add or edit a script, bind it to a user property, or undo
 /// either. The menu's symbol says what drives the field now.
 struct FieldAuthoringModifier: ViewModifier {
+    @Environment(\.appAccentColor) private var accentColor
     @EnvironmentObject private var authoring: EditorAuthoringModel
     let target: FieldTarget
 
@@ -16,7 +18,7 @@ struct FieldAuthoringModifier: ViewModifier {
                 FieldAuthoringMenuItems(authoring: authoring, target: target, drivers: drivers)
             } label: {
                 Image(systemName: Self.symbol(drivers))
-                    .foregroundStyle(drivers.script != nil || drivers.user != nil ? Color.accentColor : Color.secondary)
+                    .foregroundStyle(drivers.script != nil || drivers.user != nil ? accentColor : Color.secondary)
             }
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)

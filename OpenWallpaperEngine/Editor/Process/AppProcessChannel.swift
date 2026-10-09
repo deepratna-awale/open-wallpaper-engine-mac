@@ -38,6 +38,9 @@ struct AppProcessChannel: Equatable {
         /// Play, pause or seek the timeline of a wallpaper's editor window (`timelineCommandKey`,
         /// `secondsKey`).
         case timeline = "editor.timeline"
+        /// Theming's tint of the app's windows changed (`ThemeTintSync`, in the shared defaults):
+        /// the editor's windows take it too.
+        case themeTintDidChange = "app.themeTintDidChange"
     }
 
     /// The `userInfo` key of the wallpaper's folder.

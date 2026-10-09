@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import OWEInspectorKit
 import OWESceneEditing
 
 /// Seconds to points across the timeline's width, with room at both ends for a keyframe's diamond.
@@ -112,6 +113,7 @@ struct TimelineRuler: View {
 /// removes), dragging a selected keyframe moves the selection by whole frames, dragging on empty
 /// space draws a selection box.
 struct TimelineLanes: View {
+    @Environment(\.appAccentColor) private var accentColor
     @ObservedObject var timeline: SceneTimelineEditor
     let rows: [TimelineRow]
     let onFocus: () -> Void
@@ -150,7 +152,7 @@ struct TimelineLanes: View {
                     let y: CGFloat = CGFloat(Double(index) * TimelineRow.height)
                     let band = CGRect(x: 0, y: y, width: size.width, height: CGFloat(TimelineRow.height))
                     if focusedRows.contains(index) {
-                        context.fill(Path(band), with: .color(.accentColor.opacity(0.08)))
+                        context.fill(Path(band), with: .color(accentColor.opacity(0.08)))
                     } else if index % 2 == 1 {
                         context.fill(Path(band), with: .color(.primary.opacity(0.03)))
                     }
@@ -161,8 +163,8 @@ struct TimelineLanes: View {
                 }
                 for mark in marks {
                     let path = mark.hold ? Self.square(at: mark.point) : Self.diamond(at: mark.point)
-                    context.fill(path, with: mark.selected ? .color(.accentColor) : .color(Color(nsColor: .controlBackgroundColor)))
-                    context.stroke(path, with: mark.selected ? .color(.accentColor) : .color(.primary.opacity(0.75)), lineWidth: 1)
+                    context.fill(path, with: mark.selected ? .color(accentColor) : .color(Color(nsColor: .controlBackgroundColor)))
+                    context.stroke(path, with: mark.selected ? .color(accentColor) : .color(.primary.opacity(0.75)), lineWidth: 1)
                 }
                 let headX: CGFloat = CGFloat(playheadX)
                 var head = Path()
@@ -170,8 +172,8 @@ struct TimelineLanes: View {
                 head.addLine(to: CGPoint(x: headX, y: size.height))
                 context.stroke(head, with: .color(.red), lineWidth: 1)
                 if let box {
-                    context.fill(Path(box), with: .color(.accentColor.opacity(0.12)))
-                    context.stroke(Path(box), with: .color(.accentColor.opacity(0.7)), lineWidth: 1)
+                    context.fill(Path(box), with: .color(accentColor.opacity(0.12)))
+                    context.stroke(Path(box), with: .color(accentColor.opacity(0.7)), lineWidth: 1)
                 }
             }
             .contentShape(Rectangle())

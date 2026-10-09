@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import OWEInspectorKit
 import UniformTypeIdentifiers
 import OWESceneEditing
 
@@ -7,6 +8,7 @@ import OWESceneEditing
 /// import by the Import button or by dropping files: images become image layers, sounds sound
 /// layers, fonts are kept for text layers. Double-click (or Add to Scene) puts an asset in.
 struct AssetBrowserView: View {
+    @Environment(\.appAccentColor) private var accentColor
     @ObservedObject var session: SceneEditSession
     @ObservedObject var tools: EditorTools
     let services: WallpaperEditorServices
@@ -70,7 +72,7 @@ struct AssetBrowserView: View {
             .overlay {
                 if isTargeted {
                     RoundedRectangle(cornerRadius: 8)
-                        .strokeBorder(Color.accentColor, style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
+                        .strokeBorder(accentColor, style: StrokeStyle(lineWidth: 2, dash: [6, 4]))
                         .padding(4)
                         .allowsHitTesting(false)
                 }

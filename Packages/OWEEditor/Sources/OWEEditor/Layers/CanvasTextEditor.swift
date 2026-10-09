@@ -1,9 +1,11 @@
 import SwiftUI
+import OWEInspectorKit
 import OWESceneEditing
 
 /// Editing a text layer's text where it is on the canvas: a field over the layer, Return (or
 /// clicking away) keeps the text, Escape leaves it as it was. Option-Return starts a new line.
 struct CanvasTextEditor: View {
+    @Environment(\.appAccentColor) private var accentColor
     @ObservedObject var session: SceneEditSession
     let layerID: Int
     let viewport: CanvasViewport
@@ -26,7 +28,7 @@ struct CanvasTextEditor: View {
                 .frame(width: width, alignment: .center)
                 .frame(minHeight: height)
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 6))
-                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Color.accentColor, lineWidth: 1.5))
+                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(accentColor, lineWidth: 1.5))
                 .position(x: centre.x, y: centre.y)
                 .focused($focused)
                 .onAppear {
