@@ -31,6 +31,8 @@ final class MCPSceneFixture {
     let store: SceneEditOverlayStore
     let defaults: UserDefaults
     let suiteName: String
+    /// The depth map sections' services the resources give (none: no depth maps).
+    var depthMapServices: DepthMapEditorServices?
 
     init() throws {
         root = FileManager.default.temporaryDirectory.appending(path: "MCPScene-\(UUID().uuidString)", directoryHint: .isDirectory)
@@ -59,7 +61,10 @@ final class MCPSceneFixture {
     var identity: WallpaperSettingsIdentity { WallpaperSettingsIdentity.resolve(directory: folder, defaults: defaults) }
 
     func resources() -> FakeSceneEditResources {
-        FakeSceneEditResources(folder: folder, identity: identity, assets: EditorAssetStore(directory: root.appending(path: "assets")))
+        let resources = FakeSceneEditResources(folder: folder, identity: identity,
+                                               assets: EditorAssetStore(directory: root.appending(path: "assets")))
+        resources.depthServices = depthMapServices
+        return resources
     }
 
     /// The headless service over the fixture, editing the draft in its own store and posting saves on `center`.
@@ -73,7 +78,7 @@ final class MCPSceneFixture {
 }
 
 /// The fixture's resources: one effect with a constant, a combo and a texture slot; one particle
-/// system; a model for the image layer's puppet; no depth maps.
+/// system; a model for the image layer's puppet; depth maps only when a test gives their services.
 @MainActor
 final class FakeSceneEditResources: SceneEditResources {
     let folder: URL
@@ -82,6 +87,7 @@ final class FakeSceneEditResources: SceneEditResources {
     var sceneData: Data { MCPSceneFixture.scene }
     var projectJSON: Data? { MCPSceneFixture.project }
     var preparedEffects: [String] = []
+    var depthServices: DepthMapEditorServices?
 
     init(folder: URL, identity: WallpaperSettingsIdentity, assets: EditorAssetStore) {
         self.folder = folder
@@ -130,7 +136,7 @@ final class FakeSceneEditResources: SceneEditResources {
         ParticleCatalog(items: [], hasPresets: false)
     }
 
-    func depthMapServices() -> DepthMapEditorServices? { nil }
+    func depthMapServices() -> DepthMapEditorServices? { depthServices }
 }
 
 /// The editors' windows and the library, recorded.
