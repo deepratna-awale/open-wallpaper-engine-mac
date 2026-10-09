@@ -1,7 +1,7 @@
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// The Scene Inspector's edits read back before the debounced save. The slider's own tests moved
+/// Scene Edit / Export's edits read back before the debounced save. The slider's own tests moved
 /// with it to `Packages/OWEEditor` (`NumericSliderInputTests`).
 final class SceneInspectorEditBufferTests: XCTestCase {
     /// An inspector edit reads back at once, before the debounced save lands in the store.

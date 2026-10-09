@@ -26,7 +26,8 @@ public struct WallpaperEditorView: View {
         self.session = session
         self.services = services
         _authoring = StateObject(wrappedValue: EditorAuthoringModel(session: session, projectJSON: services.projectJSON,
-                                                                    console: services.scriptConsole))
+                                                                    console: services.scriptConsole,
+                                                                    services: services))
     }
 
     public var body: some View {

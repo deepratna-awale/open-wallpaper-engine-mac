@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// One choice of a picker the Scene Inspector and the editor show (a `// [COMBO]` option, a blend
+/// One choice of a picker Scene Edit / Export and the editor show (a `// [COMBO]` option, a blend
 /// mode), with the editor group WE files it under.
 public struct InspectorOption: Hashable, Sendable {
     public let title: String
@@ -37,7 +37,7 @@ public enum InspectorOptionGroups {
     }
 }
 
-/// A picker of `options` under their group headings, as the Scene Inspector lists WE's blend
+/// A picker of `options` under their group headings, as Scene Edit / Export lists WE's blend
 /// modes and combos.
 public struct InspectorOptionPicker<Label: View>: View {
     private let options: [InspectorOption]

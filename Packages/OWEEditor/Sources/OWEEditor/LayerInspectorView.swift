@@ -4,7 +4,7 @@ import OWEInspectorKit
 import OWESceneEditing
 
 /// The contextual inspector: the selected layer's transform, appearance and effects, or, with no
-/// selection, the scene and its user properties. Controls are the Scene Inspector's own
+/// selection, the scene and its user properties. Controls are Scene Edit / Export's own
 /// (`NumericSliderInput`, `InfoTip`, its blend-mode picker); a field a user property sets shows
 /// which one instead of a control, as WE's editor does.
 struct LayerInspectorView: View {
@@ -52,7 +52,9 @@ private struct LayerForm: View {
                 LayerTextSection(session: session, tools: tools, services: services, layer: layer)
             }
             if layer.kind == .particle, let particles = services.particles {
-                ParticleSystemSections(services: particles, layer: layer)
+                ParticleSystemSections(services: particles, layer: layer) { key in
+                    services.userPropertyTitle(key, properties: session.overlay.authoring?.properties)
+                }
             }
             if layer.kind == .image || layer.kind == .text {
                 appearanceSection
@@ -62,7 +64,7 @@ private struct LayerForm: View {
             } else if !layer.effects.isEmpty {
                 effectsSection
             }
-            if let depthMaps = services.depthMaps, SceneDepthParallax.placement(for: layer) != nil {
+            if let depthMaps = services.depthMaps, SceneDepthParallax.placement(for: layer) == .onLayer {
                 DepthMapSection(session: session, layerID: layer.id, services: depthMaps)
             }
             if layer.kind == .image, let assets = services.puppetAssets {

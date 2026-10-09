@@ -1,4 +1,5 @@
 import SwiftUI
+import OWEInspectorKit
 import OWESceneEditing
 
 /// Add Particle System: every particle system WE's editor offers (`ParticleCatalog`), its default
@@ -127,6 +128,7 @@ struct ParticleSystemBrowserView: View {
 
 /// One system or preset variant: its preview, title and preset.
 private struct ParticleSystemTile: View {
+    @Environment(\.appAccentColor) private var accentColor
     let item: ParticleCatalog.Item
     let previews: EditorPreviewProvider?
     let isSelected: Bool
@@ -149,10 +151,10 @@ private struct ParticleSystemTile: View {
             }
         }
         .padding(8)
-        .background(isSelected ? Color.accentColor.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 10))
+        .background(isSelected ? accentColor.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 10))
         .overlay {
             RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(isSelected ? Color.accentColor : .clear, lineWidth: 1.5)
+                .strokeBorder(isSelected ? accentColor : .clear, lineWidth: 1.5)
         }
         .contentShape(Rectangle())
         .help(item.summary)

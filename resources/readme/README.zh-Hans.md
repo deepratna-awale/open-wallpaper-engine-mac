@@ -17,9 +17,9 @@ Open Wallpaper Engine 是一款免费、开源的 macOS 播放器，可播放 Wa
 
 - **场景、视频和网页墙纸** — 场景使用每张墙纸自己的 Wallpaper Engine 着色器绘制（翻译为 Metal），支持特效、粒子、3D 模型、光源、时间线、SceneScript 和音频响应视觉效果。网页墙纸在 WebKit 或可选的 Chromium 引擎中运行。
 - **Steam 创意工坊** — 在 App 内浏览、筛选和下载创意工坊内容，或导入墙纸文件夹和 zip 文件。
-- **场景编辑器（实时）** — 直接在桌面上实时修改正在运行的墙纸的图层和效果，用它录制你自己的屏幕保护程序，或将其导出为 iPhone 和 iPad 的实况照片锁定屏幕，或 Android 版 Wallpaper Engine 的墙纸包。
+- **场景编辑/导出** — 直接在桌面上实时修改正在运行的墙纸的图层和效果，用它录制你自己的屏幕保护程序，或将其导出为 iPhone 和 iPad 的实况照片锁定屏幕，或 Android 版 Wallpaper Engine 的墙纸包。
 
-  ![场景编辑器（实时）](../../docs/images/scene-editor-live.png)
+  ![场景编辑/导出](../../docs/images/scene-editor-live.png)
 
 - **墙纸编辑器** — 一款秉承 Wallpaper Engine 编辑器理念的编辑器：图层、带预览的效果、时间线、SceneScript、用户属性、粒子和 Puppet Warp。你的编辑保存在墙纸旁边，绝不会写入墙纸本身的文件。
 

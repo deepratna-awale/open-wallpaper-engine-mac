@@ -17,9 +17,9 @@ Open Wallpaper Engine is a free, open-source macOS player for Wallpaper Engine w
 
 - **Scene, video and web wallpapers** — scenes draw through each wallpaper's own Wallpaper Engine shaders, translated to Metal, with effects, particles, 3D models, lights, timelines, SceneScript and audio-reactive visuals. Web wallpapers run in WebKit or the optional Chromium engine.
 - **Steam Workshop** — browse, filter and download from the Workshop inside the app, or import wallpaper folders and zips.
-- **Scene Editor (Live)** — change the running wallpaper's layers and effects live on the desktop, record your own screen saver from it, or export it as a Live Photo lock screen for iPhone and iPad or as a package for Wallpaper Engine's Android app.
+- **Scene Edit / Export** — change the running wallpaper's layers and effects live on the desktop, record your own screen saver from it, or export it as a Live Photo lock screen for iPhone and iPad or as a package for Wallpaper Engine's Android app.
 
-  ![Scene Editor (Live)](docs/images/scene-editor-live.png)
+  ![Scene Edit / Export](docs/images/scene-editor-live.png)
 
 - **Wallpaper Editor** — an editor in the spirit of Wallpaper Engine's: layers, effects with previews, a timeline, SceneScript, user properties, particles and Puppet Warp. Your edits are kept beside the wallpaper, never in its files.
 

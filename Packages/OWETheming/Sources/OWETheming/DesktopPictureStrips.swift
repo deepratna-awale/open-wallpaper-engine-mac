@@ -19,10 +19,12 @@ public struct DesktopPictureStrips: Equatable, Sendable {
         case unwritable(URL)
     }
 
-    /// `image` with the display's strip filled; nil when the display has no strip.
+    /// `image` with the display's strip drawn, fading out downwards (`MenuBarStrip.fadeStops`);
+    /// nil when the display has no strip.
     public func composed(_ image: CGImage, display: UInt32) -> CGImage? {
         guard let geometry = displays[display],
-              let rect = MenuBarStrip.imageRect(height: geometry.menuBarHeight, displaySize: geometry.size,
+              let rect = MenuBarStrip.imageRect(height: MenuBarStrip.fadeHeight(menuBarHeight: geometry.menuBarHeight),
+                                                displaySize: geometry.size,
                                                 imageSize: CGSize(width: image.width, height: image.height)),
               let space = CGColorSpace(name: CGColorSpace.sRGB),
               let context = CGContext(data: nil, width: image.width, height: image.height, bitsPerComponent: 8,
@@ -30,8 +32,17 @@ public struct DesktopPictureStrips: Equatable, Sendable {
                                       bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else { return nil }
         let bounds = CGRect(x: 0, y: 0, width: image.width, height: image.height)
         context.draw(image, in: bounds)
-        context.setFillColor(red: color.red, green: color.green, blue: color.blue, alpha: 1)
-        context.fill(rect.intersection(bounds))
+        let stops = MenuBarStrip.fadeStops
+        let colors = stops.map { CGColor(colorSpace: space, components: [color.red, color.green, color.blue, $0.alpha])! }
+        guard let gradient = CGGradient(colorsSpace: space, colors: colors as CFArray,
+                                        locations: stops.map(\.location)) else { return nil }
+        let strip = rect.intersection(bounds)
+        context.saveGState()
+        context.clip(to: strip)
+        // Core Graphics' origin is the bottom left: the strip starts at its top.
+        context.drawLinearGradient(gradient, start: CGPoint(x: strip.minX, y: strip.maxY),
+                                   end: CGPoint(x: strip.minX, y: strip.minY), options: [])
+        context.restoreGState()
         return context.makeImage()
     }
 

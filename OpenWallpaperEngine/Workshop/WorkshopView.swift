@@ -1,3 +1,4 @@
+import OWEInspectorKit
 import SwiftUI
 
 struct WorkshopView: SubviewOfContentView {
@@ -9,10 +10,13 @@ struct WorkshopView: SubviewOfContentView {
 
     var body: some View {
         VStack(spacing: 0) {
+            // The browser ends its toolbar with the window's items; setup and login have only those.
             if !viewModel.steamCmd.isInstalled {
                 SteamCmdNotInstalledView(steamCmd: viewModel.steamCmd)
+                    .toolbar { WindowActionsToolbar(viewModel: viewModel) }
             } else if !viewModel.steamCmd.isLoggedIn {
                 SteamLoginView(steamCmd: viewModel.steamCmd)
+                    .toolbar { WindowActionsToolbar(viewModel: viewModel) }
             } else {
                 WorkshopBrowserView(
                     viewModel: viewModel.workshopVM,
@@ -182,11 +186,6 @@ private struct WorkshopBrowserView: View {
             .padding(.horizontal)
             .padding(.top, 8)
             .onAppear { hasAPIKey = SteamCredentials.webAPIKey().load() != nil }
-            .searchable(text: $viewModel.searchText, placement: .toolbar, prompt: "Search wallpapers...")
-            .onSubmit(of: .search) {
-                viewModel.currentPage = 1
-                Task { await viewModel.search() }
-            }
             .onChange(of: viewModel.searchText) { oldText, newText in
                 // The field's clear button empties it: search again from the first page.
                 guard newText.isEmpty, !oldText.isEmpty else { return }
@@ -207,7 +206,15 @@ private struct WorkshopBrowserView: View {
             }
     }
 
+    /// Search first, then the browser's items, then the window's.
     @ToolbarContentBuilder private var browserToolbar: some ToolbarContent {
+        ToolbarSearchField.item(text: $viewModel.searchText, prompt: "Search wallpapers...") {
+            viewModel.currentPage = 1
+            Task { await viewModel.search() }
+        }
+        if #available(macOS 26, *) {
+            ToolbarSpacer(.fixed)
+        }
         ToolbarItemGroup {
             if let base = viewModel.presetBase {
                 Label {
@@ -279,6 +286,7 @@ private struct WorkshopBrowserView: View {
                 Task { await viewModel.search() }
             }
         }
+        WindowActionsToolbar(viewModel: contentViewModel)
     }
 
     private func searchWithNewKey() {
@@ -535,6 +543,7 @@ struct WorkshopFiltersSidebar: View {
 /// A Workshop result in the Workshop and Discover tabs: its preview, title and tags, the download
 /// control and the item's context menu.
 struct WorkshopItemCard: View {
+    @Environment(\.appAccentColor) private var accentColor
     let item: WorkshopItem
     @ObservedObject var viewModel: WorkshopViewModel
 
@@ -575,7 +584,7 @@ struct WorkshopItemCard: View {
                     Label("Select item",
                           systemImage: viewModel.selectedItemIds.contains(item.id) ? "checkmark.circle.fill" : "circle")
                         .labelStyle(.iconOnly)
-                        .foregroundStyle(viewModel.selectedItemIds.contains(item.id) ? Color.accentColor : .white)
+                        .foregroundStyle(viewModel.selectedItemIds.contains(item.id) ? accentColor : .white)
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(viewModel.selectedItemIds.contains(item.id) ? .isSelected : [])
@@ -704,7 +713,7 @@ private struct WorkshopItemMenu: View {
                 setAs.run(.screenSaver, for: item)
             } label: {
                 Label {
-                    Text("Set as Screen Saver", comment: "Context menu: sets the wallpaper as the screen saver (Installed: opens the Scene Editor (Live)'s Screen Saver mode)")
+                    Text("Set as Screen Saver", comment: "Context menu: sets the wallpaper as the screen saver (Installed: opens Scene Edit / Export's Screen Saver mode)")
                 } icon: {
                     Image(systemName: "play.rectangle")
                 }

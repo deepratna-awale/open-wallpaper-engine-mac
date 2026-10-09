@@ -269,10 +269,13 @@ struct ContentView: View {
             WorkshopView(contentViewModel: viewModel)
         case 2:
             DownloadsView(steamCmd: viewModel.steamCmd)
+                .toolbar { WindowActionsToolbar(viewModel: viewModel) }
         case 3:
             PlaylistView(wallpaperViewModel: wallpaperViewModel)
+                .toolbar { WindowActionsToolbar(viewModel: viewModel) }
         case 4:
             WorkshopDiscoverView(model: viewModel.discoverVM, workshop: viewModel.workshopVM,
+                                 contentViewModel: viewModel,
                                  cardSize: viewModel.navigation.explorerIconSize - 5)
         default:
             EmptyView()
@@ -306,28 +309,9 @@ struct ContentView: View {
         ToolbarItem(placement: .principal) {
             TopTabBar(contentViewModel: viewModel)
         }
-        ToolbarItemGroup(placement: .primaryAction) {
-            Button {
-                viewModel.presentation.isDisplaySettingsReveal = true
-            } label: {
-                Label("Displays", systemImage: "display")
-            }
-            .help("Display Settings")
-            Button {
-                AppDelegate.shared.openSettingsWindow()
-            } label: {
-                Label("Settings", systemImage: "gearshape")
-            }
-            .help("Settings", shortcut: .settings)
-            if tab == 0 {
-                Button {
-                    withAnimation { viewModel.navigation.isDetailsReveal.toggle() }
-                } label: {
-                    Label("Details", systemImage: "sidebar.right")
-                }
-                .help("Show or hide the wallpaper details")
-            }
-        }
+        // Displays, Settings and Details come from each tab's toolbar (`WindowActionsToolbar`),
+        // after the tab's own items.
+
     }
 }
 

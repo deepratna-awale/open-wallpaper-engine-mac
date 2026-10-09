@@ -17,7 +17,7 @@ enum DepthMapPlugin {
         }
     }
 
-    /// This process's one generator, made on first use: the Scene Editor's in the app, the
+    /// This process's one generator, made on first use: Scene Edit / Export's in the app, the
     /// editor windows' in the Wallpaper Editor's process. Its model is loaded only while it
     /// generates, and released when idle (`DepthMapGenerator.idleGrace`) in each process.
     static let generator = makeGenerator()
@@ -53,7 +53,9 @@ enum DepthMapPlugin {
                 try resources.prepareEffect(DepthMapPlugin.effectEntry)
             },
             texture: { resources.texture($0) },
-            openPlugins: openPlugins)
+            openPlugins: openPlugins,
+            effectSchema: { resources.effectSchema($0) },
+            encodeMask: { TEXWriter.effectMask($0, width: $1, height: $2) })
     }
 
     /// A still image layer's own texture as it is; anything else drawn (`DepthMapSceneCapture`).

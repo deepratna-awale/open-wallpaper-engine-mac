@@ -4,7 +4,7 @@ import OWESceneEditing
 
 /// What the Wallpaper Editor reads of the wallpaper and of Wallpaper Engine's assets
 /// (editor-plan notes, phases 2–3): the effects it can add, what each effect lets it change
-/// (from the effect's shaders, as the Scene Inspector reads them), the wallpaper's files, its
+/// (from the effect's shaders, as Scene Edit / Export reads them), the wallpaper's files, its
 /// textures as pictures, its fonts and its user properties.
 @MainActor
 final class EditorWallpaperResources {
@@ -116,7 +116,7 @@ final class EditorWallpaperResources {
         return nil
     }
 
-    /// The effect's constants, combos and texture slots, from its shaders (as the Scene Inspector
+    /// The effect's constants, combos and texture slots, from its shaders (as Scene Edit / Export
     /// reads them: `SceneEffectParameters`), titled with WE's labels.
     func effectSchema(_ file: String) -> EffectSchema? {
         if let cached = schemas[file] { return cached }
@@ -148,32 +148,39 @@ final class EditorWallpaperResources {
         return schema
     }
 
-    /// The samplers of the effect's first pass that WE's editor shows: those not hidden, past the
-    /// layer's own image (`g_Texture0`).
+    /// The samplers WE's editor shows, of every pass that draws a material: those not hidden, past
+    /// the layer's own image (`g_Texture0`) and not fed by the pass's `bind` (render targets).
+    /// Each keeps its pass, so a multi-pass effect's mask (Blur's, in its fourth pass) is set where
+    /// WE's scenes name it.
     private func textureSlots(_ file: String, document: EffectDocument, read: @escaping (String) -> Data?) -> [EffectSchema.TextureSlot] {
         let directory = (file as NSString).deletingLastPathComponent
         let scoped: (String) -> Data? = { path in ["\(directory)/\(path)", path].lazy.compactMap(read).first }
-        guard let materialPath = document.passes.first?.material, let materialData = scoped(materialPath),
-              let material = try? decodeTolerant(MaterialDocument.self, from: materialData),
-              let shader = material.passes.first?.shader else { return [] }
         let loader = ShaderSourceLoader(readFile: scoped)
         var slots: [EffectSchema.TextureSlot] = []
-        for stage in ShaderStage.allCases {
-            guard let source = try? loader.load(shader, stage: stage) else { continue }
-            for sampler in source.samplers {
-                guard let slot = sampler.textureSlot, slot > 0, sampler.annotation["hidden"] as? Bool != true,
-                      !slots.contains(where: { $0.slot == slot }) else { continue }
-                let label = sampler.annotation["label"] as? String ?? sampler.name
-                let mode = (sampler.annotation["mode"] as? String)?.lowercased()
-                let isMask = mode?.contains("mask") == true || label.lowercased().contains("mask")
-                let paintDefault = (sampler.annotation["paintdefaultcolor"] as? String)
-                    .map { $0.split(separator: " ").compactMap { Double($0) } }
-                slots.append(EffectSchema.TextureSlot(slot: slot, title: labels.translation(label) ?? SceneEffectParameters.title(label),
-                                                      defaultTexture: sampler.defaultTexture, isMask: isMask,
-                                                      combo: sampler.combo, paintDefault: paintDefault))
+        for (pass, effectPass) in document.passes.enumerated() {
+            guard let materialPath = effectPass.material, let materialData = scoped(materialPath),
+                  let material = try? decodeTolerant(MaterialDocument.self, from: materialData),
+                  let shader = material.passes.first?.shader else { continue }
+            let bound = Set(effectPass.bind.map(\.index))
+            let materialName = ((materialPath as NSString).lastPathComponent as NSString).deletingPathExtension
+            for stage in ShaderStage.allCases {
+                guard let source = try? loader.load(shader, stage: stage) else { continue }
+                for sampler in source.samplers {
+                    guard let slot = sampler.textureSlot, slot > 0, !bound.contains(slot), sampler.annotation["hidden"] as? Bool != true,
+                          !slots.contains(where: { $0.pass == pass && $0.slot == slot }) else { continue }
+                    let label = sampler.annotation["label"] as? String ?? sampler.name
+                    let mode = (sampler.annotation["mode"] as? String)?.lowercased()
+                    let isMask = mode?.contains("mask") == true || label.lowercased().contains("mask")
+                    let paintDefault = (sampler.annotation["paintdefaultcolor"] as? String)
+                        .map { $0.split(separator: " ").compactMap { Double($0) } }
+                    slots.append(EffectSchema.TextureSlot(slot: slot, title: labels.translation(label) ?? SceneEffectParameters.title(label),
+                                                          defaultTexture: sampler.defaultTexture, isMask: isMask,
+                                                          combo: sampler.combo, paintDefault: paintDefault, mode: mode,
+                                                          pass: pass, materialName: materialName))
+                }
             }
         }
-        return slots.sorted { $0.slot < $1.slot }
+        return slots.sorted { ($0.pass, $0.slot) < ($1.pass, $1.slot) }
     }
 
     // MARK: Files

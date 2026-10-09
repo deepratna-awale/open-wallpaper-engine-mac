@@ -5,13 +5,14 @@ import SwiftUI
 public struct InfoTip: View {
     private let text: String
     @State private var isPresented = false
+    @Environment(\.appAccentColor) private var accentColor
 
     public init(_ text: String) { self.text = text }
 
     public var body: some View {
         Button { isPresented.toggle() } label: {
             Image(systemName: "info.circle")
-                .foregroundStyle(isPresented ? Color.accentColor : .secondary)
+                .foregroundStyle(isPresented ? accentColor : .secondary)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

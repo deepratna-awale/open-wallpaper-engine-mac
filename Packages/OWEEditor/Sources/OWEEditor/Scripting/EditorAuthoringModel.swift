@@ -30,6 +30,8 @@ final class EditorAuthoringModel: ObservableObject {
     let session: SceneEditSession
     let properties: UserPropertyAuthoring
     let console: SceneScriptConsoleFeed?
+    /// Names bound user properties by their labels (`userPropertyTitle`); nil names them by key.
+    let services: WallpaperEditorServices?
     let catalog = SceneScriptAPICatalog.standard
 
     @Published var draft: ScriptDraft?
@@ -38,14 +40,22 @@ final class EditorAuthoringModel: ObservableObject {
     private var syntaxCheck: DispatchWorkItem?
     private var forward: [AnyCancellable] = []
 
-    init(session: SceneEditSession, projectJSON: Data?, console: SceneScriptConsoleFeed?) {
+    init(session: SceneEditSession, projectJSON: Data?, console: SceneScriptConsoleFeed?,
+         services: WallpaperEditorServices? = nil) {
         self.session = session
         properties = UserPropertyAuthoring(session: session, projectJSON: projectJSON)
         self.console = console
+        self.services = services
         forward.append(session.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() })
         if let console {
             forward.append(console.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() })
         }
+    }
+
+    /// The label of the user property `key`, as the property panels show it
+    /// (`WallpaperEditorServices.userPropertyTitle`), including one added in this edit.
+    func userPropertyTitle(_ key: String) -> String {
+        services?.userPropertyTitle(key, properties: session.overlay.authoring?.properties) ?? key
     }
 
     // MARK: Script editor

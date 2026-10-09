@@ -6,7 +6,7 @@ extension Notification.Name {
 }
 
 /// Whether the user is editing wallpaper properties: while a window that edits them is open (the
-/// main window's properties panel, the Scene Inspector). Changes apply by their bindings' class
+/// main window's properties panel, Scene Edit / Export). Changes apply by their bindings' class
 /// either way (`SceneBindingUpdate`); when the last window closes, each scene that took a change
 /// meanwhile rebuilds once, off the main thread, to what a fresh load draws (the reconcile).
 /// Owned by `WallpaperServices`; main thread.

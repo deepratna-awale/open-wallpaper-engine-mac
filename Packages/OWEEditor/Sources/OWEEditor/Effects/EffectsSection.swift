@@ -327,7 +327,7 @@ struct EffectParametersView: View {
     // MARK: Textures
 
     @ViewBuilder private func textureRow(_ slot: EffectSchema.TextureSlot) -> some View {
-        let current = session.effectTexture(slot.slot, effect: effect.key, of: layer.id)
+        let current = session.effectTexture(slot.slot, pass: slot.pass, effect: effect.key, of: layer.id)
         LabeledContent(slot.title) {
             HStack(spacing: 6) {
                 TextureThumbnail(path: current, services: services)
@@ -359,7 +359,7 @@ struct EffectParametersView: View {
     }
 
     private func setTexture(_ slot: EffectSchema.TextureSlot, _ path: String?) {
-        session.setEffectTexture(path, slot: slot.slot, effect: effect.key, of: layer.id, combo: slot.combo,
+        session.setEffectTexture(path, slot: slot.slot, pass: slot.pass, effect: effect.key, of: layer.id, combo: slot.combo,
                                  actionName: slot.isMask ? L("Change Mask") : L("Change Texture"))
     }
 

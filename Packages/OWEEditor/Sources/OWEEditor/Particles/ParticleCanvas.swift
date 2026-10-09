@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import OWEInspectorKit
 import OWESceneEditing
 
 /// A press on the canvas that grabbed a particle system's handle.
@@ -86,6 +87,7 @@ enum ParticleCanvasInteraction {
 
 /// Draws the particle handles over the live canvas.
 struct ParticleCanvasOverlay: View {
+    @Environment(\.appAccentColor) private var accentColor
     @ObservedObject var services: ParticleEditorServices
     @ObservedObject var model: ParticleEditingModel
     @ObservedObject var session: SceneEditSession
@@ -107,14 +109,14 @@ struct ParticleCanvasOverlay: View {
                 let size: CGFloat = isSelected ? 14 : 10
                 let ring = Path(ellipseIn: CGRect(x: origin.x - size / 2, y: origin.y - size / 2, width: size, height: size))
                 context.fill(ring, with: .color(.black.opacity(0.35)))
-                context.stroke(ring, with: .color(isSelected ? .accentColor : .white.opacity(0.8)),
+                context.stroke(ring, with: .color(isSelected ? accentColor : .white.opacity(0.8)),
                                style: StrokeStyle(lineWidth: isSelected ? 2 : 1.25, dash: session.isLocked(layer) ? [3, 2] : []))
                 var cross = Path()
                 cross.move(to: CGPoint(x: origin.x - size, y: origin.y))
                 cross.addLine(to: CGPoint(x: origin.x + size, y: origin.y))
                 cross.move(to: CGPoint(x: origin.x, y: origin.y - size))
                 cross.addLine(to: CGPoint(x: origin.x, y: origin.y + size))
-                context.stroke(cross, with: .color(isSelected ? .accentColor : .white.opacity(0.6)), lineWidth: 1)
+                context.stroke(cross, with: .color(isSelected ? accentColor : .white.opacity(0.6)), lineWidth: 1)
             }
             guard model.showsControlPoints, let selected, session.outline.layer(selected)?.kind == .particle else { return }
             let origin = CGPoint(viewport.canvasPoint(model.origin(of: selected)))

@@ -2,14 +2,19 @@ import Foundation
 
 /// The system preference values for a colour under the user's settings.
 public enum ThemePlan {
-    /// The values to store. `currentIconTheme` is the stored icon style, whose light/dark variant a
-    /// tinted style keeps. Empty without a colour or with nothing on: everything is restored.
+    /// The values to store; a key mapped to nil is removed (Multicolor's `AppleAccentColor`).
+    /// `currentIconTheme` is the stored icon style, whose light/dark variant a tinted style keeps.
+    /// Empty without a colour or with nothing on: everything is restored.
     public static func preferences(for color: ThemeColor?, settings: ThemingSettings,
-                                   currentIconTheme: PreferenceValue?) -> [SystemPreferenceKey: PreferenceValue] {
+                                   currentIconTheme: PreferenceValue?) -> [SystemPreferenceKey: PreferenceValue?] {
         guard let color, settings.wantsPreferences else { return [:] }
-        var values: [SystemPreferenceKey: PreferenceValue] = [:]
+        var values: [SystemPreferenceKey: PreferenceValue?] = [:]
         if settings.accentColor {
-            values[.accentColor] = .integer(AccentPalette.nearest(to: color).rawValue)
+            switch settings.systemAccent {
+            case .nearestApple: values[.accentColor] = .some(.integer(AccentPalette.nearest(to: color).rawValue))
+            case .multicolor: values[.accentColor] = .some(nil)
+            }
+            // The highlight takes a custom colour, so it is the colour in both choices.
             values[.highlightColor] = .string(HighlightColor.preferenceValue(for: color))
         }
         if settings.tintedIcons {

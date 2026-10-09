@@ -1,3 +1,4 @@
+import OWEInspectorKit
 import SwiftUI
 
 /// The Android device combo box's search: every word of the query has to match the maker and
@@ -72,6 +73,7 @@ struct AndroidDeviceComboBox: View {
 }
 
 private struct AndroidDeviceComboBoxList: View {
+    @Environment(\.appAccentColor) private var accentColor
     let selection: AndroidDevice?
     @Binding var query: String
     let onChoose: (AndroidDevice?) -> Void
@@ -155,7 +157,7 @@ private struct AndroidDeviceComboBoxList: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .background(RoundedRectangle(cornerRadius: 6).fill(device == selection ? Color.accentColor.opacity(0.15) : .clear))
+        .background(RoundedRectangle(cornerRadius: 6).fill(device == selection ? accentColor.opacity(0.15) : .clear))
     }
 
     private func checkmark(_ on: Bool) -> some View {

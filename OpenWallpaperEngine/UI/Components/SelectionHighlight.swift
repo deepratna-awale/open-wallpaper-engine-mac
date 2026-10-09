@@ -4,15 +4,20 @@
 //
 
 import AppKit
+import OWETheming
 import SwiftUI
 
 /// Redraws its observers when the system accent colour changes, so a selection drawn in the
-/// accent never stays in the old colour.
+/// accent never stays in the old colour. It also holds Theming's tint of this process's windows
+/// (`themeTint`), which `AppAccentTint` applies at each window's root.
 final class SystemAccentColor: ObservableObject {
     static let shared = SystemAccentColor()
 
     /// Bumped on each change; the colour itself is read from `controlAccentColor` when drawn.
     @Published private(set) var revision = 0
+    /// Theming's exact colour for Open Wallpaper Engine's own controls, selection and links
+    /// (`ThemingSettings.appTint`); nil follows the system accent. Set by `ThemeTintSync`.
+    @Published var themeTint: ThemeColor?
     private let center: NotificationCenter
     private let distributedCenter: NotificationCenter
     private var tokens: [NSObjectProtocol] = []
@@ -42,7 +47,7 @@ final class SystemAccentColor: ObservableObject {
 }
 
 /// The one selection indicator of a tile: an accent stroke inside the tile's rounded shape over a
-/// faint accent tint. It never uses the highlight colour.
+/// faint accent tint, in Theming's tint when it has one. It never uses the highlight colour.
 struct SelectionHighlight: ViewModifier {
     var isSelected: Bool
     var cornerRadius: CGFloat
@@ -51,7 +56,7 @@ struct SelectionHighlight: ViewModifier {
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-        let color = Color(nsColor: .controlAccentColor)
+        let color = accent.themeTint.map(Color.init(themeColor:)) ?? Color(nsColor: .controlAccentColor)
         content
             .overlay {
                 if isSelected {

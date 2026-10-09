@@ -110,7 +110,7 @@ enum PerceptualCompare {
     enum ChangeKind {
         /// Culling, flattening, fusion, memoryless targets, exact target size.
         case losslessInIntent
-        /// Half-res blur, half precision, BC7, MetalFX.
+        /// Half-res blur, half precision, BC7, render scale.
         case lossy
     }
 

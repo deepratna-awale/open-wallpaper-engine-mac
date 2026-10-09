@@ -4313,7 +4313,7 @@
       }
     },
     "A higher quality, more expensive blur. Prefer it for large radii where the fast blur shows banding." : {
-      "comment" : "Scene Editor tooltip for the blurprecise effect",
+      "comment" : "Scene Edit / Export tooltip for the blurprecise effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -4596,7 +4596,7 @@
       }
     },
     "A placeholder that does nothing. Authors use it to reserve a slot in the effect stack." : {
-      "comment" : "Scene Editor tooltip for the empty effect",
+      "comment" : "Scene Edit / Export tooltip for the empty effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -4881,7 +4881,7 @@
       }
     },
     "A video has no layers to adjust." : {
-      "comment" : "Scene Editor (Live): the export modes' Layer Adjustments panel for a video wallpaper",
+      "comment" : "Scene Edit / Export: the export modes' Layer Adjustments panel for a video wallpaper",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -7331,7 +7331,7 @@
       }
     },
     "Additive" : {
-      "comment" : "Scene Editor: material blending that adds the layer's colour to the scene",
+      "comment" : "Scene Edit / Export: material blending that adds the layer's colour to the scene",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -7520,7 +7520,7 @@
       }
     },
     "Adds a rising flame distortion." : {
-      "comment" : "Scene Editor tooltip for the fire effect",
+      "comment" : "Scene Edit / Export tooltip for the fire effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -7615,7 +7615,7 @@
       }
     },
     "Adds depth-aware fog that thickens toward the bottom of the scene." : {
-      "comment" : "Scene Editor tooltip for the volumetricfog effect",
+      "comment" : "Scene Edit / Export tooltip for the volumetricfog effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -7710,7 +7710,7 @@
       }
     },
     "Adds directional beams of light across the layer." : {
-      "comment" : "Scene Editor tooltip for the lightshafts effect",
+      "comment" : "Scene Edit / Export tooltip for the lightshafts effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -7805,7 +7805,7 @@
       }
     },
     "Adds expanding ripples across the surface." : {
-      "comment" : "Scene Editor tooltip for the waterripple effect",
+      "comment" : "Scene Edit / Export tooltip for the waterripple effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -7900,7 +7900,7 @@
       }
     },
     "Adds moving film grain. Keep the amount low or it swamps darker scenes." : {
-      "comment" : "Scene Editor tooltip for the filmgrain effect",
+      "comment" : "Scene Edit / Export tooltip for the filmgrain effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -7995,7 +7995,7 @@
       }
     },
     "Adds scaling with depth so near parts grow as they shift, rather than just sliding." : {
-      "comment" : "Scene Editor tooltip for the depthparallax effect's perspective parameter",
+      "comment" : "Scene Edit / Export tooltip for the depthparallax effect's perspective parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -8090,7 +8090,7 @@
       }
     },
     "Adds tape distortion, colour bleed and scanlines." : {
-      "comment" : "Scene Editor tooltip for the vhs effect",
+      "comment" : "Scene Edit / Export tooltip for the vhs effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -8373,7 +8373,7 @@
       }
     },
     "Adjusts %@." : {
-      "comment" : "Scene Editor tooltip for an effect parameter; %@ is its name",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter; %@ is its name",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -10539,7 +10539,7 @@
       }
     },
     "Alpha to Coverage" : {
-      "comment" : "Scene Editor: material blending that turns the layer's alpha into multisample coverage (graphics term)",
+      "comment" : "Scene Edit / Export: material blending that turns the layer's alpha into multisample coverage (graphics term)",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -11388,7 +11388,7 @@
       }
     },
     "Android Export" : {
-      "comment" : "Scene Editor (Live): the mode that exports a .mpkg for Wallpaper Engine's Android app",
+      "comment" : "Scene Edit / Export: the mode that exports a .mpkg for Wallpaper Engine's Android app",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -12901,7 +12901,7 @@
       }
     },
     "Applies the %@ effect to this layer." : {
-      "comment" : "Scene Editor tooltip for an effect without a description; %@ is its file name",
+      "comment" : "Scene Edit / Export tooltip for an effect without a description; %@ is its file name",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -16672,7 +16672,7 @@
       }
     },
     "Bends the image as if seen through rippled glass." : {
-      "comment" : "Scene Editor tooltip for the refraction effect",
+      "comment" : "Scene Edit / Export tooltip for the refraction effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -17146,7 +17146,7 @@
       }
     },
     "Blending" : {
-      "comment" : "Scene Editor: picker for how a layer's material blends into the scene (normal, translucent, additive, alpha to coverage)",
+      "comment" : "Scene Edit / Export: picker for how a layer's material blends into the scene (normal, translucent, additive, alpha to coverage)",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -17619,7 +17619,7 @@
       }
     },
     "Blue component of the bar colour." : {
-      "comment" : "Scene Editor tooltip for the audiobars effect's blue parameter",
+      "comment" : "Scene Edit / Export tooltip for the audiobars effect's blue parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -17809,7 +17809,7 @@
       }
     },
     "Blurs outward from a centre point, giving a zoom or speed streak look." : {
-      "comment" : "Scene Editor tooltip for the blurradial effect",
+      "comment" : "Scene Edit / Export tooltip for the blurradial effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -18283,7 +18283,7 @@
       }
     },
     "Brightness of the halo around each bar." : {
-      "comment" : "Scene Editor tooltip for the audiobars effect's glow parameter",
+      "comment" : "Scene Edit / Export tooltip for the audiobars effect's glow parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -18378,7 +18378,7 @@
       }
     },
     "Brightness of the light rays." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like ray_intensity",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like ray_intensity",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -18473,7 +18473,7 @@
       }
     },
     "Brightness of the shafts of light." : {
-      "comment" : "Scene Editor tooltip for the godrays effect's rayintensity parameter",
+      "comment" : "Scene Edit / Export tooltip for the godrays effect's rayintensity parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -18568,7 +18568,7 @@
       }
     },
     "Brightness of the shafts." : {
-      "comment" : "Scene Editor tooltip for the lightshafts effect's colorwintensity parameter",
+      "comment" : "Scene Edit / Export tooltip for the lightshafts effect's colorwintensity parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -19700,7 +19700,7 @@
       }
     },
     "Bulges the image outward from a centre point like a fisheye lens." : {
-      "comment" : "Scene Editor tooltip for the fisheye effect",
+      "comment" : "Scene Edit / Export tooltip for the fisheye effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -21129,7 +21129,7 @@
       }
     },
     "Casts light shafts from a bright source through the scene." : {
-      "comment" : "Scene Editor tooltip for the godrays effect",
+      "comment" : "Scene Edit / Export tooltip for the godrays effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -26792,7 +26792,7 @@
       }
     },
     "Colour richness. 0 is greyscale, 1 is unchanged." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like saturation",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like saturation",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -26887,7 +26887,7 @@
       }
     },
     "Colour used by this effect." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like color",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like color",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -33213,7 +33213,7 @@
       }
     },
     "Density of dropouts and noise specks." : {
-      "comment" : "Scene Editor tooltip for the vhs effect's artifacts parameter",
+      "comment" : "Scene Edit / Export tooltip for the vhs effect's artifacts parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -33402,7 +33402,7 @@
       }
     },
     "Depth where the fog reaches full density. Keep it above Fog Near or the gradient inverts." : {
-      "comment" : "Scene Editor tooltip for the volumetricfog effect's far parameter",
+      "comment" : "Scene Edit / Export tooltip for the volumetricfog effect's far parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -33497,7 +33497,7 @@
       }
     },
     "Depth where the fog starts. Nothing closer than this is fogged." : {
-      "comment" : "Scene Editor tooltip for the volumetricfog effect's near parameter",
+      "comment" : "Scene Edit / Export tooltip for the volumetricfog effect's near parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -34251,7 +34251,7 @@
       }
     },
     "Direction the effect travels, in degrees." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like direction",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like direction",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -34346,7 +34346,7 @@
       }
     },
     "Direction the waves travel, in degrees." : {
-      "comment" : "Scene Editor tooltip for the waterwaves effect's direction parameter",
+      "comment" : "Scene Edit / Export tooltip for the waterwaves effect's direction parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -35384,7 +35384,7 @@
       }
     },
     "Distorts the layer with rolling waves." : {
-      "comment" : "Scene Editor tooltip for the waterwaves effect",
+      "comment" : "Scene Edit / Export tooltip for the waterwaves effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -35762,96 +35762,96 @@
         }
       }
     },
-    "Do you want to undo every Scene Editor (Live) edit of “%@”? Its properties are kept." : {
+    "Do you want to undo every scene edit of “%@”? Its properties are kept." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "هل تريد التراجع عن كل تعديلات محرر المشهد (مباشر) على «%@»؟ يتم الاحتفاظ بخصائصها."
+            "value" : "هل تريد التراجع عن كل تعديلات المشهد على «%@»؟ يتم الاحتفاظ بخصائصها."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Möchten Sie alle Änderungen an „%@“ im Szeneneditor (Live) widerrufen? Die Eigenschaften bleiben erhalten."
+            "value" : "Möchten Sie alle Szenenänderungen an „%@“ widerrufen? Die Eigenschaften bleiben erhalten."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "¿Quieres deshacer todos los cambios del Editor de escenas (en vivo) en «%@»? Sus propiedades se conservan."
+            "value" : "¿Quieres deshacer todos los cambios de la escena en «%@»? Sus propiedades se conservan."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voulez-vous annuler toutes les modifications de « %@ » faites dans l’Éditeur de scène (en direct) ? Ses propriétés sont conservées."
+            "value" : "Voulez-vous annuler toutes les modifications de la scène de « %@ » ? Ses propriétés sont conservées."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "क्या आप “%@” में सीन एडिटर (लाइव) के हर बदलाव को पहले जैसा करना चाहते हैं? इसकी प्रॉपर्टी बनी रहेंगी।"
+            "value" : "क्या आप “%@” में सीन के हर बदलाव को पहले जैसा करना चाहते हैं? इसकी प्रॉपर्टी बनी रहेंगी।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vuoi annullare ogni modifica a “%@” fatta nell’Editor scena (live)? Le sue proprietà vengono mantenute."
+            "value" : "Vuoi annullare ogni modifica alla scena di “%@”? Le sue proprietà vengono mantenute."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「%@」へのシーンエディタ（ライブ）での編集をすべて取り消しますか？プロパティは保持されます。"
+            "value" : "「%@」のシーンの編集をすべて取り消しますか？プロパティは保持されます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "‘%@’에 대한 장면 편집기(라이브) 편집 내용을 모두 취소하시겠습니까? 속성은 유지됩니다."
+            "value" : "‘%@’의 장면 편집 내용을 모두 취소하시겠습니까? 속성은 유지됩니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Czy chcesz cofnąć wszystkie zmiany „%@” wprowadzone w Edytorze sceny (na żywo)? Jej właściwości zostaną zachowane."
+            "value" : "Czy chcesz cofnąć wszystkie zmiany sceny „%@”? Jej właściwości zostaną zachowane."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deseja desfazer todas as edições do Editor de Cena (ao vivo) em “%@”? As propriedades são mantidas."
+            "value" : "Deseja desfazer todas as edições da cena em “%@”? As propriedades são mantidas."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Отменить все изменения «%@», сделанные в Редакторе сцены (вживую)? Свойства сохранятся."
+            "value" : "Отменить все изменения сцены «%@»? Свойства сохранятся."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“%@” için tüm Sahne Düzenleyicisi (Canlı) düzenlemelerini geri almak istiyor musunuz? Özellikleri korunur."
+            "value" : "“%@” için tüm sahne düzenlemelerini geri almak istiyor musunuz? Özellikleri korunur."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Скасувати всі зміни «%@», зроблені в Редакторі сцени (наживо)? Властивості збережуться."
+            "value" : "Скасувати всі зміни сцени «%@»? Властивості збережуться."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "要撤销场景编辑器（实时）对“%@”所做的所有编辑吗？其属性会保留。"
+            "value" : "要撤销对“%@”所做的所有场景编辑吗？其属性会保留。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "要還原場景編輯器（即時）對「%@」所做的所有編輯嗎？其屬性會保留。"
+            "value" : "要還原對「%@」所做的所有場景編輯嗎？其屬性會保留。"
           }
         }
       }
@@ -40482,7 +40482,7 @@
       }
     },
     "Draws bars that rise and fall with the audio you are hearing. Needs Screen & System Audio Recording permission." : {
-      "comment" : "Scene Editor tooltip for the audiobars effect",
+      "comment" : "Scene Edit / Export tooltip for the audiobars effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -40572,6 +40572,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "繪製隨你聽到的音訊起伏的長條。需要「螢幕與系統錄音」權限。"
+          }
+        }
+      }
+    },
+    "Draws scenes at the render scale and scales them up smoothly to full size: fewer pixels to draw, a softer picture." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يرسم المشاهد بمقياس العرض ثم يكبّرها بسلاسة إلى الحجم الكامل: بكسلات أقل للرسم، وصورة أنعم."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeichnet Szenen in der Renderskalierung und skaliert sie weich auf volle Größe hoch: weniger Pixel zu zeichnen, ein weicheres Bild."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dibuja las escenas a la escala de renderizado y las amplía de forma suave al tamaño completo: menos píxeles que dibujar, una imagen más suave."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dessine les scènes à l’échelle de rendu et les agrandit de façon lissée à leur taille complète : moins de pixels à dessiner, une image plus douce."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन को रेंडर स्केल पर ड्रॉ करता है और उन्हें सहज रूप से पूर्ण आकार तक बढ़ाता है: ड्रॉ करने के लिए कम पिक्सेल, नरम तस्वीर।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disegna le scene alla scala di rendering e le ingrandisce in modo uniforme alla dimensione piena: meno pixel da disegnare, un’immagine più morbida."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーンをレンダリングスケールで描画し、フルサイズに滑らかに拡大します。描画するピクセルが減り、画像は柔らかくなります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면을 렌더링 배율로 그린 다음 전체 크기로 부드럽게 확대합니다. 그릴 픽셀이 줄고 화면은 더 부드러워집니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rysuje sceny w skali renderowania i płynnie skaluje je do pełnego rozmiaru: mniej pikseli do narysowania, bardziej miękki obraz."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desenha as cenas na escala de renderização e as amplia de forma suave para o tamanho completo: menos pixels para desenhar, uma imagem mais suave."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рисует сцены в масштабе отрисовки и сглаженно увеличивает их до полного размера: меньше пикселей для отрисовки, мягче изображение."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahneleri işleme ölçeğinde çizer ve tam boyuta yumuşak biçimde büyütür: çizilecek daha az piksel, daha yumuşak bir görüntü."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Малює сцени в масштабі відтворення і згладжено збільшує їх до повного розміру: менше пікселів для малювання, мʼякше зображення."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以渲染比例绘制场景，并平滑地放大到完整大小：需要绘制的像素更少，画面更柔和。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以渲染比例繪製場景，並平滑地放大到完整大小：需要繪製的像素更少，畫面更柔和。"
           }
         }
       }
@@ -40766,7 +40860,7 @@
       }
     },
     "Drifts a cloud texture across the layer." : {
-      "comment" : "Scene Editor tooltip for the cloudmotion effect",
+      "comment" : "Scene Edit / Export tooltip for the cloudmotion effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -42562,7 +42656,7 @@
       }
     },
     "Effect Stack" : {
-      "comment" : "Scene Editor: the effects applied to a video",
+      "comment" : "Scene Edit / Export: the effects applied to a video",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -44352,6 +44446,196 @@
         }
       }
     },
+    "Exact Wallpaper Color" : {
+      "comment" : "Settings › Theming: Open Wallpaper Engine's own controls use the wallpaper's color itself",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اللون الدقيق للخلفية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exakte Farbe des Hintergrundbilds"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color exacto del fondo de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couleur exacte du fond d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर का सटीक रंग"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colore esatto dello sfondo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙の正確なカラー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면의 정확한 색상"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokładny kolor tapety"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cor Exata da Imagem de Fundo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Точный цвет обоев"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar Kâğıdının Tam Rengi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Точний колір шпалер"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "墙纸的准确颜色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景圖片的準確顏色"
+          }
+        }
+      }
+    },
+    "Exact Wallpaper Color gives the buttons, switches, sliders, selections and links of every Open Wallpaper Engine window the wallpaper's color itself, which the system accent can't show. Follow System Accent uses the same accent as other apps." : {
+      "comment" : "Settings › Theming: info tip of the Open Wallpaper Engine's Accent picker",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يمنح «اللون الدقيق للخلفية» الأزرار والمفاتيح وأشرطة التمرير والتحديدات والروابط في كل نوافذ Open Wallpaper Engine لون الخلفية نفسه، الذي لا يستطيع لون تمييز النظام عرضه. ويستخدم «اتباع لون تمييز النظام» لون التمييز نفسه الذي تستخدمه التطبيقات الأخرى."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Exakte Farbe des Hintergrundbilds“ gibt den Tasten, Schaltern, Schiebereglern, Auswahlen und Links jedes Fensters von Open Wallpaper Engine die Farbe des Hintergrundbilds selbst, die der Systemakzent nicht darstellen kann. „Systemakzent verwenden“ nutzt denselben Akzent wie andere Apps."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Color exacto del fondo de pantalla» da a los botones, interruptores, reguladores, selecciones y enlaces de todas las ventanas de Open Wallpaper Engine el color del propio fondo de pantalla, que el acento del sistema no puede mostrar. «Seguir el acento del sistema» usa el mismo acento que las demás apps."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« Couleur exacte du fond d’écran » donne aux boutons, interrupteurs, curseurs, sélections et liens de chaque fenêtre d’Open Wallpaper Engine la couleur même du fond d’écran, que l’accentuation du système ne peut pas afficher. « Suivre l’accentuation du système » utilise la même accentuation que les autres apps."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“वॉलपेपर का सटीक रंग” Open Wallpaper Engine की हर विंडो के बटन, स्विच, स्लाइडर, चयन और लिंक को वॉलपेपर का अपना रंग देता है, जिसे सिस्टम एक्सेंट नहीं दिखा सकता। “सिस्टम एक्सेंट का पालन करें” अन्य ऐप जैसा ही एक्सेंट इस्तेमाल करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Colore esatto dello sfondo” dà a pulsanti, interruttori, cursori, selezioni e link di ogni finestra di Open Wallpaper Engine il colore stesso dello sfondo, che l’accento di sistema non può mostrare. “Segui l’accento di sistema” usa lo stesso accento delle altre app."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「壁紙の正確なカラー」では、Open Wallpaper Engineのすべてのウインドウのボタン、スイッチ、スライダ、選択範囲、リンクに、システムのアクセントでは表示できない壁紙の色そのものを使います。「システムのアクセントに従う」はほかのアプリと同じアクセントを使います。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "'배경화면의 정확한 색상'은 모든 Open Wallpaper Engine 윈도우의 버튼, 스위치, 슬라이더, 선택 항목 및 링크에 시스템 강조 색상으로는 표시할 수 없는 배경화면의 색상 그대로를 사용합니다. '시스템 강조 색상 따르기'는 다른 앱과 같은 강조 색상을 사용합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Dokładny kolor tapety” nadaje przyciskom, przełącznikom, suwakom, zaznaczeniom i linkom każdego okna Open Wallpaper Engine sam kolor tapety, którego akcent systemu nie może pokazać. „Jak w systemie” używa tego samego akcentu co inne aplikacje."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Cor Exata da Imagem de Fundo” dá aos botões, interruptores, controles deslizantes, seleções e links de todas as janelas do Open Wallpaper Engine a própria cor da imagem de fundo, que o destaque do sistema não consegue mostrar. “Seguir o Destaque do Sistema” usa o mesmo destaque que os outros apps."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Точный цвет обоев» окрашивает кнопки, переключатели, бегунки, выделение и ссылки во всех окнах Open Wallpaper Engine в сам цвет обоев, который системный акцент показать не может. «Как в системе» использует тот же акцент, что и другие приложения."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Duvar Kâğıdının Tam Rengi”, Open Wallpaper Engine’in tüm pencerelerindeki düğmelere, anahtarlara, sürgülere, seçimlere ve bağlantılara sistem vurgusunun gösteremediği duvar kâğıdı rengini verir. “Sistem Vurgusunu İzle” diğer uygulamalarla aynı vurguyu kullanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Точний колір шпалер» надає кнопкам, перемикачам, повзункам, виділенню і посиланням у всіх вікнах Open Wallpaper Engine сам колір шпалер, якого системний акцент показати не може. «Як у системі» використовує той самий акцент, що й інші програми."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“墙纸的准确颜色”让 Open Wallpaper Engine 所有窗口中的按钮、开关、滑块、所选内容和链接使用墙纸本身的颜色，这是系统强调色无法显示的。“跟随系统强调色”使用与其他 App 相同的强调色。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「背景圖片的準確顏色」讓 Open Wallpaper Engine 所有視窗中的按鈕、開關、滑桿、所選項目和連結使用背景圖片本身的顏色，這是系統強調色無法顯示的。「跟隨系統強調色」使用與其他 App 相同的強調色。"
+          }
+        }
+      }
+    },
     "Expires in %@" : {
       "comment" : "Send over Wi-Fi sheet: countdown, e.g. 14:32",
       "localizations" : {
@@ -45675,7 +45959,7 @@
       }
     },
     "Fades the layer in or out." : {
-      "comment" : "Scene Editor tooltip for the opacity effect",
+      "comment" : "Scene Edit / Export tooltip for the opacity effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -45770,7 +46054,7 @@
       }
     },
     "Fades the layer into a gradient, usually to darken edges or tint one side." : {
-      "comment" : "Scene Editor tooltip for the blendgradient effect",
+      "comment" : "Scene Edit / Export tooltip for the blendgradient effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -48697,6 +48981,101 @@
         }
       }
     },
+    "Follow System Accent" : {
+      "comment" : "Settings › Theming: Open Wallpaper Engine's own controls use the system accent color, like other apps",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اتباع لون تمييز النظام"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Systemakzent verwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir el acento del sistema"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suivre l’accentuation du système"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सिस्टम एक्सेंट का पालन करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segui l’accento di sistema"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "システムのアクセントに従う"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시스템 강조 색상 따르기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jak w systemie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir o Destaque do Sistema"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Как в системе"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sistem Vurgusunu İzle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Як у системі"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随系统强调色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟隨系統強調色"
+          }
+        }
+      }
+    },
     "Font" : {
       "comment" : "Wallpaper setting added by the app",
       "localizations" : {
@@ -51344,7 +51723,7 @@
       }
     },
     "Green component of the bar colour." : {
-      "comment" : "Scene Editor tooltip for the audiobars effect's green parameter",
+      "comment" : "Scene Edit / Export tooltip for the audiobars effect's green parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -51825,7 +52204,7 @@
       }
     },
     "Height of the torn band. Small values give a thin tracking line, large values disturb most of the frame." : {
-      "comment" : "Scene Editor tooltip for the vhs effect's distortionwidth parameter",
+      "comment" : "Scene Edit / Export tooltip for the vhs effect's distortionwidth parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -51920,7 +52299,7 @@
       }
     },
     "Height of the waves — how far pixels are displaced." : {
-      "comment" : "Scene Editor tooltip for the waterwaves effect's strength parameter",
+      "comment" : "Scene Edit / Export tooltip for the waterwaves effect's strength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -52015,7 +52394,7 @@
       }
     },
     "Height the bars keep in silence, so they do not vanish between beats." : {
-      "comment" : "Scene Editor tooltip for the audiobars effect's minimum parameter",
+      "comment" : "Scene Edit / Export tooltip for the audiobars effect's minimum parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -52863,7 +53242,7 @@
       }
     },
     "Hide this object; “%@” sets it again when you show it" : {
-      "comment" : "Scene Editor: help of the switch of an object a user property shows; the property's key",
+      "comment" : "Scene Edit / Export: help of the switch of an object a user property shows; the property's key",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -53900,7 +54279,7 @@
       }
     },
     "Highest audio frequency band that drives this. Lower it to ignore hiss and cymbals." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like frequencymax",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like frequencymax",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -53995,7 +54374,7 @@
       }
     },
     "Highest frequency band that drives the shift. Lower it to ignore cymbals and hiss." : {
-      "comment" : "Scene Editor tooltip for the hueshift effect's frequencymax parameter",
+      "comment" : "Scene Edit / Export tooltip for the hueshift effect's frequencymax parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -54090,7 +54469,7 @@
       }
     },
     "Highest frequency band that drives the warp." : {
-      "comment" : "Scene Editor tooltip for the hyperdrive effect's frequencymax parameter",
+      "comment" : "Scene Edit / Export tooltip for the hyperdrive effect's frequencymax parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -54374,7 +54753,7 @@
       }
     },
     "Horizontal scroll speed. Negative scrolls left, 0 stops. Only looks seamless on tiling textures." : {
-      "comment" : "Scene Editor tooltip for the scroll effect's speedx parameter",
+      "comment" : "Scene Edit / Export tooltip for the scroll effect's speedx parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -54564,7 +54943,7 @@
       }
     },
     "Horizontal speed. Negative values move the other way, 0 stops." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like speedx",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like speedx",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -54847,7 +55226,7 @@
       }
     },
     "How bright a pixel must be before it casts rays. Lower it to catch more of the image, raise it to keep rays on highlights only." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like ray_threshold",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like ray_threshold",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -54942,7 +55321,7 @@
       }
     },
     "How bright a pixel must be before it glows." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like bloomthreshold",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like bloomthreshold",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -55037,7 +55416,7 @@
       }
     },
     "How bright a pixel must be to emit rays. Lower it if nothing glows; raise it if the whole image smears." : {
-      "comment" : "Scene Editor tooltip for the godrays effect's raythreshold parameter",
+      "comment" : "Scene Edit / Export tooltip for the godrays effect's raythreshold parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -55132,7 +55511,7 @@
       }
     },
     "How close a pixel must be to the key colour to be removed. Raise it until the background is gone, then stop — going further eats the subject." : {
-      "comment" : "Scene Editor tooltip for the colorkey effect's tolerance parameter",
+      "comment" : "Scene Edit / Export tooltip for the colorkey effect's tolerance parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -55227,7 +55606,7 @@
       }
     },
     "How closely a pixel must match before it is affected. Raise it until the whole target area is covered, then stop." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like tolerance",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like tolerance",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -55322,7 +55701,7 @@
       }
     },
     "How far colour bleeds sideways, like worn tape." : {
-      "comment" : "Scene Editor tooltip for the vhs effect's chromatic parameter",
+      "comment" : "Scene Edit / Export tooltip for the vhs effect's chromatic parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -55417,7 +55796,7 @@
       }
     },
     "How far the bars react to volume. Raise it for quiet music, lower it if the bars keep hitting the ceiling." : {
-      "comment" : "Scene Editor tooltip for the audiobars effect's strength parameter",
+      "comment" : "Scene Edit / Export tooltip for the audiobars effect's strength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -55512,7 +55891,7 @@
       }
     },
     "How far the blur reaches on each axis." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like blur_scale",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like blur_scale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -55607,7 +55986,7 @@
       }
     },
     "How far the hue rotates at full volume." : {
-      "comment" : "Scene Editor tooltip for the hueshift effect's audioamount parameter",
+      "comment" : "Scene Edit / Export tooltip for the hueshift effect's audioamount parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -55702,7 +56081,7 @@
       }
     },
     "How far the image shifts horizontally with the pointer. Needs a depth map; without one nothing moves." : {
-      "comment" : "Scene Editor tooltip for the depthparallax effect's depthx parameter",
+      "comment" : "Scene Edit / Export tooltip for the depthparallax effect's depthx parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -55797,7 +56176,7 @@
       }
     },
     "How far the image shifts vertically with the pointer." : {
-      "comment" : "Scene Editor tooltip for the depthparallax effect's depthy parameter",
+      "comment" : "Scene Edit / Export tooltip for the depthparallax effect's depthy parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -55892,7 +56271,7 @@
       }
     },
     "How far the image stretches into streaks." : {
-      "comment" : "Scene Editor tooltip for the hyperdrive effect's strength parameter",
+      "comment" : "Scene Edit / Export tooltip for the hyperdrive effect's strength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -55987,7 +56366,7 @@
       }
     },
     "How far the layer moves each shake, in pixels." : {
-      "comment" : "Scene Editor tooltip for the shake effect's strength parameter",
+      "comment" : "Scene Edit / Export tooltip for the shake effect's strength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -56082,7 +56461,7 @@
       }
     },
     "How far the layer slides against the pointer. Give background layers more than foreground ones to sell the depth." : {
-      "comment" : "Scene Editor tooltip for the parallax effect's amount parameter",
+      "comment" : "Scene Edit / Export tooltip for the parallax effect's amount parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -56177,7 +56556,7 @@
       }
     },
     "How far the leaves bend." : {
-      "comment" : "Scene Editor tooltip for the foliagesway effect's strength parameter",
+      "comment" : "Scene Edit / Export tooltip for the foliagesway effect's strength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -56272,7 +56651,7 @@
       }
     },
     "How far the rays reach from their source." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like ray_length",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like ray_length",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -56367,7 +56746,7 @@
       }
     },
     "How far the red and blue channels separate. Keep it small — past a few pixels it stops reading as a lens and starts looking broken." : {
-      "comment" : "Scene Editor tooltip for the chromaticaberration effect's strength parameter",
+      "comment" : "Scene Edit / Export tooltip for the chromaticaberration effect's strength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -56462,7 +56841,7 @@
       }
     },
     "How far the shafts reach from their source." : {
-      "comment" : "Scene Editor tooltip for the godrays effect's raylength parameter",
+      "comment" : "Scene Edit / Export tooltip for the godrays effect's raylength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -56557,7 +56936,7 @@
       }
     },
     "How far the surface is displaced by each ripple." : {
-      "comment" : "Scene Editor tooltip for the waterripple effect's ripplestrength parameter",
+      "comment" : "Scene Edit / Export tooltip for the waterripple effect's ripplestrength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -56652,7 +57031,7 @@
       }
     },
     "How far the tracking glitch tears the image sideways." : {
-      "comment" : "Scene Editor tooltip for the vhs effect's distortionstrength parameter",
+      "comment" : "Scene Edit / Export tooltip for the vhs effect's distortionstrength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -56747,7 +57126,7 @@
       }
     },
     "How fast the fog moves across the scene." : {
-      "comment" : "Scene Editor tooltip for the volumetricfog effect's drift parameter",
+      "comment" : "Scene Edit / Export tooltip for the volumetricfog effect's drift parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -56842,7 +57221,7 @@
       }
     },
     "How fast the ripples spread." : {
-      "comment" : "Scene Editor tooltip for the waterripple effect's animationspeed parameter",
+      "comment" : "Scene Edit / Export tooltip for the waterripple effect's animationspeed parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -56937,7 +57316,7 @@
       }
     },
     "How fast the shafts drift." : {
-      "comment" : "Scene Editor tooltip for the lightshafts effect's rayspeed parameter",
+      "comment" : "Scene Edit / Export tooltip for the lightshafts effect's rayspeed parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -57032,7 +57411,7 @@
       }
     },
     "How fast the streaks travel outward." : {
-      "comment" : "Scene Editor tooltip for the hyperdrive effect's speed parameter",
+      "comment" : "Scene Edit / Export tooltip for the hyperdrive effect's speed parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -57127,7 +57506,7 @@
       }
     },
     "How fast the sway travels through the foliage." : {
-      "comment" : "Scene Editor tooltip for the foliagesway effect's speeduv parameter",
+      "comment" : "Scene Edit / Export tooltip for the foliagesway effect's speeduv parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -57222,7 +57601,7 @@
       }
     },
     "How fast the waves travel." : {
-      "comment" : "Scene Editor tooltip for the waterwaves effect's speed parameter",
+      "comment" : "Scene Edit / Export tooltip for the waterwaves effect's speed parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -57317,7 +57696,7 @@
       }
     },
     "How gradually the distortion ramps in and out. Low values snap, high values glide." : {
-      "comment" : "Scene Editor tooltip for the nitro effect's smoothness parameter",
+      "comment" : "Scene Edit / Export tooltip for the nitro effect's smoothness parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -57412,7 +57791,7 @@
       }
     },
     "How gradually the effect blends at its boundary." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like smoothness",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like smoothness",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -57507,7 +57886,7 @@
       }
     },
     "How hard the lens bends the image. Negative values pinch inward instead of bulging out." : {
-      "comment" : "Scene Editor tooltip for the fisheye effect's scale parameter",
+      "comment" : "Scene Edit / Export tooltip for the fisheye effect's scale parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -57601,102 +57980,102 @@
         }
       }
     },
-    "How large scenes render before MetalFX upscales them, per side. Lower is faster and softer." : {
+    "How large scenes render before they are scaled up, per side. Lower is faster and softer." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "الحجم الذي تُعرض به المشاهد، لكل ضلع، قبل أن يكبّرها MetalFX. القيمة الأقل أسرع وأنعم."
+            "value" : "الحجم الذي تُعرض به المشاهد، لكل ضلع، قبل تكبيرها. القيمة الأقل أسرع وأنعم."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wie groß Szenen pro Seite gerendert werden, bevor MetalFX sie hochskaliert. Kleiner ist schneller und weicher."
+            "value" : "Wie groß Szenen pro Seite gerendert werden, bevor sie hochskaliert werden. Kleiner ist schneller und weicher."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tamaño al que se renderizan las escenas, por lado, antes de que MetalFX las escale. Menos es más rápido y más suave."
+            "value" : "Tamaño al que se renderizan las escenas, por lado, antes de escalarlas. Menos es más rápido y más suave."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Taille de rendu des scènes, par côté, avant que MetalFX ne les agrandisse. Plus bas est plus rapide et plus flou."
+            "value" : "Taille de rendu des scènes, par côté, avant leur agrandissement. Plus bas est plus rapide et plus flou."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MetalFX से बड़ा करने से पहले सीन हर किनारे पर कितने बड़े रेंडर हों। कम मान तेज़ और नरम होता है।"
+            "value" : "बड़ा किए जाने से पहले सीन हर किनारे पर कितने बड़े रेंडर हों। कम मान तेज़ और नरम होता है।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dimensione, per lato, a cui vengono renderizzate le scene prima che MetalFX le ingrandisca. Più bassa è più veloce e più morbida."
+            "value" : "Dimensione, per lato, a cui vengono renderizzate le scene prima di essere ingrandite. Più bassa è più veloce e più morbida."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MetalFX でアップスケールする前にシーンをレンダリングする大きさ（各辺）です。低いほど速く、柔らかくなります。"
+            "value" : "拡大する前にシーンをレンダリングする大きさ（各辺）です。低いほど速く、柔らかくなります。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MetalFX가 업스케일하기 전에 장면을 렌더링하는 크기(변 기준)입니다. 낮을수록 빠르고 부드러워집니다."
+            "value" : "확대하기 전에 장면을 렌더링하는 크기(변 기준)입니다. 낮을수록 빠르고 부드러워집니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rozmiar, w jakim sceny są renderowane (na bok) przed skalowaniem przez MetalFX. Mniej to szybciej i miękciej."
+            "value" : "Rozmiar, w jakim sceny są renderowane (na bok) przed skalowaniem. Mniej to szybciej i miękciej."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O tamanho, por lado, em que as cenas são renderizadas antes de o MetalFX ampliá-las. Menor é mais rápido e mais suave."
+            "value" : "O tamanho, por lado, em que as cenas são renderizadas antes de serem ampliadas. Menor é mais rápido e mais suave."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Размер отрисовки сцен по каждой стороне до масштабирования MetalFX. Меньше — быстрее и мягче."
+            "value" : "Размер отрисовки сцен по каждой стороне до масштабирования. Меньше — быстрее и мягче."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sahnelerin MetalFX ile büyütülmeden önce kenar başına işlendiği boyut. Düşük değer daha hızlı ve daha yumuşaktır."
+            "value" : "Sahnelerin büyütülmeden önce kenar başına işlendiği boyut. Düşük değer daha hızlı ve daha yumuşaktır."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Розмір відтворення сцен за кожною стороною до масштабування MetalFX. Менше — швидше й мʼякше."
+            "value" : "Розмір відтворення сцен за кожною стороною до масштабування. Менше — швидше й мʼякше."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MetalFX 放大之前场景渲染的尺寸（按边长）。越低越快，画面越柔和。"
+            "value" : "放大之前场景渲染的尺寸（按边长）。越低越快，画面越柔和。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MetalFX 放大之前場景渲染的尺寸（按邊長）。越低越快，畫面越柔和。"
+            "value" : "放大之前場景渲染的尺寸（按邊長）。越低越快，畫面越柔和。"
           }
         }
       }
     },
     "How many bars are drawn across the layer." : {
-      "comment" : "Scene Editor tooltip for the audiobars effect's bars parameter",
+      "comment" : "Scene Edit / Export tooltip for the audiobars effect's bars parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -57791,7 +58170,7 @@
       }
     },
     "How many times the texture tiles horizontally." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like repeatx",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like repeatx",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -57886,7 +58265,7 @@
       }
     },
     "How many times the texture tiles vertically." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like repeaty",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like repeaty",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -57981,7 +58360,7 @@
       }
     },
     "How much bar movement is averaged over time. High values glide, 0 reacts instantly and jitters." : {
-      "comment" : "Scene Editor tooltip for the audiobars effect's smoothing parameter",
+      "comment" : "Scene Edit / Export tooltip for the audiobars effect's smoothing parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -58076,7 +58455,7 @@
       }
     },
     "How much of the area the effect fills." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like density",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like density",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -58171,7 +58550,7 @@
       }
     },
     "How much of the layer the lens covers. Small values bulge only the centre." : {
-      "comment" : "Scene Editor tooltip for the fisheye effect's size parameter",
+      "comment" : "Scene Edit / Export tooltip for the fisheye effect's size parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -58360,7 +58739,7 @@
       }
     },
     "How much the warp reacts to volume." : {
-      "comment" : "Scene Editor tooltip for the hyperdrive effect's audioamount parameter",
+      "comment" : "Scene Edit / Export tooltip for the hyperdrive effect's audioamount parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -58455,7 +58834,7 @@
       }
     },
     "How often the pattern repeats over time." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like frequency",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like frequency",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -58550,7 +58929,7 @@
       }
     },
     "How often the tracking glitch rolls through." : {
-      "comment" : "Scene Editor tooltip for the vhs effect's distortionspeed parameter",
+      "comment" : "Scene Edit / Export tooltip for the vhs effect's distortionspeed parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -58645,7 +59024,7 @@
       }
     },
     "How quickly each shake settles. High values give a short sharp jolt, low values keep it wobbling." : {
-      "comment" : "Scene Editor tooltip for the shake effect's friction parameter",
+      "comment" : "Scene Edit / Export tooltip for the shake effect's friction parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -58740,7 +59119,7 @@
       }
     },
     "How quickly the effect animates. 0 freezes it." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like speed",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like speed",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -58835,7 +59214,7 @@
       }
     },
     "How quickly the effect fades away from the centre." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like centerfalloff",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like centerfalloff",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -58930,7 +59309,7 @@
       }
     },
     "How quickly the motion settles. High values stop it sharply, low values let it keep moving." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like friction",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like friction",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -59025,7 +59404,7 @@
       }
     },
     "How quickly the split fades toward the centre. High values keep the centre sharp and push the fringing to the edges, like a real lens." : {
-      "comment" : "Scene Editor tooltip for the chromaticaberration effect's centerfalloff parameter",
+      "comment" : "Scene Edit / Export tooltip for the chromaticaberration effect's centerfalloff parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -59120,7 +59499,7 @@
       }
     },
     "How rapidly it shakes." : {
-      "comment" : "Scene Editor tooltip for the shake effect's speed parameter",
+      "comment" : "Scene Edit / Export tooltip for the shake effect's speed parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -59215,7 +59594,7 @@
       }
     },
     "How strongly audio drives this parameter." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like audioamount",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like audioamount",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -59310,7 +59689,7 @@
       }
     },
     "How strongly noise distorts the result. Small values keep it organic; large values look grainy." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like noise_amount",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like noise_amount",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -59405,7 +59784,7 @@
       }
     },
     "How strongly the effect is applied." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like intensity\nScene Editor tooltip for an effect parameter named like strength",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like intensity\nScene Edit / Export tooltip for an effect parameter named like strength",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -59500,7 +59879,7 @@
       }
     },
     "How strongly the effect is applied. 0 disables it." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like amount",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like amount",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -59595,7 +59974,7 @@
       }
     },
     "How strongly the tint colour is mixed in. 0 leaves the layer untouched, 1 replaces it with the colour." : {
-      "comment" : "Scene Editor tooltip for the tint effect's alpha parameter",
+      "comment" : "Scene Edit / Export tooltip for the tint effect's alpha parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -59785,7 +60164,7 @@
       }
     },
     "How thick the fog is. Small changes read strongly — start low." : {
-      "comment" : "Scene Editor tooltip for the volumetricfog effect's density parameter",
+      "comment" : "Scene Edit / Export tooltip for the volumetricfog effect's density parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -59880,7 +60259,7 @@
       }
     },
     "How wide the shafts spread." : {
-      "comment" : "Scene Editor tooltip for the lightshafts effect's rayradius parameter",
+      "comment" : "Scene Edit / Export tooltip for the lightshafts effect's rayradius parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -60070,7 +60449,7 @@
       }
     },
     "Hue rotation applied even without audio." : {
-      "comment" : "Scene Editor tooltip for the hueshift effect's intensity parameter",
+      "comment" : "Scene Edit / Export tooltip for the hueshift effect's intensity parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -60826,7 +61205,7 @@
       }
     },
     "Image" : {
-      "comment" : "Scene Editor: the kind of a scene object\nWallpaper type: an image added by URL",
+      "comment" : "Scene Edit / Export: the kind of a scene object\nWallpaper type: an image added by URL",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -60921,7 +61300,7 @@
       }
     },
     "Image %lld" : {
-      "comment" : "Scene Editor: an image layer without a name",
+      "comment" : "Scene Edit / Export: an image layer without a name",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -64700,7 +65079,7 @@
       }
     },
     "Jitters the layer. Masked so only part of the image moves." : {
-      "comment" : "Scene Editor tooltip for the shake effect",
+      "comment" : "Scene Edit / Export tooltip for the shake effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -65174,7 +65553,7 @@
       }
     },
     "Keeps only the outlines in the image." : {
-      "comment" : "Scene Editor tooltip for the edgedetection effect",
+      "comment" : "Scene Edit / Export tooltip for the edgedetection effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -66587,7 +66966,7 @@
       }
     },
     "Layer Adjustments Panel" : {
-      "comment" : "Scene Editor (Live) toolbar: shows or hides the export modes' right-hand Layer Adjustments panel",
+      "comment" : "Scene Edit / Export toolbar: shows or hides the export modes' right-hand Layer Adjustments panel",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -66870,7 +67249,7 @@
       }
     },
     "Leans the layer to one side." : {
-      "comment" : "Scene Editor tooltip for the skew effect",
+      "comment" : "Scene Edit / Export tooltip for the skew effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -70927,7 +71306,7 @@
       }
     },
     "Lowest audio frequency band that drives this. Raise it to ignore bass." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like frequencymin",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like frequencymin",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -71022,7 +71401,7 @@
       }
     },
     "Lowest frequency band that drives the shift. Raise it to ignore bass." : {
-      "comment" : "Scene Editor tooltip for the hueshift effect's frequencymin parameter",
+      "comment" : "Scene Edit / Export tooltip for the hueshift effect's frequencymin parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -71117,7 +71496,7 @@
       }
     },
     "Lowest frequency band that drives the warp. Raise it to ignore bass." : {
-      "comment" : "Scene Editor tooltip for the hyperdrive effect's frequencymin parameter",
+      "comment" : "Scene Edit / Export tooltip for the hyperdrive effect's frequencymin parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -72264,7 +72643,7 @@
       }
     },
     "Makes one colour transparent, like a green screen. Raise Tolerance until the colour disappears, then raise Fuzziness to soften the edge." : {
-      "comment" : "Scene Editor tooltip for the colorkey effect",
+      "comment" : "Scene Edit / Export tooltip for the colorkey effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -74149,194 +74528,6 @@
         }
       }
     },
-    "MetalFX" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX"
-          }
-        }
-      }
-    },
-    "MetalFX draws the scene at the render scale and scales it up to full size, for less work. Where MetalFX isn't available, or for HDR, the frame is scaled smoothly instead." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يرسم MetalFX المشهد بمقياس العرض ثم يكبّره إلى الحجم الكامل، لتقليل العمل. وحيث لا يتوفر MetalFX، أو مع HDR، يُكبَّر الإطار بسلاسة بدلًا من ذلك."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX zeichnet die Szene in der Renderskalierung und skaliert sie auf volle Größe hoch, für weniger Aufwand. Wo MetalFX nicht verfügbar ist oder bei HDR wird das Bild stattdessen weich skaliert."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX dibuja la escena a la escala de renderizado y la amplía al tamaño completo, con menos trabajo. Donde MetalFX no está disponible, o con HDR, el fotograma se escala de forma suave."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX dessine la scène à l’échelle de rendu et l’agrandit à sa taille complète, pour moins de travail. Là où MetalFX n’est pas disponible, ou en HDR, l’image est agrandie de façon lissée."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX दृश्य को रेंडर स्केल पर ड्रॉ करता है और उसे पूर्ण आकार तक बढ़ाता है, जिससे काम कम होता है। जहाँ MetalFX उपलब्ध नहीं है, या HDR में, फ़्रेम को सहज रूप से बढ़ाया जाता है।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX disegna la scena alla scala di rendering e la ingrandisce alla dimensione piena, con meno lavoro. Dove MetalFX non è disponibile, o in HDR, il fotogramma viene ingrandito in modo uniforme."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFXはシーンをレンダリングスケールで描画してフルサイズに拡大し、負荷を減らします。MetalFXを使用できない場合やHDRでは、フレームを滑らかに拡大します。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX는 장면을 렌더링 배율로 그린 다음 전체 크기로 확대하여 작업량을 줄입니다. MetalFX를 사용할 수 없거나 HDR에서는 프레임을 부드럽게 확대합니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX rysuje scenę w skali renderowania i skaluje ją do pełnego rozmiaru, przy mniejszym nakładzie pracy. Gdy MetalFX jest niedostępny lub przy HDR, klatka jest skalowana płynnie."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O MetalFX desenha a cena na escala de renderização e a amplia para o tamanho completo, com menos trabalho. Onde o MetalFX não está disponível, ou em HDR, o quadro é ampliado de forma suave."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX рисует сцену в масштабе отрисовки и увеличивает её до полного размера, снижая нагрузку. Если MetalFX недоступен или при HDR кадр увеличивается сглаженно."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX sahneyi işleme ölçeğinde çizer ve daha az iş için tam boyuta büyütür. MetalFX kullanılamadığında veya HDR’de kare yumuşak biçimde büyütülür."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX малює сцену в масштабі відтворення і збільшує її до повного розміру, зменшуючи навантаження. Якщо MetalFX недоступний або для HDR, кадр збільшується згладжено."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX 以渲染比例绘制场景并放大到完整大小，以减少工作量。在 MetalFX 不可用或使用 HDR 时，会平滑地放大画面。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MetalFX 以渲染比例繪製場景並放大到完整大小，以減少工作量。在無法使用 MetalFX 或使用 HDR 時，會平滑地放大畫面。"
-          }
-        }
-      }
-    },
     "Middle" : {
       "localizations" : {
         "ar" : {
@@ -74432,7 +74623,7 @@
       }
     },
     "Midtone brightness curve. 1 leaves the layer unchanged." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like gamma",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like gamma",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -74621,7 +74812,7 @@
       }
     },
     "Mirrors the layer below itself, as if on water or glass." : {
-      "comment" : "Scene Editor tooltip for the reflection effect",
+      "comment" : "Scene Edit / Export tooltip for the reflection effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -74999,7 +75190,7 @@
       }
     },
     "Mixes a second image into the layer using a Photoshop-style blend mode." : {
-      "comment" : "Scene Editor tooltip for the blend effect",
+      "comment" : "Scene Edit / Export tooltip for the blend effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -78111,7 +78302,7 @@
       }
     },
     "Moves the layer against the pointer so it appears to sit at a different depth." : {
-      "comment" : "Scene Editor tooltip for the parallax effect",
+      "comment" : "Scene Edit / Export tooltip for the parallax effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -78394,8 +78585,103 @@
         }
       }
     },
+    "Multicolor" : {
+      "comment" : "Settings › Theming: the system accent is macOS's Multicolor, so each app uses its own accent",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "متعدد الألوان"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mehrfarbig"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multicolor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multicolore"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बहुरंगी"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multicolore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "マルチカラー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "멀티 컬러"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wielobarwny"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multicolorido"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Многоцветный"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çok Renkli"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Багатоколірний"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多色"
+          }
+        }
+      }
+    },
     "Multiplies the layer by a colour." : {
-      "comment" : "Scene Editor tooltip for the tint effect",
+      "comment" : "Scene Edit / Export tooltip for the tint effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -79619,6 +79905,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "自然"
+          }
+        }
+      }
+    },
+    "Nearest Apple Accent" : {
+      "comment" : "Settings › Theming: the system accent becomes the closest of macOS's eight accent colors",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أقرب لون تمييز من Apple"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächster Apple-Akzent"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acento de Apple más cercano"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accentuation Apple la plus proche"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "निकटतम Apple एक्सेंट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accento Apple più vicino"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最も近いAppleのアクセント"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "가장 가까운 Apple 강조 색상"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najbliższy akcent Apple"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destaque da Apple Mais Próximo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ближайший акцент Apple"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En Yakın Apple Vurgusu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найближчий акцент Apple"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最接近的 Apple 强调色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最接近的 Apple 強調色"
           }
         }
       }
@@ -83969,101 +84350,6 @@
         }
       }
     },
-    "Not used at 1920×1200 or smaller, where drawing natively is faster." : {
-      "comment" : "Note under Settings › Performance › Upscaling: it is skipped for small scene targets",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لا تُستخدم عند 1920×1200 أو أصغر، حيث يكون الرسم بالدقة الأصلية أسرع."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wird bei 1920×1200 oder kleiner nicht verwendet, da natives Zeichnen dort schneller ist."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No se usa a 1920×1200 o menos, donde dibujar a resolución nativa es más rápido."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Non utilisée en 1920×1200 ou moins, où dessiner en résolution native est plus rapide."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1920×1200 या उससे छोटे पर उपयोग नहीं होता, जहाँ नेटिव रूप से बनाना ज़्यादा तेज़ है।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Non usato a 1920×1200 o meno, dove disegnare in modo nativo è più veloce."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1920×1200 以下では使用されません。このサイズではネイティブで描画するほうが高速です。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1920×1200 이하에서는 사용되지 않습니다. 이 크기에서는 네이티브로 그리는 것이 더 빠릅니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nieużywane przy 1920×1200 lub mniej, gdzie rysowanie natywne jest szybsze."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Não é usado em 1920×1200 ou menos, onde desenhar de forma nativa é mais rápido."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не используется при 1920×1200 и меньше: там рисовать в исходном разрешении быстрее."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1920×1200 veya daha küçük boyutlarda kullanılmaz; orada doğal çözünürlükte çizmek daha hızlıdır."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не використовується за 1920×1200 і менше: там малювати в рідній роздільності швидше."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在 1920×1200 或更小尺寸下不使用，此时直接以原生分辨率绘制更快。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在 1920×1200 或更小尺寸下不使用，此時直接以原生解析度繪製更快。"
-          }
-        }
-      }
-    },
     "Not yet" : {
       "localizations" : {
         "ar" : {
@@ -84441,7 +84727,7 @@
       }
     },
     "Object %lld" : {
-      "comment" : "Scene Editor: a scene object without a name",
+      "comment" : "Scene Edit / Export: a scene object without a name",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -84625,101 +84911,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "物件屬性"
-          }
-        }
-      }
-    },
-    "Off" : {
-      "comment" : "Upscaling: none",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إيقاف"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aus"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Desactivado"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Désactivé"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "बंद"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Disattivato"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "オフ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "끔"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyłączone"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Desativado"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Выкл."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kapalı"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Вимк."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "关闭"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "關閉"
           }
         }
       }
@@ -84914,7 +85105,7 @@
       }
     },
     "Offsets the start of the animation, useful for de-syncing two copies of an effect." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like phase",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like phase",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -85009,7 +85200,7 @@
       }
     },
     "Offsets, scales or rotates the layer." : {
-      "comment" : "Scene Editor tooltip for the transform effect",
+      "comment" : "Scene Edit / Export tooltip for the transform effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -86332,7 +86523,7 @@
       }
     },
     "Opacity left behind where the colour is keyed out. 0 makes matched pixels fully transparent." : {
-      "comment" : "Scene Editor tooltip for the colorkey effect's alpha parameter",
+      "comment" : "Scene Edit / Export tooltip for the colorkey effect's alpha parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -88220,6 +88411,101 @@
         }
       }
     },
+    "Open Wallpaper Engine's Accent" : {
+      "comment" : "Settings › Theming: picker label, the accent color of Open Wallpaper Engine's own windows",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لون التمييز في Open Wallpaper Engine"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akzent von Open Wallpaper Engine"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acento de Open Wallpaper Engine"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accentuation d’Open Wallpaper Engine"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine का एक्सेंट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accento di Open Wallpaper Engine"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engineのアクセント"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 강조 색상"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akcent Open Wallpaper Engine"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destaque do Open Wallpaper Engine"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Акцент Open Wallpaper Engine"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine Vurgusu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Акцент Open Wallpaper Engine"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 的强调色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 的強調色"
+          }
+        }
+      }
+    },
     "Open Wallpaper…" : {
       "localizations" : {
         "ar" : {
@@ -88881,7 +89167,7 @@
       }
     },
     "Open the export settings and export: device, crop, clip, quality and properties" : {
-      "comment" : "Scene Editor (Live) toolbar: help for the iPhone & iPad Export mode's Export Settings button",
+      "comment" : "Scene Edit / Export toolbar: help for the iPhone & iPad Export mode's Export Settings button",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -88976,7 +89262,7 @@
       }
     },
     "Open the export settings and export: device, crop, output and properties" : {
-      "comment" : "Scene Editor (Live) toolbar: help for the Android Export mode's Export Settings button",
+      "comment" : "Scene Edit / Export toolbar: help for the Android Export mode's Export Settings button",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -89635,7 +89921,7 @@
       }
     },
     "Opens or closes a circular mask over the layer." : {
-      "comment" : "Scene Editor tooltip for the iris effect",
+      "comment" : "Scene Edit / Export tooltip for the iris effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -91049,7 +91335,7 @@
       }
     },
     "Other" : {
-      "comment" : "Resolution filter group for the remaining resolutions\nScene Editor: the kind of a scene object that is neither an image nor particles",
+      "comment" : "Resolution filter group for the remaining resolutions\nScene Edit / Export: the kind of a scene object that is neither an image nor particles",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -91711,7 +91997,7 @@
       }
     },
     "Overall amount of tape degradation." : {
-      "comment" : "Scene Editor tooltip for the vhs effect's strength parameter",
+      "comment" : "Scene Edit / Export tooltip for the vhs effect's strength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -91806,7 +92092,7 @@
       }
     },
     "Overall lightness. 1 leaves the layer unchanged." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like brightness",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like brightness",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -91901,7 +92187,7 @@
       }
     },
     "Overlays procedural clouds." : {
-      "comment" : "Scene Editor tooltip for the clouds effect",
+      "comment" : "Scene Edit / Export tooltip for the clouds effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -92374,7 +92660,7 @@
       }
     },
     "Particle %lld" : {
-      "comment" : "Scene Editor: a particle system without a name",
+      "comment" : "Scene Edit / Export: a particle system without a name",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -92563,7 +92849,7 @@
       }
     },
     "Particle System" : {
-      "comment" : "Scene Editor: the kind of a scene object",
+      "comment" : "Scene Edit / Export: the kind of a scene object",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -97889,7 +98175,7 @@
       }
     },
     "Point the effect radiates from, as a fraction of the layer (0.5, 0.5 is the middle)." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like center",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like center",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -101570,7 +101856,7 @@
       }
     },
     "Projects rippling underwater light patterns." : {
-      "comment" : "Scene Editor tooltip for the watercaustics effect",
+      "comment" : "Scene Edit / Export tooltip for the watercaustics effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -101854,7 +102140,7 @@
       }
     },
     "Pulses a speed-boost distortion." : {
-      "comment" : "Scene Editor tooltip for the nitro effect",
+      "comment" : "Scene Edit / Export tooltip for the nitro effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -101949,7 +102235,7 @@
       }
     },
     "Pushes the image along as if it were flowing water." : {
-      "comment" : "Scene Editor tooltip for the waterflow effect",
+      "comment" : "Scene Edit / Export tooltip for the waterflow effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -103460,7 +103746,7 @@
       }
     },
     "Radius of the spinning disc, as a fraction of the layer." : {
-      "comment" : "Scene Editor tooltip for the spin effect's size parameter",
+      "comment" : "Scene Edit / Export tooltip for the spin effect's size parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -105818,7 +106104,7 @@
       }
     },
     "Red component of the bar colour." : {
-      "comment" : "Scene Editor tooltip for the audiobars effect's red parameter",
+      "comment" : "Scene Edit / Export tooltip for the audiobars effect's red parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -111616,96 +111902,96 @@
         }
       }
     },
-    "Reset Scene Editor (Live) Edits" : {
+    "Reset Scene Edits" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "إعادة تعيين تعديلات محرر المشهد (مباشر)"
+            "value" : "إعادة تعيين تعديلات المشهد"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Änderungen im Szeneneditor (Live) zurücksetzen"
+            "value" : "Szenenänderungen zurücksetzen"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Restablecer cambios del Editor de escenas (en vivo)"
+            "value" : "Restablecer cambios de la escena"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Réinitialiser les modifications de l’Éditeur de scène (en direct)"
+            "value" : "Réinitialiser les modifications de la scène"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "सीन एडिटर (लाइव) के बदलाव रीसेट करें"
+            "value" : "सीन के बदलाव रीसेट करें"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ripristina modifiche dell’Editor scena (live)"
+            "value" : "Ripristina modifiche della scena"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "シーンエディタ（ライブ）の編集をリセット"
+            "value" : "シーンの編集をリセット"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "장면 편집기(라이브) 편집 내용 재설정"
+            "value" : "장면 편집 내용 재설정"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Resetuj zmiany z Edytora sceny (na żywo)"
+            "value" : "Resetuj zmiany sceny"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Redefinir Edições do Editor de Cena (ao vivo)"
+            "value" : "Redefinir Edições da Cena"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Сбросить изменения Редактора сцены (вживую)"
+            "value" : "Сбросить изменения сцены"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sahne Düzenleyicisi (Canlı) Düzenlemelerini Sıfırla"
+            "value" : "Sahne Düzenlemelerini Sıfırla"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Скинути зміни Редактора сцени (наживо)"
+            "value" : "Скинути зміни сцени"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重置场景编辑器（实时）编辑"
+            "value" : "重置场景编辑"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重置場景編輯器（即時）編輯"
+            "value" : "重置場景編輯"
           }
         }
       }
@@ -113500,7 +113786,7 @@
       }
     },
     "Reveals a second image through a moving window." : {
-      "comment" : "Scene Editor tooltip for the xray effect",
+      "comment" : "Scene Edit / Export tooltip for the xray effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -113973,7 +114259,7 @@
       }
     },
     "Rocks the layer back and forth around its base." : {
-      "comment" : "Scene Editor tooltip for the swing effect",
+      "comment" : "Scene Edit / Export tooltip for the swing effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -114351,7 +114637,7 @@
       }
     },
     "Rotates a circular region of the layer." : {
-      "comment" : "Scene Editor tooltip for the spin effect",
+      "comment" : "Scene Edit / Export tooltip for the spin effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -114446,7 +114732,7 @@
       }
     },
     "Rotates every colour around the colour wheel." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like hue\nScene Editor tooltip for the hueshift effect",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like hue\nScene Edit / Export tooltip for the hueshift effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -114541,7 +114827,7 @@
       }
     },
     "Rotation applied by the effect, in degrees." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like angle",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like angle",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -115014,7 +115300,7 @@
       }
     },
     "Runs a soft highlight across the layer." : {
-      "comment" : "Scene Editor tooltip for the shimmer effect",
+      "comment" : "Scene Edit / Export tooltip for the shimmer effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -116336,97 +116622,97 @@
         }
       }
     },
-    "Saves the current properties and Scene Editor (Live) edits. A preset with the same name is replaced." : {
+    "Saves the current properties and scene edits. A preset with the same name is replaced." : {
       "comment" : "Message of the prompt that names a new wallpaper preset",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يحفظ الخصائص الحالية وتعديلات محرر المشهد (مباشر). يتم استبدال الإعداد المسبق الذي يحمل الاسم نفسه."
+            "value" : "يحفظ الخصائص الحالية وتعديلات المشهد. يتم استبدال الإعداد المسبق الذي يحمل الاسم نفسه."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sichert die aktuellen Eigenschaften und Änderungen im Szeneneditor (Live). Eine Voreinstellung mit demselben Namen wird ersetzt."
+            "value" : "Sichert die aktuellen Eigenschaften und Szenenänderungen. Eine Voreinstellung mit demselben Namen wird ersetzt."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Guarda las propiedades actuales y los cambios del Editor de escenas (en vivo). Se reemplaza el preajuste con el mismo nombre."
+            "value" : "Guarda las propiedades actuales y los cambios de la escena. Se reemplaza el preajuste con el mismo nombre."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enregistre les propriétés actuelles et les modifications de l’Éditeur de scène (en direct). Un préréglage du même nom est remplacé."
+            "value" : "Enregistre les propriétés actuelles et les modifications de la scène. Un préréglage du même nom est remplacé."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "मौजूदा प्रॉपर्टी और सीन एडिटर (लाइव) के बदलाव सेव करता है। इसी नाम का प्रीसेट बदल दिया जाता है।"
+            "value" : "मौजूदा प्रॉपर्टी और सीन के बदलाव सेव करता है। इसी नाम का प्रीसेट बदल दिया जाता है।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salva le proprietà attuali e le modifiche dell’Editor scena (live). Una preimpostazione con lo stesso nome viene sostituita."
+            "value" : "Salva le proprietà attuali e le modifiche alla scena. Una preimpostazione con lo stesso nome viene sostituita."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "現在のプロパティとシーンエディタ（ライブ）での編集を保存します。同じ名前のプリセットは置き換えられます。"
+            "value" : "現在のプロパティとシーンの編集を保存します。同じ名前のプリセットは置き換えられます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "현재 속성과 장면 편집기(라이브) 편집 내용을 저장합니다. 같은 이름의 사전 설정은 대치됩니다."
+            "value" : "현재 속성과 장면 편집 내용을 저장합니다. 같은 이름의 사전 설정은 대치됩니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zachowuje bieżące właściwości i zmiany z Edytora sceny (na żywo). Ustawienie o tej samej nazwie zostanie zastąpione."
+            "value" : "Zachowuje bieżące właściwości i zmiany sceny. Ustawienie o tej samej nazwie zostanie zastąpione."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salva as propriedades atuais e as edições do Editor de Cena (ao vivo). Um preajuste com o mesmo nome é substituído."
+            "value" : "Salva as propriedades atuais e as edições da cena. Um preajuste com o mesmo nome é substituído."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Сохраняет текущие свойства и изменения Редактора сцены (вживую). Пресет с тем же названием заменяется."
+            "value" : "Сохраняет текущие свойства и изменения сцены. Пресет с тем же названием заменяется."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Geçerli özellikleri ve Sahne Düzenleyicisi (Canlı) düzenlemelerini kaydeder. Aynı adlı hazır ayar değiştirilir."
+            "value" : "Geçerli özellikleri ve sahne düzenlemelerini kaydeder. Aynı adlı hazır ayar değiştirilir."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Зберігає поточні властивості й зміни Редактора сцени (наживо). Пресет із такою самою назвою замінюється."
+            "value" : "Зберігає поточні властивості й зміни сцени. Пресет із такою самою назвою замінюється."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "存储当前属性和场景编辑器（实时）的编辑。同名的预设会被替换。"
+            "value" : "存储当前属性和场景编辑。同名的预设会被替换。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "儲存目前屬性和場景編輯器（即時）的編輯。同名的預設會被取代。"
+            "value" : "儲存目前屬性和場景編輯。同名的預設會被取代。"
           }
         }
       }
@@ -116620,7 +116906,7 @@
       }
     },
     "Scales the layer in time with the audio." : {
-      "comment" : "Scene Editor tooltip for the pulse effect",
+      "comment" : "Scene Edit / Export tooltip for the pulse effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -116905,7 +117191,7 @@
       }
     },
     "Scatters sparkles across the layer." : {
-      "comment" : "Scene Editor tooltip for the glitter effect",
+      "comment" : "Scene Edit / Export tooltip for the glitter effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -117284,285 +117570,96 @@
         }
       }
     },
-    "Scene Editor" : {
+    "Scene Edit / Export" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "محرر المشهد"
+            "value" : "تحرير/تصدير المشهد"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Szeneneditor"
+            "value" : "Szene bearbeiten/exportieren"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Editor de escenas"
+            "value" : "Editar/exportar escena"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Éditeur de scène"
+            "value" : "Modifier/exporter la scène"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "सीन एडिटर"
+            "value" : "सीन एडिट/एक्सपोर्ट"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Editor scena"
+            "value" : "Modifica/esporta scena"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "シーンエディタ"
+            "value" : "シーン編集/書き出し"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "장면 편집기"
+            "value" : "장면 편집/내보내기"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Edytor sceny"
+            "value" : "Edycja/eksport sceny"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Editor de Cena"
+            "value" : "Editar/Exportar Cena"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Редактор сцены"
+            "value" : "Правка/экспорт сцены"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sahne Düzenleyicisi"
+            "value" : "Sahne Düzenle/Dışa Aktar"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Редактор сцени"
+            "value" : "Редагування/експорт сцени"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "场景编辑器"
+            "value" : "场景编辑/导出"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "場景編輯器"
-          }
-        }
-      }
-    },
-    "Scene Editor (Live)" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "محرر المشهد (مباشر)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Szeneneditor (Live)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Editor de escenas (en vivo)"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Éditeur de scène (en direct)"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "सीन एडिटर (लाइव)"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Editor scena (live)"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "シーンエディタ（ライブ）"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "장면 편집기(라이브)"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edytor sceny (na żywo)"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Editor de Cena (ao vivo)"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Редактор сцены (вживую)"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sahne Düzenleyicisi (Canlı)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Редактор сцени (наживо)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "场景编辑器（实时）"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "場景編輯器（即時）"
-          }
-        }
-      }
-    },
-    "Scene Editor (Live) edits are reset too." : {
-      "comment" : "Reset confirmation: the Scene Editor (Live)'s edits go as well",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تتم إعادة تعيين تعديلات محرر المشهد (مباشر) أيضًا."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Änderungen im Szeneneditor (Live) werden ebenfalls zurückgesetzt."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Los cambios del Editor de escenas (en vivo) también se restablecen."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les modifications de l’Éditeur de scène (en direct) sont aussi réinitialisées."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "सीन एडिटर (लाइव) के बदलाव भी रीसेट हो जाते हैं।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anche le modifiche dell’Editor scena (live) vengono ripristinate."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "シーンエディタ（ライブ）での編集もリセットされます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "장면 편집기(라이브) 편집 내용도 재설정됩니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zmiany z Edytora sceny (na żywo) również zostaną zresetowane."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "As edições do Editor de Cena (ao vivo) também são redefinidas."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Изменения Редактора сцены (вживую) тоже сбрасываются."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sahne Düzenleyicisi (Canlı) düzenlemeleri de sıfırlanır."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Зміни Редактора сцени (наживо) теж скидаються."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "场景编辑器（实时）的编辑也会被重置。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "場景編輯器（即時）的編輯也會被重置。"
+            "value" : "場景編輯/輸出"
           }
         }
       }
@@ -117939,6 +118036,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法使用場景"
+          }
+        }
+      }
+    },
+    "Scene edits are reset too." : {
+      "comment" : "Reset confirmation: Scene Edit / Export's edits go as well",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتم إعادة تعيين تعديلات المشهد أيضًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szenenänderungen werden ebenfalls zurückgesetzt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los cambios de la escena también se restablecen."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les modifications de la scène sont aussi réinitialisées."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन के बदलाव भी रीसेट हो जाते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anche le modifiche alla scena vengono ripristinate."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーンの編集もリセットされます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면 편집 내용도 재설정됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmiany sceny również zostaną zresetowane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As edições da cena também são redefinidas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменения сцены тоже сбрасываются."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahne düzenlemeleri de sıfırlanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зміни сцени теж скидаються."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "场景编辑也会被重置。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "場景編輯也會被重置。"
           }
         }
       }
@@ -122657,7 +122849,7 @@
       }
     },
     "Sends ripples out from the pointer as it moves." : {
-      "comment" : "Scene Editor tooltip for the cursorripple effect",
+      "comment" : "Scene Edit / Export tooltip for the cursorripple effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -122752,7 +122944,7 @@
       }
     },
     "Separation between lights and darks. 1 leaves the layer unchanged." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like contrast",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like contrast",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -123504,7 +123696,7 @@
           }
         }
       },
-      "comment" : "Context menu: sets the wallpaper as the screen saver (Installed: opens the Scene Editor (Live)'s Screen Saver mode)"
+      "comment" : "Context menu: sets the wallpaper as the screen saver (Installed: opens Scene Edit / Export's Screen Saver mode)"
     },
     "Set as Wallpaper" : {
       "comment" : "Context menu: applies the wallpaper to the selected displays",
@@ -125298,7 +125490,7 @@
       }
     },
     "Shapes the audio response. Above 1 reacts mainly to peaks." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like audioexponent",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like audioexponent",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -125393,7 +125585,7 @@
       }
     },
     "Shapes the response curve. Above 1 emphasises peaks and ignores small values." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like exponent",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like exponent",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -125488,7 +125680,7 @@
       }
     },
     "Shapes the response curve. Above 1 ignores quiet passages and reacts mainly to peaks." : {
-      "comment" : "Scene Editor tooltip for the hueshift effect's audioexponent parameter",
+      "comment" : "Scene Edit / Export tooltip for the hueshift effect's audioexponent parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -125583,7 +125775,7 @@
       }
     },
     "Shapes the response curve. Above 1 reacts mainly to peaks." : {
-      "comment" : "Scene Editor tooltip for the hyperdrive effect's audioexponent parameter",
+      "comment" : "Scene Edit / Export tooltip for the hyperdrive effect's audioexponent parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -125867,7 +126059,7 @@
       }
     },
     "Sharpens local detail without changing overall brightness. High values look crunchy." : {
-      "comment" : "Scene Editor tooltip for the localcontrast effect",
+      "comment" : "Scene Edit / Export tooltip for the localcontrast effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -125962,7 +126154,7 @@
       }
     },
     "Sharpness of the wave crests. 1 is a smooth sine; higher values give peaked, choppier water." : {
-      "comment" : "Scene Editor tooltip for the waterwaves effect's exponent parameter",
+      "comment" : "Scene Edit / Export tooltip for the waterwaves effect's exponent parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -126151,7 +126343,7 @@
       }
     },
     "Shifts parts of the image by a depth map so it looks three-dimensional as the pointer moves." : {
-      "comment" : "Scene Editor tooltip for the depthparallax effect",
+      "comment" : "Scene Edit / Export tooltip for the depthparallax effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -127469,7 +127661,7 @@
       }
     },
     "Show or hide the Layer Adjustments panel" : {
-      "comment" : "Scene Editor (Live) toolbar: help for the export modes' panel toggle",
+      "comment" : "Scene Edit / Export toolbar: help for the export modes' panel toggle",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -128128,7 +128320,7 @@
       }
     },
     "Show this object; “%@” sets it again" : {
-      "comment" : "Scene Editor: help of the switch of an object hidden over the user property that shows it; the property's key",
+      "comment" : "Scene Edit / Export: help of the switch of an object hidden over the user property that shows it; the property's key",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -128977,7 +129169,7 @@
       }
     },
     "Simulated camera exposure. Positive brightens, negative darkens." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like exposure",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like exposure",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -129166,7 +129358,7 @@
       }
     },
     "Size of the affected area." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like size",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like size",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -129261,7 +129453,7 @@
       }
     },
     "Size of the affected region." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like radius",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like radius",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -129356,7 +129548,7 @@
       }
     },
     "Size of the noise pattern. Lower is coarser and blotchier, higher is finer." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like noise_scale",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like noise_scale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -129451,7 +129643,7 @@
       }
     },
     "Size of the pattern relative to the layer." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like scale",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like scale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -129546,7 +129738,7 @@
       }
     },
     "Size of the ripples. Low values give broad swells, high values fine ridges." : {
-      "comment" : "Scene Editor tooltip for the waterripple effect's scale parameter",
+      "comment" : "Scene Edit / Export tooltip for the waterripple effect's scale parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -129641,7 +129833,7 @@
       }
     },
     "Size of the sway pattern. Low values move the whole layer together, high values ripple through it." : {
-      "comment" : "Scene Editor tooltip for the foliagesway effect's scale parameter",
+      "comment" : "Scene Edit / Export tooltip for the foliagesway effect's scale parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -130112,7 +130304,7 @@
       }
     },
     "Slides the texture continuously, useful for tiling backgrounds." : {
-      "comment" : "Scene Editor tooltip for the scroll effect",
+      "comment" : "Scene Edit / Export tooltip for the scroll effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -130396,7 +130588,7 @@
       }
     },
     "Smears the image along its direction of motion." : {
-      "comment" : "Scene Editor tooltip for the motionblur effect",
+      "comment" : "Scene Edit / Export tooltip for the motionblur effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -130585,7 +130777,7 @@
       }
     },
     "Softens the boundary of the affected region." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like feather",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like feather",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -130680,7 +130872,7 @@
       }
     },
     "Softens the layer. This is the cheap blur; use Blur Precise when you need a cleaner result." : {
-      "comment" : "Scene Editor tooltip for the blur effect",
+      "comment" : "Scene Edit / Export tooltip for the blur effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -130775,7 +130967,7 @@
       }
     },
     "Softness of the cut-out edge. Raise it if the keyed edge looks jagged; too high and the subject goes semi-transparent." : {
-      "comment" : "Scene Editor tooltip for the colorkey effect's fuzziness parameter",
+      "comment" : "Scene Edit / Export tooltip for the colorkey effect's fuzziness parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -130870,7 +131062,7 @@
       }
     },
     "Softness of the disc edge. Very small values leave a visible hard circle." : {
-      "comment" : "Scene Editor tooltip for the spin effect's feather parameter",
+      "comment" : "Scene Edit / Export tooltip for the spin effect's feather parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -130965,7 +131157,7 @@
       }
     },
     "Softness of the edge where the effect stops. Raise it to avoid a hard cut." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like fuzziness",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like fuzziness",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -131910,7 +132102,7 @@
       }
     },
     "Spacing between bars, as a fraction of their width." : {
-      "comment" : "Scene Editor tooltip for the audiobars effect's gap parameter",
+      "comment" : "Scene Edit / Export tooltip for the audiobars effect's gap parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -132194,7 +132386,7 @@
       }
     },
     "Splits red and blue channels apart, imitating a cheap camera lens. Subtle values read best." : {
-      "comment" : "Scene Editor tooltip for the chromaticaberration effect",
+      "comment" : "Scene Edit / Export tooltip for the chromaticaberration effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -136541,7 +136733,7 @@
       }
     },
     "Strength of the blend. 0 leaves the layer untouched, 1 applies it fully." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like multiply",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like multiply",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -136636,7 +136828,7 @@
       }
     },
     "Strength of the glow around bright areas." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like bloom",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like bloom",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -136731,7 +136923,7 @@
       }
     },
     "Strength of the speed-boost distortion." : {
-      "comment" : "Scene Editor tooltip for the nitro effect's multiply parameter",
+      "comment" : "Scene Edit / Export tooltip for the nitro effect's multiply parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -137203,7 +137395,7 @@
       }
     },
     "Stretches the image into streaks for a warp-speed look." : {
-      "comment" : "Scene Editor tooltip for the hyperdrive effect",
+      "comment" : "Scene Edit / Export tooltip for the hyperdrive effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -137392,7 +137584,7 @@
       }
     },
     "Sways the layer as if leaves were moving in wind." : {
-      "comment" : "Scene Editor tooltip for the foliagesway effect",
+      "comment" : "Scene Edit / Export tooltip for the foliagesway effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -137487,7 +137679,7 @@
       }
     },
     "Sweeps a bright band across the layer. The mask controls which parts can catch the light." : {
-      "comment" : "Scene Editor tooltip for the shine effect",
+      "comment" : "Scene Edit / Export tooltip for the shine effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -137582,7 +137774,7 @@
       }
     },
     "Swirls the image around a centre point." : {
-      "comment" : "Scene Editor tooltip for the twirl effect",
+      "comment" : "Scene Edit / Export tooltip for the twirl effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -138612,6 +138804,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "與音樂同步"
+          }
+        }
+      }
+    },
+    "System Accent" : {
+      "comment" : "Settings › Theming: picker label, what the accent color of every app becomes",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لون التمييز للنظام"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Systemakzent"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acento del sistema"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accentuation du système"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सिस्टम एक्सेंट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accento di sistema"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "システムのアクセント"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시스템 강조 색상"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akcent systemu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destaque do Sistema"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Акцент системы"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sistem Vurgusu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Акцент системи"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统强调色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系統強調色"
           }
         }
       }
@@ -142399,7 +142686,7 @@
       }
     },
     "The cut-off where the effect starts to apply. Lower catches more of the image, higher restricts it to the strongest pixels." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like threshold",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like threshold",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -150704,7 +150991,7 @@
       }
     },
     "Tilts the layer in 3D space." : {
-      "comment" : "Scene Editor tooltip for the perspective effect",
+      "comment" : "Scene Edit / Export tooltip for the perspective effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -152026,7 +152313,7 @@
       }
     },
     "Translucent" : {
-      "comment" : "Scene Editor: material blending that draws the layer over the scene by its alpha",
+      "comment" : "Scene Edit / Export: material blending that draws the layer over the scene by its alpha",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -152216,7 +152503,7 @@
       }
     },
     "Transparency of the bars." : {
-      "comment" : "Scene Editor tooltip for the audiobars effect's opacity parameter",
+      "comment" : "Scene Edit / Export tooltip for the audiobars effect's opacity parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -152311,7 +152598,7 @@
       }
     },
     "Transparency of the layer. 0 hides it completely, 1 is fully solid." : {
-      "comment" : "Scene Editor tooltip for the opacity effect's alpha parameter",
+      "comment" : "Scene Edit / Export tooltip for the opacity effect's alpha parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -152406,7 +152693,7 @@
       }
     },
     "Transparency. 0 is invisible, 1 is solid." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like alpha\nScene Editor tooltip for an effect parameter named like opacity",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like alpha\nScene Edit / Export tooltip for an effect parameter named like opacity",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -154199,190 +154486,96 @@
         }
       }
     },
-    "Undo every change made to this wallpaper in the Scene Editor" : {
+    "Undo every change made to this wallpaper in Scene Edit / Export" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "التراجع عن كل تغيير أُجري على خلفية الشاشة هذه في محرر المشهد"
+            "value" : "التراجع عن كل تغيير أُجري على هذه الخلفية في نافذة «تحرير/تصدير المشهد»"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alle Änderungen an diesem Hintergrundbild im Szeneneditor widerrufen"
+            "value" : "Alle Änderungen an diesem Hintergrundbild im Fenster „Szene bearbeiten/exportieren“ widerrufen"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deshacer todos los cambios hechos a este fondo de pantalla en el Editor de escenas"
+            "value" : "Deshace todos los cambios hechos en este fondo en la ventana «Editar/exportar escena»"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Annuler toutes les modifications apportées à ce fond d’écran dans l’Éditeur de scène"
+            "value" : "Annuler toutes les modifications apportées à ce fond d’écran dans la fenêtre « Modifier/exporter la scène »"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "सीन एडिटर में इस वॉलपेपर में किए गए हर बदलाव को पहले जैसा करें"
+            "value" : "“सीन एडिट/एक्सपोर्ट” में इस वॉलपेपर में किए गए हर बदलाव को पहले जैसा करें"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Annulla ogni modifica fatta a questo sfondo nell’Editor scena"
+            "value" : "Annulla ogni modifica fatta a questo sfondo nella finestra “Modifica/esporta scena”"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "シーンエディタでこの壁紙に加えたすべての変更を取り消します"
+            "value" : "「シーン編集/書き出し」でこの壁紙に加えた変更をすべて取り消します"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "장면 편집기에서 이 배경화면에 적용한 모든 변경 사항을 취소합니다"
+            "value" : "‘장면 편집/내보내기’에서 이 배경화면에 한 모든 변경 사항을 취소합니다"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cofnij wszystkie zmiany tej tapety wprowadzone w Edytorze sceny"
+            "value" : "Cofnij wszystkie zmiany tej tapety wprowadzone w oknie „Edycja/eksport sceny”"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Desfazer todas as alterações feitas nesta imagem de fundo no Editor de Cena"
+            "value" : "Desfaz todas as alterações feitas neste papel de parede na janela “Editar/Exportar Cena”"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Отменить все изменения этих обоев, сделанные в Редакторе сцены"
+            "value" : "Отменить все изменения этих обоев, сделанные в окне «Правка/экспорт сцены»"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sahne Düzenleyicisi’nde bu duvar kâğıdında yapılan tüm değişiklikleri geri al"
+            "value" : "Bu duvar kâğıdında “Sahne Düzenle/Dışa Aktar” penceresinde yapılan tüm değişiklikleri geri alır"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Скасувати всі зміни цієї шпалери, зроблені в Редакторі сцени"
+            "value" : "Скасувати всі зміни цих шпалер, зроблені у вікні «Редагування/експорт сцени»"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "撤销在场景编辑器中对此墙纸所做的所有更改"
+            "value" : "撤销在“场景编辑/导出”中对此墙纸所做的所有更改"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "還原在場景編輯器中對此背景圖片所做的所有變更"
-          }
-        }
-      }
-    },
-    "Undo every change made to this wallpaper in the Scene Editor (Live)" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "التراجع عن كل تغيير أُجري على هذه الخلفية في محرر المشهد (مباشر)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alle Änderungen an diesem Hintergrundbild im Szeneneditor (Live) widerrufen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deshace todos los cambios hechos en este fondo en el Editor de escenas (en vivo)"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Annuler toutes les modifications apportées à ce fond d’écran dans l’Éditeur de scène (en direct)"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "सीन एडिटर (लाइव) में इस वॉलपेपर में किए गए हर बदलाव को पहले जैसा करें"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Annulla ogni modifica fatta a questo sfondo nell’Editor scena (live)"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "シーンエディタ（ライブ）でこの壁紙に加えた変更をすべて取り消します"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "장면 편집기(라이브)에서 이 배경화면에 한 모든 변경 사항을 취소합니다"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cofnij wszystkie zmiany tej tapety wprowadzone w Edytorze sceny (na żywo)"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Desfaz todas as alterações feitas neste papel de parede no Editor de Cena (ao vivo)"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отменить все изменения этих обоев, сделанные в Редакторе сцены (вживую)"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bu duvar kâğıdında Sahne Düzenleyicisi (Canlı) ile yapılan tüm değişiklikleri geri alır"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Скасувати всі зміни цих шпалер, зроблені в Редакторі сцени (наживо)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "撤销在场景编辑器（实时）中对此墙纸所做的所有更改"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "還原在場景編輯器（即時）中對此背景圖片所做的所有更改"
+            "value" : "還原在「場景編輯/輸出」中對此背景圖片所做的所有更改"
           }
         }
       }
@@ -158751,7 +158944,7 @@
       }
     },
     "Version %@" : {
-      "comment" : "Scene Editor: one of a layer's alternative versions",
+      "comment" : "Scene Edit / Export: one of a layer's alternative versions",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -159224,7 +159417,7 @@
       }
     },
     "Vertical scroll speed. Negative scrolls up, 0 stops." : {
-      "comment" : "Scene Editor tooltip for the scroll effect's speedy parameter",
+      "comment" : "Scene Edit / Export tooltip for the scroll effect's speedy parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -159414,7 +159607,7 @@
       }
     },
     "Vertical speed. Negative values move the other way, 0 stops." : {
-      "comment" : "Scene Editor tooltip for an effect parameter named like speedy",
+      "comment" : "Scene Edit / Export tooltip for an effect parameter named like speedy",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -160735,7 +160928,7 @@
       }
     },
     "Wallpaper" : {
-      "comment" : "Scene Editor (Live): the mode that edits the running wallpaper",
+      "comment" : "Scene Edit / Export: the mode that edits the running wallpaper",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -163191,7 +163384,7 @@
       }
     },
     "Wavelength. Low values give many small ripples, high values give a few broad swells." : {
-      "comment" : "Scene Editor tooltip for the waterwaves effect's scale parameter",
+      "comment" : "Scene Edit / Export tooltip for the waterwaves effect's scale parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -168011,7 +168204,7 @@
       "localizations" : {}
     },
     "iPhone & iPad Export" : {
-      "comment" : "Scene Editor (Live): the mode that exports a Live Photo",
+      "comment" : "Scene Edit / Export: the mode that exports a Live Photo",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -168108,6 +168301,101 @@
     "macOS" : {
       "shouldTranslate" : false,
       "localizations" : {}
+    },
+    "macOS has only eight accent colors. Nearest Apple Accent uses the closest one, so every app matches, though not exactly. Multicolor lets each app use its own accent instead. Either way, the text highlight and Open Wallpaper Engine itself can use the exact color." : {
+      "comment" : "Settings › Theming: info tip of the System Accent picker",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحتوي macOS على ثمانية ألوان تمييز فقط. يستخدم «أقرب لون تمييز من Apple» اللون الأقرب، فتتطابق كل التطبيقات وإن لم يكن اللون دقيقًا. ويتيح «متعدد الألوان» لكل تطبيق استخدام لون التمييز الخاص به. وفي الحالتين، يمكن أن يستخدم لون تمييز النص وOpen Wallpaper Engine نفسه اللون الدقيق."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS hat nur acht Akzentfarben. „Nächster Apple-Akzent“ verwendet die ähnlichste, sodass alle Apps übereinstimmen, wenn auch nicht genau. „Mehrfarbig“ lässt jede App ihren eigenen Akzent verwenden. In beiden Fällen können die Textmarkierung und Open Wallpaper Engine selbst die exakte Farbe verwenden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS solo tiene ocho colores de acento. «Acento de Apple más cercano» usa el más parecido, así todas las apps coinciden, aunque no exactamente. «Multicolor» deja que cada app use su propio acento. En ambos casos, el resaltado del texto y el propio Open Wallpaper Engine pueden usar el color exacto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS ne propose que huit couleurs d’accentuation. « Accentuation Apple la plus proche » utilise la plus ressemblante, pour que toutes les apps s’accordent, sans être exactes. « Multicolore » laisse chaque app utiliser sa propre accentuation. Dans les deux cas, la couleur de surlignage et Open Wallpaper Engine lui-même peuvent utiliser la couleur exacte."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS में केवल आठ एक्सेंट रंग हैं। “निकटतम Apple एक्सेंट” सबसे मिलता-जुलता रंग इस्तेमाल करता है, ताकि सभी ऐप मेल खाएँ, भले ही रंग सटीक न हो। “बहुरंगी” हर ऐप को अपना एक्सेंट इस्तेमाल करने देता है। दोनों ही स्थितियों में, टेक्स्ट हाइलाइट और खुद Open Wallpaper Engine सटीक रंग इस्तेमाल कर सकते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS ha solo otto colori di accento. “Accento Apple più vicino” usa il più simile, così tutte le app corrispondono, anche se non esattamente. “Multicolore” lascia che ogni app usi il proprio accento. In entrambi i casi, l’evidenziazione del testo e Open Wallpaper Engine stesso possono usare il colore esatto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOSのアクセントカラーは8色だけです。「最も近いAppleのアクセント」は最も近い色を使うため、すべてのアプリがそろいますが、正確な色にはなりません。「マルチカラー」では各アプリが独自のアクセントを使います。どちらの場合も、テキストのハイライトとOpen Wallpaper Engine自体は正確な色を使えます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS의 강조 색상은 8가지뿐입니다. '가장 가까운 Apple 강조 색상'은 가장 비슷한 색상을 사용하므로 모든 앱이 일치하지만 정확하지는 않습니다. '멀티 컬러'는 각 앱이 자체 강조 색상을 사용하게 합니다. 어느 경우든 텍스트 하이라이트와 Open Wallpaper Engine 자체는 정확한 색상을 사용할 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS ma tylko osiem kolorów akcentu. „Najbliższy akcent Apple” używa najbardziej podobnego, więc wszystkie aplikacje pasują do siebie, choć nie dokładnie. „Wielobarwny” pozwala każdej aplikacji używać własnego akcentu. W obu przypadkach wyróżnienie tekstu i sam Open Wallpaper Engine mogą używać dokładnego koloru."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O macOS tem apenas oito cores de destaque. “Destaque da Apple Mais Próximo” usa a mais parecida, para que todos os apps combinem, embora não exatamente. “Multicolorido” deixa cada app usar o próprio destaque. Em ambos os casos, o realce de texto e o próprio Open Wallpaper Engine podem usar a cor exata."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В macOS всего восемь цветов акцента. «Ближайший акцент Apple» использует самый похожий, поэтому все приложения совпадают, хотя и не точно. «Многоцветный» позволяет каждому приложению использовать свой акцент. В обоих случаях цвет выделения текста и сам Open Wallpaper Engine могут использовать точный цвет."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS’te yalnızca sekiz vurgu rengi vardır. “En Yakın Apple Vurgusu” en yakın olanı kullanır; böylece tüm uygulamalar uyumlu olur ama renk tam olarak aynı olmaz. “Çok Renkli” her uygulamanın kendi vurgusunu kullanmasını sağlar. Her iki durumda da metin vurgulama rengi ve Open Wallpaper Engine’in kendisi tam rengi kullanabilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У macOS лише вісім кольорів акценту. «Найближчий акцент Apple» використовує найсхожіший, тож усі програми збігаються, хоча й не точно. «Багатоколірний» дає кожній програмі використовувати власний акцент. В обох випадках колір виділення тексту і сам Open Wallpaper Engine можуть використовувати точний колір."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 只有八种强调色。“最接近的 Apple 强调色”使用最相近的一种，让所有 App 保持一致，但并不完全准确。“多色”让每个 App 使用自己的强调色。无论哪种方式，文本高亮颜色和 Open Wallpaper Engine 本身都可以使用准确的颜色。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 只有八種強調色。「最接近的 Apple 強調色」會使用最相近的一種，讓所有 App 一致，但不完全準確。「多色」讓每個 App 使用自己的強調色。無論哪一種，文字反白顏色和 Open Wallpaper Engine 本身都可以使用準確的顏色。"
+          }
+        }
+      }
     },
     "macOS uses this shortcut for “%@”. Use Anyway saves it and opens Keyboard Shortcuts in System Settings, where you can turn the macOS one off." : {
       "localizations" : {

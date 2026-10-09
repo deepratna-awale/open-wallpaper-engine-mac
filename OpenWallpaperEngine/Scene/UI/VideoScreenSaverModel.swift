@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-/// The Scene Editor (Live)'s Screen Saver mode for a video wallpaper: the screen saver of a video
+/// Scene Edit / Export's Screen Saver mode for a video wallpaper: the screen saver of a video
 /// is the video itself, played as it is (`ScreenSaverVideoSource`), so there is nothing to record
 /// or adjust; the mode sets it as the screen saver, or goes back to the desktop's wallpaper.
 @MainActor

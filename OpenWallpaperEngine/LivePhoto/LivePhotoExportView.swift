@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// The Scene Editor (Live)'s iPhone & iPad Export mode: the wallpaper as it plays in the mode's
+/// Scene Edit / Export's iPhone & iPad Export mode: the wallpaper as it plays in the mode's
 /// private instance (`IsolatedSceneEditSession`), framed as the chosen device's lock screen, with
 /// the crop, the clip, the quality and the Live Photo export.
 @MainActor

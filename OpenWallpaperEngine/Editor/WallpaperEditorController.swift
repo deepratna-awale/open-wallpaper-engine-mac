@@ -103,7 +103,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
             self.sync?.preview(overlay, folder: self.wallpaper.wallpaperDirectory, identity: self.identity)
         }
         timeline.onCanvasTime = { [weak self] seconds in self?.timelineCanvas.show(seconds) }
-        let content = NSHostingView(rootView: WallpaperEditorView(session: session, services: makeServices()))
+        let content = NSHostingView(rootView: WallpaperEditorView(session: session, services: makeServices())
+            .appAccentTint())
         content.sizingOptions = [.minSize]
         window.contentView = content
         window.center()

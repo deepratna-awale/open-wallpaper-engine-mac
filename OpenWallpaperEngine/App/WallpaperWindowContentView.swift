@@ -13,15 +13,15 @@ final class WallpaperWindowContentView: NSView, StretchCanvasHosting {
 
     var stretchCanvas: CGRect?
 
-    /// Theming's menu bar strip (Settings › Theming › Menu Bar): the window's top filled with the
-    /// colour, as tall as the display's menu bar. The menu bar is transparent over the wallpaper
+    /// Theming's menu bar strip (Settings › Theming › Menu Bar): the window's top in the colour,
+    /// fading out downwards over a few menu bar heights (`MenuBarStrip.fadeStops`). The menu bar is transparent over the wallpaper
     /// window, which covers the desktop picture, so this is what it shows. A plain layer above the
     /// wallpaper: the compositor draws it and nothing renders again.
     var menuBarStrip: MenuBarStripFill? {
         didSet { if menuBarStrip != oldValue { layoutStrip() } }
     }
 
-    private var stripView: NSView?
+    private var stripLayer: CAGradientLayer?
 
     init(content: NSView) {
         super.init(frame: .zero)
@@ -44,20 +44,26 @@ final class WallpaperWindowContentView: NSView, StretchCanvasHosting {
     var content: NSView? { subviews.first }
 
     private func layoutStrip() {
-        guard let strip = menuBarStrip, strip.height > 0 else {
-            stripView?.removeFromSuperview()
-            stripView = nil
+        guard let strip = menuBarStrip, strip.height > 0, let host = layer else {
+            stripLayer?.removeFromSuperlayer()
+            stripLayer = nil
             return
         }
-        let view = stripView ?? {
-            let view = NSView()
-            view.wantsLayer = true
-            addSubview(view, positioned: .above, relativeTo: nil)
-            stripView = view
-            return view
+        let gradient = stripLayer ?? {
+            let gradient = CAGradientLayer()
+            gradient.actions = ["frame": NSNull(), "bounds": NSNull(), "position": NSNull(), "colors": NSNull()]
+            // Above the wallpaper's view; layers don't take the desktop's mouse events.
+            host.addSublayer(gradient)
+            stripLayer = gradient
+            return gradient
         }()
-        view.frame = NSRect(x: 0, y: bounds.height - strip.height, width: bounds.width, height: strip.height)
-        view.layer?.backgroundColor = strip.cgColor
+        let height = MenuBarStrip.fadeHeight(menuBarHeight: strip.height)
+        gradient.frame = CGRect(x: 0, y: bounds.height - height, width: bounds.width, height: height)
+        // A layer-backed view's layer is not flipped: y grows upwards, so the colour starts at the top.
+        gradient.startPoint = CGPoint(x: 0.5, y: 1)
+        gradient.endPoint = CGPoint(x: 0.5, y: 0)
+        gradient.colors = MenuBarStrip.fadeStops.compactMap { strip.cgColor.copy(alpha: $0.alpha) }
+        gradient.locations = MenuBarStrip.fadeStops.map { NSNumber(value: Double($0.location)) }
     }
 
     private func applyMirror() {

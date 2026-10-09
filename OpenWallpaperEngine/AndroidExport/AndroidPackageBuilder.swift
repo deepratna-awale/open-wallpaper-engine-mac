@@ -9,7 +9,7 @@ import Foundation
 ///   its folder) but its sound files (WE drops the music; the sound layer keeps naming it),
 ///   project.json and the preview as they are, scene.json written again with
 ///   `general.texturereduction`, shaders made GLSL ES-safe (`MobileShaderCompatibility`) and
-///   `.tex` files converted (`MobileTextureConverter`). From the Scene Editor (Live)'s Android
+///   `.tex` files converted (`MobileTextureConverter`). From Scene Edit / Export's Android
 ///   Export mode, its layer edits and user properties are baked in (`AndroidSceneBake`).
 /// - **Scene, Pre-Rendered:** `wallpaper.mp4` (`AndroidVideoRenderer`), scene.json (with
 ///   `texturereduction` 4, as WE's has it), project.json with `file` set to `wallpaper.mp4`

@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import OWEInspectorKit
 import OWESceneEditing
 
 /// The active track's curves, one per channel in its own colour, as the player evaluates them
@@ -7,6 +8,7 @@ import OWESceneEditing
 /// keyframe shows its back and front handles (WE's model: x in half-segment units, y in value
 /// units), which drag the curve's shape. Dragging empty space draws a selection box.
 struct TimelineCurveEditor: View {
+    @Environment(\.appAccentColor) private var accentColor
     @ObservedObject var timeline: SceneTimelineEditor
     let target: TimelineTarget
     let onFocus: () -> Void
@@ -131,13 +133,13 @@ struct TimelineCurveEditor: View {
         Canvas { (context: inout GraphicsContext, canvasSize: CGSize) in
             Self.drawGrid(in: &context, size: canvasSize, axis: axis)
             Self.drawCurves(in: &context, size: canvasSize, clip: clip, channels: channels, scale: scale, axis: axis)
-            Self.drawMarks(in: &context, keys: keys, handles: handles)
+            Self.drawMarks(in: &context, keys: keys, handles: handles, accent: accentColor)
             let headX: CGFloat = CGFloat(playheadX)
             context.stroke(Self.line(from: CGPoint(x: headX, y: 0), to: CGPoint(x: headX, y: canvasSize.height)),
                            with: .color(.red), lineWidth: 1)
             if let box {
-                context.fill(Path(box), with: .color(.accentColor.opacity(0.12)))
-                context.stroke(Path(box), with: .color(.accentColor.opacity(0.7)), lineWidth: 1)
+                context.fill(Path(box), with: .color(accentColor.opacity(0.12)))
+                context.stroke(Path(box), with: .color(accentColor.opacity(0.7)), lineWidth: 1)
             }
         }
         .contentShape(Rectangle())
@@ -191,18 +193,19 @@ struct TimelineCurveEditor: View {
     }
 
     /// The selected keys' handles, then every key.
-    private static func drawMarks(in context: inout GraphicsContext, keys: [KeyMark], handles: [HandleMark]) {
+    private static func drawMarks(in context: inout GraphicsContext, keys: [KeyMark], handles: [HandleMark],
+                                  accent accentColor: Color) {
         for handle in handles {
             context.stroke(line(from: handle.key, to: handle.point), with: .color(.primary.opacity(0.5)), lineWidth: 1)
             let dotRect = CGRect(x: handle.point.x - 3.5, y: handle.point.y - 3.5, width: 7, height: 7)
             let dot = Path(ellipseIn: dotRect)
             context.fill(dot, with: .color(Color(nsColor: .controlBackgroundColor)))
-            context.stroke(dot, with: .color(.accentColor), lineWidth: 1.5)
+            context.stroke(dot, with: .color(accentColor), lineWidth: 1.5)
         }
         for key in keys {
             let mark: Path = TimelineLanes.diamond(at: key.point, radius: 5)
             let color: Color = colors[key.ref.channel % colors.count]
-            context.fill(mark, with: key.selected ? .color(.accentColor) : .color(color))
+            context.fill(mark, with: key.selected ? .color(accentColor) : .color(color))
             context.stroke(mark, with: .color(key.selected ? .white : .black.opacity(0.4)), lineWidth: 1)
         }
     }

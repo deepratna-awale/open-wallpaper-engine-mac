@@ -1,7 +1,7 @@
 import Foundation
 
 /// The Depth Map Generation plugin on disk, shared by the app (which installs it, Settings ›
-/// Plugins) and every process that generates depth maps (the app's Scene Editor, the Wallpaper
+/// Plugins) and every process that generates depth maps (the app's Scene Edit / Export, the Wallpaper
 /// Editor in its own process), which each read it from here rather than from the installer:
 ///
 ///     <Application Support>/Open Wallpaper Engine[ (isolated <tag>)]/Plugins/DepthMaps/

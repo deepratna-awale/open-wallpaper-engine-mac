@@ -17,9 +17,9 @@ Open Wallpaper Engine to darmowy odtwarzacz open source dla macOS, który wyświ
 
 - **Tapety typu scena, wideo i internetowe** — sceny są rysowane własnymi shaderami Wallpaper Engine każdej tapety, przetłumaczonymi na Metal, z efektami, cząsteczkami, modelami 3D, światłami, osiami czasu, SceneScript i wizualizacjami reagującymi na dźwięk. Tapety internetowe działają w WebKit lub w opcjonalnym silniku Chromium.
 - **Warsztat Steam** — przeglądaj, filtruj i pobieraj tapety z Warsztatu bezpośrednio w aplikacji albo importuj foldery i pliki zip z tapetami.
-- **Edytor sceny (na żywo)** — zmieniaj na żywo, na biurku, warstwy i efekty działającej tapety, nagraj z niej własny wygaszacz ekranu albo wyeksportuj ją jako ekran blokady Live Photo dla iPhone’a i iPada lub jako pakiet dla aplikacji Wallpaper Engine na Androida.
+- **Edycja/eksport sceny** — zmieniaj na żywo, na biurku, warstwy i efekty działającej tapety, nagraj z niej własny wygaszacz ekranu albo wyeksportuj ją jako ekran blokady Live Photo dla iPhone’a i iPada lub jako pakiet dla aplikacji Wallpaper Engine na Androida.
 
-  ![Edytor sceny (na żywo)](../../docs/images/scene-editor-live.png)
+  ![Edycja/eksport sceny](../../docs/images/scene-editor-live.png)
 
 - **Edytor tapet** — edytor wzorowany na edytorze Wallpaper Engine: warstwy, efekty z podglądem, oś czasu, SceneScript, właściwości użytkownika, cząsteczki i Puppet Warp. Twoje zmiany są zapisywane obok tapety, nigdy w jej plikach.
 

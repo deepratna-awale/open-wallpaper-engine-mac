@@ -32,7 +32,7 @@ enum ScreenSaverLiveLayers {
         return ids
     }
 
-    /// `values` with the layers `ids` switched off (the Scene Editor (Live)'s visibility keys).
+    /// `values` with the layers `ids` switched off (Scene Edit / Export's visibility keys).
     static func hiding(_ ids: Set<Int>, in values: [String: String]) -> [String: String] {
         var result = values
         for id in ids { result[sceneObjectVisibilityKey(objectID: id)] = "false" }

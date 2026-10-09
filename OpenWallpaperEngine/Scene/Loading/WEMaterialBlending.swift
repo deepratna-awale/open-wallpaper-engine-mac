@@ -2,7 +2,7 @@
 /// normal 0, translucent 1, additive 2, alphatocoverage 3. A value the parser doesn't know
 /// leaves the zeroed byte, normal.
 ///
-/// The Scene Inspector sets a layer's (`sceneObjectBlendingKey`), which the scene loader puts in
+/// Scene Edit / Export sets a layer's (`sceneObjectBlendingKey`), which the scene loader puts in
 /// place of its material's first pass's (`ImageMaterialPlanBuilder.blending`,
 /// `ParticleMaterialPlanBuilder.blending`), so it draws, sorts and picks its combos
 /// (`ImageMaterialPlanBuilder.blendingCombos`) as that material would.

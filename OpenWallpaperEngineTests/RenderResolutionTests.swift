@@ -1,12 +1,11 @@
 import XCTest
-import Metal
 import OWEControlProtocol
 @testable import OpenWallpaperEngine
 
 /// Settings → Performance → Render Resolution (`GSRenderResolution`), Upscaling and Render Scale:
 /// the scene target sized for the displays' backing pixels (Your Display), 4K at their shape, or
 /// the scene's authored size (Full), whatever the scene's size, then drawn at the render scale and
-/// scaled up (`SceneUpscaler`).
+/// scaled up by the composite.
 final class RenderResolutionTests: XCTestCase {
     private func viewport(_ pixels: SIMD2<Float>, scale: Float = 1) -> SceneViewport {
         SceneViewport(drawableSize: pixels, pointSize: pixels / scale, cursor: nil, frameRateLimit: 30)
@@ -105,12 +104,12 @@ final class RenderResolutionTests: XCTestCase {
         XCTAssertEqual(target(hdScene, [retina], .yourDisplay, scale: GSRenderScale.percent67.factor), SIMD2(2560, 1440))
         XCTAssertEqual(target(hdScene, [retina], .yourDisplay, scale: GSRenderScale.percent75.factor), SIMD2(2880, 1620))
         XCTAssertEqual(target(qhdScene, [plain], .uhd4K, scale: GSRenderScale.percent50.factor), SIMD2(1920, 1080),
-                       "MetalFX draws below the chosen target and rebuilds it")
+                       "Upscaling draws below the chosen target; the composite scales it up")
         XCTAssertEqual(target(hdScene, [plain], .full, scale: 0.5), SIMD2(960, 540))
         XCTAssertEqual(SceneRenderResolution.drawnPixelsPerUnit(2, scale: 1), 2)
         var settings = SceneRenderSettings()
         XCTAssertEqual(settings.drawnScale, 1, "upscaling off draws the full target")
-        settings.upscaling = .metalFX
+        settings.upscaling = .bilinear
         settings.renderScale = .percent67
         XCTAssertEqual(settings.drawnScale, 2.0 / 3)
     }
@@ -145,56 +144,16 @@ final class RenderResolutionTests: XCTestCase {
         XCTAssertTrue(sizes.summary(.uhd4K).contains("3840×2160"))
     }
 
-    func testUpscalingPathFallsBackToBilinear() {
-        var settings = SceneRenderSettings()
-        XCTAssertEqual(SceneUpscaler.path(settings: settings, format: .bgra8Unorm, deviceSupportsMetalFX: true), .none)
-        settings.upscaling = .metalFX
-        settings.renderScale = .percent50
-        XCTAssertEqual(SceneUpscaler.path(settings: settings, format: .bgra8Unorm, deviceSupportsMetalFX: true), .metalFX)
-        XCTAssertEqual(SceneUpscaler.path(settings: settings, format: .bgra8Unorm, deviceSupportsMetalFX: false), .bilinear,
-                       "a GPU without MetalFX")
-        XCTAssertEqual(SceneUpscaler.path(settings: settings, format: .rgba16Float, deviceSupportsMetalFX: true), .bilinear,
-                       "HDR and EDR frames")
-    }
-
-    func testMetalFXUpscalesToTheFullTarget() throws {
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        try XCTSkipUnless(SceneUpscaler.supportsMetalFX(device), "this GPU has no MetalFX spatial scaler")
-        let upscaler = SceneUpscaler(device: device)
-        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: 64, height: 36, mipmapped: false)
-        descriptor.usage = [.shaderRead, .renderTarget]
-        descriptor.storageMode = .private
-        let input = try XCTUnwrap(device.makeTexture(descriptor: descriptor))
-        let queue = try XCTUnwrap(device.makeCommandQueue())
-        // The scaler is made off the calling thread: the first frames fall back.
-        var output: MTLTexture?
-        let deadline = Date().addingTimeInterval(10)
-        while output == nil, Date() < deadline {
-            let commandBuffer = try XCTUnwrap(queue.makeCommandBuffer())
-            output = upscaler.upscale(input, to: SIMD2(128, 72), commandBuffer: commandBuffer)
-            commandBuffer.commit()
-            if output == nil { Thread.sleep(forTimeInterval: 0.02) }
-        }
-        let upscaled = try XCTUnwrap(output)
-        XCTAssertEqual(SIMD2(upscaled.width, upscaled.height), SIMD2(128, 72))
-        let hdr = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba16Float, width: 64, height: 36, mipmapped: false)
-        hdr.usage = [.shaderRead]
-        hdr.storageMode = .private
-        let commandBuffer = try XCTUnwrap(queue.makeCommandBuffer())
-        XCTAssertNil(upscaler.upscale(try XCTUnwrap(device.makeTexture(descriptor: hdr)), to: SIMD2(128, 72),
-                                      commandBuffer: commandBuffer), "RGBA16F is scaled bilinearly by the composite")
-    }
-
     func testTheSettingReachesTheRenderer() {
         var settings = GlobalSettings()
         XCTAssertEqual(settings.renderResolution, .yourDisplay, "the display's own pixels by default")
         XCTAssertEqual(settings.upscaling, .off)
         settings.renderResolution = .uhd4K
-        settings.upscaling = .metalFX
+        settings.upscaling = .bilinear
         settings.renderScale = .percent50
         let render = SceneRenderSettings(settings)
         XCTAssertEqual(render.renderResolution, .uhd4K)
-        XCTAssertEqual(render.upscaling, .metalFX)
+        XCTAssertEqual(render.upscaling, .bilinear)
         XCTAssertEqual(render.renderScale, .percent50)
         XCTAssertEqual(SceneRenderSettings().renderResolution, .yourDisplay, "a settings-less renderer draws as WE does")
     }
@@ -219,15 +178,15 @@ final class RenderResolutionTests: XCTestCase {
         XCTAssertEqual(try resolution("bogus"), .yourDisplay, "an unknown value keeps the default")
         var settings = GlobalSettings()
         settings.renderResolution = .uhd4K
-        settings.upscaling = .metalFX
+        settings.upscaling = .bilinear
         settings.renderScale = .percent67
         let roundTrip = try decoded(String(decoding: JSONEncoder().encode(settings), as: UTF8.self), backingScale: 2)
         XCTAssertEqual(roundTrip.0, settings)
         XCTAssertFalse(roundTrip.migrated, "a saved value of today's is read as it is")
     }
 
-    /// The points-based Display becomes Your Display drawn natively: Upscaling stays as it was
-    /// (MetalFX measured slower than native), and on a Retina display web wallpapers stay at
+    /// The points-based Display becomes Your Display drawn natively: Upscaling stays as it was,
+    /// and on a Retina display web wallpapers stay at
     /// standard resolution, as Display drew them. Once.
     func testDisplayOnRetinaBecomesYourDisplayOnce() throws {
         let (retina, migrated) = try decoded(#"{"renderResolution":"display","upscaling":"off","renderScale":"percent75"}"#,
@@ -245,9 +204,9 @@ final class RenderResolutionTests: XCTestCase {
         XCTAssertEqual(again.0, retina)
 
         // Upscaling the user turned on stays on, at their scale.
-        let upscaled = try decoded(#"{"renderResolution":"desktop","upscaling":"metalFX","renderScale":"percent67"}"#,
+        let upscaled = try decoded(#"{"renderResolution":"desktop","upscaling":"bilinear","renderScale":"percent67"}"#,
                                    backingScale: 2).0
-        XCTAssertEqual(upscaled.upscaling, .metalFX)
+        XCTAssertEqual(upscaled.upscaling, .bilinear)
         XCTAssertEqual(upscaled.renderScale, .percent67)
         // On a 1× display Display and Your Display are the same size: nothing else changes.
         let (plain, plainMigrated) = try decoded(#"{"renderResolution":"display"}"#, backingScale: 1)
@@ -285,24 +244,11 @@ final class RenderResolutionTests: XCTestCase {
         }
     }
 
-    /// Upscaling, when the user turns it on, only where it might pay: at 1920×1200 (2.3 MP) or less
-    /// the target is drawn natively.
-    func testUpscalingIsSkippedForSmallTargets() {
-        XCTAssertFalse(SceneRenderResolution.upscalingPays(targetSize: SIMD2(1920, 1080)))
-        XCTAssertFalse(SceneRenderResolution.upscalingPays(targetSize: SIMD2(1920, 1200)))
-        XCTAssertFalse(SceneRenderResolution.upscalingPays(targetSize: SIMD2(1440, 900)))
-        XCTAssertTrue(SceneRenderResolution.upscalingPays(targetSize: SIMD2(1921, 1200)))
-        XCTAssertTrue(SceneRenderResolution.upscalingPays(targetSize: SIMD2(2560, 1440)))
-        XCTAssertTrue(SceneRenderResolution.upscalingPays(targetSize: SIMD2(5120, 2880)))
-        XCTAssertFalse(SceneRenderResolution.upscalingPays(targetSize: target(hdScene, [plain], .yourDisplay)))
-        XCTAssertTrue(SceneRenderResolution.upscalingPays(targetSize: target(hdScene, [retina], .yourDisplay)))
-    }
-
     func testPresetsDrawNatively() {
         for quality in [GSQuality.low, .medium, .high, .ultra] {
             var settings = GlobalSettings()
             settings.renderResolution = .uhd4K
-            settings.upscaling = .metalFX
+            settings.upscaling = .bilinear
             settings.renderScale = .percent50
             settings.applyResolutionPreset(quality)
             XCTAssertEqual(settings.renderResolution, .yourDisplay, "\(quality)")
@@ -313,10 +259,41 @@ final class RenderResolutionTests: XCTestCase {
         }
         // The user's own choice stands until a preset is applied again.
         var settings = GlobalSettingsViewModel.applying(.low, to: GlobalSettings())
-        settings.upscaling = .metalFX
-        XCTAssertEqual(settings.upscaling, .metalFX)
+        settings.upscaling = .bilinear
+        XCTAssertEqual(settings.upscaling, .bilinear)
         settings.applyResolutionPreset(.low)
         XCTAssertEqual(settings.upscaling, .off, "applying a preset again overrides it")
+    }
+
+    /// The removed MetalFX Upscaling becomes bilinear Upscaling at the same render scale, once:
+    /// stored settings, an imported settings file and MCP's earlier `metalfx` alike.
+    @MainActor
+    func testMetalFXBecomesBilinearAtTheSameScale() throws {
+        let (stored, migrated) = try decoded(#"{"upscaling":"metalFX","renderScale":"percent67"}"#, backingScale: 2)
+        XCTAssertTrue(migrated, "saved at once, so it is carried over (and logged) once")
+        XCTAssertEqual(stored.upscaling, .bilinear)
+        XCTAssertEqual(stored.renderScale, .percent67)
+        XCTAssertEqual(SceneRenderSettings(stored).drawnScale, 2.0 / 3, "the scene keeps drawing at the same scale")
+        let again = try decoded(String(decoding: JSONEncoder().encode(stored), as: UTF8.self), backingScale: 2)
+        XCTAssertFalse(again.migrated)
+        XCTAssertEqual(again.0, stored)
+        XCTAssertEqual(try decoded(#"{"upscaling":"metalFX"}"#).0.upscaling, .bilinear, "without a migration context too")
+        XCTAssertEqual(try decoded(#"{"upscaling":"off"}"#).0.upscaling, .off)
+        XCTAssertEqual(try decoded(#"{"upscaling":"bogus"}"#).0.upscaling, .off, "an unknown value keeps the default")
+
+        let file = #"{"format":"open-wallpaper-engine-settings","version":1,"appVersion":"1.0.0-beta.5","#
+            + #""settings":{"upscaling":"metalFX","renderScale":"percent50"},"preferences":{}}"#
+        let migration = GlobalSettingsMigration(mainBackingScale: 1)
+        let imported = try SettingsTransfer.decode(Data(file.utf8), migration: migration)
+        XCTAssertTrue(migration.migrated)
+        XCTAssertEqual(imported.settings.upscaling, .bilinear)
+        XCTAssertEqual(imported.settings.renderScale, .percent50)
+
+        let setting = try LibrarySetting.named("upscaling")
+        XCTAssertEqual(setting.kind, .choice(["off", "bilinear"]))
+        for (given, expected) in [("off", "off"), ("bilinear", "bilinear"), ("metalfx", "bilinear"), ("MetalFX", "bilinear")] {
+            XCTAssertEqual(try setting.parse(.string(given)), .string(expected), given)
+        }
     }
 
     @MainActor

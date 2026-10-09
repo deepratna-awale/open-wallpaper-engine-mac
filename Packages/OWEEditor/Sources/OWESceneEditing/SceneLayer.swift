@@ -16,6 +16,9 @@ public struct SceneLayerEffect: Identifiable, Hashable, Sendable {
     public var constants: [String: SceneJSONValue] = [:]
     public var combos: [String: Int] = [:]
     public var textures: [SceneJSONValue] = []
+    /// Every pass's `textures` as the scene has them (the first is `textures`): a multi-pass
+    /// effect's mask is named in the pass that samples it (Blur's in its fourth).
+    public var passTextures: [[SceneJSONValue]] = []
     /// How many passes the scene lists for it.
     public var passCount = 0
 
@@ -35,7 +38,7 @@ public struct SceneLayerEffect: Identifiable, Hashable, Sendable {
         ((file as NSString).deletingLastPathComponent as NSString).lastPathComponent.lowercased()
     }
 
-    /// The authored name, else the folder's, as the Scene Inspector titles it.
+    /// The authored name, else the folder's, as Scene Edit / Export titles it.
     public var title: String {
         if let name, !name.isEmpty { return name }
         return folderName.replacingOccurrences(of: "_", with: " ").capitalized
@@ -62,7 +65,7 @@ public struct SceneLayer: Identifiable, Hashable, Sendable {
         }
     }
 
-    /// Its `id`, or its index when it has none (as the Scene Inspector and the overlay key it).
+    /// Its `id`, or its index when it has none (as Scene Edit / Export and the overlay key it).
     public let id: Int
     /// Its position in scene.json's `objects`: the draw order, later on top.
     public let index: Int
