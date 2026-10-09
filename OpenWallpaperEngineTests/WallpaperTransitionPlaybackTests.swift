@@ -115,39 +115,94 @@ final class WallpaperTransitionPlaybackTests: XCTestCase {
 
     // MARK: - Freed
 
+    private func outgoingPicture(_ device: MTLDevice, width: Int = 64, height: Int = 36) throws -> MTLTexture {
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: width, height: height,
+                                                                  mipmapped: false)
+        descriptor.usage = [.shaderRead]
+        return try XCTUnwrap(device.makeTexture(descriptor: descriptor))
+    }
+
+    /// Waits for what `queue` was given so far to finish on the GPU, then for `freed`.
+    private func waitUntilFreed(_ queue: MTLCommandQueue, _ freed: () -> Bool, _ message: String) {
+        let barrier = queue.makeCommandBuffer()
+        barrier?.commit()
+        barrier?.waitUntilCompleted()
+        let deadline = Date().addingTimeInterval(2)
+        while !freed(), Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+        XCTAssertTrue(freed(), message)
+    }
+
     func testAPlayerFreesItsFramesAndPictureWhenItEnds() throws {
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice(), "no Metal device")
         let renderer = try WallpaperTransitionRenderer(device: device)
         let queue = try XCTUnwrap(device.makeCommandQueue())
         try renderer.preparePipelines(for: .crt, pixelFormat: .bgra8Unorm)
-        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: 64, height: 36, mipmapped: false)
-        descriptor.usage = [.shaderRead]
         let host = NSView(frame: CGRect(x: 0, y: 0, width: 64, height: 36))
         weak var outgoing: MTLTexture?
-        weak var frame: MTLTexture?
+        weak var frames: WallpaperTransitionFrameLoop?
         var finished: [WallpaperTransitionPlayer] = []
         try autoreleasepool {
-            let texture = try XCTUnwrap(device.makeTexture(descriptor: descriptor))
+            let texture = try outgoingPicture(device)
             outgoing = texture
             let overlay = WallpaperTransitionOverlayView(frame: host.bounds, contentsRect: WallpaperTransitionGeometry.wholeFrame)
             host.addSubview(overlay)
             let player = try WallpaperTransitionPlayer(kind: .crt, duration: 1, target: "1", outgoing: texture,
                                                        pixelSize: SIMD2(64, 36), renderer: renderer, queue: queue,
                                                        overlays: [overlay])
+            XCTAssertTrue(overlay.layer === overlay.metalLayer, "the frames are presented to the overlay's own layer")
+            XCTAssertEqual(overlay.metalLayer.drawableSize, CGSize(width: 64, height: 36))
+            XCTAssertTrue(overlay.metalLayer.framebufferOnly, "one display: nothing copies its frames")
             try player.showFirstFrame()
-            XCTAssertNotNil(overlay.layer?.contents, "the first frame shows before the change")
-            XCTAssertEqual(player.surfaces.count, WallpaperTransitionPlayer.surfaceCount)
-            frame = player.surfaces.first?.texture
+            XCTAssertFalse(overlay.metalLayer.presentsWithTransaction, "only the first frame goes with the transaction")
+            frames = player.frames
             player.run { finished.append($0) }
             player.stop()
             XCTAssertTrue(player.isFinished)
-            XCTAssertTrue(player.surfaces.isEmpty)
             XCTAssertTrue(player.overlays.isEmpty)
         }
         XCTAssertEqual(finished.count, 1)
         XCTAssertTrue(host.subviews.isEmpty, "the overlay left the window")
-        XCTAssertNil(frame, "the frames are freed")
-        XCTAssertNil(outgoing, "the outgoing picture is freed")
+        waitUntilFreed(queue, { outgoing == nil && frames == nil }, "the frames and the outgoing picture are freed")
+    }
+
+    func testAPlayerEndsByItselfAndFreesItsPicture() throws {
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice(), "no Metal device")
+        let renderer = try WallpaperTransitionRenderer(device: device)
+        let queue = try XCTUnwrap(device.makeCommandQueue())
+        try renderer.preparePipelines(for: .fade, pixelFormat: .bgra8Unorm)
+        let host = NSView(frame: CGRect(x: 0, y: 0, width: 64, height: 36))
+        weak var outgoing: MTLTexture?
+        let ended = expectation(description: "the transition ends")
+        var player: WallpaperTransitionPlayer?
+        try autoreleasepool {
+            let texture = try outgoingPicture(device)
+            outgoing = texture
+            // A clone: two overlays show the one render.
+            let overlays = (0..<2).map { _ in
+                WallpaperTransitionOverlayView(frame: host.bounds, contentsRect: WallpaperTransitionGeometry.wholeFrame)
+            }
+            overlays.forEach { host.addSubview($0) }
+            let playing = try WallpaperTransitionPlayer(kind: .fade, duration: 0.05, target: "1", outgoing: texture,
+                                                       pixelSize: SIMD2(64, 36), renderer: renderer, queue: queue,
+                                                       overlays: overlays)
+            XCTAssertTrue(overlays.allSatisfy { !$0.metalLayer.framebufferOnly }, "the other display's frames are copies")
+            try playing.showFirstFrame()
+            playing.run { _ in ended.fulfill() }
+            player = playing
+        }
+        // Off screen, the display link may not run: the player still ends just after its time.
+        wait(for: [ended], timeout: 3)
+        XCTAssertEqual(player?.isFinished, true)
+        XCTAssertTrue(host.subviews.isEmpty, "the overlays left the window")
+        player = nil
+        waitUntilFreed(queue, { outgoing == nil }, "the outgoing picture is freed")
+    }
+
+    func testTheClockHoldsForTheLeadIn() {
+        let clock = WallpaperTransitionClock(startTime: 10, duration: 1)
+        XCTAssertEqual(clock.progress(at: 10.05), 0)
+        XCTAssertEqual(clock.progress(at: 10.6), 0.5, accuracy: 0.0001)
+        XCTAssertEqual(clock.end, 11.1, accuracy: 1e-9)
     }
 
     func testProgressRunsOverTheTransitionTime() throws {

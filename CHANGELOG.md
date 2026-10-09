@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Wallpaper transitions play smoothly.** Fade, Paint, Twister and the others drew their frames on the main thread, so the incoming wallpaper loading there made them stutter and jump; they now draw and present every frame on a thread of their own, keeping Wallpaper Engine's timing.
 - **Images with effects are no longer drawn zoomed in.** A picture stored inside a larger texture (as Wallpaper Engine's editor stores most imported pictures) with an effect drew only its top-left part, stretched over the layer, so under Fill or Fit the bottom and right of the picture were cut off. It now shows whole, as without the effect; animated sprite sheets with effects had the same fault. In a compressed (DXT) picture stored that way, an effect's mask now lines up with the picture instead of landing lower and further right.
 - **The Wallpaper Editor names bound user properties by their labels everywhere**: the script and binding menu's help and its Unbind item, and the particle panel's instance override, now say “Clock Location” rather than `clocklocation`, as the layer and effect panels already did.
 - **Wallpaper Engine's default wallpapers show Wallpaper Engine as their author**, as in Wallpaper Engine, instead of Unknown Author: they aren't Workshop items, and their project marks them official.
