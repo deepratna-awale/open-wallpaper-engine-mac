@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Shaders whose constants or varyings are named with words Metal reserves now compile.** Names such as `or`, `new` or a shader's own `log10` are renamed in the compiled shader rather than in its text, so they work everywhere, including for constants, which still take their values by Wallpaper Engine's names.
 - **Wallpaper Engine's default wallpapers show Wallpaper Engine as their author**, as in Wallpaper Engine, instead of Unknown Author: they aren't Workshop items, and their project marks them official.
 - **Wallpapers without a content rating show in Installed.** Wallpapers made before Wallpaper Engine had ratings were left out of the Installed list unless the Workshop's tags were cached; they count as Everyone, as the Details panel shows them.
 - **GIF wallpapers fill the screen.** A wallpaper made with Wallpaper Engine's GIF template (such as Aesthetic City) was drawn at its GIF's size in the middle of a 1920×1080 canvas instead of filling the display: its scene takes its size from the GIF, as in Wallpaper Engine.

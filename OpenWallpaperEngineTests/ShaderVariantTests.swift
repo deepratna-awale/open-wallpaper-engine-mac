@@ -90,9 +90,10 @@ final class ShaderVariantTests: XCTestCase {
         let prelude = ShaderPrelude.text(for: .fragment, combos: [:], source: "#define M_PI 3.14\nfloat log10(float x) { return x; }")
         XCTAssertFalse(prelude.contains("#define M_PI "))
         XCTAssertFalse(prelude.contains("#define log10(x)"))
-        XCTAssertTrue(prelude.contains("#define log10 we_log10"), "clear of metal::log10")
         XCTAssertTrue(prelude.contains("#define M_PI_2 "))
-        _ = try translateDialectFixture("redefines")
+        // Clear of metal::log10: renamed in the SPIR-V, not by the prelude.
+        let variant = try translateDialectFixture("redefines")
+        XCTAssertTrue(variant.fragmentMSL.contains("we_log10("), variant.fragmentMSL)
     }
 
     /// HLSL lets a vertex shader modify its inputs; GLSL doesn't.
@@ -115,12 +116,16 @@ final class ShaderVariantTests: XCTestCase {
     /// Locals and functions named with C++ keywords are renamed; a uniform keeps its name, since
     /// values bind to it by name.
     func testCppKeywordNamesCompileAndUniformsKeepTheirNames() throws {
-        let source = "uniform float new;\nfloat operator(float this) { return this; }\nvoid main() { vec2 or = vec2(0.0); }"
-        let prelude = ShaderPrelude.text(for: .fragment, combos: [:], source: source)
-        for name in ["or", "this", "operator"] { XCTAssertTrue(prelude.contains("#define \(name) we_\(name)"), name) }
-        XCTAssertFalse(prelude.contains("#define new "))
-        XCTAssertFalse(prelude.contains("#define not "), "`not` is a GLSL built-in")
-        _ = try translateDialectFixture("reserved")
+        let variant = try translateDialectFixture("reserved")
+        // `or` and `operator` are renamed in the SPIR-V (OpName); `this`, which GLSL reserves, by the prelude.
+        for name in ["we_or", "we_operator", "we_this"] { XCTAssertTrue(variant.fragmentMSL.contains(name), name) }
+        // A uniform named with a C++ keyword compiles and still binds by WE's name.
+        let vertex = "#version 450\nlayout(location = 0) in vec4 p;\nvoid main() { gl_Position = p; }\n"
+        let fragment = "#version 450\nuniform float new;\nlayout(location = 0) out vec4 o;\nvoid main() { o = vec4(new); }\n"
+        let pair = try InProcessShaderCompiler().compilePairToMSL(vertex: vertex, fragment: fragment)
+        XCTAssertTrue(pair.fragment.msl.contains("we_new"), pair.fragment.msl)
+        XCTAssertNotNil(try ShaderVariantTranslator.uniformLayout(from: pair.fragment.reflection)?.members["new"])
+        XCTAssertNoThrow(try MTLCreateSystemDefaultDevice()?.makeLibrary(source: pair.fragment.msl, options: nil))
     }
 
     func testUnmatchedEndifIsDropped() {

@@ -1,41 +1,8 @@
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// The Swift text passes around glslang (prelude analysis, implicit-conversion fixups, the pair
-/// rewriter): their fast paths must give exactly what the plain patterns give.
+/// The Swift text passes around glslang (prelude analysis, the pair rewriter).
 final class ShaderTextPassTests: XCTestCase {
-    /// Every `.vert`/`.frag` in the bundled WE assets, includes inlined.
-    private static func bundledSources() throws -> [ShaderSource] {
-        // Resolved, so an assets folder reached through a symlink is still enumerated.
-        let assets = ShaderVariantTests.weAssets.resolvingSymlinksInPath()
-        let loader = ShaderSourceLoader(roots: [assets])
-        guard let files = FileManager.default.enumerator(at: assets, includingPropertiesForKeys: nil) else { return [] }
-        var sources: [ShaderSource] = []
-        for case let url as URL in files {
-            guard let stage = ShaderStage(rawValue: url.pathExtension) else { continue }
-            let relative = String(url.path.dropFirst(assets.path.count + 1))
-            do {
-                sources.append(try loader.load(relative, stage: stage))
-            } catch ShaderSourceError.missingInclude {
-                continue // a header-only fragment of a shader; not loadable on its own
-            }
-        }
-        return sources
-    }
-
-    /// The identifier prefilter never hides a declaration the full pattern would find.
-    func testReservedLocalsMatchTheUnfilteredPatterns() throws {
-        _ = try Fixtures.assets()
-        let sources = try Self.bundledSources()
-        XCTAssertGreaterThan(sources.count, 100)
-        for source in sources {
-            let analysis = ShaderPrelude.SourceAnalysis(source: source.text)
-            let unfiltered = ShaderPrelude.cppReservedWords.subtracting(analysis.macros).sorted()
-                .filter { ShaderPrelude.declaresLocal($0, in: source.text) }
-            XCTAssertEqual(analysis.reservedLocals, unfiltered, source.path)
-        }
-    }
-
     func testIdentifierTokensAreMaximalASCIIRuns() {
         let tokens = ShaderPrelude.identifierTokens(in: "vec2 or=a_b1;é new\nthis")
         XCTAssertEqual(tokens, ["vec2", "or", "a_b1", "new", "this"])
@@ -48,7 +15,6 @@ final class ShaderTextPassTests: XCTestCase {
         let copy = source
         XCTAssertEqual(copy.preludeAnalysis.macros, ["A"])
         XCTAssertEqual(source.preludeAnalysis.functions, ["log10", "main"])
-        XCTAssertEqual(source.preludeAnalysis.reservedLocals, ["or"])
         XCTAssertEqual(ShaderPrelude.text(for: .fragment, combos: ["X": 1], analysis: source.preludeAnalysis),
                        ShaderPrelude.text(for: .fragment, combos: ["X": 1], source: source.text))
     }

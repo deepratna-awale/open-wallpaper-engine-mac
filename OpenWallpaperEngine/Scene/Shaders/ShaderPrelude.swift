@@ -15,8 +15,6 @@ enum ShaderPrelude {
         let macros: Set<String>
         /// Names the shader defines as functions.
         let functions: Set<String>
-        /// C++ keywords the shader declares itself, sorted.
-        let reservedLocals: [String]
         /// The shader reads a render target texel by texel (`texLoad2D`, `texSample2DBackBuffer`).
         let loadsTexels: Bool
         /// The shader discards with HLSL's `clip`.
@@ -41,11 +39,8 @@ enum ShaderPrelude {
             clips = identifiers.contains("clip")
             samplesVolumes = identifiers.contains("texSample3D")
             comparesDepth = identifiers.contains("texSample2DCompare") || identifiers.contains("sampler2DComparison")
-            reservedLocals = cppReservedWords.subtracting(macros).sorted().filter { name in
-                identifiers.contains(Substring(name)) && declaresLocal(name, in: source)
-            }
-            let skipped = macros.union(reservedLocals)
-            glslReservedNames = GLSLReservedWords.used(in: source).filter { !skipped.contains($0) }
+            let defined = macros
+            glslReservedNames = GLSLReservedWords.used(in: source).filter { !defined.contains($0) }
         }
 
         static let loadNames = ["texLoad2D", "texSample2DBackBuffer", "sampler2DBackBuffer"]
@@ -67,16 +62,9 @@ enum ShaderPrelude {
         lines.append(contentsOf: common.filter { line in
             macroName(line).map { !defined.contains($0) } ?? true
         })
-        // A function named like a Metal built-in GLSL lacks (e.g. `log10`) becomes ambiguous
-        // in MSL; rename the shader's own definition and every call to it.
-        for name in metalOnlyBuiltins where analysis.functions.contains(name) && !analysis.macros.contains(name) {
-            lines.append("#define \(name) we_\(name)")
-        }
-        // C++ keywords are valid GLSL names but not MSL ones (`vec2 or;`). Only names the shader
-        // declares itself are renamed, never an interface name, which binds by name.
-        for name in analysis.reservedLocals {
-            lines.append("#define \(name) we_\(name)")
-        }
+        // Names MSL reserves but GLSL allows (C++ keywords such as `or`, a shader's own `log10`
+        // next to Metal's) are renamed in the SPIR-V the MSL is written from, by the shader
+        // toolchain (`renameMetalClashes`), not here.
         // GLSL reserves names WE's HLSL compiler accepts (`float common;`). These are renamed
         // everywhere, interface names included: both stages rename a varying alike, and the
         // uniform block is reflected back to WE's names (`GLSLReservedWords.originalName`).
@@ -160,52 +148,6 @@ enum ShaderPrelude {
 
     private static let definitionPattern = try! NSRegularExpression(
         pattern: #"(?m)^[ \t]*#[ \t]*define[ \t]+(\w+)|\b\w+[ \t]+(\w+)[ \t]*\([^;{}()]*\)\s*\{"#)
-
-    /// Built-in in the Metal standard library but not in GLSL, so a shader may define its own.
-    static let metalOnlyBuiltins = ["log10", "fmod", "rsqrt", "saturate", "fract2", "powr", "select", "median3"]
-
-    /// C++ keywords (MSL is C++) that GLSL doesn't reserve. `not` is left out: it's a GLSL built-in.
-    static let cppReservedWords: Set<String> = [
-        "and", "or", "xor", "bitand", "bitor", "compl", "and_eq", "or_eq", "xor_eq", "not_eq",
-        "template", "namespace", "this", "new", "delete", "operator", "class", "typename", "private",
-        "public", "protected", "friend", "virtual", "register", "auto", "explicit", "mutable", "using",
-        "typedef", "union", "enum", "extern", "static", "goto", "try", "catch", "throw", "sizeof",
-        "alignas", "alignof", "decltype", "constexpr", "nullptr", "static_assert", "thread_local",
-        "noexcept", "char", "short", "long", "signed", "unsigned", "wchar_t", "typeid", "export",
-        "concept", "requires", "device", "constant", "thread", "threadgroup", "kernel", "vertex", "fragment",
-    ]
-
-    private static let interfacePattern = try! NSRegularExpression(
-        pattern: #"(?m)^[ \t]*(?:uniform|varying|attribute|in|out)\b[^;]*;"#)
-
-    /// Whether the shader declares `name` itself (a variable or function after a type), and not
-    /// as a uniform, varying or attribute.
-    static func declaresLocal(_ name: String, in source: String) -> Bool {
-        guard let patterns = localPatterns[name] ?? makeLocalPatterns(name) else { return false }
-        let whole = NSRange(source.startIndex..., in: source)
-        guard patterns.declaration.firstMatch(in: source, range: whole) != nil else { return false }
-        let declarations = interfacePattern.matches(in: source, range: whole)
-        return !declarations.contains { match in
-            patterns.interface.firstMatch(in: source, range: match.range) != nil
-        }
-    }
-
-    /// A declaration of `name` after a type, and `name` declared in an interface statement.
-    private typealias LocalPatterns = (declaration: NSRegularExpression, interface: NSRegularExpression)
-
-    /// Compiled once; the names are fixed identifiers.
-    private static let localPatterns: [String: LocalPatterns] = Dictionary(
-        uniqueKeysWithValues: cppReservedWords.compactMap { name in makeLocalPatterns(name).map { (name, $0) } })
-
-    private static func makeLocalPatterns(_ name: String) -> LocalPatterns? {
-        do {
-            return (try NSRegularExpression(pattern: #"\b\w+\s+"# + NSRegularExpression.escapedPattern(for: name) + #"\s*[=;,()\[]"#),
-                    try NSRegularExpression(pattern: #"\b"# + NSRegularExpression.escapedPattern(for: name) + #"\s*[;\[]"#))
-        } catch {
-            OWELog.error(.shader, "Invalid declaration pattern for \(name): \(error)")
-            return nil
-        }
-    }
 
     /// Every maximal run of ASCII identifier characters: a superset of the names a declaration
     /// pattern can match, found in one pass over the UTF-8 bytes.

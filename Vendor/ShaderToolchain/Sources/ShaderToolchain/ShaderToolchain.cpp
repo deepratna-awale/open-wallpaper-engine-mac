@@ -4,6 +4,7 @@
 #include <cstring>
 #include <mutex>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "glslang/Public/ShaderLang.h"
@@ -18,7 +19,7 @@
 // version query). Keep in sync with README.md.
 #define OWE_SPIRV_CROSS_VERSION "vulkan-sdk-1.4.357.0"
 // The fixed options below; change this string whenever they change.
-#define OWE_SHADER_OPTIONS "E:none;G:opengl450-spv1.0-msgspv;pair:vulkan100-relaxed-linked-WEUniforms0-spv1.0;msl20300+decoration-binding;vert:fixup-clipspace+flip-vert-y"
+#define OWE_SHADER_OPTIONS "E:none;G:opengl450-spv1.0-msgspv;pair:vulkan100-relaxed-linked-WEUniforms0-spv1.0;rename:metal-clashes-we_;msl20300+decoration-binding;vert:fixup-clipspace+flip-vert-y"
 
 namespace {
 
@@ -165,10 +166,65 @@ bool compilePairSpirv(const char *vertexSource, const char *fragmentSource, std:
     return true;
 }
 
+// Names GLSL lets a shader use that MSL (C++) reserves or Metal's standard library declares, so
+// a WE shader's own `or`, `this` or `log10` would not compile as MSL. They are renamed `we_<name>`
+// in the SPIR-V's debug names (OpName, OpMemberName) the MSL is written from; the reflection
+// reads the original SPIR-V, so constants still bind by WE's names. A function's name is
+// glslang's mangled `name(args`.
+const std::unordered_set<std::string> &metalClashes() {
+    static const std::unordered_set<std::string> names = {
+        "and", "or", "xor", "bitand", "bitor", "compl", "and_eq", "or_eq", "xor_eq", "not_eq",
+        "template", "namespace", "this", "new", "delete", "operator", "class", "typename", "private",
+        "public", "protected", "friend", "virtual", "register", "auto", "explicit", "mutable", "using",
+        "typedef", "union", "enum", "extern", "static", "goto", "try", "catch", "throw", "sizeof",
+        "alignas", "alignof", "decltype", "constexpr", "nullptr", "static_assert", "thread_local",
+        "noexcept", "char", "short", "long", "signed", "unsigned", "wchar_t", "typeid", "export",
+        "concept", "requires", "device", "constant", "thread", "threadgroup", "kernel", "vertex", "fragment",
+        // Metal standard library functions GLSL lacks: a shader's own definition is ambiguous.
+        "log10", "fmod", "rsqrt", "saturate", "fract2", "powr", "select", "median3",
+    };
+    return names;
+}
+
+std::vector<uint32_t> renameMetalClashes(const std::vector<uint32_t> &words) {
+    const uint32_t opName = 5, opMemberName = 6;
+    if (words.size() < 5) return words;
+    std::vector<uint32_t> result(words.begin(), words.begin() + 5);
+    result.reserve(words.size());
+    size_t index = 5;
+    while (index < words.size()) {
+        uint32_t count = words[index] >> 16, opcode = words[index] & 0xffff;
+        if (count == 0 || index + count > words.size()) {
+            result.insert(result.end(), words.begin() + index, words.end());
+            break;
+        }
+        size_t operands = opcode == opName ? 1 : opcode == opMemberName ? 2 : 0;
+        if (operands > 0 && count > operands + 1) {
+            const char *text = reinterpret_cast<const char *>(&words[index + 1 + operands]);
+            size_t limit = (count - 1 - operands) * 4;
+            std::string name(text, strnlen(text, limit));
+            if (metalClashes().count(name.substr(0, name.find('(')))) {
+                std::string renamed = "we_" + name;
+                std::vector<uint32_t> string(renamed.size() / 4 + 1, 0);
+                std::memcpy(string.data(), renamed.data(), renamed.size());
+                uint32_t total = static_cast<uint32_t>(1 + operands + string.size());
+                result.push_back(total << 16 | opcode);
+                result.insert(result.end(), words.begin() + index + 1, words.begin() + index + 1 + operands);
+                result.insert(result.end(), string.begin(), string.end());
+                index += count;
+                continue;
+            }
+        }
+        result.insert(result.end(), words.begin() + index, words.begin() + index + count);
+        index += count;
+    }
+    return result;
+}
+
 // spirv-cross main.cpp `compile_iteration` with the CLI defaults and our three flags.
 std::string compileMSL(std::vector<uint32_t> spirv, owe_shader_stage stage) {
     using namespace SPIRV_CROSS_NAMESPACE;
-    Parser parser(std::move(spirv));
+    Parser parser(renameMetalClashes(spirv));
     parser.parse();
     CompilerMSL compiler(std::move(parser.get_parsed_ir()));
 
