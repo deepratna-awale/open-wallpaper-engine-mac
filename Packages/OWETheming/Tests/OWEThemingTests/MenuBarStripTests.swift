@@ -49,16 +49,22 @@ final class MenuBarStripTests: XCTestCase {
         XCTAssertNil(MenuBarStrip.imageRect(height: 5, displaySize: .zero, imageSize: CGSize(width: 10, height: 10)))
     }
 
-    func testComposedFillsOnlyTheStrip() throws {
+    /// The strip fades out downwards over `fadeHeightRatio` menu bar heights: full colour at the
+    /// top, fainter further down, and the picture untouched below it.
+    func testComposedFadesTheStripDownwards() throws {
         let image = try XCTUnwrap(Self.solid(width: 40, height: 40, gray: 0))
         let strips = DesktopPictureStrips(color: ThemeColor(red: 1, green: 0, blue: 0),
                                           displays: [7: MenuBarStripDisplay(size: CGSize(width: 20, height: 20), menuBarHeight: 5)])
         let composed = try XCTUnwrap(strips.composed(image, display: 7))
         let pixels = try XCTUnwrap(Self.pixels(composed))
-        // Row 0 is the top row in memory: the top 10 rows are red, the rest black.
-        XCTAssertEqual(pixels[(5 * 40 + 3) * 4], 255)
-        XCTAssertEqual(pixels[(5 * 40 + 3) * 4 + 1], 0)
-        XCTAssertEqual(pixels[(20 * 40 + 3) * 4], 0)
+        // Row 0 is the top row in memory. 2 pixels a point: a 5 pt bar fades over 30 rows.
+        let red = { (row: Int) in Int(pixels[(row * 40 + 3) * 4]) }
+        XCTAssertGreaterThanOrEqual(red(0), 250, "full colour at the top")
+        XCTAssertEqual(pixels[3 * 4 + 1], 0)
+        XCTAssertGreaterThan(red(4), red(15), "fainter further down")
+        XCTAssertGreaterThan(red(15), red(27))
+        XCTAssertGreaterThan(red(15), 0)
+        XCTAssertEqual(red(32), 0, "the picture below the fade is untouched")
         XCTAssertNil(strips.composed(image, display: 8), "a display without geometry is left alone")
     }
 
@@ -78,8 +84,8 @@ final class MenuBarStripTests: XCTestCase {
         let source = try XCTUnwrap(CGImageSourceCreateWithURL(url as CFURL, nil))
         XCTAssertEqual(CGImageSourceGetType(source) as String?, "public.png")
         let pixels = try XCTUnwrap(Self.pixels(try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil))))
-        XCTAssertEqual(pixels[2], 255)
-        XCTAssertEqual(pixels[(10 * 16) * 4 + 2], 0)
+        XCTAssertGreaterThanOrEqual(pixels[2], 250, "the strip's colour at the top")
+        XCTAssertEqual(pixels[(13 * 16) * 4 + 2], 0, "below the 12-row fade the picture is untouched")
     }
 
     static func solid(width: Int, height: Int, gray: CGFloat) -> CGImage? {
