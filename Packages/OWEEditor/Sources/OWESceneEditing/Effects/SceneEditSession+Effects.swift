@@ -65,6 +65,26 @@ extension SceneEditSession {
     /// Adds `entry` on top of the layer's effects (applied last) and returns its key.
     @discardableResult
     public func addEffect(_ entry: EffectCatalogEntry, to layerID: Int, actionName: String) -> String? {
+        guard let (next, key) = overlay(adding: entry, to: layerID) else { return nil }
+        commit(next, actionName: actionName, coalescingKey: nil)
+        return key
+    }
+
+    /// Adds `entry` on top of the layer's effects with `path` in `slot` of pass `pass` (its combo
+    /// on, as `setEffectTexture` sets it), as one undo step; returns the effect's key.
+    @discardableResult
+    public func addEffect(_ entry: EffectCatalogEntry, to layerID: Int, texture path: String, slot: Int, pass: Int = 0,
+                          combo: String? = nil, actionName: String) -> String? {
+        guard let added = overlay(adding: entry, to: layerID) else { return nil }
+        var next = added.0
+        let key = added.1
+        setTexture(path, slot: slot, pass: pass, effect: key, of: layerID, combo: combo, in: &next)
+        commit(next, actionName: actionName, coalescingKey: nil)
+        return key
+    }
+
+    /// The overlay with `entry` added on top of the layer's effects, and the new effect's key.
+    private func overlay(adding entry: EffectCatalogEntry, to layerID: Int) -> (SceneEditOverlay, String)? {
         guard let layer = outline.layer(layerID) else { return nil }
         let keys = layer.effects.map(\.key)
         let used = (overlay.objects[String(layerID)]?.addedEffects ?? [:]).keys.compactMap { Int($0.dropFirst()) }
@@ -83,8 +103,7 @@ extension SceneEditSession {
             edit.addedEffects = added
             if edit.effectOrder != nil { edit.effectOrder = keys + [key] }
         }
-        commit(next, actionName: actionName, coalescingKey: nil)
-        return key
+        return (next, key)
     }
 
     /// Removes the effect: an added one leaves the overlay with its edits, an authored one leaves
@@ -179,8 +198,14 @@ extension SceneEditSession {
     /// WE's scenes leave it.
     public func setEffectTexture(_ path: String?, slot: Int, pass: Int = 0, effect effectKey: String, of layerID: Int,
                                  combo: String? = nil, actionName: String) {
-        let authoredPath = Self.authoredTexture(baseEffect(effectKey, of: layerID), pass: pass, slot: slot)
         var next = overlay
+        setTexture(path, slot: slot, pass: pass, effect: effectKey, of: layerID, combo: combo, in: &next)
+        commit(next, actionName: actionName, coalescingKey: nil)
+    }
+
+    private func setTexture(_ path: String?, slot: Int, pass: Int, effect effectKey: String, of layerID: Int,
+                            combo: String?, in next: inout SceneEditOverlay) {
+        let authoredPath = Self.authoredTexture(baseEffect(effectKey, of: layerID), pass: pass, slot: slot)
         next.updateEffect(key: effectKey, of: layerID) { edit in
             var textures = edit.textures ?? [:]
             textures[SceneEditOverlay.EffectEdit.textureKey(pass: pass, slot: slot)] =
@@ -195,7 +220,6 @@ extension SceneEditSession {
                 edit.combos = combos.isEmpty ? nil : combos
             }
         }
-        commit(next, actionName: actionName, coalescingKey: nil)
     }
 
     /// Binds the constant to user property `property` (nil: the constant's own value again).
