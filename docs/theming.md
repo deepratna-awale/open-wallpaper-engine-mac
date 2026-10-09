@@ -52,9 +52,8 @@ pane and of SkyLight on macOS 27; nothing was written while finding them.
 
 macOS has no API for the menu bar's colour. On macOS 26 and later the bar is transparent with no
 tint of its own: it shows whatever is directly behind it, which is OWE's wallpaper window (it covers
-the desktop picture). The strip is the colour fading out downwards: full at the top, gone at three
-menu bar heights (`MenuBarStrip.fadeStops`), so the bar stays mostly solid behind its text and the
-colour dissolves into the wallpaper. It is drawn twice:
+the desktop picture). The strip is the colour fading out downwards: 40% at the top, gone at 1.5
+menu bar heights (`MenuBarStrip.fadeStops`): a tint over the bar that dissolves into the wallpaper. It is drawn twice:
 
 - **The wallpaper window.** Each display's wallpaper window gets a gradient layer over its top
   (`WallpaperWindowContentView.menuBarStrip`). The
