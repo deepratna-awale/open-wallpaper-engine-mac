@@ -154,8 +154,10 @@ extension SceneRigAnimationEventTests {
         let directory = FileManager.default.temporaryDirectory.appending(path: "owe-samurai-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         addTeardownBlock { try? FileManager.default.removeItem(at: directory) } // Optional: cleanup only.
+        // Copies, not links: the loader refuses an asset whose links resolve outside the wallpaper's
+        // folder (`AssetPathResolver`), so linked folders would leave the puppet without its rig.
         for name in try FileManager.default.contentsOfDirectory(atPath: source.path) where name != "scene.json" {
-            try FileManager.default.createSymbolicLink(at: directory.appending(path: name), withDestinationURL: source.appending(path: name))
+            try FileManager.default.copyItem(at: source.appending(path: name), to: directory.appending(path: name))
         }
         let script = """
             export function update(value) {
