@@ -30,6 +30,14 @@ int owe_shader_preprocess(const char *source, owe_shader_stage stage, char **out
 int owe_shader_compile_msl(const char *source, owe_shader_stage stage, char **msl, char **reflection,
                            char **log, const char **failed_step);
 
+/// Compiles a vertex/fragment pair as one linked program under glslang's relaxed Vulkan rules,
+/// which gather both stages' loose uniforms into one `WEUniforms` block (binding 0). Returns 1
+/// with both stages' MSL and reflection set; 0 with `*log`, `*failed_step` and `*failed_stage`
+/// (the stage, or -1 for the link) set.
+int owe_shader_compile_pair_msl(const char *vertex, const char *fragment, char **vertex_msl,
+                                char **vertex_reflection, char **fragment_msl, char **fragment_reflection,
+                                char **log, const char **failed_step, int *failed_stage);
+
 void owe_shader_free(char *string);
 
 /// Identifies the linked libraries and the fixed option set; changes whenever output can.

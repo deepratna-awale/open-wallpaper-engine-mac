@@ -335,13 +335,10 @@ public final class SceneEditSession: ObservableObject {
         commit(next, actionName: actionName, coalescingKey: coalescingKey)
     }
 
-    /// Drops every scene edit (locks stay: they aren't edits of the wallpaper). Undoable.
-    public func revert(actionName: String) {
-        var next = SceneEditOverlay()
-        for (key, edit) in overlay.objects where edit.locked == true {
-            next.objects[key] = SceneEditOverlay.ObjectEdit(locked: true)
-        }
-        commit(next, actionName: actionName, coalescingKey: nil)
+    /// File › Revert to Saved: back to `saved`, the overlay as last saved (an empty one drops every
+    /// edit), locks included, so nothing is left unsaved. Undoable.
+    public func revert(to saved: SceneEditOverlay, actionName: String) {
+        commit(saved, actionName: actionName, coalescingKey: nil)
     }
 
     /// nil when `value` is what the scene authored, so the layer no longer counts as edited.

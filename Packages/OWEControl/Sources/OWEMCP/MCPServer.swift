@@ -154,8 +154,9 @@ public final class MCPServer {
             Controls Open Wallpaper Engine, the wallpaper player on this Mac: its displays, library, \
             playback, user properties, playlists, settings and editors. Ids come from list_wallpapers and \
             list_displays; get_wallpaper lists a wallpaper's user properties. A scene wallpaper is edited \
-            as its editors edit it: scene_get lists its layers, scene_apply_edits changes them (one undo \
-            step, shown live and in open editors), scene_undo takes it back. Tools that delete need \
+            as its editors edit it: scene_get lists its layers, scene_apply_edits changes them in the \
+            Wallpaper Editor's draft (one undo step, shown in its open window), scene_undo takes it back, \
+            and wallpaper_editor_save saves the draft so the displays show it. Tools that delete need \
             confirm: true; ask the user first. The app's MCP Server plugin must be installed \
             (Settings › Plugins); owe-mcp starts the app when it isn't running.
             """,

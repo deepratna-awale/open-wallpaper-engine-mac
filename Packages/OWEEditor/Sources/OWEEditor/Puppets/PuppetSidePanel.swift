@@ -22,7 +22,7 @@ struct PuppetSidePanel: View {
                         Label(problem.text, systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
                     }
                 } footer: {
-                    Text(PL("Save as Local Wallpaper writes the puppet once these are fixed."))
+                    Text(PL("Save as New Wallpaper writes the puppet once these are fixed."))
                 }
             }
         }

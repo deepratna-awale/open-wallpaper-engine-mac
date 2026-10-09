@@ -4,7 +4,7 @@ import OWESceneEditing
 @testable import OpenWallpaperEngine
 
 /// A layer's depth map made into an effect's mask (Create Mask from Depth Map): the `.tex` is the
-/// R8 mask WE's editor writes, Save as Local Wallpaper carries it and the effect's reference into
+/// R8 mask WE's editor writes, Save as New Wallpaper carries it and the effect's reference into
 /// the copy, and the masked effect changes only the masked part of the layer.
 @MainActor
 final class DepthMaskTests: XCTestCase {

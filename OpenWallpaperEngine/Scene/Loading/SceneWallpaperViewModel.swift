@@ -482,7 +482,13 @@ class SceneWallpaperViewModel: ObservableObject {
                                         edits: split.edits, userProperties: split.properties,
                                         settings: String(describing: settings.contentKey),
                                         displays: SceneCacheKey.Display.connected(),
-                                        overlay: overlayOverride ?? SceneEditOverlayFiles.overlay(for: settingsIdentity(for: dir)))
+                                        overlay: overlayOverride ?? editOverlay(for: settingsIdentity(for: dir)))
+    }
+
+    /// The Wallpaper Editor's overlay the scene is read with: its draft for the editor's canvas
+    /// (`WallpaperPropertyScope.editorDraft`), the saved one anywhere else.
+    private func editOverlay(for identity: WallpaperSettingsIdentity) -> SceneEditOverlay? {
+        propertyScope == .editorDraft ? SceneEditOverlayFiles.editedOverlay(for: identity) : SceneEditOverlayFiles.overlay(for: identity)
     }
 
     /// The scene and the document it was decoded from (for the scripts; nil when it isn't JSON the

@@ -129,14 +129,18 @@ final class SceneEditSessionTests: XCTestCase {
         XCTAssertEqual(session.transform(of: 10).origin.x, 960)
     }
 
-    func testRevertDropsEditsKeepsLocksAndUndoes() {
+    func testRevertToSavedGoesBackToTheSavedOverlayAndUndoes() {
         session.setValue(.number(0.5), for: "alpha", of: 10, actionName: "Change Opacity")
+        let saved = session.overlay
+        session.setValue(.number(0.25), for: "alpha", of: 10, actionName: "Change Opacity")
         session.setLocked(true, 11, actionName: "Lock")
-        session.revert(actionName: "Revert")
-        XCTAssertFalse(session.overlay.hasSceneEdits)
-        XCTAssertTrue(session.isLocked(11))
-        session.undo()
+        session.revert(to: saved, actionName: "Revert to Saved")
+        XCTAssertEqual(session.overlay, saved, "nothing unsaved is left, the lock included")
         XCTAssertEqual(session.value("alpha", of: 10), .number(0.5))
+        XCTAssertFalse(session.isLocked(11))
+        session.undo()
+        XCTAssertEqual(session.value("alpha", of: 10), .number(0.25))
+        XCTAssertTrue(session.isLocked(11))
     }
 
     func testAppliedSceneMatchesWhatTheSessionShows() throws {

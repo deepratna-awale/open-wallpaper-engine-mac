@@ -35,6 +35,8 @@ final class WallpaperEditorLauncher {
         var launch: (_ app: URL, _ arguments: [String], _ environment: [String: String],
                      _ done: @escaping @MainActor (Error?) -> Void) -> Void = WallpaperEditorLauncher.openApp
         var now: () -> Date = Date.init
+        /// How long a request that needs the editor's answer waits for it (`restartParticles`).
+        var replyTimeout: TimeInterval = 1
     }
 
     /// How long requests wait for a launched editor to say it is ready before asking again.
@@ -109,6 +111,31 @@ final class WallpaperEditorLauncher {
         return post(.timeline, folder: folder, extra: info)
     }
 
+    /// Asks the running editor to restart the particle systems `layers` in its window of the
+    /// wallpaper in `folder` (the draft its canvas runs). True once it says it did; false when no
+    /// editor runs, it has no window of the wallpaper, or it doesn't answer within `replyTimeout`.
+    func restartParticles(_ folder: URL, layers: Set<Int>) async -> Bool {
+        let path = folder.standardizedFileURL.path(percentEncoded: false)
+        let reply = EditorReply()
+        return await withCheckedContinuation { continuation in
+            reply.continuation = continuation
+            let messaging = dependencies.messaging, sender = dependencies.sender
+            reply.token = messaging.observe(dependencies.channel.name(.particlesRestarted)) { replier, info in
+                guard replier != sender, info[AppProcessChannel.folderKey] == path else { return }
+                reply.finish(true, messaging: messaging)
+            }
+            let layerList = layers.sorted().map(String.init).joined(separator: ",")
+            guard post(.particlesRestart, folder: folder, extra: [AppProcessChannel.layersKey: layerList]) else {
+                return reply.finish(false, messaging: messaging)
+            }
+            let timeout = dependencies.replyTimeout
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(timeout)) // Cancellation can't happen: nothing cancels it.
+                reply.finish(false, messaging: messaging)
+            }
+        }
+    }
+
     private func post(_ message: AppProcessChannel.Message, folder: URL, extra: [String: String] = [:]) -> Bool {
         guard dependencies.editorIsRunning() else { return false }
         var info = extra
@@ -151,5 +178,21 @@ final class WallpaperEditorLauncher {
         NSWorkspace.shared.openApplication(at: app, configuration: configuration) { _, error in
             DispatchQueue.main.async { MainActor.assumeIsolated { done(error) } }
         }
+    }
+}
+
+/// One answer the app waits for from the editor: the first of the answer and the timeout resumes
+/// the waiting request, once.
+@MainActor
+private final class EditorReply {
+    var continuation: CheckedContinuation<Bool, Never>?
+    var token: AnyObject?
+
+    func finish(_ result: Bool, messaging: AppProcessMessaging) {
+        guard let continuation else { return }
+        self.continuation = nil
+        if let token { messaging.remove(token) }
+        token = nil
+        continuation.resume(returning: result)
     }
 }

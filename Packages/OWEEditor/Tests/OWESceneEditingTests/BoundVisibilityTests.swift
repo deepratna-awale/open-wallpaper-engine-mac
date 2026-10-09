@@ -43,7 +43,7 @@ final class BoundVisibilityTests: XCTestCase {
         XCTAssertTrue(session.isEdited(1))
         XCTAssertEqual(session.binding("visible", of: 1), .userProperty("clocklocation"), "the binding stays")
         XCTAssertEqual(session.overlay.field("visible", of: 1), .bool(false))
-        // The scene the renderer and Save as Local Wallpaper read: a plain false, which no
+        // The scene the renderer and Save as New Wallpaper read: a plain false, which no
         // property value shows.
         let visible = try appliedVisible(1, session.overlay)
         XCTAssertEqual(visible as? Bool, false)
@@ -78,7 +78,7 @@ final class BoundVisibilityTests: XCTestCase {
         XCTAssertEqual(session.overlay, SceneEditOverlay())
         session.redo()
         XCTAssertTrue(session.isHiddenOverProperty(1))
-        session.revert(actionName: "Revert")
+        session.revert(to: SceneEditOverlay(), actionName: "Revert to Saved")
         XCTAssertFalse(session.isHiddenOverProperty(1))
         XCTAssertEqual(session.binding("visible", of: 1), .userProperty("clocklocation"))
     }

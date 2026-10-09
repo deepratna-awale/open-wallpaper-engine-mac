@@ -1,6 +1,6 @@
 import Foundation
 
-/// Save as Local Wallpaper: a new wallpaper folder in the library with the edits baked into its
+/// Save as New Wallpaper: a new wallpaper folder in the library with the edits baked into its
 /// scene.json. The source wallpaper (a Workshop item, usually) is only read.
 public struct LocalWallpaperWriter {
     public struct Source {

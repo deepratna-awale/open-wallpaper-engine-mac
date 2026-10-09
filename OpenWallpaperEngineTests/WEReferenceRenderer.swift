@@ -31,6 +31,8 @@ struct WEReferenceRenderer {
     var particleSeed: UInt32 = 0
     /// The frames a second the clock steps at and the viewport asks for: WE's FPS setting.
     var frameRate = 30.0
+    /// The display's size in pixels (100 %): WE's captures are `size`.
+    var outputSize = WEReferenceRenderer.size
 
     /// The frames at `shots` (in time order), placed on the screen as WE places a scene (cover).
     func render(_ shots: [Shot]) throws -> [WEReferenceImage] {
@@ -40,12 +42,12 @@ struct WEReferenceRenderer {
         defer { restoreTime() }
         let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
         var settings = settings
-        settings.textureReduction = TextureReduction.factor(textureResolution, outputPixels: SIMD2<Float>(Self.size),
+        settings.textureReduction = TextureReduction.factor(textureResolution, outputPixels: SIMD2<Float>(outputSize),
                                                              sceneSize: model.textureReductionSceneSize)
         model.setRenderSettings(settings)
         let content = try XCTUnwrap(model.metalContent(), "\(directory.lastPathComponent): no content")
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        let points = CGSize(width: Self.size.x, height: Self.size.y)
+        let points = CGSize(width: outputSize.x, height: outputSize.y)
         let view = MTKView(frame: CGRect(origin: .zero, size: points), device: device)
         view.colorPixelFormat = .bgra8Unorm
         view.autoResizeDrawable = false
@@ -98,13 +100,13 @@ struct WEReferenceRenderer {
             let texture = try XCTUnwrap(renderer.sharedFrame)
             let bytes = try TextureUploadTests.read(texture, device: device)
             let image = WEReferenceImage(width: texture.width, height: texture.height, pixels: bytes)
-            images.append(image.covering(width: Self.size.x, height: Self.size.y))
+            images.append(image.covering(width: outputSize.x, height: outputSize.y))
         }
         return images
     }
 
     private func draw(_ renderer: SceneMetalRenderer, cursor: SIMD2<Double>) {
-        let size = SIMD2<Float>(Float(Self.size.x), Float(Self.size.y))
+        let size = SIMD2<Float>(Float(outputSize.x), Float(outputSize.y))
         // The viewport's cursor is in points from the bottom-left.
         let point = SIMD2(Float(cursor.x), size.y - Float(cursor.y))
         renderer.renderShared([SceneViewport(drawableSize: size, pointSize: size, cursor: point,

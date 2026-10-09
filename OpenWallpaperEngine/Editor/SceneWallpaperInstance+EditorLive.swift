@@ -14,6 +14,11 @@ extension SceneWallpaperInstance {
         return folder.standardizedFileURL.path == viewModel.currentWallpaper.wallpaperDirectory.standardizedFileURL.path
     }
 
+    /// Whether this is the Wallpaper Editor's canvas, which runs the editor's draft
+    /// (`WallpaperPropertyScope.editorDraft`): it takes the draft's changes, every other instance
+    /// only the saved overlay's.
+    var runsEditorDraft: Bool { key.properties == .editorDraft }
+
     /// Takes the editor's overlay; true when the renderer draws it live (no reload needed).
     func applyEditorEdits(overlay: SceneEditOverlay?, base: SceneOutline?) -> Bool {
         guard let overlay, let base else { return false }

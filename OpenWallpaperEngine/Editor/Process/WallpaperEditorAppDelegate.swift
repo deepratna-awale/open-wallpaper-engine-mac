@@ -55,6 +55,10 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
         changeSync.onAppOverlay = { [weak self] folder, actionName, step in
             self?.editor(of: folder)?.adoptSavedOverlay(actionName: actionName, step: step)
         }
+        // An MCP client saved the draft: the open window of the wallpaper has nothing unsaved.
+        changeSync.onAppDraftSave = { [weak self] folder in
+            self?.editor(of: folder)?.draftWasSaved()
+        }
         changeSync.start()
         themeTint.follow()
     }
@@ -80,6 +84,24 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
         return true
     }
 
+    /// Quitting asks about each window's unsaved changes in turn, as a document app does; Cancel
+    /// in any of them keeps the editor running.
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        let unsaved = editors.values.filter { $0.isEdited }.sorted { $0.window.title < $1.window.title }
+        guard !unsaved.isEmpty else { return .terminateNow }
+        review(unsaved[...]) { quits in sender.reply(toApplicationShouldTerminate: quits) }
+        return .terminateLater
+    }
+
+    private func review(_ unsaved: ArraySlice<WallpaperEditorController>, then done: @escaping @MainActor (Bool) -> Void) {
+        guard let editor = unsaved.first else { return done(true) }
+        editor.window.makeKeyAndOrderFront(nil)
+        editor.confirmUnsavedChanges { [weak self] proceed in
+            guard proceed, let self else { return done(false) }
+            self.review(unsaved.dropFirst(), then: done)
+        }
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
         requests.stop()
         changeSync.stop()
@@ -102,7 +124,8 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
             return false
         }
         do {
-            let editor = try WallpaperEditorController(wallpaper: wallpaper, host: sceneHost, sync: changeSync)
+            let editor = try WallpaperEditorController(wallpaper: wallpaper, host: sceneHost, sync: changeSync,
+                                                       resumesDraft: resumesDraft(of: wallpaper))
             editor.onClose = { [weak self] in
                 guard let self else { return }
                 self.editors[folder] = nil
@@ -118,6 +141,14 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
         }
     }
 
+    /// A draft left from an earlier session (the editor quit without asking, or crashed): Resume
+    /// edits it on, Discard starts from the wallpaper as last saved. True without one.
+    private func resumesDraft(of wallpaper: WEWallpaper) -> Bool {
+        guard WallpaperEditorDraft(wallpaper: wallpaper).hasUnsavedChanges else { return true }
+        OWELog.info(.ui, "The Wallpaper Editor found a draft of \(wallpaper.project.title) from an earlier session")
+        return WallpaperEditorDraftAlerts.leftoverDraft(title: wallpaper.project.displayTitle).runModal() == .alertFirstButtonReturn
+    }
+
     /// The open editor of the wallpaper in `folder`, however its path was spelt.
     private func editor(of folder: URL) -> WallpaperEditorController? {
         let path = folder.standardizedFileURL.path
@@ -130,6 +161,12 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
 
     func controlTimeline(of folder: URL, command: String, seconds: Double?) {
         editor(of: folder)?.controlTimeline(command: command, seconds: seconds)
+    }
+
+    func restartParticles(of folder: URL, layers: Set<Int>) -> Bool {
+        guard let editor = editor(of: folder) else { return false }
+        editor.restartParticles(layers)
+        return true
     }
 
     private func showCantOpen(title: String) {

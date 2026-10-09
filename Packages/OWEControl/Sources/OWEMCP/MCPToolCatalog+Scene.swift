@@ -114,7 +114,7 @@ extension MCPToolCatalog {
 
     private static let sceneEditing: [MCPTool] = [
         MCPTool("scene_apply_edits", title: "Apply Scene Edits",
-                description: "Edits a scene wallpaper as the Wallpaper Editor does, through its edit model: layers, effects, particles, puppets, timelines, scripts, bindings and the wallpaper's own user properties. The edits are kept beside the wallpaper (never written into it), show at once on the displays running it and in its open editor windows, and are one undo step there and for scene_undo. scene_get gives the ids. " + sceneEditsDescription,
+                description: "Edits a scene wallpaper as the Wallpaper Editor does, through its edit model: layers, effects, particles, puppets, timelines, scripts, bindings and the wallpaper's own user properties. The edits go into the wallpaper's Wallpaper Editor draft (kept beside the wallpaper, never written into it): they show at once in its open Wallpaper Editor window and are one undo step there and for scene_undo, and the displays running the wallpaper show them only once wallpaper_editor_save saves the draft. scene_get gives the ids. " + sceneEditsDescription,
                 input: JSONSchema.object([
                     "wallpaper_id": sceneWallpaper,
                     "edits": JSONSchema.objectArray("The edits to apply, in order (see the tool's description).", item: sceneEditSchema, maxItems: 200),
@@ -127,23 +127,32 @@ extension MCPToolCatalog {
         MCPTool("scene_redo", title: "Redo Scene Edit",
                 description: "Redoes what scene_undo undid.",
                 input: JSONSchema.object(["wallpaper_id": sceneWallpaper], required: ["wallpaper_id"]), annotations: .change) { message($0) },
-        MCPTool("scene_save", title: "Save Scene Edits",
-                description: "Confirms the wallpaper's edits are saved. Every edit is saved as it is made (beside the wallpaper, as the editor saves them), so this changes nothing; scene_save_as_local_wallpaper makes a copy with them.",
-                input: JSONSchema.object(["wallpaper_id": sceneWallpaper], required: ["wallpaper_id"]), annotations: .idempotent) { message($0) },
-        MCPTool("scene_save_as_local_wallpaper", title: "Save as Local Wallpaper",
-                description: "File › Save as Local Wallpaper: a copy of the wallpaper with its edits baked in, added to the library. The wallpaper itself isn't touched. Returns the copy's id.",
+        MCPTool("wallpaper_editor_save", title: "Save Wallpaper Editor Draft",
+                description: "The Wallpaper Editor's File › Save: the wallpaper's draft (every unsaved scene_apply_edits, depth map and revert, and an open editor window's own changes) becomes the wallpaper's edits, which the displays, the screen saver and playlists running it then show. The wallpaper's own files aren't changed. scene_get's unsaved says whether there is anything to save.",
+                input: JSONSchema.object(["wallpaper_id": sceneWallpaper], required: ["wallpaper_id"]), annotations: .change) { message($0) },
+        MCPTool("wallpaper_editor_save_as_new", title: "Save as New Wallpaper",
+                description: "The Wallpaper Editor's File › Save as New Wallpaper: a new wallpaper in the library with the draft's edits baked in. The wallpaper and its draft stay as they are. Returns the new wallpaper's id.",
                 input: JSONSchema.object([
                     "wallpaper_id": sceneWallpaper,
-                    "title": JSONSchema.string("The copy's title; \"<title> (Edited)\" when omitted."),
+                    "title": JSONSchema.string("The new wallpaper's title; \"<title> (Edited)\" when omitted."),
                 ], required: ["wallpaper_id"]), annotations: .change) { message($0) },
-        MCPTool("scene_revert", title: "Revert Scene Edits",
-                description: "File › Revert: drops every edit of the wallpaper (layer locks stay). One undo step: scene_undo brings them back.",
+        MCPTool("scene_save", title: "Save Wallpaper Editor Draft (Deprecated)",
+                description: "Deprecated: the older name of wallpaper_editor_save, which it does exactly; use wallpaper_editor_save.",
+                input: JSONSchema.object(["wallpaper_id": sceneWallpaper], required: ["wallpaper_id"]), annotations: .change) { message($0) },
+        MCPTool("scene_save_as_local_wallpaper", title: "Save as New Wallpaper (Deprecated)",
+                description: "Deprecated: the older name of wallpaper_editor_save_as_new, which it does exactly; use wallpaper_editor_save_as_new.",
+                input: JSONSchema.object([
+                    "wallpaper_id": sceneWallpaper,
+                    "title": JSONSchema.string("The new wallpaper's title; \"<title> (Edited)\" when omitted."),
+                ], required: ["wallpaper_id"]), annotations: .change) { message($0) },
+        MCPTool("scene_revert", title: "Revert to Saved",
+                description: "The Wallpaper Editor's File › Revert to Saved: the draft goes back to the wallpaper as last saved, dropping every unsaved edit. One undo step: scene_undo brings them back.",
                 input: JSONSchema.object(["wallpaper_id": sceneWallpaper], required: ["wallpaper_id"]), annotations: .destructive) { message($0) },
     ]
 
     private static let sceneReading: [MCPTool] = [
         MCPTool("scene_get", title: "Get Scene",
-                description: "A scene wallpaper as the editors show it, edits included: its size and settings, and every layer with its id, name, kind, draw order, parent, visibility, lock, fields (transform, alpha, colour, blend mode, size, text, font…), user-property bindings, scripted fields, effects (key, file, visibility, constants, combos, textures, bindings), particle file and puppet; the wallpaper's own user properties; and the undo state.",
+                description: "A scene wallpaper as the Wallpaper Editor shows it, its draft's edits included (unsaved says whether any aren't saved yet): its size and settings, and every layer with its id, name, kind, draw order, parent, visibility, lock, fields (transform, alpha, colour, blend mode, size, text, font…), user-property bindings, scripted fields, effects (key, file, visibility, constants, combos, textures, bindings), particle file and puppet; the wallpaper's own user properties; and the undo state.",
                 input: JSONSchema.object(["wallpaper_id": sceneWallpaper], required: ["wallpaper_id"]), annotations: .readOnly) { result in
             "\(wallpaperName(result["wallpaper"])) has \(count(result["layers"]?.arrayValue?.count ?? 0, "layer"))."
         },
@@ -170,7 +179,7 @@ extension MCPToolCatalog {
             "Particle system \(result["definition"]?.stringValue ?? "?")."
         },
         MCPTool("particles_restart", title: "Restart Particle System",
-                description: "Starts a particle system again from nothing on the displays running the wallpaper, as the particle editor's Restart does.",
+                description: "Starts a particle system again from nothing, as the particle editor's Restart does: in the open Wallpaper Editor window's canvas when there is one (the draft being edited; in_editor says so), else on the displays running the wallpaper as saved.",
                 input: JSONSchema.object(["wallpaper_id": sceneWallpaper, "layer": layerID], required: ["wallpaper_id", "layer"]),
                 annotations: .idempotent) { message($0) },
         MCPTool("puppets_list", title: "List Puppets",
@@ -245,7 +254,7 @@ extension MCPToolCatalog {
                     "layer": JSONSchema.integer("The layer; the whole scene when omitted."),
                 ], required: ["wallpaper_id"]), annotations: .destructive) { message($0) },
         MCPTool("use_depth_map_as_mask", title: "Use Depth Map as Mask",
-                description: "Create Mask from Depth Map › Use as Mask for…: writes the layer's depth map (depth_generate) as the mask of one of its effects with a grey mask slot (Shake, Water Ripple, Tint…), so the effect shows where the mask is white (near, unless inverted). It is stored as WE stores a painted mask (an R8 .tex in materials/masks, named in the effect's pass textures), so Save as Local Wallpaper writes a normal WE wallpaper. An existing mask is replaced (the result's replaced names it; scene_undo brings it back and its file is kept). One undo step.",
+                description: "Create Mask from Depth Map › Use as Mask for…: writes the layer's depth map (depth_generate) as the mask of one of its effects with a grey mask slot (Shake, Water Ripple, Tint…), so the effect shows where the mask is white (near, unless inverted). It is stored as WE stores a painted mask (an R8 .tex in materials/masks, named in the effect's pass textures), so Save as New Wallpaper writes a normal WE wallpaper. An existing mask is replaced (the result's replaced names it; scene_undo brings it back and its file is kept). One undo step.",
                 input: JSONSchema.object([
                     "wallpaper_id": sceneWallpaper,
                     "layer": layerID,

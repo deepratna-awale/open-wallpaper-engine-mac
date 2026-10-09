@@ -300,7 +300,7 @@ private struct SceneForm: View {
                         userProperties()
                     }
                 }
-                Text(L("Select a layer in the list or on the canvas to edit it. Edits apply wherever this wallpaper runs; its own files are never changed."))
+                Text(L("Select a layer in the list or on the canvas to edit it. Edits show here until you save them, then wherever this wallpaper runs; its own files are never changed."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

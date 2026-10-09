@@ -132,7 +132,7 @@ final class WallpaperSettingsIdentityTests: XCTestCase {
         XCTAssertEqual(WallpaperSettingsIdentity.resolve(directory: rain, defaults: defaults), rainOld, "an adopted old id survives edits")
     }
 
-    /// A copy of a wallpaper's folder (Save as Local Wallpaper, a Finder copy) is a new wallpaper.
+    /// A copy of a wallpaper's folder (Save as New Wallpaper, a Finder copy) is a new wallpaper.
     func testACopiedFolderGetsANewId() throws {
         let original = try wallpaper("library/Rain")
         let identity = WallpaperSettingsIdentity.resolve(directory: original, defaults: defaults)

@@ -70,6 +70,34 @@ struct InProcessShaderCompiler: ShaderCompiler {
         }
     }
 
+    func compilePairToMSL(vertex: String, fragment: String) throws -> CompiledShaderPair {
+        ThreadGuards.assertBackground("shader translation")
+        let key = Self.shaderKey(step: "compile-pair", stage: .vertex, source: vertex + "\u{0}" + fragment)
+        return try dispatch(step: "glslang", key: key) {
+            var vertexMSL: UnsafeMutablePointer<CChar>?
+            var vertexReflection: UnsafeMutablePointer<CChar>?
+            var fragmentMSL: UnsafeMutablePointer<CChar>?
+            var fragmentReflection: UnsafeMutablePointer<CChar>?
+            var log: UnsafeMutablePointer<CChar>?
+            var step: UnsafePointer<CChar>?
+            var stage: Int32 = -1
+            defer {
+                owe_shader_free(vertexMSL); owe_shader_free(vertexReflection)
+                owe_shader_free(fragmentMSL); owe_shader_free(fragmentReflection)
+                owe_shader_free(log)
+            }
+            guard owe_shader_compile_pair_msl(vertex, fragment, &vertexMSL, &vertexReflection, &fragmentMSL,
+                                              &fragmentReflection, &log, &step, &stage) != 0,
+                  let vertexMSL, let vertexReflection, let fragmentMSL, let fragmentReflection else {
+                throw ShaderCompilerError.failed(step: step.map { String(cString: $0) } ?? "glslang",
+                                                 output: Self.errors(log))
+            }
+            return CompiledShaderPair(
+                vertex: (String(cString: vertexMSL), Data(String(cString: vertexReflection).utf8)),
+                fragment: (String(cString: fragmentMSL), Data(String(cString: fragmentReflection).utf8)))
+        }
+    }
+
     /// Runs `body` (a library call on the shader `key`) on the compile thread, unless that shader
     /// is quarantined or the thread is stuck.
     func dispatch<T>(step: String, key: String, _ body: @escaping () throws -> T) throws -> T {

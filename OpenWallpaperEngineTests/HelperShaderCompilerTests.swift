@@ -12,6 +12,9 @@ final class HelperShaderCompilerTests: XCTestCase {
             if source.contains("BROKEN") { throw ShaderCompilerError.failed(step: "glslang", output: "ERROR: broken") }
             return ("msl(\(stage.rawValue)):" + source, Data("{}".utf8))
         }
+        func compilePairToMSL(vertex: String, fragment: String) throws -> CompiledShaderPair {
+            CompiledShaderPair(vertex: try compileToMSL(vertex, stage: .vertex), fragment: try compileToMSL(fragment, stage: .fragment))
+        }
     }
 
     /// A helper that serves requests in memory, or dies on the requests `crashes` says.
@@ -96,6 +99,16 @@ final class HelperShaderCompilerTests: XCTestCase {
         XCTAssertEqual(compiler.cacheFingerprint, InProcessShaderCompiler.fingerprint)
     }
 
+    /// A pair goes to the helper as one request and comes back as both stages.
+    func testPairRoundTrip() throws {
+        let launcher = Launcher()
+        let compiler = launcher.compiler()
+        let out = try onBackground { try compiler.compilePairToMSL(vertex: "v", fragment: "f") }
+        XCTAssertEqual(out.vertex.msl, "msl(vert):v")
+        XCTAssertEqual(out.fragment.msl, "msl(frag):f")
+        XCTAssertEqual(launcher.launches, 1)
+    }
+
     func testCompileErrorPassesThroughWithoutRestart() throws {
         let launcher = Launcher()
         let compiler = launcher.compiler()
@@ -121,8 +134,8 @@ final class HelperShaderCompilerTests: XCTestCase {
     }
 
     func testSecondCrashFailsTheVariantAndDumpsItToFailedShaders() throws {
-        // Every helper dies on the fragment compile.
-        let launcher = Launcher { _, request in request.operation == .compileToMSL && request.stage == .fragment }
+        // Every helper dies on the pair's compile.
+        let launcher = Launcher { _, request in request.operation == .compilePairToMSL }
         let failures = FileManager.default.temporaryDirectory.appending(path: "owe-helper-failed-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: failures) } // Optional: test scratch.
         let translator = ShaderVariantTranslator(compiler: launcher.compiler(), cacheDirectory: nil, failureDirectory: failures)
@@ -133,7 +146,7 @@ final class HelperShaderCompilerTests: XCTestCase {
         XCTAssertThrowsError(try onBackground { try translator.variant(vertex: vertex, fragment: fragment, combos: [:]) }) { error in
             XCTAssertTrue("\(error)".contains("failed twice"), "\(error)")
         }
-        // The first helper served the vertex steps, then crashed; the retry's helper crashed too.
+        // The first helper served the preprocessing, then crashed; the retry's helper crashed too.
         XCTAssertEqual(launcher.launches, 2)
         let dumped = try FileManager.default.contentsOfDirectory(atPath: failures.path)
         XCTAssertEqual(dumped.count, 1, "\(dumped)")
