@@ -11,16 +11,20 @@ protocol WallpaperEditorWindows: AnyObject {
     func closeEditor(of folder: URL)
     /// Plays, pauses or seeks (`seconds`) the timeline of the wallpaper's open window.
     func controlTimeline(of folder: URL, command: String, seconds: Double?)
+    /// Restarts the particle systems `layers` in the wallpaper's open window; false without one.
+    func restartParticles(of folder: URL, layers: Set<Int>) -> Bool
 }
 
 extension WallpaperEditorWindows {
     func closeEditor(of folder: URL) {}
     func controlTimeline(of folder: URL, command: String, seconds: Double?) {}
+    func restartParticles(of folder: URL, layers: Set<Int>) -> Bool { false }
 }
 
 /// The Wallpaper Editor process's side of `WallpaperEditorLauncher`: it opens the wallpapers Open
 /// Wallpaper Engine asks for in this process, one window each, and says when it is ready for them;
-/// it closes them and drives their timelines when the app asks (an MCP client).
+/// it closes them, drives their timelines and restarts their particle systems when the app asks
+/// (an MCP client), answering a restart it made (`particlesRestarted`).
 @MainActor
 final class WallpaperEditorRequests {
     private let messaging: AppProcessMessaging
@@ -52,6 +56,12 @@ final class WallpaperEditorRequests {
         on(.timeline) { windows, folder, info in
             windows.controlTimeline(of: folder, command: info[AppProcessChannel.timelineCommandKey] ?? "",
                                     seconds: info[AppProcessChannel.secondsKey].flatMap(Double.init))
+        }
+        on(.particlesRestart) { [weak self] windows, folder, info in
+            let layers = Set((info[AppProcessChannel.layersKey] ?? "").split(separator: ",").compactMap { Int($0) })
+            guard let self, !layers.isEmpty, windows.restartParticles(of: folder, layers: layers) else { return }
+            self.messaging.post(self.channel.name(.particlesRestarted), sender: self.sender,
+                                userInfo: [AppProcessChannel.folderKey: info[AppProcessChannel.folderKey] ?? ""])
         }
     }
 

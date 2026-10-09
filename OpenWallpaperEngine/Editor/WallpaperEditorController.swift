@@ -326,6 +326,13 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         return false
     }
 
+    /// An MCP client's `particles_restart`: the canvas builds the systems `layers` again from
+    /// nothing, as the particle editor's Restart does, from the draft.
+    func restartParticles(_ layers: Set<Int>) {
+        SceneEditOverlayFiles.postParticles(session.overlay, wallpaperDirectory: wallpaper.wallpaperDirectory, objectIDs: layers,
+                                            draft: true)
+    }
+
     /// An MCP client's timeline command (`play`, `pause`, `seek` to `seconds`).
     func controlTimeline(command: String, seconds: Double?) {
         switch command {

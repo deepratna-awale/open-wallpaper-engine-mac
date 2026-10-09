@@ -142,6 +142,8 @@ final class FakeSceneEditorControl: SceneEditorControl {
     var closedWallpaperEditors: [String] = []
     var timelineCommands: [(String, String, Double?)] = []
     var restarted: [Int] = []
+    /// Whether the Wallpaper Editor has a window of the wallpaper (a restart goes there).
+    var editorWindowOpen = false
     var savedCopies: [String] = []
     var isDepthMapPluginInstalled = false
 
@@ -164,7 +166,10 @@ final class FakeSceneEditorControl: SceneEditorControl {
         return true
     }
 
-    func restartParticles(_ document: HeadlessSceneDocument, layer: Int) { restarted.append(layer) }
+    func restartParticles(_ document: HeadlessSceneDocument, layer: Int) async -> Bool {
+        restarted.append(layer)
+        return editorWindowOpen
+    }
 
     func saveAsNewWallpaper(_ document: HeadlessSceneDocument, title: String) throws -> URL {
         savedCopies.append(title)

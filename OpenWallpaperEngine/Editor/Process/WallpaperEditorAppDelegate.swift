@@ -160,6 +160,12 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
         editor(of: folder)?.controlTimeline(command: command, seconds: seconds)
     }
 
+    func restartParticles(of folder: URL, layers: Set<Int>) -> Bool {
+        guard let editor = editor(of: folder) else { return false }
+        editor.restartParticles(layers)
+        return true
+    }
+
     private func showCantOpen(title: String) {
         let alert = NSAlert()
         alert.messageText = String(localized: "The Wallpaper Editor can’t open “\(title)”.")

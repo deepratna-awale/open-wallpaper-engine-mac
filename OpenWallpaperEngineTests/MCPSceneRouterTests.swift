@@ -200,8 +200,12 @@ final class MCPSceneRouterTests: XCTestCase {
             ["op": "set_particle_field", "layer": 6, "section": "emitter", "index": 0, "field": "nonsense", "value": "1"],
         ]])
         XCTAssertEqual(wrongField?.code, .notFound)
-        _ = try await result("particles_restart", ["wallpaper_id": "fixture", "layer": 6])
-        XCTAssertEqual(editors.restarted, [6])
+        let onDisplays = try await result("particles_restart", ["wallpaper_id": "fixture", "layer": 6])
+        XCTAssertEqual(onDisplays["in_editor"], false, "without an editor window, the displays restart it")
+        editors.editorWindowOpen = true
+        let inEditor = try await result("particles_restart", ["wallpaper_id": "fixture", "layer": 6])
+        XCTAssertEqual(inEditor["in_editor"], true, "an open editor window's canvas restarts it")
+        XCTAssertEqual(editors.restarted, [6, 6])
     }
 
     // MARK: Puppets
@@ -306,6 +310,16 @@ final class MCPSceneRouterTests: XCTestCase {
         XCTAssertFalse(fixture.draftStore.hasDraft(for: fixture.identity.rawValue))
         let again = try await result("wallpaper_editor_save", ["wallpaper_id": "fixture"])
         XCTAssertEqual(again["saved"], false, "nothing left to save")
+    }
+
+    func testTheOlderSaveToolsStillWork() async throws {
+        _ = try await apply([["op": "set_alpha", "layer": 4, "alpha": 0.5]])
+        let saved = try await result("scene_save", ["wallpaper_id": "fixture"])
+        XCTAssertEqual(saved["saved"], true, "scene_save saves the draft, as wallpaper_editor_save does")
+        XCTAssertEqual(try savedOverlay().field("alpha", of: 4), .number(0.5))
+        let copy = try await result("scene_save_as_local_wallpaper", ["wallpaper_id": "fixture", "title": "Old Name"])
+        XCTAssertEqual(copy["title"], "Old Name")
+        XCTAssertEqual(editors.savedCopies, ["Old Name"], "as wallpaper_editor_save_as_new does")
     }
 
     func testRevertToSavedAndSaveAsNew() async throws {

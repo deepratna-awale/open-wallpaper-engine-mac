@@ -37,6 +37,11 @@ struct AppProcessChannel: Equatable {
         /// Play, pause or seek the timeline of a wallpaper's editor window (`timelineCommandKey`,
         /// `secondsKey`).
         case timeline = "editor.timeline"
+        /// Restart particle systems (`layersKey`) in a wallpaper's editor window, the draft its
+        /// canvas runs (an MCP client's `particles_restart`).
+        case particlesRestart = "editor.particlesRestart"
+        /// The editor restarted them: it has a window of the wallpaper.
+        case particlesRestarted = "editor.particlesRestarted"
     }
 
     /// The `userInfo` key of the wallpaper's folder.
@@ -48,6 +53,8 @@ struct AppProcessChannel: Equatable {
     /// The `userInfo` keys of a timeline command (`play`, `pause`, `seek`) and its time in seconds.
     static let timelineCommandKey = "command"
     static let secondsKey = "seconds"
+    /// The `userInfo` key of the particle systems' layer ids, comma-separated (`particlesRestart`).
+    static let layersKey = "layers"
 
     /// What an MCP client's save of an overlay was: a new undo step, or an Undo or Redo of one,
     /// which the editor's window follows in its own history.

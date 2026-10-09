@@ -10,6 +10,7 @@ import OWESceneEditing
 final class SceneControlRequests: ControlRequestGroup {
     let methods: Set<String> = [
         "scene_get", "scene_apply_edits", "scene_undo", "scene_redo", "wallpaper_editor_save", "wallpaper_editor_save_as_new",
+        "scene_save", "scene_save_as_local_wallpaper",
         "scene_revert", "effects_catalog", "particles_catalog", "particles_get", "particles_restart", "puppets_list",
         "timeline_get", "timeline_preview", "script_get", "script_set", "script_check", "user_properties_get",
         "depth_generate", "depth_apply", "depth_remove", "use_depth_map_as_mask", "editor_close", "editor_set_tab",
@@ -60,15 +61,16 @@ final class SceneControlRequests: ControlRequestGroup {
         case "scene_get": return SceneControlSnapshot.scene(document)
         case "scene_apply_edits": return try applyEdits(params, document)
         case "scene_undo", "scene_redo": return undo(document, redo: method == "scene_redo")
-        case "wallpaper_editor_save": return try save(document)
-        case "wallpaper_editor_save_as_new": return try saveAsNew(params, document)
+        // The older names (deprecated) do the same, so existing clients keep working.
+        case "wallpaper_editor_save", "scene_save": return try save(document)
+        case "wallpaper_editor_save_as_new", "scene_save_as_local_wallpaper": return try saveAsNew(params, document)
         case "scene_revert": return revert(params, document)
         case "effects_catalog":
             return SceneControlSnapshot.effects(document, query: try params.string("query") ?? "")
         case "particles_catalog":
             return SceneControlSnapshot.particles(document, query: try params.string("query") ?? "")
         case "particles_get": return try particlesGet(params, document)
-        case "particles_restart": return try particlesRestart(params, document)
+        case "particles_restart": return try await particlesRestart(params, document)
         case "puppets_list": return SceneControlSnapshot.puppets(document)
         case "timeline_get": return SceneControlSnapshot.timelines(document, layer: try params.int("layer"))
         case "script_get": return try scriptGet(params, document)
@@ -176,10 +178,15 @@ final class SceneControlRequests: ControlRequestGroup {
         return SceneControlSnapshot.particleSystem(document, layer: layer, schema: schema)
     }
 
-    private func particlesRestart(_ params: ControlParameters, _ document: HeadlessSceneDocument) throws -> JSONValue {
+    private func particlesRestart(_ params: ControlParameters, _ document: HeadlessSceneDocument) async throws -> JSONValue {
         let layer = try particleLayer(params, document)
-        editors.restartParticles(document, layer: layer.id)
-        return ["layer": .number(Double(layer.id)), "message": .string("Particle system \(layer.id) starts again from nothing.")]
+        let inEditor = await editors.restartParticles(document, layer: layer.id)
+        return [
+            "layer": .number(Double(layer.id)), "in_editor": .bool(inEditor),
+            "message": .string(inEditor
+                ? "Particle system \(layer.id) starts again from nothing in the open Wallpaper Editor window's canvas (the draft)."
+                : "Particle system \(layer.id) starts again from nothing on the displays running the wallpaper."),
+        ]
     }
 
     // MARK: Scripts

@@ -260,6 +260,33 @@ final class WallpaperEditorProcessTests: XCTestCase {
         XCTAssertEqual(windows.opened.map(\.path), [other.standardizedFileURL.path])
     }
 
+    /// An MCP client's particle restart goes to the editor's open window of the wallpaper, which
+    /// answers; without one (or without the editor) the app is told no, and restarts the displays.
+    func testAParticleRestartReachesTheEditorsOpenWindow() async {
+        let messaging = FakeProcessMessaging()
+        let channel = AppProcessChannel(isolationTag: "tests")
+        var running = true
+        let launcher = WallpaperEditorLauncher(dependencies: .init(
+            messaging: messaging, channel: channel, sender: "app", isolationTag: "tests", languages: nil,
+            editorIsRunning: { running }, launch: { _, _, _, _ in }, replyTimeout: 0.05))
+        let windows = FakeEditorWindows()
+        windows.open = [folder.standardizedFileURL.path]
+        let requests = WallpaperEditorRequests(messaging: messaging, channel: channel, sender: "editor", windows: windows)
+        requests.start()
+        defer { requests.stop() }
+
+        let restarted = await launcher.restartParticles(folder, layers: [6, 2])
+        XCTAssertTrue(restarted, "the window restarts it and says so")
+        XCTAssertEqual(windows.restarted, [[2, 6]])
+        let other = folder.deletingLastPathComponent().appending(path: "other", directoryHint: .isDirectory)
+        let noWindow = await launcher.restartParticles(other, layers: [6])
+        XCTAssertFalse(noWindow, "no window of that wallpaper: no answer")
+        running = false
+        let noEditor = await launcher.restartParticles(folder, layers: [6])
+        XCTAssertFalse(noEditor, "no editor running")
+        XCTAssertEqual(windows.restarted.count, 1)
+    }
+
     func testIsolatedProcessesOnlyHearTheirOwnTag() {
         XCTAssertNotEqual(AppProcessChannel(isolationTag: "a").name(.openWallpaper),
                           AppProcessChannel(isolationTag: nil).name(.openWallpaper))
@@ -523,6 +550,15 @@ private final class FakeProcessMessaging: AppProcessMessaging {
 @MainActor
 private final class FakeEditorWindows: WallpaperEditorWindows {
     private(set) var opened: [URL] = []
+    /// The folders (paths) with an open window, and the particle restarts they took.
+    var open: Set<String> = []
+    private(set) var restarted: [Set<Int>] = []
+
+    func restartParticles(of folder: URL, layers: Set<Int>) -> Bool {
+        guard open.contains(folder.standardizedFileURL.path) else { return false }
+        restarted.append(layers)
+        return true
+    }
 
     func showEditor(of folder: URL) -> Bool {
         opened.append(folder.standardizedFileURL)
