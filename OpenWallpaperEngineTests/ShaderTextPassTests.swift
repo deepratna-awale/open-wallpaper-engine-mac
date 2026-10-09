@@ -53,14 +53,14 @@ final class ShaderTextPassTests: XCTestCase {
                        ShaderPrelude.text(for: .fragment, combos: ["X": 1], source: source.text))
     }
 
-    /// Declarations go after `#version`/`#extension` and blank lines, as their own line.
-    func testRewriterInsertsTheUniformBlockAfterTheHeader() {
-        let vertex = "#version 450\n#extension GL_X : enable\n\nuniform float u;\nvoid main() { gl_Position = vec4(u); }"
-        let result = ShaderPairRewriter.rewrite(vertex: vertex, fragment: "#version 450\n")
-        // The removed uniform leaves a blank line, which still counts as header.
-        XCTAssertTrue(result.vertex.hasPrefix("#version 450\n#extension GL_X : enable\n\n\nlayout(std140, binding = 0) uniform WEUniforms {\n"),
+    /// Declarations go after `#version`/`#extension` and blank lines, as their own line: a
+    /// varying the fragment stage reads and the vertex stage never writes.
+    func testRewriterInsertsDeclarationsAfterTheHeader() {
+        let vertex = "#version 450\n#extension GL_X : enable\n\nvoid main() { gl_Position = vec4(0.0); }"
+        let result = ShaderPairRewriter.rewrite(vertex: vertex, fragment: "#version 450\nin vec2 v_X;\nvoid main() {}")
+        XCTAssertTrue(result.vertex.hasPrefix("#version 450\n#extension GL_X : enable\n\nlayout(location = 0) out vec2 v_X;\n"),
                       result.vertex)
-        XCTAssertTrue(result.fragment.hasPrefix("#version 450\n\nlayout(std140"), result.fragment)
+        XCTAssertFalse(result.vertex.contains("WEUniforms"), "loose uniforms are left to glslang's relaxed rules")
     }
 
     /// WE's GLSL backend leaves `HLSL`/`HLSL_SM30` undefined, so `#ifdef HLSL` branches (D3D
