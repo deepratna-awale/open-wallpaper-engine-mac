@@ -17,10 +17,11 @@ public final class SystemThemeApplier {
     /// The keys theming has changed and not yet restored.
     public var changedKeys: Set<SystemPreferenceKey> { Set(journal.entries.keys) }
 
-    /// Makes `desired` the stored values, and restores every key theming changed that `desired`
-    /// no longer names. Returns the keys written.
+    /// Makes `desired` the stored values (a key mapped to nil is removed), and restores every key
+    /// theming changed that `desired` no longer names. A key's original is the one saved before its
+    /// first change, also when a later value replaces or removes it. Returns the keys written.
     @discardableResult
-    public func apply(_ desired: [SystemPreferenceKey: PreferenceValue]) -> Set<SystemPreferenceKey> {
+    public func apply(_ desired: [SystemPreferenceKey: PreferenceValue?]) -> Set<SystemPreferenceKey> {
         var written = Set<SystemPreferenceKey>()
         for key in SystemPreferenceKey.allCases {
             if let value = desired[key] {
