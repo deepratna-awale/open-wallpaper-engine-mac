@@ -74,6 +74,9 @@ final class ShaderVariantCacheTests: XCTestCase {
         14: "f777a1f881241c3d830a24ae93abab77da33e58d9998cce31a84c6212c21576a",
         // Loose uniforms gathered by glslang's relaxed Vulkan rules, both stages linked (15).
         15: "33ed80c55075954dc8f0c47ed436ba008a031a33aa995baca03e14dfe9955844",
+        // Unbound sampler combos left undefined, WE's texture macros, `TEX<n>FORMAT` for every
+        // format-combo texture (16): none of these pairs' defaults change.
+        16: "33ed80c55075954dc8f0c47ed436ba008a031a33aa995baca03e14dfe9955844",
     ]
 
     /// Fails when translated output changes without a `revision` bump, which would let users keep
