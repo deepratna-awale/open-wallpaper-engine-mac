@@ -17,11 +17,11 @@ Open Wallpaper Engine is a free, open-source macOS player for Wallpaper Engine w
 
 - **Scene, video and web wallpapers** — scenes draw through each wallpaper's own Wallpaper Engine shaders, translated to Metal, with effects, particles, 3D models, lights, timelines, SceneScript and audio-reactive visuals. Web wallpapers run in WebKit or the optional Chromium engine.
 - **Steam Workshop** — browse, filter and download from the Workshop inside the app, or import wallpaper folders and zips.
-- **Scene Edit / Export** — change the running wallpaper's layers and effects live on the desktop, record your own screen saver from it, or export it as a Live Photo lock screen for iPhone and iPad or as a package for Wallpaper Engine's Android app.
+- **Scene Edit / Export** — change the running wallpaper's layers and effects live on the desktop, make it your screen saver, or export it (scenes and videos) as a Live Photo lock screen for iPhone and iPad or as a package for Wallpaper Engine's Android app.
 
   ![Scene Edit / Export](docs/images/scene-editor-live.png)
 
-- **Wallpaper Editor** — an editor in the spirit of Wallpaper Engine's: layers, effects with previews, a timeline, SceneScript, user properties, particles and Puppet Warp. Your edits are kept beside the wallpaper, never in its files.
+- **Wallpaper Editor** — an editor in the spirit of Wallpaper Engine's: layers, effects with previews, a timeline, SceneScript, user properties, particles, Puppet Warp and masks made from a depth map. You edit a draft: **Save** applies it to the wallpaper, **Save as New Wallpaper** adds a copy to the library, and the wallpaper's own files are never changed.
 
   ![Wallpaper Editor](docs/images/wallpaper-editor.png)
 
@@ -37,7 +37,7 @@ Open Wallpaper Engine is a free, open-source macOS player for Wallpaper Engine w
 
   ![Send over Wi-Fi](docs/images/send-over-wifi.png)
 
-- **Theming** — the menu bar, accent colour and tinted folders follow the wallpaper's colours.
+- **Theming** — the menu bar, the accent colour and tinted icons and folders follow the wallpaper's colour; Open Wallpaper Engine's own windows can use the exact colour.
 
   ![Theming](docs/images/theming.png)
 
@@ -56,16 +56,16 @@ You need **macOS 14.0 (Sonoma) or later**. Some features need a later macOS, a p
 
 ## Quick start
 
-1. Open the app. The setup assistant sets the language, SteamCMD, your Steam login and the Wallpaper Engine assets; every step can be skipped.
+1. Open the app. The setup assistant sets the language, SteamCMD, your Steam login and the Wallpaper Engine assets, and can import your Wallpaper Engine favourites; every step can be skipped.
 2. Install the Wallpaper Engine assets (*Settings › Assets*) if you want scene wallpapers. They come from your own copy of Wallpaper Engine on Steam; video and web wallpapers work without them.
-3. Find wallpapers in the **Workshop** tab, or import a wallpaper folder or zip (*File › Import Wallpaper from Folder…*, ⌘I).
-4. Click a wallpaper in the library, then **Set Wallpaper** in its details. Its properties are listed below it.
+3. Find wallpapers in the **Discover** and **Workshop** tabs, or import a wallpaper folder or zip (*File › Import Wallpaper from Folder…*, ⌘I).
+4. Click a wallpaper in the library, then **Set Wallpaper** in its details (or right-click it and choose **Set as Wallpaper**). Its properties are listed below it.
 
 More: [Getting started](docs/getting-started.md) and the [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
 ## Privacy
 
-Everything the app saves stays on your Mac, and it collects no data or analytics. It contacts Steam (for the Workshop and the assets) and GitHub (for updates), and plugins download only when you install them. Details: [what the app connects to](docs/getting-started.md#what-the-app-connects-to) and the [Privacy Policy](docs/legal/privacy-policy.md).
+Everything the app saves stays on your Mac, and it collects no data or analytics. It contacts Steam (for the Workshop and the assets), openwallpaperengine.app (to check for updates) and GitHub (to download them), and plugins download only when you install them. Details: [what the app connects to](docs/getting-started.md#what-the-app-connects-to) and the [Privacy Policy](docs/legal/privacy-policy.md).
 
 ## Documentation
 
