@@ -123,7 +123,12 @@ final class ShaderComparisonSuiteTests: XCTestCase {
                     items[key + "|load"] = ShaderRecord(ok: false, error: "load: " + Self.errorClass("\(error)"))
                     continue
                 }
-                for combos in Self.comboSets(vertex: vertex, fragment: fragment) {
+                // The format combos of the samplers' default textures, as the loaders set them.
+                let samplers = vertex.samplers + fragment.samplers
+                let images = ImageMaterialPlanBuilder(translator: translator, readFile: readFile, loadTexture: { _, _ in nil })
+                let formats = ImageMaterialPlanBuilder.formatCombos(
+                    samplers, headers: images.formatHeaders(samplers, listed: [:], materialPath: "materials/default.json"))
+                for combos in Self.comboSets(vertex: vertex, fragment: fragment, base: formats) {
                     translated.insert(ShaderVariantTranslator.cacheKey(vertex: vertex, fragment: fragment, combos: combos))
                     record(key + "|" + Self.label(combos)) {
                         try translator.variant(vertex: vertex, fragment: fragment, combos: combos)
@@ -150,7 +155,7 @@ final class ShaderComparisonSuiteTests: XCTestCase {
                     items[key + "|geom|load"] = ShaderRecord(ok: false, error: "load: " + Self.errorClass("\(error)"))
                     continue
                 }
-                for combos in Self.comboSets(vertex: declarations, fragment: fragment, base: ["GS_ENABLED": 1]) {
+                for combos in Self.comboSets(vertex: declarations, fragment: fragment, base: formats.merging(["GS_ENABLED": 1]) { $1 }) {
                     record(key + "|geom|" + Self.label(combos)) {
                         let emulation = try GeometryShaderEmulation.make(geometry, combos: combos, compiler: translator.compiler)
                         let folded = try synthetic("shaders/\(path)+geom.vert", emulation.vertexText)
@@ -200,7 +205,9 @@ final class ShaderComparisonSuiteTests: XCTestCase {
             for (slot, name) in request.textures where !name.hasPrefix("_rt_") && name != "previous" {
                 headers[slot] = images.textureHeader(name, materialPath: request.materialPath)
             }
-            let formats = ImageMaterialPlanBuilder.formatCombos(vertex.samplers + fragment.samplers, headers: headers)
+            let samplers = vertex.samplers + fragment.samplers
+            let formats = ImageMaterialPlanBuilder.formatCombos(
+                samplers, headers: images.formatHeaders(samplers, listed: headers, materialPath: request.materialPath))
             let resolved = SceneEngineCombos().applied(to: ShaderVariantTranslator.resolveCombos(
                 vertex: vertex, fragment: fragment, overrides: request.overrides + [formats],
                 boundTextureSlots: Set(request.textures.keys).union([0]),

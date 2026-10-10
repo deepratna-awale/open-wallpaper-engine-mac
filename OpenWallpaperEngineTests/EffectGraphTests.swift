@@ -345,7 +345,7 @@ final class EffectGraphTests: XCTestCase {
 
     /// A sampler annotated `"formatcombo": true` gets `TEX<n>FORMAT` from its texture's format, as
     /// WE sets it: refraction decodes an RG88 normal map by it, lightshafts reads an R8 gradient
-    /// map as `.rrr`. An RGBA texture (expanded on load) leaves it unset.
+    /// map as `.rrr`. An RGBA texture (expanded on load) sets `FORMAT_RGBA8888` (0).
     func testFormatComboSamplersTakeTheirTexturesFormat() throws {
         let root = ShaderVariantTests.weAssets
         let generated = ["materials/normal_rg88.tex": TextureRG88Tests.tex(format: 8, pixels: [128, 255]),
@@ -364,7 +364,7 @@ final class EffectGraphTests: XCTestCase {
         let r8 = try formatBuilder.build(try effect(gradient.replacingOccurrences(of: "TEXTURE", with: "gradient_r8")))
         XCTAssertEqual(r8.passes.first?.variant?.combos["TEX2FORMAT"], 9)
         let rgba = try formatBuilder.build(try effect(gradient.replacingOccurrences(of: "TEXTURE", with: "gradient_rgba")))
-        XCTAssertNil(rgba.passes.first?.variant?.combos["TEX2FORMAT"])
+        XCTAssertEqual(rgba.passes.first?.variant?.combos["TEX2FORMAT"], 0)
     }
 
     func testEveryBuiltinEffectRunsWithDefaults() throws {

@@ -215,7 +215,9 @@ struct ImageMaterialPlanBuilder {
             listed[slot] = try textureInput(named: name, materialPath: materialPath)
             if listed[slot] != nil, !name.hasPrefix("_rt_") { headers[slot] = textureHeader(name, materialPath: materialPath) }
         }
-        let formats = Self.formatCombos(vertex.samplers + fragment.samplers, headers: headers)
+        let formats = Self.formatCombos(vertex.samplers + fragment.samplers,
+                                        headers: formatHeaders(vertex.samplers + fragment.samplers, listed: headers,
+                                                               materialPath: materialPath))
         // WE's material pass loader sets `ALPHATOCOVERAGE` and `ADDITIVE` from the pass's blending,
         // whatever the object (0x140154bc1, 0x140154c5a; as for models).
         let coverage = Self.blendingCombos(blending: materialPass.blending)
@@ -321,17 +323,33 @@ struct ImageMaterialPlanBuilder {
         return nil
     }
 
-    /// `TEX<n>FORMAT` for the samplers annotated `"formatcombo": true` (0x1401a5c40: the bound
-    /// texture's format), as `SceneEffectPlanBuilder` sets it: only the formats that load as the GPU
-    /// samples them (RG88, R8, block-compressed); the others are expanded to RGBA on load.
+    /// `TEX<n>FORMAT` for the samplers annotated `"formatcombo": true` with a texture header in
+    /// `headers` (the texture listed in the slot, else the sampler's `default`; `formatHeaders`),
+    /// as `SceneEffectPlanBuilder` sets it: WE sets it to the format of the texture that fills the
+    /// slot, whatever it is (0x1401a6902…0x1401a69e4: the default texture loads first). Here
+    /// `TEXImageFormat.formatComboValue`: `fur4` reads `TEX8FORMAT` outside an `#if`, so the name
+    /// must exist for an RGBA texture too.
     static func formatCombos(_ samplers: [ShaderUniformDeclaration], headers: [Int: Data]) -> [String: Int] {
         var combos: [String: Int] = [:]
-        for sampler in samplers where (sampler.annotation["formatcombo"] as? NSNumber)?.boolValue == true {
-            guard let slot = sampler.textureSlot, let header = headers[slot], let format = TEXImageFormat(texData: header),
-                  format.isChannelReduced || format.isBlockCompressed else { continue }
-            combos["TEX\(slot)FORMAT"] = Int(format.rawValue)
+        for sampler in samplers where sampler.isFormatCombo {
+            guard let slot = sampler.textureSlot, let header = headers[slot],
+                  let format = TEXImageFormat(texData: header) else { continue }
+            combos["TEX\(slot)FORMAT"] = format.formatComboValue
         }
         return combos
+    }
+
+    /// `listed` (texture headers by slot) plus, for each `"formatcombo"` sampler without one, its
+    /// `default` texture's header: the texture that fills the slot (`formatCombos`). Slot 0 is
+    /// the object's own image, never the default.
+    func formatHeaders(_ samplers: [ShaderUniformDeclaration], listed: [Int: Data], materialPath: String) -> [Int: Data] {
+        var headers = listed
+        for sampler in samplers where sampler.isFormatCombo {
+            guard let slot = sampler.textureSlot, slot > 0, headers[slot] == nil, let name = sampler.defaultTexture,
+                  !name.isEmpty, !name.hasPrefix("_rt_") else { continue }
+            headers[slot] = textureHeader(name, materialPath: materialPath)
+        }
+        return headers
     }
 
     static let texClampUVsFlag: UInt32 = 2

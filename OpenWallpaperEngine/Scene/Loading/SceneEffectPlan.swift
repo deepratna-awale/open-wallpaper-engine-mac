@@ -272,17 +272,16 @@ struct SceneEffectPlanBuilder {
 
     /// `TEX<n>FORMAT` for the samplers annotated `"formatcombo": true`, from the format of the
     /// texture bound there (or the sampler's default), as WE sets it: lightshafts reads an R8 or
-    /// RG88 gradient map as `.rrr`, refraction decodes a normal map by its format. Only formats
-    /// that load as the GPU samples them need it; the others are expanded to RGBA on load.
+    /// RG88 gradient map as `.rrr`, refraction decodes a normal map by its format. A format that
+    /// is expanded to RGBA on load is `FORMAT_RGBA8888` (`TEXImageFormat.formatComboValue`).
     private func formatCombos(_ samplers: [ShaderUniformDeclaration], names: [Int: String], materialPath: String,
                               effectDirectory: String) -> [String: Int] {
         var combos: [String: Int] = [:]
-        for sampler in samplers where (sampler.annotation["formatcombo"] as? NSNumber)?.boolValue == true {
+        for sampler in samplers where sampler.isFormatCombo {
             guard let slot = sampler.textureSlot, let name = names[slot] ?? sampler.defaultTexture,
                   let header = textureHeader(named: name, materialPath: materialPath, effectDirectory: effectDirectory),
-                  let format = TEXImageFormat(texData: header),
-                  format.isChannelReduced || format.isBlockCompressed else { continue }
-            combos["TEX\(slot)FORMAT"] = Int(format.rawValue)
+                  let format = TEXImageFormat(texData: header) else { continue }
+            combos["TEX\(slot)FORMAT"] = format.formatComboValue
         }
         return combos
     }

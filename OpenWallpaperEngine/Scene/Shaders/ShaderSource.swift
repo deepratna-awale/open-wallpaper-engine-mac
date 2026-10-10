@@ -31,6 +31,8 @@ struct ShaderUniformDeclaration {
     }
     /// `util/noise` etc.: what fills the slot when nothing else does.
     var defaultTexture: String? { annotation["default"] as? String }
+    /// `"formatcombo": true`: the engine sets `TEX<n>FORMAT` to the format of the slot's texture.
+    var isFormatCombo: Bool { (annotation["formatcombo"] as? NSNumber)?.boolValue == true }
     var isSampler: Bool { type.hasPrefix("sampler") }
 
     /// `g_TextureN` → N.

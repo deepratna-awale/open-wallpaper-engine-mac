@@ -125,7 +125,9 @@ struct ModelMaterialPlanBuilder {
             listed[slot] = try textureInput(named: name, materialPath: materialPath)
             if listed[slot] != nil, !name.hasPrefix("_rt_") { headers[slot] = images.textureHeader(name, materialPath: materialPath) }
         }
-        let formats = ImageMaterialPlanBuilder.formatCombos(vertex.samplers + fragment.samplers, headers: headers)
+        let formats = ImageMaterialPlanBuilder.formatCombos(
+            vertex.samplers + fragment.samplers,
+            headers: images.formatHeaders(vertex.samplers + fragment.samplers, listed: headers, materialPath: materialPath))
         // A pass blending alpha-to-coverage gets `ALPHATOCOVERAGE` (0x140154bc1, 0x1401564a4), an
         // additive one `ADDITIVE` (0x140154c5a).
         let coverage = ImageMaterialPlanBuilder.blendingCombos(blending: materialPass.blending)
