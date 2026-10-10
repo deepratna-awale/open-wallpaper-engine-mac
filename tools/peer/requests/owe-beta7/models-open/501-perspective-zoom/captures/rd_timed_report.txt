@@ -1,0 +1,11 @@
+p501_layer_zoom1 still 3 triggered at 3.001 s frame 610
+p501_layer_zoom2 still 3 triggered at 3.005 s frame 804
+p501_layer_fov26 still 3 triggered at 3.001 s frame 975
+p501_path_zoom still 0.5 triggered at 0.504 s frame 1086
+p501_path_zoom still 1 triggered at 1.002 s frame 1098
+p501_path_zoom still 1.5 triggered at 1.501 s frame 1110
+p501_path_zoom still 3 triggered at 3.004 s frame 1148
+p501_path_fov still 0.5 triggered at 0.501 s frame 1296
+p501_path_fov still 1 triggered at 1.003 s frame 1308
+p501_path_fov still 1.5 triggered at 1.505 s frame 1321
+p501_path_fov still 3 triggered at 3.001 s frame 1359
