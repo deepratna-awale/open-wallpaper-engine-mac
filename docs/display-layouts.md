@@ -29,8 +29,9 @@ connected displays is kept and comes back when its displays reconnect.
 ## Clone
 
 A clone runs the wallpaper once: a scene renders one frame (at the largest size its displays
-need) and each display shows it at its own size and placement; a video decodes once. Web pages
-and WebM videos still load one page per display, as macOS can't show one page in two windows.
+need) and each display shows it at its own size and placement; a video decodes once. A web page
+or WebM video loads once on the main clone display and the other displays show it, covering
+them; the pointer and clicks on any display reach the page, and its sound plays once.
 
 - **Set as Main Clone Display** picks the display whose wallpaper and properties the clone shows.
   Setting a wallpaper on any member sets it on the whole clone.
@@ -42,8 +43,9 @@ and WebM videos still load one page per display, as macOS can't show one page in
 The canvas is the rectangle around the displays as they are arranged in System Settings ›
 Displays, gaps included; each display shows its own part. A scene renders one canvas-sized frame
 and reads the pointer on the canvas, so parallax and cursor effects line up across displays. A
-video plays once. A web page is laid out on the whole canvas once per display, so pages that keep
-their own random state may not line up.
+video plays once. In the Chromium web engine a web page (or WebM video) is laid out on the whole
+canvas once and each display shows its part. In WebKit it is laid out on the whole canvas once per
+display, so pages that keep their own random state may not line up.
 
 ## Splits
 
