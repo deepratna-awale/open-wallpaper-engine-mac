@@ -442,7 +442,7 @@ final class ModelRenderTests: XCTestCase {
             let pass = SceneEffectPassPlan(command: .render, variantKey: material.pass.variantKey, variant: material.pass.variant,
                                            blending: blending, target: nil, textures: [:], constants: material.pass.constants)
             let changed = ModelMaterialPlan(materialPath: material.materialPath, pass: pass, raster: material.raster,
-                                            clampedSlots: [], meshCombos: material.meshCombos)
+                                            clampedSlots: [], meshCombos: material.meshCombos, customShader: material.customShader)
             let source = plan.meshes[0]
             return SceneModelPlan.Mesh(index: index, material: changed, format: source.format, vertexData: source.vertexData,
                                        indexData: source.indexData, usesUInt32Indices: false, indexCount: source.indexCount)
@@ -464,6 +464,26 @@ final class ModelRenderTests: XCTestCase {
         XCTAssertEqual(SceneModelRenderer.meshAttribute(for: ["a_Position"], in: format)?.name, "a_Position")
         XCTAssertNil(SceneModelRenderer.meshAttribute(for: ["a_BlendIndices"], in: format))
         XCTAssertNil(SceneModelRenderer.meshAttribute(for: ["a_TexCoordC1"], in: format))
+    }
+
+    /// docs/models-plan.md §5.11: the cube has no texture coordinates, which `generic4` reads. As
+    /// WE's own shader it still draws (zeros for them); the same shader taken as a wallpaper's own
+    /// makes no pipeline, so the mesh draws nothing.
+    func testOnlyACustomShaderLackingAMeshInputDrawsNothing() throws {
+        let cube = Self.cube()
+        XCTAssertFalse(cube.format.contains(.texCoord))
+        func plan(builtin: Bool) throws -> SceneModelPlan {
+            var builder = try XCTUnwrap(materials)
+            builder.isBuiltinShader = builtin ? { $0 == "generic4" } : nil
+            let material = try builder.build(materialPath: "materials/generic4.json",
+                                             mesh: ModelMeshCombos(mesh: cube, bones: 0, morphTargets: false))
+            XCTAssertEqual(material.customShader, !builtin)
+            return SceneModelPlan(path: "cube.mdl", meshes: [SceneModelPlan.Mesh(
+                index: 0, material: material, format: cube.format, vertexData: cube.vertexData, indexData: cube.indexData,
+                usesUInt32Indices: false, indexCount: cube.indexCount)], bounds: .unbounded, skeleton: nil)
+        }
+        XCTAssertTrue(renderer.waitUntilReady(try plan(builtin: true), pixelFormat: .bgra8Unorm), "WE's generic4 draws")
+        XCTAssertFalse(renderer.waitUntilReady(try plan(builtin: false), pixelFormat: .bgra8Unorm), "a custom shader doesn't")
     }
 
     /// The bones slot pads a short palette with identities to the shader's `BONECOUNT`.

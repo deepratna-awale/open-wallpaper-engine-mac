@@ -335,7 +335,8 @@ final class SceneShadowTests: XCTestCase {
                 XCTAssertTrue(variant.vertexMSL.contains("instance_id"), "\(shader)")
                 XCTAssertNotNil(variant.uniforms?.members["g_ViewportViewProjectionMatrices"], "\(shader)")
                 XCTAssertNoThrow(try device.makeRenderPipelineState(
-                    descriptor: SceneShadowPass.pipelineDescriptor(variant, format: format, device: device)), "\(shader) \(combos)")
+                    descriptor: SceneShadowPass.pipelineDescriptor(variant, format: format, customShader: false, device: device)),
+                    "\(shader) \(combos)")
             }
         }
     }

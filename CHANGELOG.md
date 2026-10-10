@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **3D models drawn with Wallpaper Engine's own shaders draw again when their mesh lacks data the shader reads.** Only a model whose wallpaper ships its own shader is skipped in that case, as Wallpaper Engine skips it; 1.0.0-beta.6 skipped such models whatever their shader.
 ### Added
 
 - **Import Wallpaper Engine's favourites.** Wallpaper Engine keeps its favourites in your Steam account (your Workshop favourites), so once the assets are installed or a Wallpaper Engine folder is chosen, the setup assistant and Settings › Assets ask *Also import your Wallpaper Engine favourites?* when Steam lists any that aren't in My Favourites yet, and show how many were added. Your current favourites stay, and importing again adds only new ones. It uses your Steam Web API key and the account Steam's own files name (the SteamCMD login, or the last login of the Steam folder the chosen install is in); without them nothing is offered. *Import Wallpaper Engine Favourites…* in Settings › Assets checks again ([docs/getting-started.md](docs/getting-started.md#wallpaper-engine-favourites)).
