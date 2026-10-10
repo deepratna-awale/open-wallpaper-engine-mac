@@ -1,0 +1,20 @@
+{
+ "monitor": 2,
+ "resolution": [1920, 1080],
+ "files": ["base.mdl", "a_moved.mdl", "b_order.mdl", "b_clip.mdl", "b_clip_order.mdl", "b_clip_keyed_order.mdl", "b_group.mdl",
+           "c_refpose.mdl", "d_bone_flags.mdl", "e_offset0.mdl", "e_offset10.mdl", "f_alpha.mdl", "notes.txt"],
+ "shots": [
+  {"name": "mo2_509a_base", "stills": [3.0]},
+  {"name": "mo2_509a_moved", "stills": [3.0]},
+  {"name": "mo2_509a_moved_tint", "stills": [3.0]},
+  {"name": "mo2_509b_b_clip", "stills": [1.0], "clip": {"seconds": 3, "fps": 30}},
+  {"name": "mo2_509b_b_clip_order", "stills": [1.0], "clip": {"seconds": 3, "fps": 30}},
+  {"name": "mo2_509b_b_clip_keyed_order", "stills": [1.0], "clip": {"seconds": 3, "fps": 30}, "optional": true},
+  {"name": "mo2_509c_refpose", "stills": [3.0]},
+  {"name": "mo2_509c_refpose_clip", "stills": [1.0]},
+  {"name": "mo2_509d_bone_flags", "clip": {"seconds": 3, "fps": 30}, "optional": true},
+  {"name": "mo2_509e_offset0", "stills": [0.5], "clip": {"seconds": 3, "fps": 30}},
+  {"name": "mo2_509e_offset10", "stills": [0.5], "clip": {"seconds": 3, "fps": 30}},
+  {"name": "mo2_509f_alpha", "stills": [1.0], "clip": {"seconds": 3, "fps": 30}, "optional": true}
+ ]
+}
