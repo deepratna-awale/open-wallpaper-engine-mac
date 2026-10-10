@@ -4,7 +4,7 @@ import QuartzCore
 
 /// Shows a `ChromiumBrowserPage` in a wallpaper window: each frame's IOSurface (already a Metal
 /// texture, no copy across processes) is blitted into the view's `CAMetalLayer` and presented.
-/// The page is sized to the view in points at the display's scale (1 with "standard resolution"),
+/// The page is sized to the view in points at the display's scale, or less (`WebPageScale`),
 /// and the desktop's mouse is forwarded to it (`ChromiumMouseForwarder`).
 final class ChromiumPageView: NSView {
     let page: ChromiumBrowserPage
@@ -22,6 +22,10 @@ final class ChromiumPageView: NSView {
     /// Render web pages at one pixel per point on Retina displays (`WebPageScale`).
     var standardResolution = false {
         didSet { if standardResolution != oldValue { updateSize() } }
+    }
+    /// Render web pages at half the display's scale, WE's `-halfresolution` (`WebPageScale`).
+    var halfResolution = false {
+        didSet { if halfResolution != oldValue { updateSize() } }
     }
 
     init(page: ChromiumBrowserPage, device: MTLDevice? = MTLCreateSystemDefaultDevice()) {
@@ -74,16 +78,18 @@ final class ChromiumPageView: NSView {
         }
     }
 
-    /// Points to pixels for the page: the window's backing scale, or 1 at standard resolution.
-    static func pageScale(standardResolution: Bool, backingScale: CGFloat) -> Double {
-        standardResolution ? 1 : Double(max(backingScale, 1))
+    /// Points to pixels for the page (`WebPageScale.pixelsPerPoint`).
+    static func pageScale(standardResolution: Bool, halfResolution: Bool, backingScale: CGFloat) -> Double {
+        Double(WebPageScale.pixelsPerPoint(standardResolution: standardResolution, halfResolution: halfResolution,
+                                           backingScale: backingScale))
     }
 
     private func updateSize() {
         let width = Int(bounds.width.rounded()), height = Int(bounds.height.rounded())
         guard width > 0, height > 0 else { return }
         let backing = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 1
-        let scale = Self.pageScale(standardResolution: standardResolution, backingScale: backing)
+        let scale = Self.pageScale(standardResolution: standardResolution, halfResolution: halfResolution,
+                                   backingScale: backing)
         metalLayer.contentsScale = backing
         page.resize(width: width, height: height, scale: scale)
     }

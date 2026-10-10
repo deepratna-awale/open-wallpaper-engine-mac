@@ -105,7 +105,7 @@ struct WebWallpaperView: NSViewRepresentable {
         }
         applyPlacement(wallpaperViewModel.wallpaperPlacement, to: nsView)
         let settings = AppDelegate.shared.globalSettingsViewModel.settings
-        WebPageScale.apply(standardResolution: settings.webStandardResolution, to: nsView)
+        WebPageScale.apply(settings, to: nsView)
         // A page per display, so only the one on the wallpaper's audible display plays sound. The
         // playback rules pause each display's page on its own, and silence the wallpaper only when
         // every display showing it is muted, paused or stopped.
@@ -134,20 +134,50 @@ struct WebWallpaperView: NSViewRepresentable {
     }
 }
 
-/// "Render web wallpapers at standard resolution": on a Retina display the page renders with a
-/// device scale factor of 1, so a page that sizes its canvas by `devicePixelRatio` draws a quarter
-/// of the pixels. WebKit's `_overrideDeviceScaleFactor` (0 = the window's own) has no public
-/// equivalent; where it is missing the page keeps its full resolution.
+/// How many pixels a web wallpaper draws per point, from two settings; whichever gives fewer
+/// pixels wins:
+/// - "Render web wallpapers at standard resolution": on a Retina display the page renders with a
+///   device scale factor of 1, so a page that sizes its canvas by `devicePixelRatio` draws a
+///   quarter of the pixels.
+/// - Texture Resolution's High Performance (`half`): WE starts `webwallpaper64.exe` with
+///   `-halfresolution` for it, and only for it (0x14011a681…0x14011a729), so the page renders at
+///   half the display's scale in each direction and is stretched to the window.
+///
+/// WebKit's `_overrideDeviceScaleFactor` (0 = the window's own) has no public equivalent; where it
+/// is missing the page keeps its full resolution. Chromium takes the scale as its device scale
+/// factor (`ChromiumPageView`).
 enum WebPageScale {
     private static let setOverride = NSSelectorFromString("_setOverrideDeviceScaleFactor:")
 
-    static func scaleFactor(standardResolution: Bool, backingScale: CGFloat) -> CGFloat {
-        standardResolution && backingScale > 1 ? 1 : 0
+    /// The page's pixels per point on a display whose backing scale is `backingScale`.
+    static func pixelsPerPoint(standardResolution: Bool, halfResolution: Bool, backingScale: CGFloat) -> CGFloat {
+        let backing = max(backingScale, 1)
+        var scale = backing
+        if standardResolution { scale = min(scale, 1) }
+        if halfResolution { scale = min(scale, backing / 2) }
+        return scale
     }
 
-    static func apply(standardResolution: Bool, to webView: WKWebView) {
+    /// Texture Resolution asks for WE's `-halfresolution`.
+    static func halfResolution(_ settings: GlobalSettings) -> Bool {
+        settings.textureResolution == .highPerformance
+    }
+
+    /// WebKit's override for the page: 0 keeps the window's own scale.
+    static func scaleFactor(standardResolution: Bool, halfResolution: Bool, backingScale: CGFloat) -> CGFloat {
+        let scale = pixelsPerPoint(standardResolution: standardResolution, halfResolution: halfResolution,
+                                   backingScale: backingScale)
+        return scale == max(backingScale, 1) ? 0 : scale
+    }
+
+    static func apply(_ settings: GlobalSettings, to webView: WKWebView) {
+        apply(standardResolution: settings.webStandardResolution, halfResolution: halfResolution(settings), to: webView)
+    }
+
+    static func apply(standardResolution: Bool, halfResolution: Bool = false, to webView: WKWebView) {
         let backingScale = webView.window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 1
-        let factor = scaleFactor(standardResolution: standardResolution, backingScale: backingScale)
+        let factor = scaleFactor(standardResolution: standardResolution, halfResolution: halfResolution,
+                                 backingScale: backingScale)
         guard webView.responds(to: setOverride), let method = webView.method(for: setOverride) else { return }
         typealias SetOverride = @convention(c) (AnyObject, Selector, CGFloat) -> Void
         if (webView.value(forKey: "_overrideDeviceScaleFactor") as? CGFloat) == factor { return }
