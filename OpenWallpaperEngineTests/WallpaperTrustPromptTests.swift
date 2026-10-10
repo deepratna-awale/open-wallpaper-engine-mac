@@ -89,6 +89,27 @@ final class WallpaperTrustPromptTests: XCTestCase {
         XCTAssertEqual(model.wallpapers[model.selectedScreenId]?.project.title, "Page")
     }
 
+    func testProceedAppliesAsAnApplyWithoutPromptDoes() async {
+        let model = model()
+        let transitions = RecordingTransitions()
+        model.transitions = transitions
+        let asked = model.layoutResolution.targets(of: model.selectedScreenIds)
+        XCTAssertFalse(asked.isEmpty)
+        await apply(web, on: model)
+        XCTAssertTrue(transitions.performed.isEmpty, "nothing changes while the prompt waits")
+
+        // The selection moving while the prompt counts down (the menu bar) doesn't move the wallpaper.
+        model.selectedScreenIds = ["elsewhere"]
+        model.proceedWithTrustRequest(remember: false)
+        XCTAssertEqual(transitions.performed.count, 1, "Settings' transition, as for any wallpaper chosen by hand")
+        XCTAssertEqual(transitions.performed.first?.kind, .door)
+        XCTAssertEqual(transitions.performed.first?.screens, asked)
+        for screen in asked {
+            XCTAssertEqual(model.wallpapers[screen]?.project.title, "Page")
+        }
+        XCTAssertNil(model.wallpapers["elsewhere"])
+    }
+
     func testUnchangedFolderDoesntAskEvenAfterTheAppEditsProjectJSON() async throws {
         store.trust(web, fingerprint: WallpaperTrustStore.fingerprint(of: web))
         // Renaming or tagging in the library rewrites project.json; Finder drops a .DS_Store.
@@ -157,4 +178,19 @@ final class WallpaperTrustPromptTests: XCTestCase {
         XCTAssertEqual(WallpaperTrustStore.trustList(["/a", "/b"], adding: "/a"), ["/a", "/b"])
         XCTAssertEqual(WallpaperTrustStore.trustList(["/a", "/a"], adding: "/c"), ["/a", "/c"])
     }
+}
+
+/// Records each transition and applies its change at once.
+@MainActor
+private final class RecordingTransitions: WallpaperTransitionPerforming {
+    var manualSettings = WallpaperTransitionSettings(choice: .kind(.door), milliseconds: 500)
+    var performed: [(kind: WallpaperTransitionKind, screens: Set<String>)] = []
+
+    func perform(_ kind: WallpaperTransitionKind, duration: TimeInterval, on screens: Set<String>,
+                 apply: @escaping @MainActor () -> Void) {
+        performed.append((kind, screens))
+        apply()
+    }
+
+    func flushPending() {}
 }
