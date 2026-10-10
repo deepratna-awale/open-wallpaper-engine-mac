@@ -261,6 +261,26 @@ final class ChromiumWebWallpaperBridgeTests: XCTestCase {
         XCTAssertEqual(last?.width, 640)
     }
 
+    func testOneBrowserFeedsEveryDisplayMirroringIt() {
+        let (page, id, _) = makeShownPage()
+        defer { page.close() }
+        let lock = NSLock()
+        var seen: [Int: [Int64]] = [:]
+        let mirrors = [NSObject(), NSObject()]
+        for (index, mirror) in mirrors.enumerated() {
+            page.addFrameObserver(mirror) { frame in lock.withLock { seen[index, default: []].append(frame.frameNumber) } }
+        }
+        XCTAssertEqual(lock.withLock { seen }, [0: [1], 1: [1]], "a mirror starts with the page's last frame")
+        helper.paint(id, frames: 2, width: 640, height: 400)
+        waitUntil("the mirrors' frames") { lock.withLock { seen.values.allSatisfy { $0.count == 3 } } }
+        XCTAssertEqual(lock.withLock { seen }, [0: [1, 2, 3], 1: [1, 2, 3]])
+        XCTAssertEqual(helper.created.count, 1, "one browser for every display")
+        page.removeFrameObserver(mirrors[0])
+        helper.paint(id, frames: 1, width: 640, height: 400)
+        waitUntil("the remaining mirror's frame") { lock.withLock { seen[1]?.count } == 4 }
+        XCTAssertEqual(lock.withLock { seen[0] }, [1, 2, 3])
+    }
+
     func testWithoutAFrameOfThatSizeTheScreenshotIsTheLastFrame() throws {
         let (page, id, _) = makeShownPage()
         defer { page.close() }

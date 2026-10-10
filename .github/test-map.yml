@@ -156,7 +156,7 @@ map:
   "OpenWallpaperEngine/Scene/UI/**": ["Scene*", "UserProperty*", "WallpaperProperty*", "NumericSlider*", "LivePhoto*", "ScreenSaver*"]
   "OpenWallpaperEngine/LivePhoto/**": ["LivePhoto*", "AndroidExport*", "SceneEditorExport*"]
   "OpenWallpaperEngine/AndroidExport/**": ["AndroidExport*", "AndroidWiFi*", "MobilePackage*", "MobileFormat*", "MCPSystem*", "SceneEditorExport*"]
-  "OpenWallpaperEngine/Web/**": ["Web*", "UserPropertyHTML*", "WallpaperProperty*", "Display*"]
+  "OpenWallpaperEngine/Web/**": ["Web*", "ChromiumWebWallpaper*", "UserPropertyHTML*", "WallpaperProperty*", "Display*"]
   "OpenWallpaperEngine/Video/**": ["Video*", "WebKitVideo*", "MediaThumbnail*", "Display*"]
   "OpenWallpaperEngine/Audio/**": ["@audio"]
   "OpenWallpaperEngine/Library/**": ["@library"]
