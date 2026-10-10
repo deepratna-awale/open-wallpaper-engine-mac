@@ -104,10 +104,6 @@ enum ShaderCompileHelperServer {
             switch request.operation {
             case .preprocess:
                 response.text = try compiler.preprocess(request.source, stage: request.stage)
-            case .compileToMSL:
-                let output = try compiler.compileToMSL(request.source, stage: request.stage)
-                response.text = output.msl
-                response.reflection = output.reflection
             case .compilePairToMSL:
                 let output = try compiler.compilePairToMSL(vertex: request.source, fragment: request.fragmentSource ?? "")
                 response.text = output.vertex.msl

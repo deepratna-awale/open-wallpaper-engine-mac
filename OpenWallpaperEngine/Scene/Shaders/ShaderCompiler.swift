@@ -25,9 +25,6 @@ protocol ShaderCompiler {
     var cacheFingerprint: String { get }
     /// Runs the GLSL preprocessor only, resolving every `#if` against the defined macros.
     func preprocess(_ source: String, stage: ShaderStage) throws -> String
-    /// Compiles preprocessed, fully decorated GLSL to MSL and returns it with SPIRV-Cross's
-    /// reflection JSON.
-    func compileToMSL(_ source: String, stage: ShaderStage) throws -> (msl: String, reflection: Data)
     /// Compiles a preprocessed, decorated vertex/fragment pair as one linked program under
     /// glslang's relaxed Vulkan rules, which gather both stages' loose uniforms into one
     /// `WEUniforms` block, and returns each stage's MSL and reflection JSON. A failure's output

@@ -19,7 +19,7 @@
 // version query). Keep in sync with README.md.
 #define OWE_SPIRV_CROSS_VERSION "vulkan-sdk-1.4.357.0"
 // The fixed options below; change this string whenever they change.
-#define OWE_SHADER_OPTIONS "E:none;G:opengl450-spv1.0-msgspv;pair:vulkan100-relaxed-linked-WEUniforms0-spv1.0;rename:metal-clashes-we_;msl20300+decoration-binding;vert:fixup-clipspace+flip-vert-y"
+#define OWE_SHADER_OPTIONS "E:none;pair:vulkan100-relaxed-linked-WEUniforms0-spv1.0;rename:metal-clashes-we_;msl20300+decoration-binding;vert:fixup-clipspace+flip-vert-y"
 
 namespace {
 
@@ -77,37 +77,6 @@ bool preprocess(const char *source, owe_shader_stage stage, std::string &output,
     // glslangValidator prints the result with puts(), which appends a newline.
     if (ok && !text.empty()) output = text + "\n";
     return ok;
-}
-
-// StandAlone.cpp: `-G` = OpenGL client 4.50, SPIR-V 1.0, messages = EShMsgSpvRules, a linked
-// program, mapIO(), then GlslangToSpv with default options.
-bool compileSpirv(const char *source, owe_shader_stage stage, std::vector<unsigned int> &spirv, std::string &log) {
-    EShLanguage lang = language(stage);
-    glslang::TShader shader(lang);
-    const char *strings[] = {source};
-    const char *names[] = {fileName(stage)};
-    shader.setStringsWithLengthsAndNames(strings, nullptr, names, 1);
-    shader.setPreamble("");
-    shader.setEnvInput(glslang::EShSourceGlsl, lang, glslang::EShClientOpenGL, 100);
-    shader.setEnvClient(glslang::EShClientOpenGL, glslang::EShTargetOpenGL_450);
-    shader.setEnvTarget(glslang::EShTargetSpv, glslang::EShTargetSpv_1_0);
-    NoIncluder includer;
-    const EShMessages messages = EShMsgSpvRules;
-    if (!shader.parse(GetDefaultResources(), 100, false, messages, includer)) {
-        log = infoLog(shader);
-        return false;
-    }
-    glslang::TProgram program;
-    program.addShader(&shader);
-    if (!program.link(messages) || !program.mapIO()) {
-        log = infoLog(shader) + program.getInfoLog() + program.getInfoDebugLog();
-        return false;
-    }
-    glslang::SpvOptions options;
-    options.compilerSignature = "glslang";
-    spv::SpvBuildLogger logger;
-    glslang::GlslangToSpv(*program.getIntermediate(lang), spirv, &logger, &options);
-    return true;
 }
 
 // The pair as one program under glslang's relaxed Vulkan rules (GL_KHR_vulkan_glsl's relaxations,
@@ -324,39 +293,6 @@ extern "C" int owe_shader_preprocess(const char *source, owe_shader_stage stage,
         return 0;
     }
     *output = copy(text);
-    return 1;
-}
-
-extern "C" int owe_shader_compile_msl(const char *source, owe_shader_stage stage, char **msl, char **reflection,
-                                      char **log, const char **failed_step) {
-    std::lock_guard<std::mutex> guard(compileLock());
-    initializeOnce();
-    std::vector<unsigned int> spirv;
-    std::string messages;
-    if (!compileSpirv(source, stage, spirv, messages)) {
-        *failed_step = "glslang";
-        *log = copy(messages);
-        return 0;
-    }
-    std::vector<uint32_t> words(spirv.begin(), spirv.end());
-    std::string mslText;
-    try {
-        mslText = compileMSL(words, stage);
-    } catch (const std::exception &error) {
-        *failed_step = "spirv-cross";
-        *log = copy(error.what());
-        return 0;
-    }
-    std::string json;
-    try {
-        json = reflect(words);
-    } catch (const std::exception &error) {
-        *failed_step = "reflect";
-        *log = copy(error.what());
-        return 0;
-    }
-    *msl = copy(mslText);
-    *reflection = copy(json);
     return 1;
 }
 

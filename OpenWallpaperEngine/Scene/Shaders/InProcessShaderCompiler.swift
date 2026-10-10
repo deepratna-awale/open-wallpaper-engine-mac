@@ -53,23 +53,6 @@ struct InProcessShaderCompiler: ShaderCompiler {
         }
     }
 
-    func compileToMSL(_ source: String, stage: ShaderStage) throws -> (msl: String, reflection: Data) {
-        ThreadGuards.assertBackground("shader translation")
-        return try dispatch(step: "glslang", key: Self.shaderKey(step: "compile", stage: stage, source: source)) {
-            var msl: UnsafeMutablePointer<CChar>?
-            var reflection: UnsafeMutablePointer<CChar>?
-            var log: UnsafeMutablePointer<CChar>?
-            var step: UnsafePointer<CChar>?
-            defer { owe_shader_free(msl); owe_shader_free(reflection); owe_shader_free(log) }
-            guard owe_shader_compile_msl(source, stage.library, &msl, &reflection, &log, &step) != 0,
-                  let msl, let reflection else {
-                throw ShaderCompilerError.failed(step: step.map { String(cString: $0) } ?? "glslang",
-                                                 output: Self.errors(log))
-            }
-            return (String(cString: msl), Data(String(cString: reflection).utf8))
-        }
-    }
-
     func compilePairToMSL(vertex: String, fragment: String) throws -> CompiledShaderPair {
         ThreadGuards.assertBackground("shader translation")
         let key = Self.shaderKey(step: "compile-pair", stage: .vertex, source: vertex + "\u{0}" + fragment)

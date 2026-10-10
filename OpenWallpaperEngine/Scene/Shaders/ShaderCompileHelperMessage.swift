@@ -9,7 +9,6 @@ import Foundation
 enum ShaderCompileHelperMessage {
     enum Operation: String, Codable {
         case preprocess
-        case compileToMSL
         case compilePairToMSL
     }
 
@@ -32,9 +31,9 @@ enum ShaderCompileHelperMessage {
 
     struct Response: Codable, Equatable {
         var id: UInt64
-        /// `preprocess`: the preprocessed GLSL; `compileToMSL`: the MSL.
+        /// `preprocess`: the preprocessed GLSL; `compilePairToMSL`: the vertex stage's MSL.
         var text: String?
-        /// `compileToMSL`: SPIRV-Cross's reflection JSON.
+        /// `compilePairToMSL`: the vertex stage's SPIRV-Cross reflection JSON.
         var reflection: Data?
         /// `compilePairToMSL`: the fragment stage's MSL and reflection (the vertex stage's are
         /// `text` and `reflection`).

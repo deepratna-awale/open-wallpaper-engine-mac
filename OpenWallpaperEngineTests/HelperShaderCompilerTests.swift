@@ -8,12 +8,12 @@ final class HelperShaderCompilerTests: XCTestCase {
     private struct StubCompiler: ShaderCompiler {
         var cacheFingerprint: String { "stub" }
         func preprocess(_ source: String, stage: ShaderStage) throws -> String { "pre(\(stage.rawValue)):" + source }
-        func compileToMSL(_ source: String, stage: ShaderStage) throws -> (msl: String, reflection: Data) {
+        func compilePairToMSL(vertex: String, fragment: String) throws -> CompiledShaderPair {
+            CompiledShaderPair(vertex: try compile(vertex, stage: .vertex), fragment: try compile(fragment, stage: .fragment))
+        }
+        private func compile(_ source: String, stage: ShaderStage) throws -> (msl: String, reflection: Data) {
             if source.contains("BROKEN") { throw ShaderCompilerError.failed(step: "glslang", output: "ERROR: broken") }
             return ("msl(\(stage.rawValue)):" + source, Data("{}".utf8))
-        }
-        func compilePairToMSL(vertex: String, fragment: String) throws -> CompiledShaderPair {
-            CompiledShaderPair(vertex: try compileToMSL(vertex, stage: .vertex), fragment: try compileToMSL(fragment, stage: .fragment))
         }
     }
 
@@ -74,7 +74,8 @@ final class HelperShaderCompilerTests: XCTestCase {
     }
 
     func testFrameRoundTripSplitsAndJoins() throws {
-        let request = ShaderCompileHelperMessage.Request(id: 7, operation: .compileToMSL, stage: .fragment, source: "void main(){}")
+        let request = ShaderCompileHelperMessage.Request(id: 7, operation: .compilePairToMSL, stage: .vertex, source: "void main(){}",
+                                                         fragmentSource: "void main(){}")
         var stream = try ShaderCompileHelperFrame.encode(request) + ShaderCompileHelperFrame.encode(request)
         var partial = Data(stream.prefix(5))
         XCTAssertNil(try ShaderCompileHelperFrame.take(from: &partial))
@@ -89,9 +90,9 @@ final class HelperShaderCompilerTests: XCTestCase {
         let compiler = launcher.compiler()
         let pre = try onBackground { try compiler.preprocess("#define A 1", stage: .vertex) }
         XCTAssertEqual(pre, "pre(vert):#define A 1")
-        let out = try onBackground { try compiler.compileToMSL("void main(){}", stage: .fragment) }
-        XCTAssertEqual(out.msl, "msl(frag):void main(){}")
-        XCTAssertEqual(out.reflection, Data("{}".utf8))
+        let out = try onBackground { try compiler.compilePairToMSL(vertex: "v", fragment: "void main(){}") }
+        XCTAssertEqual(out.fragment.msl, "msl(frag):void main(){}")
+        XCTAssertEqual(out.fragment.reflection, Data("{}".utf8))
         XCTAssertEqual(launcher.launches, 1, "one long-lived helper serves every request")
         let statistics = compiler.currentStatistics
         XCTAssertEqual(statistics.requests, 2)
@@ -112,7 +113,7 @@ final class HelperShaderCompilerTests: XCTestCase {
     func testCompileErrorPassesThroughWithoutRestart() throws {
         let launcher = Launcher()
         let compiler = launcher.compiler()
-        XCTAssertThrowsError(try onBackground { try compiler.compileToMSL("BROKEN", stage: .vertex) }) { error in
+        XCTAssertThrowsError(try onBackground { try compiler.compilePairToMSL(vertex: "BROKEN", fragment: "f") }) { error in
             guard case ShaderCompilerError.failed(let step, let output)? = error as? ShaderCompilerError else {
                 return XCTFail("\(error)")
             }
@@ -126,8 +127,8 @@ final class HelperShaderCompilerTests: XCTestCase {
         // The first helper dies on its first request; the second serves it.
         let launcher = Launcher { launch, _ in launch == 1 }
         let compiler = launcher.compiler()
-        let out = try onBackground { try compiler.compileToMSL("void main(){}", stage: .vertex) }
-        XCTAssertEqual(out.msl, "msl(vert):void main(){}")
+        let out = try onBackground { try compiler.compilePairToMSL(vertex: "void main(){}", fragment: "f") }
+        XCTAssertEqual(out.vertex.msl, "msl(vert):void main(){}")
         XCTAssertEqual(launcher.launches, 2)
         XCTAssertTrue(launcher.channels[0].closed)
         XCTAssertFalse(launcher.channels[1].closed)
@@ -182,9 +183,10 @@ final class HelperShaderCompilerTests: XCTestCase {
         let source = "#version 450\nlayout(location = 0) out vec4 color;\nvoid main() { color = vec4(0.25); }\n"
         let pre = try onBackground { try compiler.preprocess(source, stage: .fragment) }
         XCTAssertTrue(pre.contains("main"), pre)
-        let out = try onBackground { try compiler.compileToMSL(source, stage: .fragment) }
-        XCTAssertTrue(out.msl.contains("fragment"), out.msl)
-        XCTAssertFalse(out.reflection.isEmpty)
+        let vertex = "#version 450\nvoid main() { gl_Position = vec4(0.0); }\n"
+        let out = try onBackground { try compiler.compilePairToMSL(vertex: vertex, fragment: source) }
+        XCTAssertTrue(out.fragment.msl.contains("fragment"), out.fragment.msl)
+        XCTAssertFalse(out.fragment.reflection.isEmpty)
         XCTAssertEqual(compiler.currentStatistics.launches, 1, "one helper answered both requests")
     }
 }

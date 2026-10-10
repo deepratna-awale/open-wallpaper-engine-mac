@@ -73,14 +73,6 @@ final class HelperShaderCompiler: ShaderCompiler {
         return text
     }
 
-    func compileToMSL(_ source: String, stage: ShaderStage) throws -> (msl: String, reflection: Data) {
-        let response = try send(.compileToMSL, stage: stage, source: source)
-        guard let msl = response.text, let reflection = response.reflection else {
-            throw ShaderCompilerError.failed(step: "glslang", output: "empty response")
-        }
-        return (msl, reflection)
-    }
-
     func compilePairToMSL(vertex: String, fragment: String) throws -> CompiledShaderPair {
         let response = try send(.compilePairToMSL, stage: .vertex, source: vertex, fragmentSource: fragment)
         guard let vertexMSL = response.text, let vertexReflection = response.reflection,

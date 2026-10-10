@@ -26,12 +26,9 @@ final class ShaderVariantCacheTests: XCTestCase {
             self.marker = marker
         }
         func preprocess(_ source: String, stage: ShaderStage) throws -> String { source }
-        func compileToMSL(_ source: String, stage: ShaderStage) throws -> (msl: String, reflection: Data) {
-            compiles += 1
-            return ("// \(marker)", Data("{}".utf8))
-        }
         func compilePairToMSL(vertex: String, fragment: String) throws -> CompiledShaderPair {
-            CompiledShaderPair(vertex: try compileToMSL(vertex, stage: .vertex), fragment: try compileToMSL(fragment, stage: .fragment))
+            compiles += 2
+            return CompiledShaderPair(vertex: ("// \(marker)", Data("{}".utf8)), fragment: ("// \(marker)", Data("{}".utf8)))
         }
     }
 
@@ -290,7 +287,7 @@ final class ShaderVariantCacheTests: XCTestCase {
             for text in cases {
                 // Either outcome is fine; returning at all is the test.
                 _ = try? compiler.preprocess(text, stage: .fragment)
-                _ = try? compiler.compileToMSL("#version 150\n" + text, stage: .fragment)
+                _ = try? compiler.compilePairToMSL(vertex: "#version 450\nvoid main() { gl_Position = vec4(0.0); }\n", fragment: "#version 150\n" + text)
             }
         }
     }

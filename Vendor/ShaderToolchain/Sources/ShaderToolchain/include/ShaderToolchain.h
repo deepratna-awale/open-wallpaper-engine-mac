@@ -1,12 +1,12 @@
 #ifndef OWE_SHADER_TOOLCHAIN_H
 #define OWE_SHADER_TOOLCHAIN_H
 
-// In-process glslang + SPIRV-Cross, reproducing exactly what the app used to run as processes:
+// In-process glslang + SPIRV-Cross:
 //   glslangValidator -E -S <stage> file                        (owe_shader_preprocess)
-//   glslangValidator -G -S <stage> -o spv file                 (owe_shader_compile_msl, step 1)
+//   glslangValidator --relaxed-rules-vulkan, both stages linked (owe_shader_compile_pair_msl, step 1)
 //   spirv-cross spv --msl --msl-version 20300 --msl-decoration-binding
-//               [--fixup-clipspace --flip-vert-y for vertex]   (step 2)
-//   spirv-cross spv --reflect                                  (step 3)
+//               [--fixup-clipspace --flip-vert-y for vertex]   (step 2, each stage)
+//   spirv-cross spv --reflect                                  (step 3, each stage)
 //
 // Every call is serialized on one internal lock: glslang keeps process-global state (symbol
 // tables, the pool allocator) that is not safe to use from several threads at once.
@@ -24,11 +24,6 @@ typedef enum {
 
 /// Returns 1 on success with `*output` set; 0 on failure with `*log` set.
 int owe_shader_preprocess(const char *source, owe_shader_stage stage, char **output, char **log);
-
-/// Returns 1 on success with `*msl` and `*reflection` set; 0 on failure with `*log` set
-/// (`*failed_step` then names the step: "glslang", "spirv-cross" or "reflect").
-int owe_shader_compile_msl(const char *source, owe_shader_stage stage, char **msl, char **reflection,
-                           char **log, const char **failed_step);
 
 /// Compiles a vertex/fragment pair as one linked program under glslang's relaxed Vulkan rules,
 /// which gather both stages' loose uniforms into one `WEUniforms` block (binding 0). Returns 1
