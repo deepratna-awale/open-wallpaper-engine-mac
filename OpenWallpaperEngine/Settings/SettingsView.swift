@@ -206,6 +206,9 @@ struct SettingsView: View {
             viewModel.commitEdits()
             viewModel.beginEditing()
             transfer.applyPreferences(to: .app)
+            if let folders = transfer.folders {
+                AppDelegate.shared.contentViewModel.library.folders.merge(folders.folders)
+            }
             let updater = AppDelegate.shared.updater
             if let updates = transfer.updates, updater.isEnabled {
                 updater.automaticallyChecksForUpdates = updates.automaticallyChecksForUpdates
