@@ -49,6 +49,20 @@ final class PlaybackRulesTests: XCTestCase {
                        ["1": .run, "2": .run])
     }
 
+    /// A locked screen or a switched-away session pauses every display, with no setting, and
+    /// doesn't loosen a stricter rule.
+    func testAnInactiveSessionPausesEveryDisplay() {
+        let inactive = SystemPlaybackConditions(sessionInactive: true)
+        XCTAssertEqual(playback(PlaybackRules(), system: inactive), ["1": .pause, "2": .pause])
+        XCTAssertEqual(playback(PlaybackRules(focused: .mute), ["1": DisplayConditions(focused: true)], system: inactive),
+                       ["1": .pause, "2": .pause])
+        XCTAssertEqual(playback(PlaybackRules(fullscreen: .stop), ["2": DisplayConditions(fullscreen: true)], system: inactive),
+                       ["1": .pause, "2": .stop])
+        var asleep = inactive
+        asleep.displaysAsleep = true
+        XCTAssertEqual(playback(PlaybackRules(displayAsleep: .stop), system: asleep), ["1": .stop, "2": .stop])
+    }
+
     func testSystemRulesActOnEveryDisplay() {
         XCTAssertEqual(playback(PlaybackRules(playingAudio: .mute), system: SystemPlaybackConditions(otherApplicationPlayingAudio: true)),
                        ["1": .mute, "2": .mute])

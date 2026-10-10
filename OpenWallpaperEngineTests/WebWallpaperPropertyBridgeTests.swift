@@ -104,9 +104,33 @@ final class WebWallpaperPropertyBridgeTests: XCTestCase {
 final class WebPageScaleTests: XCTestCase {
     /// Only an opted-in Retina display is overridden to 1; otherwise WebKit keeps the window's scale.
     func testScaleFactorOverridesOnlyOptedInRetina() {
-        XCTAssertEqual(WebPageScale.scaleFactor(standardResolution: true, backingScale: 2), 1)
-        XCTAssertEqual(WebPageScale.scaleFactor(standardResolution: true, backingScale: 1), 0)
-        XCTAssertEqual(WebPageScale.scaleFactor(standardResolution: false, backingScale: 2), 0)
+        XCTAssertEqual(WebPageScale.scaleFactor(standardResolution: true, halfResolution: false, backingScale: 2), 1)
+        XCTAssertEqual(WebPageScale.scaleFactor(standardResolution: true, halfResolution: false, backingScale: 1), 0)
+        XCTAssertEqual(WebPageScale.scaleFactor(standardResolution: false, halfResolution: false, backingScale: 2), 0)
+    }
+
+    /// High Performance texture resolution is WE's `-halfresolution`: half the display's scale,
+    /// combined with standard resolution by taking whichever gives fewer pixels.
+    @MainActor
+    func testHalfResolutionHalvesTheDisplaysScale() {
+        XCTAssertEqual(WebPageScale.pixelsPerPoint(standardResolution: false, halfResolution: true, backingScale: 1), 0.5)
+        XCTAssertEqual(WebPageScale.pixelsPerPoint(standardResolution: false, halfResolution: true, backingScale: 2), 1)
+        XCTAssertEqual(WebPageScale.pixelsPerPoint(standardResolution: true, halfResolution: true, backingScale: 1), 0.5)
+        XCTAssertEqual(WebPageScale.pixelsPerPoint(standardResolution: true, halfResolution: true, backingScale: 2), 1)
+        XCTAssertEqual(WebPageScale.pixelsPerPoint(standardResolution: true, halfResolution: false, backingScale: 2), 1)
+        XCTAssertEqual(WebPageScale.pixelsPerPoint(standardResolution: false, halfResolution: false, backingScale: 2), 2)
+        XCTAssertEqual(WebPageScale.scaleFactor(standardResolution: false, halfResolution: true, backingScale: 1), 0.5)
+        XCTAssertEqual(ChromiumPageView.pageScale(standardResolution: false, halfResolution: true, backingScale: 1), 0.5)
+        XCTAssertEqual(ChromiumPageView.pageScale(standardResolution: false, halfResolution: false, backingScale: 2), 2)
+    }
+
+    /// Only High Performance halves web pages; Automatic doesn't, as WE passes the flag for `half` only.
+    func testOnlyHighPerformanceAsksForHalfResolution() {
+        var settings = GlobalSettings()
+        for (value, half) in [(GSTextureResolutionQuality.highPerformance, true), (.highQuality, false), (.automatic, false)] {
+            settings.textureResolution = value
+            XCTAssertEqual(WebPageScale.halfResolution(settings), half, value.rawValue)
+        }
     }
 }
 

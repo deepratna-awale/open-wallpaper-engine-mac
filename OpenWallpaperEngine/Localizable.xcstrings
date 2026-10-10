@@ -166423,96 +166423,96 @@
         }
       }
     },
-    "Wallpaper Engine's setting: High Performance loads textures at half their size and runs effects at half size too; Automatic does so for a scene with more than 3.9 times the display's pixels (a 4K scene on a 1080p display), and for a 3D scene on a display smaller than 1080p." : {
+    "Wallpaper Engine's setting: High Performance loads textures at half their size, runs effects at half size too and draws web wallpapers at half resolution; Automatic halves textures and effects for a scene with more than 3.9 times the display's pixels (a 4K scene on a 1080p display), and for a 3D scene on a display smaller than 1080p." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "إعداد Wallpaper Engine: يحمّل خيار «أداء عالٍ» الأنسجة بنصف حجمها ويشغّل التأثيرات بنصف الحجم أيضًا؛ ويفعل خيار «تلقائي» ذلك للمشهد الذي يزيد عدد وحدات البكسل فيه على 3.9 أضعاف وحدات بكسل شاشة العرض (مشهد 4K على شاشة عرض 1080p)، وللمشهد ثلاثي الأبعاد على شاشة عرض أصغر من 1080p."
+            "value" : "إعداد Wallpaper Engine: يحمّل خيار «أداء عالٍ» الأنسجة بنصف حجمها ويشغّل التأثيرات بنصف الحجم أيضًا ويرسم خلفيات الويب بنصف الدقة؛ ويخفّض خيار «تلقائي» الأنسجة والتأثيرات إلى النصف للمشهد الذي يزيد عدد وحدات البكسل فيه على 3.9 أضعاف وحدات بكسل شاشة العرض (مشهد 4K على شاشة عرض 1080p)، وللمشهد ثلاثي الأبعاد على شاشة عرض أصغر من 1080p."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Einstellung von Wallpaper Engine: „Hohe Leistung“ lädt Texturen in halber Größe und berechnet auch Effekte in halber Größe. „Automatisch“ tut dies bei einer Szene mit mehr als dem 3,9-Fachen der Pixel des Displays (eine 4K-Szene auf einem 1080p-Display) sowie bei einer 3D-Szene auf einem Display unter 1080p."
+            "value" : "Einstellung von Wallpaper Engine: „Hohe Leistung“ lädt Texturen in halber Größe, berechnet auch Effekte in halber Größe und zeichnet Web-Hintergrundbilder in halber Auflösung. „Automatisch“ halbiert Texturen und Effekte bei einer Szene mit mehr als dem 3,9-Fachen der Pixel des Displays (eine 4K-Szene auf einem 1080p-Display) sowie bei einer 3D-Szene auf einem Display unter 1080p."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajuste de Wallpaper Engine: Alto rendimiento carga las texturas a la mitad de su tamaño y también ejecuta los efectos a la mitad; Automática hace lo mismo con escenas de más de 3,9 veces los píxeles de la pantalla (una escena 4K en una pantalla 1080p) y con escenas 3D en pantallas de menos de 1080p."
+            "value" : "Ajuste de Wallpaper Engine: Alto rendimiento carga las texturas a la mitad de su tamaño, también ejecuta los efectos a la mitad y dibuja los fondos de pantalla web a la mitad de resolución; Automática reduce a la mitad texturas y efectos en escenas de más de 3,9 veces los píxeles de la pantalla (una escena 4K en una pantalla 1080p) y en escenas 3D en pantallas de menos de 1080p."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Réglage de Wallpaper Engine : « Hautes performances » charge les textures à la moitié de leur taille et exécute aussi les effets à la moitié de leur taille ; « Automatique » fait de même pour une scène comptant plus de 3,9 fois les pixels du moniteur (une scène 4K sur un moniteur 1080p), ainsi que pour une scène 3D sur un moniteur inférieur à 1080p."
+            "value" : "Réglage de Wallpaper Engine : « Hautes performances » charge les textures à la moitié de leur taille, exécute aussi les effets à la moitié de leur taille et dessine les fonds d’écran web à la moitié de leur résolution ; « Automatique » divise par deux textures et effets pour une scène comptant plus de 3,9 fois les pixels du moniteur (une scène 4K sur un moniteur 1080p), ainsi que pour une scène 3D sur un moniteur inférieur à 1080p."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wallpaper Engine की सेटिंग: उच्च परफ़ॉर्मेंस टेक्सचर को आधे आकार पर लोड करता है और इफ़ेक्ट भी आधे आकार पर चलाता है; ऑटोमैटिक ऐसा तब करता है जब किसी सीन में डिस्प्ले के 3.9 गुना से ज़्यादा पिक्सेल हों (1080p डिस्प्ले पर 4K सीन), और 1080p से छोटे डिस्प्ले पर 3D सीन के लिए."
+            "value" : "Wallpaper Engine की सेटिंग: उच्च परफ़ॉर्मेंस टेक्सचर को आधे आकार पर लोड करता है, इफ़ेक्ट भी आधे आकार पर चलाता है और वेब वॉलपेपर को आधे रेज़ोल्यूशन पर बनाता है; ऑटोमैटिक टेक्सचर और इफ़ेक्ट को तब आधा करता है जब किसी सीन में डिस्प्ले के 3.9 गुना से ज़्यादा पिक्सेल हों (1080p डिस्प्ले पर 4K सीन), और 1080p से छोटे डिस्प्ले पर 3D सीन के लिए."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Impostazione di Wallpaper Engine: “Prestazioni elevate” carica le texture a metà delle loro dimensioni ed esegue anche gli effetti a metà dimensione; “Automatica” fa lo stesso per una scena con più di 3,9 volte i pixel dello schermo (una scena 4K su uno schermo 1080p) e per una scena 3D su uno schermo inferiore a 1080p."
+            "value" : "Impostazione di Wallpaper Engine: “Prestazioni elevate” carica le texture a metà delle loro dimensioni, esegue anche gli effetti a metà dimensione e disegna gli sfondi web a metà risoluzione; “Automatica” dimezza texture ed effetti per una scena con più di 3,9 volte i pixel dello schermo (una scena 4K su uno schermo 1080p) e per una scena 3D su uno schermo inferiore a 1080p."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wallpaper Engineの設定です。「高パフォーマンス」では、テクスチャを半分のサイズで読み込み、エフェクトも半分のサイズで実行します。「自動」では、ディスプレイのピクセル数の3.9倍を超えるシーン（1080pディスプレイ上の4Kシーン）と、1080pより小さいディスプレイ上の3Dシーンに対してこれを行います。"
+            "value" : "Wallpaper Engineの設定です。「高パフォーマンス」では、テクスチャを半分のサイズで読み込み、エフェクトも半分のサイズで実行し、Web 壁紙を半分の解像度で描画します。「自動」では、ディスプレイのピクセル数の3.9倍を超えるシーン（1080pディスプレイ上の4Kシーン）と、1080pより小さいディスプレイ上の3Dシーンに対して、テクスチャとエフェクトを半分にします。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wallpaper Engine의 설정입니다. 고성능은 텍스처를 절반 크기로 불러오고 효과도 절반 크기로 실행합니다. 자동은 디스플레이 픽셀 수의 3.9배를 초과하는 장면(1080p 디스플레이의 4K 장면)과 1080p보다 작은 디스플레이의 3D 장면에 대해 같은 방식으로 처리합니다."
+            "value" : "Wallpaper Engine의 설정입니다. 고성능은 텍스처를 절반 크기로 불러오고 효과도 절반 크기로 실행하며 웹 배경화면을 절반 해상도로 그립니다. 자동은 디스플레이 픽셀 수의 3.9배를 초과하는 장면(1080p 디스플레이의 4K 장면)과 1080p보다 작은 디스플레이의 3D 장면에 대해 텍스처와 효과를 절반으로 줄입니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ustawienie z Wallpaper Engine: „Wysoka wydajność” wczytuje tekstury w połowie rozmiaru i w połowie rozmiaru uruchamia też efekty; „Automatycznie” robi tak w przypadku sceny mającej ponad 3,9 raza więcej pikseli niż wyświetlacz (scena 4K na wyświetlaczu 1080p) oraz sceny 3D na wyświetlaczu mniejszym niż 1080p."
+            "value" : "Ustawienie z Wallpaper Engine: „Wysoka wydajność” wczytuje tekstury w połowie rozmiaru, w połowie rozmiaru uruchamia też efekty i rysuje tapety internetowe w połowie rozdzielczości; „Automatycznie” zmniejsza o połowę tekstury i efekty w przypadku sceny mającej ponad 3,9 raza więcej pikseli niż wyświetlacz (scena 4K na wyświetlaczu 1080p) oraz sceny 3D na wyświetlaczu mniejszym niż 1080p."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajuste do Wallpaper Engine: Alto Desempenho carrega as texturas com metade do tamanho e também executa os efeitos com metade do tamanho; Automático faz isso para uma cena com mais de 3,9 vezes os pixels da tela (uma cena 4K em uma tela 1080p) e para uma cena 3D em uma tela menor que 1080p."
+            "value" : "Ajuste do Wallpaper Engine: Alto Desempenho carrega as texturas com metade do tamanho, também executa os efeitos com metade do tamanho e desenha as imagens de fundo web com metade da resolução; Automático reduz texturas e efeitos à metade para uma cena com mais de 3,9 vezes os pixels da tela (uma cena 4K em uma tela 1080p) e para uma cena 3D em uma tela menor que 1080p."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Настройка Wallpaper Engine: «Высокая производительность» загружает текстуры в половинном размере и обрабатывает эффекты тоже в половинном размере; «Автоматически» делает так для сцены, в которой пикселей более чем в 3,9 раза больше, чем у дисплея (сцена 4K на дисплее 1080p), и для 3D-сцены на дисплее меньше 1080p."
+            "value" : "Настройка Wallpaper Engine: «Высокая производительность» загружает текстуры в половинном размере, обрабатывает эффекты тоже в половинном размере и рисует веб-обои в половинном разрешении; «Автоматически» уменьшает текстуры и эффекты вдвое для сцены, в которой пикселей более чем в 3,9 раза больше, чем у дисплея (сцена 4K на дисплее 1080p), и для 3D-сцены на дисплее меньше 1080p."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wallpaper Engine ayarı: Yüksek Performans, dokuları yarı boyutta yükler ve efektleri de yarı boyutta çalıştırır; Otomatik, bunu ekranın piksel sayısının 3,9 katından fazlasına sahip sahneler (1080p ekranda 4K sahne) ve 1080p’den küçük ekranlardaki 3B sahneler için yapar."
+            "value" : "Wallpaper Engine ayarı: Yüksek Performans, dokuları yarı boyutta yükler, efektleri de yarı boyutta çalıştırır ve web duvar kâğıtlarını yarı çözünürlükte çizer; Otomatik, ekranın piksel sayısının 3,9 katından fazlasına sahip sahnelerde (1080p ekranda 4K sahne) ve 1080p’den küçük ekranlardaki 3B sahnelerde dokuları ve efektleri yarıya indirir."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Параметр Wallpaper Engine: «Висока продуктивність» завантажує текстури в половинному розмірі й також обчислює ефекти в половинному розмірі; «Автоматично» робить так для сцени, що має понад 3,9 раза більше пікселів, ніж дисплей (сцена 4K на дисплеї 1080p), а також для 3D-сцени на дисплеї, меншому за 1080p."
+            "value" : "Параметр Wallpaper Engine: «Висока продуктивність» завантажує текстури в половинному розмірі, також обчислює ефекти в половинному розмірі й малює вебшпалери в половинній роздільності; «Автоматично» зменшує текстури й ефекти вдвічі для сцени, що має понад 3,9 раза більше пікселів, ніж дисплей (сцена 4K на дисплеї 1080p), а також для 3D-сцени на дисплеї, меншому за 1080p."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wallpaper Engine 的设置：“高性能”以一半尺寸载入纹理，并以一半尺寸运行效果；“自动”会对像素数超过显示器 3.9 倍的场景（如在 1080p 显示器上的 4K 场景）以及在低于 1080p 的显示器上的 3D 场景这样做。"
+            "value" : "Wallpaper Engine 的设置：“高性能”以一半尺寸载入纹理，以一半尺寸运行效果，并以一半分辨率绘制网页墙纸；“自动”会对像素数超过显示器 3.9 倍的场景（如在 1080p 显示器上的 4K 场景）以及在低于 1080p 的显示器上的 3D 场景将纹理和效果减半。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wallpaper Engine 的設定：「高效能」會以一半尺寸載入紋理，效果也以一半尺寸執行；「自動」則會在場景像素超過顯示器 3.9 倍時（例如在 1080p 顯示器上顯示 4K 場景），以及在小於 1080p 的顯示器上顯示 3D 場景時這樣做。"
+            "value" : "Wallpaper Engine 的設定：「高效能」會以一半尺寸載入紋理，效果也以一半尺寸執行，並以一半解析度繪製網頁背景圖片；「自動」則會在場景像素超過顯示器 3.9 倍時（例如在 1080p 顯示器上顯示 4K 場景），以及在小於 1080p 的顯示器上顯示 3D 場景時，將紋理與效果減半。"
           }
         }
       }

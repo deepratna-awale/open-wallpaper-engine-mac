@@ -1,3 +1,4 @@
+import Combine
 import XCTest
 @testable import OpenWallpaperEngine
 
@@ -100,6 +101,82 @@ final class DisplayPlaybackMonitorTests: XCTestCase {
         monitor.setDisplaysAsleep(false)
         XCTAssertTrue(monitor.isPolling)
         XCTAssertEqual(applied.last, ["1": .run, "2": .run])
+    }
+
+    // MARK: - Lock and fast user switching
+
+    /// A monitor following its own centers, where the test posts the system's notifications: the
+    /// distributed ones would otherwise reach every process on the Mac.
+    private final class SessionBox { var state = DesktopSessionState() }
+
+    private func startSessionMonitor(session: SessionBox = SessionBox())
+        -> (monitor: DisplayPlaybackMonitor, workspace: NotificationCenter, distributed: NotificationCenter) {
+        monitor.stop()
+        let workspace = NotificationCenter(), distributed = NotificationCenter()
+        var sources = makeSources()
+        sources.workspaceNotifications = workspace
+        sources.distributedNotifications = distributed
+        sources.session = { session.state }
+        let sessionMonitor = DisplayPlaybackMonitor(sources: sources, scanQueue: nil) { [weak self] in self?.applied.append($0) }
+        sessionMonitor.start(settings: Just(GlobalSettings()))
+        monitor = sessionMonitor
+        return (sessionMonitor, workspace, distributed)
+    }
+
+    func testLockingTheScreenPausesEveryDisplayUntilItUnlocks() {
+        let (monitor, _, distributed) = startSessionMonitor()
+        XCTAssertEqual(applied.last, ["1": .run, "2": .run])
+        distributed.post(name: Notification.Name("com.apple.screenIsLocked"), object: nil)
+        spin { applied.last == ["1": .pause, "2": .pause] }
+        XCTAssertEqual(applied.last, ["1": .pause, "2": .pause])
+        XCTAssertTrue(monitor.sessionInactive)
+        XCTAssertFalse(monitor.isPolling, "nobody sees the desktop, so the windows aren't looked at")
+        distributed.post(name: Notification.Name("com.apple.screenIsUnlocked"), object: nil)
+        spin { applied.last == ["1": .run, "2": .run] }
+        XCTAssertEqual(applied.last, ["1": .run, "2": .run])
+    }
+
+    func testSwitchingToAnotherUserPausesEveryDisplayUntilSwitchingBack() {
+        let (monitor, workspace, _) = startSessionMonitor()
+        workspace.post(name: NSWorkspace.sessionDidResignActiveNotification, object: nil)
+        spin { applied.last == ["1": .pause, "2": .pause] }
+        XCTAssertEqual(applied.last, ["1": .pause, "2": .pause])
+        workspace.post(name: NSWorkspace.sessionDidBecomeActiveNotification, object: nil)
+        spin { applied.last == ["1": .run, "2": .run] }
+        XCTAssertEqual(applied.last, ["1": .run, "2": .run])
+        XCTAssertFalse(monitor.sessionInactive)
+    }
+
+    /// Lock and session combine: switching back to a still-locked screen stays paused, and the
+    /// lock's pause combines with the rules as any other (the stricter wins, and they come back).
+    func testLockAndSessionCombineWithTheRules() {
+        let session = SessionBox()
+        let (monitor, workspace, distributed) = startSessionMonitor(session: session)
+        monitor.setRules(PlaybackRules(displayAsleep: .stop))
+        distributed.post(name: Notification.Name("com.apple.screenIsLocked"), object: nil)
+        workspace.post(name: NSWorkspace.sessionDidResignActiveNotification, object: nil)
+        spin { applied.last == ["1": .pause, "2": .pause] }
+        monitor.setDisplaysAsleep(true)
+        XCTAssertEqual(applied.last, ["1": .stop, "2": .stop])
+        monitor.setDisplaysAsleep(false)
+        XCTAssertEqual(applied.last, ["1": .pause, "2": .pause])
+        // Back to this session; the window server says the screen is still locked.
+        session.state = DesktopSessionState(screenLocked: true, active: true)
+        workspace.post(name: NSWorkspace.sessionDidBecomeActiveNotification, object: nil)
+        spin { monitor.session.active }
+        XCTAssertTrue(monitor.session.screenLocked)
+        XCTAssertEqual(applied.last, ["1": .pause, "2": .pause])
+        distributed.post(name: Notification.Name("com.apple.screenIsUnlocked"), object: nil)
+        spin { applied.last == ["1": .run, "2": .run] }
+        XCTAssertEqual(applied.last, ["1": .run, "2": .run])
+    }
+
+    /// Started while the screen is locked (the app launched at login before unlocking): paused.
+    func testStartingOnALockedScreenPauses() {
+        let session = SessionBox()
+        session.state = DesktopSessionState(screenLocked: true, active: true)
+        _ = startSessionMonitor(session: session)
+        XCTAssertEqual(applied.last, ["1": .pause, "2": .pause])
     }
 
     func testAudioAndBatteryActOnEveryDisplay() {
