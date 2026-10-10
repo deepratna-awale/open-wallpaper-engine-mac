@@ -21,15 +21,19 @@ final class ModelMaterialPlan {
     /// shadow atlas: made for an opaque material while the scene's light budget has a shadowed
     /// light and the shadows setting is on; nil otherwise.
     let shadowCaster: ModelMaterialPlan?
+    /// The pass's shader is the wallpaper's own, not one of WE's (`ModelMaterialPlanBuilder.isBuiltinShader`):
+    /// only then does a mesh lacking an input the shader reads draw nothing (`SceneModelMissingInputs`).
+    let customShader: Bool
 
     init(materialPath: String, pass: SceneEffectPassPlan, raster: SceneRasterState, clampedSlots: Set<Int>,
-         meshCombos: ModelMeshCombos, shadowCaster: ModelMaterialPlan? = nil) {
+         meshCombos: ModelMeshCombos, shadowCaster: ModelMaterialPlan? = nil, customShader: Bool) {
         self.materialPath = materialPath
         self.pass = pass
         self.raster = raster
         self.clampedSlots = clampedSlots
         self.meshCombos = meshCombos
         self.shadowCaster = shadowCaster
+        self.customShader = customShader
     }
 
     /// WE's blending byte (+0x1f0): normal 0, translucent 1, additive 2, alphatocoverage 3.
@@ -92,6 +96,9 @@ struct ModelMaterialPlanBuilder {
     /// The combos WE's engine lays over every material of the scene (`LIGHTS_*`, `HDR`, `FOG_*`,
     /// `REVERSEDEPTH`).
     var sceneEngineCombos = SceneEngineCombos()
+    /// Whether a pass's `shader` is one of WE's own, in its assets (`generic4`, `shadowcaster`, …)
+    /// rather than the wallpaper's. Nil treats every shader as the wallpaper's.
+    var isBuiltinShader: ((String) -> Bool)?
 
     func build(materialPath: String, mesh: ModelMeshCombos) throws -> ModelMaterialPlan {
         guard let data = readFile(materialPath) else { throw ModelMaterialPlanError.missing(materialPath) }
@@ -177,7 +184,8 @@ struct ModelMaterialPlanBuilder {
         return ModelMaterialPlan(materialPath: materialPath, pass: pass,
                                  raster: SceneRasterState(depthtest: materialPass.depthtest, depthwrite: materialPass.depthwrite,
                                                           cullmode: materialPass.cullmode, blending: materialPass.blending),
-                                 clampedSlots: clampedSlots, meshCombos: mesh, shadowCaster: shadowCaster)
+                                 clampedSlots: clampedSlots, meshCombos: mesh, shadowCaster: shadowCaster,
+                                 customShader: isCustom(materialPass.shader))
     }
 
     /// What a material's shadow variant takes from it.
@@ -244,8 +252,11 @@ struct ModelMaterialPlanBuilder {
         return ModelMaterialPlan(materialPath: "\(source.materialPath) (shadow: \(shader))", pass: pass,
                                  raster: SceneRasterState(depthtest: utilPass.depthtest, depthwrite: utilPass.depthwrite,
                                                           cullmode: utilPass.cullmode),
-                                 clampedSlots: source.clampedSlots.intersection(inputs.keys), meshCombos: source.mesh)
+                                 clampedSlots: source.clampedSlots.intersection(inputs.keys), meshCombos: source.mesh,
+                                 customShader: isCustom(shader))
     }
+
+    private func isCustom(_ shader: String) -> Bool { !(isBuiltinShader?(shader) ?? false) }
 
     /// The util material every shadow variant takes its pass state (and its default shader) from.
     static let shadowCasterMaterial = "materials/util/shadowcaster.json"

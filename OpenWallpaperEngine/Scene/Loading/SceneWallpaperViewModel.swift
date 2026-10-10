@@ -1299,7 +1299,7 @@ class SceneWallpaperViewModel: ObservableObject {
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
             loadTexture: { [weak self] name, path in self?.loadMetalTexture(named: name, materialDir: path, wallpaperDir: wallpaperDir) },
-            sceneEngineCombos: sceneEngineCombos)
+            sceneEngineCombos: sceneEngineCombos, isBuiltinShader: Self.isBuiltinShader)
         let package = pkgParser
         let built = SceneModelBuilder(materials: materials,
                                       loadModel: { try MDLModel.load(path: $0, package: package, directory: wallpaperDir) },
@@ -1324,7 +1324,7 @@ class SceneWallpaperViewModel: ObservableObject {
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
             loadTexture: { [weak self] name, path in self?.loadMetalTexture(named: name, materialDir: path, wallpaperDir: wallpaperDir) },
-            sceneEngineCombos: sceneEngineCombos)
+            sceneEngineCombos: sceneEngineCombos, isBuiltinShader: Self.isBuiltinShader)
         var built = object
         let planner = SceneScriptModelPlanBuilder(materials: materials, wallpaperName: wallpaperDir.lastPathComponent)
         let geometry = SceneScriptModelGeometry(store: modelData, token: token)
@@ -2151,6 +2151,13 @@ class SceneWallpaperViewModel: ObservableObject {
             relativePaths.append("materials/\(normalizedPath)")
         }
         return relativePaths
+    }
+
+    /// Whether WE's assets have the vertex stage of `shader` (`generic4`, `shadowcaster`, …): one of
+    /// WE's own shaders, as opposed to a wallpaper's (`ModelMaterialPlan.customShader`).
+    static func isBuiltinShader(_ shader: String) -> Bool {
+        let file = shader.hasSuffix(".vert") ? shader : "\(shader).vert"
+        return WallpaperEngineAssets.locate(["shaders/\(file)", file], in: WallpaperEngineAssets.searchDirectories) != nil
     }
 
     private func sharedAssetData(named path: String) -> Data? {

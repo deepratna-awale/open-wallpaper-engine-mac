@@ -503,6 +503,7 @@ final class SceneShadowPass {
 
     static func pipelineKey(_ mesh: SceneModelPlan.Mesh, material: ModelMaterialPlan) -> String {
         "shadow|\(material.pass.variantKey)|\(mesh.format.rawValue)|\(material.blending)|d\(SceneShadowAtlas.pixelFormat.rawValue)"
+            + (material.customShader ? "|custom" : "")
     }
 
     /// Blocks until every caster mesh of `plan` compiled or failed (tests). True when all are ready.
@@ -529,10 +530,12 @@ final class SceneShadowPass {
         guard !state.busy else { return nil }
         pipelineLock.withLock { _ = pending.insert(key) }
         let device = self.device, archive = self.archive, format = mesh.format, name = material.materialPath
+        let customShader = material.customShader
         compileQueue.async { [weak self] in
             let result: MTLRenderPipelineState?
             do {
-                result = try EffectGraphRenderer.makePipeline(Self.pipelineDescriptor(variant, format: format, device: device),
+                result = try EffectGraphRenderer.makePipeline(Self.pipelineDescriptor(variant, format: format, customShader: customShader,
+                                                                                      device: device),
                                                               device: device, archive: archive, key: key)
             } catch let missing as SceneModelMissingInputs {
                 OWELog.debug(.shader, "Model material \(name): the mesh casts no shadow: \(missing)")
@@ -555,8 +558,9 @@ final class SceneShadowPass {
     /// coverage itself would change nothing. A fragment stage that neither discards nor writes
     /// depth (WE's casters without `ALPHATOCOVERAGE`, whose `main` is empty) changes nothing in a
     /// depth-only pass either, so the pipeline has none and the rasteriser writes the depth alone.
+    /// A `customShader` caster reading an input the mesh lacks throws `SceneModelMissingInputs`.
     static func pipelineDescriptor(_ variant: TranslatedShaderVariant, format: MDLVertexFormat,
-                                   device: MTLDevice) throws -> MTLRenderPipelineDescriptor {
+                                   customShader: Bool, device: MTLDevice) throws -> MTLRenderPipelineDescriptor {
         let (vertexLibrary, fragmentLibrary) = try variant.makeLibraries(device: device)
         guard let vertex = vertexLibrary.makeFunction(name: "main0"),
               let fragment = fragmentLibrary.makeFunction(name: "main0") else {
@@ -568,7 +572,7 @@ final class SceneShadowPass {
         descriptor.depthAttachmentPixelFormat = SceneShadowAtlas.pixelFormat
         descriptor.rasterSampleCount = 1
         descriptor.inputPrimitiveTopology = .triangle
-        try SceneModelMissingInputs.check(vertex, attributes: variant.attributes, format: format)
+        if customShader { try SceneModelMissingInputs.check(vertex, attributes: variant.attributes, format: format) }
         descriptor.vertexDescriptor = SceneModelRenderer.vertexDescriptor(for: vertex, attributes: variant.attributes, format: format)
         return descriptor
     }

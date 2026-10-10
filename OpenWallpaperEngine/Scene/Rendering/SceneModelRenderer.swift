@@ -9,8 +9,9 @@ import simd
 ///
 /// Each mesh is one interleaved vertex buffer and a triangle list, as the `.mdl` has them; the
 /// vertex descriptor maps the translated shader's `a_*` inputs onto the mesh's attributes by their
-/// D3D semantic, as WE's input layout does (0x1400d81a3); a stage reading an input the mesh lacks
-/// draws nothing, as in WE (open point 11, `missingInputs`). Pipelines compile off the render thread, keyed by the depth format, and share
+/// D3D semantic, as WE's input layout does (0x1400d81a3); a custom shader's stage reading an input
+/// the mesh lacks draws nothing, as in WE (open point 11, `missingInputs`), and WE's own shaders read
+/// zeros for it. Pipelines compile off the render thread, keyed by the depth format, and share
 /// the effects' binary archive; a mesh draws nothing until its pipeline is ready, and a pipeline
 /// that fails is logged once. Call on the render thread, apart from the compiles.
 final class SceneModelRenderer: SceneModelDrawing {
@@ -548,7 +549,7 @@ final class SceneModelRenderer: SceneModelDrawing {
     static func pipelineKey(_ mesh: SceneModelPlan.Mesh, pixelFormat: MTLPixelFormat, sampleCount: Int,
                             depthFormat: MTLPixelFormat) -> String {
         "model|\(mesh.material.pass.variantKey)|\(mesh.format.rawValue)|\(mesh.material.blending)|\(pixelFormat.rawValue)"
-            + "|x\(sampleCount)|d\(depthFormat.rawValue)"
+            + "|x\(sampleCount)|d\(depthFormat.rawValue)" + (mesh.material.customShader ? "|custom" : "")
     }
 
     var hasPendingPipelines: Bool { pipelineLock.withLock { !pending.isEmpty } }
@@ -588,12 +589,14 @@ final class SceneModelRenderer: SceneModelDrawing {
         let format = mesh.format
         let blending = mesh.material.blending
         let material = mesh.material.materialPath
+        let customShader = mesh.material.customShader
         compileQueue.async { [weak self] in
             let result: MTLRenderPipelineState?
             do {
                 result = try EffectGraphRenderer.makePipeline(
                     Self.pipelineDescriptor(variant, format: format, blending: blending, pixelFormat: pixelFormat,
-                                            sampleCount: sampleCount, depthFormat: depthFormat, device: device),
+                                            sampleCount: sampleCount, depthFormat: depthFormat,
+                                            customShader: customShader, device: device),
                     device: device, archive: archive, key: key)
             } catch let missing as SceneModelMissingInputs {
                 OWELog.debug(.shader, "Model material \(material): the mesh draws nothing: \(missing)")
@@ -611,10 +614,11 @@ final class SceneModelRenderer: SceneModelDrawing {
     }
 
     /// The pipeline of a mesh's variant: WE's blending (`alphatocoverage` as Metal's alpha to
-    /// coverage, without blending), the mesh's vertex layout.
+    /// coverage, without blending), the mesh's vertex layout. A `customShader` reading an input the
+    /// mesh lacks throws `SceneModelMissingInputs`.
     static func pipelineDescriptor(_ variant: TranslatedShaderVariant, format: MDLVertexFormat, blending: String,
                                    pixelFormat: MTLPixelFormat, sampleCount: Int, depthFormat: MTLPixelFormat,
-                                   device: MTLDevice) throws -> MTLRenderPipelineDescriptor {
+                                   customShader: Bool, device: MTLDevice) throws -> MTLRenderPipelineDescriptor {
         let (vertexLibrary, fragmentLibrary) = try variant.makeLibraries(device: device)
         guard let vertex = vertexLibrary.makeFunction(name: "main0"),
               let fragment = fragmentLibrary.makeFunction(name: "main0") else {
@@ -636,7 +640,7 @@ final class SceneModelRenderer: SceneModelDrawing {
             attachment.destinationRGBBlendFactor = blend.destination
             attachment.destinationAlphaBlendFactor = blend.destination
         }
-        try SceneModelMissingInputs.check(vertex, attributes: variant.attributes, format: format)
+        if customShader { try SceneModelMissingInputs.check(vertex, attributes: variant.attributes, format: format) }
         descriptor.vertexDescriptor = vertexDescriptor(for: vertex, attributes: variant.attributes, format: format)
         return descriptor
     }
@@ -658,7 +662,7 @@ final class SceneModelRenderer: SceneModelDrawing {
     /// (`ShaderPairRewriter.attributeLocations`). An input takes the mesh's attribute of the same
     /// D3D semantic and index (a `vec2 a_TexCoord` reads the first two components of a mesh's
     /// `a_TexCoordVec4`, as WE's input layout binds by semantic [I]); one the mesh lacks reads zeros
-    /// where a caller allows it (model pipelines refuse it first, `SceneModelMissingInputs`).
+    /// where a caller allows it (a custom shader's model pipeline refuses it first, `SceneModelMissingInputs`).
     static func vertexDescriptor(for function: MTLFunction, attributes: [String: Int],
                                  format: MDLVertexFormat) -> MTLVertexDescriptor {
         let descriptor = MTLVertexDescriptor()
@@ -714,16 +718,16 @@ final class SceneModelRenderer: SceneModelDrawing {
     }
 }
 
-/// A model pipeline whose vertex stage reads inputs the mesh's format lacks (docs/models-plan.md
-/// §5.11). WE binds the shader's inputs by semantic in an input layout built from the mesh's
-/// format (0x1400d81a3); D3D11 refuses a layout missing an input the stage reads, and WE then draws
-/// nothing of the mesh and logs nothing (WE 2.8.42's capture, models-open/511: a box whose custom
-/// shader reads `a_Color` and `a_TexCoordC1` isn't drawn). The app skips the draw the same way and
-/// logs it once at debug level. WE builds the layout from the format bits alone and passes the
-/// compiled vertex shader to `CreateInputLayout`, which checks the shader's input signature: only
-/// inputs the compiled stage reads count, so the check uses the compiled function's active
-/// attributes, never the declarations (generic4 reads `a_TexCoord` and `a_Normal` in every combo,
-/// which every library format has).
+/// A custom shader's model pipeline whose vertex stage reads inputs the mesh's format lacks
+/// (docs/models-plan.md §5.11). WE binds the shader's inputs by semantic in an input layout built
+/// from the mesh's format (0x1400d81a3), and a mesh drawn through a wallpaper's own shader that
+/// reads an input the mesh lacks isn't drawn, with nothing logged (WE 2.8.42's capture,
+/// models-open/511: a box whose custom shader reads `a_Color` and `a_TexCoordC1`). The app skips
+/// that draw the same way and logs it once at debug level. Only inputs the compiled stage reads
+/// count (`CreateInputLayout` checks the compiled shader's input signature), so the check uses the
+/// compiled function's active attributes, never the declarations. WE's own shaders from its assets
+/// (`ModelMaterialPlan.customShader` false: `generic4`, `shadowcaster`, …) aren't checked and keep
+/// drawing, with zeros for an input the mesh lacks.
 struct SceneModelMissingInputs: Error, CustomStringConvertible {
     let inputs: [String]
 
