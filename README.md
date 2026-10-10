@@ -11,7 +11,7 @@ Open Wallpaper Engine is a free, open-source macOS player for Wallpaper Engine w
 
 **Website:** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki:** [guides and troubleshooting](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-![The library](docs/images/library.png)
+![The library](docs/images/library.jpg)
 
 ## Highlights
 
@@ -19,11 +19,11 @@ Open Wallpaper Engine is a free, open-source macOS player for Wallpaper Engine w
 - **Steam Workshop** — browse, filter and download from the Workshop inside the app, or import wallpaper folders and zips.
 - **Scene Edit / Export** — change the running wallpaper's layers and effects live on the desktop, make it your screen saver, or export it (scenes and videos) as a Live Photo lock screen for iPhone and iPad or as a package for Wallpaper Engine's Android app.
 
-  ![Scene Edit / Export](docs/images/scene-editor-live.png)
+  ![Scene Edit / Export](docs/images/scene-editor-live.jpg)
 
 - **Wallpaper Editor** — an editor in the spirit of Wallpaper Engine's: layers, effects with previews, a timeline, SceneScript, user properties, particles, Puppet Warp and masks made from a depth map. You edit a draft: **Save** applies it to the wallpaper, **Save as New Wallpaper** adds a copy to the library, and the wallpaper's own files are never changed.
 
-  ![Wallpaper Editor](docs/images/wallpaper-editor.png)
+  ![Wallpaper Editor](docs/images/wallpaper-editor.jpg)
 
 - **Displays** — a wallpaper per display, one stretched across them or cloned onto each, groups, splits and profiles, as in Wallpaper Engine.
 

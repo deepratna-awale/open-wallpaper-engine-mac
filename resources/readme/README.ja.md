@@ -11,7 +11,7 @@ Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・We
 
 **Web サイト：** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki：** [ガイドとトラブルシューティング](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-![ライブラリ](../../docs/images/library.png)
+![ライブラリ](../../docs/images/library.jpg)
 
 ## 主な機能
 
@@ -19,11 +19,11 @@ Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・We
 - **Steam ワークショップ** — アプリ内でワークショップを閲覧・絞り込み・ダウンロードできるほか、壁紙のフォルダや zip を読み込むこともできます。
 - **シーン編集/書き出し** — 再生中の壁紙のレイヤーやエフェクトをデスクトップ上でリアルタイムに変更したり、その壁紙をスクリーンセーバーにしたり、（シーンと動画を）iPhone・iPad 用の Live Photo ロック画面や、Wallpaper Engine の Android アプリ用パッケージとして書き出したりできます。
 
-  ![シーン編集/書き出し](../../docs/images/scene-editor-live.png)
+  ![シーン編集/書き出し](../../docs/images/scene-editor-live.jpg)
 
 - **壁紙エディタ** — Wallpaper Engine のエディタにならったエディタです。レイヤー、プレビュー付きのエフェクト、タイムライン、SceneScript、ユーザープロパティ、パーティクル、Puppet Warp、深度マップから作るマスクを扱えます。編集はドラフトに対して行い、**保存** で壁紙に反映し、**新規壁紙として保存** でライブラリにコピーを追加します。壁紙自体のファイルが変更されることはありません。
 
-  ![壁紙エディタ](../../docs/images/wallpaper-editor.png)
+  ![壁紙エディタ](../../docs/images/wallpaper-editor.jpg)
 
 - **ディスプレイ** — Wallpaper Engine と同じく、ディスプレイごとの壁紙、複数ディスプレイへの引き伸ばしや複製、グループ、分割、プロファイルに対応します。
 

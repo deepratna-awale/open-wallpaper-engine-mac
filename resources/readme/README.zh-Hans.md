@@ -11,7 +11,7 @@ Open Wallpaper Engine 是一款免费、开源的 macOS 播放器，可播放 Wa
 
 **网站：** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki：** [指南与疑难解答](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-![资源库](../../docs/images/library.png)
+![资源库](../../docs/images/library.jpg)
 
 ## 亮点
 
@@ -19,11 +19,11 @@ Open Wallpaper Engine 是一款免费、开源的 macOS 播放器，可播放 Wa
 - **Steam 创意工坊** — 在 App 内浏览、筛选和下载创意工坊内容，或导入墙纸文件夹和 zip 文件。
 - **场景编辑/导出** — 直接在桌面上实时修改正在运行的墙纸的图层和效果，将它设为你的屏幕保护程序，或将其（场景和视频）导出为 iPhone 和 iPad 的实况照片锁定屏幕，或 Android 版 Wallpaper Engine 的墙纸包。
 
-  ![场景编辑/导出](../../docs/images/scene-editor-live.png)
+  ![场景编辑/导出](../../docs/images/scene-editor-live.jpg)
 
 - **墙纸编辑器** — 一款秉承 Wallpaper Engine 编辑器理念的编辑器：图层、带预览的效果、时间线、SceneScript、用户属性、粒子、Puppet Warp 以及由深度图生成的遮罩。你编辑的是一份草稿：**保存** 会将其应用到墙纸，**保存为新墙纸** 会在资源库中添加一份副本，墙纸本身的文件绝不会被更改。
 
-  ![墙纸编辑器](../../docs/images/wallpaper-editor.png)
+  ![墙纸编辑器](../../docs/images/wallpaper-editor.jpg)
 
 - **显示器** — 与 Wallpaper Engine 一样：每台显示器一张墙纸、一张墙纸横跨所有显示器或在每台显示器上克隆，并支持分组、分割和配置文件。
 

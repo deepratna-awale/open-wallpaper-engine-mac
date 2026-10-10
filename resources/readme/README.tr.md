@@ -11,7 +11,7 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 
 **Web sitesi:** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki:** [kılavuzlar ve sorun giderme](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-![Kitaplık](../../docs/images/library.png)
+![Kitaplık](../../docs/images/library.jpg)
 
 ## Öne Çıkanlar
 
@@ -19,11 +19,11 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 - **Steam Atölyesi** — Atölye’ye uygulamanın içinden göz atın, filtreleyin ve indirin ya da duvar kâğıdı klasörlerini ve zip dosyalarını içe aktarın.
 - **Sahne Düzenle/Dışa Aktar** — çalışan duvar kâğıdının katmanlarını ve efektlerini doğrudan masaüstünde canlı olarak değiştirin, onu ekran koruyucunuz yapın ya da onu (sahneler ve videolar) iPhone ve iPad için Live Photo kilit ekranı veya Wallpaper Engine’in Android uygulaması için bir paket olarak dışa aktarın.
 
-  ![Sahne Düzenle/Dışa Aktar](../../docs/images/scene-editor-live.png)
+  ![Sahne Düzenle/Dışa Aktar](../../docs/images/scene-editor-live.jpg)
 
 - **Duvar Kâğıdı Düzenleyici** — Wallpaper Engine’in düzenleyicisinin ruhunu taşıyan bir düzenleyici: katmanlar, önizlemeli efektler, zaman çizelgesi, SceneScript, kullanıcı özellikleri, parçacıklar, Puppet Warp ve derinlik haritasından oluşturulan maskeler. Bir taslağı düzenlersiniz: **Kaydet** taslağı duvar kâğıdına uygular, **Yeni Duvar Kâğıdı Olarak Kaydet** kitaplığa bir kopya ekler; duvar kâğıdının kendi dosyaları hiçbir zaman değiştirilmez.
 
-  ![Duvar Kâğıdı Düzenleyici](../../docs/images/wallpaper-editor.png)
+  ![Duvar Kâğıdı Düzenleyici](../../docs/images/wallpaper-editor.jpg)
 
 - **Ekranlar** — Wallpaper Engine’deki gibi her ekrana ayrı bir duvar kâğıdı, tüm ekranlara yayılan ya da her birine kopyalanan tek bir duvar kâğıdı; ayrıca gruplar, bölmeler ve profiller.
 

@@ -11,7 +11,7 @@ Open Wallpaper Engine 是一款免費、開源的 macOS 播放器，可播放 Wa
 
 **網站：** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki：** [指南與疑難排解](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-![資料庫](../../docs/images/library.png)
+![資料庫](../../docs/images/library.jpg)
 
 ## 特色
 
@@ -19,11 +19,11 @@ Open Wallpaper Engine 是一款免費、開源的 macOS 播放器，可播放 Wa
 - **Steam 工作坊** — 在 App 內瀏覽、篩選並下載工作坊內容，或輸入背景圖片檔案夾與 zip 檔。
 - **場景編輯/輸出** — 直接在桌面上即時修改正在執行的背景圖片的圖層與效果，將它設為你的螢幕保護程式，或將其（場景與影片）輸出為 iPhone 與 iPad 的原況照片鎖定畫面，或 Android 版 Wallpaper Engine 的背景圖片套件。
 
-  ![場景編輯/輸出](../../docs/images/scene-editor-live.png)
+  ![場景編輯/輸出](../../docs/images/scene-editor-live.jpg)
 
 - **背景圖片編輯器** — 一款延續 Wallpaper Engine 編輯器精神的編輯器：圖層、附預覽的效果、時間軸、SceneScript、使用者屬性、粒子、Puppet Warp 以及由深度圖產生的遮罩。你編輯的是一份草稿：**儲存** 會將其套用到背景圖片，**儲存為新背景圖片** 會在資料庫中加入一份拷貝，背景圖片本身的檔案絕不會被更改。
 
-  ![背景圖片編輯器](../../docs/images/wallpaper-editor.png)
+  ![背景圖片編輯器](../../docs/images/wallpaper-editor.jpg)
 
 - **顯示器** — 與 Wallpaper Engine 相同：每台顯示器一張背景圖片、一張背景圖片橫跨所有顯示器或在每台顯示器上複製，並支援群組、分割與設定檔。
 

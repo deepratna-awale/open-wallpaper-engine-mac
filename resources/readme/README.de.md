@@ -11,7 +11,7 @@ Open Wallpaper Engine ist ein kostenloser Open-Source-Player für macOS, der Wal
 
 **Website:** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki:** [Anleitungen und Fehlerbehebung](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-![Die Mediathek](../../docs/images/library.png)
+![Die Mediathek](../../docs/images/library.jpg)
 
 ## Highlights
 
@@ -19,11 +19,11 @@ Open Wallpaper Engine ist ein kostenloser Open-Source-Player für macOS, der Wal
 - **Steam Workshop** – Hintergrundbilder direkt in der App im Workshop durchsuchen, filtern und laden oder Hintergrundbildordner und Zip-Dateien importieren.
 - **Szene bearbeiten/exportieren** – Ebenen und Effekte des laufenden Hintergrundbilds live auf dem Schreibtisch ändern, es zu deinem Bildschirmschoner machen oder es (Szenen und Videos) als Live-Photo-Sperrbildschirm für iPhone und iPad oder als Paket für die Android-App von Wallpaper Engine exportieren.
 
-  ![Szene bearbeiten/exportieren](../../docs/images/scene-editor-live.png)
+  ![Szene bearbeiten/exportieren](../../docs/images/scene-editor-live.jpg)
 
 - **Hintergrundbild-Editor** – ein Editor nach dem Vorbild von Wallpaper Engine: Ebenen, Effekte mit Vorschauen, eine Zeitleiste, SceneScript, Benutzereigenschaften, Partikel, Puppet Warp und Masken aus einer Tiefenkarte. Du bearbeitest einen Entwurf: **Sichern** übernimmt ihn in das Hintergrundbild, **Als neues Hintergrundbild sichern** fügt der Mediathek eine Kopie hinzu, und die eigenen Dateien des Hintergrundbilds werden nie verändert.
 
-  ![Hintergrundbild-Editor](../../docs/images/wallpaper-editor.png)
+  ![Hintergrundbild-Editor](../../docs/images/wallpaper-editor.jpg)
 
 - **Displays** – ein Hintergrundbild pro Display, eines über alle gestreckt oder auf jedes geklont, Gruppen, Teilungen und Profile, wie in Wallpaper Engine.
 

@@ -11,7 +11,7 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
 
 **वेबसाइट:** [openwallpaperengine.app](https://openwallpaperengine.app/) · **विकी:** [गाइड और समस्या निवारण](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-![लाइब्रेरी](../../docs/images/library.png)
+![लाइब्रेरी](../../docs/images/library.jpg)
 
 ## ख़ास बातें
 
@@ -19,11 +19,11 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
 - **Steam Workshop** — ऐप के अंदर ही Workshop ब्राउज़ करें, फ़िल्टर करें और डाउनलोड करें, या वॉलपेपर फ़ोल्डर और zip इंपोर्ट करें.
 - **सीन एडिट/एक्सपोर्ट** — चल रहे वॉलपेपर की लेयर और इफ़ेक्ट सीधे डेस्कटॉप पर लाइव बदलें, उसे अपना स्क्रीन सेवर बनाएँ, या उसे (सीन और वीडियो) iPhone और iPad के लिए Live Photo लॉक स्क्रीन के रूप में या Wallpaper Engine के Android ऐप के पैकेज के रूप में एक्सपोर्ट करें.
 
-  ![सीन एडिट/एक्सपोर्ट](../../docs/images/scene-editor-live.png)
+  ![सीन एडिट/एक्सपोर्ट](../../docs/images/scene-editor-live.jpg)
 
 - **वॉलपेपर एडिटर** — Wallpaper Engine के एडिटर की तर्ज़ पर बना एडिटर: लेयर, प्रीव्यू के साथ इफ़ेक्ट, टाइमलाइन, SceneScript, यूज़र प्रॉपर्टी, पार्टिकल, Puppet Warp और डेप्थ मैप से बने मास्क. आप एक ड्राफ़्ट एडिट करते हैं: **सहेजें** उसे वॉलपेपर पर लागू करता है, **नए वॉलपेपर के रूप में सहेजें** लाइब्रेरी में एक कॉपी जोड़ता है, और वॉलपेपर की अपनी फ़ाइलें कभी नहीं बदलतीं.
 
-  ![वॉलपेपर एडिटर](../../docs/images/wallpaper-editor.png)
+  ![वॉलपेपर एडिटर](../../docs/images/wallpaper-editor.jpg)
 
 - **डिस्प्ले** — हर डिस्प्ले पर अलग वॉलपेपर, एक वॉलपेपर सभी डिस्प्ले पर फैला हुआ या हर डिस्प्ले पर क्लोन किया हुआ, साथ ही ग्रुप, स्प्लिट और प्रोफ़ाइल — बिल्कुल Wallpaper Engine की तरह.
 

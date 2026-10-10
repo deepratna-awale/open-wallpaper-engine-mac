@@ -11,7 +11,7 @@ Open Wallpaper Engine est un lecteur macOS gratuit et open source pour les fonds
 
 **Site web :** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki :** [guides et dépannage](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-![La bibliothèque](../../docs/images/library.png)
+![La bibliothèque](../../docs/images/library.jpg)
 
 ## Points forts
 
@@ -19,11 +19,11 @@ Open Wallpaper Engine est un lecteur macOS gratuit et open source pour les fonds
 - **Steam Workshop** — parcourez, filtrez et téléchargez des fonds d’écran du Workshop directement dans l’app, ou importez des dossiers et des fichiers zip de fonds d’écran.
 - **Modifier/exporter la scène** — modifiez en direct sur le bureau les calques et les effets du fond d’écran en cours, faites-en votre économiseur d’écran, ou exportez-le (scènes et vidéos) en écran verrouillé Live Photo pour iPhone et iPad ou en paquet pour l’app Android de Wallpaper Engine.
 
-  ![Modifier/exporter la scène](../../docs/images/scene-editor-live.png)
+  ![Modifier/exporter la scène](../../docs/images/scene-editor-live.jpg)
 
 - **Éditeur de fond d’écran** — un éditeur dans l’esprit de celui de Wallpaper Engine : calques, effets avec aperçus, chronologie, SceneScript, propriétés utilisateur, particules, Puppet Warp et masques créés à partir d’une carte de profondeur. Vous modifiez un brouillon : **Enregistrer** l’applique au fond d’écran, **Enregistrer comme nouveau fond d’écran** en ajoute une copie à la bibliothèque, et les fichiers du fond d’écran lui-même ne sont jamais modifiés.
 
-  ![Éditeur de fond d’écran](../../docs/images/wallpaper-editor.png)
+  ![Éditeur de fond d’écran](../../docs/images/wallpaper-editor.jpg)
 
 - **Moniteurs** — un fond d’écran par moniteur, un seul étiré sur tous ou cloné sur chacun, des groupes, des divisions et des profils, comme dans Wallpaper Engine.
 

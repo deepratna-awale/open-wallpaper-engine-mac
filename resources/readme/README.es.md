@@ -11,7 +11,7 @@ Open Wallpaper Engine es un reproductor gratuito y de código abierto para macOS
 
 **Sitio web:** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki:** [guías y solución de problemas](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-![La biblioteca](../../docs/images/library.png)
+![La biblioteca](../../docs/images/library.jpg)
 
 ## Lo más destacado
 
@@ -19,11 +19,11 @@ Open Wallpaper Engine es un reproductor gratuito y de código abierto para macOS
 - **Steam Workshop**: explora, filtra y descarga fondos del Workshop sin salir de la app, o importa carpetas y archivos zip de fondos de pantalla.
 - **Editar/exportar escena**: cambia en vivo en el escritorio las capas y los efectos del fondo que se está reproduciendo, conviértelo en tu salvapantallas o expórtalo (escenas y vídeos) como pantalla de bloqueo Live Photo para iPhone y iPad o como paquete para la app de Android de Wallpaper Engine.
 
-  ![Editar/exportar escena](../../docs/images/scene-editor-live.png)
+  ![Editar/exportar escena](../../docs/images/scene-editor-live.jpg)
 
 - **Editor de fondos de pantalla**: un editor al estilo del de Wallpaper Engine, con capas, efectos con vista previa, línea de tiempo, SceneScript, propiedades de usuario, partículas, Puppet Warp y máscaras creadas a partir de un mapa de profundidad. Editas un borrador: **Guardar** lo aplica al fondo de pantalla, **Guardar como nuevo fondo de pantalla** añade una copia a la biblioteca, y los archivos del propio fondo de pantalla nunca se modifican.
 
-  ![Editor de fondos de pantalla](../../docs/images/wallpaper-editor.png)
+  ![Editor de fondos de pantalla](../../docs/images/wallpaper-editor.jpg)
 
 - **Pantallas**: un fondo por pantalla, uno estirado a lo largo de todas o clonado en cada una, grupos, divisiones y perfiles, como en Wallpaper Engine.
 
