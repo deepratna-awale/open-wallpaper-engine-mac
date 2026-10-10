@@ -48,6 +48,12 @@ struct AssetsPage: SettingsPage {
             }
             .settingsAnchor(SettingsAnchor.weFavorites)
 
+            Section {
+                WallpaperEngineFoldersImportView(assets: assets, library: AppDelegate.shared.contentViewModel.library)
+            } header: {
+                Label("Wallpaper Engine Folders", systemImage: "folder")
+            }
+
             SteamCmdSection(steamCmd: steamCmd, installer: installer)
                 .settingsAnchor(SettingsAnchor.steamCmd)
 

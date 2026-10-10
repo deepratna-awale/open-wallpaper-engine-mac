@@ -88,6 +88,9 @@ struct ExplorerItemMenu: SubviewOfContentView {
                     Label(favorites.contains(hoveredWallpaper) ? "Remove from Favorites" : "Add to Favorites",
                           systemImage: favorites.contains(hoveredWallpaper) ? "heart.slash" : "heart.fill")
                 }
+                MoveToFolderMenu(library: viewModel.library) { destination in
+                    viewModel.library.move(viewModel.library.wallpapersActedOn(from: hoveredWallpaper), toFolder: destination)
+                }
             }
             
             Section {

@@ -122,6 +122,18 @@ final class AppLibraryControlService: LibraryControlService {
         return found
     }
 
+    // MARK: - Installed folders
+
+    var installedFolders: InstalledFolderTree { app.contentViewModel.library.folders.tree }
+
+    func changeInstalledFolders(_ change: (inout InstalledFolderTree) -> Void) {
+        app.contentViewModel.library.folders.update(change)
+    }
+
+    func folderKey(of wallpaper: ControlWallpaper) -> String {
+        model.find(wallpaper).map(FavoritesStore.key(for:)) ?? wallpaper.folder.standardizedFileURL.path
+    }
+
     // MARK: - Displays
 
     func setDisplay(_ id: String, enabled: Bool) {

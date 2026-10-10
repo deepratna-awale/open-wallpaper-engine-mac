@@ -36,6 +36,15 @@ protocol LibraryControlService: AnyObject {
     /// Deletes the wallpaper's folder, or moves it to the Trash, as the library's Unsubscribe does.
     func delete(_ wallpaper: ControlWallpaper, toTrash: Bool) async throws
 
+    // MARK: Installed folders
+
+    /// The Installed tab's folders.
+    var installedFolders: InstalledFolderTree { get }
+    /// Changes them as the Installed tab's folder commands do, saving the result.
+    func changeInstalledFolders(_ change: (inout InstalledFolderTree) -> Void)
+    /// The key a wallpaper is filed under (`FavoritesStore.key(for:)`).
+    func folderKey(of wallpaper: ControlWallpaper) -> String
+
     // MARK: Displays
 
     /// Shows wallpapers on the display or not, as Display Settings' Enabled switch does.

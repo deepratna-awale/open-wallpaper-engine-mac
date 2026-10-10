@@ -3,8 +3,8 @@ import Foundation
 /// Settings › Export and Import: the app's settings as a JSON file, to move them to another Mac
 /// or keep a copy.
 ///
-/// The file holds the global settings, the on/off preferences stored beside them and Sparkle's
-/// update choices. It never holds secrets: the Steam Web API key and the Steam account stay in
+/// The file holds the global settings, the on/off preferences stored beside them, Sparkle's
+/// update choices and the Installed tab's folders. It never holds secrets: the Steam Web API key and the Steam account stay in
 /// the Keychain and are never read here. Paths (the Wallpaper Storage folder, a chosen assets
 /// folder) are left out too, since they belong to one Mac.
 struct SettingsTransfer: Codable, Equatable {
@@ -34,6 +34,9 @@ struct SettingsTransfer: Codable, Equatable {
     var settings: GlobalSettings
     var preferences: [String: Bool]
     var updates: Updates?
+    /// The Installed tab's folders (`InstalledFolderStore`); nil in a file from before them, or
+    /// when there are none. Importing merges them into the folders there (`InstalledFolderTree.merge`).
+    var folders: InstalledFolderTree?
 
     enum TransferError: LocalizedError {
         case notSettingsFile
@@ -55,7 +58,9 @@ struct SettingsTransfer: Codable, Equatable {
         for key in preferenceKeys where defaults.object(forKey: key) != nil {
             preferences[key] = defaults.bool(forKey: key)
         }
-        return SettingsTransfer(appVersion: appVersion, settings: settings, preferences: preferences, updates: updates)
+        let folders = InstalledFolderStore.load(from: defaults)
+        return SettingsTransfer(appVersion: appVersion, settings: settings, preferences: preferences, updates: updates,
+                                folders: folders.folders.isEmpty ? nil : folders)
     }
 
     func encoded() throws -> Data {

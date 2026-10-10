@@ -28,6 +28,10 @@ Scenes use Wallpaper Engine's shared effects, materials, shaders, fonts and Scen
 
 Wallpaper Engine's favourites are your Steam Workshop favourites: they live in your Steam account, not in Wallpaper Engine's folder or its `config.json`, so a fresh SteamCMD download has none of its own. When the assets are installed, or a Wallpaper Engine folder is chosen, the app asks Steam's Web API for them (with your Steam Web API key and the account's SteamID, found in the files of the SteamCMD login or of the Steam folder the chosen install sits in) and asks *Also import your Wallpaper Engine favourites?* when there are any that aren't in My Favourites yet. They are added to your favourites, never replacing them, and the count is shown. Without a key, or with no account found, there is nothing to import from and the question isn't asked; *Import Wallpaper Engine Favourites…* in *Settings → Assets* checks again later. An account that keeps its favourites private returns none.
 
+### Wallpaper Engine folders
+
+Wallpaper Engine keeps the folders of its Installed tab in its `config.json`, beside `wallpaper64.exe` (`<account>.general.browser.folders`: each folder's title, colour, icon, subfolders and the Workshop ids or file paths filed in it). When you choose a Wallpaper Engine folder for the assets (the install or its `assets` folder), the app reads them and asks *Also import your Wallpaper Engine folders?* when they would add a folder, or file a wallpaper that isn't in a folder yet. They merge into your folders: a folder with the same name at the same place is the same folder, a wallpaper already in a folder here stays there, and importing again adds nothing. A local wallpaper is matched by its folder's name. The SteamCMD download keeps no `config.json`, so there is nothing to import from it; *Import Wallpaper Engine Folders…* in *Settings → Assets* checks again later.
+
 ## Wallpapers
 
 ### Browse & Download from Steam Workshop

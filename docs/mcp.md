@@ -414,7 +414,7 @@ A mistake changes nothing:
 
 ### Library and app
 
-Playlists, favourites, deleting wallpapers, the displays wallpapers are shown on, the app's
+Playlists, favourites, the Installed tab's folders, deleting wallpapers, the displays wallpapers are shown on, the app's
 settings and the plugins' status. Each tool does what the app's own control does, through the same
 view models, so a change saves and applies as it does from the app. Every result carries a
 `message` saying what happened.
@@ -428,6 +428,9 @@ view models, so a change saves and applies as it does from the app. Every result
 | `playlist_move_item` | `playlist`, `wallpaper_id`, `offset` | Moves a wallpaper up (negative) or down (positive) that many places, one place at a time as Move Up and Move Down do. |
 | `playlist_delete` | `playlist`, `confirm` | Deletes the playlist (its wallpapers stay in the library), as its Delete button does. Needs `confirm: true`. |
 | `wallpaper_set_favorite` | `id`, `favorite` | Favourites a wallpaper or not, as the library's heart does (the My Favourites filter). |
+| `folders_list` | none | The Installed tab's folders: each one's `id`, `name`, `path` (`"Games / Retro"`), `color`, `icon`, `wallpaper_ids` (installed wallpapers filed in it) and `subfolders`, plus `top_level_wallpaper_count`. A wallpaper is in one folder at most. |
+| `folder_create` | `name`, `parent?` (an id or path such as `"Games/Retro"`, case-insensitive) | Create Folder in the Installed tab: a folder at the top level or inside `parent`. Names may repeat, as in Wallpaper Engine. |
+| `wallpaper_move_to_folder` | `wallpaper_ids`, `folder?` (an id or path; omitted or `""` is the top level) | Move to Folder: takes each wallpaper out of its folder and files it in `folder`, or back at the top level. Nothing is copied or deleted. |
 | `wallpaper_delete` | `id`, `confirm`, `to_trash?` (`true` by default) | Unsubscribe in the library: moves the wallpaper's folder to the Trash (or deletes it at once with `to_trash: false`), takes it off the displays showing it, forgets its library index entry and snapshots, and removes Workshop dependencies nothing else uses. Only folders in the wallpaper storage folder. Steam subscriptions are not touched. Needs `confirm: true`. |
 | `display_settings_get` | `display?` | Each display's `id`, `name`, `main`, `enabled` (wallpapers shown on it), `rule` (the playback rule's state) and `wallpaper`. |
 | `display_settings_set` | `display`, `enabled` | Display Settings' Enabled switch: shows wallpapers on the display, or the desktop picture. |

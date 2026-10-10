@@ -113,6 +113,12 @@ private final class FakeLibraryService: LibraryControlService {
         deleted.append((wallpaper.id, toTrash))
     }
 
+    var installedFolders = InstalledFolderTree()
+    func changeInstalledFolders(_ change: (inout InstalledFolderTree) -> Void) { change(&installedFolders) }
+    func folderKey(of wallpaper: ControlWallpaper) -> String {
+        wallpaper.workshopID.map { "workshop-\($0)" } ?? wallpaper.folder.path
+    }
+
     func setDisplay(_ id: String, enabled: Bool) {
         if let index = model.displayList.firstIndex(where: { $0.id == id }) { model.displayList[index].isEnabled = enabled }
     }
@@ -327,6 +333,32 @@ final class MCPLibraryRouterTests: XCTestCase {
         let failed = await error("wallpaper_delete", ["id": "100", "confirm": true])
         XCTAssertEqual(failed?.code, .failed)
         let unknown = await error("wallpaper_delete", ["id": "999", "confirm": true])
+        XCTAssertEqual(unknown?.code, .notFound)
+    }
+
+    // MARK: - Installed folders
+
+    func testFolderCreateListAndMove() async throws {
+        let games = try await result("folder_create", ["name": "Games"])
+        let gamesID = try XCTUnwrap(games["folder"]?["id"]?.stringValue)
+        let retro = try await result("folder_create", ["name": "Retro", "parent": "games"])
+        XCTAssertEqual(retro["folder"]?["path"], "Games / Retro", "the parent by name, ignoring case")
+        let missing = await error("folder_create", ["name": "X", "parent": "Nope"])
+        XCTAssertEqual(missing?.code, .notFound)
+
+        _ = try await result("wallpaper_move_to_folder", ["wallpaper_ids": ["100", "200"], "folder": "Games/Retro"])
+        _ = try await result("wallpaper_move_to_folder", ["wallpaper_ids": ["200"], "folder": .string(gamesID)])
+        let listed = try await result("folders_list")
+        XCTAssertEqual(listed["top_level_wallpaper_count"], 1, "Forest stays at the top level")
+        let top = try XCTUnwrap(listed["folders"]?.arrayValue?.first)
+        XCTAssertEqual(top["name"], "Games")
+        XCTAssertEqual(top["wallpaper_ids"], ["200"], "a wallpaper is in one folder: moving it took it out of Retro")
+        XCTAssertEqual(top["subfolders"]?.arrayValue?.first?["wallpaper_ids"], ["100"])
+
+        _ = try await result("wallpaper_move_to_folder", ["wallpaper_ids": ["100", "200"]])
+        XCTAssertTrue(service.installedFolders.filedKeys.isEmpty, "no folder is the top level")
+        XCTAssertEqual(service.installedFolders.allFolders().count, 2, "the folders stay")
+        let unknown = await error("wallpaper_move_to_folder", ["wallpaper_ids": ["999"]])
         XCTAssertEqual(unknown?.code, .notFound)
     }
 

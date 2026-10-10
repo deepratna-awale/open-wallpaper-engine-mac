@@ -62,6 +62,36 @@ final class SettingsTransferTests: XCTestCase {
     }
 
     /// Other JSON, a newer format and unknown preferences are refused or dropped.
+    /// The Installed folders travel with the settings, and importing them merges into the
+    /// folders there: importing the same file twice adds nothing.
+    func testExportImportCarriesTheInstalledFolders() throws {
+        let none = SettingsTransfer.export(settings: GlobalSettings(), defaults: defaults, updates: nil, appVersion: "1")
+        XCTAssertNil(none.folders, "no folders: none in the file")
+
+        let source = InstalledFolderStore(defaults: defaults)
+        let games = try XCTUnwrap(source.update { $0.create(title: "Games") })
+        source.update { $0.create(title: "Retro", in: games) }
+        source.update { $0.move(items: ["workshop-1", "/library/mine"], to: games) }
+        source.update { $0.setIcon(.star, of: games) }
+        let exported = SettingsTransfer.export(settings: GlobalSettings(), defaults: defaults, updates: nil, appVersion: "1")
+        let imported = try SettingsTransfer.decode(exported.encoded())
+        XCTAssertEqual(imported.folders, source.tree)
+
+        let otherSuite = suite + ".folders"
+        let other = try XCTUnwrap(UserDefaults(suiteName: otherSuite))
+        defer { other.removePersistentDomain(forName: otherSuite) }
+        let target = InstalledFolderStore(defaults: other)
+        let kept = try XCTUnwrap(target.update { $0.create(title: "Mine") })
+        target.update { $0.move(items: ["workshop-1"], to: kept) }
+        let first = target.merge(try XCTUnwrap(imported.folders).folders)
+        XCTAssertEqual(first, .init(folders: 2, wallpapers: 1), "workshop-1 stays in Mine")
+        XCTAssertTrue(target.merge(try XCTUnwrap(imported.folders).folders).isEmpty, "idempotent")
+        XCTAssertEqual(InstalledFolderStore(defaults: other).tree.allFolders().map(\.path), ["Games", "Games / Retro", "Mine"])
+
+        let older = try SettingsTransfer.decode(Data(#"{"format": "open-wallpaper-engine-settings", "version": 1, "appVersion": "1", "settings": {}, "preferences": {}}"#.utf8))
+        XCTAssertNil(older.folders, "a file from before folders")
+    }
+
     func testImportRefusesOtherFiles() throws {
         XCTAssertThrowsError(try SettingsTransfer.decode(Data("{\"fps\": 30}".utf8)))
         XCTAssertThrowsError(try SettingsTransfer.decode(Data("not json".utf8)))

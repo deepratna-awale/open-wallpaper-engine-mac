@@ -96,7 +96,7 @@ final class MCPServerTests: XCTestCase {
         XCTAssertTrue(Set(names).isSuperset(of: [
             "playlist_create", "playlist_update", "playlist_add_items", "playlist_remove_items", "playlist_move_item",
             "playlist_delete", "wallpaper_set_favorite", "wallpaper_delete", "display_settings_get", "display_settings_set",
-            "settings_get", "settings_set", "plugin_status",
+            "settings_get", "settings_set", "plugin_status", "folders_list", "folder_create", "wallpaper_move_to_folder",
         ]), "the library and app's tools")
         XCTAssertTrue(Set(names).isSuperset(of: [
             "devices_list", "export_settings_get", "export_live_photo", "export_android", "android_send_wifi", "screensaver_get", "screensaver_set_layers",

@@ -3,7 +3,8 @@ import Combine
 import Observation
 
 /// The Installed tab's list: the library's wallpapers, searched, filtered (`filters`) and sorted,
-/// in pages, with the selection; and deleting wallpapers from it.
+/// in pages, with the selection; its folders (`folders`, the one open in `currentFolderID`); and
+/// deleting wallpapers from it.
 @MainActor @Observable
 final class InstalledLibraryModel {
     var sortingBy: WEWallpaperSortingMethod = InstalledLibraryModel.stored(Keys.sortingBy, default: .name) {
@@ -21,6 +22,19 @@ final class InstalledLibraryModel {
 
     var searchText = "" {
         didSet { invalidateSortedMemo() }
+    }
+
+    /// The Installed folders, saved in the settings.
+    let folders: InstalledFolderStore
+
+    /// The folder the grid shows; nil is the top level (WE's Home). The search and filters
+    /// apply within it (`InstalledFolderScope`).
+    var currentFolderID: UUID? {
+        didSet {
+            guard currentFolderID != oldValue else { return }
+            clearSelection()
+            invalidateSortedMemo()
+        }
     }
 
     var selectedWallpapers = Set<URL>()
@@ -57,11 +71,15 @@ final class InstalledLibraryModel {
         static let sortingSequence = "SortingSequence"
     }
 
-    init(filters: FilterResultsViewModel, steamCmd: SteamCmdService, presentation: ContentPresentation) {
+    init(filters: FilterResultsViewModel, steamCmd: SteamCmdService, presentation: ContentPresentation,
+         folders: InstalledFolderStore? = nil) {
         self.filters = filters
         self.steamCmd = steamCmd
         self.presentation = presentation
+        let folders = folders ?? InstalledFolderStore()
+        self.folders = folders
         filters.onChange = { [weak self] in self?.invalidateSortedMemo() }
+        folders.onChange = { [weak self] in self?.invalidateSortedMemo() }
         memoCancellables = [
             FavoritesStore.shared.objectWillChange.sink { [weak self] _ in self?.invalidateSortedMemo() },
             // Steam tags arriving for installed wallpapers: the grid, Details and filters use them.
@@ -182,7 +200,7 @@ final class InstalledLibraryModel {
         let query = searchText
         let checkedShowOnly = filters.showOnly, checkedType = filters.type, checkedCategory = filters.category
         let checkedAgeRating = filters.ageRating, checkedTags = filters.tag
-        return allWallpapers.filter { wallpaper in
+        return scopedWallpapers.filter { wallpaper in
             let wallpaperTags = self.tags(of: wallpaper)
             guard query.isEmpty || Self.matchesSearch(query, wallpaper: wallpaper, tags: wallpaperTags) else { return false }
 
@@ -239,7 +257,7 @@ final class InstalledLibraryModel {
 
     private var sortedWallpapers: [WEWallpaper] {
         // Read every input first, so a view answered from the memo still observes them.
-        _ = (revision, searchText, sortingBy, sortingSequence)
+        _ = (revision, searchText, sortingBy, sortingSequence, currentFolderID, folders.tree)
         filters.observeAll()
         if let sortedMemo { return sortedMemo }
         let sorted = computeSortedWallpapers()
