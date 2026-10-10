@@ -22,6 +22,8 @@ struct WebWallpaperView: NSViewRepresentable {
                                                                           media: AppDelegate.shared.mediaSession))
     }
 
+    func makeCoordinator() -> WebPageSourceCoordinator { WebPageSourceCoordinator() }
+
     func makeNSView(context: Context) -> WKWebView {
         let configuration = Self.makeConfiguration()
         viewModel.installBridge(on: configuration.userContentController)
@@ -36,8 +38,13 @@ struct WebWallpaperView: NSViewRepresentable {
         nsView.navigationDelegate = viewModel
         viewModel.webView = nsView
         viewModel.applySchedulingPolicy()
+        context.coordinator.share(nsView, of: screenId, through: wallpaperViewModel.webPageMirrors, viewModel: viewModel)
         Self.loadWallpaper(nsView, viewModel: viewModel)
         return nsView
+    }
+
+    static func dismantleNSView(_ nsView: WKWebView, coordinator: WebPageSourceCoordinator) {
+        coordinator.stopSharing()
     }
 
     static func pageURL(of wallpaper: WEWallpaper) -> URL {
@@ -106,12 +113,13 @@ struct WebWallpaperView: NSViewRepresentable {
         applyPlacement(wallpaperViewModel.wallpaperPlacement, to: nsView)
         let settings = AppDelegate.shared.globalSettingsViewModel.settings
         WebPageScale.apply(standardResolution: settings.webStandardResolution, to: nsView)
-        // A page per display, so only the one on the wallpaper's audible display plays sound. The
-        // playback rules pause each display's page on its own, and silence the wallpaper only when
-        // every display showing it is muted, paused or stopped.
+        // A page per display (or per clone or stretch, whose other displays mirror it), so only the
+        // page on the wallpaper's audible display plays sound. The playback rules pause each page
+        // while none of its displays draws, and silence the wallpaper only when every display
+        // showing it is muted, paused or stopped.
         let key = WallpaperInstanceKey(selectedWallpaper)
-        viewModel.setPaused(!wallpaperViewModel.playback(onScreen: screenId).rendersFrames)
-        viewModel.setMuted(!wallpaperViewModel.shouldPlayAudio(on: screenId) || wallpaperViewModel.playVolume == 0
+        viewModel.setPaused(!wallpaperViewModel.pageRendersFrames(of: screenId, engine: .webKit))
+        viewModel.setMuted(!wallpaperViewModel.pagePlaysAudio(of: screenId, engine: .webKit) || wallpaperViewModel.playVolume == 0
                            || !wallpaperViewModel.wallpaperPlayback(of: key).playsSound)
     }
 

@@ -1,4 +1,5 @@
 import AppKit
+import WebKit
 
 /// Passes the mouse to web wallpapers: their windows ignore mouse events, so a global monitor
 /// sends the clicks, drags, scrolls and moves made over the desktop (Finder frontmost) to the page
@@ -52,12 +53,35 @@ final class WebWallpaperMouseForwarder {
         }
     }
 
-    private func forward(_ event: NSEvent) {
+    /// Over a display mirroring another's page (a clone's or stretch's member), the source's web
+    /// view and the event moved to the point over it that shows the same part of the page.
+    private static func mirroredTarget(at mouseLocation: NSPoint, in content: NSView,
+                                       event: NSEvent) -> (WKWebView, NSEvent)? {
+        guard let mirror = content.pageMirror(at: mouseLocation), let source = mirror.source as? WKWebView,
+              let sourceWindow = source.window else { return nil }
+        let sourceFrame = sourceWindow.convertToScreen(source.convert(source.bounds, to: nil))
+        guard let point = mirror.sourcePoint(mouseLocation, sourceFrame: sourceFrame),
+              let moved = event.cgEvent?.copy() else { return nil }
+        // Quartz's global coordinates start at the primary display's top-left corner.
+        let primaryTop = NSScreen.screens.first?.frame.maxY ?? 0
+        moved.location = CGPoint(x: point.x, y: primaryTop - point.y)
+        return NSEvent(cgEvent: moved).map { (source, $0) }
+    }
+
+    private func forward(_ original: NSEvent) {
         guard NSWorkspace.shared.frontmostApplication?.bundleIdentifier == "com.apple.finder" else { return }
         // A split display has a page per region, and a stretched page is the canvas's size.
         let mouseLocation = NSEvent.mouseLocation
         guard let window = windows().first(where: { $0.frame.contains(mouseLocation) }),
-              let webview = window.contentView?.webView(at: mouseLocation) else { return }
+              let content = window.contentView else { return }
+        let webview: WKWebView, event: NSEvent
+        if let page = content.webView(at: mouseLocation) {
+            (webview, event) = (page, original)
+        } else if let target = Self.mirroredTarget(at: mouseLocation, in: content, event: original) {
+            (webview, event) = target
+        } else {
+            return
+        }
         switch event.type {
         case .scrollWheel: webview.scrollWheel(with: event)
         case .mouseMoved: webview.mouseMoved(with: event)

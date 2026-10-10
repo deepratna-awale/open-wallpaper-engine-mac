@@ -32,11 +32,13 @@ struct ChromiumWebWallpaperView: NSViewRepresentable {
         }
         viewModel.onFrameRateChange = { [weak page] fps in page?.setFrameRate(fps) }
         viewModel.applySchedulingPolicy()
+        context.coordinator.share(view, of: screenId, through: wallpaperViewModel.webPageMirrors, viewModel: viewModel)
         Self.load(page, viewModel: viewModel)
         return view
     }
 
     static func dismantleNSView(_ nsView: ChromiumPageView, coordinator: Coordinator) {
+        coordinator.stopSharing()
         coordinator.page?.close()
         coordinator.page = nil
     }
@@ -74,12 +76,12 @@ struct ChromiumWebWallpaperView: NSViewRepresentable {
         let settings = AppDelegate.shared.globalSettingsViewModel.settings
         nsView.standardResolution = settings.webStandardResolution
         let key = WallpaperInstanceKey(selectedWallpaper)
-        viewModel.setPaused(!wallpaperViewModel.playback(onScreen: screenId).rendersFrames)
-        viewModel.setMuted(!wallpaperViewModel.shouldPlayAudio(on: screenId) || wallpaperViewModel.playVolume == 0
+        viewModel.setPaused(!wallpaperViewModel.pageRendersFrames(of: screenId, engine: .chromium))
+        viewModel.setMuted(!wallpaperViewModel.pagePlaysAudio(of: screenId, engine: .chromium) || wallpaperViewModel.playVolume == 0
                            || !wallpaperViewModel.wallpaperPlayback(of: key).playsSound)
     }
 
-    final class Coordinator {
+    final class Coordinator: WebPageSourceCoordinator {
         var page: ChromiumBrowserPage?
     }
 }

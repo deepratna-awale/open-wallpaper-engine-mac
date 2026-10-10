@@ -41,9 +41,10 @@ extension WKWebView: WebWallpaperPage {
         setAllMediaPlaybackSuspended(paused, completionHandler: nil)
     }
 
-    /// WebKit judges visibility itself (its window's occlusion); only the policy is set.
+    /// WebKit judges visibility itself (its window's occlusion); only the policy is set. A page
+    /// still seen though its window is covered (another display mirrors it) isn't held back.
     func applySchedulingPolicy(muted: Bool, visible: Bool) {
-        configuration.preferences.inactiveSchedulingPolicy = muted ? .suspend : .throttle
+        configuration.preferences.inactiveSchedulingPolicy = visible ? .none : muted ? .suspend : .throttle
     }
 
     var hostWindow: NSWindow? { window }

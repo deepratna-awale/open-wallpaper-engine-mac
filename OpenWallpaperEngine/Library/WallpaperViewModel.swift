@@ -212,6 +212,8 @@ class WallpaperViewModel: ObservableObject {
     var sceneHost: SceneWallpaperHost?
     /// Lets the displays that show the same web wallpaper share one WebContent process.
     let webProcessGroup = WebProcessGroup()
+    /// The web pages a clone's or stretch's other displays mirror (`WebPageMirrorView`).
+    let webPageMirrors = WebPageMirrorRegistry()
     /// The scenes (and Metal videos) running on this model's displays, one per wallpaper however
     /// many displays show it (docs/architecture.md "Wallpaper instances").
     let sceneInstances = WallpaperInstanceRegistry<WallpaperInstanceKey, SceneWallpaperInstance>(teardown: { $0.shutdown() })

@@ -31,7 +31,11 @@ struct WallpaperView: View {
             // A video AVFoundation can't decode (WebM) plays through WebKit on either framework.
             // With the Chromium engine installed, that page is Chromium's (`WebEngineRouting`).
             if WebKitVideoPlayer.handles(wallpaper.mediaURL) {
-                if webEngine.engine(for: wallpaper) == .chromium {
+                let engine = webEngine.engine(for: wallpaper)
+                if let source = viewModel.pageSource(of: screenId, engine: engine) {
+                    pageMirror(of: source, engine: engine)
+                        .stretched(on: canvas, display: display)
+                } else if engine == .chromium {
                     ChromiumVideoWallpaperView(wallpaperViewModel: viewModel, screenId: screenId)
                         .id("\(instance.wallpaper)-chromium")
                         .stretched(on: canvas, display: display)
@@ -56,8 +60,13 @@ struct WallpaperView: View {
             }
         case "web":
             // Every web wallpaper plays in Chromium while it is installed and on, else in WebKit;
-            // switching rebuilds the view on the other engine.
-            if webEngine.engine(for: wallpaper) == .chromium {
+            // switching rebuilds the view on the other engine. A clone's or stretch's other
+            // displays show their source display's page.
+            let engine = webEngine.engine(for: wallpaper)
+            if let source = viewModel.pageSource(of: screenId, engine: engine) {
+                pageMirror(of: source, engine: engine)
+                    .stretched(on: canvas, display: display)
+            } else if engine == .chromium {
                 ChromiumWebWallpaperView(wallpaperViewModel: viewModel, screenId: screenId)
                     .id("\(viewModel.propertyScope(for: screenId))-chromium")
                     .stretched(on: canvas, display: display)
@@ -72,6 +81,12 @@ struct WallpaperView: View {
         default:
             EmptyView()
         }
+    }
+
+    /// `source`'s page on this display (`WebPageMirrorView`), as WE mirrors a clone: one page.
+    private func pageMirror(of source: String, engine: WebEngine) -> some View {
+        WebPageMirror(registry: viewModel.webPageMirrors, sourceScreenId: source)
+            .id("\(source)-mirror-\(engine.rawValue)")
     }
 }
 
