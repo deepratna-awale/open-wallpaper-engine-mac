@@ -1,7 +1,7 @@
 import Foundation
 import OWEControlProtocol
 
-/// The control channel's requests for the library and the app: playlists, favourites, deleting wallpapers, displays, the app's settings and plugin status (`docs/mcp.md`).
+/// The control channel's requests for the library and the app: playlists, favourites, the Installed folders, deleting wallpapers, displays, the app's settings and plugin status (`docs/mcp.md`).
 /// Each checks its parameters, finds what it names through `ControlLookup` and asks `service`,
 /// which drives the app's own view models; the result is the changed thing with a `message`.
 @MainActor
@@ -9,7 +9,7 @@ final class LibraryControlRequests: ControlRequestGroup {
     let methods: Set<String> = [
         "playlist_create", "playlist_update", "playlist_add_items", "playlist_remove_items", "playlist_move_item",
         "playlist_delete", "wallpaper_set_favorite", "wallpaper_delete", "display_settings_get", "display_settings_set",
-        "settings_get", "settings_set", "plugin_status",
+        "settings_get", "settings_set", "plugin_status", "folders_list", "folder_create", "wallpaper_move_to_folder",
     ]
 
     let service: LibraryControlService
@@ -37,6 +37,9 @@ final class LibraryControlRequests: ControlRequestGroup {
         case "settings_get": return try settings(params)
         case "settings_set": return try setSetting(params)
         case "plugin_status": return pluginStatus()
+        case "folders_list": return foldersList(lookup)
+        case "folder_create": return try createFolder(params)
+        case "wallpaper_move_to_folder": return try moveToFolder(params, lookup)
         default: throw ControlError(.unknownMethod, "The app doesn't know \"\(method)\".")
         }
     }

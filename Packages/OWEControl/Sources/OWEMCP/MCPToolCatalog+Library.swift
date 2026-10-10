@@ -1,11 +1,11 @@
 import Foundation
 import OWEControlProtocol
 
-/// The library and the app (`docs/mcp.md`): playlists, favourites, deleting wallpapers, the
+/// The library and the app (`docs/mcp.md`): playlists, favourites, the Installed folders, deleting wallpapers, the
 /// displays wallpapers are shown on, the app's settings and the plugins' status. Each tool does
 /// what the app's own control does; the deleting ones need `confirm: true`.
 extension MCPToolCatalog {
-    static let libraryTools: [MCPTool] = playlistTools + wallpaperTools + displayTools + settingsTools + pluginTools
+    static let libraryTools: [MCPTool] = playlistTools + wallpaperTools + folderTools + displayTools + settingsTools + pluginTools
 
     private static let libraryPlaylist = JSONSchema.string(
         "A playlist's name (case-insensitive) or id, from list_playlists.", minLength: 1)
@@ -77,6 +77,26 @@ extension MCPToolCatalog {
                     "confirm": libraryConfirm,
                     "to_trash": JSONSchema.boolean("true (the default) moves the folder to the Trash; false deletes it immediately."),
                 ], required: ["id", "confirm"]), annotations: .destructive) { message($0) },
+    ]
+
+    // MARK: - Installed folders
+
+    private static let folderTools: [MCPTool] = [
+        MCPTool("folders_list", title: "List Folders",
+                description: "The Installed tab's folders, as Wallpaper Engine organises its Installed list: each folder's id, name, colour, icon, path (\"Games / Retro\"), the ids of the installed wallpapers filed in it and its subfolders, plus how many wallpapers are at the top level. A wallpaper is in one folder at most.",
+                annotations: .readOnly) { message($0) },
+        MCPTool("folder_create", title: "Create Folder",
+                description: "Creates a folder in the Installed tab, as Create Folder does, at the top level or inside parent. Names may repeat, as in Wallpaper Engine.",
+                input: JSONSchema.object([
+                    "name": JSONSchema.string("The new folder's name.", minLength: 1),
+                    "parent": JSONSchema.string("The folder to make it in: an id or path (\"Games/Retro\", case-insensitive) from folders_list. Omit for the top level."),
+                ], required: ["name"]), annotations: .change) { message($0) },
+        MCPTool("wallpaper_move_to_folder", title: "Move to Folder",
+                description: "Files wallpapers in a folder, as Move to Folder in the Installed tab does: out of the folder each was in, into folder, or back to the top level when folder is omitted or empty. Nothing is copied or deleted.",
+                input: JSONSchema.object([
+                    "wallpaper_ids": JSONSchema.stringArray("The wallpapers to move: ids from list_wallpapers.", maxItems: 500),
+                    "folder": JSONSchema.string("The folder: an id or path (\"Games/Retro\", case-insensitive) from folders_list. Omit or \"\" for the top level."),
+                ], required: ["wallpaper_ids"]), annotations: .idempotent) { message($0) },
     ]
 
     // MARK: - Displays
