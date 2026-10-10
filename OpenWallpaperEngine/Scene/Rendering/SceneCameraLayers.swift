@@ -63,7 +63,8 @@ final class SceneCameraLayers {
         let authorsVisible: Bool
         /// The path's fov (+0x33c): 50 until its channel sets it.
         var fov = Float(SceneCameraDefaults.fov)
-        /// The path's zoom: 1 until its channel sets it [I].
+        /// The path's zoom: 1 until its channel sets it. Only an orthographic scene uses it: in
+        /// perspective WE ignores a path's zoom channel and plays its fov (capture 501).
         var zoom: Float = 1
 
         init(_ path: WECameraLayerPath, values: SceneValueContext, layer: String) {

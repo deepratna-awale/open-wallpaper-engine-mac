@@ -168,7 +168,7 @@ anim: u64 id; cstr name; cstr mode ("loop" | "mirror" | "single"); f32 fps; u32 
 | `fov` | 50 | vertical, degrees |
 | `perspectiveoverridefov` | 95 | the fov of `perspective` layers in ortho scenes |
 | `nearz` / `farz` | 0.1 / 10000 | perspective only; ortho is always z −2000…2000 |
-| `zoom` | 1 | **ortho only** (0x14017fd50); it does nothing in perspective [I] |
+| `zoom` | 1 | **ortho only** (0x14017fd50). In perspective it does nothing, wherever it is set: `general.zoom` 1 vs 2, a camera layer's zoom 1 vs 2 and a camera path's zoom channel all draw pixel-identical frames, while a path's `fov` channel animates (WE 2.8.0.42, `tools/peer/requests/owe-beta3` and `owe-beta7/models-open/501-perspective-zoom`). WE's editor shows FOV, Near and Far there and no Zoom; a camera layer's view wins over the scene's camera block. |
 | `camerafade` | on | fades each scene camera path in and out |
 | `camerashake` | off | speed, amplitude, roughness |
 | `cameraparallax` | off | **ortho only**: no parallax in 3D (0x14018af5d) |
