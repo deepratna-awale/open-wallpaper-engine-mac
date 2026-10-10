@@ -4,6 +4,8 @@ import Foundation
 struct WallpaperTrustRequest: Equatable {
     let id = UUID()
     var wallpaper: WEWallpaper
+    /// The displays selected when it was applied: Proceed sets it there.
+    var screenIds: Set<String>
     /// It was trusted before, and its folder's content changed since.
     var contentChanged: Bool
 
@@ -44,11 +46,11 @@ extension WallpaperViewModel {
             setWallpaper(wallpaper, for: selectedScreenIds, transition: .manual)
             return
         }
+        let screenIds = selectedScreenIds
         guard trustStore.isListed(wallpaper) else {
-            requestTrust(for: wallpaper, contentChanged: false, fingerprint: nil)
+            requestTrust(for: wallpaper, on: screenIds, contentChanged: false, fingerprint: nil)
             return
         }
-        let screenIds = selectedScreenIds
         let fingerprint = Self.fingerprintTask(of: wallpaper)
         trustCheck = Task { [weak self] in
             let current = await fingerprint.value
@@ -61,19 +63,20 @@ extension WallpaperViewModel {
                 ChromiumFeatureAdvisor.shared.wallpaperApplied(wallpaper)
             case .changed, .untrusted:
                 OWELog.info(.library, "\(wallpaper.wallpaperDirectory.lastPathComponent) changed since it was trusted")
-                self.requestTrust(for: wallpaper, contentChanged: true, fingerprint: current)
+                self.requestTrust(for: wallpaper, on: screenIds, contentChanged: true, fingerprint: current)
             }
         }
     }
 
-    /// The prompt's Proceed: applies the waiting wallpaper and, with `remember`, trusts its folder
-    /// as it was when the prompt asked. Returns the task that records the trust, for tests to wait on.
+    /// The prompt's Proceed: applies the waiting wallpaper as an apply that needs no prompt does
+    /// (on the displays selected when it was applied, with Settings' transition) and, with
+    /// `remember`, trusts its folder as it was when the prompt asked. Returns the task that records the trust, for tests to wait on.
     @discardableResult
     func proceedWithTrustRequest(remember: Bool) -> Task<Void, Never>? {
         guard let request = trustRequest else { return nil }
         let fingerprint = trustRequestFingerprint
         endTrustRequest()
-        currentWallpaper = request.wallpaper
+        setWallpaper(request.wallpaper, for: request.screenIds, transition: .manual)
         ChromiumFeatureAdvisor.shared.wallpaperApplied(request.wallpaper)
         guard remember, let fingerprint else { return nil }
         return Task { [trustStore] in
@@ -87,8 +90,8 @@ extension WallpaperViewModel {
         trustRequestFingerprint = nil
     }
 
-    private func requestTrust(for wallpaper: WEWallpaper, contentChanged: Bool, fingerprint: String?) {
-        trustRequest = WallpaperTrustRequest(wallpaper: wallpaper, contentChanged: contentChanged)
+    private func requestTrust(for wallpaper: WEWallpaper, on screenIds: Set<String>, contentChanged: Bool, fingerprint: String?) {
+        trustRequest = WallpaperTrustRequest(wallpaper: wallpaper, screenIds: screenIds, contentChanged: contentChanged)
         // Read while the prompt counts down, so Proceed trusts the content the user was asked about.
         trustRequestFingerprint = fingerprint.map { known in Task { known } } ?? Self.fingerprintTask(of: wallpaper)
         askToTrust(wallpaper)
