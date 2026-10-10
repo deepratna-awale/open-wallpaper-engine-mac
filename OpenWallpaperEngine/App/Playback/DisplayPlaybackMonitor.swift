@@ -7,7 +7,8 @@ import IOKit.ps
 ///
 /// Cheap by construction: it re-evaluates on the events that change the answer (an application
 /// activated, hidden, launched or quit, a Space or the screens changed, the displays slept or
-/// woke, the power source changed), at most ten times a second. Windows moved or zoomed within an
+/// woke, the screen locked or unlocked, the user's session was switched away from or back to,
+/// the power source changed), at most ten times a second. Windows moved or zoomed within an
 /// application post no event, so while a rule about windows or other applications' audio is on
 /// it also looks twice a second; with those rules off, or the displays asleep, it doesn't poll.
 /// Application Rules follow launching, quitting and activating an application, and a window
@@ -42,6 +43,9 @@ final class DisplayPlaybackMonitor {
     private let onCoverage: (Set<String>) -> Void
     private(set) var rules = PlaybackRules()
     private(set) var displaysAsleep = false
+    /// The screen is locked, or this user's session isn't the one in front: every display pauses
+    /// (`SystemPlaybackConditions.sessionInactive`).
+    private(set) var session = DesktopSessionState()
     /// Video memory ran out (`VideoMemoryWatch`, only while its setting is on).
     private(set) var videoMemoryExhausted = false
     /// The last states handed to `apply`.
@@ -94,6 +98,7 @@ final class DisplayPlaybackMonitor {
 
     /// Starts following `settings` and the system's events, and evaluates once.
     func start<Settings: Publisher>(settings: Settings) where Settings.Output == GlobalSettings, Settings.Failure == Never {
+        session = sources.session()
         observeWorkspace()
         observePowerSource()
         settingsCancellable = settings
@@ -129,6 +134,29 @@ final class DisplayPlaybackMonitor {
         evaluate()
     }
 
+    /// The screen locked (true) or unlocked.
+    func setScreenLocked(_ locked: Bool) {
+        setSession(DesktopSessionState(screenLocked: locked, active: session.active))
+    }
+
+    /// This user's session became the one in front (true) or was switched away from. Coming back
+    /// also reads the lock again, which may have changed while another session was in front.
+    func setSessionActive(_ active: Bool) {
+        let locked = active ? sources.session().screenLocked : session.screenLocked
+        setSession(DesktopSessionState(screenLocked: locked, active: active))
+    }
+
+    private func setSession(_ next: DesktopSessionState) {
+        guard next != session else { return }
+        session = next
+        OWELog.info(.app, "Session \(next.active ? "active" : "switched away"), screen \(next.screenLocked ? "locked" : "unlocked")")
+        updatePolling()
+        evaluate()
+    }
+
+    /// Nobody sees this session's desktop.
+    var sessionInactive: Bool { session.screenLocked || !session.active }
+
     func setVideoMemoryExhausted(_ exhausted: Bool) {
         guard exhausted != videoMemoryExhausted else { return }
         videoMemoryExhausted = exhausted
@@ -155,6 +183,7 @@ final class DisplayPlaybackMonitor {
                             displaysAsleep: displaysAsleep,
                             applications: rules.watchesApplications ? sources.applications() : [:],
                             videoMemoryExhausted: videoMemoryExhausted,
+                            sessionInactive: sessionInactive,
                             watchesCoverage: watchesCoverage)
         shared.set(inputs: inputs)
         let maximizedRuns = !rules.maximizedRuleApplications.isDisjoint(with: inputs.applications.values)
@@ -220,7 +249,8 @@ final class DisplayPlaybackMonitor {
             onBattery: rules.watchesPower && sources.onBattery(),
             runningApplications: Set(inputs.applications.values),
             audioProcesses: rules.applicationRulesWatchAudio ? sources.audioProcesses() : [],
-            videoMemoryExhausted: inputs.videoMemoryExhausted)
+            videoMemoryExhausted: inputs.videoMemoryExhausted,
+            sessionInactive: inputs.sessionInactive)
         return Outcome(states: rules.playback(displays: inputs.displays.map(\.id), conditions: conditions, system: system),
                        load: rules.load(conditions: conditions, system: system),
                        covered: inputs.watchesCoverage
@@ -250,6 +280,7 @@ final class DisplayPlaybackMonitor {
         /// rule is on.
         var applications: [pid_t: String] = [:]
         var videoMemoryExhausted = false
+        var sessionInactive = false
         var watchesCoverage = false
 
         /// Whether the answer needs a read that is too slow for the main thread.
@@ -273,7 +304,7 @@ final class DisplayPlaybackMonitor {
 
     /// The poll's interval while a rule needs it; nil: no poll.
     var neededPollInterval: TimeInterval? {
-        guard !displaysAsleep else { return nil }
+        guard !displaysAsleep, !sessionInactive else { return nil }
         if rules.watchesWindows || rules.watchesAudio || watchesCoverage { return Self.pollInterval }
         if maximizedRuleApplicationRuns { return Self.maximizedRulePollInterval }
         return nil
@@ -314,7 +345,7 @@ final class DisplayPlaybackMonitor {
     }
 
     private func observeWorkspace() {
-        let workspace = NSWorkspace.shared.notificationCenter
+        let workspace = sources.workspaceNotifications
         let changes: [Notification.Name] = [
             NSWorkspace.didActivateApplicationNotification, NSWorkspace.didHideApplicationNotification,
             NSWorkspace.didUnhideApplicationNotification, NSWorkspace.didLaunchApplicationNotification,
@@ -325,6 +356,11 @@ final class DisplayPlaybackMonitor {
         }
         observe(workspace, NSWorkspace.screensDidSleepNotification) { $0.setDisplaysAsleep(true) }
         observe(workspace, NSWorkspace.screensDidWakeNotification) { $0.setDisplaysAsleep(false) }
+        observe(workspace, NSWorkspace.sessionDidResignActiveNotification) { $0.setSessionActive(false) }
+        observe(workspace, NSWorkspace.sessionDidBecomeActiveNotification) { $0.setSessionActive(true) }
+        let distributed = sources.distributedNotifications
+        observe(distributed, DesktopSessionState.screenLockedNotification) { $0.setScreenLocked(true) }
+        observe(distributed, DesktopSessionState.screenUnlockedNotification) { $0.setScreenLocked(false) }
         observe(NotificationCenter.default, NSApplication.didChangeScreenParametersNotification) { $0.setNeedsEvaluation() }
     }
 

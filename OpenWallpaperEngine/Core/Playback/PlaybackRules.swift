@@ -15,6 +15,10 @@ struct SystemPlaybackConditions: Equatable {
     var audioProcesses: Set<String> = []
     /// Video memory ran out with "Pause when VRAM is exhausted" on (`VideoMemoryWatch`).
     var videoMemoryExhausted = false
+    /// The screen is locked, or another user's session is in front (fast user switching). Nobody
+    /// sees the desktop then, so every display pauses, as WE pauses on Windows' session
+    /// notifications (`WTSRegisterSessionNotification`).
+    var sessionInactive = false
 }
 
 /// Settings › Performance › Playback, evaluated for each display, as WE does with several
@@ -102,6 +106,7 @@ struct PlaybackRules: Equatable {
             if let effect = rule.action.playback { everywhere = max(everywhere, effect.state) }
         }
         if system.videoMemoryExhausted { everywhere = max(everywhere, .pause) }
+        if system.sessionInactive { everywhere = max(everywhere, .pause) }
 
         var local: [String: DisplayPlayback] = [:]
         for display in displays {

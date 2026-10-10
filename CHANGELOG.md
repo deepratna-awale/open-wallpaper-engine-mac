@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Wallpapers pause while the screen is locked or another user is switched in**, and play again on unlocking or switching back, as Wallpaper Engine pauses on its session notifications. Scenes relied only on macOS reporting their windows covered, and web and WebM wallpapers only slowed their timers. The pause combines with Settings › Performance › Playback (a stricter rule such as *Stop* still wins) and with your own Pause.
 - **3D models drawn with Wallpaper Engine's own shaders draw again when their mesh lacks data the shader reads.** Only a model whose wallpaper ships its own shader is skipped in that case, as Wallpaper Engine skips it; 1.0.0-beta.6 skipped such models whatever their shader.
 - **More of Wallpaper Engine's shaders compile.** Its macros for handing a texture to a function (`DECLARE_SAMPLER2D_PARAMETER`, `MAKE_SAMPLER2D_ARGUMENT`) are defined, so the reflective variants of the fur, foliage and chroma shaders and morphing shadow casters translate; `TEX<n>FORMAT` is set for every texture a `formatcombo` sampler gets, its default included, so fur (`fur4`) compiles and toon-shaded models read their default R8 gradient as grey, not red; and a sampler's combo such as `NORMALMAP` is left undefined while no texture is bound, as Wallpaper Engine leaves it, so `generic3` models without a normal map compile and particles without one light both sides.
 
