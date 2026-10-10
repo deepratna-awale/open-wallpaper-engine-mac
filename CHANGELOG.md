@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Import Wallpaper Engine's favourites.** Wallpaper Engine keeps its favourites in your Steam account (your Workshop favourites), so once the assets are installed or a Wallpaper Engine folder is chosen, the setup assistant and Settings › Assets ask *Also import your Wallpaper Engine favourites?* when Steam lists any that aren't in My Favourites yet, and show how many were added. Your current favourites stay, and importing again adds only new ones. It uses your Steam Web API key and the account Steam's own files name (the SteamCMD login, or the last login of the Steam folder the chosen install is in); without them nothing is offered. *Import Wallpaper Engine Favourites…* in Settings › Assets checks again ([docs/getting-started.md](docs/getting-started.md#wallpaper-engine-favourites)).
 
+### Changed
+
+- **A cloned web wallpaper runs once.** On a clone the page (or WebM video) loads on the main clone display and the other displays show it, as Wallpaper Engine mirrors a clone; the pointer and clicks on any display reach it and its sound plays once. In the Chromium web engine a stretched page is also laid out once on the whole canvas, each display showing its part. On two displays the Chromium engine uses about a third less CPU, 40 % less GPU and 170 to 200 MB less memory; WebKit about a tenth less CPU.
+
 ### Fixed
 
 - **A web wallpaper you trust in its prompt plays Settings' transition**, as every wallpaper you choose by hand does, and goes on the displays that were selected when you chose it.
