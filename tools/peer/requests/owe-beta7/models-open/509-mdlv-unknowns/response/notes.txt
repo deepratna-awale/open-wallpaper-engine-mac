@@ -24,3 +24,11 @@ C (reference pose)
 - Button found: Puppet -> Optional -> "Reference Pose". Not exercised yet.
 
 D, E, F: not started.
+
+C (done): c_refpose.mdl / c_refpose.json
+- Action: Puppet -> Optional -> "Reference Pose" opens a pose mode with "Confirm", "Reference overlay" and "Reset Pose".
+- Per bone it shows "Reset Selected Bone", Origin, Angles, **Opacity**, and Limb Depth Order.
+- Set: blue Angles Z = 90, then Confirm and save.
+- Effect on the files:
+  - The .mdl grows 18326 -> 20831 bytes and gains an MDLE block at 0x50DD (base has none).
+  - The puppet json's "referencepose" becomes [{alpha: 1.0, id: 25, transform: "<4x4, 90 deg about z>"}], so a per-bone alpha is stored with the reference pose.
