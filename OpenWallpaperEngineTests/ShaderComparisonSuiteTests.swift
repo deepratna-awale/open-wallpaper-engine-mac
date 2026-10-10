@@ -11,9 +11,11 @@ import CryptoKit
 /// xcodebuild):
 /// - `testTranslateCorpus` translates every vert/frag pair in `OWE_ASSETS` and in each wallpaper
 ///   folder of `OWE_SHADER_COMPARE_LIBRARY` (read only; the wallpaper's own files first, then the
-///   assets, as a scene loads them), each with its default combos and with each declared combo
-///   switched on alone (as `ShaderRevisionGuardTests` does), plus a pair's geometry stage folded
-///   into its vertex stage as particle materials build it, compiles the MSL with Metal, and
+///   assets, as a scene loads them), with the combo sets of `comboSets` (defaults, each declared
+///   combo's values, every texture bound, the engine's combos), plus a pair's geometry stage
+///   folded into its vertex stage as particle materials build it, and the variants the
+///   materials, effects and scenes of each root build (`recordMaterialRequests`), compiles the
+///   MSL with Metal (the sources that fail go to `failed/`), and
 ///   writes `shaders.json`: per shader and combo set, ok or failed, the error class and a hash of
 ///   the output.
 /// - `testRenderScenes` draws each scene folder listed in the file `OWE_SHADER_COMPARE_SCENES`
@@ -64,11 +66,15 @@ final class ShaderComparisonSuiteTests: XCTestCase {
         let output = try Self.outputFolder()
         let assets = try Fixtures.assets()
         let started = Date()
-        let translator = ShaderVariantTranslator(compiler: InProcessShaderCompiler(), cacheDirectory: nil, failureDirectory: nil)
+        // The source each failing variant's compiler step saw, by shader and stage (the last one wins).
+        let translator = ShaderVariantTranslator(compiler: InProcessShaderCompiler(), cacheDirectory: nil,
+                                                 failureDirectory: output.appending(path: "failed", directoryHint: .isDirectory))
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         var metalVerdicts: [String: String?] = [:]
         var items: [String: ShaderRecord] = [:]
         var pairs = 0
+        // Cache keys translated so far: a material request that repeats one adds nothing.
+        var translated = Set<String>()
 
         var corpora: [(label: String, root: URL, roots: [URL])] = [("assets", assets, [assets])]
         if let library = Self.environment["OWE_SHADER_COMPARE_LIBRARY"], !library.isEmpty {
@@ -118,6 +124,7 @@ final class ShaderComparisonSuiteTests: XCTestCase {
                     continue
                 }
                 for combos in Self.comboSets(vertex: vertex, fragment: fragment) {
+                    translated.insert(ShaderVariantTranslator.cacheKey(vertex: vertex, fragment: fragment, combos: combos))
                     record(key + "|" + Self.label(combos)) {
                         try translator.variant(vertex: vertex, fragment: fragment, combos: combos)
                     }
@@ -151,6 +158,8 @@ final class ShaderComparisonSuiteTests: XCTestCase {
                     }
                 }
             }
+            recordMaterialRequests(corpus.label, root: corpus.root, readFile: readFile, translator: translator,
+                                   translated: &translated, record: record)
         }
         var byClass: [String: Int] = [:]
         for record in items.values where !record.ok { byClass[record.error ?? "?", default: 0] += 1 }
@@ -163,31 +172,149 @@ final class ShaderComparisonSuiteTests: XCTestCase {
               + "in \(Int(summary.seconds)) s → \(output.path)/shaders.json")
     }
 
+    /// The variants the materials, effects and scenes under `root` build
+    /// (`ShaderComparisonMaterialRequests`), resolved as the loaders resolve them: the slots their
+    /// textures fill bound (and slot 0, as every layer's is), the format and component combos of
+    /// those textures, the engine's combos of an orthographic LDR scene (`SceneEngineCombos()`)
+    /// and `engineShaped`. Recorded under `<label>/<pair>|material|<combos>`, each new variant once.
+    private func recordMaterialRequests(_ label: String, root: URL, readFile: @escaping (String) -> Data?,
+                                        translator: ShaderVariantTranslator, translated: inout Set<String>,
+                                        record: (String, () throws -> TranslatedShaderVariant) -> Void) {
+        for request in ShaderComparisonMaterialRequests(readFile: readFile).requests(under: root) {
+            let directory = request.directory
+            let scoped: (String) -> Data? = { path in
+                if !directory.isEmpty, let data = readFile("\(directory)/\(path)") { return data }
+                return readFile(path)
+            }
+            let loader = ShaderSourceLoader(readFile: scoped)
+            let pair = (directory.isEmpty ? "" : directory + "/") + "shaders/" + request.shader
+            let vertex: ShaderSource, fragment: ShaderSource
+            do {
+                vertex = try loader.load(request.shader, stage: .vertex)
+                fragment = try loader.load(request.shader, stage: .fragment)
+            } catch {
+                continue // a material whose shader isn't there loads nothing in WE either
+            }
+            let images = ImageMaterialPlanBuilder(translator: translator, readFile: scoped, loadTexture: { _, _ in nil })
+            var headers: [Int: Data] = [:]
+            for (slot, name) in request.textures where !name.hasPrefix("_rt_") && name != "previous" {
+                headers[slot] = images.textureHeader(name, materialPath: request.materialPath)
+            }
+            let formats = ImageMaterialPlanBuilder.formatCombos(vertex.samplers + fragment.samplers, headers: headers)
+            let resolved = SceneEngineCombos().applied(to: ShaderVariantTranslator.resolveCombos(
+                vertex: vertex, fragment: fragment, overrides: request.overrides + [formats],
+                boundTextureSlots: Set(request.textures.keys).union([0]),
+                textureFlags: headers.compactMapValues { TEXImageFormat.texiWord(1, in: $0) }))
+            let combos = Self.engineShaped(resolved, vertex: vertex, fragment: fragment)
+            guard translated.insert(ShaderVariantTranslator.cacheKey(vertex: vertex, fragment: fragment, combos: combos)).inserted
+            else { continue }
+            record("\(label)/\(pair)|material|" + Self.label(combos)) {
+                try translator.variant(vertex: vertex, fragment: fragment, combos: combos)
+            }
+        }
+    }
+
     /// Pair paths (no extension) under `root`: every `.vert` or `.frag` file's, sorted. The other
     /// stage may come from a later root (a wallpaper's fragment over WE's vertex stage).
+    /// `shaders/HLSL/` is left out: it holds Direct3D 11 HLSL (`dx11playlisttransition`,
+    /// `dx11fallback`), which `wallpaper64.exe` compiles as is for its playlist transitions and
+    /// fallback draw (paths at 0x140477c70 and 0x1404868e0), not WE shaders a material names.
     static func shaderPaths(under root: URL) -> [String] {
         guard let files = FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil,
                                                          options: [.skipsHiddenFiles]) else { return [] }
         let base = root.standardizedFileURL.path
         var paths = Set<String>()
         for case let url as URL in files where url.pathExtension == "vert" || url.pathExtension == "frag" {
+            guard !url.pathComponents.contains("HLSL") else { continue }
             paths.insert(String(url.deletingPathExtension().standardizedFileURL.path.dropFirst(base.count + 1)))
         }
         return paths.sorted()
     }
 
-    /// The default combos (texture slot 0 bound, as every layer's is) and each declared combo
-    /// switched on alone.
+    /// The combo sets the suite translates a pair with, each shaped as the engine shapes it
+    /// (`engineShaped`):
+    /// - the default combos (texture slot 0 bound, as every layer's is);
+    /// - each declared combo switched to each other value it can take alone: an `options`
+    ///   combo's option values, an `imageblending` combo's blend modes (each `BLENDMODE == n` the
+    ///   pair tests, 31 included), any other combo 1;
+    /// - every sampler's texture bound (`MASK`, `NORMALMAP`, the PBR maps…), alone and with each
+    ///   declared combo switched to its first other value;
+    /// - every texture bound under the engine's combos of a perspective HDR scene with fog and
+    ///   one light of each kind, shadowed (`SceneEngineCombos`).
     static func comboSets(vertex: ShaderSource, fragment: ShaderSource, base: [String: Int] = [:]) -> [[String: Int]] {
         let defaults = ShaderVariantTranslator.resolveCombos(vertex: vertex, fragment: fragment, overrides: [base],
                                                              boundTextureSlots: [0])
+        let slots = Set((vertex.samplers + fragment.samplers).compactMap(\.textureSlot)).union([0])
+        let bound = ShaderVariantTranslator.resolveCombos(vertex: vertex, fragment: fragment, overrides: [base],
+                                                          boundTextureSlots: slots)
+        let declared = declaredComboValues(vertex: vertex, fragment: fragment)
         var sets = [defaults]
-        for combo in Set((vertex.combos + fragment.combos).map(\.name)).sorted() where defaults[combo] != 1 {
-            var combos = defaults
-            combos[combo] = 1
+        for (combo, values) in declared {
+            for value in values where defaults[combo] != value {
+                var combos = defaults
+                combos[combo] = value
+                sets.append(combos)
+            }
+        }
+        sets.append(bound)
+        for (combo, values) in declared {
+            guard let value = values.first(where: { bound[combo] != $0 }) else { continue }
+            var combos = bound
+            combos[combo] = value
             sets.append(combos)
         }
-        return sets
+        let engine = SceneEngineCombos(
+            hdr: true, sceneOrtho: false,
+            lightBudget: WELightConfig(point: 1, spot: 1, tube: 1, directional: 1, spotShadow: 1, spotCookie: 1,
+                                       spotShadowCookie: 1, directionalShadow: 1, pointShadow: 1),
+            shadowQuality: 3, fogDistance: true, fogHeight: true)
+        sets.append(engine.applied(to: bound))
+        var seen = Set<String>()
+        return sets.map { engineShaped($0, vertex: vertex, fragment: fragment) }.filter { seen.insert(label($0)).inserted }
+    }
+
+    /// Each declared combo (sorted) and the values it can take: an `options` combo's option
+    /// values, an `imageblending` combo's blend modes (`BLENDMODE == n` in either stage), else 1.
+    static func declaredComboValues(vertex: ShaderSource, fragment: ShaderSource) -> [(String, [Int])] {
+        var result: [String: [Int]] = [:]
+        let texts = [vertex.text, fragment.text]
+        for text in texts {
+            for match in comboPattern.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
+                guard let json = ShaderSourceLoader.annotation(String(text[Range(match.range(at: 1), in: text)!])),
+                      let name = (json["combo"] as? String)?.uppercased(), result[name] == nil else { continue }
+                if let options = json["options"] as? [String: Any], !options.isEmpty {
+                    let values = options.values.compactMap { ($0 as? NSNumber)?.intValue ?? Int($0 as? String ?? "") }
+                    result[name] = Array(Set(values)).sorted()
+                } else if json["type"] as? String == "imageblending" {
+                    var modes = Set<Int>()
+                    for text in texts {
+                        let pattern = try! NSRegularExpression(pattern: "\\b\(name)\\s*==\\s*(\\d+)")
+                        for mode in pattern.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
+                            if let value = Int(text[Range(mode.range(at: 1), in: text)!]) { modes.insert(value) }
+                        }
+                    }
+                    result[name] = modes.isEmpty ? [1] : modes.sorted()
+                } else {
+                    result[name] = [1]
+                }
+            }
+        }
+        return result.sorted { $0.key < $1.key }.map { ($0.key, $0.value) }
+    }
+
+    private static let comboPattern = try! NSRegularExpression(pattern: #"//\s*\[COMBO\]\s*(\{[^\n]*\})"#)
+
+    /// `combos` with the values the loaders always supply alongside them: `BONECOUNT` with
+    /// `SKINNING` (a model's is at least 16, `ModelMeshCombos.boneCount`) and a puppet channel
+    /// material's `BLENDROWCOUNT` (`buildPuppetTextureChannels`), which no material declares.
+    static func engineShaped(_ combos: [String: Int], vertex: ShaderSource, fragment: ShaderSource) -> [String: Int] {
+        var combos = combos
+        if (combos["SKINNING"] ?? 0) != 0, (combos["BONECOUNT"] ?? 0) <= 0 {
+            combos["BONECOUNT"] = ModelMeshCombos.boneCount(0)
+        }
+        let names = vertex.preludeAnalysis.identifiers.union(fragment.preludeAnalysis.identifiers)
+        if names.contains("BLENDROWCOUNT"), combos["BLENDROWCOUNT"] == nil { combos["BLENDROWCOUNT"] = 1 }
+        return combos
     }
 
     static func label(_ combos: [String: Int]) -> String {
