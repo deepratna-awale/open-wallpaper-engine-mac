@@ -32,3 +32,21 @@ C (done): c_refpose.mdl / c_refpose.json
 - Effect on the files:
   - The .mdl grows 18326 -> 20831 bytes and gains an MDLE block at 0x50DD (base has none).
   - The puppet json's "referencepose" becomes [{alpha: 1.0, id: 25, transform: "<4x4, 90 deg about z>"}], so a per-bone alpha is stored with the reference pose.
+
+B, continued
+- **b_clip.mdl** (base + clip):
+  - Puppet -> 4. Animation -> Create/Add -> "Animation Options": Mode Loop, Seconds 2, FPS 30, Smoothness 0.3, Stiffness 1, "Create smooth animation loop" on.
+  - Keyed blue Angles Z = 0 / 180 / 0 at frames 0 / 30 / ~59.
+  - MDLA0006 at 0x4755. Clip "Animation 1", mode "loop", id 23 (0x17).
+- **b_clip_order.mdl:** b_clip + blue "Move Limb to Back". The puppet json bone gets "priorityoffset": -100; red stays 0. The .mdl is the same size as b_clip.
+- **Animatable tracks per bone** (Animation track list): Origin x/y/z, Angles x/y/z, Scale x/y/z, **Opacity**, **Depth offset**. So draw order CAN be keyed. b_clip_keyed_order isn't saved yet; it was interrupted by a Windows UAC prompt.
+- **Groups:** not found. The UI has "Limbs" (one per mesh island) and Poses (Save/Load); there's no bone-group panel.
+
+C, continued
+- The c_refpose MDLV body grew: MDLS moved 0x462B -> 0x4F63 (+2360 bytes), plus the MDLE block. Possibly the reference pose writes the optional "second position set" blob (A).
+
+F (done): f_alpha.mdl
+- On b_clip, keyed blue **Opacity** 1 @ frame 0 -> 0 @ frame 30 (Animation track "Opacity").
+- The editor preview fades the bar (0.209 at frame 20).
+- The .mdl grows 22827 -> 23331 bytes (MDLA). The u32 at 0x11 stays 1.
+- The reference-pose panel also has a per-bone "Opacity", and the puppet json's referencepose has "alpha".
