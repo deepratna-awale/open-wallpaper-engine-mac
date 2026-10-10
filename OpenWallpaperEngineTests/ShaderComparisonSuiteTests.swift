@@ -240,7 +240,8 @@ final class ShaderComparisonSuiteTests: XCTestCase {
     /// - every sampler's texture bound (`MASK`, `NORMALMAP`, the PBR maps…), alone and with each
     ///   declared combo switched to its first other value;
     /// - every texture bound under the engine's combos of a perspective HDR scene with fog and
-    ///   one light of each kind, shadowed (`SceneEngineCombos`).
+    ///   lights of each kind (`SceneEngineCombos`), within WE's budget: the base counts include
+    ///   their shadowed and cookie subsets (`WELightConfig`), at most 3 shadow maps and 1 cookie.
     static func comboSets(vertex: ShaderSource, fragment: ShaderSource, base: [String: Int] = [:]) -> [[String: Int]] {
         let defaults = ShaderVariantTranslator.resolveCombos(vertex: vertex, fragment: fragment, overrides: [base],
                                                              boundTextureSlots: [0])
@@ -265,8 +266,8 @@ final class ShaderComparisonSuiteTests: XCTestCase {
         }
         let engine = SceneEngineCombos(
             hdr: true, sceneOrtho: false,
-            lightBudget: WELightConfig(point: 1, spot: 1, tube: 1, directional: 1, spotShadow: 1, spotCookie: 1,
-                                       spotShadowCookie: 1, directionalShadow: 1, pointShadow: 1),
+            lightBudget: WELightConfig(point: 2, spot: 3, tube: 1, directional: 2, spotShadow: 0, spotCookie: 1,
+                                       spotShadowCookie: 0, directionalShadow: 1, pointShadow: 1),
             shadowQuality: 3, fogDistance: true, fogHeight: true)
         sets.append(engine.applied(to: bound))
         var seen = Set<String>()
