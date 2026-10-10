@@ -38,7 +38,7 @@ struct UpdatesSection: View {
         } header: {
             Label("Updates", systemImage: "arrow.down.circle")
         } footer: {
-            Text("Open Wallpaper Engine checks GitHub for new versions: the update list on GitHub Pages and the downloads on GitHub Releases. No personal data is sent. Automatic updates install when you quit, when you're away from your Mac, or within a day.")
+            Text("Open Wallpaper Engine checks for new versions in the update list at openwallpaperengine.app and downloads them from GitHub Releases. No personal data is sent. Automatic updates install when you quit, when you're away from your Mac, or within a day.")
         }
     }
 }

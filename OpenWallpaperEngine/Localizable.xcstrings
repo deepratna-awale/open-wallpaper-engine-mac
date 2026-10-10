@@ -22217,6 +22217,100 @@
         }
       }
     },
+    "Change wallpapers on a timer, at login, by time of day or by day of week, with Wallpaper Engine's transitions, and keep the wallpapers you love a click away." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "غيّر الخلفيات وفق مؤقت، أو عند تسجيل الدخول، أو حسب وقت اليوم، أو حسب يوم الأسبوع، مع انتقالات Wallpaper Engine، واجعل الخلفيات التي تحبها على بُعد نقرة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wechseln Sie Hintergrundbilder nach Zeit, bei der Anmeldung, nach Tageszeit oder Wochentag, mit den Übergängen von Wallpaper Engine, und halten Sie Ihre Lieblinge nur einen Klick entfernt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia los fondos de pantalla con un temporizador, al iniciar sesión, según la hora del día o el día de la semana, con las transiciones de Wallpaper Engine, y ten los que te encantan a un clic."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changez de fond d’écran à intervalles réguliers, à l’ouverture de session, selon l’heure ou le jour de la semaine, avec les transitions de Wallpaper Engine, et gardez vos préférés à portée de clic."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टाइमर पर, लॉग इन करने पर, दिन के समय या सप्ताह के दिन के अनुसार Wallpaper Engine के ट्रांज़िशन के साथ वॉलपेपर बदलें, और अपने पसंदीदा वॉलपेपर एक क्लिक की दूरी पर रखें."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia gli sfondi a intervalli regolari, all’accesso, in base all’ora del giorno o al giorno della settimana, con le transizioni di Wallpaper Engine, e tieni gli sfondi che ami a portata di clic."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タイマー、ログイン時、時間帯、曜日に合わせて、Wallpaper Engine のトランジションで壁紙を切り替えたり、お気に入りの壁紙をワンクリックで使えるようにしたりできます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "타이머, 로그인, 시간대 또는 요일에 따라 Wallpaper Engine의 전환 효과로 배경화면을 바꾸고, 좋아하는 배경화면을 클릭 한 번으로 사용할 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmieniaj tapety co określony czas, przy logowaniu, według pory dnia lub dnia tygodnia, z przejściami Wallpaper Engine, a ulubione tapety miej zawsze pod ręką."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Troque as imagens de fundo por tempo, ao iniciar sessão, pela hora do dia ou pelo dia da semana, com as transições do Wallpaper Engine, e mantenha suas favoritas a um clique de distância."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Меняйте обои по таймеру, при входе в систему, по времени суток или дню недели, с переходами Wallpaper Engine, и держите любимые обои под рукой."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıtlarını bir zamanlayıcıyla, oturum açıldığında, günün saatine veya haftanın gününe göre Wallpaper Engine geçişleriyle değiştirin, sevdiklerinizi bir tık uzağınızda tutun."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінюйте шпалери за таймером, під час входу, за часом доби чи днем тижня, з переходами Wallpaper Engine, і тримайте улюблені шпалери за одне клацання."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按定时、登录时、一天中的时段或星期几更换墙纸，使用 Wallpaper Engine 的过渡效果，让喜爱的墙纸一键可达。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "依計時、登入時、一天中的時段或星期幾更換背景圖片，搭配 Wallpaper Engine 的轉換效果，並讓你喜愛的背景圖片隨手可得。"
+          }
+        }
+      }
+    },
     "Change when video ends" : {
       "localizations" : {
         "ar" : {
@@ -25142,96 +25236,96 @@
         }
       }
     },
-    "Choose what happens on battery, when another app goes fullscreen, or when your displays sleep — from lowering the frame rate to pausing entirely." : {
+    "Choose what happens on battery, when another app goes fullscreen, or when your displays sleep — from keeping wallpapers running to pausing or stopping them." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "اختر ما يحدث عند العمل بالبطارية، أو عندما ينتقل تطبيق آخر إلى ملء الشاشة، أو عندما تدخل شاشات العرض في وضع السكون — بدءًا من خفض معدل الإطارات ووصولًا إلى الإيقاف المؤقت التام."
+            "value" : "اختر ما يحدث عند العمل بالبطارية، أو عندما ينتقل تطبيق آخر إلى ملء الشاشة، أو عندما تدخل شاشات العرض في وضع السكون — من إبقاء الخلفيات قيد التشغيل إلى إيقافها مؤقتًا أو إيقافها تمامًا."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Legen Sie fest, was im Batteriebetrieb, bei einer anderen App im Vollbildmodus oder im Ruhezustand der Displays passiert – von einer niedrigeren Bildrate bis zum vollständigen Pausieren."
+            "value" : "Legen Sie fest, was im Batteriebetrieb, bei einer anderen App im Vollbildmodus oder im Ruhezustand der Displays passiert – vom Weiterlaufen der Hintergrundbilder bis zum Pausieren oder Stoppen."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elige qué ocurre con la batería, cuando otra app pasa a pantalla completa o cuando tus pantallas entran en reposo: desde bajar la velocidad de fotogramas hasta pausar por completo."
+            "value" : "Elige qué ocurre con la batería, cuando otra app pasa a pantalla completa o cuando tus pantallas entran en reposo: desde seguir reproduciendo los fondos de pantalla hasta pausarlos o detenerlos."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Choisissez ce qui se passe sur batterie, lorsqu’une autre app passe en plein écran ou lorsque vos moniteurs sont en veille — de la réduction de la fréquence d’images à la mise en pause complète."
+            "value" : "Choisissez ce qui se passe sur batterie, lorsqu’une autre app passe en plein écran ou lorsque vos moniteurs sont en veille — de laisser tourner les fonds d’écran à leur mise en pause ou leur arrêt."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "चुनें कि बैटरी पर, किसी दूसरे ऐप के फ़ुल स्क्रीन होने पर या डिस्प्ले के स्लीप में जाने पर क्या हो — फ़्रेम दर घटाने से लेकर पूरी तरह पॉज़ करने तक."
+            "value" : "चुनें कि बैटरी पर, किसी दूसरे ऐप के फ़ुल स्क्रीन होने पर या डिस्प्ले के स्लीप में जाने पर क्या हो — वॉलपेपर चलते रहने देने से लेकर उन्हें पॉज़ या बंद करने तक."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Scegli cosa succede con l’alimentazione a batteria, quando un’altra app passa a tutto schermo o quando gli schermi sono in stop: dal ridurre la frequenza fotogrammi alla pausa completa."
+            "value" : "Scegli cosa succede con l’alimentazione a batteria, quando un’altra app passa a tutto schermo o quando gli schermi sono in stop: dal lasciare in esecuzione gli sfondi a metterli in pausa o arrestarli."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "バッテリー使用時、ほかのアプリがフルスクリーンになったとき、ディスプレイがスリープしたときの動作を、フレームレートを下げることから完全な一時停止まで選択できます。"
+            "value" : "バッテリー使用時、ほかのアプリがフルスクリーンになったとき、ディスプレイがスリープしたときの動作を、壁紙の実行を続けることから一時停止や停止まで選択できます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "배터리 사용 중, 다른 앱이 전체 화면으로 전환될 때 또는 디스플레이가 잠자기 상태일 때 프레임 속도 낮추기부터 완전히 일시 정지하기까지 원하는 동작을 선택할 수 있습니다."
+            "value" : "배터리 사용 중, 다른 앱이 전체 화면으로 전환될 때 또는 디스플레이가 잠자기 상태일 때 배경화면을 계속 실행하는 것부터 일시 정지하거나 중지하는 것까지 원하는 동작을 선택할 수 있습니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wybierz, co się dzieje przy zasilaniu z baterii, gdy inna aplikacja przechodzi na pełny ekran lub gdy wyświetlacze są uśpione — od obniżenia liczby klatek po całkowite wstrzymanie."
+            "value" : "Wybierz, co się dzieje przy zasilaniu z baterii, gdy inna aplikacja przechodzi na pełny ekran lub gdy wyświetlacze są uśpione — od dalszego działania tapet po ich wstrzymanie lub zatrzymanie."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Escolha o que acontece na bateria, quando outro app entra em tela cheia ou quando as telas repousam — de reduzir a taxa de quadros a pausar totalmente."
+            "value" : "Escolha o que acontece na bateria, quando outro app entra em tela cheia ou quando as telas repousam — de manter as imagens de fundo em execução a pausá-las ou pará-las."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Выберите, что происходит при работе от аккумулятора, когда другое приложение открыто на весь экран или когда дисплеи уходят в сон: от снижения частоты кадров до полной паузы."
+            "value" : "Выберите, что происходит при работе от аккумулятора, когда другое приложение открыто на весь экран или когда дисплеи уходят в сон: от продолжения работы обоев до паузы или полной остановки."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pille çalışırken, başka bir uygulama tam ekrana geçtiğinde veya ekranlarınız uyku moduna girdiğinde ne olacağını seçin — kare hızını düşürmekten tamamen duraklatmaya kadar."
+            "value" : "Pille çalışırken, başka bir uygulama tam ekrana geçtiğinde veya ekranlarınız uyku moduna girdiğinde ne olacağını seçin — duvar kâğıtlarının çalışmaya devam etmesinden duraklatılmasına veya durdurulmasına kadar."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Виберіть, що відбувається під час роботи від акумулятора, коли інша програма переходить у повноекранний режим або коли дисплеї засинають: від зниження частоти кадрів до повної паузи."
+            "value" : "Виберіть, що відбувається під час роботи від акумулятора, коли інша програма переходить у повноекранний режим або коли дисплеї засинають: від продовження роботи шпалер до паузи чи зупинки."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选择使用电池、其他 App 进入全屏或显示器睡眠时的行为——从降低帧速率到完全暂停。"
+            "value" : "选择使用电池、其他 App 进入全屏或显示器睡眠时的行为——从让墙纸继续运行到暂停或停止。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選擇使用電池時、其他 App 進入全螢幕時或顯示器進入睡眠時的處理方式——從降低畫面播放速率到完全暫停。"
+            "value" : "選擇使用電池時、其他 App 進入全螢幕時或顯示器進入睡眠時的處理方式——從讓背景圖片持續執行到暫停或停止。"
           }
         }
       }
@@ -88791,97 +88885,97 @@
         }
       }
     },
-    "Open Wallpaper Engine checks GitHub for new versions: the update list on GitHub Pages and the downloads on GitHub Releases. No personal data is sent. Automatic updates install when you quit, when you're away from your Mac, or within a day." : {
+    "Open Wallpaper Engine checks for new versions in the update list at openwallpaperengine.app and downloads them from GitHub Releases. No personal data is sent. Automatic updates install when you quit, when you're away from your Mac, or within a day." : {
       "comment" : "Settings › General › Updates explanation of what the updater contacts and when updates install",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يتحقق Open Wallpaper Engine من وجود إصدارات جديدة على GitHub: قائمة التحديثات على GitHub Pages والتنزيلات على GitHub Releases. لا يتم إرسال أي بيانات شخصية. تُثبَّت التحديثات التلقائية عند إنهاء التطبيق، أو عندما تكون بعيدًا عن جهاز Mac، أو خلال يوم."
+            "value" : "يتحقق Open Wallpaper Engine من وجود إصدارات جديدة في قائمة التحديثات على openwallpaperengine.app وينزّلها من GitHub Releases. لا يتم إرسال أي بيانات شخصية. تُثبَّت التحديثات التلقائية عند إنهاء التطبيق، أو عندما تكون بعيدًا عن جهاز Mac، أو خلال يوم."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine sucht auf GitHub nach neuen Versionen: die Update-Liste auf GitHub Pages und die Downloads auf GitHub Releases. Es werden keine persönlichen Daten gesendet. Automatische Updates werden installiert, wenn Sie das Programm beenden, wenn Sie nicht an Ihrem Mac sind oder innerhalb eines Tages."
+            "value" : "Open Wallpaper Engine sucht in der Update-Liste auf openwallpaperengine.app nach neuen Versionen und lädt sie von GitHub Releases. Es werden keine persönlichen Daten gesendet. Automatische Updates werden installiert, wenn Sie das Programm beenden, wenn Sie nicht an Ihrem Mac sind oder innerhalb eines Tages."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine busca nuevas versiones en GitHub: la lista de actualizaciones en GitHub Pages y las descargas en GitHub Releases. No se envían datos personales. Las actualizaciones automáticas se instalan al salir de la app, cuando no estás usando tu Mac o en el plazo de un día."
+            "value" : "Open Wallpaper Engine busca nuevas versiones en la lista de actualizaciones de openwallpaperengine.app y las descarga de GitHub Releases. No se envían datos personales. Las actualizaciones automáticas se instalan al salir de la app, cuando no estás usando tu Mac o en el plazo de un día."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine recherche les nouvelles versions sur GitHub : la liste des mises à jour sur GitHub Pages et les téléchargements sur GitHub Releases. Aucune donnée personnelle n’est envoyée. Les mises à jour automatiques s’installent lorsque vous quittez l’app, lorsque vous vous éloignez de votre Mac ou dans la journée."
+            "value" : "Open Wallpaper Engine recherche les nouvelles versions dans la liste des mises à jour sur openwallpaperengine.app et les télécharge depuis GitHub Releases. Aucune donnée personnelle n’est envoyée. Les mises à jour automatiques s’installent lorsque vous quittez l’app, lorsque vous vous éloignez de votre Mac ou dans la journée."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine नए संस्करणों के लिए GitHub जाँचता है: GitHub Pages पर अपडेट सूची और GitHub Releases पर डाउनलोड. कोई व्यक्तिगत डेटा नहीं भेजा जाता. स्वचालित अपडेट ऐप छोड़ने पर, जब आप अपने Mac से दूर हों, या एक दिन के भीतर इंस्टॉल होते हैं."
+            "value" : "Open Wallpaper Engine नए संस्करणों के लिए openwallpaperengine.app पर अपडेट सूची जाँचता है और उन्हें GitHub Releases से डाउनलोड करता है. कोई व्यक्तिगत डेटा नहीं भेजा जाता. स्वचालित अपडेट ऐप छोड़ने पर, जब आप अपने Mac से दूर हों, या एक दिन के भीतर इंस्टॉल होते हैं."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine cerca nuove versioni su GitHub: l’elenco degli aggiornamenti su GitHub Pages e i download su GitHub Releases. Non vengono inviati dati personali. Gli aggiornamenti automatici vengono installati quando esci dall’app, quando non stai usando il Mac o entro un giorno."
+            "value" : "Open Wallpaper Engine cerca nuove versioni nell’elenco degli aggiornamenti su openwallpaperengine.app e le scarica da GitHub Releases. Non vengono inviati dati personali. Gli aggiornamenti automatici vengono installati quando esci dall’app, quando non stai usando il Mac o entro un giorno."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine は GitHub で新しいバージョンを確認します：GitHub Pages のアップデート一覧と GitHub Releases のダウンロード。個人データは送信されません。自動アップデートは、終了時、Mac から離れているとき、または 1 日以内にインストールされます。"
+            "value" : "Open Wallpaper Engine は openwallpaperengine.app のアップデート一覧で新しいバージョンを確認し、GitHub Releases からダウンロードします。個人データは送信されません。自動アップデートは、終了時、Mac から離れているとき、または 1 日以内にインストールされます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine은 GitHub에서 새 버전을 확인합니다. GitHub Pages의 업데이트 목록과 GitHub Releases의 다운로드를 사용합니다. 개인 데이터는 전송되지 않습니다. 자동 업데이트는 앱을 종료할 때, Mac을 사용하지 않을 때 또는 하루 안에 설치됩니다."
+            "value" : "Open Wallpaper Engine은 openwallpaperengine.app의 업데이트 목록에서 새 버전을 확인하고 GitHub Releases에서 다운로드합니다. 개인 데이터는 전송되지 않습니다. 자동 업데이트는 앱을 종료할 때, Mac을 사용하지 않을 때 또는 하루 안에 설치됩니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine sprawdza nowe wersje w serwisie GitHub: listę uaktualnień w GitHub Pages i pliki do pobrania w GitHub Releases. Żadne dane osobowe nie są wysyłane. Automatyczne uaktualnienia są instalowane po zakończeniu aplikacji, gdy nie korzystasz z Maca, lub w ciągu doby."
+            "value" : "Open Wallpaper Engine sprawdza nowe wersje na liście uaktualnień w openwallpaperengine.app i pobiera je z GitHub Releases. Żadne dane osobowe nie są wysyłane. Automatyczne uaktualnienia są instalowane po zakończeniu aplikacji, gdy nie korzystasz z Maca, lub w ciągu doby."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O Open Wallpaper Engine busca novas versões no GitHub: a lista de atualizações no GitHub Pages e os downloads no GitHub Releases. Nenhum dado pessoal é enviado. As atualizações automáticas são instaladas quando você encerra o app, quando está longe do Mac ou em até um dia."
+            "value" : "O Open Wallpaper Engine busca novas versões na lista de atualizações em openwallpaperengine.app e as baixa do GitHub Releases. Nenhum dado pessoal é enviado. As atualizações automáticas são instaladas quando você encerra o app, quando está longe do Mac ou em até um dia."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine проверяет новые версии на GitHub: список обновлений на GitHub Pages и загрузки на GitHub Releases. Личные данные не отправляются. Автоматические обновления устанавливаются при завершении работы приложения, когда вы не пользуетесь Mac, или в течение суток."
+            "value" : "Open Wallpaper Engine проверяет новые версии в списке обновлений на openwallpaperengine.app и загружает их с GitHub Releases. Личные данные не отправляются. Автоматические обновления устанавливаются при завершении работы приложения, когда вы не пользуетесь Mac, или в течение суток."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine yeni sürümleri GitHub’da denetler: GitHub Pages’taki güncelleme listesi ve GitHub Releases’taki indirmeler. Hiçbir kişisel veri gönderilmez. Otomatik güncellemeler, uygulamadan çıktığınızda, Mac’inizden uzaktayken veya bir gün içinde yüklenir."
+            "value" : "Open Wallpaper Engine yeni sürümleri openwallpaperengine.app’teki güncelleme listesinde denetler ve GitHub Releases’tan indirir. Hiçbir kişisel veri gönderilmez. Otomatik güncellemeler, uygulamadan çıktığınızda, Mac’inizden uzaktayken veya bir gün içinde yüklenir."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine перевіряє нові версії на GitHub: список оновлень на GitHub Pages і завантаження на GitHub Releases. Жодні особисті дані не надсилаються. Автоматичні оновлення встановлюються, коли ви завершуєте програму, коли ви не користуєтеся Mac, або протягом доби."
+            "value" : "Open Wallpaper Engine перевіряє нові версії в списку оновлень на openwallpaperengine.app і завантажує їх з GitHub Releases. Жодні особисті дані не надсилаються. Автоматичні оновлення встановлюються, коли ви завершуєте програму, коли ви не користуєтеся Mac, або протягом доби."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine 会在 GitHub 上检查新版本：GitHub Pages 上的更新列表和 GitHub Releases 上的下载。不会发送任何个人数据。自动更新会在你退出 App、离开 Mac 时或在一天内安装。"
+            "value" : "Open Wallpaper Engine 会在 openwallpaperengine.app 的更新列表中检查新版本，并从 GitHub Releases 下载。不会发送任何个人数据。自动更新会在你退出 App、离开 Mac 时或在一天内安装。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine 會在 GitHub 上檢查新版本：GitHub Pages 上的更新列表和 GitHub Releases 上的下載。不會傳送任何個人資料。自動更新會在你結束 App、離開 Mac 時或在一天內安裝。"
+            "value" : "Open Wallpaper Engine 會在 openwallpaperengine.app 的更新列表中檢查新版本，並從 GitHub Releases 下載。不會傳送任何個人資料。自動更新會在你結束 App、離開 Mac 時或在一天內安裝。"
           }
         }
       }
@@ -107426,6 +107520,194 @@
         }
       }
     },
+    "Records a seamless loop of the current wallpaper in the background (a video wallpaper plays its own file) and installs a screen saver that plays it. Choose Open Wallpaper Engine in Screen Saver settings to use it. Turning it off removes the screen saver and its videos." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يسجّل في الخلفية حلقة سلسة من الخلفية الحالية (خلفية الفيديو تُعرض بملفها نفسه) ويثبّت شاشة توقف تعرضها. اختر Open Wallpaper Engine في إعدادات شاشة التوقف لاستخدامها. إيقافه يزيل شاشة التوقف ومقاطع الفيديو الخاصة بها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nimmt im Hintergrund eine nahtlose Schleife des aktuellen Hintergrundbilds auf (ein Video-Hintergrundbild spielt seine eigene Datei) und installiert einen Bildschirmschoner, der sie abspielt. Wählen Sie Open Wallpaper Engine in den Bildschirmschoner-Einstellungen, um ihn zu nutzen. Ausschalten entfernt den Bildschirmschoner und seine Videos."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Graba en segundo plano un bucle continuo del fondo de pantalla actual (un fondo de pantalla de vídeo reproduce su propio archivo) e instala un salvapantallas que lo reproduce. Elige Open Wallpaper Engine en los ajustes del salvapantallas para usarlo. Al desactivarlo se eliminan el salvapantallas y sus vídeos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistre en arrière-plan une boucle sans raccord du fond d’écran actuel (un fond d’écran vidéo lit son propre fichier) et installe un économiseur d’écran qui la lit. Choisissez Open Wallpaper Engine dans les réglages de l’économiseur d’écran pour l’utiliser. Le désactiver supprime l’économiseur et ses vidéos."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मौजूदा वॉलपेपर का एक सहज लूप बैकग्राउंड में रिकॉर्ड करता है (वीडियो वॉलपेपर अपनी ही फ़ाइल चलाता है) और उसे चलाने वाला स्क्रीन सेवर इंस्टॉल करता है। इसे इस्तेमाल करने के लिए स्क्रीन सेवर सेटिंग्स में Open Wallpaper Engine चुनें। बंद करने पर स्क्रीन सेवर और उसके वीडियो हट जाते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registra in background un loop continuo dello sfondo attuale (uno sfondo video riproduce il proprio file) e installa un salvaschermo che lo riproduce. Scegli Open Wallpaper Engine nelle impostazioni del salvaschermo per usarlo. Disattivandolo vengono rimossi il salvaschermo e i suoi video."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在の壁紙の継ぎ目のないループをバックグラウンドで録画し（ビデオ壁紙はそのファイル自体を再生します）、それを再生するスクリーンセーバをインストールします。使うにはスクリーンセーバ設定で Open Wallpaper Engine を選択してください。オフにするとスクリーンセーバとそのビデオが削除されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 배경화면의 끊김 없는 루프를 백그라운드에서 녹화하고(비디오 배경화면은 자체 파일을 재생합니다) 이를 재생하는 화면 보호기를 설치합니다. 사용하려면 화면 보호기 설정에서 Open Wallpaper Engine을 선택하세요. 끄면 화면 보호기와 비디오가 제거됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nagrywa w tle płynną pętlę bieżącej tapety (tapeta wideo odtwarza własny plik) i instaluje wygaszacz ekranu, który ją odtwarza. Aby go używać, wybierz Open Wallpaper Engine w ustawieniach wygaszacza ekranu. Wyłączenie usuwa wygaszacz i jego filmy."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grava em segundo plano um loop contínuo da imagem de fundo atual (uma imagem de fundo de vídeo reproduz o próprio arquivo) e instala um protetor de tela que o reproduz. Escolha Open Wallpaper Engine nos ajustes do Protetor de Tela para usá-lo. Desativar remove o protetor de tela e seus vídeos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В фоне записывает бесшовную петлю текущих обоев (видеообои воспроизводят собственный файл) и устанавливает заставку, которая её воспроизводит. Чтобы использовать её, выберите Open Wallpaper Engine в настройках заставки. При выключении заставка и её видео удаляются."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçerli duvar kâğıdının kesintisiz bir döngüsünü arka planda kaydeder (bir video duvar kâğıdı kendi dosyasını oynatır) ve onu oynatan bir ekran koruyucu yükler. Kullanmak için Ekran Koruyucu ayarlarında Open Wallpaper Engine’i seçin. Kapatmak ekran koruyucuyu ve videolarını kaldırır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У фоні записує безшовну петлю поточних шпалер (відеошпалери відтворюють власний файл) і встановлює заставку, що її відтворює. Щоб користуватися нею, виберіть Open Wallpaper Engine у параметрах заставки. Вимкнення видаляє заставку та її відео."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在后台录制当前墙纸的无缝循环（视频墙纸播放其自身的文件），并安装播放它的屏幕保护程序。要使用它，请在屏幕保护程序设置中选择 Open Wallpaper Engine。关闭后会移除屏幕保护程序及其视频。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在背景錄製目前背景圖片的無縫循環（影片背景圖片會播放其本身的檔案），並安裝播放它的螢幕保護程式。若要使用，請在螢幕保護程式設定中選擇 Open Wallpaper Engine。關閉後會移除螢幕保護程式及其影片。"
+          }
+        }
+      }
+    },
+    "Records a seamless loop of the current wallpaper in the background, at the largest display's pixels, and installs it as a screen saver; a video wallpaper plays its own file. Recording waits while your Mac is on battery or hot." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يسجّل في الخلفية حلقة متصلة من الخلفية الحالية بدقة أكبر شاشة عرض بالبكسل، ويثبّتها كشاشة توقف؛ أما خلفية الفيديو فتُعرض بملفها نفسه. ينتظر التسجيل أثناء عمل Mac على البطارية أو ارتفاع حرارته."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nimmt im Hintergrund eine nahtlose Schleife des aktuellen Hintergrundbilds in den Pixeln des größten Displays auf und installiert sie als Bildschirmschoner; ein Video-Hintergrundbild spielt seine eigene Datei. Die Aufnahme wartet, solange der Mac im Batteriebetrieb läuft oder heiß ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Graba en segundo plano un bucle continuo del fondo de pantalla actual, a los píxeles de la pantalla más grande, y lo instala como salvapantallas; un fondo de pantalla de vídeo reproduce su propio archivo. La grabación espera mientras el Mac funciona con batería o está caliente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistre en arrière-plan une boucle continue du fond d’écran actuel, aux pixels du plus grand moniteur, et l’installe comme économiseur d’écran ; un fond d’écran vidéo lit son propre fichier. L’enregistrement attend tant que votre Mac est sur batterie ou chaud."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बैकग्राउंड में मौजूदा वॉलपेपर का एक सहज लूप सबसे बड़े डिस्प्ले के पिक्सेल पर रिकॉर्ड करता है और उसे स्क्रीन सेवर के रूप में इंस्टॉल करता है; वीडियो वॉलपेपर अपनी ही फ़ाइल चलाता है। Mac के बैटरी पर या गर्म होने पर रिकॉर्डिंग रुकी रहती है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registra in background un loop continuo dello sfondo attuale, ai pixel dello schermo più grande, e lo installa come salvaschermo; uno sfondo video riproduce il proprio file. La registrazione attende mentre il Mac è a batteria o caldo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在の壁紙のシームレスなループを、最も大きいディスプレイのピクセルでバックグラウンドで録画し、スクリーンセーバとしてインストールします。ビデオ壁紙はそのファイル自体を再生します。Mac がバッテリー駆動中または高温のときは録画を待機します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 배경화면의 끊김 없는 루프를 가장 큰 디스플레이의 픽셀로 백그라운드에서 녹화하고 화면 보호기로 설치합니다. 비디오 배경화면은 자체 파일을 재생합니다. Mac이 배터리로 작동하거나 뜨거울 때는 녹화를 기다립니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nagrywa w tle płynną pętlę bieżącej tapety w pikselach największego wyświetlacza i instaluje ją jako wygaszacz ekranu; tapeta wideo odtwarza własny plik. Nagrywanie czeka, gdy Mac działa na baterii lub jest gorący."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grava em segundo plano um loop contínuo da imagem de fundo atual, nos pixels da maior tela, e o instala como protetor de tela; uma imagem de fundo de vídeo reproduz o próprio arquivo. A gravação espera enquanto o Mac está na bateria ou quente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В фоне записывает бесшовный цикл текущих обоев в пикселях самого большого дисплея и устанавливает его как заставку; видеообои воспроизводят собственный файл. Пока Mac работает от аккумулятора или перегрет, запись ждет."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçerli duvar kâğıdının kesintisiz bir döngüsünü arka planda, en büyük ekranın piksellerinde kaydeder ve ekran koruyucu olarak yükler; bir video duvar kâğıdı kendi dosyasını oynatır. Mac’iniz pildeyken veya ısındığında kayıt bekler."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У фоні записує безшовний цикл поточних шпалер у пікселях найбільшого дисплея та встановлює його як заставку; відеошпалери відтворюють власний файл. Поки Mac працює від акумулятора або перегрітий, запис чекає."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在后台以最大显示器的像素录制当前墙纸的无缝循环，并将其安装为屏幕保护程序；视频墙纸播放其自身的文件。Mac 使用电池或过热时，录制会等待。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在背景以最大顯示器的像素錄製目前背景圖片的無縫循環，並將其安裝為螢幕保護程式；影片背景圖片會播放其本身的檔案。Mac 使用電池或過熱時，錄製會等待。"
+          }
+        }
+      }
+    },
     "Red component of the bar colour." : {
       "comment" : "Scene Edit / Export tooltip for the audiobars effect's red parameter",
       "localizations" : {
@@ -111812,194 +112094,6 @@
         }
       }
     },
-    "Renders a seamless loop of the current scene in the background, at the largest display's point size and without clock and date layers, and installs it as a screen saver. Rendering waits while your Mac is on battery or hot." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يعرض في الخلفية حلقة متصلة من المشهد الحالي بحجم أكبر شاشة عرض بالنقاط ودون طبقات الساعة والتاريخ، ويثبّتها كشاشة توقف. وينتظر العرض أثناء عمل Mac على البطارية أو ارتفاع حرارته."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rendert im Hintergrund eine nahtlose Schleife der aktuellen Szene in der Punktgröße des größten Displays und ohne Uhr- und Datumsebenen und installiert sie als Bildschirmschoner. Das Rendern wartet, solange der Mac im Batteriebetrieb läuft oder heiß ist."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Renderiza en segundo plano un bucle continuo de la escena actual, al tamaño en puntos de la pantalla más grande y sin las capas de reloj y fecha, y lo instala como salvapantallas. El renderizado espera mientras el Mac funciona con batería o está caliente."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Effectue en arrière-plan le rendu d’une boucle continue de la scène actuelle, à la taille en points du plus grand moniteur et sans les calques d’heure et de date, et l’installe comme économiseur d’écran. Le rendu attend tant que votre Mac est sur batterie ou chaud."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "बैकग्राउंड में मौजूदा सीन का एक सहज लूप, सबसे बड़े डिस्प्ले के पॉइंट साइज़ पर और घड़ी व तारीख लेयर के बिना, रेंडर करता है और उसे स्क्रीन सेवर के रूप में इंस्टॉल करता है। Mac के बैटरी पर या गर्म होने पर रेंडरिंग रुकी रहती है।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esegue in background il rendering di un loop continuo della scena attuale, alla dimensione in punti dello schermo più grande e senza i livelli di orologio e data, e lo installa come salvaschermo. Il rendering attende mentre il Mac è a batteria o caldo."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "現在のシーンのシームレスなループを、最も大きいディスプレイのポイントサイズで、時計と日付のレイヤーを除いてバックグラウンドでレンダリングし、スクリーンセーバとしてインストールします。Mac がバッテリー駆動中または高温のときはレンダリングを待機します。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "현재 장면의 끊김 없는 루프를 가장 큰 디스플레이의 포인트 크기로, 시계와 날짜 레이어 없이 백그라운드에서 렌더링하고 화면 보호기로 설치합니다. Mac이 배터리로 작동하거나 뜨거울 때는 렌더링을 기다립니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "W tle renderuje płynną pętlę bieżącej sceny w rozmiarze w punktach największego wyświetlacza, bez warstw zegara i daty, i instaluje ją jako wygaszacz ekranu. Renderowanie czeka, gdy Mac działa na baterii lub jest gorący."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Renderiza em segundo plano um loop contínuo da cena atual, no tamanho em pontos da maior tela e sem as camadas de relógio e data, e o instala como protetor de tela. A renderização espera enquanto o Mac está na bateria ou quente."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "В фоне отрисовывает бесшовный цикл текущей сцены в размере самого большого дисплея в точках, без слоев часов и даты, и устанавливает его как заставку. Пока Mac работает от аккумулятора или перегрет, отрисовка ждет."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geçerli sahnenin kesintisiz bir döngüsünü arka planda, en büyük ekranın nokta boyutunda ve saat ile tarih katmanları olmadan işler ve ekran koruyucu olarak yükler. Mac’iniz pildeyken veya ısındığında işleme bekler."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "У фоні відтворює безшовний цикл поточної сцени в розмірі найбільшого дисплея в точках, без шарів годинника й дати, і встановлює його як заставку. Поки Mac працює від акумулятора або перегрітий, відтворення чекає."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在后台以最大显示器的点尺寸渲染当前场景的无缝循环（不含时钟和日期图层），并将其安装为屏幕保护程序。Mac 使用电池或过热时，渲染会等待。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在背景以最大顯示器的點尺寸渲染目前場景的無縫循環（不含時鐘和日期圖層），並將其安裝為螢幕保護程式。Mac 使用電池或過熱時，渲染會等待。"
-          }
-        }
-      }
-    },
-    "Renders a seamless loop of the current scene wallpaper in the background and installs a screen saver that plays it. Choose Open Wallpaper Engine in Screen Saver settings to use it. Turning it off removes the screen saver and its videos." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يصيّر حلقة سلسة من خلفية المشهد الحالية في الخلفية ويثبّت شاشة توقف تعرضها. اختر Open Wallpaper Engine في إعدادات شاشة التوقف لاستخدامها. إيقافه يزيل شاشة التوقف ومقاطع الفيديو الخاصة بها."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rendert im Hintergrund eine nahtlose Schleife des aktuellen Szenen-Hintergrundbilds und installiert einen Bildschirmschoner, der sie abspielt. Wähle Open Wallpaper Engine in den Bildschirmschoner-Einstellungen, um ihn zu nutzen. Ausschalten entfernt den Bildschirmschoner und seine Videos."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Renderiza en segundo plano un bucle continuo del fondo de pantalla de escena actual e instala un salvapantallas que lo reproduce. Elige Open Wallpaper Engine en los ajustes del salvapantallas para usarlo. Al desactivarlo se eliminan el salvapantallas y sus vídeos."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Calcule en arrière-plan une boucle sans raccord du fond d'écran de scène actuel et installe un économiseur d'écran qui la lit. Choisissez Open Wallpaper Engine dans les réglages de l'économiseur d'écran pour l'utiliser. Le désactiver supprime l'économiseur et ses vidéos."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "मौजूदा सीन वॉलपेपर का एक सहज लूप बैकग्राउंड में रेंडर करता है और उसे चलाने वाला स्क्रीन सेवर इंस्टॉल करता है। इसे इस्तेमाल करने के लिए स्क्रीन सेवर सेटिंग्स में Open Wallpaper Engine चुनें। बंद करने पर स्क्रीन सेवर और उसके वीडियो हट जाते हैं।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esegue in background il rendering di un loop continuo dello sfondo scena attuale e installa un salvaschermo che lo riproduce. Scegli Open Wallpaper Engine nelle impostazioni del salvaschermo per usarlo. Disattivandolo vengono rimossi il salvaschermo e i suoi video."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "現在のシーン壁紙の継ぎ目のないループをバックグラウンドでレンダリングし、それを再生するスクリーンセーバをインストールします。使うにはスクリーンセーバ設定で Open Wallpaper Engine を選択してください。オフにするとスクリーンセーバとそのビデオが削除されます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "현재 장면 배경화면의 끊김 없는 루프를 백그라운드에서 렌더링하고 이를 재생하는 화면 보호기를 설치합니다. 사용하려면 화면 보호기 설정에서 Open Wallpaper Engine을 선택하세요. 끄면 화면 보호기와 비디오가 제거됩니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Renderuje w tle płynną pętlę bieżącej tapety sceny i instaluje wygaszacz ekranu, który ją odtwarza. Aby go używać, wybierz Open Wallpaper Engine w ustawieniach wygaszacza ekranu. Wyłączenie usuwa wygaszacz i jego filmy."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Renderiza em segundo plano um loop contínuo do papel de parede de cena atual e instala um protetor de tela que o reproduz. Escolha Open Wallpaper Engine nos ajustes do Protetor de Tela para usá-lo. Desativar remove o protetor de tela e seus vídeos."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "В фоне рендерит бесшовную петлю текущих обоев-сцены и устанавливает заставку, которая её воспроизводит. Чтобы использовать её, выберите Open Wallpaper Engine в настройках заставки. При выключении заставка и её видео удаляются."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geçerli sahne duvar kâğıdının kesintisiz bir döngüsünü arka planda işler ve onu oynatan bir ekran koruyucu yükler. Kullanmak için Ekran Koruyucu ayarlarında Open Wallpaper Engine’i seçin. Kapatmak ekran koruyucuyu ve videolarını kaldırır."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "У фоні рендерить безшовну петлю поточних шпалер-сцени та встановлює заставку, що її відтворює. Щоб користуватися нею, виберіть Open Wallpaper Engine у параметрах заставки. Вимкнення видаляє заставку та її відео."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在后台渲染当前场景壁纸的无缝循环，并安装播放它的屏幕保护程序。要使用它，请在屏幕保护程序设置中选择 Open Wallpaper Engine。关闭后会移除屏幕保护程序及其视频。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在背景算繪目前場景桌布的無縫循環，並安裝播放它的螢幕保護程式。若要使用，請在螢幕保護程式設定中選擇 Open Wallpaper Engine。關閉後會移除螢幕保護程式及其影片。"
-          }
-        }
-      }
-    },
     "Repeat" : {
       "localizations" : {
         "ar" : {
@@ -115861,100 +115955,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "自動輪播"
-          }
-        }
-      }
-    },
-    "Rotate through a playlist on a timer or when a video ends, and keep the wallpapers you love a click away." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تنقّل بين خلفيات قائمة التشغيل وفق مؤقت أو عند انتهاء الفيديو، واجعل الخلفيات التي تحبها على بُعد نقرة."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wechseln Sie Hintergrundbilder einer Playlist nach Zeit oder am Ende eines Videos und halten Sie Ihre Lieblinge nur einen Klick entfernt."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rota una playlist con un temporizador o al terminar un vídeo, y ten los fondos de pantalla que te encantan a un clic."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Faites défiler une playlist à intervalles réguliers ou à la fin d’une vidéo, et gardez vos fonds d’écran préférés à portée de clic."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "टाइमर पर या वीडियो समाप्त होने पर प्लेलिस्ट के वॉलपेपर बदलें, और अपने पसंदीदा वॉलपेपर एक क्लिक की दूरी पर रखें."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scorri una playlist a intervalli regolari o al termine di un video, e tieni gli sfondi che ami a portata di clic."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "タイマーやビデオの終了に合わせてプレイリストを切り替えたり、お気に入りの壁紙をワンクリックで使えるようにしたりできます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "타이머에 따라 또는 비디오가 끝날 때 플레이리스트를 순환하고, 좋아하는 배경화면을 클릭 한 번으로 사용할 수 있습니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zmieniaj tapety z playlisty co określony czas lub po zakończeniu wideo, a ulubione tapety miej zawsze pod ręką."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alterne entre as imagens de fundo de uma playlist por tempo ou quando um vídeo termina, e mantenha suas favoritas a um clique de distância."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Меняйте обои из плейлиста по таймеру или по окончании видео и держите любимые обои под рукой."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bir çalma listesini zamanlayıcıyla veya bir video bittiğinde sırayla oynatın, sevdiğiniz duvar kâğıtlarını bir tık uzağınızda tutun."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Змінюйте шпалери зі списку відтворення за таймером або коли закінчується відео й тримайте улюблені шпалери за одне клацання."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "按定时或在视频结束时轮换播放列表，让喜爱的墙纸一键可达。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "依計時或在影片結束時輪播播放列表，並讓你喜愛的背景圖片隨手可得。"
           }
         }
       }

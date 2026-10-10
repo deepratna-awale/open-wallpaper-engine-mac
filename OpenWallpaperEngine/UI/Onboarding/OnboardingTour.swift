@@ -108,7 +108,7 @@ extension OnboardingTour {
                             systemImage: "link",
                             imageColor: .teal),
                     Section(title: "Playlists and Favourites",
-                            text: "Rotate through a playlist on a timer or when a video ends, and keep the wallpapers you love a click away.",
+                            text: "Change wallpapers on a timer, at login, by time of day or by day of week, with Wallpaper Engine's transitions, and keep the wallpapers you love a click away.",
                             systemImage: "heart.fill",
                             imageColor: .red),
                     Section(title: "Tune Every Property",
@@ -120,7 +120,7 @@ extension OnboardingTour {
                  subtitle: "You stay in control of resources",
                  sections: [
                     Section(title: "Kind to Your Battery",
-                            text: "Choose what happens on battery, when another app goes fullscreen, or when your displays sleep — from lowering the frame rate to pausing entirely.",
+                            text: "Choose what happens on battery, when another app goes fullscreen, or when your displays sleep — from keeping wallpapers running to pausing or stopping them.",
                             systemImage: "battery.75",
                             imageColor: .green),
                     Section(title: "Performance You Set",
