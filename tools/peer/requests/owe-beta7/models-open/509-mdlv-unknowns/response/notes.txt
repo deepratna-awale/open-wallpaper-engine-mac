@@ -1,0 +1,26 @@
+509 notes: WE 2.8.0.42 editor (partial; laptop battery ran low during the run)
+
+Base puppet (base.mdl / base.json)
+- Project p509_bars: bars.png as an image layer at (960,540), scale 1, made by ../build_bars.py.
+- Puppet Warp -> 1. Geometry -> Create (defaults: subdivision 2, padding 7, holes on). Gives two mesh islands, "Limb 20" (red) and "Limb 21" (blue).
+- 2. Skeleton: clicks at image (130,128) and (256,128) give bone "red" (root) and child "blue". A third click adds a third bone, which was removed.
+- 3. Weights: auto-weighting put every vertex on "red". Blue bar was painted to "blue" with Paint Weights (Add, size 40, opacity 100).
+
+A (second position set)
+- Candidate tool: Puppet -> 1. Geometry (Edit) -> "Vertex Editing: Lock Geometry for Vertex Editing" (orange button).
+- Not exercised yet; no a_moved.mdl.
+
+B (per-bone ranges / depth arrays)
+- Setting: Puppet -> 3. Weights -> click a bone -> panel "Limb Depth Order".
+  - Text "Default depth: 100".
+  - Fields "Calculated depth" and "Depth offset", each with a reset button.
+  - Buttons "Move Limb to Front" and "Move Limb to Back".
+  - Weights "Tools" also has a "Show depth order" checkbox.
+- b_order.mdl: blue -> "Move Limb to Back". Calculated depth went 100 -> 0, Depth offset 0 -> -100. Everything else is as in base.
+- Not done: b_clip, b_clip_order, b_clip_keyed_order, b_group; no clips or stills.
+- Groups: the Weights step lists "Limbs" (one per mesh island), but no named-group panel was found.
+
+C (reference pose)
+- Button found: Puppet -> Optional -> "Reference Pose". Not exercised yet.
+
+D, E, F: not started.
