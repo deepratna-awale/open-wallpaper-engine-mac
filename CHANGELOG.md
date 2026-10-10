@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Texture Resolution's High Performance also draws web wallpapers at half resolution**, as Wallpaper Engine starts its web renderer with `-halfresolution` for that setting (and only for it), in WebKit and in Chromium. With *Render web wallpapers at standard resolution* also on, whichever draws fewer pixels wins. On a test page with CSS animations and a canvas on a 1080p display, the page's GPU time fell by about 18% in both engines, and its memory by about 50 MB in WebKit and 120 MB in Chromium.
+
 ### Fixed
 
 - **3D models drawn with Wallpaper Engine's own shaders draw again when their mesh lacks data the shader reads.** Only a model whose wallpaper ships its own shader is skipped in that case, as Wallpaper Engine skips it; 1.0.0-beta.6 skipped such models whatever their shader.
