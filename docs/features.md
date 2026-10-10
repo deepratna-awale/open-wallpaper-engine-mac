@@ -24,7 +24,7 @@ Everything Open Wallpaper Engine does, by area. The [README](../README.md) has t
 
 - **Scene Edit / Export** (Details › Scene Edit / Export, ⌥⌘I) has four tabs, and every export happens there. **Wallpaper** edits the running wallpaper: show, hide, move, resize, recolour and fade layers and change effects, live on the desktop. **Screen Saver** records a version of the wallpaper as your screen saver ([docs/screen-saver.md](screen-saver.md)). **iPhone & iPad Export** turns it into a Live Photo lock screen ([docs/iphone-ipad-export.md](iphone-ipad-export.md)). **Android Export** writes it as a package for Wallpaper Engine's Android app ([docs/android-export.md](android-export.md)). A video wallpaper opens it on its screen saver and export tabs.
 - **Wallpaper Editor** (Edit Wallpaper in the library's bottom bar, ⌥⌘E) is an editor in the spirit of Wallpaper Engine's, running as an app of its own: add, arrange and group layers; add effects and particle systems from Wallpaper Engine's catalogs, with previews the app renders in the background once its assets are installed; animate on a timeline; write SceneScript with autocomplete; author user properties; edit particle systems and Puppet Warp rigs. The editor works on a draft: edits show in its canvas and can all be undone, and nothing else runs them (the desktop, the screen saver, playlists) until **File › Save** (⌘S), which every display showing the wallpaper then shows; **Save as New Wallpaper** (⇧⌘S) adds a new wallpaper with them to the library instead, and **Revert to Saved** goes back to the last save. Closing or quitting with unsaved changes asks to save them, and a draft survives a crash: the editor offers to resume it. Edits are kept beside the wallpaper, never in its files.
-- **Depth maps** — with the Depth Map Generation plugin, both editors make a depth map of a layer or the whole scene on your Mac and apply Wallpaper Engine's Depth Parallax effect to it ([docs/depth-maps.md](depth-maps.md)).
+- **Depth maps** — with the Depth Map Generation plugin, both editors make depth maps on your Mac: **Scene › Depth Parallax** applies Wallpaper Engine's Depth Parallax to the whole scene, and a layer's **Create Mask from Depth Map** turns its depth map into the layer's opacity (**Layer Opacity**) or the mask of one of its effects ([docs/depth-maps.md](depth-maps.md)).
 
 ### Several Displays
 
@@ -37,7 +37,7 @@ Everything Open Wallpaper Engine does, by area. The [README](../README.md) has t
 
 ### Theme macOS
 
-Settings › General › **Theming** lets the menu bar, the accent and highlight colours, tinted icons and folders follow the scheme colour of the wallpaper on the main display, and restores your own colours when it's turned off. [docs/theming.md](theming.md)
+Settings › General › **Theming** lets the menu bar (a tint that fades out below it), the accent and highlight colours, tinted icons and folders follow the scheme colour of the wallpaper on the main display, and restores your own colours when it's turned off. macOS has only eight accent colours, so you choose whether the system accent becomes the nearest of them or Multicolor; Open Wallpaper Engine's own windows can use the exact colour. [docs/theming.md](theming.md)
 
 ### Control from MCP Clients
 
@@ -101,11 +101,13 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 ### Screen saver, lock screen & theming
 - **Screen saver** — a plugin records a seamless loop of a scene, web or WebM wallpaper (videos play their own file) and installs a macOS screen saver that plays it; Scene Edit / Export's Screen Saver tab records your own version and can re-record it daily ([docs/screen-saver.md](screen-saver.md)).
 - **Lock screen** — each display's desktop picture, which the lock screen shows, is a picture of its wallpaper.
-- **Theming** — the menu bar, accent, tinted icons and folders follow the wallpaper's colour ([docs/theming.md](theming.md)).
+- **Theming** — the menu bar, accent, tinted icons and folders follow the wallpaper's colour, and the app's own windows can use the exact colour ([docs/theming.md](theming.md)).
 
 ### Workshop & library
 - Wallpaper Engine's Workshop filters: Show Only, a resolution filter, genres combined with AND/OR, a Wallpaper/Preset category, and tags on every card.
 - **Discover** — Wallpaper Engine's curated Workshop lists; Workshop items can be blocked (or their author), reported in Steam, and lead to related wallpapers.
+- **Set as Wallpaper** and **Set as Screen Saver** in the Installed, Discover and Workshop context menus; a Workshop item downloads first.
+- **Installed** is one scrolling grid of the whole library.
 - **Workshop preset items** play their base wallpaper with the preset's values, as in Wallpaper Engine.
 - **Library folders** — add folders of wallpapers beside Wallpaper Storage (Settings › Assets); they're watched and never written to.
 - **Animated previews** — wallpaper tiles in the library play their Workshop preview animation (GIF), so you can see a wallpaper move before applying it. They play only while visible, and pause when the window is hidden or in Low Power Mode.

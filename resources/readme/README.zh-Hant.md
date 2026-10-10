@@ -11,19 +11,19 @@ Open Wallpaper Engine 是一款免費、開源的 macOS 播放器，可播放 Wa
 
 **網站：** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki：** [指南與疑難排解](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-![資料庫](../../docs/images/library.png)
+![資料庫](../../docs/images/library.jpg)
 
 ## 特色
 
 - **場景、影片與網頁背景圖片** — 場景會使用每張背景圖片自己的 Wallpaper Engine 著色器繪製（轉換為 Metal），支援特效、粒子、3D 模型、光源、時間軸、SceneScript 與音訊響應視覺效果。網頁背景圖片在 WebKit 或選用的 Chromium 引擎中執行。
 - **Steam 工作坊** — 在 App 內瀏覽、篩選並下載工作坊內容，或輸入背景圖片檔案夾與 zip 檔。
-- **場景編輯/輸出** — 直接在桌面上即時修改正在執行的背景圖片的圖層與效果，用它錄製你自己的螢幕保護程式，或將其輸出為 iPhone 與 iPad 的原況照片鎖定畫面，或 Android 版 Wallpaper Engine 的背景圖片套件。
+- **場景編輯/輸出** — 直接在桌面上即時修改正在執行的背景圖片的圖層與效果，將它設為你的螢幕保護程式，或將其（場景與影片）輸出為 iPhone 與 iPad 的原況照片鎖定畫面，或 Android 版 Wallpaper Engine 的背景圖片套件。
 
-  ![場景編輯/輸出](../../docs/images/scene-editor-live.png)
+  ![場景編輯/輸出](../../docs/images/scene-editor-live.jpg)
 
-- **背景圖片編輯器** — 一款延續 Wallpaper Engine 編輯器精神的編輯器：圖層、附預覽的效果、時間軸、SceneScript、使用者屬性、粒子與 Puppet Warp。你的編輯會保存在背景圖片旁邊，絕不會寫入背景圖片本身的檔案。
+- **背景圖片編輯器** — 一款延續 Wallpaper Engine 編輯器精神的編輯器：圖層、附預覽的效果、時間軸、SceneScript、使用者屬性、粒子、Puppet Warp 以及由深度圖產生的遮罩。你編輯的是一份草稿：**儲存** 會將其套用到背景圖片，**儲存為新背景圖片** 會在資料庫中加入一份拷貝，背景圖片本身的檔案絕不會被更改。
 
-  ![背景圖片編輯器](../../docs/images/wallpaper-editor.png)
+  ![背景圖片編輯器](../../docs/images/wallpaper-editor.jpg)
 
 - **顯示器** — 與 Wallpaper Engine 相同：每台顯示器一張背景圖片、一張背景圖片橫跨所有顯示器或在每台顯示器上複製，並支援群組、分割與設定檔。
 
@@ -37,9 +37,9 @@ Open Wallpaper Engine 是一款免費、開源的 macOS 播放器，可播放 Wa
 
   ![透過 Wi-Fi 傳送](../../docs/images/send-over-wifi.png)
 
-- **主題** — 選單列、強調色與著色檔案夾會跟隨背景圖片的顏色變化。
+- **主題顏色** — 選單列、強調色以及著色的圖像與檔案夾會跟隨背景圖片的顏色變化；Open Wallpaper Engine 自己的視窗可以使用背景圖片的準確顏色。
 
-  ![主題](../../docs/images/theming.png)
+  ![主題顏色](../../docs/images/theming.png)
 
 - **MCP 伺服器外掛** — MCP 用戶端可以設定背景圖片、播放列表與設定，並編輯場景；連線僅限本機，且只有你的帳號可以開啟。
 
@@ -56,16 +56,16 @@ Open Wallpaper Engine 是一款免費、開源的 macOS 播放器，可播放 Wa
 
 ## 快速入門
 
-1. 打開 App。設定輔助程式會設定語言、SteamCMD、你的 Steam 登入與 Wallpaper Engine 素材；每個步驟都可以略過。
+1. 打開 App。設定輔助程式會設定語言、SteamCMD、你的 Steam 登入與 Wallpaper Engine 素材，也可以輸入你的 Wallpaper Engine 喜好項目；每個步驟都可以略過。
 2. 如果想使用場景背景圖片，請安裝 Wallpaper Engine 素材（*設定 › 資源*）。這些素材來自你在 Steam 上自己的 Wallpaper Engine 副本；影片與網頁背景圖片不需要它們也能使用。
-3. 在 **工作坊** 標籤頁中尋找背景圖片，或輸入背景圖片檔案夾或 zip 檔（*檔案 › 從檔案夾輸入背景圖片…*，⌘I）。
-4. 在資料庫中按一下背景圖片，然後在其詳細資訊中按一下 **設定背景圖片**。它的屬性會列在下方。
+3. 在 **探索** 與 **工作坊** 標籤頁中尋找背景圖片，或輸入背景圖片檔案夾或 zip 檔（*檔案 › 從檔案夾輸入背景圖片…*，⌘I）。
+4. 在資料庫中按一下背景圖片，然後在其詳細資訊中按一下 **設定背景圖片**（或按一下右鍵並選擇 **設為背景圖片**）。它的屬性會列在下方。
 
 更多內容：[入門指南](../../docs/getting-started.md)與 [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)。
 
 ## 隱私權
 
-App 儲存的所有內容都留在你的 Mac 上，它不收集任何資料或分析資訊。它會連線到 Steam（用於工作坊與素材）和 GitHub（用於更新），外掛只會在你安裝時下載。詳細資訊：[App 會連線到哪些服務](../../docs/getting-started.md#what-the-app-connects-to)以及[隱私權政策](../../docs/legal/privacy-policy.md)。
+App 儲存的所有內容都留在你的 Mac 上，它不收集任何資料或分析資訊。它會連線到 Steam（用於工作坊與素材）、openwallpaperengine.app（用於檢查更新）和 GitHub（用於下載更新），外掛只會在你安裝時下載。詳細資訊：[App 會連線到哪些服務](../../docs/getting-started.md#what-the-app-connects-to)以及[隱私權政策](../../docs/legal/privacy-policy.md)。
 
 ## 文件
 

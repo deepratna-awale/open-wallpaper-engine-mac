@@ -11,19 +11,19 @@ Open Wallpaper Engine est un lecteur macOS gratuit et open source pour les fonds
 
 **Site web :** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki :** [guides et dépannage](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-![La bibliothèque](../../docs/images/library.png)
+![La bibliothèque](../../docs/images/library.jpg)
 
 ## Points forts
 
 - **Fonds d’écran de scène, vidéo et web** — les scènes sont dessinées avec les propres nuanceurs Wallpaper Engine de chaque fond d’écran, traduits en Metal, avec effets, particules, modèles 3D, lumières, chronologies, SceneScript et visuels réactifs à l’audio. Les fonds d’écran web s’exécutent dans WebKit ou dans le moteur Chromium facultatif.
 - **Steam Workshop** — parcourez, filtrez et téléchargez des fonds d’écran du Workshop directement dans l’app, ou importez des dossiers et des fichiers zip de fonds d’écran.
-- **Modifier/exporter la scène** — modifiez en direct sur le bureau les calques et les effets du fond d’écran en cours, enregistrez-en votre propre économiseur d’écran, ou exportez-le en écran verrouillé Live Photo pour iPhone et iPad ou en paquet pour l’app Android de Wallpaper Engine.
+- **Modifier/exporter la scène** — modifiez en direct sur le bureau les calques et les effets du fond d’écran en cours, faites-en votre économiseur d’écran, ou exportez-le (scènes et vidéos) en écran verrouillé Live Photo pour iPhone et iPad ou en paquet pour l’app Android de Wallpaper Engine.
 
-  ![Modifier/exporter la scène](../../docs/images/scene-editor-live.png)
+  ![Modifier/exporter la scène](../../docs/images/scene-editor-live.jpg)
 
-- **Éditeur de fond d’écran** — un éditeur dans l’esprit de celui de Wallpaper Engine : calques, effets avec aperçus, chronologie, SceneScript, propriétés utilisateur, particules et Puppet Warp. Vos modifications sont conservées à côté du fond d’écran, jamais dans ses fichiers.
+- **Éditeur de fond d’écran** — un éditeur dans l’esprit de celui de Wallpaper Engine : calques, effets avec aperçus, chronologie, SceneScript, propriétés utilisateur, particules, Puppet Warp et masques créés à partir d’une carte de profondeur. Vous modifiez un brouillon : **Enregistrer** l’applique au fond d’écran, **Enregistrer comme nouveau fond d’écran** en ajoute une copie à la bibliothèque, et les fichiers du fond d’écran lui-même ne sont jamais modifiés.
 
-  ![Éditeur de fond d’écran](../../docs/images/wallpaper-editor.png)
+  ![Éditeur de fond d’écran](../../docs/images/wallpaper-editor.jpg)
 
 - **Moniteurs** — un fond d’écran par moniteur, un seul étiré sur tous ou cloné sur chacun, des groupes, des divisions et des profils, comme dans Wallpaper Engine.
 
@@ -37,13 +37,13 @@ Open Wallpaper Engine est un lecteur macOS gratuit et open source pour les fonds
 
   ![Envoyer par Wi-Fi](../../docs/images/send-over-wifi.png)
 
-- **Thèmes** — la barre des menus, la couleur d’accentuation et les dossiers teintés suivent les couleurs du fond d’écran.
+- **Thème de couleur** — la barre des menus, la couleur d’accentuation ainsi que les icônes et les dossiers teintés suivent la couleur du fond d’écran ; les fenêtres d’Open Wallpaper Engine peuvent utiliser la couleur exacte.
 
-  ![Thèmes](../../docs/images/theming.png)
+  ![Thème de couleur](../../docs/images/theming.png)
 
-- **Module Serveur MCP** — les clients MCP peuvent définir les fonds d’écran, les playlists et les réglages, et modifier les scènes, via une connexion locale que seul votre compte peut ouvrir.
+- **Plug-in Serveur MCP** — les clients MCP peuvent définir les fonds d’écran, les playlists et les réglages, et modifier les scènes, via une connexion locale que seul votre compte peut ouvrir.
 
-  ![Module Serveur MCP](../../docs/images/mcp-plugin.png)
+  ![Plug-in Serveur MCP](../../docs/images/mcp-plugin.png)
 
 Tout le reste, domaine par domaine : [docs/features.md](../../docs/features.md).
 
@@ -52,20 +52,20 @@ Tout le reste, domaine par domaine : [docs/features.md](../../docs/features.md).
 1. Téléchargez la dernière version sur [openwallpaperengine.app](https://openwallpaperengine.app/) ou sur [GitHub Releases](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases). Elle est signée et notariée, et se met à jour toute seule.
 2. Ouvrez le DMG et faites glisser **Open Wallpaper Engine** dans Applications.
 
-Il vous faut **macOS 14.0 (Sonoma) ou version ultérieure**. Certaines fonctionnalités nécessitent une version plus récente de macOS, une autorisation ou un module : voir [Prise en main](../../docs/getting-started.md#requirements).
+Il vous faut **macOS 14.0 (Sonoma) ou version ultérieure**. Certaines fonctionnalités nécessitent une version plus récente de macOS, une autorisation ou un plug-in : voir [Prise en main](../../docs/getting-started.md#requirements).
 
 ## Démarrage rapide
 
-1. Ouvrez l’app. L’assistant de configuration règle la langue, SteamCMD, votre connexion Steam et les ressources de Wallpaper Engine ; chaque étape peut être ignorée.
+1. Ouvrez l’app. L’assistant de configuration règle la langue, SteamCMD, votre connexion Steam et les ressources de Wallpaper Engine, et peut importer vos favoris Wallpaper Engine ; chaque étape peut être ignorée.
 2. Installez les ressources de Wallpaper Engine (*Réglages › Ressources*) si vous voulez des fonds d’écran de scène. Elles proviennent de votre propre exemplaire de Wallpaper Engine sur Steam ; les fonds d’écran vidéo et web fonctionnent sans elles.
-3. Trouvez des fonds d’écran dans l’onglet **Workshop**, ou importez un dossier ou un fichier zip de fond d’écran (*Fichier › Importer un fond d’écran depuis un dossier…*, ⌘I).
-4. Cliquez sur un fond d’écran dans la bibliothèque, puis sur **Définir le fond d’écran** dans ses détails. Ses propriétés sont listées en dessous.
+3. Trouvez des fonds d’écran dans les onglets **Découvrir** et **Workshop**, ou importez un dossier ou un fichier zip de fond d’écran (*Fichier › Importer un fond d’écran depuis un dossier…*, ⌘I).
+4. Cliquez sur un fond d’écran dans la bibliothèque, puis sur **Définir le fond d’écran** dans ses détails (ou cliquez dessus avec le bouton droit et choisissez **Définir comme fond d’écran**). Ses propriétés sont listées en dessous.
 
 Pour aller plus loin : [Prise en main](../../docs/getting-started.md) et le [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
 ## Confidentialité
 
-Tout ce que l’app enregistre reste sur votre Mac, et elle ne collecte aucune donnée ni statistique d’utilisation. Elle contacte Steam (pour le Workshop et les ressources) et GitHub (pour les mises à jour), et les modules ne sont téléchargés que lorsque vous les installez. Détails : [ce à quoi l’app se connecte](../../docs/getting-started.md#what-the-app-connects-to) et la [politique de confidentialité](../../docs/legal/privacy-policy.md).
+Tout ce que l’app enregistre reste sur votre Mac, et elle ne collecte aucune donnée ni statistique d’utilisation. Elle contacte Steam (pour le Workshop et les ressources), openwallpaperengine.app (pour rechercher les mises à jour) et GitHub (pour les télécharger), et les plug-ins ne sont téléchargés que lorsque vous les installez. Détails : [ce à quoi l’app se connecte](../../docs/getting-started.md#what-the-app-connects-to) et la [politique de confidentialité](../../docs/legal/privacy-policy.md).
 
 ## Documentation
 

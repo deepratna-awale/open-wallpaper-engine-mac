@@ -11,19 +11,19 @@ Open Wallpaper Engine to darmowy odtwarzacz open source dla macOS, który wyświ
 
 **Strona internetowa:** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki:** [poradniki i rozwiązywanie problemów](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-![Biblioteka](../../docs/images/library.png)
+![Biblioteka](../../docs/images/library.jpg)
 
 ## Najważniejsze funkcje
 
 - **Tapety typu scena, wideo i internetowe** — sceny są rysowane własnymi shaderami Wallpaper Engine każdej tapety, przetłumaczonymi na Metal, z efektami, cząsteczkami, modelami 3D, światłami, osiami czasu, SceneScript i wizualizacjami reagującymi na dźwięk. Tapety internetowe działają w WebKit lub w opcjonalnym silniku Chromium.
 - **Warsztat Steam** — przeglądaj, filtruj i pobieraj tapety z Warsztatu bezpośrednio w aplikacji albo importuj foldery i pliki zip z tapetami.
-- **Edycja/eksport sceny** — zmieniaj na żywo, na biurku, warstwy i efekty działającej tapety, nagraj z niej własny wygaszacz ekranu albo wyeksportuj ją jako ekran blokady Live Photo dla iPhone’a i iPada lub jako pakiet dla aplikacji Wallpaper Engine na Androida.
+- **Edycja/eksport sceny** — zmieniaj na żywo, na biurku, warstwy i efekty działającej tapety, ustaw ją jako wygaszacz ekranu albo wyeksportuj ją (sceny i wideo) jako ekran blokady Live Photo dla iPhone’a i iPada lub jako pakiet dla aplikacji Wallpaper Engine na Androida.
 
-  ![Edycja/eksport sceny](../../docs/images/scene-editor-live.png)
+  ![Edycja/eksport sceny](../../docs/images/scene-editor-live.jpg)
 
-- **Edytor tapet** — edytor wzorowany na edytorze Wallpaper Engine: warstwy, efekty z podglądem, oś czasu, SceneScript, właściwości użytkownika, cząsteczki i Puppet Warp. Twoje zmiany są zapisywane obok tapety, nigdy w jej plikach.
+- **Edytor tapet** — edytor wzorowany na edytorze Wallpaper Engine: warstwy, efekty z podglądem, oś czasu, SceneScript, właściwości użytkownika, cząsteczki, Puppet Warp i maski tworzone z mapy głębi. Edytujesz wersję roboczą: **Zachowaj** stosuje ją do tapety, **Zachowaj jako nową tapetę** dodaje kopię do biblioteki, a własne pliki tapety nigdy nie są zmieniane.
 
-  ![Edytor tapet](../../docs/images/wallpaper-editor.png)
+  ![Edytor tapet](../../docs/images/wallpaper-editor.jpg)
 
 - **Wyświetlacze** — osobna tapeta na każdym wyświetlaczu, jedna rozciągnięta na wszystkie lub sklonowana na każdy, grupy, podziały i profile, tak jak w Wallpaper Engine.
 
@@ -37,9 +37,9 @@ Open Wallpaper Engine to darmowy odtwarzacz open source dla macOS, który wyświ
 
   ![Wysyłanie przez Wi-Fi](../../docs/images/send-over-wifi.png)
 
-- **Motywy** — pasek menu, kolor akcentu i zabarwione foldery dopasowują się do kolorów tapety.
+- **Motyw kolorów** — pasek menu, kolor akcentu oraz zabarwione ikony i foldery dopasowują się do koloru tapety; własne okna Open Wallpaper Engine mogą używać dokładnie tego koloru.
 
-  ![Motywy](../../docs/images/theming.png)
+  ![Motyw kolorów](../../docs/images/theming.png)
 
 - **Wtyczka Serwer MCP** — klienty MCP mogą ustawiać tapety, playlisty i ustawienia oraz edytować sceny przez lokalne połączenie, które może otworzyć tylko Twoje konto.
 
@@ -56,16 +56,16 @@ Potrzebujesz **macOS 14.0 (Sonoma) lub nowszego**. Niektóre funkcje wymagają n
 
 ## Szybki start
 
-1. Otwórz aplikację. Asystent konfiguracji ustawia język, SteamCMD, logowanie do Steam i zasoby Wallpaper Engine; każdy krok można pominąć.
+1. Otwórz aplikację. Asystent konfiguracji ustawia język, SteamCMD, logowanie do Steam i zasoby Wallpaper Engine, a także może zaimportować Twoje ulubione z Wallpaper Engine; każdy krok można pominąć.
 2. Zainstaluj zasoby Wallpaper Engine (*Ustawienia › Zasoby*), jeśli chcesz korzystać z tapet typu scena. Pochodzą one z Twojej własnej kopii Wallpaper Engine w Steam; tapety wideo i internetowe działają bez nich.
-3. Znajdź tapety na karcie **Warsztat** albo zaimportuj folder lub plik zip z tapetą (*Plik › Importuj tapetę z folderu…*, ⌘I).
-4. Kliknij tapetę w bibliotece, a następnie **Ustaw tapetę** w jej szczegółach. Jej właściwości są wymienione poniżej.
+3. Znajdź tapety na kartach **Odkryj** i **Warsztat** albo zaimportuj folder lub plik zip z tapetą (*Plik › Importuj tapetę z folderu…*, ⌘I).
+4. Kliknij tapetę w bibliotece, a następnie **Ustaw tapetę** w jej szczegółach (albo kliknij ją prawym przyciskiem i wybierz **Ustaw jako tapetę**). Jej właściwości są wymienione poniżej.
 
 Więcej: [Pierwsze kroki](../../docs/getting-started.md) i [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
 ## Prywatność
 
-Wszystko, co zapisuje aplikacja, zostaje na Twoim Macu, a ona sama nie zbiera żadnych danych ani statystyk. Łączy się ze Steam (w celu obsługi Warsztatu i zasobów) i z GitHubem (w celu aktualizacji), a wtyczki są pobierane dopiero wtedy, gdy je zainstalujesz. Szczegóły: [z czym łączy się aplikacja](../../docs/getting-started.md#what-the-app-connects-to) oraz [polityka prywatności](../../docs/legal/privacy-policy.md).
+Wszystko, co zapisuje aplikacja, zostaje na Twoim Macu, a ona sama nie zbiera żadnych danych ani statystyk. Łączy się ze Steam (w celu obsługi Warsztatu i zasobów), z openwallpaperengine.app (aby sprawdzać aktualizacje) i z GitHubem (aby je pobierać), a wtyczki są pobierane dopiero wtedy, gdy je zainstalujesz. Szczegóły: [z czym łączy się aplikacja](../../docs/getting-started.md#what-the-app-connects-to) oraz [polityka prywatności](../../docs/legal/privacy-policy.md).
 
 ## Dokumentacja
 

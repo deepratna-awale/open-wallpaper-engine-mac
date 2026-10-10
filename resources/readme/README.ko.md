@@ -11,19 +11,19 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 
 **웹사이트:** [openwallpaperengine.app](https://openwallpaperengine.app/) · **위키:** [가이드 및 문제 해결](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-![보관함](../../docs/images/library.png)
+![보관함](../../docs/images/library.jpg)
 
 ## 주요 기능
 
 - **장면, 동영상, 웹 배경화면** — 장면은 각 배경화면에 포함된 Wallpaper Engine 셰이더를 Metal로 변환해 그리며, 효과, 파티클, 3D 모델, 조명, 타임라인, SceneScript, 오디오 반응형 비주얼을 지원합니다. 웹 배경화면은 WebKit 또는 선택 사항인 Chromium 엔진에서 실행됩니다.
 - **Steam 창작마당** — 앱 안에서 창작마당을 둘러보고, 필터링하고, 다운로드하거나 배경화면 폴더와 zip 파일을 가져올 수 있습니다.
-- **장면 편집/내보내기** — 실행 중인 배경화면의 레이어와 효과를 데스크탑에서 실시간으로 바꾸고, 이를 녹화해 나만의 화면 보호기를 만들거나, iPhone 및 iPad용 Live Photo 잠금 화면 또는 Wallpaper Engine Android 앱용 패키지로 내보낼 수 있습니다.
+- **장면 편집/내보내기** — 실행 중인 배경화면의 레이어와 효과를 데스크탑에서 실시간으로 바꾸고, 화면 보호기로 사용하거나, (장면과 동영상을) iPhone 및 iPad용 Live Photo 잠금 화면 또는 Wallpaper Engine Android 앱용 패키지로 내보낼 수 있습니다.
 
-  ![장면 편집/내보내기](../../docs/images/scene-editor-live.png)
+  ![장면 편집/내보내기](../../docs/images/scene-editor-live.jpg)
 
-- **배경화면 편집기** — Wallpaper Engine 편집기를 본뜬 편집기입니다. 레이어, 미리보기가 있는 효과, 타임라인, SceneScript, 사용자 속성, 파티클, Puppet Warp를 다룰 수 있습니다. 편집 내용은 배경화면 파일이 아니라 배경화면 옆에 따로 저장됩니다.
+- **배경화면 편집기** — Wallpaper Engine 편집기를 본뜬 편집기입니다. 레이어, 미리보기가 있는 효과, 타임라인, SceneScript, 사용자 속성, 파티클, Puppet Warp, 깊이 맵으로 만든 마스크를 다룰 수 있습니다. 편집은 초안에서 이루어지며, **저장**하면 배경화면에 적용되고 **새 배경화면으로 저장**하면 보관함에 사본이 추가됩니다. 배경화면 자체의 파일은 절대 변경되지 않습니다.
 
-  ![배경화면 편집기](../../docs/images/wallpaper-editor.png)
+  ![배경화면 편집기](../../docs/images/wallpaper-editor.jpg)
 
 - **디스플레이** — Wallpaper Engine처럼 디스플레이마다 다른 배경화면, 여러 디스플레이에 걸쳐 늘리거나 각 디스플레이에 복제한 배경화면, 그룹, 분할, 프로필을 지원합니다.
 
@@ -37,7 +37,7 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 
   ![Wi-Fi로 보내기](../../docs/images/send-over-wifi.png)
 
-- **테마** — 메뉴 막대, 강조 색상, 색이 입혀진 폴더가 배경화면의 색상을 따라갑니다.
+- **테마** — 메뉴 막대, 강조 색상, 색이 입혀진 아이콘과 폴더가 배경화면의 색상을 따라갑니다. Open Wallpaper Engine 자체의 윈도우에는 배경화면의 정확한 색상을 사용할 수 있습니다.
 
   ![테마](../../docs/images/theming.png)
 
@@ -56,16 +56,16 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 
 ## 빠른 시작
 
-1. 앱을 엽니다. 설정 도우미에서 언어, SteamCMD, Steam 로그인, Wallpaper Engine 에셋을 설정합니다. 모든 단계는 건너뛸 수 있습니다.
+1. 앱을 엽니다. 설정 도우미에서 언어, SteamCMD, Steam 로그인, Wallpaper Engine 에셋을 설정하고 Wallpaper Engine 즐겨찾기를 가져올 수도 있습니다. 모든 단계는 건너뛸 수 있습니다.
 2. 장면 배경화면을 사용하려면 Wallpaper Engine 에셋을 설치합니다(*설정 › 에셋*). 에셋은 사용자가 Steam에서 보유한 Wallpaper Engine에서 가져오며, 동영상 및 웹 배경화면은 에셋 없이도 작동합니다.
-3. **창작마당** 탭에서 배경화면을 찾거나, 배경화면 폴더 또는 zip 파일을 가져옵니다(*파일 › 폴더에서 배경화면 가져오기…*, ⌘I).
-4. 보관함에서 배경화면을 클릭한 다음, 세부사항에서 **배경화면 설정**을 클릭합니다. 그 아래에 배경화면의 속성이 표시됩니다.
+3. **발견** 및 **창작마당** 탭에서 배경화면을 찾거나, 배경화면 폴더 또는 zip 파일을 가져옵니다(*파일 › 폴더에서 배경화면 가져오기…*, ⌘I).
+4. 보관함에서 배경화면을 클릭한 다음, 세부사항에서 **배경화면 설정**을 클릭합니다(또는 배경화면을 오른쪽 클릭하고 **배경화면으로 설정**을 선택합니다). 그 아래에 배경화면의 속성이 표시됩니다.
 
 자세한 내용: [시작하기](../../docs/getting-started.md) 및 [위키](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
 ## 개인정보 보호
 
-앱이 저장하는 모든 것은 사용자의 Mac에 남으며, 어떤 데이터나 분석 정보도 수집하지 않습니다. 앱은 Steam(창작마당 및 에셋용)과 GitHub(업데이트용)에 연결하며, 플러그인은 사용자가 설치할 때만 다운로드됩니다. 자세한 내용: [앱이 연결하는 대상](../../docs/getting-started.md#what-the-app-connects-to) 및 [개인정보 처리방침](../../docs/legal/privacy-policy.md).
+앱이 저장하는 모든 것은 사용자의 Mac에 남으며, 어떤 데이터나 분석 정보도 수집하지 않습니다. 앱은 Steam(창작마당 및 에셋용), openwallpaperengine.app(업데이트 확인용), GitHub(업데이트 다운로드용)에 연결하며, 플러그인은 사용자가 설치할 때만 다운로드됩니다. 자세한 내용: [앱이 연결하는 대상](../../docs/getting-started.md#what-the-app-connects-to) 및 [개인정보 처리방침](../../docs/legal/privacy-policy.md).
 
 ## 문서
 

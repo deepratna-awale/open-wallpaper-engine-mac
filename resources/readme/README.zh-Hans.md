@@ -11,19 +11,19 @@ Open Wallpaper Engine 是一款免费、开源的 macOS 播放器，可播放 Wa
 
 **网站：** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki：** [指南与疑难解答](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
-![资源库](../../docs/images/library.png)
+![资源库](../../docs/images/library.jpg)
 
 ## 亮点
 
 - **场景、视频和网页墙纸** — 场景使用每张墙纸自己的 Wallpaper Engine 着色器绘制（翻译为 Metal），支持特效、粒子、3D 模型、光源、时间线、SceneScript 和音频响应视觉效果。网页墙纸在 WebKit 或可选的 Chromium 引擎中运行。
 - **Steam 创意工坊** — 在 App 内浏览、筛选和下载创意工坊内容，或导入墙纸文件夹和 zip 文件。
-- **场景编辑/导出** — 直接在桌面上实时修改正在运行的墙纸的图层和效果，用它录制你自己的屏幕保护程序，或将其导出为 iPhone 和 iPad 的实况照片锁定屏幕，或 Android 版 Wallpaper Engine 的墙纸包。
+- **场景编辑/导出** — 直接在桌面上实时修改正在运行的墙纸的图层和效果，将它设为你的屏幕保护程序，或将其（场景和视频）导出为 iPhone 和 iPad 的实况照片锁定屏幕，或 Android 版 Wallpaper Engine 的墙纸包。
 
-  ![场景编辑/导出](../../docs/images/scene-editor-live.png)
+  ![场景编辑/导出](../../docs/images/scene-editor-live.jpg)
 
-- **墙纸编辑器** — 一款秉承 Wallpaper Engine 编辑器理念的编辑器：图层、带预览的效果、时间线、SceneScript、用户属性、粒子和 Puppet Warp。你的编辑保存在墙纸旁边，绝不会写入墙纸本身的文件。
+- **墙纸编辑器** — 一款秉承 Wallpaper Engine 编辑器理念的编辑器：图层、带预览的效果、时间线、SceneScript、用户属性、粒子、Puppet Warp 以及由深度图生成的遮罩。你编辑的是一份草稿：**保存** 会将其应用到墙纸，**保存为新墙纸** 会在资源库中添加一份副本，墙纸本身的文件绝不会被更改。
 
-  ![墙纸编辑器](../../docs/images/wallpaper-editor.png)
+  ![墙纸编辑器](../../docs/images/wallpaper-editor.jpg)
 
 - **显示器** — 与 Wallpaper Engine 一样：每台显示器一张墙纸、一张墙纸横跨所有显示器或在每台显示器上克隆，并支持分组、分割和配置文件。
 
@@ -37,9 +37,9 @@ Open Wallpaper Engine 是一款免费、开源的 macOS 播放器，可播放 Wa
 
   ![通过 Wi-Fi 发送](../../docs/images/send-over-wifi.png)
 
-- **主题** — 菜单栏、强调色和着色文件夹会跟随墙纸的颜色变化。
+- **主题颜色** — 菜单栏、强调色以及着色的图标和文件夹会跟随墙纸的颜色变化；Open Wallpaper Engine 自己的窗口可以使用墙纸的准确颜色。
 
-  ![主题](../../docs/images/theming.png)
+  ![主题颜色](../../docs/images/theming.png)
 
 - **MCP 服务器插件** — MCP 客户端可以设定墙纸、播放列表和设置，并编辑场景；连接仅限本地，且只有你的账户可以打开。
 
@@ -56,16 +56,16 @@ Open Wallpaper Engine 是一款免费、开源的 macOS 播放器，可播放 Wa
 
 ## 快速入门
 
-1. 打开 App。设置助理会设置语言、SteamCMD、你的 Steam 登录和 Wallpaper Engine 素材；每一步都可以跳过。
+1. 打开 App。设置助理会设置语言、SteamCMD、你的 Steam 登录和 Wallpaper Engine 素材，还可以导入你的 Wallpaper Engine 个人收藏；每一步都可以跳过。
 2. 如果想使用场景墙纸，请安装 Wallpaper Engine 素材（*设置 › 资源*）。这些素材来自你在 Steam 上自己的 Wallpaper Engine 副本；视频和网页墙纸无需它们即可使用。
-3. 在 **创意工坊** 标签页中查找墙纸，或导入墙纸文件夹或 zip 文件（*文件 › 从文件夹导入墙纸…*，⌘I）。
-4. 在资源库中点按一张墙纸，然后在其详细信息中点按 **设定墙纸**。它的属性列在下方。
+3. 在 **发现** 和 **创意工坊** 标签页中查找墙纸，或导入墙纸文件夹或 zip 文件（*文件 › 从文件夹导入墙纸…*，⌘I）。
+4. 在资源库中点按一张墙纸，然后在其详细信息中点按 **设定墙纸**（或者右键点按它并选择 **设为墙纸**）。它的属性列在下方。
 
 更多内容：[入门指南](../../docs/getting-started.md)和 [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)。
 
 ## 隐私
 
-App 保存的所有内容都留在你的 Mac 上，它不收集任何数据或分析信息。它会连接 Steam（用于创意工坊和素材）和 GitHub（用于更新），插件只会在你安装时下载。详情：[App 会连接哪些服务](../../docs/getting-started.md#what-the-app-connects-to)以及[隐私政策](../../docs/legal/privacy-policy.md)。
+App 保存的所有内容都留在你的 Mac 上，它不收集任何数据或分析信息。它会连接 Steam（用于创意工坊和素材）、openwallpaperengine.app（用于检查更新）和 GitHub（用于下载更新），插件只会在你安装时下载。详情：[App 会连接哪些服务](../../docs/getting-started.md#what-the-app-connects-to)以及[隐私政策](../../docs/legal/privacy-policy.md)。
 
 ## 文档
 
