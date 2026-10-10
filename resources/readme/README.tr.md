@@ -17,11 +17,11 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 
 - **Sahne, video ve web duvar kâğıtları** — sahneler, her duvar kâğıdının Metal’e çevrilmiş kendi Wallpaper Engine gölgelendiricileriyle çizilir; efektler, parçacıklar, 3B modeller, ışıklar, zaman çizelgeleri, SceneScript ve sese duyarlı görseller desteklenir. Web duvar kâğıtları WebKit’te veya isteğe bağlı Chromium motorunda çalışır.
 - **Steam Atölyesi** — Atölye’ye uygulamanın içinden göz atın, filtreleyin ve indirin ya da duvar kâğıdı klasörlerini ve zip dosyalarını içe aktarın.
-- **Sahne Düzenle/Dışa Aktar** — çalışan duvar kâğıdının katmanlarını ve efektlerini doğrudan masaüstünde canlı olarak değiştirin, ondan kendi ekran koruyucunuzu kaydedin ya da onu iPhone ve iPad için Live Photo kilit ekranı veya Wallpaper Engine’in Android uygulaması için bir paket olarak dışa aktarın.
+- **Sahne Düzenle/Dışa Aktar** — çalışan duvar kâğıdının katmanlarını ve efektlerini doğrudan masaüstünde canlı olarak değiştirin, onu ekran koruyucunuz yapın ya da onu (sahneler ve videolar) iPhone ve iPad için Live Photo kilit ekranı veya Wallpaper Engine’in Android uygulaması için bir paket olarak dışa aktarın.
 
   ![Sahne Düzenle/Dışa Aktar](../../docs/images/scene-editor-live.png)
 
-- **Duvar Kâğıdı Düzenleyici** — Wallpaper Engine’in düzenleyicisinin ruhunu taşıyan bir düzenleyici: katmanlar, önizlemeli efektler, zaman çizelgesi, SceneScript, kullanıcı özellikleri, parçacıklar ve Puppet Warp. Düzenlemeleriniz duvar kâğıdının yanında saklanır, hiçbir zaman onun dosyalarına yazılmaz.
+- **Duvar Kâğıdı Düzenleyici** — Wallpaper Engine’in düzenleyicisinin ruhunu taşıyan bir düzenleyici: katmanlar, önizlemeli efektler, zaman çizelgesi, SceneScript, kullanıcı özellikleri, parçacıklar, Puppet Warp ve derinlik haritasından oluşturulan maskeler. Bir taslağı düzenlersiniz: **Kaydet** taslağı duvar kâğıdına uygular, **Yeni Duvar Kâğıdı Olarak Kaydet** kitaplığa bir kopya ekler; duvar kâğıdının kendi dosyaları hiçbir zaman değiştirilmez.
 
   ![Duvar Kâğıdı Düzenleyici](../../docs/images/wallpaper-editor.png)
 
@@ -37,9 +37,9 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 
   ![Wi-Fi üzerinden gönder](../../docs/images/send-over-wifi.png)
 
-- **Temalar** — menü çubuğu, vurgu rengi ve renklendirilmiş klasörler duvar kâğıdının renklerine uyar.
+- **Renk Teması** — menü çubuğu, vurgu rengi ve renklendirilmiş simgeler ile klasörler duvar kâğıdının rengine uyar; Open Wallpaper Engine’in kendi pencereleri tam rengi kullanabilir.
 
-  ![Temalar](../../docs/images/theming.png)
+  ![Renk Teması](../../docs/images/theming.png)
 
 - **MCP Sunucusu eklentisi** — MCP istemcileri duvar kâğıtlarını, çalma listelerini ve ayarları belirleyebilir ve sahneleri düzenleyebilir; bunu yalnızca sizin hesabınızın açabildiği yerel bir bağlantı üzerinden yapar.
 
@@ -56,16 +56,16 @@ Geri kalan her şey, alan alan: [docs/features.md](../../docs/features.md).
 
 ## Hızlı Başlangıç
 
-1. Uygulamayı açın. Kurulum yardımcısı dili, SteamCMD’yi, Steam oturumunuzu ve Wallpaper Engine varlıklarını ayarlar; her adım atlanabilir.
+1. Uygulamayı açın. Kurulum yardımcısı dili, SteamCMD’yi, Steam oturumunuzu ve Wallpaper Engine varlıklarını ayarlar ve Wallpaper Engine favorilerinizi içe aktarabilir; her adım atlanabilir.
 2. Sahne duvar kâğıtlarını kullanmak istiyorsanız Wallpaper Engine varlıklarını yükleyin (*Ayarlar › Varlıklar*). Bunlar Steam’deki kendi Wallpaper Engine kopyanızdan gelir; video ve web duvar kâğıtları bunlar olmadan da çalışır.
-3. **Atölye** sekmesinde duvar kâğıdı bulun ya da bir duvar kâğıdı klasörünü veya zip dosyasını içe aktarın (*Dosya › Klasörden Duvar Kâğıdı İçe Aktar…*, ⌘I).
-4. Kitaplıkta bir duvar kâğıdına tıklayın, ardından ayrıntılarında **Duvar Kâğıdı Yap**’a tıklayın. Özellikleri hemen altında listelenir.
+3. **Keşfet** ve **Atölye** sekmelerinde duvar kâğıdı bulun ya da bir duvar kâğıdı klasörünü veya zip dosyasını içe aktarın (*Dosya › Klasörden Duvar Kâğıdı İçe Aktar…*, ⌘I).
+4. Kitaplıkta bir duvar kâğıdına tıklayın, ardından ayrıntılarında **Duvar Kâğıdı Yap**’a tıklayın (ya da duvar kâğıdına sağ tıklayıp **Duvar Kâğıdı Yap**’ı seçin). Özellikleri hemen altında listelenir.
 
 Daha fazlası: [Başlarken](../../docs/getting-started.md) ve [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
 ## Gizlilik
 
-Uygulamanın kaydettiği her şey Mac’inizde kalır; uygulama hiçbir veri ya analiz toplamaz. Steam (Atölye ve varlıklar için) ve GitHub (güncellemeler için) ile iletişim kurar; eklentiler yalnızca siz yüklediğinizde indirilir. Ayrıntılar: [uygulamanın bağlandığı yerler](../../docs/getting-started.md#what-the-app-connects-to) ve [Gizlilik Politikası](../../docs/legal/privacy-policy.md).
+Uygulamanın kaydettiği her şey Mac’inizde kalır; uygulama hiçbir veri ya analiz toplamaz. Steam (Atölye ve varlıklar için), openwallpaperengine.app (güncellemeleri denetlemek için) ve GitHub (güncellemeleri indirmek için) ile iletişim kurar; eklentiler yalnızca siz yüklediğinizde indirilir. Ayrıntılar: [uygulamanın bağlandığı yerler](../../docs/getting-started.md#what-the-app-connects-to) ve [Gizlilik Politikası](../../docs/legal/privacy-policy.md).
 
 ## Belgeler
 

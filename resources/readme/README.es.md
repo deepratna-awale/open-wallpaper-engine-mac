@@ -17,11 +17,11 @@ Open Wallpaper Engine es un reproductor gratuito y de código abierto para macOS
 
 - **Fondos de pantalla de escena, de vídeo y web**: las escenas se dibujan con los propios sombreadores de Wallpaper Engine de cada fondo, traducidos a Metal, con efectos, partículas, modelos 3D, luces, líneas de tiempo, SceneScript y visuales que reaccionan al audio. Los fondos web se ejecutan en WebKit o en el motor Chromium opcional.
 - **Steam Workshop**: explora, filtra y descarga fondos del Workshop sin salir de la app, o importa carpetas y archivos zip de fondos de pantalla.
-- **Editar/exportar escena**: cambia en vivo en el escritorio las capas y los efectos del fondo que se está reproduciendo, graba con él tu propio salvapantallas o expórtalo como pantalla de bloqueo Live Photo para iPhone y iPad o como paquete para la app de Android de Wallpaper Engine.
+- **Editar/exportar escena**: cambia en vivo en el escritorio las capas y los efectos del fondo que se está reproduciendo, conviértelo en tu salvapantallas o expórtalo (escenas y vídeos) como pantalla de bloqueo Live Photo para iPhone y iPad o como paquete para la app de Android de Wallpaper Engine.
 
   ![Editar/exportar escena](../../docs/images/scene-editor-live.png)
 
-- **Editor de fondos de pantalla**: un editor al estilo del de Wallpaper Engine, con capas, efectos con vista previa, línea de tiempo, SceneScript, propiedades de usuario, partículas y Puppet Warp. Tus cambios se guardan junto al fondo de pantalla, nunca en sus archivos.
+- **Editor de fondos de pantalla**: un editor al estilo del de Wallpaper Engine, con capas, efectos con vista previa, línea de tiempo, SceneScript, propiedades de usuario, partículas, Puppet Warp y máscaras creadas a partir de un mapa de profundidad. Editas un borrador: **Guardar** lo aplica al fondo de pantalla, **Guardar como nuevo fondo de pantalla** añade una copia a la biblioteca, y los archivos del propio fondo de pantalla nunca se modifican.
 
   ![Editor de fondos de pantalla](../../docs/images/wallpaper-editor.png)
 
@@ -37,13 +37,13 @@ Open Wallpaper Engine es un reproductor gratuito y de código abierto para macOS
 
   ![Enviar por Wi-Fi](../../docs/images/send-over-wifi.png)
 
-- **Temas**: la barra de menús, el color de acento y las carpetas teñidas siguen los colores del fondo de pantalla.
+- **Temas de color**: la barra de menús, el color de acento y los iconos y carpetas teñidos siguen el color del fondo de pantalla; las propias ventanas de Open Wallpaper Engine pueden usar el color exacto.
 
-  ![Temas](../../docs/images/theming.png)
+  ![Temas de color](../../docs/images/theming.png)
 
-- **Plugin Servidor MCP**: los clientes MCP pueden establecer fondos de pantalla, playlists y ajustes, y editar escenas, a través de una conexión local que solo tu cuenta puede abrir.
+- **Complemento Servidor MCP**: los clientes MCP pueden establecer fondos de pantalla, playlists y ajustes, y editar escenas, a través de una conexión local que solo tu cuenta puede abrir.
 
-  ![Plugin Servidor MCP](../../docs/images/mcp-plugin.png)
+  ![Complemento Servidor MCP](../../docs/images/mcp-plugin.png)
 
 Todo lo demás, área por área: [docs/features.md](../../docs/features.md).
 
@@ -52,20 +52,20 @@ Todo lo demás, área por área: [docs/features.md](../../docs/features.md).
 1. Descarga la última versión desde [openwallpaperengine.app](https://openwallpaperengine.app/) o [GitHub Releases](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases). Está firmada y notarizada, y se actualiza sola.
 2. Abre el DMG y arrastra **Open Wallpaper Engine** a Aplicaciones.
 
-Necesitas **macOS 14.0 (Sonoma) o posterior**. Algunas funciones requieren una versión más reciente de macOS, un permiso o un plugin: consulta [Primeros pasos](../../docs/getting-started.md#requirements).
+Necesitas **macOS 14.0 (Sonoma) o posterior**. Algunas funciones requieren una versión más reciente de macOS, un permiso o un complemento: consulta [Primeros pasos](../../docs/getting-started.md#requirements).
 
 ## Inicio rápido
 
-1. Abre la app. El asistente de configuración establece el idioma, SteamCMD, tu inicio de sesión de Steam y los recursos de Wallpaper Engine; todos los pasos se pueden omitir.
+1. Abre la app. El asistente de configuración establece el idioma, SteamCMD, tu inicio de sesión de Steam y los recursos de Wallpaper Engine, y puede importar tus favoritos de Wallpaper Engine; todos los pasos se pueden omitir.
 2. Instala los recursos de Wallpaper Engine (*Ajustes › Recursos*) si quieres fondos de pantalla de escena. Proceden de tu propia copia de Wallpaper Engine en Steam; los fondos de vídeo y web funcionan sin ellos.
-3. Busca fondos de pantalla en la pestaña **Workshop**, o importa una carpeta o un archivo zip de fondo de pantalla (*Archivo › Importar fondo de pantalla desde carpeta…*, ⌘I).
-4. Haz clic en un fondo de pantalla de la biblioteca y luego en **Establecer fondo de pantalla** en sus detalles. Sus propiedades aparecen debajo.
+3. Busca fondos de pantalla en las pestañas **Descubrir** y **Workshop**, o importa una carpeta o un archivo zip de fondo de pantalla (*Archivo › Importar fondo de pantalla desde carpeta…*, ⌘I).
+4. Haz clic en un fondo de pantalla de la biblioteca y luego en **Establecer fondo de pantalla** en sus detalles (o haz clic en él con el botón derecho y elige **Usar como fondo de pantalla**). Sus propiedades aparecen debajo.
 
 Más información: [Primeros pasos](../../docs/getting-started.md) y la [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
 ## Privacidad
 
-Todo lo que guarda la app se queda en tu Mac, y no recopila datos ni analíticas. Se conecta a Steam (para el Workshop y los recursos) y a GitHub (para las actualizaciones), y los plugins solo se descargan cuando los instalas. Detalles: [a qué se conecta la app](../../docs/getting-started.md#what-the-app-connects-to) y la [política de privacidad](../../docs/legal/privacy-policy.md).
+Todo lo que guarda la app se queda en tu Mac, y no recopila datos ni analíticas. Se conecta a Steam (para el Workshop y los recursos), a openwallpaperengine.app (para buscar actualizaciones) y a GitHub (para descargarlas), y los complementos solo se descargan cuando los instalas. Detalles: [a qué se conecta la app](../../docs/getting-started.md#what-the-app-connects-to) y la [política de privacidad](../../docs/legal/privacy-policy.md).
 
 ## Documentación
 

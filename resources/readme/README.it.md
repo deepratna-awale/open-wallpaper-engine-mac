@@ -17,11 +17,11 @@ Open Wallpaper Engine è un player gratuito e open source per macOS che riproduc
 
 - **Sfondi scena, video e web** — le scene vengono disegnate con gli shader di Wallpaper Engine propri di ciascuno sfondo, tradotti in Metal, con effetti, particelle, modelli 3D, luci, timeline, SceneScript ed elementi visivi reattivi all’audio. Gli sfondi web girano in WebKit o nel motore Chromium opzionale.
 - **Steam Workshop** — sfoglia, filtra e scarica dal Workshop direttamente nell’app, oppure importa cartelle e file zip di sfondi.
-- **Modifica/esporta scena** — modifica dal vivo sulla scrivania i livelli e gli effetti dello sfondo in esecuzione, registra con esso il tuo salvaschermo o esportalo come schermata di blocco Live Photo per iPhone e iPad o come pacchetto per l’app Android di Wallpaper Engine.
+- **Modifica/esporta scena** — modifica dal vivo sulla scrivania i livelli e gli effetti dello sfondo in esecuzione, rendilo il tuo salvaschermo o esportalo (scene e video) come schermata di blocco Live Photo per iPhone e iPad o come pacchetto per l’app Android di Wallpaper Engine.
 
   ![Modifica/esporta scena](../../docs/images/scene-editor-live.png)
 
-- **Editor sfondi** — un editor sul modello di quello di Wallpaper Engine: livelli, effetti con anteprime, timeline, SceneScript, proprietà utente, particelle e Puppet Warp. Le tue modifiche vengono salvate accanto allo sfondo, mai nei suoi file.
+- **Editor sfondi** — un editor sul modello di quello di Wallpaper Engine: livelli, effetti con anteprime, timeline, SceneScript, proprietà utente, particelle, Puppet Warp e maschere create da una mappa di profondità. Modifichi una bozza: **Salva** la applica allo sfondo, **Salva come nuovo sfondo** ne aggiunge una copia alla libreria, e i file dello sfondo stesso non vengono mai modificati.
 
   ![Editor sfondi](../../docs/images/wallpaper-editor.png)
 
@@ -37,13 +37,13 @@ Open Wallpaper Engine è un player gratuito e open source per macOS che riproduc
 
   ![Invia via Wi-Fi](../../docs/images/send-over-wifi.png)
 
-- **Temi** — la barra dei menu, il colore di evidenziazione e le cartelle colorate seguono i colori dello sfondo.
+- **Tema colore** — la barra dei menu, il colore di evidenziazione e le icone e le cartelle colorate seguono il colore dello sfondo; le finestre di Open Wallpaper Engine possono usare il colore esatto.
 
-  ![Temi](../../docs/images/theming.png)
+  ![Tema colore](../../docs/images/theming.png)
 
-- **Plugin Server MCP** — i client MCP possono impostare sfondi, playlist e impostazioni e modificare le scene tramite una connessione locale che solo il tuo account può aprire.
+- **Plug-in Server MCP** — i client MCP possono impostare sfondi, playlist e impostazioni e modificare le scene tramite una connessione locale che solo il tuo account può aprire.
 
-  ![Plugin Server MCP](../../docs/images/mcp-plugin.png)
+  ![Plug-in Server MCP](../../docs/images/mcp-plugin.png)
 
 Tutto il resto, area per area: [docs/features.md](../../docs/features.md).
 
@@ -52,20 +52,20 @@ Tutto il resto, area per area: [docs/features.md](../../docs/features.md).
 1. Scarica l’ultima versione da [openwallpaperengine.app](https://openwallpaperengine.app/) o da [GitHub Releases](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases). È firmata e autenticata da Apple, e si aggiorna da sola.
 2. Apri il DMG e trascina **Open Wallpaper Engine** in Applicazioni.
 
-Serve **macOS 14.0 (Sonoma) o successivo**. Alcune funzionalità richiedono una versione di macOS più recente, un permesso o un plugin: vedi [Per iniziare](../../docs/getting-started.md#requirements).
+Serve **macOS 14.0 (Sonoma) o successivo**. Alcune funzionalità richiedono una versione di macOS più recente, un permesso o un plug-in: vedi [Per iniziare](../../docs/getting-started.md#requirements).
 
 ## Avvio rapido
 
-1. Apri l’app. L’assistente di configurazione imposta la lingua, SteamCMD, l’accesso a Steam e le risorse di Wallpaper Engine; ogni passaggio si può saltare.
+1. Apri l’app. L’assistente di configurazione imposta la lingua, SteamCMD, l’accesso a Steam e le risorse di Wallpaper Engine, e può importare i tuoi preferiti di Wallpaper Engine; ogni passaggio si può saltare.
 2. Installa le risorse di Wallpaper Engine (*Impostazioni › Risorse*) se vuoi gli sfondi di tipo scena. Provengono dalla tua copia di Wallpaper Engine su Steam; gli sfondi video e web funzionano anche senza.
-3. Trova sfondi nella scheda **Workshop**, oppure importa una cartella o un file zip di uno sfondo (*File › Importa sfondo da cartella…*, ⌘I).
-4. Fai clic su uno sfondo nella libreria, poi su **Imposta sfondo** nei suoi dettagli. Le sue proprietà sono elencate subito sotto.
+3. Trova sfondi nelle schede **Esplora** e **Workshop**, oppure importa una cartella o un file zip di uno sfondo (*File › Importa sfondo da cartella…*, ⌘I).
+4. Fai clic su uno sfondo nella libreria, poi su **Imposta sfondo** nei suoi dettagli (oppure fai clic su di esso con il tasto destro e scegli **Imposta come sfondo**). Le sue proprietà sono elencate subito sotto.
 
 Altro: [Per iniziare](../../docs/getting-started.md) e il [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
 ## Privacy
 
-Tutto ciò che l’app salva resta sul tuo Mac, e non raccoglie dati né statistiche. Contatta Steam (per il Workshop e le risorse) e GitHub (per gli aggiornamenti), e i plugin vengono scaricati solo quando li installi. Dettagli: [a cosa si connette l’app](../../docs/getting-started.md#what-the-app-connects-to) e l’[informativa sulla privacy](../../docs/legal/privacy-policy.md).
+Tutto ciò che l’app salva resta sul tuo Mac, e non raccoglie dati né statistiche. Contatta Steam (per il Workshop e le risorse), openwallpaperengine.app (per cercare gli aggiornamenti) e GitHub (per scaricarli), e i plug-in vengono scaricati solo quando li installi. Dettagli: [a cosa si connette l’app](../../docs/getting-started.md#what-the-app-connects-to) e l’[informativa sulla privacy](../../docs/legal/privacy-policy.md).
 
 ## Documentazione
 

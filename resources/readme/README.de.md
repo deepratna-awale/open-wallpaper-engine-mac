@@ -17,11 +17,11 @@ Open Wallpaper Engine ist ein kostenloser Open-Source-Player für macOS, der Wal
 
 - **Szenen-, Video- und Web-Hintergrundbilder** – Szenen werden mit den eigenen Wallpaper-Engine-Shadern des jeweiligen Hintergrundbilds gezeichnet, nach Metal übersetzt, mit Effekten, Partikeln, 3D-Modellen, Lichtern, Zeitleisten, SceneScript und audioreaktiven Visuals. Web-Hintergrundbilder laufen in WebKit oder in der optionalen Chromium-Engine.
 - **Steam Workshop** – Hintergrundbilder direkt in der App im Workshop durchsuchen, filtern und laden oder Hintergrundbildordner und Zip-Dateien importieren.
-- **Szene bearbeiten/exportieren** – Ebenen und Effekte des laufenden Hintergrundbilds live auf dem Schreibtisch ändern, daraus einen eigenen Bildschirmschoner aufnehmen oder es als Live-Photo-Sperrbildschirm für iPhone und iPad oder als Paket für die Android-App von Wallpaper Engine exportieren.
+- **Szene bearbeiten/exportieren** – Ebenen und Effekte des laufenden Hintergrundbilds live auf dem Schreibtisch ändern, es zu deinem Bildschirmschoner machen oder es (Szenen und Videos) als Live-Photo-Sperrbildschirm für iPhone und iPad oder als Paket für die Android-App von Wallpaper Engine exportieren.
 
   ![Szene bearbeiten/exportieren](../../docs/images/scene-editor-live.png)
 
-- **Hintergrundbild-Editor** – ein Editor nach dem Vorbild von Wallpaper Engine: Ebenen, Effekte mit Vorschauen, eine Zeitleiste, SceneScript, Benutzereigenschaften, Partikel und Puppet Warp. Deine Änderungen werden neben dem Hintergrundbild gespeichert, nie in seinen Dateien.
+- **Hintergrundbild-Editor** – ein Editor nach dem Vorbild von Wallpaper Engine: Ebenen, Effekte mit Vorschauen, eine Zeitleiste, SceneScript, Benutzereigenschaften, Partikel, Puppet Warp und Masken aus einer Tiefenkarte. Du bearbeitest einen Entwurf: **Sichern** übernimmt ihn in das Hintergrundbild, **Als neues Hintergrundbild sichern** fügt der Mediathek eine Kopie hinzu, und die eigenen Dateien des Hintergrundbilds werden nie verändert.
 
   ![Hintergrundbild-Editor](../../docs/images/wallpaper-editor.png)
 
@@ -37,9 +37,9 @@ Open Wallpaper Engine ist ein kostenloser Open-Source-Player für macOS, der Wal
 
   ![Über WLAN senden](../../docs/images/send-over-wifi.png)
 
-- **Theming** – Menüleiste, Akzentfarbe und eingefärbte Ordner übernehmen die Farben des Hintergrundbilds.
+- **Farbanpassung** – Menüleiste, Akzentfarbe sowie eingefärbte Symbole und Ordner übernehmen die Farbe des Hintergrundbilds; die Fenster von Open Wallpaper Engine selbst können genau diese Farbe verwenden.
 
-  ![Theming](../../docs/images/theming.png)
+  ![Farbanpassung](../../docs/images/theming.png)
 
 - **Plug-in MCP-Server** – MCP-Clients können Hintergrundbilder, Playlists und Einstellungen festlegen und Szenen bearbeiten, über eine lokale Verbindung, die nur dein Benutzeraccount öffnen kann.
 
@@ -56,16 +56,16 @@ Du brauchst **macOS 14.0 (Sonoma) oder neuer**. Manche Funktionen setzen eine ne
 
 ## Schnellstart
 
-1. Öffne die App. Der Einrichtungsassistent legt die Sprache, SteamCMD, deine Steam-Anmeldung und die Wallpaper-Engine-Assets fest; jeder Schritt lässt sich überspringen.
+1. Öffne die App. Der Einrichtungsassistent legt die Sprache, SteamCMD, deine Steam-Anmeldung und die Wallpaper-Engine-Assets fest und kann deine Wallpaper-Engine-Favoriten importieren; jeder Schritt lässt sich überspringen.
 2. Installiere die Wallpaper-Engine-Assets (*Einstellungen › Assets*), wenn du Szenen-Hintergrundbilder nutzen möchtest. Sie stammen aus deiner eigenen Wallpaper-Engine-Kopie auf Steam; Video- und Web-Hintergrundbilder funktionieren ohne sie.
-3. Finde Hintergrundbilder im Tab **Workshop** oder importiere einen Hintergrundbildordner oder eine Zip-Datei (*Ablage › Hintergrundbild aus Ordner importieren …*, ⌘I).
-4. Klicke in der Mediathek auf ein Hintergrundbild und dann in seinen Details auf **Hintergrundbild festlegen**. Seine Eigenschaften stehen darunter.
+3. Finde Hintergrundbilder in den Tabs **Entdecken** und **Workshop** oder importiere einen Hintergrundbildordner oder eine Zip-Datei (*Ablage › Hintergrundbild aus Ordner importieren …*, ⌘I).
+4. Klicke in der Mediathek auf ein Hintergrundbild und dann in seinen Details auf **Hintergrundbild festlegen** (oder klicke es mit der rechten Maustaste an und wähle **Als Hintergrundbild verwenden**). Seine Eigenschaften stehen darunter.
 
 Mehr dazu: [Erste Schritte](../../docs/getting-started.md) und das [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
 ## Datenschutz
 
-Alles, was die App speichert, bleibt auf deinem Mac, und sie sammelt keine Daten oder Analysen. Sie kontaktiert Steam (für den Workshop und die Assets) und GitHub (für Updates), und Plug-ins werden erst geladen, wenn du sie installierst. Details: [womit sich die App verbindet](../../docs/getting-started.md#what-the-app-connects-to) und die [Datenschutzrichtlinie](../../docs/legal/privacy-policy.md).
+Alles, was die App speichert, bleibt auf deinem Mac, und sie sammelt keine Daten oder Analysen. Sie kontaktiert Steam (für den Workshop und die Assets), openwallpaperengine.app (um nach Updates zu suchen) und GitHub (um sie zu laden), und Plug-ins werden erst geladen, wenn du sie installierst. Details: [womit sich die App verbindet](../../docs/getting-started.md#what-the-app-connects-to) und die [Datenschutzrichtlinie](../../docs/legal/privacy-policy.md).
 
 ## Dokumentation
 
