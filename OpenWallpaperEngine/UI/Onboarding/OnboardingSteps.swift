@@ -263,6 +263,11 @@ struct OnboardingAssetsStep: View {
                         .foregroundStyle(.red)
                 }
             }
+            OnboardingCard {
+                Label("Wallpaper Engine Favourites", systemImage: "heart")
+                    .font(.headline)
+                WallpaperEngineFavoritesImportView(assets: assets, steamCmd: steamCmd)
+            }
         }
         .onAppear { assets.refresh() }
     }
