@@ -36,7 +36,7 @@ final class SpriteSheetAutosizeTests: XCTestCase {
         XCTAssertEqual(authored.size, SIMD2(16, 16))
 
         let makeLayer = try XCTUnwrap(content.scripts?.makeLayer)
-        guard case .layer(let created)? = makeLayer(["image": .string("models/sheet.json"), "name": .string("made")]) else {
+        guard case .layer(let created)? = makeLayer(["id": .number(100), "image": .string("models/sheet.json"), "name": .string("made")]) else {
             return XCTFail("createLayer('models/sheet.json') makes an image layer")
         }
         XCTAssertEqual(created.size, SIMD2(16, 16))
@@ -54,7 +54,7 @@ final class SpriteSheetAutosizeTests: XCTestCase {
         defer { Fixtures.removeStoredSettings(for: library) }
         let content = try XCTUnwrap(model.metalContent())
         let makeLayer = try XCTUnwrap(content.scripts?.makeLayer)
-        guard case .layer(let coin)? = makeLayer(["image": .string("models/coin_0.json"), "name": .string("coin")]) else {
+        guard case .layer(let coin)? = makeLayer(["id": .number(100), "image": .string("models/coin_0.json"), "name": .string("coin")]) else {
             return XCTFail("createLayer('models/coin_0.json') makes an image layer")
         }
         XCTAssertEqual(coin.size, SIMD2(16, 16))

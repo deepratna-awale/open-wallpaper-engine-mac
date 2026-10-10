@@ -1029,12 +1029,8 @@ class SceneWallpaperViewModel: ObservableObject {
             OWELog.error(.script, "createLayer: the object can't be decoded: \(error)")
             return nil
         }
-        // `createLayer` gives every object it makes an id (`SceneScriptSceneDescriber.layer`).
-        guard let id = resolved.id else {
-            OWELog.error(.script, "createLayer: the object has no id")
-            return nil
-        }
         if resolved.particle != nil {
+            guard let id = createdID(of: resolved) else { return nil }
             var systems = buildParticleFamily(resolved, id: id, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
                                               pixelUnits: loadedScene.map(Self.particlesUsePixelUnits) ?? true,
                                               transforms: SceneTransformHierarchy(objects: [resolved]),
@@ -1067,7 +1063,18 @@ class SceneWallpaperViewModel: ObservableObject {
                                            bindings: SceneLayerBindings(object: resolved, builtWith: context))
             return .model(built, node: node, motion: motion)
         }
+        guard let id = createdID(of: resolved) else { return nil }
         return buildLayer(resolved, id: id, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: context).map { .layer($0) }
+    }
+
+    /// The id `createLayer` gave the object it made (`SceneScriptSceneDescriber.layer`), which its
+    /// layer or particle system is built with; nil (logged) for an object without one.
+    private func createdID(of object: WESceneObject) -> Int? {
+        guard let id = object.id else {
+            OWELog.error(.script, "createLayer: \(object.name ?? "an object") has no id")
+            return nil
+        }
+        return id
     }
 
     /// Finds the scene's sound files in the package, the folder, Workshop items and WE's assets.
