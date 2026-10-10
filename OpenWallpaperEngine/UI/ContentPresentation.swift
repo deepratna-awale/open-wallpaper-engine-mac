@@ -21,6 +21,11 @@ final class ContentPresentation {
     /// Unsubscribing the Installed tab's selection.
     var isBatchUnsubscribeConfirming = false
 
+    /// The Installed folder being named (Create Folder, Rename) and the one whose removal is
+    /// being confirmed.
+    var folderNamePrompt: InstalledFolderPrompt?
+    var folderRemoval: InstalledFolder?
+
     func alertImportModal(which error: WPImportError) {
         importAlertError = error
         importAlertPresented = true

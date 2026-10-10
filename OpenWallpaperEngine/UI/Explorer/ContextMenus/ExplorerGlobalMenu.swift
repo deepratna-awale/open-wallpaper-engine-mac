@@ -20,6 +20,17 @@ struct ExplorerGlobalMenu: SubviewOfContentView {
     var body: some View {
         Section {
             Button {
+                viewModel.presentation.folderNamePrompt = .create
+            } label: {
+                Label {
+                    Text("Create Folder…", comment: "Context menu of the Installed tab: makes a folder in the folder shown")
+                } icon: {
+                    Image(systemName: "folder.badge.plus")
+                }
+            }
+        }
+        Section {
+            Button {
                 NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: FileManager.default.wallpapersDirectory.path(percentEncoded: false))
             } label: {
                 Label("Open All in Finder", systemImage: "folder.badge.gearshape")

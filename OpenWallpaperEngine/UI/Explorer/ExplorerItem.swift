@@ -109,6 +109,9 @@ struct ExplorerItem: SubviewOfContentView {
             )
             wallpaperViewModel.inspect(wallpaper)
         }
+        // Onto a folder tile or a breadcrumb: the selection when this tile is in it, as WE moves it.
+        .draggable(InstalledDragPayload.wallpapers(
+            viewModel.library.wallpapersActedOn(from: wallpaper).map(FavoritesStore.key(for:))).text)
         .onTapGesture(count: 2) {
             wallpaperViewModel.inspect(wallpaper)
             AppDelegate.shared.showWorkshopPreview(wallpaper)
