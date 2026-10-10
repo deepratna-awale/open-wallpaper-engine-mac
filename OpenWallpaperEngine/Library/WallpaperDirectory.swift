@@ -270,9 +270,12 @@ final class FavoritesStore: ObservableObject {
 
     @Published private(set) var ids: Set<String>
     private let storageKey = "FavoriteWallpaperIds"
+    private let defaults: UserDefaults
 
-    private init() {
-        ids = Set(UserDefaults.app.stringArray(forKey: storageKey) ?? [])
+    /// The app's store reads `UserDefaults.app`; tests pass their own suite.
+    init(defaults: UserDefaults = .app) {
+        self.defaults = defaults
+        ids = Set(defaults.stringArray(forKey: storageKey) ?? [])
     }
 
     func contains(_ id: String) -> Bool {
@@ -285,7 +288,22 @@ final class FavoritesStore: ObservableObject {
         } else {
             ids.insert(id)
         }
-        UserDefaults.app.set(ids.sorted(), forKey: storageKey)
+        save()
+    }
+
+    /// Adds `keys` to the favourites, keeping every one already there; returns how many were new.
+    /// Merging the same keys again adds nothing.
+    @discardableResult
+    func merge(_ keys: some Sequence<String>) -> Int {
+        let new = Set(keys).subtracting(ids)
+        guard !new.isEmpty else { return 0 }
+        ids.formUnion(new)
+        save()
+        return new.count
+    }
+
+    private func save() {
+        defaults.set(ids.sorted(), forKey: storageKey)
     }
 
     /// A Workshop wallpaper keeps one identity whether or not it is installed, so favouriting it in
@@ -311,7 +329,7 @@ final class FavoritesStore: ObservableObject {
         } else {
             ids.insert(Self.key(for: wallpaper))
         }
-        UserDefaults.app.set(ids.sorted(), forKey: storageKey)
+        save()
     }
 }
 

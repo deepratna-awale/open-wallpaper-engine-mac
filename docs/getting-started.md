@@ -24,6 +24,10 @@ Installing the app, the optional requirements, the Wallpaper Engine assets and b
 
 Scenes use Wallpaper Engine's shared effects, materials, shaders, fonts and SceneScript runtime from your own Wallpaper Engine copy on Steam; the app doesn't ship them. Install them in *Settings → Assets*: the app downloads your copy with steamcmd (the account must own Wallpaper Engine), keeps only the assets and the default wallpapers, and deletes the rest. You can also choose an existing Wallpaper Engine folder. Video and web wallpapers work without them.
 
+### Wallpaper Engine favourites
+
+Wallpaper Engine's favourites are your Steam Workshop favourites: they live in your Steam account, not in Wallpaper Engine's folder or its `config.json`, so a fresh SteamCMD download has none of its own. When the assets are installed, or a Wallpaper Engine folder is chosen, the app asks Steam's Web API for them (with your Steam Web API key and the account's SteamID, found in the files of the SteamCMD login or of the Steam folder the chosen install sits in) and asks *Also import your Wallpaper Engine favourites?* when there are any that aren't in My Favourites yet. They are added to your favourites, never replacing them, and the count is shown. Without a key, or with no account found, there is nothing to import from and the question isn't asked; *Import Wallpaper Engine Favourites…* in *Settings → Assets* checks again later. An account that keeps its favourites private returns none.
+
 ## Wallpapers
 
 ### Browse & Download from Steam Workshop

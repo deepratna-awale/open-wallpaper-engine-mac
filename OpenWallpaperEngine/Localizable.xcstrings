@@ -3556,6 +3556,335 @@
         }
       }
     },
+    "%lld wallpapers you favourited in Wallpaper Engine aren't in My Favourites yet. They're added; your current favourites stay." : {
+      "comment" : "%lld is the number of new favourites found in the user's Steam account; message of the Also import your Wallpaper Engine favourites? question",
+      "localizations" : {
+        "ar" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "عدد الخلفيات المفضلة في Wallpaper Engine غير الموجودة بعد في مفضلتي: %lld. ستُضاف، وتبقى مفضلتك الحالية."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "عدد الخلفيات المفضلة في Wallpaper Engine غير الموجودة بعد في مفضلتي: %lld. ستُضاف، وتبقى مفضلتك الحالية."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "عدد الخلفيات المفضلة في Wallpaper Engine غير الموجودة بعد في مفضلتي: %lld. ستُضاف، وتبقى مفضلتك الحالية."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "عدد الخلفيات المفضلة في Wallpaper Engine غير الموجودة بعد في مفضلتي: %lld. ستُضاف، وتبقى مفضلتك الحالية."
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "عدد الخلفيات المفضلة في Wallpaper Engine غير الموجودة بعد في مفضلتي: %lld. ستُضاف، وتبقى مفضلتك الحالية."
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "عدد الخلفيات المفضلة في Wallpaper Engine غير الموجودة بعد في مفضلتي: %lld. ستُضاف، وتبقى مفضلتك الحالية."
+                }
+              }
+            }
+          }
+        },
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Hintergrundbild, das Sie in Wallpaper Engine als Favorit markiert haben, ist noch nicht in „Meine Favoriten“. Es wird hinzugefügt; Ihre bisherigen Favoriten bleiben erhalten."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Hintergrundbilder, die Sie in Wallpaper Engine als Favoriten markiert haben, sind noch nicht in „Meine Favoriten“. Sie werden hinzugefügt; Ihre bisherigen Favoriten bleiben erhalten."
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld wallpaper you favourited in Wallpaper Engine isn't in My Favourites yet. It's added; your current favourites stay."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld wallpapers you favourited in Wallpaper Engine aren't in My Favourites yet. They're added; your current favourites stay."
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld fondo de pantalla que marcaste como favorito en Wallpaper Engine aún no está en «Mis favoritos». Se añadirá; tus favoritos actuales se mantienen."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld fondos de pantalla que marcaste como favoritos en Wallpaper Engine aún no están en «Mis favoritos». Se añadirán; tus favoritos actuales se mantienen."
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld fond d’écran mis en favori dans Wallpaper Engine n’est pas encore dans « Mes favoris ». Il y sera ajouté ; vos favoris actuels sont conservés."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld fonds d’écran mis en favoris dans Wallpaper Engine ne sont pas encore dans « Mes favoris ». Ils y seront ajoutés ; vos favoris actuels sont conservés."
+                }
+              }
+            }
+          }
+        },
+        "hi" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Wallpaper Engine में पसंदीदा बनाया गया %lld वॉलपेपर अभी मेरे पसंदीदा में नहीं है। उसे जोड़ा जाएगा; आपके मौजूदा पसंदीदा बने रहेंगे।"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Wallpaper Engine में पसंदीदा बनाए गए %lld वॉलपेपर अभी मेरे पसंदीदा में नहीं हैं। उन्हें जोड़ा जाएगा; आपके मौजूदा पसंदीदा बने रहेंगे।"
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld sfondo che hai aggiunto ai preferiti in Wallpaper Engine non è ancora in “I miei preferiti”. Verrà aggiunto; i preferiti attuali restano."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld sfondi che hai aggiunto ai preferiti in Wallpaper Engine non sono ancora in “I miei preferiti”. Verranno aggiunti; i preferiti attuali restano."
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Wallpaper Engine でお気に入りにした壁紙のうち、%lld 件がまだ「お気に入り」にありません。追加されます。現在のお気に入りはそのまま残ります。"
+                }
+              }
+            }
+          }
+        },
+        "ko" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Wallpaper Engine에서 즐겨찾기한 배경화면 중 %lld개가 아직 나의 즐겨찾기에 없습니다. 추가되며 현재 즐겨찾기는 그대로 유지됩니다."
+                }
+              }
+            }
+          }
+        },
+        "pl" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld tapety oznaczone jako ulubione w Wallpaper Engine nie są jeszcze w „Moje ulubione”. Zostaną dodane; obecne ulubione pozostaną."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld tapet oznaczonych jako ulubione w Wallpaper Engine nie jest jeszcze w „Moje ulubione”. Zostaną dodane; obecne ulubione pozostaną."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld tapeta oznaczona jako ulubiona w Wallpaper Engine nie jest jeszcze w „Moje ulubione”. Zostanie dodana; obecne ulubione pozostaną."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld tapety oznaczone jako ulubione w Wallpaper Engine nie są jeszcze w „Moje ulubione”. Zostaną dodane; obecne ulubione pozostaną."
+                }
+              }
+            }
+          }
+        },
+        "pt-BR" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld imagem de fundo que você marcou como favorita no Wallpaper Engine ainda não está em Meus Favoritos. Ela será adicionada; seus favoritos atuais continuam."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld imagens de fundo que você marcou como favoritas no Wallpaper Engine ainda não estão em Meus Favoritos. Elas serão adicionadas; seus favoritos atuais continuam."
+                }
+              }
+            }
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Обоев из избранного Wallpaper Engine, которых ещё нет в «Избранном»: %lld. Они будут добавлены, текущее избранное сохранится."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Обоев из избранного Wallpaper Engine, которых ещё нет в «Избранном»: %lld. Они будут добавлены, текущее избранное сохранится."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Обоев из избранного Wallpaper Engine, которых ещё нет в «Избранном»: %lld. Они будут добавлены, текущее избранное сохранится."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Обоев из избранного Wallpaper Engine, которых ещё нет в «Избранном»: %lld. Они будут добавлены, текущее избранное сохранится."
+                }
+              }
+            }
+          }
+        },
+        "tr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Wallpaper Engine’de favorilere eklediğiniz %lld duvar kâğıdı henüz Favorilerim’de değil. Eklenecek; mevcut favorileriniz korunur."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Wallpaper Engine’de favorilere eklediğiniz %lld duvar kâğıdı henüz Favorilerim’de değil. Eklenecekler; mevcut favorileriniz korunur."
+                }
+              }
+            }
+          }
+        },
+        "uk" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld шпалери з улюблених у Wallpaper Engine ще не в «Мої улюблені». Їх буде додано, поточні улюблені залишаться."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld шпалер з улюблених у Wallpaper Engine ще не в «Мої улюблені». Їх буде додано, поточні улюблені залишаться."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld шпалера з улюблених у Wallpaper Engine ще не в «Мої улюблені». Її буде додано, поточні улюблені залишаться."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld шпалери з улюблених у Wallpaper Engine ще не в «Мої улюблені». Їх буде додано, поточні улюблені залишаться."
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "你在 Wallpaper Engine 中收藏的墙纸有 %lld 张尚未加入“个人收藏”。它们将被添加，现有的个人收藏会保留。"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hant" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "你在 Wallpaper Engine 中加入喜好項目的背景圖片有 %lld 張尚未在「我的喜好項目」中。它們將被加入，現有的喜好項目會保留。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld × %lld pixels" : {
       "localizations" : {
         "ar" : {
@@ -8184,6 +8513,101 @@
         }
       }
     },
+    "Adds the wallpapers you favourited in Wallpaper Engine to My Favourites. Nothing is removed." : {
+      "comment" : "Help for the Import Wallpaper Engine Favourites button; My Favourites is the library filter",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يضيف خلفيات الشاشة التي أضفتها إلى المفضلة في Wallpaper Engine إلى مفضلتي. لا تتم إزالة أي شيء."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fügt die Hintergrundbilder, die Sie in Wallpaper Engine als Favoriten markiert haben, zu „Meine Favoriten“ hinzu. Es wird nichts entfernt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade a «Mis favoritos» los fondos de pantalla que marcaste como favoritos en Wallpaper Engine. No se quita nada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajoute à « Mes favoris » les fonds d’écran que vous avez mis en favoris dans Wallpaper Engine. Rien n’est supprimé."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine में पसंदीदा बनाए गए वॉलपेपर को मेरे पसंदीदा में जोड़ता है। कुछ भी हटाया नहीं जाता।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiunge a “I miei preferiti” gli sfondi che hai aggiunto ai preferiti in Wallpaper Engine. Non viene rimosso nulla."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine でお気に入りにした壁紙を「お気に入り」に追加します。何も削除されません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine에서 즐겨찾기한 배경화면을 나의 즐겨찾기에 추가합니다. 아무것도 제거되지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodaje do „Moje ulubione” tapety oznaczone jako ulubione w Wallpaper Engine. Nic nie jest usuwane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adiciona a Meus Favoritos as imagens de fundo que você marcou como favoritas no Wallpaper Engine. Nada é removido."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавляет в «Избранное» обои, отмеченные как избранные в Wallpaper Engine. Ничего не удаляется."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine’de favorilere eklediğiniz duvar kâğıtlarını Favorilerim’e ekler. Hiçbir şey kaldırılmaz."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додає до «Мої улюблені» шпалери, позначені як улюблені у Wallpaper Engine. Нічого не вилучається."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将你在 Wallpaper Engine 中收藏的墙纸添加到“个人收藏”。不会移除任何项目。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將你在 Wallpaper Engine 中加入喜好項目的背景圖片加入「我的喜好項目」。不會移除任何項目。"
+          }
+        }
+      }
+    },
     "Adjust Menu Bar Color" : {
       "localizations" : {
         "ar" : {
@@ -10911,6 +11335,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "同時加入 Wallpaper Engine 的預設背景圖片"
+          }
+        }
+      }
+    },
+    "Also import your Wallpaper Engine favourites?" : {
+      "comment" : "Title of the question asked once Wallpaper Engine's assets are installed or a Wallpaper Engine folder is chosen",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل تريد أيضًا استيراد مفضلة Wallpaper Engine؟"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auch Ihre Wallpaper Engine-Favoriten importieren?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Importar también tus favoritos de Wallpaper Engine?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importer aussi vos favoris Wallpaper Engine ?"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "क्या अपने Wallpaper Engine के पसंदीदा भी इंपोर्ट करें?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importare anche i tuoi preferiti di Wallpaper Engine?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine のお気に入りも読み込みますか？"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 즐겨찾기도 가져오겠습니까?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaimportować też ulubione z Wallpaper Engine?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importar também seus favoritos do Wallpaper Engine?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Также импортировать избранное Wallpaper Engine?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine favorileriniz de içe aktarılsın mı?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Також імпортувати улюблені з Wallpaper Engine?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "也导入你的 Wallpaper Engine 个人收藏吗？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "也要輸入你的 Wallpaper Engine 喜好項目嗎？"
           }
         }
       }
@@ -62056,6 +62575,101 @@
         }
       }
     },
+    "Import Wallpaper Engine Favourites…" : {
+      "comment" : "Button in Settings › Assets and the setup assistant: adds the wallpapers favourited in Wallpaper Engine (the Steam account's Workshop favourites) to My Favourites",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استيراد مفضلة Wallpaper Engine…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine-Favoriten importieren …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importar favoritos de Wallpaper Engine…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importer les favoris de Wallpaper Engine…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine के पसंदीदा इंपोर्ट करें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importa i preferiti di Wallpaper Engine…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine のお気に入りを読み込む…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 즐겨찾기 가져오기…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importuj ulubione z Wallpaper Engine…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importar Favoritos do Wallpaper Engine…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Импортировать избранное Wallpaper Engine…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine Favorilerini İçe Aktar…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Імпортувати улюблені з Wallpaper Engine…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入 Wallpaper Engine 个人收藏…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輸入 Wallpaper Engine 喜好項目⋯"
+          }
+        }
+      }
+    },
     "Import Wallpaper Engine Profile…" : {
       "localizations" : {
         "ar" : {
@@ -62806,6 +63420,335 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "從 Steam 收藏庫匯入"
+          }
+        }
+      }
+    },
+    "Imported %lld favourites" : {
+      "comment" : "%lld is the number of favourites added to My Favourites",
+      "localizations" : {
+        "ar" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "تم استيراد المفضلة: %lld"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "تم استيراد المفضلة: %lld"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "تم استيراد المفضلة: %lld"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "تم استيراد المفضلة: %lld"
+                }
+              },
+              "two" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "تم استيراد المفضلة: %lld"
+                }
+              },
+              "zero" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "تم استيراد المفضلة: %lld"
+                }
+              }
+            }
+          }
+        },
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Favorit importiert"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Favoriten importiert"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Imported %lld favourite"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Imported %lld favourites"
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld favorito importado"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld favoritos importados"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld favori importé"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld favoris importés"
+                }
+              }
+            }
+          }
+        },
+        "hi" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld पसंदीदा इंपोर्ट किया गया"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld पसंदीदा इंपोर्ट किए गए"
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld preferito importato"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld preferiti importati"
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 件のお気に入りを読み込みました"
+                }
+              }
+            }
+          }
+        },
+        "ko" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "즐겨찾기 %lld개를 가져왔습니다"
+                }
+              }
+            }
+          }
+        },
+        "pl" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zaimportowane ulubione: %lld"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zaimportowane ulubione: %lld"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zaimportowane ulubione: %lld"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zaimportowane ulubione: %lld"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld favorito importado"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld favoritos importados"
+                }
+              }
+            }
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Импортировано в избранное: %lld"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Импортировано в избранное: %lld"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Импортировано в избранное: %lld"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Импортировано в избранное: %lld"
+                }
+              }
+            }
+          }
+        },
+        "tr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld favori içe aktarıldı"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld favori içe aktarıldı"
+                }
+              }
+            }
+          }
+        },
+        "uk" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Імпортовано до улюблених: %lld"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Імпортовано до улюблених: %lld"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Імпортовано до улюблених: %lld"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Імпортовано до улюблених: %lld"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "已导入 %lld 项个人收藏"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hant" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "已輸入 %lld 個喜好項目"
+                }
+              }
+            }
           }
         }
       }
@@ -84253,6 +85196,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "一般"
+          }
+        }
+      }
+    },
+    "Not Now" : {
+      "comment" : "Button that turns down an offer for now; it can be accepted later",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ليس الآن"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht jetzt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ahora no"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plus tard"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी नहीं"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non ora"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今はしない"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "나중에"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie teraz"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agora Não"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не сейчас"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şimdi Değil"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не зараз"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以后"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "稍後"
           }
         }
       }
@@ -135125,6 +136163,101 @@
         }
       }
     },
+    "Steam returned no Wallpaper Engine favourites for this account." : {
+      "comment" : "Status after checking Steam: the account has no Workshop favourites, or keeps the list private",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يُرجع Steam أي مفضلة لـ Wallpaper Engine لهذا الحساب."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam hat für dieses Konto keine Wallpaper Engine-Favoriten zurückgegeben."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam no ha devuelto favoritos de Wallpaper Engine para esta cuenta."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam n’a renvoyé aucun favori Wallpaper Engine pour ce compte."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam ने इस खाते के लिए Wallpaper Engine का कोई पसंदीदा नहीं लौटाया।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam non ha restituito preferiti di Wallpaper Engine per questo account."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam からこのアカウントの Wallpaper Engine のお気に入りは返されませんでした。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam에서 이 계정의 Wallpaper Engine 즐겨찾기를 반환하지 않았습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam nie zwrócił ulubionych z Wallpaper Engine dla tego konta."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Steam não retornou favoritos do Wallpaper Engine para esta conta."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam не вернул избранное Wallpaper Engine для этой учётной записи."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam bu hesap için Wallpaper Engine favorisi döndürmedi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam не повернув улюблених з Wallpaper Engine для цього облікового запису."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam 没有返回此账户的 Wallpaper Engine 个人收藏。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam 沒有傳回此帳號的 Wallpaper Engine 喜好項目。"
+          }
+        }
+      }
+    },
     "SteamCMD" : {
       "comment" : "Settings section header",
       "localizations" : {
@@ -161781,6 +162914,101 @@
         }
       }
     },
+    "Wallpaper Engine Favourites" : {
+      "comment" : "Heading of the favourites import in Settings › Assets and the setup assistant's Assets step",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مفضلة Wallpaper Engine"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine-Favoriten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favoritos de Wallpaper Engine"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favoris Wallpaper Engine"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine के पसंदीदा"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preferiti di Wallpaper Engine"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine のお気に入り"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 즐겨찾기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ulubione z Wallpaper Engine"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favoritos do Wallpaper Engine"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Избранное Wallpaper Engine"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine Favorileri"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Улюблені з Wallpaper Engine"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 个人收藏"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 喜好項目"
+          }
+        }
+      }
+    },
     "Wallpaper Engine Settings" : {
       "comment" : "Name of a preset made from the property values saved in Wallpaper Engine's config.json",
       "localizations" : {
@@ -162061,6 +163289,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wallpaper Engine for Mac"
+          }
+        }
+      }
+    },
+    "Wallpaper Engine keeps favourites in your Steam account, not in its folder. Importing them needs a Steam Web API key and a Steam login, or a Wallpaper Engine folder inside a Steam folder." : {
+      "comment" : "Note under the favourites import: where Wallpaper Engine's favourites live and what the import needs",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحفظ Wallpaper Engine المفضلة في حسابك على Steam، لا في مجلده. يتطلب استيرادها مفتاح Steam Web API وتسجيل الدخول إلى Steam، أو مجلد Wallpaper Engine داخل مجلد Steam."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine speichert Favoriten in Ihrem Steam-Konto, nicht in seinem Ordner. Zum Importieren sind ein Steam-Web-API-Schlüssel und eine Steam-Anmeldung nötig oder ein Wallpaper Engine-Ordner in einem Steam-Ordner."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine guarda los favoritos en tu cuenta de Steam, no en su carpeta. Para importarlos necesitas una clave de la API web de Steam y haber iniciado sesión en Steam, o una carpeta de Wallpaper Engine dentro de una carpeta de Steam."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine conserve les favoris dans votre compte Steam, pas dans son dossier. Pour les importer, il faut une clé d’API Web Steam et une connexion à Steam, ou un dossier Wallpaper Engine situé dans un dossier Steam."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine पसंदीदा को अपने फ़ोल्डर में नहीं, बल्कि आपके Steam खाते में रखता है। इन्हें इंपोर्ट करने के लिए Steam Web API कुंजी और Steam लॉग इन, या किसी Steam फ़ोल्डर के अंदर Wallpaper Engine फ़ोल्डर चाहिए।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine conserva i preferiti nel tuo account Steam, non nella sua cartella. Per importarli servono una chiave Steam Web API e l’accesso a Steam, oppure una cartella di Wallpaper Engine all’interno di una cartella di Steam."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine はお気に入りをフォルダではなく Steam アカウントに保存します。読み込むには、Steam Web APIキーと Steam へのログイン、または Steam フォルダ内の Wallpaper Engine フォルダが必要です。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine은 즐겨찾기를 폴더가 아닌 Steam 계정에 저장합니다. 가져오려면 Steam Web API 키와 Steam 로그인, 또는 Steam 폴더 안의 Wallpaper Engine 폴더가 필요합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine przechowuje ulubione na koncie Steam, a nie w swoim folderze. Do importu potrzebny jest klucz Steam Web API i logowanie do Steam albo folder Wallpaper Engine w folderze Steam."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Wallpaper Engine guarda os favoritos na sua conta Steam, não na pasta dele. Para importá-los, é preciso uma chave de API Web do Steam e uma sessão iniciada no Steam, ou uma pasta do Wallpaper Engine dentro de uma pasta do Steam."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine хранит избранное в вашей учётной записи Steam, а не в своей папке. Для импорта нужны ключ Steam Web API и вход в Steam либо папка Wallpaper Engine внутри папки Steam."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine favorileri klasöründe değil, Steam hesabınızda tutar. İçe aktarmak için bir Steam Web API anahtarı ve Steam girişi ya da bir Steam klasörü içindeki Wallpaper Engine klasörü gerekir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine зберігає улюблені у вашому обліковому записі Steam, а не у своїй папці. Для імпорту потрібні ключ Steam Web API і вхід у Steam або папка Wallpaper Engine у папці Steam."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 将个人收藏保存在你的 Steam 账户中，而不是它的文件夹里。导入需要 Steam Web API 密钥和 Steam 登录，或者位于 Steam 文件夹内的 Wallpaper Engine 文件夹。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 將喜好項目儲存在你的 Steam 帳號中，而不是它的檔案夾裡。輸入需要 Steam Web API 密鑰和 Steam 登入，或位於 Steam 檔案夾內的 Wallpaper Engine 檔案夾。"
           }
         }
       }
@@ -168004,6 +169327,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "你的訂閱"
+          }
+        }
+      }
+    },
+    "Your Wallpaper Engine favourites are already in My Favourites." : {
+      "comment" : "Status after checking Steam: every Wallpaper Engine favourite is a favourite here already",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مفضلة Wallpaper Engine موجودة بالفعل في مفضلتي."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihre Wallpaper Engine-Favoriten sind bereits in „Meine Favoriten“."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus favoritos de Wallpaper Engine ya están en «Mis favoritos»."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos favoris Wallpaper Engine sont déjà dans « Mes favoris »."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपके Wallpaper Engine के पसंदीदा पहले से मेरे पसंदीदा में हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I tuoi preferiti di Wallpaper Engine sono già in “I miei preferiti”."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine のお気に入りはすでに「お気に入り」にあります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 즐겨찾기가 이미 나의 즐겨찾기에 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ulubione z Wallpaper Engine są już w „Moje ulubione”."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seus favoritos do Wallpaper Engine já estão em Meus Favoritos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Избранное Wallpaper Engine уже есть в «Избранном»."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine favorileriniz zaten Favorilerim’de."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Улюблені з Wallpaper Engine вже є в «Мої улюблені»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的 Wallpaper Engine 个人收藏已在“个人收藏”中。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的 Wallpaper Engine 喜好項目已在「我的喜好項目」中。"
           }
         }
       }
