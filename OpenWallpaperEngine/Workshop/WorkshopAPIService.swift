@@ -336,13 +336,24 @@ class WorkshopAPIService {
     /// The account's subscribed Wallpaper Engine items (GetUserFiles `type=mysubscriptions`, with
     /// the user's Web API key). An account with none, or a private one, answers `.empty`.
     func getSubscribedItemIDs(steamID: String) async throws -> WorkshopSubscriptions.Outcome {
+        try await getUserFileIDs(steamID: steamID, list: .subscriptions)
+    }
+
+    /// The account's favourited Wallpaper Engine items (GetUserFiles `type=myfavorites`, with the
+    /// user's Web API key): Wallpaper Engine's own favourites, which live in the Steam account.
+    func getFavoritedItemIDs(steamID: String) async throws -> WorkshopSubscriptions.Outcome {
+        try await getUserFileIDs(steamID: steamID, list: .favorites)
+    }
+
+    private func getUserFileIDs(steamID: String,
+                                list: WorkshopSubscriptions.List) async throws -> WorkshopSubscriptions.Outcome {
         guard WorkshopSubscriptions.isSteamID64(steamID) else { throw WorkshopAPIError.invalidURL }
         guard let key = apiKey.load() else { throw WorkshopAPIError.noAPIKey }
         var ids: [String] = []
         // Up to 50 pages of 100; Steam stops returning files past the last one.
         for page in 1...50 {
             var components = URLComponents(url: WorkshopSubscriptions.userFilesURL, resolvingAgainstBaseURL: false)!
-            components.queryItems = WorkshopSubscriptions.queryItems(steamID: steamID, page: page)
+            components.queryItems = WorkshopSubscriptions.queryItems(steamID: steamID, page: page, list: list)
             guard let url = components.url else { throw WorkshopAPIError.invalidURL }
             guard case .items(let found) = try WorkshopSubscriptions.outcome(from: try await sendKeyed(url, key: key)) else { break }
             let new = found.filter { !ids.contains($0) }
