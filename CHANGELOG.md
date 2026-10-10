@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **3D models drawn with Wallpaper Engine's own shaders draw again when their mesh lacks data the shader reads.** Only a model whose wallpaper ships its own shader is skipped in that case, as Wallpaper Engine skips it; 1.0.0-beta.6 skipped such models whatever their shader.
+
 ## [1.0.0-beta.6] - 2026-10-09
 
 ### Added
