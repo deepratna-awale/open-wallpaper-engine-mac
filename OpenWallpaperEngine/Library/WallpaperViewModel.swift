@@ -252,14 +252,10 @@ class WallpaperViewModel: ObservableObject {
 
     // MARK: - Wallpaper access
 
-    /// Convenience: wallpaper for the currently selected screen in the UI.
+    /// The wallpaper of the display selected in the UI. Read only: changing wallpapers goes
+    /// through `apply(_:)` (chosen by hand) or `setWallpaper(_:for:transition:)`.
     var currentWallpaper: WEWallpaper {
-        get {
-            wallpaper(for: selectedScreenId)
-        }
-        set {
-            setWallpaper(newValue, for: selectedScreenIds)
-        }
+        wallpaper(for: selectedScreenId)
     }
 
     var displayedWallpaper: WEWallpaper {

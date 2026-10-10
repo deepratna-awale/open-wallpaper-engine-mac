@@ -41,6 +41,13 @@ struct AssetsPage: SettingsPage {
                 Text("Downloads your Wallpaper Engine copy with SteamCMD, keeps only its assets and default wallpapers, and deletes the rest. Log in to Steam in the Workshop tab first.")
             }
 
+            Section {
+                WallpaperEngineFavoritesImportView(assets: assets, steamCmd: steamCmd)
+            } header: {
+                Label("Wallpaper Engine Favourites", systemImage: "heart")
+            }
+            .settingsAnchor(SettingsAnchor.weFavorites)
+
             SteamCmdSection(steamCmd: steamCmd, installer: installer)
                 .settingsAnchor(SettingsAnchor.steamCmd)
 

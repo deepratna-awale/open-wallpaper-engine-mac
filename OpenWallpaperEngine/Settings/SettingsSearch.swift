@@ -24,6 +24,7 @@ enum SettingsAnchor {
     static let storage = "storage"
     static let libraryFolders = "libraryfolders"
     static let apiKey = "apikey"
+    static let weFavorites = "wefavorites"
     static let blockList = "blocklist"
     static let updates = "updates"
     static let privacy = "privacy"
@@ -118,6 +119,7 @@ struct SettingsSearch {
             entry("Library Folders", .assets, SettingsAnchor.libraryFolders),
             entry("Manage Blocklist", .assets, SettingsAnchor.blockList),
             entry("Steam Web API Key", .assets, SettingsAnchor.apiKey),
+            entry("Wallpaper Engine Favourites", .assets, SettingsAnchor.weFavorites),
 
             entry("Update automatically", .updates, SettingsAnchor.updates),
             entry("Receive beta updates", .updates, SettingsAnchor.updates),

@@ -671,8 +671,9 @@ class SceneWallpaperViewModel: ObservableObject {
         let authoredTransforms = SceneTransformHierarchy(objects: scene.objects)
         // WE draws objects in scene.json order; both lists carry that index so the renderer can interleave them.
         let layers: [SceneMetalLayer] = scene.objects.enumerated().compactMap { index, object in
-            var layer = bindingTable.building(.object(SceneObjectIdentity.id(of: object, at: index))) {
-                buildLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: valueContext)
+            let id = SceneObjectIdentity.id(of: object, at: index)
+            var layer = bindingTable.building(.object(id)) {
+                buildLayer(object, id: id, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: valueContext)
             }
             layer?.order = index
             return layer
@@ -683,8 +684,9 @@ class SceneWallpaperViewModel: ObservableObject {
         let particleCache = ParticleDefinitionCache(sharesParts: sharesParticleDefinitions)
         for (index, object) in scene.objects.enumerated() {
             let base = particleSystems.count
-            let family = bindingTable.building(.object(SceneObjectIdentity.id(of: object, at: index))) {
-                buildParticleFamily(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
+            let id = SceneObjectIdentity.id(of: object, at: index)
+            let family = bindingTable.building(.object(id)) {
+                buildParticleFamily(object, id: id, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
                                     pixelUnits: Self.particlesUsePixelUnits(scene), transforms: authoredTransforms,
                                     cache: particleCache)
             }
@@ -804,11 +806,11 @@ class SceneWallpaperViewModel: ObservableObject {
             let object = scene.objects[index]
             guard object.light == nil, object.sound == nil, object.model == nil, object.cameraLayer == nil else { return nil }
             var layer = bindingTable.building(.object(id)) {
-                buildLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: valueContext)
+                buildLayer(object, id: id, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: valueContext)
             }
             layer?.order = index
             let family = bindingTable.building(.object(id)) {
-                buildParticleFamily(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
+                buildParticleFamily(object, id: id, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
                                     pixelUnits: Self.particlesUsePixelUnits(scene), transforms: authoredTransforms,
                                     cache: particleCache)
             }
@@ -964,11 +966,11 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// An object's layer: an image, text or shape layer, with its user bindings; nil for objects
     /// that draw nothing of their own (groups, particle systems, sounds).
-    private func buildLayer(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>,
+    private func buildLayer(_ object: WESceneObject, id: Int, wallpaperDir: URL, sceneSize: SIMD2<Float>,
                             context: SceneValueContext) -> SceneMetalLayer? {
-        var layer = buildMetalLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
-            ?? buildMetalTextLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
-            ?? buildShapeLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
+        var layer = buildMetalLayer(object, id: id, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
+            ?? buildMetalTextLayer(object, id: id, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
+            ?? buildShapeLayer(object, id: id, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
         layer?.bindings = SceneLayerBindings(object: object, builtWith: context)
         if layer?.fillsScene == false { layer?.tilt = SceneLocalTransform(object: object).tilt }
         return layer
@@ -1028,7 +1030,8 @@ class SceneWallpaperViewModel: ObservableObject {
             return nil
         }
         if resolved.particle != nil {
-            var systems = buildParticleFamily(resolved, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
+            guard let id = createdID(of: resolved) else { return nil }
+            var systems = buildParticleFamily(resolved, id: id, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
                                               pixelUnits: loadedScene.map(Self.particlesUsePixelUnits) ?? true,
                                               transforms: SceneTransformHierarchy(objects: [resolved]),
                                               cache: ParticleDefinitionCache(sharesParts: sharesParticleDefinitions))
@@ -1060,7 +1063,18 @@ class SceneWallpaperViewModel: ObservableObject {
                                            bindings: SceneLayerBindings(object: resolved, builtWith: context))
             return .model(built, node: node, motion: motion)
         }
-        return buildLayer(resolved, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: context).map { .layer($0) }
+        guard let id = createdID(of: resolved) else { return nil }
+        return buildLayer(resolved, id: id, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: context).map { .layer($0) }
+    }
+
+    /// The id `createLayer` gave the object it made (`SceneScriptSceneDescriber.layer`), which its
+    /// layer or particle system is built with; nil (logged) for an object without one.
+    private func createdID(of object: WESceneObject) -> Int? {
+        guard let id = object.id else {
+            OWELog.error(.script, "createLayer: \(object.name ?? "an object") has no id")
+            return nil
+        }
+        return id
     }
 
     /// Finds the scene's sound files in the package, the folder, Workshop items and WE's assets.
@@ -1163,16 +1177,16 @@ class SceneWallpaperViewModel: ObservableObject {
         SceneLocalTransform(object: object).origin
     }
 
-    private func buildMetalLayer(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>) -> SceneMetalLayer? {
-        var layer = buildImageLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
-        layer?.systemImage = systemImage(of: object, wallpaperDir: wallpaperDir)
+    private func buildMetalLayer(_ object: WESceneObject, id: Int, wallpaperDir: URL, sceneSize: SIMD2<Float>) -> SceneMetalLayer? {
+        var layer = buildImageLayer(object, id: id, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
+        layer?.systemImage = systemImage(of: object, id: id, wallpaperDir: wallpaperDir)
         return layer
     }
 
     /// The system texture an image object binds to its image's slot (0): its `instance`'s
     /// `usertextures`, else its material's first pass's (2963872291's album-art placeholder);
     /// nil (logged when it names one this app doesn't supply) for none.
-    private func systemImage(of object: WESceneObject, wallpaperDir: URL) -> SceneSystemTexture? {
+    private func systemImage(of object: WESceneObject, id: Int, wallpaperDir: URL) -> SceneSystemTexture? {
         var userTextures: [SceneJSON?] = [object.instance?.usertextures]
         if let imagePath = object.image,
            let model: WEModel = loadJSON(path: imagePath, wallpaperDir: wallpaperDir),
@@ -1180,10 +1194,10 @@ class SceneWallpaperViewModel: ObservableObject {
            let material: WEMaterial = loadJSON(path: materialPath, wallpaperDir: wallpaperDir) {
             userTextures.append(material.passes?.first?.usertextures)
         }
-        return SceneSystemTexture.bindings(in: userTextures, owner: "Layer \(object.id ?? -1)")[0]
+        return SceneSystemTexture.bindings(in: userTextures, owner: "Layer \(id)")[0]
     }
 
-    private func buildImageLayer(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>) -> SceneMetalLayer? {
+    private func buildImageLayer(_ object: WESceneObject, id: Int, wallpaperDir: URL, sceneSize: SIMD2<Float>) -> SceneMetalLayer? {
         guard let imagePath = object.image,
               let model: WEModel = loadJSON(path: imagePath, wallpaperDir: wallpaperDir),
               let materialPath = model.material,
@@ -1191,13 +1205,13 @@ class SceneWallpaperViewModel: ObservableObject {
             return nil
         }
         if model.solidlayer == true {
-            var layer = buildSolidLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
+            var layer = buildSolidLayer(object, id: id, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
             layer.solidBlending = blendingOverride(for: object)?.rawValue ?? material.passes?.first?.blending ?? "normal"
             // `flat` has no `BLENDMODE`: a blend mode composites the fill through WE's material for it.
             if let mode = object.colorBlendMode, mode != 0 {
-                layer.imageMaterial = buildBlendComposite(mode, object: object, wallpaperDir: wallpaperDir)
+                layer.imageMaterial = buildBlendComposite(mode, object: object, id: id, wallpaperDir: wallpaperDir)
             } else {
-                layer.imageMaterial = buildImageMaterial(materialPath, object: object, wallpaperDir: wallpaperDir)
+                layer.imageMaterial = buildImageMaterial(materialPath, object: object, id: id, wallpaperDir: wallpaperDir)
             }
             return layer
         }
@@ -1229,8 +1243,8 @@ class SceneWallpaperViewModel: ObservableObject {
         let rotation = Float(object.angles?.parseVector3().2 ?? 0)
         let staticScale = object.scale?.parseVector3() ?? (1, 1, 1)
         let objectColor = object.color?.parseVector3() ?? (1, 1, 1)
-        let effectPlans = buildEffectPlans(object.effects ?? [], objectID: object.id ?? -1, wallpaperDir: wallpaperDir)
-        var layer = SceneMetalLayer(id: String(object.id ?? -1), name: object.name ?? String(object.id ?? -1), source: source, position: position, size: size,
+        let effectPlans = buildEffectPlans(object.effects ?? [], objectID: id, wallpaperDir: wallpaperDir)
+        var layer = SceneMetalLayer(id: String(id), name: object.name ?? String(id), source: source, position: position, size: size,
                        scale: SIMD2<Float>(Float(staticScale.0), Float(staticScale.1)),
                        opacity: Float(object.alpha ?? 1),
                        brightness: Float(object.brightness ?? 1), color: SIMD4<Float>(Float(objectColor.0), Float(objectColor.1), Float(objectColor.2), 1), text: nil,
@@ -1248,20 +1262,20 @@ class SceneWallpaperViewModel: ObservableObject {
         if !sceneInput {
             // A puppet is lit like any image: its mesh draws the image (`layer.puppet`) that its
             // effects, prelighting and own draw read.
-            layer.imageMaterial = buildImageMaterial(materialPath, object: object, wallpaperDir: wallpaperDir,
+            layer.imageMaterial = buildImageMaterial(materialPath, object: object, id: id, wallpaperDir: wallpaperDir,
                                                      prelit: !effectPlans.plans.isEmpty)
         }
         if let rig = model.puppet, !sceneInput {
             let imageSize = source.pixelSize * textureReductionApplied(named: textureName, materialDir: materialPath,
                                                                        wallpaperDir: wallpaperDir)
-            layer.puppet = buildPuppet(rig, materialPath: materialPath, object: object, source: source,
+            layer.puppet = buildPuppet(rig, materialPath: materialPath, object: object, id: id, source: source,
                                        imageSize: imageSize, wallpaperDir: wallpaperDir)
         }
         return layer
     }
 
     /// A Puppet Warp image's mesh (`ScenePuppetPlan`); nil (logged) draws the image unwarped.
-    private func buildPuppet(_ rig: String, materialPath: String, object: WESceneObject, source: SceneMetalTextureSource,
+    private func buildPuppet(_ rig: String, materialPath: String, object: WESceneObject, id: Int, source: SceneMetalTextureSource,
                              imageSize: SIMD2<Float>, wallpaperDir: URL) -> ScenePuppetPlan? {
         guard let translator = effectTranslator else { return nil }
         let builder = ImageMaterialPlanBuilder(
@@ -1275,7 +1289,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                             imageSize: imageSize, animationLayers: object.animationLayers,
                                             builder: builder)
         } catch {
-            OWELog.error(.scene, "Puppet layer \(object.id ?? -1) draws its image unwarped, rig \(rig): \(error)")
+            OWELog.error(.scene, "Puppet layer \(id) draws its image unwarped, rig \(rig): \(error)")
             return nil
         }
     }
@@ -1343,7 +1357,7 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// The image's own material through WE's shader; nil (logged when it's a failure) keeps the native draw.
     /// `prelit`: the layer has effects, so WE lights it before them (`ImageMaterialPlan.prelighting`).
-    private func buildImageMaterial(_ materialPath: String, object: WESceneObject, wallpaperDir: URL,
+    private func buildImageMaterial(_ materialPath: String, object: WESceneObject, id: Int, wallpaperDir: URL,
                                     prelit: Bool = false) -> ImageMaterialPlan? {
         guard let translator = effectTranslator else { return nil }
         let builder = ImageMaterialPlanBuilder(
@@ -1355,14 +1369,14 @@ class SceneWallpaperViewModel: ObservableObject {
             return try builder.build(materialPath: materialPath, colorBlendMode: object.colorBlendMode,
                                      clampUVs: object.clampuvs, prelit: prelit)
         } catch {
-            OWELog.error(.scene, "Image layer \(object.id ?? -1) draws natively, material \(materialPath): \(error)")
+            OWELog.error(.scene, "Image layer \(id) draws natively, material \(materialPath): \(error)")
             return nil
         }
     }
 
     /// A layer's own image composited with its `colorBlendMode` through WE's composite material
     /// (`ImageMaterialPlanBuilder.buildBlendComposite`); nil (logged) keeps the native draw.
-    private func buildBlendComposite(_ mode: Int, object: WESceneObject, wallpaperDir: URL) -> ImageMaterialPlan? {
+    private func buildBlendComposite(_ mode: Int, object: WESceneObject, id: Int, wallpaperDir: URL) -> ImageMaterialPlan? {
         guard let translator = effectTranslator else { return nil }
         let builder = ImageMaterialPlanBuilder(
             translator: translator,
@@ -1372,7 +1386,7 @@ class SceneWallpaperViewModel: ObservableObject {
         do {
             return try builder.buildBlendComposite(colorBlendMode: mode)
         } catch {
-            OWELog.error(.scene, "Layer \(object.id ?? -1) draws without its blend mode \(mode): \(error)")
+            OWELog.error(.scene, "Layer \(id) draws without its blend mode \(mode): \(error)")
             return nil
         }
     }
@@ -1380,7 +1394,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// `models/util/solidlayer*.json`: WE's `flat` shader fills the quad with the object's `color`.
     /// The colour is baked into a generated texture so authored effects see the coloured image, as
     /// they do in WE; `alpha` stays on the layer and is applied when the quad is drawn.
-    private func buildSolidLayer(_ object: WESceneObject, wallpaperDir: URL,
+    private func buildSolidLayer(_ object: WESceneObject, id: Int, wallpaperDir: URL,
                                  sceneSize: SIMD2<Float>) -> SceneMetalLayer {
         let authoredSize = object.size.map { value -> SIMD2<Float> in
             let parsed = value.parseVector2()
@@ -1392,7 +1406,7 @@ class SceneWallpaperViewModel: ObservableObject {
         let size = authoredSize ?? sceneSize
         let color = object.color?.parseVector3() ?? (1, 1, 1)
         let staticScale = object.scale?.parseVector3() ?? (1, 1, 1)
-        var layer = SceneMetalLayer(id: String(object.id ?? -1), name: object.name ?? String(object.id ?? -1),
+        var layer = SceneMetalLayer(id: String(id), name: object.name ?? String(id),
                        source: .image(Self.solidImage(red: color.0, green: color.1, blue: color.2)),
                        position: localOrigin(for: object),
                        size: size,
@@ -1402,11 +1416,11 @@ class SceneWallpaperViewModel: ObservableObject {
                        parallaxDepth: Self.parallaxDepth(of: object),
                        perspective: object.perspective ?? false,
                        rotation: Float(object.angles?.parseVector3().2 ?? 0))
-        layer.weEffects = buildEffectPlans(object.effects ?? [], objectID: object.id ?? -1, wallpaperDir: wallpaperDir).plans
+        layer.weEffects = buildEffectPlans(object.effects ?? [], objectID: id, wallpaperDir: wallpaperDir).plans
         layer.alignment = object.alignment
         layer.solidFill = SIMD4(Float(color.0), Float(color.1), Float(color.2), 1)
         // The colour is the image: a bound colour rebuilds the layer.
-        bindingTable.baked(.objectField(.color), of: .object(object.id ?? -1))
+        bindingTable.baked(.objectField(.color), of: .object(id))
         return layer
     }
 
@@ -1432,7 +1446,7 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// Text is laid out and rasterised by the renderer every frame (its string can change); the
     /// layer's source is only a placeholder. `size` is the block before auto-sizing.
-    private func buildMetalTextLayer(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>) -> SceneMetalLayer? {
+    private func buildMetalTextLayer(_ object: WESceneObject, id: Int, wallpaperDir: URL, sceneSize: SIMD2<Float>) -> SceneMetalLayer? {
         guard let text = object.textValue else { return nil }
         let sizeValue = object.size?.parseVector2() ?? (0, 0)
         let textScale = object.scale?.parseVector3() ?? (1, 1, 1)
@@ -1452,7 +1466,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                          useEllipsis: object.limituseellipsis ?? false,
                                          anchor: object.anchor, blockAlign: object.blockalign ?? false,
                                          effects: object.textEffects.effects)
-        var layer = SceneMetalLayer(id: String(object.id ?? -1), name: object.name ?? String(object.id ?? -1),
+        var layer = SceneMetalLayer(id: String(id), name: object.name ?? String(id),
                                source: .image(transparentPlaceholderImage),
                                position: localOrigin(for: object),
                                size: SIMD2<Float>(Float(sizeValue.0), Float(sizeValue.1)),
@@ -1464,12 +1478,12 @@ class SceneWallpaperViewModel: ObservableObject {
         // No alignment: the lines sit around the origin by `horizontalalign` and `verticalalign` as
         // WE places them (`SceneTextLayout.baselineOrigins`), in a block centred on them (`boxCenter`).
         // WE runs a text object's effects on its rasterised text; the renderer rasterises before effects run.
-        layer.weEffects = buildEffectPlans(object.effects ?? [], objectID: object.id ?? -1, wallpaperDir: wallpaperDir).plans
+        layer.weEffects = buildEffectPlans(object.effects ?? [], objectID: id, wallpaperDir: wallpaperDir).plans
         // Drawn through WE's `font` material, which reads its texture as coverage: effects' output
         // isn't that, and `font` has no blend-mode combo, so those layers keep the native draw.
         // Text with font effects draws its coloured raster (`SceneTextEffects`), not coverage.
         if layer.weEffects.isEmpty, (object.colorBlendMode ?? 0) == 0, textConfig.effects == nil {
-            layer.imageMaterial = buildTextMaterial(object, wallpaperDir: wallpaperDir)
+            layer.imageMaterial = buildTextMaterial(object, id: id, wallpaperDir: wallpaperDir)
         }
         return layer
     }
@@ -1477,7 +1491,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// A text object's `font` material (`materials/fonts/basefont.json`), whose `g_Texture0` is the
     /// renderer's rasterised text. WE's MSDF atlas (`msdf`, outline, drop shadow) isn't generated:
     /// CoreText's coverage stands in for it, as for plain fonts. nil (logged) keeps the native draw.
-    private func buildTextMaterial(_ object: WESceneObject, wallpaperDir: URL) -> ImageMaterialPlan? {
+    private func buildTextMaterial(_ object: WESceneObject, id: Int, wallpaperDir: URL) -> ImageMaterialPlan? {
         guard let translator = effectTranslator else { return nil }
         let builder = ImageMaterialPlanBuilder(
             translator: translator,
@@ -1488,7 +1502,7 @@ class SceneWallpaperViewModel: ObservableObject {
         do {
             return try builder.buildText(materialPath: materialPath)
         } catch {
-            OWELog.error(.scene, "Text layer \(object.id ?? -1) draws natively, material \(materialPath): \(error)")
+            OWELog.error(.scene, "Text layer \(id) draws natively, material \(materialPath): \(error)")
             return nil
         }
     }
@@ -1498,9 +1512,9 @@ class SceneWallpaperViewModel: ObservableObject {
     /// (0x14025fac0) sizes it as a square the scene's orthographic height on each side, and which
     /// writes `DIRECTDRAW` 1 into the combos of every pass of its effects before they load
     /// (0x14025ff50, called per pass at 0x1401e7ad2), so an effect draws on nothing, not on an image.
-    private func buildShapeLayer(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>) -> SceneMetalLayer? {
+    private func buildShapeLayer(_ object: WESceneObject, id: Int, wallpaperDir: URL, sceneSize: SIMD2<Float>) -> SceneMetalLayer? {
         guard object.shape != nil, let effects = object.effects, !effects.isEmpty else { return nil }
-        let plans = buildEffectPlans(effects, objectID: object.id ?? -1, wallpaperDir: wallpaperDir,
+        let plans = buildEffectPlans(effects, objectID: id, wallpaperDir: wallpaperDir,
                                      objectCombos: Self.shapeEffectCombos).plans
         guard !plans.isEmpty else { return nil }
         let position = localOrigin(for: object)
@@ -1513,7 +1527,7 @@ class SceneWallpaperViewModel: ObservableObject {
         }
         // Its transform is any object's (the base class 0x1401e6980 reads `scale` as for an image).
         let staticScale = object.scale?.parseVector3() ?? (1, 1, 1)
-        var layer = SceneMetalLayer(id: String(object.id ?? -1), name: object.name ?? String(object.id ?? -1),
+        var layer = SceneMetalLayer(id: String(id), name: object.name ?? String(id),
                        source: .image(transparentPlaceholderImage), position: position, size: size,
                        scale: SIMD2<Float>(Float(staticScale.0), Float(staticScale.1)),
                        opacity: Float(object.alpha ?? 1),
@@ -1879,16 +1893,16 @@ class SceneWallpaperViewModel: ObservableObject {
         !scene.general.projection.isPerspective
     }
 
-    private func buildParticleFamily(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>, pixelUnits: Bool,
+    private func buildParticleFamily(_ object: WESceneObject, id: Int, wallpaperDir: URL, sceneSize: SIMD2<Float>, pixelUnits: Bool,
                                      transforms: SceneTransformHierarchy,
                                      cache: ParticleDefinitionCache) -> [SceneMetalParticleSystem] {
         OWEPhaseTiming.measure(.particlesModels) {
-            buildParticleFamilyUntimed(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, pixelUnits: pixelUnits,
+            buildParticleFamilyUntimed(object, id: id, wallpaperDir: wallpaperDir, sceneSize: sceneSize, pixelUnits: pixelUnits,
                                        transforms: transforms, cache: cache)
         }
     }
 
-    private func buildParticleFamilyUntimed(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>,
+    private func buildParticleFamilyUntimed(_ object: WESceneObject, id: Int, wallpaperDir: URL, sceneSize: SIMD2<Float>,
                                             pixelUnits: Bool, transforms: SceneTransformHierarchy,
                                             cache: ParticleDefinitionCache) -> [SceneMetalParticleSystem] {
         guard let particlePath = object.particle else { return [] }
@@ -1898,11 +1912,11 @@ class SceneWallpaperViewModel: ObservableObject {
         let builder = ParticleFamilyBuilder(
             load: { [weak self] path in self?.loadJSON(path: path, wallpaperDir: wallpaperDir) },
             build: { [weak self] path, system, world, overrides in
-                self?.buildMetalParticleSystem(path, particleSystem: system, object: object, world: world,
+                self?.buildMetalParticleSystem(path, particleSystem: system, object: object, id: id, world: world,
                                                overrides: overrides, sceneSize: sceneSize, pixelUnits: pixelUnits,
                                                wallpaperDir: wallpaperDir, cache: cache)
             },
-            report: { message in OWELog.error(.scene, "Particle object \(object.id ?? -1): \(message)") })
+            report: { message in OWELog.error(.scene, "Particle object \(id): \(message)") })
         var family = builder.family(particlePath, world: world,
                                     overrides: SceneParticleOverrides(object.instanceoverride, in: userValueContext))
         // Only the root is the object; its children follow it through their links.
@@ -1920,7 +1934,7 @@ class SceneWallpaperViewModel: ObservableObject {
         Self.logDetail("\(wallpaperDir.lastPathComponent): \(summary)")
     }
 
-    private func buildMetalParticleSystem(_ particlePath: String, particleSystem: WEParticleSystem, object: WESceneObject,
+    private func buildMetalParticleSystem(_ particlePath: String, particleSystem: WEParticleSystem, object: WESceneObject, id: Int,
                                           world: SceneAffineTransform, overrides: SceneParticleOverrides,
                                           sceneSize: SIMD2<Float>, pixelUnits: Bool, wallpaperDir: URL,
                                           cache: ParticleDefinitionCache) -> SceneMetalParticleSystem? {
@@ -1935,7 +1949,7 @@ class SceneWallpaperViewModel: ObservableObject {
         guard let parts = cache.parts(for: key, noteReads: { table.noteReads($0) }, build: {
             table.capturingReads {
                 buildSharedParticleParts(particlePath, materialPath: materialPath, particleSystem: particleSystem,
-                                         blending: blending, object: object, wallpaperDir: wallpaperDir,
+                                         blending: blending, object: object, id: id, wallpaperDir: wallpaperDir,
                                          timing: cache.timing)
             }
         }) else { return nil }
@@ -1948,8 +1962,8 @@ class SceneWallpaperViewModel: ObservableObject {
     /// the material, texture 0, its sprite sheet, each renderer's material plan and the built-in
     /// draw's texture. Nil when the system can't draw (no material or texture).
     private func buildSharedParticleParts(_ particlePath: String, materialPath: String, particleSystem: WEParticleSystem,
-                                          blending: WEMaterialBlending?, object: WESceneObject, wallpaperDir: URL,
-                                          timing: ParticleBuildTiming) -> ParticleSharedParts? {
+                                          blending: WEMaterialBlending?, object: WESceneObject, id: Int,
+                                          wallpaperDir: URL, timing: ParticleBuildTiming) -> ParticleSharedParts? {
         guard var material: WEMaterial = timing.measure(.materialDocument, {
                   loadJSON(path: materialPath, wallpaperDir: wallpaperDir)
               }),
@@ -1958,7 +1972,7 @@ class SceneWallpaperViewModel: ObservableObject {
         guard let source = timing.measure(.texture, {
             loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir, colour: true)
         }) else {
-            OWELog.error(.scene, "\(wallpaperDir.lastPathComponent): particle \(particlePath) (object \(object.id ?? -1)): "
+            OWELog.error(.scene, "\(wallpaperDir.lastPathComponent): particle \(particlePath) (object \(id)): "
                          + "texture \(textureName) of \(materialPath) not found")
             return nil
         }
@@ -1968,7 +1982,7 @@ class SceneWallpaperViewModel: ObservableObject {
         let renderers = particleSystem.renderer ?? []
         let materialPlan = timing.measure(.materialPlan) {
             buildParticleMaterial(materialPath, particleSystem: particleSystem, renderer: renderers.first, source: source,
-                                  spriteSheet: spriteSheet, blending: blending, object: object, wallpaperDir: wallpaperDir)
+                                  spriteSheet: spriteSheet, blending: blending, object: object, id: id, wallpaperDir: wallpaperDir)
         }
         let fallbackSource = timing.measure(.fallbackTexture) { () -> SceneMetalTextureSource? in
             let albedo = ParticleMaterialPlanBuilder.textureHeader(named: textureName, materialPath: materialPath) {
@@ -1981,7 +1995,7 @@ class SceneWallpaperViewModel: ObservableObject {
         let rendererMaterials = timing.measure(.extraRenderers) {
             renderers.dropFirst().map { renderer in
                 buildParticleMaterial(materialPath, particleSystem: particleSystem, renderer: renderer, source: source,
-                                      spriteSheet: spriteSheet, blending: blending, object: object,
+                                      spriteSheet: spriteSheet, blending: blending, object: object, id: id,
                                       wallpaperDir: wallpaperDir)
             }
         }
@@ -2014,7 +2028,7 @@ class SceneWallpaperViewModel: ObservableObject {
     private func buildParticleMaterial(_ materialPath: String, particleSystem: WEParticleSystem,
                                        renderer: WEParticleRenderer?, source: SceneMetalTextureSource,
                                        spriteSheet: SpriteSheet?, blending: WEMaterialBlending?, object: WESceneObject,
-                                       wallpaperDir: URL) -> ParticleMaterialPlan? {
+                                       id: Int, wallpaperDir: URL) -> ParticleMaterialPlan? {
         guard let translator = effectTranslator else { return nil }
         let start = DispatchTime.now().uptimeNanoseconds
         defer {
@@ -2030,7 +2044,7 @@ class SceneWallpaperViewModel: ObservableObject {
             return try builder.build(materialPath: materialPath, renderer: renderer, flags: particleSystem.flags ?? 0,
                                      baseTexture: source, spriteSheet: spriteSheet)
         } catch {
-            OWELog.error(.scene, "Particle system \(object.id ?? -1) uses the built-in draw, material \(materialPath): \(error)")
+            OWELog.error(.scene, "Particle system \(id) uses the built-in draw, material \(materialPath): \(error)")
             return nil
         }
     }

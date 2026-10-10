@@ -1,9 +1,17 @@
 import Foundation
 
-/// The user's Workshop subscriptions, from `IPublishedFileService/GetUserFiles/v1` with
-/// `type=mysubscriptions` (`subscribed` always answers `{"response":{}}`). It needs the user's Web API
-/// key and SteamID64; an empty answer is treated as "Steam didn't return your subscriptions".
+/// The user's Workshop lists, from `IPublishedFileService/GetUserFiles/v1`: subscriptions with
+/// `type=mysubscriptions` (`subscribed` always answers `{"response":{}}`), and favourites with
+/// `type=myfavorites`, the list Wallpaper Engine's heart writes (`setFavorited` in its UI, Steam's
+/// favourited-items query in `wallpaperui.exe`). It needs the user's Web API key and SteamID64; an
+/// empty answer is treated as "Steam didn't return the list".
 enum WorkshopSubscriptions {
+    /// Which of the account's lists GetUserFiles returns.
+    enum List: String {
+        case subscriptions = "mysubscriptions"
+        case favorites = "myfavorites"
+    }
+
     static let userFilesURL = URL(string: "https://api.steampowered.com/IPublishedFileService/GetUserFiles/v1/")!
     /// The probe's answer, kept so an account Steam returns nothing for doesn't show the option again.
     static let probeResultKey = "WorkshopSubscriptionsProbe.mysubscriptions"
@@ -20,11 +28,12 @@ enum WorkshopSubscriptions {
     }
 
     /// The query of one GetUserFiles page. The key goes in the `x-webapi-key` header, never here.
-    static func queryItems(steamID: String, page: Int, perPage: Int = 100) -> [URLQueryItem] {
+    static func queryItems(steamID: String, page: Int, perPage: Int = 100,
+                           list: List = .subscriptions) -> [URLQueryItem] {
         [
             URLQueryItem(name: "steamid", value: steamID),
             URLQueryItem(name: "appid", value: String(WorkshopAPIService.wallpaperEngineAppId)),
-            URLQueryItem(name: "type", value: "mysubscriptions"),
+            URLQueryItem(name: "type", value: list.rawValue),
             URLQueryItem(name: "page", value: String(page)),
             URLQueryItem(name: "numperpage", value: String(perPage)),
             URLQueryItem(name: "return_short_description", value: "false"),
@@ -66,6 +75,38 @@ enum WorkshopSubscriptions {
             }) {
                 return id
             }
+        }
+        return nil
+    }
+
+    /// The account Steam last logged in with, when no account name is known: the user whose
+    /// `MostRecent` is 1 in `config/loginusers.vdf`, or the only user listed, under each root in order.
+    static func mostRecentSteamID64(steamRoots: [URL], fileManager: FileManager = .default) -> String? {
+        for root in steamRoots {
+            let loginUsers = root.appending(path: "config/loginusers.vdf")
+            if fileManager.fileExists(atPath: loginUsers.path),
+               let id = readID(loginUsers, mostRecentSteamID(inLoginUsers:)) {
+                return id
+            }
+        }
+        return nil
+    }
+
+    static func mostRecentSteamID(inLoginUsers entries: [ValveKeyValues.Entry]) -> String? {
+        let users = (entries["users"]?.entries ?? []).filter { isSteamID64($0.key) }
+        if let recent = users.first(where: { $0.value["MostRecent"]?.string == "1" }) { return recent.key }
+        return users.count == 1 ? users[0].key : nil
+    }
+
+    /// The Steam folder a Wallpaper Engine install sits in (`<Steam>/steamapps/common/wallpaper_engine`,
+    /// or a folder inside it): the parent of the nearest `steamapps` above `folder`.
+    static func steamRoot(containing folder: URL) -> URL? {
+        var url = folder.standardizedFileURL
+        while url.pathComponents.count > 1 {
+            if url.lastPathComponent.caseInsensitiveCompare("steamapps") == .orderedSame {
+                return url.deletingLastPathComponent()
+            }
+            url = url.deletingLastPathComponent()
         }
         return nil
     }
