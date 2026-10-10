@@ -28,6 +28,33 @@ struct DisplayPlaybackSources: @unchecked Sendable {
     /// Starts following which processes play sound; `changed` is called on any thread when that
     /// changes. The returned closure stops following.
     var observeAudioProcesses: (_ changed: @escaping @Sendable () -> Void) -> (() -> Void) = { _ in {} }
+    /// Whether the screen is locked and whether this user's session is the one in front, read
+    /// when the monitor starts and when the session becomes active again. Main thread.
+    var session: () -> DesktopSessionState = { DesktopSessionState() }
+    /// Where the workspace's notifications arrive (`NSWorkspace`'s center in the app).
+    var workspaceNotifications: NotificationCenter = NSWorkspace.shared.notificationCenter
+    /// Where the system's distributed notifications arrive: the screen's lock and unlock.
+    var distributedNotifications: NotificationCenter = DistributedNotificationCenter.default()
+}
+
+/// The login session's state, as the window server reports it (`CGSessionCopyCurrentDictionary`).
+struct DesktopSessionState: Equatable {
+    /// The screen is locked: `screenLockedNotification` until `screenUnlockedNotification`.
+    var screenLocked = false
+    /// This user's session is the one on the console (not switched away from).
+    var active = true
+
+    /// The distributed notifications loginwindow posts when the screen locks and unlocks.
+    static let screenLockedNotification = Notification.Name("com.apple.screenIsLocked")
+    static let screenUnlockedNotification = Notification.Name("com.apple.screenIsUnlocked")
+
+    /// The window server's answer now; a session it can't describe counts as unlocked and active.
+    static func current() -> DesktopSessionState {
+        // Optional: nil only without a window server session (then nothing is shown anyway).
+        guard let info = CGSessionCopyCurrentDictionary() as? [String: Any] else { return DesktopSessionState() }
+        return DesktopSessionState(screenLocked: (info["CGSSessionScreenIsLocked"] as? Bool) ?? false,
+                                   active: (info[kCGSessionOnConsoleKey as String] as? Bool) ?? true)
+    }
 }
 
 extension DisplayPlaybackSources {
@@ -64,7 +91,8 @@ extension DisplayPlaybackSources {
             observeAudioProcesses: { changed in
                 audioProcesses.start(changed: changed)
                 return { audioProcesses.stop() }
-            })
+            },
+            session: { DesktopSessionState.current() })
     }
 }
 
