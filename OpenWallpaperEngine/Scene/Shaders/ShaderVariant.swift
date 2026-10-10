@@ -51,7 +51,7 @@ enum ShaderVariantError: Error, CustomStringConvertible {
 /// hundreds of thousands possible, so nothing is precompiled.
 final class ShaderVariantTranslator {
     /// Bump whenever translated output for the same input can change.
-    static let revision = 15
+    static let revision = 16
 
     let compiler: ShaderCompiler
     /// Root of the disk cache; variants go into its `generationDirectory`.
@@ -210,6 +210,18 @@ final class ShaderVariantTranslator {
         }
     }
 
+    /// The combos the prelude `#define`s: `combos` without a sampler's combo (`"combo":"NORMALMAP"`)
+    /// at 0 that neither stage declares as a `[COMBO]`. WE defines a sampler's combo only while a
+    /// texture is bound to it, which WE's shaders rely on: `genericparticle.frag` lights both sides
+    /// under `#ifndef NORMALMAP`, and `generic3.frag` declares `v_WorldNormal` only where
+    /// `NORMALMAP` is undefined but reads it wherever `#if NORMALMAP` fails. In an `#if` an
+    /// undefined name is 0, so nothing else changes.
+    static func definedCombos(vertex: ShaderSource, fragment: ShaderSource, combos: [String: Int]) -> [String: Int] {
+        let declared = Set((vertex.combos + fragment.combos).map(\.name))
+        let samplerCombos = Set((vertex.samplers + fragment.samplers).compactMap { $0.combo?.uppercased() })
+        return combos.filter { name, value in value != 0 || !samplerCombos.contains(name) || declared.contains(name) }
+    }
+
     /// The variant's cache key. Only `effectiveCombos` are hashed, so a combo the shaders never
     /// name doesn't fork the key (test-risks LR17).
     static func cacheKey(vertex: ShaderSource, fragment: ShaderSource, combos: [String: Int],
@@ -231,10 +243,11 @@ final class ShaderVariantTranslator {
         let label = "\(vertex.path) + \(fragment.path)"
         // The input of the step running now, kept for `recordFailure`.
         var step: (source: ShaderSource, text: String)?
+        let defines = Self.definedCombos(vertex: vertex, fragment: fragment, combos: combos)
         do {
-            step = (vertex, ShaderPrelude.text(for: .vertex, combos: combos, analysis: vertex.preludeAnalysis) + vertex.text(combos: combos))
+            step = (vertex, ShaderPrelude.text(for: .vertex, combos: defines, analysis: vertex.preludeAnalysis) + vertex.text(combos: combos))
             let vertexText = try compiler.preprocess(step!.text, stage: .vertex)
-            step = (fragment, ShaderPrelude.text(for: .fragment, combos: combos, analysis: fragment.preludeAnalysis) + fragment.text(combos: combos))
+            step = (fragment, ShaderPrelude.text(for: .fragment, combos: defines, analysis: fragment.preludeAnalysis) + fragment.text(combos: combos))
             let fragmentText = try compiler.preprocess(step!.text, stage: .fragment)
             let pair = ShaderPairRewriter.rewrite(
                 vertex: ShaderPrelude.fixupAfterPreprocess(vertexText),

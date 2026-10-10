@@ -123,6 +123,13 @@ enum ShaderPrelude {
         "#define CASTF(x) (float(x))",
         "#define CASTI(x) (int(x))",
         "#define CASTU(x) (uint(x))",
+        // WE's macros for passing a texture to a function (`ApplyReflection`, `ApplyMorphPosition`;
+        // `wallpaper64.exe` 0x140487eec…0x140487fe6): a texture and its sampler state in HLSL, the
+        // combined sampler here.
+        "#define DECLARE_SAMPLER2D_PARAMETER(t) sampler2D t",
+        "#define MAKE_SAMPLER2D_ARGUMENT(t) t",
+        "#define DECLARE_SAMPLER2D_COMPARE_PARAMETER(t) sampler2DComparison t",
+        "#define MAKE_SAMPLER2D_COMPARE_ARGUMENT(t) t",
         "#define float1 float",
         "#define float2 vec2",
         "#define float3 vec3",

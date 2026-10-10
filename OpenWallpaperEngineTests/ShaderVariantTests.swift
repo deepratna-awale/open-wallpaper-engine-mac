@@ -79,6 +79,91 @@ final class ShaderVariantTests: XCTestCase {
         return variant
     }
 
+    // MARK: - Names the engine supplies
+
+    /// A pair from inline sources, its includes and combos parsed as for WE's files.
+    private func inlinePair(vertex: String, fragment: String) throws -> (ShaderSource, ShaderSource) {
+        let files = ["shaders/inline.vert": vertex, "shaders/inline.frag": fragment]
+        let loader = ShaderSourceLoader(readFile: { files[$0].map { Data($0.utf8) } })
+        return (try loader.load("inline", stage: .vertex), try loader.load("inline", stage: .fragment))
+    }
+
+    private static let inlineVertex = """
+    attribute vec3 a_Position;
+    attribute vec2 a_TexCoord;
+    varying vec2 v_TexCoord;
+    void main() { gl_Position = vec4(a_Position, 1.0); v_TexCoord = a_TexCoord; }
+    """
+
+    /// WE's macros for handing a texture to a function (`ApplyReflection`, `ApplyMorphPosition`).
+    func testTextureParameterMacrosPassASampler() throws {
+        let (vertex, fragment) = try inlinePair(vertex: Self.inlineVertex, fragment: """
+        uniform sampler2D g_Texture0;
+        varying vec2 v_TexCoord;
+        vec4 Read(DECLARE_SAMPLER2D_PARAMETER(t), vec2 uv) { return texSample2D(t, uv); }
+        void main() { gl_FragColor = Read(MAKE_SAMPLER2D_ARGUMENT(g_Texture0), v_TexCoord); }
+        """)
+        let variant = try translator.variant(vertex: vertex, fragment: fragment, combos: [:])
+        XCTAssertEqual(variant.textureSlots, [0])
+    }
+
+    /// A sampler's combo is defined only while its texture is bound: `#ifdef NORMALMAP` fails
+    /// without a normal map, as `generic3` and `genericparticle` expect.
+    func testUnboundSamplerComboIsUndefined() throws {
+        let (vertex, fragment) = try inlinePair(vertex: Self.inlineVertex, fragment: """
+        uniform sampler2D g_Texture1; // {"combo":"NORMALMAP"}
+        varying vec2 v_TexCoord;
+        void main() {
+        #ifdef NORMALMAP
+            gl_FragColor = texSample2D(g_Texture1, v_TexCoord) * 0.25;
+        #else
+            gl_FragColor = vec4(v_TexCoord, 0.0, 0.75);
+        #endif
+        }
+        """)
+        let unbound = ShaderVariantTranslator.resolveCombos(vertex: vertex, fragment: fragment, overrides: [], boundTextureSlots: [0])
+        XCTAssertEqual(unbound["NORMALMAP"], 0)
+        XCTAssertNil(ShaderVariantTranslator.definedCombos(vertex: vertex, fragment: fragment, combos: unbound)["NORMALMAP"])
+        XCTAssertTrue(try translator.variant(vertex: vertex, fragment: fragment, combos: unbound).fragmentMSL.contains("0.75"))
+        let bound = ShaderVariantTranslator.resolveCombos(vertex: vertex, fragment: fragment, overrides: [], boundTextureSlots: [0, 1])
+        XCTAssertTrue(try translator.variant(vertex: vertex, fragment: fragment, combos: bound).fragmentMSL.contains("0.25"))
+    }
+
+    /// A declared combo at 0 stays defined, sampler or not: WE defines every combo it resolves.
+    func testDeclaredComboAtZeroStaysDefined() throws {
+        let (vertex, fragment) = try inlinePair(vertex: Self.inlineVertex, fragment: """
+        // [COMBO] {"combo":"MASK","default":0}
+        uniform sampler2D g_Texture1; // {"combo":"MASK"}
+        varying vec2 v_TexCoord;
+        void main() { gl_FragColor = vec4(float(MASK)); }
+        """)
+        XCTAssertEqual(ShaderVariantTranslator.definedCombos(vertex: vertex, fragment: fragment, combos: ["MASK": 0])["MASK"], 0)
+    }
+
+    /// `TEX<n>FORMAT` is set for every `formatcombo` sampler with a texture, the slot's own or its
+    /// default (`util/fur`, R8, for `fur4`'s `g_Texture8`), RGBA-loaded formats as
+    /// `FORMAT_RGBA8888`.
+    func testFormatCombosCoverDefaultTexturesAndRGBA() throws {
+        func tex(_ format: UInt32) -> Data {
+            var data = Data("TEXV0005\u{0}TEXI0001\u{0}".utf8)
+            withUnsafeBytes(of: format.littleEndian) { data.append(contentsOf: $0) }
+            data.append(Data(count: 16))
+            return data
+        }
+        let files = ["materials/util/fur.tex": tex(9)]
+        let builder = ImageMaterialPlanBuilder(translator: translator, readFile: { files[$0] }, loadTexture: { _, _ in nil })
+        let samplers = ShaderSourceLoader.parseUniforms("""
+        uniform sampler2D g_Texture1; // {"formatcombo":true}
+        uniform sampler2D g_Texture8; // {"default":"util/fur","formatcombo":true}
+        uniform sampler2D g_Texture9; // {"formatcombo":true}
+        """)
+        let headers = builder.formatHeaders(samplers, listed: [1: tex(0)], materialPath: "materials/m.json")
+        XCTAssertEqual(ImageMaterialPlanBuilder.formatCombos(samplers, headers: headers),
+                       ["TEX1FORMAT": 0, "TEX8FORMAT": 9])
+        XCTAssertEqual(TEXImageFormat(rawValue: 1).formatComboValue, 0, "RGB888 loads as RGBA")
+        XCTAssertEqual(TEXImageFormat(rawValue: 4).formatComboValue, 4, "DXT5 samples as stored")
+    }
+
     /// Scalar splat, vector truncation, float→int, float `%`, float and packed-float4 array
     /// indices, `mix` of different sizes, a `vec4` sampling coordinate.
     func testHLSLImplicitConversionsTranslate() throws {

@@ -33,6 +33,11 @@ struct TEXImageFormat: RawRepresentable, Equatable {
         (3...7).contains(rawValue) || rawValue == 12
     }
 
+    /// The `TEX<n>FORMAT` a shader sees for a texture of this format: the format itself where the
+    /// texture loads as stored (`isChannelReduced`, `isBlockCompressed`), else `FORMAT_RGBA8888`
+    /// (0), the RGBA it is expanded to.
+    var formatComboValue: Int { isChannelReduced || isBlockCompressed ? Int(rawValue) : 0 }
+
     /// The `index`th 32-bit word after the `TEXI0001` tag of a `.tex` file (`TEXV0005\0TEXI0001\0`,
     /// format, flags…); nil when the data isn't a `.tex`.
     static func texiWord(_ index: Int, in data: Data) -> UInt32? {

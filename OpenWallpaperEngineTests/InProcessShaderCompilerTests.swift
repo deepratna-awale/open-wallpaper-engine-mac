@@ -59,8 +59,8 @@ final class InProcessShaderCompilerTests: XCTestCase {
     }
 
     func testCompileErrorIsReportedNotFatal() {
-        XCTAssertThrowsError(try InProcessShaderCompiler().compileToMSL("#version 150\nvoid main() { nope(); }",
-                                                                        stage: .fragment)) { error in
+        XCTAssertThrowsError(try InProcessShaderCompiler().compilePairToMSL(
+            vertex: "#version 450\nvoid main() { gl_Position = vec4(0.0); }\n", fragment: "#version 450\nvoid main() { nope(); }")) { error in
             XCTAssertTrue("\(error)".contains("glslang"), "\(error)")
         }
         XCTAssertThrowsError(try InProcessShaderCompiler().preprocess("#if\n", stage: .vertex))
@@ -186,16 +186,17 @@ final class InProcessShaderCompilerTests: XCTestCase {
         let directory = try guardDirectory()
         let skipped = "#version 450\nlayout(location = 0) out vec4 color;\nvoid main() { color = vec4(1.0); }\n"
         let other = "#version 450\nlayout(location = 0) out vec4 color;\nvoid main() { color = vec4(0.5); }\n"
+        let vertex = "#version 450\nvoid main() { gl_Position = vec4(0.0); }\n"
         InProcessCompileCrashGuard(directory: directory, fingerprint: InProcessShaderCompiler.libraryFingerprint)
-            .recordHang(InProcessShaderCompiler.shaderKey(step: "compile", stage: .fragment, source: skipped))
+            .recordHang(InProcessShaderCompiler.shaderKey(step: "compile-pair", stage: .vertex, source: vertex + "\u{0}" + skipped))
         let crashGuard = InProcessCompileCrashGuard(directory: directory, fingerprint: InProcessShaderCompiler.libraryFingerprint)
         crashGuard.collectDeaths()
         let compiler = InProcessShaderCompiler(crashGuard: crashGuard)
-        XCTAssertThrowsError(try compiler.compileToMSL(skipped, stage: .fragment)) { error in
+        XCTAssertThrowsError(try compiler.compilePairToMSL(vertex: vertex, fragment: skipped)) { error in
             guard case ShaderCompilerError.quarantined = error else { return XCTFail("\(error)") }
             XCTAssertTrue("\(error)".contains("quarantined"), "\(error)")
         }
-        XCTAssertFalse(try compiler.compileToMSL(other, stage: .fragment).msl.isEmpty)
+        XCTAssertFalse(try compiler.compilePairToMSL(vertex: vertex, fragment: other).fragment.msl.isEmpty)
         XCTAssertFalse(try compiler.preprocess(skipped, stage: .fragment).isEmpty, "only the step that failed is skipped")
         XCTAssertFalse(compiler.isStuck)
     }

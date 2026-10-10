@@ -13,7 +13,7 @@ final class GLSLReservedWordsTests: XCTestCase {
         let compiler = InProcessShaderCompiler()
         for word in GLSLReservedWords.words.sorted() {
             let text = "#version 450\nlayout(location = 0) out vec4 color;\nvoid main() { float \(word) = 1.0; color = vec4(\(word)); }\n"
-            XCTAssertThrowsError(try compiler.compileToMSL(text, stage: .fragment), word)
+            XCTAssertThrowsError(try compiler.compilePairToMSL(vertex: "#version 450\nvoid main() { gl_Position = vec4(0.0); }\n", fragment: text), word)
         }
     }
 

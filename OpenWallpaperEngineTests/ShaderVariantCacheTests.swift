@@ -26,12 +26,9 @@ final class ShaderVariantCacheTests: XCTestCase {
             self.marker = marker
         }
         func preprocess(_ source: String, stage: ShaderStage) throws -> String { source }
-        func compileToMSL(_ source: String, stage: ShaderStage) throws -> (msl: String, reflection: Data) {
-            compiles += 1
-            return ("// \(marker)", Data("{}".utf8))
-        }
         func compilePairToMSL(vertex: String, fragment: String) throws -> CompiledShaderPair {
-            CompiledShaderPair(vertex: try compileToMSL(vertex, stage: .vertex), fragment: try compileToMSL(fragment, stage: .fragment))
+            compiles += 2
+            return CompiledShaderPair(vertex: ("// \(marker)", Data("{}".utf8)), fragment: ("// \(marker)", Data("{}".utf8)))
         }
     }
 
@@ -77,6 +74,9 @@ final class ShaderVariantCacheTests: XCTestCase {
         14: "f777a1f881241c3d830a24ae93abab77da33e58d9998cce31a84c6212c21576a",
         // Loose uniforms gathered by glslang's relaxed Vulkan rules, both stages linked (15).
         15: "33ed80c55075954dc8f0c47ed436ba008a031a33aa995baca03e14dfe9955844",
+        // Unbound sampler combos left undefined, WE's texture macros, `TEX<n>FORMAT` for every
+        // format-combo texture (16): none of these pairs' defaults change.
+        16: "33ed80c55075954dc8f0c47ed436ba008a031a33aa995baca03e14dfe9955844",
     ]
 
     /// Fails when translated output changes without a `revision` bump, which would let users keep
@@ -290,7 +290,7 @@ final class ShaderVariantCacheTests: XCTestCase {
             for text in cases {
                 // Either outcome is fine; returning at all is the test.
                 _ = try? compiler.preprocess(text, stage: .fragment)
-                _ = try? compiler.compileToMSL("#version 150\n" + text, stage: .fragment)
+                _ = try? compiler.compilePairToMSL(vertex: "#version 450\nvoid main() { gl_Position = vec4(0.0); }\n", fragment: "#version 150\n" + text)
             }
         }
     }
