@@ -46,4 +46,37 @@ final class SceneIDLessObjectTests: XCTestCase {
         let resolved = visibility.resolve { values[$0] }
         XCTAssertEqual(resolved.objects, ["0": true, "1": true, "2": true, "3": false])
     }
+
+    /// Two id-less layers built through the loader each keep their own id (their index), not a
+    /// shared -1: two solid layers, each with its own colour.
+    func testTwoIDLessLayersKeepTheirOwnIDs() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: "owe-idless-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory.appending(path: "models"), withIntermediateDirectories: true)
+        defer {
+            Fixtures.removeStoredSettings(for: directory)
+            try? FileManager.default.removeItem(at: directory) // Optional: a temporary folder.
+        }
+        let files = [
+            "models/solid.json": #"{"solidlayer":true,"material":"materials/util/solidlayer.json"}"#,
+            "materials/util/solidlayer.json": #"{"passes":[{"shader":"flat","textures":[null]}]}"#,
+            "scene.json": #"""
+            {"camera":{"center":"0 0 -1","eye":"0 0 0","up":"0 1 0"},"version":1,
+             "general":{"clearcolor":"0 0 0","orthogonalprojection":{"width":64,"height":64}},
+             "objects":[
+              {"name":"red","image":"models/solid.json","origin":"16 32 0","size":"8 8","color":"1 0 0"},
+              {"name":"green","image":"models/solid.json","origin":"48 32 0","size":"8 8","color":"0 1 0"}
+             ]}
+            """#,
+            "project.json": #"{"file":"scene.json","title":"Fixture: id-less objects","type":"scene"}"#,
+        ]
+        try FileManager.default.createDirectory(at: directory.appending(path: "materials/util"), withIntermediateDirectories: true)
+        for (path, text) in files { try Data(text.utf8).write(to: directory.appending(path: path)) }
+        let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
+        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let content = try XCTUnwrap(model.metalContent())
+        XCTAssertEqual(content.layers.map(\.id), ["0", "1"])
+        XCTAssertEqual(content.layers.map(\.name), ["red", "green"])
+        XCTAssertEqual(content.layers.map(\.solidFill), [SIMD4<Float>(1, 0, 0, 1), SIMD4<Float>(0, 1, 0, 1)] as [SIMD4<Float>?])
+        XCTAssertEqual(content.objectIDs, [0, 1])
+    }
 }
