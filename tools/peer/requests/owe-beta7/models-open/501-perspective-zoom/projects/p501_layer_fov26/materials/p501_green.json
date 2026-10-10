@@ -1,0 +1,20 @@
+{
+ "passes": [
+  {
+   "shader": "generic4",
+   "combos": {
+    "LIGHTING": 0,
+    "FOG": 0
+   },
+   "cullmode": "nocull",
+   "depthtest": "enabled",
+   "depthwrite": "enabled",
+   "constantshadervalues": {
+    "color": "0 0.8 0"
+   },
+   "textures": [
+    "util/white"
+   ]
+  }
+ ]
+}

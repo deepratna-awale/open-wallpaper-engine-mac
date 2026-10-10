@@ -1,0 +1,13 @@
+{
+ "monitor": 2,
+ "resolution": [1920, 1080],
+ "shots": [
+  {"project": "p501_layer_zoom1", "stills": [3.0]},
+  {"project": "p501_layer_zoom2", "stills": [3.0]},
+  {"project": "p501_layer_fov26", "stills": [3.0]},
+  {"project": "p501_path_zoom", "stills": [0.5, 1.0, 1.5], "clip": {"seconds": 4, "fps": 30}},
+  {"project": "p501_path_fov", "stills": [0.5, 1.0, 1.5], "clip": {"seconds": 4, "fps": 30}}
+ ],
+ "naming": "mo2_501_<project without p501_>_t<seconds>.png; clips mo2_501_<project without p501_>.mp4",
+ "editor": ["scene_camera_settings.png", "probe_cam_inspector.png", "viewport_zoom1.png", "viewport_zoom2.png", "editor_path_perspective.json"]
+}

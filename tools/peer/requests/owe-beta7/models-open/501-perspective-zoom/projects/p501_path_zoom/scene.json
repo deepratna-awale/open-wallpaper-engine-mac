@@ -1,0 +1,75 @@
+{
+ "camera": {
+  "center": "0.00000 1.00000 0.00000",
+  "eye": "0.00000 1.00000 14.00000",
+  "up": "0.00000 1.00000 0.00000"
+ },
+ "general": {
+  "ambientcolor": "0.30000 0.30000 0.30000",
+  "bloom": false,
+  "camerafade": false,
+  "cameraparallax": false,
+  "camerashake": false,
+  "clearcolor": "0.85000 0.85000 0.85000",
+  "clearenabled": true,
+  "farz": 10000.0,
+  "fov": 50.0,
+  "hdr": false,
+  "nearz": 0.1,
+  "orthogonalprojection": null,
+  "skylightcolor": "0.30000 0.30000 0.30000",
+  "transparentsorting": false,
+  "zoom": 1.0
+ },
+ "objects": [
+  {
+   "id": 10,
+   "name": "grid",
+   "model": "models/p501_grid.mdl",
+   "origin": "0 0 0",
+   "scale": "1 1 1",
+   "solid": true
+  },
+  {
+   "id": 11,
+   "name": "red cube",
+   "model": "models/p501_red.mdl",
+   "origin": "-2.00000 0.50000 0.00000",
+   "scale": "1 1 1",
+   "solid": true
+  },
+  {
+   "id": 12,
+   "name": "green cube",
+   "model": "models/p501_green.mdl",
+   "origin": "0.00000 0.50000 -5.00000",
+   "scale": "1 1 1",
+   "solid": true
+  },
+  {
+   "id": 13,
+   "name": "blue cube",
+   "model": "models/p501_blue.mdl",
+   "origin": "2.00000 0.50000 -15.00000",
+   "scale": "1 1 1",
+   "solid": true
+  },
+  {
+   "angles": "0.00000 0.00000 0.00000",
+   "camera": "default",
+   "disablepropagation": false,
+   "fov": 50.0,
+   "id": 950,
+   "name": "Probe Cam",
+   "origin": "0.00000 1.00000 10.00000",
+   "queuemode": "random",
+   "solid": true,
+   "zoom": 1.0,
+   "visible": {
+    "value": true
+   },
+   "path": "scripts/camera_paths_950.json"
+  }
+ ],
+ "version": 5
+}
