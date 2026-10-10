@@ -268,6 +268,11 @@ struct OnboardingAssetsStep: View {
                     .font(.headline)
                 WallpaperEngineFavoritesImportView(assets: assets, steamCmd: steamCmd)
             }
+            OnboardingCard {
+                Label("Wallpaper Engine Folders", systemImage: "folder")
+                    .font(.headline)
+                WallpaperEngineFoldersImportView(assets: assets, library: AppDelegate.shared.contentViewModel.library)
+            }
         }
         .onAppear { assets.refresh() }
     }
