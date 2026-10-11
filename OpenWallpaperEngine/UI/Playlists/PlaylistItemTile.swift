@@ -8,11 +8,17 @@ struct PlaylistItemTile: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            GifImage(contentsOf: PlaylistSummary.previewURL(for: item.wallpaper) ?? AppBundleLayout.wallpaperNotFoundURL,
-                     animates: false)
-                .resizable()
-                .aspectRatio(16 / 9, contentMode: .fill)
+            // The 16:9 frame comes from a clear view: GifImage is an AppKit view with no height of its
+            // own, so sized by itself in a grid cell it collapses to nothing.
+            Color.clear
                 .aspectRatio(16 / 9, contentMode: .fit)
+                .overlay {
+                    GifImage(contentsOf: PlaylistSummary.previewURL(for: item.wallpaper) ?? AppBundleLayout.wallpaperNotFoundURL,
+                             animates: false)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .accessibilityHidden(true)
+                }
                 .clipShape(RoundedRectangle(cornerRadius: ExplorerItem.cornerRadius, style: .continuous))
                 .overlay(alignment: .topTrailing) {
                     Button {
