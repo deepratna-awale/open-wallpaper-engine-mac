@@ -74,6 +74,77 @@ final class ModelScriptRigTests: XCTestCase {
         XCTAssertNil(renderer.attachments.attachmentWorld(SceneAttachedObject(id: "10", parentID: "9", attachment: "nope")))
     }
 
+    /// 3159348391's moves: `getAnimationLayer('kick').getAnimation('go')` is the timeline on the
+    /// layer's own `blend` (`animationlayers[1].blend`), found by its name or its field's key; the
+    /// object's and the scene's `getAnimation(name)` don't reach it, and `play()` sends the
+    /// timeline call the renderer applies to that site.
+    func testALayersOwnTimelinesAreFoundThroughTheLayer() throws {
+        var model = SceneScriptObjectDescription.make(.model, id: 124, name: "dancer", animations: [
+            .init(name: "go", fps: 30, frameCount: 15, duration: 0.5, property: "animationlayers.1.blend"),
+            .init(name: "spin", fps: 30, frameCount: 30, duration: 1, playing: true, property: "angles"),
+        ])
+        var rig = SceneScriptRigTests.rig
+        rig.layers = [.init(key: 47, name: "idle", clip: 0, additive: false, authored: 0),
+                      .init(key: 48, name: "kick", clip: 1, additive: false, blend: 0, authored: 1)]
+        model.rig = rig
+        let f = try SceneScriptObjectFixture(FakeSceneScriptObjectHost(scene: SceneScriptSceneDescription(objects: [model])))
+        f.runtime.load()
+        XCTAssertEqual(f.evaluate("""
+            var dancer = thisScene.getLayer('dancer'), kick = dancer.getAnimationLayer('kick'), go = kick.getAnimation('go');
+            [go !== null, go === kick.getAnimation('blend'), go.name, go.frameCount, go.isPlaying(), kick.getAnimation('spin'),
+             dancer.getAnimationLayer('idle').getAnimation('go'), dancer.getAnimation('go'), thisScene.getAnimation('go'),
+             dancer.getAnimation('spin') !== null, dancer.createAnimationLayer('wave').getAnimation('go')].join()
+            """)?.toString(), "true,true,go,15,false,,,,,true,")
+        f.evaluate("go.play();")
+        f.runtime.frame(deltaTime: 1.0 / 60)
+        let calls = f.host.takeCommands().compactMap { command -> (SceneScriptAnimationReference, SceneScriptObjectCommand.AnimationAction)? in
+            if case let .animation(reference, action) = command { return (reference, action) }
+            return nil
+        }
+        XCTAssertEqual(calls.count, 1)
+        XCTAssertEqual(calls.first?.0.name, "go")
+        XCTAssertEqual(calls.first?.0.slot, try XCTUnwrap(f.model.slot(forObjectID: 124)))
+        XCTAssertEqual(calls.first?.1, .play)
+        XCTAssertEqual(f.store.animationDescriptions[try XCTUnwrap(calls.first?.0.animationSlot)]?.property,
+                       "animationlayers.1.blend")
+    }
+
+    /// The renderer's side: an authored layer's `blend` timeline is the wallpaper's
+    /// `SceneAnimationSet` sample of its site (`animationlayers[l].blend` of the object) when the
+    /// set has one, so scripts' `play()` raises the move; without one it runs on its own clock.
+    func testALayersBlendFollowsTheWallpapersTimeline() throws {
+        let model = try MDLModel(contentsOf: Fixtures.url("Models/v13-puppet.mdl"))
+        let skeleton = try XCTUnwrap(model.skeleton)
+        let clips = model.animations ?? []
+        let clip = try XCTUnwrap(clips.first)
+        let json = """
+            [{"animation": \(clip.id), "id": 3, "name": "idle", "blend": 1},
+             {"animation": \(clip.id), "id": 4, "name": "kick", "blend": {"value": 0, "animation": {
+                 "c0": [{"frame": 0, "value": 0}, {"frame": 3, "value": 1}, {"frame": 12, "value": 1}, {"frame": 15, "value": 0}],
+                 "options": {"fps": 30, "length": 15, "mode": "single", "name": "go", "startpaused": true}}}}]
+            """
+        let layers = try JSONDecoder().decode([WEAnimationLayer].self, from: Data(json.utf8))
+        XCTAssertEqual(layers.map(\.position), [0, 1])
+
+        struct Values: SceneValueContext {
+            var blend: Float?
+            func userProperty(_ name: String) -> String? { nil }
+            func animationValue(_ site: SceneAnimationSite) -> [Float]? {
+                site == SceneAnimationSite(owner: .animationLayer(object: 124, layer: 1), key: "blend") ? blend.map { [$0] } : nil
+            }
+        }
+        let shared = ScenePuppetAnimator(skeleton: skeleton, clips: clips, layers: layers, model: true, objectID: 124)
+        shared.advance(delta: 1 / 30, values: Values(blend: 0.75))
+        XCTAssertEqual(shared.layerStates.map(\.blend), [1, 0.75])
+        shared.advance(delta: 1 / 30, values: Values(blend: 0.25))
+        XCTAssertEqual(shared.layerStates.map(\.blend), [1, 0.25])
+
+        // Without the set's sample: its own start-paused clock holds the first key.
+        let own = ScenePuppetAnimator(skeleton: skeleton, clips: clips, layers: layers, model: true)
+        for _ in 0..<10 { own.advance(delta: 1 / 30, values: Values(blend: 0.75)) }
+        XCTAssertEqual(own.layerStates.map(\.blend), [1, 0])
+    }
+
     /// PaRappa's model objects describe their rigs to scripts (skipped without the library).
     func testALibraryModelDescribesItsRig() throws {
         let directory = LibrarySweepTests.libraryRoot.appending(path: "3159348391", directoryHint: .isDirectory)

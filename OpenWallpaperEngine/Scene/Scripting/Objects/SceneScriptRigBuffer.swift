@@ -32,6 +32,9 @@ struct SceneScriptRigDescription: Equatable {
         var rate: Float = 1
         var blend: Float = 1
         var visible = true
+        /// Its index in the object's `animationlayers`, where its timelines are found
+        /// (`IAnimationLayer.getAnimation`).
+        var authored: Int?
     }
 
     struct Attachment: Equatable {
@@ -57,7 +60,10 @@ struct SceneScriptRigDescription: Equatable {
                 ["id": Double($0.id), "name": $0.name, "fps": $0.fps, "frameCount": $0.frameCount,
                  "duration": $0.duration] as [String: Any]
             },
-            "layers": layers.map { ["key": $0.key, "name": $0.name, "clip": $0.clip, "additive": $0.additive] as [String: Any] },
+            "layers": layers.map {
+                ["key": $0.key, "name": $0.name, "clip": $0.clip, "additive": $0.additive, "authored": $0.authored ?? -1]
+                    as [String: Any]
+            },
             "attachments": attachments.map { ["name": $0.name, "bone": $0.bone, "matrix": $0.matrix] as [String: Any] },
             "blendShapes": blendShapes,
         ]
@@ -81,7 +87,7 @@ extension SceneScriptRigDescription {
         }
         layers = animator.stack.layers.map {
             Layer(key: $0.key, name: $0.name, clip: $0.clip, additive: $0.additive, rate: $0.rate, blend: $0.blend,
-                  visible: $0.visible)
+                  visible: $0.visible, authored: $0.authored)
         }
         attachments = (model.attachments ?? []).map { attachment in
             let m = attachment.matrix

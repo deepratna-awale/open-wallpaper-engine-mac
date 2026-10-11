@@ -197,6 +197,18 @@ struct SceneScriptSceneDescriber {
                 }
             }
         }
+        // An animation layer's timelines (`rate`, `blend`) belong to the object: their events go to
+        // its scripts, and `getAnimationLayer(name).getAnimation(name)` finds them by the layer's
+        // index in `animationlayers` (`objects-layers.js`).
+        if case .array(let layers)? = json["animationlayers"] {
+            for (index, entry) in layers.enumerated() {
+                guard case .object(let layer) = entry else { continue }
+                for key in layer.keys.sorted() {
+                    let property = SceneAnimationSite(owner: .animationLayer(object: id, layer: index), key: key).scriptProperty
+                    if let animation = Self.animation(layer[key], property: property) { description.animations.append(animation) }
+                }
+            }
+        }
         if kind == .image, case .string(let image)? = json["image"] {
             description.textureAnimation = textureAnimation(model: image)
             description.videoDuration = videoDuration(model: image)

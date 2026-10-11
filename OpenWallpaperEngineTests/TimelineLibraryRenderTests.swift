@@ -247,7 +247,7 @@ final class TimelineLibraryRenderTests: XCTestCase {
                 return .scriptOwned
             }
             return probe.constants[site].map { .value($0, first: 0) }
-        case .scene, .particleInstance, .effect:
+        case .scene, .particleInstance, .effect, .animationLayer:
             return nil
         }
     }

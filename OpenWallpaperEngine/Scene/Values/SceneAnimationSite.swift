@@ -17,13 +17,17 @@ enum SceneAnimationOwner: Hashable {
     case effect(object: Int, effect: Int)
     /// A material of an effect, by pass index (`passes[pass].constantshadervalues`).
     case material(object: Int, effect: Int, pass: Int)
+    /// An animation layer of a model or puppet, by its index in `animationlayers` (its animatable
+    /// `rate` and `blend`, 0x14026c980). Scripts reach it through the layer
+    /// (`getAnimationLayer(name).getAnimation(name)`), and its events go to the object's scripts.
+    case animationLayer(object: Int, layer: Int)
 
     /// The layer the owner belongs to; nil for the scene.
     var objectID: Int? {
         switch self {
         case .scene: return nil
         case .object(let id), .particleInstance(let id): return id
-        case .effect(let id, _), .material(let id, _, _): return id
+        case .effect(let id, _), .material(let id, _, _), .animationLayer(let id, _): return id
         }
     }
 }
@@ -41,7 +45,8 @@ struct SceneAnimationSite: Hashable, CustomStringConvertible {
 
     /// The site of a script's animation record (`SceneScriptAnimationReference` and the
     /// description's `property`, as `SceneScriptSceneDescriber` names them): `general.<key>` for
-    /// the scene, `instanceoverride.<key>` for particle overrides, the key itself otherwise.
+    /// the scene, `instanceoverride.<key>` for particle overrides, `animationlayers.<index>.<key>`
+    /// for an animation layer's fields, the key itself otherwise.
     /// `objectID` is the layer's id (nil for the scene); `effect`/`material` its effect and pass.
     init?(scriptProperty property: String, objectID: Int?, effect: Int?, material: Int?) {
         guard let objectID else {
@@ -57,6 +62,10 @@ struct SceneAnimationSite: Hashable, CustomStringConvertible {
         case (nil, nil):
             if property.hasPrefix(Self.instancePrefix) {
                 self.init(owner: .particleInstance(objectID), key: String(property.dropFirst(Self.instancePrefix.count)))
+            } else if property.hasPrefix(Self.animationLayerPrefix) {
+                let parts = property.dropFirst(Self.animationLayerPrefix.count).split(separator: ".", maxSplits: 1)
+                guard parts.count == 2, let layer = Int(parts[0]), layer >= 0 else { return nil }
+                self.init(owner: .animationLayer(object: objectID, layer: layer), key: String(parts[1]))
             } else {
                 self.init(owner: .object(objectID), key: property)
             }
@@ -70,6 +79,7 @@ struct SceneAnimationSite: Hashable, CustomStringConvertible {
         switch owner {
         case .scene: return Self.scenePrefix + key
         case .particleInstance: return Self.instancePrefix + key
+        case .animationLayer(_, let layer): return "\(Self.animationLayerPrefix)\(layer).\(key)"
         case .object, .effect, .material: return key
         }
     }
@@ -81,9 +91,12 @@ struct SceneAnimationSite: Hashable, CustomStringConvertible {
         case .particleInstance(let id): return "object \(id) instanceoverride.\(key)"
         case let .effect(id, effect): return "object \(id) effect \(effect) \(key)"
         case let .material(id, effect, pass): return "object \(id) effect \(effect) pass \(pass) \(key)"
+        case let .animationLayer(id, layer): return "object \(id) animationlayers[\(layer)] \(key)"
         }
     }
 
     private static let scenePrefix = "general."
     private static let instancePrefix = "instanceoverride."
+    /// `animationlayers.<index>.`, as the script site builder joins the field path.
+    static let animationLayerPrefix = "animationlayers."
 }

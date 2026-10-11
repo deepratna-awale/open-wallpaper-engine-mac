@@ -3847,7 +3847,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func puppetAnimator(_ id: String, _ puppet: ScenePuppetPlan) -> ScenePuppetAnimator {
 
         if let animator = puppetAnimators[id] { return animator }
-        let animator = puppet.makeAnimator()
+        let animator = puppet.makeAnimator(objectID: Int(id))
         puppetAnimators[id] = animator
         return animator
     }

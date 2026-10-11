@@ -224,6 +224,14 @@
         return binding.property;
     };
 
+    // The property prefix of an animation layer's own timelines (`animationlayers.<index>.<key>`):
+    // they belong to the object (their events go to its scripts) but are found through the layer
+    // (`IAnimationLayer.getAnimation`), not by the object's or the scene's `getAnimation(name)`.
+    objects.animationLayerPrefix = 'animationlayers.';
+    function isLayerTimeline(record) {
+        return typeof record.property === 'string' && record.property.indexOf(objects.animationLayerPrefix) === 0;
+    }
+
     // IObject.getAnimation(name?) over `records` (the owner's animation records): the animation
     // named so (`options.name`), else the one on the property of that key, which is how a
     // timeline without a name is found (2321732083 plays its ships' unnamed `origin` timelines
@@ -236,7 +244,7 @@
             found = records.find(function (record) { return record.property === property; });
         } else {
             const key = String(name);
-            found = records.find(function (record) { return record.name === key; })
+            found = records.find(function (record) { return record.name === key && !isLayerTimeline(record); })
                 || records.find(function (record) { return record.property === key; });
         }
         return found ? objects.animationFor(owner, found, false) : null;
@@ -252,7 +260,9 @@
         if (typeof name !== 'string') return null;
         function named(records) {
             if (!records) return undefined;
-            for (let i = 0; i < records.length; i++) if (records[i].name === name) return records[i];
+            for (let i = 0; i < records.length; i++) {
+                if (records[i].name === name && !isLayerTimeline(records[i])) return records[i];
+            }
             return undefined;
         }
         for (const layer of objects.bySlot.values()) {
