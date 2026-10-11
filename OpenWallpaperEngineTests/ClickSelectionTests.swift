@@ -38,13 +38,7 @@ final class ClickSelectionTests: XCTestCase {
     }
 
     func testDiscoverRowsSelectRanges() throws {
-        let root = FileManager.default.temporaryDirectory.appending(path: "owe-click-\(UUID().uuidString)", directoryHint: .isDirectory)
-        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: root) } // cleanup of a temp folder; nothing to report
-        let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { root }),
-                                       storageDirectory: { root }, previewCacheRoot: root,
-                                       presentPreview: { _ in }, restoresSession: false)
-        let model = WorkshopViewModel(steamCmd: steamCmd, searchPage: { _, _, _, _, _ in [] })
+        let model = try workshop()
         let row = (1...5).map(Self.item)
         XCTAssertTrue(model.items.isEmpty, "the Workshop tab's page holds none of the row")
 
@@ -56,6 +50,37 @@ final class ClickSelectionTests: XCTestCase {
         XCTAssertEqual(model.selectedItemIds, ["2", "3", "4", "5"])
         model.selectItem(row[0], in: row, kind: .replace)
         XCTAssertEqual(model.selectedItemIds, ["1"])
+    }
+
+    /// Select All in Discover: the list See More opened, else every row of the home once.
+    func testSelectAllTakesWhatDiscoverShows() async throws {
+        let week = try XCTUnwrap(WorkshopDiscover.home.first { $0.id == "popular-week" })
+        let rated = try XCTUnwrap(WorkshopDiscover.home.first { $0.id == "top-rated" })
+        let discover = WorkshopDiscoverViewModel(sections: [week, rated], fetch: { section, page, _ in
+            guard page == 1 else { return [] }
+            return section.id == week.id ? (1...3).map(Self.item) : (3...5).map(Self.item)
+        })
+        await discover.loadIfNeeded(week)
+        await discover.loadIfNeeded(rated)
+        XCTAssertEqual(discover.shownItems.map(\.id), ["1", "2", "3", "4", "5"], "the home, each card once")
+        discover.openSection = rated
+        XCTAssertEqual(discover.shownItems.map(\.id), ["3", "4", "5"], "See More")
+
+        let model = try workshop()
+        model.selectAll(discover.shownItems)
+        XCTAssertEqual(model.selectedItemIds, ["3", "4", "5"])
+        model.selectItem(Self.item(5), in: discover.shownItems, kind: .toggle)
+        XCTAssertEqual(model.selectedItemIds, ["3", "4"])
+    }
+
+    private func workshop() throws -> WorkshopViewModel {
+        let root = FileManager.default.temporaryDirectory.appending(path: "owe-click-\(UUID().uuidString)", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        addTeardownBlock { try? FileManager.default.removeItem(at: root) } // cleanup of a temp folder; nothing to report
+        let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { root }),
+                                       storageDirectory: { root }, previewCacheRoot: root,
+                                       presentPreview: { _ in }, restoresSession: false)
+        return WorkshopViewModel(steamCmd: steamCmd, searchPage: { _, _, _, _, _ in [] })
     }
 
     private static func item(_ number: Int) -> WorkshopItem {
