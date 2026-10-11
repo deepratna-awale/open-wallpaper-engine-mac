@@ -158,10 +158,14 @@ final class SceneModelPlan {
     /// The animator that poses this model from its object's animation layers; nil for a model
     /// without bones. A layer naming no clip of the `.mdl` makes no layer (logged). `rootMotion`
     /// is the object's `rootmotion`.
-    func makeAnimator(layers: [WEAnimationLayer], objectName: String, rootMotion: Bool = true) -> ScenePuppetAnimator? {
+    /// `objectID`: the scene object's id, whose layers' timelines run in the wallpaper's
+    /// `SceneAnimationSet`.
+    func makeAnimator(layers: [WEAnimationLayer], objectName: String, rootMotion: Bool = true,
+                      objectID: Int? = nil) -> ScenePuppetAnimator? {
         guard let skeleton, !skeleton.bones.isEmpty else { return nil }
         return ScenePuppetAnimator(skeleton: skeleton, clips: clips, layers: layers,
-                                   morphRig: morphs.map(SceneMorphRig.model), model: true, rootMotion: rootMotion) { [path] layer in
+                                   morphRig: morphs.map(SceneMorphRig.model), model: true, rootMotion: rootMotion,
+                                   objectID: objectID) { [path] layer in
             OWELog.error(.scene, "Model \(objectName) (\(path)) has no clip \(layer.animation.map(String.init) ?? "(none)") for "
                          + "animation layer \(layer.name ?? "?"); WE makes no layer for it")
         }

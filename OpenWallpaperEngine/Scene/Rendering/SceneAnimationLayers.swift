@@ -28,10 +28,14 @@ struct SceneAnimationLayer: Equatable {
     var visible: Bool
     /// `playSingleAnimation`: the layer goes once its clip finished [I].
     var removesWhenFinished = false
+    /// Its index in the object's `animationlayers`; nil for a layer a script created.
+    var authored: Int?
 
     init(key: Int, name: String, clip: Int, animation: MDLAnimation, additive: Bool = false, blendIn: Bool = false,
-         blendOut: Bool = false, blendTime: Float = 0.5, rate: Float = 1, blend: Float = 1, visible: Bool = true) {
+         blendOut: Bool = false, blendTime: Float = 0.5, rate: Float = 1, blend: Float = 1, visible: Bool = true,
+         authored: Int? = nil) {
         self.key = key
+        self.authored = authored
         self.name = name
         self.clip = clip
         clock = Self.clock(for: animation)
