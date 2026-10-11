@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **A cloned or stretched web wallpaper runs once in the Chromium web engine.** On a clone the page (or WebM video) loads on the main clone display and the other displays show it, as Wallpaper Engine mirrors a clone; on a stretch it is laid out once on the whole canvas and each display shows its part. The pointer and clicks on any display reach the page and its sound plays once. On two displays that is about 40 % less CPU and GPU and 130 to 380 MB less memory. WebKit still loads a page per display.
 - **Texture Resolution's High Performance also draws web wallpapers at half resolution**, as Wallpaper Engine starts its web renderer with `-halfresolution` for that setting (and only for it), in WebKit and in Chromium. With *Render web wallpapers at standard resolution* also on, whichever draws fewer pixels wins. On a test page with CSS animations and a canvas on a 1080p display, the page's GPU time fell by about 18% in both engines, and its memory by about 50 MB in WebKit and 120 MB in Chromium.
 
 ### Fixed
