@@ -23,7 +23,7 @@ B (per-bone ranges / depth arrays)
 C (reference pose)
 - Button found: Puppet -> Optional -> "Reference Pose". Not exercised yet.
 
-D, E, F: not started.
+(D, E, F: see below.)
 
 C (done): c_refpose.mdl / c_refpose.json
 - Action: Puppet -> Optional -> "Reference Pose" opens a pose mode with "Confirm", "Reference overlay" and "Reset Pose".
@@ -96,6 +96,20 @@ E (done): e_offset0.mdl / e_offset10.mdl (+ .json)
 - **Interpretation:** offset10 at time t matches offset0 at about t+0.5 s; the loop wraps earlier. So the frame offset **shifts the loop phase forward**: playback starts partway into the clip. It is not a delay.
   - The measured shift (about 0.5 s) is larger than 10 frames (0.33 s). Per-load timing jitter between the two captures is about +-0.15 s, so this is consistent with starting 10 frames in.
 
-D: NOT done.
-- It needs Blender to run make_bone_flags_fbx.py, then an FBX import through the editor's Create Wallpaper flow.
-- Pending a further session.
+D (done): d_bone_flags.mdl (+ d_bone_flags.json)
+- **Import:** bone_flags.fbx (Blender 5.2.2, make_bone_flags_fbx.py) through the editor's Edit -> Import Model into p509e_box, with the import dialog at its defaults. The file is MDLV, 9911 bytes. The json holds only editor.animationmapping {"Scene": 22} plus normals/skinning/tangentspace.
+- **MDLS0004, 6 nodes** (name: flags, parent):
+  - RootNode: 0, -1
+  - Rig: 0, 0. Rig's matrix carries the FBX unit conversion: scale 100 and a -90 deg X turn.
+  - root: 1, 1
+  - mid: 1, 2
+  - loose: 1, 2. It is unweighted, a child of root.
+  - tip: 1, 3
+- **Pivot (the empty above Rig) is not in the .mdl at all.** It is in the FBX (the string occurs 3 times), but WE's importer dropped it. Rig's parent is RootNode directly.
+- **Flag 0x1 therefore means "an armature bone", not "a bone with weights".** loose and tip have no weights but have flag 1. Only the non-bone nodes (RootNode, the armature object Rig) have flag 0.
+- **MDLA0006:** one animation "Scene", 30 fps, 30 frames, with **6 tracks, one per node in node order, flag-0 nodes included**, 31 keys each (pos3, rot3 euler, scale3).
+  - Only mid's track varies; its rot X goes to 0.6 at key 15.
+  - RootNode's track is identity throughout.
+  - Rig's track is constant (rot X -1.571, scale 100), i.e. its bind.
+  - So flag-0 nodes do have tracks, but constant ones equal to their bind. A playback clip could not show whether WE animates a flag-0 node, so none was taken.
+- **Model Editor bone list**, as shown in the Attachments -> Add Attachment -> Bone dropdown: the field shows "RootNode", and the list is loose, mid, Rig, root, RootNode, tip. The list is **alphabetical (case-insensitive), not in file order**, and it includes the flag-0 nodes.

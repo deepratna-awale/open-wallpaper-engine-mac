@@ -1,0 +1,12 @@
+{
+	"editor" : 
+	{
+		"animationmapping" : 
+		{
+			"Scene" : 22
+		}
+	},
+	"normals" : true,
+	"skinning" : true,
+	"tangentspace" : true
+}
