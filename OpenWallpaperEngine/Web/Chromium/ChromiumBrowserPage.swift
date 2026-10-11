@@ -55,6 +55,8 @@ final class ChromiumBrowserPage: NSObject, WebWallpaperPage, ChromiumBrowserClie
     private var capturedImages: [Int: CGImage] = [:]
     /// A screenshot's size, whose frames still in flight after it are dropped.
     private var staleSize: (width: Int, height: Int)?
+    /// The displays mirroring the page (`WebPageMirrorView`), each fed every frame shown.
+    private var frameObservers: [ObjectIdentifier: (ChromiumFrame) -> Void] = [:]
 
     init(host: ChromiumBrowserHost = .shared, startScripts: [String], frameRate: Int) {
         self.host = host
@@ -246,6 +248,20 @@ final class ChromiumBrowserPage: NSObject, WebWallpaperPage, ChromiumBrowserClie
         return imageContext.createCGImage(upright, from: upright.extent)
     }
 
+    /// Hands `owner` every frame the page shows from now on (XPC's queue), starting with the
+    /// last one (on this thread), so a mirror shows the page at once.
+    func addFrameObserver(_ owner: AnyObject, _ observer: @escaping (ChromiumFrame) -> Void) {
+        let last = lock.withLock {
+            frameObservers[ObjectIdentifier(owner)] = observer
+            return lastFrame
+        }
+        if let last { observer(last) }
+    }
+
+    func removeFrameObserver(_ owner: AnyObject) {
+        _ = lock.withLock { frameObservers.removeValue(forKey: ObjectIdentifier(owner)) }
+    }
+
     func sendMouse(_ event: ChromiumMouseEvent) {
         guard let browserId, !hidden else { return }
         host.send(browserId, mouse: event)
@@ -278,6 +294,7 @@ final class ChromiumBrowserPage: NSObject, WebWallpaperPage, ChromiumBrowserClie
         switch use {
         case .show:
             onFrame?(frame)
+            lock.withLock { Array(frameObservers.values) }.forEach { $0(frame) }
         case .capture(let token, let last):
             let image = Self.image(of: frame)
             lock.withLock { if let image { capturedImages[token] = image } }

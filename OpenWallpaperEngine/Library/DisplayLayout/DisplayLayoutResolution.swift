@@ -172,6 +172,24 @@ struct DisplayLayoutResolution: Equatable {
         stretches.first { $0.screens.contains(screenId) }
     }
 
+    /// The display whose web page `screenId` mirrors: its clone's or stretch's source, while that
+    /// display is `shown` (its window shows the page). Nil for the source itself, a display in no
+    /// group, or a group whose source shows nothing: such a display loads its own page.
+    func pageSource(of screenId: String, shown: Set<String>) -> String? {
+        guard let source = clone(containing: screenId)?.source ?? stretch(containing: screenId)?.source,
+              source != screenId, shown.contains(source) else { return nil }
+        return source
+    }
+
+    /// The shown displays that show `screenId`'s page: itself and, when it is a group's source,
+    /// the members mirroring it (`pageSource`). Its pause and sound follow all of them.
+    func pageMembers(of screenId: String, shown: Set<String>) -> [String] {
+        let group = clone(containing: screenId)?.screens ?? stretch(containing: screenId)?.screens ?? []
+        return [screenId] + group.filter {
+            $0 != screenId && shown.contains($0) && pageSource(of: $0, shown: shown) == screenId
+        }
+    }
+
     /// The region with id `id`.
     func region(_ id: String) -> Region? {
         regions[Self.screen(of: id)]?.first { $0.id == id }

@@ -85,7 +85,9 @@ final class WallpaperScreenshotService {
         if let video = wallpapers.videoInstances.instance(for: key.wallpaper) {
             return try await Self.currentFrame(of: video.player)
         }
-        guard let window = window(screenID), let content = window.contentView else { throw Failure.nothingToCapture }
+        guard let window = window(screenID), var content = window.contentView else { throw Failure.nothingToCapture }
+        // A display mirroring another's page (a clone's or stretch's member) shows that page.
+        if let mirror = Self.pageMirror(in: content), let source = mirror.source { content = source }
         if let webView = Self.webView(in: content) {
             return try await Self.snapshot(of: webView, pixelWidth: pixelSize.x, backingScale: backingScale)
         }
@@ -93,6 +95,14 @@ final class WallpaperScreenshotService {
             return try await Self.capture(chromium.page, pixelWidth: pixelSize.x)
         }
         throw Failure.nothingToCapture
+    }
+
+    static func pageMirror(in view: NSView) -> WebPageMirrorView? {
+        if let mirror = view as? WebPageMirrorView { return mirror }
+        for subview in view.subviews {
+            if let mirror = pageMirror(in: subview) { return mirror }
+        }
+        return nil
     }
 
     static func chromiumPageView(in view: NSView) -> ChromiumPageView? {
