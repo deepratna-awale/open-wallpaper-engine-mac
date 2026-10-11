@@ -84,6 +84,7 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
         switch self {
         case .general:
             return [SettingField(\.autoStart), SettingField(\.language), SettingField(\.appearance),
+                    SettingField(\.showInDock), SettingField(\.showInMenuBar),
                     SettingField(\.adjustMenuBarTint), SettingField(\.lockScreenPicture), SettingField(\.theming),
                     SettingField(\.screenshotResolution), SettingField(\.screenshotFolder),
                     SettingField(\.browseTransition)]

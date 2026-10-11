@@ -374,6 +374,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         
         // 创建化右上角常驻菜单栏
         setStatusMenu()
+        statusItem.isVisible = globalSettingsViewModel.settings.showInMenuBar
         
         // 创建主视窗
         self.mainWindowController = MainWindowController()
@@ -449,7 +450,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                       wallpapers: wallpaperViewModel)
         themeTintCancellable = theming.$appTint.removeDuplicates().sink { [unowned self] in themeTint.publish($0) }
 
-        // Launched into the menu bar only, the Dock icon goes until a window opens.
+        // Launched into the menu bar only, the Dock icon goes until a window opens, unless Show in
+        // Dock keeps it.
+        dockPresence.keepsIcon = { [unowned self] in globalSettingsViewModel.settings.showInDock }
         dockPresence.start()
 
         // The screen saver's daily re-recording: catches up a run missed while the app was quit.
@@ -520,6 +523,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         contentViewModel.navigation.isApplicationActive = false
     }
     
+    /// Settings › General › Show in Dock and Show in Menu Bar.
+    func applyAppPresence() {
+        statusItem?.isVisible = globalSettingsViewModel.settings.showInMenuBar
+        dockPresence.update()
+    }
+
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if !self.mainWindowController.window.isVisible && !settingsWindow.isVisible {
             self.mainWindowController.window?.makeKeyAndOrderFront(nil)
@@ -535,6 +544,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         safeRestart.applicationWillTerminate()
         crashWatcher.applicationWillTerminate()
         mcpServerPlugin.stop()
+        // The steamcmd kept logged in between Workshop downloads quits with the app.
+        contentViewModel.steamCmd.endSteamCmdSession()
         updater.stopShaderPrewarm()
         // The system colours go back when the user chose "Restore on quit".
         theming.stop()

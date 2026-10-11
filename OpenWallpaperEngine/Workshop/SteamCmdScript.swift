@@ -39,6 +39,13 @@ struct SteamCmdScript {
         lines.append(line)
     }
 
+    /// This script's commands, then `other`'s.
+    func followed(by other: SteamCmdScript) -> SteamCmdScript {
+        var script = self
+        script.lines += other.lines
+        return script
+    }
+
     /// The script with a final `quit`, as steamcmd reads it from stdin.
     var standardInput: Data {
         Data((lines + ["quit"]).map { $0 + "\n" }.joined().utf8)
