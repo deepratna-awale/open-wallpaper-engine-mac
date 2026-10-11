@@ -11,6 +11,7 @@ struct WallpaperExplorer: SubviewOfContentView {
     var viewModel: ContentViewModel
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     @State private var isCreatePlaylistPresented = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(contentViewModel viewModel: ContentViewModel, wallpaperViewModel: WallpaperViewModel) {
         self.viewModel = viewModel
@@ -43,6 +44,7 @@ struct WallpaperExplorer: SubviewOfContentView {
                     ], alignment: .leading, spacing: 8) {
                         ForEach(viewModel.library.displayedFolders) { folder in
                             InstalledFolderTile(viewModel: viewModel, folder: folder)
+                                .transition(InstalledDropAnimation.removal(reduceMotion: reduceMotion))
                                 .contextMenu {
                                     InstalledFolderMenu(viewModel: viewModel, folder: folder)
                                     ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
@@ -50,6 +52,7 @@ struct WallpaperExplorer: SubviewOfContentView {
                         }
                         ForEach(viewModel.library.displayedWallpapers, id: \.wallpaperDirectory) { wallpaper in
                             ExplorerItem(viewModel: viewModel, wallpaperViewModel: wallpaperViewModel, wallpaper: wallpaper)
+                                .transition(InstalledDropAnimation.removal(reduceMotion: reduceMotion))
                                 .contextMenu {
                                     ExplorerItemMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel, current: wallpaper)
                                     ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel,
