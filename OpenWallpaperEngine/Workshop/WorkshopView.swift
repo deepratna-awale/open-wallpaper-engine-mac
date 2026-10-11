@@ -593,9 +593,14 @@ struct WorkshopItemCard: View {
                 .help("Select item")
             }
         }
-        .border(Color(nsColor: .separatorColor), width: 1)
+        // Rounded like the Installed tiles (`ExplorerItem.cornerRadius`), outlined as before.
+        .clipShape(RoundedRectangle(cornerRadius: ExplorerItem.cornerRadius, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: ExplorerItem.cornerRadius, style: .continuous)
+                .strokeBorder(Color(nsColor: .separatorColor), lineWidth: 1)
+        }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .contentShape(Rectangle())
+        .contentShape(RoundedRectangle(cornerRadius: ExplorerItem.cornerRadius, style: .continuous))
         .contextMenu {
             WorkshopItemMenu(item: item, viewModel: viewModel)
         }
