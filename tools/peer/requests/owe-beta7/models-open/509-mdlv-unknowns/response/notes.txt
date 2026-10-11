@@ -54,3 +54,20 @@ F (done): f_alpha.mdl
 b_clip_keyed_order (done): b_clip + blue "Depth offset" keyed in the Animation (-100 typed at frame 0, +100 at frame 30)
 - Puppet json animations[0].bones[1].priorityoffset becomes a key track with "step": true (stepped, no interpolation). The stored frame-0 value is -200.0, i.e. not the typed -100; likely relative to the default depth 100.
 - .mdl size 22827 -> 23331 (MDLA grows). So draw order CAN be animated.
+
+Stills (response/stills/, stills_sheet.png)
+- **How captured:** RenderDoc swapchain grabs of the running wallpaper on the second screen, at exact trigger times (stills/rd_timed_report.txt).
+- **Projects:** p509_s_* in myprojects, built by make_variant.py from response/*.mdl. The animation layer uses clip id 23.
+- **"Done." text:** the faint "Done." at the top of every frame comes from another WE window/layer, not the puppet. Ignore it.
+- **Pixel counts:** red/blue pixel counts per frame are listed in this file's commit message.
+
+Results
+- **base t3:** both bars in their image places.
+- **C, reference pose:** c_refpose with NO animation layer draws blue **in the reference pose**, rotated 90 deg and deformed (mo2_509c_refpose_t3); base draws it straight. So the wallpaper's rest pose = the MDLE reference pose.
+  - c_refpose_clip (layer id 23, but that file has no clip) looks the same.
+- **B, static order:**
+  - b_clip t1 (blue swung over red): **blue drawn on top of red** (red 5455 px, blue 5372 px).
+  - b_clip_order t1 (blue "Move Limb to Back", priorityoffset -100, static): **identical** to b_clip, with blue still on top.
+  - So the static per-bone depth offset does NOT change draw order at runtime in this test, or blue's offset was cancelled by the clip (the clip has no key for it).
+- **B, keyed order:** b_clip_keyed_order t1: **blue is hidden under red** (red 10560 px, blue 267 px). A keyed depth-offset track DOES reorder at runtime.
+- **F, keyed opacity:** f_alpha (blue Opacity 1 -> 0 over frames 0-30): blue px 2459 @0.5 s -> 137 @0.8 s -> 72 @1 s. **WE fades the bone at runtime.**
