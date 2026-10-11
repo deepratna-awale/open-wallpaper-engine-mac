@@ -391,6 +391,8 @@ class WallpaperViewModel: ObservableObject {
             apply()
             return
         }
+        // Views that are slow to make are made before the transition starts playing.
+        WebKitVideoWallpaperView.prepare(wallpaper, on: Set(changing), wallpaperViewModel: self)
         transitions.perform(kind, duration: settings.duration, on: Set(changing), apply: apply)
     }
 

@@ -69,6 +69,42 @@ final class WebKitVideoPlaybackTests: XCTestCase {
         try await assertVideo(player, transform: "", filter: "", rate: 1)
     }
 
+    /// A page made ahead of a transition's change waits, paused, for its display's view: only that
+    /// display takes it, only for its video, and it plays once taken.
+    func testAPreparedPageIsTakenByItsDisplayForItsVideo() async throws {
+        let pages = WebKitVideoPreparedPages()
+        let other = clip.deletingPathExtension().appendingPathExtension("mp4")
+        pages.prepare(clip, readAccess: clip.deletingLastPathComponent(), on: "1")
+        XCTAssertEqual(pages.screenIds, ["1"])
+        XCTAssertNil(pages.take(clip, on: "2"), "another display makes its own")
+        XCTAssertNil(pages.take(other, on: "1"), "another video: the waiting page is dropped")
+        XCTAssertEqual(pages.screenIds, [])
+
+        pages.prepare(clip, readAccess: clip.deletingLastPathComponent(), on: "1")
+        let player = try XCTUnwrap(pages.take(clip, on: "1"))
+        defer { player.stop() }
+        XCTAssertTrue(player.state.paused, "it waits paused")
+        XCTAssertEqual(pages.screenIds, [])
+        let window = host(player)
+        defer { window.close() }
+        player.state = WebKitVideoPlayer.State(placement: .fill, paused: false, muted: true, volume: 0, rate: 1)
+        let first = try await currentTime(player, after: 0)
+        let later = try await currentTime(player, after: first + 0.1)
+        XCTAssertGreaterThan(later, first, "the taken page plays")
+    }
+
+    /// A page no view takes (the change went elsewhere) is dropped after its lifetime.
+    func testAPreparedPageNoViewTakesIsDropped() async throws {
+        let pages = WebKitVideoPreparedPages(lifetime: .milliseconds(50))
+        pages.prepare(clip, readAccess: clip.deletingLastPathComponent(), on: "1")
+        XCTAssertEqual(pages.screenIds, ["1"])
+        let deadline = Date().addingTimeInterval(5)
+        while !pages.screenIds.isEmpty, Date() < deadline {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        XCTAssertEqual(pages.screenIds, [])
+    }
+
     private func assertVideo(_ player: WebKitVideoPlayer, transform: String, filter: String, rate: Double,
                              file: StaticString = #filePath, line: UInt = #line) async throws {
         let style = try await evaluate(player, "(function(){var v=document.querySelector('video');" +
