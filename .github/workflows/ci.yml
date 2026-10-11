@@ -1,17 +1,26 @@
 name: CI
 
+# CI runs twice per change: on its pull request once it's labelled "ready to merge" (and up to
+# date with main), and on main once it's merged. A pull request without the label runs nothing;
+# a push to a labelled one runs again.
 on:
   push:
     branches: [main]
   pull_request:
+    types: [labeled, synchronize, reopened]
   workflow_dispatch:
 
 # Every job only reads the repository (and the Actions cache and artifacts, which need no token scope).
 permissions:
   contents: read
 
+# A run that won't test anything (an unlabelled pull request, or another label added) gets a group
+# of its own, so it never cancels a real run.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: >-
+    ci-${{ github.ref }}-${{ (github.event_name != 'pull_request' ||
+    (contains(github.event.pull_request.labels.*.name, 'ready to merge') &&
+    (github.event.action != 'labeled' || github.event.label.name == 'ready to merge'))) && 'run' || github.run_id }}
   cancel-in-progress: true
 
 env:
@@ -34,9 +43,36 @@ env:
   # once); Scripts/ci-local.sh runs the whole suite the same way locally.
 
 jobs:
+  # Lets a pull request through only with the "ready to merge" label and only when it has every
+  # commit on main, so what is tested is what merges.
+  gate:
+    if: >-
+      github.event_name != 'pull_request' ||
+      (contains(github.event.pull_request.labels.*.name, 'ready to merge') &&
+      (github.event.action != 'labeled' || github.event.label.name == 'ready to merge'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Up to date with main
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BASE: ${{ github.event.pull_request.base.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          base_sha=$(gh api "repos/$REPO/commits/$BASE" --jq .sha)
+          behind=$(gh api "repos/$REPO/compare/$base_sha...$HEAD_SHA" --jq .behind_by)
+          if [[ "$behind" != 0 ]]; then
+            echo "::error::The branch is $behind commit(s) behind $BASE. Merge $BASE into it, then label it again."
+            exit 1
+          fi
+
   # Which test classes run: every one, except on a pull request, where the changed files pick them
   # through .github/test-map.yml.
   plan:
+    needs: gate
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -72,6 +108,7 @@ jobs:
 
   # Builds the app and the test bundle once; every test shard runs that build without recompiling.
   build:
+    needs: gate
     runs-on: macos-26
     timeout-minutes: 45
     steps:
@@ -237,6 +274,7 @@ jobs:
 
   # The local packages' own tests (Packages/*), which the app's test bundle doesn't hold.
   packages:
+    needs: gate
     runs-on: macos-26
     timeout-minutes: 20
     steps:
@@ -255,21 +293,22 @@ jobs:
   # The required status check: passes only when the build, every shard and the packages passed (or
   # no test class had to run).
   build-and-test:
-    needs: [plan, build, test, packages]
-    if: ${{ !cancelled() }}
+    needs: [gate, plan, build, test, packages]
+    if: ${{ !cancelled() && needs.gate.result != 'skipped' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Check the shards
         env:
+          GATE: ${{ needs.gate.result }}
           PLAN: ${{ needs.plan.result }}
           BUILD: ${{ needs.build.result }}
           TEST: ${{ needs.test.result }}
           PACKAGES: ${{ needs.packages.result }}
           SELECTION: ${{ needs.plan.outputs.selection }}
         run: |
-          echo "plan: $PLAN, build: $BUILD, shards: $TEST, packages: $PACKAGES"
-          [[ "$PLAN" == success && "$BUILD" == success && "$PACKAGES" == success ]] || exit 1
+          echo "gate: $GATE, plan: $PLAN, build: $BUILD, shards: $TEST, packages: $PACKAGES"
+          [[ "$GATE" == success && "$PLAN" == success && "$BUILD" == success && "$PACKAGES" == success ]] || exit 1
           [[ "$TEST" == success || ( "$TEST" == skipped && "$SELECTION" == none ) ]]
 
   # The same suite with Wallpaper Engine's built-in assets, so the asset-gated tests run. The assets
