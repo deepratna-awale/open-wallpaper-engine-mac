@@ -54,6 +54,18 @@ class MainWindowController: NSWindowController, NSWindowDelegate {
     }
     
     func windowDidBecomeKey(_ notification: Notification) {
+        stageLibrary()
+    }
+
+    /// A window opened behind another app never becomes key: the library loads once it's on screen.
+    func windowDidChangeOcclusionState(_ notification: Notification) {
+        guard window?.occlusionState.contains(.visible) == true else { return }
+        stageLibrary()
+    }
+
+    /// Builds the library again (closing the window tears it down) and fades it in.
+    private func stageLibrary() {
+        guard !AppDelegate.shared.contentViewModel.navigation.isStaging else { return }
         DispatchQueue.main.async {
             withAnimation {
                 AppDelegate.shared.contentViewModel.navigation.isStaging = true

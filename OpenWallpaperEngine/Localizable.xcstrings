@@ -68201,6 +68201,100 @@
         }
       }
     },
+    "Keeps the icon in the Dock while no window is open. Off, it shows only while a window is open." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يبقي الأيقونة في Dock حتى عند عدم فتح أي نافذة. عند إيقافه، تظهر فقط أثناء فتح نافذة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behält das Symbol im Dock, auch wenn kein Fenster geöffnet ist. Aus: Es erscheint nur, solange ein Fenster geöffnet ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantiene el icono en el Dock aunque no haya ninguna ventana abierta. Desactivado, solo aparece mientras hay una ventana abierta."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garde l’icône dans le Dock même quand aucune fenêtre n’est ouverte. Désactivé, elle n’apparaît que tant qu’une fenêtre est ouverte."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोई विंडो खुली न होने पर भी आइकन को Dock में रखता है। बंद होने पर, यह केवल विंडो खुली होने तक दिखता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantiene l’icona nel Dock anche quando nessuna finestra è aperta. Disattivato, appare solo mentre una finestra è aperta."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ウインドウが開いていないときもアイコンをDockに残します。オフにすると、ウインドウが開いている間だけ表示されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "열린 윈도우가 없을 때도 아이콘을 Dock에 유지합니다. 끄면 윈도우가 열려 있는 동안에만 표시됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowuje ikonę w Docku, gdy żadne okno nie jest otwarte. Po wyłączeniu ikona jest widoczna tylko, gdy otwarte jest okno."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantém o ícone no Dock mesmo sem nenhuma janela aberta. Desativado, ele aparece apenas enquanto houver uma janela aberta."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оставляет значок в Dock, даже когда ни одно окно не открыто. Если выключено, значок виден только при открытом окне."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiçbir pencere açık değilken de simgeyi Dock’ta tutar. Kapalıyken yalnızca bir pencere açıkken görünür."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Залишає значок у Dock, навіть коли жодне вікно не відкрите. Якщо вимкнено, значок видно лише тоді, коли відкрите вікно."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有打开窗口时也在程序坞中保留图标。关闭后，仅在有窗口打开时显示。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有開啟視窗時也在 Dock 中保留圖示。關閉後，只在有視窗開啟時顯示。"
+          }
+        }
+      }
+    },
     "Key set" : {
       "localizations" : {
         "ar" : {
@@ -88607,6 +88701,100 @@
         }
       }
     },
+    "Once its windows close, Open Wallpaper Engine keeps running in the background. Open it again from Applications or Spotlight to show its window." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بعد إغلاق نوافذه، يستمر Open Wallpaper Engine في العمل في الخلفية. افتحه مجددًا من التطبيقات أو Spotlight لإظهار نافذته."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sobald seine Fenster geschlossen sind, läuft Open Wallpaper Engine im Hintergrund weiter. Öffne es erneut über „Programme“ oder Spotlight, um sein Fenster zu zeigen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuando se cierran sus ventanas, Open Wallpaper Engine sigue ejecutándose en segundo plano. Ábrelo de nuevo desde Aplicaciones o Spotlight para ver su ventana."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une fois ses fenêtres fermées, Open Wallpaper Engine continue de tourner en arrière-plan. Ouvrez-le à nouveau depuis Applications ou Spotlight pour afficher sa fenêtre."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "विंडो बंद होने के बाद, Open Wallpaper Engine पृष्ठभूमि में चलता रहता है। इसकी विंडो दिखाने के लिए इसे Applications या Spotlight से फिर से खोलें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiuse le sue finestre, Open Wallpaper Engine continua a funzionare in background. Aprilo di nuovo da Applicazioni o Spotlight per mostrarne la finestra."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ウインドウを閉じると、Open Wallpaper Engineはバックグラウンドで動作し続けます。ウインドウを表示するには、アプリケーションまたはSpotlightから再度開いてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "윈도우를 닫으면 Open Wallpaper Engine은 백그라운드에서 계속 실행됩니다. 윈도우를 표시하려면 응용 프로그램이나 Spotlight에서 다시 여십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Po zamknięciu okien Open Wallpaper Engine działa dalej w tle. Otwórz go ponownie z Aplikacji lub Spotlight, aby pokazać jego okno."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depois que suas janelas fecham, o Open Wallpaper Engine continua rodando em segundo plano. Abra-o de novo pelos Aplicativos ou pelo Spotlight para mostrar a janela."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "После закрытия окон Open Wallpaper Engine продолжает работать в фоне. Чтобы показать его окно, снова откройте его из «Программ» или через Spotlight."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pencereleri kapandığında Open Wallpaper Engine arka planda çalışmaya devam eder. Penceresini göstermek için Uygulamalar’dan veya Spotlight’tan yeniden açın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Після закриття вікон Open Wallpaper Engine продовжує працювати у фоні. Щоб показати його вікно, знову відкрийте його з «Програм» або через Spotlight."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭窗口后，Open Wallpaper Engine 会在后台继续运行。从“应用程序”或聚焦搜索再次打开它即可显示窗口。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉視窗後，Open Wallpaper Engine 會在背景繼續執行。從「應用程式」或 Spotlight 再次打開它即可顯示視窗。"
+          }
+        }
+      }
+    },
     "One Wallpaper Per Display" : {
       "localizations" : {
         "ar" : {
@@ -102052,100 +102240,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "後處理"
-          }
-        }
-      }
-    },
-    "Power Saving Mode, Sleeping..." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "وضع توفير الطاقة، في وضع السكون…"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stromsparmodus, Ruhezustand …"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modo de ahorro de energía, en reposo…"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mode économie d’énergie, en veille…"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "पावर सेविंग मोड, स्लीप में…"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modalità risparmio energetico, in stop…"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "省電力モード、スリープ中…"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "절전 모드, 잠자는 중..."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tryb oszczędzania energii, uśpienie…"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modo de Economia de Energia, em repouso…"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Режим энергосбережения, сон…"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Güç Tasarrufu Modu, Uykuda…"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Режим енергозбереження, сон…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "节能模式，正在休眠…"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "省電模式，睡眠中⋯"
           }
         }
       }
@@ -131071,6 +131165,100 @@
         }
       }
     },
+    "Show in Dock" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إظهار في Dock"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Dock anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar en el Dock"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher dans le Dock"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock में दिखाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra nel Dock"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dockに表示"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock에 표시"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokazuj w Docku"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar no Dock"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать в Dock"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock’ta göster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показувати в Dock"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在程序坞中显示"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Dock 中顯示"
+          }
+        }
+      }
+    },
     "Show in Finder" : {
       "comment" : "Button: reveal SteamCMD's folder in the Finder",
       "localizations" : {
@@ -131162,6 +131350,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示於 Finder"
+          }
+        }
+      }
+    },
+    "Show in Menu Bar" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إظهار في شريط القائمة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In der Menüleiste anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar en la barra de menús"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher dans la barre des menus"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेनू बार में दिखाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra nella barra dei menu"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メニューバーに表示"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메뉴 막대에 표시"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokazuj na pasku menu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar na barra de menus"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать в строке меню"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menü çubuğunda göster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показувати в рядку меню"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在菜单栏中显示"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在選單列中顯示"
           }
         }
       }
@@ -132576,6 +132858,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在資料庫中選擇背景圖片時顯示。每個播放列表在其設定中都有自己的轉換效果。"
+          }
+        }
+      }
+    },
+    "Shows Open Wallpaper Engine's menu in the menu bar, with recent wallpapers, pause and the rest." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يعرض قائمة Open Wallpaper Engine في شريط القائمة، مع الخلفيات الأخيرة والإيقاف المؤقت وغيرها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt das Menü von Open Wallpaper Engine in der Menüleiste, mit zuletzt verwendeten Hintergrundbildern, Pause und mehr."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra el menú de Open Wallpaper Engine en la barra de menús, con los fondos recientes, la pausa y lo demás."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Affiche le menu d’Open Wallpaper Engine dans la barre des menus, avec les fonds d’écran récents, la pause et le reste."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेनू बार में Open Wallpaper Engine का मेनू दिखाता है, हाल के वॉलपेपर, रोकें और बाकी विकल्पों के साथ।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra il menu di Open Wallpaper Engine nella barra dei menu, con gli sfondi recenti, la pausa e il resto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メニューバーにOpen Wallpaper Engineのメニューを表示します。最近の壁紙、一時停止などがあります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메뉴 막대에 Open Wallpaper Engine 메뉴를 표시합니다. 최근 배경화면, 일시 정지 등이 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokazuje menu Open Wallpaper Engine na pasku menu, z ostatnimi tapetami, pauzą i resztą."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra o menu do Open Wallpaper Engine na barra de menus, com papéis de parede recentes, pausa e o resto."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывает меню Open Wallpaper Engine в строке меню: недавние обои, пауза и остальное."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine menüsünü menü çubuğunda gösterir; son duvar kâğıtları, duraklatma ve diğerleri."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує меню Open Wallpaper Engine у рядку меню: нещодавні шпалери, пауза та інше."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在菜单栏中显示 Open Wallpaper Engine 的菜单，包括最近的墙纸、暂停等。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在選單列中顯示 Open Wallpaper Engine 的選單，包括最近的桌布、暫停等。"
           }
         }
       }

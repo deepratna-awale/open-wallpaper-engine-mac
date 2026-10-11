@@ -64,6 +64,8 @@ struct SettingsSearch {
             entry("Language", .general, SettingsAnchor.language),
             entry("Appearance", .general, SettingsAnchor.appearance),
             entry("Theme", .general, SettingsAnchor.appearance),
+            entry("Show in Dock", .general, SettingsAnchor.macOS),
+            entry("Show in Menu Bar", .general, SettingsAnchor.macOS),
             entry("Adjust Menu Bar Color", .general, SettingsAnchor.macOS),
             entry("Show Wallpaper on Lock Screen", .general, SettingsAnchor.macOS),
             entry("Theming", .general, SettingsAnchor.theming),

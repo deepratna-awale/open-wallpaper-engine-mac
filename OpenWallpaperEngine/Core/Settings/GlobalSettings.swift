@@ -382,6 +382,12 @@ struct GlobalSettings: Codable, Equatable {
     var language = GSLocalization.followSystem
     
     // MARK: macOS
+    /// The Dock icon stays while no window is open (`DockPresence`). Off by default: the icon shows
+    /// only while one of the app's windows is open.
+    var showInDock = false
+    /// The status item in the menu bar (`AppDelegate.applyAppPresence`). On by default. With this
+    /// and `showInDock` off, the app runs in the background once its windows close.
+    var showInMenuBar = true
     var adjustMenuBarTint = true
     /// The lock screen shows the scene wallpaper: each display's desktop picture is the scene's
     /// loading snapshot (`LockScreenPicture`). On by default; off puts the user's pictures back.
@@ -459,6 +465,7 @@ struct GlobalSettings: Codable, Equatable {
         case postProcessing = "postProcessingQuality"
         case reflections = "reflection"
         case autoStart, language, adjustMenuBarTint, appearance, audioOutput
+        case showInDock, showInMenuBar
         case lockScreenPicture, screenSaver
         case reloadWhenChangingOutputDevice, videoFramework, processPiority, pauseOnVRAMExhausted
         case restartAfterCrashing, autoRefresh
@@ -525,6 +532,8 @@ extension GlobalSettings {
         read(.reducedResolutionParticles, &reducedResolutionParticles)
         read(.autoStart, &autoStart)
         read(.language, &language)
+        read(.showInDock, &showInDock)
+        read(.showInMenuBar, &showInMenuBar)
         read(.adjustMenuBarTint, &adjustMenuBarTint)
         read(.lockScreenPicture, &lockScreenPicture)
         read(.screenSaver, &screenSaver)
