@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import Metal
 import QuartzCore
 
@@ -29,6 +30,10 @@ final class ScreenSaverLiveScene {
     private let publisher: ScreenSaverFramePublisher
     private var link: CADisplayLink?
     private let ticker: Ticker
+    /// The view model's revision whose content was last asked for, and its change feed: the
+    /// background load delivers nothing at first and bumps the revision when it lands.
+    private var contentRevision = -1
+    private var contentSubscription: AnyCancellable?
 
     init?(wallpaper: WEWallpaper, propertyScope: WallpaperPropertyScope, target: Target, screen: NSScreen?,
           settings: GlobalSettings, placement: WallpaperPlacement, scriptServices: SceneScriptServices?,
@@ -58,11 +63,13 @@ final class ScreenSaverLiveScene {
         let viewport = SceneViewport(drawableSize: pixels, pointSize: SIMD2(Float(target.points.x), Float(target.points.y)),
                                      cursor: nil, frameRateLimit: target.frameRate)
         ticker = Ticker(renderer: renderer, viewport: viewport, ring: target.ring, publisher: publisher)
-        // Loaded on the preparation pool; frames start once the content lands on the render thread.
-        viewModel.contentAsync { [thread, renderer] content in
-            thread.perform { renderer.setContent(content) }
-            if content == nil { OWELog.error(.app, "Live screen saver: \(name) has no scene content") }
-        }
+        // Loaded on the preparation pool: the first ask finds the load still in flight and gets
+        // nothing; its commit bumps the revision, which asks again. Frames start once the content
+        // lands on the render thread.
+        contentSubscription = viewModel.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.loadContentIfRevised() }
+        loadContentIfRevised()
         startLink(screen: screen)
         OWELog.info(.app, "Live screen saver: drawing \(name) at \(target.pixels.x)×\(target.pixels.y), \(target.frameRate) fps, ring \(target.ring)")
     }
@@ -76,6 +83,21 @@ final class ScreenSaverLiveScene {
             renderer?.releaseContent()
         }
         thread.stop()
+    }
+
+    private func loadContentIfRevised() {
+        let revision = viewModel.metalRevision
+        guard revision != contentRevision else { return }
+        contentRevision = revision
+        let name = viewModel.currentWallpaper.wallpaperDirectory.lastPathComponent
+        viewModel.contentAsync { [thread, renderer] content in
+            guard let content else {
+                OWELog.debug(.app, "Live screen saver: \(name) is still loading (revision \(revision))")
+                return
+            }
+            thread.perform { renderer?.setContent(content) }
+            OWELog.info(.app, "Live screen saver: \(name) loaded (revision \(revision))")
+        }
     }
 
     private func startLink(screen: NSScreen?) {
