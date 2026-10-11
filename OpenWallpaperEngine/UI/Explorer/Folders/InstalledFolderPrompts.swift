@@ -9,7 +9,7 @@ enum InstalledFolderPrompt: Equatable {
 }
 
 /// The Installed tab's folder alerts: the name for Create Folder and Rename (WE's text input,
-/// prefilled with "New Folder" or the title), and Remove Folder's confirmation.
+/// prefilled with "New Folder", numbered when taken, or the title), and Remove Folder's confirmation.
 struct InstalledFolderPrompts: ViewModifier {
     var viewModel: ContentViewModel
     @State private var name = ""
@@ -30,7 +30,7 @@ struct InstalledFolderPrompts: ViewModifier {
         content
             .onChange(of: presentation.folderNamePrompt) { _, prompt in
                 switch prompt {
-                case .create: name = String(localized: "New Folder", comment: "Default name of a folder made in the Installed tab")
+                case .create: name = viewModel.library.newFolderTitle
                 case .rename(_, let title): name = title
                 case nil: break
                 }
@@ -55,7 +55,7 @@ struct InstalledFolderPrompts: ViewModifier {
         if case .rename = presentation.folderNamePrompt {
             return Text("Rename Folder", comment: "Title of the alert that renames a folder in the Installed tab")
         }
-        return Text("Create Folder", comment: "Title of the alert that names a new folder in the Installed tab, and the Installed tab's button that opens it")
+        return Text("Create Folder", comment: "Title of the alert that names a new folder in the Installed tab, the Installed tab's button that opens it, and the command in a wallpaper's context menu that makes a folder and moves the wallpaper (or the selection it is in) into it")
     }
 
     private var removalTitle: Text {

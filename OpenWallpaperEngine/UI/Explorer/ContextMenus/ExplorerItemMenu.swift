@@ -91,6 +91,15 @@ struct ExplorerItemMenu: SubviewOfContentView {
                 MoveToFolderMenu(library: viewModel.library) { destination in
                     viewModel.library.move(viewModel.library.wallpapersActedOn(from: hoveredWallpaper), toFolder: destination)
                 }
+                Button {
+                    createFolderWithWallpapers()
+                } label: {
+                    Label {
+                        Text("Create Folder", comment: "Title of the alert that names a new folder in the Installed tab, the Installed tab's button that opens it, and the command in a wallpaper's context menu that makes a folder and moves the wallpaper (or the selection it is in) into it")
+                    } icon: {
+                        Image(systemName: "folder.badge.plus")
+                    }
+                }
             }
             
             Section {
@@ -120,6 +129,15 @@ struct ExplorerItemMenu: SubviewOfContentView {
             }
         }
         .labelStyle(.titleAndIcon)
+    }
+
+    /// Create Folder, as Finder's New Folder with Selection: a folder in the one shown holding
+    /// this wallpaper (or the selection it is in), then its name asked for as Rename does.
+    private func createFolderWithWallpapers() {
+        let library = viewModel.library
+        guard let id = library.createFolder(moving: library.wallpapersActedOn(from: hoveredWallpaper)),
+              let folder = library.folders.tree.folder(id) else { return }
+        viewModel.presentation.folderNamePrompt = .rename(folder.id, folder.title)
     }
 
     /// The wallpaper whose Workshop presets "Browse Presets" lists: a preset item's base, else a
