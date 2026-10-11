@@ -3,9 +3,9 @@ import simd
 import ImageIO
 @testable import OpenWallpaperEngine
 
-/// docs/models-plan.md §5.10, 5.11, 5.18, 5.19, 5.20, 5.22 and 5.31 against WE 2.8.42's captures
+/// docs/models-plan.md §5.10, 5.11, 5.17, 5.18, 5.19, 5.20, 5.22 and 5.31 against WE 2.8.42's captures
 /// of running wallpapers (we-test-wp-images, tools/peer/requests/owe-beta3/models-open: 510, 511,
-/// 518-fade-threshold, 519b, 520, 522 and 531b, a README, the stills and the projects each).
+/// 517-puppet-cull, 518-fade-threshold, 519b, 520, 522 and 531b, a README, the stills and the projects each).
 /// The camera captures' gradient image isn't in the projects; a test draws its own, opaque and
 /// 1024 px square as WE's, so only its edges are measured. The projects are in `Tests/Fixtures/Models/OpenPoints`
 /// without their binaries, which come from the repository's fixtures: the box from WE's import of
@@ -117,6 +117,41 @@ final class ModelsOpenPointsRenderCaptureTests: XCTestCase {
             let centre = try XCTUnwrap(Self.rowCentre(Image(still), row: 300), "WE t \(shot)")
             XCTAssertTrue((low...high).contains(centre), "WE t \(shot): \(centre)")
         }
+    }
+
+    // MARK: - 5.17 A `cullmode` "normal" puppet
+
+    /// WE's capture (517-puppet-cull): the rope puppet, its material's `cullmode` "normal", draws
+    /// at (960, 540) scaled 1 1 1 and nothing of it shows scaled −1 1 1. WE's editor winds the
+    /// rig counter-clockwise; drawn by the real loader and renderer, the upright rope shows and
+    /// the mirrored one is culled.
+    func testANormalCullPuppetDrawsUprightAndIsCulledMirrored() throws {
+        func rope(scale: String) throws -> Image {
+            let directory = try project("531b-puppet-origin-script", binaries: [
+                "Models/BonePhysics/rope-A.mdl": "models/rope_puppet.mdl",
+                "Models/TextureChannels/materials/rope.tex": "materials/rope.tex",
+            ], as: "517-cull-normal-\(scale)")
+            try Self.editJSON(directory.appending(path: "scene.json")) { scene in
+                var objects = scene["objects"] as! [[String: Any]]
+                objects[0]["origin"] = "960 540 0"
+                objects[0]["scale"] = scale
+                scene["objects"] = objects
+            }
+            try Self.editJSON(directory.appending(path: "materials/rope.json")) { material in
+                var passes = material["passes"] as! [[String: Any]]
+                passes[0]["cullmode"] = "normal"
+                material["passes"] = passes
+            }
+            return try render(directory)
+        }
+        XCTAssertGreaterThan(Self.drawnPixels(try rope(scale: "1 1 1")), 1000, "the upright rope draws")
+        XCTAssertEqual(Self.drawnPixels(try rope(scale: "-1 1 1")), 0, "the mirrored rope is culled")
+
+        guard let folder = ModelsOpenPointsCaptureTests.capture("517-puppet-cull") else { return }
+        let upright = try WEReferenceImage.load(folder.appending(path: "mo_517_cull_normal.png"))
+        let mirrored = try WEReferenceImage.load(folder.appending(path: "mo_517_cull_normal_flipx.png"))
+        XCTAssertGreaterThan(Self.drawnPixels(Image(upright)), 1000, "WE: the upright rope draws")
+        XCTAssertEqual(Self.drawnPixels(Image(mirrored)), 0, "WE: the mirrored rope is culled")
     }
 
     // MARK: - 5.18 A model's opacity
