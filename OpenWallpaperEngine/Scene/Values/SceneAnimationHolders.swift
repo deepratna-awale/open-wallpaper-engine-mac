@@ -7,6 +7,7 @@ import Foundation
 /// - its particle overrides (`objects[i].instanceoverride.<key>`);
 /// - its effects' own fields (`effects[e].<key>`, e.g. `visible`), except `passes`;
 /// - their materials' constants (`effects[e].passes[p].constantshadervalues.<name>`);
+/// - a model's or puppet's animation layers' fields (`animationlayers[l].<key>`: `rate`, `blend`);
 /// - the scene's settings (`general.<key>`), except `properties`, the user-property table.
 ///
 /// Holders come in document order (objects, then `general`); within one block, keys are sorted,
@@ -34,6 +35,12 @@ enum SceneAnimationHolders {
         var holders = bound(in: fields, owner: .object(id), skipping: ["effects", "instanceoverride"])
         if case .object(let overrides)? = fields["instanceoverride"] {
             holders += bound(in: overrides, owner: .particleInstance(id), skipping: [])
+        }
+        if case .array(let layers)? = fields["animationlayers"] {
+            for (index, entry) in layers.enumerated() {
+                guard case .object(let layer) = entry else { continue }
+                holders += bound(in: layer, owner: .animationLayer(object: id, layer: index), skipping: [])
+            }
         }
         guard case .array(let effects)? = fields["effects"] else { return holders }
         for (effectIndex, entry) in effects.enumerated() {

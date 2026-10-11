@@ -35,6 +35,9 @@ final class ScenePuppetAnimator {
     /// An authored layer's bound values: user bindings and `animation` timelines on `rate`,
     /// `blend` and `visible`, re-read every frame until a script sets the field.
     private struct Binding {
+        /// The layer's index in `animationlayers`: its timelines' site
+        /// (`SceneAnimationOwner.animationLayer`).
+        var position: Int
         var rate: SceneRawValue?
         var blend: SceneRawValue?
         var visible: SceneRawValue?
@@ -43,6 +46,10 @@ final class ScenePuppetAnimator {
     }
 
     private var bindings: [Int: Binding] = [:]
+    /// The scene object whose `animationlayers` these are, whose timelines run in the wallpaper's
+    /// `SceneAnimationSet` (where scripts play them and their events reach the object's scripts);
+    /// nil runs each timeline on its own clock here.
+    let objectID: Int?
     /// Model-space matrices `setBoneTransform` set: that bone's palette entry only, its children
     /// untouched (0x14020f350). Kept until the next evaluation or local write recomputes the bones.
     private var worldOverrides: [Int: simd_float4x4] = [:]
@@ -57,7 +64,9 @@ final class ScenePuppetAnimator {
     /// `model`: a model object's rig (WE's model update); `rootMotion`: it runs its clips' root
     /// motion (its `rootmotion` is on).
     init(skeleton: MDLSkeleton, clips: [MDLAnimation], layers: [WEAnimationLayer], morphRig: SceneMorphRig? = nil,
-         model: Bool = false, rootMotion: Bool = false, missing: (WEAnimationLayer) -> Void = { _ in }) {
+         model: Bool = false, rootMotion: Bool = false, objectID: Int? = nil,
+         missing: (WEAnimationLayer) -> Void = { _ in }) {
+        self.objectID = objectID
         physics = SceneBonePhysics(skeleton)
         let skeleton = SceneSkeleton(skeleton)
         self.skeleton = skeleton
@@ -77,9 +86,9 @@ final class ScenePuppetAnimator {
                                             additive: authored.additive, blendIn: authored.blendIn,
                                             blendOut: authored.blendOut, blendTime: Float(authored.blendTime),
                                             rate: Float(authored.rate), blend: Float(authored.blend),
-                                            visible: authored.visible)
+                                            visible: authored.visible, authored: authored.position ?? position)
             stack.insert(layer, autosort: authored.autosort ?? false, index: authored.index)
-            bindings[key] = Binding(rate: authored.values[.rate], blend: authored.values[.blend],
+            bindings[key] = Binding(position: authored.position ?? position, rate: authored.values[.rate], blend: authored.values[.blend],
                                     visible: authored.values[.visible],
                                     rateTimeline: Self.timeline(authored.values[.rate]),
                                     blendTimeline: Self.timeline(authored.values[.blend]))
@@ -146,21 +155,30 @@ final class ScenePuppetAnimator {
         return eventsSinceFeedback
     }
 
+    /// A timeline's value this frame: the wallpaper's `SceneAnimationSet` sample of the layer's
+    /// field when it runs there, else the timeline advanced on its own clock here.
+    private func timelineValue(_ timeline: inout SceneTimelineAnimation?, field: String, position: Int, delta: Float,
+                               values: SceneValueContext) -> Float? {
+        guard var own = timeline else { return nil }
+        if let objectID,
+           let shared = values.animationValue(SceneAnimationSite(owner: .animationLayer(object: objectID, layer: position),
+                                                                 key: field)) {
+            return shared.first ?? 1
+        }
+        own.clock.advance(by: delta)
+        timeline = own
+        return own.value().first ?? 1
+    }
+
     private func resolveBindings(delta: Float, values: SceneValueContext) {
         for (key, binding) in bindings {
             var binding = binding
-            let rate = binding.rateTimeline.map { timeline -> Float in
-                var timeline = timeline
-                timeline.clock.advance(by: delta)
-                binding.rateTimeline = timeline
-                return timeline.value().first ?? 1
-            } ?? binding.rate?.userBindingSource.map { SceneValueResolver.resolve($0, in: values).float }
-            let blend = binding.blendTimeline.map { timeline -> Float in
-                var timeline = timeline
-                timeline.clock.advance(by: delta)
-                binding.blendTimeline = timeline
-                return timeline.value().first ?? 1
-            } ?? binding.blend?.userBindingSource.map { SceneValueResolver.resolve($0, in: values).float }
+            let rate = timelineValue(&binding.rateTimeline, field: SceneAnimationLayerValueField.rate.rawValue,
+                                     position: binding.position, delta: delta, values: values)
+                ?? binding.rate?.userBindingSource.map { SceneValueResolver.resolve($0, in: values).float }
+            let blend = timelineValue(&binding.blendTimeline, field: SceneAnimationLayerValueField.blend.rawValue,
+                                      position: binding.position, delta: delta, values: values)
+                ?? binding.blend?.userBindingSource.map { SceneValueResolver.resolve($0, in: values).float }
             let visible = binding.visible?.userBindingSource.map { SceneValueResolver.resolve($0, in: values).float != 0 }
             bindings[key] = binding
             stack.update(key: key) { layer in

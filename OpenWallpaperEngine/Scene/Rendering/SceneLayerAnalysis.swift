@@ -305,7 +305,7 @@ final class SceneLayerAnalysis {
             switch site.owner {
             case .scene: sceneAnimated = true
             case .object(let id), .particleInstance(let id): animatedObjects.insert(id)
-            case .effect(let id, _), .material(let id, _, _): animatedObjects.insert(id)
+            case .effect(let id, _), .material(let id, _, _), .animationLayer(let id, _): animatedObjects.insert(id)
             }
         }
         // A timeline on an object that isn't a drawn layer nor an ancestor (a light) reaches every

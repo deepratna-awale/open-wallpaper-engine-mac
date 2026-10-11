@@ -25,6 +25,10 @@ struct WEAnimationLayer: Decodable, Equatable {
     /// The bindable fields in their authored form (literal, `user`, `script`, `animation`):
     /// `rate` and `blend` are animatable floats (0x1401a4b00).
     var values: [SceneAnimationLayerValueField: SceneRawValue] = [:]
+    /// Its index in the object's `animationlayers` as authored (decoded elements that fail are
+    /// skipped, so it can differ from the position in a decoded list): where its timelines live
+    /// (`SceneAnimationOwner.animationLayer`).
+    var position: Int?
 
     init(animation: UInt64?, id: Int? = nil, name: String? = nil,
          values: [SceneAnimationLayerValueField: SceneRawValue] = [:]) {
@@ -37,6 +41,7 @@ struct WEAnimationLayer: Decodable, Equatable {
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: AnyCodingKey.self)
         let info = decoder.userInfo
+        position = decoder.codingPath.last?.intValue
         func key(_ name: String) -> AnyCodingKey { AnyCodingKey(stringValue: name) }
         if case .number(let number)? = c.decodeLogged(SceneJSON.self, forKey: key("animation"), userInfo: info),
            number >= 0, number < 0x1p64 {

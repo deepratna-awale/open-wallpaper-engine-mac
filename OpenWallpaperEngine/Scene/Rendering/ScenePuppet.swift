@@ -153,10 +153,11 @@ final class ScenePuppetPlan {
         return total > 0 ? skinned / total : p
     }
 
-    /// The animator that poses this rig from the image's animation layers.
-    func makeAnimator() -> ScenePuppetAnimator {
+    /// The animator that poses this rig from the image's animation layers; `objectID` is the
+    /// image's scene object id, whose layers' timelines run in the wallpaper's `SceneAnimationSet`.
+    func makeAnimator(objectID: Int? = nil) -> ScenePuppetAnimator {
         ScenePuppetAnimator(skeleton: skeleton, clips: clips, layers: animationLayers,
-                            morphRig: SceneMorphRig.puppet(morphs, meshFlags: meshFlags)) { [rigPath] layer in
+                            morphRig: SceneMorphRig.puppet(morphs, meshFlags: meshFlags), objectID: objectID) { [rigPath] layer in
             OWELog.error(.scene, "Puppet rig \(rigPath) has no clip \(layer.animation.map(String.init) ?? "(none)") for "
                          + "animation layer \(layer.name ?? "?"); WE makes no layer for it")
         }

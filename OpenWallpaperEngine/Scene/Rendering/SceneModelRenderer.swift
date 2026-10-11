@@ -252,7 +252,7 @@ final class SceneModelRenderer: SceneModelDrawing {
         if let animator = animators[id] { return animator }
         guard let model = objects[id], let plan = model.plan,
               let animator = plan.makeAnimator(layers: model.animationLayers, objectName: model.name,
-                                               rootMotion: model.authored.rootMotion) else { return nil }
+                                               rootMotion: model.authored.rootMotion, objectID: Int(model.id)) else { return nil }
         animators[id] = animator
         return animator
     }
