@@ -306,31 +306,25 @@ class WorkshopViewModel: ObservableObject {
         await search()
     }
 
-    func selectItem(_ item: WorkshopItem) {
-        let modifiers = NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask)
-        let isAdditive = modifiers.contains(.control) || modifiers.contains(.command)
-
-        if modifiers.contains(.shift), !isAdditive,
-           let anchorId = selectionAnchorId,
-           let start = items.firstIndex(where: { $0.id == anchorId }),
-           let end = items.firstIndex(where: { $0.id == item.id }) {
-            let rangeItems = items[min(start, end)...max(start, end)]
-            selectedItemIds = Set(rangeItems.map(\.id))
-            selectedItems = Dictionary(uniqueKeysWithValues: rangeItems.map { ($0.id, $0) })
-        } else if isAdditive {
-            if selectedItemIds.contains(item.id) {
-                selectedItemIds.remove(item.id)
-                selectedItems.removeValue(forKey: item.id)
-            } else {
-                selectedItemIds.insert(item.id)
-                selectedItems[item.id] = item
-            }
-            selectionAnchorId = item.id
-        } else {
-            selectedItemIds = [item.id]
-            selectedItems = [item.id: item]
+    /// A click on a card (`ClickSelection`): a plain click selects it alone, ⌘ toggles it and ⇧
+    /// selects the run from the anchor in `order`, the list the card is in (the Workshop grid's
+    /// page by default, a Discover row or grid otherwise).
+    func selectItem(_ item: WorkshopItem, in order: [WorkshopItem]? = nil,
+                    kind: ClickSelection.Kind = ClickSelection.current) {
+        let order = order ?? items
+        var selected = selectedItemIds
+        if !ClickSelection.apply(kind, on: item.id, in: order.map(\.id), selected: &selected, anchor: &selectionAnchorId) {
+            selected = [item.id]
             selectionAnchorId = item.id
         }
+        // Keep the items the selection names, for Download Selected; one selected in another
+        // list stays as it was.
+        var known = Dictionary(order.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        known[item.id] = item
+        selectedItems = Dictionary(uniqueKeysWithValues: selected.compactMap { id in
+            (known[id] ?? selectedItems[id]).map { (id, $0) }
+        })
+        selectedItemIds = selected
     }
 
     func clearSelection() {

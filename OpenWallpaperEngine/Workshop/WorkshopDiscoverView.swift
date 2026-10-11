@@ -69,7 +69,7 @@ struct WorkshopDiscoverView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 13) {
                     ForEach(row.items) { item in
-                        card(item)
+                        card(item, in: row.items)
                             .frame(width: cardSize, height: cardSize)
                             .onAppear { loadMoreIfLast(item, in: section) }
                     }
@@ -100,7 +100,7 @@ struct WorkshopDiscoverView: View {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: cardSize, maximum: cardSize), spacing: 13)],
                           alignment: .leading, spacing: 13) {
                     ForEach(row.items) { item in
-                        card(item)
+                        card(item, in: row.items)
                             .onAppear { loadMoreIfLast(item, in: section) }
                     }
                 }
@@ -118,8 +118,9 @@ struct WorkshopDiscoverView: View {
 
     // MARK: Parts
 
-    private func card(_ item: WorkshopItem) -> some View {
-        WorkshopItemCard(item: item, viewModel: workshop)
+    /// A card; ⇧-click selects a run within `list`, its row or grid.
+    private func card(_ item: WorkshopItem, in list: [WorkshopItem]) -> some View {
+        WorkshopItemCard(item: item, viewModel: workshop, selectionOrder: list)
     }
 
     private func loadMoreIfLast(_ item: WorkshopItem, in section: WorkshopDiscoverSection) {
