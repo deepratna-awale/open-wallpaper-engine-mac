@@ -1,0 +1,26 @@
+{
+	"editor" : 
+	{
+		"animationmapping" : 
+		{
+			"Scene" : 16
+		},
+		"clips" : 
+		[
+			{
+				"animation" : "Scene",
+				"end" : 30,
+				"frameoffset" : 10,
+				"id" : 26,
+				"matchloop" : true,
+				"motionflags" : 47104,
+				"name" : "Scene (Clip 5)",
+				"rootmotion" : "",
+				"start" : 0
+			}
+		]
+	},
+	"normals" : true,
+	"skinning" : true,
+	"tangentspace" : true
+}

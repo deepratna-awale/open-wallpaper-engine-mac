@@ -1,1 +1,8 @@
-p509_s_a_moved still 3 triggered at 3.005 s frame 537
+p509_s_e_offset0 still 0.25 triggered at 0.263 s frame 497
+p509_s_e_offset0 still 0.5 triggered at 0.513 s frame 504
+p509_s_e_offset0 still 0.75 triggered at 0.759 s frame 508
+p509_s_e_offset0 still 1 triggered at 1.011 s frame 513
+p509_s_e_offset10 still 0.25 triggered at 0.259 s frame 615
+p509_s_e_offset10 still 0.5 triggered at 0.509 s frame 622
+p509_s_e_offset10 still 0.75 triggered at 0.760 s frame 627
+p509_s_e_offset10 still 1 triggered at 1.000 s frame 631

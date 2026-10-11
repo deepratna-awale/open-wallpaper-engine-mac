@@ -84,3 +84,18 @@ A (done): a_moved.mdl / a_moved.json
 - **Still mo2_509a_moved_t3.png (running wallpaper):** the blue bar is drawn **at its moved position** (about 150 image px up), red stays in place. So WE draws the moved geometry.
   - The tint-effect variant was not captured.
 - **u32 repeat test** (moving twice) was not done.
+
+E (done): e_offset0.mdl / e_offset10.mdl (+ .json)
+- **Project:** MG4's root-motion box (models_gt/mg4/we_import_project, copied to p509e_box).
+- **Edits:** Model Editor -> Animation -> clip "Scene (Clip 5)" -> Clip options. Set "Motion root bone" = None, then "Frame offset" 0 vs 10. Start 0, End 30, Match loop on.
+- **Model json:** editor.clips[0] gets "frameoffset": 0 / 10, "rootmotion": "". id 26 is unchanged, motionflags 47104.
+- **.mdl:** both 9533 bytes, with a **single byte difference at 0x2530**. The clip record's u32s read `00000000 1e000000 0a000000 ffffffff` = start 0, end 30, **frame offset 10**, root bone -1 (None). That confirms (u0 start, u1 end, u2 frame offset, u3 root bone).
+- **Playback** (RenderDoc stills, animation layer on clip 26, MG4 camera): box centroid (px) at t = 0.25 / 0.5 / 0.75 / 1.0 s:
+  - offset0:  (957,560) (895,540) (830,522) (753,503)
+  - offset10: (829,522) (756,503) (956,560) (913,545)
+- **Interpretation:** offset10 at time t matches offset0 at about t+0.5 s; the loop wraps earlier. So the frame offset **shifts the loop phase forward**: playback starts partway into the clip. It is not a delay.
+  - The measured shift (about 0.5 s) is larger than 10 frames (0.33 s). Per-load timing jitter between the two captures is about +-0.15 s, so this is consistent with starting 10 frames in.
+
+D: NOT done.
+- It needs Blender to run make_bone_flags_fbx.py, then an FBX import through the editor's Create Wallpaper flow.
+- Pending a further session.
