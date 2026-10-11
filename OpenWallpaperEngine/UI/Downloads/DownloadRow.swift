@@ -80,6 +80,13 @@ struct DownloadRow: View {
             Text(verbatim: workshopId)
                 .monospacedDigit()
                 .help("Workshop ID")
+            if let subscriptions = item?.subscriptions, subscriptions > 0 {
+                Label {
+                    Text(subscriptions, format: .number.notation(.compactName))
+                } icon: {
+                    Image(systemName: "heart")
+                }
+            }
             if let fileSize = item?.fileSize, fileSize > 0 {
                 Text(Int64(fileSize), format: .byteCount(style: .file))
             }
