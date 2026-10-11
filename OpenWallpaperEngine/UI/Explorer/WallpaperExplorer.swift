@@ -11,6 +11,7 @@ struct WallpaperExplorer: SubviewOfContentView {
     var viewModel: ContentViewModel
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     @State private var isCreatePlaylistPresented = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(contentViewModel viewModel: ContentViewModel, wallpaperViewModel: WallpaperViewModel) {
         self.viewModel = viewModel
@@ -43,6 +44,7 @@ struct WallpaperExplorer: SubviewOfContentView {
                     ], alignment: .leading, spacing: 8) {
                         ForEach(viewModel.library.displayedFolders) { folder in
                             InstalledFolderTile(viewModel: viewModel, folder: folder)
+                                .transition(InstalledDropAnimation.removal(reduceMotion: reduceMotion))
                                 .contextMenu {
                                     InstalledFolderMenu(viewModel: viewModel, folder: folder)
                                     ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
@@ -50,9 +52,11 @@ struct WallpaperExplorer: SubviewOfContentView {
                         }
                         ForEach(viewModel.library.displayedWallpapers, id: \.wallpaperDirectory) { wallpaper in
                             ExplorerItem(viewModel: viewModel, wallpaperViewModel: wallpaperViewModel, wallpaper: wallpaper)
+                                .transition(InstalledDropAnimation.removal(reduceMotion: reduceMotion))
                                 .contextMenu {
                                     ExplorerItemMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel, current: wallpaper)
-                                    ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
+                                    ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel,
+                                                       includesCreateFolder: false)
                                 }
                         }
                     }
@@ -74,7 +78,7 @@ struct WallpaperExplorer: SubviewOfContentView {
                         viewModel.presentation.folderNamePrompt = .create
                     } label: {
                         Label {
-                            Text("Create Folder", comment: "Title of the alert that names a new folder in the Installed tab, and the Installed tab's button that opens it")
+                            Text("Create Folder", comment: "Title of the alert that names a new folder in the Installed tab, the Installed tab's button that opens it, and the command in a wallpaper's context menu that makes a folder and moves the wallpaper (or the selection it is in) into it")
                         } icon: {
                             Image(systemName: "folder.badge.plus")
                         }

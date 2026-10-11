@@ -27,7 +27,7 @@ private func sceneUserPropertyTitle(_ raw: String, labels: WallpaperEngineLabels
 
 struct SceneUserProperty: Identifiable {
     let id: String
-    let title: String
+    var title: String
     let type: String
     let order: Int
     let defaultValue: String
@@ -325,9 +325,7 @@ struct SceneUserPropertiesView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            let wallpaperProperties = model.properties.filter {
-                model.authoredPropertyIDs.contains($0.id) && ($0.condition?.evaluate(model.values) ?? true)
-            }
+            let wallpaperProperties = model.shownWallpaperProperties()
             if !wallpaperProperties.isEmpty {
                 CollapsibleSection(title: "Wallpaper Settings") {
                     VStack(alignment: .leading, spacing: 8) {
@@ -643,5 +641,25 @@ enum UserPropertyPathPanel {
             panel.allowedContentTypes = [.image]
         }
         return panel.runModal() == .OK ? panel.url?.path : nil
+    }
+}
+
+extension SceneUserPropertiesModel {
+    /// The wallpaper's own properties whose condition holds, in sidebar order, titled with the
+    /// label their conditions leave (a script can rewrite one, e.g. "Clock : Disabled" to "Enabled").
+    func shownWallpaperProperties() -> [SceneUserProperty] {
+        let authored = properties.filter { authoredPropertyIDs.contains($0.id) }
+        let scope = UserPropertyConditionScope(values: values,
+                                               texts: Dictionary(authored.map { ($0.id, $0.rawText) }) { first, _ in first })
+        var shown: [SceneUserProperty] = []
+        for property in authored where property.condition.map({ scope.evaluate($0) }) ?? true {
+            shown.append(property)
+        }
+        return shown.map { (property: SceneUserProperty) -> SceneUserProperty in
+            guard let text = scope.texts[property.id], text != property.rawText else { return property }
+            var retitled = property
+            retitled.title = UserPropertyHTML.containsMarkup(text) ? UserPropertyHTML.plainText(text) : text
+            return retitled
+        }
     }
 }

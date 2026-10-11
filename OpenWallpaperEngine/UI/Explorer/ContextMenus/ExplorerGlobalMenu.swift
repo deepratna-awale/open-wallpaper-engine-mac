@@ -11,21 +11,26 @@ struct ExplorerGlobalMenu: SubviewOfContentView {
     
     var viewModel: ContentViewModel
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
-    
-    init(contentViewModel viewModel: ContentViewModel, wallpaperViewModel: WallpaperViewModel) {
+    /// Whether it lists Create Folder…; a wallpaper's menu has its own, which moves it in.
+    var includesCreateFolder: Bool
+
+    init(contentViewModel viewModel: ContentViewModel, wallpaperViewModel: WallpaperViewModel, includesCreateFolder: Bool = true) {
         self.wallpaperViewModel = wallpaperViewModel
         self.viewModel = viewModel
+        self.includesCreateFolder = includesCreateFolder
     }
     
     var body: some View {
-        Section {
-            Button {
-                viewModel.presentation.folderNamePrompt = .create
-            } label: {
-                Label {
-                    Text("Create Folder…", comment: "Context menu of the Installed tab: makes a folder in the folder shown")
-                } icon: {
-                    Image(systemName: "folder.badge.plus")
+        if includesCreateFolder {
+            Section {
+                Button {
+                    viewModel.presentation.folderNamePrompt = .create
+                } label: {
+                    Label {
+                        Text("Create Folder…", comment: "Context menu of the Installed tab: makes a folder in the folder shown")
+                    } icon: {
+                        Image(systemName: "folder.badge.plus")
+                    }
                 }
             }
         }

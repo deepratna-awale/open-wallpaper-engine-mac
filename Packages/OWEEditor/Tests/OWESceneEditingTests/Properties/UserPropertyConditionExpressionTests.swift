@@ -62,4 +62,38 @@ final class UserPropertyConditionExpressionTests: XCTestCase {
         XCTAssertFalse(eval("!a.value == 1", ["a": "1"]))
         XCTAssertTrue(eval("!!a.value", ["a": "1"]))
     }
+
+    // MARK: - Scripts
+
+    /// The label trick: the condition rewrites the checkbox's own label as it's ticked.
+    func testScriptRewritesItsLabel() {
+        let condition = UserPropertyConditionExpression("clock_enable.value ? clock_enable.text = clock_enable.text.replace('Disabled','Enabled').replace('ugcDanger','ugcSuccess') : clock_enable.text = clock_enable.text.replace('Enabled','Disabled').replace('ugcSuccess','ugcDanger')")
+        XCTAssertFalse(condition.isUnderstood)
+        let label = "<span class='ugcDanger'>Clock : Disabled</span>"
+        let on = UserPropertyConditionScope(values: ["clock_enable": "true"], texts: ["clock_enable": label])
+        XCTAssertTrue(on.evaluate(condition))
+        XCTAssertEqual(on.texts["clock_enable"], "<span class='ugcSuccess'>Clock : Enabled</span>")
+        let off = UserPropertyConditionScope(values: ["clock_enable": "false"], texts: ["clock_enable": label])
+        XCTAssertTrue(off.evaluate(condition))
+        XCTAssertEqual(off.texts["clock_enable"], label)
+    }
+
+    func testScriptTernaryHides() {
+        let source = "background_enable.value && !(background_type.value == 1) ? background_effect.text = 'x' : false"
+        XCTAssertFalse(eval(source, ["background_enable": "false", "background_type": "0", "background_effect": "false"]))
+        XCTAssertTrue(eval(source, ["background_enable": "true", "background_type": "0", "background_effect": "false"]))
+        XCTAssertFalse(eval(source, ["background_enable": "true", "background_type": "1", "background_effect": "false"]))
+    }
+
+    func testLabelsCarryAcrossConditions() {
+        let scope = UserPropertyConditionScope(values: ["a": "true", "b": "true"], texts: ["a": "A off", "b": ""])
+        XCTAssertTrue(scope.evaluate(UserPropertyConditionExpression("a.value ? a.text = a.text.replace('off','on') : false")))
+        XCTAssertTrue(scope.evaluate(UserPropertyConditionExpression("b.value ? b.text = a.text : false")))
+        XCTAssertEqual(scope.texts["b"], "A on")
+    }
+
+    func testScriptThatCouldLoopOrThrowHolds() {
+        XCTAssertTrue(eval("(function(){ while(true){} })()", [:]))
+        XCTAssertTrue(eval("missing.value.trim() == 'x'", [:]))
+    }
 }
