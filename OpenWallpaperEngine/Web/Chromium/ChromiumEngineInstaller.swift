@@ -61,6 +61,13 @@ final class ChromiumEngineInstaller: VersionedInstaller<ChromiumEngineInstallPha
                    message: ChromiumEngineInstaller.message(for:), trash: trash)
     }
 
+    /// Whether an engine is installed, read from the folder without an installer (any thread).
+    nonisolated static var hasActiveInstall: Bool {
+        let root = defaultRoot
+        guard let active = VersionedInstallState.read(in: root).active else { return false }
+        return ChromiumEnginePackage.manifest(in: root.appending(path: active)) != nil
+    }
+
     /// Whether the pinned build is the active install.
     var isCurrent: Bool { pin != nil && installedVersion == pin?.version }
 

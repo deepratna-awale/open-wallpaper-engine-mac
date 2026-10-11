@@ -12,6 +12,7 @@ import SwiftUI
 /// copy. Animated library previews are built in (`ThumbnailAnimation`).
 struct PluginsPage: SettingsPage {
     @ObservedObject var viewModel: GlobalSettingsViewModel
+    @StateObject private var chromium = ChromiumEngineInstaller()
 
     init(globalSettings viewModel: GlobalSettingsViewModel) {
         self.viewModel = viewModel
@@ -32,9 +33,19 @@ struct PluginsPage: SettingsPage {
                         Button("Open Screen Saver Settings…") {
                             ScreenSaverInstaller.current.openSettings()
                         }
+                        if chromium.installedVersion == nil {
+                            // The screen saver draws web pages and WebM videos through Chromium only
+                            // (`ScreenSaverLiveWeb`).
+                            Text("Web wallpapers and WebM videos move in the screen saver only with the Chromium engine. Without it, the screen saver shows their picture.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Button("Install the Chromium Engine") { chromium.install() }
+                                .disabled(chromium.isBusy || chromium.pin == nil)
+                        }
                     }
                 }
-                ChromiumEngineSection()
+                ChromiumEngineSection(installer: chromium)
                     .settingsAnchor(SettingsAnchor.chromium)
                 DepthMapPluginSection()
                     .settingsAnchor(SettingsAnchor.depthMaps)

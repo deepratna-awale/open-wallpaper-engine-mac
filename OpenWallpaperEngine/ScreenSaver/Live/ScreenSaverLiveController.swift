@@ -4,8 +4,9 @@ import Metal
 import notify
 
 /// The live screen saver, the app's side: while the screen saver runs and an Open Wallpaper Engine
-/// saver shows (`ScreenSaverLiveState`), the scene loops of the screen saver's layout
-/// (`ScreenSaverPlugin.liveLoops`) are drawn live (`ScreenSaverLiveScene`) into rings of surfaces
+/// saver shows (`ScreenSaverLiveState`), the loops of the screen saver's layout
+/// (`ScreenSaverPlugin.liveLoops`) are drawn live (scenes by `ScreenSaverLiveScene`, web pages and
+/// WebM videos through Chromium by `ScreenSaverLiveWeb`) into rings of surfaces
 /// published for the `.saver` (`live.json`, Darwin notifications) and the extension (XPC,
 /// `ScreenSaverFrameService`) by `ScreenSaverFramePublisher`. Nothing is drawn at any other time:
 /// drawing stops on `willstop`/`didstop`, an unlock, or when no saver has said it is there for
@@ -22,7 +23,12 @@ final class ScreenSaverLiveController {
         var settings: () -> GlobalSettings
         var placement: () -> WallpaperPlacement
         var scriptServices: () -> SceneScriptServices?
+        /// The desktop's Chromium page on a display, while it shows the wallpaper.
+        var pageSharing: (_ screenId: String, _ wallpaper: WEWallpaper) -> ScreenSaverPageSharing? = { _, _ in nil }
     }
+
+    /// How often the frames each ring drew are logged while drawing.
+    static let countsInterval: TimeInterval = 10
 
     private let plugin: ScreenSaverPlugin
     private let environment: Environment
@@ -36,6 +42,13 @@ final class ScreenSaverLiveController {
     private var publisher: ScreenSaverFramePublisher?
     private var service: ScreenSaverFrameService?
     private var scenes: [ScreenSaverLiveScene] = []
+    private var pages: [ScreenSaverLiveWeb] = []
+    private var countsSince: TimeInterval = 0
+    /// Launched for a saver (`launchedForScreenSaver`), heard once the plugin is observed.
+    private var launchedForSaver = false
+    /// The screen saver session this app was launched for ended.
+    var onLaunchedSessionEnded: (() -> Void)?
+    private var frameRate = 0
 
     init(plugin: ScreenSaverPlugin, environment: Environment, store: ScreenSaverVideoStore = .current,
          mayPublish: Bool = ScreenSaverInstaller.current.mayInstall) {
@@ -62,9 +75,17 @@ final class ScreenSaverLiveController {
         }
     }
 
+    /// The broker launched the app for a saver showing (`ScreenSaverLiveNames.launchArgument`):
+    /// the screen saver runs, and its `didstart` came before the app.
+    func launchedForScreenSaver() {
+        launchedForSaver = true
+        if !observers.isEmpty { handle(.launchedForScreenSaver) }
+    }
+
     private func setObserving(_ observing: Bool) {
         if observing, observers.isEmpty {
             observeLifecycle()
+            defer { if launchedForSaver { handle(.launchedForScreenSaver) } }
             if publisher == nil, let device = MTLCreateSystemDefaultDevice() {
                 let publisher = ScreenSaverFramePublisher(
                     manifestURL: store.directory.appending(path: ScreenSaverLiveManifest.fileName, directoryHint: .notDirectory),
@@ -124,6 +145,7 @@ final class ScreenSaverLiveController {
         if state.handle(event, at: now) {
             if state.isDrawing { startDrawing() } else { stopDrawing() }
         }
+        if state.isDrawing, now - countsSince >= Self.countsInterval { logCounts(at: now) }
         // Timeouts need a clock only while the screen saver runs.
         if state.screenSaverRuns, timer == nil {
             timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
@@ -133,35 +155,65 @@ final class ScreenSaverLiveController {
         } else if !state.screenSaverRuns {
             timer?.invalidate()
             timer = nil
+            if launchedForSaver {
+                launchedForSaver = false
+                onLaunchedSessionEnded?()
+            }
         }
     }
 
     private func startDrawing() {
-        guard let publisher, scenes.isEmpty else { return }
+        guard let publisher, scenes.isEmpty, pages.isEmpty else { return }
         let (loops, displays) = plugin.liveLoops()
         guard !loops.isEmpty else {
-            OWELog.info(.app, "Live screen saver: no scene to draw live; the saver plays its videos")
+            OWELog.info(.app, "Live screen saver: nothing to draw live; the saver plays its videos")
             return
         }
         let settings = environment.settings()
         let limits = FramePacing.Limits(settings, power: PowerPolicyMonitor.shared.policy)
         let screens = Dictionary(NSScreen.screens.map { (WallpaperViewModel.screenId(for: $0), $0) }, uniquingKeysWith: { first, _ in first })
+        // As the desktop paces scenes: the user's rate, capped by the power policy, rounded down to
+        // a whole divisor of the display's refresh so every frame lasts as long (55 for 60 on a
+        // 165 Hz display, `FramePacing.cadence`).
         func rate(for screen: NSScreen?) -> Int {
             let refresh = screen?.maximumFramesPerSecond ?? 60
-            return max(1, min(limits.userLimit, limits.powerCap ?? .max, refresh > 0 ? refresh : 60))
+            let target = max(1, min(limits.userLimit, limits.powerCap ?? .max))
+            return FramePacing.cadence(target, refreshRate: refresh > 0 ? refresh : 60)
         }
         let frameRate = loops.map { rate(for: $0.screenId.flatMap { screens[$0] }) }.max() ?? 30
+        // A page's ring is the page's own pixels (Web Standard Resolution and Texture Resolution
+        // may draw it below the display's); a scene's the loop's.
+        func pagePixelsPerPoint(_ loop: ScreenSaverPlugin.LiveLoop) -> CGFloat {
+            ScreenSaverLiveWeb.pixelsPerPoint(settings, backingScale: CGFloat(loop.pixels.x) / CGFloat(max(loop.points.x, 1)))
+        }
+        let sizes = loops.map { loop in
+            loop.kind == .scene ? loop.pixels
+                : ScreenSaverLiveWeb.pixels(points: loop.points, pixelsPerPoint: pagePixelsPerPoint(loop))
+        }
         do {
-            try publisher.publish(sizes: loops.map(\.pixels),
-                                  displays: ScreenSaverPlugin.liveDisplayEntries(loops.map(\.loop), pixels: loops.map(\.pixels),
+            try publisher.publish(sizes: sizes,
+                                  displays: ScreenSaverPlugin.liveDisplayEntries(loops.map(\.loop), pixels: sizes,
                                                                                  displays: displays),
                                   frameRate: frameRate)
         } catch {
             OWELog.error(.app, "Live screen saver: can't allocate the frames: \(error)")
             return
         }
+        self.frameRate = frameRate
+        countsSince = ProcessInfo.processInfo.systemUptime
+        _ = publisher.takeCounts()
         for (ring, loop) in loops.enumerated() {
             let screen = loop.screenId.flatMap { screens[$0] }
+            if case .page(let kind) = loop.kind {
+                let sharing = loop.screenId.flatMap { environment.pageSharing($0, loop.wallpaper) }
+                if let page = ScreenSaverLiveWeb(kind: kind, wallpaper: loop.wallpaper, propertyScope: loop.propertyScope,
+                                                 ring: ring, points: loop.points, pixelsPerPoint: pagePixelsPerPoint(loop),
+                                                 frameRate: rate(for: screen), placement: environment.placement(),
+                                                 sharing: sharing, publisher: publisher) {
+                    pages.append(page)
+                }
+                continue
+            }
             let target = ScreenSaverLiveScene.Target(ring: ring, pixels: loop.pixels, points: loop.points, frameRate: rate(for: screen))
             if let scene = ScreenSaverLiveScene(wallpaper: loop.wallpaper, propertyScope: loop.propertyScope, target: target,
                                                 screen: screen, settings: settings, placement: environment.placement(),
@@ -172,12 +224,26 @@ final class ScreenSaverLiveController {
     }
 
     private func stopDrawing() {
-        let drew = !scenes.isEmpty
+        let drew = !scenes.isEmpty || !pages.isEmpty
         scenes.forEach { $0.shutdown() }
         scenes.removeAll()
+        pages.forEach { $0.shutdown() }
+        pages.removeAll()
         if drew {
             publisher?.clear()
             OWELog.info(.app, "Live screen saver: stopped drawing")
+        }
+    }
+
+    /// Where frames are lost: each ring's ticks (a scene's display link, a page's frames) and
+    /// frames drawn, against the rate asked for.
+    private func logCounts(at now: TimeInterval) {
+        guard let publisher else { return }
+        let seconds = now - countsSince
+        countsSince = now
+        for (ring, counts) in publisher.takeCounts().sorted(by: { $0.key < $1.key }) {
+            OWELog.info(.app, String(format: "Live screen saver: ring %d ticks %.1f/s drawn %.1f/s (asked %d) over %.0f s",
+                                     ring, Double(counts.ticks) / seconds, Double(counts.drawn) / seconds, frameRate, seconds))
         }
     }
 }

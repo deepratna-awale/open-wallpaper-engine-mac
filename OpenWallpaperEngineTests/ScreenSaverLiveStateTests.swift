@@ -49,4 +49,20 @@ final class ScreenSaverLiveStateTests: XCTestCase {
         XCTAssertTrue(state.screenSaverRuns)
         XCTAssertTrue(state.handle(.saverAlive, at: 10), "a host that came back")
     }
+
+    func testAnAppLaunchedForASaverDrawsWithoutTheDidStartItMissed() {
+        var state = ScreenSaverLiveState()
+        XCTAssertTrue(state.handle(.launchedForScreenSaver, at: 0), "loads at once, before the saver's next ping")
+        XCTAssertTrue(state.screenSaverRuns)
+        XCTAssertFalse(state.handle(.saverAlive, at: 0.5))
+        XCTAssertTrue(state.handle(.screenUnlocked, at: 5), "an unlock still ends it")
+    }
+
+    func testTheBrokerLaunchesTheAppOnlyWhenItIsntRunningAndNotOverAndOver() {
+        var policy = LiveSaverLaunchPolicy()
+        XCTAssertFalse(policy.shouldLaunch(at: 0, appRunning: true))
+        XCTAssertTrue(policy.shouldLaunch(at: 1, appRunning: false))
+        XCTAssertFalse(policy.shouldLaunch(at: 2, appRunning: false), "still starting")
+        XCTAssertTrue(policy.shouldLaunch(at: 1 + LiveSaverLaunchPolicy.retryInterval, appRunning: false), "it didn't start")
+    }
 }

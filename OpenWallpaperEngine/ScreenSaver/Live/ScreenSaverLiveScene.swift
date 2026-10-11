@@ -107,7 +107,9 @@ final class ScreenSaverLiveScene {
         }
         let link = screen.displayLink(target: ticker, selector: #selector(Ticker.tick(_:)))
         let rate = Float(target.frameRate)
-        link.preferredFrameRateRange = CAFrameRateRange(minimum: min(rate, 10), maximum: rate, preferred: rate)
+        // A fixed rate, as the desktop's links (`SceneRenderLoop`): a range lets macOS tick an
+        // app with no window on screen slower than asked.
+        link.preferredFrameRateRange = CAFrameRateRange(minimum: rate, maximum: rate, preferred: rate)
         self.link = link
         thread.perform { [thread] in link.add(to: thread.runLoop, forMode: .default) }
     }
@@ -128,6 +130,7 @@ final class ScreenSaverLiveScene {
 
         @objc func tick(_ link: CADisplayLink) {
             guard renderer.hasContent else { return }
+            publisher.ticked(ring: ring)
             renderer.renderShared([viewport])
             guard let target = publisher.target(ring: ring),
                   let commandBuffer = renderer.commandQueue.makeCommandBuffer() else { return }

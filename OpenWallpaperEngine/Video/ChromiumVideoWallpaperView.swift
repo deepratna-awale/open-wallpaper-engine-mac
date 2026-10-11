@@ -19,7 +19,7 @@ struct ChromiumVideoWallpaperView: NSViewRepresentable {
         context.coordinator.player = player
         player.state = state(for: wallpaper)
         player.musicSync = VideoMusicSyncEffect(wallpaper)
-        context.coordinator.share(view, of: screenId, through: wallpaperViewModel.webPageMirrors)
+        context.coordinator.share(view, of: screenId, through: wallpaperViewModel.webPageMirrors, sharing: player)
         return view
     }
 

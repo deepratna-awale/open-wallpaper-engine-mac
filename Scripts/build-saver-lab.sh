@@ -70,6 +70,17 @@ cat > "$out/app.openwallpaperengine.saver-broker.plist" <<PLIST
 		<key>C33D7BSFGS.app.openwallpaperengine.saver-broker</key>
 		<true/>
 	</dict>
+	<key>LaunchEvents</key>
+	<dict>
+		<key>com.apple.notifyd.matching</key>
+		<dict>
+			<key>app.openwallpaperengine.saver.alive</key>
+			<dict>
+				<key>Notification</key>
+				<string>app.openwallpaperengine.saver.alive</string>
+			</dict>
+		</dict>
+	</dict>
 	<key>ProcessType</key>
 	<string>Background</string>
 </dict>

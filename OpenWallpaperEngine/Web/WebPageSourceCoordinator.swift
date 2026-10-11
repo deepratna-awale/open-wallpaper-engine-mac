@@ -8,9 +8,9 @@ class WebPageSourceCoordinator {
     private var stop: (() -> Void)?
 
     func share(_ view: NSView, of screenId: String, through registry: WebPageMirrorRegistry,
-               viewModel: WebWallpaperViewModel? = nil) {
+               viewModel: WebWallpaperViewModel? = nil, sharing: ScreenSaverPageSharing? = nil) {
         stopSharing()
-        registry.setSource(view, for: screenId)
+        registry.setSource(view, for: screenId, sharing: sharing ?? viewModel)
         (view as? ChromiumPageView)?.mirrors = { [weak registry] in registry?.mirrors(of: screenId) ?? [] }
         viewModel?.mirrorWindows = { [weak registry] in registry?.mirrors(of: screenId).compactMap(\.window) ?? [] }
         stop = { [weak registry, weak view] in

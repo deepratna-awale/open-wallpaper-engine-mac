@@ -146,6 +146,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var crashWatcherCancellable: AnyCancellable?
     /// Hides the Dock icon while no window is open (`DockPresence`).
     let dockPresence = DockPresence()
+    /// Launched by the screen saver's broker for a saver showing while the app wasn't running
+    /// (`ScreenSaverLiveNames.launchArgument`): no window and no Dock icon until that screen saver
+    /// session ends or a window opens.
+    private(set) var launchedForScreenSaver = ProcessInfo.processInfo.arguments.contains(ScreenSaverLiveNames.launchArgument)
     /// Sparkle, off in builds without an update signing key (`Core/Updates`).
     lazy var updater = AppUpdater(configuration: .main)
     /// The system's now-playing session, one for the process (MediaRemote registers per process):
@@ -159,7 +163,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     lazy var liveScreenSaver = ScreenSaverLiveController(plugin: screenSaver, environment: .init(
         settings: { [unowned self] in globalSettingsViewModel.settings },
         placement: { [unowned self] in wallpaperViewModel.wallpaperPlacement },
-        scriptServices: { [unowned self] in sceneScriptServices }))
+        scriptServices: { [unowned self] in sceneScriptServices },
+        pageSharing: { [unowned self] screenId, wallpaper in
+            wallpaperViewModel.webPageMirrors.sharing(for: screenId, showing: wallpaper)
+        }))
     /// Settings › General › Theming: macOS follows the wallpaper's scheme colour.
     private(set) lazy var theming = ThemingController.make { [unowned self] in
         applyMenuBarStrips()
@@ -280,6 +287,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     func applicationWillFinishLaunching(_ notification: Notification) {
+        // Behind the screen saver: no Dock icon from the start.
+        if launchedForScreenSaver { NSApp.setActivationPolicy(.accessory) }
         // Animated previews are built in now; the old plugin's on/off is dropped.
         ThumbnailAnimation.removeRetiredPreference(from: .app)
 
@@ -321,6 +330,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             .sink { [weak self] canvases in self?.applyStretchCanvases(canvases) }
         // The screen saver's loops follow the displays' wallpapers and layouts.
         screenSaver.observe(wallpaperViewModel)
+        liveScreenSaver.onLaunchedSessionEnded = { [weak self] in
+            self?.launchedForScreenSaver = false
+            self?.dockPresence.update()
+        }
+        if launchedForScreenSaver {
+            OWELog.info(.app, "Live screen saver: launched for a saver showing")
+            liveScreenSaver.launchedForScreenSaver()
+        }
         liveScreenSaver.start()
         // Settings › Optimizations › Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
@@ -413,6 +430,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         AppDelegate.shared.setPlacehoderWallpaper(with: wallpaperViewModel.currentWallpaper)
         // Each display's desktop picture (lock screen, menu bar tint) follows what it shows.
         desktopPictures.observe(wallpaperViewModel, settings: globalSettingsViewModel)
+        // The screen saver shows each display's picture until its live frames come.
+        if ScreenSaverInstaller.current.mayInstall {
+            let stills = ScreenSaverStillPublisher.current
+            desktopPictures.sync.onPictureWritten = { url, display in stills.publish(url, display: display) }
+        }
 
         // 显示桌面壁纸
         for (_, window) in self.wallpaperWindows {
@@ -437,7 +459,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             .sink { [weak self] enabled in MainActor.assumeIsolated { self?.videoMemoryWatch.setEnabled(enabled) } }
 
         // After an update relaunch, what was open before; otherwise the setup assistant if due.
-        if !restoreUpdateRelaunchState(),
+        if !restoreUpdateRelaunchState(), !launchedForScreenSaver,
            globalSettingsViewModel.isFirstLaunch || globalSettingsViewModel.needsLegalNotice {
             self.mainWindowController.window.center()
             self.mainWindowController.window.makeKeyAndOrderFront(nil)
@@ -458,7 +480,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         // Launched into the menu bar only, the Dock icon goes until a window opens, unless Show in
         // Dock keeps it.
-        dockPresence.keepsIcon = { [unowned self] in globalSettingsViewModel.settings.showInDock }
+        dockPresence.keepsIcon = { [unowned self] in globalSettingsViewModel.settings.showInDock && !launchedForScreenSaver }
         dockPresence.start()
 
         // The screen saver's daily re-recording: catches up a run missed while the app was quit.

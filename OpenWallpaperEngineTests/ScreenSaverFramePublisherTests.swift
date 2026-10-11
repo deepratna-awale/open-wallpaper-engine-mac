@@ -119,6 +119,90 @@ final class ScreenSaverFramePublisherTests: XCTestCase {
         XCTAssertEqual(frame.frameRate, 60)
         XCTAssertNil(store.newestFrame(display: "B", pixels: (8, 8)), "B plays its video")
     }
+
+    func testTheStoreTellsItsViewsOfEachNewFrameAndWhetherFramesAreFresh() throws {
+        let publisher = try publisher(RecordingNotifier())
+        try publisher.publish(sizes: [SIMD2(8, 8)], displays: [.init(display: nil, ring: 0)], frameRate: 60)
+        let message = publisher.framesMessage
+        let store = LiveFrameStore()
+        store.use(message.manifest, surfaces: [0: message.surfaces(ofRing: 0)])
+        let generation = ScreenSaverLiveStamp.generation(message.manifest.generation)
+        let heard = LockedValue(0)
+        let owner = NSObject()
+        store.addObserver(owner) { heard.mutate { $0 += 1 } }
+        XCTAssertFalse(store.hasFreshFrame(at: 10, within: 0.5))
+
+        store.show(ring: 0, stamp: ScreenSaverLiveStamp(generation: generation, frame: 1, slot: 0), at: 10)
+        store.show(ring: 0, stamp: ScreenSaverLiveStamp(generation: generation, frame: 1, slot: 0), at: 10.1) // Not newer.
+        XCTAssertEqual(heard.value, 1)
+        XCTAssertTrue(store.hasFreshFrame(at: 10.4, within: 0.5))
+        XCTAssertFalse(store.hasFreshFrame(at: 10.6, within: 0.5), "a repeated stamp isn't a new frame")
+
+        store.removeObserver(owner)
+        store.show(ring: 0, stamp: ScreenSaverLiveStamp(generation: generation, frame: 2, slot: 1), at: 11)
+        XCTAssertEqual(heard.value, 1)
+        store.use(ScreenSaverLiveManifest(), surfaces: [:])
+        XCTAssertFalse(store.hasFreshFrame(at: 11, within: 0.5), "new rings start stale")
+    }
+
+    func testCountsTicksAndFramesAndRepeatsTheNewestForAStillPage() throws {
+        let notifier = RecordingNotifier()
+        let publisher = try publisher(notifier)
+        try publisher.publish(sizes: [SIMD2(8, 8)], displays: [.init(display: nil, ring: 0)], frameRate: 60)
+        let queue = try XCTUnwrap(MTLCreateSystemDefaultDevice()?.makeCommandQueue())
+        publisher.repeatNewest(ring: 0, on: queue)
+        XCTAssertTrue(notifier.posts.isEmpty, "nothing to repeat before the first frame")
+
+        publisher.ticked(ring: 0)
+        publisher.ticked(ring: 0)
+        let target = try XCTUnwrap(publisher.target(ring: 0))
+        publisher.drawn(ring: 0, slot: target.slot, generation: target.generation)
+        XCTAssertEqual(publisher.takeCounts()[0], ScreenSaverFramePublisher.Counts(ticks: 2, drawn: 1))
+        XCTAssertEqual(publisher.takeCounts()[0], ScreenSaverFramePublisher.Counts(), "taking them starts them again")
+
+        let repeated = expectation(description: "repeated")
+        DispatchQueue.global().async {
+            while notifier.posts.count < 2 { usleep(1000) }
+            repeated.fulfill()
+        }
+        publisher.repeatNewest(ring: 0, on: queue)
+        wait(for: [repeated], timeout: 5)
+        let stamps = notifier.posts.compactMap { ScreenSaverLiveStamp(state: $0.1) }
+        XCTAssertEqual(stamps.map(\.frame), [1, 2])
+        XCTAssertEqual(stamps.last?.slot, UInt8((target.slot + 1) % ScreenSaverFramePublisher.ringSize), "into the next slot")
+    }
+
+    func testStillsNameEachDisplaysPictureAndFallBackToAnyDisplays() throws {
+        var stills = ScreenSaverStills()
+        XCTAssertNil(stills.file(forDisplay: "A"))
+        stills.stills = ["B": "still-B.heic"]
+        XCTAssertEqual(stills.file(forDisplay: "A"), "still-B.heic", "a display not pictured yet shows another's")
+        stills.stills["A"] = "still-A.jpg"
+        XCTAssertEqual(stills.file(forDisplay: "A"), "still-A.jpg")
+        XCTAssertEqual(ScreenSaverStills.fileName(display: "37D8832A-2D66/x", fileExtension: "heic"), "still-37D8832A-2D66_x.heic")
+    }
+
+    @MainActor
+    func testTheStillPublisherLinksTheDisplaysPictureAndListsIt() throws {
+        let pictures = folder.appending(path: "pictures", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: pictures, withIntermediateDirectories: true)
+        let first = pictures.appending(path: "lock-1-a.heic"), second = pictures.appending(path: "lock-1-b.jpg")
+        try Data("one".utf8).write(to: first)
+        try Data("two".utf8).write(to: second)
+        let shared = folder.appending(path: "shared", directoryHint: .isDirectory)
+        let stills = ScreenSaverStillPublisher(folder: shared)
+
+        stills.publish(first, display: "A")
+        try FileManager.default.removeItem(at: first) // The desktop picture's slot is reused: the still stays.
+        var listed = try XCTUnwrap(ScreenSaverStills.read(shared.appending(path: ScreenSaverStills.fileName)))
+        XCTAssertEqual(try Data(contentsOf: shared.appending(path: try XCTUnwrap(listed.stills["A"]))), Data("one".utf8))
+
+        stills.publish(second, display: "A")
+        listed = try XCTUnwrap(ScreenSaverStills.read(shared.appending(path: ScreenSaverStills.fileName)))
+        XCTAssertEqual(listed.stills["A"], "still-A.jpg")
+        let files = try FileManager.default.contentsOfDirectory(atPath: shared.path(percentEncoded: false)).sorted()
+        XCTAssertEqual(files, ["still-A.jpg", ScreenSaverStills.fileName], "the earlier format's still is gone, nothing staged is left")
+    }
 }
 
 /// A value shared with XPC's and Metal's threads.

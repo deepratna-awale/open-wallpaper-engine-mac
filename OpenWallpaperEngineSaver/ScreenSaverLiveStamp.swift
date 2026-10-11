@@ -65,4 +65,7 @@ enum ScreenSaverLiveNames {
     /// The broker's Mach service (a launchd agent, `OWESaverBroker`): the extension finds the app's
     /// frame service through it. Prefixed with the App Group, so the extension's sandbox may look it up.
     static let brokerService = appGroup + ".saver-broker"
+    /// The argument the broker launches the app with when a saver shows and the app isn't
+    /// running: the app starts in the background, draws for the screen saver, and opens no window.
+    static let launchArgument = "--screen-saver-launch"
 }

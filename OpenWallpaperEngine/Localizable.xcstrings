@@ -66976,6 +66976,100 @@
         }
       }
     },
+    "Install the Chromium Engine" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تثبيت محرك Chromium"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium-Engine installieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar el motor Chromium"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer le moteur Chromium"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium इंजन इंस्टॉल करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installa il motore Chromium"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium エンジンをインストール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium 엔진 설치"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zainstaluj silnik Chromium"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar o mecanismo Chromium"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установить движок Chromium"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium Motorunu Yükle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установити рушій Chromium"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装 Chromium 引擎"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安裝 Chromium 引擎"
+          }
+        }
+      }
+    },
     "Installed" : {
       "localizations" : {
         "ar" : {
@@ -171058,6 +171152,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "網頁引擎"
+          }
+        }
+      }
+    },
+    "Web wallpapers and WebM videos move in the screen saver only with the Chromium engine. Without it, the screen saver shows their picture." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا تتحرك خلفيات الويب ومقاطع WebM في شاشة التوقف إلا مع محرك Chromium. بدونه، تعرض شاشة التوقف صورتها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web-Hintergründe und WebM-Videos bewegen sich im Bildschirmschoner nur mit der Chromium-Engine. Ohne sie zeigt der Bildschirmschoner ihr Bild."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los fondos web y los vídeos WebM solo se mueven en el salvapantallas con el motor Chromium. Sin él, el salvapantallas muestra su imagen."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les fonds d’écran web et les vidéos WebM ne bougent dans l’économiseur d’écran qu’avec le moteur Chromium. Sans lui, l’économiseur d’écran affiche leur image."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वेब वॉलपेपर और WebM वीडियो स्क्रीन सेवर में केवल Chromium इंजन के साथ चलते हैं। इसके बिना, स्क्रीन सेवर उनकी तस्वीर दिखाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gli sfondi web e i video WebM si muovono nel salvaschermo solo con il motore Chromium. Senza, il salvaschermo mostra la loro immagine."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web 壁紙と WebM 動画は、Chromium エンジンがある場合にのみスクリーンセーバーで動きます。ない場合、スクリーンセーバーはその画像を表示します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "웹 배경화면과 WebM 동영상은 Chromium 엔진이 있어야 화면 보호기에서 움직입니다. 없으면 화면 보호기에 해당 사진이 표시됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tapety internetowe i filmy WebM poruszają się w wygaszaczu ekranu tylko z silnikiem Chromium. Bez niego wygaszacz pokazuje ich obraz."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Papéis de parede da web e vídeos WebM só se movem no protetor de tela com o mecanismo Chromium. Sem ele, o protetor de tela mostra a imagem deles."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Веб-обои и видео WebM движутся в заставке только с движком Chromium. Без него заставка показывает их изображение."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web duvar kâğıtları ve WebM videolar ekran koruyucuda yalnızca Chromium motoruyla hareket eder. Motor olmadan ekran koruyucu onların resmini gösterir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вебшпалери та відео WebM рухаються в заставці лише з рушієм Chromium. Без нього заставка показує їхнє зображення."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网页壁纸和 WebM 视频只有在安装 Chromium 引擎后才会在屏幕保护程序中动起来。否则，屏幕保护程序会显示它们的图片。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "網頁桌布和 WebM 影片只有在安裝 Chromium 引擎後才會在螢幕保護程式中動起來。否則，螢幕保護程式會顯示它們的圖片。"
           }
         }
       }

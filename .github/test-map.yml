@@ -169,5 +169,5 @@ map:
   "OpenWallpaperEngine/MCP/**": ["MCP*", "Localization*"]
   "MCPServer/**": ["MCPServerProcess*"]
   "OpenWallpaperEngineSaverExtension/**": ["ScreenSaverFrameService*", "ScreenSaverLive*", "LiveSaver*"]
-  "OWESaverBroker/**": ["ScreenSaverFrameService*"]
+  "OWESaverBroker/**": ["ScreenSaverFrameService*", "ScreenSaverLiveState*"]
   "OpenWallpaperEngine/Installs/**": ["VersionedInstall*", "ChromiumEngine*", "DepthMapPlugin*", "WebEngineRouting*"]

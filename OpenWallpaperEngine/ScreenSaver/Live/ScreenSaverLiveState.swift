@@ -8,6 +8,10 @@ import Foundation
 struct ScreenSaverLiveState: Equatable {
     enum Event: Equatable {
         case didStart
+        /// The app was launched for a saver that showed while it wasn't running (the broker,
+        /// `ScreenSaverLiveNames.launchArgument`): the screen saver runs, its `didstart` was missed,
+        /// and the launch is that saver saying it shows, so the wallpaper starts loading at once.
+        case launchedForScreenSaver
         case willStop
         case didStop
         /// A saver view showing (not a preview) said it is there.
@@ -41,6 +45,9 @@ struct ScreenSaverLiveState: Equatable {
         case .didStart:
             screenSaverRuns = true
             lastAlive = nil
+        case .launchedForScreenSaver:
+            screenSaverRuns = true
+            lastAlive = now
         case .willStop, .didStop:
             screenSaverRuns = false
             lastAlive = nil

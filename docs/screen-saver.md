@@ -71,17 +71,26 @@ Development builds draw the screen saver live instead of playing the recording; 
 keep the recording until this has been tried on real screen saver hosts (Phase 0 below).
 
 - While the screen saver runs and an Open Wallpaper Engine saver is showing, the app draws each
-  display's scene wallpaper as the screen saver's layout plans it (per display, cloned or
+  display's wallpaper live as the screen saver's layout plans it (per display, cloned or
   stretched), with the screen saver's own settings: scripts see `engine.isScreensaver()` true, the
   clock layers are drawn and live, audio-reactive parts follow what the Mac plays, and the sound
-  stays off. The saver shows those frames.
+  stays off. The saver shows each frame as it comes, at the display's cadence (60 fps on a 165 Hz
+  display is 55, as on the desktop).
+- Web wallpapers and WebM videos are drawn by the Chromium engine whichever engine the desktop
+  uses (WebKit stops a page the screen saver covers). When the desktop already shows the page in
+  Chromium on that display, that page is drawn from; otherwise a page of its own, without a
+  window. Without the Chromium engine they show their picture, and Settings › Plugins › Screen
+  Saver offers to install it.
 - It draws only then: it stops when the screen saver stops (or the Mac is unlocked), and another
   screen saver or the System Settings preview never makes it draw.
-- The saver plays the recorded loop whenever the app isn't drawing: the app isn't running, the
-  display shows a web page or a video wallpaper (a video plays its own file), or the first frames
-  haven't arrived yet. A Screen Saver mode recording set as the screen saver always plays as
-  recorded.
-- After the screen saver stops the lock screen keeps its last frame.
+- Until the first frames come, each display shows its lock-screen picture (with Show Wallpaper on
+  Lock Screen on). When the app isn't running, the saver asks for it: the broker launches it in
+  the background, with no window or Dock icon, and it starts loading the wallpaper at once.
+- The saver plays the recorded loop whenever the app isn't drawing and there is one (for now: the
+  recordings go in a later step). A Screen Saver mode recording set as the screen saver always
+  plays as recorded.
+- After the screen saver stops the lock screen keeps its last frame. A view the host makes at the
+  lock shows the live frames at once.
 
 Two savers show the frames: the screen saver in `~/Library/Screen Savers` (macOS 14 and later),
 and a screen saver extension in macOS's newer format, inside the app, which is built only for
@@ -104,8 +113,11 @@ process's CPU and GPU time, parked or not); the app logs `Live screen saver: …
 
 1. Note which screen saver is selected (System Settings › Wallpaper › Screen Saver; Screen Saver
    on macOS 14 and 15), and quit Open Wallpaper Engine.
-2. For the extension only: `launchctl bootstrap gui/$(id -u) <out>/app.openwallpaperengine.saver-broker.plist`
-   and `pluginkit -a "<out>/Open Wallpaper Engine.app/Contents/PlugIns/OpenWallpaperEngineSaverExtension.appex"`.
+2. The broker (both savers: it launches the app for them when it isn't running): copy the plist
+   to an internal disk first (`launchctl` refuses one on a volume with ownership disabled), then
+   `cp <out>/app.openwallpaperengine.saver-broker.plist /private/tmp/` and
+   `launchctl bootstrap gui/$(id -u) /private/tmp/app.openwallpaperengine.saver-broker.plist`.
+   For the extension also `pluginkit -a "<out>/Open Wallpaper Engine.app/Contents/PlugIns/OpenWallpaperEngineSaverExtension.appex"`.
 3. `open "<out>/Open Wallpaper Engine.app"` (Settings › Plugins › Screen Saver on). Like any
    build of the app, it installs its own Open Wallpaper Engine screen saver; your usual app puts
    its own back when it starts.
@@ -117,9 +129,9 @@ process's CPU and GPU time, parked or not); the app logs `Live screen saver: …
    the last frame before unlocking. Leave the Mac at the desktop for a minute (the cost lines of
    hidden hosts).
 7. Put it back: select the screen saver from step 1; `rm -rf ~/Library/Screen\ Savers/OWE\ Live\ Lab.saver`;
-   for the extension `pluginkit -r "<out>/Open Wallpaper Engine.app/Contents/PlugIns/OpenWallpaperEngineSaverExtension.appex"`
-   and `launchctl bootout gui/$(id -u)/app.openwallpaperengine.saver-broker`; quit the lab app
-   and start your usual one.
+   `launchctl bootout gui/$(id -u)/app.openwallpaperengine.saver-broker`; for the extension
+   `pluginkit -r "<out>/Open Wallpaper Engine.app/Contents/PlugIns/OpenWallpaperEngineSaverExtension.appex"`;
+   quit the lab app and start your usual one.
 
 ## Lock screen picture
 

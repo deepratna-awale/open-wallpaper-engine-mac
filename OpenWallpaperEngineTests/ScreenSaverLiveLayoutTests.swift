@@ -34,4 +34,24 @@ final class ScreenSaverLiveLayoutTests: XCTestCase {
         XCTAssertEqual(entries.compactMap(\.crop?.x), [0, 0.5])
         XCTAssertEqual(entries.compactMap(\.crop?.width), [0.5, 0.5])
     }
+
+    func testScenesDrawLiveAndPagesThroughChromiumOnly() {
+        let folder = URL(filePath: "/tmp/owe-live-kind", directoryHint: .isDirectory)
+        func wallpaper(_ type: String, _ file: String) -> WEWallpaper {
+            WEWallpaper(using: WEProject(file: file, preview: "p.jpg", title: "t", type: type), where: folder)
+        }
+        let scene = wallpaper("scene", "scene.json"), web = wallpaper("web", "index.html")
+        let webm = wallpaper("video", "clip.webm"), mp4 = wallpaper("video", "clip.mp4")
+        XCTAssertEqual(ScreenSaverPlugin.liveKind(of: scene, chromiumInstalled: false), .scene)
+        XCTAssertNil(ScreenSaverPlugin.liveKind(of: web, chromiumInstalled: false), "without Chromium: the still")
+        XCTAssertEqual(ScreenSaverPlugin.liveKind(of: web, chromiumInstalled: true), .page(.web))
+        XCTAssertEqual(ScreenSaverPlugin.liveKind(of: webm, chromiumInstalled: true),
+                       WebKitVideoPlayer.handles(webm.mediaURL) ? .page(.webm) : nil)
+        XCTAssertNil(ScreenSaverPlugin.liveKind(of: mp4, chromiumInstalled: true), "the saver plays its own file")
+    }
+
+    func testAPagesRingIsThePagesOwnPixels() {
+        XCTAssertEqual(ScreenSaverLiveWeb.pixels(points: SIMD2(1512, 982), pixelsPerPoint: 2), SIMD2(3024, 1964))
+        XCTAssertEqual(ScreenSaverLiveWeb.pixels(points: SIMD2(1512, 982), pixelsPerPoint: 1), SIMD2(1512, 982))
+    }
 }

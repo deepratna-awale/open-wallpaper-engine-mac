@@ -27,6 +27,18 @@ final class ScreenSaverFramePublisher: @unchecked Sendable { // `lock` owns `rin
         let notifyName: String
         var next = 0
         var frame: UInt32 = 0
+        /// The slot of the newest frame drawn, nil before the first.
+        var newest: Int?
+        /// Since the last `takeCounts`: the source's ticks (or frames offered) and the frames drawn.
+        var ticks = 0
+        var drawn = 0
+    }
+
+    /// A ring's frames over a stretch of time (`takeCounts`): where frames are lost between the
+    /// rate asked for, the source's ticks and the frames drawn.
+    struct Counts: Equatable {
+        var ticks = 0
+        var drawn = 0
     }
 
     /// Where `live.json` goes; nil writes none.
@@ -124,6 +136,8 @@ final class ScreenSaverFramePublisher: @unchecked Sendable { // `lock` owns `rin
             guard generation == manifest.generation, var ring = rings[id] else { return nil }
             ring.frame &+= 1
             if ring.frame == 0 { ring.frame = 1 }
+            ring.newest = slot
+            ring.drawn += 1
             rings[id] = ring
             return (ring.notifyName, ScreenSaverLiveStamp(generation: ScreenSaverLiveStamp.generation(generation),
                                                           frame: ring.frame, slot: UInt8(slot)))
@@ -131,6 +145,47 @@ final class ScreenSaverFramePublisher: @unchecked Sendable { // `lock` owns `rin
         guard let posted else { return }
         notifier.post(posted.name, state: posted.stamp.state)
         onStamp?(id, posted.stamp.state)
+    }
+
+    /// The source of ring `id` ticked (a display link's tick, a page's frame): counted against
+    /// the frames drawn.
+    func ticked(ring id: Int) {
+        lock.withLock { rings[id]?.ticks += 1 }
+    }
+
+    /// Each ring's counts since the last call, which starts them again.
+    func takeCounts() -> [Int: Counts] {
+        lock.withLock {
+            var counts: [Int: Counts] = [:]
+            for (id, ring) in rings {
+                counts[id] = Counts(ticks: ring.ticks, drawn: ring.drawn)
+                rings[id]?.ticks = 0
+                rings[id]?.drawn = 0
+            }
+            return counts
+        }
+    }
+
+    /// Draws ring `id`'s newest frame again, into the next slot, and stamps it: a page that paints
+    /// nothing new (a still page sends no frames) still looks alive to the savers, which fall back
+    /// after `LiveFrameFallback.staleAfter` without one. A GPU copy; nothing before the first frame.
+    func repeatNewest(ring id: Int, on queue: MTLCommandQueue) {
+        let copy: (source: MTLTexture, slot: Int, texture: MTLTexture, generation: Int)? = lock.withLock {
+            guard var ring = rings[id], let newest = ring.newest else { return nil }
+            let slot = ring.next
+            ring.next = (slot + 1) % ring.textures.count
+            rings[id] = ring
+            return (ring.textures[newest], slot, ring.textures[slot], manifest.generation)
+        }
+        guard let copy, let buffer = queue.makeCommandBuffer(), let blit = buffer.makeBlitCommandEncoder() else { return }
+        buffer.label = "Live screen saver repeated frame"
+        blit.copy(from: copy.source, to: copy.texture)
+        blit.endEncoding()
+        buffer.addCompletedHandler { [weak self] done in
+            guard done.status == .completed else { return }
+            self?.drawn(ring: id, slot: copy.slot, generation: copy.generation)
+        }
+        buffer.commit()
     }
 
     /// Wraps within the stamps' 16 bits, skipping 0.

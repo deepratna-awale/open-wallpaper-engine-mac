@@ -4,7 +4,8 @@ import SwiftUI
 /// Settings › Plugins › Chromium web engine: install, update or remove the optional CEF build the
 /// app pins. Nothing is installed until the user asks.
 struct ChromiumEngineSection: View {
-    @StateObject private var installer = ChromiumEngineInstaller()
+    /// The Plugins page's, which the Screen Saver section installs through too.
+    @ObservedObject var installer: ChromiumEngineInstaller
     @State private var removeError: String?
 
     var body: some View {

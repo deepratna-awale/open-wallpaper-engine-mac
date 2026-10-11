@@ -10,12 +10,20 @@ final class WebPageMirrorRegistry {
         init(_ view: NSView) { self.view = view }
     }
 
+    private final class WeakSharing {
+        weak var sharing: ScreenSaverPageSharing?
+        init(_ sharing: ScreenSaverPageSharing) { self.sharing = sharing }
+    }
+
     private var sources: [String: WeakView] = [:]
+    private var sharings: [String: WeakSharing] = [:]
     private var mirrors: [String: [WebPageMirrorView]] = [:]
 
-    /// `view` shows `screenId`'s page; its mirrors show it from now on.
-    func setSource(_ view: NSView, for screenId: String) {
+    /// `view` shows `screenId`'s page; its mirrors show it from now on. `sharing` is what the
+    /// live screen saver draws the page through, when it can.
+    func setSource(_ view: NSView, for screenId: String, sharing: ScreenSaverPageSharing? = nil) {
         sources[screenId] = WeakView(view)
+        sharings[screenId] = sharing.map(WeakSharing.init)
         mirrors[screenId]?.forEach { $0.attach(view) }
     }
 
@@ -23,10 +31,18 @@ final class WebPageMirrorRegistry {
     func removeSource(_ view: NSView, for screenId: String) {
         guard sources[screenId]?.view === view else { return }
         sources[screenId] = nil
+        sharings[screenId] = nil
         mirrors[screenId]?.forEach { $0.attach(nil) }
     }
 
     func source(for screenId: String) -> NSView? { sources[screenId]?.view }
+
+    /// `screenId`'s Chromium page for the live screen saver, while it shows `wallpaper`.
+    func sharing(for screenId: String, showing wallpaper: WEWallpaper) -> ScreenSaverPageSharing? {
+        guard sources[screenId]?.view != nil, let sharing = sharings[screenId]?.sharing,
+              sharing.sharedPage != nil, sharing.shows(wallpaper) else { return nil }
+        return sharing
+    }
 
     func add(_ mirror: WebPageMirrorView) {
         var list = mirrors[mirror.sourceScreenId] ?? []
