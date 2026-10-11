@@ -546,6 +546,8 @@ struct WorkshopItemCard: View {
     @Environment(\.appAccentColor) private var accentColor
     let item: WorkshopItem
     @ObservedObject var viewModel: WorkshopViewModel
+    /// The list the card is in, for ⇧-click ranges; nil is the Workshop grid's page.
+    var selectionOrder: [WorkshopItem]? = nil
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -579,7 +581,7 @@ struct WorkshopItemCard: View {
         .overlay(alignment: .topLeading) {
             if !viewModel.selectedItemIds.isEmpty {
                 Button {
-                    viewModel.selectItem(item)
+                    viewModel.selectItem(item, in: selectionOrder)
                 } label: {
                     Label("Select item",
                           systemImage: viewModel.selectedItemIds.contains(item.id) ? "checkmark.circle.fill" : "circle")
@@ -593,14 +595,19 @@ struct WorkshopItemCard: View {
                 .help("Select item")
             }
         }
-        .border(Color(nsColor: .separatorColor), width: 1)
+        // Rounded like the Installed tiles (`ExplorerItem.cornerRadius`), outlined as before.
+        .clipShape(RoundedRectangle(cornerRadius: ExplorerItem.cornerRadius, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: ExplorerItem.cornerRadius, style: .continuous)
+                .strokeBorder(Color(nsColor: .separatorColor), lineWidth: 1)
+        }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .contentShape(Rectangle())
+        .contentShape(RoundedRectangle(cornerRadius: ExplorerItem.cornerRadius, style: .continuous))
         .contextMenu {
             WorkshopItemMenu(item: item, viewModel: viewModel)
         }
         .onTapGesture {
-            viewModel.selectItem(item)
+            viewModel.selectItem(item, in: selectionOrder)
         }
         .onTapGesture(count: 2) {
             viewModel.preview(item: item)

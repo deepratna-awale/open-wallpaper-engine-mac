@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// A folder tile's context menu, WE's: Open, Rename, Change Icon, Change Color, Move to Folder
@@ -44,22 +45,20 @@ struct InstalledFolderMenu: View {
 
     private var iconMenu: some View {
         Menu {
-            Button {
-                library.setIcon(nil, ofFolder: folder.id)
-            } label: {
-                Label {
-                    Text("Default", comment: "Change Icon / Change Color menu item: the plain folder icon or colour")
-                } icon: {
-                    Image(systemName: folder.icon == nil ? "checkmark" : "folder")
-                }
-            }
-            Divider()
-            ForEach(InstalledFolderIcon.allCases, id: \.self) { icon in
-                Button {
-                    library.setIcon(icon, ofFolder: folder.id)
+            // WE's grid: its plain folder first (the default), then its 29 icons.
+            // Palettes: menus drop items whose label is only an image, so the icons are palette
+            // rows instead. A menu lays one palette out in a single row, so the icons are split
+            // into rows of `iconsPerRow` that share one selection: a grid.
+            ForEach(Array(Self.iconRows.enumerated()), id: \.offset) { _, row in
+                Picker(selection: Binding(get: { folder.icon }, set: { library.setIcon($0, ofFolder: folder.id) })) {
+                    ForEach(row, id: \.self) { icon in
+                        Image(systemName: icon?.systemImage ?? InstalledFolderIcon.defaultSystemImage).tag(icon)
+                    }
                 } label: {
-                    Image(systemName: folder.icon == icon ? "checkmark" : icon.systemImage)
+                    Text("Change Icon", comment: "Context menu of a folder in the Installed tab")
                 }
+                .pickerStyle(.palette)
+                .labelsHidden()
             }
         } label: {
             Label {
@@ -89,8 +88,9 @@ struct InstalledFolderMenu: View {
                     Label {
                         Text(color.label)
                     } icon: {
-                        Image(systemName: folder.color == color ? "checkmark.circle.fill" : "circle.fill")
-                            .foregroundStyle(color.color)
+                        // A drawn swatch: menus tint symbol images to one colour, so a coloured
+                        // symbol would show grey.
+                        Image(nsImage: Self.swatch(color.color, selected: folder.color == color))
                     }
                 }
             }
@@ -101,5 +101,33 @@ struct InstalledFolderMenu: View {
                 Image(systemName: "paintpalette")
             }
         }
+    }
+
+    /// Icons per palette row in Change Icon.
+    private static let iconsPerRow = 5
+
+    /// The icons in rows of `iconsPerRow`.
+    private static let iconRows: [[InstalledFolderIcon?]] = {
+        let icons = InstalledFolderIcon.pickerOrder
+        return stride(from: 0, to: icons.count, by: iconsPerRow).map { Array(icons[$0..<min($0 + iconsPerRow, icons.count)]) }
+    }()
+
+    /// A filled circle in `color` (not a template image, so the menu keeps its colour), ringed
+    /// when it is the folder's colour.
+    private static func swatch(_ color: Color, selected: Bool) -> NSImage {
+        let size = NSSize(width: 14, height: 14)
+        let image = NSImage(size: size, flipped: false) { rect in
+            let circle = NSBezierPath(ovalIn: rect.insetBy(dx: 1.5, dy: 1.5))
+            NSColor(color).setFill()
+            circle.fill()
+            if selected {
+                NSColor.labelColor.setStroke()
+                circle.lineWidth = 1.5
+                circle.stroke()
+            }
+            return true
+        }
+        image.isTemplate = false
+        return image
     }
 }

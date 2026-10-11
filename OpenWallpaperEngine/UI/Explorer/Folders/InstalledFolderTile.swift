@@ -7,12 +7,16 @@ struct InstalledFolderTile: View {
     var viewModel: ContentViewModel
     var folder: InstalledFolder
     @State private var isTargeted = false
+    /// Counts the drops it took, for their feedback.
+    @State private var drops = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let count = viewModel.library.wallpaperCount(of: folder)
         ZStack(alignment: .bottom) {
             Rectangle().fill(.quaternary)
-            Image(systemName: folder.icon?.systemImage ?? "folder.fill")
+            // WE's open variant while something is dragged over it.
+            Image(systemName: folder.systemImage(open: isTargeted))
                 .resizable()
                 .scaledToFit()
                 .foregroundStyle(folder.color?.color ?? Color.secondary)
@@ -44,8 +48,13 @@ struct InstalledFolderTile: View {
         .onTapGesture { viewModel.library.open(folder: folder.id) }
         .draggable(InstalledDragPayload.folder(folder.id).text)
         .dropDestination(for: String.self) { texts, _ in
-            viewModel.library.drop(texts, into: folder.id)
+            let moved = withAnimation(InstalledDropAnimation.move(reduceMotion: reduceMotion)) {
+                viewModel.library.drop(texts, into: folder.id)
+            }
+            if moved { drops += 1 }
+            return moved
         } isTargeted: { isTargeted = $0 }
+        .dropFeedback(trigger: drops, cornerRadius: ExplorerItem.cornerRadius)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
     }

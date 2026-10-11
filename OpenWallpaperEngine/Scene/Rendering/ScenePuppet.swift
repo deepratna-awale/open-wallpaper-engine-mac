@@ -541,10 +541,15 @@ final class ScenePuppetRenderer {
     /// The winding of the mesh's front faces as it is drawn into the layer's image. WE draws the
     /// mesh in the scene through the object's world, with D3D's `FrontCounterClockwise = FALSE`
     /// and no compensation for a mirroring world (WE 2.8's capture, docs/models-plan.md §5.17: a
-    /// `cullmode` "normal" puppet scaled −1 1 1 disappears). Here the mesh draws into its image,
-    /// clockwise in front, and the layer then mirrors it, so a mirrored layer culls the other
-    /// winding.
-    static func frontFacing(mirrored: Bool) -> MTLWinding { mirrored ? .counterClockwise : .clockwise }
+    /// `cullmode` "normal" puppet draws at scale 1 1 1 and disappears at −1 1 1). That is a
+    /// `.mdl`'s counter-clockwise winding in clip space (`SceneModelRenderer.frontFacing`), and
+    /// WE's editor winds a rig's triangles counter-clockwise in its image (y up: the rope and the
+    /// library's rigs). Into the image, the mesh keeps that winding in clip space (the projection's
+    /// row flip and the stage's y negation cancel), so the same winding is in front; the layer
+    /// then mirrors the image, so a mirrored layer culls the other winding.
+    static func frontFacing(mirrored: Bool) -> MTLWinding {
+        mirrored ? .clockwise : SceneModelRenderer.frontFacing
+    }
 
     /// Whether a layer whose world maps its image's x and y axes to `axisX` and `axisY` on screen
     /// (y up) shows the image mirrored: a negative scale, or a tilt past a quarter turn.
@@ -791,8 +796,8 @@ final class ScenePuppetRenderer {
                                         znear: 0, zfar: 1))
         encoder.setScissorRect(MTLScissorRect(x: 0, y: 0, width: content.x, height: content.y))
         encoder.setCullMode(plan.material.cullsBackFaces ? .back : .none)
-        // D3D's default: clockwise triangles face the viewer (FrontCounterClockwise false); the
-        // other winding when the layer mirrors the image (`frontFacing(mirrored:)`).
+        // WE's front faces (`frontFacing(mirrored:)`): the editor's counter-clockwise rig faces
+        // the viewer; the other winding when the layer mirrors the image.
         encoder.setFrontFacing(Self.frontFacing(mirrored: draw.mirrored))
         encoder.setVertexBuffer(state.vertices, offset: 0, index: Self.meshBuffer)
         encoder.setVertexBuffer(zeroAttributes, offset: 0, index: EffectGraphRenderer.zeroBuffer)

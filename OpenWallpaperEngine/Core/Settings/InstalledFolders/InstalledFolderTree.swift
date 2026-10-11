@@ -91,6 +91,16 @@ struct InstalledFolderTree: Equatable {
         return result
     }
 
+    /// A title for a new folder in `parent` (the top level for nil) that none of its folders has,
+    /// ignoring case, as Finder numbers them: `base`, else "`base` 2", "`base` 3"…
+    func uniqueTitle(_ base: String, in parent: UUID?) -> String {
+        let taken = Set(subfolders(of: parent).map { $0.title.lowercased() })
+        guard taken.contains(base.lowercased()) else { return base }
+        var number = 2
+        while taken.contains("\(base) \(number)".lowercased()) { number += 1 }
+        return "\(base) \(number)"
+    }
+
     /// Folders in title order (WE sorts them by title with `localeCompare`).
     static func sortedByTitle(_ folders: [InstalledFolder]) -> [InstalledFolder] {
         folders.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }

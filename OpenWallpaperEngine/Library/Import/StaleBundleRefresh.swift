@@ -37,10 +37,12 @@ enum StaleBundleScanner {
         }
         let project = (try? Data(contentsOf: directory.appending(path: "project.json")))
             .flatMap { try? JSONDecoder().decode(WEProject.self, from: $0) }
-        let id = project?.workshopid?.rawValue ?? directory.lastPathComponent
-        let isWorkshopId = !id.isEmpty && id.allSatisfy { $0.isASCII && $0.isNumber }
+        // The folder is named for the item Steam installed; project.json's id can be empty or point
+        // at the author's earlier upload, so it's only the fallback.
+        let isWorkshopId = { (id: String) in !id.isEmpty && id.allSatisfy { $0.isASCII && $0.isNumber } }
+        let workshopId = [directory.lastPathComponent, project?.workshopid?.rawValue].compactMap { $0 }.first(where: isWorkshopId)
         return StaleBundle(directory: directory,
-                           workshopId: isWorkshopId ? id : nil,
+                           workshopId: workshopId,
                            packageName: packageName,
                            title: project?.title ?? directory.lastPathComponent)
     }

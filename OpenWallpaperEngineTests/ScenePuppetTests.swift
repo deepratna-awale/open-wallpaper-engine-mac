@@ -125,8 +125,9 @@ final class ScenePuppetTests: XCTestCase {
     }
 
     /// A `cullmode` "normal" puppet (WE 2.8's capture, docs/models-plan.md §5.17): the editor's
-    /// rig faces the viewer and draws, and a layer that mirrors it culls every triangle, as WE
-    /// culls the rope scaled −1 1 1.
+    /// rig, wound counter-clockwise, faces the viewer and draws, and a layer that mirrors it culls
+    /// every triangle, as WE culls the rope scaled −1 1 1. With clockwise in front the rig was
+    /// culled upright: Empress of Grace's (3810943704) girl and eyes never showed.
     func testAMirroredLayerCullsANormalCullMesh() throws {
         let image = Self.picture(width: 64, height: 48, opaque: true)
         let plan = try plan(Self.gridMesh(size: SIMD2(64, 48), columns: 8, rows: 6), bones: 1, size: SIMD2(64, 48),
@@ -587,7 +588,7 @@ final class ScenePuppetTests: XCTestCase {
     }
 
     /// A `columns` × `rows` grid laid over an image of `size` pixels, as WE's editor builds a rig:
-    /// position `(uv − ½) · size` with v flipped.
+    /// position `(uv − ½) · size` with v flipped, every triangle counter-clockwise (y up).
     static func gridMesh(size: SIMD2<Float>, columns: Int, rows: Int, flags: UInt32 = 0) -> MDLMesh {
         var vertices = Data(), indices: [UInt16] = []
         for row in 0...rows {
@@ -599,7 +600,7 @@ final class ScenePuppetTests: XCTestCase {
         for row in 0..<rows {
             for column in 0..<columns {
                 let a = UInt16(row * (columns + 1) + column), b = a + 1, c = a + UInt16(columns + 1), d = c + 1
-                indices += [a, b, c, b, d, c]
+                indices += [a, c, b, b, c, d]
             }
         }
         return MDLMesh(materials: ["materials/image4.json"], flags: flags, format: MDLVertexFormat(rawValue: 0x1800009),
