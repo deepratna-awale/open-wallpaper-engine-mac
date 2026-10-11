@@ -2,7 +2,8 @@ import CoreVideo
 import IOSurface
 import Metal
 
-/// The IOSurfaces a transition's frames are drawn into for a layer's contents.
+/// The IOSurfaces a transition's frames are drawn into for a layer's contents (and the live
+/// screen saver's frames, `ScreenSaverFramePublisher`).
 enum WallpaperTransitionSurface {
     /// How many a player uses in turn.
     static let count = 3
@@ -14,12 +15,16 @@ enum WallpaperTransitionSurface {
         var description: String { "can't allocate a \(size.x)×\(size.y) frame" }
     }
 
-    /// A BGRA IOSurface of `size` in sRGB and a render target over it.
-    static func make(_ size: SIMD2<Int>, device: MTLDevice) throws -> (surface: IOSurface, texture: MTLTexture) {
-        let properties: [IOSurfacePropertyKey: Any] = [
+    /// A BGRA IOSurface of `size` in sRGB and a render target over it. A `global` surface can be
+    /// looked up by id from another process (`IOSurfaceLookup`, the `.saver`'s only way to it).
+    static func make(_ size: SIMD2<Int>, device: MTLDevice, global: Bool = false) throws -> (surface: IOSurface, texture: MTLTexture) {
+        var properties: [IOSurfacePropertyKey: Any] = [
             .width: size.x, .height: size.y, .bytesPerElement: 4,
             .pixelFormat: kCVPixelFormatType_32BGRA,
         ]
+        // `kIOSurfaceIsGlobal` is deprecated (any process may read a global surface) but is what
+        // the screen saver's sandboxed host can reach; its key is spelled out to avoid the warning.
+        if global { properties[IOSurfacePropertyKey(rawValue: "IOSurfaceIsGlobal")] = true }
         guard let surface = IOSurface(properties: properties) else { throw Failure(size: size) }
         if let space = CGColorSpace(name: CGColorSpace.sRGB)?.copyPropertyList() {
             IOSurfaceSetValue(surface, kIOSurfaceColorSpace, space)

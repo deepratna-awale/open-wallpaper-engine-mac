@@ -83,7 +83,7 @@ final class ScreenSaverPlugin: ObservableObject {
     private var generation = 0
     private var jobs: [PreparationPool.Job] = []
     /// The view model whose displays the plan follows (`observe(_:)`).
-    private weak var viewModel: WallpaperViewModel?
+    private(set) weak var viewModel: WallpaperViewModel?
     private var observation: AnyCancellable?
     /// The current plan; nil while none is followed.
     private var plan: ScreenSaverLayoutPlan?
@@ -231,7 +231,7 @@ final class ScreenSaverPlugin: ObservableObject {
     }
 
     /// The plan for the displays now, with each planned content's wallpaper by its id.
-    private func currentPlan(fallback: WEWallpaper?) -> (plan: ScreenSaverLayoutPlan, wallpapers: [String: WEWallpaper]) {
+    func currentPlan(fallback: WEWallpaper?) -> (plan: ScreenSaverLayoutPlan, wallpapers: [String: WEWallpaper]) {
         var wallpapers: [String: WEWallpaper] = [:]
         func content(_ wallpaper: WEWallpaper, scope: WallpaperPropertyScope) -> ScreenSaverLayoutPlan.Content {
             let id = wallpaper.wallpaperDirectory.standardizedFileURL.path
@@ -349,6 +349,10 @@ final class ScreenSaverPlugin: ObservableObject {
         guard recordings == 0, settingsStore.selection == nil else { return }
         update(enabled: isEnabled, wallpaper: wallpaper)
     }
+
+    /// Whether the saver follows the desktop's wallpapers: on, with no Screen Saver mode recording
+    /// set or being made (the live screen saver draws only then, `ScreenSaverLiveController`).
+    var followsDesktop: Bool { isEnabled && recordings == 0 && settingsStore.selection == nil }
 
     /// Drops the current plan: its jobs stop and its late results are ignored.
     private func reset() {

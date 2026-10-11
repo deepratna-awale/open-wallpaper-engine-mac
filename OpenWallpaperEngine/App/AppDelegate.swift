@@ -155,6 +155,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// the desktop's left clicks.
     /// Settings › Plugins › Screen Saver: the loop videos and the bundled saver.
     lazy var screenSaver = ScreenSaverPlugin()
+    /// The screen saver drawn live while it runs, the savers showing the frames.
+    lazy var liveScreenSaver = ScreenSaverLiveController(plugin: screenSaver, environment: .init(
+        settings: { [unowned self] in globalSettingsViewModel.settings },
+        placement: { [unowned self] in wallpaperViewModel.wallpaperPlacement },
+        scriptServices: { [unowned self] in sceneScriptServices }))
     /// Settings › General › Theming: macOS follows the wallpaper's scheme colour.
     private(set) lazy var theming = ThemingController.make { [unowned self] in
         applyMenuBarStrips()
@@ -316,6 +321,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             .sink { [weak self] canvases in self?.applyStretchCanvases(canvases) }
         // The screen saver's loops follow the displays' wallpapers and layouts.
         screenSaver.observe(wallpaperViewModel)
+        liveScreenSaver.start()
         // Settings › Optimizations › Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
             .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }

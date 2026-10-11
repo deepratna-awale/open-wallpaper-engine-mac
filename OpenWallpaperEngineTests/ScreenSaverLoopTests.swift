@@ -171,15 +171,18 @@ final class ScreenSaverStorageTests: XCTestCase {
         XCTAssertFalse(user.isInstalled)
     }
 
-    func testRetainKeepsTheManifestAndListedVideosOnly() throws {
+    func testRetainKeepsTheManifestsAndListedVideosOnly() throws {
         let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: folder) }
         let store = ScreenSaverVideoStore(directory: folder)
         try store.writeManifest(ScreenSaverManifest(videos: [.init(file: "new.mov", width: 1, height: 1)]))
-        for name in ["new.mov", "old.mov", ".partial-new.mov"] { try Data().write(to: store.url(fileName: name)) }
+        for name in ["new.mov", "old.mov", ".partial-new.mov", ScreenSaverLiveManifest.fileName] {
+            try Data().write(to: store.url(fileName: name))
+        }
         store.retain(["new.mov"])
         XCTAssertTrue(store.exists(fileName: "new.mov"))
         XCTAssertTrue(store.exists(fileName: ScreenSaverManifest.fileName))
+        XCTAssertTrue(store.exists(fileName: ScreenSaverLiveManifest.fileName), "the live frames' manifest stays")
         XCTAssertFalse(store.exists(fileName: "old.mov"))
         XCTAssertFalse(store.exists(fileName: ".partial-new.mov"))
         store.removeAll()
