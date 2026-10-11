@@ -17,11 +17,9 @@ struct PlaylistView: View {
     @State private var selectedItems: Set<UUID> = []
     /// Set to start renaming the playlist (a new one starts with its name being edited).
     @State private var isEditingName = false
-    @SceneStorage("PlaylistItemLayout") private var layout: ItemLayout = .list
-
-    enum ItemLayout: String {
-        case list, grid
-    }
+    /// In the app's defaults: the main window is an AppKit window, where SwiftUI scene storage keeps
+    /// nothing and never changes, so the List/Grid control couldn't switch.
+    @AppStorage(PlaylistItemLayout.defaultsKey, store: .app) private var layout = PlaylistItemLayout.defaultLayout
 
     private struct PendingShortcut {
         let shortcut: GlobalShortcut
@@ -191,8 +189,8 @@ struct PlaylistView: View {
                 .foregroundStyle(.primary)
             Spacer()
             Picker("Layout", selection: $layout) {
-                Label("List", systemImage: "list.bullet").tag(ItemLayout.list)
-                Label("Grid", systemImage: "square.grid.2x2").tag(ItemLayout.grid)
+                Label("Grid", systemImage: "square.grid.2x2").tag(PlaylistItemLayout.grid)
+                Label("List", systemImage: "list.bullet").tag(PlaylistItemLayout.list)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
