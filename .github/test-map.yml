@@ -168,4 +168,6 @@ map:
   "OpenWallpaperEngine/DepthMaps/**": ["DepthMap*", "DepthMask*", "DepthParallax*", "Localization*"]
   "OpenWallpaperEngine/MCP/**": ["MCP*", "Localization*"]
   "MCPServer/**": ["MCPServerProcess*"]
+  "OpenWallpaperEngineSaverExtension/**": ["ScreenSaverFrameService*", "ScreenSaverLive*", "LiveSaver*"]
+  "OWESaverBroker/**": ["ScreenSaverFrameService*"]
   "OpenWallpaperEngine/Installs/**": ["VersionedInstall*", "ChromiumEngine*", "DepthMapPlugin*", "WebEngineRouting*"]
