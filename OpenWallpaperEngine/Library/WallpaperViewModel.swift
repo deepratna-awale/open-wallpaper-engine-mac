@@ -466,6 +466,25 @@ class WallpaperViewModel: ObservableObject {
         playlists[playlistIndex].items.swapAt(itemIndex, destination)
     }
 
+    /// Drag to reorder: moves the item to `destination` (an index into the items before the move,
+    /// as `onMove` gives it) one Move Up or Move Down step at a time.
+    func movePlaylistItem(itemID: UUID, toOffset destination: Int, playlistID: UUID? = nil) {
+        guard let id = playlistID ?? activePlaylistID,
+              let playlist = playlists.first(where: { $0.id == id }),
+              let source = playlist.items.firstIndex(where: { $0.id == itemID }) else { return }
+        let target = min(destination > source ? destination - 1 : destination, playlist.items.count - 1)
+        let step = target > source ? 1 : -1
+        for _ in 0..<abs(target - source) { movePlaylistItem(itemID: itemID, offset: step, playlistID: id) }
+    }
+
+    /// Renames a playlist; an empty name keeps the old one.
+    func renamePlaylist(_ playlistID: UUID, to name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, let index = playlists.firstIndex(where: { $0.id == playlistID }),
+              playlists[index].name != trimmed else { return }
+        playlists[index].name = trimmed
+    }
+
         func setPlaylistDuration(_ duration: TimeInterval, playlistID: UUID? = nil) {
           guard let id = playlistID ?? activePlaylistID,
               let index = playlists.firstIndex(where: { $0.id == id }) else { return }
