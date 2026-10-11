@@ -52,9 +52,14 @@ protocol SteamCmdRunning {
     /// As above; `cancellation` terminates steamcmd.
     func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?, cancellation: SteamCmdCancellation,
              onOutput: @escaping (String) -> Void) -> SteamCmdRun
+
+    /// A steamcmd kept running between Workshop downloads, or nil to run each download alone.
+    func makeSession() -> SteamCmdSessionRunning?
 }
 
 extension SteamCmdRunning {
+    func makeSession() -> SteamCmdSessionRunning? { nil }
+
     /// A runner that can't stop steamcmd early runs it to the end.
     func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?, cancellation: SteamCmdCancellation,
              onOutput: @escaping (String) -> Void) -> SteamCmdRun {
@@ -68,6 +73,8 @@ extension SteamCmdRunning {
 
 /// Runs the real steamcmd as a subprocess.
 struct ProcessSteamCmdRunner: SteamCmdRunning {
+    func makeSession() -> SteamCmdSessionRunning? { SteamCmdSession() }
+
     func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?,
              onOutput: @escaping (String) -> Void) -> SteamCmdRun {
         run(executable: executable, script: script, timeout: timeout, cancellation: SteamCmdCancellation(),

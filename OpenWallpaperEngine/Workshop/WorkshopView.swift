@@ -546,6 +546,8 @@ struct WorkshopItemCard: View {
     @Environment(\.appAccentColor) private var accentColor
     let item: WorkshopItem
     @ObservedObject var viewModel: WorkshopViewModel
+    /// The list the card is in, for ⇧-click ranges; nil is the Workshop grid's page.
+    var selectionOrder: [WorkshopItem]? = nil
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -579,7 +581,7 @@ struct WorkshopItemCard: View {
         .overlay(alignment: .topLeading) {
             if !viewModel.selectedItemIds.isEmpty {
                 Button {
-                    viewModel.selectItem(item)
+                    viewModel.selectItem(item, in: selectionOrder)
                 } label: {
                     Label("Select item",
                           systemImage: viewModel.selectedItemIds.contains(item.id) ? "checkmark.circle.fill" : "circle")
@@ -605,7 +607,7 @@ struct WorkshopItemCard: View {
             WorkshopItemMenu(item: item, viewModel: viewModel)
         }
         .onTapGesture {
-            viewModel.selectItem(item)
+            viewModel.selectItem(item, in: selectionOrder)
         }
         .onTapGesture(count: 2) {
             viewModel.preview(item: item)

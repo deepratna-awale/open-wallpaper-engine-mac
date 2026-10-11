@@ -36,6 +36,9 @@ private struct BreadcrumbStep: View {
     var folder: InstalledFolder?
     var isLast: Bool
     @State private var isTargeted = false
+    /// Counts the drops it took, for their feedback.
+    @State private var drops = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Button {
@@ -61,7 +64,12 @@ private struct BreadcrumbStep: View {
         .buttonStyle(.borderless)
         .disabled(isLast)
         .dropDestination(for: String.self) { texts, _ in
-            library.drop(texts, into: folder?.id)
+            let moved = withAnimation(InstalledDropAnimation.move(reduceMotion: reduceMotion)) {
+                library.drop(texts, into: folder?.id)
+            }
+            if moved { drops += 1 }
+            return moved
         } isTargeted: { isTargeted = $0 }
+        .dropFeedback(trigger: drops, cornerRadius: 6)
     }
 }

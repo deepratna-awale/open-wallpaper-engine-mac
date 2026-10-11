@@ -33,18 +33,32 @@ enum InstalledDragPayload: Equatable {
 }
 
 extension InstalledLibraryModel {
+    /// Whether dropping `payload` in `destination` (the top level for nil) moves anything: the
+    /// destination is there, and a folder never goes into itself or one of its subfolders.
+    func canDrop(_ payload: InstalledDragPayload, into destination: UUID?) -> Bool {
+        let tree = folders.tree
+        if let destination, tree.folder(destination) == nil { return false }
+        switch payload {
+        case .wallpapers(let keys):
+            return !keys.isEmpty
+        case .folder(let id):
+            guard tree.folder(id) != nil else { return false }
+            guard let destination else { return true }
+            return !tree.path(to: destination).contains(where: { $0.id == id })
+        }
+    }
+
     /// Files what `texts` (a drop's items) carry in `destination` (the top level for nil);
-    /// returns whether any was ours.
+    /// returns whether any of it moved, so a refused drop slides back.
     @discardableResult
     func drop(_ texts: [String], into destination: UUID?) -> Bool {
         var handled = false
-        for payload in texts.compactMap(InstalledDragPayload.init(text:)) {
+        for payload in texts.compactMap(InstalledDragPayload.init(text:)) where canDrop(payload, into: destination) {
             switch payload {
             case .wallpapers(let keys):
                 folders.update { $0.move(items: keys, to: destination) }
                 clearSelection()
             case .folder(let id):
-                guard id != destination else { continue }
                 move(folder: id, toFolder: destination)
             }
             handled = true

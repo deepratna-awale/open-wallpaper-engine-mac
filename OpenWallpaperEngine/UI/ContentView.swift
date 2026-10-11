@@ -254,10 +254,6 @@ struct ContentView: View {
                 tabContent
                     .transition(.modifier(active: StagingFade(isStaged: false),
                                           identity: StagingFade(isStaged: true)))
-            } else {
-                // indicate that this view is initializing
-                Text("Power Saving Mode, Sleeping...")
-                    .font(.largeTitle)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -68,6 +68,17 @@ struct GeneralPage: SettingsPage {
             .settingsAnchor(SettingsAnchor.appearance)
             // MARK: macOS
             Section {
+                Toggle("Show in Dock", isOn: $viewModel.settings.showInDock)
+                    .changedFromDefault(viewModel.isChanged(\.showInDock))
+                    .help("Keeps the icon in the Dock while no window is open. Off, it shows only while a window is open.")
+                Toggle("Show in Menu Bar", isOn: $viewModel.settings.showInMenuBar)
+                    .changedFromDefault(viewModel.isChanged(\.showInMenuBar))
+                    .help("Shows Open Wallpaper Engine's menu in the menu bar, with recent wallpapers, pause and the rest.")
+                if !viewModel.settings.showInDock && !viewModel.settings.showInMenuBar {
+                    Text("Once its windows close, Open Wallpaper Engine keeps running in the background. Open it again from Applications or Spotlight to show its window.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
                 Toggle("Adjust Menu Bar Color", isOn: $viewModel.settings.adjustMenuBarTint)
                     .changedFromDefault(viewModel.isChanged(\.adjustMenuBarTint))
                     .help("While a video or web wallpaper plays, sets the desktop picture to a frame of it, so macOS tints the menu bar to match. Off restores your own picture.")

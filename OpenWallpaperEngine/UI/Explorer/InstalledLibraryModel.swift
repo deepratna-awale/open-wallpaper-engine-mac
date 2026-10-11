@@ -320,36 +320,32 @@ final class InstalledLibraryModel {
     }
 
     func toggleSelection(for wallpaper: WEWallpaper) {
-        let url = wallpaper.wallpaperDirectory
-        if selectedWallpapers.contains(url) {
-            selectedWallpapers.remove(url)
-        } else {
-            selectedWallpapers.insert(url)
-        }
-        selectionAnchor = url
+        ClickSelection.apply(.toggle, on: wallpaper.wallpaperDirectory, in: [],
+                             selected: &selectedWallpapers, anchor: &selectionAnchor)
     }
 
+    /// A click on a tile (`ClickSelection`): ⌘ toggles it, ⇧ selects the run from the anchor in
+    /// `wallpapers`, and a plain click clears the selection and inspects it.
     func selectWallpaper(
         _ wallpaper: WEWallpaper,
         from wallpapers: [WEWallpaper],
-        inspectingWith wallpaperViewModel: WallpaperViewModel
+        inspectingWith wallpaperViewModel: WallpaperViewModel,
+        kind: ClickSelection.Kind = ClickSelection.current
     ) {
         let url = wallpaper.wallpaperDirectory
-        let modifiers = NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask)
-        let isAdditive = modifiers.contains(.control) || modifiers.contains(.command)
+        guard !ClickSelection.apply(kind, on: url, in: wallpapers.map(\.wallpaperDirectory),
+                                    selected: &selectedWallpapers, anchor: &selectionAnchor) else { return }
+        clearSelection()
+        wallpaperViewModel.inspect(wallpaper)
+        selectionAnchor = url
+    }
 
-        if modifiers.contains(.shift), !isAdditive,
-           let anchor = selectionAnchor,
-           let start = wallpapers.firstIndex(where: { $0.wallpaperDirectory == anchor }),
-           let end = wallpapers.firstIndex(where: { $0.wallpaperDirectory == url }) {
-            selectedWallpapers = Set(wallpapers[min(start, end)...max(start, end)].map(\.wallpaperDirectory))
-        } else if isAdditive {
-            toggleSelection(for: wallpaper)
-        } else {
-            clearSelection()
-            wallpaperViewModel.inspect(wallpaper)
-            selectionAnchor = url
-        }
+    /// Edit › Select All: every wallpaper the folder shown lists after the search and filters,
+    /// as Finder selects every item its window shows. Folders have no selection.
+    func selectAll() {
+        let wallpapers = displayedWallpapers
+        selectedWallpapers = Set(wallpapers.map(\.wallpaperDirectory))
+        selectionAnchor = wallpapers.first?.wallpaperDirectory
     }
 
     func clearSelection() {

@@ -1,11 +1,14 @@
 import Cocoa
 
-/// The Dock icon is shown only while one of the app's windows is open: closing the last one leaves
-/// the app in the menu bar, and opening one (from the menu bar, a menu or a reopen) brings the icon
-/// back. A minimised window keeps it, since the Dock is where it is restored from.
+/// The Dock icon is shown while one of the app's windows is open, or always with Settings › General
+/// › Show in Dock: without it, closing the last window leaves the app in the menu bar (or in the
+/// background), and opening one (from the menu bar, a menu or a reopen) brings the icon back. A
+/// minimised window keeps it, since the Dock is where it is restored from.
 @MainActor
 final class DockPresence {
     private var observers: [NSObjectProtocol] = []
+    /// Settings › General › Show in Dock.
+    var keepsIcon: () -> Bool = { false }
 
     func start() {
         let center = NotificationCenter.default
@@ -27,10 +30,16 @@ final class DockPresence {
         update()
     }
 
-    /// Shows the icon when an app window is open or minimised, hides it otherwise.
+    /// Shows the icon when an app window is open or minimised, or Show in Dock is on; hides it
+    /// otherwise.
     func update() {
         if NSApp.windows.contains(where: { Self.counts($0) && ($0.isVisible || $0.isMiniaturized) }) {
             show()
+        } else if keepsIcon() {
+            // No window to bring forward: the icon appears without taking focus.
+            guard NSApp.activationPolicy() != .regular else { return }
+            NSApp.setActivationPolicy(.regular)
+            DockBadge.current.apply()
         } else if NSApp.activationPolicy() != .accessory {
             NSApp.setActivationPolicy(.accessory)
         }
