@@ -535,6 +535,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         safeRestart.applicationWillTerminate()
         crashWatcher.applicationWillTerminate()
         mcpServerPlugin.stop()
+        // The steamcmd kept logged in between Workshop downloads quits with the app.
+        contentViewModel.steamCmd.endSteamCmdSession()
         updater.stopShaderPrewarm()
         // The system colours go back when the user chose "Restore on quit".
         theming.stop()
