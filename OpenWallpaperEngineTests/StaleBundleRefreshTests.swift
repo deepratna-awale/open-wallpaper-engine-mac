@@ -32,11 +32,12 @@ final class StaleBundleRefreshTests: XCTestCase {
 
     /// A converted bundle at `name`, made by `version`, optionally with its archived package.
     @discardableResult
-    private func bundle(_ name: String, version: Int, archived: Bool, title: String? = nil,
+    private func bundle(_ name: String, version: Int, archived: Bool, title: String? = nil, workshopid: String? = nil,
                         dependencyEntries: [String]? = ["materials/workshop/2000000002/a.tex"]) throws -> URL {
         let directory = root.appending(path: name)
         try fm.createDirectory(at: directory, withIntermediateDirectories: true)
-        try Data(#"{"file":"scene.json","title":"\#(title ?? name)","type":"scene"}"#.utf8)
+        let id = workshopid.map { #","workshopid":"\#($0)""# } ?? ""
+        try Data(#"{"file":"scene.json","title":"\#(title ?? name)","type":"scene"\#(id)}"#.utf8)
             .write(to: directory.appending(path: "project.json"))
         try Data("{}".utf8).write(to: directory.appending(path: "scene.json"))
         if archived {
@@ -117,6 +118,17 @@ final class StaleBundleRefreshTests: XCTestCase {
         let directory = try bundle("1000000007", version: old, archived: false, dependencyEntries: [])
         try reference("workshop/2000000002/missing", in: directory)
         XCTAssertEqual(StaleBundleScanner.scan(storage: root), [])
+    }
+
+    func testFolderNameWinsOverProjectWorkshopId() throws {
+        try bundle("1000000003", version: old, archived: false, workshopid: "")
+        try bundle("1000000004", version: old, archived: false, workshopid: "1000000099")
+        XCTAssertEqual(StaleBundleScanner.scan(storage: root).map(\.workshopId), ["1000000003", "1000000004"])
+    }
+
+    func testProjectWorkshopIdNamesARenamedFolder() throws {
+        try bundle("Renamed", version: old, archived: false, workshopid: "1000000005")
+        XCTAssertEqual(StaleBundleScanner.scan(storage: root).first?.workshopId, "1000000005")
     }
 
     func testLocalImportHasNoWorkshopId() throws {
