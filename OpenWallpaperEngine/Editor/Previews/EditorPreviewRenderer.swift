@@ -288,7 +288,7 @@ final class EditorPreviewRenderer {
                                                storage: SceneScriptStorage(directory: scratch.appending(path: "storage")),
                                                media: SilentMediaSession(), spectrum: { .silent })
             let model = SceneWallpaperViewModel(wallpaper: wallpaper)
-            let settings = LivePhotoRenderer.renderSettings(from: ScreenSaverLoopRenderer.globalSettings(from: .app))
+            let settings = LivePhotoRenderer.renderSettings(from: OffscreenRendering.globalSettings(from: .app))
             model.setRenderSettings(settings)
             guard let content = model.metalContent(),
                   let renderer = SceneMetalRenderer(pixelFormat: .bgra8Unorm, scriptServices: services,

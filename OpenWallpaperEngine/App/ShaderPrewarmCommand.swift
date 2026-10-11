@@ -73,7 +73,7 @@ enum ShaderPrewarmCommand {
         let output = URL(filePath: values[3], directoryHint: .notDirectory)
         if ScreenSaverWebLoopRecorder.records(wallpaper) {
             let properties = values.count > 4 ? ScreenSaverPlugin.decodeProperties(values[4]) : [:]
-            let settings = ScreenSaverLoopRenderer.globalSettings(from: .app)
+            let settings = OffscreenRendering.globalSettings(from: .app)
             let recorder = ScreenSaverWebLoopRecorder(wallpaper: wallpaper, pixelSize: pixels, pointSize: points,
                                                       output: output, properties: properties, fps: Int(settings.fps))
             switch recorder.run() {

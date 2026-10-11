@@ -253,7 +253,7 @@ final class LivePhotoRenderer {
                                            storage: SceneScriptStorage(directory: scratch),
                                            media: SilentMediaSession(), spectrum: { .silent })
         let model = SceneWallpaperViewModel(wallpaper: wallpaper)
-        let settings = Self.renderSettings(from: ScreenSaverLoopRenderer.globalSettings(from: defaults))
+        let settings = Self.renderSettings(from: OffscreenRendering.globalSettings(from: defaults))
         model.setRenderSettings(settings)
         guard let content = model.metalContent(),
               let renderer = SceneMetalRenderer(pixelFormat: .bgra8Unorm, scriptServices: services,

@@ -61,7 +61,7 @@ enum DepthMapSceneCapture {
     /// The still frame for `request`.
     static func render(_ wallpaper: WEWallpaper, request: DepthMapSourceRequest) async throws -> CGImage {
         let edits = Self.overlay(request.overlay, drawing: request.drawnLayers, of: request.allLayers)
-        let settings = LivePhotoRenderer.renderSettings(from: ScreenSaverLoopRenderer.globalSettings(from: .app))
+        let settings = LivePhotoRenderer.renderSettings(from: OffscreenRendering.globalSettings(from: .app))
         // The scene is read and its content built off the main thread, as the app's instances do.
         let (model, content) = try await Task.detached(priority: .userInitiated) { () throws -> (SceneWallpaperViewModel, SceneMetalContent) in
             let model = SceneWallpaperViewModel(wallpaper: wallpaper, overlay: edits)
