@@ -198,6 +198,15 @@ struct ContentView: View {
         }
     }
 
+    /// The Playlists tab's Show in Installed: the Installed tab, with the wallpaper selected and in
+    /// the Details panel.
+    private func showInInstalled(_ wallpaper: WEWallpaper) {
+        viewModel.navigation.topTabBarSelection = 0
+        viewModel.navigation.isDetailsReveal = true
+        viewModel.library.selectWallpaper(wallpaper, from: viewModel.library.autoRefreshWallpapers,
+                                          inspectingWith: wallpaperViewModel)
+    }
+
     /// Up to three titles, then "and N more", as one list in the user's language.
     private var batchUnsubscribeMessage: Text {
         let items = viewModel.library.selectedWallpaperItems()
@@ -264,10 +273,10 @@ struct ContentView: View {
         case 1:
             WorkshopView(contentViewModel: viewModel)
         case 2:
-            DownloadsView(steamCmd: viewModel.steamCmd)
+            DownloadsView(steamCmd: viewModel.steamCmd, wallpaperViewModel: wallpaperViewModel)
                 .toolbar { WindowActionsToolbar(viewModel: viewModel) }
         case 3:
-            PlaylistView(wallpaperViewModel: wallpaperViewModel)
+            PlaylistView(wallpaperViewModel: wallpaperViewModel, showInInstalled: showInInstalled)
                 .toolbar { WindowActionsToolbar(viewModel: viewModel) }
         case 4:
             WorkshopDiscoverView(model: viewModel.discoverVM, workshop: viewModel.workshopVM,
