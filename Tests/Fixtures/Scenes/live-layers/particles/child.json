@@ -1,2 +1,0 @@
-{ "material" : "materials/plain.json", "emitter" : [ { "name" : "sphererandom", "rate" : 5 } ],
-  "operator" : [ { "name" : "movement" }, { "name" : "oscillateposition", "audioprocessingmode" : { "user" : "react", "value" : 3 } } ] }

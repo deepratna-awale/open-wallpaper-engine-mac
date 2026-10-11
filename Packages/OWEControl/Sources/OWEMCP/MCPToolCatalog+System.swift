@@ -80,12 +80,12 @@ extension MCPToolCatalog {
 
     private static let screenSaverTools: [MCPTool] = [
         MCPTool("screensaver_get", title: "Get Screen Saver",
-                description: "The screen saver: whether the Screen Saver plugin is on, the recording set as the screen saver (wallpaper, when it was recorded, size), whether a recording is running, and the daily re-recording. With wallpaper_id, also that wallpaper's screen saver version: its layers as the screen saver shows them and its user property values, from the Screen Saver mode's saved choices or else the wallpaper's own.",
+                description: "The screen saver: whether the Screen Saver plugin is on, and the wallpaper set as the screen saver (kind live: a scene drawn live with its screen saver choices; kind video: a video wallpaper's own file; and when it was picked), or none while it draws the desktop's wallpapers live. With wallpaper_id, also that wallpaper's screen saver version: its layers as the screen saver shows them and its user property values, from the Screen Saver mode's saved choices or else the wallpaper's own.",
                 input: JSONSchema.object([
                     "wallpaper_id": JSONSchema.string("A wallpaper's id from list_wallpapers.", minLength: 1),
                 ]), annotations: .readOnly) { message($0) },
         MCPTool("screensaver_set_layers", title: "Set Screen Saver Layers",
-                description: "Shows or hides a scene's layers and sets its user properties in its screen saver version only, as Scene Edit / Export's Screen Saver mode does: saved as the screen saver's own choices for that wallpaper, never touching the desktop. The next recording uses them.",
+                description: "Shows or hides a scene's layers and sets its user properties in its screen saver version only, as Scene Edit / Export's Screen Saver mode does: saved as the screen saver's own choices for that wallpaper, never touching the desktop. The screen saver draws it with them while it is set as the screen saver.",
                 input: JSONSchema.object([
                     "wallpaper_id": JSONSchema.string("A scene wallpaper's id from list_wallpapers.", minLength: 1),
                     "layers": JSONSchema.objectArray("Layers to show or hide.", item: JSONSchema.object([
@@ -97,24 +97,14 @@ extension MCPToolCatalog {
                         "value": JSONSchema.string("The value as text, as set_user_property takes it."),
                     ], required: ["key", "value"]), maxItems: 200),
                 ], required: ["wallpaper_id"]), annotations: .idempotent) { message($0) },
-        MCPTool("screensaver_record", title: "Record Screen Saver",
-                description: "\"Record and Set as Screen Saver\" from the Screen Saver mode: records a seamless loop of the scene's screen saver version and makes it the screen saver, waiting for the recording (this takes minutes). It turns the Screen Saver plugin on when it is off, as the mode does. The user picks \"Open Wallpaper Engine\" in System Settings › Screen Saver.",
+        MCPTool("screensaver_set", title: "Set as Screen Saver",
+                description: "\"Set as Screen Saver\" from the Screen Saver mode: a scene becomes the screen saver, drawn live with its screen saver choices while the screen saver runs; a video wallpaper's own file becomes the screen saver (waiting while it is put in place). Nothing is recorded. It turns the Screen Saver plugin on when it is off, as the mode does. The user picks \"Open Wallpaper Engine\" in System Settings › Screen Saver.",
                 input: JSONSchema.object([
-                    "wallpaper_id": JSONSchema.string("A scene wallpaper's id from list_wallpapers.", minLength: 1),
+                    "wallpaper_id": JSONSchema.string("A scene or video wallpaper's id from list_wallpapers.", minLength: 1),
                 ], required: ["wallpaper_id"]), annotations: .change, longRunning: true) { message($0) },
         MCPTool("screensaver_stop_using", title: "Stop Using as Screen Saver",
-                description: "\"Stop Using as Screen Saver\": the screen saver goes back to looping the desktop's wallpaper.",
+                description: "\"Stop Using as Screen Saver\": the screen saver goes back to drawing the desktop's wallpapers live.",
                 annotations: .change) { message($0) },
-        MCPTool("screensaver_schedule_get", title: "Get Screen Saver Schedule",
-                description: "The screen saver's daily re-recording: whether it is on, its time, when it last ran (or was turned on or moved) and when it runs next.",
-                annotations: .readOnly) { message($0) },
-        MCPTool("screensaver_schedule_set", title: "Set Screen Saver Schedule",
-                description: "Turns the daily re-recording (\"Re-record Every Day at\") on or off and sets its time. It records the screen saver's recording again each day while the app runs.",
-                input: JSONSchema.object([
-                    "enabled": JSONSchema.boolean("true turns it on, false off."),
-                    "hour": JSONSchema.integer("The hour, 0 to 23, with enabled true.", minimum: 0, maximum: 23),
-                    "minute": JSONSchema.integer("The minute, 0 to 59, with enabled true.", minimum: 0, maximum: 59),
-                ], required: ["enabled"]), annotations: .idempotent) { message($0) },
     ]
 
     // MARK: - Lock screen

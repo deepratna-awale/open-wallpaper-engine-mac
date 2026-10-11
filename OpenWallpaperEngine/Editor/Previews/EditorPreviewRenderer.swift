@@ -215,8 +215,8 @@ final class EditorPreviewRenderer {
     }
 
     /// Writes a loop of `frames` frames: `head` holds the frames already captured, from the
-    /// first. The loop starts `fade` frames in and its last `fade` frames fade into those, as the
-    /// screen saver's loop does (`ScreenSaverLoopRenderer.write`).
+    /// first. The loop starts `fade` frames in and its last `fade` frames fade into those
+    /// (`ScreenSaverSeamFinder.crossfadeWeight`).
     private func writeLoop(_ session: Session, frames: Int, frameRate: Int, fade: Int, head: [CGImage],
                            to outputBase: URL) async throws -> URL {
         var captured = head

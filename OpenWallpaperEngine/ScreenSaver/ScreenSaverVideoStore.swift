@@ -88,6 +88,55 @@ struct ScreenSaverVideoStore: Sendable {
         }
     }
 
+    // MARK: Earlier versions' recordings
+
+    /// Whether `name` is a video an earlier version recorded here: a scene's or a page's loop
+    /// (`<wallpaper>_<content>-<property hash>-<width>x<height>-r<revision>.mov`) or a Screen Saver
+    /// mode recording of one (the same with `-rec<time>`). A video wallpaper's own file
+    /// (`…-video-r<revision>.<extension>`) and anything else isn't.
+    static func isOldRecording(_ name: String) -> Bool {
+        name.range(of: #"^[^/]+-[0-9a-f]{12}-[0-9]+x[0-9]+-r[0-9]+(-rec[0-9]+)?\.mov$"#, options: .regularExpression) != nil
+            && !name.contains("-video-r")
+    }
+
+    /// Deletes the loop videos and recordings earlier versions made: only regular files directly
+    /// in `folder` named as they were (`isOldRecording`), never one `keep` lists, never a link,
+    /// a folder or anything outside it. Each deletion is logged. Returns the names deleted.
+    @discardableResult
+    static func removeOldRecordings(in folder: URL, keeping keep: Set<String> = []) -> [String] {
+        let files: [URL]
+        do {
+            files = try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+        } catch {
+            // Optional: no folder means nothing to delete.
+            return []
+        }
+        var removed: [String] = []
+        for file in files where isOldRecording(file.lastPathComponent) && !keep.contains(file.lastPathComponent) {
+            let values = try? file.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey]) // Optional: unreadable is skipped.
+            guard values?.isRegularFile == true, values?.isSymbolicLink != true else { continue }
+            do {
+                try FileManager.default.removeItem(at: file)
+                removed.append(file.lastPathComponent)
+                OWELog.info(.app, "Screen saver: deleted the old recording \(file.lastPathComponent) from \(folder.lastPathComponent)")
+            } catch {
+                OWELog.error(.app, "Screen saver: can't delete the old recording \(file.lastPathComponent): \(error)")
+            }
+        }
+        return removed
+    }
+
+    /// Deletes the recordings earlier versions left: in this folder (but `keep`), and in the
+    /// recordings' staging folder in Caches, which goes once empty.
+    func removeOldRecordings(cachesDirectory: URL, keeping keep: Set<String>) {
+        Self.removeOldRecordings(in: directory, keeping: keep)
+        let staging = cachesDirectory.appending(path: "ScreenSaverRecordings", directoryHint: .isDirectory)
+        Self.removeOldRecordings(in: staging)
+        if let left = try? FileManager.default.contentsOfDirectory(atPath: staging.path(percentEncoded: false)), left.isEmpty { // Optional: absent is fine.
+            try? FileManager.default.removeItem(at: staging) // Optional: an empty folder of ours.
+        }
+    }
+
     /// Removes the folder: the plugin was turned off.
     func removeAll() {
         guard FileManager.default.fileExists(atPath: directory.path(percentEncoded: false)) else { return }

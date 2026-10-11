@@ -1,8 +1,7 @@
 import Foundation
 
 /// What the control channel's system requests (`SystemControlRequests`) do in the app: Scene Edit / Export's
-/// iPhone & iPad Export and Screen Saver modes, the screen saver's daily
-/// re-recording and Settings › General's lock-screen picture, through the code those use
+/// iPhone & iPad Export and Screen Saver modes and Settings › General's lock-screen picture, through the code those use
 /// (`AppSystemControlService`), or a fake in tests. Every call is on the main actor.
 @MainActor
 protocol SystemControlService: AnyObject {
@@ -30,20 +29,18 @@ protocol SystemControlService: AnyObject {
     var screenSaver: SystemScreenSaverState { get }
     /// The scene's layers as scene.json lists them.
     func layers(of wallpaper: ControlWallpaper) throws -> [SystemSceneLayer]
-    /// The values the screen saver records the wallpaper with: its own saved choices, or the
+    /// The values the screen saver draws the wallpaper with: its own saved choices, or the
     /// wallpaper's values while it has none.
     func screenSaverValues(of wallpaper: ControlWallpaper) throws -> SystemScreenSaverValues
     /// Saves `values` as the screen saver's choices for the wallpaper, as the Screen Saver mode
     /// does; false when nothing was saved because they are the wallpaper's own values, which the
     /// screen saver follows until its choices first differ.
     func setScreenSaverValues(_ values: [String: String], of wallpaper: ControlWallpaper) throws -> Bool
-    /// "Record and Set as Screen Saver", waiting for the recording.
-    func recordScreenSaver(_ wallpaper: ControlWallpaper) async throws -> SystemScreenSaverRecording
+    /// "Set as Screen Saver": a scene drawn live with its screen saver choices, or a video
+    /// wallpaper's own file (waiting while it is put in place).
+    func setScreenSaver(_ wallpaper: ControlWallpaper) async throws -> SystemScreenSaverSet
     /// "Stop Using as Screen Saver".
     func stopUsingScreenSaver()
-    var schedule: SystemScreenSaverSchedule { get }
-    func setScheduleEnabled(_ enabled: Bool)
-    func setScheduleTime(hour: Int, minute: Int)
 
     // MARK: Lock screen
 

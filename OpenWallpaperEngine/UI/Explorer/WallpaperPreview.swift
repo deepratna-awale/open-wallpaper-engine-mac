@@ -60,19 +60,20 @@ struct WallpaperPreview: SubviewOfContentView {
         return ByteCountFormatter.string(fromByteCount: Int64(sizeBytes), countStyle: .file)
     }
     
-    /// The selected wallpaper's loop video: ready, rendering or not made for this type. Nothing
-    /// while the plugin is off or an eligible wallpaper has no loop yet.
+    /// Whether the screen saver shows the selected wallpaper: drawn live, a video's own file ready
+    /// or being repaired, or not (with why). Nothing while the plugin is off or a video's file
+    /// isn't checked yet.
     @ViewBuilder private var screenSaverStatusRow: some View {
         switch screenSaver.status(for: wallpaperViewModel.displayedWallpaper) {
         case .available:
             screenSaverRow(String(localized: "Screen Saver Available",
-                                  comment: "Details panel: a screen saver loop video of this wallpaper is ready"),
+                                  comment: "Details panel: the screen saver shows this wallpaper"),
                            showsSettings: true) {
                 Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
             }
         case .rendering:
             screenSaverRow(String(localized: "Rendering Screen Saver",
-                                  comment: "Details panel: the screen saver loop video of this wallpaper is being made"),
+                                  comment: "Details panel: the video wallpaper's file is being prepared for the screen saver"),
                            showsSettings: true) {
                 ProgressView().controlSize(.small).progressViewStyle(.circular)
             }
@@ -82,30 +83,22 @@ struct WallpaperPreview: SubviewOfContentView {
                 Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
             }
             .help(screenSaverNotAvailableReason)
-        case .notAvailable(.pageDidNotLoad):
+        case .needsChromium:
             screenSaverRow(String(localized: "Screen Saver Not Available",
                                   comment: "Details panel: no screen saver is made from this wallpaper")) {
                 Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
             }
-            .help(String(localized: "The wallpaper's page didn't load, so no screen saver was recorded",
-                         comment: "Details panel: why a web or WebM video wallpaper has no screen saver"))
-        case .notAvailable(.doesNotLoop):
-            screenSaverRow(String(localized: "Screen Saver Not Available",
-                                  comment: "Details panel: no screen saver is made from this wallpaper")) {
-                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
-            }
-            .help(String(localized: "This page doesn't loop smoothly",
-                         comment: "Details panel: why a web wallpaper has no screen saver: its recording has no seamless loop"))
+            .help(String(localized: "Web wallpapers and WebM videos move in the screen saver only with the Chromium engine. Without it, the screen saver shows their picture."))
         case nil:
             EmptyView()
         }
     }
 
-    /// Why the saver doesn't play the selected wallpaper: a video in a format AVFoundation can't
-    /// play and WebM can't record, or an application wallpaper.
+    /// Why the saver doesn't show the selected wallpaper: a video in a format AVFoundation can't
+    /// play, or an application wallpaper.
     private var screenSaverNotAvailableReason: String {
         if wallpaperViewModel.displayedWallpaper.project.type.caseInsensitiveCompare("video") == .orderedSame {
-            return String(localized: "The screen saver plays MP4 and MOV videos in H.264 or HEVC, and records WebM videos",
+            return String(localized: "The screen saver plays MP4 and MOV videos in H.264 or HEVC, and WebM videos through the Chromium engine",
                           comment: "Details panel: why a video wallpaper in another codec has no screen saver")
         }
         return String(localized: "Screen savers are made from scene, web and video wallpapers",

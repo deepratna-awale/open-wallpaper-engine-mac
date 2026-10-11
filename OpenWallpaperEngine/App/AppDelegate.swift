@@ -187,19 +187,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         ])
         return MCPServerPlugin(handler: { request in await router.handle(request) })
     }()
-    /// Scene Edit / Export's Screen Saver mode's recordings, set as the screen saver.
+    /// What is set as the screen saver (Scene Edit / Export's Screen Saver mode, Set as Screen Saver).
     lazy var screenSaverRecordings = ScreenSaverRecordingService(plugin: screenSaver, environment: .init(
-        screens: {
-            NSScreen.screens.map { screen in
-                (pixels: SIMD2(Int(screen.frame.width * screen.backingScaleFactor), Int(screen.frame.height * screen.backingScaleFactor)),
-                 points: SIMD2(Int(screen.frame.width), Int(screen.frame.height)))
-            }
-        },
         isPluginEnabled: { [unowned self] in globalSettingsViewModel.settings.screenSaver },
         enablePlugin: { [unowned self] in globalSettingsViewModel.settings.screenSaver = true },
         desktopWallpaper: { [unowned self] in wallpaperViewModel.currentWallpaper }))
-    /// The screen saver's daily re-recording, while the app runs.
-    lazy var screenSaverSchedule = ScreenSaverDailyScheduler(service: screenSaverRecordings)
     /// Renders the Wallpaper Editor's browser previews in the background once WE's assets are there.
     private(set) lazy var editorPreviewPrewarm = EditorPreviewPrewarm(environment: .live)
     lazy var sceneScriptServices: SceneScriptServices = {
@@ -486,8 +478,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         dockPresence.keepsIcon = { [unowned self] in globalSettingsViewModel.settings.showInDock && !launchedForScreenSaver }
         dockPresence.start()
 
-        // The screen saver's daily re-recording: catches up a run missed while the app was quit.
-        screenSaverSchedule.start()
         // The Wallpaper Editor's browser previews, when any is missing.
         editorPreviewPrewarm.start(reason: "launch", after: EditorPreviewPrewarm.launchDelay)
 
@@ -515,11 +505,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
     }
     
-    /// A scene's recording set as the screen saver by an earlier version becomes the live pick of
-    /// that wallpaper, with its picture as the still; one of a wallpaper no longer in the library
-    /// goes, so the screen saver follows the desktop again. A video's own file stays as it is.
+    /// What earlier versions left for the screen saver: a scene's recording set as the screen saver
+    /// becomes the live pick of that wallpaper, with its picture as the still; one of a wallpaper no
+    /// longer in the library goes, so the screen saver follows the desktop again; a video's own
+    /// file stays as it is. The old recordings and the retired settings are deleted.
     private func migrateScreenSaverRecording() {
         let store = screenSaverRecordings.store
+        store.removeRetiredKeys()
+        // Recordings are gone: the old loop videos too, once the selection is settled, in the
+        // background (only the user's own copy wrote them where the saver reads). A video set as
+        // the screen saver keeps its file.
+        defer {
+            if ScreenSaverInstaller.current.mayInstall {
+                let videos = ScreenSaverVideoStore.current, caches = AppStorageLocation.current.cachesDirectory
+                let keep = Set([store.selection?.fileName].compactMap { $0 })
+                DispatchQueue.global(qos: .utility).async { videos.removeOldRecordings(cachesDirectory: caches, keeping: keep) }
+            }
+        }
         guard let selection = store.selection else { return }
         let folder = URL(filePath: selection.wallpaperDirectory, directoryHint: .isDirectory)
         guard let wallpaper = InstalledLibrary.wallpaper(at: folder, hiding: []) else {

@@ -176,11 +176,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     var holdsClock = false
     /// The frame being rendered only redraws the scene as it stands (`redrawShared`).
     private var redrawing = false
-    /// The renderer draws the screen saver's loop video (`ScreenSaverLoopRenderer`): scripts see
+    /// The renderer draws the live screen saver (`ScreenSaverLiveScene`): scripts see
     /// `engine.isScreensaver()` true. Set before the first frame.
     var rendersScreenSaver = false
     /// While true the scene's clock text layers (`SceneClockLayers`) draw nothing: set for the
-    /// screen saver's loop video and while capturing the loading snapshot the lock screen shows.
+    /// Live Photo export (iOS draws its own clock) and while capturing the loading snapshot the
+    /// lock screen shows.
     var hidesClockLayers = false
     /// The pointer every frame sees instead of the mouse, normalised over the scene with y up
     /// (`g_PointerPosition`; the centre is 0.5, 0.5); nil follows the mouse. A picture that is

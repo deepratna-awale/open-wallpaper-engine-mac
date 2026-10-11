@@ -180,12 +180,9 @@ final class ScreenSaverLayoutTests: XCTestCase {
         let content = Plan.Content(id: directory.standardizedFileURL.path)
         let plan = plan(ScreenSaverDisplayLayout(sameAsWallpaper: false, layout: .stretch), displays: [a, b],
                         shown: ["1": content])
-        let store = ScreenSaverVideoStore(directory: directory.appending(path: "Store"))
-        let work = Plugin.work(for: plan, wallpapers: [content.id: video], store: store)
-        XCTAssertTrue(work.renders.isEmpty, "a video plays its own file: nothing is rendered")
+        let work = Plugin.work(for: plan, wallpapers: [content.id: video])
         XCTAssertEqual(work.videos.count, 1)
         let entry = try XCTUnwrap(work.entries.first)
-        XCTAssertTrue(entry.isVideo)
         XCTAssertEqual(entry.file, work.videos.first?.file)
 
         // A 16:9 file filling the 4480×1440 canvas: its middle band, split between the displays.
@@ -205,7 +202,7 @@ final class ScreenSaverLayoutTests: XCTestCase {
         XCTAssertEqual(crops[1].width * 1920 / (crops[1].height * 1080), 2560.0 / 1440, accuracy: 1e-9)
     }
 
-    func testASceneRendersOnceForDisplaysSharingIt() throws {
+    func testAScenesLoopListsNoVideo() throws {
         let directory = FileManager.default.temporaryDirectory.appending(path: "owe-ss-layout-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -213,12 +210,9 @@ final class ScreenSaverLayoutTests: XCTestCase {
         let scene = WEWallpaper(using: WEProject(file: "scene.json", preview: "p.jpg", title: "t", type: "scene"), where: directory)
         let content = Plan.Content(id: directory.standardizedFileURL.path)
         let plan = plan(ScreenSaverDisplayLayout(), displays: [a, b], shown: ["1": content, "2": content])
-        let store = ScreenSaverVideoStore(directory: directory.appending(path: "Store"))
-        let work = Plugin.work(for: plan, wallpapers: [content.id: scene], store: store)
-        XCTAssertEqual(work.renders.count, 1)
-        XCTAssertEqual(work.renders.first?.target.pixelSize, SIMD2(3840, 2160), "the largest of both displays")
-        XCTAssertEqual(work.entries.first?.size, SIMD2(3840, 2160))
-        let videos = Plugin.manifestVideos(for: try XCTUnwrap(work.entries.first).loop, file: "f.mov", size: SIMD2(3840, 2160),
+        let work = Plugin.work(for: plan, wallpapers: [content.id: scene])
+        XCTAssertTrue(work.entries.isEmpty && work.videos.isEmpty, "a scene is drawn live: no video, nothing rendered")
+        let videos = Plugin.manifestVideos(for: try XCTUnwrap(plan.loops.first), file: "f.mov", size: SIMD2(3840, 2160),
                                            rate: nil, everyDisplay: true)
         XCTAssertEqual(videos, [ScreenSaverManifest.Video(file: "f.mov", width: 3840, height: 2160)], "plays on any display")
     }

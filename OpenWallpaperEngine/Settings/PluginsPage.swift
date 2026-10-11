@@ -24,8 +24,8 @@ struct PluginsPage: SettingsPage {
                 VStack(alignment: .leading, spacing: 6) {
                     Toggle("Screen Saver", isOn: $viewModel.settings.screenSaver)
                         .changedFromDefault(viewModel.isChanged(\.screenSaver))
-                        .help("Records a seamless loop of the current wallpaper in the background, at the largest display's pixels, and installs it as a screen saver; a video wallpaper plays its own file. Recording waits while your Mac is on battery or hot.")
-                    Text("Records a seamless loop of the current wallpaper in the background (a video wallpaper plays its own file) and installs a screen saver that plays it. Choose Open Wallpaper Engine in Screen Saver settings to use it. Turning it off removes the screen saver and its videos.")
+                        .help("Installs a screen saver that draws the current wallpaper live while it runs; a video wallpaper plays its own file.")
+                    Text("Installs a screen saver that draws your wallpaper live while it runs, so clocks, dates and audio-reactive parts move as they do on the desktop; a video wallpaper plays its own file. Choose Open Wallpaper Engine in Screen Saver settings to use it. Turning it off removes the screen saver.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)

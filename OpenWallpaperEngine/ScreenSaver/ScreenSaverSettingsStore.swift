@@ -3,32 +3,30 @@ import Foundation
 /// Scene Edit / Export's Screen Saver mode's saved state, in the app's defaults
 /// (`UserDefaults.app`, so tests and isolated copies keep their own):
 /// - **Per wallpaper** (`ScreenSaverValues.<identity>`, `WallpaperSettingsIdentity`): the values the
-///   screen saver's version of a wallpaper is recorded with (its user properties and Scene Edit /
+///   screen saver's version of a wallpaper is drawn with (its user properties and Scene Edit /
 ///   Export's layer edits, as `IsolatedSceneEditSession.values` holds them). They are the screen
 ///   saver's own, apart from the wallpaper's: the desktop never reads them, and editing the
-///   wallpaper doesn't change them. Every recording of that wallpaper, by hand or on the daily
-///   schedule, uses them.
+///   wallpaper doesn't change them.
 /// - **The live pick** (`ScreenSaverLivePick`): the wallpaper set as the screen saver, which the
 ///   live screen saver draws with these values instead of the desktop's wallpapers.
 /// - **The selection** (`ScreenSaverSelection`): a video wallpaper's own file set as the screen
 ///   saver, which the saver plays. Earlier versions also kept a scene's recording here;
 ///   `migrateRecordedSelection` turns that into the live pick of its wallpaper.
-/// - **The daily schedule** (`ScreenSaverSchedule`).
 struct ScreenSaverSettingsStore {
     static let valuesPrefix = "ScreenSaverValues."
     static let selectionKey = "ScreenSaverSelection"
     static let livePickKey = "ScreenSaverLivePick"
-    static let scheduleKey = "ScreenSaverSchedule"
 
-    /// The recording set as the screen saver.
+    /// A video wallpaper's own file set as the screen saver (earlier versions: also a scene's
+    /// recording, `migrateRecordedSelection`).
     struct Selection: Codable, Equatable, Sendable {
-        /// The recorded wallpaper's folder.
+        /// The wallpaper's folder.
         var wallpaperDirectory: String
         /// The video's name in the screen saver's folder (`ScreenSaverVideoStore`).
         var fileName: String
         var width: Int
         var height: Int
-        /// When it was recorded.
+        /// When it was set.
         var recorded: Date
     }
 
@@ -44,12 +42,23 @@ struct ScreenSaverSettingsStore {
 
     init(defaults: UserDefaults = .app) { self.defaults = defaults }
 
+    /// Keys earlier versions saved that nothing reads any more: the daily re-recording's schedule.
+    static let retiredKeys = ["ScreenSaverSchedule"]
+
+    /// Removes the retired keys (once a version without them starts; harmless afterwards).
+    func removeRetiredKeys() {
+        for key in Self.retiredKeys where defaults.object(forKey: key) != nil {
+            defaults.removeObject(forKey: key)
+            OWELog.info(.app, "Screen saver: removed the retired setting \(key)")
+        }
+    }
+
     // MARK: Per wallpaper
 
     static func valuesKey(_ identity: WallpaperSettingsIdentity) -> String { valuesPrefix + identity.rawValue }
 
-    /// The screen saver's saved values for the wallpaper, nil when it has none (a recording then
-    /// starts from the wallpaper's own).
+    /// The screen saver's saved values for the wallpaper, nil when it has none (it is then drawn
+    /// with the wallpaper's own).
     func values(for identity: WallpaperSettingsIdentity) -> [String: String]? {
         defaults.dictionary(forKey: Self.valuesKey(identity)) as? [String: String]
     }
@@ -58,7 +67,7 @@ struct ScreenSaverSettingsStore {
         defaults.set(values, forKey: Self.valuesKey(identity))
     }
 
-    // MARK: Selection and schedule
+    // MARK: Selection and pick
 
     var selection: Selection? {
         get { decode(Selection.self, forKey: Self.selectionKey) }
@@ -81,11 +90,6 @@ struct ScreenSaverSettingsStore {
         livePick = LivePick(wallpaperDirectory: selection.wallpaperDirectory, picked: selection.recorded)
         self.selection = nil
         return true
-    }
-
-    var schedule: ScreenSaverSchedule {
-        get { decode(ScreenSaverSchedule.self, forKey: Self.scheduleKey) ?? ScreenSaverSchedule() }
-        nonmutating set { encode(newValue, forKey: Self.scheduleKey) }
     }
 
     private func decode<Value: Decodable>(_ type: Value.Type, forKey key: String) -> Value? {

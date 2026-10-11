@@ -2,8 +2,8 @@ import AppKit
 import OWEControlProtocol
 
 /// The app's system features for the control channel, through the code their own controls run:
-/// the Screen Saver mode's store and recording service (`ScreenSaverSettingsStore`,
-/// `ScreenSaverRecordingService`, `ScreenSaverDailyScheduler`), Settings › General's lock-screen
+/// the Screen Saver mode's store and service (`ScreenSaverSettingsStore`,
+/// `ScreenSaverRecordingService`), Settings › General's lock-screen
 /// setting (`LockScreenPicture`), and the iPhone & iPad Export mode's render
 /// (`AppSystemControlService+LivePhoto`). Nothing here opens a window or System Settings, or asks
 /// macOS for a permission.
@@ -38,22 +38,20 @@ final class AppSystemControlService: SystemControlService {
     // MARK: - Screen saver
 
     var screenSaver: SystemScreenSaverState {
-        SystemScreenSaverState(pluginEnabled: app.globalSettingsViewModel.settings.screenSaver,
-                               isRecording: recordings.isRecording, selection: selection)
+        SystemScreenSaverState(pluginEnabled: app.globalSettingsViewModel.settings.screenSaver, selection: selection)
     }
 
     private var selection: SystemScreenSaverSelection? {
-        // A picked wallpaper is drawn live at each display's size: no recording date or size.
+        func wallpaper(at path: String) -> ControlWallpaper? {
+            InstalledLibrary.wallpaper(at: URL(filePath: path, directoryHint: .isDirectory), hiding: []).map { model.control($0) }
+        }
         if let pick = recordings.livePick {
-            let folder = URL(filePath: pick.wallpaperDirectory, directoryHint: .isDirectory)
-            return SystemScreenSaverSelection(wallpaper: InstalledLibrary.wallpaper(at: folder, hiding: []).map { model.control($0) },
-                                              folder: pick.wallpaperDirectory, recorded: pick.picked, width: 0, height: 0)
+            return SystemScreenSaverSelection(wallpaper: wallpaper(at: pick.wallpaperDirectory), folder: pick.wallpaperDirectory,
+                                              kind: .live, picked: pick.picked)
         }
         guard let selection = recordings.selection else { return nil }
-        let folder = URL(filePath: selection.wallpaperDirectory, directoryHint: .isDirectory)
-        return SystemScreenSaverSelection(wallpaper: InstalledLibrary.wallpaper(at: folder, hiding: []).map { model.control($0) },
-                                          folder: selection.wallpaperDirectory, recorded: selection.recorded,
-                                          width: selection.width, height: selection.height)
+        return SystemScreenSaverSelection(wallpaper: wallpaper(at: selection.wallpaperDirectory), folder: selection.wallpaperDirectory,
+                                          kind: .video, picked: selection.recorded)
     }
 
     func layers(of wallpaper: ControlWallpaper) throws -> [SystemSceneLayer] {
@@ -79,43 +77,28 @@ final class AppSystemControlService: SystemControlService {
         return true
     }
 
-    /// As the mode's Record and Set as Screen Saver: its values are the screen saver's own choices,
-    /// else the wallpaper's.
-    func recordScreenSaver(_ wallpaper: ControlWallpaper) async throws -> SystemScreenSaverRecording {
+    /// As the mode's Set as Screen Saver: a scene is drawn live with the screen saver's own
+    /// choices, else the wallpaper's; a video's own file is put in place.
+    func setScreenSaver(_ wallpaper: ControlWallpaper) async throws -> SystemScreenSaverSet {
         let found = try found(wallpaper)
         guard !recordings.isRecording else {
-            throw ControlError(.unavailable, "A screen saver recording is already running. Wait for it to finish, then try again.")
+            throw ControlError(.unavailable, "A video is being set as the screen saver. Wait for it to finish, then try again.")
         }
         let values = try screenSaverValues(of: wallpaper).values
         let wasEnabled = app.globalSettingsViewModel.settings.screenSaver
         let recordings = recordings
-        OWELog.info(.app, "MCP: recording \(found.wallpaperDirectory.lastPathComponent) as the screen saver")
+        OWELog.info(.app, "MCP: setting \(found.wallpaperDirectory.lastPathComponent) as the screen saver")
         let succeeded = await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
-            recordings.record(found, values: values, background: false) { continuation.resume(returning: $0) }
+            recordings.set(found, values: values) { continuation.resume(returning: $0) }
         }
         guard succeeded, let selection else {
-            throw ControlError(.failed, "\"\(wallpaper.title)\" couldn't be recorded as the screen saver. The app's log says why: /usr/bin/log show --last 10m --predicate 'process == \"Open Wallpaper Engine\"' | grep 'Screen saver'.")
+            throw ControlError(.failed, "\"\(wallpaper.title)\" couldn't be set as the screen saver. The app's log says why: /usr/bin/log show --last 10m --predicate 'process == \"Open Wallpaper Engine\"' | grep 'Screen saver'.")
         }
-        return SystemScreenSaverRecording(selection: selection, enabledPlugin: !wasEnabled && screenSaver.pluginEnabled)
+        return SystemScreenSaverSet(selection: selection, enabledPlugin: !wasEnabled && screenSaver.pluginEnabled)
     }
 
     func stopUsingScreenSaver() {
         recordings.stopUsingSelection()
-    }
-
-    var schedule: SystemScreenSaverSchedule {
-        let scheduler = app.screenSaverSchedule
-        let schedule = scheduler.schedule
-        return SystemScreenSaverSchedule(enabled: schedule.isEnabled, hour: schedule.hour, minute: schedule.minute,
-                                         anchor: schedule.anchor, nextRun: scheduler.nextFire)
-    }
-
-    func setScheduleEnabled(_ enabled: Bool) {
-        app.screenSaverSchedule.setEnabled(enabled)
-    }
-
-    func setScheduleTime(hour: Int, minute: Int) {
-        app.screenSaverSchedule.setTime(hour: hour, minute: minute)
     }
 
     // MARK: - Lock screen

@@ -1,40 +1,37 @@
 import AppKit
 
-/// Makes and sets the Screen Saver mode's recordings: a scene's version (the mode's values,
-/// `ScreenSaverSettingsStore`) recorded as a seamless loop (`ScreenSaverRecorder`) at the size the
-/// screen saver plugin would render (`ScreenSaverPlugin.targets`), installed as the screen saver's
-/// video and kept as the selection, which the plugin then plays instead of a loop of the desktop's
-/// wallpaper. The mode records by hand; the daily schedule (`ScreenSaverDailyScheduler`) records
-/// the selection again.
+/// What is set as the screen saver, from Scene Edit / Export's Screen Saver mode, the library's
+/// and Workshop's Set as Screen Saver, and MCP: a wallpaper picked to be drawn live with the
+/// mode's values (`pick`, `ScreenSaverSettingsStore.livePick`), or a video wallpaper's own file
+/// (`useVideo`, `ScreenSaverSettingsStore.selection`), which the plugin then plays instead of
+/// following the desktop. Nothing is recorded.
 @MainActor
 final class ScreenSaverRecordingService: ObservableObject {
-    /// What a recording needs from the app: the displays, whether the screen saver plugin is on,
+    /// What setting the screen saver needs from the app: whether the screen saver plugin is on,
     /// and the desktop's wallpaper.
     struct Environment {
-        var screens: @MainActor () -> [(pixels: SIMD2<Int>, points: SIMD2<Int>)]
         var isPluginEnabled: @MainActor () -> Bool
         /// Turns Settings › Plugins › Screen Saver on (it installs the saver).
         var enablePlugin: @MainActor () -> Void
         var desktopWallpaper: @MainActor () -> WEWallpaper?
     }
 
+    /// A video wallpaper's file is being put in place (`useVideo`).
     @Published private(set) var isRecording = false
     let store: ScreenSaverSettingsStore
-    private let recorder: ScreenSaverRecorder
     private let plugin: ScreenSaverPlugin
     private let environment: Environment
     private let videos: ScreenSaverVideoStore
 
     init(plugin: ScreenSaverPlugin, environment: Environment, store: ScreenSaverSettingsStore = ScreenSaverSettingsStore(),
-         recorder: ScreenSaverRecorder = .current, videos: ScreenSaverVideoStore = .current) {
+         videos: ScreenSaverVideoStore = .current) {
         self.plugin = plugin
         self.environment = environment
         self.store = store
-        self.recorder = recorder
         self.videos = videos
     }
 
-    /// The recording set as the screen saver, if any.
+    /// The video wallpaper whose own file is the screen saver, if any.
     var selection: ScreenSaverSettingsStore.Selection? { store.selection }
 
     /// The wallpaper picked as the screen saver, drawn live, if any.
@@ -65,49 +62,16 @@ final class ScreenSaverRecordingService: ObservableObject {
         objectWillChange.send()
     }
 
-    /// The video of `wallpaper`'s recording, when it is the screen saver and the file exists.
-    func recordedVideo(of wallpaper: WEWallpaper) -> URL? {
-        guard isSelected(wallpaper), let selection, videos.exists(fileName: selection.fileName) else { return nil }
-        return videos.url(fileName: selection.fileName)
-    }
-
-    /// Records `wallpaper` with `values` and sets it as the screen saver (turning the plugin on
-    /// when it is off). `background` runs the render at background priority (the schedule); by
-    /// hand it runs at user-initiated priority. `completion` gets whether it was set.
-    func record(_ wallpaper: WEWallpaper, values: [String: String], background: Bool,
-                completion: @escaping @MainActor (Bool) -> Void = { _ in }) {
-        // A scene is drawn live now: it is picked, not recorded.
-        if !ScreenSaverVideoSource.isEligible(wallpaper) {
-            pick(wallpaper, values: values)
-            completion(true)
+    /// Sets `wallpaper` as the screen saver with `values` (the Screen Saver mode's, else the
+    /// wallpaper's): a video's own file (`useVideo`), anything else picked to be drawn live
+    /// (`pick`). `completion` gets whether it was set.
+    func set(_ wallpaper: WEWallpaper, values: [String: String], completion: @escaping @MainActor (Bool) -> Void = { _ in }) {
+        if ScreenSaverVideoSource.isEligible(wallpaper) {
+            useVideo(wallpaper, completion: completion)
             return
         }
-        guard !isRecording else {
-            OWELog.info(.app, "Screen saver: a recording is already running; \(wallpaper.wallpaperDirectory.lastPathComponent) waits for the next")
-            completion(false)
-            return
-        }
-        guard var target = ScreenSaverPlugin.targets(for: wallpaper, screens: environment.screens(), properties: values).first else {
-            OWELog.error(.app, "Screen saver: \(wallpaper.wallpaperDirectory.lastPathComponent) can't be recorded (not a readable scene, or no display)")
-            completion(false)
-            return
-        }
-        let started = Date()
-        target.isRecording = true
-        target.fileName = ScreenSaverVideoStore.recordedFileName(target.fileName, at: started)
-        isRecording = true
-        plugin.beginRecording()
-        let recorder = recorder, folder = wallpaper.wallpaperDirectory, recorded = target
-        OWELog.info(.app, "Screen saver: recording \(folder.lastPathComponent) at \(target.pixelSize.x)×\(target.pixelSize.y)\(background ? " (daily schedule)" : "")")
-        let queue = DispatchQueue.global(qos: background ? .background : .userInitiated)
-        Task { [weak self] in
-            // The render blocks its thread for minutes: a dispatch queue's, not the cooperative pool's.
-            let succeeded = await withCheckedContinuation { continuation in
-                queue.async { continuation.resume(returning: recorder.record(wallpaper: folder, target: recorded)) }
-            }
-            self?.finish(wallpaper, values: values, target: recorded, started: started, succeeded: succeeded)
-            completion(succeeded)
-        }
+        pick(wallpaper, values: values)
+        completion(true)
     }
 
     /// Sets a video wallpaper's own video as the screen saver (turning the plugin on when it is
@@ -120,7 +84,7 @@ final class ScreenSaverRecordingService: ObservableObject {
             return
         }
         guard ScreenSaverVideoSource.isEligible(wallpaper),
-              let key = ScreenSaverPlugin.statusKey(for: wallpaper, properties: [:]) else {
+              let key = ScreenSaverPlugin.statusKey(for: wallpaper) else {
             OWELog.error(.app, "Screen saver: \(wallpaper.wallpaperDirectory.lastPathComponent) isn't a video the screen saver plays")
             completion(false)
             return
@@ -162,12 +126,6 @@ final class ScreenSaverRecordingService: ObservableObject {
         }
     }
 
-    private func finish(_ wallpaper: WEWallpaper, values: [String: String], target: ScreenSaverPlugin.Target,
-                        started: Date, succeeded: Bool) {
-        if succeeded { store.setValues(values, for: WallpaperSettingsIdentity.resolve(wallpaper, defaults: store.defaults)) }
-        finish(wallpaper, fileName: target.fileName, size: target.pixelSize, started: started, succeeded: succeeded)
-    }
-
     private func finish(_ wallpaper: WEWallpaper, fileName: String, size: SIMD2<Int>, started: Date, succeeded: Bool) {
         isRecording = false
         if succeeded {
@@ -184,29 +142,7 @@ final class ScreenSaverRecordingService: ObservableObject {
         objectWillChange.send()
     }
 
-    /// Records the selected wallpaper again with its saved values (the daily schedule); false when
-    /// nothing is set as the screen saver, it can't be found, or a recording is running.
-    @discardableResult
-    func recordSelection(background: Bool, completion: @escaping @MainActor (Bool) -> Void = { _ in }) -> Bool {
-        // A picked wallpaper is drawn live: nothing to record again.
-        guard !isRecording, store.livePick == nil, let selection else { return false }
-        let folder = URL(filePath: selection.wallpaperDirectory, directoryHint: .isDirectory)
-        guard let wallpaper = InstalledLibrary.wallpaper(at: folder, hiding: []) else {
-            OWELog.error(.app, "Screen saver: \(folder.lastPathComponent), set as the screen saver, is no longer in the library")
-            return false
-        }
-        // A video is its own screen saver: linked again, as it is.
-        if ScreenSaverVideoSource.isEligible(wallpaper) {
-            useVideo(wallpaper, completion: completion)
-            return true
-        }
-        let identity = WallpaperSettingsIdentity.resolve(wallpaper, defaults: store.defaults)
-        let values = store.values(for: identity) ?? IsolatedSceneEditSession.seed(of: wallpaper, from: [.shared], defaults: store.defaults)
-        record(wallpaper, values: values, background: background, completion: completion)
-        return true
-    }
-
-    /// Goes back to the plugin's loop of the desktop's wallpaper (its render replaces the recording).
+    /// Goes back to the desktop's wallpapers.
     func stopUsingSelection() {
         guard store.selection != nil || store.livePick != nil else { return }
         store.selection = nil

@@ -3,9 +3,9 @@ import Foundation
 /// The Discover and Workshop menus' "Set as Wallpaper" and "Set as Screen Saver": the item is
 /// downloaded as Download does (into the Wallpaper Storage folder, with its dependencies), unless
 /// it is installed already, then applied as the library applies it, or set as the screen saver as
-/// the Screen Saver mode records it (`ScreenSaverRecordingService.setAsScreenSaver`, its clock and
-/// audio-reactive layers off). The download shows its progress and errors as any download does;
-/// the recording and its errors show in the same place (`downloadState(for:)`).
+/// the Screen Saver mode sets it (`ScreenSaverRecordingService.setAsScreenSaver`: a scene drawn
+/// live, a video's own file). The download shows its progress and errors as any download does;
+/// setting the screen saver and its errors show in the same place (`downloadState(for:)`).
 @MainActor
 final class WorkshopSetAsFlow: ObservableObject {
     enum Action: Equatable {
@@ -100,17 +100,17 @@ final class WorkshopSetAsFlow: ObservableObject {
             phases[id] = .recording
             environment.setScreenSaver(wallpaper) { [weak self] succeeded in
                 self?.phases[id] = succeeded ? nil
-                    : .failed(String(localized: "The screen saver couldn't be recorded. The logs say why."))
+                    : .failed(String(localized: "The wallpaper couldn't be set as the screen saver. The logs say why."))
             }
         }
     }
 
-    /// What the item's card shows over its download's state: the recording, or why the run failed.
+    /// What the item's card shows over its download's state: setting the screen saver, or why the run failed.
     func downloadState(for workshopId: String) -> SteamCmdService.DownloadState? {
         switch phases[workshopId] {
         case .recording?:
-            return .downloading(status: String(localized: "Recording the screen saver…",
-                                               comment: "Workshop card: the downloaded wallpaper is being recorded as the screen saver"))
+            return .downloading(status: String(localized: "Setting the screen saver…",
+                                               comment: "Workshop card: the downloaded wallpaper is being set as the screen saver"))
         case .failed(let message)?:
             return .failed(message)
         case .downloading?, nil:

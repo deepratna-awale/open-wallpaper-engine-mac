@@ -1,1 +1,0 @@
-{ "name" : "Beat", "passes" : [ { "material" : "materials/effects/beat.json" } ], "version" : 1 }

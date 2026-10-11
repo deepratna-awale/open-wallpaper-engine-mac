@@ -2,7 +2,7 @@ import Foundation
 
 /// When the Installed, Discover and Workshop menus' "Set as Wallpaper" and "Set as Screen Saver"
 /// can apply an item. Application wallpapers don't run on macOS; the screen saver takes what the
-/// Screen Saver mode records or plays (`ScreenSaverRecordingService.canSet`). A Workshop item
+/// Screen Saver mode draws or plays (`ScreenSaverRecordingService.canSet`). A Workshop item
 /// isn't downloaded yet, so its type is its Steam type tag; an item without one (a preset) is
 /// checked once it is downloaded.
 enum WallpaperSetAsRules {

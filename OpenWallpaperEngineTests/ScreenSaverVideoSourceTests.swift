@@ -78,11 +78,6 @@ final class ScreenSaverVideoSourceTests: XCTestCase {
         XCTAssertFalse(ScreenSaverVideoSource.needsRepair(sampleEntryTypes: ["hvc1", "avc1", "mp4a"]))
     }
 
-    func testVideosHaveNoRenderTargets() {
-        let screens = [(pixels: SIMD2(3840, 2160), points: SIMD2(1920, 1080))]
-        XCTAssertTrue(Plugin.targets(for: wallpaper(file: "video.mp4"), screens: screens, properties: [:]).isEmpty)
-    }
-
     // MARK: - Store entry
 
     func testPlayableFileIsLinkedNotCopied() throws {
@@ -161,14 +156,14 @@ final class ScreenSaverVideoSourceTests: XCTestCase {
     func testVideoStatus() throws {
         _ = try mp4(entryType: "avc1", name: "video.mp4")
         let video = wallpaper(file: "video.mp4")
-        let key = try XCTUnwrap(Plugin.statusKey(for: video, properties: ["ignored": "1"]))
+        let key = try XCTUnwrap(Plugin.statusKey(for: video))
         XCTAssertEqual(key.propertyHash, ScreenSaverVideoStore.propertyHash([:]), "a video's properties don't change its file")
-        XCTAssertNil(Plugin.status(for: video, enabled: true, statuses: [:]))
-        XCTAssertEqual(Plugin.status(for: video, enabled: true, statuses: [key: .rendering]), .rendering)
-        XCTAssertEqual(Plugin.status(for: video, enabled: true, statuses: [key: .available]), .available)
-        XCTAssertEqual(Plugin.status(for: video, enabled: true, statuses: [key: .notEligible]), .notEligible,
+        XCTAssertNil(Plugin.status(for: video, enabled: true, statuses: [:], chromiumInstalled: true))
+        XCTAssertEqual(Plugin.status(for: video, enabled: true, statuses: [key: .rendering], chromiumInstalled: true), .rendering)
+        XCTAssertEqual(Plugin.status(for: video, enabled: true, statuses: [key: .available], chromiumInstalled: true), .available)
+        XCTAssertEqual(Plugin.status(for: video, enabled: true, statuses: [key: .notEligible], chromiumInstalled: true), .notEligible,
                        "a codec AVFoundation can't play")
-        XCTAssertNil(Plugin.status(for: video, enabled: false, statuses: [key: .available]))
-        XCTAssertEqual(Plugin.status(for: wallpaper(file: "video.mkv"), enabled: true, statuses: [:]), .notEligible)
+        XCTAssertNil(Plugin.status(for: video, enabled: false, statuses: [key: .available], chromiumInstalled: true))
+        XCTAssertEqual(Plugin.status(for: wallpaper(file: "video.mkv"), enabled: true, statuses: [:], chromiumInstalled: true), .notEligible)
     }
 }

@@ -15,7 +15,7 @@ import notify
 /// Only the user's own copy draws (an isolated copy, like the tests, never installs the saver
 /// and never publishes), and only while the Screen Saver plugin follows the desktop. Until the
 /// real screen saver hosts confirm it (the live screen saver's Phase 0), only development builds
-/// draw (`isAvailable`); release builds keep the recorded loop.
+/// draw (`isAvailable`).
 @MainActor
 final class ScreenSaverLiveController {
     /// What the drawing reads from the app.

@@ -93,7 +93,7 @@ struct SystemSceneLayer: Equatable {
     var authoredVisible: Bool
 }
 
-/// The values a wallpaper's screen saver version is recorded with.
+/// The values a wallpaper's screen saver version is drawn with.
 struct SystemScreenSaverValues: Equatable {
     /// User properties and Scene Edit / Export's layer edits.
     var values: [String: String]
@@ -101,38 +101,34 @@ struct SystemScreenSaverValues: Equatable {
     var isOwn: Bool
 }
 
-/// The recording set as the screen saver.
+/// The wallpaper set as the screen saver.
 struct SystemScreenSaverSelection: Equatable {
-    /// The recorded wallpaper; nil when it is no longer in the library.
+    enum Kind: String, Equatable {
+        /// Drawn live with the screen saver's choices for it.
+        case live
+        /// A video wallpaper's own file, played as it is.
+        case video
+    }
+
+    /// The wallpaper; nil when it is no longer in the library.
     var wallpaper: ControlWallpaper?
     var folder: String
-    var recorded: Date
-    var width: Int
-    var height: Int
+    var kind: Kind
+    /// When it was set as the screen saver.
+    var picked: Date
 }
 
 struct SystemScreenSaverState: Equatable {
     /// Settings › Plugins › Screen Saver.
     var pluginEnabled: Bool
-    var isRecording: Bool
     var selection: SystemScreenSaverSelection?
 }
 
-/// A finished "Record and Set as Screen Saver".
-struct SystemScreenSaverRecording: Equatable {
+/// A finished "Set as Screen Saver".
+struct SystemScreenSaverSet: Equatable {
     var selection: SystemScreenSaverSelection
-    /// The plugin was off, so the recording turned it on (which installs the saver).
+    /// The plugin was off, so setting it turned it on (which installs the saver).
     var enabledPlugin: Bool
-}
-
-/// The screen saver's daily re-recording.
-struct SystemScreenSaverSchedule: Equatable {
-    var enabled: Bool
-    var hour: Int
-    var minute: Int
-    /// When it last ran, or was turned on or moved to another time.
-    var anchor: Date?
-    var nextRun: Date?
 }
 
 /// Settings › General › "Show Wallpaper on Lock Screen".

@@ -5,13 +5,11 @@ import SwiftUI
 /// (`ScreenSaverEditorModel`, `IsolatedSceneEditSession`).
 struct ScreenSaverEditorPanel<Layer: View>: View {
     @ObservedObject var model: ScreenSaverEditorModel
-    @ObservedObject var schedule: ScreenSaverDailyScheduler
     /// The selected layer's adjustments (Scene Edit / Export's own controls, on the isolated store).
     @ViewBuilder let layer: () -> Layer
 
     init(model: ScreenSaverEditorModel, @ViewBuilder layer: @escaping () -> Layer) {
         self.model = model
-        schedule = model.schedule
         self.layer = layer
     }
 

@@ -33,8 +33,8 @@ extension ScreenSaverPlugin {
     nonisolated static func liveKind(of wallpaper: WEWallpaper, chromiumInstalled: Bool) -> LiveLoop.Kind? {
         if isScene(wallpaper) { return .scene }
         guard chromiumInstalled else { return nil }
-        if ScreenSaverWebLoopRecorder.isWeb(wallpaper) { return .page(.web) }
-        if ScreenSaverWebLoopRecorder.isWebMVideo(wallpaper), WebKitVideoPlayer.handles(wallpaper.mediaURL) {
+        if isWeb(wallpaper) { return .page(.web) }
+        if isWebMVideo(wallpaper), WebKitVideoPlayer.handles(wallpaper.mediaURL) {
             return .page(.webm)
         }
         return nil

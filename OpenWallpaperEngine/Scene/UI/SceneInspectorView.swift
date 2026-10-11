@@ -87,7 +87,7 @@ private struct SceneInspectorTexture: Identifiable {
 }
 
 /// Scene Edit / Export's modes: the wallpaper's objects, edited on the running wallpaper, or
-/// the Screen Saver mode's recording, the iPhone & iPad Export mode's lock screen or the Android
+/// the Screen Saver mode's version, the iPhone & iPad Export mode's lock screen or the Android
 /// Export mode's screen, each edited on the mode's own copy (`IsolatedSceneEditSession`). The
 /// picker lists them in this order.
 enum SceneInspectorMode: CaseIterable {
@@ -1050,7 +1050,7 @@ extension AppDelegate {
 /// Scene Edit / Export: its mode, and the editor for it. The Wallpaper mode edits the stores
 /// the running wallpaper reads; the Screen Saver and iPhone & iPad Export modes each edit an
 /// isolated copy of them made when the mode opens (`IsolatedSceneEditSession`), shown by the
-/// mode's private instance and recorded or exported, and dropped when it closes. Every export
+/// mode's private instance and drawn by the screen saver or exported, and dropped when it closes. Every export
 /// happens here, so a video opens it too, with the modes that apply to it (`SceneEditorModes`).
 struct SceneInspectorView: View {
     private let wallpaper: WEWallpaper
@@ -1150,7 +1150,6 @@ struct SceneInspectorView: View {
                                                    seededFrom: scopes)
             let recordings = AppDelegate.shared.screenSaverRecordings
             screenSaverModel = ScreenSaverEditorModel(session: session, seededFrom: scopes, recordings: recordings,
-                                                      schedule: AppDelegate.shared.screenSaverSchedule,
                                                       store: recordings.store)
         case .wallpaper:
             break
@@ -1519,7 +1518,7 @@ private struct SceneInspectorContent: View {
             }
         }
         .pickerStyle(.segmented)
-        .help(Text("Edit the running wallpaper, record it as your screen saver, preview it as an iPhone or iPad lock screen and export a Live Photo, or frame it for an Android device and export a .mpkg, without changing your desktop"))
+        .help(Text("Edit the running wallpaper, set it as your screen saver, preview it as an iPhone or iPad lock screen and export a Live Photo, or frame it for an Android device and export a .mpkg, without changing your desktop"))
     }
 
     /// ⌘K. macOS 15 focuses a search field through `searchFocused`; macOS 14 has no API for it,
