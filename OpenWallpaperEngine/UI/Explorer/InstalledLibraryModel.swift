@@ -352,6 +352,14 @@ final class InstalledLibraryModel {
         }
     }
 
+    /// Edit › Select All: every wallpaper the folder shown lists after the search and filters,
+    /// as Finder selects every item its window shows. Folders have no selection.
+    func selectAll() {
+        let wallpapers = displayedWallpapers
+        selectedWallpapers = Set(wallpapers.map(\.wallpaperDirectory))
+        selectionAnchor = wallpapers.first?.wallpaperDirectory
+    }
+
     func clearSelection() {
         selectedWallpapers.removeAll()
         selectionAnchor = nil

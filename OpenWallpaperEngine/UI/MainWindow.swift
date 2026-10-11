@@ -57,6 +57,21 @@ class MainWindowController: NSWindowController, NSWindowDelegate {
         super.windowDidLoad()
     }
     
+    /// Edit › Select All (⌘A) when no text field took it: every wallpaper the Installed tab shows.
+    /// It reaches the window's controller through the responder chain, so a focused text field
+    /// (the search, a name prompt) keeps selecting its own text.
+    override func selectAll(_ sender: Any?) {
+        guard let library = Self.selectableLibrary else { return }
+        library.selectAll()
+    }
+
+    /// The Installed list Select All selects in: the Installed tab's, while it shows wallpapers.
+    private static var selectableLibrary: InstalledLibraryModel? {
+        let content = AppDelegate.shared.contentViewModel
+        guard content.navigation.topTabBarSelection == 0, !content.library.displayedWallpapers.isEmpty else { return nil }
+        return content.library
+    }
+
     func windowWillClose(_ notification: Notification) {
         AppDelegate.shared.contentViewModel.navigation.isStaging = false
     }
@@ -67,5 +82,12 @@ class MainWindowController: NSWindowController, NSWindowDelegate {
                 AppDelegate.shared.contentViewModel.navigation.isStaging = true
             }
         }
+    }
+}
+
+extension MainWindowController: NSMenuItemValidation {
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        guard menuItem.action == #selector(selectAll(_:)) else { return true }
+        return Self.selectableLibrary != nil
     }
 }
