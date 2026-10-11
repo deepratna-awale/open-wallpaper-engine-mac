@@ -62,8 +62,17 @@ struct ScreenSaverVideoStore: Sendable {
         try JSONEncoder().encode(manifest).write(to: manifestURL, options: .atomic)
     }
 
+    /// Whether `name` is a file the saver reads besides the videos: the manifests (the videos',
+    /// the live frames') and the stills (`ScreenSaverStills`, its pictures).
+    static func isKept(_ name: String) -> Bool {
+        name == ScreenSaverManifest.fileName || name == ScreenSaverLiveManifest.fileName
+            || name == ScreenSaverStills.fileName || name.hasPrefix("still-")
+            // A still being written (`ScreenSaverStillPublisher` stages it as `.<uuid>-still-…`).
+            || name.hasPrefix(".") && name.contains("-still-")
+    }
+
     /// Removes every video but `keep` (and partial renders), so only the current ones stay; the
-    /// manifests (the videos' and the live frames') stay.
+    /// manifests and the stills stay.
     func retain(_ keep: Set<String>) {
         let files: [URL]
         do {
@@ -72,8 +81,7 @@ struct ScreenSaverVideoStore: Sendable {
             // Optional: no folder yet means nothing to remove.
             return
         }
-        let manifests: Set<String> = [ScreenSaverManifest.fileName, ScreenSaverLiveManifest.fileName]
-        for file in files where !manifests.contains(file.lastPathComponent) && !keep.contains(file.lastPathComponent) {
+        for file in files where !Self.isKept(file.lastPathComponent) && !keep.contains(file.lastPathComponent) {
             do { try FileManager.default.removeItem(at: file) } catch {
                 OWELog.error(.app, "Screen saver: can't remove \(file.lastPathComponent): \(error)")
             }
