@@ -71,3 +71,16 @@ Results
   - So the static per-bone depth offset does NOT change draw order at runtime in this test, or blue's offset was cancelled by the clip (the clip has no key for it).
 - **B, keyed order:** b_clip_keyed_order t1: **blue is hidden under red** (red 10560 px, blue 267 px). A keyed depth-offset track DOES reorder at runtime.
 - **F, keyed opacity:** f_alpha (blue Opacity 1 -> 0 over frames 0-30): blue px 2459 @0.5 s -> 137 @0.8 s -> 72 @1 s. **WE fades the bone at runtime.**
+
+A (done): a_moved.mdl / a_moved.json
+- **Tool:** Puppet -> 1. Geometry (Edit) -> "Lock Geometry for Vertex Editing". Confirm the dialog ("Convert the procedurally generated geometry to a fixed mesh..."; it also enables blend shapes).
+- **After locking:** Geometry shows "Edit Mesh: Edit Topology / Edit Deformation", "Edit Blend Shapes" and "Edit Expressions".
+- **Edit Deformation:** a vertex view with a "Limbs" list (Limb 9 = blue island, Limb 11 = red island), "Paint Deformation", "Reset Camera" and "Shading".
+  - Selecting Limb 9 selects the blue island's vertices; dragging moves them up about 150 image px (about 119 screen px at the editor zoom). Then Confirm and save.
+- **Files:**
+  - The puppet json becomes a fixed mesh: new keys "vertices", "faces", "facepriorities", "incompletefaces", "incompletevertices", "spliceedges".
+  - The .mdl grows 18326 -> 20686: **+2360 bytes before MDLS**, and vertex data changes from 0x4d. (2360 - 8) / 12 = 196, which would match a "u8 1, u32, 12 * vertexCount" blob if this rig has 196 vertices. Please confirm with your parser.
+  - c_refpose ALSO grew by exactly +2360 bytes before MDLS and changed at 0x4d, so the reference pose writes the same kind of blob.
+- **Still mo2_509a_moved_t3.png (running wallpaper):** the blue bar is drawn **at its moved position** (about 150 image px up), red stays in place. So WE draws the moved geometry.
+  - The tint-effect variant was not captured.
+- **u32 repeat test** (moving twice) was not done.

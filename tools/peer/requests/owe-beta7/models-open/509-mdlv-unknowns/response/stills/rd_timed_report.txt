@@ -1,15 +1,1 @@
-p509_s_base still 3 triggered at 3.009 s frame 585
-p509_s_c_refpose still 3 triggered at 3.003 s frame 772
-p509_s_c_refpose_clip still 1 triggered at 1.010 s frame 891
-p509_s_b_clip still 0.5 triggered at 0.505 s frame 997
-p509_s_b_clip still 1 triggered at 1.005 s frame 1009
-p509_s_b_clip still 1.5 triggered at 1.508 s frame 1022
-p509_s_b_clip_order still 0.5 triggered at 0.503 s frame 1125
-p509_s_b_clip_order still 1 triggered at 1.012 s frame 1138
-p509_s_b_clip_order still 1.5 triggered at 1.507 s frame 1149
-p509_s_b_clip_keyed still 0.5 triggered at 0.511 s frame 1251
-p509_s_b_clip_keyed still 1 triggered at 1.011 s frame 1263
-p509_s_b_clip_keyed still 1.5 triggered at 1.515 s frame 1274
-p509_s_f_alpha still 0.5 triggered at 0.511 s frame 1374
-p509_s_f_alpha still 0.8 triggered at 0.808 s frame 1381
-p509_s_f_alpha still 1 triggered at 1.008 s frame 1386
+p509_s_a_moved still 3 triggered at 3.005 s frame 537
