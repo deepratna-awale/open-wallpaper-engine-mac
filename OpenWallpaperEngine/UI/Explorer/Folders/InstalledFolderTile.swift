@@ -15,7 +15,8 @@ struct InstalledFolderTile: View {
         let count = viewModel.library.wallpaperCount(of: folder)
         ZStack(alignment: .bottom) {
             Rectangle().fill(.quaternary)
-            Image(systemName: folder.icon?.systemImage ?? "folder.fill")
+            // WE's open variant while something is dragged over it.
+            Image(systemName: folder.systemImage(open: isTargeted))
                 .resizable()
                 .scaledToFit()
                 .foregroundStyle(folder.color?.color ?? Color.secondary)

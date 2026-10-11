@@ -34,6 +34,33 @@ final class WallpaperEngineFoldersImportTests: XCTestCase {
         XCTAssertNil(folders[1].color, "an unknown colour is the default")
     }
 
+    /// WE stores the colour's class and the icon's Font Awesome classes; a missing key is the default.
+    func testParsesWEsColourAndIconClasses() throws {
+        func folder(_ fields: String) throws -> InstalledFolder {
+            let json = #"{"u": {"general": {"browser": {"folders": [{"type": "folder", "title": "F", "items": {}, "subfolders": []"#
+                + fields + "}]}}}}"
+            return try XCTUnwrap(WallpaperEngineFolders.folders(inConfig: Data(json.utf8)).first)
+        }
+        let plain = try folder("")
+        XCTAssertNil(plain.color, "no folderColor: Default")
+        XCTAssertNil(plain.icon, "no folderIcon: the plain folder")
+        for color in InstalledFolderColor.allCases {
+            XCTAssertEqual(try folder(#", "folderColor": "\#(color.rawValue)""#).color, color)
+        }
+        XCTAssertEqual(try folder(#", "folderColor": "fas fa-square browseFolderColorDarkGreen""#).color, .darkGreen,
+                       "the class among the picker's other classes")
+        for icon in InstalledFolderIcon.allCases {
+            var fields = #", "folderIcon": "\#(icon.rawValue)""#
+            if let open = icon.weOpenClass { fields += #", "folderIconOpen": "\#(open)""# }
+            XCTAssertEqual(try folder(fields).icon, icon, icon.rawValue)
+        }
+        XCTAssertNil(try folder(#", "folderIcon": "fas fa-folder""#).icon, "WE's plain folder is the default")
+        XCTAssertEqual(try folder(#", "folderIcon": "fa fa-star""#).icon, .star, "the old `fa` style WE renders as `fas`")
+        XCTAssertEqual(try folder(#", "folderIcon": "far fa-snowflake""#).icon, .snowflake, "the picker's outline snowflake")
+        XCTAssertEqual(try folder(#", "folderIconOpen": "far fa-burst""#).icon, .balloons, "only the open variant")
+        XCTAssertNil(try folder(#", "folderIcon": "fas fa-unicorn""#).icon, "an unknown icon is the default")
+    }
+
     func testMapsItemsToKeysHere() {
         XCTAssertEqual(WallpaperEngineFolders.key(forItem: "1000000001", localKeys: [:]), "workshop-1000000001")
         XCTAssertEqual(WallpaperEngineFolders.key(forItem: "C:/Users/a/My Wallpapers/pixel-town/project.json", localKeys: localKeys),

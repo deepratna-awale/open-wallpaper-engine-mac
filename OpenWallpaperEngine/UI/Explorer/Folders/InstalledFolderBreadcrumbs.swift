@@ -49,7 +49,8 @@ private struct BreadcrumbStep: View {
                     Label {
                         Text(verbatim: folder.title)
                     } icon: {
-                        Image(systemName: folder.icon?.systemImage ?? "folder.fill")
+                        // A folder on the path is open: WE's open variant.
+                        Image(systemName: folder.systemImage(open: true))
                             .foregroundStyle(folder.color?.color ?? Color.secondary)
                     }
                 } else {
