@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// A folder tile's context menu, WE's: Open, Rename, Change Icon, Change Color, Move to Folder
@@ -54,13 +55,17 @@ struct InstalledFolderMenu: View {
                 }
             }
             Divider()
-            ForEach(InstalledFolderIcon.allCases, id: \.self) { icon in
-                Button {
-                    library.setIcon(icon, ofFolder: folder.id)
-                } label: {
-                    Image(systemName: folder.icon == icon ? "checkmark" : icon.systemImage)
+            // A palette: menus drop items whose label is only an image, so the icons show as a
+            // grid of symbols instead, the folder's own one selected.
+            Picker(selection: Binding(get: { folder.icon }, set: { library.setIcon($0, ofFolder: folder.id) })) {
+                ForEach(InstalledFolderIcon.allCases, id: \.self) { icon in
+                    Image(systemName: icon.systemImage).tag(Optional(icon))
                 }
+            } label: {
+                Text("Change Icon", comment: "Context menu of a folder in the Installed tab")
             }
+            .pickerStyle(.palette)
+            .labelsHidden()
         } label: {
             Label {
                 Text("Change Icon", comment: "Context menu of a folder in the Installed tab")
@@ -89,8 +94,9 @@ struct InstalledFolderMenu: View {
                     Label {
                         Text(color.label)
                     } icon: {
-                        Image(systemName: folder.color == color ? "checkmark.circle.fill" : "circle.fill")
-                            .foregroundStyle(color.color)
+                        // A drawn swatch: menus tint symbol images to one colour, so a coloured
+                        // symbol would show grey.
+                        Image(nsImage: Self.swatch(color.color, selected: folder.color == color))
                     }
                 }
             }
@@ -101,5 +107,24 @@ struct InstalledFolderMenu: View {
                 Image(systemName: "paintpalette")
             }
         }
+    }
+
+    /// A filled circle in `color` (not a template image, so the menu keeps its colour), ringed
+    /// when it is the folder's colour.
+    private static func swatch(_ color: Color, selected: Bool) -> NSImage {
+        let size = NSSize(width: 14, height: 14)
+        let image = NSImage(size: size, flipped: false) { rect in
+            let circle = NSBezierPath(ovalIn: rect.insetBy(dx: 1.5, dy: 1.5))
+            NSColor(color).setFill()
+            circle.fill()
+            if selected {
+                NSColor.labelColor.setStroke()
+                circle.lineWidth = 1.5
+                circle.stroke()
+            }
+            return true
+        }
+        image.isTemplate = false
+        return image
     }
 }
