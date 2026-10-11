@@ -50,3 +50,7 @@ F (done): f_alpha.mdl
 - The editor preview fades the bar (0.209 at frame 20).
 - The .mdl grows 22827 -> 23331 bytes (MDLA). The u32 at 0x11 stays 1.
 - The reference-pose panel also has a per-bone "Opacity", and the puppet json's referencepose has "alpha".
+
+b_clip_keyed_order (done): b_clip + blue "Depth offset" keyed in the Animation (-100 typed at frame 0, +100 at frame 30)
+- Puppet json animations[0].bones[1].priorityoffset becomes a key track with "step": true (stepped, no interpolation). The stored frame-0 value is -200.0, i.e. not the typed -100; likely relative to the default depth 100.
+- .mdl size 22827 -> 23331 (MDLA grows). So draw order CAN be animated.
