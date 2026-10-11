@@ -57,19 +57,29 @@ class MainWindowController: NSWindowController, NSWindowDelegate {
         super.windowDidLoad()
     }
     
-    /// Edit › Select All (⌘A) when no text field took it: every wallpaper the Installed tab shows.
-    /// It reaches the window's controller through the responder chain, so a focused text field
-    /// (the search, a name prompt) keeps selecting its own text.
+    /// Edit › Select All (⌘A) when no text field took it: every wallpaper or card the Installed,
+    /// Workshop or Discover tab shows. It reaches the window's controller through the responder
+    /// chain, so a focused text field (the search, a name prompt) keeps selecting its own text.
     override func selectAll(_ sender: Any?) {
-        guard let library = Self.selectableLibrary else { return }
-        library.selectAll()
+        Self.selectAllAction?()
     }
 
-    /// The Installed list Select All selects in: the Installed tab's, while it shows wallpapers.
-    private static var selectableLibrary: InstalledLibraryModel? {
+    /// What Select All does in the tab shown; nil when it shows nothing to select.
+    private static var selectAllAction: (() -> Void)? {
         let content = AppDelegate.shared.contentViewModel
-        guard content.navigation.topTabBarSelection == 0, !content.library.displayedWallpapers.isEmpty else { return nil }
-        return content.library
+        switch content.navigation.topTabBarSelection {
+        case 0:
+            let library = content.library
+            return library.displayedWallpapers.isEmpty ? nil : { library.selectAll() }
+        case 1:
+            let workshop = content.workshopVM
+            return workshop.items.isEmpty ? nil : { workshop.selectAll() }
+        case 4:
+            let shown = content.discoverVM.shownItems, workshop = content.workshopVM
+            return shown.isEmpty ? nil : { workshop.selectAll(shown) }
+        default:
+            return nil
+        }
     }
 
     func windowWillClose(_ notification: Notification) {
@@ -100,6 +110,6 @@ class MainWindowController: NSWindowController, NSWindowDelegate {
 extension MainWindowController: NSMenuItemValidation {
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         guard menuItem.action == #selector(selectAll(_:)) else { return true }
-        return Self.selectableLibrary != nil
+        return Self.selectAllAction != nil
     }
 }
