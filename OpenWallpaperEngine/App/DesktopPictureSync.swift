@@ -27,6 +27,9 @@ final class DesktopPictureSync {
 
     let setter: DesktopPictureSetting
     let files: LockScreenPicture
+    /// A display's new picture was written and set: the screen saver keeps it as its still
+    /// (`ScreenSaverStillPublisher`).
+    var onPictureWritten: ((URL, CGDirectDisplayID) -> Void)?
     let loader: DisplayPictureLoader
     /// Each display's picture as last set, and what it was drawn from.
     private(set) var shown: [CGDirectDisplayID: Shown] = [:]
@@ -128,6 +131,7 @@ final class DesktopPictureSync {
             case .written(let url, let signature):
                 set(url, display: job.plan.display, showing: setter.picture(for: job.plan.display), reason: "updated")
                 shown[job.plan.display] = Shown(url: url, signature: signature)
+                onPictureWritten?(url, job.plan.display)
             case .unchanged:
                 reassert([job.plan.display])
             case .failed:

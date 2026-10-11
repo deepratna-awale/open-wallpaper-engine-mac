@@ -1,11 +1,13 @@
 import AppKit
+import ImageIO
 import Metal
 import MetalPerformanceShaders
 import QuartzCore
 
 /// What a saver view shows (the `.saver`'s `OWESaverView` and the extension's view): the app's
 /// live frames while they arrive (`LiveFrameSource`), else the loop video (`SaverVideoPlayer`),
-/// switched with a short crossfade (`LiveFrameFallback`). It works around the hosts' known bugs
+/// switched with a short crossfade (`LiveFrameFallback`), over the display's still picture
+/// (`ScreenSaverStills`), which shows until the first frames come. It works around the hosts' known bugs
 /// (live screen saver notes §4):
 ///
 /// - It starts on `startAnimation` whatever it heard (a new host misses `didstart`), and again on
@@ -13,6 +15,11 @@ import QuartzCore
 ///   its last frame, which the lock screen shows. It never exits.
 /// - A view whose frames aren't presented (a stacked instance, a hidden host) parks at 1 fps
 ///   (`SaverParkPolicy`).
+/// - Each frame is drawn as it comes (the store's observer), not on a display link of its own,
+///   which beat against the app's and dropped frames; the link only checks for a stall, pings and
+///   reports, a few times a second.
+/// - A view that starts while the process already shows live frames (the host's new views at the
+///   lock) shows them at once, with no fade from black.
 /// - A small view is the System Settings preview whatever its flag says: it never makes the app draw.
 /// - Every view of the process shares one frame source, and the app draws each loop once.
 ///
@@ -20,14 +27,16 @@ import QuartzCore
 /// `presentedTime` says whether the view is on screen. Main thread.
 @MainActor
 final class LiveSaverPresenter: NSObject {
-    /// The rate a view checks for live frames while its video plays.
-    static let fallbackRate = 4
+    /// The rate a view checks for a stall, pings the app and reports.
+    static let housekeepingRate = 4
     /// How long the switch between the video and live frames fades.
     static let crossfade: CFTimeInterval = 0.3
 
     private weak var view: NSView?
     private let source: LiveFrameSource
     private let video = SaverVideoPlayer()
+    private let still = CALayer()
+    private var stillFile: String?
     private let metalLayer = CAMetalLayer()
     private let viewID = UUID().uuidString
     private let isPreview: Bool
@@ -39,6 +48,7 @@ final class LiveSaverPresenter: NSObject {
     private var showsLive = false
     private(set) var isRunning = false
     private var lastPing: CFTimeInterval = -.infinity
+    private var lastDrawn: CFTimeInterval?
     private var observers: [NSObjectProtocol] = []
     private var textures: [IOSurfaceID: MTLTexture] = [:]
     private var stats = Stats()
@@ -51,6 +61,7 @@ final class LiveSaverPresenter: NSObject {
         var drawn = 0
         var presented = 0
         var ticks = 0
+        var skippedParked = 0
     }
 
     init(view: NSView, isPreview flag: Bool, source: LiveFrameSource) {
@@ -61,6 +72,11 @@ final class LiveSaverPresenter: NSObject {
         view.wantsLayer = true
         view.layer?.backgroundColor = NSColor.black.cgColor
         view.layer?.masksToBounds = true
+        still.frame = view.bounds
+        still.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
+        still.contentsGravity = .resizeAspectFill
+        still.masksToBounds = true
+        view.layer?.addSublayer(still)
         video.layer.frame = view.bounds
         view.layer?.addSublayer(video.layer)
         metalLayer.device = SaverMetal.device
@@ -73,11 +89,15 @@ final class LiveSaverPresenter: NSObject {
         view.layer?.addSublayer(metalLayer)
         SaverLog.lifecycle.notice("view init pid=\(getpid()) view=\(self.viewID, privacy: .public) frame=\(Int(view.bounds.width))x\(Int(view.bounds.height)) previewFlag=\(flag) preview=\(self.isPreview)")
         observeLifecycle()
+        source.store.addObserver(self) { [weak self] in
+            DispatchQueue.main.async { MainActor.assumeIsolated { self?.frameCame() } }
+        }
     }
 
     /// Stops observing; the view is going away.
     func invalidate() {
         stop(reason: "deinit")
+        source.store.removeObserver(self)
         let center = DistributedNotificationCenter.default()
         for observer in observers { center.removeObserver(observer) }
         observers.removeAll()
@@ -92,14 +112,29 @@ final class LiveSaverPresenter: NSObject {
         park = SaverParkPolicy(startedAt: now)
         fallback.reset()
         stats = Stats(since: now)
-        showLive(false, animated: false)
-        let started = video.start(display: displayIdentity, bounds: view.bounds, scale: scale)
+        shown = nil
+        lastDrawn = nil
+        loadStill()
         source.attach(viewID: viewID, display: displayIdentity, isPreview: isPreview)
+        source.refresh()
+        // Another view of this process shows live frames (a new host view at the lock): so does
+        // this one, at once.
+        let resumes = source.store.hasFreshFrame(at: LiveFrameStore.now(), within: LiveFrameFallback.staleAfter)
+            && source.store.newestFrame(display: displayIdentity, pixels: pixels) != nil
+        var started = false
+        if resumes {
+            fallback.resume(at: now)
+            showLive(true, animated: false)
+            frameCame()
+        } else {
+            showLive(false, animated: false)
+            started = video.start(display: displayIdentity, bounds: view.bounds, scale: scale)
+        }
         let link = view.displayLink(target: self, selector: #selector(tick(_:)))
         link.add(to: .main, forMode: .common)
         self.link = link
-        setRate(Self.fallbackRate)
-        SaverLog.lifecycle.notice("start (\(reason, privacy: .public)) view=\(self.viewID, privacy: .public) display=\(self.displayIdentity ?? "nil", privacy: .public) pixels=\(self.pixels.width)x\(self.pixels.height) video=\(started)")
+        setRate(Self.housekeepingRate)
+        SaverLog.lifecycle.notice("start (\(reason, privacy: .public)) view=\(self.viewID, privacy: .public) display=\(self.displayIdentity ?? "nil", privacy: .public) pixels=\(self.pixels.width)x\(self.pixels.height) live=\(resumes) video=\(started)")
     }
 
     /// Stops drawing and checking, keeping the last frame shown (the lock screen shows it).
@@ -141,6 +176,7 @@ final class LiveSaverPresenter: NSObject {
 
     // MARK: Frames
 
+    /// A few times a second: the app is pinged, a stall falls back, the park and the report.
     @objc private func tick(_ link: CADisplayLink) {
         guard isRunning else { return }
         let now = CACurrentMediaTime()
@@ -150,22 +186,29 @@ final class LiveSaverPresenter: NSObject {
             lastPing = now
             source.ping(viewID: viewID)
         }
-        fallback.tickInterval = linkRate > 0 ? 1 / Double(linkRate) : 0
-        var frameRate = 0
-        if let frame = source.store.newestFrame(display: displayIdentity, pixels: pixels) {
-            frameRate = frame.frameRate
-            if frame.stamp.isNewer(than: shown) {
-                shown = frame.stamp
-                stats.arrived += 1
-                fallback.frameArrived(at: now)
-                if fallback.mode == .live { draw(frame) }
-            }
-        }
         let live = fallback.update(at: now) == .live
         if live != showsLive { showLive(live, animated: true) }
         let parked = park.isParked(at: now)
-        setRate(live ? park.rate(at: now, fullRate: frameRate) : (parked ? SaverParkPolicy.parkedRate : Self.fallbackRate))
+        setRate(parked ? SaverParkPolicy.parkedRate : Self.housekeepingRate)
         report(at: now, parked: parked)
+    }
+
+    /// A new frame is in the store: drawn now, while live (one a second while parked).
+    private func frameCame() {
+        guard isRunning, let frame = source.store.newestFrame(display: displayIdentity, pixels: pixels),
+              frame.stamp.isNewer(than: shown) else { return }
+        let now = CACurrentMediaTime()
+        shown = frame.stamp
+        stats.arrived += 1
+        fallback.frameArrived(at: now)
+        if fallback.mode == .live, !showsLive { showLive(true, animated: true) }
+        guard fallback.mode == .live else { return }
+        guard park.mayDraw(at: now, lastDrawn: lastDrawn) else {
+            stats.skippedParked += 1
+            return
+        }
+        lastDrawn = now
+        draw(frame)
     }
 
     private func showLive(_ live: Bool, animated: Bool) {
@@ -177,11 +220,36 @@ final class LiveSaverPresenter: NSObject {
         CATransaction.commit()
         if live {
             video.pause()
-        } else if let view, isRunning {
+        } else if let view, isRunning, animated {
             video.start(display: displayIdentity, bounds: view.bounds, scale: scale)
         }
         if animated {
             SaverLog.frames.notice("\(live ? "live frames" : "fallback to video", privacy: .public) view=\(self.viewID, privacy: .public)")
+        }
+    }
+
+    /// Shows the display's still picture, decoded off the main thread; kept when there is none.
+    private func loadStill() {
+        let folder = ScreenSaverManifest.sharedFolder(home: ScreenSaverManifest.userHome)
+        guard let file = ScreenSaverStills.read(folder.appending(path: ScreenSaverStills.fileName))?
+            .file(forDisplay: displayIdentity) else { return }
+        let url = folder.appending(path: file)
+        let modified = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate // Optional: part of the key.
+        let key = "\(file)|\(modified?.timeIntervalSinceReferenceDate ?? 0)"
+        guard key != stillFile else { return }
+        stillFile = key
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let image = CGImageSourceCreateWithURL(url as CFURL, nil).flatMap { CGImageSourceCreateImageAtIndex($0, 0, nil) }
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated {
+                    guard let self, let image else { return }
+                    CATransaction.begin()
+                    CATransaction.setDisableActions(true)
+                    self.still.contents = image
+                    CATransaction.commit()
+                    SaverLog.lifecycle.notice("still view=\(self.viewID, privacy: .public) \(file, privacy: .public)")
+                }
+            }
         }
     }
 
@@ -259,7 +327,7 @@ final class LiveSaverPresenter: NSObject {
 
     private func report(at now: CFTimeInterval, parked: Bool) {
         guard now - stats.since >= Stats.interval else { return }
-        SaverLog.frames.notice("view=\(self.viewID, privacy: .public) live=\(self.showsLive) parked=\(parked) rate=\(self.linkRate) ticks=\(self.stats.ticks) arrived=\(self.stats.arrived) drawn=\(self.stats.drawn) presented=\(self.stats.presented) over \(Int(now - self.stats.since)) s")
+        SaverLog.frames.notice("view=\(self.viewID, privacy: .public) live=\(self.showsLive) parked=\(parked) rate=\(self.linkRate) ticks=\(self.stats.ticks) arrived=\(self.stats.arrived) drawn=\(self.stats.drawn) presented=\(self.stats.presented) skippedParked=\(self.stats.skippedParked) over \(Int(now - self.stats.since)) s")
         SaverCostMeter.report(at: now, parked: parked)
         stats = Stats(since: now)
     }

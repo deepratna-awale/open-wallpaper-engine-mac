@@ -6,7 +6,7 @@ import notify
 /// no XPC or Mach lookup to the app, but may read any file, look up a global IOSurface by id and
 /// use Darwin notifications. So it reads the rings from `live.json` (`ScreenSaverLiveManifest`),
 /// looks their surfaces up (`IOSurfaceLookup`), reads each ring's newest stamp from its
-/// notification's state, and posts `saverAlive` while a view shows. One per process: hosts keep
+/// notification's state as the notification comes, and posts `saverAlive` while a view shows. One per process: hosts keep
 /// several views (one per display, stacked instances).
 final class GlobalSurfaceFrameSource: LiveFrameSource {
     static let shared = GlobalSurfaceFrameSource(
@@ -17,7 +17,7 @@ final class GlobalSurfaceFrameSource: LiveFrameSource {
     private let manifestURL: URL
     private var manifest: ScreenSaverLiveManifest?
     private var modified: Date?
-    /// Each ring's notification token (`notify_register_check`).
+    /// Each ring's notification token (`notify_register_dispatch`).
     private var tokens: [Int: Int32] = [:]
     private var lastManifestCheck: TimeInterval = -.infinity
     private var lastPing: TimeInterval = -.infinity
@@ -49,20 +49,23 @@ final class GlobalSurfaceFrameSource: LiveFrameSource {
             lastManifestCheck = now
             reloadIfChanged()
         }
+        // A frame posted before the rings were registered isn't delivered: read the states once.
+        for (ring, token) in tokens { read(ring: ring, token: token) }
+    }
+
+    /// Ring `ring`'s newest stamp, from its notification's state: on each notification (as the
+    /// frame is drawn) and on `refresh`.
+    private func read(ring: Int, token: Int32) {
         guard let manifest, manifest.isLive else { return }
-        let generation = ScreenSaverLiveStamp.generation(manifest.generation)
-        for ring in manifest.rings {
-            guard let token = tokens[ring.id] else { continue }
-            var state: UInt64 = 0
-            guard notify_get_state(token, &state) == UInt32(NOTIFY_STATUS_OK),
-                  let stamp = ScreenSaverLiveStamp(state: state) else { continue }
-            if stamp.generation != generation {
-                // Newer rings than the manifest read: read it again on the next refresh.
-                lastManifestCheck = -.infinity
-                continue
-            }
-            store.show(ring: ring.id, stamp: stamp)
+        var state: UInt64 = 0
+        guard notify_get_state(token, &state) == UInt32(NOTIFY_STATUS_OK),
+              let stamp = ScreenSaverLiveStamp(state: state) else { return }
+        guard stamp.generation == ScreenSaverLiveStamp.generation(manifest.generation) else {
+            // Newer rings than the manifest read: read it again on the next refresh.
+            lastManifestCheck = -.infinity
+            return
         }
+        store.show(ring: ring, stamp: stamp)
     }
 
     /// One alive notification a second for the whole process, however many views show.
@@ -99,7 +102,12 @@ final class GlobalSurfaceFrameSource: LiveFrameSource {
             guard ringSurfaces.count == ring.surfaces.count else { continue }
             surfaces[ring.id] = ringSurfaces
             var token: Int32 = 0
-            if notify_register_check(ring.notifyName, &token) == UInt32(NOTIFY_STATUS_OK) { tokens[ring.id] = token }
+            let id = ring.id
+            // Delivered on the main thread as each frame is drawn: the views draw it then.
+            let status = notify_register_dispatch(ring.notifyName, &token, .main) { [weak self] token in
+                self?.read(ring: id, token: token)
+            }
+            if status == UInt32(NOTIFY_STATUS_OK) { tokens[ring.id] = token }
         }
         store.use(manifest, surfaces: surfaces)
         SaverLog.transport.notice("live manifest generation=\(manifest.generation) pid=\(manifest.pid) rings=\(manifest.rings.count) displays=\(manifest.displays.count) surfaces found=\(found)/\(listed) fps=\(manifest.frameRate)")

@@ -1,7 +1,7 @@
 import CoreGraphics
 import Foundation
 
-/// How fast a saver view ticks. macOS 14 to 27 keep saver views that are never shown (stacked
+/// How fast a saver view draws. macOS 14 to 27 keep saver views that are never shown (stacked
 /// instances, hidden full-screen hosts), so a view ticks at full rate only while its frames are
 /// presented (`MTLDrawable.presentedTime` non-zero), for a grace period after it starts, and parks
 /// at `parkedRate` otherwise. Times are seconds on one monotonic clock.
@@ -30,6 +30,12 @@ struct SaverParkPolicy: Equatable {
     }
 
     mutating func presented(at now: TimeInterval) { lastPresented = now }
+
+    /// Whether a frame that came at `now` is drawn: every one at full rate, one a second parked.
+    func mayDraw(at now: TimeInterval, lastDrawn: TimeInterval?) -> Bool {
+        guard isParked(at: now), let lastDrawn else { return true }
+        return now - lastDrawn >= 1 / Double(Self.parkedRate)
+    }
 
     /// Whether a view is the System Settings preview: its flag, which is unreliable from macOS 26
     /// (the preview and the real run go through the same host), or a frame too small for a screen.

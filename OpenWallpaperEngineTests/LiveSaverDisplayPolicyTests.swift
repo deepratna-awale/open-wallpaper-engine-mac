@@ -25,12 +25,19 @@ final class LiveSaverDisplayPolicyTests: XCTestCase {
         XCTAssertEqual(fallback.update(at: 1.2), .live)
     }
 
-    func testAParkedViewTicksSlowerWithoutFallingBack() {
+    func testResumesLiveAtOnce() {
         var fallback = LiveFrameFallback()
-        fallback.tickInterval = 1
-        for time in [0.0, 1, 2] { fallback.frameArrived(at: time) }
-        XCTAssertEqual(fallback.update(at: 2.9), .live, "frames a second apart are fresh at one tick a second")
-        XCTAssertEqual(fallback.update(at: 4.1), .fallback)
+        fallback.resume(at: 5)
+        XCTAssertEqual(fallback.update(at: 5), .live, "a new view of a process already showing live frames")
+        XCTAssertEqual(fallback.update(at: 5.1 + LiveFrameFallback.staleAfter), .fallback, "still falls back when they stop")
+    }
+
+    func testAParkedViewDrawsOneFrameASecond() {
+        let park = SaverParkPolicy(startedAt: 0)
+        XCTAssertTrue(park.mayDraw(at: 1, lastDrawn: 0.99), "every frame while starting")
+        XCTAssertTrue(park.mayDraw(at: 10, lastDrawn: nil))
+        XCTAssertFalse(park.mayDraw(at: 10, lastDrawn: 9.5))
+        XCTAssertTrue(park.mayDraw(at: 10.5, lastDrawn: 9.5))
     }
 
     func testResetFallsBackAtOnce() {
