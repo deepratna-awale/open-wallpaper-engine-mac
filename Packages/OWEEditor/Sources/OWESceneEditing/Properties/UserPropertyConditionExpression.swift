@@ -1,4 +1,5 @@
 import Foundation
+import JavaScriptCore
 
 /// A property's `condition` (`clock.value == 1`, `style.value == "cycle" && mode.value != "dual"`):
 /// the one evaluator the app's property sidebar and the editor's live preview share, so they can't
@@ -7,7 +8,8 @@ import Foundation
 /// `name.value`, string, number and flag literals, `== != === !== < <= > >=`, `! && ||` and
 /// parentheses, with JavaScript's precedence. Values are the sidebar's strings; a comparison is
 /// numeric when both sides are numbers (flags count as 1 and 0, as JavaScript's loose `==` compares
-/// them), else textual. An empty condition, or one outside the subset, holds.
+/// them), else textual. Anything else runs as JavaScript, as in WE (`UserPropertyConditionScope`);
+/// an empty condition, or a script that loops or throws, holds.
 public struct UserPropertyConditionExpression: Sendable {
     private indirect enum Node: Sendable {
         case literal(String)
@@ -32,9 +34,12 @@ public struct UserPropertyConditionExpression: Sendable {
 
     /// Whether the property shows for `values` (property key to sidebar value).
     public func evaluate(_ values: [String: String]) -> Bool {
-        guard let root else { return true }
+        guard let root else { return isScript ? UserPropertyConditionScope(values: values).evaluate(self) : true }
         return Self.truthy(Self.eval(root, values))
     }
+
+    /// Whether the expression is a script outside the subset, run as JavaScript.
+    var isScript: Bool { root == nil && !source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
     /// The properties the expression reads.
     public var referencedKeys: Set<String> {
@@ -219,6 +224,63 @@ public struct UserPropertyConditionExpression: Sendable {
             default:
                 return nil
             }
+        }
+    }
+}
+
+/// The properties a sidebar's conditions run against, as WE's JavaScript sees them: each one an
+/// object with its `value` and `text` (label). Some authors write to `text` from a condition
+/// (`x.value ? x.text = x.text.replace('Disabled','Enabled') : …`) so a checkbox's label follows
+/// it; `texts` holds the labels after each evaluation. Conditions run in the order given, sharing
+/// the labels, as WE runs them down the sidebar.
+public final class UserPropertyConditionScope {
+    private let values: [String: String]
+    public private(set) var texts: [String: String]
+    private var context: JSContext?
+
+    public init(values: [String: String], texts: [String: String] = [:]) {
+        self.values = values
+        self.texts = texts
+    }
+
+    /// Whether the property with `expression` as its condition shows.
+    public func evaluate(_ expression: UserPropertyConditionExpression) -> Bool {
+        guard expression.isScript else { return expression.evaluate(values) }
+        // A condition is an expression; one that could loop would hang the sidebar, so it holds.
+        guard expression.source.range(of: #"\b(while|for|do|function)\b|=>"#, options: .regularExpression) == nil,
+              let context = scriptContext() else { return true }
+        let result = context.evaluateScript(expression.source)
+        guard let result, context.exception == nil else {
+            context.exception = nil
+            return true
+        }
+        for key in texts.keys {
+            if let text = context.objectForKeyedSubscript(key)?.objectForKeyedSubscript("text"), text.isString {
+                texts[key] = text.toString()
+            }
+        }
+        return result.toBool()
+    }
+
+    private func scriptContext() -> JSContext? {
+        if let context { return context }
+        guard let context = JSContext() else { return nil }
+        for key in Set(values.keys).union(texts.keys) {
+            let property = JSValue(newObjectIn: context)
+            property?.setObject(Self.scriptValue(values[key] ?? ""), forKeyedSubscript: "value")
+            property?.setObject(texts[key] ?? "", forKeyedSubscript: "text")
+            context.setObject(property, forKeyedSubscript: key as NSString)
+        }
+        self.context = context
+        return context
+    }
+
+    /// A sidebar value as WE hands it to the script: flags and numbers typed, the rest text.
+    private static func scriptValue(_ value: String) -> Any {
+        switch value.lowercased() {
+        case "true": return true
+        case "false": return false
+        default: return Double(value.trimmingCharacters(in: .whitespaces)) ?? value
         }
     }
 }
