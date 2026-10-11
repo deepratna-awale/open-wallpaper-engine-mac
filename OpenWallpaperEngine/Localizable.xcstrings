@@ -76430,6 +76430,100 @@
         }
       }
     },
+    "Make this version of the wallpaper the screen saver" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اجعل هذا الإصدار من الخلفية شاشة التوقف"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Version des Hintergrunds zum Bildschirmschoner machen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar esta versión del fondo como salvapantallas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faire de cette version du fond d’écran l’économiseur d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर के इस संस्करण को स्क्रीन सेवर बनाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa questa versione dello sfondo come salvaschermo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このバージョンの壁紙をスクリーンセーバーにする"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 버전의 배경화면을 화면 보호기로 사용"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ustaw tę wersję tapety jako wygaszacz ekranu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar esta versão do papel de parede como protetor de tela"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сделать эту версию обоев заставкой"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıdının bu sürümünü ekran koruyucu yap"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зробити цю версію шпалер заставкою"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将此版本的壁纸设为屏幕保护程序"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將此版本的桌布設為螢幕保護程式"
+          }
+        }
+      }
+    },
     "Make this video the screen saver" : {
       "localizations" : {
         "ar" : {
@@ -152149,6 +152243,100 @@
         }
       }
     },
+    "The screen saver is live" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شاشة التوقف حية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Bildschirmschoner ist live"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El salvapantallas es en vivo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’économiseur d’écran est en direct"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीन सेवर लाइव है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il salvaschermo è dal vivo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンセーバーはライブです"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 보호기가 실시간으로 그려집니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wygaszacz ekranu działa na żywo"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O protetor de tela é ao vivo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставка работает вживую"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran koruyucu canlı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставка працює наживо"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屏幕保护程序是实时的"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "螢幕保護程式是即時的"
+          }
+        }
+      }
+    },
     "The screen saver plays MP4 and MOV videos in H.264 or HEVC, and records WebM videos" : {
       "comment" : "Details panel: why a video wallpaper in another codec has no screen saver",
       "localizations" : {
@@ -156486,6 +156674,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此背景圖片在你信任後已變更。"
+          }
+        }
+      }
+    },
+    "This wallpaper is your screen saver." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هذه الخلفية هي شاشة التوقف لديك."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Hintergrund ist dein Bildschirmschoner."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este fondo es tu salvapantallas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce fond d’écran est votre économiseur d’écran."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह वॉलपेपर आपका स्क्रीन सेवर है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo sfondo è il tuo salvaschermo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この壁紙がスクリーンセーバーです。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 배경화면이 화면 보호기입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta tapeta jest Twoim wygaszaczem ekranu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este papel de parede é o seu protetor de tela."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эти обои — ваша заставка."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu duvar kâğıdı ekran koruyucunuz."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ці шпалери — ваша заставка."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此壁纸是你的屏幕保护程序。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此桌布是你的螢幕保護程式。"
           }
         }
       }
@@ -172281,6 +172563,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "播放影片或網頁背景圖片時，將其中一個畫面設為桌面圖片，讓 macOS 相應地為選單列著色。關閉後回復你自己的圖片。"
+          }
+        }
+      }
+    },
+    "While the screen saver runs, Open Wallpaper Engine draws this version of the wallpaper live: clocks, dates, media info and audio-reactive parts move as they do on the desktop, and its sound stays off." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أثناء تشغيل شاشة التوقف، يرسم Open Wallpaper Engine هذا الإصدار من الخلفية مباشرةً: تتحرك الساعات والتواريخ ومعلومات الوسائط والأجزاء المتفاعلة مع الصوت كما على سطح المكتب، ويبقى صوتها مغلقًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Während der Bildschirmschoner läuft, zeichnet Open Wallpaper Engine diese Version des Hintergrunds live: Uhren, Daten, Medieninfos und audioreaktive Teile bewegen sich wie auf dem Schreibtisch, und der Ton bleibt aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mientras el salvapantallas está activo, Open Wallpaper Engine dibuja esta versión del fondo en vivo: los relojes, las fechas, la información multimedia y las partes reactivas al audio se mueven como en el escritorio, y su sonido sigue desactivado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendant que l’économiseur d’écran fonctionne, Open Wallpaper Engine dessine cette version du fond d’écran en direct : les horloges, les dates, les infos multimédias et les parties réactives au son bougent comme sur le bureau, et son son reste coupé."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीन सेवर चलते समय, Open Wallpaper Engine वॉलपेपर के इस संस्करण को लाइव बनाता है: घड़ियाँ, तारीख़ें, मीडिया जानकारी और ऑडियो-रिएक्टिव हिस्से डेस्कटॉप की तरह चलते हैं, और इसकी आवाज़ बंद रहती है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mentre il salvaschermo è attivo, Open Wallpaper Engine disegna questa versione dello sfondo dal vivo: orologi, date, informazioni multimediali e parti reattive all’audio si muovono come sulla scrivania, e il suo audio resta spento."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンセーバーの実行中、Open Wallpaper Engine はこのバージョンの壁紙をライブで描画します。時計、日付、メディア情報、オーディオに反応する部分はデスクトップと同じように動き、サウンドはオフのままです。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 보호기가 실행되는 동안 Open Wallpaper Engine은 이 버전의 배경화면을 실시간으로 그립니다. 시계, 날짜, 미디어 정보, 오디오에 반응하는 부분이 데스크탑에서처럼 움직이며, 소리는 꺼진 상태로 유지됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gdy działa wygaszacz ekranu, Open Wallpaper Engine rysuje tę wersję tapety na żywo: zegary, daty, informacje o multimediach i elementy reagujące na dźwięk poruszają się jak na biurku, a jej dźwięk pozostaje wyłączony."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enquanto o protetor de tela está ativo, o Open Wallpaper Engine desenha esta versão do papel de parede ao vivo: relógios, datas, informações de mídia e partes que reagem ao áudio se movem como na mesa, e o som dele fica desligado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока работает заставка, Open Wallpaper Engine рисует эту версию обоев вживую: часы, даты, сведения о медиа и реагирующие на звук части движутся, как на рабочем столе, а звук остаётся выключенным."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran koruyucu çalışırken Open Wallpaper Engine duvar kâğıdının bu sürümünü canlı çizer: saatler, tarihler, medya bilgileri ve sese tepki veren bölümler masaüstündeki gibi hareket eder ve sesi kapalı kalır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поки працює заставка, Open Wallpaper Engine малює цю версію шпалер наживо: годинники, дати, відомості про медіа й частини, що реагують на звук, рухаються, як на робочому столі, а звук залишається вимкненим."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屏幕保护程序运行时，Open Wallpaper Engine 会实时绘制此版本的壁纸：时钟、日期、媒体信息和音频响应部分会像在桌面上一样变化，且声音保持关闭。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "螢幕保護程式執行時，Open Wallpaper Engine 會即時繪製此版本的桌布：時鐘、日期、媒體資訊和音訊回應部分會像在桌面上一樣變化，且聲音保持關閉。"
           }
         }
       }

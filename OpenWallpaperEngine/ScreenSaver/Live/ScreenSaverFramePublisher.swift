@@ -1,3 +1,4 @@
+import CoreImage
 import Foundation
 import IOSurface
 import Metal
@@ -186,6 +187,20 @@ final class ScreenSaverFramePublisher: @unchecked Sendable { // `lock` owns `rin
             self?.drawn(ring: id, slot: copy.slot, generation: copy.generation)
         }
         buffer.commit()
+    }
+
+    private static let imageContext = CIContext(options: [.cacheIntermediates: false])
+
+    /// Ring `id`'s newest frame as an image (the picked wallpaper's still), nil before the first.
+    /// Reads the surface on the CPU: call it off the main thread, once in a while.
+    func newestImage(ring id: Int) -> CGImage? {
+        let surface: IOSurface? = lock.withLock {
+            guard let ring = rings[id], let newest = ring.newest else { return nil }
+            return ring.surfaces[newest]
+        }
+        guard let surface else { return nil }
+        let image = CIImage(ioSurface: surface, options: [.colorSpace: CGColorSpace(name: CGColorSpace.sRGB)!])
+        return Self.imageContext.createCGImage(image, from: image.extent)
     }
 
     /// Wraps within the stamps' 16 bits, skipping 0.

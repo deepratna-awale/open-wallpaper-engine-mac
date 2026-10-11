@@ -1489,12 +1489,11 @@ private struct SceneInspectorContent: View {
             .help("Open the export settings and export: device, crop, output and properties")
         } else if let screenSaverModel {
             Button {
-                screenSaverModel.record()
+                screenSaverModel.setAsScreenSaver()
             } label: {
-                Label("Record", systemImage: "record.circle")
+                Label("Set as Screen Saver", systemImage: "display")
             }
-            .disabled(screenSaverModel.isRecording)
-            .help("Record a seamless loop of this version of the wallpaper and make it the screen saver")
+            .help("Make this version of the wallpaper the screen saver")
         } else if videoScreenSaver != nil || unavailableMode != nil {
             EmptyView()
         } else {

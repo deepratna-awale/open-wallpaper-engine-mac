@@ -37,9 +37,32 @@ final class ScreenSaverRecordingService: ObservableObject {
     /// The recording set as the screen saver, if any.
     var selection: ScreenSaverSettingsStore.Selection? { store.selection }
 
-    /// Whether `wallpaper`'s recording is the screen saver.
+    /// The wallpaper picked as the screen saver, drawn live, if any.
+    var livePick: ScreenSaverSettingsStore.LivePick? { store.livePick }
+
+    /// Where the picked wallpaper's still goes; nil in a copy that never installs the saver.
+    var stills: ScreenSaverStillPublisher?
+
+    /// Whether `wallpaper` is the screen saver: picked, or its video set.
     func isSelected(_ wallpaper: WEWallpaper) -> Bool {
-        selection?.wallpaperDirectory == wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false)
+        let folder = wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false)
+        return selection?.wallpaperDirectory == folder || livePick?.wallpaperDirectory == folder
+    }
+
+    /// Makes `wallpaper` the screen saver, drawn live with `values` (its user properties and
+    /// layer edits), which become the screen saver's own choices for it; turns the plugin on when
+    /// it is off. Nothing is recorded. Its preview is the still until the live draw keeps a frame.
+    func pick(_ wallpaper: WEWallpaper, values: [String: String]) {
+        let folder = wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false)
+        store.setValues(values, for: WallpaperSettingsIdentity.resolve(wallpaper, defaults: store.defaults))
+        let isNew = store.livePick?.wallpaperDirectory != folder
+        store.livePick = ScreenSaverSettingsStore.LivePick(wallpaperDirectory: folder, picked: Date())
+        store.selection = nil
+        if isNew { stills?.publishPreview(of: wallpaper) }
+        OWELog.info(.app, "Screen saver: \(wallpaper.wallpaperDirectory.lastPathComponent) is the screen saver, drawn live")
+        if !environment.isPluginEnabled() { environment.enablePlugin() }
+        plugin.update(enabled: environment.isPluginEnabled(), wallpaper: environment.desktopWallpaper())
+        objectWillChange.send()
     }
 
     /// The video of `wallpaper`'s recording, when it is the screen saver and the file exists.
@@ -53,6 +76,12 @@ final class ScreenSaverRecordingService: ObservableObject {
     /// hand it runs at user-initiated priority. `completion` gets whether it was set.
     func record(_ wallpaper: WEWallpaper, values: [String: String], background: Bool,
                 completion: @escaping @MainActor (Bool) -> Void = { _ in }) {
+        // A scene is drawn live now: it is picked, not recorded.
+        if !ScreenSaverVideoSource.isEligible(wallpaper) {
+            pick(wallpaper, values: values)
+            completion(true)
+            return
+        }
         guard !isRecording else {
             OWELog.info(.app, "Screen saver: a recording is already running; \(wallpaper.wallpaperDirectory.lastPathComponent) waits for the next")
             completion(false)
@@ -142,6 +171,10 @@ final class ScreenSaverRecordingService: ObservableObject {
     private func finish(_ wallpaper: WEWallpaper, fileName: String, size: SIMD2<Int>, started: Date, succeeded: Bool) {
         isRecording = false
         if succeeded {
+            if store.livePick != nil {
+                store.livePick = nil
+                stills?.clearPick()
+            }
             store.selection = ScreenSaverSettingsStore.Selection(
                 wallpaperDirectory: wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false),
                 fileName: fileName, width: size.x, height: size.y, recorded: started)
@@ -155,7 +188,8 @@ final class ScreenSaverRecordingService: ObservableObject {
     /// nothing is set as the screen saver, it can't be found, or a recording is running.
     @discardableResult
     func recordSelection(background: Bool, completion: @escaping @MainActor (Bool) -> Void = { _ in }) -> Bool {
-        guard !isRecording, let selection else { return false }
+        // A picked wallpaper is drawn live: nothing to record again.
+        guard !isRecording, store.livePick == nil, let selection else { return false }
         let folder = URL(filePath: selection.wallpaperDirectory, directoryHint: .isDirectory)
         guard let wallpaper = InstalledLibrary.wallpaper(at: folder, hiding: []) else {
             OWELog.error(.app, "Screen saver: \(folder.lastPathComponent), set as the screen saver, is no longer in the library")
@@ -174,8 +208,12 @@ final class ScreenSaverRecordingService: ObservableObject {
 
     /// Goes back to the plugin's loop of the desktop's wallpaper (its render replaces the recording).
     func stopUsingSelection() {
-        guard store.selection != nil else { return }
+        guard store.selection != nil || store.livePick != nil else { return }
         store.selection = nil
+        if store.livePick != nil {
+            store.livePick = nil
+            stills?.clearPick()
+        }
         OWELog.info(.app, "Screen saver: back to the desktop's wallpaper")
         plugin.update(enabled: environment.isPluginEnabled(), wallpaper: environment.desktopWallpaper())
         objectWillChange.send()

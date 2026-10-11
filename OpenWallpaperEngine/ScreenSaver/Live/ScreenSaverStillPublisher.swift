@@ -1,5 +1,7 @@
 import CoreGraphics
 import Foundation
+import ImageIO
+import UniformTypeIdentifiers
 
 /// Keeps the savers' still pictures (`ScreenSaverStills`) the lock screen's: each time a display's
 /// desktop picture is written (`DesktopPictureSync.onPictureWritten`), it is hard-linked into the
@@ -17,6 +19,65 @@ final class ScreenSaverStillPublisher {
 
     static var current: ScreenSaverStillPublisher {
         ScreenSaverStillPublisher(folder: ScreenSaverVideoStore.current.directory)
+    }
+
+    nonisolated static let pickFileName = "still-pick.jpg"
+
+    /// `image` is the picked wallpaper's picture (its preview when it is picked, then a frame of
+    /// its live draw): shown on every display while it is picked. Encoded off the main thread.
+    func publishPick(_ image: CGImage) {
+        let folder = folder
+        DispatchQueue.global(qos: .utility).async {
+            let staging = folder.appending(path: ".\(UUID().uuidString)-\(Self.pickFileName)", directoryHint: .notDirectory)
+            do {
+                try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                guard let destination = CGImageDestinationCreateWithURL(staging as CFURL, UTType.jpeg.identifier as CFString, 1, nil)
+                else { throw CocoaError(.fileWriteUnknown) }
+                CGImageDestinationAddImage(destination, image, [kCGImageDestinationLossyCompressionQuality: 0.9] as CFDictionary)
+                guard CGImageDestinationFinalize(destination),
+                      rename(staging.path(percentEncoded: false),
+                             folder.appending(path: Self.pickFileName).path(percentEncoded: false)) == 0
+                else { throw CocoaError(.fileWriteUnknown) }
+            } catch {
+                try? FileManager.default.removeItem(at: staging) // Optional: the failed attempt's leftover.
+                OWELog.error(.app, "Screen saver: can't keep the picked wallpaper's still: \(error)")
+                return
+            }
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated { self.list(pick: Self.pickFileName) }
+            }
+        }
+    }
+
+    /// Back to the desktop's stills.
+    func clearPick() {
+        list(pick: nil)
+        try? FileManager.default.removeItem(at: folder.appending(path: Self.pickFileName)) // Optional: may not exist.
+    }
+
+    /// The picked wallpaper's first picture: its preview's first frame.
+    func publishPreview(of wallpaper: WEWallpaper) {
+        guard let name = wallpaper.project.preview, !name.isEmpty else { return }
+        let preview = wallpaper.wallpaperDirectory.appending(path: name)
+        DispatchQueue.global(qos: .utility).async {
+            guard let source = CGImageSourceCreateWithURL(preview as CFURL, nil),
+                  let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated { self.publishPick(image) }
+            }
+        }
+    }
+
+    private func list(pick: String?) {
+        var stills = ScreenSaverStills.read(folder.appending(path: ScreenSaverStills.fileName)) ?? ScreenSaverStills()
+        guard stills.pick != pick else { return }
+        stills.pick = pick
+        do {
+            try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
+            try JSONEncoder().encode(stills).write(to: folder.appending(path: ScreenSaverStills.fileName), options: .atomic)
+        } catch {
+            OWELog.error(.app, "Screen saver: can't list the picked wallpaper's still: \(error)")
+        }
     }
 
     /// `picture` is what display `display` (its identity) shows now.

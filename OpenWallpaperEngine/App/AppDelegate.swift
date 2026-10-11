@@ -328,6 +328,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Stretched displays name their canvas to the scene views in their windows.
         stretchCanvasCancellable = wallpaperViewModel.$layoutResolution.map(\.canvases).removeDuplicates()
             .sink { [weak self] canvases in self?.applyStretchCanvases(canvases) }
+        migrateScreenSaverRecording()
         // The screen saver's loops follow the displays' wallpapers and layouts.
         screenSaver.observe(wallpaperViewModel)
         liveScreenSaver.onLaunchedSessionEnded = { [weak self] in
@@ -434,6 +435,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if ScreenSaverInstaller.current.mayInstall {
             let stills = ScreenSaverStillPublisher.current
             desktopPictures.sync.onPictureWritten = { url, display in stills.publish(url, display: display) }
+            screenSaverRecordings.stills = stills
+            liveScreenSaver.stills = stills
         }
 
         // 显示桌面壁纸
@@ -512,6 +515,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
     }
     
+    /// A scene's recording set as the screen saver by an earlier version becomes the live pick of
+    /// that wallpaper, with its picture as the still; one of a wallpaper no longer in the library
+    /// goes, so the screen saver follows the desktop again. A video's own file stays as it is.
+    private func migrateScreenSaverRecording() {
+        let store = screenSaverRecordings.store
+        guard let selection = store.selection else { return }
+        let folder = URL(filePath: selection.wallpaperDirectory, directoryHint: .isDirectory)
+        guard let wallpaper = InstalledLibrary.wallpaper(at: folder, hiding: []) else {
+            store.selection = nil
+            OWELog.info(.app, "Screen saver: \(folder.lastPathComponent), set as the screen saver, is no longer in the library")
+            return
+        }
+        guard store.migrateRecordedSelection(isVideo: { _ in ScreenSaverVideoSource.isEligible(wallpaper) }) else { return }
+        OWELog.info(.app, "Screen saver: \(folder.lastPathComponent)'s recording is now drawn live")
+        if ScreenSaverInstaller.current.mayInstall { ScreenSaverStillPublisher.current.publishPreview(of: wallpaper) }
+    }
+
     private lazy var identityNotice = AppIdentityNotice()
     private var staleBundleRefresher: StaleBundleRefresher?
     private var staleBundleNotice: SafeRestartNotice?

@@ -80,16 +80,12 @@ final class ScreenSaverEditorModel: ObservableObject {
     /// The recording to preview, when there is one.
     var hasRecording: Bool { recordings.recordedVideo(of: wallpaper) != nil }
 
-    /// Records this version and sets it as the screen saver.
-    func record() {
-        guard !recordings.isRecording else { return }
+    /// Makes this version the screen saver, drawn live with the mode's values.
+    func setAsScreenSaver() {
         persist()
         stopPreview()
         errorMessage = nil
-        recordings.record(wallpaper, values: session.values, background: false) { [weak self] succeeded in
-            guard !succeeded else { return }
-            self?.errorMessage = String(localized: "The screen saver couldn't be recorded. The logs say why.")
-        }
+        recordings.pick(wallpaper, values: session.values)
     }
 
     func stopUsingAsScreenSaver() {

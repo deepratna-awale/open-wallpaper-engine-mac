@@ -40,19 +40,15 @@ screen saver from a scene wallpaper's own version:
 
 - It runs a private copy of the wallpaper. Turning layers on or off, adjusting them and changing
   user properties there never touches your desktop, its properties or the Wallpaper Editor's
-  edits. These choices are kept for each wallpaper as its screen saver's own, so the next
-  recording reuses them.
-- A note at the top reminds you the screen saver is a video: hide layers that show the date, the
-  time or other live data, or use the daily re-recording.
-- **Record and Set as Screen Saver** records the loop and makes it the screen saver, turning the
-  plugin on if it is off. The previous video is replaced at once, never left missing or
-  half-written. **Preview Recording** plays it beside the live preview. While a recording is set,
-  the desktop's wallpaper isn't recorded; **Stop Using as Screen Saver** goes back to it.
-- **Re-record Every Day at** a time you choose (off by default): while Open Wallpaper Engine is
-  running, the screen saver is recorded again each day with that day's date and time, at
-  background priority, waiting while the battery is below 30 %. A time missed while the Mac slept
-  or the app was quit is recorded once at the next wake or launch. The tab shows when it was last
-  recorded and when it will be next.
+  edits. These choices are kept for each wallpaper as its screen saver's own, and the live
+  screen saver draws it with them.
+- **Set as Screen Saver** makes this version of the wallpaper the screen saver, turning the
+  plugin on if it is off. Nothing is recorded: while the screen saver runs, the app draws it live
+  on every display with the tab's choices (its layers and user properties), so clocks, dates and
+  audio-reactive parts move. Its preview is the screen saver's still until a live draw keeps a
+  frame of it. **Stop Using as Screen Saver** goes back to the desktop's wallpaper.
+- When the app starts, a recording an earlier version set as the screen saver becomes this
+  live pick of its wallpaper.
 
 A video wallpaper (MP4, M4V or MOV) opens Scene Edit / Export on this tab too, with the
 video playing: its screen saver is the video itself, so there is nothing to record or adjust.

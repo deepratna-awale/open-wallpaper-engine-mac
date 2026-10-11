@@ -18,6 +18,8 @@ import Combine
 /// - While a recording from Scene Edit / Export's Screen Saver mode is set as the screen saver
 ///   (`ScreenSaverSettingsStore.selection`), or one is being made (`beginRecording`), the saver
 ///   plays that and nothing is rendered for the desktop's wallpaper (`ScreenSaverRecordingService`).
+/// - While a wallpaper is picked as the screen saver (`ScreenSaverSettingsStore.livePick`), it is
+///   drawn live (`liveLoops`), nothing is rendered, and the manifest lists no video.
 @MainActor
 final class ScreenSaverPlugin: ObservableObject {
     /// What the Details pane says about a wallpaper's loop video.
@@ -72,7 +74,7 @@ final class ScreenSaverPlugin: ObservableObject {
     private let store: ScreenSaverVideoStore
     private let installer: ScreenSaverInstaller
     private let runner: Runner
-    private let settingsStore: ScreenSaverSettingsStore
+    let settingsStore: ScreenSaverSettingsStore
     /// Recordings being made (`beginRecording`): nothing else is rendered or listed meanwhile.
     private var recordings = 0
     @Published private(set) var isEnabled = false
@@ -199,6 +201,16 @@ final class ScreenSaverPlugin: ObservableObject {
                 installer.install()
             }
         }
+        // A wallpaper picked as the screen saver is drawn live: no video, so no other wallpaper's
+        // loop plays before its first frames.
+        if recordings == 0, settingsStore.livePick != nil {
+            Self.fileQueue.async {
+                do { try store.writeManifest(ScreenSaverManifest()) } catch {
+                    OWELog.error(.app, "Screen saver: can't clear the videos' manifest: \(error)")
+                }
+            }
+            return
+        }
         // A recording set as the screen saver (or being made) plays instead; its manifest stays.
         guard recordings == 0, settingsStore.selection == nil, viewModel != nil || wallpaper != nil else { return }
         let (plan, wallpapers) = currentPlan(fallback: wallpaper)
@@ -225,7 +237,7 @@ final class ScreenSaverPlugin: ObservableObject {
     }
 
     private func replanIfChanged() {
-        guard isEnabled, recordings == 0, settingsStore.selection == nil else { return }
+        guard isEnabled, recordings == 0, settingsStore.selection == nil, settingsStore.livePick == nil else { return }
         guard currentPlan(fallback: nil).plan != plan else { return }
         update(enabled: true, wallpaper: nil)
     }
@@ -352,7 +364,16 @@ final class ScreenSaverPlugin: ObservableObject {
 
     /// Whether the saver follows the desktop's wallpapers: on, with no Screen Saver mode recording
     /// set or being made (the live screen saver draws only then, `ScreenSaverLiveController`).
-    var followsDesktop: Bool { isEnabled && recordings == 0 && settingsStore.selection == nil }
+    var followsDesktop: Bool {
+        isEnabled && recordings == 0 && settingsStore.selection == nil && settingsStore.livePick == nil
+    }
+
+    /// The wallpaper picked as the screen saver (Scene Edit / Export's Screen Saver mode, Set as
+    /// Screen Saver), while the plugin is on and it is still in the library.
+    var livePick: WEWallpaper? {
+        guard isEnabled, recordings == 0, let pick = settingsStore.livePick else { return nil }
+        return InstalledLibrary.wallpaper(at: URL(filePath: pick.wallpaperDirectory, directoryHint: .isDirectory), hiding: [])
+    }
 
     /// Drops the current plan: its jobs stop and its late results are ignored.
     private func reset() {

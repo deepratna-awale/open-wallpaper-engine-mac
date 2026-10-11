@@ -1,3 +1,4 @@
+import CoreGraphics
 import IOSurface
 import Metal
 import XCTest
@@ -180,6 +181,34 @@ final class ScreenSaverFramePublisherTests: XCTestCase {
         stills.stills["A"] = "still-A.jpg"
         XCTAssertEqual(stills.file(forDisplay: "A"), "still-A.jpg")
         XCTAssertEqual(ScreenSaverStills.fileName(display: "37D8832A-2D66/x", fileExtension: "heic"), "still-37D8832A-2D66_x.heic")
+        stills.pick = "still-pick.jpg"
+        XCTAssertEqual(stills.file(forDisplay: "A"), "still-pick.jpg", "the picked wallpaper's on every display")
+        let old = try JSONDecoder().decode(ScreenSaverStills.self, from: Data(#"{"revision":1,"stills":{"A":"a.heic"}}"#.utf8))
+        XCTAssertNil(old.pick, "stills written before the pick read as following the desktop")
+    }
+
+    @MainActor
+    func testThePickedWallpapersStillIsKeptAndDropped() throws {
+        let shared = folder.appending(path: "shared", directoryHint: .isDirectory)
+        let stills = ScreenSaverStillPublisher(folder: shared)
+        let context = try XCTUnwrap(CGContext(data: nil, width: 4, height: 4, bitsPerComponent: 8, bytesPerRow: 16,
+                                              space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                              bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue))
+        let image = try XCTUnwrap(context.makeImage())
+        let listedURL = shared.appending(path: ScreenSaverStills.fileName)
+        stills.publishPick(image)
+        let kept = expectation(description: "kept")
+        func poll() {
+            if ScreenSaverStills.read(listedURL)?.pick != nil { kept.fulfill() } else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { MainActor.assumeIsolated { poll() } }
+            }
+        }
+        poll()
+        wait(for: [kept], timeout: 5)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: shared.appending(path: ScreenSaverStillPublisher.pickFileName).path(percentEncoded: false)))
+        stills.clearPick()
+        XCTAssertNil(ScreenSaverStills.read(listedURL)?.pick)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: shared.appending(path: ScreenSaverStillPublisher.pickFileName).path(percentEncoded: false)))
     }
 
     @MainActor

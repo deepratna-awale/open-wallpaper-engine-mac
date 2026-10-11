@@ -12,10 +12,15 @@ struct ScreenSaverStills: Codable, Equatable {
     var revision = ScreenSaverStills.revision
     /// The picture's file name in the shared folder, by display identity.
     var stills: [String: String] = [:]
+    /// The picture of the wallpaper picked as the screen saver (Scene Edit / Export's Screen Saver
+    /// mode), shown on every display while it is picked; nil follows the desktop's.
+    var pick: String?
 
-    /// The file for the display `display` (its identity; nil when unknown): its own, else any
-    /// display's, so a display the app hasn't pictured yet shows the wallpaper rather than black.
+    /// The file for the display `display` (its identity; nil when unknown): the picked wallpaper's,
+    /// else its own, else any display's, so a display the app hasn't pictured yet shows the
+    /// wallpaper rather than black.
     func file(forDisplay display: String?) -> String? {
+        if let pick { return pick }
         if let display, let file = stills[display] { return file }
         return stills.keys.sorted().first.flatMap { stills[$0] }
     }

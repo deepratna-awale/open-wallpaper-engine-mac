@@ -46,6 +46,10 @@ final class ScreenSaverLiveController {
     private var countsSince: TimeInterval = 0
     /// Launched for a saver (`launchedForScreenSaver`), heard once the plugin is observed.
     private var launchedForSaver = false
+    /// The picked wallpaper's still, kept from its live draw (`ScreenSaverStillPublisher`).
+    var stills: ScreenSaverStillPublisher?
+    /// How long the picked wallpaper draws before a frame is kept as its still.
+    static let pickStillDelay: TimeInterval = 3
     /// The screen saver session this app was launched for ended.
     var onLaunchedSessionEnded: (() -> Void)?
     private var frameRate = 0
@@ -204,6 +208,7 @@ final class ScreenSaverLiveController {
         _ = publisher.takeCounts()
         for (ring, loop) in loops.enumerated() {
             let screen = loop.screenId.flatMap { screens[$0] }
+            if loop.isPick { keepPickStill(ring: ring) }
             if case .page(let kind) = loop.kind {
                 let sharing = loop.screenId.flatMap { environment.pageSharing($0, loop.wallpaper) }
                 if let page = ScreenSaverLiveWeb(kind: kind, wallpaper: loop.wallpaper, propertyScope: loop.propertyScope,
@@ -244,6 +249,20 @@ final class ScreenSaverLiveController {
         for (ring, counts) in publisher.takeCounts().sorted(by: { $0.key < $1.key }) {
             OWELog.info(.app, String(format: "Live screen saver: ring %d ticks %.1f/s drawn %.1f/s (asked %d) over %.0f s",
                                      ring, Double(counts.ticks) / seconds, Double(counts.drawn) / seconds, frameRate, seconds))
+        }
+    }
+
+    /// Keeps a frame of the picked wallpaper's live draw as its still, once it has drawn a while:
+    /// the next screen saver shows it until the live frames come.
+    private func keepPickStill(ring: Int) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.pickStillDelay) { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self, self.state.isDrawing, let publisher = self.publisher, let stills = self.stills else { return }
+                DispatchQueue.global(qos: .utility).async {
+                    guard let image = publisher.newestImage(ring: ring) else { return }
+                    DispatchQueue.main.async { MainActor.assumeIsolated { stills.publishPick(image) } }
+                }
+            }
         }
     }
 }

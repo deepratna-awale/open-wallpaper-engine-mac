@@ -3,8 +3,8 @@ import XCTest
 
 /// Scene Edit / Export's Screen Saver mode: its isolated session never reaches the desktop,
 /// its layer and property choices are saved per wallpaper apart from the wallpaper's own and
-/// reused, a recording is installed and set as the screen saver (which the plugin then keeps),
-/// and the installed video is replaced at once or not at all.
+/// reused, Set as Screen Saver picks the scene to be drawn live with them, an earlier recording
+/// migrates to that pick, and an installed video is replaced at once or not at all.
 final class ScreenSaverEditorTests: XCTestCase {
     private var defaults: UserDefaults!
     private var suite: String!
@@ -137,7 +137,8 @@ final class ScreenSaverEditorTests: XCTestCase {
         XCTAssertEqual(WallpaperServices.shared.userProperties(wallpaper: sharedKey), shared)
         XCTAssertEqual(WallpaperServices.shared.userProperties(wallpaper: session.runtimeKey)[visibility], "false")
         XCTAssertNil(session.instances.instance(for: WallpaperInstanceKey(wallpaper)))
-        XCTAssertNil(store.selection, "nothing is the screen saver until a recording is made")
+        XCTAssertNil(store.selection, "nothing is the screen saver until it is set")
+        XCTAssertNil(store.livePick)
         XCTAssertTrue(runs.targets.isEmpty, "editing renders nothing")
 
         model.close()
@@ -200,54 +201,80 @@ final class ScreenSaverEditorTests: XCTestCase {
 
     // MARK: Recording
 
-    /// Record and Set as Screen Saver: the helper records the session's values with the clock
-    /// layers left to the user's choices, the video is installed under a new name, and the
-    /// selection and the choices are saved; the plugin then renders nothing for the desktop.
+    /// Set as Screen Saver: the scene is picked, not recorded. The pick and the choices are saved,
+    /// nothing renders, and the plugin lists no video, so the saver shows the pick's still and its
+    /// live frames. Turning the plugin off keeps the pick (there is no video to remove).
     @MainActor
-    func testRecordingIsInstalledAndSetAsTheScreenSaver() throws {
+    func testSettingASceneAsTheScreenSaverPicksItLive() throws {
         let wallpaper = try wallpaper()
         let store = ScreenSaverSettingsStore(defaults: defaults)
         let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
         let pluginRuns = Runs()
         let plugin = makePlugin(store, videos: videos, runs: pluginRuns)
+        plugin.update(enabled: true, wallpaper: nil)
         let runs = Runs()
         let service = makeService(store, plugin: plugin, videos: videos, runner: Self.runner(runs, bytes: "loop-1"))
         let values = ["speed": "0.7", sceneObjectVisibilityKey(objectID: 2): "false"]
 
-        let done = expectation(description: "recorded")
-        service.record(wallpaper, values: values, background: false) { succeeded in
-            XCTAssertTrue(succeeded)
-            done.fulfill()
-        }
-        XCTAssertTrue(service.isRecording)
-        wait(for: [done], timeout: 10)
-
-        let target = try XCTUnwrap(runs.targets.first)
-        XCTAssertTrue(target.isRecording)
-        XCTAssertEqual(target.properties, values)
-        XCTAssertEqual(target.pixelSize, SIMD2(3840, 2160), "the display's pixels")
-        let selection = try XCTUnwrap(store.selection)
-        XCTAssertEqual(selection.fileName, target.fileName)
-        XCTAssertTrue(selection.fileName.contains("-rec"))
+        var succeeded: Bool?
+        service.record(wallpaper, values: values, background: false) { succeeded = $0 }
+        XCTAssertEqual(succeeded, true, "at once: nothing is recorded")
+        XCTAssertFalse(service.isRecording)
+        XCTAssertTrue(runs.targets.isEmpty)
+        let pick = try XCTUnwrap(store.livePick)
+        XCTAssertEqual(pick.wallpaperDirectory, wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false))
+        XCTAssertNil(store.selection)
         XCTAssertTrue(service.isSelected(wallpaper))
         XCTAssertEqual(store.values(for: WallpaperSettingsIdentity.resolve(wallpaper, defaults: defaults)), values)
-        let manifest = try JSONDecoder().decode(ScreenSaverManifest.self, from: Data(contentsOf: videos.manifestURL))
-        XCTAssertEqual(manifest.videos.map(\.file), [selection.fileName])
-        XCTAssertEqual(service.recordedVideo(of: wallpaper), videos.url(fileName: selection.fileName))
-        XCTAssertFalse(service.isRecording)
+        XCTAssertFalse(plugin.followsDesktop)
+        XCTAssertEqual(plugin.livePick?.wallpaperDirectory.standardizedFileURL, wallpaper.wallpaperDirectory.standardizedFileURL)
 
-        // The plugin keeps the recording: showing a wallpaper renders nothing and keeps the manifest.
-        plugin.update(enabled: true, wallpaper: wallpaper)
-        XCTAssertTrue(plugin.statuses.isEmpty)
         let settled = expectation(description: "file queue")
         DispatchQueue.global().asyncAfter(deadline: .now() + 0.3) { settled.fulfill() }
         wait(for: [settled], timeout: 2)
         XCTAssertTrue(pluginRuns.targets.isEmpty)
-        XCTAssertEqual(try JSONDecoder().decode(ScreenSaverManifest.self, from: Data(contentsOf: videos.manifestURL)), manifest)
+        XCTAssertEqual(try JSONDecoder().decode(ScreenSaverManifest.self, from: Data(contentsOf: videos.manifestURL)).videos, [])
 
-        // Turning the plugin off removes the videos, and the recording stops being the screen saver.
         plugin.update(enabled: false, wallpaper: nil)
+        XCTAssertNotNil(store.livePick)
+        service.stopUsingSelection()
+        XCTAssertNil(store.livePick)
+        XCTAssertFalse(service.isSelected(wallpaper))
+    }
+
+    /// A scene's recording set as the screen saver by an earlier version becomes the live pick of
+    /// its wallpaper; a video's own file stays the selection.
+    func testARecordedSelectionMigratesToTheLivePick() throws {
+        let store = ScreenSaverSettingsStore(defaults: defaults)
+        let recorded = Date(timeIntervalSince1970: 1_790_000_000)
+        let selection = ScreenSaverSettingsStore.Selection(wallpaperDirectory: "/w/3810943704", fileName: "a-rec1.mov",
+                                                           width: 3840, height: 2160, recorded: recorded)
+        store.selection = selection
+        XCTAssertFalse(store.migrateRecordedSelection(isVideo: { _ in true }))
+        XCTAssertEqual(store.selection, selection, "a video's file stays")
+        XCTAssertNil(store.livePick)
+
+        XCTAssertTrue(store.migrateRecordedSelection(isVideo: { _ in false }))
         XCTAssertNil(store.selection)
+        XCTAssertEqual(store.livePick, ScreenSaverSettingsStore.LivePick(wallpaperDirectory: "/w/3810943704", picked: recorded))
+        XCTAssertFalse(store.migrateRecordedSelection(isVideo: { _ in false }), "once")
+    }
+
+    /// The pick is drawn with the screen saver's own values (properties and layer edits), put in
+    /// its isolated store; the wallpaper's own stay as they are.
+    @MainActor
+    func testThePickIsDrawnWithTheScreenSaversOwnValues() throws {
+        let wallpaper = try wallpaper()
+        let store = ScreenSaverSettingsStore(defaults: defaults)
+        save(["speed": "0.3"], .shared, of: wallpaper)
+        ScreenSaverPlugin.publishPickValues(for: wallpaper, store: store)
+        XCTAssertEqual(stored(ScreenSaverPlugin.pickScope, of: wallpaper), ["speed": "0.3"], "the wallpaper's own until the screen saver has its own")
+
+        let own = ["speed": "0.9", sceneObjectVisibilityKey(objectID: 4): "false"]
+        store.setValues(own, for: WallpaperSettingsIdentity.resolve(wallpaper, defaults: defaults))
+        ScreenSaverPlugin.publishPickValues(for: wallpaper, store: store)
+        XCTAssertEqual(stored(ScreenSaverPlugin.pickScope, of: wallpaper), own)
+        XCTAssertEqual(stored(.shared, of: wallpaper), ["speed": "0.3"])
     }
 
     // MARK: Atomic replace

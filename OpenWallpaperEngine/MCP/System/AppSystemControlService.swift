@@ -43,6 +43,12 @@ final class AppSystemControlService: SystemControlService {
     }
 
     private var selection: SystemScreenSaverSelection? {
+        // A picked wallpaper is drawn live at each display's size: no recording date or size.
+        if let pick = recordings.livePick {
+            let folder = URL(filePath: pick.wallpaperDirectory, directoryHint: .isDirectory)
+            return SystemScreenSaverSelection(wallpaper: InstalledLibrary.wallpaper(at: folder, hiding: []).map { model.control($0) },
+                                              folder: pick.wallpaperDirectory, recorded: pick.picked, width: 0, height: 0)
+        }
         guard let selection = recordings.selection else { return nil }
         let folder = URL(filePath: selection.wallpaperDirectory, directoryHint: .isDirectory)
         return SystemScreenSaverSelection(wallpaper: InstalledLibrary.wallpaper(at: folder, hiding: []).map { model.control($0) },

@@ -8,12 +8,16 @@ import Foundation
 ///   saver's own, apart from the wallpaper's: the desktop never reads them, and editing the
 ///   wallpaper doesn't change them. Every recording of that wallpaper, by hand or on the daily
 ///   schedule, uses them.
-/// - **The selection** (`ScreenSaverSelection`): the recording set as the screen saver, while one
-///   is. The screen saver plugin then plays it instead of making a loop of the desktop's wallpaper.
+/// - **The live pick** (`ScreenSaverLivePick`): the wallpaper set as the screen saver, which the
+///   live screen saver draws with these values instead of the desktop's wallpapers.
+/// - **The selection** (`ScreenSaverSelection`): a video wallpaper's own file set as the screen
+///   saver, which the saver plays. Earlier versions also kept a scene's recording here;
+///   `migrateRecordedSelection` turns that into the live pick of its wallpaper.
 /// - **The daily schedule** (`ScreenSaverSchedule`).
 struct ScreenSaverSettingsStore {
     static let valuesPrefix = "ScreenSaverValues."
     static let selectionKey = "ScreenSaverSelection"
+    static let livePickKey = "ScreenSaverLivePick"
     static let scheduleKey = "ScreenSaverSchedule"
 
     /// The recording set as the screen saver.
@@ -26,6 +30,14 @@ struct ScreenSaverSettingsStore {
         var height: Int
         /// When it was recorded.
         var recorded: Date
+    }
+
+    /// The wallpaper set as the screen saver, drawn live.
+    struct LivePick: Codable, Equatable, Sendable {
+        /// The wallpaper's folder.
+        var wallpaperDirectory: String
+        /// When it was picked.
+        var picked: Date
     }
 
     let defaults: UserDefaults
@@ -51,6 +63,24 @@ struct ScreenSaverSettingsStore {
     var selection: Selection? {
         get { decode(Selection.self, forKey: Self.selectionKey) }
         nonmutating set { encode(newValue, forKey: Self.selectionKey) }
+    }
+
+    var livePick: LivePick? {
+        get { decode(LivePick.self, forKey: Self.livePickKey) }
+        nonmutating set { encode(newValue, forKey: Self.livePickKey) }
+    }
+
+    /// A scene's recording set as the screen saver (earlier versions) becomes the live pick of its
+    /// wallpaper; a video's own file (`isVideo` of its folder) stays the selection. Returns whether
+    /// it moved.
+    @discardableResult
+    func migrateRecordedSelection(isVideo: (URL) -> Bool) -> Bool {
+        guard let selection else { return false }
+        let folder = URL(filePath: selection.wallpaperDirectory, directoryHint: .isDirectory)
+        guard !isVideo(folder) else { return false }
+        livePick = LivePick(wallpaperDirectory: selection.wallpaperDirectory, picked: selection.recorded)
+        self.selection = nil
+        return true
     }
 
     var schedule: ScreenSaverSchedule {
