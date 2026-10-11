@@ -1,0 +1,9 @@
+3159348391 still 4 triggered at 4.003 s frame 814
+3159348391 still 4.5 triggered at 4.504 s frame 826
+3159348391 still 5 triggered at 5.004 s frame 836
+3159348391 still 12 triggered at 12.005 s frame 1011
+3159348391 still 12.5 triggered at 12.502 s frame 1023
+3159348391 still 13 triggered at 13.000 s frame 1033
+3159348391 still 20 triggered at 20.003 s frame 1207
+3159348391 still 20.5 triggered at 20.505 s frame 1219
+3159348391 still 21 triggered at 21.002 s frame 1231

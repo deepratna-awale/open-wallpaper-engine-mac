@@ -1,4 +1,4 @@
-# Runs inside qrenderdoc (--python). job_timed.json {ident, we, out, monitor, shots:[{project, tag, stills:[s...]}]}:
+# Runs inside qrenderdoc (--python). job_timed.json {ident, we, out, monitor, shots:[{project, file?, tag, stills:[s...]}]}:
 # for each project opens it via wallpaper64 -control, then triggers one-frame captures as close as possible to each
 # still time (seconds after the open command), and saves each frame's swapchain as <out>/<tag>_t<still>.png.
 # The actual trigger time is logged (capture latency is a few hundred ms). Works with the screen covered or locked.
@@ -17,7 +17,7 @@ try:
     for s in JOB['shots']:
         subprocess.call([JOB['we'] + r'\wallpaper64.exe', '-control', 'openWallpaper', '-file', JOB['we'] + r'\projects\defaultprojects\retro\project.json', '-monitor', str(JOB['monitor'])])
         time.sleep(3)
-        subprocess.call([JOB['we'] + r'\wallpaper64.exe', '-control', 'openWallpaper', '-file', JOB['we'] + r'\projects\myprojects\%s\project.json' % s['project'], '-monitor', str(JOB['monitor'])])
+        subprocess.call([JOB['we'] + r'\wallpaper64.exe', '-control', 'openWallpaper', '-file', s.get('file') or JOB['we'] + r'\projects\myprojects\%s\project.json' % s['project'], '-monitor', str(JOB['monitor'])])
         t0 = time.time()
         for st in s['stills']:
             while time.time() - t0 < st: time.sleep(0.005)
