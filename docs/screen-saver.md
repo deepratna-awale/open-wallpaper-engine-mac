@@ -65,6 +65,62 @@ With several displays, Display Settings' **Screen saver layout** is **Same as wa
 displays' layout and groups) by default, or a loop per display, one stretched across the
 displays, or one cloned. See [`display-layouts.md`](display-layouts.md).
 
+## Live screen saver (in progress)
+
+Development builds draw the screen saver live instead of playing the recording; release builds
+keep the recording until this has been tried on real screen saver hosts (Phase 0 below).
+
+- While the screen saver runs and an Open Wallpaper Engine saver is showing, the app draws each
+  display's scene wallpaper as the screen saver's layout plans it (per display, cloned or
+  stretched), with the screen saver's own settings: scripts see `engine.isScreensaver()` true, the
+  clock layers are drawn and live, audio-reactive parts follow what the Mac plays, and the sound
+  stays off. The saver shows those frames.
+- It draws only then: it stops when the screen saver stops (or the Mac is unlocked), and another
+  screen saver or the System Settings preview never makes it draw.
+- The saver plays the recorded loop whenever the app isn't drawing: the app isn't running, the
+  display shows a web page or a video wallpaper (a video plays its own file), or the first frames
+  haven't arrived yet. A Screen Saver mode recording set as the screen saver always plays as
+  recorded.
+- After the screen saver stops the lock screen keeps its last frame.
+
+Two savers show the frames: the screen saver in `~/Library/Screen Savers` (macOS 14 and later),
+and a screen saver extension in macOS's newer format, inside the app, which is built only for
+testing so far (macOS 14 and later; it needs the app's broker, below).
+
+### Testing it (Phase 0)
+
+`Scripts/build-saver-lab.sh <out>` builds, without installing or registering anything:
+
+- `<out>/OWE Live Lab.saver`: the screen saver, with its own bundle id
+  (`app.openwallpaperengine.saver.lab`), name and class, so it sits beside the installed one;
+- `<out>/Open Wallpaper Engine.app`: a development build of the app with the extension
+  (`Contents/PlugIns/OpenWallpaperEngineSaverExtension.appex`, listed as *OWE Live Lab
+  (extension)*) and the broker (`Contents/Helpers/owe-saver-broker`);
+- `<out>/app.openwallpaperengine.saver-broker.plist`: the broker's launch agent.
+
+Both lab savers log under the subsystem `app.openwallpaper.engine.saverlab` (views, lifecycle
+notifications, surfaces found, the XPC connection, frames shown, fallbacks, and every 10 s the
+process's CPU and GPU time, parked or not); the app logs `Live screen saver: …` lines.
+
+1. Note which screen saver is selected (System Settings › Wallpaper › Screen Saver; Screen Saver
+   on macOS 14 and 15), and quit Open Wallpaper Engine.
+2. For the extension only: `launchctl bootstrap gui/$(id -u) <out>/app.openwallpaperengine.saver-broker.plist`
+   and `pluginkit -a "<out>/Open Wallpaper Engine.app/Contents/PlugIns/OpenWallpaperEngineSaverExtension.appex"`.
+3. `open "<out>/Open Wallpaper Engine.app"` (Settings › Plugins › Screen Saver on). Like any
+   build of the app, it installs its own Open Wallpaper Engine screen saver; your usual app puts
+   its own back when it starts.
+4. For the legacy saver: `cp -R "<out>/OWE Live Lab.saver" ~/Library/Screen\ Savers/`.
+5. In a Terminal: `/usr/bin/log stream --level debug --predicate 'subsystem == "app.openwallpaper.engine.saverlab" OR (subsystem == "app.openwallpaperengine" AND eventMessage CONTAINS "Live screen saver")'`.
+6. Select *OWE Live Lab* (or *OWE Live Lab (extension)*), click Preview, wait a minute and move
+   the mouse. Then let the screen saver start on its own (the idle time, or a Hot Corner) and,
+   where the Mac asks for the password after the screen saver, check that the lock screen keeps
+   the last frame before unlocking. Leave the Mac at the desktop for a minute (the cost lines of
+   hidden hosts).
+7. Put it back: select the screen saver from step 1; `rm -rf ~/Library/Screen\ Savers/OWE\ Live\ Lab.saver`;
+   for the extension `pluginkit -r "<out>/Open Wallpaper Engine.app/Contents/PlugIns/OpenWallpaperEngineSaverExtension.appex"`
+   and `launchctl bootout gui/$(id -u)/app.openwallpaperengine.saver-broker`; quit the lab app
+   and start your usual one.
+
 ## Lock screen picture
 
 Settings › General › **Show Wallpaper on Lock Screen** (on by default) sets each display's desktop
