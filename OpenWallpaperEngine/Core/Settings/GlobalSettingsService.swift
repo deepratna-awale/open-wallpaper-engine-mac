@@ -46,6 +46,7 @@ class GlobalSettingsViewModel: ObservableObject {
     var didCurrentWallpaperChangeCancellable: Cancellable?
     var didAddToLoginItemCancellable: Cancellable?
     var didChangeScreenSaverCancellable: Cancellable?
+    var didChangeAppPresenceCancellable: Cancellable?
     
     /// `followsLaunch`: at launch, the settings that act on the system (launch at login, the menu
     /// bar tint and lock-screen pictures, the screen saver) start following the app's wallpaper.
@@ -106,6 +107,7 @@ class GlobalSettingsViewModel: ObservableObject {
         didCurrentWallpaperChangeCancellable?.cancel()
         didAddToLoginItemCancellable?.cancel()
         didChangeScreenSaverCancellable?.cancel()
+        didChangeAppPresenceCancellable?.cancel()
     }
     
     func didFinishLaunchingNotification() {
@@ -138,8 +140,17 @@ class GlobalSettingsViewModel: ObservableObject {
                                                           wallpaper: AppDelegate.shared.wallpaperViewModel.currentWallpaper)
                 }
             }
-            
-        
+
+        self.didChangeAppPresenceCancellable =
+        self.$settings
+            .map { [$0.showInDock, $0.showInMenuBar] }
+            .removeDuplicates()
+            .dropFirst()
+            .sink { _ in
+                // `$settings` publishes before the property changes.
+                DispatchQueue.main.async { AppDelegate.shared.applyAppPresence() }
+            }
+
         self.validate()
     }
     

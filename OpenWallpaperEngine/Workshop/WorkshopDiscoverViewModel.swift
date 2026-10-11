@@ -66,6 +66,13 @@ final class WorkshopDiscoverViewModel: ObservableObject {
         sections.filter { !row($0).isEmptyAfterLoading }
     }
 
+    /// The cards Discover shows: the list See More opened, else every row of the home, in order.
+    var shownItems: [WorkshopItem] {
+        let lists = openSection.map { [row($0).items] } ?? visibleSections.map { row($0).items }
+        var seen = Set<String>()
+        return lists.joined().filter { seen.insert($0.id).inserted }
+    }
+
     /// Loads the section's first page unless it has one.
     func loadIfNeeded(_ section: WorkshopDiscoverSection) async {
         let current = row(section)
