@@ -113,7 +113,7 @@ struct InstalledFolderMenu: View {
     }
 
     /// Icons per palette row in Change Icon.
-    private static let iconsPerRow = 6
+    private static let iconsPerRow = 5
 
     /// The icons in rows of `iconsPerRow`.
     private static let iconRows: [[InstalledFolderIcon]] = stride(from: 0, to: InstalledFolderIcon.allCases.count, by: iconsPerRow).map {
