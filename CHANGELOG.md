@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The main window no longer says "Power Saving Mode, Sleeping..." while it opens.** The library, which closing the window unloads, now loads as soon as the window is on screen (not only once it's the active window, which left a window opened behind another app on that text) and fades in.
 - **Dragging in the Installed tab moves wallpapers and folders, not the window.** The main window moved by its background, so a drag on a wallpaper or folder tile moved the whole window; it now moves by its title bar and toolbar, as other Mac windows do. Drag a wallpaper, or the selection it is in, onto a folder tile to move it in, a folder onto another to nest it (never into itself or a folder inside it), or either onto a breadcrumb to move it up; the target is highlighted while you hover. Files dragged from Finder onto the grid still import.
 - **A wallpaper setting's condition written as JavaScript works as in Wallpaper Engine.** Conditions beyond simple comparisons (a ternary, `.text.replace(…)`) run as JavaScript over the other settings, as Wallpaper Engine runs them, so a setting hides when it should and a checkbox whose condition rewrites its own label reads *Enabled* once ticked ("Clock : Disabled" → "Clock : Enabled"). Before, such a condition was skipped: the setting always showed and the label stayed *Disabled*.
 - **Wallpapers pause while the screen is locked or another user is switched in**, and play again on unlocking or switching back, as Wallpaper Engine pauses on its session notifications. Scenes relied only on macOS reporting their windows covered, and web and WebM wallpapers only slowed their timers. The pause combines with Settings › Performance › Playback (a stricter rule such as *Stop* still wins) and with your own Pause.
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Choose whether the app shows in the Dock and the menu bar.** Settings › General › macOS has *Show in Dock* (keeps the icon while no window is open; off, it shows only while a window is open, as before) and *Show in Menu Bar*. With both off, the app keeps running in the background once its windows close; open it again from Applications or Spotlight to show its window.
 - **Select All (⌘A) in the Installed tab** selects every wallpaper the folder shown lists, after the search and filters, as Finder does; from Edit › Select All too. In the search box or a name prompt, ⌘A still selects the text.
 - **Drops into a folder animate.** The moved tiles shrink and fade out while the grid closes up, and the folder tile or breadcrumb pops once; with Reduce Motion they only fade and the folder only flashes. Dragging several wallpapers shows a stack of up to three of them with a count, as Finder and Photos do.
 - **Create Folder in a wallpaper's context menu**, as Finder's New Folder with Selection: it makes a folder in the folder shown, named *New Folder* (numbered when that name is taken), moves the wallpaper (or the selection it is in) into it, and asks for the folder's name.
