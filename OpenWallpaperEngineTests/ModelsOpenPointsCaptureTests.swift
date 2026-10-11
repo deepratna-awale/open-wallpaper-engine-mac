@@ -266,8 +266,10 @@ final class ModelsOpenPointsCaptureTests: XCTestCase {
         }
         XCTAssertFalse(mirrored(upright))
         XCTAssertTrue(mirrored(flipped))
-        XCTAssertEqual(ScenePuppetRenderer.frontFacing(mirrored: false), .clockwise, "D3D's default")
-        XCTAssertEqual(ScenePuppetRenderer.frontFacing(mirrored: true), .counterClockwise,
+        XCTAssertEqual(ScenePuppetRenderer.frontFacing(mirrored: false), .counterClockwise,
+                       "the editor's counter-clockwise rig faces the viewer, as a model's faces do")
+        XCTAssertEqual(ScenePuppetRenderer.frontFacing(mirrored: false), SceneModelRenderer.frontFacing)
+        XCTAssertEqual(ScenePuppetRenderer.frontFacing(mirrored: true), .clockwise,
                        "a mirrored layer's mesh shows its back faces, which `normal` culls")
         // A half turn about z isn't a mirror; a tilt past a quarter turn is.
         XCTAssertFalse(ScenePuppetRenderer.isMirrored(axisX: SIMD2(-1, 0), axisY: SIMD2(0, -1)))
