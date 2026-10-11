@@ -1,98 +1,81 @@
 # Screen saver and lock screen
 
-macOS screen savers can't run Wallpaper Engine scenes, so Open Wallpaper Engine records a
-seamless loop of the wallpaper and installs a screen saver that plays it. How it is built:
-[`architecture.md`](architecture.md), "Lock screen and screen saver".
+Open Wallpaper Engine installs a screen saver that shows your wallpaper live: while the screen
+saver runs, the app draws the wallpaper as it does on the desktop and the screen saver shows its
+frames. Nothing is recorded. How it is built: [`architecture.md`](architecture.md), "Lock screen
+and screen saver".
 
 ## The Screen Saver plugin
 
 Settings › Plugins › **Screen Saver** (on by default) installs the Open Wallpaper Engine screen
 saver in `~/Library/Screen Savers`. **Open Screen Saver Settings…** opens the System Settings pane
 that holds the screen savers (Screen Saver, or Wallpaper on newer macOS), where you choose it. The
-app never changes the system's screen saver setting itself. Turning the plugin off
-removes the screen saver and its videos.
+app never changes the system's screen saver setting itself. Turning the plugin off removes the
+screen saver.
 
-While it is on, the loop of the wallpaper you are showing is recorded in the background, at low
-priority, waiting while the Mac is on battery or hot:
+While the screen saver runs and an Open Wallpaper Engine saver is showing:
 
-- **Scenes**: a loop the length of the scene's own animation where it repeats exactly (at most
-  30 s), otherwise the stretch that comes back closest to its start (5 to 30 s), crossfaded at
-  the seam.
-- **Web pages and WebM videos**: recorded from the page on a stepped clock, so the loop is
-  smooth even when a frame is slow to capture. A page that never loops smoothly isn't used.
-- **Video wallpapers** (MP4 and MOV in H.264 or HEVC) play their own file, with nothing recorded.
-- Audio-reactive wallpapers hear a steady beat while they are recorded, so they still move.
+- **Scenes** are drawn live as the screen saver's layout plans them (per display, cloned or
+  stretched), with the screen saver's own settings: scripts see `engine.isScreensaver()` true,
+  clocks and dates show the time, audio-reactive parts follow what the Mac plays, and the sound
+  stays off. The pointer stays in the middle (any input ends the screen saver).
+- **Web wallpapers and WebM videos** are drawn by the Chromium engine, whichever engine the
+  desktop uses: WebKit stops a page the screen saver covers. When the desktop already shows the
+  page in Chromium on that display, that page is drawn from; otherwise one of its own, without a
+  window. Without the Chromium engine they show their picture, and Settings › Plugins › Screen
+  Saver offers to install it.
+- **Video wallpapers** (MP4 and MOV in H.264 or HEVC) play their own file.
 - Application wallpapers can't be used.
 
-The loop is recorded at the largest display's pixels; the scene in it is drawn as Render
-Resolution and Upscaling draw the live wallpaper, then fitted to the video. The Details panel shows whether a wallpaper's screen saver is
-available (**Screen Saver Available**), being made (**Rendering Screen Saver**) or not
-(**Screen Saver Not Available**, with the reason in its tooltip).
+Each frame is shown as it is drawn, at the display's cadence, as on the desktop (60 fps on a
+165 Hz display is 55). Until the first frames come, each display shows its lock-screen picture
+(with Show Wallpaper on Lock Screen on). The app draws only while the screen saver runs: it stops
+when the screen saver stops or the Mac is unlocked, and another screen saver or the System
+Settings preview never makes it draw. After the screen saver stops, the lock screen keeps its
+last frame.
 
-A loop is a recording: clocks, dates, media info and audio-reactive parts show the moment it was
-recorded.
+When the app isn't running, the screen saver asks for it: its broker launches the app in the
+background, with no window or Dock icon, and the wallpaper starts loading at once.
+
+The Details panel says whether the screen saver shows the selected wallpaper (**Screen Saver
+Available**), is preparing a video's file (**Rendering Screen Saver**) or not (**Screen Saver Not
+Available**, with the reason in its tooltip).
 
 ## The Screen Saver tab
 
 Scene Edit / Export's second tab (Wallpaper | Screen Saver | iPhone & iPad Export | Android
-Export) makes the
-screen saver from a scene wallpaper's own version:
+Export) makes a scene wallpaper's own version the screen saver:
 
 - It runs a private copy of the wallpaper. Turning layers on or off, adjusting them and changing
   user properties there never touches your desktop, its properties or the Wallpaper Editor's
-  edits. These choices are kept for each wallpaper as its screen saver's own, and the live
-  screen saver draws it with them.
-- **Set as Screen Saver** makes this version of the wallpaper the screen saver, turning the
-  plugin on if it is off. Nothing is recorded: while the screen saver runs, the app draws it live
-  on every display with the tab's choices (its layers and user properties), so clocks, dates and
-  audio-reactive parts move. Its preview is the screen saver's still until a live draw keeps a
-  frame of it. **Stop Using as Screen Saver** goes back to the desktop's wallpaper.
-- When the app starts, a recording an earlier version set as the screen saver becomes this
-  live pick of its wallpaper.
+  edits. These choices are kept for each wallpaper as its screen saver's own, and the screen
+  saver draws it with them.
+- **Set as Screen Saver** makes this version the screen saver, drawn live on every display,
+  turning the plugin on if it is off. Its preview is the screen saver's picture until the
+  screen saver has drawn it once. **Stop Using as Screen Saver** goes back to the desktop's
+  wallpapers.
+- When the app starts, a recording an earlier version set as the screen saver becomes this live
+  choice of its wallpaper, and the old recordings are deleted.
 
 A video wallpaper (MP4, M4V or MOV) opens Scene Edit / Export on this tab too, with the
-video playing: its screen saver is the video itself, so there is nothing to record or adjust.
-**Set as Screen Saver** makes it the screen saver (turning the plugin on if it is off), and
-**Stop Using as Screen Saver** goes back to the desktop's wallpaper.
+video playing: its screen saver is the video itself, played as it is. **Set as Screen Saver**
+makes it the screen saver (turning the plugin on if it is off), and **Stop Using as Screen
+Saver** goes back to the desktop's wallpapers.
 
 ## Screen saver layout
 
 With several displays, Display Settings' **Screen saver layout** is **Same as wallpaper** (the
-displays' layout and groups) by default, or a loop per display, one stretched across the
-displays, or one cloned. See [`display-layouts.md`](display-layouts.md).
+displays' layout and groups) by default, or each display's own wallpaper, one stretched across
+the displays, or one cloned. See [`display-layouts.md`](display-layouts.md).
 
-## Live screen saver (in progress)
-
-Development builds draw the screen saver live instead of playing the recording; release builds
-keep the recording until this has been tried on real screen saver hosts (Phase 0 below).
-
-- While the screen saver runs and an Open Wallpaper Engine saver is showing, the app draws each
-  display's wallpaper live as the screen saver's layout plans it (per display, cloned or
-  stretched), with the screen saver's own settings: scripts see `engine.isScreensaver()` true, the
-  clock layers are drawn and live, audio-reactive parts follow what the Mac plays, and the sound
-  stays off. The saver shows each frame as it comes, at the display's cadence (60 fps on a 165 Hz
-  display is 55, as on the desktop).
-- Web wallpapers and WebM videos are drawn by the Chromium engine whichever engine the desktop
-  uses (WebKit stops a page the screen saver covers). When the desktop already shows the page in
-  Chromium on that display, that page is drawn from; otherwise a page of its own, without a
-  window. Without the Chromium engine they show their picture, and Settings › Plugins › Screen
-  Saver offers to install it.
-- It draws only then: it stops when the screen saver stops (or the Mac is unlocked), and another
-  screen saver or the System Settings preview never makes it draw.
-- Until the first frames come, each display shows its lock-screen picture (with Show Wallpaper on
-  Lock Screen on). When the app isn't running, the saver asks for it: the broker launches it in
-  the background, with no window or Dock icon, and it starts loading the wallpaper at once.
-- The saver plays the recorded loop whenever the app isn't drawing and there is one (for now: the
-  recordings go in a later step). A Screen Saver mode recording set as the screen saver always
-  plays as recorded.
-- After the screen saver stops the lock screen keeps its last frame. A view the host makes at the
-  lock shows the live frames at once.
+## How the frames reach the screen saver
 
 Two savers show the frames: the screen saver in `~/Library/Screen Savers` (macOS 14 and later),
-and a screen saver extension in macOS's newer format, inside the app, which is built only for
-testing so far (macOS 14 and later; it needs the app's broker, below).
+which reads them as shared surfaces and Darwin notifications, and a screen saver extension in
+macOS's newer format inside the app, which gets them over XPC through the app's broker. Live
+drawing is still limited to development builds until the real screen saver hosts confirm it.
 
-### Testing it (Phase 0)
+### Testing it (lab build)
 
 `Scripts/build-saver-lab.sh <out>` builds, without installing or registering anything:
 

@@ -543,8 +543,8 @@ Example:
 
 ### Export, screen saver and lock screen
 
-Scene Edit / Export's **iPhone & iPad Export** and **Screen Saver** modes, the screen saver's
-daily re-recording, and Settings › General's **Show Wallpaper on Lock Screen**. Each tool runs the
+Scene Edit / Export's **iPhone & iPad Export** and **Screen Saver** modes, and Settings ›
+General's **Show Wallpaper on Lock Screen**. Each tool runs the
 code those controls run. None of them opens a window or System Settings, changes a system setting,
 or makes macOS ask for a permission.
 
@@ -555,12 +555,10 @@ or makes macOS ask for a permission.
 | `export_live_photo` | `wallpaper_id`, `device?`, `crop?` (`zoom` 1–3, `center_x`, `center_y`), `clip?` (`start`, `length` 1–3 s), `settings?` (`quality`: `best`, `high`, `smaller`; `save_to_photos`), `output_folder?` | Renders a scene as a Live Photo (HEIC + MOV) as the mode's Save does, with the wallpaper's own property values and edits (what the mode copies when it opens), and waits for it. `device` defaults to the remembered one; the crop defaults to the whole-scene window, centred; without `clip.start` the clip is the window with the most motion, as the mode picks it. Returns the `photo` and `movie` paths, the `crop` and `clip` used, and `photos` (`off`, `skipped`, `saved`, `failed`, `needs_access`). Without `output_folder` the files stay in the app's cache (`in_cache`) until the mode's next export clears it; `output_folder` must be an existing absolute folder (files of the same name are replaced). |
 | `export_android` | `wallpaper_id` or `wallpaper_ids`, `mode?` (`high_quality`, `balanced`, `pre_rendered`), `options?` (`pixel_art`, `texture_reduction` 1/2/4, `cropping`: `phone`/`original`, `video_preset`: `original`/`full_hd`/`uhd_4k`, `fps` 24/30/60, `alignment` 0–1), `output_folder?` | Scene Edit / Export's Android Export: one `<title>.mpkg` per wallpaper (unique names) for Wallpaper Engine's Android app, and waits for them. Videos are packed as they are; scenes are Dynamic (`balanced` by default) or a pre-rendered 30 s video. Returns the `folder`, each of the `packages` (`wallpaper_id`, `title`, `type`, `mode`, `path`, `size`, `preview`), and what was `skipped` (web and application wallpapers, with the reason) or `failed`. Without `output_folder` the packages go to the app's export cache folder. |
 | `android_send_wifi` | `package_paths` (from `export_android`) or `wallpaper_id` / `wallpaper_ids` (exported first, with `export_android`'s `mode?`, `options?`, `output_folder?`), `address?` | The Android export's "Send over Wi-Fi" without its sheet: serves only those packages on the Mac's local network behind a random 50-bit token, GET only, for 15 minutes, and returns the `url` (`http://owe-fileshare.<mac>.local:<port>/<token>/` while the name is advertised, else `http://<IPv4>:<port>/<token>/`), `expires_at`, `expires_in_seconds`, the Mac's local-network `addresses` (`address` picks one; the primary interface's by default), the `files` (`index`, `title`, `type`: `sceneDynamic`, `scenePreRendered`, `video`, `size`, `path`, `download_name`) and the `export` it made, if any. `package_paths` must be WE mobile packages (`.mpkg`, `PKGM`). A new call replaces the previous session. Refused with `unavailable` when the Mac has no local-network address. |
-| `screensaver_get` | `wallpaper_id?` | `plugin_enabled` (Settings › Plugins › Screen Saver), `recording`, the `selection` (the recording set as the screen saver: `wallpaper`, `folder`, `recorded`, `width`, `height`) and the `schedule`. With `wallpaper_id`, its screen saver version: `eligible` (scenes only), `is_screen_saver`, `own_choices` (the screen saver has its own saved choices; else it follows the wallpaper's values), the `layers` (`id`, `name`, `kind`, `visible` as the screen saver shows it, `authored_visible`) and the user `properties`. |
-| `screensaver_set_layers` | `wallpaper_id`, `layers?` (`[{layer, visible}]`, `layer` by id or name), `properties?` (`[{key, value}]`) | The Screen Saver mode's layer switches and user properties, saved as the screen saver's own choices for that scene (`ScreenSaverSettingsStore`), never touching the desktop. Values are checked as `set_user_property` checks them. Values equal to the wallpaper's own are not saved (`saved: false`): the screen saver follows the wallpaper until its choices first differ, as in the mode. The next recording uses them. |
-| `screensaver_record` | `wallpaper_id` | "Record and Set as Screen Saver": records a seamless loop of the scene's screen saver version and makes it the screen saver, and waits for it (minutes). When the Screen Saver plugin is off, the recording turns it on (`enabled_plugin`), which installs the saver, as the mode does. |
-| `screensaver_stop_using` | none | "Stop Using as Screen Saver": the screen saver loops the desktop's wallpaper again. `stopped` is false when nothing was set. |
-| `screensaver_schedule_get` | none | The daily re-recording: `enabled`, `hour`, `minute`, `time`, `anchor` (when it last ran, or was turned on or moved) and `next_run`. |
-| `screensaver_schedule_set` | `enabled`, `hour?`, `minute?` | "Re-record Every Day at": on or off, and its time (only with `enabled: true`, as the mode's time picker). |
+| `screensaver_get` | `wallpaper_id?` | `plugin_enabled` (Settings › Plugins › Screen Saver) and the `selection`: the wallpaper set as the screen saver (`wallpaper`, `folder`, `kind`: `live` for a scene drawn live with its screen saver choices, `video` for a video wallpaper's own file, and `picked`, when it was set), or null while the screen saver draws the desktop's wallpapers live. With `wallpaper_id`, its screen saver version: `eligible` (scenes only), `is_screen_saver`, `own_choices` (the screen saver has its own saved choices; else it follows the wallpaper's values), the `layers` (`id`, `name`, `kind`, `visible` as the screen saver shows it, `authored_visible`) and the user `properties`. |
+| `screensaver_set_layers` | `wallpaper_id`, `layers?` (`[{layer, visible}]`, `layer` by id or name), `properties?` (`[{key, value}]`) | The Screen Saver mode's layer switches and user properties, saved as the screen saver's own choices for that scene (`ScreenSaverSettingsStore`), never touching the desktop. Values are checked as `set_user_property` checks them. Values equal to the wallpaper's own are not saved (`saved: false`): the screen saver follows the wallpaper until its choices first differ, as in the mode. The screen saver draws the wallpaper with them while it is set as the screen saver. |
+| `screensaver_set` | `wallpaper_id` | "Set as Screen Saver": a scene becomes the screen saver, drawn live with its screen saver choices while the screen saver runs; a video wallpaper's own file becomes the screen saver (it waits while the file is put in place). Nothing is recorded. When the Screen Saver plugin is off, this turns it on (`enabled_plugin`), which installs the saver, as the mode does. Returns the `selection`. |
+| `screensaver_stop_using` | none | "Stop Using as Screen Saver": the screen saver draws the desktop's wallpapers live again. `stopped` is false when nothing was set. |
 | `lock_screen_get` | none | `enabled`, `may_change_desktop_picture` (false in an isolated copy), `follows` (the selected display's wallpaper) and per display its `wallpaper`, `picture` (the desktop picture the lock screen shows) and `is_lock_screen_picture`. |
 | `lock_screen_set` | `enabled` | Turns Show Wallpaper on Lock Screen on (the pictures are applied at once) or off (the user's pictures come back), as Settings › General does. |
 | `lock_screen_refresh` | none | Draws each display's picture again now from the wallpaper it shows, as turning the setting on does. |
@@ -590,7 +588,7 @@ Export a Live Photo for an iPhone into a folder, keeping the clip's automatic st
 }
 ```
 
-Hide a clock in the screen saver's version, then record it:
+Hide a clock in the screen saver's version, then make it the screen saver:
 
 ```json
 {"name": "screensaver_set_layers", "arguments": {"wallpaper_id": "2849384121",
@@ -604,32 +602,21 @@ Hide a clock in the screen saver's version, then record it:
   "layers": [{"id": 1, "name": "Background", "kind": "image", "visible": true, "authored_visible": true},
              {"id": 4, "name": "Clock", "kind": "text", "visible": false, "authored_visible": true}],
   "properties": {"rain": "true", "speed": "1"},
-  "message": "Saved the screen saver's choices for \"Rainy Window\": hid \"Clock\" and set rain to true. The desktop is unchanged; the next recording (screensaver_record, or the daily re-recording when this is the screen saver) uses them."
+  "message": "Saved the screen saver's choices for \"Rainy Window\": hid \"Clock\" and set rain to true. The desktop is unchanged; the screen saver draws it with them while it is set as the screen saver (screensaver_set)."
 }
 ```
 
 ```json
-{"name": "screensaver_record", "arguments": {"wallpaper_id": "2849384121"}}
+{"name": "screensaver_set", "arguments": {"wallpaper_id": "2849384121"}}
 ```
 
 ```json
 {
   "wallpaper": {"id": "2849384121", "title": "Rainy Window", "type": "scene", "...": "..."},
-  "selection": {"wallpaper": {"id": "2849384121", "...": "..."}, "folder": "/…/2849384121", "recorded": "2026-10-04T09:12:44Z", "width": 1920, "height": 1080},
+  "selection": {"wallpaper": {"id": "2849384121", "...": "..."}, "folder": "/…/2849384121", "kind": "live", "picked": "2026-10-04T09:12:44Z"},
   "enabled_plugin": false,
-  "message": "Recorded \"Rainy Window\" at 1920×1080 and set it as the screen saver. To use it, pick \"Open Wallpaper Engine\" in System Settings › Screen Saver if it isn't your screen saver yet."
+  "message": "\"Rainy Window\" is the screen saver, drawn live with its screen saver choices (screensaver_set_layers). To use it, pick \"Open Wallpaper Engine\" in System Settings › Screen Saver if it isn't your screen saver yet."
 }
-```
-
-Re-record every morning:
-
-```json
-{"name": "screensaver_schedule_set", "arguments": {"enabled": true, "hour": 6, "minute": 30}}
-```
-
-```json
-{"enabled": true, "hour": 6, "minute": 30, "time": "06:30", "anchor": "2026-10-04T09:13:02Z", "next_run": "2026-10-05T04:30:00Z",
- "message": "The screen saver is recorded again every day at 06:30, next 5 Oct 2026 at 6:30, while the app runs (a missed time runs at the next wake or launch)."}
 ```
 
 The lock screen:
@@ -660,19 +647,20 @@ What these tools don't do, and why:
   Settings › Screen Saver for them, so no tool does that or changes a system setting. The messages
   say to pick "Open Wallpaper Engine" there.
 - **The Screen Saver plugin** is installed or removed only in Settings › Plugins. The one exception
-  is OWE's own: recording turns it on when it is off, as the Screen Saver mode does.
-- **Other wallpaper types.** Export, recording and layer choices are for scenes, as the modes are;
-  the Screen Saver plugin loops video and web wallpapers by itself while they are on the desktop.
+  is OWE's own: `screensaver_set` turns it on when it is off, as the Screen Saver mode does.
+- **Other wallpaper types.** Export and layer choices are for scenes, as the modes are, and
+  `screensaver_set` takes scenes and videos; the screen saver draws web wallpapers live by itself
+  while they are on the desktop.
 - **Lock screen.** It follows the wallpaper OWE shows on its selected display, on every display;
   there is no choice to expose. An isolated copy never changes the desktop picture, so
   `lock_screen_refresh` is refused there; it is also refused while the setting is off.
-- **One at a time.** A second `export_live_photo` or `export_android` while one renders, or `screensaver_record` /
-  `screensaver_stop_using` while a recording runs, is refused with `unavailable`.
+- **One at a time.** A second `export_live_photo` or `export_android` while one renders, or a second
+  `screensaver_set` while a video is being put in place, is refused with `unavailable`.
 - **An open Screen Saver mode.** If Scene Edit / Export has the same wallpaper open in its
   Screen Saver mode, its own copy of the choices replaces what `screensaver_set_layers` saved when
   the mode next saves (as it does after each change and when it closes).
 
-`export_live_photo`, `export_android`, `screensaver_record` and `depth_generate` render, so `owe-mcp` waits up to
+`export_live_photo`, `export_android`, `screensaver_set` and `depth_generate` may take minutes, so `owe-mcp` waits up to
 15 minutes for them instead of the usual two. When the call carries `_meta.progressToken`,
 `owe-mcp` sends `notifications/progress` every 5 seconds until it answers (a count with no total:
 the app doesn't say how far it is), so a client that resets its timeout on progress keeps
