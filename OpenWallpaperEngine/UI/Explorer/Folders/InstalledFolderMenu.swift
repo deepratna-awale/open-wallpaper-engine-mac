@@ -45,23 +45,14 @@ struct InstalledFolderMenu: View {
 
     private var iconMenu: some View {
         Menu {
-            Button {
-                library.setIcon(nil, ofFolder: folder.id)
-            } label: {
-                Label {
-                    Text("Default", comment: "Change Icon / Change Color menu item: the plain folder icon or colour")
-                } icon: {
-                    Image(systemName: folder.icon == nil ? "checkmark" : "folder")
-                }
-            }
-            Divider()
+            // WE's grid: its plain folder first (the default), then its 29 icons.
             // Palettes: menus drop items whose label is only an image, so the icons are palette
             // rows instead. A menu lays one palette out in a single row, so the icons are split
             // into rows of `iconsPerRow` that share one selection: a grid.
             ForEach(Array(Self.iconRows.enumerated()), id: \.offset) { _, row in
                 Picker(selection: Binding(get: { folder.icon }, set: { library.setIcon($0, ofFolder: folder.id) })) {
                     ForEach(row, id: \.self) { icon in
-                        Image(systemName: icon.systemImage).tag(Optional(icon))
+                        Image(systemName: icon?.systemImage ?? InstalledFolderIcon.defaultSystemImage).tag(icon)
                     }
                 } label: {
                     Text("Change Icon", comment: "Context menu of a folder in the Installed tab")
@@ -116,9 +107,10 @@ struct InstalledFolderMenu: View {
     private static let iconsPerRow = 5
 
     /// The icons in rows of `iconsPerRow`.
-    private static let iconRows: [[InstalledFolderIcon]] = stride(from: 0, to: InstalledFolderIcon.allCases.count, by: iconsPerRow).map {
-        Array(InstalledFolderIcon.allCases[$0..<min($0 + iconsPerRow, InstalledFolderIcon.allCases.count)])
-    }
+    private static let iconRows: [[InstalledFolderIcon?]] = {
+        let icons = InstalledFolderIcon.pickerOrder
+        return stride(from: 0, to: icons.count, by: iconsPerRow).map { Array(icons[$0..<min($0 + iconsPerRow, icons.count)]) }
+    }()
 
     /// A filled circle in `color` (not a template image, so the menu keeps its colour), ringed
     /// when it is the folder's colour.

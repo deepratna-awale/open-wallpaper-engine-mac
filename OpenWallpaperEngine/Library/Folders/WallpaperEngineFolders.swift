@@ -61,10 +61,17 @@ enum WallpaperEngineFolders {
             items = Set(list)
         }
         return InstalledFolder(title: title,
-                               color: (entry["folderColor"] as? String).flatMap(InstalledFolderColor.init(rawValue:)),
-                               icon: (entry["folderIcon"] as? String).flatMap(InstalledFolderIcon.init(weClass:)),
+                               color: (entry["folderColor"] as? String).flatMap(InstalledFolderColor.init(weClass:)),
+                               icon: icon(entry),
                                items: items,
                                subfolders: (entry["subfolders"] as? [Any] ?? []).compactMap(folder))
+    }
+
+    /// The folder's icon: `folderIcon`, or when that isn't one of WE's the icon whose open variant
+    /// is `folderIconOpen`; nil (WE's plain folder) when neither is, as when both are absent.
+    private static func icon(_ entry: [String: Any]) -> InstalledFolderIcon? {
+        (entry["folderIcon"] as? String).flatMap(InstalledFolderIcon.init(weClass:))
+            ?? (entry["folderIconOpen"] as? String).flatMap(InstalledFolderIcon.init(weOpenClass:))
     }
 
     /// WE writes `1`; anything true-ish counts.

@@ -39,8 +39,8 @@ struct InstalledFolder: Codable, Equatable, Identifiable {
         id = try container.decode(UUID.self, forKey: .id)
         title = try container.decode(String.self, forKey: .title)
         // Optional by design: a value this version doesn't know shows the default.
-        color = (try? container.decodeIfPresent(String.self, forKey: .color)).flatMap(InstalledFolderColor.init(rawValue:))
-        icon = (try? container.decodeIfPresent(String.self, forKey: .icon)).flatMap(InstalledFolderIcon.init(rawValue:))
+        color = (try? container.decodeIfPresent(String.self, forKey: .color)).flatMap(InstalledFolderColor.init(weClass:))
+        icon = (try? container.decodeIfPresent(String.self, forKey: .icon)).flatMap(InstalledFolderIcon.init(weClass:))
         items = Set(try container.decodeIfPresent([String].self, forKey: .items) ?? [])
         subfolders = try container.decodeIfPresent([Lossy<InstalledFolder>].self, forKey: .subfolders)?
             .compactMap(\.value) ?? []
@@ -146,7 +146,10 @@ enum InstalledFolderColor: String, CaseIterable, Codable {
 }
 
 /// Wallpaper Engine's folder icons (Change Icon), stored by WE's own Font Awesome class (its
-/// `folderIcon` values), each shown as the closest SF Symbol.
+/// `folderIcon` values), each shown as the closest SF Symbol. WE's picker has 30, in this order:
+/// its plain folder first (nil here: the default, which stores no icon), then these 29
+/// (`pickerOrder`). Some have an open variant (WE's `folderIconOpen`), shown when the folder is
+/// open or a drop target.
 enum InstalledFolderIcon: String, CaseIterable, Codable {
     case star = "fas fa-star"
     case heart = "fas fa-heart"
@@ -178,14 +181,21 @@ enum InstalledFolderIcon: String, CaseIterable, Codable {
     case balloons = "fas fa-balloons"
     case bone = "fas fa-bone"
 
-    /// The SF Symbol drawn for it.
+    /// WE's Change Icon grid in its order: the plain folder (nil, the default) and the 29 icons.
+    static let pickerOrder: [InstalledFolderIcon?] = [nil] + allCases
+
+    /// The SF Symbol of WE's plain folder (`fa-folder`). SF Symbols has no open folder, so it is
+    /// also the open one (WE's `fa-folder-open`).
+    static let defaultSystemImage = "folder.fill"
+
+    /// The SF Symbol drawn for it (macOS 14's symbols; Font Awesome Pro's have no exact match).
     var systemImage: String {
         switch self {
         case .star: return "star.fill"
         case .heart: return "heart.fill"
         case .gem: return "diamond.fill"
         case .car: return "car.fill"
-        case .rocket: return "airplane.departure"
+        case .rocket: return "airplane"
         case .snowflake: return "snowflake"
         case .thumbsUp: return "hand.thumbsup.fill"
         case .gamepad: return "gamecontroller.fill"
@@ -193,13 +203,13 @@ enum InstalledFolderIcon: String, CaseIterable, Codable {
         case .music: return "music.note"
         case .trash: return "trash.fill"
         case .bug: return "ladybug.fill"
-        case .magic: return "wand.and.stars"
+        case .magic: return "wand.and.rays"
         case .banana: return "carrot.fill"
         case .alien: return "eyes"
         case .alien8bit: return "square.grid.3x3.fill"
         case .bat: return "moon.stars.fill"
-        case .bomb: return "burst.fill"
-        case .boombox: return "hifispeaker.fill"
+        case .bomb: return "flame.circle.fill"
+        case .boombox: return "radio.fill"
         case .candle: return "flame"
         case .dragon: return "lizard.fill"
         case .fire: return "flame.fill"
@@ -213,11 +223,69 @@ enum InstalledFolderIcon: String, CaseIterable, Codable {
         }
     }
 
-    /// WE's icon for a stored `folderIcon`: its own classes, and the outline snowflake its
-    /// picker shows (`far fa-snowflake`) for the solid one it stores.
+    /// WE's open variant (`folderIconOpen`), for the icons that have one.
+    var weOpenClass: String? {
+        switch self {
+        case .car: return "fas fa-car-burst"
+        case .rocket: return "fas fa-rocket-launch"
+        case .magic: return "fas fa-wand-magic-sparkles"
+        case .bomb: return "fas fa-explosion"
+        case .balloons: return "far fa-burst"
+        default: return nil
+        }
+    }
+
+    /// The SF Symbol of the open variant; the closed one for an icon without one.
+    var openSystemImage: String {
+        switch self {
+        case .car: return "car.side.rear.and.collision.and.car.side.front"
+        case .rocket: return "airplane.departure"
+        case .magic: return "wand.and.stars"
+        case .bomb: return "burst.fill"
+        case .balloons: return "burst"
+        default: return systemImage
+        }
+    }
+
+    /// WE's icon for a stored `folderIcon`: its own classes, also with the old `fa ` prefix WE
+    /// renders as `fas ` and the outline style its picker shows for some (`far fa-snowflake`).
+    /// WE's plain folder (`fa-folder`) and an unknown class are nil, the default.
     init?(weClass: String) {
-        let normalized = weClass.trimmingCharacters(in: .whitespaces)
-            .replacingOccurrences(of: "far fa-", with: "fas fa-")
-        self.init(rawValue: normalized)
+        guard let name = Self.iconName(weClass) else { return nil }
+        self.init(rawValue: "fas fa-\(name)")
+    }
+
+    /// The icon whose open variant (`folderIconOpen`) is `weOpenClass`, in any style.
+    init?(weOpenClass: String) {
+        guard let name = Self.iconName(weOpenClass),
+              let icon = Self.allCases.first(where: { $0.weOpenClass.flatMap(Self.iconName) == name })
+        else { return nil }
+        self = icon
+    }
+
+    /// `rocket` of `fas fa-rocket`: the `fa-` class among the style classes.
+    private static func iconName(_ classes: String) -> String? {
+        classes.split(whereSeparator: \.isWhitespace)
+            .first { $0.hasPrefix("fa-") }
+            .map { String($0.dropFirst(3)) }
+    }
+}
+
+extension InstalledFolderColor {
+    /// WE's colour for a stored `folderColor`: its class, also among other classes
+    /// (`fas fa-square browseFolderColorRed`, as its picker draws it). Unknown is nil, the default.
+    init?(weClass: String) {
+        guard let match = weClass.split(whereSeparator: \.isWhitespace)
+            .lazy.compactMap({ Self(rawValue: String($0)) }).first
+        else { return nil }
+        self = match
+    }
+}
+
+extension InstalledFolder {
+    /// Its icon's SF Symbol: WE's open variant when `open` (shown, or a drop target).
+    func systemImage(open: Bool = false) -> String {
+        guard let icon else { return InstalledFolderIcon.defaultSystemImage }
+        return open ? icon.openSystemImage : icon.systemImage
     }
 }

@@ -154,8 +154,42 @@ final class InstalledFolderTests: XCTestCase {
     }
 
     func testEverySymbolExists() {
+        XCTAssertNotNil(NSImage(systemSymbolName: InstalledFolderIcon.defaultSystemImage, accessibilityDescription: nil))
         for icon in InstalledFolderIcon.allCases {
             XCTAssertNotNil(NSImage(systemSymbolName: icon.systemImage, accessibilityDescription: nil), icon.rawValue)
+            XCTAssertNotNil(NSImage(systemSymbolName: icon.openSystemImage, accessibilityDescription: nil), icon.rawValue)
+        }
+    }
+
+    /// WE's Change Icon grid (2.8.42's scripts.js): 30 icons in its order, the plain folder first.
+    func testIconsAreWEsThirtyInWEsOrder() {
+        let names = ["folder", "star", "heart", "gem", "car", "rocket", "snowflake", "thumbs-up", "gamepad-modern", "gift",
+                     "music", "trash", "bug", "magic", "banana", "alien", "alien-8bit", "bat", "bomb", "boombox",
+                     "candle-holder", "dragon", "fire", "meteor", "tree-palm", "skull-crossbones", "tree-christmas",
+                     "tv-retro", "balloons", "bone"]
+        XCTAssertEqual(InstalledFolderIcon.pickerOrder.map { $0?.rawValue ?? "fas fa-folder" }, names.map { "fas fa-\($0)" })
+        let open = Dictionary(uniqueKeysWithValues: InstalledFolderIcon.allCases.compactMap { icon in icon.weOpenClass.map { (icon, $0) } })
+        XCTAssertEqual(open, [.car: "fas fa-car-burst", .rocket: "fas fa-rocket-launch", .magic: "fas fa-wand-magic-sparkles",
+                              .bomb: "fas fa-explosion", .balloons: "far fa-burst"])
+    }
+
+    /// An open folder (shown, or a drop target) draws WE's open variant where it has one.
+    func testOpenVariant() {
+        XCTAssertEqual(InstalledFolder(title: "A", icon: .rocket).systemImage(open: true), "airplane.departure")
+        XCTAssertEqual(InstalledFolder(title: "A", icon: .rocket).systemImage(), "airplane")
+        XCTAssertEqual(InstalledFolder(title: "A", icon: .star).systemImage(open: true), "star.fill", "no open variant")
+        XCTAssertEqual(InstalledFolder(title: "A").systemImage(open: true), InstalledFolderIcon.defaultSystemImage)
+    }
+
+    /// Folders saved by earlier versions (icons by their WE class) still read.
+    func testStoredIconsStillDecode() throws {
+        for icon in InstalledFolderIcon.allCases {
+            let json = #"[{"id": "\#(UUID().uuidString)", "title": "F", "icon": "\#(icon.rawValue)", "color": "browseFolderColorRed", "items": [], "subfolders": []}]"#
+            let folder = try XCTUnwrap(JSONDecoder().decode(InstalledFolderTree.self, from: Data(json.utf8)).folders.first)
+            XCTAssertEqual(folder.icon, icon)
+            XCTAssertEqual(folder.color, .red)
+            let again = try JSONDecoder().decode(InstalledFolderTree.self, from: JSONEncoder().encode(InstalledFolderTree(folders: [folder])))
+            XCTAssertEqual(again.folders.first?.icon, icon, "written back as WE's class")
         }
     }
 
