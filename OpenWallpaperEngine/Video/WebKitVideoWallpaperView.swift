@@ -39,19 +39,20 @@ struct WebKitVideoWallpaperView: NSViewRepresentable {
     }
 
     private func state(for wallpaper: WEWallpaper) -> WebKitVideoPlayer.State {
-        Self.state(for: wallpaper, wallpaperViewModel: wallpaperViewModel, screenId: screenId)
+        Self.state(for: wallpaper, wallpaperViewModel: wallpaperViewModel, screenId: screenId, engine: .webKit)
     }
 
-    /// The player's state on `screenId`: its display's pause, the wallpaper's audible display and
-    /// volume, placement and rate. Shared with the Chromium view.
+    /// The player's state on `screenId`: the pause of the displays showing its page (its own and
+    /// those mirroring it), the wallpaper's audible display and volume, placement and rate. Shared
+    /// with the Chromium view.
     @MainActor
     static func state(for wallpaper: WEWallpaper, wallpaperViewModel: WallpaperViewModel,
-                      screenId: String) -> WebKitVideoPlayer.State {
+                      screenId: String, engine: WebEngine) -> WebKitVideoPlayer.State {
         let key = WallpaperInstanceKey(wallpaper)
-        let muted = !wallpaperViewModel.shouldPlayAudio(on: screenId) || wallpaperViewModel.playVolume == 0
+        let muted = !wallpaperViewModel.pagePlaysAudio(of: screenId, engine: engine) || wallpaperViewModel.playVolume == 0
             || !wallpaperViewModel.wallpaperPlayback(of: key).playsSound
         return WebKitVideoPlayer.State(placement: wallpaperViewModel.wallpaperPlacement,
-                                       paused: !wallpaperViewModel.playback(onScreen: screenId).rendersFrames,
+                                       paused: !wallpaperViewModel.pageRendersFrames(of: screenId, engine: engine),
                                        muted: muted,
                                        volume: wallpaperViewModel.playVolume,
                                        // A page per display: its own playback rate (WE's option).
@@ -60,7 +61,7 @@ struct WebKitVideoWallpaperView: NSViewRepresentable {
     }
 
     @MainActor
-    final class Coordinator {
+    final class Coordinator: WebPageSourceCoordinator {
         var player: WebKitVideoPlayer?
     }
 }

@@ -49,6 +49,9 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     }
     /// Receives the page's frame intervals and heartbeats (a page that stops beating is hung).
     weak var renderWatchdog: RenderWatchdog?
+    /// The windows of the displays mirroring this page (a clone's or stretch's other members): the
+    /// page counts as seen while any of them, or its own, is uncovered.
+    var mirrorWindows: () -> [NSWindow] = { [] }
     private(set) var heartbeatGate = WebHeartbeatGate()
     /// Whether the current page has beaten yet: one that never runs the bridge (a load error
     /// page) is not judged.
@@ -131,8 +134,10 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         visibilityObservers.append(NotificationCenter.default.addObserver(
             forName: NSWindow.didChangeOcclusionStateNotification, object: nil, queue: .main
         ) { [weak self] notification in
-            guard let self, let window = notification.object as? NSWindow, window === self.page?.hostWindow else { return }
-            self.windowOcclusionChanged(visible: window.occlusionState.contains(.visible))
+            guard let self, let window = notification.object as? NSWindow else { return }
+            let windows = [self.page?.hostWindow].compactMap { $0 } + self.mirrorWindows()
+            guard windows.contains(where: { $0 === window }) else { return }
+            self.windowOcclusionChanged(visible: windows.contains { $0.occlusionState.contains(.visible) })
         })
     }
 
