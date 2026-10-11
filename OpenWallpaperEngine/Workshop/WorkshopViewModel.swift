@@ -327,6 +327,14 @@ class WorkshopViewModel: ObservableObject {
         selectedItemIds = selected
     }
 
+    /// Edit › Select All: every card in `list` (the Workshop grid's page by default).
+    func selectAll(_ list: [WorkshopItem]? = nil) {
+        let list = list ?? items
+        selectedItems = Dictionary(list.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        selectedItemIds = Set(selectedItems.keys)
+        selectionAnchorId = list.first?.id
+    }
+
     func clearSelection() {
         selectedItemIds.removeAll()
         selectedItems.removeAll()
