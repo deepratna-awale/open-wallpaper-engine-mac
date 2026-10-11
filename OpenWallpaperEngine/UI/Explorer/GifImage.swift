@@ -178,6 +178,10 @@ final class PreviewImageView: NSView {
         return CGSize(width: (bounds.width * scale).rounded(.up), height: (bounds.height * scale).rounded(.up))
     }
 
+    /// A press on a preview belongs to its tile (a click, a drag onto a folder), never to moving
+    /// a window that moves by its background; NSView's default allows that for any non-opaque view.
+    override var mouseDownCanMoveWindow: Bool { false }
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true

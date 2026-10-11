@@ -19,26 +19,34 @@ class MainWindowController: NSWindowController, NSWindowDelegate {
     }
     
     override init(window: NSWindow?) {
-        super.init(window: NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 480, height: 300),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
-            backing: .buffered, defer: false))
+        super.init(window: Self.makeWindow())
         self.window.delegate = self
-        self.window.isReleasedWhenClosed = false
-        self.window.title = "Open Wallpaper Engine \(AppVersion.current)"
-        // The content's split view, toolbar and inspector draw the window chrome (glass on macOS 26).
-        self.window.toolbarStyle = .unified
-        // The tabs sit in the toolbar's centre; the title stays for the Window menu and Mission Control.
-        self.window.titleVisibility = .hidden
-        // The frame autosaves into UserDefaults.standard, which an isolated copy must not write.
-        if !AppStorageLocation.current.isIsolated { self.window.setFrameAutosaveName("MainWindow") }
-        self.window.isMovableByWindowBackground = true
         self.window.contentView = NSHostingView(rootView: ContentView(
                 viewModel: AppDelegate.shared.contentViewModel,
                 wallpaperViewModel: AppDelegate.shared.wallpaperViewModel
             ).environmentObject(AppDelegate.shared.globalSettingsViewModel)
             .appAccentTint()
         )
+    }
+
+    /// The main window, without its content. It moves by its title bar and toolbar only: moved
+    /// by its background as well, AppKit moves it from any mouse-down on a view that allows it,
+    /// which SwiftUI's hosting view and every non-opaque view do, so a drag on a wallpaper or
+    /// folder tile moved the window instead of starting the drag.
+    static func makeWindow() -> NSWindow {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 480, height: 300),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+            backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.title = "Open Wallpaper Engine \(AppVersion.current)"
+        // The content's split view, toolbar and inspector draw the window chrome (glass on macOS 26).
+        window.toolbarStyle = .unified
+        // The tabs sit in the toolbar's centre; the title stays for the Window menu and Mission Control.
+        window.titleVisibility = .hidden
+        // The frame autosaves into UserDefaults.standard, which an isolated copy must not write.
+        if !AppStorageLocation.current.isIsolated { window.setFrameAutosaveName("MainWindow") }
+        return window
     }
     
     required init?(coder: NSCoder) {
