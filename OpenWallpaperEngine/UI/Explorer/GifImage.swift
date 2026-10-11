@@ -92,6 +92,16 @@ struct GifImage: NSViewRepresentable {
         }
     }
 
+    /// The downsampled still a tile shows for `url`: the one already loaded, else read now and
+    /// kept for the tiles. For a few pictures at once, such as a drag's image.
+    static func still(at url: URL) -> CGImage? {
+        let key = url.path + "#still"
+        if let cached = imageCache.object(forKey: key as NSString) { return cached.image }
+        guard let image = downsampledImage(at: url, maxPixelSize: 512) else { return nil }
+        imageCache.setObject(StillImage(image: image), forKey: key as NSString)
+        return image
+    }
+
     private final class StillImage {
         let image: CGImage
         init(image: CGImage) { self.image = image }
@@ -177,6 +187,10 @@ final class PreviewImageView: NSView {
         let scale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
         return CGSize(width: (bounds.width * scale).rounded(.up), height: (bounds.height * scale).rounded(.up))
     }
+
+    /// A press on a preview belongs to its tile (a click, a drag onto a folder), never to moving
+    /// a window that moves by its background; NSView's default allows that for any non-opaque view.
+    override var mouseDownCanMoveWindow: Bool { false }
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

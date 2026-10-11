@@ -186,6 +186,69 @@ final class InstalledFolderTests: XCTestCase {
         XCTAssertEqual(InstalledFolderScope.wallpapers(all, in: nil, tree: InstalledFolderTree()).count, 3, "no folders: everything")
     }
 
+    /// New folders are numbered as Finder numbers them, among the folders beside them only.
+    func testNewFolderTitlesAreUnique() throws {
+        var tree = InstalledFolderTree()
+        XCTAssertEqual(tree.uniqueTitle("New Folder", in: nil), "New Folder")
+        let first = try XCTUnwrap(tree.create(title: "New Folder"))
+        tree.create(title: "new folder 2")
+        XCTAssertEqual(tree.uniqueTitle("New Folder", in: nil), "New Folder 3", "taken ignoring case")
+        XCTAssertEqual(tree.uniqueTitle("New Folder", in: first), "New Folder", "another level")
+    }
+
+    private func library() -> InstalledLibraryModel {
+        InstalledLibraryModel(filters: FilterResultsViewModel(), steamCmd: SteamCmdService(), presentation: ContentPresentation(),
+                              folders: InstalledFolderStore(defaults: defaults))
+    }
+
+    /// A wallpaper's Create Folder: one change makes a numbered folder in the folder shown and
+    /// moves the wallpapers into it, out of wherever they were.
+    func testCreateFolderMovesTheWallpapersIn() throws {
+        let library = library()
+        let games = try XCTUnwrap(library.createFolder(named: "Games"))
+        library.open(folder: games)
+        library.folders.update { $0.create(title: "New Folder", in: games) }
+        let other = try XCTUnwrap(library.folders.update { $0.create(title: "Other") })
+        library.folders.update { $0.move(items: ["workshop-1"], to: other) }
+        var changes = 0
+        let onChange = library.folders.onChange
+        library.folders.onChange = { changes += 1; onChange?() }
+
+        let id = try XCTUnwrap(library.createFolder(moving: [wallpaper("1", title: "A", workshopID: 1),
+                                                             wallpaper("mine", title: "B")]))
+        XCTAssertEqual(changes, 1, "one change")
+        let folder = try XCTUnwrap(library.folders.tree.folder(id))
+        XCTAssertEqual(folder.title, "New Folder 2")
+        XCTAssertEqual(folder.items, ["workshop-1", "/library/mine"])
+        XCTAssertEqual(library.folders.tree.path(to: id).map(\.title), ["Games", "New Folder 2"], "in the folder shown")
+        XCTAssertEqual(library.folders.tree.folder(other)?.items, [], "out of the last folder")
+        XCTAssertEqual(library.newFolderTitle, "New Folder 3")
+    }
+
+    /// Drops: a selection's wallpapers move together, and a folder never into itself or below it.
+    func testDropsMoveWallpapersAndFolders() throws {
+        let library = library()
+        let a = try XCTUnwrap(library.createFolder(named: "A"))
+        let b = try XCTUnwrap(library.folders.update { $0.create(title: "B", in: a) })
+        let c = try XCTUnwrap(library.createFolder(named: "C"))
+
+        XCTAssertTrue(library.drop([InstalledDragPayload.wallpapers(["workshop-1", "workshop-2"]).text], into: b))
+        XCTAssertEqual(library.folders.tree.folder(b)?.items, ["workshop-1", "workshop-2"])
+        XCTAssertTrue(library.drop([InstalledDragPayload.wallpapers(["workshop-2"]).text], into: nil), "a breadcrumb: Home")
+        XCTAssertEqual(library.folders.tree.filedKeys, ["workshop-1"])
+
+        XCTAssertFalse(library.canDrop(.folder(a), into: a), "into itself")
+        XCTAssertFalse(library.canDrop(.folder(a), into: b), "into its subfolder")
+        XCTAssertFalse(library.drop([InstalledDragPayload.folder(a).text], into: b))
+        XCTAssertEqual(library.folders.tree.path(to: b).map(\.title), ["A", "B"], "unchanged")
+        XCTAssertTrue(library.canDrop(.folder(c), into: b))
+        XCTAssertTrue(library.drop([InstalledDragPayload.folder(c).text], into: b))
+        XCTAssertEqual(library.folders.tree.path(to: c).map(\.title), ["A", "B", "C"])
+        XCTAssertTrue(library.drop([InstalledDragPayload.folder(c).text], into: nil))
+        XCTAssertEqual(library.folders.tree.folders.map(\.title).sorted(), ["A", "C"])
+        XCTAssertFalse(library.drop(["some text"], into: a), "not ours")
+    }
+
     // MARK: Drags
 
     func testDragPayloadRoundTrips() {
