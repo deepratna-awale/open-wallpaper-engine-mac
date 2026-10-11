@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// The selected playlist, in the main window's detail column; `PlaylistSidebar` lists them.
+/// The selected playlist, in the main window's detail column, as Music shows a playlist: the
+/// header, then its wallpapers as a list or a grid. `PlaylistSidebar` lists the playlists.
 struct PlaylistView: View {
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     /// The playlist whose Delete button was clicked, until the confirmation is answered.
@@ -11,6 +12,14 @@ struct PlaylistView: View {
     @State private var pendingShortcut: PendingShortcut?
     /// The playlist whose Playlist Settings sheet is open.
     @State private var configuredPlaylist: WallpaperPlaylist?
+    /// Opens a wallpaper in the Installed tab.
+    let showInInstalled: (WEWallpaper) -> Void
+    @State private var selectedItems: Set<UUID> = []
+    /// Set to start renaming the playlist (a new one starts with its name being edited).
+    @State private var isEditingName = false
+    /// In the app's defaults: the main window is an AppKit window, where SwiftUI scene storage keeps
+    /// nothing and never changes, so the List/Grid control couldn't switch.
+    @AppStorage(PlaylistItemLayout.defaultsKey, store: .app) private var layout = PlaylistItemLayout.defaultLayout
 
     private struct PendingShortcut {
         let shortcut: GlobalShortcut
@@ -70,123 +79,145 @@ struct PlaylistView: View {
 
     @ViewBuilder private var playlistDetail: some View {
         if let playlist = wallpaperViewModel.activePlaylist {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack {
-                        Text(playlist.name).font(.largeTitle.bold())
-                        Spacer()
-                        ShortcutRecorderField(
-                            shortcut: playlist.shortcut,
-                            isRecording: $isRecordingShortcut,
-                            onRecord: { record($0, for: playlist.id) },
-                            onClear: { shortcuts.assign(nil, to: playlist.id) },
-                            // The hotkeys and the playlists' shortcuts stop while it listens.
-                            onRecordingChange: { recording in
-                                let hotKeys = AppDelegate.shared.globalHotKeys
-                                recording ? hotKeys.suspend() : hotKeys.resume()
+            let actions = PlaylistItemActions(wallpaperViewModel: wallpaperViewModel, playlist: playlist,
+                                              showInInstalled: showInInstalled)
+            Group {
+                if playlist.items.isEmpty || layout == .grid {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 24) {
+                            header(playlist)
+                            if playlist.items.isEmpty {
+                                emptyPlaylist
+                            } else {
+                                itemsHeader
+                                LazyVGrid(columns: [GridItem(.adaptive(minimum: 176, maximum: 260), spacing: 16)],
+                                          alignment: .leading, spacing: 16) {
+                                    ForEach(playlist.items) { item in
+                                        PlaylistItemTile(item: item, actions: actions)
+                                            .draggable(item.id.uuidString)
+                                            .dropDestination(for: String.self) { ids, _ in
+                                                drop(ids, onto: item, in: playlist)
+                                            }
+                                    }
+                                }
                             }
-                        )
-                        Button {
-                            configuredPlaylist = playlist
-                        } label: {
-                            Label("Configure", systemImage: "gearshape")
                         }
-                        .glassButtonStyle()
-                        .help("Playlist Settings: when the wallpaper changes, and the transition")
-                        Button(role: .destructive) {
-                            playlistPendingDeletion = playlist
-                        } label: {
-                            Label("Delete playlist", systemImage: "trash")
-                                .labelStyle(.iconOnly)
-                        }
-                        .glassButtonStyle()
-                        .help("Delete playlist")
+                        .padding(24)
                     }
-                    if playlist.shortcut != nil, shortcuts.unregisteredPlaylists.contains(playlist.id) {
-                        Label("This shortcut may not work: another app uses it.", systemImage: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.secondary)
-                    }
-                    VStack(alignment: .leading, spacing: 8) {
-                        Toggle("Rotate automatically", isOn: $wallpaperViewModel.playlistEnabled)
-                        // A scheduled playlist's slots pick the wallpaper, not the order.
-                        Group {
-                            Toggle("Shuffle", isOn: $wallpaperViewModel.playlistShuffle)
-                            Toggle("Repeat", isOn: $wallpaperViewModel.playlistRepeats)
-                        }
-                        .disabled(playlist.timing.isScheduled)
-                        Toggle("Change when video ends", isOn: Binding(
-                            get: { playlist.changeWhenVideoEnds },
-                            set: { wallpaperViewModel.setPlaylistChangeWhenVideoEnds($0) }
-                        ))
-                        .disabled(!playlist.timing.usesTimerOptions)
-                        LabeledContent("Change wallpaper") {
-                            Text(playlist.timing.title)
-                        }
-                        HStack {
-                            Text("Wallpaper duration")
-                            // No `step:` (AppKit would draw a tick per step); the binding snaps instead.
-                            Slider(value: Binding(
-                                get: { playlist.duration },
-                                set: { wallpaperViewModel.setPlaylistDuration(PlaylistDurationFormat.snapped($0)) }
-                            ), in: PlaylistDurationFormat.range)
-                            Text(PlaylistDurationFormat.label(playlist.duration))
-                                .font(.caption.monospacedDigit())
-                                .frame(minWidth: 64, alignment: .trailing)
-                                .fixedSize()
-                        }
-                        .disabled(playlist.timing != .timer)
-                    }
-                    GlassGroup {
-                        HStack {
-                            Button { wallpaperViewModel.previousPlaylistWallpaper() } label: { Label("Previous", systemImage: "backward.fill") }
-                                .glassButtonStyle()
-                            Button { wallpaperViewModel.nextPlaylistWallpaper() } label: { Label("Next", systemImage: "forward.fill") }
-                                .glassButtonStyle()
-                            Text("\(playlist.items.count) wallpapers").foregroundStyle(.secondary)
-                        }
-                    }
-                    ForEach(playlist.items) { item in
-                        HStack(spacing: 10) {
-                            GifImage(contentsOf: previewURL(for: item.wallpaper), animates: false)
-                                .resizable()
-                                .aspectRatio(1, contentMode: .fill)
-                                .frame(width: 64, height: 64)
-                                .clipShape(RoundedRectangle(cornerRadius: ExplorerItem.cornerRadius, style: .continuous))
-                            Text(verbatim: item.wallpaper.project.displayTitle)
-                                .lineLimit(1)
-                                .frame(width: 180, alignment: .leading)
-                            Button { wallpaperViewModel.movePlaylistItem(itemID: item.id, offset: -1) } label: { Image(systemName: "chevron.up") }
-                                .disabled(playlist.items.first?.id == item.id)
-                                .help("Move up")
-                            Button { wallpaperViewModel.movePlaylistItem(itemID: item.id, offset: 1) } label: { Image(systemName: "chevron.down") }
-                                .disabled(playlist.items.last?.id == item.id)
-                                .help("Move down")
-                            Button(role: .destructive) { wallpaperViewModel.removeFromPlaylist(itemID: item.id) } label: { Image(systemName: "minus.circle") }
-                                .help("Remove from playlist")
-                        }
-                        .buttonStyle(.plain)
-                        Divider()
-                    }
+                } else {
+                    itemList(playlist, actions: actions)
                 }
-                .padding(24)
             }
+            .animation(.snappy, value: playlist.items)
         } else {
-            ContentUnavailableView("Create a Playlist", systemImage: "rectangle.stack.badge.plus",
-                                   description: Text("Create a playlist to manage wallpaper rotation."))
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ContentUnavailableView {
+                Label("No Playlists", systemImage: "rectangle.stack.badge.plus")
+            } description: {
+                Text("Create a playlist to manage wallpaper rotation.")
+            } actions: {
+                Button("Create Playlist") {
+                    wallpaperViewModel.createPlaylist(named: String(localized: "Untitled Playlist", comment: "Name of a new playlist until the user renames it"))
+                    isEditingName = true
+                }
+                .glassButtonStyle(.prominent)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
-    private func previewURL(for wallpaper: WEWallpaper) -> URL {
-        if wallpaper.project.type.lowercased() == "remote-video",
-           let url = URL(string: wallpaper.project.file) {
-            return url
+    /// The list layout: rows to drag into a new order, select with the keyboard, and Delete.
+    private func itemList(_ playlist: WallpaperPlaylist, actions: PlaylistItemActions) -> some View {
+        List(selection: $selectedItems) {
+            header(playlist)
+                .padding(.vertical, 16)
+                .listRowSeparator(.hidden)
+                .selectionDisabled()
+            Section {
+                ForEach(playlist.items) { item in
+                    PlaylistItemRow(item: item, actions: actions)
+                        .tag(item.id)
+                }
+                .onMove { sources, destination in
+                    guard let source = sources.first else { return }
+                    wallpaperViewModel.movePlaylistItem(itemID: playlist.items[source].id, toOffset: destination,
+                                                        playlistID: playlist.id)
+                }
+            } header: {
+                itemsHeader
+            }
         }
-        if wallpaper.project.type.lowercased() == "remote-image",
-           let url = URL(string: wallpaper.project.file) {
-            return url
+        .listStyle(.inset)
+        .scrollContentBackground(.hidden)
+        .contextMenu(forSelectionType: UUID.self) { ids in
+            if ids.count == 1, let item = playlist.items.first(where: { ids.contains($0.id) }) {
+                PlaylistItemMenu(item: item, actions: actions)
+            } else if !ids.isEmpty {
+                Button("Remove from playlist", role: .destructive) { actions.remove(Array(ids)) }
+            }
+        } primaryAction: { ids in
+            if ids.count == 1, let item = playlist.items.first(where: { ids.contains($0.id) }) {
+                actions.setAsWallpaper(item)
+            }
         }
-        return wallpaper.previewURL
-            ?? AppBundleLayout.wallpaperNotFoundURL
+        .onDeleteCommand {
+            actions.remove(Array(selectedItems))
+            selectedItems = []
+        }
+    }
+
+    private func header(_ playlist: WallpaperPlaylist) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            PlaylistHeader(
+                wallpaperViewModel: wallpaperViewModel,
+                playlist: playlist,
+                isRecordingShortcut: $isRecordingShortcut,
+                unregisteredShortcut: playlist.shortcut != nil && shortcuts.unregisteredPlaylists.contains(playlist.id),
+                onRecordShortcut: { record($0, for: playlist.id) },
+                onClearShortcut: { shortcuts.assign(nil, to: playlist.id) },
+                onSettings: { configuredPlaylist = playlist },
+                onDelete: { playlistPendingDeletion = playlist },
+                isEditingName: $isEditingName
+            )
+            PlaylistRotationOptions(wallpaperViewModel: wallpaperViewModel, playlist: playlist)
+        }
+    }
+
+    private var itemsHeader: some View {
+        HStack {
+            Text("Wallpapers")
+                .font(.title3.bold())
+                .foregroundStyle(.primary)
+            Spacer()
+            Picker("Layout", selection: $layout) {
+                Label("Grid", systemImage: "square.grid.2x2").tag(PlaylistItemLayout.grid)
+                Label("List", systemImage: "list.bullet").tag(PlaylistItemLayout.list)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .fixedSize()
+            .help("Show the wallpapers as a list or a grid")
+        }
+        .padding(.vertical, 4)
+    }
+
+    private var emptyPlaylist: some View {
+        ContentUnavailableView {
+            Label("No Wallpapers", systemImage: "photo.on.rectangle.angled")
+        } description: {
+            Text("In Installed, right-click a wallpaper and choose Add to Playlist.")
+        }
+        .frame(maxWidth: .infinity, minHeight: 240)
+    }
+
+    /// A tile dropped on another in the grid takes its place, as dragging a row does.
+    private func drop(_ ids: [String], onto target: WallpaperPlaylistItem, in playlist: WallpaperPlaylist) -> Bool {
+        guard let id = ids.first.flatMap(UUID.init(uuidString:)),
+              let source = playlist.items.firstIndex(where: { $0.id == id }),
+              let destination = playlist.items.firstIndex(where: { $0.id == target.id }), source != destination else { return false }
+        withAnimation(.snappy) {
+            wallpaperViewModel.movePlaylistItem(itemID: id, toOffset: destination > source ? destination + 1 : destination,
+                                                playlistID: playlist.id)
+        }
+        return true
     }
 }

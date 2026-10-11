@@ -15,6 +15,9 @@ class SteamCmdService: ObservableObject {
     @Published var downloadItems: [String: DownloadItem] = [:]
     @Published var downloadStartedAt: [String: Date] = [:]
     @Published var downloadPercentages: [String: Double] = [:]
+    /// Where each finished download landed in the Wallpaper Storage folder, for Show in Finder and
+    /// Set as Wallpaper in the Downloads tab.
+    @Published var downloadFolders: [String: URL] = [:]
 
     enum DownloadState: Equatable {
         case downloading(status: String)
@@ -407,6 +410,32 @@ class SteamCmdService: ObservableObject {
         }
     }
 
+    /// Starts a failed download again with what the first attempt knew about the item.
+    func retryDownload(_ workshopId: String) {
+        guard case .failed = downloadProgress[workshopId] else { return }
+        let item = downloadItems[workshopId]
+        downloadWorkshopItem(workshopId: workshopId, title: item?.title ?? downloadTitles[workshopId],
+                             previewURL: item?.previewURL, creatorId: item?.creatorId,
+                             subscriptions: item?.subscriptions ?? 0, fileSize: item?.fileSize ?? 0)
+    }
+
+    /// Retry All Failed in the Downloads tab, in the order they are listed.
+    func retryFailedDownloads(_ workshopIds: [String]) {
+        for workshopId in workshopIds { retryDownload(workshopId) }
+    }
+
+    /// Clear Completed in the Downloads tab: forgets the finished downloads' rows. The items stay
+    /// in the library.
+    func clearCompletedDownloads() {
+        let completed = downloadProgress.compactMap { $0.value == .completed ? $0.key : nil }
+        for workshopId in completed {
+            downloadProgress[workshopId] = nil
+            downloadPercentages[workshopId] = nil
+            downloadStartedAt[workshopId] = nil
+            downloadFolders[workshopId] = nil
+        }
+    }
+
     /// Downloads a Workshop item again only to restore the package a converted bundle was made from:
     /// the package goes into `<wallpaperDirectory>/.owe-source/`, the live files stay untouched.
     /// Runs after other downloads at background priority; `completion` runs on the main queue.
@@ -522,6 +551,7 @@ class SteamCmdService: ObservableObject {
             dependencyIndex.recordUserDownload(workshopId)
         }
         downloadProgress[workshopId] = .completed
+        downloadFolders[workshopId] = destination
         downloadedIndex.insert(workshopId)
         itemInstalled.send(destination)
         onCompleted?(destination)
