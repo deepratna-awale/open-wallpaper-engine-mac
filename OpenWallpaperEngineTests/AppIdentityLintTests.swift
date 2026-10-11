@@ -29,7 +29,7 @@ final class AppIdentityLintTests: XCTestCase {
         })
         let app = Self.appIdentifier
         XCTAssertEqual(identifiers, [app, "\(app).editor", "\(app).saver", "\(app).chromium.helper", "\(app).mcp",
-                                     "\(app).framework", "\(app).tests"])
+                                     "\(app).framework", "\(app).tests", "\(app).saver-extension", "\(app).saver-broker"])
         // CEF's helper apps, renamed by the build script.
         XCTAssertTrue(project.contains("\(app).chromium.helper${SUFFIX:+.$SUFFIX}.app"))
     }
