@@ -34,7 +34,10 @@ struct MDLModel: Equatable {
     var attachments: [MDLAttachment]?
     /// One entry per mesh, when the file has an `MDMP0001` section.
     var morphTargets: [MDLMorphTargets]?
-    /// `MDLE0002`: one local matrix per bone, an alternate pose (the writer's `referencepose` [I]).
+    /// `MDLE0002`: one local matrix per bone. Puppet Warp's "Reference Pose" writes it: the
+    /// reference pose becomes the bind pose (`MDLS`, with the mesh skinned into it) and this keeps
+    /// the bones' locals from before (WE 2.8's capture 509 C). The wallpaper draws the bind pose;
+    /// nothing here reads it.
     var referencePose: [simd_float4x4]?
     /// Where WE's reader stops: after the meshes before `MDLV` 13, else after the empty tag.
     var end: Int

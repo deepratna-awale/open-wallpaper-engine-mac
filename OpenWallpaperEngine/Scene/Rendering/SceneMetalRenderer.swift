@@ -3722,9 +3722,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // (`posedEffectOutput`), as WE draws the layer's geometry last.
         var pose = animator.pose
         if !entry.layer.weEffects.isEmpty {
-            // The texture channels are the image's: its effects see them.
+            // The texture channels are the image's: its effects see them. So are the parts'
+            // opacities, which WE's mesh draw into the effects' buffer applies (`SKINNING_ALPHA`);
+            // the parts' order matters where the posed mesh overlaps them (`posedEffectOutput`).
             pose = ScenePuppetPose.bind(boneCount: animator.pose.bones.count)
             pose.blendMap = animator.pose.blendMap
+            pose.bonesAlpha = animator.pose.bonesAlpha
         }
         // A rig that rearranges an atlas: the editor paints the effects' masks over its texture as
         // stored, where its parts don't overlap, so the effects read the texture itself and the
@@ -3780,9 +3783,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // The output keeps the source's layout, the image in the same share of its texels.
         let share = SIMD2(Float(puppet.contentPixels.x) / Float(source.width), Float(puppet.contentPixels.y) / Float(source.height))
         let content = SIMD2(Float(output.width), Float(output.height)) * simd_min(share, SIMD2(repeating: 1))
+        // A rig whose effects ran on its texture (`drawPuppet`) has its parts faded here; any other
+        // had them faded when its mesh drew the effects' input.
         return puppets.warp(puppet, layerID: entry.layer.id, key: "_effects", texture: output, contentSize: content,
                             pose: animator.pose, canvas: puppetCanvases[entry.layer.id], redraw: true, blended: true,
-                            mirrored: puppetIsMirrored(entry, camera: camera), commandBuffer: commandBuffer) ?? output
+                            mirrored: puppetIsMirrored(entry, camera: camera), fades: !puppet.bindPoseIsTextureLayout,
+                            commandBuffer: commandBuffer) ?? output
     }
 
     /// A script's call on a puppet's layers or bones. `setBoneTransform`'s matrix is in the scene;

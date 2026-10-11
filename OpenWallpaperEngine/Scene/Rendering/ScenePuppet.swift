@@ -47,9 +47,14 @@ final class ScenePuppetPlan {
     /// The first mesh's blend shapes (`MDMP`) and flags: its "morph_<n>" texture and uniforms.
     let morphs: MDLMorphTargets?
     let meshFlags: UInt32
-    /// Whether every vertex sits where its texture coordinate puts it in the image
-    /// (`isTextureLayout`): then the bind pose is the texture as stored.
+    /// Whether every vertex sits where its texture coordinate puts it in the image: then the bind
+    /// pose is the texture as stored. A rig with the texture layout's positions
+    /// (`MDLMesh.textureLayoutPositions`) is compared with them, any other by its coordinates
+    /// (`isTextureLayout`).
     let bindPoseIsTextureLayout: Bool
+    /// The order the parts draw in when the rig's clips key a bone's depth; nil draws the index
+    /// buffer as it is.
+    let drawOrder: ScenePuppetDrawOrder?
     /// The rig's texture channels, drawn over the image the mesh samples; nil without.
     let channels: ScenePuppetChannelPlan?
 
@@ -64,8 +69,16 @@ final class ScenePuppetPlan {
         self.combos = combos
         format = mesh.format
         self.vertexData = vertexData
-        indexData = mesh.indexData
-        usesUInt32Indices = mesh.usesUInt32Indices
+        let drawOrder = ScenePuppetDrawOrder(mesh: mesh, skeleton: skeleton, clips: clips)
+        self.drawOrder = drawOrder
+        if drawOrder != nil, !mesh.usesUInt32Indices {
+            // Ranges draw from their own offsets, which Metal wants 4-byte aligned: u32 indices.
+            indexData = mesh.indices.withUnsafeBytes { Data($0) }
+            usesUInt32Indices = true
+        } else {
+            indexData = mesh.indexData
+            usesUInt32Indices = mesh.usesUInt32Indices
+        }
         indexCount = mesh.indexCount
         self.imageSize = imageSize
         self.contentPixels = contentPixels
@@ -76,7 +89,29 @@ final class ScenePuppetPlan {
         self.morphs = morphs
         meshFlags = mesh.flags
         self.channels = channels
-        bindPoseIsTextureLayout = Self.isTextureLayout(mesh.vertexData, format: mesh.format, imageSize: imageSize)
+        if let layout = mesh.textureLayoutPositions {
+            bindPoseIsTextureLayout = Self.matches(mesh.vertexData, format: mesh.format, layout: layout)
+        } else {
+            bindPoseIsTextureLayout = Self.isTextureLayout(mesh.vertexData, format: mesh.format, imageSize: imageSize)
+        }
+    }
+
+    /// Whether every vertex's position is within a pixel of `layout`'s (the texture layout WE's
+    /// editor keeps beside a mesh it moved off it, docs/models-plan.md §1.2).
+    static func matches(_ vertexData: Data, format: MDLVertexFormat, layout: [SIMD3<Float>]) -> Bool {
+        guard let position = MDLVertexAttribute.named("a_Position").flatMap(format.offset(of:)) else { return true }
+        let stride = format.stride
+        let count = stride > 0 ? vertexData.count / stride : 0
+        guard count == layout.count else { return false }
+        return vertexData.withUnsafeBytes { raw in
+            func float(_ at: Int) -> Float { Float(bitPattern: UInt32(littleEndian: raw.loadUnaligned(fromByteOffset: at, as: UInt32.self))) }
+            for vertex in 0..<count {
+                let base = vertex * stride + position
+                let point = SIMD2(float(base), float(base + 4))
+                if simd_reduce_max(simd_abs(point - SIMD2(layout[vertex].x, layout[vertex].y))) > 1 { return false }
+            }
+            return true
+        }
     }
 
     /// Whether every vertex of `vertexData` (texture coordinates unscaled) is at `(uv − ½)·size`,
@@ -157,7 +192,8 @@ final class ScenePuppetPlan {
     /// image's scene object id, whose layers' timelines run in the wallpaper's `SceneAnimationSet`.
     func makeAnimator(objectID: Int? = nil) -> ScenePuppetAnimator {
         ScenePuppetAnimator(skeleton: skeleton, clips: clips, layers: animationLayers,
-                            morphRig: SceneMorphRig.puppet(morphs, meshFlags: meshFlags), objectID: objectID) { [rigPath] layer in
+                            morphRig: SceneMorphRig.puppet(morphs, meshFlags: meshFlags), objectID: objectID,
+                            drawOrder: drawOrder) { [rigPath] layer in
             OWELog.error(.scene, "Puppet rig \(rigPath) has no clip \(layer.animation.map(String.init) ?? "(none)") for "
                          + "animation layer \(layer.name ?? "?"); WE makes no layer for it")
         }
@@ -322,6 +358,9 @@ struct ScenePuppetPose: Equatable {
     /// The texture channels' weights, `g_BlendMap` flattened (`ScenePuppetAnimator.channelWeights`);
     /// empty is every channel 0.
     var blendMap: [Float] = []
+    /// The index ranges in the order they draw (`ScenePuppetDrawOrder`); nil draws the index
+    /// buffer as it is.
+    var drawRanges: [ScenePuppetDrawOrder.Range]? = nil
 
     static func bind(boneCount: Int) -> ScenePuppetPose {
         ScenePuppetPose(bones: Array(repeating: matrix_identity_float4x4, count: boneCount),
@@ -666,10 +705,13 @@ final class ScenePuppetRenderer {
     /// (`applyBlending`): the image a translucent puppet's effects made, whose parts overlap (a
     /// strand of hair over a face the texture leaves empty under it). Otherwise later triangles
     /// replace earlier ones, as data textures (normal maps, masks) want. `mirrored`: the layer
-    /// mirrors its image (`Draw.mirrored`).
+    /// mirrors its image (`Draw.mirrored`). `fades`: the parts fade by the pose's `bonesAlpha`
+    /// when the material has `SKINNING_ALPHA`, for output that didn't come through the mesh's own
+    /// draw (a rig whose effects run on its texture). The triangles draw in the pose's
+    /// `drawRanges` order.
     func warp(_ plan: ScenePuppetPlan, layerID: String, key: String, texture: MTLTexture, contentSize: SIMD2<Float>?,
               pose: ScenePuppetPose, canvas: ScenePuppetCanvas? = nil, redraw: Bool = false, blended: Bool = false,
-              mirrored: Bool = false, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+              mirrored: Bool = false, fades: Bool = false, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         guard let state = layers[layerID], state.plan === plan else { return nil }
         let format = plan.format
         guard let position = MDLVertexAttribute.named("a_Position").flatMap(format.offset(of:)),
@@ -707,12 +749,13 @@ final class ScenePuppetRenderer {
         struct Uniforms {
             var projection: simd_float4x4
             var uvScale: SIMD2<Float>
-            var positionOffset, indicesOffset, weightsOffset, texCoordOffset, stride, boneCount: UInt32
+            var positionOffset, indicesOffset, weightsOffset, texCoordOffset, stride, boneCount, alphaCount: UInt32
         }
         var uniforms = Uniforms(projection: (canvas ?? .image(plan.imageSize)).projection, uvScale: SIMD2(1, 1),
                                 positionOffset: UInt32(position), indicesOffset: UInt32(indices),
                                 weightsOffset: UInt32(weights), texCoordOffset: UInt32(texCoord),
-                                stride: UInt32(format.stride), boneCount: UInt32(pose.bones.count))
+                                stride: UInt32(format.stride), boneCount: UInt32(pose.bones.count),
+                                alphaCount: fades && plan.combos.skinningAlpha ? UInt32(pose.bonesAlpha.count) : 0)
         let bones = pose.bones.isEmpty ? [matrix_identity_float4x4] : pose.bones
         encoder.setRenderPipelineState(blends ? blendedWarpPipeline : warpPipeline)
         encoder.setViewport(MTLViewport(originX: 0, originY: 0, width: Double(extent.x), height: Double(extent.y),
@@ -726,11 +769,15 @@ final class ScenePuppetRenderer {
             return nil
         }
         encoder.setVertexBuffer(palette.buffer, offset: palette.offset, index: 2)
+        let alphas = pose.bonesAlpha.isEmpty ? [Float(1)] : pose.bonesAlpha
+        guard let alphaBuffer = alphas.withUnsafeBytes({ uniformArena.allocate($0, for: commandBuffer) }) else {
+            encoder.endEncoding()
+            return nil
+        }
+        encoder.setVertexBuffer(alphaBuffer.buffer, offset: alphaBuffer.offset, index: 3)
         encoder.setFragmentTexture(texture, index: 0)
         encoder.setFragmentSamplerState(clampSampler, index: 0)
-        encoder.drawIndexedPrimitives(type: .triangle, indexCount: plan.indexCount,
-                                      indexType: plan.usesUInt32Indices ? .uint32 : .uint16,
-                                      indexBuffer: state.indices, indexBufferOffset: 0)
+        Self.drawMesh(plan, ranges: pose.drawRanges, indices: state.indices, encoder: encoder)
         encoder.endEncoding()
         if let scratch {
             guard let compute = commandBuffer.makeComputeCommandEncoder() else { return nil }
@@ -811,11 +858,26 @@ final class ScenePuppetRenderer {
         if !bytes.isEmpty {
             bytes.withUnsafeBytes { raw in uniformArena.bind(raw, index: 0, to: encoder, commandBuffer: commandBuffer) }
         }
-        encoder.drawIndexedPrimitives(type: .triangle, indexCount: plan.indexCount,
-                                      indexType: plan.usesUInt32Indices ? .uint32 : .uint16,
-                                      indexBuffer: state.indices, indexBufferOffset: 0)
+        Self.drawMesh(plan, ranges: draw.pose.drawRanges, indices: state.indices, encoder: encoder)
         drawsEncoded += 1
         return true
+    }
+
+    /// The mesh's triangles: the index buffer as it is, or its `ranges` in their order
+    /// (`ScenePuppetDrawOrder`), later ranges over earlier ones.
+    static func drawMesh(_ plan: ScenePuppetPlan, ranges: [ScenePuppetDrawOrder.Range]?, indices: MTLBuffer,
+                         encoder: MTLRenderCommandEncoder) {
+        let type: MTLIndexType = plan.usesUInt32Indices ? .uint32 : .uint16
+        guard let ranges else {
+            encoder.drawIndexedPrimitives(type: .triangle, indexCount: plan.indexCount, indexType: type,
+                                          indexBuffer: indices, indexBufferOffset: 0)
+            return
+        }
+        let size = plan.usesUInt32Indices ? 4 : 2
+        for range in ranges where range.indexCount > 0 && range.firstIndex + range.indexCount <= plan.indexCount {
+            encoder.drawIndexedPrimitives(type: .triangle, indexCount: range.indexCount, indexType: type,
+                                          indexBuffer: indices, indexBufferOffset: range.firstIndex * size)
+        }
     }
 
     /// `g_Bones`, `g_BonesAlpha` and the morph uniforms (zero without targets: none applies).

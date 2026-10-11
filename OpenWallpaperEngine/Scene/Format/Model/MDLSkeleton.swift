@@ -72,10 +72,19 @@ struct MDLSkeleton: Equatable {
     var maps: [[MapEntry]] = []
     var ikSets: [IKSet] = []
     var boneVectors: [BoneVector]?
-    /// One bone index per bone (model+0x1d0, which WE clamps to the last bone) [?].
+    /// One bone index per bone (model+0x1d0, which WE clamps to the last bone): in Puppet Warp
+    /// rigs, the bones by draw depth, the order of the mesh's `BoneRange`s.
     var boneIndices: [UInt32]?
-    /// Version 3 and later: one u32 per bone (model+0x1e8); 900, 1000… look like a priority [I].
+    /// Version 3 and later: one u32 per bone (model+0x1e8), each bone's draw depth as a signed
+    /// integer (`boneDepths`).
     var bonePriorities: [UInt32]?
+
+    /// `bonePriorities` as WE's editor writes them: Puppet Warp's "Limb Depth Order", the bone's
+    /// Calculated depth (default 100 per bone in order, plus its Depth offset; "Move Limb to Back"
+    /// takes 100 off, WE 2.8's capture 509 B), signed (−100 is 0xFFFFFF9C). The editor already
+    /// sorts the mesh's index ranges by it, lowest first, so a static depth needs nothing at run
+    /// time; a clip's keyed Depth offset (`MDLAnimation.boneDepthTracks`) reorders them.
+    var boneDepths: [Int32]? { bonePriorities?.map { Int32(bitPattern: $0) } }
 
     /// Each bone's bind pose in model space: `local · world(parent)` in WE's row-vector order,
     /// that is `world(parent) · local` for these column-vector matrices [I, consistent in the

@@ -63,8 +63,8 @@ struct MDLAnimation: Equatable {
         /// the root's start and end matrices there (unless the clip matches its loop, flag 0x400).
         var startFrame: UInt32
         var endFrame: UInt32
-        /// The editor's Frame offset: where the root's previous matrix starts [I: the editor
-        /// always wrote 0].
+        /// The editor's Frame offset: a layer on the clip starts that many frames into it, its
+        /// loop phase-shifted rather than delayed (WE 2.8's capture 509 E; `SceneAnimationLayer`).
         var frameOffset: UInt32
         /// The editor's Motion root bone; −1 for None.
         var rootBone: Int32
@@ -112,16 +112,27 @@ struct MDLAnimation: Equatable {
     /// `MDLA` 3 and later: one per Puppet Warp texture channel, its `g_BlendMap` entry (the
     /// clip's list at +0xd8, 0x1402646dc; the puppet update samples it at 0x1401fefa0…0x1401ffa2e).
     var scalarTracksA: [ScalarTrack]?
-    /// `MDLA` 3 and later, when present: one per bone track.
+    /// `MDLA` 3 and later, when present: one per bone track, the bone's keyed Opacity
+    /// (`boneAlphaTracks`).
     var scalarTracksB: [ScalarTrack]?
     /// `MDLA` 4 and later, when present: one per mesh.
     var meshTracks: [MeshTrack]?
     /// `MDLA` 5 and later: the animated model's box.
     var bounds: MDLBounds?
-    /// `MDLA` 6 and later, when present: one per bone track.
+    /// `MDLA` 6 and later, when present: one per bone track, the bone's keyed Depth offset
+    /// (`boneDepthTracks`).
     var scalarTracksC: [ScalarTrack]?
     var reference: Reference?
     var events: [Event]
+
+    /// Puppet Warp's per-bone Opacity keyed in the clip (WE 2.8's capture 509 F: the editor's
+    /// animation track "Opacity" writes the second scalar list): `g_BonesAlpha`, which WE fades the
+    /// bone's part by at run time.
+    var boneAlphaTracks: [ScalarTrack]? { scalarTracksB }
+    /// Puppet Warp's per-bone Depth offset keyed in the clip, stepped (509 B: the editor's track
+    /// "Depth offset" writes the third scalar list): added to the bone's depth
+    /// (`MDLSkeleton.boneDepths`), it reorders the parts at run time.
+    var boneDepthTracks: [ScalarTrack]? { scalarTracksC }
 
     var mode: Mode { Mode(name: modeName) }
     /// `frames / fps` seconds (0x1401a8c10).

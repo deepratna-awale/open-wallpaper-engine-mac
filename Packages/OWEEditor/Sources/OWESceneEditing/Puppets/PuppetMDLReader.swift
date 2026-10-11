@@ -5,8 +5,7 @@ import simd
 /// 4–23, `MDLS` 1–4, `MDLA` 1–6; docs/models-plan.md §1), the same layout as the app's
 /// `MDLReader`. The puppet is the first mesh (the only one WE draws, 0x14020aeb9) with its
 /// skeleton, weights and clips; what the editor doesn't edit is kept (`PuppetPreservedData`) or,
-/// for data no library rig has (links, constraints, IK sets, scalar and morph-weight tracks),
-/// left out.
+/// for data no library rig has (links, constraints, IK sets, morph-weight tracks), left out.
 public enum PuppetMDLReader {
     /// `imageSize`: the image's pixels (the mesh's space has no size of its own).
     public static func read(_ data: Data, imageSize: SIMD2<Float>, sourcePath: String? = nil) throws -> PuppetDocument {
@@ -87,6 +86,8 @@ public enum PuppetMDLReader {
         var format: UInt32
         var vertices: ArraySlice<UInt8>
         var indices: ArraySlice<UInt8>
+        /// The 16-byte records after the vertices (`MDLV` 21 and later), as u32s.
+        var boneRanges: [SIMD4<UInt32>]?
     }
 
     private static func readMesh(_ r: inout PuppetMDLInput, version: Int, legacyFormat: UInt32, materials: Int) throws -> RawMesh {
@@ -99,12 +100,21 @@ public enum PuppetMDLReader {
         guard format & ~PuppetVertexLayout.knownBits == 0 else { throw PuppetMDLError.malformed("vertex format") }
         let vertices = try r.blob("vertices")
         let indices = try r.blob("indices")
+        var ranges: [SIMD4<UInt32>]?
         if version >= 21 {
             if try r.u8() != 0 {
                 _ = try r.u32()
                 _ = try r.blob("extra positions")
             }
-            if try r.u8() != 0 { _ = try r.blob("vector4 block") }
+            if try r.u8() != 0 {
+                let block = try r.blob("vector4 block")
+                guard block.count % 16 == 0 else { throw PuppetMDLError.malformed("vector4 block") }
+                let values = Array(block)
+                func u32(_ at: Int) -> UInt32 {
+                    UInt32(values[at]) | UInt32(values[at + 1]) << 8 | UInt32(values[at + 2]) << 16 | UInt32(values[at + 3]) << 24
+                }
+                ranges = stride(from: 0, to: values.count, by: 16).map { SIMD4(u32($0), u32($0 + 4), u32($0 + 8), u32($0 + 12)) }
+            }
         }
         if version >= 23 {
             for _ in 0..<(try r.u32()) {
@@ -116,7 +126,7 @@ public enum PuppetMDLReader {
             }
         }
         return RawMesh(material: names.first ?? "", flags: flags, flagsExtra: extra, format: format, vertices: vertices,
-                       indices: indices)
+                       indices: indices, boneRanges: ranges)
     }
 
     /// The channels a texture-channel mesh's quads name: the largest `a_BlendIndices.x` + 1.
@@ -185,6 +195,9 @@ public enum PuppetMDLReader {
         document.preserved.meshFlags = mesh.flags & ~1
         document.preserved.meshFlagsExtra = mesh.flagsExtra
         if !morphs.isEmpty { document.preserved.morphIndices = morphs }
+        if let ranges = mesh.boneRanges, !ranges.isEmpty, ranges.allSatisfy({ UInt64($0.z) + UInt64($0.w) <= UInt64(3 * triangles.count) }) {
+            document.preserved.boneRanges = ranges
+        }
     }
 
     // MARK: MDLS
@@ -272,6 +285,14 @@ public enum PuppetMDLReader {
 
     // MARK: MDLA
 
+    /// One scalar track per bone track: its u32, then a sample per frame.
+    private static func boneScalars(_ r: inout PuppetMDLInput, count: Int) throws -> [PuppetChannelTrack] {
+        try (0..<max(count, 0)).map { _ in
+            let tag = try r.u32()
+            return PuppetChannelTrack(tag: tag, samples: PuppetMDLInput.floats(try r.blob("scalar track")))
+        }
+    }
+
     private static func readAnimations(_ r: inout PuppetMDLInput, version: Int, links: Int, constraints: Int, meshes: Int,
                                        into document: inout PuppetDocument) throws {
         let count = Int(try r.i32())
@@ -311,17 +332,13 @@ public enum PuppetMDLReader {
                 }
             }
             var channelTracks: [PuppetChannelTrack] = []
+            var boneAlpha: [PuppetChannelTrack]?, boneDepth: [PuppetChannelTrack]?
             if version >= 3 {
                 for _ in 0..<(try r.u32()) {
                     let tag = try r.u32()
                     channelTracks.append(PuppetChannelTrack(tag: tag, samples: PuppetMDLInput.floats(try r.blob("scalar track"))))
                 }
-                if try r.u8() != 0 {
-                    for _ in 0..<trackCount {
-                        _ = try r.u32()
-                        _ = try r.blob("scalar track")
-                    }
-                }
+                if try r.u8() != 0 { boneAlpha = try boneScalars(&r, count: trackCount) }
             }
             if version >= 4, try r.u8() != 0 {
                 for _ in 0..<meshes {
@@ -335,16 +352,20 @@ public enum PuppetMDLReader {
                 }
             }
             if version >= 5 { _ = try r.f32s(6) }
-            if version >= 6, try r.u8() != 0 {
-                for _ in 0..<trackCount {
-                    _ = try r.u32()
-                    _ = try r.blob("scalar track")
-                }
-            }
+            if version >= 6, try r.u8() != 0 { boneDepth = try boneScalars(&r, count: trackCount) }
             let mode = PuppetClip.Mode(rawValue: modeName) ?? .loop
             var clip = PuppetClip(id: id, name: name, mode: mode, fps: fps, frames: frames, tracks: tracks,
                                   otherFlags: flags & ~PuppetClip.RootMotion.ownedFlags)
             if !channelTracks.isEmpty { clip.channelTracks = channelTracks }
+            // One per bone the document kept; a bone past the file's tracks at rest.
+            let boneCount = document.bones.count
+            func perBone(_ tracks: [PuppetChannelTrack]?, rest: Float) -> [PuppetChannelTrack]? {
+                tracks.map { tracks in
+                    (0..<boneCount).map { tracks.indices.contains($0) ? tracks[$0] : PuppetChannelTrack(tag: 0, samples: [rest]) }
+                }
+            }
+            clip.boneAlphaTracks = perBone(boneAlpha, rest: 1)
+            clip.boneDepthTracks = perBone(boneDepth, rest: 0)
             if PuppetClip.Mode(rawValue: modeName) == nil { clip.modeName = modeName }
             if flags & PuppetClip.RootMotion.ownedFlags != 0 {
                 var motion = PuppetClip.RootMotion(matchLoop: flags & PuppetClip.RootMotion.matchLoopFlag != 0,
