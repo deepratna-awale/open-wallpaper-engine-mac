@@ -41,13 +41,37 @@ extension InstalledLibraryModel {
         currentFolderID = id
     }
 
-    /// WE's Create Folder: a folder in the one shown, named `title` or WE's "New Folder".
+    /// The name a new folder in the one shown gets: WE's "New Folder", numbered when a folder
+    /// there already has it.
+    var newFolderTitle: String {
+        folders.tree.uniqueTitle(String(localized: "New Folder", comment: "Default name of a folder made in the Installed tab"),
+                                 in: shownFolderID)
+    }
+
+    /// WE's Create Folder: a folder in the one shown, named `title` or `newFolderTitle`.
     @discardableResult
     func createFolder(named title: String) -> UUID? {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        let name = trimmed.isEmpty ? String(localized: "New Folder", comment: "Default name of a folder made in the Installed tab") : trimmed
+        let name = trimmed.isEmpty ? newFolderTitle : trimmed
         let parent = shownFolderID
         return folders.update { $0.create(title: name, in: parent) }
+    }
+
+    /// Create Folder from a wallpaper's menu, as Finder's New Folder with Selection: a folder
+    /// named `newFolderTitle` in the one shown, with `wallpapers` moved into it, in one change.
+    /// Clears the selection; returns the folder's id.
+    @discardableResult
+    func createFolder(moving wallpapers: [WEWallpaper]) -> UUID? {
+        let name = newFolderTitle
+        let parent = shownFolderID
+        let keys = wallpapers.map(FavoritesStore.key(for:))
+        let id = folders.update { tree -> UUID? in
+            guard let id = tree.create(title: name, in: parent) else { return nil }
+            tree.move(items: keys, to: id)
+            return id
+        }
+        clearSelection()
+        return id
     }
 
     func renameFolder(_ id: UUID, to title: String) {
