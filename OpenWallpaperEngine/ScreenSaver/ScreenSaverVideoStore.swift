@@ -65,10 +65,13 @@ struct ScreenSaverVideoStore: Sendable {
     /// Whether `name` is a file the saver reads besides the videos: the manifests (the videos',
     /// the live frames') and the stills (`ScreenSaverStills`, its pictures).
     static func isKept(_ name: String) -> Bool {
-        name == ScreenSaverManifest.fileName || name == ScreenSaverLiveManifest.fileName
-            || name == ScreenSaverStills.fileName || name.hasPrefix("still-")
-            // A still being written (`ScreenSaverStillPublisher` stages it as `.<uuid>-still-…`).
-            || name.hasPrefix(".") && name.contains("-still-")
+        name == ScreenSaverManifest.fileName || name == ScreenSaverLiveManifest.fileName || isStill(name)
+    }
+
+    /// Whether `name` is one of the stills (`stills.json`, a picture, or one being written:
+    /// `ScreenSaverStillPublisher` stages it as `.<uuid>-still-…`).
+    static func isStill(_ name: String) -> Bool {
+        name == ScreenSaverStills.fileName || name.hasPrefix("still-") || name.hasPrefix(".") && name.contains("-still-")
     }
 
     /// Removes every video but `keep` (and partial renders), so only the current ones stay; the
@@ -137,11 +140,24 @@ struct ScreenSaverVideoStore: Sendable {
         }
     }
 
-    /// Removes the folder: the plugin was turned off.
+    /// The plugin was turned off: the videos and manifests go, the stills stay (`isStill`), so a
+    /// saver shown before the next enable, or right after it, isn't left blank. The folder goes
+    /// once nothing is left in it.
     func removeAll() {
-        guard FileManager.default.fileExists(atPath: directory.path(percentEncoded: false)) else { return }
-        do { try FileManager.default.removeItem(at: directory) } catch {
-            OWELog.error(.app, "Screen saver: can't remove the videos: \(error)")
+        let files: [URL]
+        do {
+            files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+        } catch {
+            // Optional: no folder means nothing to remove.
+            return
+        }
+        for file in files where !Self.isStill(file.lastPathComponent) {
+            do { try FileManager.default.removeItem(at: file) } catch {
+                OWELog.error(.app, "Screen saver: can't remove \(file.lastPathComponent): \(error)")
+            }
+        }
+        if let left = try? FileManager.default.contentsOfDirectory(atPath: directory.path(percentEncoded: false)), left.isEmpty { // Optional: gone is fine.
+            try? FileManager.default.removeItem(at: directory) // Optional: an empty folder of ours.
         }
     }
 }

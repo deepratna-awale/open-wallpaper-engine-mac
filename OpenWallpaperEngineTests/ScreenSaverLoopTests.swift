@@ -85,7 +85,7 @@ final class ScreenSaverStorageTests: XCTestCase {
         XCTAssertFalse(user.isInstalled)
     }
 
-    func testRetainKeepsTheManifestsAndListedVideosOnly() throws {
+    func testRetainAndTurningOffKeepTheStills() throws {
         let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: folder) }
         let store = ScreenSaverVideoStore(directory: folder)
@@ -102,7 +102,13 @@ final class ScreenSaverStorageTests: XCTestCase {
         XCTAssertFalse(store.exists(fileName: "old.mov"))
         XCTAssertFalse(store.exists(fileName: ".partial-new.mov"))
         store.removeAll()
-        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.path))
+        XCTAssertFalse(store.exists(fileName: "new.mov"))
+        XCTAssertFalse(store.exists(fileName: ScreenSaverManifest.fileName))
+        for still in stills { XCTAssertTrue(store.exists(fileName: still), "\(still): turning the plugin off keeps the stills") }
+        for still in stills { try FileManager.default.removeItem(at: store.url(fileName: still)) }
+        try Data().write(to: store.url(fileName: "again.mov"))
+        store.removeAll()
+        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.path), "an emptied folder goes")
     }
 
     func testManifestPicksTheVideoForTheViewSize() {
