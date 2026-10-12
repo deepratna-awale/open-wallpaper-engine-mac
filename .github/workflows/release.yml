@@ -312,6 +312,26 @@ jobs:
           echo "owe-mcp: ${MCP_KB} KB"
           test "$MCP_KB" -lt 10240 || { echo "::error::owe-mcp is ${MCP_KB} KB; it should link only what it needs"; exit 1; }
 
+          # The live screen saver: its extension (sandboxed, the app's team and App Group) and its
+          # broker, a launch agent SMAppService registers from Contents/Library/LaunchAgents.
+          APPEX="$APP/Contents/PlugIns/OpenWallpaperEngineSaverExtension.appex"
+          BROKER="$APP/Contents/Helpers/owe-saver-broker"
+          AGENT="$APP/Contents/Library/LaunchAgents/app.openwallpaperengine.saver-broker.plist"
+          test -d "$APPEX" || { echo "::error::the screen saver extension is missing"; exit 1; }
+          test -x "$BROKER" || { echo "::error::owe-saver-broker is missing"; exit 1; }
+          test -f "$AGENT" || { echo "::error::the broker's launch agent plist is missing"; exit 1; }
+          codesign --verify --strict --verbose=2 "$APPEX"
+          codesign --verify --strict --verbose=2 "$BROKER"
+          test "$(team "$APPEX")" = "$(team "$APP")" && test "$(team "$BROKER")" = "$(team "$APP")" \
+            || { echo "::error::the screen saver extension or broker isn't signed by the app's team"; exit 1; }
+          APPEX_ENTS=$(codesign -d --entitlements - --xml "$APPEX" 2>/dev/null | plutil -p - || true)
+          echo "$APPEX_ENTS"
+          grep -q "com.apple.security.app-sandbox" <<<"$APPEX_ENTS" || { echo "::error::the screen saver extension isn't sandboxed"; exit 1; }
+          grep -q "$(team "$APP").app.openwallpaperengine" <<<"$APPEX_ENTS" \
+            || { echo "::error::the screen saver extension lacks the app's App Group"; exit 1; }
+          test "$(/usr/libexec/PlistBuddy -c "Print :BundleProgram" "$AGENT")" = "Contents/Helpers/owe-saver-broker" \
+            || { echo "::error::the broker's launch agent doesn't point at Contents/Helpers/owe-saver-broker"; exit 1; }
+
           INFO="$APP/Contents/Info.plist"
           plist() { /usr/libexec/PlistBuddy -c "Print :$1" "$INFO"; }
           echo "version $(plist CFBundleShortVersionString) ($(plist CFBundleVersion)), label $(plist OWEVersionLabel)"

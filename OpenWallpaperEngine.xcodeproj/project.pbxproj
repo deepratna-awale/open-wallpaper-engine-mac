@@ -461,6 +461,7 @@
 				EE6000000000000000000018 /* Chromium Helper Apps */,
 				FB1000000000000000000011 /* Embed Wallpaper Editor */,
 				EC2000000000000000000011 /* Embed MCP Server */,
+				EE9000000000000000000001 /* Embed Screen Saver Extension and Broker */,
 			);
 			buildRules = (
 			);
@@ -470,6 +471,8 @@
 				EE500000000000000000000C /* PBXTargetDependency */,
 				EE6000000000000000000016 /* PBXTargetDependency */,
 				EC2000000000000000000013 /* PBXTargetDependency */,
+				EE9000000000000000000004 /* PBXTargetDependency */,
+				EE9000000000000000000005 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				FA1000000000000000000021 /* OpenWallpaperEngineApp */,
@@ -712,6 +715,20 @@
 			remoteGlobalIDString = EC2000000000000000000001;
 			remoteInfo = OWEMCPServer;
 		};
+		EE9000000000000000000002 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5EC47E6E2A2DB2E600120CCC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EE7000000000000000000001;
+			remoteInfo = OpenWallpaperEngineSaverExtension;
+		};
+		EE9000000000000000000003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5EC47E6E2A2DB2E600120CCC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EE8000000000000000000001;
+			remoteInfo = OWESaverBroker;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXTargetDependency section */
@@ -719,6 +736,16 @@
 			isa = PBXTargetDependency;
 			target = 5EC47E752A2DB2E600120CCC /* OpenWallpaperEngine */;
 			targetProxy = EE2000000000000000000008 /* PBXContainerItemProxy */;
+		};
+		EE9000000000000000000004 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EE7000000000000000000001 /* OpenWallpaperEngineSaverExtension */;
+			targetProxy = EE9000000000000000000002 /* PBXContainerItemProxy */;
+		};
+		EE9000000000000000000005 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EE8000000000000000000001 /* OWESaverBroker */;
+			targetProxy = EE9000000000000000000003 /* PBXContainerItemProxy */;
 		};
 		EE500000000000000000000C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -894,6 +921,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "set -euo pipefail\n# CEF's helper apps, in CEF's macOS naming: \"<helper>.app\" and its (Renderer), (GPU) and (Plugin)\n# variants, which Chromium launches by name. The installer copies them into the engine bundle\n# (<version>/OWE Chromium.app/Contents/Frameworks) beside the framework, so CEF's sandbox, which\n# allows its main bundle, covers them. Same executable and entitlements as the XPC helper.\nHELPERS=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers\"\nSOURCE=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/XPCServices/owe-chromium-helper.xpc/Contents\"\nrm -rf \"$HELPERS\"/\"OWE Chromium Helper\"*.app\nmkdir -p \"$HELPERS\"\nfor VARIANT in \"\" \" (Renderer)\" \" (GPU)\" \" (Plugin)\"; do\n  NAME=\"OWE Chromium Helper$VARIANT\"\n  SUFFIX=$(printf '%s' \"$VARIANT\" | tr -d ' ()' | tr '[:upper:]' '[:lower:]')\n  APP=\"$HELPERS/$NAME.app\"\n  mkdir -p \"$APP/Contents/MacOS\"\n  cp \"$SOURCE/MacOS/owe-chromium-helper\" \"$APP/Contents/MacOS/$NAME\"\n  cp \"$SOURCE/Info.plist\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleExecutable -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleName -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleDisplayName -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleIdentifier -string \"app.openwallpaperengine.chromium.helper${SUFFIX:+.$SUFFIX}.app\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundlePackageType -string APPL \"$APP/Contents/Info.plist\"\n  plutil -remove XPCService \"$APP/Contents/Info.plist\"\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ]; then\n    codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --options runtime ${OTHER_CODE_SIGN_FLAGS:-} --entitlements \"${SRCROOT}/OWEChromiumHelper/OWEChromiumHelper.entitlements\" \"$APP\"\n  fi\ndone\nrm -rf \"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/XPCServices/owe-chromium-helper (Renderer).app\"\n";
+		};
+		EE9000000000000000000001 /* Embed Screen Saver Extension and Broker */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed Screen Saver Extension and Broker";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\n# The live screen saver's extension (Contents/PlugIns) and its broker (Contents/Helpers, with\n# its launch agent in Contents/Library/LaunchAgents for SMAppService), in builds that set\n# OWE_EMBED_SCREEN_SAVER_EXTENSION (Release: archives and the lab's release check). Xcode\n# registers every app it builds with LaunchServices, and pkd would list each Debug copy's\n# extension as another OWE screen saver in System Settings, and its agent would compete for the\n# broker's Mach service; so Debug builds (Dev copies, tests) carry neither.\n# Scripts/build-saver-lab.sh puts them into a copy for testing.\nCONTENTS=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}\"\nAPPEX=\"$CONTENTS/PlugIns/OpenWallpaperEngineSaverExtension.appex\"\nBROKER=\"$CONTENTS/Helpers/owe-saver-broker\"\nAGENT=\"$CONTENTS/Library/LaunchAgents/app.openwallpaperengine.saver-broker.plist\"\nif [ \"${OWE_EMBED_SCREEN_SAVER_EXTENSION:-NO}\" != \"YES\" ]; then\n  rm -rf \"$APPEX\" \"$BROKER\" \"$AGENT\"\n  exit 0\nfi\nmkdir -p \"$CONTENTS/PlugIns\" \"$CONTENTS/Helpers\" \"$CONTENTS/Library/LaunchAgents\"\nrm -rf \"$APPEX\"\nditto \"${BUILT_PRODUCTS_DIR}/OpenWallpaperEngineSaverExtension.appex\" \"$APPEX\"\nditto \"${BUILT_PRODUCTS_DIR}/owe-saver-broker\" \"$BROKER\"\ncp \"${SRCROOT}/OWESaverBroker/app.openwallpaperengine.saver-broker.plist\" \"$AGENT\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1131,6 +1177,7 @@
 		5EC47EA22A2DB2E700120CCC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				OWE_EMBED_SCREEN_SAVER_EXTENSION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
