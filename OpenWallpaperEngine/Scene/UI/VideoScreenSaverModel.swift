@@ -7,28 +7,28 @@ import Foundation
 @MainActor
 final class VideoScreenSaverModel: ObservableObject {
     let wallpaper: WEWallpaper
-    let recordings: ScreenSaverRecordingService
+    let selectionService: ScreenSaverSelectionService
     @Published var errorMessage: String?
     private var subscription: AnyCancellable?
 
-    init(wallpaper: WEWallpaper, recordings: ScreenSaverRecordingService) {
+    init(wallpaper: WEWallpaper, selectionService: ScreenSaverSelectionService) {
         self.wallpaper = wallpaper
-        self.recordings = recordings
-        subscription = recordings.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }
+        self.selectionService = selectionService
+        subscription = selectionService.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }
     }
 
-    var isScreenSaver: Bool { recordings.isSelected(wallpaper) }
-    var isWorking: Bool { recordings.isRecording }
+    var isScreenSaver: Bool { selectionService.isSelected(wallpaper) }
+    var isWorking: Bool { selectionService.isSettingVideo }
 
     func setAsScreenSaver() {
         errorMessage = nil
-        recordings.useVideo(wallpaper) { [weak self] succeeded in
+        selectionService.useVideo(wallpaper) { [weak self] succeeded in
             guard !succeeded else { return }
             self?.errorMessage = String(localized: "The video couldn't be set as the screen saver. The logs say why.")
         }
     }
 
     func stopUsingAsScreenSaver() {
-        recordings.stopUsingSelection()
+        selectionService.stopUsingSelection()
     }
 }

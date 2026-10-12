@@ -38,7 +38,7 @@ final class ScreenSaverPlugin: ObservableObject {
     private let store: ScreenSaverVideoStore
     private let installer: ScreenSaverInstaller
     let settingsStore: ScreenSaverSettingsStore
-    /// Videos being set as the screen saver (`beginRecording`): nothing is linked or listed meanwhile.
+    /// Videos being set as the screen saver (`beginSettingVideo`): nothing is linked or listed meanwhile.
     private var settingVideos = 0
     @Published private(set) var isEnabled = false
     /// The video wallpapers' statuses, for their current files only.
@@ -259,17 +259,17 @@ final class ScreenSaverPlugin: ObservableObject {
         }
     }
 
-    /// A video wallpaper's own file is being set as the screen saver (`ScreenSaverRecordingService.useVideo`):
+    /// A video wallpaper's own file is being set as the screen saver (`ScreenSaverSelectionService.useVideo`):
     /// the plan's links and manifest writes stop (a late one of an older generation is dropped),
     /// so none replaces it or prunes its staging copy.
-    func beginRecording() {
+    func beginSettingVideo() {
         settingVideos += 1
         reset()
     }
 
     /// The video was set (or not); the plugin follows `wallpaper` again unless something is set
     /// as the screen saver.
-    func endRecording(wallpaper: WEWallpaper?) {
+    func endSettingVideo(wallpaper: WEWallpaper?) {
         settingVideos = max(settingVideos - 1, 0)
         guard settingVideos == 0, settingsStore.selection == nil else { return }
         update(enabled: isEnabled, wallpaper: wallpaper)

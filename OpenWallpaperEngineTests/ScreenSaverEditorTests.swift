@@ -61,10 +61,10 @@ final class ScreenSaverEditorTests: XCTestCase {
 
     @MainActor
     private func makeService(_ store: ScreenSaverSettingsStore, plugin: ScreenSaverPlugin,
-                             videos: ScreenSaverVideoStore) -> ScreenSaverRecordingService {
-        let environment = ScreenSaverRecordingService.Environment(isPluginEnabled: { true }, enablePlugin: {},
+                             videos: ScreenSaverVideoStore) -> ScreenSaverSelectionService {
+        let environment = ScreenSaverSelectionService.Environment(isPluginEnabled: { true }, enablePlugin: {},
                                                                   desktopWallpaper: { nil })
-        return ScreenSaverRecordingService(plugin: plugin, environment: environment, store: store, videos: videos)
+        return ScreenSaverSelectionService(plugin: plugin, environment: environment, store: store, videos: videos)
     }
 
     // MARK: Isolation
@@ -87,7 +87,7 @@ final class ScreenSaverEditorTests: XCTestCase {
 
         let session = IsolatedSceneEditSession(wallpaper: wallpaper, purpose: ScreenSaverEditorModel.purpose,
                                                seededFrom: [.shared], defaults: defaults)
-        let model = ScreenSaverEditorModel(session: session, seededFrom: [.shared], recordings: service,
+        let model = ScreenSaverEditorModel(session: session, seededFrom: [.shared], selectionService: service,
                                            store: store, defaults: defaults)
         XCTAssertEqual(session.values, shared)
         XCTAssertEqual(session.scope, .isolated(ScreenSaverEditorModel.purpose))
@@ -131,7 +131,7 @@ final class ScreenSaverEditorTests: XCTestCase {
         func open(_ wallpaper: WEWallpaper) -> ScreenSaverEditorModel {
             ScreenSaverEditorModel(session: IsolatedSceneEditSession(wallpaper: wallpaper, purpose: ScreenSaverEditorModel.purpose,
                                                                      seededFrom: [.shared], defaults: defaults),
-                                   seededFrom: [.shared], recordings: service, store: store, defaults: defaults)
+                                   seededFrom: [.shared], selectionService: service, store: store, defaults: defaults)
         }
 
         // Opening and closing without a change saves nothing: the screen saver follows the wallpaper.
@@ -181,7 +181,7 @@ final class ScreenSaverEditorTests: XCTestCase {
         var succeeded: Bool?
         service.set(wallpaper, values: values) { succeeded = $0 }
         XCTAssertEqual(succeeded, true, "at once: nothing is recorded")
-        XCTAssertFalse(service.isRecording)
+        XCTAssertFalse(service.isSettingVideo)
         let pick = try XCTUnwrap(store.livePick)
         XCTAssertEqual(pick.wallpaperDirectory, wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false))
         XCTAssertNil(store.selection)

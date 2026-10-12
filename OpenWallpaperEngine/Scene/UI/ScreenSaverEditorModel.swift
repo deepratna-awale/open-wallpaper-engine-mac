@@ -16,7 +16,7 @@ final class ScreenSaverEditorModel: ObservableObject {
 
     let session: IsolatedSceneEditSession
     let wallpaper: WEWallpaper
-    let recordings: ScreenSaverRecordingService
+    let selectionService: ScreenSaverSelectionService
     private let store: ScreenSaverSettingsStore
     private let defaults: UserDefaults
     private let identity: WallpaperSettingsIdentity
@@ -27,16 +27,16 @@ final class ScreenSaverEditorModel: ObservableObject {
 
     /// `defaults` holds the stores (the session's too); `store` the screen saver's own settings.
     init(session: IsolatedSceneEditSession, seededFrom seedScopes: [WallpaperPropertyScope],
-         recordings: ScreenSaverRecordingService, store: ScreenSaverSettingsStore, defaults: UserDefaults = .app) {
+         selectionService: ScreenSaverSelectionService, store: ScreenSaverSettingsStore, defaults: UserDefaults = .app) {
         self.seedScopes = seedScopes
         self.session = session
         wallpaper = session.wallpaper
-        self.recordings = recordings
+        self.selectionService = selectionService
         self.store = store
         self.defaults = defaults
         identity = session.targets.identity
         if let saved = store.values(for: identity) { session.replaceValues(saved) }
-        recordings.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &subscriptions)
+        selectionService.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &subscriptions)
         // The editor's models write the session's store directly; its changes are saved as they settle.
         NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification, object: defaults)
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
@@ -60,16 +60,16 @@ final class ScreenSaverEditorModel: ObservableObject {
     }
 
     /// Whether this wallpaper is the screen saver.
-    var isScreenSaver: Bool { recordings.isSelected(wallpaper) }
+    var isScreenSaver: Bool { selectionService.isSelected(wallpaper) }
 
     /// Makes this version the screen saver, drawn live with the mode's values.
     func setAsScreenSaver() {
         persist()
-        recordings.pick(wallpaper, values: session.values)
+        selectionService.pick(wallpaper, values: session.values)
     }
 
     func stopUsingAsScreenSaver() {
-        recordings.stopUsingSelection()
+        selectionService.stopUsingSelection()
     }
 
     /// The mode closes: its last changes are saved.

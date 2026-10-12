@@ -3,7 +3,7 @@ import Foundation
 /// The Discover and Workshop menus' "Set as Wallpaper" and "Set as Screen Saver": the item is
 /// downloaded as Download does (into the Wallpaper Storage folder, with its dependencies), unless
 /// it is installed already, then applied as the library applies it, or set as the screen saver as
-/// the Screen Saver mode sets it (`ScreenSaverRecordingService.setAsScreenSaver`: a scene drawn
+/// the Screen Saver mode sets it (`ScreenSaverSelectionService.setAsScreenSaver`: a scene drawn
 /// live, a video's own file). The download shows its progress and errors as any download does;
 /// setting the screen saver and its errors show in the same place (`downloadState(for:)`).
 @MainActor
@@ -15,7 +15,7 @@ final class WorkshopSetAsFlow: ObservableObject {
     /// Where an item's run is, from its download on.
     enum Phase: Equatable {
         case downloading(Action)
-        case recording
+        case settingScreenSaver
         case failed(String)
     }
 
@@ -32,7 +32,7 @@ final class WorkshopSetAsFlow: ObservableObject {
         /// The wallpaper in a downloaded folder, as the library reads it.
         var wallpaper: @MainActor (_ folder: URL) -> WEWallpaper?
         var setWallpaper: @MainActor (WEWallpaper) -> Void
-        var isRecordingScreenSaver: @MainActor () -> Bool
+        var isSettingScreenSaver: @MainActor () -> Bool
         var setScreenSaver: @MainActor (WEWallpaper, _ completion: @escaping @MainActor (Bool) -> Void) -> Void
     }
 
@@ -50,10 +50,10 @@ final class WorkshopSetAsFlow: ObservableObject {
         case .wallpaper:
             guard WallpaperSetAsRules.canSetWallpaper(item) else { return false }
         case .screenSaver:
-            guard WallpaperSetAsRules.canSetScreenSaver(item), !environment.isRecordingScreenSaver() else { return false }
+            guard WallpaperSetAsRules.canSetScreenSaver(item), !environment.isSettingScreenSaver() else { return false }
         }
         switch phases[item.id] {
-        case .downloading?, .recording?: return false
+        case .downloading?, .settingScreenSaver?: return false
         case .failed?, nil: break
         }
         return environment.isInstalled(item.id) || environment.canDownload()
@@ -97,7 +97,7 @@ final class WorkshopSetAsFlow: ObservableObject {
                 phases[id] = .failed(Self.cantSetMessage(action))
                 return
             }
-            phases[id] = .recording
+            phases[id] = .settingScreenSaver
             environment.setScreenSaver(wallpaper) { [weak self] succeeded in
                 self?.phases[id] = succeeded ? nil
                     : .failed(String(localized: "The wallpaper couldn't be set as the screen saver. The logs say why."))
@@ -108,7 +108,7 @@ final class WorkshopSetAsFlow: ObservableObject {
     /// What the item's card shows over its download's state: setting the screen saver, or why the run failed.
     func downloadState(for workshopId: String) -> SteamCmdService.DownloadState? {
         switch phases[workshopId] {
-        case .recording?:
+        case .settingScreenSaver?:
             return .downloading(status: String(localized: "Setting the screen saver…",
                                                comment: "Workshop card: the downloaded wallpaper is being set as the screen saver"))
         case .failed(let message)?:

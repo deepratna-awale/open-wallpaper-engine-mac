@@ -2,7 +2,7 @@ import Foundation
 
 /// "Set as Screen Saver" from the Discover and Workshop menus: the Screen Saver mode's Set as
 /// Screen Saver, without opening the mode.
-extension ScreenSaverRecordingService {
+extension ScreenSaverSelectionService {
     /// Whether the Screen Saver mode can set `wallpaper` as the screen saver: a scene drawn live,
     /// or a video file the saver plays (`SceneEditorModes`). Web and application wallpapers can't be.
     nonisolated static func canSet(_ wallpaper: WEWallpaper) -> Bool {
@@ -14,7 +14,7 @@ extension ScreenSaverRecordingService {
     /// wallpaper's). Its clocks and audio-reactive layers stay as they are: drawn live, they move.
     /// `completion` gets whether it was set.
     func setAsScreenSaver(_ wallpaper: WEWallpaper, completion: @escaping @MainActor (Bool) -> Void) {
-        guard !isRecording, Self.canSet(wallpaper) else {
+        guard !isSettingVideo, Self.canSet(wallpaper) else {
             OWELog.info(.app, "Screen saver: \(wallpaper.wallpaperDirectory.lastPathComponent) can't be set now (a video is being set, or the screen saver can't show it)")
             completion(false)
             return

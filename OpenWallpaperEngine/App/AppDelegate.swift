@@ -188,7 +188,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         return MCPServerPlugin(handler: { request in await router.handle(request) })
     }()
     /// What is set as the screen saver (Scene Edit / Export's Screen Saver mode, Set as Screen Saver).
-    lazy var screenSaverRecordings = ScreenSaverRecordingService(plugin: screenSaver, environment: .init(
+    lazy var screenSaverSelection = ScreenSaverSelectionService(plugin: screenSaver, environment: .init(
         isPluginEnabled: { [unowned self] in globalSettingsViewModel.settings.screenSaver },
         enablePlugin: { [unowned self] in globalSettingsViewModel.settings.screenSaver = true },
         desktopWallpaper: { [unowned self] in wallpaperViewModel.currentWallpaper }))
@@ -427,7 +427,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if ScreenSaverInstaller.current.mayInstall {
             let stills = ScreenSaverStillPublisher.current
             desktopPictures.sync.onPictureWritten = { url, display in stills.publish(url, display: display) }
-            screenSaverRecordings.stills = stills
+            screenSaverSelection.stills = stills
             liveScreenSaver.stills = stills
         }
 
@@ -510,7 +510,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// longer in the library goes, so the screen saver follows the desktop again; a video's own
     /// file stays as it is. The old recordings and the retired settings are deleted.
     private func migrateScreenSaverRecording() {
-        let store = screenSaverRecordings.store
+        let store = screenSaverSelection.store
         store.removeRetiredKeys()
         // Recordings are gone: the old loop videos too, once the selection is settled, in the
         // background (only the user's own copy wrote them where the saver reads). A video set as

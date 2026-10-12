@@ -6,7 +6,7 @@ import AppKit
 /// (`useVideo`, `ScreenSaverSettingsStore.selection`), which the plugin then plays instead of
 /// following the desktop. Nothing is recorded.
 @MainActor
-final class ScreenSaverRecordingService: ObservableObject {
+final class ScreenSaverSelectionService: ObservableObject {
     /// What setting the screen saver needs from the app: whether the screen saver plugin is on,
     /// and the desktop's wallpaper.
     struct Environment {
@@ -17,7 +17,7 @@ final class ScreenSaverRecordingService: ObservableObject {
     }
 
     /// A video wallpaper's file is being put in place (`useVideo`).
-    @Published private(set) var isRecording = false
+    @Published private(set) var isSettingVideo = false
     let store: ScreenSaverSettingsStore
     private let plugin: ScreenSaverPlugin
     private let environment: Environment
@@ -79,7 +79,7 @@ final class ScreenSaverRecordingService: ObservableObject {
     /// (`ScreenSaverVideoSource.prepare`: linked, or repaired), and becomes the selection.
     /// `completion` gets whether it was set.
     func useVideo(_ wallpaper: WEWallpaper, completion: @escaping @MainActor (Bool) -> Void = { _ in }) {
-        guard !isRecording else {
+        guard !isSettingVideo else {
             completion(false)
             return
         }
@@ -94,8 +94,8 @@ final class ScreenSaverRecordingService: ObservableObject {
         let loopName = ScreenSaverVideoSource.fileName(key: key, source: source)
         let fileName = "\((loopName as NSString).deletingPathExtension)-rec\(Int(started.timeIntervalSince1970)).\(source.pathExtension.lowercased())"
         let videos = videos
-        isRecording = true
-        plugin.beginRecording()
+        isSettingVideo = true
+        plugin.beginSettingVideo()
         OWELog.info(.app, "Screen saver: setting \(wallpaper.wallpaperDirectory.lastPathComponent)'s video")
         Task { [weak self] in
             let size: SIMD2<Int>? = await withCheckedContinuation { continuation in
@@ -127,7 +127,7 @@ final class ScreenSaverRecordingService: ObservableObject {
     }
 
     private func finish(_ wallpaper: WEWallpaper, fileName: String, size: SIMD2<Int>, started: Date, succeeded: Bool) {
-        isRecording = false
+        isSettingVideo = false
         if succeeded {
             if store.livePick != nil {
                 store.livePick = nil
@@ -138,7 +138,7 @@ final class ScreenSaverRecordingService: ObservableObject {
                 fileName: fileName, width: size.x, height: size.y, recorded: started)
             if !environment.isPluginEnabled() { environment.enablePlugin() }
         }
-        plugin.endRecording(wallpaper: environment.desktopWallpaper())
+        plugin.endSettingVideo(wallpaper: environment.desktopWallpaper())
         objectWillChange.send()
     }
 

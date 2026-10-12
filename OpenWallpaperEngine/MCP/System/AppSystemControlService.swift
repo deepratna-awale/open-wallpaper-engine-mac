@@ -3,7 +3,7 @@ import OWEControlProtocol
 
 /// The app's system features for the control channel, through the code their own controls run:
 /// the Screen Saver mode's store and service (`ScreenSaverSettingsStore`,
-/// `ScreenSaverRecordingService`), Settings › General's lock-screen
+/// `ScreenSaverSelectionService`), Settings › General's lock-screen
 /// setting (`LockScreenPicture`), and the iPhone & iPad Export mode's render
 /// (`AppSystemControlService+LivePhoto`). Nothing here opens a window or System Settings, or asks
 /// macOS for a permission.
@@ -21,8 +21,8 @@ final class AppSystemControlService: SystemControlService {
         self.model = model
     }
 
-    private var recordings: ScreenSaverRecordingService { app.screenSaverRecordings }
-    private var store: ScreenSaverSettingsStore { recordings.store }
+    private var selectionService: ScreenSaverSelectionService { app.screenSaverSelection }
+    private var store: ScreenSaverSettingsStore { selectionService.store }
 
     /// The library's wallpaper `wallpaper` names.
     func found(_ wallpaper: ControlWallpaper) throws -> WEWallpaper {
@@ -45,11 +45,11 @@ final class AppSystemControlService: SystemControlService {
         func wallpaper(at path: String) -> ControlWallpaper? {
             InstalledLibrary.wallpaper(at: URL(filePath: path, directoryHint: .isDirectory), hiding: []).map { model.control($0) }
         }
-        if let pick = recordings.livePick {
+        if let pick = selectionService.livePick {
             return SystemScreenSaverSelection(wallpaper: wallpaper(at: pick.wallpaperDirectory), folder: pick.wallpaperDirectory,
                                               kind: .live, picked: pick.picked)
         }
-        guard let selection = recordings.selection else { return nil }
+        guard let selection = selectionService.selection else { return nil }
         return SystemScreenSaverSelection(wallpaper: wallpaper(at: selection.wallpaperDirectory), folder: selection.wallpaperDirectory,
                                           kind: .video, picked: selection.recorded)
     }
@@ -81,15 +81,15 @@ final class AppSystemControlService: SystemControlService {
     /// choices, else the wallpaper's; a video's own file is put in place.
     func setScreenSaver(_ wallpaper: ControlWallpaper) async throws -> SystemScreenSaverSet {
         let found = try found(wallpaper)
-        guard !recordings.isRecording else {
+        guard !selectionService.isSettingVideo else {
             throw ControlError(.unavailable, "A video is being set as the screen saver. Wait for it to finish, then try again.")
         }
         let values = try screenSaverValues(of: wallpaper).values
         let wasEnabled = app.globalSettingsViewModel.settings.screenSaver
-        let recordings = recordings
+        let selectionService = selectionService
         OWELog.info(.app, "MCP: setting \(found.wallpaperDirectory.lastPathComponent) as the screen saver")
         let succeeded = await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
-            recordings.set(found, values: values) { continuation.resume(returning: $0) }
+            selectionService.set(found, values: values) { continuation.resume(returning: $0) }
         }
         guard succeeded, let selection else {
             throw ControlError(.failed, "\"\(wallpaper.title)\" couldn't be set as the screen saver. The app's log says why: /usr/bin/log show --last 10m --predicate 'process == \"Open Wallpaper Engine\"' | grep 'Screen saver'.")
@@ -98,7 +98,7 @@ final class AppSystemControlService: SystemControlService {
     }
 
     func stopUsingScreenSaver() {
-        recordings.stopUsingSelection()
+        selectionService.stopUsingSelection()
     }
 
     // MARK: - Lock screen
