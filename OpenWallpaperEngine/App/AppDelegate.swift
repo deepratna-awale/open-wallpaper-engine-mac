@@ -435,6 +435,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         AppDelegate.shared.setPlacehoderWallpaper(with: wallpaperViewModel.currentWallpaper)
         // Each display's desktop picture (lock screen, menu bar tint) follows what it shows.
         desktopPictures.observe(wallpaperViewModel, settings: globalSettingsViewModel)
+        #if DEBUG
+        // The live screen saver lab: each display's window stack during a screen saver or lock.
+        ScreenSaverWindowSampler.shared.startIfLab()
+        #endif
         // The screen saver shows each display's picture until its live frames come.
         if ScreenSaverInstaller.current.mayInstall {
             let stills = ScreenSaverStillPublisher.current

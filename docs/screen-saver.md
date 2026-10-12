@@ -123,7 +123,11 @@ the classic saver; the lab build below adds the rest to a copy for testing.
 
 Both lab savers log under the subsystem `app.openwallpaper.engine.saverlab` (views, lifecycle
 notifications, surfaces found, the XPC connection, frames shown, fallbacks, and every 10 s the
-process's CPU and GPU time, parked or not); the app logs `Live screen saver: …` lines.
+process's CPU and GPU time, parked or not); the app logs `Live screen saver: …` lines. The lab's
+app also logs each display's on-screen window stack while a screen saver or lock session runs,
+whichever saver shows (`Window sample …`, Info level: numbers, levels, owners, bounds and alpha
+from `CGWindowListCopyWindowInfo`, which needs no permission): the first sample of a session
+in full, then the windows that appear or go away.
 
 1. Note which screen saver is selected (System Settings › Wallpaper › Screen Saver; Screen Saver
    on macOS 14 and 15), and quit Open Wallpaper Engine.
