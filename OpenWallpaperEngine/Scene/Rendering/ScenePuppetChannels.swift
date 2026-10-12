@@ -103,8 +103,15 @@ extension SceneAnimationLayerStack {
     /// adds `value · w` and any other lerps from the channel's value by `w`. Channels past the
     /// clip's tracks keep theirs.
     func applyChannels(_ layer: SceneAnimationLayer, weight: Float, to channels: inout [Float]) {
+        applyScalars(layer, \.scalarTracksA, weight: weight, to: &channels)
+    }
+
+    /// Lays one layer's scalar tracks of the list `list` over `values` (one per track, in order)
+    /// as `applyChannels` describes; WE's puppet update samples every scalar list alike.
+    func applyScalars(_ layer: SceneAnimationLayer, _ list: KeyPath<MDLAnimation, [MDLAnimation.ScalarTrack]?>,
+                      weight: Float, to channels: inout [Float]) {
         let (clip, first) = source(of: layer.clip)
-        guard weight != 0, let tracks = clip.scalarTracksA, !tracks.isEmpty else { return }
+        guard weight != 0, let tracks = clip[keyPath: list], !tracks.isEmpty else { return }
         let position = layer.clock.samplePosition
         let t = position.fraction
         for (channel, track) in tracks.enumerated() where channel < channels.count && !track.samples.isEmpty {

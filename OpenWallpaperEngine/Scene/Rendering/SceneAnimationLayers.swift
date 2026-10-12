@@ -39,6 +39,7 @@ struct SceneAnimationLayer: Equatable {
         self.name = name
         self.clip = clip
         clock = Self.clock(for: animation)
+        clock.time = Self.startTime(of: animation, clock: clock)
         self.additive = additive
         self.blendIn = blendIn
         self.blendOut = blendOut && animation.mode == .single
@@ -65,6 +66,18 @@ struct SceneAnimationLayer: Equatable {
         }
         return SceneTimelineClock(frameDuration: frameDuration, duration: max(0, duration),
                                   length: Int32(clamping: animation.frames), flags: flags, events: events)
+    }
+
+    /// Where a layer's clock starts: the clip record's Frame offset (`MDLAnimation.Reference`),
+    /// which starts the clip that many frames in, wrapped into its duration (a "single" clip held
+    /// at its end), else 0. WE 2.8's capture 509 E: a 30-frame clip with offset 10 plays at time
+    /// t what offset 0 plays about 0.5 s later, a phase shift, not a delay (the 0.17 s past
+    /// 10 frames is within the captures' ±0.15 s load jitter) [I: the clock's start wasn't traced;
+    /// an offset past the end of a "mirror" clip starts it forwards].
+    static func startTime(of animation: MDLAnimation, clock: SceneTimelineClock) -> Float {
+        guard let offset = animation.reference?.frameOffset, offset > 0, clock.duration > 0 else { return 0 }
+        let time = Float(offset) * clock.frameDuration
+        return clock.flags.contains(.single) ? min(time, clock.duration) : time.truncatingRemainder(dividingBy: clock.duration)
     }
 
     /// The weight this frame (0x14026c8b0): `blend`, times the blend-in ramp
@@ -193,13 +206,16 @@ struct SceneAnimationLayerStack: Equatable {
     mutating func evaluate(delta: Float, update: inout SceneAnimationLayerUpdate) -> [SceneBoneTransform] {
         var morphs: [SceneMorphWeights] = []
         var channels: [Float] = []
-        return evaluate(delta: delta, update: &update, morphs: &morphs, kind: .model, channels: &channels)
+        var bones = SceneBoneScalars()
+        return evaluate(delta: delta, update: &update, morphs: &morphs, kind: .model, channels: &channels, bones: &bones)
     }
 
-    /// The same, with each layer's morph tracks laid over `morphs` (`applyMorphs`) and its
-    /// texture-channel tracks over `channels` (`applyChannels`) as it applies.
+    /// The same, with each layer's morph tracks laid over `morphs` (`applyMorphs`), its
+    /// texture-channel tracks over `channels` (`applyChannels`) and its per-bone opacity and depth
+    /// tracks over `bones` (`applyBoneScalars`) as it applies.
     mutating func evaluate(delta: Float, update: inout SceneAnimationLayerUpdate, morphs: inout [SceneMorphWeights],
-                           kind: SceneMorphRig.Kind, channels: inout [Float]) -> [SceneBoneTransform] {
+                           kind: SceneMorphRig.Kind, channels: inout [Float],
+                           bones: inout SceneBoneScalars) -> [SceneBoneTransform] {
         var pose = skeleton.bindPose
         var turn: Float = 0
         var index = 0
@@ -218,6 +234,8 @@ struct SceneAnimationLayerStack: Equatable {
             apply(layers[index], weight: weight, to: &pose)
             if !morphs.isEmpty { applyMorphs(layers[index], weight: weight, to: &morphs, kind: kind) }
             if !channels.isEmpty { applyChannels(layers[index], weight: weight, to: &channels) }
+            if !bones.alpha.isEmpty { applyScalars(layers[index], \.boneAlphaTracks, weight: weight, to: &bones.alpha) }
+            if !bones.depth.isEmpty { applyScalars(layers[index], \.boneDepthTracks, weight: weight, to: &bones.depth) }
             turn += applyRootMotion(at: index, weight: weight, to: &pose)
             if layers[index].removesWhenFinished, after.flags.contains(.finished) {
                 layers.remove(at: index)

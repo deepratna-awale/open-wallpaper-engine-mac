@@ -34,17 +34,22 @@ struct ScenePuppetWarpUniforms {
     uint texCoordOffset;
     uint stride;
     uint boneCount;
+    // The bones' opacities `alphas` holds (`g_BonesAlpha`), 0 for none: a rig whose effects run
+    // on its texture fades its parts in their posed layout, as `SKINNING_ALPHA` would have.
+    uint alphaCount;
 };
 
 struct ScenePuppetWarpOut {
     float4 position [[position]];
     float2 uv;
+    float alpha;
 };
 
 vertex ScenePuppetWarpOut scenePuppetWarpVertex(uint vid [[vertex_id]],
                                                 device const uchar *mesh [[buffer(0)]],
                                                 constant ScenePuppetWarpUniforms &u [[buffer(1)]],
-                                                constant float4x4 *bones [[buffer(2)]]) {
+                                                constant float4x4 *bones [[buffer(2)]],
+                                                constant float *alphas [[buffer(3)]]) {
     device const uchar *v = mesh + vid * u.stride;
     float3 p = float3(*(device const packed_float3 *)(v + u.positionOffset));
     uint4 index = uint4(*(device const packed_uint4 *)(v + u.indicesOffset));
@@ -67,6 +72,18 @@ vertex ScenePuppetWarpOut scenePuppetWarpVertex(uint vid [[vertex_id]],
     out.position.y = -out.position.y;
     out.position.z = 0.5 * out.position.w;
     out.uv = float2(*(device const packed_float2 *)(v + u.texCoordOffset)) * u.uvScale;
+    // genericimage2/4.vert's v_BoneAlpha: the weights as stored, saturated.
+    float alpha = 1.0;
+    if (u.alphaCount > 0) {
+        alpha = 0.0;
+        for (uint k = 0; k < 4; k++) {
+            if (index[k] < u.alphaCount) {
+                alpha += alphas[index[k]] * weight[k];
+            }
+        }
+        alpha = saturate(alpha);
+    }
+    out.alpha = alpha;
     return out;
 }
 
@@ -99,7 +116,8 @@ static float4 scenePuppetEdgeSample(texture2d<float> source, float2 uv) {
 fragment float4 scenePuppetWarpFragment(ScenePuppetWarpOut in [[stage_in]],
                                         texture2d<float> source [[texture(0)]],
                                         sampler smp [[sampler(0)]]) {
-    return scenePuppetEdgeSample(source, in.uv);
+    float4 color = scenePuppetEdgeSample(source, in.uv);
+    return float4(color.rgb, color.a * in.alpha);
 }
 
 // The same, premultiplied, for a blended material's warp (`ScenePuppetRenderer.warp`, `blended`):
@@ -109,6 +127,7 @@ fragment float4 scenePuppetWarpPremultipliedFragment(ScenePuppetWarpOut in [[sta
                                                      texture2d<float> source [[texture(0)]],
                                                      sampler smp [[sampler(0)]]) {
     float4 color = scenePuppetEdgeSample(source, in.uv);
+    color.a *= in.alpha;
     return float4(color.rgb * color.a, color.a);
 }
 
