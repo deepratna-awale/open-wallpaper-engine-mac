@@ -13,9 +13,7 @@ import notify
 /// `ScreenSaverLiveState.saverTimeout`. The savers play their videos whenever frames stop.
 ///
 /// Only the user's own copy draws (an isolated copy, like the tests, never installs the saver
-/// and never publishes), and only while the Screen Saver plugin follows the desktop. Until the
-/// real screen saver hosts confirm it (the live screen saver's Phase 0), only development builds
-/// draw (`isAvailable`).
+/// and never publishes), and only while the Screen Saver plugin is on.
 @MainActor
 final class ScreenSaverLiveController {
     /// What the drawing reads from the app.
@@ -62,18 +60,9 @@ final class ScreenSaverLiveController {
         self.mayPublish = mayPublish
     }
 
-    /// Development builds only, until Phase 0 confirms the hosts.
-    static var isAvailable: Bool {
-        #if DEBUG
-        return true
-        #else
-        return false
-        #endif
-    }
-
     /// Follows the Screen Saver plugin: observing the screen saver while it is on.
     func start() {
-        guard Self.isAvailable, mayPublish, enabledSubscription == nil else { return }
+        guard mayPublish, enabledSubscription == nil else { return }
         enabledSubscription = plugin.$isEnabled.removeDuplicates().sink { [weak self] enabled in
             MainActor.assumeIsolated { self?.setObserving(enabled) }
         }
