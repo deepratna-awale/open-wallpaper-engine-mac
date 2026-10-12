@@ -204,17 +204,18 @@ final class SceneRenderLoop {
         let pixelSize = SIMD2(Int(viewport.drawableSize.x), Int(viewport.drawableSize.y))
         guard pixelSize.x > 0, pixelSize.y > 0,
               snapshots.claim(pixelSize: pixelSize, contentSince: contentSince, now: now) else { return }
-        // The lock screen shows this picture: a frame without the clock, which would show the
-        // capture's time. With one display the extra frame is freed after; with several the
-        // displays' frame is drawn again with the clock.
-        let hidesClock = !renderer.clockLayerIDs.isEmpty
-        if hidesClock { renderer.hidesClockLayers = true }
-        if rendersFrame || hidesClock { renderer.redrawShared([viewport]) }
-        let started = renderer.captureSharedFrame(pixelSize: pixelSize, pixelsPerPoint: viewport.pixelsPerPoint) {
-            snapshots.save($0)
+        // The lock screen and the screen saver show this picture: a still, without its text and
+        // clock hands, which would show the capture's time (`captureStill`). With one display the
+        // extra frame is freed after; with several the displays' frame is drawn again with them.
+        let save: @Sendable (CGImage?) -> Void = { snapshots.save($0) }
+        let started: Bool
+        if rendersFrame || !renderer.stillLayerIDs.isEmpty {
+            started = renderer.captureStill(pixelSize: pixelSize, pixelsPerPoint: viewport.pixelsPerPoint,
+                                            viewports: [viewport], restores: !rendersFrame, completion: save)
+            if rendersFrame { renderer.releaseSharedFrame() }
+        } else {
+            started = renderer.captureSharedFrame(pixelSize: pixelSize, pixelsPerPoint: viewport.pixelsPerPoint, completion: save)
         }
-        if hidesClock { renderer.hidesClockLayers = false }
-        if rendersFrame { renderer.releaseSharedFrame() } else if hidesClock { renderer.redrawShared([viewport]) }
         if !started { OWELog.debug(.scene, "Loading snapshot: no frame to capture at \(pixelSize.x)×\(pixelSize.y)") }
     }
 

@@ -289,14 +289,16 @@ final class ScreenSaverLiveController {
         }
     }
 
-    /// Keeps a frame of the picked wallpaper's live draw as its still, once it has drawn a while:
-    /// the next screen saver shows it until the live frames come.
-    private func keepPickStill(ring: Int) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + Self.pickStillDelay) { [weak self] in
+    /// Keeps a still of the picked wallpaper's live draw, once it has drawn a while: the next
+    /// screen saver shows it until the live frames come. A still frame drawn for it, without its
+    /// text and clock hands (`ScreenSaverLiveScene.captureStill`); a page's frames can't leave
+    /// them out, so a page keeps the still it has.
+    private func keepPickStill(of scene: ScreenSaverLiveScene) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.pickStillDelay) { [weak self, weak scene] in
             MainActor.assumeIsolated {
-                guard let self, self.state.isDrawing, let publisher = self.publisher, let stills = self.stills else { return }
-                DispatchQueue.global(qos: .utility).async {
-                    guard let image = publisher.newestImage(ring: ring) else { return }
+                guard let self, let scene, self.state.isDrawing, !scene.isPaused, let stills = self.stills else { return }
+                scene.captureStill { image in
+                    guard let image else { return }
                     DispatchQueue.main.async { MainActor.assumeIsolated { stills.publishPick(image) } }
                 }
             }

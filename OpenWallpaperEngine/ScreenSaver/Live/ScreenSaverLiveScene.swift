@@ -7,7 +7,8 @@ import QuartzCore
 /// wallpaper loaded by the real loader (`SceneWallpaperViewModel`, in the background) and drawn by
 /// the real renderer (`SceneMetalRenderer`) on its own render thread (`SceneRenderThread`), as the
 /// screen saver (`engine.isScreensaver()` true, silent, the pointer held at the centre, its clock
-/// layers drawn), at the loop's pixel size, into its ring of surfaces
+/// layers drawn; its stills leave out its text and clock hands, `captureStill`), at the loop's
+/// pixel size, into its ring of surfaces
 /// (`ScreenSaverFramePublisher`) through the same placement a display presents with
 /// (`encodeSharedFrame`). The audio spectrum is the app's own capture, so audio-reactive scenes
 /// follow the music. Paced by a display link of the loop's first display at the user's frame
@@ -31,6 +32,7 @@ final class ScreenSaverLiveScene {
     /// Whether it draws (paused: loaded and kept warm, drawing nothing, `pause`).
     private(set) var isPaused = false
     private let ticker: Ticker
+    private let viewport: SceneViewport
     /// The view model's revision whose content was last asked for, and its change feed: the
     /// background load delivers nothing at first and bumps the revision when it lands.
     private var contentRevision = -1
@@ -62,6 +64,7 @@ final class ScreenSaverLiveScene {
         renderer.sounds.setTargetGain(0)
         let viewport = SceneViewport(drawableSize: pixels, pointSize: SIMD2(Float(target.points.x), Float(target.points.y)),
                                      cursor: nil, frameRateLimit: target.frameRate)
+        self.viewport = viewport
         ticker = Ticker(renderer: renderer, viewport: viewport, ring: target.ring, publisher: publisher)
         // Loaded on the preparation pool: the first ask finds the load still in flight and gets
         // nothing; its commit bumps the revision, which asks again. Frames start once the content

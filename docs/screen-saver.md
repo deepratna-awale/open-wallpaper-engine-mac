@@ -150,6 +150,7 @@ process's CPU and GPU time, parked or not); the app logs `Live screen saver: …
 Settings › General › **Show Wallpaper on Lock Screen** (on by default) sets each display's desktop
 picture to a picture of what it shows: its wallpaper, its part of a stretch, a flipped clone or
 its split regions, with the display options. macOS shows that picture on the lock screen and
-tints the menu bar from it. Pictures are updated when a wallpaper, layout or option changes, and
+tints the menu bar from it. A scene's picture leaves out its text and clock hands, so the lock
+screen never shows the time the picture was taken; the screen saver's pictures do the same. Pictures are updated when a wallpaper, layout or option changes, and
 shown again after a Space change, a wake or a display change. Your own picture comes back when
 the setting is turned off or the app quits.

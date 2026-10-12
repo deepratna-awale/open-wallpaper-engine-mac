@@ -41,6 +41,22 @@ extension SceneMetalRenderer {
         return true
     }
 
+    /// A still of the scene's current moment, as a picture shown later shows it (the lock screen,
+    /// the screen saver's): drawn again, unstepped, for `viewports`, without the layers a still
+    /// leaves out (`hidesStillLayers`: its text and clock hands), then copied at `pixelSize`
+    /// (`captureSharedFrame`). `restores`: the shared frame is drawn again with them after, for
+    /// the displays that show it. Render thread.
+    func captureStill(pixelSize: SIMD2<Int>, pixelsPerPoint: Float, viewports: [SceneViewport], restores: Bool,
+                      completion: @escaping @Sendable (CGImage?) -> Void) -> Bool {
+        guard hasContent else { return false }
+        hidesStillLayers = true
+        redrawShared(viewports)
+        let started = captureSharedFrame(pixelSize: pixelSize, pixelsPerPoint: pixelsPerPoint, completion: completion)
+        hidesStillLayers = false
+        if restores { redrawShared(viewports) }
+        return started
+    }
+
     /// A screenshot (WE's "Take screenshot"): the scene's current moment drawn again, without
     /// stepping it (`redrawShared`), at `pixelSize` and 1 pixel per point, so every pass renders at
     /// that size (whatever Render Resolution is) rather than scaling up a display's frame, then
