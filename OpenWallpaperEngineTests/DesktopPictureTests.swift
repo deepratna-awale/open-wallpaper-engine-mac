@@ -322,6 +322,71 @@ final class DesktopPictureTests: XCTestCase {
         XCTAssertEqual(setter.pictures[2], owe2, "the user's picture is gone: OWE's stays rather than a missing file")
         XCTAssertTrue(FileManager.default.fileExists(atPath: owe2.path))
     }
+
+    // MARK: The screen saver's stills
+
+    /// With the lock-screen picture on, the screen saver's still of each display is the desktop
+    /// picture itself, hard-linked into the screen saver's folder.
+    func testWithTheLockScreenPictureTheScreenSaverStillIsItsHardLink() async throws {
+        let a = try wallpaper("a")
+        try saveSnapshot(a, red)
+        let folder = root.appending(path: "ScreenSaver", directoryHint: .isDirectory)
+        let stills = ScreenSaverStillPublisher(folder: folder)
+        sync.onPictureWritten = { url, display in stills.publish(url, display: "UUID-\(display)") }
+        await sync.update(plans(["1": a, "2": a]), placement: .fill)
+        let picture = try XCTUnwrap(setter.pictures[1])
+        let still = folder.appending(path: ScreenSaverStills.fileName(display: "UUID-1", fileExtension: picture.pathExtension))
+        let inode = { (url: URL) in try FileManager.default.attributesOfItem(atPath: url.path)[.systemFileNumber] as? Int }
+        XCTAssertEqual(try inode(still), try inode(picture), "the still is the lock-screen picture, linked")
+    }
+
+    /// With the lock-screen picture and the menu bar tint off, the screen saver still gets each
+    /// display's picture, written for it alone: no desktop picture is set or recorded.
+    func testWithoutTheLockScreenPictureTheScreenSaverStillIsWrittenAndTheDesktopUntouched() async throws {
+        let a = try wallpaper("a")
+        let b = try wallpaper("b")
+        try saveSnapshot(a, red)
+        try saveSnapshot(b, blue)
+        let suite = "app.openwallpaperengine.isolated.tests.desktoppicture.saver.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        let caches = root.appending(path: "Caches", directoryHint: .isDirectory)
+        var files = LockScreenPicture(cache: DesktopSnapshotCache(cachesDirectory: caches), defaults: defaults)
+        files.namePrefix = LockScreenPicture.saverPrefix
+        let saverSync = DesktopPictureSync(setter: setter, files: files, loader: DisplayPictureLoader(cachesDirectory: caches),
+                                           setsPictures: false)
+        let folder = root.appending(path: "ScreenSaver", directoryHint: .isDirectory)
+        let stills = ScreenSaverStillPublisher(folder: folder)
+        var written: [CGDirectDisplayID: URL] = [:]
+        saverSync.onPictureWritten = { url, display in
+            written[display] = url
+            stills.publish(url, display: "UUID-\(display)")
+        }
+        await saverSync.update(plans(["1": a, "2": b]), placement: .fill)
+        XCTAssertTrue(setter.sets.isEmpty, "no desktop picture is set")
+        XCTAssertTrue(setter.pictures.isEmpty)
+        XCTAssertTrue(files.originals().isEmpty, "nothing is recorded as the user's picture")
+        assertColor(try color(written[1], x: 0.5, y: 0.5), red)
+        assertColor(try color(written[2], x: 0.5, y: 0.5), blue)
+        XCTAssertEqual(written[1]?.lastPathComponent.hasPrefix("saver-1-"), true)
+        let listed = try XCTUnwrap(ScreenSaverStills.read(folder.appending(path: ScreenSaverStills.fileName)))
+        let still = try XCTUnwrap(listed.stills["UUID-2"])
+        assertColor(try color(folder.appending(path: still), x: 0.5, y: 0.5), blue, "the screen saver's still of display 2")
+
+        // A new wallpaper on display 2 writes its still again.
+        try saveSnapshot(a, green)
+        await saverSync.update(plans(["1": a, "2": a]), placement: .fill)
+        assertColor(try color(written[2], x: 0.5, y: 0.5), green)
+        XCTAssertTrue(setter.sets.isEmpty)
+        saverSync.restoreUsersPictures([1, 2], fallback: nil)
+        XCTAssertTrue(setter.sets.isEmpty, "and nothing is put back")
+    }
+
+    func testTheScreenSaverStillsAreWrittenAloneOnlyWhenTheDesktopPicturesDontFollow() {
+        XCTAssertEqual(DesktopPictureController.mode(followsWallpapers: true, wantsScreenSaverStills: false), .desktop)
+        XCTAssertEqual(DesktopPictureController.mode(followsWallpapers: true, wantsScreenSaverStills: true), .desktop)
+        XCTAssertEqual(DesktopPictureController.mode(followsWallpapers: false, wantsScreenSaverStills: true), .screenSaverStills)
+        XCTAssertNil(DesktopPictureController.mode(followsWallpapers: false, wantsScreenSaverStills: false))
+    }
 }
 
 /// The desktop pictures of a fake desktop: one Space, ignoring the URL it already shows as macOS does.

@@ -28,8 +28,10 @@ While the screen saver runs and an Open Wallpaper Engine saver is showing:
 - Application wallpapers can't be used.
 
 Each frame is shown as it is drawn, at the display's cadence, as on the desktop (60 fps on a
-165 Hz display is 55). Until the first frames come, each display shows its lock-screen picture
-(with Show Wallpaper on Lock Screen on). The app draws only while the screen saver runs: it stops
+165 Hz display is 55). Until the first frames come, each display shows a still of what it shows:
+its lock-screen picture, or with Show Wallpaper on Lock Screen off the same picture written for
+the screen saver alone (your desktop picture is left as it is). When the screen saver shows the
+wallpaper a display already runs, it draws that running wallpaper, so it is live at once. The app draws only while the screen saver runs: it stops
 when the screen saver stops or the Mac is unlocked, and another screen saver or the System
 Settings preview never makes it draw. After the screen saver stops, the lock screen keeps its
 last frame.

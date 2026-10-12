@@ -22,19 +22,24 @@ struct LockScreenPicture: @unchecked Sendable { // UserDefaults is thread-safe; 
 
     let cache: DesktopSnapshotCache
     let defaults: UserDefaults
+    /// The files' prefix: `prefix` for the pictures set as the desktop's, `saverPrefix` for the
+    /// screen saver's own stills (`DesktopPictureSync.setsPictures` false).
+    var namePrefix = Self.prefix
+
+    static let saverPrefix = "saver-"
 
     static var current: LockScreenPicture { LockScreenPicture(cache: .current, defaults: .app) }
 
     // MARK: Names
 
     func url(display: CGDirectDisplayID, slot: Int, fileExtension: String) -> URL {
-        cache.directory.appending(path: "\(Self.prefix)\(display)-\(slot == 0 ? "a" : "b").\(fileExtension)",
+        cache.directory.appending(path: "\(namePrefix)\(display)-\(slot == 0 ? "a" : "b").\(fileExtension)",
                                   directoryHint: .notDirectory)
     }
 
     /// Whether `url` is a lock-screen picture OWE set.
     func isLockPicture(_ url: URL) -> Bool {
-        cache.isSnapshot(url) && url.lastPathComponent.hasPrefix(Self.prefix)
+        cache.isSnapshot(url) && url.lastPathComponent.hasPrefix(namePrefix)
     }
 
     /// The slot to write next: the one `showing` isn't.

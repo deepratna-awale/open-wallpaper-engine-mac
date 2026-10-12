@@ -29,20 +29,47 @@ final class DesktopPictureController {
     private static let fallbackKey = "OSWallpaper"
 
     let sync: DesktopPictureSync
+    /// The screen saver's own stills while the desktop pictures don't follow the wallpapers: the
+    /// same pictures, written but never set (`DesktopPictureSync.setsPictures` false).
+    let saverSync: DesktopPictureSync?
+    /// Whether the screen saver wants each display's still (the Screen Saver plugin is on and
+    /// this copy keeps its stills).
+    var wantsScreenSaverStills: () -> Bool = { false }
     private let mayChange: Bool
     private weak var viewModel: WallpaperViewModel?
     private weak var settings: GlobalSettingsViewModel?
     private var cancellables = Set<AnyCancellable>()
     private var wasActive = false
 
-    init(sync: DesktopPictureSync, mayChange: Bool = DesktopSnapshotCache.mayChangeDesktopPicture) {
+    init(sync: DesktopPictureSync, saverSync: DesktopPictureSync? = nil,
+         mayChange: Bool = DesktopSnapshotCache.mayChangeDesktopPicture) {
         self.sync = sync
+        self.saverSync = saverSync
         self.mayChange = mayChange
     }
 
     static func system() -> DesktopPictureController {
-        DesktopPictureController(sync: DesktopPictureSync(setter: SystemDesktopPictures(), files: .current,
-                                                          loader: .current))
+        var saverFiles = LockScreenPicture.current
+        saverFiles.namePrefix = LockScreenPicture.saverPrefix
+        return DesktopPictureController(
+            sync: DesktopPictureSync(setter: SystemDesktopPictures(), files: .current, loader: .current),
+            saverSync: DesktopPictureSync(setter: SystemDesktopPictures(), files: saverFiles, loader: .current,
+                                          setsPictures: false))
+    }
+
+    /// What `refresh` writes the pictures for.
+    enum Mode: Equatable {
+        /// The desktop pictures (and from them the screen saver's stills).
+        case desktop
+        /// The screen saver's stills only.
+        case screenSaverStills
+    }
+
+    /// The pictures written: the desktop's while they follow the wallpapers, else the screen
+    /// saver's own while it wants them, else none.
+    nonisolated static func mode(followsWallpapers: Bool, wantsScreenSaverStills: Bool) -> Mode? {
+        if followsWallpapers { return .desktop }
+        return wantsScreenSaverStills ? .screenSaverStills : nil
     }
 
     /// Whether the desktop pictures follow the wallpapers.
@@ -86,6 +113,8 @@ final class DesktopPictureController {
             viewModel.displayOptions.$entries.map { _ in () }.eraseToAnyPublisher(),
             settings.$settings.map(Self.followsWallpapers).removeDuplicates()
                 .map { _ in () }.eraseToAnyPublisher(),
+            settings.$settings.map(\.screenSaver).removeDuplicates()
+                .map { _ in () }.eraseToAnyPublisher(),
             center.publisher(for: .sceneLoadingSnapshotSaved).map { _ in () }.eraseToAnyPublisher(),
             center.publisher(for: .webWallpaperPageSnapshot).map { _ in () }.eraseToAnyPublisher(),
         ]
@@ -110,11 +139,11 @@ final class DesktopPictureController {
     /// Updates every display's picture, or puts the user's back when the pictures were just
     /// turned off.
     func refresh() {
-        guard isActive else {
-            if wasActive { restoreUsersPictures() }
-            return
-        }
-        wasActive = true
+        let active = isActive
+        if !active, wasActive { restoreUsersPictures() }
+        guard let mode = Self.mode(followsWallpapers: active, wantsScreenSaverStills: mayChange && wantsScreenSaverStills()),
+              let target = mode == .desktop ? sync : saverSync else { return }
+        if mode == .desktop { wasActive = true }
         guard let viewModel else { return }
         let plans = DesktopPicturePlan.plans(
             displays: displays, resolution: viewModel.layoutResolution,
@@ -124,8 +153,8 @@ final class DesktopPictureController {
             },
             options: { viewModel.displayOptions(on: $0) })
         let placement = viewModel.wallpaperPlacement
-        let strips = DesktopPictureTheming.strips()
-        Task { await sync.update(plans, placement: placement, strips: strips) }
+        let strips = mode == .desktop ? DesktopPictureTheming.strips() : nil
+        Task { await target.update(plans, placement: placement, strips: strips) }
     }
 
     /// The current Space, a wake or a display change may show another picture: shows each

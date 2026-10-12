@@ -439,6 +439,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if ScreenSaverInstaller.current.mayInstall {
             let stills = ScreenSaverStillPublisher.current
             desktopPictures.sync.onPictureWritten = { url, display in stills.publish(url, display: display) }
+            // With the lock-screen picture and the menu bar tint off, the same pictures are
+            // written for the screen saver alone while its plugin is on.
+            desktopPictures.saverSync?.onPictureWritten = { url, display in stills.publish(url, display: display) }
+            desktopPictures.wantsScreenSaverStills = { [unowned self] in globalSettingsViewModel.settings.screenSaver }
             screenSaverSelection.stills = stills
             liveScreenSaver.stills = stills
         }
