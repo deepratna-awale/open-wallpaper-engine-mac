@@ -89,6 +89,9 @@ final class LiveSaverPresenter: NSObject {
         view.layer?.addSublayer(metalLayer)
         SaverLog.lifecycle.notice("view init pid=\(getpid()) view=\(self.viewID, privacy: .public) frame=\(Int(view.bounds.width))x\(Int(view.bounds.height)) previewFlag=\(flag) preview=\(self.isPreview)")
         observeLifecycle()
+        // The still at once, before the host starts the view (half a second later on the classic
+        // host): black otherwise. The display's own once the view is in a window.
+        loadStill()
         source.store.addObserver(self) { [weak self] in
             DispatchQueue.main.async { MainActor.assumeIsolated { self?.frameCame() } }
         }
@@ -152,6 +155,11 @@ final class LiveSaverPresenter: NSObject {
     func layout() {
         guard let view else { return }
         video.layout(in: view.bounds)
+    }
+
+    /// The view moved to a window (and so to a display): that display's still.
+    func windowChanged() {
+        loadStill()
     }
 
     private func observeLifecycle() {

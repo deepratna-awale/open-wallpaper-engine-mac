@@ -37,6 +37,11 @@ class OWESaverViewBase: ScreenSaverView {
 
     override func animateOneFrame() {}
 
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        presenter?.windowChanged()
+    }
+
     override var hasConfigureSheet: Bool { false }
 
     override func resizeSubviews(withOldSize oldSize: NSSize) {
