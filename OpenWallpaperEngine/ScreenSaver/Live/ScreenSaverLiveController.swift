@@ -180,10 +180,11 @@ final class ScreenSaverLiveController {
         } else if !state.screenSaverRuns {
             timer?.invalidate()
             timer = nil
-            if launchedForSaver {
-                launchedForSaver = false
-                onLaunchedSessionEnded?()
-            }
+            launchedForSaver = false
+        }
+        if state.screenSaverRuns != sessionRuns {
+            sessionRuns = state.screenSaverRuns
+            onSessionChanged?(sessionRuns)
         }
     }
 

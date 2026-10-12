@@ -326,10 +326,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         migrateScreenSaverRecording()
         // The screen saver's loops follow the displays' wallpapers and layouts.
         screenSaver.observe(wallpaperViewModel)
-        liveScreenSaver.onLaunchedSessionEnded = { [weak self] in
-            self?.launchedForScreenSaver = false
-            self?.dockPresence.update()
-        }
+        liveScreenSaver.onSessionChanged = { [weak self] running in self?.screenSaverSessionChanged(running) }
+        screenSaverSelection.onPicked = { [weak self] wallpaper in self?.liveScreenSaver.renderPickStill(wallpaper) }
+        quitsAfterScreenSaver = launchedForScreenSaver
+        if launchedForScreenSaver { observeWindowsOpenedAfterScreenSaverLaunch() }
         if launchedForScreenSaver {
             OWELog.info(.app, "Live screen saver: launched for a saver showing")
             liveScreenSaver.launchedForScreenSaver()
@@ -537,7 +537,55 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         guard store.migrateRecordedSelection(isVideo: { _ in ScreenSaverVideoSource.isEligible(wallpaper) }) else { return }
         OWELog.info(.app, "Screen saver: \(folder.lastPathComponent)'s recording is now drawn live")
-        if ScreenSaverInstaller.current.mayInstall { ScreenSaverStillPublisher.current.publishPreview(of: wallpaper) }
+        // Its still now, once the app is set up (`renderPickStill`).
+        DispatchQueue.main.async { [weak self] in self?.liveScreenSaver.renderPickStill(wallpaper) }
+    }
+
+    /// A copy the broker launched for a screen saver (`launchedForScreenSaver`) quits once its
+    /// sessions are over, after `ScreenSaverLiveController.warmGrace` (another session may follow),
+    /// unless the user opened one of its windows meanwhile: the user had quit the app, and it
+    /// shouldn't stay, with its desktop wallpapers, because a screen saver ran.
+    private var quitsAfterScreenSaver = false
+    private var screenSaverQuitTimer: Timer?
+    private var windowOpenedObserver: NSObjectProtocol?
+
+    private func screenSaverSessionChanged(_ running: Bool) {
+        if running {
+            screenSaverQuitTimer?.invalidate()
+            screenSaverQuitTimer = nil
+            return
+        }
+        if launchedForScreenSaver {
+            launchedForScreenSaver = false
+            dockPresence.update()
+        }
+        guard quitsAfterScreenSaver else { return }
+        screenSaverQuitTimer?.invalidate()
+        OWELog.info(.app, "Live screen saver: launched only for the screen saver; quitting in \(Int(ScreenSaverLiveController.warmGrace)) s unless a window opens")
+        screenSaverQuitTimer = Timer.scheduledTimer(withTimeInterval: ScreenSaverLiveController.warmGrace + 5, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, self.quitsAfterScreenSaver else { return }
+                OWELog.info(.app, "Live screen saver: quitting the copy launched for the screen saver")
+                NSApp.terminate(nil)
+            }
+        }
+    }
+
+    /// The user opening one of the app's windows keeps a copy launched for the screen saver running.
+    private func observeWindowsOpenedAfterScreenSaverLaunch() {
+        windowOpenedObserver = NotificationCenter.default.addObserver(forName: NSWindow.didBecomeKeyNotification, object: nil,
+                                                                      queue: .main) { [weak self] note in
+            MainActor.assumeIsolated {
+                guard let self, let window = note.object as? NSWindow, window.styleMask.contains(.titled),
+                      !(window is NSPanel) else { return }
+                self.quitsAfterScreenSaver = false
+                self.screenSaverQuitTimer?.invalidate()
+                self.screenSaverQuitTimer = nil
+                if let observer = self.windowOpenedObserver { NotificationCenter.default.removeObserver(observer) }
+                self.windowOpenedObserver = nil
+                OWELog.info(.app, "Live screen saver: a window opened; the copy launched for the screen saver keeps running")
+            }
+        }
     }
 
     private lazy var identityNotice = AppIdentityNotice()
