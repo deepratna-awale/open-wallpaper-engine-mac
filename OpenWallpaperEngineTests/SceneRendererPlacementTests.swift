@@ -165,15 +165,25 @@ final class SceneRendererPlacementTests: XCTestCase {
         renderer.setContent(SceneMetalContent(
             size: SIMD2(scene, scene), layers: [layer], particleSystems: [],
             bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7, tint: SIMD3(repeating: 1))))
-        var pixels = [UInt8](repeating: 0, count: size * size * 4)
-        let deadline = Date().addingTimeInterval(10)
+        // The first frames draw before the layer's pipelines land: opaque black, not the layer.
+        // Draw until a frame had every pass in it (`hasCompleteFrame`), however long the compiles
+        // take on a loaded machine.
+        let deadline = Date().addingTimeInterval(30)
         repeat {
             RunLoop.main.run(until: Date().addingTimeInterval(0.02))
             renderer.draw(in: view)
             renderer.lastCommandBuffer?.waitUntilCompleted()
-            view.currentDrawable?.texture.getBytes(&pixels, bytesPerRow: size * 4,
-                                                   from: MTLRegionMake2D(0, 0, size, size), mipmapLevel: 0)
-        } while Date() < deadline && pixels.allSatisfy { $0 == 0 }
+        } while !renderer.hasCompleteFrame && Date() < deadline
+        XCTAssertTrue(renderer.hasCompleteFrame, "a complete frame was drawn")
+        // `currentDrawable` hands out the view's drawables in turn: draw until each holds a
+        // complete frame, or the one read below can be an early frame's.
+        for _ in 0..<4 {
+            renderer.draw(in: view)
+            renderer.lastCommandBuffer?.waitUntilCompleted()
+        }
+        var pixels = [UInt8](repeating: 0, count: size * size * 4)
+        view.currentDrawable?.texture.getBytes(&pixels, bytesPerRow: size * 4,
+                                               from: MTLRegionMake2D(0, 0, size, size), mipmapLevel: 0)
         func bgra(_ x: Int) -> [UInt8] { Array(pixels[((size / 2) * size + x) * 4..<((size / 2) * size + x) * 4 + 4]) }
         XCTAssertGreaterThan(bgra(size / 4)[2], 200, "red left of the origin: \(bgra(size / 4))")
         XCTAssertLessThan(bgra(size / 4)[1], 50, "\(bgra(size / 4))")
