@@ -22,7 +22,7 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
 
     /// Whether `url` goes through WebKit: a local WebM that AVFoundation reports it can't play.
     /// Other types, and a WebM once AVFoundation plays it, stay on the AVFoundation paths.
-    static func handles(_ url: URL) -> Bool {
+    nonisolated static func handles(_ url: URL) -> Bool {
         guard url.isFileURL, url.pathExtension.lowercased() == "webm" else { return false }
         return !AVURLAsset.isPlayableExtendedMIMEType("video/webm")
     }
@@ -33,7 +33,7 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
     /// The page when WebKit plays it.
     var webView: WKWebView? { page as? WKWebView }
     private var chromiumPage: ChromiumBrowserPage? { page as? ChromiumBrowserPage }
-    private let url: URL
+    let url: URL
     /// Bumped per state change, so a retry for an older state stops.
     private var generation = 0
     private var stopped = false
@@ -43,6 +43,28 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
             apply()
             updateMusicSyncTimer()
         }
+    }
+
+    /// The live screen saver draws this page (`ScreenSaverPageSharing`): the video plays, silent,
+    /// and counts as seen, whatever `state` and the windows covering it say.
+    private(set) var heldForScreenSaver = false
+
+    func holdForScreenSaver(_ hold: Bool) {
+        guard hold != heldForScreenSaver else { return }
+        heldForScreenSaver = hold
+        visibility.heldForScreenSaver = hold
+        apply()
+        updateMusicSyncTimer()
+    }
+
+    /// What the page plays: `state`, or playing and silent while held for the screen saver.
+    var shownState: State {
+        guard heldForScreenSaver else { return state }
+        var shown = state
+        shown.paused = false
+        shown.muted = true
+        if shown.rate <= 0 { shown.rate = 1 }
+        return shown
     }
 
     /// The wallpaper's music-sync amounts; while any is on the level is delivered to the page.
@@ -130,9 +152,9 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
     /// media document reports no navigation finish to rely on).
     private func apply() {
         // Chromium mutes the whole page too: its media document starts playing on its own.
-        chromiumPage?.setPageMuted(state.muted)
+        chromiumPage?.setPageMuted(shownState.muted)
         // Chromium stops drawing a paused video's page altogether.
-        chromiumPage?.applySchedulingPolicy(muted: state.muted, visible: !(state.paused || state.rate <= 0))
+        chromiumPage?.applySchedulingPolicy(muted: shownState.muted, visible: !(shownState.paused || shownState.rate <= 0))
         generation += 1
         attempt(generation)
     }
@@ -145,7 +167,7 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
         if count == Self.slowAttempts {
             OWELog.debug(.library, "WebKit video \(url.lastPathComponent): no <video> after \(count) tries; still retrying every 0.1 s")
         }
-        page.evaluate(Self.script(for: state)) { [weak self] result in
+        page.evaluate(Self.script(for: shownState)) { [weak self] result in
             // An error here is the page still loading; the retry covers it.
             guard (result as? Bool) != true else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -232,7 +254,7 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
     /// Runs the 30 Hz level delivery only while music sync is on and the page can be seen; a
     /// hidden page would drop the values, so the timer and its IPC stop too.
     private func updateMusicSyncTimer() {
-        visibility.playing = !state.paused && state.rate > 0
+        visibility.playing = !shownState.paused && shownState.rate > 0
         guard !stopped, musicSync.isActive, visibility.expectsHeartbeats else {
             musicSyncTimer?.invalidate()
             musicSyncTimer = nil
@@ -257,9 +279,9 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
         smoothedLevel = musicSync.paceAmount != 0
             ? smoothedLevel + (level - smoothedLevel) * VideoMusicSyncEffect.paceSmoothing
             : level
-        var frame = MusicSyncFrame(effect: musicSync, level: level, smoothedLevel: smoothedLevel, baseRate: state.rate)
+        var frame = MusicSyncFrame(effect: musicSync, level: level, smoothedLevel: smoothedLevel, baseRate: shownState.rate)
         if let rate = frame.rate {
-            frame.rate = paceLimiter.rate(for: rate, base: state.rate, at: ProcessInfo.processInfo.systemUptime)
+            frame.rate = paceLimiter.rate(for: rate, base: shownState.rate, at: ProcessInfo.processInfo.systemUptime)
         }
         send(frame)
     }

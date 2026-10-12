@@ -24,9 +24,9 @@ extension WorkshopSetAsFlow.Environment {
             },
             wallpaper: { folder in InstalledLibrary.wallpaper(at: folder, hiding: []) },
             setWallpaper: { AppDelegate.shared.wallpaperViewModel.inspectAndApply($0) },
-            isRecordingScreenSaver: { AppDelegate.shared.screenSaverRecordings.isRecording },
+            isSettingScreenSaver: { AppDelegate.shared.screenSaverSelection.isSettingVideo },
             setScreenSaver: { wallpaper, completion in
-                AppDelegate.shared.screenSaverRecordings.setAsScreenSaver(wallpaper, completion: completion)
+                AppDelegate.shared.screenSaverSelection.setAsScreenSaver(wallpaper, completion: completion)
             })
     }
 }

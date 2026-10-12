@@ -42,4 +42,12 @@ final class WebFrameHeartbeatTests: XCTestCase {
         XCTAssertTrue(WebWallpaperPropertyBridge.bootstrapScript.contains(WebWallpaperPropertyBridge.frameMessageName))
         XCTAssertTrue(WebWallpaperPropertyBridge.bootstrapScript.contains("requestAnimationFrame"))
     }
+
+    func testAPageHeldForTheScreenSaverIsSeenWhateverCoversIt() {
+        var gate = WebHeartbeatGate()
+        gate.windowVisible = false
+        gate.playing = false
+        gate.heldForScreenSaver = true
+        XCTAssertTrue(gate.expectsHeartbeats)
+    }
 }

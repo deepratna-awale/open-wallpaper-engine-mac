@@ -1,96 +1,10 @@
 import XCTest
 @testable import OpenWallpaperEngine
 
+/// The loops' crossfade and frame signature the exports use, and the screen saver's folder:
+/// names, isolation, pruning and the manifest.
 final class ScreenSaverLoopTests: XCTestCase {
-    private typealias Period = ScreenSaverLoopLength.Period
-
-    // MARK: Periods
-
-    func testTimelinePeriodIsLengthOverFPSAndMirrorDoublesIt() throws {
-        let loop = try XCTUnwrap(Period(timelineLength: 60, fps: 30, mirrored: false))
-        XCTAssertEqual(loop.seconds, 2, accuracy: 1e-9)
-        let mirror = try XCTUnwrap(Period(timelineLength: 60, fps: 30, mirrored: true))
-        XCTAssertEqual(mirror.seconds, 4, accuracy: 1e-9)
-        XCTAssertNil(Period(timelineLength: 60, fps: 0, mirrored: false))
-        XCTAssertNil(Period(timelineLength: 0, fps: 30, mirrored: false))
-    }
-
-    func testSpriteSheetPeriodIsTheSumOfItsFrameTimes() throws {
-        let period = try XCTUnwrap(Period(frameTimes: [0.1, 0.1, 0.1, 0.2]))
-        XCTAssertEqual(period.seconds, 0.5, accuracy: 1e-9)
-    }
-
-    func testLeastCommonMultipleOfFractions() throws {
-        // 2 s and 3 s loop together every 6 s; 1.5 s and 2 s every 6 s.
-        let a = try XCTUnwrap(Period(numerator: 2, denominator: 1))
-        let b = try XCTUnwrap(Period(numerator: 3, denominator: 1))
-        let c = try XCTUnwrap(Period(numerator: 3, denominator: 2))
-        XCTAssertEqual(ScreenSaverLoopLength.leastCommonMultiple([a, b])?.seconds, 6)
-        XCTAssertEqual(ScreenSaverLoopLength.leastCommonMultiple([c, a])?.seconds, 6)
-        XCTAssertNil(ScreenSaverLoopLength.leastCommonMultiple([]))
-    }
-
-    func testPeriodicLoopIsAWholeNumberOfFramesEndingBeforeFrameZero() throws {
-        let periods = [try XCTUnwrap(Period(timelineLength: 60, fps: 30, mirrored: false)),
-                       try XCTUnwrap(Period(frameTimes: [0.5, 0.5, 0.5]))]
-        let loop = try XCTUnwrap(ScreenSaverLoopLength.periodicLoop(periods))
-        // lcm(2 s, 1.5 s) = 6 s = 180 frames at 30 fps: frame 180 is frame 0 again.
-        XCTAssertEqual(loop, ScreenSaverLoopLength.Loop(frames: 180, frameRate: 30))
-    }
-
-    func testPeriodicLoopTakesAFrameRateThatCutsItExactly() throws {
-        // 1/24 s × 25 frames isn't a whole number of frames at 30 fps.
-        let period = try XCTUnwrap(Period(numerator: 25, denominator: 24))
-        XCTAssertEqual(ScreenSaverLoopLength.periodicLoop([period]), ScreenSaverLoopLength.Loop(frames: 25, frameRate: 24))
-    }
-
-    func testPeriodicLoopIsCappedAtThirtySecondsAndThirtyFPS() throws {
-        XCTAssertEqual(ScreenSaverLoopLength.maximumSeconds, 30)
-        XCTAssertEqual(ScreenSaverSeamFinder.maximumSeconds, 30)
-        XCTAssertTrue(ScreenSaverLoopLength.frameRates.allSatisfy { $0 <= 30 })
-        let five = try XCTUnwrap(Period(numerator: 5, denominator: 1))
-        let seven = try XCTUnwrap(Period(numerator: 7, denominator: 1))
-        XCTAssertNil(ScreenSaverLoopLength.periodicLoop([five, seven]), "35 s is over the cap")
-        XCTAssertEqual(ScreenSaverLoopLength.periodicLoop([five, seven], maximumSeconds: 40)?.seconds, 35)
-        let thirty = try XCTUnwrap(Period(numerator: 30, denominator: 1))
-        XCTAssertEqual(ScreenSaverLoopLength.periodicLoop([thirty]), ScreenSaverLoopLength.Loop(frames: 900, frameRate: 30))
-        // 1/60 s × 61 frames needs 60 fps to cut exactly: no loop, so the seam is searched at 30.
-        let sixtieths = try XCTUnwrap(Period(numerator: 61, denominator: 60))
-        XCTAssertNil(ScreenSaverLoopLength.periodicLoop([sixtieths]))
-    }
-
     // MARK: Seam
-
-    func testBestFrameIsTheClosestMatchAfterTheMinimum() {
-        // 1 fps for readability: frames 0…9, minimum 5 s.
-        let differences = [0, 0.001, 0.2, 0.3, 0.2, 0.15, 0.05, 0.02, 0.03, 0.1]
-        XCTAssertEqual(ScreenSaverSeamFinder.bestFrame(differences: differences, frameRate: 1), 7,
-                       "frame 1 matches better but is before the minimum")
-        XCTAssertNil(ScreenSaverSeamFinder.bestFrame(differences: Array(differences.prefix(5)), frameRate: 1))
-    }
-
-    func testBestFrameTakesTheEarliestOnATie() {
-        let differences = [0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.01, 0.01, 0.4]
-        XCTAssertEqual(ScreenSaverSeamFinder.bestFrame(differences: differences, frameRate: 1), 6)
-    }
-
-    func testAnInvisibleSeamCutsAndAVisibleOneCrossfades() {
-        XCTAssertEqual(ScreenSaverSeamFinder.seam(difference: 0.005, frameRate: 30, loopFrames: 300), .cut)
-        XCTAssertEqual(ScreenSaverSeamFinder.seam(difference: 0.08, frameRate: 30, loopFrames: 300), .crossfade(frames: 8))
-        XCTAssertEqual(ScreenSaverSeamFinder.seam(difference: 0.08, frameRate: 30, loopFrames: 6), .crossfade(frames: 3),
-                       "a crossfade never takes more than half the loop")
-    }
-
-    func testDecisionCombinesBestFrameAndSeam() {
-        var differences = [Double](repeating: 0.3, count: 400)
-        differences[0] = 0
-        differences[200] = 0.002
-        XCTAssertEqual(ScreenSaverSeamFinder.decide(differences: differences, frameRate: 30),
-                       .init(frames: 200, seam: .cut))
-        differences[200] = 0.05
-        XCTAssertEqual(ScreenSaverSeamFinder.decide(differences: differences, frameRate: 30),
-                       .init(frames: 200, seam: .crossfade(frames: 8)))
-    }
 
     func testCrossfadeWeightRisesOverTheLastFramesOnly() {
         XCTAssertEqual(ScreenSaverSeamFinder.crossfadeWeight(index: 5, loopFrames: 10, fade: 4), 0)
@@ -171,19 +85,30 @@ final class ScreenSaverStorageTests: XCTestCase {
         XCTAssertFalse(user.isInstalled)
     }
 
-    func testRetainKeepsTheManifestAndListedVideosOnly() throws {
+    func testRetainAndTurningOffKeepTheStills() throws {
         let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: folder) }
         let store = ScreenSaverVideoStore(directory: folder)
         try store.writeManifest(ScreenSaverManifest(videos: [.init(file: "new.mov", width: 1, height: 1)]))
-        for name in ["new.mov", "old.mov", ".partial-new.mov"] { try Data().write(to: store.url(fileName: name)) }
+        let stills = [ScreenSaverStills.fileName, "still-A.heic", "still-pick.jpg", ".1F2E-still-B.heic"]
+        for name in ["new.mov", "old.mov", ".partial-new.mov", ScreenSaverLiveManifest.fileName] + stills {
+            try Data().write(to: store.url(fileName: name))
+        }
         store.retain(["new.mov"])
         XCTAssertTrue(store.exists(fileName: "new.mov"))
         XCTAssertTrue(store.exists(fileName: ScreenSaverManifest.fileName))
+        XCTAssertTrue(store.exists(fileName: ScreenSaverLiveManifest.fileName), "the live frames' manifest stays")
+        for still in stills { XCTAssertTrue(store.exists(fileName: still), "\(still): the saver's stills stay") }
         XCTAssertFalse(store.exists(fileName: "old.mov"))
         XCTAssertFalse(store.exists(fileName: ".partial-new.mov"))
         store.removeAll()
-        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.path))
+        XCTAssertFalse(store.exists(fileName: "new.mov"))
+        XCTAssertFalse(store.exists(fileName: ScreenSaverManifest.fileName))
+        for still in stills { XCTAssertTrue(store.exists(fileName: still), "\(still): turning the plugin off keeps the stills") }
+        for still in stills { try FileManager.default.removeItem(at: store.url(fileName: still)) }
+        try Data().write(to: store.url(fileName: "again.mov"))
+        store.removeAll()
+        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.path), "an emptied folder goes")
     }
 
     func testManifestPicksTheVideoForTheViewSize() {
@@ -197,39 +122,69 @@ final class ScreenSaverStorageTests: XCTestCase {
     }
 
     func testHelperRunArgumentsAreReadOnlyHelperRuns() {
-        XCTAssertTrue(ShaderPrewarmCommand.isHelperRun(arguments: ["app", ShaderPrewarmCommand.screenSaverArgument]))
+        XCTAssertTrue(ShaderPrewarmCommand.isHelperRun(arguments: ["app", ShaderPrewarmCommand.prepareArgument]))
+        XCTAssertFalse(ShaderPrewarmCommand.isHelperRun(arguments: ["app", "--render-screensaver-loop"]), "the loop render is gone")
         XCTAssertEqual(ShaderPrewarmCommand.size("3840x2160"), SIMD2(3840, 2160))
         XCTAssertNil(ShaderPrewarmCommand.size("3840"))
         XCTAssertNil(ShaderPrewarmCommand.size("0x10"))
     }
 
-    func testOneLoopForEveryDisplay() throws {
-        let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
-        defer { try? FileManager.default.removeItem(at: folder) }
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        try Data("{}".utf8).write(to: folder.appending(path: "scene.json"))
-        let wallpaper = WEWallpaper(using: WEProject(file: "scene.json", title: "Loop", type: "scene"), where: folder)
-        let targets = ScreenSaverPlugin.targets(
-            for: wallpaper,
-            screens: [(pixels: SIMD2(3840, 2160), points: SIMD2(1920, 1080)),
-                      (pixels: SIMD2(2560, 1600), points: SIMD2(2560, 1600)),
-                      (pixels: SIMD2(1920, 1080), points: SIMD2(1920, 1080))],
-            properties: [:])
-        XCTAssertEqual(targets.map(\.pixelSize), [SIMD2(3840, 2160)], "one video, at the largest display's pixels")
-        XCTAssertEqual(targets.first?.pointSize, SIMD2(2560, 1600))
+    // MARK: Earlier versions' recordings
+
+    func testOnlyOWEsOwnRecordingNamesAreOldRecordings() {
+        XCTAssertTrue(ScreenSaverVideoStore.isOldRecording("ab12_cd34-0a1b2c3d4e5f-3840x2160-r3.mov"))
+        XCTAssertTrue(ScreenSaverVideoStore.isOldRecording("ab12_cd34-0a1b2c3d4e5f-1920x1080-r2-rec1790000000.mov"))
+        XCTAssertFalse(ScreenSaverVideoStore.isOldRecording("ab12_cd34-video-r3.mp4"), "a video wallpaper's own file")
+        XCTAssertFalse(ScreenSaverVideoStore.isOldRecording("ab12_cd34-video-r3-rec1790000000.mov"), "a video set as the screen saver")
+        XCTAssertFalse(ScreenSaverVideoStore.isOldRecording("holiday.mov"))
+        XCTAssertFalse(ScreenSaverVideoStore.isOldRecording("still-A.heic"))
+        XCTAssertFalse(ScreenSaverVideoStore.isOldRecording(ScreenSaverManifest.fileName))
     }
 
-    func testTheLoopIsTheLargestDisplaysPixels() throws {
+    func testOldRecordingsAreDeletedAndNothingElse() throws {
         let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: folder) }
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        try Data("{}".utf8).write(to: folder.appending(path: "scene.json"))
-        let wallpaper = WEWallpaper(using: WEProject(file: "scene.json", title: "Loop", type: "scene"), where: folder)
-        let screens = [(pixels: SIMD2(3840, 2160), points: SIMD2(1920, 1080)),
-                       (pixels: SIMD2(1920, 1080), points: SIMD2(1920, 1080))]
-        // Render Resolution draws the scene inside it (`ScreenSaverLoopRenderer`); the video is the pixels.
-        let targets = ScreenSaverPlugin.targets(for: wallpaper, screens: screens, properties: [:])
-        XCTAssertEqual(targets.map(\.pixelSize), [SIMD2(3840, 2160)])
-        XCTAssertEqual(targets.first?.pointSize, SIMD2(1920, 1080))
+        let shared = folder.appending(path: "ScreenSaver", directoryHint: .isDirectory)
+        let caches = folder.appending(path: "Caches", directoryHint: .isDirectory)
+        let staging = caches.appending(path: "ScreenSaverRecordings", directoryHint: .isDirectory)
+        let elsewhere = folder.appending(path: "Library", directoryHint: .isDirectory)
+        for dir in [shared, staging, elsewhere, shared.appending(path: "sub-0a1b2c3d4e5f-1x1-r1.mov")] {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        }
+        let loop = "w_c-0a1b2c3d4e5f-3840x2160-r3.mov", recording = "w_c-0a1b2c3d4e5f-3840x2160-r3-rec42.mov"
+        let video = "v_c-video-r3.mp4", kept = "k_c-0a1b2c3d4e5f-1920x1080-r3.mov"
+        for name in [loop, recording, video, kept, "still-A.heic", ScreenSaverStills.fileName, ScreenSaverManifest.fileName] {
+            try Data("x".utf8).write(to: shared.appending(path: name))
+        }
+        try Data("x".utf8).write(to: staging.appending(path: recording))
+        // A library file linked in under a recording's name is never followed or deleted.
+        let libraryFile = elsewhere.appending(path: "clip.mov")
+        try Data("library".utf8).write(to: libraryFile)
+        let link = "l_c-0a1b2c3d4e5f-640x480-r3.mov"
+        try FileManager.default.createSymbolicLink(at: shared.appending(path: link), withDestinationURL: libraryFile)
+
+        ScreenSaverVideoStore(directory: shared).removeOldRecordings(cachesDirectory: caches, keeping: [kept])
+
+        let left = try Set(FileManager.default.contentsOfDirectory(atPath: shared.path(percentEncoded: false)))
+        XCTAssertEqual(left, [video, kept, link, "still-A.heic", ScreenSaverStills.fileName, ScreenSaverManifest.fileName,
+                              "sub-0a1b2c3d4e5f-1x1-r1.mov"])
+        XCTAssertEqual(try String(contentsOf: libraryFile, encoding: .utf8), "library")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: staging.path(percentEncoded: false)), "the emptied staging folder goes")
+    }
+
+    func testRetiredSettingsAreRemovedAndOldSelectionsStillDecode() throws {
+        let suite = "owe-screensaver-retired-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set(Data(#"{"isEnabled":true,"hour":6,"minute":30}"#.utf8), forKey: "ScreenSaverSchedule")
+        // A selection as earlier versions saved it, recording fields and all.
+        defaults.set(Data(#"{"wallpaperDirectory":"/w/1","fileName":"a-rec1.mov","width":1920,"height":1080,"recorded":0}"#.utf8),
+                     forKey: ScreenSaverSettingsStore.selectionKey)
+        let store = ScreenSaverSettingsStore(defaults: defaults)
+        store.removeRetiredKeys()
+        XCTAssertNil(defaults.object(forKey: "ScreenSaverSchedule"))
+        XCTAssertEqual(store.selection?.wallpaperDirectory, "/w/1")
+        XCTAssertNil(store.livePick)
+        store.removeRetiredKeys()
     }
 }

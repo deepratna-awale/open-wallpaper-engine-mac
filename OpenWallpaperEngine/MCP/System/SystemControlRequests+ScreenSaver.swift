@@ -1,8 +1,8 @@
 import Foundation
 import OWEControlProtocol
 
-/// The screen saver: Scene Edit / Export's Screen Saver mode (its layer and property choices,
-/// Record and Set as Screen Saver, Stop Using as Screen Saver) and the daily re-recording.
+/// The screen saver: Scene Edit / Export's Screen Saver mode (its layer and property choices, Set
+/// as Screen Saver, Stop Using as Screen Saver).
 extension SystemControlRequests {
     /// Choosing it in macOS is the user's: OWE only opens that pane for them.
     static let pickInSystemSettings = "To use it, pick \"Open Wallpaper Engine\" in System Settings › Screen Saver if it isn't your screen saver yet."
@@ -11,17 +11,17 @@ extension SystemControlRequests {
         let state = service.screenSaver
         var result: [String: JSONValue] = [
             "plugin_enabled": .bool(state.pluginEnabled),
-            "recording": .bool(state.isRecording),
             "selection": state.selection.map(Self.json) ?? .null,
-            "schedule": Self.json(service.schedule),
         ]
         var message = state.pluginEnabled ? "The Screen Saver plugin is on" : "The Screen Saver plugin is off"
         if let selection = state.selection {
-            message += "; \(selection.wallpaper.map { "\"\($0.title)\"" } ?? "a wallpaper no longer in the library")'s recording of \(selection.recorded.formatted(date: .abbreviated, time: .shortened)) is the screen saver."
+            let name = selection.wallpaper.map { "\"\($0.title)\"" } ?? "a wallpaper no longer in the library"
+            message += selection.kind == .live
+                ? "; \(name) is the screen saver, drawn live with its screen saver choices."
+                : "; \(name)'s own video is the screen saver."
         } else {
-            message += state.pluginEnabled ? "; it loops the desktop's wallpaper (no recording is set as the screen saver)." : "."
+            message += state.pluginEnabled ? "; it draws the desktop's wallpapers live (nothing is set as the screen saver)." : "."
         }
-        if state.isRecording { message += " A recording is running." }
         if let id = try params.string("wallpaper_id") {
             let wallpaper = try lookup.wallpaper(id)
             result["wallpaper"] = try screenSaverWallpaper(wallpaper, selection: state.selection)
@@ -85,7 +85,7 @@ extension SystemControlRequests {
         values.merge(changes) { _, new in new }
         let saved = try service.setScreenSaverValues(values, of: wallpaper)
         let message = saved
-            ? "Saved the screen saver's choices for \"\(wallpaper.title)\": \(Self.sentenceList(described)). The desktop is unchanged; the next recording (screensaver_record, or the daily re-recording when this is the screen saver) uses them."
+            ? "Saved the screen saver's choices for \"\(wallpaper.title)\": \(Self.sentenceList(described)). The desktop is unchanged; the screen saver draws it with them while it is set as the screen saver (screensaver_set)."
             : "These are \"\(wallpaper.title)\"'s own values, which the screen saver follows until its choices differ, so nothing was saved."
         return [
             "wallpaper": ControlLookup.json(wallpaper),
@@ -96,71 +96,34 @@ extension SystemControlRequests {
         ]
     }
 
-    func recordScreenSaver(_ params: ControlParameters, lookup: ControlLookup) async throws -> JSONValue {
+    func setScreenSaver(_ params: ControlParameters, lookup: ControlLookup) async throws -> JSONValue {
         let wallpaper = try lookup.wallpaper(params.required("wallpaper_id"))
-        guard wallpaper.type == "scene" else {
-            throw ControlError(.unsupported, "\"\(wallpaper.title)\" is a \(wallpaper.type) wallpaper; the Screen Saver mode records scenes only. The Screen Saver plugin loops other wallpapers by itself while they are on the desktop.")
+        guard wallpaper.type == "scene" || wallpaper.type == "video" else {
+            throw ControlError(.unsupported, "\"\(wallpaper.title)\" is a \(wallpaper.type) wallpaper; Set as Screen Saver takes scenes and videos. The screen saver draws web wallpapers live by itself while they are on the desktop.")
         }
-        let recording = try await service.recordScreenSaver(wallpaper)
-        var message = "Recorded \"\(wallpaper.title)\" at \(recording.selection.width)×\(recording.selection.height) and set it as the screen saver."
-        if recording.enabledPlugin {
-            message += " The Screen Saver plugin was off, so the recording turned it on (which installs the saver), as the Screen Saver mode does."
+        let set = try await service.setScreenSaver(wallpaper)
+        var message = set.selection.kind == .live
+            ? "\"\(wallpaper.title)\" is the screen saver, drawn live with its screen saver choices (screensaver_set_layers)."
+            : "\"\(wallpaper.title)\"'s own video is the screen saver."
+        if set.enabledPlugin {
+            message += " The Screen Saver plugin was off, so this turned it on (which installs the saver), as the Screen Saver mode does."
         }
         return [
             "wallpaper": ControlLookup.json(wallpaper),
-            "selection": Self.json(recording.selection),
-            "enabled_plugin": .bool(recording.enabledPlugin),
+            "selection": Self.json(set.selection),
+            "enabled_plugin": .bool(set.enabledPlugin),
             "message": .string(message + " " + Self.pickInSystemSettings),
         ]
     }
 
     func stopUsingScreenSaver() throws -> JSONValue {
         let state = service.screenSaver
-        guard !state.isRecording else {
-            throw ControlError(.unavailable, "A screen saver recording is running. Wait for it to finish, then try again.")
-        }
         guard let selection = state.selection else {
-            return ["stopped": false, "message": "No recording is set as the screen saver; it already follows the desktop's wallpaper."]
+            return ["stopped": false, "message": "Nothing is set as the screen saver; it already follows the desktop's wallpapers."]
         }
         service.stopUsingScreenSaver()
-        let title = selection.wallpaper.map { "\"\($0.title)\"'s recording" } ?? "The recording"
-        return ["stopped": true, "message": .string("\(title) is no longer the screen saver; it follows the desktop's wallpaper again.")]
-    }
-
-    // MARK: Schedule
-
-    func schedule(message: String) -> JSONValue {
-        guard case .object(var object) = Self.json(service.schedule) else { return .null }
-        object["message"] = .string(message)
-        return .object(object)
-    }
-
-    func setSchedule(_ params: ControlParameters) throws -> JSONValue {
-        let enabled = try params.requiredBool("enabled")
-        let hour = try params.int("hour"), minute = try params.int("minute")
-        if let hour, !(0...23).contains(hour) { throw ControlError(.invalidParams, "hour must be 0 to 23.") }
-        if let minute, !(0...59).contains(minute) { throw ControlError(.invalidParams, "minute must be 0 to 59.") }
-        if !enabled, hour != nil || minute != nil {
-            throw ControlError(.invalidParams, "The time is set with enabled: true; the Screen Saver mode's time picker is off while the daily re-recording is off.")
-        }
-        let current = service.schedule
-        if current.enabled != enabled { service.setScheduleEnabled(enabled) }
-        let newHour = hour ?? current.hour, newMinute = minute ?? current.minute
-        if enabled, newHour != current.hour || newMinute != current.minute {
-            service.setScheduleTime(hour: newHour, minute: newMinute)
-        }
-        var message = Self.scheduleSentence(service.schedule)
-        if enabled, service.screenSaver.selection == nil {
-            message += " Nothing is set as the screen saver yet, so a run has nothing to record until screensaver_record sets one."
-        }
-        return schedule(message: message)
-    }
-
-    static func scheduleSentence(_ schedule: SystemScreenSaverSchedule) -> String {
-        guard schedule.enabled else { return "The daily re-recording is off." }
-        var sentence = "The screen saver is recorded again every day at \(String(format: "%02d:%02d", schedule.hour, schedule.minute))"
-        if let next = schedule.nextRun { sentence += ", next \(next.formatted(date: .abbreviated, time: .shortened))" }
-        return sentence + ", while the app runs (a missed time runs at the next wake or launch)."
+        let title = selection.wallpaper.map { "\"\($0.title)\"" } ?? "The wallpaper"
+        return ["stopped": true, "message": .string("\(title) is no longer the screen saver; it follows the desktop's wallpapers again.")]
     }
 
     // MARK: Lookup and writing
@@ -191,18 +154,8 @@ extension SystemControlRequests {
         [
             "wallpaper": selection.wallpaper.map(ControlLookup.json) ?? .null,
             "folder": .string(selection.folder),
-            "recorded": date(selection.recorded),
-            "width": .number(Double(selection.width)), "height": .number(Double(selection.height)),
-        ]
-    }
-
-    static func json(_ schedule: SystemScreenSaverSchedule) -> JSONValue {
-        [
-            "enabled": .bool(schedule.enabled),
-            "hour": .number(Double(schedule.hour)), "minute": .number(Double(schedule.minute)),
-            "time": .string(String(format: "%02d:%02d", schedule.hour, schedule.minute)),
-            "anchor": date(schedule.anchor),
-            "next_run": date(schedule.nextRun),
+            "kind": .string(selection.kind.rawValue),
+            "picked": date(selection.picked),
         ]
     }
 }

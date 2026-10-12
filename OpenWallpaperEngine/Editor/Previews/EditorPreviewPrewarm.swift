@@ -18,8 +18,7 @@ import OWESceneEditing
 /// - **Cost:** `laneCount` helpers in the background state, each kept for every preview it renders
 ///   (`EditorPreviewHelperLane`); a browser's tiles render at its own helper's priority. The
 ///   planning reads at utility priority.
-/// - **Power:** under the screen saver's daily re-recording's rule (`allowsEditorPreviewPrewarm`):
-///   on battery only above 30 %, never while critically hot. It pauses between previews (the
+/// - **Power:** `allowsEditorPreviewPrewarm`: on battery only above 30 %, never while critically hot. It pauses between previews (the
 ///   helpers exit, the lock is released so an editor renders on its own) and checks again every
 ///   `pauseRecheck`. Each start, pause, resume and finish is logged.
 /// - **Progress:** `progress` while a run renders, for a line in Settings › Assets.
@@ -317,7 +316,7 @@ final class EditorPreviewPrewarm: ObservableObject {
     private static func reason(_ policy: PowerPolicy) -> String {
         if policy.state.thermal == .critical { return "the Mac is critically hot" }
         let level = policy.state.batteryLevel.map { "\(Int(($0 * 100).rounded())) %" } ?? "an unknown charge"
-        return "on battery at \(level), below \(Int(PowerPolicy.scheduledRecordingMinimumBattery * 100)) %"
+        return "on battery at \(level), below \(Int(PowerPolicy.editorPreviewPrewarmMinimumBattery * 100)) %"
     }
 
     // MARK: The catalog
@@ -345,7 +344,13 @@ final class EditorPreviewPrewarm: ObservableObject {
 }
 
 extension PowerPolicy {
-    /// The editor previews' background pre-warm runs when the screen saver's daily re-recording
-    /// would: on AC, on battery at 30 % or more, never at `.critical` heat.
-    var allowsEditorPreviewPrewarm: Bool { allowsScheduledRecording }
+    /// The editor previews' background pre-warm waits on battery below this charge…
+    static let editorPreviewPrewarmMinimumBattery = 0.3
+
+    /// …and at `.critical` heat. On AC it always runs.
+    var allowsEditorPreviewPrewarm: Bool {
+        if state.thermal == .critical { return false }
+        guard state.onBattery else { return true }
+        return (state.batteryLevel ?? 0) >= Self.editorPreviewPrewarmMinimumBattery
+    }
 }

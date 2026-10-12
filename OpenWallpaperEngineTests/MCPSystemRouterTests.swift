@@ -48,7 +48,7 @@ private final class FakeSystemService: SystemControlService {
     var size = SIMD2<Double>(1920, 1080)
     var exports: [SystemLivePhotoRequest] = []
     var photos = SystemLivePhotoResult.Photos.off
-    var state = SystemScreenSaverState(pluginEnabled: false, isRecording: false, selection: nil)
+    var state = SystemScreenSaverState(pluginEnabled: false, selection: nil)
     var sceneLayers = [
         SystemSceneLayer(id: 1, name: "Background", kind: "image", authoredVisible: true),
         SystemSceneLayer(id: 4, name: "Clock", kind: "text", authoredVisible: true),
@@ -56,9 +56,8 @@ private final class FakeSystemService: SystemControlService {
     ]
     var wallpaperOwn: [String: String] = ["rain": "true", "speed": "1"]
     var saved: [String: String]?
-    var recorded: [String] = []
-    var recordFails = false
-    var plan = SystemScreenSaverSchedule(enabled: false, hour: 9, minute: 0, anchor: nil, nextRun: nil)
+    var setAsScreenSaver: [String] = []
+    var setFails = false
     var lock = SystemLockScreenState(enabled: true, mayChangeDesktopPicture: true,
                                      follows: SystemFakeAppModel.wallpaper("100", "Rainy Window", "scene"), displays: [])
     var refreshes = 0
@@ -124,24 +123,18 @@ private final class FakeSystemService: SystemControlService {
         return true
     }
 
-    func recordScreenSaver(_ wallpaper: ControlWallpaper) async throws -> SystemScreenSaverRecording {
-        if recordFails { throw ControlError(.failed, "couldn't be recorded") }
-        recorded.append(wallpaper.id)
+    func setScreenSaver(_ wallpaper: ControlWallpaper) async throws -> SystemScreenSaverSet {
+        if setFails { throw ControlError(.failed, "couldn't be set") }
+        setAsScreenSaver.append(wallpaper.id)
         let selection = SystemScreenSaverSelection(wallpaper: wallpaper, folder: wallpaper.folder.path,
-                                                   recorded: Date(timeIntervalSince1970: 1_800_000_000), width: 1920, height: 1080)
+                                                   kind: wallpaper.type == "video" ? .video : .live,
+                                                   picked: Date(timeIntervalSince1970: 1_800_000_000))
         let enabled = !state.pluginEnabled
-        state = SystemScreenSaverState(pluginEnabled: true, isRecording: false, selection: selection)
-        return SystemScreenSaverRecording(selection: selection, enabledPlugin: enabled)
+        state = SystemScreenSaverState(pluginEnabled: true, selection: selection)
+        return SystemScreenSaverSet(selection: selection, enabledPlugin: enabled)
     }
 
     func stopUsingScreenSaver() { state.selection = nil }
-
-    var schedule: SystemScreenSaverSchedule { plan }
-    func setScheduleEnabled(_ enabled: Bool) { plan.enabled = enabled }
-    func setScheduleTime(hour: Int, minute: Int) {
-        plan.hour = hour
-        plan.minute = minute
-    }
 
     var lockScreen: SystemLockScreenState { lock }
     func setLockScreenEnabled(_ enabled: Bool) { lock.enabled = enabled }
@@ -273,7 +266,7 @@ final class MCPSystemRouterTests: XCTestCase {
         let state = try await result("screensaver_get", ["wallpaper_id": "100"])
         XCTAssertEqual(state["plugin_enabled"], false)
         XCTAssertEqual(state["selection"], .null)
-        XCTAssertEqual(state["schedule"]?["enabled"], false)
+        XCTAssertNil(state["schedule"], "no daily re-recording: the screen saver is live")
         let version = try XCTUnwrap(state["wallpaper"])
         XCTAssertEqual(version["eligible"], true)
         XCTAssertEqual(version["own_choices"], false)
@@ -332,13 +325,19 @@ final class MCPSystemRouterTests: XCTestCase {
         XCTAssertTrue(twice?.message.contains("4, 9") ?? false)
     }
 
-    func testRecordAndStopUsing() async throws {
-        let recorded = try await result("screensaver_record", ["wallpaper_id": "100"])
-        XCTAssertEqual(service.recorded, ["100"])
-        XCTAssertEqual(recorded["enabled_plugin"], true)
-        XCTAssertEqual(recorded["selection"]?["width"]?.intValue, 1920)
-        XCTAssertEqual(recorded["selection"]?["wallpaper"]?["id"], "100")
-        XCTAssertTrue(recorded["message"]?.stringValue?.contains("turned it on") ?? false)
+    func testSetAndStopUsing() async throws {
+        let set = try await result("screensaver_set", ["wallpaper_id": "100"])
+        XCTAssertEqual(service.setAsScreenSaver, ["100"])
+        XCTAssertEqual(set["enabled_plugin"], true)
+        XCTAssertEqual(set["selection"]?["kind"], "live")
+        XCTAssertNotEqual(set["selection"]?["picked"], .null)
+        XCTAssertNil(set["selection"]?["width"], "drawn live at each display's size")
+        XCTAssertEqual(set["selection"]?["wallpaper"]?["id"], "100")
+        XCTAssertTrue(set["message"]?.stringValue?.contains("drawn live") ?? false)
+        XCTAssertTrue(set["message"]?.stringValue?.contains("turned it on") ?? false)
+
+        let video = try await result("screensaver_set", ["wallpaper_id": "200"])
+        XCTAssertEqual(video["selection"]?["kind"], "video", "a video's own file")
 
         let stopped = try await result("screensaver_stop_using")
         XCTAssertEqual(stopped["stopped"], true)
@@ -347,33 +346,18 @@ final class MCPSystemRouterTests: XCTestCase {
         XCTAssertEqual(again["stopped"], false)
     }
 
-    func testRecordRefusals() async {
-        let video = await error("screensaver_record", ["wallpaper_id": "200"])
-        XCTAssertEqual(video?.code, .unsupported)
-        service.recordFails = true
-        let failed = await error("screensaver_record", ["wallpaper_id": "100"])
+    func testSetRefusals() async {
+        service.setFails = true
+        let failed = await error("screensaver_set", ["wallpaper_id": "100"])
         XCTAssertEqual(failed?.code, .failed)
-        service.state.isRecording = true
-        service.state.selection = SystemScreenSaverSelection(wallpaper: nil, folder: "/x", recorded: Date(), width: 1, height: 1)
-        let busy = await error("screensaver_stop_using")
-        XCTAssertEqual(busy?.code, .unavailable)
-        XCTAssertNotNil(service.state.selection)
+        XCTAssertNil(service.state.selection)
     }
 
-    func testSchedule() async throws {
-        let on = try await result("screensaver_schedule_set", ["enabled": true, "hour": 6, "minute": 30])
-        XCTAssertEqual(on["enabled"], true)
-        XCTAssertEqual(on["time"], "06:30")
-        XCTAssertTrue(on["message"]?.stringValue?.contains("Nothing is set as the screen saver") ?? false)
-        let read = try await result("screensaver_schedule_get")
-        XCTAssertEqual(read["hour"]?.intValue, 6)
-        let off = try await result("screensaver_schedule_set", ["enabled": false])
-        XCTAssertEqual(off["enabled"], false)
-        XCTAssertEqual(off["minute"]?.intValue, 30)
-        let timeWhileOff = await error("screensaver_schedule_set", ["enabled": false, "hour": 7])
-        XCTAssertEqual(timeWhileOff?.code, .invalidParams)
-        let badHour = await error("screensaver_schedule_set", ["enabled": true, "hour": 24])
-        XCTAssertEqual(badHour?.code, .invalidParams)
+    func testTheRecordingToolsAreGone() async {
+        for tool in ["screensaver_record", "screensaver_schedule_get", "screensaver_schedule_set"] {
+            let gone = await error(tool, [:])
+            XCTAssertEqual(gone?.code, .unknownMethod, tool)
+        }
     }
 
     // MARK: - Lock screen

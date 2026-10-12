@@ -4,11 +4,11 @@ import CoreGraphics
 /// "Same as wallpaper" follows the wallpapers' layout with its clone and stretch groups; its own
 /// layout applies to every connected display.
 ///
-/// - Per display: a loop per distinct wallpaper and properties shown, recorded at the largest of
+/// - Per display: a loop per distinct wallpaper and properties shown, drawn at the largest of
 ///   its displays' sizes; displays showing the same one share it (a clone's members do).
 /// - Clone: the clone source's (the wallpapers' clone source, else the main display's) loop on
 ///   every display.
-/// - Stretch: one loop of the source's wallpaper recorded at the canvas size (`DisplayCanvas`),
+/// - Stretch: one loop of the source's wallpaper drawn at the canvas size (`DisplayCanvas`),
 ///   each display playing its rect of it (`crops`).
 struct ScreenSaverLayoutPlan: Equatable {
     /// What a display shows: a wallpaper (its folder's path) with the properties it runs with.
@@ -33,8 +33,8 @@ struct ScreenSaverLayoutPlan: Equatable {
 
     struct Loop: Equatable {
         var content: Content
-        /// The sizes its displays (or its canvas) show it at; the plugin records the largest
-        /// (`ScreenSaverPlugin.targets`).
+        /// The sizes its displays (or its canvas) show it at; the live screen saver draws the
+        /// largest (`ScreenSaverPlugin.liveLoops`).
         var sizes: [Size]
         /// The identities of the displays that play it, in display order.
         var displays: [String]

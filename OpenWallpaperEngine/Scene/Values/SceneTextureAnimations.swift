@@ -132,8 +132,3 @@ final class SceneTextureAnimations {
                      frameCount: shared.frameCount, duration: shared.duration)
     }
 }
-
-extension SceneTextureAnimations {
-    /// Each animated texture's frame times (the screen saver's loop, `ScreenSaverLoopLength`).
-    var frameTimeLists: [[Float]] { clocks.values.map(\.frameTimes) }
-}

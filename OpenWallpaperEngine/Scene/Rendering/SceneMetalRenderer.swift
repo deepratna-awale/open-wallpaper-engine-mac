@@ -176,12 +176,17 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     var holdsClock = false
     /// The frame being rendered only redraws the scene as it stands (`redrawShared`).
     private var redrawing = false
-    /// The renderer draws the screen saver's loop video (`ScreenSaverLoopRenderer`): scripts see
+    /// The renderer draws the live screen saver (`ScreenSaverLiveScene`): scripts see
     /// `engine.isScreensaver()` true. Set before the first frame.
     var rendersScreenSaver = false
     /// While true the scene's clock text layers (`SceneClockLayers`) draw nothing: set for the
-    /// screen saver's loop video and while capturing the loading snapshot the lock screen shows.
+    /// Live Photo export (iOS draws its own clock) and while capturing the loading snapshot the
+    /// lock screen shows.
     var hidesClockLayers = false
+    /// While true the layers a still leaves out draw nothing: every text layer and the clock hands
+    /// (`SceneClockLayers.stillIDs`), so a picture shown later never shows the time it was taken.
+    /// Set only around a still's frame (`captureStill`).
+    var hidesStillLayers = false
     /// The pointer every frame sees instead of the mouse, normalised over the scene with y up
     /// (`g_PointerPosition`; the centre is 0.5, 0.5); nil follows the mouse. A picture that is
     /// previewed and rendered (the iPhone & iPad Export) holds it fixed in both, so the camera and
@@ -192,6 +197,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var parallaxSettledPointer: SIMD2<Float>?
     /// The current content's clock text layers.
     private(set) var clockLayerIDs: Set<String> = []
+    /// The current content's layers a still leaves out (`hidesStillLayers`): its text layers and
+    /// clock hands. Layers scripts make later are left out by kind (`hiddenFromFrame`).
+    private(set) var stillLayerIDs: Set<String> = []
     /// The frames drawn (`BuiltinFrameContext.serial`).
     private var frameSerial: UInt64 = 0
     /// The wall clock `clock` follows (tests step it).
@@ -723,8 +731,17 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         setContent(nil)
     }
 
+    /// Whether this frame leaves `layer` out: a clock layer while `hidesClockLayers`, a text layer
+    /// or clock hand while `hidesStillLayers`.
+    private func hiddenFromFrame(_ layer: SceneMetalLayer) -> Bool {
+        (hidesClockLayers && clockLayerIDs.contains(layer.id))
+            || (hidesStillLayers && (layer.text != nil || stillLayerIDs.contains(layer.id)))
+    }
+
     func setContent(_ content: SceneMetalContent?) {
         clockLayerIDs = content?.scripts.map { SceneClockLayers.ids(in: $0.document) } ?? []
+        stillLayerIDs = Set(content?.layers.filter { $0.text != nil }.map(\.id) ?? [])
+            .union(content?.scripts.map { SceneClockLayers.stillIDs(in: $0.document) } ?? [])
         baseValueCaches.removeAll()
         effectAssetTextures.removeAll()
         clearUploadedImages()
@@ -1649,8 +1666,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             let entry = layers[layerIndex]
             // Hidden layers keep their transforms (scripts and hit tests read them) but draw nothing,
             // except into the image a model or another layer samples (`_rt_imageLayerComposite_<id>_a`).
-            let visible = scripts.isVisible(entry.layer.id)
-                && !(hidesClockLayers && clockLayerIDs.contains(entry.layer.id))
+            let visible = scripts.isVisible(entry.layer.id) && !hiddenFromFrame(entry.layer)
             let isCompositeSource = compositeOrder.sources.contains(entry.layer.id)
                 || models?.compositeLayerIDs.contains(entry.layer.id) == true
             guard visible || isCompositeSource else { continue }
@@ -2404,7 +2420,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 let id = entry.layer.id
                 let readsScene = entry.layer.readsScene || compositeOrder.inScene.contains(id)
                     || entry.layer.imageMaterial?.readsSceneSnapshot == true
-                let visible = scripts.isVisible(id) && !(hidesClockLayers && clockLayerIDs.contains(id))
+                let visible = scripts.isVisible(id) && !hiddenFromFrame(entry.layer)
                 let candidate = SceneNativeDetailLayers.isCandidate(
                     isText: entry.layer.text != nil, isMediaImage: entry.layer.systemImage != nil, visible: visible,
                     compositeSource: compositeOrder.sources.contains(id) || models?.compositeLayerIDs.contains(id) == true,

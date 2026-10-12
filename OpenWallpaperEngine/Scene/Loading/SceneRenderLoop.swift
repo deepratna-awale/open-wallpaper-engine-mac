@@ -57,6 +57,11 @@ final class SceneRenderLoop {
     /// When a draw first had content to show, and when to next ask `snapshots` to capture.
     private var contentSince: CFTimeInterval?
     private var nextSnapshotCheck: CFTimeInterval = 0
+    /// Main: the scene is lent to the screen saver (`lend`).
+    private(set) var isLent = false
+    /// Render thread: the screen saver's link while the scene is lent, and what the renderer
+    /// showed before (`lend`).
+    private var loan: (link: CADisplayLink, fixedPointer: SIMD2<Float>?, rendersScreenSaver: Bool)?
 
     /// Main: makes the thread. `renderer` is handed to it and never touched from main again.
     init(renderer: SceneMetalRenderer?, name: String, snapshots: SceneLoadingSnapshotCapture? = nil) {
@@ -139,6 +144,46 @@ final class SceneRenderLoop {
         thread.stop()
     }
 
+    // MARK: - The screen saver (main entry points)
+
+    /// Main: the live screen saver draws this running scene instead of loading it again
+    /// (`ScreenSaverSharedScene`): from now on `screen`'s display link ticks `draw` with the
+    /// renderer on the render thread, at `frameRate`, as the screen saver (the pointer held at the
+    /// centre, `engine.isScreensaver()` true). The displays, hidden by the screen saver, keep their
+    /// last frame and stop drawing, and the scene plays whatever their playback rules say, until
+    /// `endLoan`. False when it is lent already or has no renderer.
+    func lend(screen: NSScreen, frameRate: Int, draw: @escaping (SceneMetalRenderer) -> Void) -> Bool {
+        guard let renderer, !isLent else { return false }
+        isLent = true
+        let link = screen.displayLink(target: SceneLoanTicker(renderer: renderer, draw: draw), selector: #selector(SceneLoanTicker.tick(_:)))
+        let rate = Float(frameRate)
+        link.preferredFrameRateRange = CAFrameRateRange(minimum: rate, maximum: rate, preferred: rate)
+        thread.perform { [self] in
+            loan = (link, renderer.fixedPointer, renderer.rendersScreenSaver)
+            renderer.fixedPointer = SIMD2(0.5, 0.5)
+            renderer.rendersScreenSaver = true
+            applyPlayback()
+            link.add(to: thread.runLoop, forMode: .default)
+        }
+        return true
+    }
+
+    /// Main: the screen saver is done with the scene; the displays draw it again.
+    func endLoan() {
+        guard isLent else { return }
+        isLent = false
+        thread.perform { [self] in
+            guard let loan, let renderer else { return }
+            self.loan = nil
+            loan.link.invalidate()
+            renderer.fixedPointer = loan.fixedPointer
+            renderer.rendersScreenSaver = loan.rendersScreenSaver
+            // One display draws straight onto its drawable: the screen saver's frame goes.
+            if displays.count <= 1 { renderer.releaseSharedFrame() }
+            applyPlayback()
+        }
+    }
+
     // MARK: - Frames (render thread)
 
     var displayCount: Int { displays.count }
@@ -204,17 +249,18 @@ final class SceneRenderLoop {
         let pixelSize = SIMD2(Int(viewport.drawableSize.x), Int(viewport.drawableSize.y))
         guard pixelSize.x > 0, pixelSize.y > 0,
               snapshots.claim(pixelSize: pixelSize, contentSince: contentSince, now: now) else { return }
-        // The lock screen shows this picture: a frame without the clock, which would show the
-        // capture's time. With one display the extra frame is freed after; with several the
-        // displays' frame is drawn again with the clock.
-        let hidesClock = !renderer.clockLayerIDs.isEmpty
-        if hidesClock { renderer.hidesClockLayers = true }
-        if rendersFrame || hidesClock { renderer.redrawShared([viewport]) }
-        let started = renderer.captureSharedFrame(pixelSize: pixelSize, pixelsPerPoint: viewport.pixelsPerPoint) {
-            snapshots.save($0)
+        // The lock screen and the screen saver show this picture: a still, without its text and
+        // clock hands, which would show the capture's time (`captureStill`). With one display the
+        // extra frame is freed after; with several the displays' frame is drawn again with them.
+        let save: @Sendable (CGImage?) -> Void = { snapshots.save($0) }
+        let started: Bool
+        if rendersFrame || !renderer.stillLayerIDs.isEmpty {
+            started = renderer.captureStill(pixelSize: pixelSize, pixelsPerPoint: viewport.pixelsPerPoint,
+                                            viewports: [viewport], restores: !rendersFrame, completion: save)
+            if rendersFrame { renderer.releaseSharedFrame() }
+        } else {
+            started = renderer.captureSharedFrame(pixelSize: pixelSize, pixelsPerPoint: viewport.pixelsPerPoint, completion: save)
         }
-        if hidesClock { renderer.hidesClockLayers = false }
-        if rendersFrame { renderer.releaseSharedFrame() } else if hidesClock { renderer.redrawShared([viewport]) }
         if !started { OWELog.debug(.scene, "Loading snapshot: no frame to capture at \(pixelSize.x)×\(pixelSize.y)") }
     }
 
@@ -258,13 +304,15 @@ final class SceneRenderLoop {
     private func applyPlayback() {
         guard let renderer else { return }
         let fps = renderer.framePacing.targetRate
-        let paused = playback.paused
+        // Lent to the screen saver: the scene plays for it, the displays keep their last frame.
+        let lent = loan != nil
+        let paused = playback.paused && !lent
         renderer.pausesPlayback = paused
         let easing = paused && !renderer.hasStoppedPlayback
         for id in displays.keys {
             if let state = playback.displays[id] { displays[id]?.state = state }
             guard let display = displays[id] else { continue }
-            let frozen = (!display.state.plays || display.state.hidden) && !easing
+            let frozen = lent || (!display.state.plays || display.state.hidden) && !easing
             displays[id]?.frozen = frozen
             display.link.isPaused = frozen || (paused && !easing)
             setRate(fps, of: id)
@@ -330,6 +378,22 @@ final class SceneRenderLoop {
                   view.drawableSize.width > 0, view.drawableSize.height > 0 else { return nil }
             return SceneViewport(view)
         }
+    }
+}
+
+/// The screen saver's display link's target while a scene is lent to it (`SceneRenderLoop.lend`).
+private final class SceneLoanTicker: NSObject {
+    private let renderer: SceneMetalRenderer
+    private let draw: (SceneMetalRenderer) -> Void
+
+    init(renderer: SceneMetalRenderer, draw: @escaping (SceneMetalRenderer) -> Void) {
+        self.renderer = renderer
+        self.draw = draw
+    }
+
+    /// Render thread.
+    @objc func tick(_ link: CADisplayLink) {
+        draw(renderer)
     }
 }
 

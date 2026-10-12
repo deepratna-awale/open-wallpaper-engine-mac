@@ -100,7 +100,7 @@ final class MCPServerTests: XCTestCase {
         ]), "the library and app's tools")
         XCTAssertTrue(Set(names).isSuperset(of: [
             "devices_list", "export_settings_get", "export_live_photo", "export_android", "android_send_wifi", "screensaver_get", "screensaver_set_layers",
-            "screensaver_record", "screensaver_stop_using", "screensaver_schedule_get", "screensaver_schedule_set",
+            "screensaver_set", "screensaver_stop_using",
             "lock_screen_get", "lock_screen_set", "lock_screen_refresh",
         ]), "the system features' tools")
         XCTAssertEqual(names, MCPToolCatalog.tools.map(\.name))

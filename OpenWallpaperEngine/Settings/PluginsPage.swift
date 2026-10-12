@@ -12,6 +12,8 @@ import SwiftUI
 /// copy. Animated library previews are built in (`ThumbnailAnimation`).
 struct PluginsPage: SettingsPage {
     @ObservedObject var viewModel: GlobalSettingsViewModel
+    @StateObject private var chromium = ChromiumEngineInstaller()
+    @ObservedObject private var broker = AppDelegate.shared.screenSaverBroker
 
     init(globalSettings viewModel: GlobalSettingsViewModel) {
         self.viewModel = viewModel
@@ -23,8 +25,8 @@ struct PluginsPage: SettingsPage {
                 VStack(alignment: .leading, spacing: 6) {
                     Toggle("Screen Saver", isOn: $viewModel.settings.screenSaver)
                         .changedFromDefault(viewModel.isChanged(\.screenSaver))
-                        .help("Records a seamless loop of the current wallpaper in the background, at the largest display's pixels, and installs it as a screen saver; a video wallpaper plays its own file. Recording waits while your Mac is on battery or hot.")
-                    Text("Records a seamless loop of the current wallpaper in the background (a video wallpaper plays its own file) and installs a screen saver that plays it. Choose Open Wallpaper Engine in Screen Saver settings to use it. Turning it off removes the screen saver and its videos.")
+                        .help("Installs a screen saver that draws the current wallpaper live while it runs; a video wallpaper plays its own file.")
+                    Text("Installs a screen saver that draws your wallpaper live while it runs, so clocks, dates and audio-reactive parts move as they do on the desktop; a video wallpaper plays its own file. Choose Open Wallpaper Engine in Screen Saver settings to use it. Turning it off removes the screen saver.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -32,9 +34,20 @@ struct PluginsPage: SettingsPage {
                         Button("Open Screen Saver Settings…") {
                             ScreenSaverInstaller.current.openSettings()
                         }
+                        brokerNote
+                        if chromium.installedVersion == nil {
+                            // The screen saver draws web pages and WebM videos through Chromium only
+                            // (`ScreenSaverLiveWeb`).
+                            Text("Web wallpapers and WebM videos move in the screen saver only with the Chromium engine. Without it, the screen saver shows their picture.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Button("Install the Chromium Engine") { chromium.install() }
+                                .disabled(chromium.isBusy || chromium.pin == nil)
+                        }
                     }
                 }
-                ChromiumEngineSection()
+                ChromiumEngineSection(installer: chromium)
                     .settingsAnchor(SettingsAnchor.chromium)
                 DepthMapPluginSection()
                     .settingsAnchor(SettingsAnchor.depthMaps)
@@ -46,6 +59,27 @@ struct PluginsPage: SettingsPage {
                 Text("These settings take effect without saving.")
             }
             .settingsAnchor(SettingsAnchor.plugins)
+        }
+    }
+
+    /// The broker's launch agent, when macOS doesn't let it run: the screen saver then can't
+    /// start the app or, in its newer format, reach it (`ScreenSaverBrokerAgent`).
+    @ViewBuilder private var brokerNote: some View {
+        switch broker.state {
+        case .requiresApproval:
+            Label("Allow Open Wallpaper Engine in the background", systemImage: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+            Text("The screen saver needs Open Wallpaper Engine's background item to start the app while it isn't running and to show its frames. Turn it on in System Settings › General › Login Items.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Button("Open Login Items Settings…") { broker.openLoginItems() }
+        case .failed(let reason):
+            Label("The screen saver's background item couldn't be set up: \(reason)", systemImage: "xmark.octagon.fill")
+                .foregroundStyle(.red)
+                .font(.caption)
+        case .unavailable, .notRegistered, .enabled:
+            EmptyView()
         }
     }
 }

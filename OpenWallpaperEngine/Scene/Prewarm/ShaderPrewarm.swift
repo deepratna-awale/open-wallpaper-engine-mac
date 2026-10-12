@@ -153,8 +153,10 @@ struct ShaderPrewarm {
                                                 cursor: nil, frameRateLimit: 30)
             renderer.renderShared([displayViewport])
             let capture = SnapshotCapture()
-            guard renderer.captureSharedFrame(pixelSize: pixelSize, pixelsPerPoint: displayViewport.pixelsPerPoint,
-                                              completion: { capture.finish($0) }) else {
+            // A still, as the lock screen and the screen saver show it: without its text and clock hands.
+            guard renderer.captureStill(pixelSize: pixelSize, pixelsPerPoint: displayViewport.pixelsPerPoint,
+                                        viewports: [displayViewport], restores: false,
+                                        completion: { capture.finish($0) }) else {
                 OWELog.error(.shader, "Loading snapshot: \(name) had no frame to capture")
                 continue
             }

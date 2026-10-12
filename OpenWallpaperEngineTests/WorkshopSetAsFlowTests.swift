@@ -8,7 +8,7 @@ final class WorkshopSetAsFlowTests: XCTestCase {
     private final class Stub {
         var installed: [String: WEWallpaper] = [:]
         var canDownload = true
-        var isRecording = false
+        var isSettingScreenSaver = false
         var downloads: [String] = []
         var finishDownload: ((URL?) -> Void)?
         var folders: [URL: WEWallpaper] = [:]
@@ -27,7 +27,7 @@ final class WorkshopSetAsFlowTests: XCTestCase {
                 },
                 wallpaper: { [unowned self] in folders[$0] },
                 setWallpaper: { [unowned self] in applied.append($0) },
-                isRecordingScreenSaver: { [unowned self] in isRecording },
+                isSettingScreenSaver: { [unowned self] in isSettingScreenSaver },
                 setScreenSaver: { [unowned self] wallpaper, completion in
                     screenSavers.append(wallpaper)
                     finishScreenSaver = completion
@@ -93,7 +93,7 @@ final class WorkshopSetAsFlowTests: XCTestCase {
         stub.finishDownload?(folder)
         XCTAssertEqual(stub.screenSavers.map(\.wallpaperDirectory), [folder])
         XCTAssertTrue(stub.applied.isEmpty, "the desktop's wallpaper doesn't change")
-        XCTAssertEqual(flow.phases["4"], .recording)
+        XCTAssertEqual(flow.phases["4"], .settingScreenSaver)
         guard case .downloading? = flow.downloadState(for: "4") else { return XCTFail("the card shows the recording") }
 
         stub.finishScreenSaver?(true)
@@ -142,11 +142,11 @@ final class WorkshopSetAsFlowTests: XCTestCase {
         XCTAssertTrue(flow.canRun(.wallpaper, for: item("8", tags: ["Web"])))
         XCTAssertFalse(flow.canRun(.screenSaver, for: item("8", tags: ["Web"])))
 
-        stub.isRecording = true
+        stub.isSettingScreenSaver = true
         XCTAssertFalse(flow.canRun(.screenSaver, for: item("9")), "one recording at a time")
         XCTAssertTrue(flow.canRun(.wallpaper, for: item("9")))
 
-        stub.isRecording = false
+        stub.isSettingScreenSaver = false
         stub.canDownload = false
         XCTAssertFalse(flow.canRun(.wallpaper, for: item("10")), "not installed and steamcmd can't download")
         stub.installed["10"] = wallpaper("10")

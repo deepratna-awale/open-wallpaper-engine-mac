@@ -342,8 +342,24 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     func setMuted(_ muted: Bool) {
         guard muted != isMuted else { return }
         isMuted = muted
-        page?.setPageMuted(muted)
+        page?.setPageMuted(isSilent)
         applySchedulingPolicy()
+    }
+
+    /// Muted, or drawn for the screen saver, which is silent.
+    private var isSilent: Bool { isMuted || heldForScreenSaver }
+
+    /// The live screen saver draws this page (`ScreenSaverPageSharing`): it plays, silent, and
+    /// counts as seen, whatever the playback rules and the windows covering it say.
+    private(set) var heldForScreenSaver = false
+
+    func holdForScreenSaver(_ hold: Bool) {
+        guard hold != heldForScreenSaver else { return }
+        heldForScreenSaver = hold
+        heartbeatGate.heldForScreenSaver = hold
+        page?.setPageMuted(isSilent)
+        updatePaused()
+        reportHeartbeatGate()
     }
 
     /// What the engine does with the page while it can't be seen: a muted page is suspended (no
@@ -351,21 +367,29 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     /// and Wallpaper Engine keeps a covered wallpaper's sound. The heartbeat gate and the audio
     /// timer already expect nothing from a covered window (`WebHeartbeatGate.windowVisible`).
     func applySchedulingPolicy() {
-        page?.applySchedulingPolicy(muted: isMuted, visible: isVisibleOnScreen)
+        page?.applySchedulingPolicy(muted: isSilent, visible: isVisibleOnScreen)
     }
 
     /// Whether anyone can see the page: its window is uncovered, the displays are awake and the
     /// playback rules don't pause it.
     var isVisibleOnScreen: Bool {
-        heartbeatGate.windowVisible && heartbeatGate.displaysAwake && !isPaused
+        heldForScreenSaver || (heartbeatGate.windowVisible && heartbeatGate.displaysAwake && !isPaused)
     }
 
     /// Whether the playback rules pause this display's page: its media is suspended and the page
     /// hears WE's `setPaused(true)`. WebKit has no public way to stop a page's animation frames,
     /// so a page that ignores `setPaused` keeps drawing there; Chromium stops drawing it.
     private(set) var isPaused = false
+    /// What the playback rules ask; the screen saver's hold overrides it.
+    private var pausedByRules = false
 
     func setPaused(_ paused: Bool) {
+        pausedByRules = paused
+        updatePaused()
+    }
+
+    private func updatePaused() {
+        let paused = pausedByRules && !heldForScreenSaver
         guard paused != isPaused else { return }
         isPaused = paused
         heartbeatGate.playing = !paused
@@ -403,7 +427,7 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         page.evaluate(javascriptStyle)
         applyAllProperties(to: page)
         // A new page starts unmuted by script, and playing.
-        if isMuted { page.setPageMuted(true) }
+        if isSilent { page.setPageMuted(true) }
         if isPaused { applyPaused(to: page) }
 
         if settings.settings.adjustMenuBarTint || settings.settings.lockScreenPicture {

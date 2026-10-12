@@ -40,6 +40,41 @@ final class SceneScriptRenderTests: XCTestCase {
         }
     }
 
+    /// A still (the lock screen's picture, the screen saver's) leaves out every text layer and the
+    /// clock hands (a rotation script that reads the date), so it never shows the time it was taken;
+    /// the frames drawn live, before and after it, keep them.
+    func testAStillLeavesOutTheTextAndTheClockHandsAndTheLiveFramesKeepThem() throws {
+        _ = try Fixtures.assets()
+        let scene = try Scene(fixture: "still-layers", services: services(), size: SIMD2(128, 64))
+        defer { scene.close() }
+        let label = (low: SIMD2(70, 20), high: SIMD2(122, 44))
+        let live = try scene.render(frames: 3) { $0.litPixels(from: label.low, to: label.high) > 40 }
+        XCTAssertEqual(scene.renderer.stillLayerIDs, ["2", "3"])
+        XCTAssertEqual(live.color(atScene: SIMD2(16, 32)), .blue)
+        XCTAssertEqual(live.color(atScene: SIMD2(48, 32)), .red, "the live frame draws the clock hand")
+        XCTAssertGreaterThan(live.litPixels(from: label.low, to: label.high), 40, "and the text")
+
+        final class Captured: @unchecked Sendable { var image: CGImage? }
+        let captured = Captured()
+        let done = expectation(description: "the still")
+        let viewport = SceneViewport(drawableSize: SIMD2(128, 64), pointSize: SIMD2(128, 64), cursor: nil, frameRateLimit: 60)
+        XCTAssertTrue(scene.renderer.captureStill(pixelSize: SIMD2(128, 64), pixelsPerPoint: 1, viewports: [viewport],
+                                                  restores: false) { image in
+            captured.image = image
+            done.fulfill()
+        })
+        wait(for: [done], timeout: 10)
+        XCTAssertFalse(scene.renderer.hidesStillLayers, "only the still's frame leaves them out")
+        let still = try Pixels(XCTUnwrap(captured.image))
+        XCTAssertEqual(still.color(atScene: SIMD2(16, 32)), .blue, "the other layers stay")
+        XCTAssertEqual(still.color(atScene: SIMD2(48, 32)), .black, "no clock hand")
+        XCTAssertEqual(still.litPixels(from: label.low, to: label.high), 0, "no text")
+
+        let after = try scene.render(frames: 1)
+        XCTAssertEqual(after.color(atScene: SIMD2(48, 32)), .red)
+        XCTAssertGreaterThan(after.litPixels(from: label.low, to: label.high), 40)
+    }
+
     /// Without scripts the same scene shows what scene.json authored: a baseline for the test above.
     /// WP4-C: the layer `createLayer` made draws in the first frame that takes its event, not a
     /// frame or more later (WE builds it inside `createLayer`).
@@ -273,6 +308,28 @@ final class SceneScriptRenderTests: XCTestCase {
     struct Pixels {
         let bytes: [UInt8]
         let size: SIMD2<Int>
+
+        init(bytes: [UInt8], size: SIMD2<Int>) {
+            self.bytes = bytes
+            self.size = size
+        }
+
+        /// An image's pixels, as BGRA rows from the top.
+        init(_ image: CGImage) throws {
+            size = SIMD2(image.width, image.height)
+            var bytes = [UInt8](repeating: 0, count: image.width * image.height * 4)
+            let drawn = bytes.withUnsafeMutableBytes { buffer -> Bool in
+                guard let context = CGContext(data: buffer.baseAddress, width: image.width, height: image.height,
+                                              bitsPerComponent: 8, bytesPerRow: image.width * 4,
+                                              space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                              bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue
+                                                  | CGBitmapInfo.byteOrder32Little.rawValue) else { return false }
+                context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+                return true
+            }
+            try XCTSkipUnless(drawn, "no bitmap context")
+            self.bytes = bytes
+        }
 
         /// The colour at a scene point (the scene is drawn stretched onto the whole view, y up).
         func color(atScene point: SIMD2<Float>) -> Color {

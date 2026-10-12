@@ -9,8 +9,8 @@ import Metal
 /// or render thread. The app shows the progress the helper reports and shares the files
 /// (`LivePhotoHelper`).
 ///
-/// The scene is loaded by the real loader and drawn offscreen by its own real renderer, as the
-/// screen saver's loop is (`ScreenSaverLoopRenderer`): the job's user properties, no sound, a
+/// The scene is loaded by the real loader and drawn offscreen by its own real renderer: the job's
+/// user properties, no sound, a
 /// silent spectrum, the clock, day and date layers hidden (iOS draws its own,
 /// `SceneClockLayers`), on a fixed frame step from load, so frame `i` shows scene time
 /// `i / frameRate`. The whole scene is drawn at `LivePhotoCrop.renderScale` (never below its
@@ -253,7 +253,7 @@ final class LivePhotoRenderer {
                                            storage: SceneScriptStorage(directory: scratch),
                                            media: SilentMediaSession(), spectrum: { .silent })
         let model = SceneWallpaperViewModel(wallpaper: wallpaper)
-        let settings = Self.renderSettings(from: ScreenSaverLoopRenderer.globalSettings(from: defaults))
+        let settings = Self.renderSettings(from: OffscreenRendering.globalSettings(from: defaults))
         model.setRenderSettings(settings)
         guard let content = model.metalContent(),
               let renderer = SceneMetalRenderer(pixelFormat: .bgra8Unorm, scriptServices: services,

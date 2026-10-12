@@ -146,6 +146,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var crashWatcherCancellable: AnyCancellable?
     /// Hides the Dock icon while no window is open (`DockPresence`).
     let dockPresence = DockPresence()
+    /// Launched by the screen saver's broker for a saver showing while the app wasn't running
+    /// (`ScreenSaverLiveNames.launchArgument`): no window and no Dock icon until that screen saver
+    /// session ends or a window opens.
+    private(set) var launchedForScreenSaver = ProcessInfo.processInfo.arguments.contains(ScreenSaverLiveNames.launchArgument)
     /// Sparkle, off in builds without an update signing key (`Core/Updates`).
     lazy var updater = AppUpdater(configuration: .main)
     /// The system's now-playing session, one for the process (MediaRemote registers per process):
@@ -155,6 +159,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// the desktop's left clicks.
     /// Settings › Plugins › Screen Saver: the loop videos and the bundled saver.
     lazy var screenSaver = ScreenSaverPlugin()
+    /// The live screen saver's broker, a launch agent registered while the Screen Saver plugin is on.
+    lazy var screenSaverBroker = ScreenSaverBrokerAgent()
+    private var screenSaverBrokerCancellable: AnyCancellable?
+    /// The screen saver drawn live while it runs, the savers showing the frames.
+    lazy var liveScreenSaver = ScreenSaverLiveController(plugin: screenSaver, environment: .init(
+        settings: { [unowned self] in globalSettingsViewModel.settings },
+        placement: { [unowned self] in wallpaperViewModel.wallpaperPlacement },
+        scriptServices: { [unowned self] in sceneScriptServices },
+        pageSharing: { [unowned self] screenId, wallpaper in
+            wallpaperViewModel.webPageMirrors.sharing(for: screenId, showing: wallpaper)
+        },
+        sceneSharing: { [unowned self] screenId, wallpaper, scope in
+            let key = wallpaperViewModel.instanceKey(for: screenId)
+            guard key == WallpaperInstanceKey(wallpaper, properties: scope),
+                  let instance = wallpaperViewModel.sceneInstances.instance(for: key), instance.hasContent else { return nil }
+            return instance.renderLoop
+        }))
     /// Settings › General › Theming: macOS follows the wallpaper's scheme colour.
     private(set) lazy var theming = ThemingController.make { [unowned self] in
         applyMenuBarStrips()
@@ -175,19 +196,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         ])
         return MCPServerPlugin(handler: { request in await router.handle(request) })
     }()
-    /// Scene Edit / Export's Screen Saver mode's recordings, set as the screen saver.
-    lazy var screenSaverRecordings = ScreenSaverRecordingService(plugin: screenSaver, environment: .init(
-        screens: {
-            NSScreen.screens.map { screen in
-                (pixels: SIMD2(Int(screen.frame.width * screen.backingScaleFactor), Int(screen.frame.height * screen.backingScaleFactor)),
-                 points: SIMD2(Int(screen.frame.width), Int(screen.frame.height)))
-            }
-        },
+    /// What is set as the screen saver (Scene Edit / Export's Screen Saver mode, Set as Screen Saver).
+    lazy var screenSaverSelection = ScreenSaverSelectionService(plugin: screenSaver, environment: .init(
         isPluginEnabled: { [unowned self] in globalSettingsViewModel.settings.screenSaver },
         enablePlugin: { [unowned self] in globalSettingsViewModel.settings.screenSaver = true },
         desktopWallpaper: { [unowned self] in wallpaperViewModel.currentWallpaper }))
-    /// The screen saver's daily re-recording, while the app runs.
-    lazy var screenSaverSchedule = ScreenSaverDailyScheduler(service: screenSaverRecordings)
     /// Renders the Wallpaper Editor's browser previews in the background once WE's assets are there.
     private(set) lazy var editorPreviewPrewarm = EditorPreviewPrewarm(environment: .live)
     lazy var sceneScriptServices: SceneScriptServices = {
@@ -275,6 +288,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     func applicationWillFinishLaunching(_ notification: Notification) {
+        // Behind the screen saver: no Dock icon from the start.
+        if launchedForScreenSaver { NSApp.setActivationPolicy(.accessory) }
         // Animated previews are built in now; the old plugin's on/off is dropped.
         ThumbnailAnimation.removeRetiredPreference(from: .app)
 
@@ -314,8 +329,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Stretched displays name their canvas to the scene views in their windows.
         stretchCanvasCancellable = wallpaperViewModel.$layoutResolution.map(\.canvases).removeDuplicates()
             .sink { [weak self] canvases in self?.applyStretchCanvases(canvases) }
+        migrateScreenSaverRecording()
         // The screen saver's loops follow the displays' wallpapers and layouts.
         screenSaver.observe(wallpaperViewModel)
+        liveScreenSaver.onSessionChanged = { [weak self] running in self?.screenSaverSessionChanged(running) }
+        screenSaverSelection.onPicked = { [weak self] wallpaper in self?.liveScreenSaver.renderPickStill(wallpaper) }
+        quitsAfterScreenSaver = launchedForScreenSaver
+        if launchedForScreenSaver { observeWindowsOpenedAfterScreenSaverLaunch() }
+        if launchedForScreenSaver {
+            OWELog.info(.app, "Live screen saver: launched for a saver showing")
+            liveScreenSaver.launchedForScreenSaver()
+        }
+        liveScreenSaver.start()
+        screenSaverBrokerCancellable = screenSaver.$isEnabled.removeDuplicates().sink { [weak self] enabled in
+            MainActor.assumeIsolated { self?.screenSaverBroker.update(enabled: enabled) }
+        }
         // Settings › Optimizations › Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
             .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }
@@ -407,6 +435,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         AppDelegate.shared.setPlacehoderWallpaper(with: wallpaperViewModel.currentWallpaper)
         // Each display's desktop picture (lock screen, menu bar tint) follows what it shows.
         desktopPictures.observe(wallpaperViewModel, settings: globalSettingsViewModel)
+        #if DEBUG
+        // The live screen saver lab: each display's window stack during a screen saver or lock.
+        ScreenSaverWindowSampler.shared.startIfLab()
+        #endif
+        // The screen saver shows each display's picture until its live frames come.
+        if ScreenSaverInstaller.current.mayInstall {
+            let stills = ScreenSaverStillPublisher.current
+            desktopPictures.sync.onPictureWritten = { url, display in stills.publish(url, display: display) }
+            // With the lock-screen picture and the menu bar tint off, the same pictures are
+            // written for the screen saver alone while its plugin is on.
+            desktopPictures.saverSync?.onPictureWritten = { url, display in stills.publish(url, display: display) }
+            desktopPictures.wantsScreenSaverStills = { [unowned self] in globalSettingsViewModel.settings.screenSaver }
+            screenSaverSelection.stills = stills
+            liveScreenSaver.stills = stills
+        }
 
         // 显示桌面壁纸
         for (_, window) in self.wallpaperWindows {
@@ -431,7 +474,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             .sink { [weak self] enabled in MainActor.assumeIsolated { self?.videoMemoryWatch.setEnabled(enabled) } }
 
         // After an update relaunch, what was open before; otherwise the setup assistant if due.
-        if !restoreUpdateRelaunchState(),
+        if !restoreUpdateRelaunchState(), !launchedForScreenSaver,
            globalSettingsViewModel.isFirstLaunch || globalSettingsViewModel.needsLegalNotice {
             self.mainWindowController.window.center()
             self.mainWindowController.window.makeKeyAndOrderFront(nil)
@@ -452,11 +495,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         // Launched into the menu bar only, the Dock icon goes until a window opens, unless Show in
         // Dock keeps it.
-        dockPresence.keepsIcon = { [unowned self] in globalSettingsViewModel.settings.showInDock }
+        dockPresence.keepsIcon = { [unowned self] in globalSettingsViewModel.settings.showInDock && !launchedForScreenSaver }
         dockPresence.start()
 
-        // The screen saver's daily re-recording: catches up a run missed while the app was quit.
-        screenSaverSchedule.start()
         // The Wallpaper Editor's browser previews, when any is missing.
         editorPreviewPrewarm.start(reason: "launch", after: EditorPreviewPrewarm.launchDelay)
 
@@ -484,6 +525,83 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
     }
     
+    /// What earlier versions left for the screen saver: a scene's recording set as the screen saver
+    /// becomes the live pick of that wallpaper, with its picture as the still; one of a wallpaper no
+    /// longer in the library goes, so the screen saver follows the desktop again; a video's own
+    /// file stays as it is. The old recordings and the retired settings are deleted.
+    private func migrateScreenSaverRecording() {
+        let store = screenSaverSelection.store
+        store.removeRetiredKeys()
+        // Recordings are gone: the old loop videos too, once the selection is settled, in the
+        // background (only the user's own copy wrote them where the saver reads). A video set as
+        // the screen saver keeps its file.
+        defer {
+            if ScreenSaverInstaller.current.mayInstall {
+                let videos = ScreenSaverVideoStore.current, caches = AppStorageLocation.current.cachesDirectory
+                let keep = Set([store.selection?.fileName].compactMap { $0 })
+                DispatchQueue.global(qos: .utility).async { videos.removeOldRecordings(cachesDirectory: caches, keeping: keep) }
+            }
+        }
+        guard let selection = store.selection else { return }
+        let folder = URL(filePath: selection.wallpaperDirectory, directoryHint: .isDirectory)
+        guard let wallpaper = InstalledLibrary.wallpaper(at: folder, hiding: []) else {
+            store.selection = nil
+            OWELog.info(.app, "Screen saver: \(folder.lastPathComponent), set as the screen saver, is no longer in the library")
+            return
+        }
+        guard store.migrateRecordedSelection(isVideo: { _ in ScreenSaverVideoSource.isEligible(wallpaper) }) else { return }
+        OWELog.info(.app, "Screen saver: \(folder.lastPathComponent)'s recording is now drawn live")
+        // Its still now, once the app is set up (`renderPickStill`).
+        DispatchQueue.main.async { [weak self] in self?.liveScreenSaver.renderPickStill(wallpaper) }
+    }
+
+    /// A copy the broker launched for a screen saver (`launchedForScreenSaver`) quits once its
+    /// sessions are over, after `ScreenSaverLiveController.warmGrace` (another session may follow),
+    /// unless the user opened one of its windows meanwhile: the user had quit the app, and it
+    /// shouldn't stay, with its desktop wallpapers, because a screen saver ran.
+    private var quitsAfterScreenSaver = false
+    private var screenSaverQuitTimer: Timer?
+    private var windowOpenedObserver: NSObjectProtocol?
+
+    private func screenSaverSessionChanged(_ running: Bool) {
+        if running {
+            screenSaverQuitTimer?.invalidate()
+            screenSaverQuitTimer = nil
+            return
+        }
+        if launchedForScreenSaver {
+            launchedForScreenSaver = false
+            dockPresence.update()
+        }
+        guard quitsAfterScreenSaver else { return }
+        screenSaverQuitTimer?.invalidate()
+        OWELog.info(.app, "Live screen saver: launched only for the screen saver; quitting in \(Int(ScreenSaverLiveController.warmGrace)) s unless a window opens")
+        screenSaverQuitTimer = Timer.scheduledTimer(withTimeInterval: ScreenSaverLiveController.warmGrace + 5, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, self.quitsAfterScreenSaver else { return }
+                OWELog.info(.app, "Live screen saver: quitting the copy launched for the screen saver")
+                NSApp.terminate(nil)
+            }
+        }
+    }
+
+    /// The user opening one of the app's windows keeps a copy launched for the screen saver running.
+    private func observeWindowsOpenedAfterScreenSaverLaunch() {
+        windowOpenedObserver = NotificationCenter.default.addObserver(forName: NSWindow.didBecomeKeyNotification, object: nil,
+                                                                      queue: .main) { [weak self] note in
+            MainActor.assumeIsolated {
+                guard let self, let window = note.object as? NSWindow, window.styleMask.contains(.titled),
+                      !(window is NSPanel) else { return }
+                self.quitsAfterScreenSaver = false
+                self.screenSaverQuitTimer?.invalidate()
+                self.screenSaverQuitTimer = nil
+                if let observer = self.windowOpenedObserver { NotificationCenter.default.removeObserver(observer) }
+                self.windowOpenedObserver = nil
+                OWELog.info(.app, "Live screen saver: a window opened; the copy launched for the screen saver keeps running")
+            }
+        }
+    }
+
     private lazy var identityNotice = AppIdentityNotice()
     private var staleBundleRefresher: StaleBundleRefresher?
     private var staleBundleNotice: SafeRestartNotice?

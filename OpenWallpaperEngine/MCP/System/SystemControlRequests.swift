@@ -5,13 +5,12 @@ import OWEControlProtocol
 /// export (`SystemControlRequests+Export`), the screen saver (`+ScreenSaver`) and the lock-screen
 /// picture (`docs/mcp.md`). Each does what Scene Edit / Export's modes and the Settings
 /// controls do, through `SystemControlService`; none opens System Settings or asks macOS for a
-/// permission, and the Screen Saver plugin is turned on only by a recording, as the mode does it.
+/// permission, and the Screen Saver plugin is turned on only by Set as Screen Saver, as the mode does it.
 @MainActor
 final class SystemControlRequests: ControlRequestGroup {
     let methods: Set<String> = [
         "devices_list", "export_settings_get", "export_live_photo", "export_android", "android_send_wifi",
-        "screensaver_get", "screensaver_set_layers", "screensaver_record", "screensaver_stop_using",
-        "screensaver_schedule_get", "screensaver_schedule_set",
+        "screensaver_get", "screensaver_set_layers", "screensaver_set", "screensaver_stop_using",
         "lock_screen_get", "lock_screen_set", "lock_screen_refresh",
     ]
 
@@ -34,10 +33,8 @@ final class SystemControlRequests: ControlRequestGroup {
         case "android_send_wifi": return try await sendAndroidOverWiFi(params, lookup: lookup)
         case "screensaver_get": return try screenSaver(params, lookup: lookup)
         case "screensaver_set_layers": return try setScreenSaverLayers(params, lookup: lookup)
-        case "screensaver_record": return try await recordScreenSaver(params, lookup: lookup)
+        case "screensaver_set": return try await setScreenSaver(params, lookup: lookup)
         case "screensaver_stop_using": return try stopUsingScreenSaver()
-        case "screensaver_schedule_get": return schedule(message: Self.scheduleSentence(service.schedule))
-        case "screensaver_schedule_set": return try setSchedule(params)
         case "lock_screen_get": return lockScreen()
         case "lock_screen_set": return try setLockScreen(params)
         case "lock_screen_refresh": return try refreshLockScreen()

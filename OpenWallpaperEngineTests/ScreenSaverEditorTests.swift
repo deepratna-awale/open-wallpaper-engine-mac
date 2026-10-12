@@ -3,8 +3,8 @@ import XCTest
 
 /// Scene Edit / Export's Screen Saver mode: its isolated session never reaches the desktop,
 /// its layer and property choices are saved per wallpaper apart from the wallpaper's own and
-/// reused, a recording is installed and set as the screen saver (which the plugin then keeps),
-/// and the installed video is replaced at once or not at all.
+/// reused, Set as Screen Saver picks the scene to be drawn live with them, an earlier recording
+/// migrates to that pick, and an installed video is replaced at once or not at all.
 final class ScreenSaverEditorTests: XCTestCase {
     private var defaults: UserDefaults!
     private var suite: String!
@@ -51,51 +51,20 @@ final class ScreenSaverEditorTests: XCTestCase {
         return defaults.dictionary(forKey: identity.key(.userProperties, scope: scope)) as? [String: String]
     }
 
-    /// What the fake helper was asked to render.
-    private final class Runs: @unchecked Sendable {
-        private let lock = NSLock()
-        private var _targets: [ScreenSaverPlugin.Target] = []
-        var targets: [ScreenSaverPlugin.Target] { lock.withLock { _targets } }
-        func add(_ target: ScreenSaverPlugin.Target) { lock.withLock { _targets.append(target) } }
-    }
-
-    /// A helper that writes `bytes` as the video, or fails.
-    private static func runner(_ runs: Runs, bytes: String?) -> ScreenSaverPlugin.Runner {
-        { _, target, output in
-            runs.add(target)
-            guard let bytes else { return .failed }
-            do { try Data(bytes.utf8).write(to: output) } catch { return .failed }
-            return .rendered
-        }
-    }
-
-    private final class FakeInstaller: ScreenSaverVideoInstalling, @unchecked Sendable {
-        private let lock = NSLock()
-        private var _installed: [(file: String, size: SIMD2<Int>, bytes: String)] = []
-        var installed: [(file: String, size: SIMD2<Int>, bytes: String)] { lock.withLock { _installed } }
-
-        func install(_ recording: URL, as fileName: String, pixelSize: SIMD2<Int>) throws {
-            let bytes = String(decoding: try Data(contentsOf: recording), as: UTF8.self)
-            lock.withLock { _installed.append((fileName, pixelSize, bytes)) }
-        }
-    }
-
     @MainActor
-    private func makePlugin(_ store: ScreenSaverSettingsStore, videos: ScreenSaverVideoStore, runs: Runs) -> ScreenSaverPlugin {
-        ScreenSaverPlugin(pool: PreparationPool(maxWorkers: 1), store: videos,
+    private func makePlugin(_ store: ScreenSaverSettingsStore, videos: ScreenSaverVideoStore) -> ScreenSaverPlugin {
+        ScreenSaverPlugin(store: videos,
                           installer: ScreenSaverInstaller(bundledSaver: nil, saversDirectory: directory.appending(path: "Savers"),
                                                           mayInstall: false),
-                          runner: Self.runner(runs, bytes: nil), settingsStore: store)
+                          settingsStore: store)
     }
 
     @MainActor
-    private func makeService(_ store: ScreenSaverSettingsStore, plugin: ScreenSaverPlugin, videos: ScreenSaverVideoStore,
-                             runner: @escaping ScreenSaverPlugin.Runner) -> ScreenSaverRecordingService {
-        let recorder = ScreenSaverRecorder(stagingDirectory: directory.appending(path: "Staging"), runner: runner, installer: videos)
-        let environment = ScreenSaverRecordingService.Environment(
-            screens: { [(pixels: SIMD2(3840, 2160), points: SIMD2(1920, 1080))] },
-            isPluginEnabled: { true }, enablePlugin: {}, desktopWallpaper: { nil })
-        return ScreenSaverRecordingService(plugin: plugin, environment: environment, store: store, recorder: recorder, videos: videos)
+    private func makeService(_ store: ScreenSaverSettingsStore, plugin: ScreenSaverPlugin,
+                             videos: ScreenSaverVideoStore) -> ScreenSaverSelectionService {
+        let environment = ScreenSaverSelectionService.Environment(isPluginEnabled: { true }, enablePlugin: {},
+                                                                  desktopWallpaper: { nil })
+        return ScreenSaverSelectionService(plugin: plugin, environment: environment, store: store, videos: videos)
     }
 
     // MARK: Isolation
@@ -113,14 +82,12 @@ final class ScreenSaverEditorTests: XCTestCase {
         WallpaperServices.shared.setUserProperties(shared, wallpaper: sharedKey, replacing: true)
         let store = ScreenSaverSettingsStore(defaults: defaults)
         let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
-        let runs = Runs()
-        let plugin = makePlugin(store, videos: videos, runs: runs)
-        let service = makeService(store, plugin: plugin, videos: videos, runner: Self.runner(runs, bytes: nil))
+        let plugin = makePlugin(store, videos: videos)
+        let service = makeService(store, plugin: plugin, videos: videos)
 
         let session = IsolatedSceneEditSession(wallpaper: wallpaper, purpose: ScreenSaverEditorModel.purpose,
                                                seededFrom: [.shared], defaults: defaults)
-        let model = ScreenSaverEditorModel(session: session, seededFrom: [.shared], recordings: service,
-                                           schedule: ScreenSaverDailyScheduler(store: store, record: { false }),
+        let model = ScreenSaverEditorModel(session: session, seededFrom: [.shared], selectionService: service,
                                            store: store, defaults: defaults)
         XCTAssertEqual(session.values, shared)
         XCTAssertEqual(session.scope, .isolated(ScreenSaverEditorModel.purpose))
@@ -137,8 +104,8 @@ final class ScreenSaverEditorTests: XCTestCase {
         XCTAssertEqual(WallpaperServices.shared.userProperties(wallpaper: sharedKey), shared)
         XCTAssertEqual(WallpaperServices.shared.userProperties(wallpaper: session.runtimeKey)[visibility], "false")
         XCTAssertNil(session.instances.instance(for: WallpaperInstanceKey(wallpaper)))
-        XCTAssertNil(store.selection, "nothing is the screen saver until a recording is made")
-        XCTAssertTrue(runs.targets.isEmpty, "editing renders nothing")
+        XCTAssertNil(store.selection, "nothing is the screen saver until it is set")
+        XCTAssertNil(store.livePick)
 
         model.close()
         session.end()
@@ -159,14 +126,12 @@ final class ScreenSaverEditorTests: XCTestCase {
         save(["speed": "0.5"], .shared, of: second)
         let store = ScreenSaverSettingsStore(defaults: defaults)
         let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
-        let runs = Runs()
-        let plugin = makePlugin(store, videos: videos, runs: runs)
-        let service = makeService(store, plugin: plugin, videos: videos, runner: Self.runner(runs, bytes: nil))
-        let schedule = ScreenSaverDailyScheduler(store: store, record: { false })
+        let plugin = makePlugin(store, videos: videos)
+        let service = makeService(store, plugin: plugin, videos: videos)
         func open(_ wallpaper: WEWallpaper) -> ScreenSaverEditorModel {
             ScreenSaverEditorModel(session: IsolatedSceneEditSession(wallpaper: wallpaper, purpose: ScreenSaverEditorModel.purpose,
                                                                      seededFrom: [.shared], defaults: defaults),
-                                   seededFrom: [.shared], recordings: service, schedule: schedule, store: store, defaults: defaults)
+                                   seededFrom: [.shared], selectionService: service, store: store, defaults: defaults)
         }
 
         // Opening and closing without a change saves nothing: the screen saver follows the wallpaper.
@@ -198,83 +163,83 @@ final class ScreenSaverEditorTests: XCTestCase {
         again.session.end()
     }
 
-    // MARK: Recording
+    // MARK: Setting it
 
-    /// Record and Set as Screen Saver: the helper records the session's values with the clock
-    /// layers left to the user's choices, the video is installed under a new name, and the
-    /// selection and the choices are saved; the plugin then renders nothing for the desktop.
+    /// Set as Screen Saver: the scene is picked, not recorded. The pick and the choices are saved,
+    /// nothing renders, and the plugin lists no video, so the saver shows the pick's still and its
+    /// live frames. Turning the plugin off keeps the pick (there is no video to remove).
     @MainActor
-    func testRecordingIsInstalledAndSetAsTheScreenSaver() throws {
+    func testSettingASceneAsTheScreenSaverPicksItLive() throws {
         let wallpaper = try wallpaper()
         let store = ScreenSaverSettingsStore(defaults: defaults)
         let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
-        let pluginRuns = Runs()
-        let plugin = makePlugin(store, videos: videos, runs: pluginRuns)
-        let runs = Runs()
-        let service = makeService(store, plugin: plugin, videos: videos, runner: Self.runner(runs, bytes: "loop-1"))
+        let plugin = makePlugin(store, videos: videos)
+        plugin.update(enabled: true, wallpaper: nil)
+        let service = makeService(store, plugin: plugin, videos: videos)
         let values = ["speed": "0.7", sceneObjectVisibilityKey(objectID: 2): "false"]
 
-        let done = expectation(description: "recorded")
-        service.record(wallpaper, values: values, background: false) { succeeded in
-            XCTAssertTrue(succeeded)
-            done.fulfill()
-        }
-        XCTAssertTrue(service.isRecording)
-        wait(for: [done], timeout: 10)
-
-        let target = try XCTUnwrap(runs.targets.first)
-        XCTAssertTrue(target.isRecording)
-        XCTAssertEqual(target.properties, values)
-        XCTAssertEqual(target.pixelSize, SIMD2(3840, 2160), "the display's pixels")
-        let selection = try XCTUnwrap(store.selection)
-        XCTAssertEqual(selection.fileName, target.fileName)
-        XCTAssertTrue(selection.fileName.contains("-rec"))
+        var succeeded: Bool?
+        service.set(wallpaper, values: values) { succeeded = $0 }
+        XCTAssertEqual(succeeded, true, "at once: nothing is recorded")
+        XCTAssertFalse(service.isSettingVideo)
+        let pick = try XCTUnwrap(store.livePick)
+        XCTAssertEqual(pick.wallpaperDirectory, wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false))
+        XCTAssertNil(store.selection)
         XCTAssertTrue(service.isSelected(wallpaper))
         XCTAssertEqual(store.values(for: WallpaperSettingsIdentity.resolve(wallpaper, defaults: defaults)), values)
-        let manifest = try JSONDecoder().decode(ScreenSaverManifest.self, from: Data(contentsOf: videos.manifestURL))
-        XCTAssertEqual(manifest.videos.map(\.file), [selection.fileName])
-        XCTAssertEqual(service.recordedVideo(of: wallpaper), videos.url(fileName: selection.fileName))
-        XCTAssertFalse(service.isRecording)
+        XCTAssertFalse(plugin.followsDesktop)
+        XCTAssertEqual(plugin.livePick?.wallpaperDirectory.standardizedFileURL, wallpaper.wallpaperDirectory.standardizedFileURL)
 
-        // The plugin keeps the recording: showing a wallpaper renders nothing and keeps the manifest.
-        plugin.update(enabled: true, wallpaper: wallpaper)
-        XCTAssertTrue(plugin.statuses.isEmpty)
         let settled = expectation(description: "file queue")
         DispatchQueue.global().asyncAfter(deadline: .now() + 0.3) { settled.fulfill() }
         wait(for: [settled], timeout: 2)
-        XCTAssertTrue(pluginRuns.targets.isEmpty)
-        XCTAssertEqual(try JSONDecoder().decode(ScreenSaverManifest.self, from: Data(contentsOf: videos.manifestURL)), manifest)
+        XCTAssertEqual(try JSONDecoder().decode(ScreenSaverManifest.self, from: Data(contentsOf: videos.manifestURL)).videos, [])
 
-        // Turning the plugin off removes the videos, and the recording stops being the screen saver.
         plugin.update(enabled: false, wallpaper: nil)
+        XCTAssertNotNil(store.livePick)
+        service.stopUsingSelection()
+        XCTAssertNil(store.livePick)
+        XCTAssertFalse(service.isSelected(wallpaper))
+    }
+
+    /// A scene's recording set as the screen saver by an earlier version becomes the live pick of
+    /// its wallpaper; a video's own file stays the selection.
+    func testARecordedSelectionMigratesToTheLivePick() throws {
+        let store = ScreenSaverSettingsStore(defaults: defaults)
+        let recorded = Date(timeIntervalSince1970: 1_790_000_000)
+        let selection = ScreenSaverSettingsStore.Selection(wallpaperDirectory: "/w/3810943704", fileName: "a-rec1.mov",
+                                                           width: 3840, height: 2160, recorded: recorded)
+        store.selection = selection
+        XCTAssertFalse(store.migrateRecordedSelection(isVideo: { _ in true }))
+        XCTAssertEqual(store.selection, selection, "a video's file stays")
+        XCTAssertNil(store.livePick)
+
+        XCTAssertTrue(store.migrateRecordedSelection(isVideo: { _ in false }))
         XCTAssertNil(store.selection)
+        XCTAssertEqual(store.livePick, ScreenSaverSettingsStore.LivePick(wallpaperDirectory: "/w/3810943704", picked: recorded))
+        XCTAssertFalse(store.migrateRecordedSelection(isVideo: { _ in false }), "once")
+    }
+
+    /// The pick is drawn with the screen saver's own values (properties and layer edits), put in
+    /// its isolated store; the wallpaper's own stay as they are.
+    @MainActor
+    func testThePickIsDrawnWithTheScreenSaversOwnValues() throws {
+        let wallpaper = try wallpaper()
+        let store = ScreenSaverSettingsStore(defaults: defaults)
+        save(["speed": "0.3"], .shared, of: wallpaper)
+        ScreenSaverPlugin.publishPickValues(for: wallpaper, store: store)
+        XCTAssertEqual(stored(ScreenSaverPlugin.pickScope, of: wallpaper), ["speed": "0.3"], "the wallpaper's own until the screen saver has its own")
+
+        let own = ["speed": "0.9", sceneObjectVisibilityKey(objectID: 4): "false"]
+        store.setValues(own, for: WallpaperSettingsIdentity.resolve(wallpaper, defaults: defaults))
+        ScreenSaverPlugin.publishPickValues(for: wallpaper, store: store)
+        XCTAssertEqual(stored(ScreenSaverPlugin.pickScope, of: wallpaper), own)
+        XCTAssertEqual(stored(.shared, of: wallpaper), ["speed": "0.3"])
     }
 
     // MARK: Atomic replace
 
-    /// A failed render installs nothing (the installed video stays); a finished one is installed once.
-    func testFailedRecordingLeavesTheInstalledVideo() throws {
-        let installer = FakeInstaller()
-        let staging = directory.appending(path: "Staging")
-        var target = ScreenSaverPlugin.Target(pixelSize: SIMD2(2560, 1440), pointSize: SIMD2(2560, 1440), fileName: "w-rec1.mov")
-        target.isRecording = true
-        let wallpaperFolder = directory.appending(path: "w", directoryHint: .isDirectory)
-
-        let failing = ScreenSaverRecorder(stagingDirectory: staging, runner: Self.runner(Runs(), bytes: nil), installer: installer)
-        XCTAssertFalse(failing.record(wallpaper: wallpaperFolder, target: target))
-        XCTAssertTrue(installer.installed.isEmpty)
-
-        let working = ScreenSaverRecorder(stagingDirectory: staging, runner: Self.runner(Runs(), bytes: "frames"), installer: installer)
-        XCTAssertTrue(working.record(wallpaper: wallpaperFolder, target: target))
-        XCTAssertEqual(installer.installed.count, 1)
-        XCTAssertEqual(installer.installed.first?.file, "w-rec1.mov")
-        XCTAssertEqual(installer.installed.first?.size, SIMD2(2560, 1440))
-        XCTAssertEqual(installer.installed.first?.bytes, "frames")
-        XCTAssertFalse(FileManager.default.fileExists(atPath: staging.appending(path: "w-rec1.mov").path(percentEncoded: false)),
-                       "nothing is left in the staging folder")
-    }
-
-    /// The store's install: the new video is in place before the manifest switches to it, the old
+    /// The store's install (a video wallpaper's own file set as the screen saver): the new video is in place before the manifest switches to it, the old
     /// one goes only after, and an install that fails leaves the manifest and old video as they were.
     func testStoreInstallSwitchesTheVideoAtOnce() throws {
         let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
@@ -294,7 +259,5 @@ final class ScreenSaverEditorTests: XCTestCase {
         let unchanged = try JSONDecoder().decode(ScreenSaverManifest.self, from: Data(contentsOf: videos.manifestURL))
         XCTAssertEqual(unchanged, manifest)
         XCTAssertTrue(videos.exists(fileName: "a-rec2.mov"))
-        XCTAssertEqual(ScreenSaverVideoStore.recordedFileName("k_c-h-1920x1080-r2.mov", at: Date(timeIntervalSince1970: 42)),
-                       "k_c-h-1920x1080-r2-rec42.mov")
     }
 }

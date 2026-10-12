@@ -27,6 +27,13 @@ final class DesktopPictureSync {
 
     let setter: DesktopPictureSetting
     let files: LockScreenPicture
+    /// False: the pictures are only written, for the screen saver's stills
+    /// (`DesktopPictureController`'s screen-saver-only mode, with the lock-screen picture and the
+    /// menu bar tint off): no display's desktop picture is ever set, recorded or restored.
+    let setsPictures: Bool
+    /// A display's new picture was written and set: the screen saver keeps it as its still
+    /// (`ScreenSaverStillPublisher`).
+    var onPictureWritten: ((URL, CGDirectDisplayID) -> Void)?
     let loader: DisplayPictureLoader
     /// Each display's picture as last set, and what it was drawn from.
     private(set) var shown: [CGDirectDisplayID: Shown] = [:]
@@ -35,10 +42,11 @@ final class DesktopPictureSync {
     private var running = false
     private var pending: (plans: [DesktopPicturePlan], placement: WallpaperPlacement, strips: DesktopPictureStrips?)?
 
-    init(setter: DesktopPictureSetting, files: LockScreenPicture, loader: DisplayPictureLoader) {
+    init(setter: DesktopPictureSetting, files: LockScreenPicture, loader: DisplayPictureLoader, setsPictures: Bool = true) {
         self.setter = setter
         self.files = files
         self.loader = loader
+        self.setsPictures = setsPictures
     }
 
     /// A web wallpaper's page drew `image`: its displays' pictures use it from the next update.
@@ -64,6 +72,7 @@ final class DesktopPictureSync {
     /// Space, a wake, a reconnection). Returns the displays with no picture to show yet.
     @discardableResult
     func reassert(_ displays: [CGDirectDisplayID]) -> [CGDirectDisplayID] {
+        guard setsPictures else { return [] }
         var missing: [CGDirectDisplayID] = []
         for display in displays {
             guard let current = shown[display], LockScreenPicture.fileExists(current.url) else {
@@ -80,6 +89,7 @@ final class DesktopPictureSync {
     /// Puts the user's own pictures back on `displays` where one of OWE's shows (`restorePlan`),
     /// and forgets them and what was shown there.
     func restoreUsersPictures(_ displays: [CGDirectDisplayID], fallback: URL?) {
+        guard setsPictures else { return }
         var showing: [CGDirectDisplayID: URL?] = [:]
         for display in displays { showing[display] = setter.picture(for: display) }
         for (display, original) in files.restorePlan(showing: showing, fallback: fallback) {
@@ -112,7 +122,8 @@ final class DesktopPictureSync {
 
     private func run(_ plans: [DesktopPicturePlan], placement: WallpaperPlacement, strips: DesktopPictureStrips?) async {
         let jobs = plans.map { plan in
-            Job(plan: plan, showing: setter.picture(for: plan.display), previous: shown[plan.display],
+            Job(plan: plan, showing: setsPictures ? setter.picture(for: plan.display) : shown[plan.display]?.url,
+                previous: shown[plan.display],
                 webFrames: webFrames.filter { key, _ in plan.layers.contains { Self.key($0.wallpaperDirectory) == key } },
                 strips: strips)
         }
@@ -126,10 +137,13 @@ final class DesktopPictureSync {
         for (job, outcome) in zip(jobs, outcomes) {
             switch outcome {
             case .written(let url, let signature):
-                set(url, display: job.plan.display, showing: setter.picture(for: job.plan.display), reason: "updated")
+                if setsPictures {
+                    set(url, display: job.plan.display, showing: setter.picture(for: job.plan.display), reason: "updated")
+                }
                 shown[job.plan.display] = Shown(url: url, signature: signature)
+                onPictureWritten?(url, job.plan.display)
             case .unchanged:
-                reassert([job.plan.display])
+                if setsPictures { reassert([job.plan.display]) }
             case .failed:
                 break
             }
