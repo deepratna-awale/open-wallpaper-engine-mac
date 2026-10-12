@@ -33,11 +33,10 @@ final class LiveSaverDisplayPolicyTests: XCTestCase {
     }
 
     func testAParkedViewDrawsOneFrameASecond() {
-        let park = SaverParkPolicy(startedAt: 0)
-        XCTAssertTrue(park.mayDraw(at: 1, lastDrawn: 0.99), "every frame while starting")
-        XCTAssertTrue(park.mayDraw(at: 10, lastDrawn: nil))
-        XCTAssertFalse(park.mayDraw(at: 10, lastDrawn: 9.5))
-        XCTAssertTrue(park.mayDraw(at: 10.5, lastDrawn: 9.5))
+        XCTAssertTrue(SaverParkPolicy.mayDraw(parked: false, at: 1, lastDrawn: 0.99), "every frame at full rate")
+        XCTAssertTrue(SaverParkPolicy.mayDraw(parked: true, at: 10, lastDrawn: nil))
+        XCTAssertFalse(SaverParkPolicy.mayDraw(parked: true, at: 10, lastDrawn: 9.5))
+        XCTAssertTrue(SaverParkPolicy.mayDraw(parked: true, at: 10.5, lastDrawn: 9.5))
     }
 
     func testResetFallsBackAtOnce() {
@@ -48,14 +47,24 @@ final class LiveSaverDisplayPolicyTests: XCTestCase {
         XCTAssertEqual(fallback.mode, .fallback)
     }
 
-    func testParksWithoutPresentedFrames() {
-        var park = SaverParkPolicy(startedAt: 10)
-        XCTAssertFalse(park.isParked(at: 10 + SaverParkPolicy.startGrace), "full rate while starting")
-        XCTAssertTrue(park.isParked(at: 10.1 + SaverParkPolicy.startGrace), "never presented: a hidden host")
-        XCTAssertEqual(park.rate(at: 20, fullRate: 60), SaverParkPolicy.parkedRate)
-        park.presented(at: 20)
-        XCTAssertEqual(park.rate(at: 21, fullRate: 60), 60)
-        XCTAssertTrue(park.isParked(at: 20.1 + SaverParkPolicy.presentedGrace))
+    /// System Settings' preview draws at full rate while starting and while its window is
+    /// visible, and parks once it isn't (the Settings window hidden or closed).
+    func testThePreviewParksWhenItsWindowIsntVisible() {
+        XCTAssertFalse(SaverParkPolicy.previewParked(startedAt: 10, lastVisible: nil, at: 10 + SaverParkPolicy.startGrace),
+                       "full rate while starting")
+        XCTAssertTrue(SaverParkPolicy.previewParked(startedAt: 10, lastVisible: nil, at: 10.1 + SaverParkPolicy.startGrace))
+        XCTAssertFalse(SaverParkPolicy.previewParked(startedAt: 0, lastVisible: 20, at: 21))
+        XCTAssertTrue(SaverParkPolicy.previewParked(startedAt: 0, lastVisible: 20, at: 20.1 + SaverParkPolicy.visibleGrace))
+    }
+
+    /// A frame's crop (y down from the top, as the app draws) is the layer's `contentsRect`
+    /// (unit coordinates, y up): a stretch's left half, a stacked display's top half.
+    func testACropIsTheLayersContentsRect() {
+        XCTAssertEqual(ScreenSaverManifest.contentsRect(for: nil), CGRect(x: 0, y: 0, width: 1, height: 1))
+        XCTAssertEqual(ScreenSaverManifest.contentsRect(for: .init(x: 0, y: 0, width: 0.5, height: 1)),
+                       CGRect(x: 0, y: 0, width: 0.5, height: 1))
+        XCTAssertEqual(ScreenSaverManifest.contentsRect(for: .init(x: 0, y: 0, width: 1, height: 0.5)),
+                       CGRect(x: 0, y: 0.5, width: 1, height: 0.5))
     }
 
     func testSmallViewsArePreviewsWhateverTheirFlag() {

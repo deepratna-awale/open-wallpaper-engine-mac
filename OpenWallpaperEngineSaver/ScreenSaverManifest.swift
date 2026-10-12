@@ -106,3 +106,13 @@ struct ScreenSaverManifest: Codable, Equatable {
         return videos.min { score($0) < score($1) }
     }
 }
+
+extension ScreenSaverManifest {
+    /// A saver layer's `contentsRect` for `crop` of a frame (all of it when nil): unit
+    /// coordinates with y up, as a layer's contents are on macOS, from the crop, whose y is down
+    /// from the top as the app draws it. `contentsGravity` then fills the view with that rect.
+    static func contentsRect(for crop: Crop?) -> CGRect {
+        guard let crop, crop.width > 0, crop.height > 0 else { return CGRect(x: 0, y: 0, width: 1, height: 1) }
+        return CGRect(x: crop.x, y: 1 - crop.y - crop.height, width: crop.width, height: crop.height)
+    }
+}

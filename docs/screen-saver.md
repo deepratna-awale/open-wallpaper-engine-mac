@@ -147,6 +147,18 @@ process's CPU and GPU time, parked or not); the app logs `Live screen saver: …
    `pluginkit -r "<out>/Open Wallpaper Engine.app/Contents/PlugIns/OpenWallpaperEngineSaverExtension.appex"`;
    quit the lab app and start your usual one.
 
+### Known macOS limitation
+
+On a display without the password prompt, a screen saver can pause for about 2 s after the
+first key press during a locked screen saver, until more input comes. Every screen saver that
+loginwindow hosts does this, ours and Apple's own like Flurry; Apple's aerials don't, because a
+separate system agent draws them at the desktop's level. On a display without a window of its
+own the saver's content sits inside loginwindow's full-display window, and on the first key
+loginwindow removes its backdrop window and stops updating the content it hosts there for
+about 2 s. The saver keeps its frames coming throughout (about 275 every 10 s, every one set on
+time, the display's refresh link ticking), so there is nothing a saver can do about it. The
+display with the prompt keeps playing.
+
 ## Lock screen picture
 
 Settings › General › **Show Wallpaper on Lock Screen** (on by default) sets each display's desktop

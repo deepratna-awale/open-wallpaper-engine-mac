@@ -67,8 +67,16 @@ final class GlobalSurfaceFrameSource: LiveFrameSource {
         for (ring, token) in tokens { read(ring: ring, token: token) }
     }
 
-    /// Ring `ring`'s newest stamp, from its notification's state: on each notification (as the
-    /// frame is drawn) and on `refresh`.
+    /// Ring `ring`'s newest stamp, from its notification's state, on the draw queue as the frame
+    /// is drawn: `store` drops a stamp of other rings.
+    private static func read(ring: Int, token: Int32, into store: LiveFrameStore) {
+        var state: UInt64 = 0
+        guard notify_get_state(token, &state) == UInt32(NOTIFY_STATUS_OK),
+              let stamp = ScreenSaverLiveStamp(state: state) else { return }
+        store.show(ring: ring, stamp: stamp)
+    }
+
+    /// Ring `ring`'s newest stamp, from its notification's state, on `refresh` (main thread).
     private func read(ring: Int, token: Int32) {
         guard let manifest, manifest.isLive else { return }
         var state: UInt64 = 0
@@ -117,9 +125,11 @@ final class GlobalSurfaceFrameSource: LiveFrameSource {
             surfaces[ring.id] = ringSurfaces
             var token: Int32 = 0
             let id = ring.id
-            // Delivered on the main thread as each frame is drawn: the views draw it then.
-            let status = notify_register_dispatch(ring.notifyName, &token, .main) { [weak self] token in
-                self?.read(ring: id, token: token)
+            // Delivered on the views' draw queue as each frame is drawn, never waiting for the
+            // host's main thread (it stalls while the password prompt comes in): the views draw it then.
+            let store = store
+            let status = notify_register_dispatch(ring.notifyName, &token, SaverDrawing.queue) { token in
+                Self.read(ring: id, token: token, into: store)
             }
             if status == UInt32(NOTIFY_STATUS_OK) { tokens[ring.id] = token }
         }

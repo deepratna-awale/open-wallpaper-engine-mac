@@ -1,40 +1,31 @@
 import CoreGraphics
 import Foundation
 
-/// How fast a saver view draws. macOS 14 to 27 keep saver views that are never shown (stacked
-/// instances, hidden full-screen hosts), so a view ticks at full rate only while its frames are
-/// presented (`MTLDrawable.presentedTime` non-zero), for a grace period after it starts, and parks
-/// at `parkedRate` otherwise. Times are seconds on one monotonic clock.
-struct SaverParkPolicy: Equatable {
+/// Which saver views draw fewer frames. While a screen saver or lock session runs, none: every
+/// view draws every frame (`LiveFrameDrawer`), since no signal tells a hidden stacked view from
+/// the one shown under loginwindow's password prompt (there none reports its frames presented,
+/// and the lock's windows report themselves occluded; guessing parked the visible views, lab run
+/// 2). Only System Settings' preview, which isn't a session, parks at `parkedRate` once its window
+/// stops being visible (the Settings window hidden or closed). Times are seconds on one
+/// monotonic clock.
+enum SaverParkPolicy {
     /// Full rate for this long after the view starts, before any frame could be presented.
     static let startGrace: TimeInterval = 3
-    /// Full rate while a frame was presented within this long.
-    static let presentedGrace: TimeInterval = 2
+    /// Full rate while the preview's window was visible within this long.
+    static let visibleGrace: TimeInterval = 2
     static let parkedRate = 1
 
-    var startedAt: TimeInterval
-    var lastPresented: TimeInterval?
-
-    init(startedAt: TimeInterval) {
-        self.startedAt = startedAt
+    /// Whether System Settings' preview, started at `startedAt`, parks at `now`.
+    static func previewParked(startedAt: TimeInterval, lastVisible: TimeInterval?, at now: TimeInterval) -> Bool {
+        guard now - startedAt > startGrace else { return false }
+        return lastVisible.map { now - $0 > visibleGrace } ?? true
     }
 
-    func isParked(at now: TimeInterval) -> Bool {
-        guard now - startedAt > Self.startGrace else { return false }
-        return lastPresented.map { now - $0 > Self.presentedGrace } ?? true
-    }
-
-    /// The rate to tick at, given the rate frames come at.
-    func rate(at now: TimeInterval, fullRate: Int) -> Int {
-        isParked(at: now) ? min(Self.parkedRate, max(fullRate, 1)) : max(fullRate, 1)
-    }
-
-    mutating func presented(at now: TimeInterval) { lastPresented = now }
-
-    /// Whether a frame that came at `now` is drawn: every one at full rate, one a second parked.
-    func mayDraw(at now: TimeInterval, lastDrawn: TimeInterval?) -> Bool {
-        guard isParked(at: now), let lastDrawn else { return true }
-        return now - lastDrawn >= 1 / Double(Self.parkedRate)
+    /// Whether a frame that came at `now` is drawn by a view that is `parked`: every one at full
+    /// rate, one a second parked.
+    static func mayDraw(parked: Bool, at now: TimeInterval, lastDrawn: TimeInterval?) -> Bool {
+        guard parked, let lastDrawn else { return true }
+        return now - lastDrawn >= 1 / Double(parkedRate)
     }
 
     /// Whether a view is the System Settings preview: its flag, which is unreliable from macOS 26
