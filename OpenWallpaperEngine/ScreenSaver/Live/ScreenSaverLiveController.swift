@@ -23,6 +23,9 @@ final class ScreenSaverLiveController {
         var scriptServices: () -> SceneScriptServices?
         /// The desktop's Chromium page on a display, while it shows the wallpaper.
         var pageSharing: (_ screenId: String, _ wallpaper: WEWallpaper) -> ScreenSaverPageSharing? = { _, _ in nil }
+        /// The desktop's running scene on a display, loaded, while it shows the wallpaper with
+        /// `scope`'s values.
+        var sceneSharing: (_ screenId: String, _ wallpaper: WEWallpaper, _ scope: WallpaperPropertyScope) -> SceneRenderLoop? = { _, _, _ in nil }
     }
 
     /// How often the frames each ring drew are logged while drawing.
@@ -49,6 +52,8 @@ final class ScreenSaverLiveController {
     /// Counts `renderPickStill`s: a still drawn for an earlier pick is dropped.
     private var pickStillGeneration = 0
     private var pages: [ScreenSaverLiveWeb] = []
+    /// Loops drawn from the desktop's own running scene (`ScreenSaverSharedScene`).
+    private var sharedScenes: [ScreenSaverSharedScene] = []
     private var countsSince: TimeInterval = 0
     /// Launched for a saver (`launchedForScreenSaver`), heard once the plugin is observed.
     private var launchedForSaver = false
@@ -241,6 +246,14 @@ final class ScreenSaverLiveController {
                 continue
             }
             let target = ScreenSaverLiveScene.Target(ring: ring, pixels: loop.pixels, points: loop.points, frameRate: rate(for: screen))
+            // The desktop's own scene, already loaded: drawn from it, no second load.
+            if !loop.isPick, let screenId = loop.screenId, let paceScreen = screen ?? NSScreen.main,
+               let renderLoop = environment.sceneSharing(screenId, loop.wallpaper, loop.propertyScope),
+               let shared = ScreenSaverSharedScene(renderLoop: renderLoop, target: target, screen: paceScreen, publisher: publisher,
+                                                   name: loop.wallpaper.wallpaperDirectory.lastPathComponent) {
+                sharedScenes.append(shared)
+                continue
+            }
             let key = WarmKey(wallpaper: loop.wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false),
                               scope: "\(loop.propertyScope)", pixels: loop.pixels, points: loop.points, frameRate: target.frameRate)
             let scene: ScreenSaverLiveScene
@@ -260,7 +273,9 @@ final class ScreenSaverLiveController {
     }
 
     private func stopDrawing() {
-        let drew = !scenes.isEmpty || !pages.isEmpty
+        let drew = !scenes.isEmpty || !pages.isEmpty || !sharedScenes.isEmpty
+        sharedScenes.forEach { $0.shutdown() }
+        sharedScenes.removeAll()
         // Kept loaded for a while: the next session draws them at once.
         for (key, scene) in scenes {
             scene.pause()

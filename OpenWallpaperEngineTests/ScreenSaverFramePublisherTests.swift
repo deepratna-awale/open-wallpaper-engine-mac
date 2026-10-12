@@ -1,3 +1,4 @@
+import AppKit
 import CoreGraphics
 import IOSurface
 import Metal
@@ -185,6 +186,52 @@ final class ScreenSaverFramePublisherTests: XCTestCase {
         XCTAssertEqual(stills.file(forDisplay: "A"), "still-pick.jpg", "the picked wallpaper's on every display")
         let old = try JSONDecoder().decode(ScreenSaverStills.self, from: Data(#"{"revision":1,"stills":{"A":"a.heic"}}"#.utf8))
         XCTAssertNil(old.pick, "stills written before the pick read as following the desktop")
+    }
+
+    /// A display's running scene is lent to the screen saver's ring (`ScreenSaverSharedScene`):
+    /// its loaded content draws there, as the screen saver, on its own render thread, once at a
+    /// time, and is given back as it was.
+    @MainActor
+    func testADisplaysRunningSceneIsLentToTheRingAndGivenBack() throws {
+        _ = try Fixtures.assets()
+        let directory = Fixtures.url("Scenes/still-layers")
+        let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/still-layers/project.json"))
+        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let renderer = try XCTUnwrap(SceneMetalRenderer(pixelFormat: .bgra8Unorm, scriptServices: nil, screenID: "test-lend"))
+        let loop = SceneRenderLoop(renderer: renderer, name: "test lend")
+        defer {
+            loop.shutdown()
+            Fixtures.removeStoredSettings(for: directory)
+        }
+        let content = try XCTUnwrap(model.metalContent())
+        loop.thread.sync { renderer.setContent(content) }
+        let publisher = try publisher(RecordingNotifier())
+        try publisher.publish(sizes: [SIMD2(128, 64)], displays: [.init(display: nil, ring: 0)], frameRate: 30)
+        let screen = try XCTUnwrap(NSScreen.main)
+        let target = ScreenSaverLiveScene.Target(ring: 0, pixels: SIMD2(128, 64), points: SIMD2(128, 64), frameRate: 30)
+        let shared = try XCTUnwrap(ScreenSaverSharedScene(renderLoop: loop, target: target, screen: screen,
+                                                          publisher: publisher, name: "still-layers"))
+        XCTAssertTrue(loop.isLent)
+        XCTAssertNil(ScreenSaverSharedScene(renderLoop: loop, target: target, screen: screen, publisher: publisher, name: "again"),
+                     "lent to one loop at a time")
+        var drawn = 0
+        let deadline = Date().addingTimeInterval(10)
+        while drawn == 0, Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            drawn += publisher.takeCounts()[0]?.drawn ?? 0
+        }
+        XCTAssertGreaterThan(drawn, 0, "the running scene's frames reach the ring")
+        let frame = try XCTUnwrap(publisher.newestImage(ring: 0))
+        XCTAssertEqual(frame.width, 128)
+        let lent = loop.thread.sync { (renderer.fixedPointer, renderer.rendersScreenSaver) }
+        XCTAssertEqual(lent.0, SIMD2(0.5, 0.5), "drawn as the screen saver: the pointer held at the centre")
+        XCTAssertTrue(lent.1)
+
+        shared.shutdown()
+        XCTAssertFalse(loop.isLent)
+        let back = loop.thread.sync { (renderer.fixedPointer, renderer.rendersScreenSaver) }
+        XCTAssertNil(back.0, "given back as it was")
+        XCTAssertFalse(back.1)
     }
 
     func testAPreviewFillsTheScreenInsteadOfStretching() throws {

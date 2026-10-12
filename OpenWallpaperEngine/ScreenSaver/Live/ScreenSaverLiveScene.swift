@@ -171,20 +171,55 @@ final class ScreenSaverLiveScene {
         }
 
         @objc func tick(_ link: CADisplayLink) {
-            guard renderer.hasContent else { return }
-            publisher.ticked(ring: ring)
-            renderer.renderShared([viewport])
-            guard let target = publisher.target(ring: ring),
-                  let commandBuffer = renderer.commandQueue.makeCommandBuffer() else { return }
-            commandBuffer.label = "Live screen saver frame"
-            guard renderer.encodeSharedFrame(into: target.texture, pixelsPerPoint: viewport.pixelsPerPoint,
-                                             commandBuffer: commandBuffer) else { return }
-            let publisher = publisher, ring = ring, slot = target.slot, generation = target.generation
-            commandBuffer.addCompletedHandler { finished in
-                guard finished.status == .completed else { return }
-                publisher.drawn(ring: ring, slot: slot, generation: generation)
-            }
-            commandBuffer.commit()
+            ScreenSaverLiveScene.drawFrame(renderer, viewport: viewport, ring: ring, publisher: publisher)
         }
+    }
+
+    /// One frame of `renderer`'s scene for `viewport`, then its copy into ring `ring` of
+    /// `publisher` with the displays' placement. Render thread.
+    nonisolated static func drawFrame(_ renderer: SceneMetalRenderer, viewport: SceneViewport, ring: Int,
+                                      publisher: ScreenSaverFramePublisher) {
+        guard renderer.hasContent else { return }
+        publisher.ticked(ring: ring)
+        renderer.renderShared([viewport])
+        guard let target = publisher.target(ring: ring),
+              let commandBuffer = renderer.commandQueue.makeCommandBuffer() else { return }
+        commandBuffer.label = "Live screen saver frame"
+        guard renderer.encodeSharedFrame(into: target.texture, pixelsPerPoint: viewport.pixelsPerPoint,
+                                         commandBuffer: commandBuffer) else { return }
+        let slot = target.slot, generation = target.generation
+        commandBuffer.addCompletedHandler { finished in
+            guard finished.status == .completed else { return }
+            publisher.drawn(ring: ring, slot: slot, generation: generation)
+        }
+        commandBuffer.commit()
+    }
+}
+
+/// A loop of the screen saver that shows a display's own running scene: drawn from the desktop's
+/// instance (`SceneRenderLoop.lend`), with its loaded content and its per-display values, on its
+/// render thread, into the loop's ring at the loop's size, instead of loading the scene again.
+/// The desktop's displays, which the screen saver covers, stop drawing meanwhile.
+@MainActor
+final class ScreenSaverSharedScene {
+    private let renderLoop: SceneRenderLoop
+
+    /// Nil when the scene is lent already.
+    init?(renderLoop: SceneRenderLoop, target: ScreenSaverLiveScene.Target, screen: NSScreen,
+          publisher: ScreenSaverFramePublisher, name: String) {
+        let viewport = SceneViewport(drawableSize: SIMD2(Float(target.pixels.x), Float(target.pixels.y)),
+                                     pointSize: SIMD2(Float(target.points.x), Float(target.points.y)),
+                                     cursor: nil, frameRateLimit: target.frameRate)
+        let ring = target.ring
+        guard renderLoop.lend(screen: screen, frameRate: target.frameRate, draw: { renderer in
+            ScreenSaverLiveScene.drawFrame(renderer, viewport: viewport, ring: ring, publisher: publisher)
+        }) else { return nil }
+        self.renderLoop = renderLoop
+        OWELog.info(.app, "Live screen saver: drawing the desktop's running \(name) at \(target.pixels.x)×\(target.pixels.y), \(target.frameRate) fps, ring \(ring)")
+    }
+
+    /// The desktop draws it again.
+    func shutdown() {
+        renderLoop.endLoan()
     }
 }

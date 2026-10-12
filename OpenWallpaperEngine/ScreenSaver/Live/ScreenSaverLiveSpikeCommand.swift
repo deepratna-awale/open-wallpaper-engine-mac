@@ -9,7 +9,8 @@ import WebKit
 ///
 ///     "Open Wallpaper Engine" --saver-spike <mode> <target> <seconds> <width>x<height> [fps]
 ///
-/// `mode` is `scene` (a scene wallpaper folder, drawn by `ScreenSaverLiveScene`), `chromium` (a
+/// `mode` is `scene` (a scene wallpaper folder, drawn by `ScreenSaverLiveScene`), `shared` (a
+/// scene folder loaded first, as a display runs it, then lent to the ring), `chromium` (a
 /// URL in the Chromium engine's windowless browser, each frame blitted into the ring) or
 /// `webkit` (a URL in a `WKWebView` in a transparent window, captured with `takeSnapshot`). The
 /// manifest goes to `$OWE_SPIKE_DIR/live.json` (none without it) and no Darwin notification is
@@ -22,7 +23,7 @@ enum ScreenSaverLiveSpikeCommand {
         guard let index = arguments.firstIndex(of: argument) else { return nil }
         let rest = Array(arguments[(index + 1)...])
         guard rest.count >= 4, let seconds = Double(rest[2]), let size = ShaderPrewarmCommand.size(rest[3]) else {
-            print("usage: \(argument) scene|chromium|webkit <target> <seconds> <width>x<height> [fps]")
+            print("usage: \(argument) scene|shared|chromium|webkit <target> <seconds> <width>x<height> [fps]")
             return 1
         }
         let fps = rest.count > 4 ? Int(rest[4]) ?? 60 : 60
@@ -56,6 +57,44 @@ enum ScreenSaverLiveSpikeCommand {
                                                    screen: NSScreen.main, settings: GlobalSettings(), placement: .fill,
                                                    scriptServices: nil, publisher: publisher) else { return 1 }
             keep.append(scene)
+        case "shared":
+            // A display's running scene, loaded first as the desktop has it, then lent to the ring
+            // (`SceneRenderLoop.lend`, `ScreenSaverSharedScene`): the time to the first frame and
+            // the memory the lend adds.
+            let folder = URL(fileURLWithPath: rest[1])
+            guard let data = try? Data(contentsOf: folder.appending(path: "project.json")),
+                  let project = try? JSONDecoder().decode(WEProject.self, from: data),
+                  let renderer = SceneMetalRenderer(pixelFormat: .bgra8Unorm, scriptServices: nil, screenID: "spike-shared")
+            else { return 1 }
+            let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: folder))
+            let pixels = SIMD2(Float(size.x), Float(size.y))
+            let settings = SceneRenderSettings(GlobalSettings(), outputPixels: pixels, sceneSize: model.textureReductionSceneSize)
+            model.setRenderSettings(settings)
+            renderer.renderSettings = settings
+            let loadStart = CFAbsoluteTimeGetCurrent()
+            guard let content = model.metalContent() else { print("No content"); return 1 }
+            let loop = SceneRenderLoop(renderer: renderer, name: "OWE spike shared")
+            loop.thread.sync { renderer.setContent(content) }
+            // Drawn for a while first, as a display runs it (`OWE_SPIKE_WARM` seconds, 5 by default).
+            let viewport = SceneViewport(drawableSize: pixels, pointSize: pixels, cursor: nil, frameRateLimit: fps)
+            let warm = ProcessInfo.processInfo.environment["OWE_SPIKE_WARM"].flatMap(Double.init) ?? 5
+            let warmStart = CFAbsoluteTimeGetCurrent()
+            while CFAbsoluteTimeGetCurrent() - warmStart < warm {
+                loop.thread.sync {
+                    renderer.renderShared([viewport])
+                    renderer.lastCommandBuffer?.waitUntilCompleted()
+                }
+                _ = RunLoop.main.run(mode: .default, before: .now + 1.0 / Double(fps))
+            }
+            print(String(format: "loaded in %.0f ms; footprint %.0f MB", (CFAbsoluteTimeGetCurrent() - loadStart) * 1000, Self.footprintMB()))
+            let target = ScreenSaverLiveScene.Target(ring: 0, pixels: size, points: size, frameRate: fps)
+            stats.lentAt = CFAbsoluteTimeGetCurrent()
+            guard let screen = NSScreen.main,
+                  let shared = ScreenSaverSharedScene(renderLoop: loop, target: target, screen: screen, publisher: publisher,
+                                                      name: folder.lastPathComponent) else { return 1 }
+            keep.append(shared)
+            keep.append(loop)
+            keep.append(model)
         case "chromium":
             guard let url = URL(string: rest[1]) else { return 1 }
             guard let chromium = ChromiumSpike(url: url, size: size, fps: fps, device: device, publisher: publisher,
@@ -80,6 +119,9 @@ enum ScreenSaverLiveSpikeCommand {
                 print(String(format: "first frame in the ring %.0f ms after process start (start epoch %.3f, first frame epoch %.3f)",
                              (first - stats.startedAt) * 1000, stats.startedAt + kCFAbsoluteTimeIntervalSince1970,
                              first + kCFAbsoluteTimeIntervalSince1970))
+                if let lentAt = stats.lentAt {
+                    print(String(format: "first frame %.1f ms after the lend; footprint %.0f MB", (first - lentAt) * 1000, Self.footprintMB()))
+                }
             }
             let elapsed = Int(CFAbsoluteTimeGetCurrent() - wallStart)
             if elapsed > second {
@@ -96,6 +138,18 @@ enum ScreenSaverLiveSpikeCommand {
                      (usage.cpu - usageStart.cpu) / wall * 100, (usage.gpu - usageStart.gpu) / wall * 100, wall, stats.summary()))
         withExtendedLifetime(keep) {}
         return 0
+    }
+
+    /// The process's physical footprint, in MB.
+    static func footprintMB() -> Double {
+        var info = task_vm_info_data_t()
+        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
+        let status = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+            }
+        }
+        return status == KERN_SUCCESS ? Double(info.phys_footprint) / 1_048_576 : 0
     }
 
     /// The process's start, from the kernel.
@@ -150,6 +204,8 @@ private final class CountingNotifier: ScreenSaverFrameNotifier, @unchecked Senda
 /// Source frames, capture and copy times, and the copy's latency.
 private final class SpikeStats: @unchecked Sendable {
     let startedAt: CFAbsoluteTime
+    /// When a running scene was lent to the ring (mode `shared`). Main thread.
+    var lentAt: CFAbsoluteTime?
     private let lock = NSLock()
     private var sourceFrames = 0
     private var lastSource = 0

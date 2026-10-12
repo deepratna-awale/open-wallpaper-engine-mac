@@ -169,6 +169,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         scriptServices: { [unowned self] in sceneScriptServices },
         pageSharing: { [unowned self] screenId, wallpaper in
             wallpaperViewModel.webPageMirrors.sharing(for: screenId, showing: wallpaper)
+        },
+        sceneSharing: { [unowned self] screenId, wallpaper, scope in
+            let key = wallpaperViewModel.instanceKey(for: screenId)
+            guard key == WallpaperInstanceKey(wallpaper, properties: scope),
+                  let instance = wallpaperViewModel.sceneInstances.instance(for: key), instance.hasContent else { return nil }
+            return instance.renderLoop
         }))
     /// Settings › General › Theming: macOS follows the wallpaper's scheme colour.
     private(set) lazy var theming = ThemingController.make { [unowned self] in
