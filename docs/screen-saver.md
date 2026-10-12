@@ -34,8 +34,9 @@ when the screen saver stops or the Mac is unlocked, and another screen saver or 
 Settings preview never makes it draw. After the screen saver stops, the lock screen keeps its
 last frame.
 
-When the app isn't running, the screen saver asks for it: its broker launches the app in the
-background, with no window or Dock icon, and the wallpaper starts loading at once.
+When the app isn't running, the screen saver asks for it: its broker (the background item below)
+launches the app in the background, with no window or Dock icon, and the wallpaper starts loading
+at once.
 
 The Details panel says whether the screen saver shows the selected wallpaper (**Screen Saver
 Available**), is preparing a video's file (**Rendering Screen Saver**) or not (**Screen Saver Not
@@ -70,10 +71,40 @@ the displays, or one cloned. See [`display-layouts.md`](display-layouts.md).
 
 ## How the frames reach the screen saver
 
-Two savers show the frames: the screen saver in `~/Library/Screen Savers` (macOS 14 and later),
-which reads them as shared surfaces and Darwin notifications, and a screen saver extension in
-macOS's newer format inside the app, which gets them over XPC through the app's broker. Live
-drawing is still limited to development builds until the real screen saver hosts confirm it.
+Two savers show the frames, and both stay:
+
+- **Open Wallpaper Engine** in `~/Library/Screen Savers` (a classic `.saver`, macOS 14 and
+  later). It runs inside Apple's `legacyScreenSaver` host, whose sandbox lets it reach the app only
+  through shared surfaces the app marks global and through Darwin notifications.
+- **Open Wallpaper Engine** as a screen saver extension inside the app (macOS 14 and later,
+  release builds). It has its own sandbox, shares an App Group with the app, and gets the frames
+  over XPC through the app's background item (the broker), so nothing is shared globally.
+
+Why both: the classic saver works with any signature (development builds too), needs nothing
+registered, and runs on every supported macOS; but global surfaces are deprecated and readable by
+any process. The extension fixes that and avoids the classic host's lifecycle bugs, but it uses a
+private extension point (`com.apple.screensaver`) that a macOS update may change, needs the
+Developer ID signature for its App Group, and is only in release builds. They share the drawing
+code in the app and in the saver, so keeping both costs little, and if one stops working the
+other still does. Either can be picked in System Settings.
+
+### The background item
+
+Release builds register the broker as a background item while the Screen Saver plugin is on
+(System Settings › General › Login Items › Allow in the Background lists it as Open Wallpaper
+Engine). macOS starts it only when needed: when the screen saver extension looks for the app, or
+when the classic saver shows. It launches the app when a saver shows while the app isn't running.
+If it is turned off there, Settings › Plugins › Screen Saver says so and opens Login Items; the
+savers then show only the still while the app isn't running, and the extension shows the still
+even while it is.
+
+### Development builds
+
+Xcode registers every app it builds, and macOS would list each development copy's extension as
+another Open Wallpaper Engine screen saver and let its broker take the release one's place. So only
+release builds (`OWE_EMBED_SCREEN_SAVER_EXTENSION`, the app target's "Embed Screen Saver Extension
+and Broker" phase) carry the extension, the broker and its launch agent. Development builds keep
+the classic saver; the lab build below adds the rest to a copy for testing.
 
 ### Testing it (lab build)
 

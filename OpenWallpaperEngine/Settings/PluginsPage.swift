@@ -13,6 +13,7 @@ import SwiftUI
 struct PluginsPage: SettingsPage {
     @ObservedObject var viewModel: GlobalSettingsViewModel
     @StateObject private var chromium = ChromiumEngineInstaller()
+    @ObservedObject private var broker = AppDelegate.shared.screenSaverBroker
 
     init(globalSettings viewModel: GlobalSettingsViewModel) {
         self.viewModel = viewModel
@@ -33,6 +34,7 @@ struct PluginsPage: SettingsPage {
                         Button("Open Screen Saver Settings…") {
                             ScreenSaverInstaller.current.openSettings()
                         }
+                        brokerNote
                         if chromium.installedVersion == nil {
                             // The screen saver draws web pages and WebM videos through Chromium only
                             // (`ScreenSaverLiveWeb`).
@@ -57,6 +59,27 @@ struct PluginsPage: SettingsPage {
                 Text("These settings take effect without saving.")
             }
             .settingsAnchor(SettingsAnchor.plugins)
+        }
+    }
+
+    /// The broker's launch agent, when macOS doesn't let it run: the screen saver then can't
+    /// start the app or, in its newer format, reach it (`ScreenSaverBrokerAgent`).
+    @ViewBuilder private var brokerNote: some View {
+        switch broker.state {
+        case .requiresApproval:
+            Label("Allow Open Wallpaper Engine in the background", systemImage: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+            Text("The screen saver needs Open Wallpaper Engine's background item to start the app while it isn't running and to show its frames. Turn it on in System Settings › General › Login Items.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Button("Open Login Items Settings…") { broker.openLoginItems() }
+        case .failed(let reason):
+            Label("The screen saver's background item couldn't be set up: \(reason)", systemImage: "xmark.octagon.fill")
+                .foregroundStyle(.red)
+                .font(.caption)
+        case .unavailable, .notRegistered, .enabled:
+            EmptyView()
         }
     }
 }

@@ -1,3 +1,4 @@
+import ServiceManagement
 import XCTest
 @testable import OpenWallpaperEngine
 
@@ -64,5 +65,23 @@ final class ScreenSaverLiveStateTests: XCTestCase {
         XCTAssertTrue(policy.shouldLaunch(at: 1, appRunning: false))
         XCTAssertFalse(policy.shouldLaunch(at: 2, appRunning: false), "still starting")
         XCTAssertTrue(policy.shouldLaunch(at: 1 + LiveSaverLaunchPolicy.retryInterval, appRunning: false), "it didn't start")
+    }
+
+    func testTheBrokersBackgroundItemStates() {
+        XCTAssertEqual(ScreenSaverBrokerAgent.state(.enabled), .enabled)
+        XCTAssertEqual(ScreenSaverBrokerAgent.state(.requiresApproval), .requiresApproval, "turned off in Login Items")
+        XCTAssertEqual(ScreenSaverBrokerAgent.state(.notRegistered), .notRegistered)
+        XCTAssertEqual(ScreenSaverBrokerAgent.state(.notFound), .unavailable)
+    }
+
+    @MainActor
+    func testABuildWithoutTheAgentNeverRegistersIt() {
+        // The test host is a Debug build: no Contents/Library/LaunchAgents plist.
+        let agent = ScreenSaverBrokerAgent(bundle: .main, mayRegister: true)
+        agent.update(enabled: true)
+        XCTAssertEqual(agent.state, .unavailable)
+        let isolated = ScreenSaverBrokerAgent(bundle: .main, mayRegister: false)
+        isolated.update(enabled: true)
+        XCTAssertEqual(isolated.state, .unavailable)
     }
 }

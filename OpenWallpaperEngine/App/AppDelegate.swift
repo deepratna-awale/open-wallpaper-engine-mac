@@ -159,6 +159,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// the desktop's left clicks.
     /// Settings › Plugins › Screen Saver: the loop videos and the bundled saver.
     lazy var screenSaver = ScreenSaverPlugin()
+    /// The live screen saver's broker, a launch agent registered while the Screen Saver plugin is on.
+    lazy var screenSaverBroker = ScreenSaverBrokerAgent()
+    private var screenSaverBrokerCancellable: AnyCancellable?
     /// The screen saver drawn live while it runs, the savers showing the frames.
     lazy var liveScreenSaver = ScreenSaverLiveController(plugin: screenSaver, environment: .init(
         settings: { [unowned self] in globalSettingsViewModel.settings },
@@ -332,6 +335,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             liveScreenSaver.launchedForScreenSaver()
         }
         liveScreenSaver.start()
+        screenSaverBrokerCancellable = screenSaver.$isEnabled.removeDuplicates().sink { [weak self] enabled in
+            MainActor.assumeIsolated { self?.screenSaverBroker.update(enabled: enabled) }
+        }
         // Settings › Optimizations › Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
             .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }

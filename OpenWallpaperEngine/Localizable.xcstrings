@@ -11247,6 +11247,100 @@
         }
       }
     },
+    "Allow Open Wallpaper Engine in the background" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اسمح لـ Open Wallpaper Engine بالعمل في الخلفية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine im Hintergrund erlauben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permite Open Wallpaper Engine en segundo plano"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autorisez Open Wallpaper Engine en arrière-plan"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine को बैकग्राउंड में अनुमति दें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consenti Open Wallpaper Engine in background"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine のバックグラウンドでの動作を許可してください"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine의 백그라운드 실행을 허용하세요"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zezwól na działanie Open Wallpaper Engine w tle"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permita o Open Wallpaper Engine em segundo plano"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разрешите Open Wallpaper Engine работать в фоне"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine’in arka planda çalışmasına izin verin"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дозвольте Open Wallpaper Engine працювати у фоні"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许 Open Wallpaper Engine 在后台运行"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允許 Open Wallpaper Engine 在背景執行"
+          }
+        }
+      }
+    },
     "Allow wallpaper to change while paused" : {
       "comment" : "Playlist Settings: the timer runs on while the wallpaper is paused",
       "localizations" : {
@@ -91162,6 +91256,100 @@
         }
       }
     },
+    "Open Login Items Settings…" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح إعدادات عناصر تسجيل الدخول…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldeobjekte-Einstellungen öffnen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir ajustes de Ítems de inicio…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir les réglages Ouverture…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लॉगिन आइटम सेटिंग्स खोलें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri le impostazioni Elementi login…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ログイン項目の設定を開く…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그인 항목 설정 열기…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otwórz ustawienia rzeczy otwieranych po zalogowaniu…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir Ajustes de Itens de Início…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть настройки объектов входа…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giriş Öğeleri Ayarlarını Aç…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити параметри об’єктів входу…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开登录项设置…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打開登入項目設定…"
+          }
+        }
+      }
+    },
     "Open Permissions Page" : {
       "localizations" : {
         "ar" : {
@@ -150832,6 +151020,100 @@
         }
       }
     },
+    "The screen saver needs Open Wallpaper Engine's background item to start the app while it isn't running and to show its frames. Turn it on in System Settings › General › Login Items." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحتاج شاشة التوقف إلى عنصر الخلفية الخاص بـ Open Wallpaper Engine لتشغيل التطبيق عندما لا يكون قيد التشغيل ولعرض إطاراته. شغّله في إعدادات النظام › عام › عناصر تسجيل الدخول."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Bildschirmschoner braucht das Hintergrundobjekt von Open Wallpaper Engine, um die App zu starten, wenn sie nicht läuft, und ihre Bilder zu zeigen. Schalte es in Systemeinstellungen › Allgemein › Anmeldeobjekte ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El salvapantallas necesita el elemento en segundo plano de Open Wallpaper Engine para abrir la app cuando no está abierta y mostrar sus fotogramas. Actívalo en Ajustes del Sistema › General › Ítems de inicio."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’économiseur d’écran a besoin de l’élément d’arrière-plan d’Open Wallpaper Engine pour lancer l’app lorsqu’elle n’est pas ouverte et afficher ses images. Activez-le dans Réglages Système › Général › Ouverture."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीन सेवर को ऐप के न चलने पर उसे शुरू करने और उसके फ़्रेम दिखाने के लिए Open Wallpaper Engine के बैकग्राउंड आइटम की ज़रूरत है। इसे सिस्टम सेटिंग्स › सामान्य › लॉगिन आइटम में चालू करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il salvaschermo ha bisogno dell’elemento in background di Open Wallpaper Engine per avviare l’app quando non è aperta e mostrarne i fotogrammi. Attivalo in Impostazioni di Sistema › Generali › Elementi login."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンセーバーは、アプリが起動していないときにアプリを起動してフレームを表示するために、Open Wallpaper Engine のバックグラウンド項目を必要とします。システム設定 › 一般 › ログイン項目でオンにしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 보호기는 앱이 실행 중이 아닐 때 앱을 시작하고 프레임을 표시하기 위해 Open Wallpaper Engine의 백그라운드 항목이 필요합니다. 시스템 설정 › 일반 › 로그인 항목에서 켜세요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wygaszacz ekranu potrzebuje elementu działającego w tle Open Wallpaper Engine, aby uruchomić aplikację, gdy nie działa, i pokazywać jej klatki. Włącz go w Ustawieniach systemowych › Ogólne › Rzeczy otwierane po zalogowaniu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O protetor de tela precisa do item em segundo plano do Open Wallpaper Engine para abrir o app quando ele não está aberto e mostrar os quadros dele. Ative-o em Ajustes do Sistema › Geral › Itens de Início."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставке нужен фоновый объект Open Wallpaper Engine, чтобы запускать приложение, когда оно не запущено, и показывать его кадры. Включите его в Системных настройках › Основные › Объекты входа."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran koruyucu, uygulama çalışmıyorken onu başlatmak ve karelerini göstermek için Open Wallpaper Engine’in arka plan öğesine ihtiyaç duyar. Sistem Ayarları › Genel › Giriş Öğeleri’nde açın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставці потрібен фоновий об’єкт Open Wallpaper Engine, щоб запускати програму, коли вона не працює, і показувати її кадри. Увімкніть його в Системних параметрах › Загальні › Об’єкти входу."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屏幕保护程序需要 Open Wallpaper Engine 的后台项目，才能在应用未运行时启动它并显示其画面。请在“系统设置 › 通用 › 登录项”中打开它。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "螢幕保護程式需要 Open Wallpaper Engine 的背景項目，才能在 App 未執行時啟動它並顯示其畫面。請在「系統設定 › 一般 › 登入項目」中開啟它。"
+          }
+        }
+      }
+    },
     "The screen saver plays MP4 and MOV videos in H.264 or HEVC, and WebM videos through the Chromium engine" : {
       "localizations" : {
         "ar" : {
@@ -151016,6 +151298,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "螢幕保護程式會播放此影片"
+          }
+        }
+      }
+    },
+    "The screen saver's background item couldn't be set up: %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر إعداد عنصر الخلفية لشاشة التوقف: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Hintergrundobjekt des Bildschirmschoners konnte nicht eingerichtet werden: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo configurar el elemento en segundo plano del salvapantallas: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’élément d’arrière-plan de l’économiseur d’écran n’a pas pu être configuré : %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीन सेवर का बैकग्राउंड आइटम सेट नहीं हो सका: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile configurare l’elemento in background del salvaschermo: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンセーバーのバックグラウンド項目を設定できませんでした：%@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 보호기의 백그라운드 항목을 설정할 수 없습니다: %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się skonfigurować elementu wygaszacza ekranu działającego w tle: %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível configurar o item em segundo plano do protetor de tela: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось настроить фоновый объект заставки: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran koruyucunun arka plan öğesi ayarlanamadı: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося налаштувати фоновий об’єкт заставки: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法设置屏幕保护程序的后台项目：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法設定螢幕保護程式的背景項目：%@"
           }
         }
       }
