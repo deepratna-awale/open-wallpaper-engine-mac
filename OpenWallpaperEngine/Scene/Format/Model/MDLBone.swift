@@ -8,8 +8,11 @@ import simd
 /// `columns.3`.
 struct MDLBone: Equatable {
     var name: String
-    /// 0x1 is set on 520 of the library's 568 bones [?]; 0x2 hangs the bone's constraints on its
-    /// link, and WE then disables its clip tracks unless an IK set names it.
+    /// 0x1 marks an armature bone: WE's importer sets it on every bone of an FBX armature, weighted
+    /// or not, and on every Puppet Warp bone, and leaves it off the other nodes it keeps (the
+    /// scene's `RootNode`, the armature's object), which still get clip tracks, held at their bind
+    /// (WE 2.8's capture 509 D). Nothing at run time reads it. 0x2 hangs the bone's constraints on
+    /// its link, and WE then disables its clip tracks unless an IK set names it.
     var flags: UInt32
     /// The parent's index, 0xFFFFFFFF for a root.
     var parent: UInt32

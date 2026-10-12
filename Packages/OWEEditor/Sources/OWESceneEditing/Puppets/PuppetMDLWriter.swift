@@ -95,7 +95,16 @@ public enum PuppetMDLWriter {
         }
         out.blob(indices.bytes)
         out.u8(0) // no second position set
-        out.u8(0) // no vector4 block
+        // The parts' index ranges as they were, while the triangles are the ones they split.
+        if let ranges = document.preserved.boneRanges,
+           ranges.allSatisfy({ UInt64($0.z) + UInt64($0.w) <= UInt64(3 * document.mesh.triangles.count) && Int($0.x) < document.bones.count }) {
+            out.u8(1)
+            var block = PuppetMDLOutput()
+            for range in ranges { for value in [range.x, range.y, range.z, range.w] { block.u32(value) } }
+            out.blob(block.bytes)
+        } else {
+            out.u8(0)
+        }
         out.u32(0) // no groups
         // The texture channels' meshes as they were: their quads are in the image's pixels, not the puppet's mesh.
         for channel in channels { out.raw([UInt8](channel.bytes)) }
@@ -224,11 +233,13 @@ public enum PuppetMDLWriter {
                 for frame in 0...frames { blob.f32(track.sample(frame)) }
                 out.blob(blob.bytes)
             }
-            out.u8(0)  // A3: no per-bone scalar tracks
+            // A3: each bone's keyed Opacity, when the clip has it.
+            writeBoneScalars(clip.boneAlphaTracks, bones: document.bones.count, frames: frames, rest: 1, into: &out)
             out.u8(0)  // A4: no morph-weight tracks
             let bounds = animatedBounds(document, rig: rig, clip: index)
             out.f32s([bounds.min.x, bounds.min.y, 0, bounds.max.x, bounds.max.y, 0])
-            out.u8(0)  // A6: no third scalar list
+            // A6: each bone's keyed Depth offset, when the clip has it.
+            writeBoneScalars(clip.boneDepthTracks, bones: document.bones.count, frames: frames, rest: 0, into: &out)
             if let record, let source = record.sourceClip {
                 // 0x140265232: with root motion and without Match loop the frames must lie in the clip.
                 let limit = frames
@@ -247,6 +258,24 @@ public enum PuppetMDLWriter {
             }
         }
         return out.bytes
+    }
+
+    /// `u8` 0 without `tracks`, else `u8` 1 and one track per bone (`rest` for a bone without
+    /// one), a sample per frame, the last held past its end.
+    private static func writeBoneScalars(_ tracks: [PuppetChannelTrack]?, bones: Int, frames: Int, rest: Float,
+                                         into out: inout PuppetMDLOutput) {
+        guard let tracks else {
+            out.u8(0)
+            return
+        }
+        out.u8(1)
+        for bone in 0..<bones {
+            let track = tracks.indices.contains(bone) ? tracks[bone] : PuppetChannelTrack(tag: 0, samples: [rest])
+            out.u32(track.tag)
+            var blob = PuppetMDLOutput()
+            for frame in 0...frames { blob.f32(track.samples.isEmpty ? rest : track.sample(frame)) }
+            out.blob(blob.bytes)
+        }
     }
 
     /// The posed mesh's box over every frame of the clip (`MDLA` 5's animated box).

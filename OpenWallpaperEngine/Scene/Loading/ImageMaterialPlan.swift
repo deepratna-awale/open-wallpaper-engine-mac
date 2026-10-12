@@ -59,7 +59,8 @@ final class ImageMaterialPlan {
 /// The combos WE lays over a Puppet Warp image's material for its mesh (0x140207100, and the same
 /// list at 0x14020a5d2 for the in-scene copy; docs/models-plan.md §2.13): `SKINNING` always,
 /// `BONECOUNT` the skeleton's exact bone count (not rounded, unlike a model's), `SKINNING_ALPHA`
-/// with mesh flag 0x4, `MORPHING` when the mesh carries `a_PositionVec4` (w is the morph index)
+/// with mesh flag 0x4 (which WE's editor sets once a clip keys a bone's Opacity, capture 509 F),
+/// `MORPHING` when the mesh carries `a_PositionVec4` (w is the morph index)
 /// and `MORPHING_MODIFIERS` when it also has flag 0x2000. WE reads them from the first mesh.
 struct ImagePuppetCombos: Equatable {
     var boneCount: Int

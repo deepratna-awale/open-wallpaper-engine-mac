@@ -26,6 +26,12 @@ final class ScenePuppetAnimator {
     /// The texture channels' weights, `g_BlendMap` (puppet+0x350): what the layers last set,
     /// kept from frame to frame, 0 until a clip with channel tracks plays.
     private(set) var channelWeights = [Float](repeating: 0, count: SceneAnimationLayerStack.maximumTextureChannels)
+    /// The bones' keyed opacity and depth offset this frame (`SceneBoneScalars`): their rest values
+    /// until a layer applies, and every frame the layers run.
+    private(set) var boneScalars: SceneBoneScalars
+    /// The parts' draw order the keyed depths sort (`ScenePuppetDrawOrder`); nil for a rig whose
+    /// clips key none, or a model.
+    let drawOrder: ScenePuppetDrawOrder?
     /// The rig's physics bones (docs/models-plan.md §2.14); nil without one.
     private(set) var physics: SceneBonePhysics?
     /// The object's world matrix at the last `advance`, which with `worlds` gives the physics
@@ -64,9 +70,12 @@ final class ScenePuppetAnimator {
     /// `model`: a model object's rig (WE's model update); `rootMotion`: it runs its clips' root
     /// motion (its `rootmotion` is on).
     init(skeleton: MDLSkeleton, clips: [MDLAnimation], layers: [WEAnimationLayer], morphRig: SceneMorphRig? = nil,
-         model: Bool = false, rootMotion: Bool = false, objectID: Int? = nil,
+         model: Bool = false, rootMotion: Bool = false, objectID: Int? = nil, drawOrder: ScenePuppetDrawOrder? = nil,
          missing: (WEAnimationLayer) -> Void = { _ in }) {
         self.objectID = objectID
+        self.drawOrder = drawOrder
+        // Models have no `g_BonesAlpha` or part order; their clips' per-bone lists stay unread.
+        boneScalars = model ? SceneBoneScalars() : SceneBoneScalars.rest(boneCount: skeleton.bones.count, clips: clips)
         physics = SceneBonePhysics(skeleton)
         let skeleton = SceneSkeleton(skeleton)
         self.skeleton = skeleton
@@ -76,6 +85,7 @@ final class ScenePuppetAnimator {
         locals = skeleton.restLocal
         worlds = skeleton.restWorld
         pose = .bind(boneCount: skeleton.boneCount)
+        pose.drawRanges = drawOrder?.ranges(offsets: [])
         for (position, authored) in layers.enumerated() {
             guard let id = authored.animation, let clip = stack.clipIndex(id: id) else {
                 missing(authored)
@@ -123,8 +133,9 @@ final class ScenePuppetAnimator {
         var update = SceneAnimationLayerUpdate()
         for index in morphs.indices { morphs[index].reset() }
         if !stack.layers.isEmpty {
+            boneScalars = SceneBoneScalars(alpha: boneScalars.alpha.map { _ in 1 }, depth: boneScalars.depth.map { _ in 0 })
             let transforms = stack.evaluate(delta: delta, update: &update, morphs: &morphs, kind: morphRig?.kind ?? .model,
-                                            channels: &channelWeights)
+                                            channels: &channelWeights, bones: &boneScalars)
             locals = transforms.map(\.matrix)
             worldOverrides.removeAll()
         }
@@ -199,9 +210,11 @@ final class ScenePuppetAnimator {
             palette[bone] = matrix * skeleton.inverseBind[bone]
         }
         self.worlds = worlds
-        let next = ScenePuppetPose(bones: palette, bonesAlpha: pose.bonesAlpha,
+        let next = ScenePuppetPose(bones: palette,
+                                   bonesAlpha: boneScalars.alpha.isEmpty ? pose.bonesAlpha : boneScalars.alpha,
                                    morph: morphRig?.puppetUniforms(morphs, boneMatrices: worlds),
-                                   blendMap: channelWeights)
+                                   blendMap: channelWeights,
+                                   drawRanges: drawOrder?.ranges(offsets: boneScalars.depth))
         if next != pose { pose = next }
     }
 

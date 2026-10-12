@@ -109,7 +109,11 @@ public struct PuppetDocument: Codable, Hashable, Sendable {
         let world = PuppetMath.matrix(translation: SIMD3(head.x, head.y, 0), euler: SIMD3(0, 0, angle), scale: SIMD3(repeating: 1))
         let local = PuppetTransform(matrix: parentWorld.inverse * world)
         bones.append(PuppetBone(name: uniqueBoneName(name), parent: parent, local: local, length: length))
-        for clip in clips.indices { clips[clip].tracks.append(PuppetTrack()) }
+        for clip in clips.indices {
+            clips[clip].tracks.append(PuppetTrack())
+            clips[clip].boneAlphaTracks?.append(PuppetChannelTrack(tag: 0, samples: [1]))
+            clips[clip].boneDepthTracks?.append(PuppetChannelTrack(tag: 0, samples: [0]))
+        }
         preserved.boneAdded(count: bones.count)
         return bones.count - 1
     }
@@ -232,6 +236,12 @@ public struct PuppetDocument: Codable, Hashable, Sendable {
         for clip in clips.indices {
             let tracks = clips[clip].tracks
             clips[clip].tracks = order.map { tracks.indices.contains($0) ? tracks[$0] : PuppetTrack() }
+            if let alpha = clips[clip].boneAlphaTracks {
+                clips[clip].boneAlphaTracks = order.map { alpha.indices.contains($0) ? alpha[$0] : PuppetChannelTrack(tag: 0, samples: [1]) }
+            }
+            if let depth = clips[clip].boneDepthTracks {
+                clips[clip].boneDepthTracks = order.map { depth.indices.contains($0) ? depth[$0] : PuppetChannelTrack(tag: 0, samples: [0]) }
+            }
             if let root = clips[clip].rootMotion?.rootBone {
                 clips[clip].rootMotion?.rootBone = map.indices.contains(root) ? map[root] : nil
             }
@@ -673,6 +683,13 @@ public struct PuppetClip: Codable, Hashable, Sendable {
     /// The texture channels' weight tracks (`MDLA` 3's first scalar list, one per channel), as
     /// the file had them: Wallpaper Engine's editor keys them, this one keeps them.
     public var channelTracks: [PuppetChannelTrack]?
+    /// Each bone's keyed Opacity (`MDLA` 3's second scalar list, one per bone), as the file had
+    /// them: Wallpaper Engine's editor keys them and its wallpaper fades the part by them; this
+    /// one keeps them, following the bones.
+    public var boneAlphaTracks: [PuppetChannelTrack]?
+    /// Each bone's keyed Depth offset (`MDLA` 6's scalar list, one per bone), kept likewise: it
+    /// reorders the parts while the clip plays.
+    public var boneDepthTracks: [PuppetChannelTrack]?
 
     public init(id: UInt64, name: String, mode: Mode = .loop, fps: Float = 30, frames: Int = 60, tracks: [PuppetTrack] = [],
                 rootMotion: RootMotion? = nil, otherFlags: UInt32 = 0, events: [PuppetClipEvent] = []) {
@@ -841,6 +858,10 @@ public struct PuppetPreservedData: Codable, Hashable, Sendable {
     /// The texture channels' meshes (flag 0x2 after the puppet's), which Wallpaper Engine's
     /// editor makes; written back as they were.
     public var textureChannels: [TextureChannelMesh]?
+    /// The first mesh's per-bone index ranges (`MDLV` 21's 16-byte records: bone, 0, first index,
+    /// index count), in the parts' depth order; valid only for the triangles they were read with.
+    /// The app reorders them by a clip's keyed depth.
+    public var boneRanges: [SIMD4<UInt32>]?
 
     /// A texture-channel mesh: its quads in the image's pixels, drawn through `material` over the
     /// image the puppet samples.
@@ -858,9 +879,10 @@ public struct PuppetPreservedData: Codable, Hashable, Sendable {
 
     /// The vertices changed: blend shapes and the flags that describe them go.
     mutating func meshChanged() {
+        boneRanges = nil
         morphSection = nil
         morphIndices = nil
-        meshFlags &= 0x4 // SKINNING_ALPHA stays: it is per bone, not per vertex.
+        meshFlags &= 0xC // SKINNING_ALPHA (0x4) and the keyed draw order (0x8) stay: they are per bone, not per vertex.
         meshFlagsExtra = nil
     }
 
@@ -882,14 +904,23 @@ public struct PuppetPreservedData: Codable, Hashable, Sendable {
             }
         }
         if let priorities = bonePriorities { bonePriorities = order.map { priorities.indices.contains($0) ? priorities[$0] : 0 } }
+        // A range follows its bone; a deleted bone's triangles went to another, so the split goes.
+        if let ranges = boneRanges {
+            let moved = ranges.map { range -> SIMD4<UInt32>? in
+                guard map.indices.contains(Int(range.x)), let bone = map[Int(range.x)] else { return nil }
+                return SIMD4(UInt32(bone), range.y, range.z, range.w)
+            }
+            boneRanges = moved.contains(nil) ? nil : moved.compactMap { $0 }
+        }
         // Morph modifiers name bones; renumbered bones would point them elsewhere.
-        if order != Array(order.indices) { morphSection = nil; morphIndices = nil; meshFlags &= 0x4 }
+        if order != Array(order.indices) { morphSection = nil; morphIndices = nil; meshFlags &= 0xC }
     }
 
     /// A bone was added (at the end).
     mutating func boneAdded(count: Int) {
         let identity: [Float] = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
         referencePose = nil
+        boneRanges = nil
         if boneBoxes != nil { boneBoxes?.append(BoneBox(vector: .zero, matrix: identity)) }
         if boneIndices != nil { boneIndices?.append(UInt32(count - 1)) }
         if bonePriorities != nil { bonePriorities?.append(0) }

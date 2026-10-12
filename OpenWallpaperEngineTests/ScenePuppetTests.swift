@@ -337,6 +337,51 @@ final class ScenePuppetTests: XCTestCase {
         }
     }
 
+    /// The pose's `drawRanges` draw the index ranges in their order, later over earlier: the blue
+    /// part (drawn second in the buffer) goes under the red one when its range comes first.
+    func testDrawRangesDrawThePartsInTheirOrder() throws {
+        var bytes = [UInt8](repeating: 0, count: 8 * 4 * 4)
+        for y in 0..<4 {
+            for x in 0..<8 { bytes.replaceSubrange((y * 8 + x) * 4..<(y * 8 + x) * 4 + 4, with: x < 4 ? [255, 0, 0, 255] : [0, 0, 255, 255]) }
+        }
+        let image = Picture(width: 8, height: 4, pixels: bytes)
+        let mesh = Self.mesh(quads: [(SIMD4(-4, 2, 4, -2), SIMD4(0.1, 0.1, 0.4, 0.9)), (SIMD4(-4, 2, 4, -2), SIMD4(0.6, 0.1, 0.9, 0.9))])
+        let plan = try plan(mesh, bones: 1, size: SIMD2(8, 4))
+        var pose = ScenePuppetPose.bind(boneCount: 1)
+        XCTAssertEqual(Array(try draw(plan, source: image, pose: pose)[0..<4]), [0, 0, 255, 255], "the buffer's order: blue last")
+        pose.drawRanges = [.init(firstIndex: 6, indexCount: 6), .init(firstIndex: 0, indexCount: 6)]
+        let pixels = try draw(plan, source: image, pose: pose)
+        for index in stride(from: 0, to: pixels.count, by: 4) {
+            XCTAssertEqual(Array(pixels[index..<index + 4]), [255, 0, 0, 255], "texel \(index / 4): red last")
+        }
+    }
+
+    /// A rig whose effects ran on its texture has its parts faded where the posed mesh lays the
+    /// output out (`warp`, `fades`), by `g_BonesAlpha` weighted as `SKINNING_ALPHA` weights it.
+    func testAFadingWarpFadesByTheBonesAlpha() throws {
+        let image = Self.picture(width: 16, height: 16, opaque: true)
+        let plan = try plan(Self.gridMesh(size: SIMD2(16, 16), columns: 2, rows: 2, flags: 0x4), bones: 1,
+                            size: SIMD2(16, 16), material: "image2version")
+        let texture = try Self.texture(image, device: device)
+        _ = try draw(plan, texture: texture, pose: .bind(boneCount: 1))
+        var pose = ScenePuppetPose.bind(boneCount: 1)
+        pose.bonesAlpha = [0.5]
+        func warped(fades: Bool) throws -> [UInt8] {
+            let commands = try XCTUnwrap(queue.makeCommandBuffer())
+            let output = try XCTUnwrap(renderer.warp(plan, layerID: "puppet", key: "_effects", texture: texture, contentSize: nil,
+                                                     pose: pose, redraw: true, blended: true, fades: fades,
+                                                     commandBuffer: commands))
+            commands.commit()
+            commands.waitUntilCompleted()
+            return try ScenePuppetTestSupport.rgba8(output, device: device)
+        }
+        let faded = try warped(fades: true), kept = try warped(fades: false)
+        for index in stride(from: 0, to: faded.count, by: 4) {
+            XCTAssertEqual(Int(faded[index + 3]), 128, accuracy: 1, "texel \(index / 4)")
+            XCTAssertEqual(Int(kept[index + 3]), 255, accuracy: 1, "texel \(index / 4)")
+        }
+    }
+
     /// Triangles over each other composite like WE's straight-alpha draws over each other: a
     /// half-transparent blue part over an opaque red one is half of each, opaque.
     func testOverlappingPartsCompositeOver() throws {

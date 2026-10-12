@@ -19,8 +19,8 @@ THE DECODE (what MDLParseTests and MDLLibrarySweepTests compare field for field)
 
 Every field the parser reads, in file order, as JSON. An array of numbers with more than `--inline`
 elements (default: all inline for `dump` and `fixtures`, 16 for `library`) is written as
-{"count": n, "sha256": hex} of its packed little-endian values: f32 for floats (half floats are
-widened to f32 first), u32 for integers, u8 for raw bytes. A file the parser rejects is
+{"count": n, "sha256": hex} of its packed little-endian values: f32 for floats (MDMP's 16-bit signed
+normalised values are decoded to f32 first), u32 for integers, u8 for raw bytes. A file the parser rejects is
 {"error": {"kind": ..., "message": ...}}; kind is "truncated" (a read past the end),
 "not_mdlv", "too_many_bones" or "malformed".
 
@@ -463,6 +463,14 @@ def parse_mdat(r):
     return [dict(bone=r.u16(), name=r.cstr(), matrix=r.mat4()) for _ in range(n)]
 
 
+def _snorms(raw):
+    # 16-bit signed normalised, as WE copies them into its RGBA16 SNORM morph textures (format
+    # 0x13 -> DXGI 13, 0x1400d2a4d; MG5): max(v / 32767, -1), rounded to f32 as the app's
+    # MDLMorphTargets.float(snormBits:) gives it.
+    return [max(struct.unpack('<f', struct.pack('<f', v / 32767.0))[0], -1.0)
+            for v in struct.unpack('<%dh' % (len(raw) // 2), raw)]
+
+
 def parse_mdmp(r, model, decode):
     nb = len(model['skeleton']['bones']) if model.get('skeleton') else 0
     out = []
@@ -480,18 +488,18 @@ def parse_mdmp(r, model, decode):
                 if len(p) != 6 * vc:
                     raise MDLError('morph position blob %d != 6*%d' % (len(p), vc))
                 t['position_bytes'] = len(p)
-                if decode: t['positions'] = list(struct.unpack('<%de' % (len(p) // 2), p))
+                if decode: t['positions'] = _snorms(p)
                 fl = m['flags']
                 if fl & 0x400:
                     q = r.blob()
                     if len(q) != 6 * vc: raise MDLError('morph normal blob')
                     t['normal_bytes'] = len(q)
-                    if decode: t['normals'] = list(struct.unpack('<%de' % (len(q) // 2), q))
+                    if decode: t['normals'] = _snorms(q)
                 if fl & 0x800:
                     q = r.blob()
                     if len(q) != 6 * vc: raise MDLError('morph tangent blob')
                     t['tangent_bytes'] = len(q)
-                    if decode: t['tangents'] = list(struct.unpack('<%de' % (len(q) // 2), q))
+                    if decode: t['tangents'] = _snorms(q)
                 if fl & 0x1000:
                     q = r.blob()
                     if len(q) != 2 * vc: raise MDLError('morph 2-byte blob')
