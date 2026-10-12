@@ -187,6 +187,17 @@ final class ScreenSaverFramePublisherTests: XCTestCase {
         XCTAssertNil(old.pick, "stills written before the pick read as following the desktop")
     }
 
+    func testAPreviewFillsTheScreenInsteadOfStretching() throws {
+        let context = try XCTUnwrap(CGContext(data: nil, width: 40, height: 30, bitsPerComponent: 8, bytesPerRow: 160,
+                                              space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                              bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        let preview = try XCTUnwrap(context.makeImage())
+        let filled = try XCTUnwrap(ScreenSaverStillPublisher.filledAndBlurred(preview, pixels: SIMD2(1920, 1080)))
+        XCTAssertEqual(filled.width, 1920)
+        XCTAssertEqual(filled.height, 1080)
+        XCTAssertNil(ScreenSaverStillPublisher.filledAndBlurred(preview, pixels: SIMD2(0, 1080)))
+    }
+
     @MainActor
     func testThePickedWallpapersStillIsKeptAndDropped() throws {
         let shared = folder.appending(path: "shared", directoryHint: .isDirectory)

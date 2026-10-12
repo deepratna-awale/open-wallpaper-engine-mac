@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import CoreImage
 import ImageIO
 import UniformTypeIdentifiers
 
@@ -55,17 +56,37 @@ final class ScreenSaverStillPublisher {
         try? FileManager.default.removeItem(at: folder.appending(path: Self.pickFileName)) // Optional: may not exist.
     }
 
-    /// The picked wallpaper's first picture: its preview's first frame.
-    func publishPreview(of wallpaper: WEWallpaper) {
+    /// The picked wallpaper's first picture, until a frame of it is drawn
+    /// (`ScreenSaverLiveController.renderPickStill`): its preview's first frame filling `pixels`
+    /// (aspect kept, centred) and softly blurred, since a small preview stretched over a screen
+    /// shows its pixels.
+    func publishPreview(of wallpaper: WEWallpaper, filling pixels: SIMD2<Int>) {
         guard let name = wallpaper.project.preview, !name.isEmpty else { return }
         let preview = wallpaper.wallpaperDirectory.appending(path: name)
         DispatchQueue.global(qos: .utility).async {
             guard let source = CGImageSourceCreateWithURL(preview as CFURL, nil),
-                  let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }
+                  let image = CGImageSourceCreateImageAtIndex(source, 0, nil),
+                  let filled = Self.filledAndBlurred(image, pixels: pixels) else { return }
             DispatchQueue.main.async {
-                MainActor.assumeIsolated { self.publishPick(image) }
+                MainActor.assumeIsolated { self.publishPick(filled) }
             }
         }
+    }
+
+    /// `image` covering `pixels`, centred, blurred by about a 200th of the larger side.
+    nonisolated static func filledAndBlurred(_ image: CGImage, pixels: SIMD2<Int>) -> CGImage? {
+        guard pixels.x > 0, pixels.y > 0, image.width > 0, image.height > 0 else { return nil }
+        let size = CGSize(width: pixels.x, height: pixels.y)
+        let scale = max(size.width / CGFloat(image.width), size.height / CGFloat(image.height))
+        let input = CIImage(cgImage: image)
+            .transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+        let offset = CGPoint(x: (input.extent.width - size.width) / 2, y: (input.extent.height - size.height) / 2)
+        let radius = max(size.width, size.height) / 200
+        let blurred = input.clampedToExtent()
+            .applyingGaussianBlur(sigma: radius)
+            .cropped(to: CGRect(origin: offset, size: size))
+        return CIContext(options: [.cacheIntermediates: false]).createCGImage(blurred, from: blurred.extent,
+                                                                             format: .RGBA8, colorSpace: CGColorSpace(name: CGColorSpace.sRGB))
     }
 
     private func list(pick: String?) {

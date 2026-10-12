@@ -40,7 +40,14 @@ final class ScreenSaverLiveController {
     private var timer: Timer?
     private var publisher: ScreenSaverFramePublisher?
     private var service: ScreenSaverFrameService?
-    private var scenes: [ScreenSaverLiveScene] = []
+    private var scenes: [(key: WarmKey, scene: ScreenSaverLiveScene)] = []
+    /// Scenes of the last sessions, paused and still loaded, for `warmGrace` (`WarmKey`).
+    private var warm: [WarmKey: ScreenSaverLiveScene] = [:]
+    private var warmTimer: Timer?
+    /// The picked wallpaper's still being rendered (`renderPickStill`).
+    private var pickStill: (scene: ScreenSaverLiveScene, timer: Timer)?
+    /// Counts `renderPickStill`s: a still drawn for an earlier pick is dropped.
+    private var pickStillGeneration = 0
     private var pages: [ScreenSaverLiveWeb] = []
     private var countsSince: TimeInterval = 0
     /// Launched for a saver (`launchedForScreenSaver`), heard once the plugin is observed.
@@ -97,6 +104,8 @@ final class ScreenSaverLiveController {
             }
         } else if !observing, !observers.isEmpty {
             stopDrawing()
+            releaseWarm()
+            cancelPickStill()
             let center = DistributedNotificationCenter.default()
             for observer in observers { center.removeObserver(observer) }
             observers.removeAll()
@@ -261,4 +270,95 @@ final class ScreenSaverLiveController {
             }
         }
     }
+
+    private func armWarmTimer() {
+        warmTimer?.invalidate()
+        warmTimer = Timer.scheduledTimer(withTimeInterval: Self.warmGrace, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated { self?.releaseWarm() }
+        }
+        warmTimer?.tolerance = 10
+    }
+
+    /// Lets the warm scenes go (the grace is over, or the plugin is off).
+    private func releaseWarm() {
+        warmTimer?.invalidate()
+        warmTimer = nil
+        guard !warm.isEmpty else { return }
+        warm.values.forEach { $0.shutdown() }
+        warm.removeAll()
+        OWELog.info(.app, "Live screen saver: let the warm scenes go")
+    }
+
+    /// The picked wallpaper's still, rendered now instead of at its first screen saver: one live
+    /// draw of it, with the screen saver's values, at the largest display's pixels, into a ring of
+    /// its own that no saver sees; once it has drawn for `pickStillDelay`, a still frame of it, without
+    /// its text and clock hands (`ScreenSaverLiveScene.captureStill`), is kept. Until
+    /// then, and for what can't be drawn here (a page without the Chromium engine), the preview
+    /// fills the screen, blurred (`ScreenSaverStillPublisher.publishPreview`).
+    func renderPickStill(_ wallpaper: WEWallpaper) {
+        guard mayPublish, let stills else { return }
+        let screens = NSScreen.screens
+        guard let screen = screens.max(by: { $0.frame.width * $0.backingScaleFactor * $0.frame.height
+                                             < $1.frame.width * $1.backingScaleFactor * $1.frame.height }) else { return }
+        let pixels = SIMD2(Int(screen.frame.width * screen.backingScaleFactor), Int(screen.frame.height * screen.backingScaleFactor))
+        let points = SIMD2(Int(screen.frame.width), Int(screen.frame.height))
+        stills.publishPreview(of: wallpaper, filling: pixels)
+        cancelPickStill()
+        pickStillGeneration += 1
+        let generation = pickStillGeneration
+        guard ScreenSaverPlugin.isScene(wallpaper), let device = MTLCreateSystemDefaultDevice() else { return }
+        let ring = ScreenSaverFramePublisher(manifestURL: nil, notifier: SilentFrameNotifier(), device: device)
+        do {
+            try ring.publish(sizes: [pixels], displays: [.init(display: nil, ring: 0)], frameRate: 30)
+        } catch {
+            OWELog.error(.app, "Screen saver: can't allocate the picked wallpaper's still: \(error)")
+            return
+        }
+        ScreenSaverPlugin.publishPickValues(for: wallpaper, store: plugin.settingsStore)
+        let target = ScreenSaverLiveScene.Target(ring: 0, pixels: pixels, points: points, frameRate: 30)
+        guard let scene = ScreenSaverLiveScene(wallpaper: wallpaper, propertyScope: ScreenSaverPlugin.pickScope, target: target,
+                                               screen: screen, settings: environment.settings(), placement: environment.placement(),
+                                               scriptServices: environment.scriptServices(), publisher: ring) else { return }
+        var firstFrame: TimeInterval?
+        let started = ProcessInfo.processInfo.systemUptime
+        let timer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                let now = ProcessInfo.processInfo.systemUptime
+                if firstFrame == nil, (ring.takeCounts()[0]?.drawn ?? 0) > 0 { firstFrame = now }
+                if let first = firstFrame, now - first >= Self.pickStillDelay {
+                    // Shut down once the still is drawn (the capture runs on its render thread).
+                    self.pickStill?.timer.invalidate()
+                    self.pickStill = nil
+                    scene.captureStill { image in
+                        DispatchQueue.main.async { [weak self] in
+                            MainActor.assumeIsolated {
+                                scene.shutdown()
+                                guard let image, self?.pickStillGeneration == generation else { return }
+                                stills.publishPick(image)
+                                OWELog.info(.app, "Screen saver: drew the still of \(wallpaper.wallpaperDirectory.lastPathComponent)")
+                            }
+                        }
+                    }
+                } else if now - started > 60 {
+                    OWELog.error(.app, "Screen saver: \(wallpaper.wallpaperDirectory.lastPathComponent) drew nothing for its still in 60 s")
+                    self.cancelPickStill()
+                }
+            }
+        }
+        pickStill = (scene, timer)
+    }
+
+    private func cancelPickStill() {
+        guard let pickStill else { return }
+        pickStill.timer.invalidate()
+        // Shut down after the capture that may be reading its ring has its surface (it holds it).
+        pickStill.scene.shutdown()
+        self.pickStill = nil
+    }
+}
+
+/// Posts nothing: a ring no saver reads (the picked wallpaper's still).
+private final class SilentFrameNotifier: ScreenSaverFrameNotifier, @unchecked Sendable {
+    func post(_ name: String, state: UInt64) {}
 }

@@ -39,6 +39,8 @@ final class ScreenSaverSelectionService: ObservableObject {
 
     /// Where the picked wallpaper's still goes; nil in a copy that never installs the saver.
     var stills: ScreenSaverStillPublisher?
+    /// A new wallpaper was picked: its still is made now (`ScreenSaverLiveController.renderPickStill`).
+    var onPicked: ((WEWallpaper) -> Void)?
 
     /// Whether `wallpaper` is the screen saver: picked, or its video set.
     func isSelected(_ wallpaper: WEWallpaper) -> Bool {
@@ -55,7 +57,7 @@ final class ScreenSaverSelectionService: ObservableObject {
         let isNew = store.livePick?.wallpaperDirectory != folder
         store.livePick = ScreenSaverSettingsStore.LivePick(wallpaperDirectory: folder, picked: Date())
         store.selection = nil
-        if isNew { stills?.publishPreview(of: wallpaper) }
+        if isNew { onPicked?(wallpaper) }
         OWELog.info(.app, "Screen saver: \(wallpaper.wallpaperDirectory.lastPathComponent) is the screen saver, drawn live")
         if !environment.isPluginEnabled() { environment.enablePlugin() }
         plugin.update(enabled: environment.isPluginEnabled(), wallpaper: environment.desktopWallpaper())
