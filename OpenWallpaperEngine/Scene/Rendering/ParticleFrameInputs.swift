@@ -190,9 +190,10 @@ struct ParticleFrameInputs {
             step.onePerFrame = emitter.timing.onePerFrame
             return step
         }
-        // Without a rate a system only shows its bursts, if it has any.
-        let idle = inputs.emitters.allSatisfy { $0.rate <= 0.0001 && $0.instantaneous <= 0 }
-        if idle || configuration.opacityMultiplier <= 0.0001 {
+        // A system without a rate or burst still steps: scripts' `emitParticles(count)` bursts
+        // into it (`SceneMetalRenderer.applyScriptPlayback`), and what they emitted lives out its
+        // lifetime. An empty one costs no GPU step (`ParticleGPUSimulator.skippingEmpty`).
+        if configuration.opacityMultiplier <= 0.0001 {
             inputs.clears = true
             return inputs
         }

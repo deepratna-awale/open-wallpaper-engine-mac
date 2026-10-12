@@ -25,6 +25,29 @@ final class ParticleEmitterShapeTests: XCTestCase {
         XCTAssertEqual(runtime.particles.count, 40, "no second burst")
     }
 
+    /// 3159348391's button symbols: a system with no rate and no burst, which only scripts'
+    /// `emitParticles(1)` fills. What a script emits spawns and lives out its lifetime; the system
+    /// isn't cleared as idle on the frames between.
+    func testAScriptBurstIntoASystemWithoutARateLivesItsLifetime() throws {
+        var system = ParticleTestSystem()
+        system.emissionRate = 0
+        system.lifetime = 0.5...0.5
+        let runtime = try runtime(system)
+        for _ in 0..<10 { ParticleCPUSimulation.update([runtime], deltaTime: 1 / 60, cursor: .zero) }
+        XCTAssertTrue(runtime.particles.isEmpty, "nothing emits on its own")
+
+        var inputs = ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero)
+        SceneMetalRenderer.applyScriptPlayback(nil, emitting: 3, to: &inputs)
+        XCTAssertFalse(inputs.clears)
+        ParticleCPUSimulation.step(runtime, inputs: inputs)
+        XCTAssertEqual(runtime.particles.count, 3, "emitParticles(3)")
+        // 0.4 s later the burst is still alive; past its 0.5 s lifetime it is gone.
+        for _ in 0..<24 { ParticleCPUSimulation.update([runtime], deltaTime: 1 / 60, cursor: .zero) }
+        XCTAssertEqual(runtime.particles.count, 3, "the burst lives out its lifetime")
+        for _ in 0..<12 { ParticleCPUSimulation.update([runtime], deltaTime: 1 / 60, cursor: .zero) }
+        XCTAssertTrue(runtime.particles.isEmpty, "and then dies")
+    }
+
     func testABurstRespectsTheMaximum() throws {
         var system = ParticleTestSystem()
         system.instantaneous = 40

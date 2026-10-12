@@ -1749,6 +1749,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 // keeps its time running with emission off (`ParticleFrameInputs.hidden`).
                 let objectID = particleObjectID(system)
                 if let objectID, !scripts.isVisible(objectID) {
+                    // Its emission is off: a script's `emitParticles` while hidden adds nothing later.
+                    pendingEmits.removeValue(forKey: objectID)
                     stepHiddenParticles(system, deltaTime: Float(clock.delta), pixelFormat: sceneTexture.pixelFormat)
                     continue
                 }
@@ -3435,8 +3437,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// A step as scripts' playback leaves it: paused emits nothing (its clock stands still),
     /// stopped clears the system; `emitParticles(count)` adds a burst of `count`.
-    private static func applyScriptPlayback(_ playback: SceneScriptObjectCommand.Playback?, emitting count: Int?,
-                                            to inputs: inout ParticleFrameInputs) {
+    static func applyScriptPlayback(_ playback: SceneScriptObjectCommand.Playback?, emitting count: Int?,
+                                    to inputs: inout ParticleFrameInputs) {
         switch playback {
         case .pause?:
             for index in inputs.emitters.indices {
