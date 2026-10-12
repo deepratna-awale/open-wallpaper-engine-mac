@@ -36,6 +36,7 @@ final class ScreenSaverLiveController {
     private var enabledSubscription: AnyCancellable?
     private var observers: [NSObjectProtocol] = []
     private var aliveToken: Int32 = NOTIFY_TOKEN_INVALID
+    private var previewAliveToken: Int32 = NOTIFY_TOKEN_INVALID
     private var timer: Timer?
     private var publisher: ScreenSaverFramePublisher?
     private var service: ScreenSaverFrameService?
@@ -100,7 +101,9 @@ final class ScreenSaverLiveController {
             for observer in observers { center.removeObserver(observer) }
             observers.removeAll()
             if aliveToken != NOTIFY_TOKEN_INVALID { notify_cancel(aliveToken) }
+            if previewAliveToken != NOTIFY_TOKEN_INVALID { notify_cancel(previewAliveToken) }
             aliveToken = NOTIFY_TOKEN_INVALID
+            previewAliveToken = NOTIFY_TOKEN_INVALID
             timer?.invalidate()
             timer = nil
             service?.invalidate()
@@ -126,6 +129,10 @@ final class ScreenSaverLiveController {
             })
         }
         let status = notify_register_dispatch(ScreenSaverLiveNames.saverAlive, &aliveToken, .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.handle(.saverAlive) }
+        }
+        // A Preview run's saver: drawn for while the app runs (the broker never launches it for one).
+        notify_register_dispatch(ScreenSaverLiveNames.saverPreviewAlive, &previewAliveToken, .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.handle(.saverAlive) }
         }
         if status != UInt32(NOTIFY_STATUS_OK) {

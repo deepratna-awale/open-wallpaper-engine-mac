@@ -22,9 +22,23 @@ final class GlobalSurfaceFrameSource: LiveFrameSource {
     private var lastManifestCheck: TimeInterval = -.infinity
     private var lastPing: TimeInterval = -.infinity
     private var views: Set<String> = []
+    /// System Settings' Preview runs (`didstart` with `runFromPref`): its views post
+    /// `saverPreviewAlive` instead of `saverAlive`, which the app draws for when it runs but the
+    /// broker never launches it for (`LiveSaverLaunchPolicy`).
+    private var previewSession = false
+    private var observers: [NSObjectProtocol] = []
 
     init(manifestURL: URL) {
         self.manifestURL = manifestURL
+        let center = DistributedNotificationCenter.default()
+        observers.append(center.addObserver(forName: ScreenSaverLiveNames.didStart, object: nil, queue: .main) { [weak self] note in
+            self?.previewSession = LiveSaverLaunchPolicy.isFromPreferences(note.userInfo)
+        })
+        for name in [ScreenSaverLiveNames.willStop, ScreenSaverLiveNames.didStop] {
+            observers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                self?.previewSession = false
+            })
+        }
     }
 
     func attach(viewID: String, display: String?, isPreview: Bool) {
@@ -73,7 +87,7 @@ final class GlobalSurfaceFrameSource: LiveFrameSource {
         let now = ProcessInfo.processInfo.systemUptime
         guard force || now - lastPing >= 0.9 else { return }
         lastPing = now
-        notify_post(ScreenSaverLiveNames.saverAlive)
+        notify_post(previewSession ? ScreenSaverLiveNames.saverPreviewAlive : ScreenSaverLiveNames.saverAlive)
     }
 
     private func reloadIfChanged() {

@@ -55,6 +55,9 @@ enum ScreenSaverLiveNames {
     /// there to draw for; a saver's host can't post distributed notifications with a payload or
     /// reach the app over XPC, but Darwin notifications pass.
     static let saverAlive = "app.openwallpaperengine.saver.alive"
+    /// The same from a System Settings Preview run: the app draws for it while it runs, but the
+    /// broker never launches the app for it.
+    static let saverPreviewAlive = "app.openwallpaperengine.saver.preview-alive"
     /// A ring's frame notification: `<prefix><ring>`.
     static let framePrefix = "app.openwallpaperengine.saver.frame."
 

@@ -2,15 +2,14 @@ import AppKit
 import Foundation
 import notify
 import os
-import XPC
 
 // owe-saver-broker: the live screen saver's rendezvous, and the app's launcher while a saver
-// shows. An app can't publish a Mach service of its own (launchd owns them), and the screen saver
+// shows during a real screen saver session (never for System Settings' previews). An app can't publish a Mach service of its own (launchd owns them), and the screen saver
 // extension's sandbox can only reach a named service, so this launchd agent holds the Open
 // Wallpaper Engine app's frame service endpoint (an anonymous XPC listener) and hands it to the
-// extension. Launched on demand by launchd: for its Mach service (the extension), or for the
-// `.saver`'s Darwin `saverAlive` notification (`LaunchEvents`, com.apple.notifyd.matching), since
-// the `.saver`'s host can't reach a Mach service. When a saver shows and the app isn't running, it
+// extension. It runs from login on (`RunAtLoad`, `KeepAlive`), a small idle process, so it hears
+// loginwindow's `didstart` and knows whether a real screen saver session runs: the `.saver`'s host
+// can only post a Darwin notification, which says a saver shows but not whether it is a preview. When a saver shows and the app isn't running, it
 // launches the app in the background (`LiveSaverLaunchPolicy`). It keeps nothing on disk; when it
 // exits the app registers again.
 
@@ -83,6 +82,18 @@ final class Broker: NSObject, NSXPCListenerDelegate, LiveSaverBrokerProtocol, @u
         registrar = nil
     }
 
+    /// loginwindow's lifecycle: only a real session (`didstart` without `runFromPref`) may launch
+    /// the app (`LiveSaverLaunchPolicy`).
+    func screenSaverStarted(fromPreferences: Bool) {
+        launchPolicy.screenSaverStarted(fromPreferences: fromPreferences)
+        brokerLog.notice("didstart fromPreferences=\(fromPreferences)")
+    }
+
+    func screenSaverStopped(_ reason: String) {
+        launchPolicy.screenSaverStopped()
+        brokerLog.notice("\(reason, privacy: .public): no session")
+    }
+
     /// A `.saver` shows (its Darwin notification launched or reached the broker).
     func saverAlive() {
         guard registered == nil else { return }
@@ -95,7 +106,10 @@ final class Broker: NSObject, NSXPCListenerDelegate, LiveSaverBrokerProtocol, @u
             return
         }
         let running = !NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty
-        guard launchPolicy.shouldLaunch(at: ProcessInfo.processInfo.systemUptime, appRunning: running) else { return }
+        guard launchPolicy.shouldLaunch(at: ProcessInfo.processInfo.systemUptime, appRunning: running) else {
+            if !launchPolicy.sessionRuns { brokerLog.notice("not launching for \(reason, privacy: .public): no screen saver session (a preview, or System Settings showing it)") }
+            return
+        }
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = false
         configuration.addsToRecentItems = false
@@ -134,12 +148,15 @@ final class Broker: NSObject, NSXPCListenerDelegate, LiveSaverBrokerProtocol, @u
 
 let broker = Broker()
 
-// launchd's Darwin notification events (`LaunchEvents`) must be taken, or launchd launches the
-// broker again and again. Each is a `.saver` showing.
-xpc_set_event_stream_handler("com.apple.notifyd.matching", DispatchQueue.main) { event in
-    let name = xpc_dictionary_get_string(event, XPC_EVENT_KEY_NAME).map { String(cString: $0) } ?? "?"
-    brokerLog.notice("launch event \(name, privacy: .public)")
-    broker.saverAlive()
+// loginwindow's sessions: a real one lets a saver launch the app, a preview or System Settings'
+// own views never do.
+let distributed = DistributedNotificationCenter.default()
+distributed.addObserver(forName: ScreenSaverLiveNames.didStart, object: nil, queue: .main) { note in
+    broker.screenSaverStarted(fromPreferences: LiveSaverLaunchPolicy.isFromPreferences(note.userInfo))
+}
+for (name, label) in [(ScreenSaverLiveNames.willStop, "willstop"), (ScreenSaverLiveNames.didStop, "didstop"),
+                      (ScreenSaverLiveNames.screenUnlocked, "unlocked")] {
+    distributed.addObserver(forName: name, object: nil, queue: .main) { _ in broker.screenSaverStopped(label) }
 }
 // While it runs, the notifications themselves (launchd's event only starts the job).
 var aliveToken: Int32 = 0

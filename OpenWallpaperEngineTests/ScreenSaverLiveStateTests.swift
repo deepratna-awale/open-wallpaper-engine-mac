@@ -61,6 +61,7 @@ final class ScreenSaverLiveStateTests: XCTestCase {
 
     func testTheBrokerLaunchesTheAppOnlyWhenItIsntRunningAndNotOverAndOver() {
         var policy = LiveSaverLaunchPolicy()
+        policy.screenSaverStarted(fromPreferences: false)
         XCTAssertFalse(policy.shouldLaunch(at: 0, appRunning: true))
         XCTAssertTrue(policy.shouldLaunch(at: 1, appRunning: false))
         XCTAssertFalse(policy.shouldLaunch(at: 2, appRunning: false), "still starting")
@@ -83,5 +84,27 @@ final class ScreenSaverLiveStateTests: XCTestCase {
         let isolated = ScreenSaverBrokerAgent(bundle: .main, mayRegister: false)
         isolated.update(enabled: true)
         XCTAssertEqual(isolated.state, .unavailable)
+    }
+
+    func testOnlyARealScreenSaverSessionLaunchesTheApp() {
+        var policy = LiveSaverLaunchPolicy()
+        XCTAssertFalse(policy.shouldLaunch(at: 0, appRunning: false),
+                       "System Settings showing the saver when it is picked: no didstart")
+        policy.screenSaverStarted(fromPreferences: true)
+        XCTAssertFalse(policy.shouldLaunch(at: 1, appRunning: false), "System Settings' Preview")
+        policy.screenSaverStopped()
+        policy.screenSaverStarted(fromPreferences: false)
+        XCTAssertTrue(policy.shouldLaunch(at: 2, appRunning: false), "the screen saver itself")
+        policy.screenSaverStopped()
+        XCTAssertFalse(policy.shouldLaunch(at: 100, appRunning: false), "after it stopped")
+    }
+
+    func testPreviewRunsAreToldByRunFromPref() {
+        XCTAssertTrue(LiveSaverLaunchPolicy.isFromPreferences(["runFromPref": NSNumber(value: 1)]))
+        XCTAssertTrue(LiveSaverLaunchPolicy.isFromPreferences(["runFromPref": "1"]))
+        XCTAssertTrue(LiveSaverLaunchPolicy.isFromPreferences(["runFromPref": true]))
+        XCTAssertFalse(LiveSaverLaunchPolicy.isFromPreferences(["runFromPref": NSNumber(value: 0)]))
+        XCTAssertFalse(LiveSaverLaunchPolicy.isFromPreferences([:]))
+        XCTAssertFalse(LiveSaverLaunchPolicy.isFromPreferences(nil))
     }
 }

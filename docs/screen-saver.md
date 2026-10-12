@@ -92,8 +92,10 @@ other still does. Either can be picked in System Settings.
 
 Release builds register the broker as a background item while the Screen Saver plugin is on
 (System Settings › General › Login Items › Allow in the Background lists it as Open Wallpaper
-Engine). macOS starts it only when needed: when the screen saver extension looks for the app, or
-when the classic saver shows. It launches the app when a saver shows while the app isn't running.
+Engine). It is a small process that runs from login, so it knows when a screen saver really runs:
+it launches the app only then, when a saver shows while the app isn't running, never when you
+select the screen saver or click Preview in System Settings. A copy it launched quits two minutes
+after the screen saver ends, unless you opened one of its windows.
 If it is turned off there, Settings › Plugins › Screen Saver says so and opens Login Items; the
 savers then show only the still while the app isn't running, and the extension shows the still
 even while it is.
