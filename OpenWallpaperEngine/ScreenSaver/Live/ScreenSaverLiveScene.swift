@@ -27,8 +27,9 @@ final class ScreenSaverLiveScene {
     private let thread: SceneRenderThread
     /// Render thread only, once made.
     private let renderer: SceneMetalRenderer?
-    private let publisher: ScreenSaverFramePublisher
     private var link: CADisplayLink?
+    /// Whether it draws (paused: loaded and kept warm, drawing nothing, `pause`).
+    private(set) var isPaused = false
     private let ticker: Ticker
     /// The view model's revision whose content was last asked for, and its change feed: the
     /// background load delivers nothing at first and bumps the revision when it lands.
@@ -45,7 +46,6 @@ final class ScreenSaverLiveScene {
             return nil
         }
         self.target = target
-        self.publisher = publisher
         self.renderer = renderer
         viewModel = SceneWallpaperViewModel(wallpaper: wallpaper, propertyScope: propertyScope, loadsInBackground: true)
         thread = SceneRenderThread(name: "OWE screen saver \(name)")
@@ -85,6 +85,39 @@ final class ScreenSaverLiveScene {
         thread.stop()
     }
 
+    /// A still of the scene as it draws now, at its pixels, without its text layers and clock
+    /// hands (`SceneMetalRenderer.captureStill`): the frames it publishes keep them. `completion`
+    /// gets the picture, or nil, off the main thread.
+    func captureStill(completion: @escaping @Sendable (CGImage?) -> Void) {
+        let pixels = target.pixels, viewport = viewport
+        thread.perform { [renderer] in
+            guard let renderer, renderer.captureStill(pixelSize: pixels, pixelsPerPoint: viewport.pixelsPerPoint,
+                                                      viewports: [viewport], restores: false, completion: completion)
+            else { return completion(nil) }
+        }
+    }
+
+    /// Stops drawing, keeping the scene loaded (its textures, pipelines and scripts) for `resume`:
+    /// the next screen saver session draws at once instead of loading it again.
+    func pause() {
+        guard !isPaused else { return }
+        isPaused = true
+        let link = link
+        self.link = nil
+        thread.perform { link?.invalidate() }
+    }
+
+    /// Draws again, into ring `ring` of `publisher`, paced by `screen`.
+    func resume(ring: Int, publisher: ScreenSaverFramePublisher, screen: NSScreen?) {
+        guard isPaused else { return }
+        isPaused = false
+        let ticker = ticker
+        thread.perform { ticker.retarget(ring: ring, publisher: publisher) }
+        startLink(screen: screen)
+        let name = viewModel.currentWallpaper.wallpaperDirectory.lastPathComponent
+        OWELog.info(.app, "Live screen saver: drawing \(name) again, still loaded, ring \(ring)")
+    }
+
     private func loadContentIfRevised() {
         let revision = viewModel.metalRevision
         guard revision != contentRevision else { return }
@@ -118,12 +151,18 @@ final class ScreenSaverLiveScene {
     private final class Ticker: NSObject {
         private let renderer: SceneMetalRenderer
         private let viewport: SceneViewport
-        private let ring: Int
-        private let publisher: ScreenSaverFramePublisher
+        // Render thread only.
+        private var ring: Int
+        private var publisher: ScreenSaverFramePublisher
 
         init(renderer: SceneMetalRenderer, viewport: SceneViewport, ring: Int, publisher: ScreenSaverFramePublisher) {
             self.renderer = renderer
             self.viewport = viewport
+            self.ring = ring
+            self.publisher = publisher
+        }
+
+        func retarget(ring: Int, publisher: ScreenSaverFramePublisher) {
             self.ring = ring
             self.publisher = publisher
         }

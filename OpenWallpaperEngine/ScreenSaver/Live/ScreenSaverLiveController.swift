@@ -56,8 +56,24 @@ final class ScreenSaverLiveController {
     var stills: ScreenSaverStillPublisher?
     /// How long the picked wallpaper draws before a frame is kept as its still.
     static let pickStillDelay: TimeInterval = 3
-    /// The screen saver session this app was launched for ended.
-    var onLaunchedSessionEnded: (() -> Void)?
+    /// A screen saver session started (true) or ended (false).
+    var onSessionChanged: ((Bool) -> Void)?
+    private var sessionRuns = false
+
+    /// How long a session's scenes stay loaded after it ends, so the next one (the Mac locked
+    /// again, the screen saver back after a moment) draws at once instead of loading them again
+    /// (about 2.4 s for a large scene). Cost: the scene's memory meanwhile (about 1.3 GB for
+    /// 3810943704 at 1920×1080, measured), so it is short.
+    static let warmGrace: TimeInterval = 120
+
+    /// A scene loop as a warm scene matches it: the wallpaper, its property scope, size and rate.
+    struct WarmKey: Hashable {
+        var wallpaper: String
+        var scope: String
+        var pixels: SIMD2<Int>
+        var points: SIMD2<Int>
+        var frameRate: Int
+    }
     private var frameRate = 0
 
     init(plugin: ScreenSaverPlugin, environment: Environment, store: ScreenSaverVideoStore = .current,
@@ -213,7 +229,6 @@ final class ScreenSaverLiveController {
         _ = publisher.takeCounts()
         for (ring, loop) in loops.enumerated() {
             let screen = loop.screenId.flatMap { screens[$0] }
-            if loop.isPick { keepPickStill(ring: ring) }
             if case .page(let kind) = loop.kind {
                 let sharing = loop.screenId.flatMap { environment.pageSharing($0, loop.wallpaper) }
                 if let page = ScreenSaverLiveWeb(kind: kind, wallpaper: loop.wallpaper, propertyScope: loop.propertyScope,
@@ -225,18 +240,34 @@ final class ScreenSaverLiveController {
                 continue
             }
             let target = ScreenSaverLiveScene.Target(ring: ring, pixels: loop.pixels, points: loop.points, frameRate: rate(for: screen))
-            if let scene = ScreenSaverLiveScene(wallpaper: loop.wallpaper, propertyScope: loop.propertyScope, target: target,
-                                                screen: screen, settings: settings, placement: environment.placement(),
-                                                scriptServices: environment.scriptServices(), publisher: publisher) {
-                scenes.append(scene)
+            let key = WarmKey(wallpaper: loop.wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false),
+                              scope: "\(loop.propertyScope)", pixels: loop.pixels, points: loop.points, frameRate: target.frameRate)
+            let scene: ScreenSaverLiveScene
+            if let warmScene = warm.removeValue(forKey: key) {
+                warmScene.resume(ring: ring, publisher: publisher, screen: screen)
+                scene = warmScene
+            } else if let newScene = ScreenSaverLiveScene(wallpaper: loop.wallpaper, propertyScope: loop.propertyScope, target: target,
+                                                          screen: screen, settings: settings, placement: environment.placement(),
+                                                          scriptServices: environment.scriptServices(), publisher: publisher) {
+                scene = newScene
+            } else {
+                continue
             }
+            scenes.append((key, scene))
+            if loop.isPick { keepPickStill(of: scene) }
         }
     }
 
     private func stopDrawing() {
         let drew = !scenes.isEmpty || !pages.isEmpty
-        scenes.forEach { $0.shutdown() }
+        // Kept loaded for a while: the next session draws them at once.
+        for (key, scene) in scenes {
+            scene.pause()
+            warm[key]?.shutdown()
+            warm[key] = scene
+        }
         scenes.removeAll()
+        if !warm.isEmpty { armWarmTimer() }
         pages.forEach { $0.shutdown() }
         pages.removeAll()
         if drew {
