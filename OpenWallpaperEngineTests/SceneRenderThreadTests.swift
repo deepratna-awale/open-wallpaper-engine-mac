@@ -140,9 +140,18 @@ final class SceneRenderThreadTests: XCTestCase {
         _ = try startLoop(frames)
         waitForFrames(frames, atLeast: 2)
         XCTAssertGreaterThanOrEqual(frames.count, 2, "the display link draws")
+        // The pace the link draws at while main is free. A CI runner's virtual display can tick
+        // about once a second rather than at its refresh rate (every test of this class then
+        // takes seconds per frame), so a fixed half-second stall can see no frame at all there.
+        let paceStart = CACurrentMediaTime(), before = frames.count
+        waitForFrames(frames, atLeast: before + 3, timeout: 10)
+        let drawn = frames.count - before
+        XCTAssertGreaterThanOrEqual(drawn, 3, "the display link keeps drawing")
+        let interval = (CACurrentMediaTime() - paceStart) / Double(max(drawn, 1))
+        // The main thread stalls for about six frames at that pace (at least half a second); the
+        // render thread keeps drawing. A draw that waited on main would see none.
         let start = CACurrentMediaTime()
-        // The main thread stalls for half a second; the render thread keeps drawing.
-        Thread.sleep(forTimeInterval: 0.5)
+        Thread.sleep(forTimeInterval: min(max(0.5, interval * 6), 10))
         let end = CACurrentMediaTime()
         XCTAssertGreaterThanOrEqual(frames.count(between: start, and: end), 3, "frames kept coming while main stalled")
     }

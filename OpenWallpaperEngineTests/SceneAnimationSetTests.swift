@@ -47,6 +47,7 @@ final class SceneAnimationSetTests: XCTestCase {
             ("instanceoverride.alpha", 2, nil, nil, sparks),
             ("general.bloomstrength", nil, nil, nil, bloom),
             ("visible", 12, 1, nil, SceneAnimationSite(owner: .effect(object: 12, effect: 1), key: "visible")),
+            ("animationlayers.3.blend", 124, nil, nil, SceneAnimationSite(owner: .animationLayer(object: 124, layer: 3), key: "blend")),
         ]
         for (property, object, effect, material, site) in cases {
             XCTAssertEqual(SceneAnimationSite(scriptProperty: property, objectID: object, effect: effect, material: material),
@@ -55,6 +56,44 @@ final class SceneAnimationSetTests: XCTestCase {
         }
         XCTAssertNil(SceneAnimationSite(scriptProperty: "alpha", objectID: nil, effect: nil, material: nil))
         XCTAssertNil(SceneAnimationSite(scriptProperty: "multiply", objectID: 1, effect: nil, material: 0))
+        XCTAssertNil(SceneAnimationSite(scriptProperty: "animationlayers.x.blend", objectID: 1, effect: nil, material: nil))
+        XCTAssertNil(SceneAnimationSite(scriptProperty: "animationlayers.2", objectID: 1, effect: nil, material: nil))
+    }
+
+    /// 3159348391's moves: a model's animation layer whose `blend` is a named, start-paused,
+    /// single timeline (`go`, 0 → 1 → 0 over 15 frames, an event at frame 0) is a site of its own
+    /// (`animationlayers[1].blend`), which scripts play and whose event fires as the object's.
+    func testAnAnimationLayersBlendTimelineIsASite() throws {
+        let keys: [SceneJSON] = [(0, 0), (3, 1), (12, 1), (15, 0)].map {
+            .object(["frame": .number($0.0), "value": .number($0.1)])
+        }
+        let options: SceneJSON = .object([
+            "fps": .number(30), "length": .number(15), "mode": .string("single"), "name": .string("go"),
+            "startpaused": .bool(true), "events": .array([.object(["frame": .number(0), "name": .string("kick")])]),
+        ])
+        let model: SceneJSON = .object([
+            "id": .number(124), "model": .string("models/dancer.mdl"),
+            "animationlayers": .array([
+                .object(["animation": .number(119), "blend": .number(1), "rate": .number(4)]),
+                .object(["animation": .number(120), "rate": .number(1),
+                         "blend": .object(["value": .number(0), "animation": .object(["c0": .array(keys), "options": options])])]),
+            ]),
+        ])
+        let set = SceneAnimationSet(document: .object(["objects": .array([model])]), wallpaperID: "fixture")
+        let blend = SceneAnimationSite(owner: .animationLayer(object: 124, layer: 1), key: "blend")
+        XCTAssertEqual(set.sites, [blend])
+        XCTAssertEqual(set.site(named: "go", owner: .animationLayer(object: 124, layer: 1)), blend)
+        XCTAssertEqual(set.value(of: blend), [0])
+        for _ in 0..<10 { XCTAssertTrue(set.advance(by: 1 / 30).events.isEmpty, "start-paused") }
+        XCTAssertEqual(set.value(of: blend), [0])
+
+        set.perform(.play, on: blend)
+        XCTAssertEqual(set.advance(by: 1 / 30).events, [SceneAnimationEvent(site: blend, name: "kick", frame: 0)])
+        for _ in 0..<5 { set.advance(by: 1 / 30) }
+        XCTAssertEqual(set.value(of: blend)?[0] ?? 0, 1, accuracy: 1e-4, "frame 6: the move is laid over the idle")
+        for _ in 0..<12 { set.advance(by: 1 / 30) }
+        XCTAssertEqual(set.value(of: blend)?[0] ?? 1, 0, accuracy: 1e-4)
+        XCTAssertEqual(set.state(of: blend)?.flags.contains(.finished), true)
     }
 
     func testNamesAreFoundPerOwnerOrAcrossTheScene() throws {
