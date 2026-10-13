@@ -69,6 +69,7 @@ struct SettingsSearch {
             entry("Show in Menu Bar", .general, SettingsAnchor.macOS),
             entry("Adjust Menu Bar Color", .general, SettingsAnchor.macOS),
             entry("Show Wallpaper on Lock Screen", .general, SettingsAnchor.macOS),
+            entry("Screen Saver Same as Wallpaper", .general, SettingsAnchor.macOS),
             entry("Theming", .general, SettingsAnchor.theming),
             entry("Accent Color", .general, SettingsAnchor.theming),
             entry("System Accent", .general, SettingsAnchor.theming),

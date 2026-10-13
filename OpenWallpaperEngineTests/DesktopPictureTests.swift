@@ -296,7 +296,7 @@ final class DesktopPictureTests: XCTestCase {
         XCTAssertEqual(sync.reassert([3]), [3], "a display with no picture yet is drawn")
     }
 
-    /// Another Space may still show an older picture: both slots stay on disk.
+    /// Another Space may still show an older picture: it stays on disk.
     func testOtherSpacesNeverPointAtAMissingFile() async throws {
         let a = try wallpaper("a")
         let b = try wallpaper("b")
