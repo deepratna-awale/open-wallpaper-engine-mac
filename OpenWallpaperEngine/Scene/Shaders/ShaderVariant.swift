@@ -51,7 +51,7 @@ enum ShaderVariantError: Error, CustomStringConvertible {
 /// hundreds of thousands possible, so nothing is precompiled.
 final class ShaderVariantTranslator {
     /// Bump whenever translated output for the same input can change.
-    static let revision = 16
+    static let revision = 17
 
     let compiler: ShaderCompiler
     /// Root of the disk cache; variants go into its `generationDirectory`.
@@ -305,11 +305,10 @@ final class ShaderVariantTranslator {
         var result: [String: UniformMember] = [:]
         var alignment = 4
         for member in members {
-            guard let reflected = member["name"] as? String, let offset = member["offset"] as? Int else {
+            // WE's name, a reserved word's too: the toolchain restores it in the SPIR-V (`GLSLReservedWords`).
+            guard let name = member["name"] as? String, let offset = member["offset"] as? Int else {
                 throw ShaderVariantError.reflection("member without name/offset in \(typeID)")
             }
-            // Material constants bind by WE's name, not the one the prelude gave a reserved word.
-            let name = GLSLReservedWords.originalName(reflected)
             let count = (member["array"] as? [Int])?.first ?? 1
             alignment = max(alignment, metalAlignment(ofReflectedType: member["type"] as? String ?? ""))
             result[name] = UniformMember(name: name, type: member["type"] as? String ?? "",

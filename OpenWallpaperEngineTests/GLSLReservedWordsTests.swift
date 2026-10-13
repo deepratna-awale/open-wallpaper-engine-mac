@@ -17,18 +17,60 @@ final class GLSLReservedWordsTests: XCTestCase {
         }
     }
 
-    /// Every listed word works as a local, a function and a parameter.
-    func testEveryListedWordTranslatesAsALocalName() throws {
+    /// Every listed word works as a varying, a local, a parameter, a function and a uniform, and
+    /// the MSL its restored name ends up in compiles; a uniform keeps WE's name.
+    func testEveryListedWordTranslatesAndCompilesInMetal() throws {
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        for word in GLSLReservedWords.words.sorted() {
+            let plain = "attribute vec3 a_Position;\nvoid main() { gl_Position = vec4(a_Position, 1.0); }"
+            let pairs: [(vertex: String, fragment: String)] = [
+                ("""
+                 attribute vec3 a_Position;
+                 varying vec4 \(word);
+                 void main() { \(word) = vec4(a_Position, 1.0); gl_Position = \(word); }
+                 """, """
+                 varying vec4 \(word);
+                 float f(float \(word)) { float x = \(word) * 2.0; return x; }
+                 float g(float x) { float \(word) = x; return \(word); }
+                 void main() { gl_FragColor = \(word) * f(\(word).x) * g(\(word).y); }
+                 """),
+                (plain, "float \(word)(float x) { return x * 2.0; }\nvoid main() { gl_FragColor = vec4(\(word)(0.5)); }"),
+                (plain, "uniform float \(word);\nvoid main() { gl_FragColor = vec4(\(word)); }"),
+            ]
+            for (index, pair) in pairs.enumerated() {
+                let vertex = ShaderSource(stage: .vertex, path: "v", text: pair.vertex, combos: [], uniforms: [])
+                let fragment = ShaderSource(stage: .fragment, path: "f", text: pair.fragment, combos: [], uniforms: [])
+                let label = "\(word) #\(index)"
+                let variant: TranslatedShaderVariant
+                do {
+                    variant = try translator.variant(vertex: vertex, fragment: fragment, combos: [:])
+                } catch {
+                    XCTFail("\(label): \(error)")
+                    continue
+                }
+                if index == 2 { XCTAssertNotNil(variant.uniforms?.members[word], label) }
+                XCTAssertNoThrow(try device.makeLibrary(source: variant.vertexMSL, options: nil), label)
+                XCTAssertNoThrow(try device.makeLibrary(source: variant.fragmentMSL, options: nil), label)
+            }
+        }
+    }
+
+    /// Names a GLSL reserved word only for glslang: the SPIR-V gets WE's name back, so the MSL
+    /// carries it wherever Metal takes it, and is renamed again only where Metal can't (`half`).
+    func testTheMSLCarriesWEsNamesWhereMetalTakesThem() throws {
         let vertex = ShaderSource(stage: .vertex, path: "v", text: "void main() { gl_Position = vec4(0.0); }",
                                   combos: [], uniforms: [])
-        for word in GLSLReservedWords.words.sorted() {
-            let text = """
-            float \(word)_f(float \(word)) { return \(word) * 2.0; }
-            void main() { float \(word) = 1.0; gl_FragColor = vec4(\(word)_f(\(word))); }
-            """
-            let fragment = ShaderSource(stage: .fragment, path: "f", text: text, combos: [], uniforms: [])
-            XCTAssertNoThrow(try translator.variant(vertex: vertex, fragment: fragment, combos: [:]), word)
-        }
+        let fragment = ShaderSource(stage: .fragment, path: "f", text: """
+            uniform float common;
+            uniform float half;
+            void main() { float sample = common; gl_FragColor = vec4(sample, half, 0.0, 1.0); }
+            """, combos: [], uniforms: [])
+        let variant = try translator.variant(vertex: vertex, fragment: fragment, combos: [:])
+        XCTAssertEqual(Set(try XCTUnwrap(variant.uniforms?.members).keys), ["common", "half"])
+        XCTAssertTrue(variant.fragmentMSL.contains("float common;"), variant.fragmentMSL)
+        XCTAssertTrue(variant.fragmentMSL.contains("float we_half;"), variant.fragmentMSL)
+        XCTAssertFalse(variant.fragmentMSL.contains("we_common"), variant.fragmentMSL)
+        XCTAssertFalse(variant.fragmentMSL.contains("weSample"), variant.fragmentMSL)
     }
 
     /// A uniform keeps WE's name in the block's layout, where material constants find it, and a
@@ -80,9 +122,10 @@ final class GLSLReservedWordsTests: XCTestCase {
         XCTAssertFalse(prelude.contains("#define filter"))
     }
 
-    func testOriginalNameUndoesOnlyTheReservedRename() {
-        XCTAssertEqual(GLSLReservedWords.originalName("we_filter"), "filter")
-        XCTAssertEqual(GLSLReservedWords.originalName("we_log10"), "we_log10")
-        XCTAssertEqual(GLSLReservedWords.originalName("g_Texture0"), "g_Texture0")
+    /// `sample` is one of the list's keywords, renamed only where a shader names it.
+    func testSampleIsRenamedOnlyWhereUsed() {
+        XCTAssertTrue(GLSLReservedWords.words.contains("sample"))
+        XCTAssertFalse(ShaderPrelude.text(for: .fragment, combos: [:], source: "float x;").contains("sample"))
+        XCTAssertTrue(ShaderPrelude.text(for: .fragment, combos: [:], source: "float sample;").contains("#define sample we_sample\n"))
     }
 }

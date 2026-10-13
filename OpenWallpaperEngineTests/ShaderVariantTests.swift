@@ -202,7 +202,8 @@ final class ShaderVariantTests: XCTestCase {
     /// values bind to it by name.
     func testCppKeywordNamesCompileAndUniformsKeepTheirNames() throws {
         let variant = try translateDialectFixture("reserved")
-        // `or` and `operator` are renamed in the SPIR-V (OpName); `this`, which GLSL reserves, by the prelude.
+        // `or` and `operator` are renamed in the SPIR-V (OpName); so is `this`, which GLSL reserves:
+        // the prelude's `we_this` gets WE's name back there, which MSL can't take.
         for name in ["we_or", "we_operator", "we_this"] { XCTAssertTrue(variant.fragmentMSL.contains(name), name) }
         // A uniform named with a C++ keyword compiles and still binds by WE's name.
         let vertex = "#version 450\nlayout(location = 0) in vec4 p;\nvoid main() { gl_Position = p; }\n"
