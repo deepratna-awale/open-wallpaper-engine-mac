@@ -40,7 +40,8 @@ final class LiveSaverPresenter: NSObject {
     private let source: LiveFrameSource
     private let video = SaverVideoPlayer()
     private let still = CALayer()
-    private var stillFile: String?
+    /// The still asked for last (`ScreenSaverStillChoice.key`): only its decode is shown.
+    private var stillKey: String?
     /// The app's frames, as the layer's contents (`LiveFrameDrawer`).
     private let surfaceLayer = CALayer()
     private let viewID = UUID().uuidString
@@ -85,6 +86,11 @@ final class LiveSaverPresenter: NSObject {
         // The still at once, before the host starts the view (half a second later on the classic
         // host): black otherwise. The display's own once the view is in a window.
         loadStill()
+        // A still the app writes later (a new wallpaper, a pick) is shown at once, also by
+        // System Settings' preview, which stays open for as long as its pane does.
+        ScreenSaverFolderWatch.shared.add(self) { [weak self] in
+            MainActor.assumeIsolated { self?.loadStill() }
+        }
         let drawer = drawer
         source.store.addObserver(self) {
             SaverDrawing.queue.async { drawer.frameCame() }
@@ -95,6 +101,7 @@ final class LiveSaverPresenter: NSObject {
     func invalidate() {
         stop(reason: "deinit")
         source.store.removeObserver(self)
+        ScreenSaverFolderWatch.shared.remove(self)
         let center = DistributedNotificationCenter.default()
         for observer in observers { center.removeObserver(observer) }
         let workspace = NSWorkspace.shared.notificationCenter
@@ -151,14 +158,31 @@ final class LiveSaverPresenter: NSObject {
 
     func layout() {
         guard let view else { return }
+        // System Settings' preview is made at 0×0 and sized later: the still and the frames
+        // follow its size here rather than through autoresizing alone.
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        still.frame = view.bounds
+        surfaceLayer.frame = view.bounds
+        CATransaction.commit()
         video.layout(in: view.bounds)
         drawer.retarget(target)
     }
 
     /// The view moved to a window (and so to a display): that display's still, and its frames.
+    /// System Settings' preview runs while it has a window, whether or not its host starts it
+    /// (the classic host never starts the Wallpaper pane's thumbnail): it shows live frames
+    /// whenever the app draws them, and parks while its window isn't visible. It never makes the
+    /// app draw (`LiveFrameSource.attach`).
     func windowChanged() {
         loadStill()
         drawer.retarget(target)
+        guard isPreview else { return }
+        if view?.window != nil {
+            start(reason: "preview window")
+        } else {
+            stop(reason: "preview window gone")
+        }
     }
 
     private func observeLifecycle() {
@@ -198,6 +222,12 @@ final class LiveSaverPresenter: NSObject {
         let now = CACurrentMediaTime()
         ticks += 1
         source.refresh()
+        // Without the folder watch (no folder yet when the view was made), the still is looked
+        // for as it ticks.
+        if !ScreenSaverFolderWatch.shared.isWatching {
+            ScreenSaverFolderWatch.shared.watch()
+            loadStill()
+        }
         if now - lastPing >= 1 {
             lastPing = now
             source.ping(viewID: viewID)
@@ -227,20 +257,23 @@ final class LiveSaverPresenter: NSObject {
     }
 
     /// Shows the display's still picture, decoded off the main thread; kept when there is none.
+    /// A decode that finishes after a newer still was asked for (the view moved to its display,
+    /// the app wrote another) is dropped, so the newest still wins.
     private func loadStill() {
-        let folder = ScreenSaverManifest.sharedFolder(home: ScreenSaverManifest.userHome)
-        guard let file = ScreenSaverStills.read(folder.appending(path: ScreenSaverStills.fileName))?
-            .file(forDisplay: displayIdentity) else { return }
-        let url = folder.appending(path: file)
-        let modified = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate // Optional: part of the key.
-        let key = "\(file)|\(modified?.timeIntervalSinceReferenceDate ?? 0)"
-        guard key != stillFile else { return }
-        stillFile = key
+        let folder = ScreenSaverFolderWatch.shared.folder
+        guard let choice = ScreenSaverStillChoice.current(in: folder, display: displayIdentity),
+              choice.key != stillKey else { return }
+        let key = choice.key, url = choice.url, file = url.lastPathComponent
+        stillKey = key
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let image = CGImageSourceCreateWithURL(url as CFURL, nil).flatMap { CGImageSourceCreateImageAtIndex($0, 0, nil) }
             DispatchQueue.main.async {
                 MainActor.assumeIsolated {
-                    guard let self, let image else { return }
+                    guard let self, self.stillKey == key else { return }
+                    guard let image else {
+                        self.stillKey = nil // Looked for again on the next change.
+                        return
+                    }
                     CATransaction.begin()
                     CATransaction.setDisableActions(true)
                     self.still.contents = image
