@@ -24,8 +24,12 @@ struct WallpaperPreview: SubviewOfContentView {
     /// after their bindings write.
     @ObservedObject private var musicSync = VideoMusicSyncStore.shared
     @ObservedObject private var favorites = FavoritesStore.shared
-    /// Re-renders the screen saver row as loop renders start and finish.
+    /// Re-renders Set as Screen Saver as video files are checked and put in place.
     @ObservedObject private var screenSaver = AppDelegate.shared.screenSaver
+    /// Re-renders Set as Screen Saver as it is set or stopped.
+    @ObservedObject private var screenSaverSelection = AppDelegate.shared.screenSaverSelection
+    /// The install a web page's Set as Screen Saver offers, and whether one is there.
+    @ObservedObject private var chromiumEngine = AppDelegate.shared.chromiumEngine
     @State var isTagsHovered = false
     /// Counts the confirmed Resets; `SceneUserPropertiesView` resets on each change.
     @State private var propertyResets = 0
@@ -60,84 +64,103 @@ struct WallpaperPreview: SubviewOfContentView {
         return ByteCountFormatter.string(fromByteCount: Int64(sizeBytes), countStyle: .file)
     }
     
-    /// Whether the screen saver shows the selected wallpaper: drawn live, a video's own file ready
-    /// or being repaired, or not (with why). Nothing while the plugin is off or a video's file
-    /// isn't checked yet.
-    @ViewBuilder private var screenSaverStatusRow: some View {
-        switch screenSaver.status(for: wallpaperViewModel.displayedWallpaper) {
-        case .available:
-            screenSaverRow(String(localized: "Screen Saver Available",
-                                  comment: "Details panel: the screen saver shows this wallpaper"),
-                           showsSettings: true) {
-                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+    /// The selected wallpaper's Set as Screen Saver, below Set as Wallpaper. It sets it at once,
+    /// with its default settings (`ScreenSaverSelectionService.setAsScreenSaver`); customising it
+    /// is Scene Edit / Export's Screen Saver tab.
+    ///
+    /// - Already the screen saver: a checked "Screen Saver" that opens Screen Saver settings
+    ///   (where macOS's screen saver is chosen), and beside it Stop Using as Screen Saver, as
+    ///   Delete sits beside Set as Wallpaper. A checked state says what is true at a glance;
+    ///   stopping stays a separate, deliberate click rather than the main button's second meaning.
+    /// - A video's file being put in place: a spinner.
+    /// - Can't be set: disabled, with why below it; a web page or WebM video without the
+    ///   Chromium engine shows the install offer there.
+    @ViewBuilder private var screenSaverButton: some View {
+        let wallpaper = wallpaperViewModel.displayedWallpaper
+        let availability = ScreenSaverSelectionService.availability(of: wallpaper,
+                                                                    chromiumInstalled: chromiumEngine.installedVersion != nil)
+        let pluginStatus = screenSaver.status(for: wallpaper)
+        VStack(spacing: 6) {
+            if screenSaverSelection.isSetting(wallpaper) {
+                Button { } label: {
+                    Label {
+                        Text("Setting the screen saver…",
+                             comment: "Workshop card: the downloaded wallpaper is being set as the screen saver")
+                    } icon: {
+                        ProgressView().controlSize(.small)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .glassButtonStyle()
+                .disabled(true)
+            } else if screenSaverSelection.isSelected(wallpaper) {
+                HStack(spacing: 6) {
+                    Button {
+                        ScreenSaverInstaller.current.openSettings()
+                    } label: {
+                        Label {
+                            Text("Screen Saver")
+                        } icon: {
+                            Image(systemName: "checkmark.circle.fill")
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .glassButtonStyle()
+                    .help(String(localized: "Open Screen Saver Settings",
+                                 comment: "Details panel: opens System Settings where the screen saver is chosen"))
+                    .accessibilityValue(Text("Selected", comment: "Details panel: this wallpaper is the screen saver"))
+                    Button {
+                        screenSaverSelection.stopUsingSelection()
+                    } label: {
+                        Label("Stop Using as Screen Saver", systemImage: "xmark")
+                            .labelStyle(.iconOnly)
+                    }
+                    .glassButtonStyle()
+                    .help("Stop Using as Screen Saver")
+                }
+            } else {
+                Button {
+                    screenSaverSelection.setAsScreenSaver(wallpaper)
+                } label: {
+                    Label("Set as Screen Saver", systemImage: "play.rectangle")
+                        .frame(maxWidth: .infinity)
+                }
+                .glassButtonStyle()
+                .disabled(!availability.isAvailable || pluginStatus == .notEligible || screenSaverSelection.isSettingVideo)
             }
-        case .rendering:
-            screenSaverRow(String(localized: "Rendering Screen Saver",
-                                  comment: "Details panel: the video wallpaper's file is being prepared for the screen saver"),
-                           showsSettings: true) {
-                ProgressView().controlSize(.small).progressViewStyle(.circular)
-            }
-        case .notEligible:
-            screenSaverRow(String(localized: "Screen Saver Not Available",
-                                  comment: "Details panel: no screen saver is made from this wallpaper")) {
-                Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
-            }
-            .help(screenSaverNotAvailableReason)
+            screenSaverNote(availability, pluginStatus: pluginStatus)
+        }
+    }
+
+    /// Why Set as Screen Saver can't apply, under it.
+    @ViewBuilder private func screenSaverNote(_ availability: ScreenSaverSelectionService.Availability,
+                                              pluginStatus: ScreenSaverPlugin.Status?) -> some View {
+        switch availability {
         case .needsChromium:
-            screenSaverRow(String(localized: "Screen Saver Not Available",
-                                  comment: "Details panel: no screen saver is made from this wallpaper")) {
-                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
+            VStack(alignment: .leading, spacing: 6) {
+                screenSaverNoteText(String(localized: "Web wallpapers and WebM videos move in the screen saver only with the Chromium engine. Without it, the screen saver shows their picture."))
+                Button("Install the Chromium Engine") { chromiumEngine.install() }
+                    .glassButtonStyle()
+                    .disabled(chromiumEngine.isBusy || chromiumEngine.pin == nil)
             }
-            .help(String(localized: "Web wallpapers and WebM videos move in the screen saver only with the Chromium engine. Without it, the screen saver shows their picture."))
-        case nil:
+            .frame(maxWidth: .infinity, alignment: .leading)
+        case .unavailable(let reason):
+            screenSaverNoteText(reason)
+        case .available where pluginStatus == .notEligible:
+            // A video whose file has no H.264 or HEVC track.
+            screenSaverNoteText(String(localized: "The screen saver plays MP4 and MOV videos in H.264 or HEVC, and WebM videos through the Chromium engine",
+                                       comment: "Details panel: why a video wallpaper in another codec has no screen saver"))
+        case .available:
             EmptyView()
         }
     }
 
-    /// Why the saver doesn't show the selected wallpaper: a video in a format AVFoundation can't
-    /// play, or an application wallpaper.
-    private var screenSaverNotAvailableReason: String {
-        if wallpaperViewModel.displayedWallpaper.project.type.caseInsensitiveCompare("video") == .orderedSame {
-            return String(localized: "The screen saver plays MP4 and MOV videos in H.264 or HEVC, and WebM videos through the Chromium engine",
-                          comment: "Details panel: why a video wallpaper in another codec has no screen saver")
-        }
-        return String(localized: "Screen savers are made from scene, web and video wallpapers",
-                      comment: "Details panel: why an application wallpaper has no screen saver")
-    }
-
-    private func screenSaverRow(_ text: String, showsSettings: Bool = false,
-                                @ViewBuilder icon: () -> some View) -> some View {
-        HStack(spacing: 6) {
-            screenSaverStatus(text, icon: icon)
-            if showsSettings {
-                let title = String(localized: "Open Screen Saver Settings",
-                                   comment: "Details panel: opens System Settings where the screen saver is chosen")
-                Button {
-                    ScreenSaverInstaller.current.openSettings()
-                } label: {
-                    Image(systemName: "gearshape")
-                }
-                .buttonStyle(.borderless)
-                .help(title)
-                .accessibilityLabel(title)
-            }
-        }
-    }
-
-    private func screenSaverStatus(_ text: String, @ViewBuilder icon: () -> some View) -> some View {
-        HStack(spacing: 6) {
-            icon()
-                .frame(width: 16, height: 16)
-                .accessibilityHidden(true)
-            Text(text)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-            Spacer(minLength: 0)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String(localized: "Screen Saver"))
-        .accessibilityValue(text)
+    private func screenSaverNoteText(_ text: String) -> some View {
+        Text(verbatim: text)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     var body: some View {
@@ -303,7 +326,7 @@ struct WallpaperPreview: SubviewOfContentView {
                                 Button {
                                     wallpaperViewModel.applyInspectedWallpaper()
                                 } label: {
-                                    Label("Set Wallpaper", systemImage: "checkmark.circle")
+                                    Label("Set as Wallpaper", systemImage: "checkmark.circle")
                                         .frame(maxWidth: .infinity)
                                 }
                                 .glassButtonStyle(.prominent)
@@ -318,6 +341,7 @@ struct WallpaperPreview: SubviewOfContentView {
                                 .glassButtonStyle()
                                 .help("Delete wallpaper")
                             }
+                            screenSaverButton
                             Button {
                                 AppDelegate.shared.showSceneInspector(for: wallpaperViewModel.displayedWallpaper,
                                                                       scopes: wallpaperViewModel.editedPropertyScopes(of: wallpaperViewModel.displayedWallpaper))
@@ -406,7 +430,6 @@ struct WallpaperPreview: SubviewOfContentView {
                             default:
                                 EmptyView()
                             }
-                            screenSaverStatusRow
                         }
                     }
                     SceneUserPropertiesView(wallpaper: wallpaperViewModel.displayedWallpaper,

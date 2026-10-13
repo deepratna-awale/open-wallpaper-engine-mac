@@ -12,7 +12,7 @@ import SwiftUI
 /// copy. Animated library previews are built in (`ThumbnailAnimation`).
 struct PluginsPage: SettingsPage {
     @ObservedObject var viewModel: GlobalSettingsViewModel
-    @StateObject private var chromium = ChromiumEngineInstaller()
+    @ObservedObject private var chromium = AppDelegate.shared.chromiumEngine
     @ObservedObject private var broker = AppDelegate.shared.screenSaverBroker
 
     init(globalSettings viewModel: GlobalSettingsViewModel) {

@@ -9,6 +9,8 @@ final class SaverVideoPlayer {
     let layer = AVPlayerLayer()
     private var player: AVQueuePlayer?
     private var looper: AVPlayerLooper?
+    /// Logs a video the saver can't open (a file it may not read, a codec it can't decode).
+    private var looperStatus: NSKeyValueObservation?
     /// The rect of the video this display shows; nil for the whole video.
     private var crop: ScreenSaverManifest.Crop?
 
@@ -33,7 +35,13 @@ final class SaverVideoPlayer {
         let player = AVQueuePlayer()
         player.isMuted = true
         player.preventsDisplaySleepDuringVideoPlayback = false
-        looper = AVPlayerLooper(player: player, templateItem: item)
+        let looper = AVPlayerLooper(player: player, templateItem: item)
+        let file = url.lastPathComponent
+        looperStatus = looper.observe(\.status, options: [.initial, .new]) { looper, _ in
+            guard looper.status == .failed else { return }
+            SaverLog.lifecycle.error("video \(file, privacy: .public) can't play: \(String(describing: looper.error), privacy: .public)")
+        }
+        self.looper = looper
         layer.player = player
         self.player = player
         if let rate, rate > 0 {
@@ -51,6 +59,7 @@ final class SaverVideoPlayer {
     /// Unloads it.
     func stop() {
         player?.pause()
+        looperStatus = nil
         looper = nil
         player = nil
         layer.player = nil
@@ -81,7 +90,8 @@ final class SaverVideoPlayer {
               let manifest = try? JSONDecoder().decode(ScreenSaverManifest.self, from: data),
               manifest.revision == ScreenSaverManifest.revision else { return nil } // No video yet: stay black.
         let pixels = (width: Int(bounds.width * scale), height: Int(bounds.height * scale))
-        // A video wallpaper's entry may be a link to the library file; AVFoundation follows it.
+        // A video wallpaper's entry is a hard link or a copy of the library file: the saver can't
+        // follow a symbolic link out of this folder.
         guard let video = manifest.video(forDisplay: display, pixels: pixels) else { return nil }
         crop = video.crop
         return (folder.appending(path: video.file), video.rate)

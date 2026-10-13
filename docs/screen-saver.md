@@ -24,7 +24,12 @@ While the screen saver runs and an Open Wallpaper Engine saver is showing:
   page in Chromium on that display, that page is drawn from; otherwise one of its own, without a
   window. Without the Chromium engine they show their picture, and Settings › Plugins › Screen
   Saver offers to install it.
-- **Video wallpapers** (MP4 and MOV in H.264 or HEVC) play their own file.
+- **Video wallpapers** (MP4 and MOV in H.264 or HEVC) play their own file. The savers read only
+  their own folder (`~/Library/Application Support/Open Wallpaper Engine/ScreenSaver`), so the
+  file goes there as a hard link to the library's, or, for a library on another volume (hard links
+  can't cross volumes, and neither saver can open a link to an external disk), as a copy, made
+  once when it is set. A file that keeps its parameter sets in band (`hev1`, `avc3`) goes in as its
+  repaired copy.
 - Application wallpapers can't be used.
 
 Each frame is shown as it is drawn, at the display's cadence, as on the desktop (60 fps on a
@@ -40,14 +45,30 @@ When the app isn't running, the screen saver asks for it: its broker (the backgr
 launches the app in the background, with no window or Dock icon, and the wallpaper starts loading
 at once.
 
-The Details panel says whether the screen saver shows the selected wallpaper (**Screen Saver
-Available**), is preparing a video's file (**Rendering Screen Saver**) or not (**Screen Saver Not
-Available**, with the reason in its tooltip).
+## Set as Screen Saver
+
+**Set as Screen Saver** in a wallpaper's menu (Installed, Discover and Workshop; the last two
+download it first) and the Details panel's **Set as Screen Saver** (below **Set as Wallpaper**) set
+the wallpaper as the screen saver at once, with its default settings: every layer as authored,
+clocks on, its own property defaults, and no choices the Screen Saver tab saved for it. Customising
+it is the Screen Saver tab's (below), whose Set as Screen Saver sets it with those choices. Either
+turns the plugin on if it is off.
+
+- Scenes, video wallpapers, web wallpapers and WebM videos can be set; application wallpapers
+  can't. A web wallpaper or WebM video needs the Chromium engine: without it, choosing Set as
+  Screen Saver offers to install it instead, and the Details panel shows that note and
+  **Install the Chromium Engine** under its disabled button.
+- When the selected wallpaper is the screen saver, the Details panel's button reads **Screen
+  Saver** with a checkmark (it opens Screen Saver settings, where macOS's screen saver is chosen),
+  with **Stop Using as Screen Saver** beside it. While a video's file is put in place it shows
+  **Setting the screen saver…**.
+- MCP's `screensaver_set` takes the same wallpapers (see [`mcp.md`](mcp.md)).
 
 ## The Screen Saver tab
 
 Scene Edit / Export's second tab (Wallpaper | Screen Saver | iPhone & iPad Export | Android
-Export) makes a scene wallpaper's own version the screen saver:
+Export) makes a scene wallpaper's own version the screen saver (web wallpapers have no layers to
+choose, so they have no such tab and are set as they are):
 
 - It runs a private copy of the wallpaper. Turning layers on or off, adjusting them and changing
   user properties there never touches your desktop, its properties or the Wallpaper Editor's

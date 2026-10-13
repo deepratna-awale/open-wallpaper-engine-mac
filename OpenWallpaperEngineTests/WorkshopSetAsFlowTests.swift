@@ -15,6 +15,8 @@ final class WorkshopSetAsFlowTests: XCTestCase {
         var applied: [WEWallpaper] = []
         var screenSavers: [WEWallpaper] = []
         var finishScreenSaver: ((Bool) -> Void)?
+        var chromiumInstalled = true
+        var chromiumOffers: [WEWallpaper] = []
 
         var environment: WorkshopSetAsFlow.Environment {
             WorkshopSetAsFlow.Environment(
@@ -28,6 +30,10 @@ final class WorkshopSetAsFlowTests: XCTestCase {
                 wallpaper: { [unowned self] in folders[$0] },
                 setWallpaper: { [unowned self] in applied.append($0) },
                 isSettingScreenSaver: { [unowned self] in isSettingScreenSaver },
+                screenSaverAvailability: { [unowned self] in
+                    ScreenSaverSelectionService.availability(of: $0, chromiumInstalled: chromiumInstalled)
+                },
+                offerChromium: { [unowned self] in chromiumOffers.append($0) },
                 setScreenSaver: { [unowned self] wallpaper, completion in
                     screenSavers.append(wallpaper)
                     finishScreenSaver = completion
@@ -114,13 +120,36 @@ final class WorkshopSetAsFlowTests: XCTestCase {
     func testADownloadedItemTheScreenSaverCantPlayFails() {
         let stub = Stub()
         let flow = WorkshopSetAsFlow(environment: stub.environment)
-        // A preset has no type tag; once downloaded it turns out to be a web page.
+        // A preset has no type tag; once downloaded it turns out to be an application.
         flow.run(.screenSaver, for: item("6", tags: ["Preset"]))
         let folder = root.appending(path: "6")
-        stub.folders[folder] = wallpaper("6", type: "web", file: "index.html")
+        stub.folders[folder] = wallpaper("6", type: "application", file: "a.exe")
         stub.finishDownload?(folder)
         XCTAssertTrue(stub.screenSavers.isEmpty)
         guard case .failed? = flow.phases["6"] else { return XCTFail("it says why") }
+    }
+
+    func testADownloadedWebPageIsSetAsTheScreenSaver() {
+        let stub = Stub()
+        let flow = WorkshopSetAsFlow(environment: stub.environment)
+        XCTAssertTrue(flow.canRun(.screenSaver, for: item("12", tags: ["Web"])))
+        flow.run(.screenSaver, for: item("12", tags: ["Web"]))
+        let folder = root.appending(path: "12")
+        stub.folders[folder] = wallpaper("12", type: "web", file: "index.html")
+        stub.finishDownload?(folder)
+        XCTAssertEqual(stub.screenSavers.map(\.wallpaperDirectory), [folder], "drawn live through Chromium")
+        XCTAssertTrue(stub.chromiumOffers.isEmpty)
+    }
+
+    func testAWebPageWithoutChromiumOffersTheInstall() {
+        let stub = Stub()
+        stub.chromiumInstalled = false
+        stub.installed["13"] = wallpaper("13", type: "web", file: "index.html")
+        let flow = WorkshopSetAsFlow(environment: stub.environment)
+        flow.run(.screenSaver, for: item("13", tags: ["Web"]))
+        XCTAssertTrue(stub.screenSavers.isEmpty, "nothing is set")
+        XCTAssertEqual(stub.chromiumOffers.map(\.wallpaperDirectory), [root.appending(path: "13")])
+        XCTAssertNil(flow.phases["13"], "no failure: the install is offered instead")
     }
 
     func testADownloadedApplicationIsNotApplied() {
@@ -140,7 +169,7 @@ final class WorkshopSetAsFlowTests: XCTestCase {
         XCTAssertFalse(flow.canRun(.wallpaper, for: item("8", tags: ["Application"])))
         XCTAssertFalse(flow.canRun(.screenSaver, for: item("8", tags: ["Application"])))
         XCTAssertTrue(flow.canRun(.wallpaper, for: item("8", tags: ["Web"])))
-        XCTAssertFalse(flow.canRun(.screenSaver, for: item("8", tags: ["Web"])))
+        XCTAssertTrue(flow.canRun(.screenSaver, for: item("8", tags: ["Web"])))
 
         stub.isSettingScreenSaver = true
         XCTAssertFalse(flow.canRun(.screenSaver, for: item("9")), "one recording at a time")

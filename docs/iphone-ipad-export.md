@@ -26,8 +26,9 @@ export. The desktop, its properties and the Wallpaper Editor's edits stay as the
 ## Framing
 
 - **Device**: any of 33 iPhones and 30 iPads with Live Photo lock screens. Type a name, family,
-  year or resolution to find one; the last choice is kept. The export has that device's exact
-  pixels, in portrait.
+  year or resolution to find one; the last choice is kept. The photo has that device's exact
+  pixels, in portrait; the movie is the same picture at most 1920 pixels tall, the largest the
+  lock screen plays.
 - **Show Lock Screen Guide** draws the clock and date where the device shows them. For an iPad,
   **Preview in Landscape** shows the part iPadOS keeps when the iPad is turned.
 - Drag the preview to move the picture; pinch or **Zoom** to zoom in.
@@ -43,10 +44,22 @@ to its 1–3 s with the most motion, avoiding a cut in the middle of a burst; th
 timeline shows it and can be dragged (**Clip Start**, **Clip Length**). **Preview Clip** plays it
 in the frame; **Show Live Wallpaper** goes back.
 
-The still photo is the sharpest frame near the middle of the clip, at full resolution, and the
-movie blends in from it and back into it, so the Live Photo never jumps. The movie is HEVC at a
-bitrate for the device's resolution (**Quality**). The clock, day and date layers are left out,
-since the lock screen draws its own, and the export is silent.
+The still photo is the sharpest frame near the middle of the clip (never in its first half
+second, which the lock screen won't play from), at full resolution, and the movie blends in from
+it and back into it, so the Live Photo never jumps. The movie is 8-bit HEVC at 30 fps, at most
+1920 pixels tall, at a bitrate for its size (**Quality**). The clock, day and date layers are left
+out, since the lock screen draws its own, and the export is silent.
+
+## Motion on the lock screen
+
+Photos takes any photo and movie that share a content identifier as a Live Photo, but the lock
+screen of iOS and iPadOS 17 or later plays one as a moving wallpaper only when its movie looks
+like the camera's; otherwise it says "Motion Not Available". Apple doesn't document what it
+checks. The export writes what the camera writes and what others found the lock screen needs: a
+`live-photo-info` metadata track with a sample at every frame, and the still's moment
+(still-image-time with the still's transform) as a sample in the 600 timescale, both referring
+to the video; HEVC; a movie at most 1920 pixels on its long side; and the still at least half a
+second in. A clip of 1–3 s is within what the lock screen plays (up to about 5 s).
 
 ## Exporting
 
@@ -85,6 +98,9 @@ wallpapers' titles, made unique within the batch and the folder. **AirDrop All**
 finished Live Photo in one AirDrop share, each as its Live Photo bundle, so Photos on the iPhone
 or iPad imports them as Live Photos; each finished one also has its own AirDrop button.
 
-On the iPhone or iPad, open the photo, then Share › Use as Wallpaper, and turn Live Photo on.
+On the iPhone or iPad: touch and hold the Lock Screen, tap **+** (or Customise › Add New), choose
+**Photos**, pick the Live Photo, check that the Live Photo button (the concentric circles, bottom
+left) is on and not crossed out, and tap **Add**. Lock the device and wake it: the picture
+moves once. From Photos: open the photo, Share › Use as Wallpaper.
 
 MCP clients get `devices_list`, `export_settings_get` and `export_live_photo` ([`mcp.md`](mcp.md)).

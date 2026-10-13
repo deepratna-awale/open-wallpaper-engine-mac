@@ -1,5 +1,6 @@
 import AVFoundation
 import CoreImage
+import ImageIO
 import OWESceneEditing
 import XCTest
 @testable import OpenWallpaperEngine
@@ -168,7 +169,9 @@ final class SceneEditorExportTests: XCTestCase {
         let webm = try wallpaper("webm", type: "video", file: "clip.webm")
         let entries = SceneEditorModes.entries(for: webm)
         XCTAssertEqual(entries.map(\.mode), [.screenSaver, .deviceExport, .androidExport])
-        XCTAssertFalse(entries[0].availability.isAvailable)
+        XCTAssertEqual(entries[0].availability, .unavailable(String(
+            localized: "A WebM video is drawn live through the Chromium engine. Set it with Set as Screen Saver in the library.",
+            comment: "Scene Edit / Export: why a WebM video's Screen Saver tab can't be used")), "it is set from the library")
         XCTAssertFalse(entries[1].availability.isAvailable)
         XCTAssertEqual(entries[2].availability, .available, "WE packs any local video")
     }
@@ -247,13 +250,49 @@ final class SceneEditorExportTests: XCTestCase {
         let movieIdentifier = try await LivePhotoMetadata.movieIdentifier(at: movie)
         XCTAssertEqual(movieIdentifier, identifier)
         let stillTime = try await XCTUnwrapAsync(try await LivePhotoMetadata.movieStillImageTime(at: movie))
-        XCTAssertGreaterThan(CMTimeGetSeconds(stillTime), 0)
+        XCTAssertGreaterThanOrEqual(CMTimeGetSeconds(stillTime), LivePhotoKeyFrame.earliestSeconds - 1e-6)
         XCTAssertLessThan(CMTimeGetSeconds(stillTime), clip.length)
         let track = try await XCTUnwrapAsync(try await AVURLAsset(url: movie).loadTracks(withMediaType: .video).first)
         let natural = try await track.load(.naturalSize)
         XCTAssertEqual(natural, CGSize(width: 90, height: 196))
         let frames = try await track.load(.timeRange).duration
         XCTAssertEqual(CMTimeGetSeconds(frames), clip.length, accuracy: 0.05)
+    }
+
+    /// An export for a device taller than the Lock Screen's movies (an iPhone 17 Pro Max) keeps the
+    /// device's pixels in the still and writes the movie at 1920 pixels high, with the metadata
+    /// tracks the Lock Screen wants for motion.
+    func testALivePhotoForALargeDeviceIsWallpaperReady() async throws {
+        let video = try wallpaper("large", type: "video", file: "clip.mov", movie: true)
+        let device = DeviceModel.model(id: "iPhone 17 Pro Max")
+        XCTAssertEqual(device.pixelSize, SIMD2(1320, 2868))
+        let crop = LivePhotoCrop(sceneSize: SIMD2(320, 180), outputPixels: device.pixelSize)
+        let clip = LivePhotoClip(start: 0, length: 1)
+        let out = directory.appending(path: "large-out", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+        let still = out.appending(path: "live.HEIC"), movie = out.appending(path: "live.MOV")
+        let job = LivePhotoJob(wallpaperDirectory: video.wallpaperDirectory, properties: [:], crop: crop, clip: clip,
+                               quality: .smaller, still: still, movie: movie, identifier: UUID().uuidString)
+        try await LivePhotoRenderer(wallpaper: video, defaults: defaults).write(job, crop: crop) { _ in }
+
+        let source = try XCTUnwrap(CGImageSourceCreateWithURL(still as CFURL, nil))
+        let properties = try XCTUnwrap(CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any])
+        XCTAssertEqual(properties[kCGImagePropertyPixelWidth] as? Int, 1320)
+        XCTAssertEqual(properties[kCGImagePropertyPixelHeight] as? Int, 2868)
+        let asset = AVURLAsset(url: movie)
+        let track = try await XCTUnwrapAsync(try await asset.loadTracks(withMediaType: .video).first)
+        let natural = try await track.load(.naturalSize)
+        XCTAssertEqual(natural, CGSize(width: 884, height: 1920))
+        var identifiers: Set<String> = []
+        for metadata in try await asset.loadTracks(withMediaType: .metadata) {
+            for format in try await metadata.load(.formatDescriptions) {
+                identifiers.formUnion(LivePhotoMetadata.identifiers(of: format))
+            }
+        }
+        XCTAssertEqual(identifiers, ["mdta/com.apple.quicktime.live-photo-info", "mdta/com.apple.quicktime.still-image-time",
+                                     "mdta/com.apple.quicktime.live-photo-still-image-transform"])
+        let stillTime = try await XCTUnwrapAsync(try await LivePhotoMetadata.movieStillImageTime(at: movie))
+        XCTAssertGreaterThanOrEqual(CMTimeGetSeconds(stillTime), 0.5 - 1e-6)
     }
 
     /// The video's frames are its own at the clip's times: the motion analysis sees the bar move.
