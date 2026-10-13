@@ -5,6 +5,10 @@ import Cocoa
 /// framework both link, and the bundle id says which app this is (`AppLaunchMode`).
 public enum AppMain {
     public static func run() {
+        // First of all: an isolated copy (a test host, `OWE_ISOLATED_STATE`) moves its Darwin
+        // cache and temporary folders, and with them Metal's shader cache, out of the app's.
+        DarwinUserDirectories.isolate(for: AppStorageLocation.current)
+
         // Before any JavaScriptCore VM exists: the SceneScript watchdog must be able to stop
         // JIT-compiled loops.
         SceneScriptJIT.configurePollingTraps()
@@ -14,6 +18,10 @@ public enum AppMain {
         if let status = CrashWatcher.runIfRequested(arguments: ProcessInfo.processInfo.arguments) {
             exit(status)
         }
+
+        // Before any Metal work: the Metal shader cache goes when the shaders changed or Metal's
+        // usage database filled up, and this process holds it from now on.
+        MetalShaderCacheLaunch.run()
 
         MainActor.assumeIsolated {
             // A helper run (`ShaderPrewarmCommand`) does its work and exits before the app's

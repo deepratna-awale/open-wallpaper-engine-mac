@@ -21545,6 +21545,101 @@
         }
       }
     },
+    "Cache Size" : {
+      "comment" : "Settings › Performance › Caches: the row showing the caches' size",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حجم ذاكرة التخزين المؤقت"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache-Größe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño de las cachés"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taille des caches"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कैश का आकार"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dimensione della cache"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャッシュのサイズ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "캐시 크기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rozmiar pamięci podręcznej"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho dos Caches"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер кэшей"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önbellek Boyutu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розмір кешів"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缓存大小"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快取大小"
+          }
+        }
+      }
+    },
     "Cached session expired. Please log in with password." : {
       "localizations" : {
         "ar" : {
@@ -21635,6 +21730,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "快取的工作階段已過期。請使用密碼登入。"
+          }
+        }
+      }
+    },
+    "Caches" : {
+      "comment" : "Settings › Performance: the Caches section's header",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ذاكرات التخزين المؤقت"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caches"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cachés"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caches"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कैश"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャッシュ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "캐시"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pamięć podręczna"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caches"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кэши"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önbellekler"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кеші"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缓存"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快取"
           }
         }
       }
@@ -27029,6 +27219,291 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "清除"
+          }
+        }
+      }
+    },
+    "Clear Caches" : {
+      "comment" : "Settings › Performance › Caches: the confirmation's destructive button; also a Settings search entry",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مسح ذاكرات التخزين المؤقت"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caches leeren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaciar cachés"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vider les caches"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कैश साफ़ करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Svuota cache"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャッシュを消去"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "캐시 지우기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyczyść pamięć podręczną"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar Caches"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить кэши"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önbellekleri Temizle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистити кеші"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除缓存"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除快取"
+          }
+        }
+      }
+    },
+    "Clear Caches?" : {
+      "comment" : "Settings › Performance › Caches: the confirmation's title",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل تريد مسح ذاكرات التخزين المؤقت؟"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caches leeren?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Vaciar las cachés?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vider les caches ?"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कैश साफ़ करें?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Svuotare la cache?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャッシュを消去しますか?"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "캐시를 지우겠습니까?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyczyścić pamięć podręczną?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar os caches?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить кэши?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önbellekler temizlensin mi?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистити кеші?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要清除缓存吗？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要清除快取嗎？"
+          }
+        }
+      }
+    },
+    "Clear Caches…" : {
+      "comment" : "Settings › Performance › Caches: the button that asks to clear the caches",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مسح ذاكرات التخزين المؤقت…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caches leeren …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaciar cachés…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vider les caches…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कैश साफ़ करें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Svuota cache…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャッシュを消去…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "캐시 지우기…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyczyść pamięć podręczną…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar Caches…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистить кэши…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önbellekleri Temizle…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистити кеші…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除缓存…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除快取⋯"
           }
         }
       }
@@ -35434,6 +35909,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "背景圖片成功轉換並正常渲染後，刪除其原始套件以節省磁碟空間。若之後的轉換器更新改變了工作坊背景圖片，會重新下載；本機輸入的項目不會更新。"
+          }
+        }
+      }
+    },
+    "Deletes the caches now, except what the wallpapers on screen use. Wallpapers load slower once while their caches are made again." : {
+      "comment" : "Settings › Performance › Caches: help of the Clear Caches button",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحذف ذاكرات التخزين المؤقت الآن، باستثناء ما تستخدمه الخلفيات المعروضة على الشاشة. سيكون تحميل الخلفيات أبطأ مرة واحدة ريثما تُنشأ ذاكراتها المؤقتة من جديد."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löscht die Caches sofort, außer dem, was die Hintergrundbilder auf dem Bildschirm verwenden. Hintergrundbilder laden einmalig langsamer, während ihre Caches neu erstellt werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina las cachés ahora, excepto lo que usan los fondos de pantalla visibles. Los fondos de pantalla cargarán más despacio una vez mientras se vuelven a crear sus cachés."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprime les caches maintenant, sauf ce qu’utilisent les fonds d’écran affichés. Les fonds d’écran se chargent plus lentement une fois, le temps de recréer leurs caches."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीन पर दिख रहे वॉलपेपर जो उपयोग कर रहे हैं उसे छोड़कर, कैश को अभी हटाता है। कैश दोबारा बनने तक वॉलपेपर एक बार धीमे लोड होंगे।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina subito la cache, tranne ciò che usano gli sfondi sullo schermo. Gli sfondi si caricheranno più lentamente una volta, mentre la loro cache viene ricreata."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画面上の壁紙が使用しているものを除き、キャッシュを今すぐ削除します。キャッシュが再作成されるまで、壁紙の読み込みが一度だけ遅くなります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면의 배경화면이 사용하는 항목을 제외하고 캐시를 지금 삭제합니다. 캐시를 다시 만드는 동안 배경화면이 한 번은 느리게 로드됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuwa teraz pamięć podręczną, z wyjątkiem tego, czego używają tapety na ekranie. Tapety raz załadują się wolniej, gdy ich pamięć podręczna będzie tworzona od nowa."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apaga os caches agora, exceto o que as imagens de fundo na tela usam. As imagens de fundo carregam mais devagar uma vez enquanto seus caches são refeitos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удаляет кэши сейчас, кроме того, что используют обои на экране. Обои один раз загрузятся медленнее, пока их кэши создаются заново."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekrandaki duvar kâğıtlarının kullandıkları dışında önbellekleri şimdi siler. Önbellekleri yeniden oluşturulurken duvar kâğıtları bir kereliğine daha yavaş yüklenir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видаляє кеші зараз, окрім того, що використовують шпалери на екрані. Шпалери один раз завантажаться повільніше, поки їхні кеші створюються знову."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即删除缓存，屏幕上的墙纸正在使用的除外。重新生成缓存期间，墙纸的载入会慢一次。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即刪除快取，螢幕上的背景圖片正在使用的除外。重新建立快取期間，背景圖片的載入會慢一次。"
           }
         }
       }
@@ -123730,6 +124300,100 @@
         }
       }
     },
+    "Screen Saver Same as Wallpaper" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شاشة التوقف مثل الخلفية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirmschoner wie Hintergrundbild"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvapantallas igual que el fondo de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Économiseur d’écran identique au fond d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीन सेवर वॉलपेपर जैसा ही"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvaschermo uguale allo sfondo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンセーバを壁紙と同じにする"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 보호기를 배경화면과 동일하게"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wygaszacz ekranu taki sam jak tapeta"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protetor de Tela Igual ao Papel de Parede"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставка как обои"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran Koruyucu Duvar Kâğıdıyla Aynı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставка як шпалери"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屏幕保护程序与壁纸相同"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "螢幕保護程式與桌布相同"
+          }
+        }
+      }
+    },
     "Screen saver is:" : {
       "localizations" : {
         "ar" : {
@@ -151115,6 +151779,100 @@
         }
       }
     },
+    "The screen saver shows each display's own wallpaper. Turning it off sets the main display's wallpaper as the screen saver on every display; Set as Screen Saver on another wallpaper turns it off too." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعرض شاشة التوقف خلفية كل شاشة عرض. يؤدي إيقافه إلى تعيين خلفية شاشة العرض الرئيسية كشاشة توقف على كل شاشات العرض؛ ويوقفه أيضًا «تعيين كشاشة توقف» لخلفية أخرى."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Bildschirmschoner zeigt auf jedem Display dessen eigenes Hintergrundbild. Ausgeschaltet wird das Hintergrundbild des Hauptdisplays auf allen Displays zum Bildschirmschoner; „Als Bildschirmschoner verwenden“ bei einem anderen Hintergrundbild schaltet es ebenfalls aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El salvapantallas muestra el fondo de pantalla de cada pantalla. Al desactivarlo, el fondo de pantalla de la pantalla principal se usa como salvapantallas en todas las pantallas; «Usar como salvapantallas» en otro fondo de pantalla también lo desactiva."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’économiseur d’écran affiche le fond d’écran propre à chaque écran. Le désactiver définit le fond d’écran de l’écran principal comme économiseur d’écran sur tous les écrans ; « Définir comme économiseur d’écran » sur un autre fond d’écran le désactive aussi."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीन सेवर हर डिस्प्ले का अपना वॉलपेपर दिखाता है। इसे बंद करने पर मुख्य डिस्प्ले का वॉलपेपर सभी डिस्प्ले पर स्क्रीन सेवर बन जाता है; किसी दूसरे वॉलपेपर पर “स्क्रीन सेवर बनाएँ” भी इसे बंद कर देता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il salvaschermo mostra lo sfondo di ciascun monitor. Disattivandolo, lo sfondo del monitor principale diventa il salvaschermo su tutti i monitor; anche «Imposta come salvaschermo» su un altro sfondo lo disattiva."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンセーバは各ディスプレイの壁紙を表示します。オフにすると、メインディスプレイの壁紙がすべてのディスプレイのスクリーンセーバになります。ほかの壁紙で「スクリーンセーバに設定」を選んでもオフになります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 보호기가 각 디스플레이의 배경화면을 보여줍니다. 끄면 주 디스플레이의 배경화면이 모든 디스플레이의 화면 보호기로 설정되며, 다른 배경화면에서 '화면 보호기로 설정'을 선택해도 꺼집니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wygaszacz ekranu pokazuje tapetę każdego ekranu. Wyłączenie ustawia tapetę ekranu głównego jako wygaszacz na wszystkich ekranach; „Ustaw jako wygaszacz ekranu” dla innej tapety również je wyłącza."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O protetor de tela mostra o papel de parede de cada tela. Desativar define o papel de parede da tela principal como protetor de tela em todas as telas; “Definir como Protetor de Tela” em outro papel de parede também o desativa."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставка показывает на каждом дисплее его собственные обои. Если выключить, заставкой на всех дисплеях станут обои основного дисплея; «Сделать заставкой» для других обоев тоже выключает этот параметр."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran koruyucu her ekranın kendi duvar kâğıdını gösterir. Kapatmak, ana ekranın duvar kâğıdını tüm ekranlarda ekran koruyucu yapar; başka bir duvar kâğıdında “Ekran Koruyucu Yap” da bunu kapatır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставка показує на кожному дисплеї його власні шпалери. Якщо вимкнути, заставкою на всіх дисплеях стануть шпалери основного дисплея; «Зробити заставкою» для інших шпалер теж вимикає цей параметр."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屏幕保护程序显示每台显示器自己的壁纸。关闭后，主显示器的壁纸会在所有显示器上设为屏幕保护程序；对其他壁纸选择“设为屏幕保护程序”也会将其关闭。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "螢幕保護程式會顯示每部顯示器自己的桌布。關閉後，主顯示器的桌布會在所有顯示器上設為螢幕保護程式；對其他桌布選擇「設為螢幕保護程式」也會將其關閉。"
+          }
+        }
+      }
+    },
     "The screen saver's background item couldn't be set up: %@" : {
       "localizations" : {
         "ar" : {
@@ -151582,6 +152340,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "所選的檔案夾不含任何背景圖片。"
+          }
+        }
+      }
+    },
+    "The space Open Wallpaper Engine's caches take: optimised textures, loading pictures, editor previews, video copies, translated shaders and the GPU shader cache macOS keeps for the app. Entries unused for 60 days are deleted automatically." : {
+      "comment" : "Settings › Performance › Caches: help of the Cache Size row",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المساحة التي تشغلها ذاكرات التخزين المؤقت لـ Open Wallpaper Engine: الأنسجة المحسّنة وصور التحميل ومعاينات المحرر ونسخ الفيديو والمظللات المحوّلة وذاكرة المظللات المؤقتة لوحدة GPU التي يحتفظ بها macOS للتطبيق. تُحذف العناصر غير المستخدمة منذ 60 يومًا تلقائيًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Speicherplatz, den die Caches von Open Wallpaper Engine belegen: optimierte Texturen, Ladebilder, Editor-Vorschauen, Videokopien, übersetzte Shader und der GPU-Shader-Cache, den macOS für die App anlegt. Einträge, die 60 Tage lang nicht verwendet wurden, werden automatisch gelöscht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El espacio que ocupan las cachés de Open Wallpaper Engine: texturas optimizadas, imágenes de carga, previsualizaciones del editor, copias de vídeo, sombreadores traducidos y la caché de sombreadores de la GPU que macOS guarda para la app. Los elementos que no se usan en 60 días se eliminan automáticamente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’espace qu’occupent les caches d’Open Wallpaper Engine : textures optimisées, images de chargement, aperçus de l’éditeur, copies de vidéos, nuanceurs traduits et le cache de nuanceurs GPU que macOS conserve pour l’app. Les éléments inutilisés depuis 60 jours sont supprimés automatiquement."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine के कैश द्वारा ली गई जगह: ऑप्टिमाइज़ किए गए टेक्सचर, लोडिंग चित्र, एडिटर प्रीव्यू, वीडियो कॉपी, अनुवादित शेडर और वह GPU शेडर कैश जो macOS ऐप के लिए रखता है। 60 दिनों तक उपयोग न की गई एंट्री अपने आप हटा दी जाती हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo spazio occupato dalla cache di Open Wallpaper Engine: texture ottimizzate, immagini di caricamento, anteprime dell’editor, copie dei video, shader tradotti e la cache degli shader GPU che macOS conserva per l’app. Gli elementi non usati da 60 giorni vengono eliminati automaticamente."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engineのキャッシュが使用している容量です：最適化されたテクスチャ、読み込み中の画像、エディタのプレビュー、ビデオのコピー、変換済みのシェーダー、macOSがこのAppのために保持するGPUシェーダーキャッシュ。60日間使用されていない項目は自動的に削除されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine의 캐시가 차지하는 공간입니다. 최적화된 텍스처, 로딩 이미지, 편집기 미리보기, 비디오 사본, 변환된 셰이더, macOS가 앱을 위해 보관하는 GPU 셰이더 캐시가 포함됩니다. 60일 동안 사용되지 않은 항목은 자동으로 삭제됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Miejsce zajmowane przez pamięć podręczną Open Wallpaper Engine: zoptymalizowane tekstury, obrazy ładowania, podglądy edytora, kopie wideo, przetłumaczone shadery oraz pamięć podręczna shaderów GPU, którą macOS przechowuje dla aplikacji. Elementy nieużywane od 60 dni są usuwane automatycznie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O espaço que os caches do Open Wallpaper Engine ocupam: texturas otimizadas, imagens de carregamento, pré-visualizações do editor, cópias de vídeo, shaders traduzidos e o cache de shaders da GPU que o macOS mantém para o app. Itens sem uso há 60 dias são apagados automaticamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Место, которое занимают кэши Open Wallpaper Engine: оптимизированные текстуры, изображения загрузки, превью редактора, копии видео, преобразованные шейдеры и кэш шейдеров GPU, который macOS хранит для приложения. Элементы, не использовавшиеся 60 дней, удаляются автоматически."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine önbelleklerinin kapladığı alan: optimize edilmiş dokular, yükleme resimleri, düzenleyici önizlemeleri, video kopyaları, çevrilmiş gölgelendiriciler ve macOS’in uygulama için tuttuğu GPU gölgelendirici önbelleği. 60 gün boyunca kullanılmayan öğeler otomatik olarak silinir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Місце, яке займають кеші Open Wallpaper Engine: оптимізовані текстури, зображення завантаження, попередні перегляди редактора, копії відео, перетворені шейдери та кеш шейдерів GPU, який macOS зберігає для програми. Елементи, не використані протягом 60 днів, видаляються автоматично."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 的缓存所占的空间：优化的纹理、载入图片、编辑器预览、视频副本、转换后的着色器，以及 macOS 为此 App 保留的 GPU 着色器缓存。60 天未使用的条目会被自动删除。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 快取所佔用的空間：最佳化的紋理、載入圖片、編輯器預覽、影片副本、轉換後的著色器，以及 macOS 為此 App 保留的 GPU 著色器快取。60 天未使用的項目會自動刪除。"
           }
         }
       }
@@ -169642,6 +170495,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "你更改過設定或套用過預設組合的背景圖片會保留它們。"
+          }
+        }
+      }
+    },
+    "Wallpapers will load slower once while Open Wallpaper Engine makes their caches again. What the wallpapers on screen use is kept. The GPU shader cache is cleared the next time the app starts." : {
+      "comment" : "Settings › Performance › Caches: the confirmation's message",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سيكون تحميل الخلفيات أبطأ مرة واحدة ريثما يُنشئ Open Wallpaper Engine ذاكراتها المؤقتة من جديد. يُحتفظ بما تستخدمه الخلفيات المعروضة على الشاشة. تُمسح ذاكرة المظللات المؤقتة لوحدة GPU عند تشغيل التطبيق في المرة التالية."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrundbilder laden einmalig langsamer, während Open Wallpaper Engine ihre Caches neu erstellt. Was die Hintergrundbilder auf dem Bildschirm verwenden, bleibt erhalten. Der GPU-Shader-Cache wird beim nächsten Start der App geleert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los fondos de pantalla cargarán más despacio una vez mientras Open Wallpaper Engine vuelve a crear sus cachés. Se conserva lo que usan los fondos de pantalla visibles. La caché de sombreadores de la GPU se vacía la próxima vez que se abra la app."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les fonds d’écran se chargeront plus lentement une fois, le temps qu’Open Wallpaper Engine recrée leurs caches. Ce qu’utilisent les fonds d’écran affichés est conservé. Le cache de nuanceurs GPU est vidé au prochain démarrage de l’app."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine के कैश दोबारा बनाने तक वॉलपेपर एक बार धीमे लोड होंगे। स्क्रीन पर दिख रहे वॉलपेपर जो उपयोग कर रहे हैं, वह रखा जाता है। GPU शेडर कैश अगली बार ऐप शुरू होने पर साफ़ हो जाएगा।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gli sfondi si caricheranno più lentamente una volta, mentre Open Wallpaper Engine ricrea la loro cache. Ciò che usano gli sfondi sullo schermo viene mantenuto. La cache degli shader GPU viene svuotata al prossimo avvio dell’app."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engineがキャッシュを再作成するため、壁紙の読み込みが一度だけ遅くなります。画面上の壁紙が使用しているものは保持されます。GPUシェーダーキャッシュは次回Appを起動したときに消去されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine이 캐시를 다시 만드는 동안 배경화면이 한 번은 느리게 로드됩니다. 화면의 배경화면이 사용하는 항목은 유지됩니다. GPU 셰이더 캐시는 다음에 앱을 시작할 때 지워집니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tapety raz załadują się wolniej, gdy Open Wallpaper Engine będzie od nowa tworzyć ich pamięć podręczną. To, czego używają tapety na ekranie, zostanie zachowane. Pamięć podręczna shaderów GPU zostanie wyczyszczona przy następnym uruchomieniu aplikacji."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As imagens de fundo carregarão mais devagar uma vez enquanto o Open Wallpaper Engine refaz seus caches. O que as imagens de fundo na tela usam é mantido. O cache de shaders da GPU é limpo na próxima vez que o app abrir."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обои один раз загрузятся медленнее, пока Open Wallpaper Engine заново создаёт их кэши. То, что используют обои на экране, сохраняется. Кэш шейдеров GPU очищается при следующем запуске приложения."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine önbellekleri yeniden oluştururken duvar kâğıtları bir kereliğine daha yavaş yüklenir. Ekrandaki duvar kâğıtlarının kullandıkları korunur. GPU gölgelendirici önbelleği, uygulamanın bir sonraki açılışında temizlenir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шпалери один раз завантажаться повільніше, поки Open Wallpaper Engine знову створює їхні кеші. Те, що використовують шпалери на екрані, зберігається. Кеш шейдерів GPU очищається під час наступного запуску програми."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 重新生成缓存期间，墙纸的载入会慢一次。屏幕上的墙纸正在使用的内容会保留。GPU 着色器缓存会在下次启动 App 时清除。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 重新建立快取期間，背景圖片的載入會慢一次。螢幕上的背景圖片正在使用的內容會保留。GPU 著色器快取會在下次啟動 App 時清除。"
           }
         }
       }

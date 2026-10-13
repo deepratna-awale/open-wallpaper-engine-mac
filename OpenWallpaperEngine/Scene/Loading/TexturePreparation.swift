@@ -88,6 +88,7 @@ enum TexturePreparation {
             texture.contentClass = header.contentClass
             texture.opaque = header.opaque
             texture.sourceKey = key
+            CacheEntryUse.markUsed(url)
             return texture
         } catch {
             OWELog.info(.scene, "Texture cache: dropping unreadable \(url.lastPathComponent): \(error)")

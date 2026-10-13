@@ -32,6 +32,8 @@ class VideoWallpaperViewModel: ObservableObject {
     /// Identifies the preparation in flight; nil once its file is open.
     private var pendingPreparation: UUID?
     private var stopped = false
+    /// The file the players have open (a repaired copy is a cache entry: `CacheLeases`).
+    private var mediaLease: CacheLease?
 
     var playRate: Float = 0 {
         didSet {
@@ -323,6 +325,7 @@ class VideoWallpaperViewModel: ObservableObject {
     }
 
     private func replacePlayers(with url: URL) {
+        mediaLease = CacheLeases.current.lease(url)
         // New AVPlayers start at rate 0, so the cached values no longer describe them.
         appliedVideoRate = nil
         appliedAudioRate = nil

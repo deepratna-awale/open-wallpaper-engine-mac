@@ -64,7 +64,8 @@ struct SettingsView: View {
                             isPresented: $confirmsReset) {
             Button("Restore Defaults", role: .destructive) {
                 SettingsTabReset.reset(navigation.tab, viewModel: viewModel, defaults: .app,
-                                       updater: AppDelegate.shared.updater)
+                                       updater: AppDelegate.shared.updater,
+                                       screenSaver: AppDelegate.shared.screenSaverSelection)
                 preferencesRevision += 1
             }
             Button("Cancel", role: .cancel) {}

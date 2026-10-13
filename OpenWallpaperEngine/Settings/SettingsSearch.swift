@@ -14,6 +14,7 @@ enum SettingsAnchor {
     static let transitions = "transitions"
     static let playback = "playback"
     static let quality = "quality"
+    static let caches = "caches"
     static let converted = "converted"
     static let displays = "displays"
     static let video = "video"
@@ -68,6 +69,7 @@ struct SettingsSearch {
             entry("Show in Menu Bar", .general, SettingsAnchor.macOS),
             entry("Adjust Menu Bar Color", .general, SettingsAnchor.macOS),
             entry("Show Wallpaper on Lock Screen", .general, SettingsAnchor.macOS),
+            entry("Screen Saver Same as Wallpaper", .general, SettingsAnchor.macOS),
             entry("Theming", .general, SettingsAnchor.theming),
             entry("Accent Color", .general, SettingsAnchor.theming),
             entry("System Accent", .general, SettingsAnchor.theming),
@@ -97,6 +99,9 @@ struct SettingsSearch {
             entry("Quality ↔ Efficiency", .performance, SettingsAnchor.quality),
             entry("Particle Budget", .performance, SettingsAnchor.quality),
             entry("Reflections", .performance, SettingsAnchor.quality),
+            entry("Caches", .performance, SettingsAnchor.caches),
+            entry("Cache Size", .performance, SettingsAnchor.caches),
+            entry("Clear Caches", .performance, SettingsAnchor.caches),
 
             entry("Converted Wallpapers", .optimizations, SettingsAnchor.converted),
             entry("Remove original packages after conversion", .optimizations, SettingsAnchor.converted),
