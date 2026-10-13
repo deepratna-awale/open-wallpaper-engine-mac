@@ -78,9 +78,18 @@ final class AppSystemControlService: SystemControlService {
     }
 
     /// As the mode's Set as Screen Saver: a scene is drawn live with the screen saver's own
-    /// choices, else the wallpaper's; a video's own file is put in place.
+    /// choices, else the wallpaper's; a web page or WebM video is drawn live through the Chromium
+    /// engine (refused without it, saying how to install it); a video's own file is put in place.
     func setScreenSaver(_ wallpaper: ControlWallpaper) async throws -> SystemScreenSaverSet {
         let found = try found(wallpaper)
+        switch ScreenSaverSelectionService.availability(of: found) {
+        case .available:
+            break
+        case .needsChromium:
+            throw ControlError(.unavailable, "\"\(wallpaper.title)\" is drawn in the screen saver only by the Chromium engine, which isn't installed. Web wallpapers and WebM videos move in the screen saver only with the Chromium engine. Install it in Settings › Plugins (Install the Chromium Engine), then try again.")
+        case .unavailable(let reason):
+            throw ControlError(.unsupported, "\"\(wallpaper.title)\" can't be the screen saver: \(reason).")
+        }
         guard !selectionService.isSettingVideo else {
             throw ControlError(.unavailable, "A video is being set as the screen saver. Wait for it to finish, then try again.")
         }

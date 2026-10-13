@@ -40,12 +40,11 @@ struct ExplorerItemMenu: SubviewOfContentView {
                 }
                 .disabled(!WallpaperSetAsRules.canSetWallpaper(hoveredWallpaper))
                 Button {
-                    AppDelegate.shared.showSceneInspector(for: hoveredWallpaper,
-                                                          scopes: wallpaperViewModel.editedPropertyScopes(of: hoveredWallpaper),
-                                                          mode: .screenSaver)
+                    // At once, with its default settings; Scene Edit / Export's Screen Saver tab customises it.
+                    AppDelegate.shared.screenSaverSelection.setAsScreenSaver(hoveredWallpaper)
                 } label: {
                     Label {
-                        Text("Set as Screen Saver", comment: "Context menu: sets the wallpaper as the screen saver (Installed: opens Scene Edit / Export's Screen Saver mode)")
+                        Text("Set as Screen Saver", comment: "Context menu: sets the wallpaper as the screen saver at once, with its default settings")
                     } icon: {
                         Image(systemName: "play.rectangle")
                     }

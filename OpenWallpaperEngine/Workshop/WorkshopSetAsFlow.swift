@@ -2,9 +2,10 @@ import Foundation
 
 /// The Discover and Workshop menus' "Set as Wallpaper" and "Set as Screen Saver": the item is
 /// downloaded as Download does (into the Wallpaper Storage folder, with its dependencies), unless
-/// it is installed already, then applied as the library applies it, or set as the screen saver as
-/// the Screen Saver mode sets it (`ScreenSaverSelectionService.setAsScreenSaver`: a scene drawn
-/// live, a video's own file). The download shows its progress and errors as any download does;
+/// it is installed already, then applied as the library applies it, or set as the screen saver
+/// with its default settings (`ScreenSaverSelectionService.setAsScreenSaver`: a scene or a web
+/// page drawn live, a video's own file; a web page without the Chromium engine offers its
+/// install instead). The download shows its progress and errors as any download does;
 /// setting the screen saver and its errors show in the same place (`downloadState(for:)`).
 @MainActor
 final class WorkshopSetAsFlow: ObservableObject {
@@ -33,6 +34,10 @@ final class WorkshopSetAsFlow: ObservableObject {
         var wallpaper: @MainActor (_ folder: URL) -> WEWallpaper?
         var setWallpaper: @MainActor (WEWallpaper) -> Void
         var isSettingScreenSaver: @MainActor () -> Bool
+        /// Whether the downloaded wallpaper can be set as the screen saver now (`ScreenSaverSelectionService.availability`).
+        var screenSaverAvailability: @MainActor (WEWallpaper) -> ScreenSaverSelectionService.Availability
+        /// Offers to install the Chromium engine, which the wallpaper needs in the screen saver.
+        var offerChromium: @MainActor (WEWallpaper) -> Void
         var setScreenSaver: @MainActor (WEWallpaper, _ completion: @escaping @MainActor (Bool) -> Void) -> Void
     }
 
@@ -93,8 +98,15 @@ final class WorkshopSetAsFlow: ObservableObject {
             phases[id] = nil
             environment.setWallpaper(wallpaper)
         case .screenSaver:
-            guard WallpaperSetAsRules.canSetScreenSaver(wallpaper) else {
-                phases[id] = .failed(Self.cantSetMessage(action))
+            switch environment.screenSaverAvailability(wallpaper) {
+            case .available:
+                break
+            case .needsChromium:
+                phases[id] = nil
+                environment.offerChromium(wallpaper)
+                return
+            case .unavailable(let reason):
+                phases[id] = .failed(reason)
                 return
             }
             phases[id] = .settingScreenSaver
@@ -124,8 +136,8 @@ final class WorkshopSetAsFlow: ObservableObject {
             return String(localized: "This item can't be set as the wallpaper.",
                           comment: "Workshop card: the downloaded item is an application wallpaper or not a wallpaper")
         case .screenSaver:
-            return String(localized: "The screen saver can play only scenes and MP4, M4V or MOV videos.",
-                          comment: "Workshop card: the downloaded item can't be set as the screen saver")
+            return String(localized: "Screen savers are made from scene, web and video wallpapers",
+                          comment: "Details panel: why an application wallpaper has no screen saver")
         }
     }
 }

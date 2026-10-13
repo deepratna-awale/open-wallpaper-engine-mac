@@ -8,9 +8,11 @@ import Foundation
 /// - **Video:** no Wallpaper mode (there are no layers to edit). Screen Saver plays the video
 ///   itself; iPhone & iPad Export makes a Live Photo from it; Android Export packs it as
 ///   Wallpaper Engine does. A file AVFoundation can't read (WebM, a remote video) leaves the
-///   first two shown but unavailable, with why; Android takes any local video, as WE does.
+///   first two shown but unavailable, with why (a WebM video is set as the screen saver from the
+///   library, drawn through Chromium); Android takes any local video, as WE does.
 /// - **Web and the rest:** the Wallpaper mode, and Android Export unavailable with WE's own
-///   message (WE doesn't export them for its mobile app).
+///   message (WE doesn't export them for its mobile app). No Screen Saver mode: a web page has
+///   no layers to choose, so it is set as the screen saver from the library as it is.
 enum SceneEditorModes {
     enum Availability: Equatable {
         case available
@@ -37,9 +39,13 @@ enum SceneEditorModes {
         if isVideo(wallpaper) {
             // MP4, M4V and MOV files in the library: what AVFoundation reads.
             let readable = ScreenSaverVideoSource.isEligible(wallpaper)
+            // A WebM video is drawn live through Chromium: it is set from the library, as it is.
+            let screenSaverReason = ScreenSaverPlugin.isWebMVideo(wallpaper)
+                ? String(localized: "A WebM video is drawn live through the Chromium engine. Set it with Set as Screen Saver in the library.",
+                         comment: "Scene Edit / Export: why a WebM video's Screen Saver tab can't be used")
+                : String(localized: "The screen saver can play only MP4, M4V or MOV video files in your library.")
             return [
-                Entry(mode: .screenSaver, availability: readable ? .available : .unavailable(
-                    String(localized: "The screen saver can play only MP4, M4V or MOV video files in your library."))),
+                Entry(mode: .screenSaver, availability: readable ? .available : .unavailable(screenSaverReason)),
                 Entry(mode: .deviceExport, availability: readable ? .available : .unavailable(
                     String(localized: "Live Photos can be made only from MP4, M4V or MOV video files in your library."))),
                 Entry(mode: .androidExport, availability: AndroidPackageBuilder.kind(of: wallpaper) == .video ? .available

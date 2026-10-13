@@ -4,8 +4,13 @@ import os
 
 /// A video wallpaper's screen saver: its own video file, played by the saver as it is, with no
 /// render. The file goes in the saver's folder (`ScreenSaverVideoStore`) as a hard link to the
-/// library file, else a symbolic link (the saver host may read any path), or, when the file keeps
-/// its parameter sets in band (`hev1`, `avc3`), as its repaired copy (`VideoSampleEntryRepair`).
+/// library file, else (a library on another volume: hard links can't cross it) as a copy (a
+/// clone where the file system makes one), or, when the file keeps its parameter sets in band
+/// (`hev1`, `avc3`), as its repaired copy (`VideoSampleEntryRepair`).
+///
+/// Never a symbolic link: the extension's sandbox grants only that folder, and the classic
+/// saver's host (`legacyScreenSaver`) didn't play a link to a library on an external disk either
+/// (macOS guards other volumes from sandboxed processes), so only repaired copies played there.
 ///
 /// WebM (VP8/VP9) isn't eligible: AVFoundation can't play it, and the desktop plays it through
 /// WebKit, which the saver doesn't have.
@@ -65,9 +70,21 @@ enum ScreenSaverVideoSource {
         case failed
     }
 
-    /// Puts `source` at `destination` for the saver. `willRepair` is called before a repair.
+    /// Whether the file at `url` is one the saver can open: a regular file in its folder, not a
+    /// symbolic link out of it (which earlier versions made, `prepare`).
+    static func isInPlace(_ url: URL) -> Bool {
+        // The entry itself, not what a link points to (`attributesOfItem` doesn't follow links,
+        // and unlike `URL.resourceValues` caches nothing). Missing is not in place.
+        let type = (try? FileManager.default.attributesOfItem(atPath: url.path(percentEncoded: false)))?[.type] as? FileAttributeType
+        return type == .typeRegular
+    }
+
+    /// Puts `source` at `destination` for the saver. `willWrite` is called before the file is
+    /// written out (a repair, or a copy from another volume), which takes a while for a large
+    /// video. `hardLink` is `FileManager.linkItem` (tests make it fail as across volumes).
     /// Reads the file: never call it on the main thread.
-    static func prepare(_ source: URL, at destination: URL, willRepair: () -> Void = {}) -> Outcome {
+    static func prepare(_ source: URL, at destination: URL, willWrite: () -> Void = {},
+                        hardLink: (URL, URL) throws -> Void = { try FileManager.default.linkItem(at: $0, to: $1) }) -> Outcome {
         let types: [String]
         do { types = try VideoSampleEntryRepair.sampleEntryTypes(source) } catch {
             OWELog.error(.app, "Screen saver: can't read the video track of \(source.lastPathComponent): \(error)")
@@ -87,31 +104,37 @@ enum ScreenSaverVideoSource {
             return .failed
         }
         if needsRepair(sampleEntryTypes: types) {
-            willRepair()
+            willWrite()
             do {
-                guard try VideoSampleEntryRepair.repair(source, to: destination) else { return link(source, at: destination) }
+                guard try VideoSampleEntryRepair.repair(source, to: destination) else {
+                    return place(source, at: destination, willWrite: {}, hardLink: hardLink)
+                }
                 return .ready(repaired: true)
             } catch {
                 OWELog.error(.app, "Screen saver: can't repair \(source.lastPathComponent): \(error)")
                 return .failed
             }
         }
-        return link(source, at: destination)
+        return place(source, at: destination, willWrite: willWrite, hardLink: hardLink)
     }
 
-    /// A hard link (same volume), else a symbolic link: never a copy.
-    private static func link(_ source: URL, at destination: URL) -> Outcome {
+    /// A hard link (same volume), else a copy: `copyItem` clones it where the file system can.
+    private static func place(_ source: URL, at destination: URL, willWrite: () -> Void,
+                              hardLink: (URL, URL) throws -> Void) -> Outcome {
         do {
-            try FileManager.default.linkItem(at: source, to: destination)
+            try hardLink(source, destination)
             return .ready(repaired: false)
         } catch {
-            // Another volume: hard links can't cross it.
+            // Another volume: hard links can't cross it, and the saver can't follow a link there.
         }
+        willWrite()
         do {
-            try FileManager.default.createSymbolicLink(at: destination, withDestinationURL: source.standardizedFileURL)
+            try FileManager.default.copyItem(at: source, to: destination)
+            OWELog.info(.app, "Screen saver: copied \(source.lastPathComponent) into the screen saver's folder (it is on another volume)")
             return .ready(repaired: false)
         } catch {
-            OWELog.error(.app, "Screen saver: can't link \(source.lastPathComponent): \(error)")
+            try? FileManager.default.removeItem(at: destination) // Optional: a partial copy, if any.
+            OWELog.error(.app, "Screen saver: can't copy \(source.lastPathComponent) into the screen saver's folder: \(error)")
             return .failed
         }
     }
