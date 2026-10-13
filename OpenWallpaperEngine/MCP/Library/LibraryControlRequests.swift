@@ -1,7 +1,7 @@
 import Foundation
 import OWEControlProtocol
 
-/// The control channel's requests for the library and the app: playlists, favourites, the Installed folders, deleting wallpapers, displays, the app's settings and plugin status (`docs/mcp.md`).
+/// The control channel's requests for the library and the app: playlists, favourites, the Installed folders, deleting wallpapers, displays, the app's settings, its caches and plugin status (`docs/mcp.md`).
 /// Each checks its parameters, finds what it names through `ControlLookup` and asks `service`,
 /// which drives the app's own view models; the result is the changed thing with a `message`.
 @MainActor
@@ -10,6 +10,7 @@ final class LibraryControlRequests: ControlRequestGroup {
         "playlist_create", "playlist_update", "playlist_add_items", "playlist_remove_items", "playlist_move_item",
         "playlist_delete", "wallpaper_set_favorite", "wallpaper_delete", "display_settings_get", "display_settings_set",
         "settings_get", "settings_set", "plugin_status", "folders_list", "folder_create", "wallpaper_move_to_folder",
+        "caches_get", "caches_clear",
     ]
 
     let service: LibraryControlService
@@ -37,6 +38,8 @@ final class LibraryControlRequests: ControlRequestGroup {
         case "settings_get": return try settings(params)
         case "settings_set": return try setSetting(params)
         case "plugin_status": return pluginStatus()
+        case "caches_get": return await caches()
+        case "caches_clear": return try await clearCaches(params)
         case "folders_list": return foldersList(lookup)
         case "folder_create": return try createFolder(params)
         case "wallpaper_move_to_folder": return try moveToFolder(params, lookup)
@@ -274,6 +277,31 @@ final class LibraryControlRequests: ControlRequestGroup {
                 ]
             }),
             "message": .string(plugins.map { "\($0.name): \($0.installed ? "installed" : "not installed")" }.joined(separator: "; ") + "."),
+        ]
+    }
+
+    // MARK: - Caches
+
+    private func caches() async -> JSONValue {
+        let sizes = await service.cacheSizes()
+        let total = sizes.reduce(0) { $0 + $1.bytes }
+        return [
+            "total_bytes": .number(Double(total)),
+            "caches": .array(sizes.map { ["id": .string($0.id), "bytes": .number(Double($0.bytes))] }),
+            "message": .string("The caches take \(ByteCountFormatter.string(fromByteCount: total, countStyle: .file))."),
+        ]
+    }
+
+    private func clearCaches(_ params: ControlParameters) async throws -> JSONValue {
+        try Self.requireConfirmation(params, "Clearing the caches")
+        let cleared = await service.clearCaches()
+        let freed = ByteCountFormatter.string(fromByteCount: cleared.removedBytes, countStyle: .file)
+        return [
+            "removed_entries": .number(Double(cleared.removedEntries)),
+            "removed_bytes": .number(Double(cleared.removedBytes)),
+            "metal_shader_cache_cleared_at_next_launch": .bool(cleared.metalCacheResetRequested),
+            "message": .string("Removed \(cleared.removedEntries) \(cleared.removedEntries == 1 ? "cache entry" : "cache entries") (\(freed)); what the wallpapers on screen use was kept."
+                                + (cleared.metalCacheResetRequested ? " The GPU shader cache is cleared at the next launch." : "")),
         ]
     }
 
