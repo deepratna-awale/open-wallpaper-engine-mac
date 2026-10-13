@@ -21,3 +21,16 @@
 - **Project copy:** project/, without .tex files; the mask .png is in project/materials/masks/.
 - **Same outcome as 532/532b:** the mask data is written, but neither the editor nor the runtime hides or clips the assigned limb.
   - The only visible effect found is hidemaskgeometry, which hides the painted-over island (532b).
+
+## Follow-up check (a)-(c)
+- **(a) Runtime** (RenderDoc stills of p532c with the editor closed, t = 1.0 and 3.0 s; stills/): **the circle is drawn in full**, away from the rectangle.
+  - It ran at the user's current WE quality setting, not changed to Ultra, so the user's WE settings were left as they were.
+- **(b) Editor stats** (View › Show Stats › Always; it was set back to Automatically afterwards): **"Clipping mask passes: 1"** with maskA assigned (editor/stats_clipping_passes.png). Draw calls 7.
+  - So WE runs one clipping-mask pass, yet the circle stays fully visible in the preview.
+- **(c) The Clipping Masks panel** (editor/clipping_panel.png) has these controls only:
+  - Limbs list
+  - Assign Clipping Mask, Remove Clipping Mask
+  - **Additive blending** (checkbox, per limb; not tested)
+  - per mask: Paint Clipping Mask, Name, Invert mask, Hide mask geometry
+  - There is no enable or preview toggle.
+- **Clipping is parked here.**

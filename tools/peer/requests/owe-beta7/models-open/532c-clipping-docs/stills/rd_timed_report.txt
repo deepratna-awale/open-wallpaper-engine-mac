@@ -1,0 +1,3 @@
+connected ident 38920
+p532c still 1.0 triggered at 1.001 s frame 640
+p532c still 3.0 triggered at 3.004 s frame 690
