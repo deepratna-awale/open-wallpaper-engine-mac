@@ -12,6 +12,8 @@ extension SystemControlRequests {
         var result: [String: JSONValue] = [
             "plugin_enabled": .bool(state.pluginEnabled),
             "selection": state.selection.map(Self.json) ?? .null,
+            // Settings › General › Screen Saver Same as Wallpaper: on while nothing is set.
+            "same_as_wallpaper": .bool(state.selection == nil),
         ]
         var message = state.pluginEnabled ? "The Screen Saver plugin is on" : "The Screen Saver plugin is off"
         if let selection = state.selection {
@@ -118,18 +120,21 @@ extension SystemControlRequests {
             "wallpaper": ControlLookup.json(wallpaper),
             "selection": Self.json(set.selection),
             "enabled_plugin": .bool(set.enabledPlugin),
-            "message": .string(message + " " + Self.pickInSystemSettings),
+            "same_as_wallpaper": false,
+            "message": .string(message + " Screen Saver Same as Wallpaper is now off. " + Self.pickInSystemSettings),
         ]
     }
 
     func stopUsingScreenSaver() throws -> JSONValue {
         let state = service.screenSaver
         guard let selection = state.selection else {
-            return ["stopped": false, "message": "Nothing is set as the screen saver; it already follows the desktop's wallpapers."]
+            return ["stopped": false, "same_as_wallpaper": true,
+                    "message": "Nothing is set as the screen saver; it already follows the desktop's wallpapers (Screen Saver Same as Wallpaper is on)."]
         }
         service.stopUsingScreenSaver()
         let title = selection.wallpaper.map { "\"\($0.title)\"" } ?? "The wallpaper"
-        return ["stopped": true, "message": .string("\(title) is no longer the screen saver; it follows the desktop's wallpapers again.")]
+        return ["stopped": true, "same_as_wallpaper": true,
+                "message": .string("\(title) is no longer the screen saver; it follows the desktop's wallpapers again (Screen Saver Same as Wallpaper is on).")]
     }
 
     // MARK: Lookup and writing

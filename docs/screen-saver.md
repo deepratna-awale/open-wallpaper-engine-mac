@@ -41,9 +41,33 @@ when the screen saver stops or the Mac is unlocked, and another screen saver or 
 Settings preview never makes it draw. After the screen saver stops, the lock screen keeps its
 last frame.
 
+System Settings' preview shows the current still as soon as it is made, and a new one as soon as
+the app writes it (a new wallpaper or pick; each saver process watches its folder), without
+reopening the pane. It shows live frames whenever the app draws them (while a screen saver or
+Preview runs), and draws once a second while its window is hidden.
+
 When the app isn't running, the screen saver asks for it: its broker (the background item below)
 launches the app in the background, with no window or Dock icon, and the wallpaper starts loading
 at once.
+
+## Screen Saver Same as Wallpaper
+
+Settings › General › macOS › **Screen Saver Same as Wallpaper** (on by default, below Show
+Wallpaper on Lock Screen) is on while nothing is set as the screen saver: each display's screen
+saver shows that display's own wallpaper, as its layout plans (below). It is read from what is set
+as the screen saver, so it always says what the screen saver shows:
+
+- Setting a wallpaper as the screen saver (a menu, the Details panel, the Screen Saver tab or MCP)
+  turns it off.
+- Turning it on clears that wallpaper, as **Stop Using as Screen Saver** does.
+- Turning it off sets the main display's wallpaper as the screen saver on every display, with the
+  Screen Saver tab's choices for it if it has any. With nothing set, the screen
+  saver would still follow the desktop, so an "off" that changed nothing would say something
+  untrue. When the main display's wallpaper can't be the screen saver (an application wallpaper),
+  it stays on; a web wallpaper without the Chromium engine offers to install it first.
+- Restore Defaults on the General tab and Reset Config turn it back on. It applies at once, like
+  Set as Screen Saver, so the Settings window's Cancel doesn't undo it.
+- MCP's `screensaver_get` reports it as `same_as_wallpaper`.
 
 ## Set as Screen Saver
 
