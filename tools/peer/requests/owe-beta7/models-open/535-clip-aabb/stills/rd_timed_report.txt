@@ -1,0 +1,5 @@
+connected ident 38920
+p535_aabb_base still 0.5 triggered at 0.501 s frame 601
+p535_aabb_base still 1.0 triggered at 1.000 s frame 613
+p535_aabb_far still 0.5 triggered at 0.504 s frame 721
+p535_aabb_far still 1.0 triggered at 1.003 s frame 735

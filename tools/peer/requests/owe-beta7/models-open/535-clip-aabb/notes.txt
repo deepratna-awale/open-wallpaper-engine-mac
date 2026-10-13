@@ -1,0 +1,12 @@
+535: clip bounding box culling (WE 2.8.0.42)
+- **Files:**
+  - aabb_base.mdl is 509 E's e_offset0.mdl.
+  - aabb_far.mdl is the same file with the 24 bytes at 0x1796 and 0x250D (each clip's f32 min xyz / max xyz) set to (10000,10000,10000) x2. 46 bytes differ, all inside those two ranges.
+  - aabb_far.json is the model json, unchanged.
+- **Projects:** MG4's root-motion box (models_gt/mg4/we_import_project), camera eye 8 6 8, animation layer on clip 26. make_535.py builds them.
+- **Stills:** RenderDoc swapchain grabs at t = 0.5 and 1.0 s (stills/, rd_timed_report.txt, sheet_535.png).
+- **Result: the box still draws with the far AABB.** It is the same size and shading, and still moves along its root-motion path.
+  - Positions differ only by the usual per-load phase jitter: base t0.5 (754,503) and t1.0 (917,546); far t0.5 near (925,535) and t1.0 near (945,540).
+  - So WE does not cull a model by its clip AABB, at least not on the main camera pass.
+- **The grey "Done." band** in the far stills is WE's own toast overlay, drawn after the wallpaper switch. It is not part of the scene.
+- **Shadow-light pair: not done.** The scene has no light, and adding a shadow-casting light needs the editor. It can be done if needed.

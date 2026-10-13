@@ -12,7 +12,13 @@ try:
     import renderdoc as rd
     capdir = r'K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap'
     os.makedirs(capdir, exist_ok=True); before = set(os.listdir(capdir))
-    tc = rd.CreateTargetControl('', int(JOB['ident']), 'claude-timed', True)
+    tc = None
+    for _ in range(60):
+        for ident in [int(JOB['ident'])] + list(range(38920, 38928)):
+            tc = rd.CreateTargetControl('', ident, 'claude-timed', True)
+            if tc: P('connected ident', ident); break
+        if tc: break
+        time.sleep(2)
     jobs = []
     for s in JOB['shots']:
         subprocess.call([JOB['we'] + r'\wallpaper64.exe', '-control', 'openWallpaper', '-file', JOB['we'] + r'\projects\defaultprojects\retro\project.json', '-monitor', str(JOB['monitor'])])
