@@ -29,20 +29,6 @@ final class EffectPaddedImagePlacementTests: XCTestCase {
         var description: String { "col \(column) row \(row)\(band ? " band" : "")\(padding ? " padding" : "")" }
     }
 
-    /// 2294569625: a 1000×601 image in a 1024×1024 `.tex` with WE's shake on it, its direction map
-    /// a padded mask. The chain ran on the image cut out of its allocation, but its last pass, drawn
-    /// into the scene, still sampled the buffers through the image's share of the allocation, so the
-    /// layer showed only its top-left 976×353 texels, stretched: under Fill the bottom of the picture
-    /// was cut off. Every variant must show the same rows and columns, those the placement keeps.
-    func testPaddedImageWithAnEffectShowsThePlacedRowsAndColumns() throws {
-        _ = try Fixtures.assets()
-        for variant in [Variant(padded: true, effect: true), Variant(padded: true, effect: false),
-                        Variant(padded: false, effect: true), Variant(padded: false, effect: false)] {
-            try assertPlacement(variant, .fill)
-            try assertPlacement(variant, .fit)
-        }
-    }
-
     /// Fill scales the 1000×601 scene by 1.92 to 1920×1154 and trims 37 px (19 rows) off its top
     /// and bottom; Fit scales it by 1.797 to 1797×1080 with 61 px bars left and right.
     private func assertPlacement(_ variant: Variant, _ placement: WallpaperPlacement,

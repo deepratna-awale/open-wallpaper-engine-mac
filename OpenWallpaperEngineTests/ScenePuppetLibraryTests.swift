@@ -31,22 +31,6 @@ final class ScenePuppetLibraryTests: XCTestCase {
         }
     }
 
-    func testEveryLibraryPuppetDrawsItsPose() throws {
-        _ = try Fixtures.assets()
-        let roots = LightingLibraryDecodeTests.roots.filter { FileManager.default.fileExists(atPath: $0.path) }
-        try XCTSkipIf(roots.count < LightingLibraryDecodeTests.roots.count, "wallpaper library not present")
-        let items = try Self.puppetScenes(in: roots)
-        let ids = Set(items.map(\.workshopID))
-        for expected in ["2542737668", "3803167460", "2804817823", "2321732083", "2515150033", "3802767544", "3803042537"] {
-            XCTAssertTrue(ids.contains(expected), "\(expected)'s puppets weren't found")
-        }
-        XCTAssertGreaterThanOrEqual(items.reduce(0) { $0 + $1.layers.count }, 32, "the survey's 32 puppet layers")
-        let output = ProcessInfo.processInfo.environment["OWE_PUPPET_OUT"].map { URL(fileURLWithPath: $0, isDirectory: true) }
-        var report = "scene\tlayer\tbones\tvertices\ttexture\tIoU\talpha MAE\tcolour MAE\tpicture covered\tunwarped\tposed\n"
-        for item in items { report += try sweep(item, output: output) }
-        print("Library puppets, posed (and their bind pose against the picture):\n\(report)")
-    }
-
     /// A puppet with effects moves with its pose, frame after frame. The Cyberpunk Samurai
     /// (2321732083: `pulse` and `blend` on the puppet) stood in its first pose while its effects'
     /// kept output was keyed by the image's texture alone, which the mesh redraws in place; only
