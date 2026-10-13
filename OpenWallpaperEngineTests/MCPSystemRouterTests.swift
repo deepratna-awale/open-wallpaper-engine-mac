@@ -346,6 +346,19 @@ final class MCPSystemRouterTests: XCTestCase {
         XCTAssertEqual(again["stopped"], false)
     }
 
+    func testSetTakesWebWallpapersButNotApplications() async throws {
+        model.library.append(SystemFakeAppModel.wallpaper("300", "Neon Page", "web"))
+        model.library.append(SystemFakeAppModel.wallpaper("400", "Desktop App", "application"))
+        let web = try await result("screensaver_set", ["wallpaper_id": "300"])
+        XCTAssertEqual(service.setAsScreenSaver, ["300"])
+        XCTAssertEqual(web["selection"]?["kind"], "live")
+        XCTAssertTrue(web["message"]?.stringValue?.contains("Chromium") ?? false)
+
+        let application = await error("screensaver_set", ["wallpaper_id": "400"])
+        XCTAssertEqual(application?.code, .unsupported)
+        XCTAssertEqual(service.setAsScreenSaver, ["300"], "an application never reaches the service")
+    }
+
     func testSetRefusals() async {
         service.setFails = true
         let failed = await error("screensaver_set", ["wallpaper_id": "100"])

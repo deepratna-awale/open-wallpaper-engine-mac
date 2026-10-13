@@ -18,6 +18,11 @@ final class ScreenSaverSelectionService: ObservableObject {
 
     /// A video wallpaper's file is being put in place (`useVideo`).
     @Published private(set) var isSettingVideo = false
+    /// The video wallpaper whose file is being put in place, for its Details panel.
+    @Published private(set) var settingVideo: String?
+    /// A web wallpaper or WebM video Set as Screen Saver was chosen for without the Chromium
+    /// engine: the main window offers to install it (`setAsScreenSaver`).
+    @Published var chromiumOffer: WEWallpaper?
     let store: ScreenSaverSettingsStore
     private let plugin: ScreenSaverPlugin
     private let environment: Environment
@@ -41,6 +46,11 @@ final class ScreenSaverSelectionService: ObservableObject {
     var stills: ScreenSaverStillPublisher?
     /// A new wallpaper was picked: its still is made now (`ScreenSaverLiveController.renderPickStill`).
     var onPicked: ((WEWallpaper) -> Void)?
+
+    /// Whether `wallpaper`'s video is being put in place as the screen saver (`useVideo`).
+    func isSetting(_ wallpaper: WEWallpaper) -> Bool {
+        settingVideo == wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false)
+    }
 
     /// Whether `wallpaper` is the screen saver: picked, or its video set.
     func isSelected(_ wallpaper: WEWallpaper) -> Bool {
@@ -78,7 +88,7 @@ final class ScreenSaverSelectionService: ObservableObject {
 
     /// Sets a video wallpaper's own video as the screen saver (turning the plugin on when it is
     /// off): nothing is rendered, the file goes in as the desktop's video does
-    /// (`ScreenSaverVideoSource.prepare`: linked, or repaired), and becomes the selection.
+    /// (`ScreenSaverVideoSource.prepare`: linked, copied, or repaired), and becomes the selection.
     /// `completion` gets whether it was set.
     func useVideo(_ wallpaper: WEWallpaper, completion: @escaping @MainActor (Bool) -> Void = { _ in }) {
         guard !isSettingVideo else {
@@ -97,6 +107,7 @@ final class ScreenSaverSelectionService: ObservableObject {
         let fileName = "\((loopName as NSString).deletingPathExtension)-rec\(Int(started.timeIntervalSince1970)).\(source.pathExtension.lowercased())"
         let videos = videos
         isSettingVideo = true
+        settingVideo = wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false)
         plugin.beginSettingVideo()
         OWELog.info(.app, "Screen saver: setting \(wallpaper.wallpaperDirectory.lastPathComponent)'s video")
         Task { [weak self] in
@@ -108,6 +119,18 @@ final class ScreenSaverSelectionService: ObservableObject {
             self?.finish(wallpaper, fileName: fileName, size: size ?? .zero, started: started, succeeded: size != nil)
             completion(size != nil)
         }
+    }
+
+    /// `wallpaper`'s video, set as the screen saver, is a symbolic link an earlier version made
+    /// (its library is on another volume), which the saver can't follow: it is set again, so it
+    /// is copied in (`ScreenSaverVideoSource.prepare`). Returns whether it was.
+    @discardableResult
+    func replaceLinkedSelection(_ wallpaper: WEWallpaper) -> Bool {
+        guard let selection, selection.wallpaperDirectory == wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false),
+              !ScreenSaverVideoSource.isInPlace(videos.url(fileName: selection.fileName)) else { return false }
+        OWELog.info(.app, "Screen saver: \(wallpaper.wallpaperDirectory.lastPathComponent)'s video isn't in the screen saver's folder; setting it again")
+        useVideo(wallpaper)
+        return true
     }
 
     /// Puts `source` in the saver's folder as `fileName` and lists it alone; its display size,
@@ -130,6 +153,7 @@ final class ScreenSaverSelectionService: ObservableObject {
 
     private func finish(_ wallpaper: WEWallpaper, fileName: String, size: SIMD2<Int>, started: Date, succeeded: Bool) {
         isSettingVideo = false
+        settingVideo = nil
         if succeeded {
             if store.livePick != nil {
                 store.livePick = nil

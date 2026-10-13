@@ -98,13 +98,19 @@ extension SystemControlRequests {
 
     func setScreenSaver(_ params: ControlParameters, lookup: ControlLookup) async throws -> JSONValue {
         let wallpaper = try lookup.wallpaper(params.required("wallpaper_id"))
-        guard wallpaper.type == "scene" || wallpaper.type == "video" else {
-            throw ControlError(.unsupported, "\"\(wallpaper.title)\" is a \(wallpaper.type) wallpaper; Set as Screen Saver takes scenes and videos. The screen saver draws web wallpapers live by itself while they are on the desktop.")
+        guard ["scene", "video", "web"].contains(wallpaper.type) else {
+            throw ControlError(.unsupported, "\"\(wallpaper.title)\" is a \(wallpaper.type) wallpaper; Set as Screen Saver takes scenes, videos and web wallpapers.")
         }
         let set = try await service.setScreenSaver(wallpaper)
-        var message = set.selection.kind == .live
-            ? "\"\(wallpaper.title)\" is the screen saver, drawn live with its screen saver choices (screensaver_set_layers)."
-            : "\"\(wallpaper.title)\"'s own video is the screen saver."
+        var message: String
+        switch (set.selection.kind, wallpaper.type) {
+        case (.live, "scene"):
+            message = "\"\(wallpaper.title)\" is the screen saver, drawn live with its screen saver choices (screensaver_set_layers)."
+        case (.live, _):
+            message = "\"\(wallpaper.title)\" is the screen saver, drawn live through the Chromium engine."
+        case (.video, _):
+            message = "\"\(wallpaper.title)\"'s own video is the screen saver."
+        }
         if set.enabledPlugin {
             message += " The Screen Saver plugin was off, so this turned it on (which installs the saver), as the Screen Saver mode does."
         }

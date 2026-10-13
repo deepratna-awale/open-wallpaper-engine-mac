@@ -202,6 +202,104 @@ final class ScreenSaverEditorTests: XCTestCase {
         XCTAssertFalse(service.isSelected(wallpaper))
     }
 
+    /// The menus' and the Details panel's Set as Screen Saver: the wallpaper at once, with its
+    /// default settings: what the Screen Saver tab saved for it is cleared.
+    @MainActor
+    func testMenuSetUsesTheDefaultSettings() throws {
+        let wallpaper = try wallpaper()
+        let store = ScreenSaverSettingsStore(defaults: defaults)
+        let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
+        let plugin = makePlugin(store, videos: videos)
+        let service = makeService(store, plugin: plugin, videos: videos)
+        let identity = WallpaperSettingsIdentity.resolve(wallpaper, defaults: defaults)
+        save(["speed": "0.3"], .shared, of: wallpaper)
+        store.setValues(["speed": "0.9", sceneObjectVisibilityKey(objectID: 4): "false"], for: identity)
+
+        var succeeded: Bool?
+        service.setAsScreenSaver(wallpaper) { succeeded = $0 }
+        XCTAssertEqual(succeeded, true)
+        XCTAssertTrue(service.isSelected(wallpaper))
+        XCTAssertEqual(store.values(for: identity), [:], "no saved choices: every layer as authored, the property defaults")
+        ScreenSaverPlugin.publishPickValues(for: wallpaper, store: store)
+        XCTAssertEqual(stored(ScreenSaverPlugin.pickScope, of: wallpaper), [:], "not the desktop's values either")
+        XCTAssertNil(service.chromiumOffer)
+    }
+
+    /// A web wallpaper is set from the menu once the Chromium engine is there; without it the
+    /// install is offered and nothing is set.
+    @MainActor
+    func testMenuSetOfAWebWallpaperNeedsChromium() throws {
+        let folder = directory.appending(path: "web", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let web = WEWallpaper(using: WEProject(file: "index.html", preview: "p.jpg", title: "Web", type: "web"), where: folder)
+        let store = ScreenSaverSettingsStore(defaults: defaults)
+        let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
+        let service = makeService(store, plugin: makePlugin(store, videos: videos), videos: videos)
+        var succeeded: Bool?
+        service.setAsScreenSaver(web) { succeeded = $0 }
+        if ChromiumEngineInstaller.hasActiveInstall {
+            XCTAssertEqual(succeeded, true)
+            XCTAssertTrue(service.isSelected(web), "drawn live through Chromium")
+            XCTAssertNil(service.chromiumOffer)
+        } else {
+            XCTAssertEqual(succeeded, false)
+            XCTAssertFalse(service.isSelected(web))
+            XCTAssertEqual(service.chromiumOffer?.wallpaperDirectory, folder, "the install is offered instead")
+        }
+    }
+
+    /// A video an earlier version linked from another volume (a symbolic link the saver can't
+    /// follow) is set again at launch; one in place is left as it is.
+    @MainActor
+    func testALinkedSelectionIsSetAgain() throws {
+        let wallpaper = try wallpaper()
+        let store = ScreenSaverSettingsStore(defaults: defaults)
+        let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
+        let service = makeService(store, plugin: makePlugin(store, videos: videos), videos: videos)
+        try FileManager.default.createDirectory(at: videos.directory, withIntermediateDirectories: true)
+        let folder = wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false)
+        store.selection = .init(wallpaperDirectory: folder, fileName: "copy.mp4", width: 1, height: 1, recorded: Date())
+        try Data("movie".utf8).write(to: videos.url(fileName: "copy.mp4"))
+        XCTAssertFalse(service.replaceLinkedSelection(wallpaper), "a file in the folder plays")
+
+        let target = directory.appending(path: "elsewhere.mp4")
+        try Data("movie".utf8).write(to: target)
+        try FileManager.default.createSymbolicLink(at: videos.url(fileName: "link.mp4"), withDestinationURL: target)
+        store.selection = .init(wallpaperDirectory: folder, fileName: "link.mp4", width: 1, height: 1, recorded: Date())
+        XCTAssertTrue(service.replaceLinkedSelection(wallpaper))
+        store.selection = .init(wallpaperDirectory: "/another", fileName: "link.mp4", width: 1, height: 1, recorded: Date())
+        XCTAssertFalse(service.replaceLinkedSelection(wallpaper), "only the selected wallpaper's")
+    }
+
+    /// What Set as Screen Saver takes: scenes, playable video files, web pages and WebM videos
+    /// (these two through Chromium), never an application.
+    func testAvailability() throws {
+        func make(_ type: String, _ file: String) -> WEWallpaper {
+            WEWallpaper(using: WEProject(file: file, preview: "p.jpg", title: "T", type: type), where: directory.appending(path: type))
+        }
+        typealias Service = ScreenSaverSelectionService
+        for chromium in [false, true] {
+            XCTAssertEqual(Service.availability(of: make("scene", "scene.json"), chromiumInstalled: chromium), .available)
+            XCTAssertEqual(Service.availability(of: make("video", "a.mp4"), chromiumInstalled: chromium), .available)
+            XCTAssertEqual(Service.availability(of: make("video", "a.mov"), chromiumInstalled: chromium), .available)
+            XCTAssertEqual(Service.availability(of: make("web", "index.html"), chromiumInstalled: chromium),
+                           chromium ? .available : .needsChromium)
+            guard case .unavailable = Service.availability(of: make("application", "a.exe"), chromiumInstalled: chromium) else {
+                return XCTFail("an application can't be the screen saver")
+            }
+            guard case .unavailable = Service.availability(of: make("video", "a.avi"), chromiumInstalled: chromium) else {
+                return XCTFail("a container the saver can't play")
+            }
+        }
+        let webm = make("video", "a.webm")
+        if WebKitVideoPlayer.handles(webm.mediaURL) {
+            XCTAssertEqual(Service.availability(of: webm, chromiumInstalled: false), .needsChromium)
+            XCTAssertEqual(Service.availability(of: webm, chromiumInstalled: true), .available)
+        }
+        XCTAssertTrue(Service.canSet(make("web", "index.html")), "the menu offers it; without Chromium it offers the install")
+        XCTAssertFalse(Service.canSet(make("application", "a.exe")))
+    }
+
     /// A scene's recording set as the screen saver by an earlier version becomes the live pick of
     /// its wallpaper; a video's own file stays the selection.
     func testARecordedSelectionMigratesToTheLivePick() throws {

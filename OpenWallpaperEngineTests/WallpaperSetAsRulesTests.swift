@@ -22,13 +22,15 @@ final class WallpaperSetAsRulesTests: XCTestCase {
         XCTAssertFalse(WallpaperSetAsRules.canSetWallpaper(WEWallpaper(using: .invalid, where: URL(filePath: "/tmp/none"))))
     }
 
-    func testInstalledScreenSaverTakesWhatTheScreenSaverModeRecordsOrPlays() {
+    func testInstalledScreenSaverTakesScenesVideosAndWebPages() {
         XCTAssertTrue(WallpaperSetAsRules.canSetScreenSaver(wallpaper("scene")))
         XCTAssertTrue(WallpaperSetAsRules.canSetScreenSaver(wallpaper("video", file: "a.mp4")))
         XCTAssertTrue(WallpaperSetAsRules.canSetScreenSaver(wallpaper("video", file: "a.mov")))
-        // A WebM file the saver can't play, a web page and an application.
-        XCTAssertFalse(WallpaperSetAsRules.canSetScreenSaver(wallpaper("video", file: "a.webm")))
-        XCTAssertFalse(WallpaperSetAsRules.canSetScreenSaver(wallpaper("web", file: "index.html")))
+        // A web page and a WebM video are drawn through Chromium; without it the menu offers it.
+        XCTAssertTrue(WallpaperSetAsRules.canSetScreenSaver(wallpaper("web", file: "index.html")))
+        let webm = wallpaper("video", file: "a.webm")
+        XCTAssertEqual(WallpaperSetAsRules.canSetScreenSaver(webm), WebKitVideoPlayer.handles(webm.mediaURL))
+        XCTAssertFalse(WallpaperSetAsRules.canSetScreenSaver(wallpaper("video", file: "a.avi")))
         XCTAssertFalse(WallpaperSetAsRules.canSetScreenSaver(wallpaper("application", file: "a.exe")))
     }
 
@@ -39,7 +41,7 @@ final class WallpaperSetAsRulesTests: XCTestCase {
 
         XCTAssertTrue(WallpaperSetAsRules.canSetScreenSaver(item(["Scene"])))
         XCTAssertTrue(WallpaperSetAsRules.canSetScreenSaver(item(["video"])))
-        XCTAssertFalse(WallpaperSetAsRules.canSetScreenSaver(item(["Web"])))
+        XCTAssertTrue(WallpaperSetAsRules.canSetScreenSaver(item(["Web"])))
         XCTAssertFalse(WallpaperSetAsRules.canSetScreenSaver(item(["Application"])))
         // A preset carries no type tag: it is checked once downloaded.
         XCTAssertTrue(WallpaperSetAsRules.canSetWallpaper(item(["Preset"])))

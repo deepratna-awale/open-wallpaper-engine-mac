@@ -165,7 +165,9 @@ final class SceneEditorExportTests: XCTestCase {
         let webm = try wallpaper("webm", type: "video", file: "clip.webm")
         let entries = SceneEditorModes.entries(for: webm)
         XCTAssertEqual(entries.map(\.mode), [.screenSaver, .deviceExport, .androidExport])
-        XCTAssertFalse(entries[0].availability.isAvailable)
+        XCTAssertEqual(entries[0].availability, .unavailable(String(
+            localized: "A WebM video is drawn live through the Chromium engine. Set it with Set as Screen Saver in the library.",
+            comment: "Scene Edit / Export: why a WebM video's Screen Saver tab can't be used")), "it is set from the library")
         XCTAssertFalse(entries[1].availability.isAvailable)
         XCTAssertEqual(entries[2].availability, .available, "WE packs any local video")
     }
