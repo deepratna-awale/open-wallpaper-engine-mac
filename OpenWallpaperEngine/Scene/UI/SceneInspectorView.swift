@@ -1279,6 +1279,8 @@ private struct SceneInspectorContent: View {
             .onDisappear {
                 // The screen saver's last choices are saved before its store goes.
                 screenSaverModel?.close()
+                // The library's export selection for this mode ends with it.
+                androidModel?.closeBatch()
                 isolated?.end()
             }
     }

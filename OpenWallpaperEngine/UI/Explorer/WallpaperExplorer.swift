@@ -18,6 +18,9 @@ struct WallpaperExplorer: SubviewOfContentView {
         self.wallpaperViewModel = wallpaperViewModel
     }
 
+    /// Picking wallpapers for an Android batch: the grid only selects.
+    private var exportSelection: AndroidBatchPicker? { viewModel.androidBatchPicker }
+
     var body: some View {
         VStack(spacing: 8) {
             if viewModel.library.currentFolder != nil {
@@ -45,7 +48,7 @@ struct WallpaperExplorer: SubviewOfContentView {
                         ForEach(viewModel.library.displayedFolders) { folder in
                             InstalledFolderTile(viewModel: viewModel, folder: folder)
                                 .transition(InstalledDropAnimation.removal(reduceMotion: reduceMotion))
-                                .contextMenu {
+                                .libraryContextMenu(isEnabled: viewModel.allowsLibraryActions) {
                                     InstalledFolderMenu(viewModel: viewModel, folder: folder)
                                     ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
                                 }
@@ -53,7 +56,7 @@ struct WallpaperExplorer: SubviewOfContentView {
                         ForEach(viewModel.library.displayedWallpapers, id: \.wallpaperDirectory) { wallpaper in
                             ExplorerItem(viewModel: viewModel, wallpaperViewModel: wallpaperViewModel, wallpaper: wallpaper)
                                 .transition(InstalledDropAnimation.removal(reduceMotion: reduceMotion))
-                                .contextMenu {
+                                .libraryContextMenu(isEnabled: viewModel.allowsLibraryActions) {
                                     ExplorerItemMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel, current: wallpaper)
                                     ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel,
                                                        includesCreateFolder: false)
@@ -65,29 +68,10 @@ struct WallpaperExplorer: SubviewOfContentView {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
 
-            GlassGroup {
-                HStack(spacing: 8) {
-                    Button {
-                        isCreatePlaylistPresented = true
-                    } label: {
-                        Label("Create Playlist", systemImage: "rectangle.stack.badge.plus")
-                    }
-                    .glassButtonStyle()
-                    .disabled(viewModel.library.selectedWallpapers.isEmpty)
-                    Button {
-                        viewModel.presentation.folderNamePrompt = .create
-                    } label: {
-                        Label {
-                            Text("Create Folder", comment: "Title of the alert that names a new folder in the Installed tab, the Installed tab's button that opens it, and the command in a wallpaper's context menu that makes a folder and moves the wallpaper (or the selection it is in) into it")
-                        } icon: {
-                            Image(systemName: "folder.badge.plus")
-                        }
-                    }
-                    .glassButtonStyle()
-                    .help("Makes a folder in the folder shown, to organise your wallpapers")
-                    EditWallpaperButton(wallpaperViewModel: wallpaperViewModel)
-                }
-                .padding(.vertical, 8)
+            if let exportSelection {
+                AndroidBatchPickerBar(selection: exportSelection)
+            } else {
+                libraryActions
             }
         }
         .modifier(InstalledFolderPrompts(viewModel: viewModel))
@@ -102,6 +86,34 @@ struct WallpaperExplorer: SubviewOfContentView {
             )
             .frame(width: 480, height: 360)
             .presentationBackground(.regularMaterial)
+        }
+    }
+
+    /// The buttons under the grid.
+    private var libraryActions: some View {
+        GlassGroup {
+            HStack(spacing: 8) {
+                Button {
+                    isCreatePlaylistPresented = true
+                } label: {
+                    Label("Create Playlist", systemImage: "rectangle.stack.badge.plus")
+                }
+                .glassButtonStyle()
+                .disabled(viewModel.library.selectedWallpapers.isEmpty)
+                Button {
+                    viewModel.presentation.folderNamePrompt = .create
+                } label: {
+                    Label {
+                        Text("Create Folder", comment: "Title of the alert that names a new folder in the Installed tab, the Installed tab's button that opens it, and the command in a wallpaper's context menu that makes a folder and moves the wallpaper (or the selection it is in) into it")
+                    } icon: {
+                        Image(systemName: "folder.badge.plus")
+                    }
+                }
+                .glassButtonStyle()
+                .help("Makes a folder in the folder shown, to organise your wallpapers")
+                EditWallpaperButton(wallpaperViewModel: wallpaperViewModel)
+            }
+            .padding(.vertical, 8)
         }
     }
 }

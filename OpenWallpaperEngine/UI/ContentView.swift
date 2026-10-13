@@ -61,7 +61,8 @@ struct ContentView: View {
 
     private var isDetailsPresented: Binding<Bool> {
         Binding(
-            get: { tab == 0 && viewModel.navigation.isDetailsReveal },
+            // Picking wallpapers for an export, Details (and its Set as Wallpaper) stays closed.
+            get: { tab == 0 && viewModel.navigation.isDetailsReveal && viewModel.allowsLibraryActions },
             set: { presented in
                 if tab == 0 { viewModel.navigation.isDetailsReveal = presented }
             }
@@ -75,7 +76,14 @@ struct ContentView: View {
             detail
                 // Scenes can't draw without the assets; the library says so while they're missing.
                 .safeAreaInset(edge: .top, spacing: 0) {
-                    if tab == 0 { AssetsMissingBanner(assets: AppDelegate.shared.assets) }
+                    if tab == 0 {
+                        VStack(spacing: 0) {
+                            if let selection = viewModel.androidBatchPicker {
+                                AndroidBatchPickerBanner(selection: selection)
+                            }
+                            AssetsMissingBanner(assets: AppDelegate.shared.assets)
+                        }
+                    }
                 }
                 .inspector(isPresented: isDetailsPresented) {
                     Group {
@@ -89,6 +97,10 @@ struct ContentView: View {
         }
         // Frosted: the live wallpaper shows through the window, blurred, under the panes.
         .frostedWindowBackground()
+        // Another tab shown by a menu or an MCP client leaves the export selection, as Cancel does.
+        .onChange(of: tab) { _, tab in
+            if tab != 0 { viewModel.androidBatchPicker?.cancel() }
+        }
         .confirmationDialog("Unsubscribe Confirmation",
                             isPresented: Bindable(viewModel.presentation).isUnsubscribeConfirming) {
             if let url = viewModel.presentation.hoveredWallpaper?.wallpaperDirectory {
@@ -262,9 +274,11 @@ struct ContentView: View {
     @ViewBuilder private var tabContent: some View {
         switch tab {
         case 0:
+            // Picking wallpapers for an export, the grid only selects: no imports, no menus.
+            let isLibrary = viewModel.allowsLibraryActions
             WallpaperExplorer(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
-                .onDrop(of: [.fileURL], delegate: LibraryDropImport(presentation: viewModel.presentation))
-                .contextMenu {
+                .onDrop(of: isLibrary ? [.fileURL] : [], delegate: LibraryDropImport(presentation: viewModel.presentation))
+                .libraryContextMenu(isEnabled: isLibrary) {
                     ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
                 }
                 .padding()
@@ -313,6 +327,8 @@ struct ContentView: View {
         }
         ToolbarItem(placement: .principal) {
             TopTabBar(contentViewModel: viewModel)
+                // The export selection keeps the window on Installed until it ends.
+                .disabled(!viewModel.allowsLibraryActions)
         }
         // Displays, Settings and Details come from each tab's toolbar (`WindowActionsToolbar`),
         // after the tab's own items.

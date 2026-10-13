@@ -22,6 +22,10 @@ struct ExplorerTopBar: ViewModifier {
         self.onAddURL = onAddURL
     }
 
+    /// Picking wallpapers for an export (`AndroidBatchPicker`): only the search, refresh and
+    /// sorting stay.
+    private var isLibrary: Bool { viewModel.allowsLibraryActions }
+
     func body(content: Content) -> some View {
         content
             .toolbar {
@@ -30,29 +34,11 @@ struct ExplorerTopBar: ViewModifier {
                 if #available(macOS 26, *) {
                     ToolbarSpacer(.fixed)
                 }
-                ToolbarItem {
-                    Menu {
-                        Button("Open Wallpaper…", systemImage: "arrow.up.bin.fill") {
-                            AppDelegate.shared.openImportFromFolderPanel()
-                        }
-                        Button("Add Video Wallpaper…", systemImage: "film.stack") {
-                            AppDelegate.shared.openImportVideoPanel()
-                        }
-                        Button("Add Video/Image URL…", systemImage: "link", action: onAddURL)
-                        Divider()
-                        Button("Import Workshop Collection…", systemImage: "square.stack.3d.down.right") {
-                            viewModel.presentation.isCollectionImportPresented = true
-                        }
-                        Button("Import from Steam Library…", systemImage: "externaldrive.badge.person.crop") {
-                            viewModel.presentation.isSteamLibraryImportPresented = true
-                        }
-                    } label: {
-                        Label("Add Wallpaper", systemImage: "plus")
-                    }
-                    .help("Open a wallpaper, or add a video or an image")
+                if isLibrary {
+                    addWallpaperMenu
                 }
                 ToolbarItemGroup {
-                    if !viewModel.library.selectedWallpapers.isEmpty {
+                    if isLibrary && !viewModel.library.selectedWallpapers.isEmpty {
                         Button(role: .destructive) {
                             viewModel.presentation.isBatchUnsubscribeConfirming = true
                         } label: {
@@ -88,7 +74,33 @@ struct ExplorerTopBar: ViewModifier {
                           : "Sorted descending. Click to sort ascending.")
                     SortByMenu(selection: Bindable(viewModel.library).sortingBy)
                 }
-                WindowActionsToolbar(viewModel: viewModel, showsDetails: true)
+                if isLibrary {
+                    WindowActionsToolbar(viewModel: viewModel, showsDetails: true)
+                }
             }
+    }
+
+    private var addWallpaperMenu: some ToolbarContent {
+        ToolbarItem {
+            Menu {
+                Button("Open Wallpaper…", systemImage: "arrow.up.bin.fill") {
+                    AppDelegate.shared.openImportFromFolderPanel()
+                }
+                Button("Add Video Wallpaper…", systemImage: "film.stack") {
+                    AppDelegate.shared.openImportVideoPanel()
+                }
+                Button("Add Video/Image URL…", systemImage: "link", action: onAddURL)
+                Divider()
+                Button("Import Workshop Collection…", systemImage: "square.stack.3d.down.right") {
+                    viewModel.presentation.isCollectionImportPresented = true
+                }
+                Button("Import from Steam Library…", systemImage: "externaldrive.badge.person.crop") {
+                    viewModel.presentation.isSteamLibraryImportPresented = true
+                }
+            } label: {
+                Label("Add Wallpaper", systemImage: "plus")
+            }
+            .help("Open a wallpaper, or add a video or an image")
+        }
     }
 }
