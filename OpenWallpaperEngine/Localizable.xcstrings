@@ -26468,6 +26468,101 @@
         }
       }
     },
+    "Choose wallpapers to export to Android" : {
+      "comment" : "Banner over the Installed tab while it picks wallpapers for an Android .mpkg batch export",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر الخلفيات لتصديرها إلى Android"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrundbilder für den Export nach Android auswählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige los fondos que quieres exportar a Android"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez les fonds d’écran à exporter vers Android"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android पर एक्सपोर्ट करने के लिए वॉलपेपर चुनें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli gli sfondi da esportare su Android"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android に書き出す壁紙を選択"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android로 내보낼 배경화면 선택"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz tapety do eksportu na Androida"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha os papéis de parede para exportar para o Android"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите обои для экспорта на Android"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android’e aktarılacak duvar kâğıtlarını seçin"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть шпалери для експорту на Android"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择要导出到 Android 的壁纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇要匯出至 Android 的桌布"
+          }
+        }
+      }
+    },
     "Choose what happens on battery, when another app goes fullscreen, or when your displays sleep — from keeping wallpapers running to pausing or stopping them." : {
       "localizations" : {
         "ar" : {
@@ -48373,6 +48468,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "輸出設定…"
+          }
+        }
+      }
+    },
+    "Export as .mpkg" : {
+      "comment" : "Button under the Installed tab while it picks wallpapers for an Android batch: exports the picked wallpapers as .mpkg packages",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تصدير بتنسيق ‎.mpkg"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als MPKG exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar como .mpkg"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporter en .mpkg"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ".mpkg के रूप में एक्सपोर्ट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esporta come .mpkg"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ".mpkg として書き出す"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ".mpkg로 내보내기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksportuj jako .mpkg"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar como .mpkg"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экспортировать в .mpkg"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ".mpkg Olarak Dışa Aktar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортувати як .mpkg"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出为 .mpkg"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "匯出為 .mpkg"
           }
         }
       }

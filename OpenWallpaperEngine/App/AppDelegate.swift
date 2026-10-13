@@ -442,6 +442,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // A test copy wears "TEST", a local build "Dev", on its Dock icon (`DockBadge`).
         DockBadge.current.apply()
+        #if DEBUG
+        AndroidBatchPicker.openScreenshotFixtureIfRequested(library: contentViewModel.library)
+        #endif
         AppDelegate.shared.setPlacehoderWallpaper(with: wallpaperViewModel.currentWallpaper)
         // Each display's desktop picture (lock screen, menu bar tint) follows what it shows.
         desktopPictures.observe(wallpaperViewModel, settings: globalSettingsViewModel)
