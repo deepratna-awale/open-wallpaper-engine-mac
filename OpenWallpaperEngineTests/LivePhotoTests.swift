@@ -103,6 +103,44 @@ final class LivePhotoTests: XCTestCase {
         XCTAssertEqual(clip.keyFrameSeconds, 1.5, accuracy: 1e-9)
     }
 
+    /// The Lock Screen won't play a Live Photo whose still is in its first half second.
+    func testTheStillIsNeverInTheFirstHalfSecond() {
+        XCTAssertEqual(LivePhotoKeyFrame.earliestFrame(frameCount: 90), 15)
+        for length in [1.0, 1.2, 1.5, 2, 3] {
+            let clip = LivePhotoClip(length: length)
+            XCTAssertGreaterThanOrEqual(clip.keyFrameSeconds, LivePhotoKeyFrame.earliestSeconds - 1e-9, "\(length) s")
+            let band = LivePhotoKeyFrame.candidates(frameCount: clip.frameCount)
+            XCTAssertGreaterThanOrEqual(band.lowerBound, 15, "\(length) s")
+            XCTAssertLessThan(band.upperBound, clip.frameCount)
+            XCTAssertTrue(band.contains(clip.keyFrameIndex))
+        }
+        // A sharper early frame of a 1 s clip isn't taken.
+        var sharpness: [Int: Double] = [:]
+        for index in 0..<30 { sharpness[index] = 1 }
+        sharpness[9] = 10
+        XCTAssertGreaterThanOrEqual(LivePhotoKeyFrame.choose(sharpness: sharpness, frameCount: 30), 15)
+        // A clip shorter than half a second has its last frame as the still.
+        XCTAssertEqual(LivePhotoKeyFrame.choose(sharpness: [:], frameCount: 10), 9)
+        XCTAssertEqual(LivePhotoKeyFrame.candidates(frameCount: 10), 9...9)
+        XCTAssertEqual(LivePhotoKeyFrame.candidates(frameCount: 1), 0...0)
+    }
+
+    /// The movie is at most 1920 pixels on its long side, at the device's aspect; the still keeps
+    /// the device's pixels.
+    func testTheMovieFitsTheLockScreensSize() {
+        XCTAssertEqual(LivePhotoMovieEncoder.moviePixels(for: SIMD2(1320, 2868)), SIMD2(884, 1920))
+        XCTAssertEqual(LivePhotoMovieEncoder.moviePixels(for: SIMD2(90, 196)), SIMD2(90, 196))
+        XCTAssertEqual(LivePhotoMovieEncoder.moviePixels(for: SIMD2(1080, 1920)), SIMD2(1080, 1920))
+        for device in DeviceModel.all {
+            let movie = LivePhotoMovieEncoder.moviePixels(for: device.pixelSize)
+            XCTAssertLessThanOrEqual(max(movie.x, movie.y), LivePhotoMovieEncoder.maximumMovieSide, device.name)
+            XCTAssertEqual(movie.x % 2, 0, device.name)
+            XCTAssertEqual(movie.y % 2, 0, device.name)
+            let aspect = Double(device.pixelSize.x) / Double(device.pixelSize.y)
+            XCTAssertEqual(Double(movie.x) / Double(movie.y), aspect, accuracy: 0.005, device.name)
+        }
+    }
+
     func testClipLengthIsAtMostThreeSecondsAndBoundsTheStart() {
         let short = LivePhotoClip(start: 100, length: 1)
         XCTAssertEqual(short.frameCount, 30)
@@ -217,17 +255,25 @@ final class LivePhotoTests: XCTestCase {
         XCTAssertEqual(LivePhotoMetadata.stillIdentifier(at: still), identifier)
 
         let movie = directory.appending(path: "test.MOV")
-        var adaptor: AVAssetWriterInputMetadataAdaptor?
+        var tracks: LivePhotoMetadata.Tracks?
         let writer = try XCTUnwrap(HEVCWriter(url: movie, pixelSize: size, frameRate: 30) { writer in
             writer.metadata = [LivePhotoMetadata.contentIdentifierItem(identifier)]
-            adaptor = try LivePhotoMetadata.addStillImageTimeInput(to: writer)
+            tracks = try LivePhotoMetadata.addTracks(to: writer)
         })
-        let stillTime = CMTime(value: 4, timescale: 30)
-        XCTAssertTrue(try XCTUnwrap(adaptor).append(LivePhotoMetadata.stillImageTimeGroup(at: stillTime, frameRate: 30)))
-        adaptor?.assetWriterInput.markAsFinished()
+        let metadata = try XCTUnwrap(tracks)
+        let stillTime = LivePhotoMetadata.time(ofFrame: 4, frameRate: 30)
+        XCTAssertEqual(stillTime.timescale, 600)
+        XCTAssertTrue(metadata.still.append(try LivePhotoMetadata.stillSample(format: metadata.stillFormat, at: stillTime)))
+        metadata.still.markAsFinished()
         for frame in 0..<9 {
             XCTAssertTrue(writer.append(image, overlay: nil, weight: 0, frame: frame))
+            let info = try LivePhotoMetadata.infoSample(format: metadata.infoFormat,
+                                                        at: LivePhotoMetadata.time(ofFrame: frame, frameRate: 30),
+                                                        duration: LivePhotoMetadata.time(ofFrame: 1, frameRate: 30))
+            XCTAssertTrue(writer.waitUntilReady(metadata.info))
+            XCTAssertTrue(metadata.info.append(info))
         }
+        metadata.info.markAsFinished()
         XCTAssertTrue(writer.finish())
 
         let movieIdentifier = try await LivePhotoMetadata.movieIdentifier(at: movie)

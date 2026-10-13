@@ -160,8 +160,8 @@ struct LivePhotoClip: Equatable {
     var frameCount: Int { max(1, Int((length * Double(Self.frameRate)).rounded())) }
     /// Frames rendered (not kept) before the first, so particles and scripts have run to `start`.
     var leadInFrames: Int { Int((start * Double(Self.frameRate)).rounded()) }
-    /// The still: the clip's middle frame.
-    var keyFrameIndex: Int { frameCount / 2 }
+    /// The still: the clip's middle frame, never before `LivePhotoKeyFrame.earliestSeconds`.
+    var keyFrameIndex: Int { LivePhotoKeyFrame.middle(frameCount: frameCount) }
     /// The still's time in the movie.
     var keyFrameSeconds: Double { Double(keyFrameIndex) / Double(Self.frameRate) }
 }
