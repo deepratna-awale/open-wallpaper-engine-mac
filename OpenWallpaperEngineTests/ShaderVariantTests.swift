@@ -185,7 +185,7 @@ final class ShaderVariantTests: XCTestCase {
     func testWrittenAttributeBecomesAGlobalCopy() {
         let vertex = "#version 450\nin vec2 a_TexCoord;\nout vec2 v_TexCoord;\nvoid main() {\n a_TexCoord *= 2.0;\n v_TexCoord = a_TexCoord;\n}\n"
         let fragment = "#version 450\nin vec2 v_TexCoord;\nout vec4 out_FragColor;\nvoid main() { out_FragColor = vec4(v_TexCoord, 0.0, 1.0); }\n"
-        let pair = HLSLLinkage.rewrite(vertex: vertex, fragment: fragment)
+        let pair = HLSLLinkage.link(vertex: vertex, fragment: fragment)
         XCTAssertTrue(pair.vertex.contains("layout(location = 1) in vec2 a_TexCoord_weIn;\nvec2 a_TexCoord;"), pair.vertex)
         XCTAssertTrue(pair.vertex.contains("a_TexCoord = a_TexCoord_weIn;"), pair.vertex)
         XCTAssertEqual(pair.attributes["a_TexCoord"], 1)

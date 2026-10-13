@@ -1,7 +1,7 @@
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// The Swift text passes around glslang (prelude analysis, the pair rewriter).
+/// The Swift text passes around glslang (prelude analysis, the front end's linkage).
 final class ShaderTextPassTests: XCTestCase {
     func testIdentifierTokensAreMaximalASCIIRuns() {
         let tokens = ShaderPrelude.identifierTokens(in: "vec2 or=a_b1;é new\nthis")
@@ -21,9 +21,9 @@ final class ShaderTextPassTests: XCTestCase {
 
     /// Declarations go after `#version`/`#extension` and blank lines, as their own line: a
     /// varying the fragment stage reads and the vertex stage never writes.
-    func testRewriterInsertsDeclarationsAfterTheHeader() {
+    func testLinkageInsertsDeclarationsAfterTheHeader() {
         let vertex = "#version 450\n#extension GL_X : enable\n\nvoid main() { gl_Position = vec4(0.0); }"
-        let result = HLSLLinkage.rewrite(vertex: vertex, fragment: "#version 450\nin vec2 v_X;\nvoid main() {}")
+        let result = HLSLLinkage.link(vertex: vertex, fragment: "#version 450\nin vec2 v_X;\nvoid main() {}")
         XCTAssertTrue(result.vertex.hasPrefix("#version 450\n#extension GL_X : enable\n\nlayout(location = 0) out vec2 v_X;\n"),
                       result.vertex)
         XCTAssertFalse(result.vertex.contains("WEUniforms"), "loose uniforms are left to glslang's relaxed rules")

@@ -249,9 +249,8 @@ final class ShaderVariantTranslator {
             let vertexText = try compiler.preprocess(step!.text, stage: .vertex)
             step = (fragment, ShaderPrelude.text(for: .fragment, combos: defines, analysis: fragment.preludeAnalysis) + fragment.text(combos: combos))
             let fragmentText = try compiler.preprocess(step!.text, stage: .fragment)
-            let pair = HLSLLinkage.rewrite(
-                vertex: HLSLFrontEnd.afterPreprocess(vertexText),
-                fragment: HLSLFrontEnd.afterPreprocess(fragmentText),
+            let pair = HLSLFrontEnd.translate(
+                vertex: vertexText, fragment: fragmentText,
                 stageLocal: ShaderUniformDeclaration.stageLocalNames(vertex: vertex.uniforms, fragment: fragment.uniforms),
                 label: label)
             step = (vertex, pair.vertex)

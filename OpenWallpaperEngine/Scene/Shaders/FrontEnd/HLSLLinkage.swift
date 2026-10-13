@@ -1,12 +1,31 @@
 import Foundation
 
-/// Rewrites a preprocessed vertex/fragment pair so its Metal translation has a fixed, predictable
-/// interface:
-/// - loose uniforms stay as WE declares them: glslang's relaxed Vulkan rules gather both stages'
-///   into one std140 block `WEUniforms` at buffer 0 (`InProcessShaderCompiler.compilePairToMSL`);
-/// - `g_TextureN` is bound at texture/sampler N;
-/// - varyings get the same location in both stages (assigned by name);
-/// - vertex attributes get fixed locations (`a_Position` 0, `a_TexCoord` 1, ...).
+/// Rule 8 of the HLSL front end (`HLSLFrontEnd.link`): links a preprocessed vertex/fragment pair
+/// the way WE's HLSL linkage does, and gives its Metal translation a fixed, predictable interface.
+///
+/// WE turns a stage's `attribute`s, `varying`s and loose uniforms into the `VS_INPUT`/`VS_OUTPUT`
+/// structs and a cbuffer of one HLSL program, so a varying is matched between the stages by its
+/// name, and an input is an ordinary parameter a shader may assign to. GLSL for SPIR-V matches by
+/// location and makes inputs read-only. The rules, on the stages' top-level declarations as the
+/// front end's tokenizer reads them (`GLSLTokenizer`), never on lines of text:
+///
+/// - **Uniforms** stay as WE declares them: glslang's relaxed Vulkan rules gather both stages'
+///   into one std140 block `WEUniforms` at buffer 0 (`InProcessShaderCompiler.compilePairToMSL`).
+///   A uniform the stages declare differently (`ShaderUniformDeclaration.stageLocalNames`) is
+///   renamed in the fragment stage (`ShaderUniformDeclaration.fragmentSuffix`), so each stage reads
+///   a member of its own.
+/// - **Samplers**: `g_TextureN` is bound at texture/sampler N; any other sampler at 16 and up.
+/// - **Varyings** get the same location in both stages, assigned by name in declaration order
+///   (vertex outputs, then fragment inputs), each taking the locations its type occupies.
+/// - A fragment input the vertex stage never writes is **declared as a vertex output**, as WE's
+///   output struct would hold it (zero), instead of failing pipeline creation.
+/// - A varying **declared with a different vector size** in each stage is read as the vertex
+///   stage's type and truncated or zero-padded into a global of the fragment's type.
+/// - A **written fragment input** (`v_TexCoord.y = 1.0 - v_TexCoord.y;`) is read into a global of
+///   its name.
+/// - **Vertex attributes** (`a_…` inputs of the vertex stage) get fixed locations
+///   (`attributeLocations`, 15 for a name outside it); a written one is copied into a global.
+/// - `out_FragColor` (the prelude's `gl_FragColor`) is at location 0.
 enum HLSLLinkage {
     static let uniformBlockName = "WEUniforms"
 
@@ -22,6 +41,11 @@ enum HLSLLinkage {
         "a_TexCoordC4": 10, "a_PositionC1": 11,
     ]
 
+    /// The location of an attribute outside `attributeLocations`: no mesh stream feeds it.
+    static let unknownAttributeLocation = 15
+    /// The first slot of a sampler that isn't `g_TextureN`.
+    static let firstExtraSamplerSlot = 16
+
     struct Result {
         let vertex: String
         let fragment: String
@@ -31,148 +55,281 @@ enum HLSLLinkage {
         let attributes: [String: Int]
     }
 
-    private static let precision = #"(?:(?:lowp|mediump|highp)\s+)?"#
-    private static let samplerPattern = try! NSRegularExpression(
-        pattern: #"(?m)^[ \t]*uniform\s+"# + precision + #"(sampler\w*)\s+(\w+)\s*;[ \t]*$"#)
-    private static let varyingPattern = try! NSRegularExpression(
-        pattern: #"(?m)^[ \t]*((?:flat|smooth|noperspective)\s+)?(in|out)\s+"# + precision + #"(\w+)\s+(\w+)\s*(?:\[\s*(\d+)\s*\])?\s*;[ \t]*$"#)
+    /// A top-level `in`, `out` or `uniform` declaration of one name without a `layout`:
+    /// `[flat|smooth|noperspective] (in|out) [precision] type name [ [N] ];` or
+    /// `uniform [precision] sampler… name;`.
+    struct Declaration: Equatable {
+        enum Storage: String { case input = "in", output = "out", uniform }
 
-    /// `stageLocal` names uniforms both stages declare differently
-    /// (`ShaderUniformDeclaration.stageLocalNames`): the fragment stage's is renamed with
-    /// `ShaderUniformDeclaration.fragmentSuffix`, so each stage reads a member of its own.
-    /// `label` names the pair in the log line for slots it had to guess (an attribute outside
-    /// `attributeLocations` at 15, a sampler that isn't `g_TextureN` at 16 and up).
-    static func rewrite(vertex: String, fragment: String, stageLocal: Set<String> = [], label: String = "") -> Result {
-        var fragment = fragment
-        for name in stageLocal.sorted() {
-            let pattern = NSRegularExpression.shader(#"(?<![\w.])"# + NSRegularExpression.escapedPattern(for: name) + #"(?!\w)"#)
-            fragment = pattern.stringByReplacingMatches(in: fragment, range: NSRange(fragment.startIndex..., in: fragment),
-                                                        withTemplate: name + ShaderUniformDeclaration.fragmentSuffix)
+        let storage: Storage
+        /// The interpolation qualifier with a trailing space (`"flat "`), or empty.
+        let interpolation: String
+        let type: String
+        let name: String
+        let arrayCount: Int?
+        /// UTF-16 offsets of the declaration's first token and of the end of its `;`.
+        let start: Int
+        let end: Int
+
+        var arraySuffix: String { arrayCount.map { "[\($0)]" } ?? "" }
+    }
+
+    /// One stage's text as tokens, with its interface declarations.
+    struct Stage {
+        let code: [UInt16]
+        let tokens: [GLSLToken]
+        let declarations: [Declaration]
+
+        init(_ text: String) {
+            code = Array(text.utf16)
+            tokens = GLSLTokenizer.tokens(code)
+            declarations = HLSLLinkage.declarations(in: tokens)
         }
-        // Varyings: vertex outputs and fragment inputs, located by name. Only a vertex input is an
-        // attribute; a varying may be named `a_…` too (the default project dna_fragment's
-        // `a_TexCloudsCoord`).
-        struct Varying { let qualifier: String; let type: String; let name: String; let arrayCount: Int? }
-        func varyings(_ text: String, direction: String) -> [Varying] {
-            varyingPattern.matches(in: text, range: NSRange(text.startIndex..., in: text)).compactMap { match in
-                let name = group(match, 4, text)!
-                guard group(match, 2, text) == direction, name != "out_FragColor" else { return nil }
-                return Varying(qualifier: group(match, 1, text) ?? "", type: group(match, 3, text)!,
-                               name: name, arrayCount: group(match, 5, text).flatMap(Int.init))
-            }
+
+        func varyings(_ storage: Declaration.Storage) -> [Declaration] {
+            declarations.filter { $0.storage == storage && $0.name != "out_FragColor" }
         }
-        let vertexOutputs = varyings(vertex, direction: "out")
-        let fragmentInputs = varyings(fragment, direction: "in")
+    }
+
+    /// `stageLocal` names uniforms both stages declare differently: the fragment stage's are
+    /// renamed. `label` names the pair in the log line for slots it had to guess.
+    static func link(vertex vertexText: String, fragment fragmentText: String, stageLocal: Set<String> = [],
+                     label: String = "") -> Result {
+        let vertex = Stage(vertexText)
+        let fragment = Stage(fragmentText)
+        let renamed = Dictionary(uniqueKeysWithValues: stageLocal.map { ($0, $0 + ShaderUniformDeclaration.fragmentSuffix) })
+
+        let vertexOutputs = vertex.varyings(.output)
+        let fragmentInputs = fragment.varyings(.input).map { renaming($0, renamed) }
         var locations: [String: Int] = [:]
         var next = 0
         for varying in vertexOutputs + fragmentInputs where locations[varying.name] == nil {
             locations[varying.name] = next
-            next += slotCount(type: varying.type) * (varying.arrayCount ?? 1)
+            next += locationCount(type: varying.type) * (varying.arrayCount ?? 1)
         }
-        // A fragment input the vertex stage never writes would fail pipeline creation.
         let missing = fragmentInputs.filter { input in !vertexOutputs.contains { $0.name == input.name } }
-        // WE's HLSL linkage tolerates a varying declared with different vector sizes in the two
-        // stages; Metal doesn't. The fragment stage reads the vertex stage's type and converts.
+        // name → (the type the fragment stage reads, the type its code uses).
         var resized: [String: (vertexType: String, fragmentType: String)] = [:]
         for input in fragmentInputs where input.arrayCount == nil {
             guard let output = vertexOutputs.first(where: { $0.name == input.name }), output.arrayCount == nil,
                   output.type != input.type, vectorSize(output.type) != nil, vectorSize(input.type) != nil else { continue }
             resized[input.name] = (output.type, input.type)
         }
-        // HLSL passes a pixel shader's inputs as parameters it may assign to (a Workshop effect's
-        // `v_TexCoord.y = 1.0 - v_TexCoord.y;`); GLSL inputs are read-only, so a written input is
-        // read into a global of the same name, as a resized one is.
         for input in fragmentInputs where input.arrayCount == nil && resized[input.name] == nil
-            && isAssigned(input.name, in: fragment) {
+            && isAssigned(input.name, in: fragment.tokens, renamed: renamed) {
             resized[input.name] = (input.type, input.type)
         }
 
         var slots = Set<Int>()
         var extraSamplers: [String] = []
-
-        func decorate(_ text: String, stage: ShaderStage) -> String {
-            var extraSampler = 16
-            var result = replace(samplerPattern, in: text) { match in
-                let name = group(match, 2, text)!
-                let slot: Int
-                if name.hasPrefix("g_Texture"), let n = Int(name.dropFirst("g_Texture".count)) {
-                    slot = n
-                    slots.insert(n)
-                } else {
-                    slot = extraSampler
-                    extraSampler += 1
-                    extraSamplers.append("\(name) → \(slot)")
-                }
-                return "layout(binding = \(slot)) uniform \(group(match, 1, text)!) \(name);"
-            }
-            // HLSL vertex inputs are ordinary parameters that a shader may assign to; GLSL inputs
-            // are read-only, so a written attribute is copied into a global of the same name.
-            var writtenAttributes: [String] = []
-            result = replace(varyingPattern, in: result) { match in
-                let name = group(match, 4, result)!
-                let direction = group(match, 2, result)!
-                let type = group(match, 3, result)!
-                let array = group(match, 5, result).map { "[\($0)]" } ?? ""
-                let qualifier = group(match, 1, result) ?? ""
-                if stage == .vertex, direction == "in", name.hasPrefix("a_") {
-                    let location = attributeLocations[name] ?? 15
-                    if array.isEmpty, isAssigned(name, in: result) {
-                        writtenAttributes.append(name)
-                        return "layout(location = \(location)) in \(type) \(name)_weIn;\n\(type) \(name);"
-                    }
-                    return "layout(location = \(location)) in \(type) \(name)\(array);"
-                }
-                if name == "out_FragColor" { return "layout(location = 0) out \(type) \(name);" }
-                guard let location = locations[name] else { return group(match, 0, result)! }
-                if stage == .fragment, let types = resized[name] {
-                    return "layout(location = \(location)) \(qualifier)in \(types.vertexType) \(name)_weVarying;\n\(type) \(name);"
-                }
-                return "layout(location = \(location)) \(qualifier)\(direction) \(type) \(name)\(array);"
-            }
-            if !writtenAttributes.isEmpty {
-                result = insertAtMainEntry(result, writtenAttributes.map { "\($0) = \($0)_weIn;" }.joined(separator: " "))
-            }
-            if stage == .fragment, !resized.isEmpty {
-                result = insertAtMainEntry(result, resized.sorted { $0.key < $1.key }.map { name, types in
-                    "\(name) = \(types.vertexType == types.fragmentType ? "\(name)_weVarying" : convert("\(name)_weVarying", from: types.vertexType, to: types.fragmentType));"
-                }.joined(separator: " "))
-            }
-            if stage == .vertex, !missing.isEmpty {
-                result = insertAfterHeader(result, missing.map {
-                    "layout(location = \(locations[$0.name]!)) \($0.qualifier)out \($0.type) \($0.name)\($0.arrayCount.map { "[\($0)]" } ?? "");"
-                }.joined(separator: "\n") + "\n")
-            }
-            return result
-        }
-
-        let decoratedVertex = decorate(vertex, stage: .vertex)
-        let decoratedFragment = decorate(fragment, stage: .fragment)
         var attributes: [String: Int] = [:]
-        for match in varyingPattern.matches(in: vertex, range: NSRange(vertex.startIndex..., in: vertex)) {
-            let name = group(match, 4, vertex)!
-            if group(match, 2, vertex) == "in", name.hasPrefix("a_") { attributes[name] = attributeLocations[name] ?? 15 }
+
+        func decorate(_ stage: Stage, _ kind: ShaderStage) -> String {
+            let stageRenames = kind == .fragment ? renamed : [:]
+            var edits = HLSLEdits(editableFrom: 0)
+            var extraSampler = firstExtraSamplerSlot
+            var writtenAttributes: [String] = []
+            for original in stage.declarations {
+                let declaration = renaming(original, stageRenames)
+                let name = declaration.name, type = declaration.type
+                let replacement: String
+                switch declaration.storage {
+                case .uniform:
+                    let slot: Int
+                    if name.hasPrefix("g_Texture"), let n = Int(name.dropFirst("g_Texture".count)) {
+                        slot = n
+                        slots.insert(n)
+                    } else {
+                        slot = extraSampler
+                        extraSampler += 1
+                        extraSamplers.append("\(name) → \(slot)")
+                    }
+                    replacement = "layout(binding = \(slot)) uniform \(type) \(name);"
+                case .input where kind == .vertex && name.hasPrefix("a_"):
+                    let location = attributeLocations[name] ?? unknownAttributeLocation
+                    attributes[name] = location
+                    if declaration.arrayCount == nil, isAssigned(name, in: stage.tokens, renamed: [:]) {
+                        writtenAttributes.append(name)
+                        replacement = "layout(location = \(location)) in \(type) \(name)_weIn;\n\(type) \(name);"
+                    } else {
+                        replacement = "layout(location = \(location)) in \(type) \(name)\(declaration.arraySuffix);"
+                    }
+                case .output where name == "out_FragColor":
+                    replacement = "layout(location = 0) out \(type) \(name);"
+                case .input, .output:
+                    guard let location = locations[name] else { continue }
+                    if kind == .fragment, let types = resized[name] {
+                        replacement = "layout(location = \(location)) \(declaration.interpolation)in \(types.vertexType) \(name)_weVarying;\n\(type) \(name);"
+                    } else {
+                        replacement = "layout(location = \(location)) \(declaration.interpolation)\(declaration.storage.rawValue) \(type) \(name)\(declaration.arraySuffix);"
+                    }
+                }
+                edits.replace(declaration.start, declaration.end, replacement)
+            }
+            // The fragment stage's copies of stage-local uniforms, wherever they are named.
+            if !stageRenames.isEmpty {
+                for (index, token) in stage.tokens.enumerated() where token.kind == .identifier {
+                    guard let name = stageRenames[token.text], index == 0 || stage.tokens[index - 1].text != "." else { continue }
+                    edits.replace(token.start, token.end, name)
+                }
+            }
+            let entry: [String]
+            if kind == .vertex {
+                entry = writtenAttributes.map { "\($0) = \($0)_weIn;" }
+            } else {
+                entry = resized.sorted { $0.key < $1.key }.map { name, types in
+                    let read = "\(name)_weVarying"
+                    return "\(name) = \(types.vertexType == types.fragmentType ? read : convert(read, from: types.vertexType, to: types.fragmentType));"
+                }
+            }
+            if !entry.isEmpty, let offset = mainBodyStart(stage.tokens) {
+                edits.prefix(offset, "\n" + entry.joined(separator: " ") + "\n")
+            }
+            if kind == .vertex, !missing.isEmpty {
+                let declarations = missing.map {
+                    "layout(location = \(locations[$0.name]!)) \($0.interpolation)out \($0.type) \($0.name)\($0.arraySuffix);"
+                }.joined(separator: "\n") + "\n"
+                let offset = endOfHeader(stage.code)
+                edits.prefix(offset, offset == stage.code.count ? "\n" + declarations : declarations + "\n")
+            }
+            guard edits.count > 0 else { return String(decoding: stage.code, as: UTF16.self) }
+            return String(decoding: edits.apply(to: stage.code), as: UTF16.self)
         }
+
+        let decoratedVertex = decorate(vertex, .vertex)
+        let decoratedFragment = decorate(fragment, .fragment)
         let unknownAttributes = attributes.keys.filter { attributeLocations[$0] == nil }.sorted()
         if !unknownAttributes.isEmpty || !extraSamplers.isEmpty {
-            OWELog.debug(.shader, "\(label): guessed slots: attributes \(unknownAttributes) at location 15 (no mesh stream feeds them), samplers \(extraSamplers)")
+            OWELog.debug(.shader, "\(label): guessed slots: attributes \(unknownAttributes) at location \(unknownAttributeLocation) (no mesh stream feeds them), samplers \(extraSamplers)")
         }
         return Result(vertex: decoratedVertex, fragment: decoratedFragment, textureSlots: slots.sorted(),
                       attributes: attributes)
     }
 
-    /// Whether `name` (or a swizzle of it) is the target of `=` or a compound assignment.
-    static func isAssigned(_ name: String, in text: String) -> Bool {
-        NSRegularExpression.shader(#"(?<![\w.])"# + NSRegularExpression.escapedPattern(for: name)
-                                   + #"\s*(?:\.\w+)?\s*[-+*/]?=(?!=)"#).matches(text)
+    private static func renaming(_ declaration: Declaration, _ renamed: [String: String]) -> Declaration {
+        guard let name = renamed[declaration.name] else { return declaration }
+        return Declaration(storage: declaration.storage, interpolation: declaration.interpolation, type: declaration.type,
+                           name: name, arrayCount: declaration.arrayCount, start: declaration.start, end: declaration.end)
     }
+
+    // MARK: - Declarations
+
+    private static let interpolations: Set<String> = ["flat", "smooth", "noperspective"]
+    private static let precisions: Set<String> = ["lowp", "mediump", "highp"]
+
+    /// The interface declarations among `tokens`, at file scope (outside every bracket) and each
+    /// one a statement of its own.
+    static func declarations(in tokens: [GLSLToken]) -> [Declaration] {
+        var result: [Declaration] = []
+        var depth = 0
+        var statementStart = true
+        var index = 0
+        while index < tokens.count {
+            if depth == 0, statementStart, let (declaration, end) = declaration(in: tokens, at: index) {
+                result.append(declaration)
+                index = end
+                continue
+            }
+            let text = tokens[index].text
+            if text == "(" || text == "[" || text == "{" { depth += 1 }
+            if text == ")" || text == "]" || text == "}" { depth = max(depth - 1, 0) }
+            statementStart = depth == 0 && (text == ";" || text == "}")
+            index += 1
+        }
+        return result
+    }
+
+    /// The declaration starting at `start` and the index of the token after it.
+    private static func declaration(in tokens: [GLSLToken], at start: Int) -> (Declaration, Int)? {
+        var index = start
+        func text(_ offset: Int = 0) -> String? { index + offset < tokens.count ? tokens[index + offset].text : nil }
+        func identifier() -> String? {
+            guard index < tokens.count, tokens[index].kind == .identifier else { return nil }
+            defer { index += 1 }
+            return tokens[index].text
+        }
+        var interpolation = ""
+        if let qualifier = text(), interpolations.contains(qualifier) {
+            interpolation = qualifier + " "
+            index += 1
+        }
+        guard let word = text(), let storage = Declaration.Storage(rawValue: word),
+              storage != .uniform || interpolation.isEmpty else { return nil }
+        index += 1
+        if let precision = text(), precisions.contains(precision) { index += 1 }
+        guard let type = identifier(), let name = identifier() else { return nil }
+        var arrayCount: Int?
+        if storage != .uniform, text() == "[" {
+            guard index + 2 < tokens.count, case .number = tokens[index + 1].kind, let count = Int(tokens[index + 1].text),
+                  tokens[index + 2].text == "]" else { return nil }
+            arrayCount = count
+            index += 3
+        }
+        guard text() == ";" else { return nil }
+        if storage == .uniform, !type.hasPrefix("sampler") { return nil }
+        let declaration = Declaration(storage: storage, interpolation: interpolation, type: type, name: name,
+                                      arrayCount: arrayCount, start: tokens[start].start, end: tokens[index].end)
+        return (declaration, index + 1)
+    }
+
+    // MARK: - Uses
+
+    private static let assignments: Set<String> = ["=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>="]
+
+    /// Whether the name `name` (or a swizzle or member of it) is assigned to, incremented or
+    /// decremented. `renamed` maps names as they are in `tokens` to the names they become.
+    static func isAssigned(_ name: String, in tokens: [GLSLToken], renamed: [String: String] = [:]) -> Bool {
+        for (index, token) in tokens.enumerated() where token.kind == .identifier && (renamed[token.text] ?? token.text) == name {
+            if index > 0, tokens[index - 1].text == "." { continue }
+            if index > 0, tokens[index - 1].text == "++" || tokens[index - 1].text == "--" { return true }
+            var next = index + 1
+            if next + 1 < tokens.count, tokens[next].text == ".", tokens[next + 1].kind == .identifier { next += 2 }
+            guard next < tokens.count else { continue }
+            let operation = tokens[next].text
+            if assignments.contains(operation) || operation == "++" || operation == "--" { return true }
+        }
+        return false
+    }
+
+    /// The UTF-16 offset just inside `main`'s opening brace.
+    private static func mainBodyStart(_ tokens: [GLSLToken]) -> Int? {
+        for index in tokens.indices where tokens[index].text == "main" && index > 0 && tokens[index - 1].text == "void" {
+            var next = index + 1
+            guard next < tokens.count, tokens[next].text == "(" else { continue }
+            next += 1
+            if next < tokens.count, tokens[next].text == "void" { next += 1 }
+            guard next + 1 < tokens.count, tokens[next].text == ")", tokens[next + 1].text == "{" else { continue }
+            return tokens[next + 1].end
+        }
+        return nil
+    }
+
+    /// The UTF-16 offset after the `#version`/`#extension` lines and blank lines at the top: where
+    /// a declaration goes as a line of its own. The end of the text when every line is header.
+    static func endOfHeader(_ code: [UInt16]) -> Int {
+        let newline: UInt16 = 10, space: UInt16 = 32, tab: UInt16 = 9
+        func hasPrefix(_ prefix: String, at start: Int, end: Int) -> Bool {
+            let units = Array(prefix.utf16)
+            return end - start >= units.count && Array(code[start..<(start + units.count)]) == units
+        }
+        var lineStart = 0
+        while lineStart < code.count {
+            let lineEnd = code[lineStart...].firstIndex(of: newline) ?? code.count
+            let blank = code[lineStart..<lineEnd].allSatisfy { $0 == space || $0 == tab }
+            guard blank || hasPrefix("#version", at: lineStart, end: lineEnd)
+                    || hasPrefix("#extension", at: lineStart, end: lineEnd) else { return lineStart }
+            lineStart = lineEnd + 1
+        }
+        return code.count
+    }
+
+    // MARK: - Types
 
     /// Components of a float scalar/vector type; nil for anything else.
     static func vectorSize(_ type: String) -> Int? {
-        switch type {
-        case "float": return 1
-        case "vec2": return 2
-        case "vec3": return 3
-        case "vec4": return 4
+        switch HLSLType.named(type, structs: []) {
+        case .scalar(.float): return 1
+        case .vector(.float, let n): return n
         default: return nil
         }
     }
@@ -184,57 +341,10 @@ enum HLSLLinkage {
         return "\(target)(\(expression)\(String(repeating: ", 0.0", count: to - from)))"
     }
 
-    private static let mainPattern = try! NSRegularExpression(pattern: #"\bvoid\s+main\s*\(\s*(?:void)?\s*\)\s*\{"#)
-
-    /// Inserts statements at the start of `main`.
-    private static func insertAtMainEntry(_ text: String, _ statements: String) -> String {
-        guard let match = mainPattern.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-              let range = Range(match.range, in: text) else { return text }
-        var result = text
-        result.insert(contentsOf: "\n" + statements + "\n", at: range.upperBound)
-        return result
-    }
-
-    /// Interface slots a varying of this type occupies.
-    static func slotCount(type: String) -> Int {
-        switch type {
-        case "mat2": return 2
-        case "mat3", "mat4x3": return 3
-        case "mat4", "mat3x4": return 4
-        default: return 1
-        }
-    }
-
-    private static func group(_ match: NSTextCheckingResult, _ index: Int, _ text: String) -> String? {
-        Range(match.range(at: index), in: text).map { String(text[$0]) }
-    }
-
-    private static func replace(_ pattern: NSRegularExpression, in text: String,
-                                with transform: (NSTextCheckingResult) -> String) -> String {
-        var result = text
-        for match in pattern.matches(in: text, range: NSRange(text.startIndex..., in: text)).reversed() {
-            result.replaceSubrange(Range(match.range, in: result)!, with: transform(match))
-        }
-        return result
-    }
-
-    /// After `#version`/`#extension` and the preprocessor's `#line` markers at the top.
-    private static func insertAfterHeader(_ text: String, _ insertion: String) -> String {
-        guard !insertion.isEmpty else { return text }
-        // Walks the header lines in place; `insertion` becomes a line of its own.
-        let utf8 = text.utf8
-        var lineStart = utf8.startIndex
-        while true {
-            let lineEnd = utf8[lineStart...].firstIndex(of: UInt8(ascii: "\n")) ?? utf8.endIndex
-            let line = text[lineStart..<lineEnd]
-            guard line.hasPrefix("#version") || line.hasPrefix("#extension")
-                    || line.utf8.allSatisfy({ $0 == UInt8(ascii: " ") || $0 == UInt8(ascii: "\t") }) else { break }
-            // Every line is header: the insertion becomes the last line.
-            guard lineEnd < utf8.endIndex else { return text + "\n" + insertion }
-            lineStart = utf8.index(after: lineEnd)
-        }
-        var result = text
-        result.insert(contentsOf: insertion + "\n", at: lineStart)
-        return result
+    /// Interface locations a varying of this type occupies: one per matrix column (GLSL 4.50
+    /// §4.4.1), else one.
+    static func locationCount(type: String) -> Int {
+        if case .matrix(let columns, _) = HLSLType.named(type, structs: []) { return columns }
+        return 1
     }
 }
