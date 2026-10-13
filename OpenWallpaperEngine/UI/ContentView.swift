@@ -63,8 +63,7 @@ struct ContentView: View {
 
     private var isDetailsPresented: Binding<Bool> {
         Binding(
-            // Picking wallpapers for an export, Details (and its Set as Wallpaper) stays closed.
-            get: { tab == 0 && viewModel.navigation.isDetailsReveal && viewModel.allowsLibraryActions },
+            get: { tab == 0 && viewModel.navigation.isDetailsReveal },
             set: { presented in
                 if tab == 0 { viewModel.navigation.isDetailsReveal = presented }
             }
@@ -78,19 +77,17 @@ struct ContentView: View {
             detail
                 // Scenes can't draw without the assets; the library says so while they're missing.
                 .safeAreaInset(edge: .top, spacing: 0) {
-                    if tab == 0 {
-                        VStack(spacing: 0) {
-                            if let selection = viewModel.androidBatchPicker {
-                                AndroidBatchPickerBanner(selection: selection)
-                            }
-                            AssetsMissingBanner(assets: AppDelegate.shared.assets)
-                        }
-                    }
+                    if tab == 0 { AssetsMissingBanner(assets: AppDelegate.shared.assets) }
                 }
                 .inspector(isPresented: isDetailsPresented) {
                     Group {
                         if viewModel.navigation.isStaging {
+                            // Picking wallpapers for an export, Details (and its Set as Wallpaper)
+                            // is off. It stays in place: opening or closing the inspector then
+                            // changed the split view's sizes in a loop.
                             WallpaperPreview(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
+                                .disabled(!viewModel.allowsLibraryActions)
+                                .opacity(viewModel.allowsLibraryActions ? 1 : 0.5)
                         }
                     }
                     .inspectorColumnWidth(min: 280, ideal: 320, max: 420)

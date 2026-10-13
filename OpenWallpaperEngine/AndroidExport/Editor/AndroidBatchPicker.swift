@@ -110,17 +110,29 @@ final class AndroidBatchPicker {
 }
 
 extension AppDelegate {
-    /// Shows the main window's Installed tab as the picker for `model`'s batch. When it ends,
-    /// Scene Edit / Export comes back to the front, where the batch's progress shows.
-    func beginAndroidBatchPicking(for model: AndroidExportEditorModel) {
-        let content = contentViewModel
-        let library = content.library
-        let selection = AndroidBatchPicker(model: model, library: { library.allWallpapers })
-        selection.onFinish = { [weak self, weak content] selection in
-            content?.endAndroidBatchPicker(selection)
-            self?.sceneInspectorWindow?.makeKeyAndOrderFront(nil)
+    /// Shows the main window's Installed tab as the picker for `model`'s batch, once Scene Edit /
+    /// Export's sheets have closed: changing the main window while a sheet's close animation runs
+    /// its own run loop sent AppKit into an endless constraints pass. When it ends, Scene Edit /
+    /// Export comes back to the front, where the batch's progress shows.
+    func beginAndroidBatchPicking(for model: AndroidExportEditorModel, attempts: Int = 40) {
+        if let editor = sceneInspectorWindow, editor.attachedSheet != nil, attempts > 0 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                self?.beginAndroidBatchPicking(for: model, attempts: attempts - 1)
+            }
+            return
         }
-        content.showAndroidBatchPicker(selection)
-        openMainWindow()
+        // A later turn of the main run loop, outside any animation's.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            let content = contentViewModel
+            let library = content.library
+            let selection = AndroidBatchPicker(model: model, library: { library.allWallpapers })
+            selection.onFinish = { [weak self, weak content] selection in
+                content?.endAndroidBatchPicker(selection)
+                self?.sceneInspectorWindow?.makeKeyAndOrderFront(nil)
+            }
+            openMainWindow()
+            content.showAndroidBatchPicker(selection)
+        }
     }
 }

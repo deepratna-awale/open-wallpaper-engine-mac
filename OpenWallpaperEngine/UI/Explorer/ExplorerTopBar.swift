@@ -23,7 +23,7 @@ struct ExplorerTopBar: ViewModifier {
     }
 
     /// Picking wallpapers for an export (`AndroidBatchPicker`): only the search, refresh and
-    /// sorting stay.
+    /// sorting work. The other items stay, disabled, so the toolbar keeps its layout.
     private var isLibrary: Bool { viewModel.allowsLibraryActions }
 
     func body(content: Content) -> some View {
@@ -34,11 +34,9 @@ struct ExplorerTopBar: ViewModifier {
                 if #available(macOS 26, *) {
                     ToolbarSpacer(.fixed)
                 }
-                if isLibrary {
-                    addWallpaperMenu
-                }
+                addWallpaperMenu
                 ToolbarItemGroup {
-                    if isLibrary && !viewModel.library.selectedWallpapers.isEmpty {
+                    if !viewModel.library.selectedWallpapers.isEmpty {
                         Button(role: .destructive) {
                             viewModel.presentation.isBatchUnsubscribeConfirming = true
                         } label: {
@@ -46,6 +44,7 @@ struct ExplorerTopBar: ViewModifier {
                         }
                         .labelStyle(.titleAndIcon)
                         .help("Unsubscribe from the selected wallpapers")
+                        .disabled(!isLibrary)
                     }
                     if globalSettingsViewModel.settings.autoRefresh {
                         Button {
@@ -74,9 +73,7 @@ struct ExplorerTopBar: ViewModifier {
                           : "Sorted descending. Click to sort ascending.")
                     SortByMenu(selection: Bindable(viewModel.library).sortingBy)
                 }
-                if isLibrary {
-                    WindowActionsToolbar(viewModel: viewModel, showsDetails: true)
-                }
+                WindowActionsToolbar(viewModel: viewModel, showsDetails: true, isEnabled: isLibrary)
             }
     }
 
@@ -101,6 +98,7 @@ struct ExplorerTopBar: ViewModifier {
                 Label("Add Wallpaper", systemImage: "plus")
             }
             .help("Open a wallpaper, or add a video or an image")
+            .disabled(!isLibrary)
         }
     }
 }

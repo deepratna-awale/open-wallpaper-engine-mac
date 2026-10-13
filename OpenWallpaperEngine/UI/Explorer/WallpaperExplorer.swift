@@ -26,46 +26,57 @@ struct WallpaperExplorer: SubviewOfContentView {
             if viewModel.library.currentFolder != nil {
                 InstalledFolderBreadcrumbs(viewModel: viewModel)
             }
-            if viewModel.library.displayedWallpapers.isEmpty && viewModel.library.displayedFolders.isEmpty {
-                emptyMessage
-                    .font(.title)
-                    .foregroundStyle(Color.secondary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                // The whole list in one scrolling grid, the folder shown's folders first (as in
-                // WE); tiles are made as they scroll in.
-                ScrollView {
-                    LazyVGrid(columns: [
-                        GridItem(
-                            .adaptive(
-                                minimum: viewModel.navigation.explorerIconSize,
-                                maximum: viewModel.navigation.explorerIconSize
-                            ),
-                            spacing: 8
-                        )
-                    ], alignment: .leading, spacing: 8) {
-                        ForEach(viewModel.library.displayedFolders) { folder in
-                            InstalledFolderTile(viewModel: viewModel, folder: folder)
-                                .transition(InstalledDropAnimation.removal(reduceMotion: reduceMotion))
-                                .libraryContextMenu(isEnabled: viewModel.allowsLibraryActions) {
-                                    InstalledFolderMenu(viewModel: viewModel, folder: folder)
-                                    ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
-                                }
+            Group {
+                if viewModel.library.displayedWallpapers.isEmpty && viewModel.library.displayedFolders.isEmpty {
+                    emptyMessage
+                        .font(.title)
+                        .foregroundStyle(Color.secondary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    // The whole list in one scrolling grid, the folder shown's folders first (as in
+                    // WE); tiles are made as they scroll in.
+                    ScrollView {
+                        LazyVGrid(columns: [
+                            GridItem(
+                                .adaptive(
+                                    minimum: viewModel.navigation.explorerIconSize,
+                                    maximum: viewModel.navigation.explorerIconSize
+                                ),
+                                spacing: 8
+                            )
+                        ], alignment: .leading, spacing: 8) {
+                            ForEach(viewModel.library.displayedFolders) { folder in
+                                InstalledFolderTile(viewModel: viewModel, folder: folder)
+                                    .transition(InstalledDropAnimation.removal(reduceMotion: reduceMotion))
+                                    .libraryContextMenu(isEnabled: viewModel.allowsLibraryActions) {
+                                        InstalledFolderMenu(viewModel: viewModel, folder: folder)
+                                        ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
+                                    }
+                            }
+                            ForEach(viewModel.library.displayedWallpapers, id: \.wallpaperDirectory) { wallpaper in
+                                ExplorerItem(viewModel: viewModel, wallpaperViewModel: wallpaperViewModel, wallpaper: wallpaper)
+                                    .transition(InstalledDropAnimation.removal(reduceMotion: reduceMotion))
+                                    .libraryContextMenu(isEnabled: viewModel.allowsLibraryActions) {
+                                        ExplorerItemMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel, current: wallpaper)
+                                        ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel,
+                                                           includesCreateFolder: false)
+                                    }
+                            }
                         }
-                        ForEach(viewModel.library.displayedWallpapers, id: \.wallpaperDirectory) { wallpaper in
-                            ExplorerItem(viewModel: viewModel, wallpaperViewModel: wallpaperViewModel, wallpaper: wallpaper)
-                                .transition(InstalledDropAnimation.removal(reduceMotion: reduceMotion))
-                                .libraryContextMenu(isEnabled: viewModel.allowsLibraryActions) {
-                                    ExplorerItemMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel, current: wallpaper)
-                                    ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel,
-                                                       includesCreateFolder: false)
-                                }
-                        }
+                        .padding(.bottom, 8)
+                        // Room for the export picker's banner, which floats over the grid.
+                        .padding(.top, exportSelection == nil ? 0 : AndroidBatchPickerBanner.height + 8)
                     }
-                    .padding(.bottom, 8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            }
+            // An overlay, so the banner adds nothing to the column's minimum height: in the
+            // stack it pushed the grid and the bar below the window's bottom edge.
+            .overlay(alignment: .top) {
+                if let exportSelection {
+                    AndroidBatchPickerBanner(selection: exportSelection)
+                }
             }
 
             if let exportSelection {

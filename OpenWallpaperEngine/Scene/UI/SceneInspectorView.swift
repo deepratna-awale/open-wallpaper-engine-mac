@@ -1140,7 +1140,11 @@ struct SceneInspectorView: View {
             guard androidModel == nil else { return }
             let session = IsolatedSceneEditSession(wallpaper: wallpaper, purpose: AndroidExportEditorModel.purpose,
                                                    seededFrom: scopes)
-            androidModel = AndroidExportEditorModel(session: session, sceneSize: sceneSize)
+            let model = AndroidExportEditorModel(session: session, sceneSize: sceneSize)
+            androidModel = model
+            #if DEBUG
+            AndroidBatchPicker.runScreenshotFixture(on: model)
+            #endif
         case .screenSaver where isVideo:
             guard videoScreenSaver == nil else { return }
             videoScreenSaver = VideoScreenSaverModel(wallpaper: wallpaper, selectionService: AppDelegate.shared.screenSaverSelection)
