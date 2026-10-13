@@ -14,7 +14,7 @@ extension GlobalSettings {
     }
 }
 
-enum GSQuality {
+enum GSQuality: CaseIterable {
     case low, medium, high, ultra
 
     /// The frame rate the preset sets (`GlobalSettings.fps`): Ultra draws at the display's refresh.
