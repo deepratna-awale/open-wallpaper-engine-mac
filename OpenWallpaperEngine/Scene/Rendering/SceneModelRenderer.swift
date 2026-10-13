@@ -659,7 +659,7 @@ final class SceneModelRenderer: SceneModelDrawing {
     }
 
     /// The mesh's interleaved attributes at the locations the translated stage reads them from
-    /// (`ShaderPairRewriter.attributeLocations`). An input takes the mesh's attribute of the same
+    /// (`HLSLLinkage.attributeLocations`). An input takes the mesh's attribute of the same
     /// D3D semantic and index (a `vec2 a_TexCoord` reads the first two components of a mesh's
     /// `a_TexCoordVec4`, as WE's input layout binds by semantic [I]); one the mesh lacks reads zeros
     /// where a caller allows it (a custom shader's model pipeline refuses it first, `SceneModelMissingInputs`).

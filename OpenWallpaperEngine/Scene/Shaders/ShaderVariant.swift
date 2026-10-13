@@ -249,9 +249,9 @@ final class ShaderVariantTranslator {
             let vertexText = try compiler.preprocess(step!.text, stage: .vertex)
             step = (fragment, ShaderPrelude.text(for: .fragment, combos: defines, analysis: fragment.preludeAnalysis) + fragment.text(combos: combos))
             let fragmentText = try compiler.preprocess(step!.text, stage: .fragment)
-            let pair = ShaderPairRewriter.rewrite(
-                vertex: ShaderPrelude.fixupAfterPreprocess(vertexText),
-                fragment: ShaderPrelude.fixupAfterPreprocess(fragmentText),
+            let pair = HLSLLinkage.rewrite(
+                vertex: HLSLFrontEnd.afterPreprocess(vertexText),
+                fragment: HLSLFrontEnd.afterPreprocess(fragmentText),
                 stageLocal: ShaderUniformDeclaration.stageLocalNames(vertex: vertex.uniforms, fragment: fragment.uniforms),
                 label: label)
             step = (vertex, pair.vertex)
@@ -300,7 +300,7 @@ final class ShaderVariantTranslator {
         guard let ubos = root["ubos"] as? [[String: Any]],
               let types = root["types"] as? [String: [String: Any]],
               let block = ubos.first(where: { ubo in
-                  (ubo["type"] as? String).flatMap { types[$0]?["name"] as? String } == ShaderPairRewriter.uniformBlockName }),
+                  (ubo["type"] as? String).flatMap { types[$0]?["name"] as? String } == HLSLLinkage.uniformBlockName }),
               let typeID = block["type"] as? String,
               let members = types[typeID]?["members"] as? [[String: Any]] else { return nil }
         var result: [String: UniformMember] = [:]

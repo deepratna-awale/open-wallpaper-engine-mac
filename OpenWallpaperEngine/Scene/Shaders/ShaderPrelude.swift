@@ -6,7 +6,7 @@ import Foundation
 /// WE writes GLSL with HLSL-isms (`frac`, `saturate`, `CAST3`, `float3`, ...). Names are mapped
 /// with preprocessor macros and helper functions, never text replacement, so identifiers such as
 /// `fract` or `sample` are left alone. `mul` and HLSL's implicit conversions depend on types, so
-/// the front end's typed pass applies them to the preprocessed text (`fixupAfterPreprocess`).
+/// the front end's typed pass applies them to the preprocessed text (`HLSLFrontEnd.afterPreprocess`).
 enum ShaderPrelude {
     /// What the prelude needs to know about the shader it goes in front of. Depends on the source
     /// text only, so `ShaderSource` computes it once for all its variants.
@@ -243,12 +243,6 @@ enum ShaderPrelude {
     void clip(vec3 x) { if (any(lessThan(x, vec3(0.0)))) discard; }
     void clip(vec4 x) { if (any(lessThan(x, vec4(0.0)))) discard; }
     """
-
-    /// The front end's rules for preprocessed text (`HLSLFrontEnd.afterPreprocess`): system
-    /// values, scoping, HLSL's implicit conversions and `mul`.
-    static func fixupAfterPreprocess(_ text: String) -> String {
-        HLSLFrontEnd.afterPreprocess(text)
-    }
 
     /// WE's shaders declare the system values they read and write like other interface
     /// variables: `shadowcaster.vert`'s `in uint gl_InstanceID;` and `varying uint

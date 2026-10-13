@@ -1011,7 +1011,7 @@ final class ScenePuppetRenderer {
     }
 
     /// The mesh's interleaved attributes at the locations the translated stage reads them from
-    /// (`ShaderPairRewriter.attributeLocations`); an input the mesh lacks reads zeros, as WE's input
+    /// (`HLSLLinkage.attributeLocations`); an input the mesh lacks reads zeros, as WE's input
     /// layout leaves it (docs/models-plan.md §5, open point 11).
     static func vertexDescriptor(for function: MTLFunction, attributes: [String: Int],
                                  format: MDLVertexFormat) -> MTLVertexDescriptor {

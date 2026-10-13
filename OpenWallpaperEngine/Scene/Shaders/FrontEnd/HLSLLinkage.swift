@@ -7,7 +7,7 @@ import Foundation
 /// - `g_TextureN` is bound at texture/sampler N;
 /// - varyings get the same location in both stages (assigned by name);
 /// - vertex attributes get fixed locations (`a_Position` 0, `a_TexCoord` 1, ...).
-enum ShaderPairRewriter {
+enum HLSLLinkage {
     static let uniformBlockName = "WEUniforms"
 
     /// Locations for the vertex streams WE meshes provide; `ShaderVertexLayout` mirrors these.
