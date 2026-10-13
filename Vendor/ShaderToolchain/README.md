@@ -18,9 +18,11 @@ reflection backends. `glslang/glslang/build_info.h` is generated from upstream's
 (`glslangValidator -E`, `glslangValidator -G`, `spirv-cross --msl … / --reflect`). The golden
 corpus test (`ShaderVariantCacheTests.testTranslatedOutputMatchesItsRevision`) guards its output.
 It also compiles a shader's two stages as one program under glslang's relaxed Vulkan rules
-(`owe_shader_compile_pair_msl`, which gathers loose uniforms into one `WEUniforms` block), and
-renames names MSL reserves in the SPIR-V debug names before SPIRV-Cross writes the MSL
-(`renameMetalClashes`); the reflection reads the original names.
+(`owe_shader_compile_pair_msl`, which gathers loose uniforms into one `WEUniforms` block). In the
+SPIR-V debug names, the GLSL reserved words the prelude spelled `we_<word>` get WE's names back
+(`restoreReservedNames`; the list is `owe_shader_glsl_reserved_words`), so the reflection carries
+them, and names MSL reserves are renamed before SPIRV-Cross writes the MSL
+(`renameMetalClashes`); the reflection reads the names before that rename.
 
 ## Refreshing
 

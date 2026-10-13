@@ -131,6 +131,17 @@ private final class FakeLibraryService: LibraryControlService {
         values[setting.key] = value
     }
 
+    var clearCachesCalls = 0
+
+    func cacheSizes() async -> [ControlCacheSize] {
+        [ControlCacheSize(id: "textures", bytes: 1_000_000), ControlCacheSize(id: "metal_shader_cache", bytes: 500)]
+    }
+
+    func clearCaches() async -> ControlCacheClearResult {
+        clearCachesCalls += 1
+        return ControlCacheClearResult(removedEntries: 3, removedBytes: 4096, metalCacheResetRequested: true)
+    }
+
     func plugins() -> [ControlPluginStatus] {
         [
             ControlPluginStatus(id: "screen_saver", name: "Screen Saver", installed: true, enabled: true, version: nil,
@@ -444,5 +455,23 @@ final class MCPLibraryRouterTests: XCTestCase {
         XCTAssertEqual(plugins.first?["enabled"], true)
         XCTAssertEqual(plugins.last?["version"], "1.0.0")
         XCTAssertEqual(plugins.last?["enabled"], .null)
+    }
+
+    // MARK: - Caches
+
+    func testCachesGetAddsUpEachCache() async throws {
+        let caches = try await result("caches_get")
+        XCTAssertEqual(caches["total_bytes"], 1_000_500)
+        XCTAssertEqual(caches["caches"]?.arrayValue?.map { $0["id"] }, ["textures", "metal_shader_cache"])
+    }
+
+    func testCachesClearNeedsConfirmation() async throws {
+        let refused = await error("caches_clear", [:])
+        XCTAssertEqual(refused?.code, .refused)
+        XCTAssertEqual(service.clearCachesCalls, 0)
+        let cleared = try await result("caches_clear", ["confirm": true])
+        XCTAssertEqual(service.clearCachesCalls, 1)
+        XCTAssertEqual(cleared["removed_entries"], 3)
+        XCTAssertEqual(cleared["metal_shader_cache_cleared_at_next_launch"], true)
     }
 }

@@ -53,14 +53,29 @@ progress and results. The output settings, the user properties and the exports a
 ## Export More with These Settings
 
 **Export More with These Settings…** (in Export Settings) exports other wallpapers with the
-tab's settings. Pick them from the library (search, a type filter, tick as many as you like; the
-wallpaper being edited starts ticked, and types Android can't play are shown with why). Every
-scene gets the tab's output, quality, frame rate, video size and length; a pre-render is framed
+tab's settings. The main window switches to the Installed tab to pick them, under a tinted banner,
+**Choose wallpapers to export to Android**, with the settings the batch uses:
+
+- The grid works as usual for finding and selecting: the search, the filters, folders and
+  breadcrumbs, the sort, ⌘-click, ⇧-click and **Edit › Select All** (⌘A). A click picks or
+  unpicks a wallpaper; picks stay picked across folders and searches. The wallpaper being edited
+  starts picked.
+- Wallpapers Android can't play (web and application wallpapers, videos over 4 GB) are dimmed and
+  can't be picked; their tooltip says why.
+- Everything else is off until you finish: context menus, the Details panel (and its Set as
+  Wallpaper), dragging into folders, adding or deleting wallpapers, the other tabs.
+- The bar under the grid shows how many are picked, **Export as .mpkg** and **Cancel**. **Export
+  as .mpkg** starts the batch and returns to Scene Edit / Export; **Cancel** or Esc returns
+  without exporting. Leaving the Android Export tab or closing Scene Edit / Export ends the
+  selection too.
+
+Every scene gets the tab's output, quality, frame rate, video size and length; a pre-render is framed
 for the tab's device, centred. Only the wallpaper being edited keeps its edits (hidden layers,
 properties, crop, parallax position); the others export as authored. Videos are packed as they
 are.
 
-The batch runs as a queue with overall and per-wallpaper progress, and can be cancelled.
+The batch runs as a queue, shown in the Android Export tab's right-hand panel with overall and
+per-wallpaper progress, and can be cancelled there.
 Pre-rendered videos render one at a time (they use the GPU) while the other packages are written
 beside them. Each package is named `<title>.mpkg`, made unique within the batch, and goes into the
 Android exports list, ready for **Send over Wi-Fi…**.

@@ -77,6 +77,9 @@ final class ShaderVariantCacheTests: XCTestCase {
         // Unbound sampler combos left undefined, WE's texture macros, `TEX<n>FORMAT` for every
         // format-combo texture (16): none of these pairs' defaults change.
         16: "33ed80c55075954dc8f0c47ed436ba008a031a33aa995baca03e14dfe9955844",
+        // The pair is linked by the front end's tokens (`HLSLLinkage`), and GLSL reserved words
+        // (`sample` among them) get WE's names back in the SPIR-V (17).
+        17: "95a45d2171d4007ac07cc05efd80b54c9735975d005c80092a3844ba9cd65cd1",
     ]
 
     /// Fails when translated output changes without a `revision` bump, which would let users keep

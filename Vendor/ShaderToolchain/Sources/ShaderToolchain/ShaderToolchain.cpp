@@ -19,7 +19,7 @@
 // version query). Keep in sync with README.md.
 #define OWE_SPIRV_CROSS_VERSION "vulkan-sdk-1.4.357.0"
 // The fixed options below; change this string whenever they change.
-#define OWE_SHADER_OPTIONS "E:none;pair:vulkan100-relaxed-linked-WEUniforms0-spv1.0;rename:metal-clashes-we_;msl20300+decoration-binding;vert:fixup-clipspace+flip-vert-y"
+#define OWE_SHADER_OPTIONS "E:none;pair:vulkan100-relaxed-linked-WEUniforms0-spv1.0;rename:restore-glsl-reserved-we_+metal-clashes-we_;msl20300+decoration-binding;vert:fixup-clipspace+flip-vert-y"
 
 namespace {
 
@@ -135,10 +135,47 @@ bool compilePairSpirv(const char *vertexSource, const char *fragmentSource, std:
     return true;
 }
 
+// Words GLSL 4.50 reserves that WE's compiler accepts as names, because WE compiles its dialect
+// as HLSL: words "reserved for future use" (`common`, `input`, `filter`, `cast`, ...) and GLSL
+// keywords the dialect never uses as keywords (`sample`, `buffer`, `patch`, the image types, ...).
+// glslang's scanner rejects them, so the prelude spells each one a shader uses `we_<word>`
+// (GLSLReservedWords.swift reads this list), and restoreReservedNames gives the SPIR-V back WE's
+// spelling. The keywords HLSL shares (`shared`, `volatile`, `precise`, `double`, ...) can't be
+// names in WE either, so none is listed.
+const std::vector<std::string> &glslReservedWords() {
+    static const std::vector<std::string> words = [] {
+        // GLSL 4.50 section 3.6, as glslang's scanner rejects them.
+        std::vector<std::string> list = {
+            "common", "partition", "active", "asm", "class", "union", "enum", "typedef", "template",
+            "this", "resource", "goto", "inline", "noinline", "public", "static", "extern", "external",
+            "interface", "long", "short", "half", "fixed", "unsigned", "superp", "input", "output",
+            "hvec2", "hvec3", "hvec4", "fvec2", "fvec3", "fvec4", "sampler3DRect", "filter", "sizeof",
+            "cast", "namespace", "using",
+            // Keywords of GLSL 4.50 and its extensions that HLSL doesn't have.
+            "sample", "patch", "buffer", "coherent", "restrict", "readonly", "writeonly", "subroutine",
+            "atomic_uint", "devicecoherent", "queuefamilycoherent", "workgroupcoherent", "subgroupcoherent",
+            "shadercallcoherent", "nonprivate", "pervertexEXT", "pervertexNV", "tileImageEXT",
+        };
+        for (const char *prefix : {"", "i", "u"}) {
+            for (const char *shape : {"1D", "1DArray", "2D", "2DArray", "2DMS", "2DMSArray", "2DRect", "3D", "Buffer",
+                                      "Cube", "CubeArray"}) {
+                list.push_back(std::string(prefix) + "image" + shape);
+            }
+        }
+        return list;
+    }();
+    return words;
+}
+
+const std::unordered_set<std::string> &glslReservedWordSet() {
+    static const std::unordered_set<std::string> set(glslReservedWords().begin(), glslReservedWords().end());
+    return set;
+}
+
 // Names GLSL lets a shader use that MSL (C++) reserves or Metal's standard library declares, so
 // a WE shader's own `or`, `this` or `log10` would not compile as MSL. They are renamed `we_<name>`
 // in the SPIR-V's debug names (OpName, OpMemberName) the MSL is written from; the reflection
-// reads the original SPIR-V, so constants still bind by WE's names. A function's name is
+// reads the SPIR-V before this rename, so constants still bind by WE's names. A function's name is
 // glslang's mangled `name(args`.
 const std::unordered_set<std::string> &metalClashes() {
     static const std::unordered_set<std::string> names = {
@@ -148,14 +185,20 @@ const std::unordered_set<std::string> &metalClashes() {
         "typedef", "union", "enum", "extern", "static", "goto", "try", "catch", "throw", "sizeof",
         "alignas", "alignof", "decltype", "constexpr", "nullptr", "static_assert", "thread_local",
         "noexcept", "char", "short", "long", "signed", "unsigned", "wchar_t", "typeid", "export",
-        "concept", "requires", "device", "constant", "thread", "threadgroup", "kernel", "vertex", "fragment",
-        // Metal standard library functions GLSL lacks: a shader's own definition is ambiguous.
-        "log10", "fmod", "rsqrt", "saturate", "fract2", "powr", "select", "median3",
+        "concept", "requires", "asm", "inline", "device", "constant", "thread", "threadgroup", "kernel",
+        "vertex", "fragment",
+        // Metal's types and standard library names GLSL lacks: a shader's own name would be
+        // ambiguous, or not a name at all (`half`).
+        "half", "atomic_uint", "filter", "log10", "fmod", "rsqrt", "saturate", "fract2", "powr", "select",
+        "median3",
     };
     return names;
 }
 
-std::vector<uint32_t> renameMetalClashes(const std::vector<uint32_t> &words) {
+// Rewrites the SPIR-V's debug names (OpName, OpMemberName): `rename` returns the new name, or an
+// empty string to keep it.
+template <typename Rename>
+std::vector<uint32_t> renameDebugNames(const std::vector<uint32_t> &words, Rename rename) {
     const uint32_t opName = 5, opMemberName = 6;
     if (words.size() < 5) return words;
     std::vector<uint32_t> result(words.begin(), words.begin() + 5);
@@ -171,9 +214,8 @@ std::vector<uint32_t> renameMetalClashes(const std::vector<uint32_t> &words) {
         if (operands > 0 && count > operands + 1) {
             const char *text = reinterpret_cast<const char *>(&words[index + 1 + operands]);
             size_t limit = (count - 1 - operands) * 4;
-            std::string name(text, strnlen(text, limit));
-            if (metalClashes().count(name.substr(0, name.find('(')))) {
-                std::string renamed = "we_" + name;
+            std::string renamed = rename(std::string(text, strnlen(text, limit)));
+            if (!renamed.empty()) {
                 std::vector<uint32_t> string(renamed.size() / 4 + 1, 0);
                 std::memcpy(string.data(), renamed.data(), renamed.size());
                 uint32_t total = static_cast<uint32_t>(1 + operands + string.size());
@@ -188,6 +230,23 @@ std::vector<uint32_t> renameMetalClashes(const std::vector<uint32_t> &words) {
         index += count;
     }
     return result;
+}
+
+// `we_common` -> `common`: the spelling the prelude gave a GLSL reserved word becomes WE's again,
+// so the reflection carries WE's names. SPIRV-Cross spells a GLSL keyword its own way in the MSL
+// (`_common`), and renameMetalClashes renames what MSL can't take.
+std::vector<uint32_t> restoreReservedNames(const std::vector<uint32_t> &words) {
+    return renameDebugNames(words, [](const std::string &name) -> std::string {
+        if (name.compare(0, 3, "we_") != 0) return "";
+        std::string original = name.substr(3);
+        return glslReservedWordSet().count(original.substr(0, original.find('('))) ? original : "";
+    });
+}
+
+std::vector<uint32_t> renameMetalClashes(const std::vector<uint32_t> &words) {
+    return renameDebugNames(words, [](const std::string &name) -> std::string {
+        return metalClashes().count(name.substr(0, name.find('('))) ? "we_" + name : "";
+    });
 }
 
 // spirv-cross main.cpp `compile_iteration` with the CLI defaults and our three flags.
@@ -311,8 +370,8 @@ extern "C" int owe_shader_compile_pair_msl(const char *vertex, const char *fragm
         return 0;
     }
     const std::vector<uint32_t> *spirvs[] = {nullptr, nullptr};
-    std::vector<uint32_t> vertexWords(vertexSpirv.begin(), vertexSpirv.end());
-    std::vector<uint32_t> fragmentWords(fragmentSpirv.begin(), fragmentSpirv.end());
+    std::vector<uint32_t> vertexWords = restoreReservedNames({vertexSpirv.begin(), vertexSpirv.end()});
+    std::vector<uint32_t> fragmentWords = restoreReservedNames({fragmentSpirv.begin(), fragmentSpirv.end()});
     spirvs[0] = &vertexWords;
     spirvs[1] = &fragmentWords;
     std::string msl[2], json[2];
@@ -342,6 +401,15 @@ extern "C" int owe_shader_compile_pair_msl(const char *vertex, const char *fragm
 }
 
 extern "C" void owe_shader_free(char *string) { std::free(string); }
+
+extern "C" const char *owe_shader_glsl_reserved_words(void) {
+    static const std::string joined = [] {
+        std::string text;
+        for (const auto &word : glslReservedWords()) text += (text.empty() ? "" : " ") + word;
+        return text;
+    }();
+    return joined.c_str();
+}
 
 extern "C" const char *owe_shader_toolchain_fingerprint(void) {
     static const std::string fingerprint = [] {

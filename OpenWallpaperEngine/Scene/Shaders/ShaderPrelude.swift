@@ -6,7 +6,7 @@ import Foundation
 /// WE writes GLSL with HLSL-isms (`frac`, `saturate`, `CAST3`, `float3`, ...). Names are mapped
 /// with preprocessor macros and helper functions, never text replacement, so identifiers such as
 /// `fract` or `sample` are left alone. `mul` and HLSL's implicit conversions depend on types, so
-/// the front end's typed pass applies them to the preprocessed text (`fixupAfterPreprocess`).
+/// the front end's typed pass applies them to the preprocessed text (`HLSLFrontEnd.afterPreprocess`).
 enum ShaderPrelude {
     /// What the prelude needs to know about the shader it goes in front of. Depends on the source
     /// text only, so `ShaderSource` computes it once for all its variants.
@@ -65,9 +65,9 @@ enum ShaderPrelude {
         // Names MSL reserves but GLSL allows (C++ keywords such as `or`, a shader's own `log10`
         // next to Metal's) are renamed in the SPIR-V the MSL is written from, by the shader
         // toolchain (`renameMetalClashes`), not here.
-        // GLSL reserves names WE's HLSL compiler accepts (`float common;`). These are renamed
-        // everywhere, interface names included: both stages rename a varying alike, and the
-        // uniform block is reflected back to WE's names (`GLSLReservedWords.originalName`).
+        // GLSL reserves names WE's HLSL compiler accepts (`float common;`, `sample`). glslang
+        // reads them as `we_<name>`, every use alike (both stages rename a varying the same way);
+        // the shader toolchain gives the SPIR-V WE's names back (`GLSLReservedWords`).
         for name in analysis.glslReservedNames {
             lines.append("#define \(name) \(GLSLReservedWords.prefix)\(name)")
         }
@@ -137,8 +137,6 @@ enum ShaderPrelude {
         "#define int2 ivec2",
         "#define int3 ivec3",
         "#define int4 ivec4",
-        // `sample` is a reserved word in GLSL 4.50 that WE shaders use as a variable name.
-        "#define sample weSample",
         // common.h's constants, token-for-token, for shaders that use them without including it
         // (an identical redefinition is legal, a different one is an error).
         "#define M_PI 3.14159265359",
@@ -243,12 +241,6 @@ enum ShaderPrelude {
     void clip(vec3 x) { if (any(lessThan(x, vec3(0.0)))) discard; }
     void clip(vec4 x) { if (any(lessThan(x, vec4(0.0)))) discard; }
     """
-
-    /// The front end's rules for preprocessed text (`HLSLFrontEnd.afterPreprocess`): system
-    /// values, scoping, HLSL's implicit conversions and `mul`.
-    static func fixupAfterPreprocess(_ text: String) -> String {
-        HLSLFrontEnd.afterPreprocess(text)
-    }
 
     /// WE's shaders declare the system values they read and write like other interface
     /// variables: `shadowcaster.vert`'s `in uint gl_InstanceID;` and `varying uint

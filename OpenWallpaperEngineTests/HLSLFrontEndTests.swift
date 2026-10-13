@@ -152,7 +152,7 @@ final class HLSLFrontEndTests: XCTestCase {
     func testAPixelShaderMayAssignToItsInputs() {
         let vertex = "#version 450\nout vec2 v_TexCoord;\nvoid main() { v_TexCoord = vec2(0.0); }\n"
         let fragment = "#version 450\nin vec2 v_TexCoord;\nout vec4 out_FragColor;\nvoid main() {\n v_TexCoord.y = 1.0 - v_TexCoord.y;\n out_FragColor = vec4(v_TexCoord, 0.0, 1.0);\n}\n"
-        let pair = ShaderPairRewriter.rewrite(vertex: vertex, fragment: fragment)
+        let pair = HLSLLinkage.link(vertex: vertex, fragment: fragment)
         XCTAssertTrue(pair.fragment.contains("in vec2 v_TexCoord_weVarying;\nvec2 v_TexCoord;"), pair.fragment)
         XCTAssertTrue(pair.fragment.contains("v_TexCoord = v_TexCoord_weVarying;"), pair.fragment)
     }

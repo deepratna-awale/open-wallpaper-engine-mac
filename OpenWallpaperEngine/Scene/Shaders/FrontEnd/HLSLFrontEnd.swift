@@ -26,7 +26,21 @@ import Foundation
 /// 7. **`mul`** (`HLSLConversionPass.multiply`): operands swap for GLSL's column vectors, wider
 ///    vectors truncate, and a vector times a vector is a dot product. A `mul` the typed pass
 ///    couldn't reach still swaps (`expandRemainingMul`).
+/// 8. **Linkage** (`HLSLLinkage`), on both stages at once: varyings matched by name, inputs a
+///    shader assigns to, vertex attribute locations, sampler bindings and stage-local uniforms.
+///
+/// Everything else is glslang's relaxed Vulkan rules: loose uniforms gathered into one block
+/// (`WEUniforms`) shared by both stages of the linked program.
 enum HLSLFrontEnd {
+    /// Rules 4–8 on a preprocessed vertex/fragment pair whose preludes end with
+    /// `ShaderPrelude.endMarker`: the GLSL `ShaderCompiler.compilePairToMSL` takes. `stageLocal`
+    /// names uniforms the stages declare differently (`ShaderUniformDeclaration.stageLocalNames`).
+    static func translate(vertex: String, fragment: String, stageLocal: Set<String> = [],
+                          label: String = "") -> HLSLLinkage.Result {
+        HLSLLinkage.link(vertex: afterPreprocess(vertex), fragment: afterPreprocess(fragment),
+                         stageLocal: stageLocal, label: label)
+    }
+
     /// Rules 4–7 on a preprocessed stage whose prelude ends with `ShaderPrelude.endMarker`.
     static func afterPreprocess(_ text: String) -> String {
         let declared = ShaderPrelude.builtInDeclarations(text)

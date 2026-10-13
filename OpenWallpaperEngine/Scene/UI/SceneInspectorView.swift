@@ -1140,7 +1140,11 @@ struct SceneInspectorView: View {
             guard androidModel == nil else { return }
             let session = IsolatedSceneEditSession(wallpaper: wallpaper, purpose: AndroidExportEditorModel.purpose,
                                                    seededFrom: scopes)
-            androidModel = AndroidExportEditorModel(session: session, sceneSize: sceneSize)
+            let model = AndroidExportEditorModel(session: session, sceneSize: sceneSize)
+            androidModel = model
+            #if DEBUG
+            AndroidBatchPicker.runScreenshotFixture(on: model)
+            #endif
         case .screenSaver where isVideo:
             guard videoScreenSaver == nil else { return }
             videoScreenSaver = VideoScreenSaverModel(wallpaper: wallpaper, selectionService: AppDelegate.shared.screenSaverSelection)
@@ -1279,6 +1283,8 @@ private struct SceneInspectorContent: View {
             .onDisappear {
                 // The screen saver's last choices are saved before its store goes.
                 screenSaverModel?.close()
+                // The library's export selection for this mode ends with it.
+                androidModel?.closeBatch()
                 isolated?.end()
             }
     }

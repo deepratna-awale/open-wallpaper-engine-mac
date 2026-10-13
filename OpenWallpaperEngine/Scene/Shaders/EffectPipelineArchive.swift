@@ -42,6 +42,8 @@ final class EffectPipelineArchive {
     static let revision = 3
 
     let url: URL
+    /// The file is in use while the archive lives: Clear Caches keeps it (`CacheLeases`).
+    private let fileLease: CacheLease
     private let device: MTLDevice
     private let lock = NSLock()
     private let lookup: MTLBinaryArchive?
@@ -87,6 +89,7 @@ final class EffectPipelineArchive {
         self.timing = timing
         let prefix = Self.devicePrefix(device)
         url = directory.appending(path: "\(prefix)--\(Self.environmentKey).binarchive")
+        fileLease = CacheLeases.current.lease(url)
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         } catch {

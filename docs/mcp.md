@@ -415,7 +415,7 @@ A mistake changes nothing:
 ### Library and app
 
 Playlists, favourites, the Installed tab's folders, deleting wallpapers, the displays wallpapers are shown on, the app's
-settings and the plugins' status. Each tool does what the app's own control does, through the same
+settings, its caches and the plugins' status. Each tool does what the app's own control does, through the same
 view models, so a change saves and applies as it does from the app. Every result carries a
 `message` saying what happened.
 
@@ -436,6 +436,8 @@ view models, so a change saves and applies as it does from the app. Every result
 | `display_settings_set` | `display`, `enabled` | Display Settings' Enabled switch: shows wallpapers on the display, or the desktop picture. |
 | `settings_get` | `keys?` | Each allow-listed setting: `key`, `value`, `type` (`boolean`, `integer`, `choice`, `action`), `values` or `minimum`/`maximum`, and `description`. |
 | `settings_set` | `key`, `value` (text; a JSON number or boolean works too) | Sets one allow-listed setting through Settings' own model, as its control does. Returns the setting as `settings_get` lists it. |
+| `caches_get` | none | Settings › Performance › Caches: `total_bytes`, the space Open Wallpaper Engine's caches take on disk, and each cache's `id` and `bytes` (`textures`, `loading_snapshots`, `editor_previews`, `video_textures`, `legacy_video_textures`, `repaired_videos`, `display_pictures`, `shader_variants`, `pipeline_archives`, and `metal_shader_cache`, the GPU shader cache macOS keeps for the app). Entries unused for 60 days are deleted automatically. |
+| `caches_clear` | `confirm` | Clear Caches: deletes every cache entry except what the wallpapers on screen use (and the editor's previews while the Wallpaper Editor runs), and clears the GPU shader cache at the app's next launch. Returns `removed_entries`, `removed_bytes` and `metal_shader_cache_cleared_at_next_launch`. Wallpapers load slower once afterwards. Needs `confirm: true`. |
 | `plugin_status` | none | Settings › Plugins' entries: `id`, `name`, `installed`, `enabled` (the Screen Saver's toggle; null otherwise), `version`, `update_available`, `detail`. Status only. |
 
 `playlist` takes a playlist's name (case-insensitive) or id from `list_playlists`. Playlist tools
@@ -526,7 +528,7 @@ Example:
 
 **Rules.**
 
-- `playlist_delete` and `wallpaper_delete` refuse (`refused`) without `confirm: true`; a client
+- `playlist_delete`, `wallpaper_delete` and `caches_clear` refuse (`refused`) without `confirm: true`; a client
   should ask the user first. `playlist_remove_items` is marked destructive too.
 - `wallpaper_delete` deletes only a library wallpaper's folder inside the wallpaper storage folder,
   through the library's own Unsubscribe steps; it never touches Steam.

@@ -4,6 +4,7 @@
 // In-process glslang + SPIRV-Cross:
 //   glslangValidator -E -S <stage> file                        (owe_shader_preprocess)
 //   glslangValidator --relaxed-rules-vulkan, both stages linked (owe_shader_compile_pair_msl, step 1)
+//               and the GLSL reserved words' names restored in the SPIR-V
 //   spirv-cross spv --msl --msl-version 20300 --msl-decoration-binding
 //               [--fixup-clipspace --flip-vert-y for vertex]   (step 2, each stage)
 //   spirv-cross spv --reflect                                  (step 3, each stage)
@@ -34,6 +35,11 @@ int owe_shader_compile_pair_msl(const char *vertex, const char *fragment, char *
                                 char **log, const char **failed_step, int *failed_stage);
 
 void owe_shader_free(char *string);
+
+/// The words GLSL reserves that WE's shaders may use as names, separated by spaces. The prelude
+/// spells each one `we_<word>` for glslang; the pair compile gives the SPIR-V WE's spelling back
+/// before writing MSL and reflection, and renames only the names MSL can't take.
+const char *owe_shader_glsl_reserved_words(void);
 
 /// Identifies the linked libraries and the fixed option set; changes whenever output can.
 const char *owe_shader_toolchain_fingerprint(void);
