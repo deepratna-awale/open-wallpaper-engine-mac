@@ -43,70 +43,114 @@ enum HLSLFrontEnd {
 
     /// Rules 4–7 on a preprocessed stage whose prelude ends with `ShaderPrelude.endMarker`.
     static func afterPreprocess(_ text: String) -> String {
-        let declared = ShaderPrelude.builtInDeclarations(text)
-        let preludeEnd = endOfPrelude(in: declared)
-        let scoped = String(declared.prefix(preludeEnd)) + loopBodyScopes(String(declared.dropFirst(preludeEnd)))
+        let code = Array(text.utf16)
+        let tokens = GLSLTokenizer.tokens(code)
+        var edits = HLSLEdits(editableFrom: 0)
+        ShaderPrelude.dropBuiltInDeclarations(code, tokens, into: &edits)
+        scopeLoopBodies(tokens, from: endOfPrelude(tokens), into: &edits)
+        let scoped = edits.count == 0 ? text : String(decoding: edits.apply(to: code), as: UTF16.self)
         let converted = HLSLConversionPass.apply(to: scoped, editableFrom: endOfPrelude(utf16In: scoped))
         return expandRemainingMul(converted)
     }
 
-    private static let endMarkerPattern = NSRegularExpression.shader(#"void\s+weEndOfPrelude\s*\(\s*\)\s*\{\s*\}"#)
+    // MARK: - End of the prelude
 
-    /// Characters before the end of the prelude (0 without one).
-    static func endOfPrelude(in text: String) -> Int {
-        guard let range = endMarkerPattern.firstRange(in: text) else { return 0 }
-        return text.distance(from: text.startIndex, to: range.upperBound)
+    /// The UTF-16 offset after the prelude's last line, `ShaderPrelude.endMarker`
+    /// (`void weEndOfPrelude() {}` as tokens, however the preprocessor spaced it); 0 without one.
+    /// Reads only as far as the marker.
+    static func endOfPrelude(utf16In text: String) -> Int {
+        var end = 0
+        var matched = 0
+        GLSLTokenizer.scan(Array(text.utf16)) { token in
+            matched = advance(matched, token)
+            if matched == endMarkerTokens.count { end = token.end; return false }
+            return true
+        }
+        return end
     }
 
-    /// The same as a UTF-16 offset.
-    static func endOfPrelude(utf16In text: String) -> Int {
-        guard let range = endMarkerPattern.firstRange(in: text) else { return 0 }
-        return text.utf16.distance(from: text.utf16.startIndex, to: range.upperBound)
+    /// The same in tokens already read.
+    static func endOfPrelude(_ tokens: [GLSLToken]) -> Int {
+        var matched = 0
+        for token in tokens {
+            matched = advance(matched, token)
+            if matched == endMarkerTokens.count { return token.end }
+        }
+        return 0
+    }
+
+    private static let endMarkerTokens = ["void", "weEndOfPrelude", "(", ")", "{", "}"]
+
+    /// Tokens of the marker matched after `token`, given `matched` before it. `void` occurs only
+    /// first, so a mismatch restarts at `void` or nothing.
+    private static func advance(_ matched: Int, _ token: GLSLToken) -> Int {
+        if token.text == endMarkerTokens[matched] { return matched + 1 }
+        return token.text == endMarkerTokens[0] ? 1 : 0
     }
 
     // MARK: - Scoping
 
-    private static let loopHeaderPattern = NSRegularExpression.shader(#"\bfor\s*\(\s*\w+\s+(\w+)\s*="#)
-
     /// `for (int s = …) { float s = …; … }`: HLSL scopes the loop variable outside the body, so the
     /// body may declare its own; the body's `s` becomes `s_weBody` from its declaration on.
     static func loopBodyScopes(_ text: String) -> String {
-        var result = text
-        for match in loopHeaderPattern.matches(in: text, range: NSRange(text.startIndex..., in: text)).reversed() {
-            guard let nameRange = Range(match.range(at: 1), in: result),
-                  let headerRange = Range(match.range, in: result),
-                  let headerOpen = result[headerRange].firstIndex(of: "("),
-                  let headerClose = matching(result, open: headerOpen),
-                  let bodyOpen = result[result.index(after: headerClose)...].firstIndex(where: { !$0.isWhitespace }),
-                  result[bodyOpen] == "{", let bodyClose = matching(result, open: bodyOpen) else { continue }
-            let name = String(result[nameRange])
-            let body = String(result[result.index(after: bodyOpen)..<bodyClose])
-            let declaration = NSRegularExpression.shader(
-                #"\b(?:float|int|uint|bool|[iub]?vec[234]|mat[234])\s+"# + NSRegularExpression.escapedPattern(for: name) + #"\b"#)
-            guard let found = declaration.firstMatch(in: body, range: NSRange(body.startIndex..., in: body)),
-                  let foundRange = Range(found.range, in: body) else { continue }
-            let use = NSRegularExpression.shader(#"(?<![\w.])"# + NSRegularExpression.escapedPattern(for: name) + #"\b"#)
-            let tail = String(body[foundRange.lowerBound...])
-            let renamed = use.stringByReplacingMatches(in: tail, range: NSRange(tail.startIndex..., in: tail),
-                                                       withTemplate: NSRegularExpression.escapedTemplate(for: name + "_weBody"))
-            result.replaceSubrange(result.index(after: bodyOpen)..<bodyClose, with: body[..<foundRange.lowerBound] + renamed)
-        }
-        return result
+        let code = Array(text.utf16)
+        var edits = HLSLEdits(editableFrom: 0)
+        scopeLoopBodies(GLSLTokenizer.tokens(code), from: 0, into: &edits)
+        return edits.count == 0 ? text : String(decoding: edits.apply(to: code), as: UTF16.self)
     }
 
-    /// The bracket closing the one at `open` (`(`/`{`).
-    private static func matching(_ text: String, open: String.Index) -> String.Index? {
-        let opening = text[open]
-        let closing: Character = opening == "(" ? ")" : "}"
+    /// The renames of `loopBodyScopes` for loops from the UTF-16 offset `start` on. A loop is
+    /// `for (<type> <name> = …) { … }`. The body's own `name` is a declaration (a scalar, vector or
+    /// matrix type, then `name`) directly in the body: one in a nested block or statement is
+    /// already a scope of its own, which GLSL allows. From that declaration to the body's end,
+    /// every `name` that isn't a member (`.name`) is renamed.
+    static func scopeLoopBodies(_ tokens: [GLSLToken], from start: Int, into edits: inout HLSLEdits) {
+        var index = tokens.firstIndex { $0.start >= start } ?? tokens.count
+        while index + 5 < tokens.count {
+            defer { index += 1 }
+            guard tokens[index].text == "for", tokens[index].kind == .identifier, tokens[index + 1].text == "(",
+                  tokens[index + 2].kind == .identifier, tokens[index + 3].kind == .identifier,
+                  tokens[index + 4].text == "=",
+                  let headerClose = closing(tokens, from: index + 1, "(", ")"),
+                  headerClose + 1 < tokens.count, tokens[headerClose + 1].text == "{",
+                  let bodyClose = closing(tokens, from: headerClose + 1, "{", "}") else { continue }
+            let name = tokens[index + 3].text
+            var depth = 0
+            var declaration: Int?
+            for inner in (headerClose + 2)..<bodyClose {
+                let token = tokens[inner].text
+                if token == "(" || token == "[" || token == "{" { depth += 1 }
+                if token == ")" || token == "]" || token == "}" { depth -= 1 }
+                if depth == 0, token == name, inner > headerClose + 2, isValueType(tokens[inner - 1]) {
+                    declaration = inner
+                    break
+                }
+            }
+            guard let declaration else { continue }
+            for inner in declaration..<bodyClose where tokens[inner].text == name && tokens[inner - 1].text != "." {
+                edits.replace(tokens[inner].start, tokens[inner].end, name + "_weBody")
+            }
+        }
+    }
+
+    /// A scalar, vector or matrix type name.
+    private static func isValueType(_ token: GLSLToken) -> Bool {
+        guard token.kind == .identifier, let type = HLSLType.named(token.text, structs: []) else { return false }
+        switch type {
+        case .scalar, .vector, .matrix: return true
+        default: return false
+        }
+    }
+
+    /// The token closing the bracket at `open`.
+    private static func closing(_ tokens: [GLSLToken], from open: Int, _ opening: String, _ closing: String) -> Int? {
         var depth = 0
-        var index = open
-        while index < text.endIndex {
-            if text[index] == opening { depth += 1 }
-            if text[index] == closing {
+        for index in open..<tokens.count {
+            if tokens[index].text == opening { depth += 1 }
+            if tokens[index].text == closing {
                 depth -= 1
                 if depth == 0 { return index }
             }
-            index = text.index(after: index)
         }
         return nil
     }
