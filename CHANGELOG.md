@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Media blocklist** (Settings › Optimizations › Audio, below Media integration support), Wallpaper Engine's `mediablocklist`. It names the app of the current media session with a Block button and lists the blocked apps with Unblock. Wallpapers don't see what a blocked app plays (title, artist, album cover and its colours, timeline): to them nothing is playing until another app plays.
 - **Settings › General › Screen Saver Same as Wallpaper** (on by default, below Show Wallpaper on Lock Screen): on, each display's screen saver shows that display's own wallpaper. It is read from what is set as the screen saver, so Set as Screen Saver (a menu, the Details panel, the Screen Saver tab or MCP) turns it off, turning it on clears what was set, and turning it off sets the main display's wallpaper as the screen saver. Restore Defaults and Reset Config turn it back on; MCP's `screensaver_get` reports it as `same_as_wallpaper`.
 
 ### Changed

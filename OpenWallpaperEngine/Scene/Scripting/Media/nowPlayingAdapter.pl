@@ -14,8 +14,9 @@
 #
 # Output on stdout, one line per change:
 #   S <base64 binary property list>  the session: MediaRemote's now-playing dictionary, only the
-#                                    keys the app reads, plus "isPlaying" and, for an item without
-#                                    artwork, "playerBundleIdentifier"; empty when nothing plays
+#                                    keys the app reads, plus "isPlaying", the playing app's
+#                                    "sessionBundleIdentifier" and, for an item without artwork,
+#                                    "playerBundleIdentifier"; empty when nothing plays
 #   E <reason>                       a fatal error; the script then exits with status 1
 # It exits when stdin closes (the app quit or crashed) and on SIGTERM.
 use strict;
@@ -53,6 +54,7 @@ my $IS_PLAYING = string('isPlaying');
 # Sent only for an item without artwork of its own: the app playing it, whose icon the app shows
 # as the thumbnail instead, as the menu bar's Now Playing does.
 my $PLAYER = string('playerBundleIdentifier');
+my $SESSION_PLAYER = string('sessionBundleIdentifier');
 
 # The artwork. Most players (Music among them) don't put the image in the now-playing item; its
 # metadata only says one is available, and MediaRemote sends the image to a client that asks for
@@ -160,9 +162,10 @@ sub session {
             my $data = requestedArtwork($item);
             $out->setObject_forKey_($data, $ARTWORK) if present($data);
         }
-        if (!present($out->objectForKey_($ARTWORK)) && !itemHasArtwork($item)) {
-            my $player = playerBundleIdentifier();
-            $out->setObject_forKey_($player, $PLAYER) if present($player);
+        my $player = playerBundleIdentifier();
+        if (present($player)) {
+            $out->setObject_forKey_($player, $SESSION_PLAYER);
+            $out->setObject_forKey_($player, $PLAYER) if !present($out->objectForKey_($ARTWORK)) && !itemHasArtwork($item);
         }
         $out->setObject_forKey_(NSNumber->numberWithBool_(MRNowPlayingRequest->localIsPlaying ? 1 : 0), $IS_PLAYING);
     }

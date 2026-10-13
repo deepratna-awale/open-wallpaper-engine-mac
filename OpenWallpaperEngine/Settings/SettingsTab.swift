@@ -102,7 +102,7 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
             return [SettingField(\.syncPropertiesAcrossDisplays), SettingField(\.videoFramework),
                     SettingField(\.audioOutput), SettingField(\.reloadWhenChangingOutputDevice),
                     SettingField(\.audioRecordingThreshold),
-                    SettingField(\.mediaIntegration), SettingField(\.processPiority),
+                    SettingField(\.mediaIntegration), SettingField(\.mediaBlocklist), SettingField(\.processPiority),
                     SettingField(\.pauseOnVRAMExhausted), SettingField(\.restartAfterCrashing),
                     SettingField(\.optimiseTextures), SettingField(\.cheaperShadows),
                     SettingField(\.webStandardResolution),

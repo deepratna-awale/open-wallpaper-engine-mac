@@ -450,6 +450,11 @@ struct GlobalSettings: Codable, Equatable {
     // MARK: Misc
     var autoRefresh = true
 
+    // MARK: Media blocklist
+    /// WE's media blocklist (`mediablocklist`, empty by default): the apps, by bundle id, whose
+    /// now-playing sessions wallpapers don't see (`MacMediaSessionSource.setBlocklist`).
+    var mediaBlocklist: [String] = []
+
     /// The stored keys. `postProcessing`, `reflections` and `antiAliasing` moved to new keys when
     /// the renderer started reading them: the old keys hold values saved while the settings did
     /// nothing (post-processing then defaulted to "disabled", anti-aliasing to MSAA x2), so they
@@ -479,6 +484,7 @@ struct GlobalSettings: Codable, Equatable {
         case audioRecordingThreshold
         case theming
         case browseTransition = "browsetransition"
+        case mediaBlocklist
     }
 }
 
@@ -562,6 +568,7 @@ extension GlobalSettings {
         read(.theming, &theming)
         read(.browseTransition, &browseTransition)
         audioRecordingThreshold = min(max(audioRecordingThreshold, 0), 10)
+        read(.mediaBlocklist, &mediaBlocklist)
         if fromPoints {
             let migration = decoder.userInfo[.settingsMigration] as? GlobalSettingsMigration
             migrateFromPoints(backingScale: migration?.mainBackingScale ?? 1)
