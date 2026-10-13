@@ -10,14 +10,11 @@ struct VideoScreenSaverPanel: View {
             VStack(alignment: .leading, spacing: 14) {
                 Label("The screen saver plays this video", systemImage: "film")
                     .font(.headline)
-                Text("A video wallpaper's screen saver is its own video file, played as it is and filling each display. Nothing is recorded, so it looks exactly like the wallpaper.")
+                Text("The screen saver plays this video live, as your desktop shows it, without sound. Nothing is recorded or copied.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                if model.isWorking {
-                    ProgressView()
-                        .progressViewStyle(.linear)
-                } else if model.isScreenSaver {
+                if model.isScreenSaver {
                     Text("This video is your screen saver.")
                         .font(.caption)
                     HStack {
@@ -35,12 +32,6 @@ struct VideoScreenSaverPanel: View {
                     }
                     .glassButtonStyle(.prominent)
                     .help("Make this video the screen saver")
-                }
-                if let error = model.errorMessage {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .padding()

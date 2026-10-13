@@ -236,12 +236,24 @@ class VideoWallpaperViewModel: ObservableObject {
         // A paused wallpaper stays paused; pacing only modulates a video that is playing. The
         // wallpaper's own playback rate (WE's per-wallpaper option) scales the app's.
         let displayRate = wallpaperViewModel.displayPlaybackRate(of: currentWallpaper)
+        // Held for the screen saver: the picture plays at the wallpaper's speed (the last one
+        // while paused), silent, whatever the rules and the windows covering it say.
+        if heldForScreenSaver {
+            let speed = playRate > 0 ? playRate : (wallpaperViewModel.lastPlayRate > 0 ? wallpaperViewModel.lastPlayRate : 1)
+            setVideoRate(speed * displayRate)
+            setAudioRate(0)
+            return
+        }
         let rate = displayPlayback.rendersFrames ? playRate * displayRate : 0
         setVideoRate(rate > 0 ? max(0, rate + Float(smoothedAudioLevel * paceAmount)) : 0)
         // Audio runs on a second player, so a paused wallpaper keeps playing sound unless the
         // pause is applied here too.
         setAudioRate(playsAudio && !audioPlayer.isMuted && rate > 0 ? wallpaperViewModel.audioPlayRate * displayRate : 0)
     }
+
+    /// The live screen saver draws this video's frames (`ScreenSaverVideoSharing`): it plays,
+    /// silent, while the screen saver runs.
+    private(set) var heldForScreenSaver = false
 
     /// Assigning `AVPlayer.rate` restarts the timebase, so doing it on every audio sample stutters
     /// the video and pitches the audio. Only meaningful changes are forwarded.
@@ -337,6 +349,16 @@ class VideoWallpaperViewModel: ObservableObject {
         audioPlayer.isMuted = !playsAudio
         ownAudioTap.attach(to: audioItem)
         observeItemEnd(of: videoItem)
+        updatePlaybackRates(audioLevel: WallpaperServices.shared.audioLevel)
+    }
+}
+
+extension VideoWallpaperViewModel: ScreenSaverVideoSharing {
+    var sharedPlayer: AVPlayer { player }
+
+    func holdForScreenSaver(_ hold: Bool) {
+        guard hold != heldForScreenSaver else { return }
+        heldForScreenSaver = hold
         updatePlaybackRates(audioLevel: WallpaperServices.shared.audioLevel)
     }
 }

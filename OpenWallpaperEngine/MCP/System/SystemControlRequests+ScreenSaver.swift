@@ -16,9 +16,9 @@ extension SystemControlRequests {
         var message = state.pluginEnabled ? "The Screen Saver plugin is on" : "The Screen Saver plugin is off"
         if let selection = state.selection {
             let name = selection.wallpaper.map { "\"\($0.title)\"" } ?? "a wallpaper no longer in the library"
-            message += selection.kind == .live
-                ? "; \(name) is the screen saver, drawn live with its screen saver choices."
-                : "; \(name)'s own video is the screen saver."
+            message += selection.wallpaper?.type == "video"
+                ? "; \(name) is the screen saver, its video drawn live by the app."
+                : "; \(name) is the screen saver, drawn live with its screen saver choices."
         } else {
             message += state.pluginEnabled ? "; it draws the desktop's wallpapers live (nothing is set as the screen saver)." : "."
         }
@@ -103,13 +103,13 @@ extension SystemControlRequests {
         }
         let set = try await service.setScreenSaver(wallpaper)
         var message: String
-        switch (set.selection.kind, wallpaper.type) {
-        case (.live, "scene"):
+        switch wallpaper.type {
+        case "scene":
             message = "\"\(wallpaper.title)\" is the screen saver, drawn live with its screen saver choices (screensaver_set_layers)."
-        case (.live, _):
+        case "video":
+            message = "\"\(wallpaper.title)\" is the screen saver, its video drawn live by the app (a WebM video through the Chromium engine)."
+        default:
             message = "\"\(wallpaper.title)\" is the screen saver, drawn live through the Chromium engine."
-        case (.video, _):
-            message = "\"\(wallpaper.title)\"'s own video is the screen saver."
         }
         if set.enabledPlugin {
             message += " The Screen Saver plugin was off, so this turned it on (which installs the saver), as the Screen Saver mode does."

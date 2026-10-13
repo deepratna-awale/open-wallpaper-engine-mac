@@ -99,7 +99,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - **Safe restart** — a wallpaper that stalled or crashed the app is skipped on the next launch and marked in the library.
 
 ### Screen saver, lock screen & theming
-- **Screen saver** — a plugin installs a macOS screen saver that shows your wallpaper live: scenes, and web and WebM wallpapers through the Chromium engine, drawn while it runs (videos play their own file); Scene Edit / Export's Screen Saver tab makes your own version the screen saver ([docs/screen-saver.md](screen-saver.md)).
+- **Screen saver** — a plugin installs a macOS screen saver that shows your wallpaper live: scenes, videos, and web and WebM wallpapers through the Chromium engine, drawn while it runs; Scene Edit / Export's Screen Saver tab makes your own version the screen saver ([docs/screen-saver.md](screen-saver.md)).
 - **Lock screen** — each display's desktop picture, which the lock screen shows, is a picture of its wallpaper.
 - **Theming** — the menu bar, accent, tinted icons and folders follow the wallpaper's colour, and the app's own windows can use the exact colour ([docs/theming.md](theming.md)).
 

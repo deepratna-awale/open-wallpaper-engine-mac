@@ -24,18 +24,21 @@ While the screen saver runs and an Open Wallpaper Engine saver is showing:
   page in Chromium on that display, that page is drawn from; otherwise one of its own, without a
   window. Without the Chromium engine they show their picture, and Settings › Plugins › Screen
   Saver offers to install it.
-- **Video wallpapers** (MP4 and MOV in H.264 or HEVC) play their own file. The savers read only
-  their own folder (`~/Library/Application Support/Open Wallpaper Engine/ScreenSaver`), so the
-  file goes there as a hard link to the library's, or, for a library on another volume (hard links
-  can't cross volumes, and neither saver can open a link to an external disk), as a copy, made
-  once when it is set. A file that keeps its parameter sets in band (`hev1`, `avc3`) goes in as its
-  repaired copy.
+- **Video wallpapers** (MP4, M4V and MOV) are drawn live by the app too, as the desktop places
+  them, silent and looping. When the desktop already plays the video on that display, its player
+  (or, on the Metal video path, its running scene) is drawn from and kept playing while the screen
+  saver runs; otherwise the app opens a player of its own (hardware decode, at the wallpaper's
+  speed). Each frame is drawn once, at the video's own frame rate, and never larger than the video
+  placed on the display (a 1080p video on a 5K display is drawn at 1080p and scaled up by the
+  saver). No file is linked or copied into the screen saver's folder; a file that keeps its
+  parameter sets in band (`hev1`, `avc3`) plays from the repaired copy the desktop uses.
 - Application wallpapers can't be used.
 
 Each frame is shown as it is drawn, at the display's cadence, as on the desktop (60 fps on a
 165 Hz display is 55). Until the first frames come, each display shows a still of what it shows:
 its lock-screen picture, or with Show Wallpaper on Lock Screen off the same picture written for
-the screen saver alone (your desktop picture is left as it is). When the screen saver shows the
+the screen saver alone (your desktop picture is left as it is). A video set as the screen saver
+starts with its first frame. When the screen saver shows the
 wallpaper a display already runs, it draws that running wallpaper, so it is live at once. The app draws only while the screen saver runs: it stops
 when the screen saver stops or the Mac is unlocked, and another screen saver or the System
 Settings preview never makes it draw. After the screen saver stops, the lock screen keeps its
@@ -60,8 +63,7 @@ turns the plugin on if it is off.
   **Install the Chromium Engine** under its disabled button.
 - When the selected wallpaper is the screen saver, the Details panel's button reads **Screen
   Saver** with a checkmark (it opens Screen Saver settings, where macOS's screen saver is chosen),
-  with **Stop Using as Screen Saver** beside it. While a video's file is put in place it shows
-  **Setting the screen saver…**.
+  with **Stop Using as Screen Saver** beside it.
 - MCP's `screensaver_set` takes the same wallpapers (see [`mcp.md`](mcp.md)).
 
 ## The Screen Saver tab
@@ -78,11 +80,14 @@ choose, so they have no such tab and are set as they are):
   turning the plugin on if it is off. Its preview is the screen saver's picture until the
   screen saver has drawn it once. **Stop Using as Screen Saver** goes back to the desktop's
   wallpapers.
-- When the app starts, a recording an earlier version set as the screen saver becomes this live
-  choice of its wallpaper, and the old recordings are deleted.
+- When the app starts, what an earlier version set as the screen saver (a scene's recording, a
+  video's own file) becomes this live choice of its wallpaper. The recordings and the video files
+  earlier versions linked or copied into the screen saver's folder are deleted: only OWE's own,
+  named as it named them, directly in that folder (a link goes, never what it points to; nothing in
+  the library is touched), each deletion logged.
 
 A video wallpaper (MP4, M4V or MOV) opens Scene Edit / Export on this tab too, with the
-video playing: its screen saver is the video itself, played as it is. **Set as Screen Saver**
+video playing: its screen saver is the video itself, drawn live as the desktop shows it. **Set as Screen Saver**
 makes it the screen saver (turning the plugin on if it is off), and **Stop Using as Screen
 Saver** goes back to the desktop's wallpapers.
 

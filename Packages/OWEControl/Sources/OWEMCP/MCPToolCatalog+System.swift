@@ -80,7 +80,7 @@ extension MCPToolCatalog {
 
     private static let screenSaverTools: [MCPTool] = [
         MCPTool("screensaver_get", title: "Get Screen Saver",
-                description: "The screen saver: whether the Screen Saver plugin is on, and the wallpaper set as the screen saver (kind live: a scene drawn live with its screen saver choices; kind video: a video wallpaper's own file; and when it was picked), or none while it draws the desktop's wallpapers live. With wallpaper_id, also that wallpaper's screen saver version: its layers as the screen saver shows them and its user property values, from the Screen Saver mode's saved choices or else the wallpaper's own.",
+                description: "The screen saver: whether the Screen Saver plugin is on, and the wallpaper set as the screen saver (kind live: drawn live, a scene with its screen saver choices, a video as it is; and when it was picked), or none while it draws the desktop's wallpapers live. With wallpaper_id, also that wallpaper's screen saver version: its layers as the screen saver shows them and its user property values, from the Screen Saver mode's saved choices or else the wallpaper's own.",
                 input: JSONSchema.object([
                     "wallpaper_id": JSONSchema.string("A wallpaper's id from list_wallpapers.", minLength: 1),
                 ]), annotations: .readOnly) { message($0) },
@@ -98,7 +98,7 @@ extension MCPToolCatalog {
                     ], required: ["key", "value"]), maxItems: 200),
                 ], required: ["wallpaper_id"]), annotations: .idempotent) { message($0) },
         MCPTool("screensaver_set", title: "Set as Screen Saver",
-                description: "\"Set as Screen Saver\" from the Screen Saver mode: a scene becomes the screen saver, drawn live with its screen saver choices while the screen saver runs; a web wallpaper or WebM video is drawn live through the Chromium engine (refused while it isn't installed); a video wallpaper's own file becomes the screen saver (waiting while it is put in place). Nothing is recorded. It turns the Screen Saver plugin on when it is off, as the mode does. The user picks \"Open Wallpaper Engine\" in System Settings › Screen Saver.",
+                description: "\"Set as Screen Saver\" from the Screen Saver mode: a scene becomes the screen saver, drawn live with its screen saver choices while the screen saver runs; a video wallpaper is drawn live as it is; a web wallpaper or WebM video is drawn live through the Chromium engine (refused while it isn't installed). Nothing is recorded. It turns the Screen Saver plugin on when it is off, as the mode does. The user picks \"Open Wallpaper Engine\" in System Settings › Screen Saver.",
                 input: JSONSchema.object([
                     "wallpaper_id": JSONSchema.string("A scene, video or web wallpaper's id from list_wallpapers.", minLength: 1),
                 ], required: ["wallpaper_id"]), annotations: .change, longRunning: true) { message($0) },

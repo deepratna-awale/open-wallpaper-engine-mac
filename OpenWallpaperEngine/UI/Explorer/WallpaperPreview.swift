@@ -72,7 +72,6 @@ struct WallpaperPreview: SubviewOfContentView {
     ///   (where macOS's screen saver is chosen), and beside it Stop Using as Screen Saver, as
     ///   Delete sits beside Set as Wallpaper. A checked state says what is true at a glance;
     ///   stopping stays a separate, deliberate click rather than the main button's second meaning.
-    /// - A video's file being put in place: a spinner.
     /// - Can't be set: disabled, with why below it; a web page or WebM video without the
     ///   Chromium engine shows the install offer there.
     @ViewBuilder private var screenSaverButton: some View {
@@ -81,19 +80,7 @@ struct WallpaperPreview: SubviewOfContentView {
                                                                     chromiumInstalled: chromiumEngine.installedVersion != nil)
         let pluginStatus = screenSaver.status(for: wallpaper)
         VStack(spacing: 6) {
-            if screenSaverSelection.isSetting(wallpaper) {
-                Button { } label: {
-                    Label {
-                        Text("Setting the screen saver…",
-                             comment: "Workshop card: the downloaded wallpaper is being set as the screen saver")
-                    } icon: {
-                        ProgressView().controlSize(.small)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .glassButtonStyle()
-                .disabled(true)
-            } else if screenSaverSelection.isSelected(wallpaper) {
+            if screenSaverSelection.isSelected(wallpaper) {
                 HStack(spacing: 6) {
                     Button {
                         ScreenSaverInstaller.current.openSettings()
@@ -126,15 +113,14 @@ struct WallpaperPreview: SubviewOfContentView {
                         .frame(maxWidth: .infinity)
                 }
                 .glassButtonStyle()
-                .disabled(!availability.isAvailable || pluginStatus == .notEligible || screenSaverSelection.isSettingVideo)
+                .disabled(!availability.isAvailable || pluginStatus == .notEligible)
             }
-            screenSaverNote(availability, pluginStatus: pluginStatus)
+            screenSaverNote(availability)
         }
     }
 
     /// Why Set as Screen Saver can't apply, under it.
-    @ViewBuilder private func screenSaverNote(_ availability: ScreenSaverSelectionService.Availability,
-                                              pluginStatus: ScreenSaverPlugin.Status?) -> some View {
+    @ViewBuilder private func screenSaverNote(_ availability: ScreenSaverSelectionService.Availability) -> some View {
         switch availability {
         case .needsChromium:
             VStack(alignment: .leading, spacing: 6) {
@@ -146,10 +132,6 @@ struct WallpaperPreview: SubviewOfContentView {
             .frame(maxWidth: .infinity, alignment: .leading)
         case .unavailable(let reason):
             screenSaverNoteText(reason)
-        case .available where pluginStatus == .notEligible:
-            // A video whose file has no H.264 or HEVC track.
-            screenSaverNoteText(String(localized: "The screen saver plays MP4 and MOV videos in H.264 or HEVC, and WebM videos through the Chromium engine",
-                                       comment: "Details panel: why a video wallpaper in another codec has no screen saver"))
         case .available:
             EmptyView()
         }

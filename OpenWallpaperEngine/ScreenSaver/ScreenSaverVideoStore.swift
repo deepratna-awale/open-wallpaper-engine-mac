@@ -1,24 +1,18 @@
-import CryptoKit
 import Foundation
 
-/// Where the screen saver's loop videos live and what they are called.
+/// The screen saver's shared folder, where the app writes what the savers read: the live frames'
+/// manifest (`ScreenSaverLiveManifest`) and the stills (`ScreenSaverStills`).
 ///
-/// **Path.** The videos go in `~/Library/Application Support/Open Wallpaper Engine/ScreenSaver`
+/// **Path.** `~/Library/Application Support/Open Wallpaper Engine/ScreenSaver`
 /// (`ScreenSaverManifest.sharedFolder`). macOS stops the app writing into the screen saver host's
 /// container, but the host (`legacyScreenSaver`) may read any path, so the saver reads them there.
 /// An isolated copy (`AppStorageLocation`) writes under its own support folder instead, where no
-/// saver looks, so a test or development run never changes what the user's saver plays.
+/// saver looks, so a test or development run never changes what the user's saver shows.
 ///
-/// **Names.** `<wallpaper key>-<property hash>-<width>x<height>-r<revision>.mov`: the wallpaper's
-/// folder (`SceneLoadingSnapshotStore.wallpaperKey`) and content (`contentKey`), a hash of its
-/// user properties, the display's pixel size and `revision`. A changed wallpaper, property,
-/// display or renderer gives a new name, so a stale video is never played, and `retain` removes
-/// every video the manifest no longer lists.
+/// Earlier versions also kept videos here (scenes' recordings, and video wallpapers' own files
+/// linked or copied in for the saver to play); `removeOldRecordings` and `removeOldVideoFiles`
+/// delete them.
 struct ScreenSaverVideoStore: Sendable {
-    /// Bump whenever the rendered video changes (loop rules, encoding, what is drawn).
-    static let revision = 3
-    static let fileExtension = "mov"
-
     let directory: URL
 
     static var current: ScreenSaverVideoStore {
@@ -33,62 +27,12 @@ struct ScreenSaverVideoStore: Sendable {
             : ScreenSaverManifest.sharedFolder(home: home)
     }
 
-    // MARK: Keys
-
-    /// A hash of a wallpaper's user properties, independent of their order.
-    static func propertyHash(_ properties: [String: String]) -> String {
-        let text = properties.keys.sorted().map { "\($0)=\(properties[$0] ?? "")" }.joined(separator: "\n")
-        return SHA256.hash(data: Data(text.utf8)).prefix(6).map { String(format: "%02x", $0) }.joined()
-    }
-
-    /// The video's file name for a wallpaper (`wallpaperKey` + `contentKey`), its property hash
-    /// and a display's pixel size.
-    static func fileName(wallpaperKey: String, contentKey: String, propertyHash: String, pixelSize: SIMD2<Int>) -> String {
-        "\(wallpaperKey)_\(contentKey)-\(propertyHash)-\(pixelSize.x)x\(pixelSize.y)-r\(revision).\(fileExtension)"
-    }
-
     func url(fileName: String) -> URL { directory.appending(path: fileName, directoryHint: .notDirectory) }
-
-    var manifestURL: URL { directory.appending(path: ScreenSaverManifest.fileName, directoryHint: .notDirectory) }
-
-    func exists(fileName: String) -> Bool {
-        FileManager.default.fileExists(atPath: url(fileName: fileName).path(percentEncoded: false))
-    }
-
-    // MARK: Writing
-
-    func writeManifest(_ manifest: ScreenSaverManifest) throws {
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        try JSONEncoder().encode(manifest).write(to: manifestURL, options: .atomic)
-    }
-
-    /// Whether `name` is a file the saver reads besides the videos: the manifests (the videos',
-    /// the live frames') and the stills (`ScreenSaverStills`, its pictures).
-    static func isKept(_ name: String) -> Bool {
-        name == ScreenSaverManifest.fileName || name == ScreenSaverLiveManifest.fileName || isStill(name)
-    }
 
     /// Whether `name` is one of the stills (`stills.json`, a picture, or one being written:
     /// `ScreenSaverStillPublisher` stages it as `.<uuid>-still-…`).
     static func isStill(_ name: String) -> Bool {
         name == ScreenSaverStills.fileName || name.hasPrefix("still-") || name.hasPrefix(".") && name.contains("-still-")
-    }
-
-    /// Removes every video but `keep` (and partial renders), so only the current ones stay; the
-    /// manifests and the stills stay.
-    func retain(_ keep: Set<String>) {
-        let files: [URL]
-        do {
-            files = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
-        } catch {
-            // Optional: no folder yet means nothing to remove.
-            return
-        }
-        for file in files where !Self.isKept(file.lastPathComponent) && !keep.contains(file.lastPathComponent) {
-            do { try FileManager.default.removeItem(at: file) } catch {
-                OWELog.error(.app, "Screen saver: can't remove \(file.lastPathComponent): \(error)")
-            }
-        }
     }
 
     // MARK: Earlier versions' recordings
@@ -129,10 +73,11 @@ struct ScreenSaverVideoStore: Sendable {
         return removed
     }
 
-    /// Deletes the recordings earlier versions left: in this folder (but `keep`), and in the
-    /// recordings' staging folder in Caches, which goes once empty.
-    func removeOldRecordings(cachesDirectory: URL, keeping keep: Set<String>) {
-        Self.removeOldRecordings(in: directory, keeping: keep)
+    /// Deletes what earlier versions left: the recordings and video files in this folder
+    /// (`removeOldVideoFiles`), and the recordings' staging folder in Caches, which goes once empty.
+    func removeOldFiles(cachesDirectory: URL) {
+        Self.removeOldRecordings(in: directory)
+        Self.removeOldVideoFiles(in: directory)
         let staging = cachesDirectory.appending(path: "ScreenSaverRecordings", directoryHint: .isDirectory)
         Self.removeOldRecordings(in: staging)
         if let left = try? FileManager.default.contentsOfDirectory(atPath: staging.path(percentEncoded: false)), left.isEmpty { // Optional: absent is fine.
@@ -140,7 +85,50 @@ struct ScreenSaverVideoStore: Sendable {
         }
     }
 
-    /// The plugin was turned off: the videos and manifests go, the stills stay (`isStill`), so a
+    // MARK: Earlier versions' video files
+
+    /// The manifest of the videos earlier versions' savers played.
+    static let oldVideoManifest = "current.json"
+
+    /// Whether `name` is a video wallpaper's own file an earlier version put here for the saver
+    /// (`<wallpaper>_<content>-video-r<revision>.<mp4|m4v|mov>`, a hard link, a copy or a repaired
+    /// copy; with `-rec<time>` when it was set as the screen saver), one it was staging
+    /// (`.staging-<uuid>.<extension>`), or the manifest that listed them. Nothing else is.
+    static func isOldVideoFile(_ name: String) -> Bool {
+        name == oldVideoManifest
+            || name.range(of: #"^[^/]+-video-r[0-9]+(-rec[0-9]+)?\.(mp4|m4v|mov)$"#, options: .regularExpression) != nil
+            || name.range(of: #"^\.staging-[0-9A-Fa-f-]{36}\.(mp4|m4v|mov)$"#, options: .regularExpression) != nil
+    }
+
+    /// Deletes the video files earlier versions put directly in `folder` (`isOldVideoFile`): only
+    /// regular files and links (a link goes, never what it points to; a hard link's other name, the
+    /// library's file, stays), never a folder or anything outside it or not named so. Each deletion
+    /// is logged. Returns the names deleted.
+    @discardableResult
+    static func removeOldVideoFiles(in folder: URL) -> [String] {
+        let files: [URL]
+        do {
+            files = try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+        } catch {
+            // Optional: no folder means nothing to delete.
+            return []
+        }
+        var removed: [String] = []
+        for file in files where isOldVideoFile(file.lastPathComponent) {
+            let values = try? file.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey]) // Optional: unreadable is skipped.
+            guard values?.isRegularFile == true || values?.isSymbolicLink == true else { continue }
+            do {
+                try FileManager.default.removeItem(at: file)
+                removed.append(file.lastPathComponent)
+                OWELog.info(.app, "Screen saver: deleted the old video file \(file.lastPathComponent) from \(folder.lastPathComponent)")
+            } catch {
+                OWELog.error(.app, "Screen saver: can't delete the old video file \(file.lastPathComponent): \(error)")
+            }
+        }
+        return removed
+    }
+
+    /// The plugin was turned off: the manifests go, the stills stay (`isStill`), so a
     /// saver shown before the next enable, or right after it, isn't left blank. The folder goes
     /// once nothing is left in it.
     func removeAll() {

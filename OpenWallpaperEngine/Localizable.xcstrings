@@ -5684,100 +5684,6 @@
         }
       }
     },
-    "A video wallpaper's screen saver is its own video file, played as it is and filling each display. Nothing is recorded, so it looks exactly like the wallpaper." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "شاشة التوقف لخلفية الفيديو هي ملف الفيديو الخاص بها، يُشغَّل كما هو ويملأ كل شاشة عرض. لا يُسجَّل شيء، لذا تبدو تمامًا مثل الخلفية."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Bildschirmschoner eines Video-Hintergrundbilds ist seine eigene Videodatei, unverändert abgespielt und bildschirmfüllend auf jedem Display. Es wird nichts aufgenommen, daher sieht er genau wie das Hintergrundbild aus."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El salvapantallas de un fondo de vídeo es su propio archivo de vídeo, reproducido tal cual y llenando cada pantalla. No se graba nada, así que se ve exactamente como el fondo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L’économiseur d’écran d’un fond d’écran vidéo est son propre fichier vidéo, lu tel quel et remplissant chaque écran. Rien n’est enregistré : il est identique au fond d’écran."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "वीडियो वॉलपेपर का स्क्रीन सेवर उसकी अपनी वीडियो फ़ाइल है, जो जैसी है वैसी ही हर डिस्प्ले को भरते हुए चलती है। कुछ भी रिकॉर्ड नहीं होता, इसलिए यह बिल्कुल वॉलपेपर जैसा दिखता है।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Il salvaschermo di uno sfondo video è il suo stesso file video, riprodotto così com’è e a riempire ogni schermo. Non viene registrato nulla, quindi appare esattamente come lo sfondo."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ビデオ壁紙のスクリーンセーバは、そのビデオファイルそのものを、各ディスプレイいっぱいにそのまま再生します。録画は行わないため、壁紙とまったく同じに見えます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "비디오 배경화면의 화면 보호기는 해당 비디오 파일 자체로, 각 디스플레이를 채우며 그대로 재생됩니다. 아무것도 녹화하지 않으므로 배경화면과 똑같이 보입니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wygaszaczem ekranu tapety wideo jest jej własny plik wideo, odtwarzany bez zmian i wypełniający każdy wyświetlacz. Nic nie jest nagrywane, więc wygląda dokładnie jak tapeta."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O protetor de tela de um papel de parede de vídeo é o próprio arquivo de vídeo, reproduzido como está e preenchendo cada tela. Nada é gravado, então ele fica exatamente igual ao papel de parede."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Заставка видеообоев — это их собственный видеофайл, который воспроизводится как есть и заполняет каждый дисплей. Ничего не записывается, поэтому она выглядит точно как обои."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Video duvar kâğıdının ekran koruyucusu, olduğu gibi oynatılan ve her ekranı dolduran kendi video dosyasıdır. Hiçbir şey kaydedilmez, bu yüzden duvar kâğıdıyla tamamen aynı görünür."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Заставка відеошпалер — це їхній власний відеофайл, що відтворюється як є і заповнює кожен дисплей. Нічого не записується, тож вона виглядає точно як шпалери."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "视频墙纸的屏幕保护程序就是其视频文件本身，按原样播放并填满每台显示器。不会进行录制，因此与墙纸完全一样。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "影片背景圖片的螢幕保護程式就是其影片檔案本身，按原樣播放並填滿每台顯示器。不會進行錄製，因此與背景圖片完全相同。"
-          }
-        }
-      }
-    },
     "API request failed — check your network connection" : {
       "localizations" : {
         "ar" : {
@@ -151115,6 +151021,100 @@
         }
       }
     },
+    "The screen saver plays this video live, as your desktop shows it, without sound. Nothing is recorded or copied." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تشغّل شاشة التوقف هذا الفيديو مباشرةً كما يعرضه سطح المكتب، بلا صوت. لا يُسجَّل أو يُنسخ أي شيء."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Bildschirmschoner spielt dieses Video live ab, so wie es dein Schreibtisch zeigt, ohne Ton. Es wird nichts aufgenommen oder kopiert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El salvapantallas reproduce este vídeo en directo, tal como lo muestra tu escritorio, sin sonido. No se graba ni se copia nada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’économiseur d’écran lit cette vidéo en direct, telle que votre bureau l’affiche, sans le son. Rien n’est enregistré ni copié."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीन सेवर इस वीडियो को लाइव चलाता है, जैसा आपका डेस्कटॉप उसे दिखाता है, बिना आवाज़ के। कुछ भी रिकॉर्ड या कॉपी नहीं होता।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il salvaschermo riproduce questo video dal vivo, come lo mostra la tua scrivania, senza audio. Non viene registrato né copiato nulla."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンセーバは、このビデオをデスクトップと同じ表示で、音声なしでライブ再生します。録画やコピーは行いません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 보호기는 이 비디오를 데스크탑에 보이는 그대로 소리 없이 실시간으로 재생합니다. 아무것도 녹화하거나 복사하지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wygaszacz ekranu odtwarza to wideo na żywo, tak jak pokazuje je biurko, bez dźwięku. Nic nie jest nagrywane ani kopiowane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O protetor de tela reproduz este vídeo ao vivo, como a sua mesa o mostra, sem som. Nada é gravado nem copiado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставка воспроизводит это видео вживую, как его показывает рабочий стол, без звука. Ничего не записывается и не копируется."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran koruyucu bu videoyu masaüstünüzün gösterdiği gibi, sessiz ve canlı oynatır. Hiçbir şey kaydedilmez ya da kopyalanmaz."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставка відтворює це відео наживо, як його показує робочий стіл, без звуку. Нічого не записується і не копіюється."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屏幕保护程序会以桌面上的显示方式实时播放此视频，不带声音。不会录制或复制任何内容。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "螢幕保護程式會以桌面上的顯示方式即時播放此影片，不含聲音。不會錄製或拷貝任何內容。"
+          }
+        }
+      }
+    },
     "The screen saver's background item couldn't be set up: %@" : {
       "localizations" : {
         "ar" : {
@@ -151770,100 +151770,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法為原況照片讀取影片。"
-          }
-        }
-      }
-    },
-    "The video couldn't be set as the screen saver. The logs say why." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تعذر تعيين الفيديو كشاشة توقف. توضح السجلات السبب."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das Video konnte nicht als Bildschirmschoner festgelegt werden. Die Protokolle nennen den Grund."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No se ha podido usar el vídeo como salvapantallas. Los registros indican el motivo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de définir la vidéo comme économiseur d’écran. Les journaux indiquent pourquoi."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "वीडियो को स्क्रीन सेवर नहीं बनाया जा सका। कारण लॉग में है।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossibile impostare il video come salvaschermo. I log indicano il motivo."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ビデオをスクリーンセーバに設定できませんでした。理由はログに記録されています。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "비디오를 화면 보호기로 설정할 수 없습니다. 로그에서 이유를 확인하십시오."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nie można ustawić wideo jako wygaszacza ekranu. Przyczyna jest w dziennikach."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Não foi possível definir o vídeo como protetor de tela. Os registros informam o motivo."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не удалось сделать видео заставкой. Причина указана в журналах."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Video ekran koruyucu yapılamadı. Nedeni günlüklerde yazıyor."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не вдалося зробити відео заставкою. Причину вказано в журналах."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无法将视频设为屏幕保护程序。日志中有原因。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "無法將影片設為螢幕保護程式。記錄中有原因。"
           }
         }
       }
