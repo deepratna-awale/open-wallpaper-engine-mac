@@ -250,6 +250,8 @@ struct PerformancePage: SettingsPage {
                 Text("These settings are for scene wallpapers. FPS applies to web wallpapers too.")
             }
             .settingsAnchor(SettingsAnchor.quality)
+
+            CachesSection()
         }
     }
 

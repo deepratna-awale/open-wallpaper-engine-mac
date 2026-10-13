@@ -99,6 +99,9 @@ class SceneWallpaperViewModel: ObservableObject {
     private var embeddedVideoRate: Float = 1
     private let embeddedVideoLock = NSLock()
     private var builtVideoFrameSize: SIMD2<Float>?
+    /// The cache entries the wallpaper on screen uses (its texture blobs and loading snapshots),
+    /// which the cache expiry and Clear Caches keep (`CacheLeases`).
+    private let cacheLeases = CacheLeaseSet()
 
     /// Builds the render content off the main thread and delivers it on the main queue. While a
     /// load is in flight it delivers the previous content (nil at first); the load's commit bumps
@@ -353,6 +356,7 @@ class SceneWallpaperViewModel: ObservableObject {
         // so paths like "effects/workshop/<id>/name/effect.json" resolve as ordinary loose files.
         WorkshopDependencyResolver.linkInstalledDependencies(for: wallpaper)
         let dir = wallpaper.wallpaperDirectory
+        cacheLeases.hold(SceneLoadingSnapshotStore.current.folder(for: dir), scope: dir)
         let sceneFile = wallpaper.project.file  // e.g. "scene.json" or "gifscene.json"
         let settingsKey = settingsIdentity(for: dir, settingsDirectory: wallpaper.settingsDirectory)
             .key(.userProperties, scope: propertyScope)
@@ -1828,6 +1832,7 @@ class SceneWallpaperViewModel: ObservableObject {
             let level = TextureReduction.loadedMipmap(reduction: reduction, mipmapCount: mipmaps)
             let preparedKey = prepares ? TexturePreparation.key(texData: data, level: level) : nil
             if let preparedKey, let prepared = TexturePreparation.cachedTexture(key: preparedKey) {
+                cacheLeases.hold(TexturePreparation.url(key: preparedKey), scope: wallpaperDir)
                 return cacheTexture(.dxt(prepared), for: cacheKey)
             }
             if let image = parser.extractImage(reduction: reduction) {

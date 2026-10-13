@@ -44,8 +44,11 @@ final class VideoTextureStream {
     private var smoothedAudioLevel: Double = 0
     private static let rateEpsilon: Float = 0.01
     private static let audioSmoothing = 0.25
+    /// The file is in use while the stream plays it: Clear Caches and the cache expiry keep it.
+    private let fileLease: CacheLease
 
     init?(url: URL, device: MTLDevice) {
+        fileLease = CacheLeases.current.lease(url)
         var cache: CVMetalTextureCache?
         guard CVMetalTextureCacheCreate(kCFAllocatorDefault, nil, device, nil, &cache) == kCVReturnSuccess,
               let cache else { return nil }
@@ -237,15 +240,22 @@ private final class HeldVideoFrame: @unchecked Sendable {
     init(_ texture: CVMetalTexture) { self.texture = texture }
 }
 
-/// The MP4 files of scene video textures, written once per content into the caches folder so
-/// AVFoundation can open them by URL.
+/// The MP4 files of scene video textures, written once per content into the caches folder
+/// (`<Caches>/Open Wallpaper Engine/VideoTextures/<SHA-256>.mp4`, or the isolated copy's) so
+/// AVFoundation can open them by URL. Serving one marks it used (`CacheEntryUse`).
 enum EmbeddedVideoFiles {
-    static func url(for data: Data) -> URL? {
+    static func folder(in cachesDirectory: URL) -> URL {
+        cachesDirectory.appending(path: "Open Wallpaper Engine/VideoTextures", directoryHint: .isDirectory)
+    }
+
+    static func url(for data: Data, cachesDirectory: URL = AppStorageLocation.current.cachesDirectory) -> URL? {
         let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
-        let folder = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("VideoTextures", isDirectory: true)
+        let folder = folder(in: cachesDirectory)
         let url = folder.appendingPathComponent(digest).appendingPathExtension("mp4")
-        if FileManager.default.fileExists(atPath: url.path) { return url }
+        if FileManager.default.fileExists(atPath: url.path) {
+            CacheEntryUse.markUsed(url)
+            return url
+        }
         do {
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             try data.write(to: url, options: .atomic)

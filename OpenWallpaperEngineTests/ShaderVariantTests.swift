@@ -185,7 +185,7 @@ final class ShaderVariantTests: XCTestCase {
     func testWrittenAttributeBecomesAGlobalCopy() {
         let vertex = "#version 450\nin vec2 a_TexCoord;\nout vec2 v_TexCoord;\nvoid main() {\n a_TexCoord *= 2.0;\n v_TexCoord = a_TexCoord;\n}\n"
         let fragment = "#version 450\nin vec2 v_TexCoord;\nout vec4 out_FragColor;\nvoid main() { out_FragColor = vec4(v_TexCoord, 0.0, 1.0); }\n"
-        let pair = ShaderPairRewriter.rewrite(vertex: vertex, fragment: fragment)
+        let pair = HLSLLinkage.link(vertex: vertex, fragment: fragment)
         XCTAssertTrue(pair.vertex.contains("layout(location = 1) in vec2 a_TexCoord_weIn;\nvec2 a_TexCoord;"), pair.vertex)
         XCTAssertTrue(pair.vertex.contains("a_TexCoord = a_TexCoord_weIn;"), pair.vertex)
         XCTAssertEqual(pair.attributes["a_TexCoord"], 1)
@@ -202,7 +202,8 @@ final class ShaderVariantTests: XCTestCase {
     /// values bind to it by name.
     func testCppKeywordNamesCompileAndUniformsKeepTheirNames() throws {
         let variant = try translateDialectFixture("reserved")
-        // `or` and `operator` are renamed in the SPIR-V (OpName); `this`, which GLSL reserves, by the prelude.
+        // `or` and `operator` are renamed in the SPIR-V (OpName); so is `this`, which GLSL reserves:
+        // the prelude's `we_this` gets WE's name back there, which MSL can't take.
         for name in ["we_or", "we_operator", "we_this"] { XCTAssertTrue(variant.fragmentMSL.contains(name), name) }
         // A uniform named with a C++ keyword compiles and still binds by WE's name.
         let vertex = "#version 450\nlayout(location = 0) in vec4 p;\nvoid main() { gl_Position = p; }\n"

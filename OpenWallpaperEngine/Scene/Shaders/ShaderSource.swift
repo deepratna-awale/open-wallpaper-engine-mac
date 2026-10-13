@@ -50,7 +50,7 @@ extension ShaderUniformDeclaration {
     /// stages have constant buffers of their own, so each reads its own declaration's value;
     /// foliage sway's `g_Speed` is `speed` (default 1) in the vertex stage and `speeduv`
     /// (default 5) in the fragment stage. Ours share one block, so the fragment stage's copy is
-    /// renamed (`fragmentSuffix`) by `ShaderPairRewriter`.
+    /// renamed (`fragmentSuffix`) by `HLSLLinkage`.
     static func stageLocalNames(vertex: [ShaderUniformDeclaration], fragment: [ShaderUniformDeclaration]) -> Set<String> {
         var names = Set<String>()
         for uniform in fragment where !uniform.isSampler {

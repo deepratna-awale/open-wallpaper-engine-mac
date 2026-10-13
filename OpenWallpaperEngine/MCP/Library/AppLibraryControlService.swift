@@ -308,6 +308,22 @@ final class AppLibraryControlService: LibraryControlService {
         ControlError(.invalidParams, "\"\(text)\" isn't one of \(setting.key)'s values.")
     }
 
+    // MARK: - Caches
+
+    func cacheSizes() async -> [ControlCacheSize] {
+        await Task.detached(priority: .utility) {
+            let own = CacheSweeper(folders: CacheFolder.current).sizes()
+            let sizes = CacheFolder.ID.allCases.compactMap { id in own[id].map { ControlCacheSize(id: id.mcpName, bytes: $0) } }
+            return sizes + [ControlCacheSize(id: "metal_shader_cache", bytes: MetalShaderCache.current?.allocatedSize() ?? 0)]
+        }.value
+    }
+
+    func clearCaches() async -> ControlCacheClearResult {
+        let result = await CacheMaintenance.clearAll()
+        return ControlCacheClearResult(removedEntries: result.removed.removedFiles, removedBytes: result.removed.removedBytes,
+                                       metalCacheResetRequested: result.metalCacheResetRequested)
+    }
+
     // MARK: - Plugins
 
     func plugins() -> [ControlPluginStatus] {
