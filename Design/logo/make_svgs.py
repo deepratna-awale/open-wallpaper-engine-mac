@@ -144,6 +144,9 @@ def set_icon_fill(path):
 
 if __name__ == "__main__":
     import sys
+    if len(sys.argv) == 2 and sys.argv[1] == "--background":
+        print(P["background"])
+        sys.exit(0)
     if len(sys.argv) == 3 and sys.argv[1] == "--icon-fill":
         set_icon_fill(sys.argv[2])
         sys.exit(0)

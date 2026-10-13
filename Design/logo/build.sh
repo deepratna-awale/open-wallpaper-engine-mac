@@ -41,4 +41,15 @@ done
 
 # 4. Menu bar: the template SVG itself (vector, template rendering intent in Contents.json).
 cp svg/menubar-template.svg $XCASSETS/OWEStatusIcon.imageset/OWEStatusIcon.svg
+# 5. Screen saver tile in System Settings: the flat logo on the palette's background.
+#    The legacy .saver and the extension both bundle OpenWallpaperEngineSaver/thumbnail*.png
+#    (90 x 58 pt, the legacy size). The extension also carries a `thumbnail` image in its
+#    asset catalog at 107 x 65 pt, the size Apple's own com.apple.screensaver extensions use.
+BG=$(python3 make_svgs.py --background)
+SAVER=$ROOT/OpenWallpaperEngineSaver
+"$TMP/render" tile svg/logo-flat.svg $SAVER/thumbnail.png 90x58 "$BG"
+"$TMP/render" tile svg/logo-flat.svg $SAVER/thumbnail@2x.png 180x116 "$BG"
+THUMB=$ROOT/OpenWallpaperEngineSaverExtension/Assets.xcassets/thumbnail.imageset
+"$TMP/render" tile svg/logo-flat.svg $THUMB/thumbnail.png 107x65 "$BG"
+"$TMP/render" tile svg/logo-flat.svg $THUMB/thumbnail@2x.png 214x130 "$BG"
 echo "done"
