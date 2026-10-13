@@ -142,6 +142,15 @@ final class HEVCWriter {
         return adaptor.append(buffer, withPresentationTime: CMTime(value: CMTimeValue(frame), timescale: CMTimeScale(frameRate)))
     }
 
+    /// Waits until `other` (an input `prepare` added) takes more data; false once the writer stops.
+    func waitUntilReady(_ other: AVAssetWriterInput) -> Bool {
+        while !other.isReadyForMoreMediaData {
+            guard writer.status == .writing else { return false }
+            Thread.sleep(forTimeInterval: 0.005)
+        }
+        return writer.status == .writing
+    }
+
     func finish() -> Bool {
         input.markAsFinished()
         let done = DispatchSemaphore(value: 0)

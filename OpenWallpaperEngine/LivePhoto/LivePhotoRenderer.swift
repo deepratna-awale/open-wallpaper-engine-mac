@@ -15,7 +15,8 @@ import Metal
 /// `SceneClockLayers`), on a fixed frame step from load, so frame `i` shows scene time
 /// `i / frameRate`. The whole scene is drawn at `LivePhotoCrop.renderScale` (never below its
 /// authored size nor below the device's pixels), whatever the user's playback settings, and the
-/// crop is cut out at the device's exact pixel size.
+/// crop is cut out at the device's exact pixel size: the still's; the movie is drawn from it at
+/// most the Lock Screen's size (`LivePhotoMovieEncoder.moviePixels`).
 ///
 /// A Live Photo is written in two passes: the clip's frames go into a near-lossless intermediate
 /// movie while the still is chosen among them (`LivePhotoKeyFrame`, at full resolution), then the
@@ -143,9 +144,11 @@ final class LivePhotoRenderer {
     /// Live Photo in two (see the type's notes).
     func write(_ job: LivePhotoJob, crop: LivePhotoCrop, progress: @escaping (Double) -> Void) async throws {
         let clip = job.clip
-        let bitRate = job.qualityLevel.bitRate(for: crop.outputPixels, frameRate: LivePhotoClip.frameRate)
+        // The movie at most the Lock Screen's size; the still at the crop's full pixels.
+        let moviePixels = LivePhotoMovieEncoder.moviePixels(for: crop.outputPixels)
+        let bitRate = job.qualityLevel.bitRate(for: moviePixels, frameRate: LivePhotoClip.frameRate)
         guard let still = job.still else {
-            guard let writer = HEVCWriter(url: job.movie, pixelSize: crop.outputPixels, frameRate: LivePhotoClip.frameRate,
+            guard let writer = HEVCWriter(url: job.movie, pixelSize: moviePixels, frameRate: LivePhotoClip.frameRate,
                                           bitRate: bitRate, colorProperties: LivePhotoMovieEncoder.colorProperties) else {
                 throw Failure.movie
             }
@@ -162,10 +165,10 @@ final class LivePhotoRenderer {
             return
         }
 
-        // Pass 1: the frames, near-lossless, and the still among them.
+        // Pass 1: the frames, near-lossless at the movie's size, and the still among them at full size.
         let pass = job.movie.deletingLastPathComponent().appending(path: ".pass-\(job.identifier).mov", directoryHint: .notDirectory)
         defer { try? FileManager.default.removeItem(at: pass) } // Optional: a temporary file.
-        guard let intermediate = HEVCWriter(url: pass, pixelSize: crop.outputPixels, frameRate: LivePhotoClip.frameRate,
+        guard let intermediate = HEVCWriter(url: pass, pixelSize: moviePixels, frameRate: LivePhotoClip.frameRate,
                                             quality: 1) else { throw Failure.movie }
         let candidates = LivePhotoKeyFrame.candidates(frameCount: clip.frameCount)
         var sharpness: [Int: Double] = [:]
@@ -193,7 +196,7 @@ final class LivePhotoRenderer {
         guard let reader = IntermediateReader(url: pass) else { throw Failure.movie }
         defer { reader.cancel() }
         do {
-            try LivePhotoMovieEncoder.write(to: job.movie, pixelSize: crop.outputPixels, frameRate: LivePhotoClip.frameRate,
+            try LivePhotoMovieEncoder.write(to: job.movie, pixelSize: moviePixels, frameRate: LivePhotoClip.frameRate,
                                             frameCount: clip.frameCount, keyFrame: keyFrame, still: keyImage.image,
                                             identifier: job.identifier, bitRate: bitRate) { index in
                 try Task.checkCancellation()

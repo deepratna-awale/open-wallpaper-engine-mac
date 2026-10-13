@@ -12,26 +12,44 @@ enum LivePhotoKeyFrame {
     /// How much a frame at the band's edge counts against one in the middle.
     static let edgePenalty = 0.25
 
-    /// The frames the still can be.
+    /// The earliest the still can be in the movie: the Lock Screen says "Motion Not Available"
+    /// for a still up to about 0.33 s in, whatever the movie's length, and plays one at 0.5 s
+    /// (Glitter Live's measurements on an iPhone 17 Pro, github.com/BuddhaNag12/glitter-live).
+    static let earliestSeconds = 0.5
+
+    /// The first frame the still can be at `frameRate`: `earliestSeconds` in, or the last frame of
+    /// a shorter clip.
+    static func earliestFrame(frameCount: Int, frameRate: Int = LivePhotoClip.frameRate) -> Int {
+        min(Int((earliestSeconds * Double(frameRate)).rounded(.up)), max(frameCount - 1, 0))
+    }
+
+    /// The clip's middle frame, never before `earliestFrame`.
+    static func middle(frameCount: Int) -> Int {
+        max(frameCount / 2, earliestFrame(frameCount: frameCount))
+    }
+
+    /// The frames the still can be: the middle share of the clip, from `earliestFrame` on.
     static func candidates(frameCount: Int) -> ClosedRange<Int> {
         let middle = frameCount / 2
         let half = max(0, Int(Double(frameCount) * candidateShare / 2))
-        return max(0, middle - half)...min(max(frameCount - 1, 0), middle + half)
+        let last = max(frameCount - 1, 0)
+        let lower = max(middle - half, earliestFrame(frameCount: frameCount))
+        return min(lower, last)...max(min(last, middle + half), min(lower, last))
     }
 
     /// 1 in the middle, `1 - edgePenalty` at the band's edges.
     static func weight(index: Int, frameCount: Int) -> Double {
         let band = candidates(frameCount: frameCount)
         let half = max(Double(band.upperBound - band.lowerBound) / 2, 1)
-        let distance = abs(Double(index) - Double(frameCount / 2))
+        let distance = abs(Double(index) - Double(middle(frameCount: frameCount)))
         return 1 - edgePenalty * min(distance / half, 1)
     }
 
     /// The still among `sharpness` (by frame index; frames outside the band are ignored): the
-    /// highest weighted sharpness, the middle frame when there are none.
+    /// highest weighted sharpness, the middle frame (`middle`) when there are none.
     static func choose(sharpness: [Int: Double], frameCount: Int) -> Int {
         let band = candidates(frameCount: frameCount)
-        var best = frameCount / 2
+        var best = middle(frameCount: frameCount)
         var bestScore = -Double.infinity
         for index in band {
             guard let value = sharpness[index] else { continue }

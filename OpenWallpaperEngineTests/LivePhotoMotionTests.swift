@@ -144,6 +144,103 @@ final class LivePhotoMotionTests: XCTestCase {
         XCTAssertEqual(primaries, kCMFormatDescriptionColorPrimaries_ITU_R_709_2 as String)
     }
 
+    /// The movie carries what the Lock Screen needs to play it as a wallpaper, as the camera
+    /// writes it: 8-bit HEVC at 30 fps; a `live-photo-info` track with the camera's 144-byte
+    /// sample at every frame; one still sample in the 600 timescale holding still-image-time -1
+    /// and an identity still-image transform; both tracks referring to the video (`cdsc`).
+    func testTheMovieCarriesTheLockScreensWallpaperMetadata() async throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: "livephoto-wallpaper-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let frameCount = 45, keyFrame = 22
+        let size = SIMD2(64, 128)
+        let frame = try Self.solidImage(size.x, height: size.y)
+        let movie = directory.appending(path: "clip.MOV")
+        try LivePhotoMovieEncoder.write(to: movie, pixelSize: size, frameRate: 30, frameCount: frameCount, keyFrame: keyFrame,
+                                        still: try Self.checkerImage(size.x, height: size.y), identifier: UUID().uuidString,
+                                        bitRate: LivePhotoQuality.high.bitRate(for: size, frameRate: 30)) { _ in frame }
+
+        let asset = AVURLAsset(url: movie)
+        let videoTracks = try await asset.loadTracks(withMediaType: .video)
+        let video = try XCTUnwrap(videoTracks.first)
+        let videoFormats = try await video.load(.formatDescriptions)
+        let videoFormat = try XCTUnwrap(videoFormats.first)
+        XCTAssertEqual(CMFormatDescriptionGetMediaSubType(videoFormat), kCMVideoCodecType_HEVC)
+        let depth = CMFormatDescriptionGetExtension(videoFormat, extensionKey: kCMFormatDescriptionExtension_BitsPerComponent) as? Int
+        XCTAssertEqual(depth, 8)
+        let frameRate = try await video.load(.nominalFrameRate)
+        XCTAssertEqual(Double(frameRate), 30, accuracy: 0.01)
+
+        var info: AVAssetTrack?, still: AVAssetTrack?
+        for track in try await asset.loadTracks(withMediaType: .metadata) {
+            let identifiers = try await track.load(.formatDescriptions).flatMap(LivePhotoMetadata.identifiers(of:))
+            if identifiers == ["mdta/" + LivePhotoMetadata.infoKey] { info = track }
+            if Set(identifiers) == ["mdta/" + LivePhotoMetadata.stillImageTimeKey, "mdta/" + LivePhotoMetadata.stillImageTransformKey] {
+                still = track
+            }
+        }
+        let infoTrack = try XCTUnwrap(info, "no live-photo-info track")
+        let stillTrack = try XCTUnwrap(still, "no still-image-time + still-image-transform track")
+        for track in [infoTrack, stillTrack] {
+            let referred = try await track.loadAssociatedTracks(ofType: .metadataReferent)
+            XCTAssertEqual(referred.map(\.trackID), [video.trackID])
+        }
+
+        // live-photo-info: one sample a frame, each the camera's record at the frame's time.
+        let infoSamples = try Self.samples(of: infoTrack, in: asset)
+        XCTAssertEqual(infoSamples.count, frameCount)
+        for (index, sample) in infoSamples.enumerated() {
+            XCTAssertEqual(sample.time, LivePhotoMetadata.time(ofFrame: index, frameRate: 30))
+            XCTAssertEqual(sample.bytes.count, 144)
+            XCTAssertEqual(sample.bytes.suffix(136), LivePhotoMetadata.cameraInfoPayload)
+        }
+        let infoReader = try AVAssetReader(asset: asset)
+        let infoOutput = AVAssetReaderTrackOutput(track: infoTrack, outputSettings: nil)
+        infoReader.add(infoOutput)
+        let infoAdaptor = AVAssetReaderOutputMetadataAdaptor(assetReaderTrackOutput: infoOutput)
+        XCTAssertTrue(infoReader.startReading())
+        let infoGroup = try XCTUnwrap(infoAdaptor.nextTimedMetadataGroup())
+        XCTAssertEqual(infoGroup.items.first?.dataType, LivePhotoMetadata.infoDataType)
+        infoReader.cancelReading()
+
+        // The still: one sample at the key frame (in the 600 timescale), -1 and the identity.
+        XCTAssertEqual(try Self.samples(of: stillTrack, in: asset).count, 1)
+        let stillTimescale = try await stillTrack.load(.naturalTimeScale)
+        XCTAssertEqual(stillTimescale, 600)
+        let reader = try AVAssetReader(asset: asset)
+        let output = AVAssetReaderTrackOutput(track: stillTrack, outputSettings: nil)
+        reader.add(output)
+        let adaptor = AVAssetReaderOutputMetadataAdaptor(assetReaderTrackOutput: output)
+        XCTAssertTrue(reader.startReading())
+        let group = try XCTUnwrap(adaptor.nextTimedMetadataGroup())
+        XCTAssertEqual(CMTimeGetSeconds(group.timeRange.start), Double(keyFrame) / 30, accuracy: 1e-6)
+        let time = try XCTUnwrap(group.items.first { $0.identifier?.rawValue == LivePhotoMetadata.stillImageTimeIdentifier })
+        let value = try await time.load(.numberValue)
+        XCTAssertEqual(value?.intValue, -1)
+        let transform = try XCTUnwrap(group.items.first { $0.identifier?.rawValue == "mdta/" + LivePhotoMetadata.stillImageTransformKey })
+        let matrix = try await transform.load(.value) as? [NSNumber]
+        XCTAssertEqual(matrix?.map(\.doubleValue), [1, 0, 0, 0, 1, 0, 0, 0, 1])
+        reader.cancelReading()
+    }
+
+    /// A track's samples (with data) in order: their times and bytes.
+    private static func samples(of track: AVAssetTrack, in asset: AVAsset) throws -> [(time: CMTime, bytes: Data)] {
+        let reader = try AVAssetReader(asset: asset)
+        let output = AVAssetReaderTrackOutput(track: track, outputSettings: nil)
+        reader.add(output)
+        XCTAssertTrue(reader.startReading())
+        var samples: [(time: CMTime, bytes: Data)] = []
+        while let sample = output.copyNextSampleBuffer() {
+            guard let block = CMSampleBufferGetDataBuffer(sample) else { continue }
+            let length = CMBlockBufferGetDataLength(block)
+            guard length > 0 else { continue }
+            var data = Data(count: length)
+            data.withUnsafeMutableBytes { _ = CMBlockBufferCopyDataBytes(block, atOffset: 0, dataLength: length, destination: $0.baseAddress!) }
+            samples.append((CMSampleBufferGetPresentationTimeStamp(sample), data))
+        }
+        return samples
+    }
+
     // MARK: Images
 
     private static func solidImage(_ width: Int, height: Int? = nil) throws -> CGImage {
