@@ -105,14 +105,18 @@ struct PerformancePage: SettingsPage {
             }
             .settingsAnchor(SettingsAnchor.playback)
             Section {
-                // Each button applies a preset to the settings below; none of them stays selected.
+                // Choosing a preset applies it to the settings below. The selection is the preset
+                // the settings match, or Custom when they match none.
                 LabeledContent("Preset") {
-                    ControlGroup {
-                        Button("Low") { viewModel.setQuality(.low) }
-                        Button("Medium") { viewModel.setQuality(.medium) }
-                        Button("High") { viewModel.setQuality(.high) }
-                        Button("Ultra") { viewModel.setQuality(.ultra) }
+                    Picker("Preset", selection: qualityPreset) {
+                        Text("Low").tag(GSQuality?.some(.low))
+                        Text("Medium").tag(GSQuality?.some(.medium))
+                        Text("High").tag(GSQuality?.some(.high))
+                        Text("Ultra").tag(GSQuality?.some(.ultra))
+                        Text("Custom").tag(GSQuality?.none)
                     }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
                     .fixedSize()
                 }
                 .help("Sets the quality settings below, the frame rate and the Quality ↔ Efficiency slider in one step.")
@@ -262,6 +266,20 @@ struct PerformancePage: SettingsPage {
                 set: {
                     viewModel.settings.fps = $0
                     viewModel.settings.fpsSetByUser = true
+                })
+    }
+
+    /// The Preset control: the preset the settings match (nil, Custom, for none). Choosing a
+    /// preset applies it; choosing Custom changes nothing, so the control redraws to what the
+    /// settings match.
+    private var qualityPreset: Binding<GSQuality?> {
+        Binding(get: { GlobalSettingsViewModel.matchingPreset(viewModel.settings) },
+                set: { quality in
+                    if let quality {
+                        viewModel.setQuality(quality)
+                    } else {
+                        viewModel.objectWillChange.send()
+                    }
                 })
     }
 
