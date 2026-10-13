@@ -57,10 +57,30 @@ protocol LibraryControlService: AnyObject {
     /// Sets a value already checked against the setting (`LibrarySetting.parse`).
     func set(_ value: JSONValue, of setting: LibrarySetting) throws
 
+    // MARK: Caches
+
+    /// Each cache's bytes on disk, as Settings › Performance › Caches adds them up.
+    func cacheSizes() async -> [ControlCacheSize]
+    /// Clear Caches, as Settings' button does after its confirmation.
+    func clearCaches() async -> ControlCacheClearResult
+
     // MARK: Plugins
 
     /// Settings › Plugins' entries, in its order.
     func plugins() -> [ControlPluginStatus]
+}
+
+/// One cache's size, as `caches_get` lists it.
+struct ControlCacheSize: Equatable {
+    var id: String
+    var bytes: Int64
+}
+
+/// What `caches_clear` removed.
+struct ControlCacheClearResult: Equatable {
+    var removedEntries: Int
+    var removedBytes: Int64
+    var metalCacheResetRequested: Bool
 }
 
 /// One of Settings › Plugins' entries, as `plugin_status` lists it.

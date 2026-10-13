@@ -21,6 +21,19 @@ final class AppStorageIsolationTests: XCTestCase {
         XCTAssertTrue(store.keychainServicePrefix.contains("isolated"))
     }
 
+    /// Metal keeps its shader cache in `<Darwin user cache>/<bundle id>/com.apple.metal`, which
+    /// every copy with the app's bundle id would share; the test host moved its Darwin folders into
+    /// a subfolder of its own at launch (`DarwinUserDirectories`), so it never fills the user's.
+    func testTheTestHostHasItsOwnMetalShaderCache() throws {
+        let suffix = DarwinUserDirectories.suffix(isolationTag: AppStorageLocation.testsTag)
+        let cacheDirectory = try XCTUnwrap(DarwinUserDirectories.cacheDirectory)
+        XCTAssertEqual(cacheDirectory.lastPathComponent, suffix)
+        XCTAssertEqual(FileManager.default.temporaryDirectory.standardizedFileURL.lastPathComponent, suffix)
+        let metal = try XCTUnwrap(MetalShaderCache.current)
+        XCTAssertTrue(metal.directory.path(percentEncoded: false).contains("/\(suffix)/"), metal.directory.path)
+        XCTAssertEqual(metal.directory.lastPathComponent, "com.apple.metal")
+    }
+
     /// A test copy is marked TEST, a local build Dev, a release nothing.
     func testTheDockBadgeTellsCopiesApart() {
         XCTAssertEqual(DockBadge.current, .test, "the test host is an isolated copy")

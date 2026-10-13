@@ -211,6 +211,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }))
     /// Renders the Wallpaper Editor's browser previews in the background once WE's assets are there.
     private(set) lazy var editorPreviewPrewarm = EditorPreviewPrewarm(environment: .live)
+    /// Expires cache entries unused for 60 days, at launch and daily.
+    private let cacheMaintenance = CacheMaintenance()
     lazy var sceneScriptServices: SceneScriptServices = {
         if !SceneScriptJIT.isEnabled {
             OWELog.info(.script, "JavaScriptCore runs without its JIT (no \(SceneScriptJIT.entitlement)): scripts run several times slower")
@@ -509,6 +511,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // The Wallpaper Editor's browser previews, when any is missing.
         editorPreviewPrewarm.start(reason: "launch", after: EditorPreviewPrewarm.launchDelay)
 
+        // Cache entries unused for 60 days go, a while after launch and then daily.
+        cacheMaintenance.start()
+
         // Workshop downloads need SteamCMD; set it up from Valve in the background when it's missing.
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
             guard let self else { return }
@@ -677,6 +682,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // The steamcmd kept logged in between Workshop downloads quits with the app.
         contentViewModel.steamCmd.endSteamCmdSession()
         updater.stopShaderPrewarm()
+        cacheMaintenance.stop()
         // The system colours go back when the user chose "Restore on quit".
         theming.stop()
         // The editor's windows go back to the system accent with the app.

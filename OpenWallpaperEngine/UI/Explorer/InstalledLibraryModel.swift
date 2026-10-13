@@ -130,11 +130,16 @@ final class InstalledLibraryModel {
         return InstalledWorkshopTags.tags(of: wallpaper, in: .shared)
     }
 
-    /// A wallpaper was deleted: drops it from the library index and removes its loading snapshots.
+    /// A wallpaper was deleted: drops it from the library index and removes its loading snapshots
+    /// and the repaired copies of its videos.
     func forgetDeletedWallpaper(at directory: URL) {
         DownloadedWallpaperIndex.shared.remove(directory: directory)
         let store = SceneLoadingSnapshotStore.current
-        Task.detached(priority: .utility) { store.removeSnapshots(forWallpaperAt: directory) }
+        let repaired = RepairedVideoCache.current
+        Task.detached(priority: .utility) {
+            store.removeSnapshots(forWallpaperAt: directory)
+            repaired.removeCopies(forSourcesIn: directory)
+        }
     }
 
     /// Deletes the wallpapers' folders, or moves them to the Trash, off the main thread. Then each

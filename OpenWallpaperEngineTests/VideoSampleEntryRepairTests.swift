@@ -148,6 +148,30 @@ final class VideoSampleEntryRepairTests: XCTestCase {
                      layout: layout, largeOffsets: largeOffsets)
     }
 
+    /// Deleting a wallpaper removes the repaired copies of its videos (`InstalledLibraryModel
+    /// .forgetDeletedWallpaper`), and only those.
+    func testRepairedCopiesGoWithTheirWallpaper() throws {
+        let cache = RepairedVideoCache(cachesDirectory: root.appending(path: "Caches"))
+        let deleted = root.appending(path: "wallpapers/1234", directoryHint: .isDirectory)
+        let kept = root.appending(path: "wallpapers/12345", directoryHint: .isDirectory)
+        var copies: [URL] = []
+        for folder in [deleted, kept] {
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            let source = folder.appending(path: "video.mp4")
+            try hevcFile(layout: .movieFirst).build().write(to: source)
+            let copy = cache.playableURL(for: source)
+            XCTAssertNotEqual(copy, source)
+            let record = copy.deletingLastPathComponent().appending(path: RepairedVideoCache.sourceFileName)
+            XCTAssertEqual(try String(contentsOf: record, encoding: .utf8), source.standardizedFileURL.path(percentEncoded: false))
+            copies.append(copy)
+        }
+        try FileManager.default.removeItem(at: deleted)
+        _ = expectThreadGuardViolations { cache.removeCopies(forSourcesIn: deleted) }
+        XCTAssertFalse(FileManager.default.fileExists(atPath: copies[0].deletingLastPathComponent().path(percentEncoded: false)))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: copies[1].path(percentEncoded: false)),
+                      "a wallpaper whose folder name starts the same keeps its copy")
+    }
+
     // MARK: - Helpers
 
     private func write(_ data: Data, name: String) throws -> URL {

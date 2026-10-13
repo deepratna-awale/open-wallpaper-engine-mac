@@ -44,6 +44,7 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
 - **Settings:** the global settings model and store.
 - The **WE assets location**.
 - The **Objective-C exception catcher**.
+- **Caches** (`Core/Caches`): last use of a cache entry (`CacheEntryUse`, its modification date), what is in use now (`CacheLeases`), the sweeper that expires entries unused for 60 days and clears them (`CacheSweeper`), and macOS's Metal shader cache of the app (`MetalShaderCache`, reset at launch; `DarwinUserDirectories` gives an isolated copy its own). The app's list of caches and their schedule are in `App/Caches` (`CacheFolder+OWE`, `CacheMaintenance`, `MetalShaderCacheLaunch`).
 - It must not reference UI, view models or `AppDelegate`.
 
 ### `Scene/`: the WE scene engine

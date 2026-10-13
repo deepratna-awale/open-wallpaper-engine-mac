@@ -5,7 +5,7 @@ import OWEControlProtocol
 /// displays wallpapers are shown on, the app's settings and the plugins' status. Each tool does
 /// what the app's own control does; the deleting ones need `confirm: true`.
 extension MCPToolCatalog {
-    static let libraryTools: [MCPTool] = playlistTools + wallpaperTools + folderTools + displayTools + settingsTools + pluginTools
+    static let libraryTools: [MCPTool] = playlistTools + wallpaperTools + folderTools + displayTools + settingsTools + cacheTools + pluginTools
 
     private static let libraryPlaylist = JSONSchema.string(
         "A playlist's name (case-insensitive) or id, from list_playlists.", minLength: 1)
@@ -127,6 +127,18 @@ extension MCPToolCatalog {
                     "key": JSONSchema.string("The setting's key, from settings_get.", minLength: 1),
                     "value": JSONSchema.string("The new value as text: true or false, a number within the range, or one of the allowed values. A JSON number or boolean is accepted too."),
                 ], required: ["key", "value"]), annotations: .idempotent) { message($0) },
+    ]
+
+    // MARK: - Caches
+
+    private static let cacheTools: [MCPTool] = [
+        MCPTool("caches_get", title: "Get Cache Size",
+                description: "Settings › Performance › Caches: the space Open Wallpaper Engine's caches take on disk (total_bytes), and each cache's (caches: optimised textures, loading snapshots, editor previews, video textures, repaired videos, display pictures, translated shaders, the pipeline archive, and metal_shader_cache, the GPU shader cache macOS keeps for the app). Entries unused for 60 days are deleted automatically.",
+                annotations: .readOnly) { message($0) },
+        MCPTool("caches_clear", title: "Clear Caches",
+                description: "Settings › Performance › Clear Caches: deletes the caches, except what the wallpapers on screen use (and the editor's previews while the Wallpaper Editor runs); the GPU shader cache is cleared at the app's next launch. Wallpapers load slower once while their caches are made again. Needs confirm: true.",
+                input: JSONSchema.object(["confirm": libraryConfirm], required: ["confirm"]),
+                annotations: .destructive) { message($0) },
     ]
 
     // MARK: - Plugins
