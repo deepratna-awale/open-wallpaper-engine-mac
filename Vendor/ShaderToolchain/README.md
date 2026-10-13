@@ -20,8 +20,8 @@ corpus test (`ShaderVariantCacheTests.testTranslatedOutputMatchesItsRevision`) g
 It also compiles a shader's two stages as one program under glslang's relaxed Vulkan rules
 (`owe_shader_compile_pair_msl`, which gathers loose uniforms into one `WEUniforms` block). In the
 SPIR-V debug names, the GLSL reserved words the prelude spelled `we_<word>` get WE's names back
-(`restoreReservedNames`; the list is `owe_shader_glsl_reserved_words`), so the reflection and the
-MSL carry them, and names MSL reserves are renamed before SPIRV-Cross writes the MSL
+(`restoreReservedNames`; the list is `owe_shader_glsl_reserved_words`), so the reflection carries
+them, and names MSL reserves are renamed before SPIRV-Cross writes the MSL
 (`renameMetalClashes`); the reflection reads the names before that rename.
 
 ## Refreshing

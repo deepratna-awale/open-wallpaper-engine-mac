@@ -11,8 +11,9 @@ import ShaderToolchain
 /// one a shader uses `we_<name>` with a macro, which changes every use alike (a local, a function,
 /// a uniform, a varying in both stages). The pair compile then gives the SPIR-V's names WE's
 /// spelling back (`restoreReservedNames`), before SPIRV-Cross writes the MSL and the reflection:
-/// material constants bind by WE's names, and only the names MSL can't take (`half`, `this`, …)
-/// are renamed again for Metal (`renameMetalClashes`).
+/// material constants bind by WE's names. In the MSL, SPIRV-Cross spells a GLSL keyword its own
+/// way (`_common`), and names MSL can't take (`half`, `this`, …) are renamed for Metal
+/// (`renameMetalClashes`).
 ///
 /// The keywords HLSL shares (`shared`, `volatile`, `precise`, `double`, …) can't be names in WE
 /// either, so none is listed.

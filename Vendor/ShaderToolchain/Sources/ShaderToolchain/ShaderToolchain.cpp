@@ -233,7 +233,8 @@ std::vector<uint32_t> renameDebugNames(const std::vector<uint32_t> &words, Renam
 }
 
 // `we_common` -> `common`: the spelling the prelude gave a GLSL reserved word becomes WE's again,
-// so the reflection, and the MSL wherever Metal takes the name, carry WE's names.
+// so the reflection carries WE's names. SPIRV-Cross spells a GLSL keyword its own way in the MSL
+// (`_common`), and renameMetalClashes renames what MSL can't take.
 std::vector<uint32_t> restoreReservedNames(const std::vector<uint32_t> &words) {
     return renameDebugNames(words, [](const std::string &name) -> std::string {
         if (name.compare(0, 3, "we_") != 0) return "";

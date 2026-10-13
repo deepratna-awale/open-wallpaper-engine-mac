@@ -55,9 +55,10 @@ final class GLSLReservedWordsTests: XCTestCase {
         }
     }
 
-    /// Names a GLSL reserved word only for glslang: the SPIR-V gets WE's name back, so the MSL
-    /// carries it wherever Metal takes it, and is renamed again only where Metal can't (`half`).
-    func testTheMSLCarriesWEsNamesWhereMetalTakesThem() throws {
+    /// Names a GLSL reserved word only for glslang: the SPIR-V gets WE's name back, so the
+    /// reflection carries it; SPIRV-Cross spells it its own way in the MSL (`_common`, as it does
+    /// every GLSL keyword), and the toolchain renames it only where Metal can't take it (`half`).
+    func testTheSPIRVCarriesWEsNames() throws {
         let vertex = ShaderSource(stage: .vertex, path: "v", text: "void main() { gl_Position = vec4(0.0); }",
                                   combos: [], uniforms: [])
         let fragment = ShaderSource(stage: .fragment, path: "f", text: """
@@ -67,10 +68,12 @@ final class GLSLReservedWordsTests: XCTestCase {
             """, combos: [], uniforms: [])
         let variant = try translator.variant(vertex: vertex, fragment: fragment, combos: [:])
         XCTAssertEqual(Set(try XCTUnwrap(variant.uniforms?.members).keys), ["common", "half"])
-        XCTAssertTrue(variant.fragmentMSL.contains("float common;"), variant.fragmentMSL)
+        XCTAssertTrue(variant.fragmentMSL.contains("float _common;"), variant.fragmentMSL)
         XCTAssertTrue(variant.fragmentMSL.contains("float we_half;"), variant.fragmentMSL)
         XCTAssertFalse(variant.fragmentMSL.contains("we_common"), variant.fragmentMSL)
         XCTAssertFalse(variant.fragmentMSL.contains("weSample"), variant.fragmentMSL)
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        XCTAssertNoThrow(try device.makeLibrary(source: variant.fragmentMSL, options: nil))
     }
 
     /// A uniform keeps WE's name in the block's layout, where material constants find it, and a
@@ -125,7 +128,7 @@ final class GLSLReservedWordsTests: XCTestCase {
     /// `sample` is one of the list's keywords, renamed only where a shader names it.
     func testSampleIsRenamedOnlyWhereUsed() {
         XCTAssertTrue(GLSLReservedWords.words.contains("sample"))
-        XCTAssertFalse(ShaderPrelude.text(for: .fragment, combos: [:], source: "float x;").contains("sample"))
+        XCTAssertFalse(ShaderPrelude.text(for: .fragment, combos: [:], source: "float x;").contains("#define sample"))
         XCTAssertTrue(ShaderPrelude.text(for: .fragment, combos: [:], source: "float sample;").contains("#define sample we_sample\n"))
     }
 }
