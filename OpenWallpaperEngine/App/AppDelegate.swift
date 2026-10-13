@@ -159,6 +159,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// the desktop's left clicks.
     /// Settings › Plugins › Screen Saver: the loop videos and the bundled saver.
     lazy var screenSaver = ScreenSaverPlugin()
+    /// The Chromium engine's installer that Settings › Plugins and the screen saver's install
+    /// offer share, so an install started from either shows its progress in both.
+    lazy var chromiumEngine = ChromiumEngineInstaller()
     /// The live screen saver's broker, a launch agent registered while the Screen Saver plugin is on.
     lazy var screenSaverBroker = ScreenSaverBrokerAgent()
     private var screenSaverBrokerCancellable: AnyCancellable?
@@ -549,7 +552,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             OWELog.info(.app, "Screen saver: \(folder.lastPathComponent), set as the screen saver, is no longer in the library")
             return
         }
-        guard store.migrateRecordedSelection(isVideo: { _ in ScreenSaverVideoSource.isEligible(wallpaper) }) else { return }
+        guard store.migrateRecordedSelection(isVideo: { _ in ScreenSaverVideoSource.isEligible(wallpaper) }) else {
+            // A video an earlier version linked from another volume is put in place again.
+            if ScreenSaverInstaller.current.mayInstall { screenSaverSelection.replaceLinkedSelection(wallpaper) }
+            return
+        }
         OWELog.info(.app, "Screen saver: \(folder.lastPathComponent)'s recording is now drawn live")
         // Its still now, once the app is set up (`renderPickStill`).
         DispatchQueue.main.async { [weak self] in self?.liveScreenSaver.renderPickStill(wallpaper) }

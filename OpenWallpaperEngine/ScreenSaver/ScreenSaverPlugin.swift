@@ -5,7 +5,7 @@ import Combine
 /// screen saver's layout (`ScreenSaverLayoutPlan`: per display, cloned, or one stretched over the
 /// displays' canvas): scenes, web wallpapers and WebM videos drawn live by the app while the
 /// screen saver runs (`liveLoops`, `ScreenSaverLiveController`), and a video wallpaper AVFoundation
-/// plays as its own file, linked (or repaired) into the saver's folder (`ScreenSaverVideoSource`)
+/// plays as its own file, linked (or copied, or repaired) into the saver's folder (`ScreenSaverVideoSource`)
 /// and listed in the manifest, cropped per display for a stretch. Nothing is recorded. Off removes
 /// the saver and the linked videos.
 ///
@@ -308,7 +308,7 @@ final class ScreenSaverPlugin: ObservableObject {
         for video in work.videos { scheduleVideo(video.wallpaper, key: video.key, fileName: video.file, generation: generation) }
     }
 
-    /// A video wallpaper: links (or repairs) its file into the store; the manifest lists its
+    /// A video wallpaper: links (or copies, or repairs) its file into the store; the manifest lists its
     /// loops at its video track's size once it's there.
     private func scheduleVideo(_ wallpaper: WEWallpaper, key: StatusKey, fileName: String, generation: Int) {
         let store = store
@@ -320,7 +320,8 @@ final class ScreenSaverPlugin: ObservableObject {
                 return
             }
             let destination = store.url(fileName: fileName)
-            let outcome: ScreenSaverVideoSource.Outcome = store.exists(fileName: fileName)
+            // An earlier version's symbolic link out of the folder is replaced: the saver can't follow it.
+            let outcome: ScreenSaverVideoSource.Outcome = ScreenSaverVideoSource.isInPlace(destination)
                 ? .ready(repaired: false)
                 : ScreenSaverVideoSource.prepare(source, at: destination) {
                     Task { @MainActor in self?.setStatus(.rendering, for: key, generation: generation) }

@@ -87,10 +87,38 @@ final class ScreenSaverVideoSourceTests: XCTestCase {
         let path = destination.path(percentEncoded: false)
         let attributes = try FileManager.default.attributesOfItem(atPath: path)
         let sourceAttributes = try FileManager.default.attributesOfItem(atPath: source.path(percentEncoded: false))
-        let isSymlink = (try? FileManager.default.destinationOfSymbolicLink(atPath: path)) != nil
-        // Same volume: a hard link (same inode); otherwise a symbolic link.
-        XCTAssertTrue(isSymlink || (attributes[.systemFileNumber] as? NSNumber) == (sourceAttributes[.systemFileNumber] as? NSNumber))
+        // Same volume: a hard link (same inode), never a symbolic link.
+        XCTAssertTrue(ScreenSaverVideoSource.isInPlace(destination))
+        XCTAssertEqual(attributes[.systemFileNumber] as? NSNumber, sourceAttributes[.systemFileNumber] as? NSNumber)
         XCTAssertEqual(try Data(contentsOf: destination), try Data(contentsOf: source))
+    }
+
+    /// A library on another volume (the hard link fails, as across volumes): the file is copied
+    /// into the saver's folder, never linked there, since neither saver can follow a link out of it.
+    func testAFileOnAnotherVolumeIsCopiedNotSymlinked() throws {
+        let source = try mp4(entryType: "avc1", name: "video.mp4")
+        let destination = root.appending(path: "store/entry.mp4")
+        var announced = false
+        let outcome = ScreenSaverVideoSource.prepare(source, at: destination, willWrite: { announced = true },
+                                                     hardLink: { _, _ in throw CocoaError(.fileWriteUnknown) })
+        XCTAssertEqual(outcome, .ready(repaired: false))
+        XCTAssertTrue(announced, "a copy takes a while: the panel says so")
+        XCTAssertTrue(ScreenSaverVideoSource.isInPlace(destination))
+        XCTAssertNil(try? FileManager.default.destinationOfSymbolicLink(atPath: destination.path(percentEncoded: false)))
+        XCTAssertEqual(try Data(contentsOf: destination), try Data(contentsOf: source))
+    }
+
+    /// An earlier version's symbolic link out of the folder isn't in place: it is replaced.
+    func testASymbolicLinkIsNotInPlace() throws {
+        let source = try mp4(entryType: "avc1", name: "video.mp4")
+        let link = root.appending(path: "store/link.mp4")
+        try FileManager.default.createDirectory(at: link.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: source)
+        XCTAssertFalse(ScreenSaverVideoSource.isInPlace(link))
+        XCTAssertFalse(ScreenSaverVideoSource.isInPlace(root.appending(path: "store/missing.mp4")))
+        XCTAssertEqual(ScreenSaverVideoSource.prepare(source, at: link, hardLink: { _, _ in throw CocoaError(.fileWriteUnknown) }),
+                       .ready(repaired: false))
+        XCTAssertTrue(ScreenSaverVideoSource.isInPlace(link), "the link was replaced by the file")
     }
 
     func testPreparingAgainReplacesTheEntry() throws {

@@ -21,6 +21,8 @@ struct ContentView: View {
     @State private var isRemoteWallpaperSheetPresented = false
     /// Raises the "needs Chromium" alert for a wallpaper just applied.
     @ObservedObject private var chromiumAdvisor = ChromiumFeatureAdvisor.shared
+    /// Its Chromium install offer (`ScreenSaverSelectionService.chromiumOffer`).
+    @ObservedObject private var screenSaverSelection = AppDelegate.shared.screenSaverSelection
     /// Picked on the setup assistant's last step; opened once the sheet has closed.
     @State private var onboardingShortcut: OnboardingShortcut?
 
@@ -166,6 +168,17 @@ struct ContentView: View {
             Text("\(advice.title) uses \(advice.featureList), which the system's WebKit doesn't have. Install the Chromium web engine in Settings › Plugins to play it as in Wallpaper Engine.",
                  comment: "First %@ is the wallpaper's title, the second a list of web APIs such as navigator.serial, EyeDropper")
         }
+        // Set as Screen Saver on a web wallpaper or WebM video without the Chromium engine.
+        .alert("Set as Screen Saver", isPresented: screenSaverChromiumOfferPresented,
+               presenting: screenSaverSelection.chromiumOffer) { _ in
+            Button("Install the Chromium Engine") {
+                AppDelegate.shared.chromiumEngine.install()
+                AppDelegate.shared.openSettings(.plugins, anchor: SettingsAnchor.chromium)
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: { _ in
+            Text("Web wallpapers and WebM videos move in the screen saver only with the Chromium engine. Without it, the screen saver shows their picture.")
+        }
         .sheet(isPresented: $isRemoteWallpaperSheetPresented) {
             RemoteWallpaperURLSheet(wallpaperViewModel: wallpaperViewModel)
                 .frame(width: 500, height: 180)
@@ -186,6 +199,11 @@ struct ContentView: View {
     private var chromiumAdvicePresented: Binding<Bool> {
         Binding(get: { chromiumAdvisor.pendingAdvice != nil },
                 set: { if !$0 { chromiumAdvisor.pendingAdvice = nil } })
+    }
+
+    private var screenSaverChromiumOfferPresented: Binding<Bool> {
+        Binding(get: { screenSaverSelection.chromiumOffer != nil },
+                set: { if !$0 { screenSaverSelection.chromiumOffer = nil } })
     }
 
     private func openOnboardingShortcut() {

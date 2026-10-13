@@ -1,8 +1,9 @@
 import Foundation
 
 /// When the Installed, Discover and Workshop menus' "Set as Wallpaper" and "Set as Screen Saver"
-/// can apply an item. Application wallpapers don't run on macOS; the screen saver takes what the
-/// Screen Saver mode draws or plays (`ScreenSaverSelectionService.canSet`). A Workshop item
+/// can apply an item. Application wallpapers don't run on macOS; the screen saver takes scenes,
+/// videos and web wallpapers (`ScreenSaverSelectionService.canSet`: a web page or WebM video
+/// without the Chromium engine offers its install when chosen). A Workshop item
 /// isn't downloaded yet, so its type is its Steam type tag; an item without one (a preset) is
 /// checked once it is downloaded.
 enum WallpaperSetAsRules {
@@ -20,7 +21,7 @@ enum WallpaperSetAsRules {
 
     static func canSetScreenSaver(_ item: WorkshopItem) -> Bool {
         guard let type = wallpaperType(of: item) else { return true }
-        return ["scene", "video"].contains(type.lowercased())
+        return ["scene", "video", "web"].contains(type.lowercased())
     }
 
     /// The item's wallpaper type tag (`WorkshopTags.types`: Scene, Video, Web, Application).

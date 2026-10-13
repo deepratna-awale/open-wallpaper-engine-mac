@@ -98,9 +98,9 @@ extension MCPToolCatalog {
                     ], required: ["key", "value"]), maxItems: 200),
                 ], required: ["wallpaper_id"]), annotations: .idempotent) { message($0) },
         MCPTool("screensaver_set", title: "Set as Screen Saver",
-                description: "\"Set as Screen Saver\" from the Screen Saver mode: a scene becomes the screen saver, drawn live with its screen saver choices while the screen saver runs; a video wallpaper's own file becomes the screen saver (waiting while it is put in place). Nothing is recorded. It turns the Screen Saver plugin on when it is off, as the mode does. The user picks \"Open Wallpaper Engine\" in System Settings › Screen Saver.",
+                description: "\"Set as Screen Saver\" from the Screen Saver mode: a scene becomes the screen saver, drawn live with its screen saver choices while the screen saver runs; a web wallpaper or WebM video is drawn live through the Chromium engine (refused while it isn't installed); a video wallpaper's own file becomes the screen saver (waiting while it is put in place). Nothing is recorded. It turns the Screen Saver plugin on when it is off, as the mode does. The user picks \"Open Wallpaper Engine\" in System Settings › Screen Saver.",
                 input: JSONSchema.object([
-                    "wallpaper_id": JSONSchema.string("A scene or video wallpaper's id from list_wallpapers.", minLength: 1),
+                    "wallpaper_id": JSONSchema.string("A scene, video or web wallpaper's id from list_wallpapers.", minLength: 1),
                 ], required: ["wallpaper_id"]), annotations: .change, longRunning: true) { message($0) },
         MCPTool("screensaver_stop_using", title: "Stop Using as Screen Saver",
                 description: "\"Stop Using as Screen Saver\": the screen saver goes back to drawing the desktop's wallpapers live.",
