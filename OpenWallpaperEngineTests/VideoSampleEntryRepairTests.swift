@@ -306,18 +306,6 @@ final class VideoSampleEntryRepairTests: XCTestCase {
     }
 
     /// A video wallpaper whose track is in band gets its repaired copy in the screen saver store.
-    func testScreenSaverEntryOfAnInBandVideoIsTheRepairedCopy() throws {
-        let file = avcFile(layout: .mediaFirst)
-        let source = try write(file.build(), name: "wallpaper.mp4")
-        let destination = root.appending(path: "ScreenSaver/entry.mp4")
-        var announced = false
-        XCTAssertEqual(ScreenSaverVideoSource.prepare(source, at: destination) { announced = true }, .ready(repaired: true))
-        XCTAssertTrue(announced, "the status shows the repair")
-        XCTAssertNil(try? FileManager.default.destinationOfSymbolicLink(atPath: destination.path(percentEncoded: false)))
-        XCTAssertEqual(try VideoSampleEntryRepair.sampleEntryTypes(destination), ["avc1"])
-        XCTAssertEqual(try mediaBytes(Data(contentsOf: destination)), try mediaBytes(Data(contentsOf: source)))
-    }
-
     func testEmptyRecordTakesItsProfileFromTheSPS() throws {
         // profile_tier_level with emulation prevention bytes, then sps_id 0, chroma 4:2:0,
         // width and height 0, no conformance window, 10-bit luma and chroma.

@@ -1,4 +1,5 @@
 #if DEBUG
+import AVFoundation
 import AppKit
 import Darwin
 import Metal
@@ -12,7 +13,11 @@ import WebKit
 /// `mode` is `scene` (a scene wallpaper folder, drawn by `ScreenSaverLiveScene`), `shared` (a
 /// scene folder loaded first, as a display runs it, then lent to the ring), `chromium` (a
 /// URL in the Chromium engine's windowless browser, each frame blitted into the ring) or
-/// `webkit` (a URL in a `WKWebView` in a transparent window, captured with `takeSnapshot`). The
+/// `webkit` (a URL in a `WKWebView` in a transparent window, captured with `takeSnapshot`),
+/// `video` (a video file played by a player of its own, `ScreenSaverLiveVideo`), `sharedvideo` (a
+/// video file played first as the desktop's AVKit path plays it, in a layer on screen, then its
+/// frames drawn into the ring) or `avplayer` (a video file looped by `AVPlayerLooper` in an
+/// `AVPlayerLayer` on screen, as the saver played a video before it was drawn live). The
 /// manifest goes to `$OWE_SPIKE_DIR/live.json` (none without it) and no Darwin notification is
 /// posted, so no saver sees the frames. Prints one line per second and a summary.
 @MainActor
@@ -23,7 +28,7 @@ enum ScreenSaverLiveSpikeCommand {
         guard let index = arguments.firstIndex(of: argument) else { return nil }
         let rest = Array(arguments[(index + 1)...])
         guard rest.count >= 4, let seconds = Double(rest[2]), let size = ShaderPrewarmCommand.size(rest[3]) else {
-            print("usage: \(argument) scene|shared|chromium|webkit <target> <seconds> <width>x<height> [fps]")
+            print("usage: \(argument) scene|shared|chromium|webkit|video|sharedvideo|avplayer <target> <seconds> <width>x<height> [fps]")
             return 1
         }
         let fps = rest.count > 4 ? Int(rest[4]) ?? 60 : 60
@@ -103,6 +108,42 @@ enum ScreenSaverLiveSpikeCommand {
         case "webkit":
             guard let url = URL(string: rest[1]) else { return 1 }
             keep.append(WebKitSpike(url: url, size: size, fps: fps, device: device, publisher: publisher, stats: stats))
+        case "video", "sharedvideo":
+            let url = URL(fileURLWithPath: rest[1])
+            // Its size and rate, read ahead as the app does (`prefetchInfo`).
+            ScreenSaverVideoSource.prefetchInfo(of: [url])
+            let infoStart = CFAbsoluteTimeGetCurrent()
+            while ScreenSaverVideoSource.cachedInfo(of: url) == nil, CFAbsoluteTimeGetCurrent() - infoStart < 5 {
+                _ = RunLoop.main.run(mode: .default, before: .now + 0.01)
+            }
+            let info = ScreenSaverVideoSource.cachedInfo(of: url)
+            let ring = ScreenSaverLiveVideo.ringPixels(loop: size, video: info?.size, placement: .fill)
+            let rate = ScreenSaverLiveVideo.frameRate(videoRate: info?.frameRate ?? 0, refresh: NSScreen.main?.maximumFramesPerSecond ?? 60,
+                                                      limit: fps)
+            print("video \(info.map { "\($0.size.x)x\($0.size.y) at \($0.frameRate) fps" } ?? "unknown"); ring \(ring.x)x\(ring.y) at \(rate) fps")
+            do {
+                try publisher.publish(sizes: [ring], displays: [.init(display: nil, ring: 0)], frameRate: rate)
+            } catch {
+                print("Can't allocate the ring: \(error)")
+                return 1
+            }
+            var sharing: ScreenSaverVideoSharing?
+            if rest[0] == "sharedvideo" {
+                let desktop = DesktopVideoSpike(url: url, size: size)
+                keep.append(desktop)
+                sharing = desktop
+                let warm = ProcessInfo.processInfo.environment["OWE_SPIKE_WARM"].flatMap(Double.init) ?? 5
+                let warmStart = CFAbsoluteTimeGetCurrent()
+                while CFAbsoluteTimeGetCurrent() - warmStart < warm { _ = RunLoop.main.run(mode: .default, before: .now + 0.05) }
+                print(String(format: "the desktop's player played for %.0f s; footprint %.0f MB", warm, Self.footprintMB()))
+            }
+            stats.lentAt = CFAbsoluteTimeGetCurrent()
+            guard let video = ScreenSaverLiveVideo(url: url, name: url.lastPathComponent, ring: 0, pixels: ring, frameRate: rate, rate: 1,
+                                                   placement: .fill, screen: NSScreen.main, sharing: sharing, publisher: publisher,
+                                                   device: device) else { return 1 }
+            keep.append(video)
+        case "avplayer":
+            keep.append(SaverAVPlayerSpike(url: URL(fileURLWithPath: rest[1]), size: size, stats: stats))
         default:
             print("Unknown mode \(rest[0])")
             return 1
@@ -283,6 +324,75 @@ private final class ChromiumSpike: @unchecked Sendable {
     }
 
     deinit { session.stop() }
+}
+
+/// A window on screen, behind the others, of `size` pixels, showing `layer`.
+@MainActor
+private func spikeWindow(size: SIMD2<Int>, layer: CALayer) -> NSWindow {
+    let scale = NSScreen.main?.backingScaleFactor ?? 1
+    let points = NSRect(x: 0, y: 0, width: CGFloat(size.x) / scale, height: CGFloat(size.y) / scale)
+    let window = NSWindow(contentRect: points, styleMask: .borderless, backing: .buffered, defer: false)
+    window.ignoresMouseEvents = true
+    window.isReleasedWhenClosed = false
+    let view = NSView(frame: points)
+    view.wantsLayer = true
+    layer.frame = view.bounds
+    view.layer?.addSublayer(layer)
+    window.contentView = view
+    window.orderBack(nil)
+    return window
+}
+
+/// A video wallpaper as the desktop's AVKit path plays it (`VideoWallpaperViewModel`): an
+/// `AVPlayer` shown by a layer in a window, lent to the ring (`ScreenSaverVideoSharing`).
+@MainActor
+private final class DesktopVideoSpike: ScreenSaverVideoSharing {
+    let sharedPlayer: AVPlayer
+    private let window: NSWindow
+    private var endObserver: NSObjectProtocol?
+
+    init(url: URL, size: SIMD2<Int>) {
+        let item = AVPlayerItem(url: url)
+        sharedPlayer = WallpaperAVPlayer.make(item: item)
+        sharedPlayer.isMuted = true
+        sharedPlayer.actionAtItemEnd = .none
+        let layer = AVPlayerLayer(player: sharedPlayer)
+        layer.videoGravity = .resizeAspectFill
+        window = spikeWindow(size: size, layer: layer)
+        endObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { [weak player = sharedPlayer] _ in
+            player?.seek(to: .zero)
+        }
+        sharedPlayer.play()
+    }
+
+    func holdForScreenSaver(_ hold: Bool) {
+        if hold { sharedPlayer.play() }
+    }
+}
+
+/// The saver's playback before videos were drawn live (the removed `SaverVideoPlayer`): `AVPlayerLooper` in
+/// an `AVPlayerLayer`, filling a window of `size` pixels. Counts no ring frames.
+@MainActor
+private final class SaverAVPlayerSpike {
+    private let player = AVQueuePlayer()
+    private let looper: AVPlayerLooper
+    private let window: NSWindow
+
+    init(url: URL, size: SIMD2<Int>, stats: SpikeStats) {
+        player.isMuted = true
+        player.preventsDisplaySleepDuringVideoPlayback = false
+        looper = AVPlayerLooper(player: player, templateItem: AVPlayerItem(url: url))
+        let layer = AVPlayerLayer(player: player)
+        layer.videoGravity = .resizeAspectFill
+        window = spikeWindow(size: size, layer: layer)
+        player.play()
+        stats.extra = { [weak self] in
+            MainActor.assumeIsolated {
+                let frame = self?.player.currentItem?.tracks.first { $0.assetTrack?.mediaType == .video }?.currentVideoFrameRate ?? 0
+                return String(format: "video fps=%.1f", frame)
+            }
+        }
+    }
 }
 
 /// A `WKWebView` in a transparent, mouse-transparent window on screen; `takeSnapshot` on a timer

@@ -127,6 +127,7 @@ final class SceneWallpaperInstance {
                                      snapshots: snapshotCapture)
         // Set up before any frame; from here on only the render thread touches the renderer.
         configureRenderer(renderer)
+        renderLoop.onLoanChanged = { [weak self] in self?.updateVideoPlayback() }
         observeChanges()
         metalRevision = viewModel.metalRevision
         loadContent()
@@ -280,13 +281,17 @@ final class SceneWallpaperInstance {
     private func updateVideoPlayback() {
         guard SceneWallpaperViewModel.isVideoType(viewModel.currentWallpaper.project.type),
               let wallpapers = environment.wallpapers else { return }
-        let rendering = wallpapers.playback(of: key).rendersFrames
         // The wallpaper's own playback rate (WE's per-wallpaper option) scales the app's.
         let displayRate = wallpapers.displayPlaybackRate(of: viewModel.currentWallpaper)
-        viewModel.updateVideoPlayback(playRate: rendering ? wallpapers.playRate * displayRate : 0,
+        // Lent to the screen saver: the video plays for it (at the last speed while paused),
+        // silent, whatever the rules say (the lock pauses the desktop).
+        let lent = renderLoop.isLent
+        let speed = lent && wallpapers.playRate <= 0 ? (wallpapers.lastPlayRate > 0 ? wallpapers.lastPlayRate : 1) : wallpapers.playRate
+        let rendering = lent || wallpapers.playback(of: key).rendersFrames
+        viewModel.updateVideoPlayback(playRate: rendering ? speed * displayRate : 0,
                                       audioRate: wallpapers.audioPlayRate * displayRate,
                                       audioLevel: WallpaperServices.shared.audioLevel,
-                                      audioEnabled: wallpapers.playsAudio(for: key) && wallpapers.wallpaperPlayback(of: key).playsSound,
+                                      audioEnabled: !lent && wallpapers.playsAudio(for: key) && wallpapers.wallpaperPlayback(of: key).playsSound,
                                       volume: wallpapers.playVolume)
     }
 
