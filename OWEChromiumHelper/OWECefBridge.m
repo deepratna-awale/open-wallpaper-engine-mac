@@ -260,19 +260,34 @@ static void CEF_CALLBACK app_on_register_custom_schemes(cef_app_t *self, cef_sch
     cef.utf16_clear(&name);
 }
 
+/// The DevTools port the browser process listens on (127.0.0.1 only), or 0 for none.
+static int remoteDebuggingPort = 0;
+
+static void append_switch(cef_command_line_t *command_line, const char *switchName, const char *switchValue) {
+    cef_string_t name = {0}, value = {0};
+    set_string(&name, switchName);
+    set_string(&value, switchValue);
+    command_line->append_switch_with_value(command_line, &name, &value);
+    cef.utf16_clear(&name);
+    cef.utf16_clear(&value);
+}
+
 /// The browser process's switches: media plays without a user gesture, as WebKit is configured
 /// for wallpapers (`mediaTypesRequiringUserActionForPlayback = []`); nobody can click a wallpaper
-/// to start its sound.
+/// to start its sound. With DevTools on, the frontend that CEF serves on the port itself may open
+/// its WebSocket (Chromium refuses any other origin).
 static void CEF_CALLBACK app_on_before_command_line_processing(cef_app_t *self, const cef_string_t *process_type,
                                                                cef_command_line_t *command_line) {
     (void)self;
     if (process_type && process_type->length == 0 && command_line) {
-        cef_string_t name = {0}, value = {0};
-        set_string(&name, "autoplay-policy");
-        set_string(&value, "no-user-gesture-required");
-        command_line->append_switch_with_value(command_line, &name, &value);
-        cef.utf16_clear(&name);
-        cef.utf16_clear(&value);
+        append_switch(command_line, "autoplay-policy", "no-user-gesture-required");
+        if (remoteDebuggingPort > 0) {
+            append_switch(command_line, "remote-debugging-address", "127.0.0.1");
+            char origins[96];
+            snprintf(origins, sizeof origins, "http://127.0.0.1:%d,http://localhost:%d",
+                     remoteDebuggingPort, remoteDebuggingPort);
+            append_switch(command_line, "remote-allow-origins", origins);
+        }
     }
     OWE_RELEASE(command_line);
 }
@@ -934,7 +949,8 @@ static owe_browser *make_browser(int browserId, int width, int height, double sc
 }
 
 int owe_cef_initialize(const char *engine_bundle, const char *cache_dir, int no_sandbox,
-                       const owe_cef_callbacks *newCallbacks, char *error, size_t error_size) {
+                       int remote_debugging_port, const owe_cef_callbacks *newCallbacks,
+                       char *error, size_t error_size) {
     @autoreleasepool {
         if (initializeStatus == 0) return 0;
         if (initializeStatus == 1) {
@@ -978,6 +994,8 @@ int owe_cef_initialize(const char *engine_bundle, const char *cache_dir, int no_
         settings.command_line_args_disabled = 1;
         settings.persist_session_cookies = 0;
         settings.log_severity = LOGSEVERITY_WARNING;
+        remoteDebuggingPort = remote_debugging_port >= 1024 && remote_debugging_port <= 65535 ? remote_debugging_port : 0;
+        settings.remote_debugging_port = remoteDebuggingPort;
         NSString *frameworkPath = [frameworks stringByAppendingPathComponent:kFrameworkName];
         set_string(&settings.framework_dir_path, frameworkPath.fileSystemRepresentation);
         set_string(&settings.main_bundle_path, bundle.fileSystemRepresentation);
@@ -1166,7 +1184,7 @@ int owe_cef_start(const char *engine_bundle, const char *cache_dir, const char *
     phase1Callback = callback;
     phase1Context = context;
     owe_cef_callbacks phase1 = {.frame = phase1_frame};
-    if (owe_cef_initialize(engine_bundle, cache_dir, no_sandbox, &phase1, error, error_size) != 0) return 1;
+    if (owe_cef_initialize(engine_bundle, cache_dir, no_sandbox, 0, &phase1, error, error_size) != 0) return 1;
     // Pixels as points at scale 1: the size asked for is the size painted.
     return owe_cef_create_browser(0, url, width, height, 1, frame_rate, NULL, error, error_size);
 }

@@ -161,6 +161,7 @@ struct OptimizationsPage: SettingsPage {
                 Label("Rendering", systemImage: "wrench.and.screwdriver.fill")
             }
             .settingsAnchor(SettingsAnchor.rendering)
+            WebDevtoolsSection(devtools: AppDelegate.shared.webDevtools)
         }
         .onAppear {
             DispatchQueue.global(qos: .utility).async {
