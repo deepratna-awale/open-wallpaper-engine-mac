@@ -219,7 +219,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     lazy var screenSaverSelection = ScreenSaverSelectionService(plugin: screenSaver, environment: .init(
         isPluginEnabled: { [unowned self] in globalSettingsViewModel.settings.screenSaver },
         enablePlugin: { [unowned self] in globalSettingsViewModel.settings.screenSaver = true },
-        desktopWallpaper: { [unowned self] in wallpaperViewModel.currentWallpaper }))
+        desktopWallpaper: { [unowned self] in wallpaperViewModel.currentWallpaper },
+        mainDisplayWallpaper: { [unowned self] in
+            guard let main = NSScreen.screens.first else { return nil }
+            let wallpaper = wallpaperViewModel.wallpaper(for: WallpaperViewModel.screenId(for: main))
+            return wallpaper.project == .invalid ? nil : wallpaper
+        }))
     /// Renders the Wallpaper Editor's browser previews in the background once WE's assets are there.
     private(set) lazy var editorPreviewPrewarm = EditorPreviewPrewarm(environment: .live)
     lazy var sceneScriptServices: SceneScriptServices = {

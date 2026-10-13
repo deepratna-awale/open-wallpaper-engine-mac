@@ -60,9 +60,10 @@ final class ScreenSaverEditorTests: XCTestCase {
     }
 
     @MainActor
-    private func makeService(_ store: ScreenSaverSettingsStore, plugin: ScreenSaverPlugin) -> ScreenSaverSelectionService {
+    private func makeService(_ store: ScreenSaverSettingsStore, plugin: ScreenSaverPlugin,
+                             main: WEWallpaper? = nil) -> ScreenSaverSelectionService {
         let environment = ScreenSaverSelectionService.Environment(isPluginEnabled: { true }, enablePlugin: {},
-                                                                  desktopWallpaper: { nil })
+                                                                  desktopWallpaper: { nil }, mainDisplayWallpaper: { main })
         return ScreenSaverSelectionService(plugin: plugin, environment: environment, store: store)
     }
 
@@ -193,6 +194,92 @@ final class ScreenSaverEditorTests: XCTestCase {
         service.stopUsingSelection()
         XCTAssertNil(store.livePick)
         XCTAssertFalse(service.isSelected(wallpaper))
+    }
+
+    // MARK: Screen Saver Same as Wallpaper
+
+    /// Settings › General › Screen Saver Same as Wallpaper reads the selection: on with nothing set,
+    /// off once a wallpaper is picked, from any of the ways to set one.
+    @MainActor
+    func testSameAsWallpaperFollowsTheSelection() throws {
+        let wallpaper = try wallpaper()
+        let store = ScreenSaverSettingsStore(defaults: defaults)
+        let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
+        let service = makeService(store, plugin: makePlugin(store, videos: videos))
+        XCTAssertTrue(service.followsDesktop, "on by default")
+
+        service.setAsScreenSaver(wallpaper)
+        XCTAssertFalse(service.followsDesktop, "a menu's Set as Screen Saver turns it off")
+        service.stopUsingSelection()
+        XCTAssertTrue(service.followsDesktop)
+
+        service.pick(wallpaper, values: ["speed": "0.5"])
+        XCTAssertFalse(service.followsDesktop, "the Screen Saver tab's pick turns it off")
+        service.stopUsingSelection()
+        XCTAssertTrue(service.followsDesktop)
+    }
+
+    /// Turning it on clears the pick.
+    @MainActor
+    func testTurningSameAsWallpaperOnClearsWhatIsSet() throws {
+        let wallpaper = try wallpaper()
+        let store = ScreenSaverSettingsStore(defaults: defaults)
+        let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
+        let service = makeService(store, plugin: makePlugin(store, videos: videos))
+        service.pick(wallpaper, values: [:])
+        var result: Bool?
+        service.setFollowsDesktop(true) { result = $0 }
+        XCTAssertEqual(result, true)
+        XCTAssertNil(store.livePick)
+        XCTAssertTrue(service.followsDesktop)
+    }
+
+    /// Turning it off sets the main display's wallpaper, with the Screen Saver tab's choices for
+    /// it; with no wallpaper the screen saver can show there, it stays on.
+    @MainActor
+    func testTurningSameAsWallpaperOffPicksTheMainDisplaysWallpaper() throws {
+        let wallpaper = try wallpaper()
+        let store = ScreenSaverSettingsStore(defaults: defaults)
+        let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
+        let identity = WallpaperSettingsIdentity.resolve(wallpaper, defaults: defaults)
+        let choices = ["speed": "0.8"]
+        store.setValues(choices, for: identity)
+        let service = makeService(store, plugin: makePlugin(store, videos: videos), main: wallpaper)
+        XCTAssertEqual(service.wallpaperForStoppingFollowingDesktop()?.wallpaperDirectory, wallpaper.wallpaperDirectory)
+        var result: Bool?
+        service.setFollowsDesktop(false) { result = $0 }
+        XCTAssertEqual(result, true)
+        XCTAssertFalse(service.followsDesktop)
+        XCTAssertTrue(service.isSelected(wallpaper))
+        XCTAssertEqual(store.values(for: identity), choices, "its Screen Saver tab choices are kept")
+
+        let empty = makeService(ScreenSaverSettingsStore(defaults: defaults), plugin: makePlugin(store, videos: videos))
+        empty.stopUsingSelection()
+        XCTAssertNil(empty.wallpaperForStoppingFollowingDesktop())
+        empty.setFollowsDesktop(false) { result = $0 }
+        XCTAssertEqual(result, false)
+        XCTAssertTrue(empty.followsDesktop, "never off while the screen saver still follows the desktop")
+    }
+
+    /// General's Restore Defaults (and Reset Config) turn it back on.
+    @MainActor
+    func testRestoreDefaultsTurnsSameAsWallpaperOn() throws {
+        let wallpaper = try wallpaper()
+        let store = ScreenSaverSettingsStore(defaults: defaults)
+        let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
+        let service = makeService(store, plugin: makePlugin(store, videos: videos))
+        let viewModel = GlobalSettingsViewModel()
+        let saved = viewModel.settings
+        defer { viewModel.settings = saved }
+        service.pick(wallpaper, values: [:])
+        XCTAssertTrue(SettingsTabReset.hasChanges(.general, settings: GlobalSettings(), defaults: defaults, screenSaver: service))
+        SettingsTabReset.reset(.performance, viewModel: viewModel, defaults: defaults, updater: nil, screenSaver: service)
+        XCTAssertFalse(service.followsDesktop, "another tab's reset leaves it")
+        SettingsTabReset.reset(.general, viewModel: viewModel, defaults: defaults, updater: nil, screenSaver: service)
+        XCTAssertTrue(service.followsDesktop)
+        XCTAssertFalse(SettingsTabReset.hasChanges(.general, settings: GlobalSettings(), defaults: defaults, screenSaver: service))
+        XCTAssertEqual(SettingsSearch.results(for: "Screen Saver Same as Wallpaper", locale: Locale(identifier: "en")).first?.anchor,
+                       SettingsAnchor.macOS)
     }
 
     /// The menus' and the Details panel's Set as Screen Saver: the wallpaper at once, with its

@@ -102,7 +102,8 @@ struct DiagnosticsPage: SettingsPage {
                     Spacer()
                     Button {
                         SettingsTabReset.resetAll(viewModel: viewModel, defaults: .app,
-                                                  updater: AppDelegate.shared.updater)
+                                                  updater: AppDelegate.shared.updater,
+                                                  screenSaver: AppDelegate.shared.screenSaverSelection)
                         onReset()
                     } label: {
                         Text("Reset").frame(minWidth: 100)

@@ -18,12 +18,14 @@ enum SettingsTabReset {
     }
 
     /// Resets `tab` in `viewModel` and `defaults`. Updates also go back to updating
-    /// automatically, as a new install does.
+    /// automatically, as a new install does. General's Screen Saver Same as Wallpaper, read from
+    /// `screenSaver`'s selection, goes back on: whatever was set as the screen saver goes.
     static func reset(_ tab: SettingsTab, viewModel: GlobalSettingsViewModel, defaults: UserDefaults,
-                      updater: AppUpdater?) {
+                      updater: AppUpdater?, screenSaver: ScreenSaverSelectionService? = nil) {
         let reset = tab.resetting(viewModel.settings)
         if reset != viewModel.settings { viewModel.settings = reset }
         for key in preferenceKeys(of: tab) { defaults.removeObject(forKey: key) }
+        if tab == .general { screenSaver?.setFollowsDesktop(true) }
         if tab == .updates, let updater, updater.isEnabled {
             updater.automaticallyChecksForUpdates = true
             updater.updatesAutomatically = true
@@ -41,15 +43,19 @@ enum SettingsTabReset {
 
     /// "Reset Config": every tab's settings and preferences back to their defaults. The library,
     /// playlists, history and window state are not settings and stay.
-    static func resetAll(viewModel: GlobalSettingsViewModel, defaults: UserDefaults, updater: AppUpdater?) {
+    static func resetAll(viewModel: GlobalSettingsViewModel, defaults: UserDefaults, updater: AppUpdater?,
+                         screenSaver: ScreenSaverSelectionService? = nil) {
         for tab in SettingsTab.allCases {
-            reset(tab, viewModel: viewModel, defaults: defaults, updater: updater)
+            reset(tab, viewModel: viewModel, defaults: defaults, updater: updater, screenSaver: screenSaver)
         }
     }
 
-    /// Whether anything `tab` shows differs from its default.
-    static func hasChanges(_ tab: SettingsTab, settings: GlobalSettings, defaults: UserDefaults) -> Bool {
+    /// Whether anything `tab` shows differs from its default (Screen Saver Same as Wallpaper off
+    /// counts for General).
+    static func hasChanges(_ tab: SettingsTab, settings: GlobalSettings, defaults: UserDefaults,
+                           screenSaver: ScreenSaverSelectionService? = nil) -> Bool {
         tab.fields.contains { $0.isChanged(settings) }
             || preferenceKeys(of: tab).contains { defaults.object(forKey: $0) != nil }
+            || tab == .general && screenSaver?.followsDesktop == false
     }
 }

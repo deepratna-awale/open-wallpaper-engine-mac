@@ -12,6 +12,7 @@ import SwiftUI
 /// the keyboard shortcuts.
 struct GeneralPage: SettingsPage {
     @ObservedObject var viewModel: GlobalSettingsViewModel
+    @ObservedObject private var screenSaverSelection = AppDelegate.shared.screenSaverSelection
 
     init(globalSettings viewModel: GlobalSettingsViewModel) {
         self.viewModel = viewModel
@@ -85,6 +86,7 @@ struct GeneralPage: SettingsPage {
                 Toggle("Show Wallpaper on Lock Screen", isOn: $viewModel.settings.lockScreenPicture)
                     .changedFromDefault(viewModel.isChanged(\.lockScreenPicture))
                     .help("Sets each display's desktop picture to the scene wallpaper's snapshot, so the lock screen shows it. Turning it off restores your own pictures.")
+                ScreenSaverSameAsWallpaperToggle(selection: screenSaverSelection)
             } header: {
                 Label("macOS", systemImage: "apple.logo")
             }
@@ -123,6 +125,27 @@ struct GeneralPage: SettingsPage {
             // MARK: Keyboard Shortcuts
             KeyboardShortcutsSection()
         }
+    }
+}
+
+/// Settings › General › macOS › Screen Saver Same as Wallpaper: on, each display's screen saver
+/// shows that display's wallpaper; off, one wallpaper set as the screen saver shows. It reads the
+/// screen saver's selection (`ScreenSaverSelectionService.followsDesktop`), so it is off whenever
+/// a wallpaper is set as the screen saver, from a menu, the Details panel, the Screen Saver tab or
+/// MCP. Turning it on clears that; turning it off sets the main display's wallpaper, so the
+/// switch never reads off while the screen saver still follows the desktop. It applies at once,
+/// as Set as Screen Saver does.
+struct ScreenSaverSameAsWallpaperToggle: View {
+    @ObservedObject var selection: ScreenSaverSelectionService
+
+    var body: some View {
+        let follows = selection.followsDesktop
+        Toggle("Screen Saver Same as Wallpaper", isOn: Binding(
+            get: { selection.followsDesktop },
+            set: { selection.setFollowsDesktop($0) }))
+            .changedFromDefault(!follows)
+            .disabled(follows && selection.wallpaperForStoppingFollowingDesktop() == nil)
+            .help("The screen saver shows each display's own wallpaper. Turning it off sets the main display's wallpaper as the screen saver on every display; Set as Screen Saver on another wallpaper turns it off too.")
     }
 }
 

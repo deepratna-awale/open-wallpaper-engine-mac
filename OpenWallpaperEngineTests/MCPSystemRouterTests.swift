@@ -266,6 +266,7 @@ final class MCPSystemRouterTests: XCTestCase {
         let state = try await result("screensaver_get", ["wallpaper_id": "100"])
         XCTAssertEqual(state["plugin_enabled"], false)
         XCTAssertEqual(state["selection"], .null)
+        XCTAssertEqual(state["same_as_wallpaper"], true, "Screen Saver Same as Wallpaper: nothing is set")
         XCTAssertNil(state["schedule"], "no daily re-recording: the screen saver is live")
         let version = try XCTUnwrap(state["wallpaper"])
         XCTAssertEqual(version["eligible"], true)
@@ -335,6 +336,9 @@ final class MCPSystemRouterTests: XCTestCase {
         XCTAssertEqual(set["selection"]?["wallpaper"]?["id"], "100")
         XCTAssertTrue(set["message"]?.stringValue?.contains("drawn live") ?? false)
         XCTAssertTrue(set["message"]?.stringValue?.contains("turned it on") ?? false)
+        XCTAssertEqual(set["same_as_wallpaper"], false)
+        let picked = try await result("screensaver_get")
+        XCTAssertEqual(picked["same_as_wallpaper"], false, "derived from the selection")
 
         let video = try await result("screensaver_set", ["wallpaper_id": "200"])
         XCTAssertEqual(video["selection"]?["kind"], "live", "a video is drawn live too")
@@ -342,6 +346,7 @@ final class MCPSystemRouterTests: XCTestCase {
 
         let stopped = try await result("screensaver_stop_using")
         XCTAssertEqual(stopped["stopped"], true)
+        XCTAssertEqual(stopped["same_as_wallpaper"], true)
         XCTAssertNil(service.state.selection)
         let again = try await result("screensaver_stop_using")
         XCTAssertEqual(again["stopped"], false)
