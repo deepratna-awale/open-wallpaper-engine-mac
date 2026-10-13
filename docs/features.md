@@ -118,6 +118,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - **iPhone & iPad Export** in Scene Edit / Export turns a scene or video wallpaper into a Live Photo lock screen for any iPhone or iPad that shows one, with AirDrop, to a folder or into a Photos album, without changing your desktop, one wallpaper or a batch.
 - **Android Export** in Scene Edit / Export writes Wallpaper Engine's `.mpkg` packages for its Android app, one wallpaper or a batch, sent to the device over Wi-Fi or copied.
 - Property conditions, text rows and slider formats from the wallpaper's settings are honoured.
+- **User shortcuts** (Wallpaper Engine 2.7's `usershortcut` property): a wallpaper's clickable element opens what you assign it in Details: a file in its default app (an app with its arguments), a folder in Finder, a website in your browser, or a command run in zsh with your login environment. Only you choose what it opens: the author's project.json, presets and Share JSON never bind one, and a binding copied from another Mac doesn't open until you assign it again. Scripts get `engine.openUserShortcut(name)` (true when something opened) and `{isbound, commandtype, file}` in their user properties, as in Wallpaper Engine; web wallpapers have no user shortcuts there either.
 - Steam passwords are never stored, and the Steam Web API key is kept in the Keychain.
 
 ### Interface & languages
