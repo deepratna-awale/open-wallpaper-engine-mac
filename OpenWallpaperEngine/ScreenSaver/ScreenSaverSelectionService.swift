@@ -14,6 +14,9 @@ final class ScreenSaverSelectionService: ObservableObject {
         /// Turns Settings › Plugins › Screen Saver on (it installs the saver).
         var enablePlugin: @MainActor () -> Void
         var desktopWallpaper: @MainActor () -> WEWallpaper?
+        /// The main display's wallpaper (the one with the menu bar), which turning Screen Saver
+        /// Same as Wallpaper off picks (`setFollowsDesktop`); nil when it shows none.
+        var mainDisplayWallpaper: @MainActor () -> WEWallpaper? = { nil }
     }
 
     /// A video wallpaper's file is being put in place (`useVideo`).
@@ -41,6 +44,50 @@ final class ScreenSaverSelectionService: ObservableObject {
 
     /// The wallpaper picked as the screen saver, drawn live, if any.
     var livePick: ScreenSaverSettingsStore.LivePick? { store.livePick }
+
+    /// Settings › General › Screen Saver Same as Wallpaper: on while nothing is set as the screen
+    /// saver, so each display's screen saver shows that display's wallpaper. It is read from the
+    /// selection, never stored apart, so it can't disagree with what the screen saver shows.
+    var followsDesktop: Bool { store.selection == nil && store.livePick == nil }
+
+    /// What turning Screen Saver Same as Wallpaper off would set: the main display's wallpaper,
+    /// when the screen saver can show it (`availability`); nil otherwise, and the setting stays on.
+    func wallpaperForStoppingFollowingDesktop() -> WEWallpaper? {
+        guard let wallpaper = environment.mainDisplayWallpaper(), wallpaper.project != .invalid,
+              Self.canSet(wallpaper) else { return nil }
+        return wallpaper
+    }
+
+    /// Turns Screen Saver Same as Wallpaper on (whatever was set as the screen saver goes:
+    /// `stopUsingSelection`) or off. Off sets the main display's wallpaper as the screen saver,
+    /// with the Screen Saver tab's choices for it if it has any, since "off" with nothing set
+    /// would still follow the desktop. A web wallpaper without the Chromium engine offers it
+    /// (`chromiumOffer`) and stays on.
+    /// `completion` gets whether the setting now reads `follows`.
+    func setFollowsDesktop(_ follows: Bool, completion: @escaping @MainActor (Bool) -> Void = { _ in }) {
+        guard follows != followsDesktop else {
+            completion(true)
+            return
+        }
+        if follows {
+            stopUsingSelection()
+            completion(true)
+            return
+        }
+        guard let wallpaper = wallpaperForStoppingFollowingDesktop(), !isSettingVideo else {
+            OWELog.info(.app, "Screen saver: the main display's wallpaper can't be the screen saver now; it keeps following the desktop")
+            completion(false)
+            return
+        }
+        if case .needsChromium = Self.availability(of: wallpaper) {
+            chromiumOffer = wallpaper
+            completion(false)
+            return
+        }
+        // With the Screen Saver tab's choices for it, if it has any.
+        let values = store.values(for: WallpaperSettingsIdentity.resolve(wallpaper, defaults: store.defaults)) ?? [:]
+        set(wallpaper, values: values) { [weak self] set in completion(set && self?.followsDesktop == false) }
+    }
 
     /// Where the picked wallpaper's still goes; nil in a copy that never installs the saver.
     var stills: ScreenSaverStillPublisher?

@@ -5,11 +5,17 @@ import AppKit
 /// pictures to put back.
 ///
 /// - **Files.** A display's picture is OWE's own copy in its desktop-picture folder
-///   (`DesktopSnapshotCache`) as `lock-<display>-<a|b>.<heic|jpg>`, never a file of a cache that
+///   (`DesktopSnapshotCache`) as `lock-<display>-<serial>.<heic|jpg>`, never a file of a cache that
 ///   trims itself (the loading snapshots, the video frames), so a picture in use can't vanish.
-///   The name alternates (macOS ignores setting the URL it already shows). Both slots stay while
-///   the app runs and after it quits: desktop pictures are per Space, and a Space OWE can't reach
-///   now may still show either. `DesktopSnapshotCache.isSnapshot` never saves one as the user's.
+///   Every picture gets a new name, written in full under a hidden one and renamed into place
+///   before it is set: macOS's wallpaper agent caches decoded pictures by URL and pixel size, so
+///   a picture written again under a name it had read (the earlier `a`/`b` slots) showed the
+///   older picture, or black, in System Settings › Wallpaper until another display was chosen
+///   (its log: a cache insertion for `lock-1-b.heic` still running when OWE replaced that file).
+///   The newest `kept` of each display stay while the app runs and after it quits: desktop
+///   pictures are per Space, and a Space OWE can't reach now may still show an earlier one (a
+///   Space change shows the current one again). `DesktopSnapshotCache.isSnapshot` never saves
+///   one as the user's.
 /// - **The user's pictures.** The first time a display's picture is replaced, the picture it
 ///   showed is recorded per display (`originalsKey`); turning the pictures off, or quitting, puts
 ///   them back when they still exist.
@@ -32,9 +38,13 @@ struct LockScreenPicture: @unchecked Sendable { // UserDefaults is thread-safe; 
 
     // MARK: Names
 
-    func url(display: CGDirectDisplayID, slot: Int, fileExtension: String) -> URL {
-        cache.directory.appending(path: "\(namePrefix)\(display)-\(slot == 0 ? "a" : "b").\(fileExtension)",
-                                  directoryHint: .notDirectory)
+    /// How many pictures of each display stay on disk: the newest, which the current Space shows,
+    /// and a few earlier ones other Spaces may still show.
+    static let kept = 4
+
+    /// The picture named `serial` of `display`.
+    func url(display: CGDirectDisplayID, serial: String, fileExtension: String) -> URL {
+        cache.directory.appending(path: "\(namePrefix)\(display)-\(serial).\(fileExtension)", directoryHint: .notDirectory)
     }
 
     /// Whether `url` is a lock-screen picture OWE set.
@@ -42,10 +52,28 @@ struct LockScreenPicture: @unchecked Sendable { // UserDefaults is thread-safe; 
         cache.isSnapshot(url) && url.lastPathComponent.hasPrefix(namePrefix)
     }
 
-    /// The slot to write next: the one `showing` isn't.
-    func nextSlot(display: CGDirectDisplayID, showing: URL?) -> Int {
-        guard let showing, isLockPicture(showing) else { return 0 }
-        return showing.deletingPathExtension().lastPathComponent.hasSuffix("-a") ? 1 : 0
+    /// The serial of a new picture: the time in milliseconds, base 36, so names sort by age
+    /// (an earlier version's `a` and `b` sort first).
+    static func serial(at date: Date = Date()) -> String {
+        String(UInt64(max(date.timeIntervalSince1970, 0) * 1000), radix: 36)
+    }
+
+    /// `display`'s pictures in the folder, oldest first.
+    func pictures(of display: CGDirectDisplayID) -> [URL] {
+        let prefix = "\(namePrefix)\(display)-"
+        let files = (try? FileManager.default.contentsOfDirectory(at: cache.directory, includingPropertiesForKeys: nil,
+                                                                   options: .skipsHiddenFiles)) ?? [] // Optional: no folder yet.
+        return files
+            .filter { $0.lastPathComponent.hasPrefix(prefix) && SceneLoadingSnapshotStore.extensions.contains($0.pathExtension.lowercased()) }
+            .map { (url: $0, serial: serialValue(of: $0, display: display)) }
+            .sorted { ($0.serial, $0.url.lastPathComponent) < ($1.serial, $1.url.lastPathComponent) }
+            // Named in the folder's own form (the listing resolves `/var` to `/private/var`).
+            .map { cache.directory.appending(path: $0.url.lastPathComponent, directoryHint: .notDirectory) }
+    }
+
+    /// The serial of `display`'s picture `url` as a number; 0 when it has none.
+    private func serialValue(of url: URL, display: CGDirectDisplayID) -> UInt64 {
+        UInt64(url.deletingPathExtension().lastPathComponent.dropFirst("\(namePrefix)\(display)-".count), radix: 36) ?? 0
     }
 
     // MARK: The user's pictures
@@ -111,29 +139,46 @@ struct LockScreenPicture: @unchecked Sendable { // UserDefaults is thread-safe; 
 
     // MARK: Writing
 
-    /// Copies `snapshot` into the display's next slot and returns its URL.
+    /// Copies `snapshot` as the display's new picture and returns its URL.
     func write(snapshot: URL, display: CGDirectDisplayID, showing: URL?) throws -> URL {
-        let target = try clearedSlot(display: display, showing: showing, fileExtension: snapshot.pathExtension.lowercased())
-        try FileManager.default.copyItem(at: snapshot, to: target)
-        return target
-    }
-
-    /// Writes an encoded picture into the display's next slot and returns its URL.
-    func write(_ data: Data, fileExtension: String, display: CGDirectDisplayID, showing: URL?) throws -> URL {
-        let target = try clearedSlot(display: display, showing: showing, fileExtension: fileExtension)
-        try data.write(to: target, options: .atomic)
-        return target
-    }
-
-    /// The next slot's URL, with that slot's files in every format removed.
-    private func clearedSlot(display: CGDirectDisplayID, showing: URL?, fileExtension: String) throws -> URL {
-        try FileManager.default.createDirectory(at: cache.directory, withIntermediateDirectories: true)
-        let slot = nextSlot(display: display, showing: showing)
-        for other in SceneLoadingSnapshotStore.extensions {
-            let file = url(display: display, slot: slot, fileExtension: other)
-            guard Self.fileExists(file) else { continue }
-            try FileManager.default.removeItem(at: file)
+        try place(display: display, showing: showing, fileExtension: snapshot.pathExtension.lowercased()) { staging in
+            try FileManager.default.copyItem(at: snapshot, to: staging)
         }
-        return url(display: display, slot: slot, fileExtension: fileExtension)
+    }
+
+    /// Writes an encoded picture as the display's new picture and returns its URL.
+    func write(_ data: Data, fileExtension: String, display: CGDirectDisplayID, showing: URL?) throws -> URL {
+        try place(display: display, showing: showing, fileExtension: fileExtension) { staging in
+            try data.write(to: staging)
+        }
+    }
+
+    /// Writes the new picture under a hidden name (`write`), renames it to a name no earlier
+    /// picture had, so it is complete whenever it is seen, and removes the display's pictures
+    /// beyond the newest `kept`, the new one included (never `showing`).
+    private func place(display: CGDirectDisplayID, showing: URL?, fileExtension: String,
+                       write: (URL) throws -> Void) throws -> URL {
+        let fileManager = FileManager.default
+        try fileManager.createDirectory(at: cache.directory, withIntermediateDirectories: true)
+        let existing = pictures(of: display)
+        // Never an earlier name: later than the newest, even within a millisecond or with the
+        // clock set back.
+        let newest = existing.last.map { serialValue(of: $0, display: display) } ?? 0
+        let now = UInt64(Self.serial(), radix: 36) ?? 0
+        let target = url(display: display, serial: String(max(now, newest + 1), radix: 36), fileExtension: fileExtension)
+        let staging = cache.directory.appending(path: ".\(UUID().uuidString).\(fileExtension)", directoryHint: .notDirectory)
+        do {
+            try write(staging)
+            try fileManager.moveItem(at: staging, to: target)
+        } catch {
+            try? fileManager.removeItem(at: staging) // Optional: the failed attempt's leftover.
+            throw error
+        }
+        // Compared with symbolic links resolved: the picture shown may be named another way.
+        let shown = showing?.resolvingSymlinksInPath().path(percentEncoded: false)
+        for old in existing.dropLast(max(Self.kept - 1, 0)) where old.resolvingSymlinksInPath().path(percentEncoded: false) != shown {
+            try? fileManager.removeItem(at: old) // Optional: another Space's older picture.
+        }
+        return target
     }
 }
