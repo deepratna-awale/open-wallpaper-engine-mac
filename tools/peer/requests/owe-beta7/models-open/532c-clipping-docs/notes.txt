@@ -1,0 +1,23 @@
+532c: clipping mask using the docs' showcase setup (WE 2.8.0.42). STOPPED at step 3: the circle does not disappear in the editor.
+
+## Setup (make_532c.py, project p532c)
+- **Image:** circle_rect.png, 512x256, transparent. A purple circle (bbox 40-180 x 58-198) and a red rectangle (300-470 x 70-186), separate shapes.
+  - Puppet Warp warns "Image is not transparent" when the editor opens. The image is RGBA with alpha 0 between the shapes; the generated mesh is still two separate islands, as in editor/after_confirm.png.
+- **Geometry:** Create (defaults), then Lock Geometry for Vertex Editing › OK › Confirm.
+- **Skeleton:** Bone 1 in the rectangle (root); "circle" (Bone 2), a child of Bone 1, at the circle centre.
+- **Weights:** WE's automatic weights already gave the circle fully to "circle" (green) and the rectangle to the root. Confirmed unchanged.
+- **Clipping Masks:**
+  - Limb 21 (circle) › Assign Clipping Mask › "maskA" › OK.
+  - The paint panel opened; the whole rectangle was painted (Amount 255, Size 40), then OK.
+
+## Result
+- **After OK** (editor/after_ok.png) and **after Confirm** (editor/after_confirm.png), the circle is **still fully visible**, away from the rectangle.
+- The docs say the clipped limb becomes invisible right after OK; that doesn't happen here. Per the request I stopped: no animation, no c_none, no runtime stills, no draw list.
+
+## Files written by the editor (saved after the mask)
+- **c_mask_noclip.mdl / .json:**
+  - `puppet.clippingmasks = [{"hidemaskgeometry":false,"id":40,"invert":false,"name":"maskA","texture":"masks/clipping_mask_6efbf20d"}]`
+  - The circle island has clippingmaskid 40.
+- **Project copy:** project/, without .tex files; the mask .png is in project/materials/masks/.
+- **Same outcome as 532/532b:** the mask data is written, but neither the editor nor the runtime hides or clips the assigned limb.
+  - The only visible effect found is hidemaskgeometry, which hides the painted-over island (532b).

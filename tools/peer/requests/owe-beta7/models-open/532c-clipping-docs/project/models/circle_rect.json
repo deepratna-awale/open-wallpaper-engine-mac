@@ -1,0 +1,5 @@
+{
+	"autosize" : true,
+	"material" : "materials/circle_rect.json",
+	"puppet" : "models/circle_rect_puppet.mdl"
+}
