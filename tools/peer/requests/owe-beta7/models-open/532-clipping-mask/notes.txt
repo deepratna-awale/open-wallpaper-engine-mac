@@ -36,3 +36,24 @@
   - There is no extra draw or stencil-like pass for a mask, and the draws are 540 indices, not the 1080-index mesh.
   - So WE renders this puppet in 3 draws of half the index buffer, which points to per-range drawing, but the mask texture doesn't change the output.
 - **Caveat:** this is the editor-saved project run directly; nothing was rebuilt or packed. If WE needs a step to apply masks, the editor didn't offer one.
+
+## Follow-up (a)-(d) and the bend question
+- **(a) The mask texture holds real paint.**
+  - project/materials/masks/clipping_mask_608392ae.png is 512x256, saved as RGB.
+  - 0 = unpainted, 255 = painted; 39215 of 131072 pixels are non-zero.
+  - The >127 bounding box is x 0-263, y 61-194: the red bar (x 40-219, y 98-157) plus the brush margin, in image/texture space.
+- **Mask paint tool behaviour:** "Clear" fills the mask with 255 (all painted), not 0. Painting with Amount 0 erases.
+- **(b) The editor's own preview doesn't clip either** (editor/editor_preview_sheet.png, 8 preview frames about 0.25 s apart). Blue is drawn in full on and off the red bar.
+- **(c) Variants**, each with its own runtime project and stills at 1.0 s in stills2/ (sheet_532b.png, top row):
+  - **g_mask_invert:** Invert mask on, giving json `invert: true`. Blue is drawn in full, not clipped.
+  - **g_mask2:** the mask erased over the right half of red, so only the left half (about x 0-130 of the image) is painted. Its texture is in project_mask2/materials/masks (same file name). Blue is drawn in full.
+- **(d) g_mask_hide:** Hide mask geometry on, giving json `hidemaskgeometry: true`.
+  - **The red limb, the one the mask was painted over, is no longer drawn**, in the editor (editor/editor_preview_hide_sheet.png) and at runtime.
+  - Blue is still drawn in full.
+  - So hidemaskgeometry hides the geometry under the painted mask area. Here that is the red island, so the mask does pick out red.
+- **None of the variants clips blue,** so I can't confirm the hypothesis that the mask limits where blue is visible, in WE 2.8 or its editor.
+  - For OWE: hidemaskgeometry has a visible effect, hiding the island(s) under the mask, while the clipping itself shows nothing.
+- **The bend is not from locking.** p532_unlocked runs 509's original b_clip.mdl (unlocked) and p532_locked runs g_locked.mdl, at 0.2, 1.0 and 1.5 s (sheet rows 2-3).
+  - They look the same: the blue bar bends in both.
+  - So the bend is the b_clip clip itself, as played by WE (blue's weights and rotation), not the geometry lock.
+- **The "Done." text** in some stills is WE's own toast after a wallpaper switch.

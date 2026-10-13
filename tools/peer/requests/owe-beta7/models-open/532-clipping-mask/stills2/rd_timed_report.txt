@@ -1,0 +1,10 @@
+connected ident 38920
+p532_invert still 1.0 triggered at 1.005 s frame 633
+p532_hide still 1.0 triggered at 1.002 s frame 750
+p532_mask2 still 1.0 triggered at 1.005 s frame 871
+p532_locked still 0.2 triggered at 0.204 s frame 968
+p532_locked still 1.0 triggered at 1.002 s frame 989
+p532_locked still 1.5 triggered at 1.503 s frame 1002
+p532_unlocked still 0.2 triggered at 0.204 s frame 1097
+p532_unlocked still 1.0 triggered at 1.004 s frame 1115
+p532_unlocked still 1.5 triggered at 1.503 s frame 1127
