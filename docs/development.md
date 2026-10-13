@@ -27,7 +27,7 @@ Wallpaper Engine ships its effects as GLSL. They are translated to Metal (GLSL �
 ## Project layout
 
 - `OpenWallpaperEngine/Scene/Format/` — PKG, TEX/TEXS, and scene.json parsers and models
-- `OpenWallpaperEngine/Scene/Shaders/` — GLSL → SPIR-V → MSL translation (`ShaderVariant.swift`, `InProcessShaderCompiler.swift`), caching and the pipeline archive
+- `OpenWallpaperEngine/Scene/Shaders/` — GLSL → SPIR-V → MSL translation (`ShaderVariant.swift`, `InProcessShaderCompiler.swift`), caching and the pipeline archive; `FrontEnd/` is the HLSL front end (WE's dialect as GLSL, [architecture](architecture.md#shader-translation))
 - `Vendor/ShaderToolchain/` — glslang and SPIRV-Cross sources, built into the app as a local package
 - `OpenWallpaperEngine/Scene/Scripting/` — SceneScript runtime and audio/FFT bindings
 - `OpenWallpaperEngine/Audio/` — system audio capture (`SystemAudioCapture.swift`, `ProcessTapAudioCapture.swift`, `SystemAudioBackend.swift`) and the per-player level tap (`AudioLevelTap.swift`)

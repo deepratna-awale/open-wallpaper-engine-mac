@@ -53,7 +53,7 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
 |---|---|---|
 | `Scene/Format/` | Decode WE files into plain Swift models. It does no rendering and has no side effects. | `scene.json`, `project.json` scene properties, `effect.json`, materials, models, particles, `.pkg`, `.tex` |
 | `Scene/Values/` | Resolve every dynamic value the same way: literal, `{"user":…}`, `{"user":{"name","condition"}}`, `{"script":…}`, `{"animation":…}`. User bindings live in one table per loaded scene (`Values/Bindings`). | `UserPropertyBindingTable`, `SceneValueSource` |
-| `Scene/Shaders/` | GLSL → SPIR-V → MSL translation (in a helper process, `--shader-compile-helper`), reflection and the translation cache. The editors' effect catalog is `EffectCatalog` in `Packages/OWEEditor` (`OWESceneEditing`). | `ShaderVariantTranslator`, `HelperShaderCompiler`, `ShaderCompileHelperServer`, `InProcessShaderCompiler` |
+| `Scene/Shaders/` | GLSL → SPIR-V → MSL translation (in a helper process, `--shader-compile-helper`), reflection and the translation cache. `FrontEnd/` is the HLSL front end, the one place WE's GLSL-with-HLSL-isms become GLSL glslang takes (see [Shader translation](#shader-translation)). The editors' effect catalog is `EffectCatalog` in `Packages/OWEEditor` (`OWESceneEditing`). | `ShaderVariantTranslator`, `HelperShaderCompiler`, `ShaderCompileHelperServer`, `InProcessShaderCompiler` |
 | `Scene/Rendering/` | Metal: layers, the effect pass graph, render targets, text, particles and the camera. | `SceneMetalRenderer`, `SceneShaders.metal` |
 | `Scene/Scripting/` | The SceneScript runtime (JavaScriptCore), one per wallpaper instance on its own thread, and the WE JS API surface as extensions; `Host/` ties a runtime to the renderer (docs/scenescript-plan.md). | `SceneScriptRuntime`, `SceneScriptWallpaper`, `SceneScriptSceneMirror` |
 | `Scene/Loading/` | Turns a wallpaper into render content: loads, resolves and builds. | `SceneWallpaperViewModel` (to be split) |
@@ -133,7 +133,14 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
    - *Effect Detail* (`GSSceneDetail`, `SceneEffectDetail`): Match Display runs each layer's effects at most at the layer's size on screen; Full at its texture's size, as WE. It doesn't size the scene target.
 5. **Script.** `Scene/Scripting` runs once per frame in one context per wallpaper instance, on its own thread. Layer objects read and write a shared object table; the renderer feeds it each object's drawn values before the frame and draws what scripts wrote after it (`SceneRendererScripts`).
 
-## Wallpaper instances
+### Shader translation
+
+Every shader (effects, image and model materials, puppets, particles) takes one path, `ShaderVariantTranslator.variant`: WE compiles its dialect as HLSL (FXC), so the HLSL front end (`Scene/Shaders/FrontEnd`, `HLSLFrontEnd`) applies FXC's rules, then glslang compiles the pair as one program under its relaxed Vulkan rules and SPIRV-Cross writes the MSL and the reflection (`Vendor/ShaderToolchain`).
+
+1. Includes, `#require`s and combos (`ShaderSourceLoader`, `ShaderVariantTranslator.resolveCombos`); the prelude maps HLSL's intrinsics, types and texture functions with macros and helpers (`ShaderPrelude`), and spells GLSL reserved words a shader uses as names `we_<word>` for glslang's scanner (`GLSLReservedWords`). glslang preprocesses each stage.
+2. On the preprocessed text, by tokens (`GLSLTokenizer`), never by regular expressions on lines: system-value declarations, loop scoping, HLSL's implicit conversions and `mul` (`HLSLConversionPass`), then the pair's linkage (`HLSLLinkage`): varyings located by name in both stages, written inputs and attributes copied into globals, resized and missing varyings, attribute locations, `g_TextureN` bindings and the fragment stage's copies of stage-local uniforms.
+3. glslang links both stages under its relaxed Vulkan rules, which gather the loose uniforms into one std140 block `WEUniforms`. In the SPIR-V, the reserved words get WE's names back (`restoreReservedNames`), so the reflection carries WE's names; names MSL can't take (`half`, `this`, a shader's own `log10`) are renamed for the MSL only (`renameMetalClashes`), and SPIRV-Cross spells GLSL keywords its own way there (`_common`).
+
 
 A wallpaper runs **once**, however many displays show it with the same user properties.
 
