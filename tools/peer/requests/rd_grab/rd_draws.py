@@ -10,7 +10,11 @@ try:
     import renderdoc as rd
     capdir = r'K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap'
     before = set(os.listdir(capdir))
-    tc = rd.CreateTargetControl('', int(JOB['ident']), 'claude-draws', True)
+    tc = None
+    for _ in range(60):
+        tc = rd.CreateTargetControl('', int(JOB['ident']), 'claude-draws', True)
+        if tc: break
+        time.sleep(2)
     jobs = []
     for pj in JOB['projects']:
         subprocess.call([JOB['we'] + r'\wallpaper64.exe', '-control', 'openWallpaper', '-file',

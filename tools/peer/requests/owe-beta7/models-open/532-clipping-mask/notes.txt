@@ -1,0 +1,38 @@
+532: Puppet Warp clipping mask (WE 2.8.0.42)
+
+## Editor steps
+- **Project:** p532_mask = 509's bars with b_clip's clip "Animation 1" (id 23: blue 0 -> 180 -> 0 deg at frames 0/30/60) and an animation layer on it.
+- **Clipping masks need locked geometry.** Opening Puppet › Optional › Clipping Masks first shows "Geometry Not Locked: Lock the geometry in the Geometry settings first before using clipping masks."
+  - So Geometry › Edit › "Lock Geometry for Vertex Editing" › OK › Confirm was done first and saved as the control **g_locked.mdl/.json**. No vertex was moved.
+- **Making the mask:**
+  - Clipping Masks lists the limbs as "Limb 19" (blue) and "Limb 20" (red).
+  - Select Limb 19 › **Assign Clipping Mask** › name dialog "maskA" › OK.
+  - That opens a paint panel (Draw/Smooth, Amount 255, Size 40, Opacity 100, Hardness 50, Show mask, Mask opacity).
+  - The whole red bar was painted, then OK › Confirm › Save. Saved as **g_mask.mdl/.json**.
+  - The limb panel also offers "Remove Clipping Mask" and "Additive blending" (left off). The mask panel offers "Paint Clipping Mask", Name, and "Invert mask" (left off).
+- **g_mask2: not done.**
+
+## What the editor writes
+- **Mask texture:** materials/masks/clipping_mask_608392ae.png and .tex, with .tex-json {clampuvs, format r8, nomip, nonpoweroftwo}. It is in project/materials/masks/.
+- **Puppet json:**
+  - `puppet.clippingmasks: [{"hidemaskgeometry": false, "id": 30, "invert": false, "name": "maskA", "texture": "masks/clipping_mask_608392ae"}]`
+  - `puppet.vertexislands[0].clippingmaskid: 30` (blue); `vertexislands[1].clippingmaskid: 0` (red)
+- **.mdl:** g_mask is 77 bytes longer than g_locked. The only change is in the block right before MDLS, i.e. the per-range records; the bones and MDLA are unchanged apart from the shift.
+  - g_locked: `.. 00 01 | 20 00 00 00 | 00x12 | 52 02 00 00 | 01 00 00 00 00 00 00 00 | 52 02 00 00 e6 01 00 00 00 00 00 00 | MDLS`
+  - g_mask, from 0x4601: `00 01 | 30 00 00 00 | 00x12 | 1c 02 00 00 | 00 00 00 00 00 00 00 00 1c 02 00 00 36 00 00 00 | 01 00 00 00 00 00 00 00 52 02 00 00 e6 01 00 00 | 01 00 00 00 | 1e 00 00 00 (=30, mask id) 00 00 00 00 "masks/clipping_mask_608392ae\0" 00 00 00 00 | 02 00 00 00 01 00 00 00 02 00 00 00 01 00 00 00 00 00 00 00 | MDLS`
+  - **Reading (not verified):**
+    - The size field goes 0x20 -> 0x30.
+    - The index ranges are re-split into one more range: 0x21c/0x36 next to the 0x252/0x1e6 range. 0x252 + 0x1e6 = 1080 indices, the whole mesh.
+    - Then come a mask count (1) and a mask record {u32 id 30, u32 0, cstring texture, u32 0}.
+    - Then a trailing u32 list 2,1,2,1,0. It may be per-island or per-range mask flags.
+
+## Running wallpaper (RenderDoc stills t = 0.2 / 1.0 / 1.5 s; sheet_532.png crops the middle 800x480)
+- **The mask has no visible effect.**
+  - At t0.2 and t1.5 the blue bar is fully drawn in empty space, away from red.
+  - At t1.0 it lies over red and is drawn whole, on top.
+  - Expected: blue visible only inside the painted red area, so nearly invisible at t0.2/1.5. WE drew it unclipped.
+- **Side note:** in this project the blue bar bends while it turns, a non-rigid deformation in all three stills, so it looks bent rather than turned. 509's b_clip stills showed a straight bar. This may come from locking the geometry, but it isn't checked.
+- **rd_draws_report.txt (one frame, frame 661):** 3 x DrawIndexed(540) plus 4 x Draw(3) fullscreen passes, the bloom/composite chain.
+  - There is no extra draw or stencil-like pass for a mask, and the draws are 540 indices, not the 1080-index mesh.
+  - So WE renders this puppet in 3 draws of half the index buffer, which points to per-range drawing, but the mask texture doesn't change the output.
+- **Caveat:** this is the editor-saved project run directly; nothing was rebuilt or packed. If WE needs a step to apply masks, the editor didn't offer one.

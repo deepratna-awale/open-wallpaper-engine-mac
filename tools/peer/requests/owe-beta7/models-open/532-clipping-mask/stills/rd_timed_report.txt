@@ -1,0 +1,4 @@
+connected ident 38920
+p532_mask still 0.2 triggered at 0.203 s frame 620
+p532_mask still 1.0 triggered at 1.003 s frame 641
+p532_mask still 1.5 triggered at 1.502 s frame 654

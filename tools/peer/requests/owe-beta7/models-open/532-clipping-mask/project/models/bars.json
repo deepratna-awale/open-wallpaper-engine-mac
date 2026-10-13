@@ -1,0 +1,5 @@
+{
+ "autosize": true,
+ "material": "materials/bars.json",
+ "puppet": "models/bars_puppet.mdl"
+}
