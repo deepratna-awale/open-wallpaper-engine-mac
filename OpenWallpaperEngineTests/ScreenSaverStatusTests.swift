@@ -2,19 +2,14 @@ import XCTest
 @testable import OpenWallpaperEngine
 
 /// What the Details pane says about a wallpaper in the screen saver: scenes are drawn live, web
-/// wallpapers and WebM videos through Chromium, video wallpapers play their own file once it is
-/// prepared, and nothing is said while the plugin is off.
+/// wallpapers and WebM videos through Chromium, video wallpapers drawn live at once, and nothing is
+/// said while the plugin is off.
 final class ScreenSaverStatusTests: XCTestCase {
     private typealias Plugin = ScreenSaverPlugin
 
     private func wallpaper(type: String, file: String = "scene.json",
                            directory: URL = URL(fileURLWithPath: "/tmp/owe-status-test")) -> WEWallpaper {
         WEWallpaper(using: WEProject(file: file, preview: "p.jpg", title: "t", type: type), where: directory)
-    }
-
-    private func key(for wallpaper: WEWallpaper) -> Plugin.StatusKey {
-        Plugin.StatusKey(wallpaperKey: SceneLoadingSnapshotStore.wallpaperKey(for: wallpaper.wallpaperDirectory),
-                         contentKey: "c", propertyHash: "h")
     }
 
     func testScenesWebPagesVideosAndWebMVideosAreEligible() {
@@ -27,45 +22,36 @@ final class ScreenSaverStatusTests: XCTestCase {
         XCTAssertFalse(Plugin.isEligible(WEWallpaper(using: .invalid, where: URL(fileURLWithPath: "/tmp/x"))))
     }
 
-    func testOnlyVideoWallpapersHaveAFileKey() {
-        XCTAssertNil(Plugin.statusKey(for: wallpaper(type: "scene")))
-        XCTAssertNil(Plugin.statusKey(for: wallpaper(type: "web", file: "index.html")))
-        XCTAssertNil(Plugin.statusKey(for: wallpaper(type: "application", file: "app.exe")))
-    }
-
     func testScenesAreAvailableAtOnce() {
-        XCTAssertEqual(Plugin.status(for: wallpaper(type: "scene"), enabled: true, statuses: [:], chromiumInstalled: false),
+        XCTAssertEqual(Plugin.status(for: wallpaper(type: "scene"), enabled: true, chromiumInstalled: false),
                        .available, "drawn live: nothing to make first")
     }
 
     func testPagesNeedChromium() {
         for page in [wallpaper(type: "web", file: "index.html"), wallpaper(type: "video", file: "clip.webm")] {
-            XCTAssertEqual(Plugin.status(for: page, enabled: true, statuses: [:], chromiumInstalled: false), .needsChromium)
-            XCTAssertEqual(Plugin.status(for: page, enabled: true, statuses: [:], chromiumInstalled: true), .available)
+            XCTAssertEqual(Plugin.status(for: page, enabled: true, chromiumInstalled: false), .needsChromium)
+            XCTAssertEqual(Plugin.status(for: page, enabled: true, chromiumInstalled: true), .available)
         }
     }
 
-    func testVideosFollowTheirFile() {
+    func testVideosAreAvailableAtOnce() {
         let video = wallpaper(type: "video", file: "clip.mp4")
-        XCTAssertNil(Plugin.status(for: video, enabled: true, statuses: [:], chromiumInstalled: true), "not checked yet")
-        XCTAssertEqual(Plugin.status(for: video, enabled: true, statuses: [key(for: video): .rendering], chromiumInstalled: true),
-                       .rendering)
-        XCTAssertEqual(Plugin.status(for: video, enabled: true, statuses: [key(for: video): .available], chromiumInstalled: true),
-                       .available)
+        XCTAssertEqual(Plugin.status(for: video, enabled: true, chromiumInstalled: false), .available,
+                       "drawn live: no file to put in place first")
     }
 
     func testNotEligibleTypesSayNotAvailable() {
         for type in ["application", "preset"] {
-            XCTAssertEqual(Plugin.status(for: wallpaper(type: type), enabled: true, statuses: [:], chromiumInstalled: true),
+            XCTAssertEqual(Plugin.status(for: wallpaper(type: type), enabled: true, chromiumInstalled: true),
                            .notEligible, type)
         }
-        XCTAssertEqual(Plugin.status(for: wallpaper(type: "video", file: "clip.mkv"), enabled: true, statuses: [:],
+        XCTAssertEqual(Plugin.status(for: wallpaper(type: "video", file: "clip.mkv"), enabled: true,
                                      chromiumInstalled: true), .notEligible)
     }
 
     func testNoStatusWhenDisabled() {
-        XCTAssertNil(Plugin.status(for: wallpaper(type: "scene"), enabled: false, statuses: [:], chromiumInstalled: true))
-        XCTAssertNil(Plugin.status(for: wallpaper(type: "video"), enabled: false, statuses: [:], chromiumInstalled: true))
+        XCTAssertNil(Plugin.status(for: wallpaper(type: "scene"), enabled: false, chromiumInstalled: true))
+        XCTAssertNil(Plugin.status(for: wallpaper(type: "video"), enabled: false, chromiumInstalled: true))
     }
 
     @MainActor
@@ -76,6 +62,6 @@ final class ScreenSaverStatusTests: XCTestCase {
                                                                        saversDirectory: URL(fileURLWithPath: "/tmp/owe-status-savers"),
                                                                        mayInstall: false))
         XCTAssertNil(plugin.status(for: wallpaper(type: "scene")), "off")
-        XCTAssertTrue(plugin.statuses.isEmpty)
+        XCTAssertNil(plugin.status(for: wallpaper(type: "video", file: "clip.mp4")), "off")
     }
 }

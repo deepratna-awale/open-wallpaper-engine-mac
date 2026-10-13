@@ -82,7 +82,12 @@ struct ContentView: View {
                 .inspector(isPresented: isDetailsPresented) {
                     Group {
                         if viewModel.navigation.isStaging {
+                            // Picking wallpapers for an export, Details (and its Set as Wallpaper)
+                            // is off. It stays in place: opening or closing the inspector then
+                            // changed the split view's sizes in a loop.
                             WallpaperPreview(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
+                                .disabled(!viewModel.allowsLibraryActions)
+                                .opacity(viewModel.allowsLibraryActions ? 1 : 0.5)
                         }
                     }
                     .inspectorColumnWidth(min: 280, ideal: 320, max: 420)
@@ -91,6 +96,10 @@ struct ContentView: View {
         }
         // Frosted: the live wallpaper shows through the window, blurred, under the panes.
         .frostedWindowBackground()
+        // Another tab shown by a menu or an MCP client leaves the export selection, as Cancel does.
+        .onChange(of: tab) { _, tab in
+            if tab != 0 { viewModel.androidBatchPicker?.cancel() }
+        }
         .confirmationDialog("Unsubscribe Confirmation",
                             isPresented: Bindable(viewModel.presentation).isUnsubscribeConfirming) {
             if let url = viewModel.presentation.hoveredWallpaper?.wallpaperDirectory {
@@ -280,9 +289,11 @@ struct ContentView: View {
     @ViewBuilder private var tabContent: some View {
         switch tab {
         case 0:
+            // Picking wallpapers for an export, the grid only selects: no imports, no menus.
+            let isLibrary = viewModel.allowsLibraryActions
             WallpaperExplorer(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
-                .onDrop(of: [.fileURL], delegate: LibraryDropImport(presentation: viewModel.presentation))
-                .contextMenu {
+                .onDrop(of: isLibrary ? [.fileURL] : [], delegate: LibraryDropImport(presentation: viewModel.presentation))
+                .libraryContextMenu(isEnabled: isLibrary) {
                     ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
                 }
                 .padding()
@@ -331,6 +342,8 @@ struct ContentView: View {
         }
         ToolbarItem(placement: .principal) {
             TopTabBar(contentViewModel: viewModel)
+                // The export selection keeps the window on Installed until it ends.
+                .disabled(!viewModel.allowsLibraryActions)
         }
         // Displays, Settings and Details come from each tab's toolbar (`WindowActionsToolbar`),
         // after the tab's own items.

@@ -3,9 +3,8 @@ import ScreenSaver
 
 /// The bundled screen saver. While the app draws the screen saver live, it shows the app's frames
 /// (global IOSurfaces it finds through `live.json` and Darwin notifications,
-/// `GlobalSurfaceFrameSource`); otherwise it plays the current wallpaper's loop video, which the
-/// app renders into the folder the saver reads (`ScreenSaverManifest`). Each display shows what
-/// is listed for it; a stretched one its rect. Black when the app has neither. `LiveSaverPresenter`
+/// `GlobalSurfaceFrameSource`); otherwise each display's still (`ScreenSaverStills`). Each display
+/// shows what is listed for it; a stretched one its rect. Black when the app has neither. `LiveSaverPresenter`
 /// does the work and the host's lifecycle workarounds.
 class OWESaverViewBase: ScreenSaverView {
     private var presenter: LiveSaverPresenter?

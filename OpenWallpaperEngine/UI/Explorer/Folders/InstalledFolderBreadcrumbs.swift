@@ -6,6 +6,9 @@ import SwiftUI
 struct InstalledFolderBreadcrumbs: View {
     var viewModel: ContentViewModel
 
+    /// Picking wallpapers for an export: the steps only open their folders.
+    private var takesDrops: Bool { viewModel.allowsLibraryActions }
+
     var body: some View {
         let path = viewModel.library.folderPath
         HStack(spacing: 4) {
@@ -17,12 +20,12 @@ struct InstalledFolderBreadcrumbs: View {
             .buttonStyle(.borderless)
             .help("Back")
             .keyboardShortcut("[", modifiers: .command)
-            BreadcrumbStep(library: viewModel.library, folder: nil, isLast: false)
+            BreadcrumbStep(library: viewModel.library, folder: nil, isLast: false, takesDrops: takesDrops)
             ForEach(Array(path.enumerated()), id: \.element.id) { index, folder in
                 Image(systemName: "chevron.forward")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                BreadcrumbStep(library: viewModel.library, folder: folder, isLast: index == path.count - 1)
+                BreadcrumbStep(library: viewModel.library, folder: folder, isLast: index == path.count - 1, takesDrops: takesDrops)
             }
             Spacer()
         }
@@ -35,6 +38,8 @@ private struct BreadcrumbStep: View {
     /// nil is the top level.
     var folder: InstalledFolder?
     var isLast: Bool
+    /// Wallpapers and folders dropped on it move there.
+    var takesDrops = true
     @State private var isTargeted = false
     /// Counts the drops it took, for their feedback.
     @State private var drops = 0
@@ -65,12 +70,13 @@ private struct BreadcrumbStep: View {
         .buttonStyle(.borderless)
         .disabled(isLast)
         .dropDestination(for: String.self) { texts, _ in
+            guard takesDrops else { return false }
             let moved = withAnimation(InstalledDropAnimation.move(reduceMotion: reduceMotion)) {
                 library.drop(texts, into: folder?.id)
             }
             if moved { drops += 1 }
             return moved
-        } isTargeted: { isTargeted = $0 }
+        } isTargeted: { isTargeted = takesDrops && $0 }
         .dropFeedback(trigger: drops, cornerRadius: 6)
     }
 }

@@ -3,9 +3,9 @@ import ImageIO
 import QuartzCore
 
 /// What a saver view shows (the `.saver`'s `OWESaverView` and the extension's view): the app's
-/// live frames while they arrive (`LiveFrameSource`), else the loop video (`SaverVideoPlayer`),
-/// switched with a short crossfade (`LiveFrameFallback`), over the display's still picture
-/// (`ScreenSaverStills`), which shows until the first frames come. It works around the hosts' known bugs
+/// live frames while they arrive (`LiveFrameSource`), faded in and out (`LiveFrameFallback`) over
+/// the display's still picture (`ScreenSaverStills`), which shows until the first frames come and
+/// whenever they stop. It works around the hosts' known bugs
 /// (live screen saver notes §4):
 ///
 /// - It starts on `startAnimation` whatever it heard (a new host misses `didstart`), and again on
@@ -33,12 +33,11 @@ import QuartzCore
 final class LiveSaverPresenter: NSObject {
     /// The rate a view checks for a stall, pings the app and reports.
     static let housekeepingRate = 4
-    /// How long the switch between the video and live frames fades.
+    /// How long the switch between the still and live frames fades.
     static let crossfade: CFTimeInterval = 0.3
 
     private weak var view: NSView?
     private let source: LiveFrameSource
-    private let video = SaverVideoPlayer()
     private let still = CALayer()
     /// The still asked for last (`ScreenSaverStillChoice.key`): only its decode is shown.
     private var stillKey: String?
@@ -72,8 +71,6 @@ final class LiveSaverPresenter: NSObject {
         still.contentsGravity = .resizeAspectFill
         still.masksToBounds = true
         view.layer?.addSublayer(still)
-        video.layer.frame = view.bounds
-        view.layer?.addSublayer(video.layer)
         surfaceLayer.isOpaque = true
         surfaceLayer.opacity = 0
         surfaceLayer.frame = view.bounds
@@ -128,19 +125,13 @@ final class LiveSaverPresenter: NSObject {
         let resumes = source.store.hasFreshFrame(at: LiveFrameStore.now(), within: LiveFrameFallback.staleAfter)
             && source.store.newestFrame(display: displayIdentity, pixels: pixels) != nil
         drawer.start(target: target, at: now, resumes: resumes)
-        var started = false
-        if resumes {
-            showLive(true, animated: false)
-            SaverDrawing.queue.async { [drawer] in drawer.frameCame() }
-        } else {
-            showLive(false, animated: false)
-            started = video.start(display: displayIdentity, bounds: view.bounds, scale: scale)
-        }
+        showLive(resumes, animated: false)
+        if resumes { SaverDrawing.queue.async { [drawer] in drawer.frameCame() } }
         let link = view.displayLink(target: self, selector: #selector(tick(_:)))
         link.add(to: .main, forMode: .common)
         self.link = link
         setRate(Self.housekeepingRate)
-        SaverLog.lifecycle.notice("start (\(reason, privacy: .public)) view=\(self.viewID, privacy: .public) display=\(self.displayIdentity ?? "nil", privacy: .public) pixels=\(self.pixels.width)x\(self.pixels.height) live=\(resumes) video=\(started) window=\(view.window?.windowNumber ?? 0)")
+        SaverLog.lifecycle.notice("start (\(reason, privacy: .public)) view=\(self.viewID, privacy: .public) display=\(self.displayIdentity ?? "nil", privacy: .public) pixels=\(self.pixels.width)x\(self.pixels.height) live=\(resumes) window=\(view.window?.windowNumber ?? 0)")
     }
 
     /// Stops drawing and checking, keeping the last frame shown (the lock screen shows it).
@@ -151,7 +142,6 @@ final class LiveSaverPresenter: NSObject {
         link?.invalidate()
         link = nil
         linkRate = 0
-        video.pause()
         source.detach(viewID: viewID)
         SaverLog.lifecycle.notice("stop (\(reason, privacy: .public)) view=\(self.viewID, privacy: .public) live=\(self.showsLive)")
     }
@@ -165,7 +155,6 @@ final class LiveSaverPresenter: NSObject {
         still.frame = view.bounds
         surfaceLayer.frame = view.bounds
         CATransaction.commit()
-        video.layout(in: view.bounds)
         drawer.retarget(target)
     }
 
@@ -246,13 +235,8 @@ final class LiveSaverPresenter: NSObject {
         CATransaction.setDisableActions(!animated)
         surfaceLayer.opacity = live ? 1 : 0
         CATransaction.commit()
-        if live {
-            video.pause()
-        } else if let view, isRunning, animated {
-            video.start(display: displayIdentity, bounds: view.bounds, scale: scale)
-        }
         if animated {
-            SaverLog.frames.notice("\(live ? "live frames" : "fallback to video", privacy: .public) view=\(self.viewID, privacy: .public)")
+            SaverLog.frames.notice("\(live ? "live frames" : "fallback to the still", privacy: .public) view=\(self.viewID, privacy: .public)")
         }
     }
 
@@ -335,7 +319,7 @@ final class LiveSaverPresenter: NSObject {
 /// while the password prompt comes in) never holds a frame: each new frame in the store is drawn
 /// as it comes, while the session runs, the view has a window and a display, and that display is
 /// awake. Its fallback (`LiveFrameFallback`) is kept here too, so frames keep it live; the
-/// presenter reads it to switch between the video and the live layer. Every field is the draw
+/// presenter reads it to switch between the still and the live layer. Every field is the draw
 /// queue's; the main thread reaches them through `sync`/`async` on it, which never waits on main.
 final class LiveFrameDrawer: @unchecked Sendable {
     struct Target: Equatable {
