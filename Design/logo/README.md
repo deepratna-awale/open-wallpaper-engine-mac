@@ -10,7 +10,7 @@ The artwork is a redesign of [Klaus Zhu](https://github.com/klauszhu1105)'s orig
 | `svg/monitor.svg`, `screen.svg`, `gear.svg`, `hole.svg` | App icon layers on the 1024 pt Icon Composer canvas. They use flat, solid fills only, with no gradient, baked shadow, glass or highlight. |
 | `svg/logo-flat.svg` | The un-glassed logo on a clear background, used for the placeholder image and the docs. |
 | `svg/menubar-template.svg` | The 18 × 18 pt menu bar silhouette: the monitor outline, a solid gear with its hole, and the stand. |
-| `render.swift` | Rasterises the SVGs, and puts a full-bleed icon on the pre-26 macOS icon grid (an 824/1024 body with a soft shadow). |
+| `render.swift` | Rasterises the SVGs, puts a full-bleed icon on the pre-26 macOS icon grid (an 824/1024 body with a soft shadow), and centres the flat logo on a solid tile for the screen saver thumbnails. |
 | `build.sh` | Regenerates every asset below. |
 
 ## Where the assets go
@@ -21,6 +21,8 @@ The artwork is a redesign of [Klaus Zhu](https://github.com/klauszhu1105)'s orig
 | `Assets.xcassets/AppIcon.appiconset` | The macOS 14/15 fallback: `ictool`'s own rendering of `AppIcon.icon`, at 16–512 pt @1x/@2x. |
 | `Assets.xcassets/OWEStatusIcon.imageset` | The menu bar icon: the template SVG, with preserved vector data and the template rendering intent, so macOS draws it white on dark bars and black on light ones. |
 | `Assets.xcassets/we.placeholder.imageset`, `OpenWallpaperEngine.docc/.../OpenWallpaperEngine-icon@2x.png` | The flat logo. |
+| `OpenWallpaperEngineSaver/thumbnail.png`, `thumbnail@2x.png` | The screen saver tile in System Settings: the flat logo on the palette's `background`, at 90 × 58 pt. The legacy `.saver` and the screen saver extension both bundle these files. |
+| `OpenWallpaperEngineSaverExtension/Assets.xcassets/thumbnail.imageset` | The same tile at 107 × 65 pt, the size of the `thumbnail` image in Apple's own `com.apple.screensaver` extensions. |
 
 Both icons use the name `AppIcon` (`ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon`). Xcode 26+ builds the `.icon` for macOS 26, and the asset catalog set for older systems.
 
