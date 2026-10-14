@@ -36,9 +36,8 @@ protocol SystemControlService: AnyObject {
     /// does; false when nothing was saved because they are the wallpaper's own values, which the
     /// screen saver follows until its choices first differ.
     func setScreenSaverValues(_ values: [String: String], of wallpaper: ControlWallpaper) throws -> Bool
-    /// "Set as Screen Saver": a scene drawn live with its screen saver choices, a web page or
-    /// WebM video drawn live through Chromium, or a video wallpaper's own file (waiting while it
-    /// is put in place).
+    /// "Set as Screen Saver": a scene drawn live with its screen saver choices, a video wallpaper
+    /// drawn live as it is, or a web page or WebM video drawn live through Chromium.
     func setScreenSaver(_ wallpaper: ControlWallpaper) async throws -> SystemScreenSaverSet
     /// "Stop Using as Screen Saver".
     func stopUsingScreenSaver()

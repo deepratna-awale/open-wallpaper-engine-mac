@@ -14,8 +14,8 @@ extension ScreenSaverSelectionService {
         var isAvailable: Bool { self == .available }
     }
 
-    /// What the screen saver can be set to: a scene drawn live, a video file the saver plays
-    /// (MP4, M4V, MOV), and a web wallpaper or WebM video drawn live through Chromium
+    /// What the screen saver can be set to: a scene or a video (MP4, M4V, MOV) drawn live by the
+    /// app, and a web wallpaper or WebM video drawn live through Chromium
     /// (`ScreenSaverPlugin.liveKind`). Never an application wallpaper.
     nonisolated static func availability(of wallpaper: WEWallpaper, chromiumInstalled: Bool) -> Availability {
         if ScreenSaverPlugin.isScene(wallpaper) || ScreenSaverVideoSource.isEligible(wallpaper) { return .available }
@@ -58,11 +58,6 @@ extension ScreenSaverSelectionService {
             return
         case .unavailable:
             OWELog.info(.app, "Screen saver: the screen saver can't show \(wallpaper.wallpaperDirectory.lastPathComponent)")
-            completion(false)
-            return
-        }
-        guard !isSettingVideo else {
-            OWELog.info(.app, "Screen saver: \(wallpaper.wallpaperDirectory.lastPathComponent) can't be set while a video is being set")
             completion(false)
             return
         }

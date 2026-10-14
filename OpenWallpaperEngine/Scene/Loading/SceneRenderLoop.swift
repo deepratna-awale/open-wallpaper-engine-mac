@@ -58,7 +58,11 @@ final class SceneRenderLoop {
     private var contentSince: CFTimeInterval?
     private var nextSnapshotCheck: CFTimeInterval = 0
     /// Main: the scene is lent to the screen saver (`lend`).
-    private(set) var isLent = false
+    private(set) var isLent = false {
+        didSet { if isLent != oldValue { onLoanChanged?() } }
+    }
+    /// Main: the scene was lent or given back (a video's stream plays for the screen saver meanwhile).
+    var onLoanChanged: (() -> Void)?
     /// Render thread: the screen saver's link while the scene is lent, and what the renderer
     /// showed before (`lend`).
     private var loan: (link: CADisplayLink, fixedPointer: SIMD2<Float>?, rendersScreenSaver: Bool)?

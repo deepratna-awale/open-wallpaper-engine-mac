@@ -1,14 +1,14 @@
 import AppKit
 
 extension ScreenSaverPlugin {
-    /// A loop of the screen saver's layout the app draws live: a scene wallpaper, or a web page
-    /// or a WebM video through the Chromium engine (`ScreenSaverLiveWeb`) when it is installed
-    /// (video wallpapers AVFoundation plays are their own file, which the saver plays), at the
-    /// largest of its displays' sizes (a stretch's canvas), with the properties its first display
-    /// runs it with.
+    /// A loop of the screen saver's layout the app draws live: a scene wallpaper, a video wallpaper
+    /// AVFoundation plays (`ScreenSaverLiveVideo`), or a web page or a WebM video through the
+    /// Chromium engine (`ScreenSaverLiveWeb`) when it is installed, at the largest of its displays'
+    /// sizes (a stretch's canvas), with the properties its first display runs it with.
     struct LiveLoop {
         enum Kind: Equatable {
             case scene
+            case video
             case page(ScreenSaverLiveWeb.Kind)
         }
 
@@ -28,10 +28,12 @@ extension ScreenSaverPlugin {
     /// it (Scene Edit / Export's Screen Saver mode, `ScreenSaverSettingsStore`), never the desktop's.
     static let pickScope = WallpaperPropertyScope.isolated("screen-saver-live")
 
-    /// What draws `wallpaper` live, nil when nothing can: a scene, or a page (a web wallpaper, a
-    /// WebM video AVFoundation can't play) while the Chromium engine is installed.
+    /// What draws `wallpaper` live, nil when nothing can: a scene, a video AVFoundation plays, or a
+    /// page (a web wallpaper, a WebM video AVFoundation can't play) while the Chromium engine is
+    /// installed.
     nonisolated static func liveKind(of wallpaper: WEWallpaper, chromiumInstalled: Bool) -> LiveLoop.Kind? {
         if isScene(wallpaper) { return .scene }
+        if ScreenSaverVideoSource.isEligible(wallpaper) { return .video }
         guard chromiumInstalled else { return nil }
         if isWeb(wallpaper) { return .page(.web) }
         if isWebMVideo(wallpaper), WebKitVideoPlayer.handles(wallpaper.mediaURL) {
@@ -65,7 +67,7 @@ extension ScreenSaverPlugin {
 
     /// The live manifest's display entries for `loops` (ring `i` is `loops[i]`): one for any
     /// display when a whole loop plays on every display, else one per display, with its crop for
-    /// a stretch. Displays not listed play their video.
+    /// a stretch. Displays not listed show their still.
     nonisolated static func liveDisplayEntries(_ loops: [ScreenSaverLayoutPlan.Loop], pixels: [SIMD2<Int>],
                                                displays: [String]) -> [ScreenSaverFramePublisher.DisplayEntry] {
         var entries: [ScreenSaverFramePublisher.DisplayEntry] = []
@@ -102,7 +104,8 @@ extension ScreenSaverPlugin {
         }
         guard let largest = sizes.indices.max(by: { sizes[$0].pixels.x * sizes[$0].pixels.y < sizes[$1].pixels.x * sizes[$1].pixels.y })
         else { return ([], []) }
-        Self.publishPickValues(for: wallpaper, store: settingsStore)
+        // A video plays as it is: it has no values of its own.
+        if kind != .video { Self.publishPickValues(for: wallpaper, store: settingsStore) }
         let identities = displays.map(\.identity)
         let loop = ScreenSaverLayoutPlan.Loop(content: .init(id: wallpaper.wallpaperDirectory.standardizedFileURL.path),
                                               sizes: sizes, displays: identities)

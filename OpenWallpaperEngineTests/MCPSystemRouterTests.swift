@@ -127,7 +127,7 @@ private final class FakeSystemService: SystemControlService {
         if setFails { throw ControlError(.failed, "couldn't be set") }
         setAsScreenSaver.append(wallpaper.id)
         let selection = SystemScreenSaverSelection(wallpaper: wallpaper, folder: wallpaper.folder.path,
-                                                   kind: wallpaper.type == "video" ? .video : .live,
+                                                   kind: .live,
                                                    picked: Date(timeIntervalSince1970: 1_800_000_000))
         let enabled = !state.pluginEnabled
         state = SystemScreenSaverState(pluginEnabled: true, selection: selection)
@@ -341,7 +341,8 @@ final class MCPSystemRouterTests: XCTestCase {
         XCTAssertEqual(picked["same_as_wallpaper"], false, "derived from the selection")
 
         let video = try await result("screensaver_set", ["wallpaper_id": "200"])
-        XCTAssertEqual(video["selection"]?["kind"], "video", "a video's own file")
+        XCTAssertEqual(video["selection"]?["kind"], "live", "a video is drawn live too")
+        XCTAssertTrue(video["message"]?.stringValue?.contains("drawn live by the app") ?? false)
 
         let stopped = try await result("screensaver_stop_using")
         XCTAssertEqual(stopped["stopped"], true)
