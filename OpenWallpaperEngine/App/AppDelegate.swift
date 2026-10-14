@@ -269,6 +269,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var mediaIntegrationCancellable: AnyCancellable?
     private var mediaBlocklistCancellable: AnyCancellable?
     private var recordingThresholdCancellable: AnyCancellable?
+    private var recordingVolumeCancellable: AnyCancellable?
+    private var recordingDeviceCancellable: AnyCancellable?
     /// Follows the default output device: capture always restarts, wallpapers reload when the
     /// setting is on. `rebuildWallpaperWindows` is the same reload an asset change uses.
     private lazy var outputDeviceMonitor = OutputDeviceChangeMonitor(
@@ -350,6 +352,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Settings › Optimizations › Recording threshold: quieter captured audio reads as silence.
         recordingThresholdCancellable = globalSettingsViewModel.$settings.map(\.audioRecordingThreshold).removeDuplicates()
             .sink { WallpaperServices.shared.audioCapture.recordingThreshold = $0 }
+        // Settings › Optimizations › Recording volume and Audio recording device: the spectrum's
+        // boost, and the device it is recorded from.
+        recordingVolumeCancellable = globalSettingsViewModel.$settings.map(\.audioRecordingVolume).removeDuplicates()
+            .sink { WallpaperServices.shared.audioCapture.recordingVolume = $0 }
+        recordingDeviceCancellable = globalSettingsViewModel.$settings.map(\.audioRecordingDevice).removeDuplicates()
+            .sink { device in MainActor.assumeIsolated { WallpaperServices.shared.audioCapture.recordingDevice = device } }
         // Flipped clone displays mirror their window's content (`WallpaperWindowContentView`).
         displayFlipCancellable = wallpaperViewModel.$layoutResolution.map(\.flipped).removeDuplicates()
             .sink { [weak self] flipped in self?.applyDisplayFlips(flipped) }

@@ -98,6 +98,18 @@ struct OptimizationsPage: SettingsPage {
                 }
                 .changedFromDefault(viewModel.isChanged(\.reloadWhenChangingOutputDevice))
                 .help("Reloads the wallpapers and their audio when you switch the sound output, such as to headphones or another speaker.")
+                AudioRecordingDeviceRow(selection: $viewModel.settings.audioRecordingDevice)
+                    .changedFromDefault(viewModel.isChanged(\.audioRecordingDevice))
+                    .help("Where audio-reactive wallpapers hear sound from. Default is the sound your Mac plays; a microphone or a loopback device such as BlackHole records that input instead.")
+                HStack {
+                    Text("Recording volume")
+                    Spacer()
+                    NumericSliderInput(value: $viewModel.settings.audioRecordingVolume, range: 0...200,
+                                       defaultValue: 50, step: 1, fractionDigits: 0,
+                                       sliderWidth: 150, fieldWidth: 44)
+                }
+                .changedFromDefault(viewModel.isChanged(\.audioRecordingVolume))
+                .help("How strongly audio-reactive wallpapers react to the recorded sound. 50 is normal, 100 doubles it, 0 silences it.")
                 HStack {
                     Text("Recording threshold")
                     Spacer()
