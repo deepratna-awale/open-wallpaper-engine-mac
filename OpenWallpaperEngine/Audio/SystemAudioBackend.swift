@@ -1,12 +1,15 @@
 import Foundation
 
-/// Where system audio comes from.
+/// Where captured audio comes from.
 ///
-/// - `processTap`: a Core Audio process tap (macOS 14.2+). It needs only the System Audio
-///   Recording permission.
+/// - `inputDevice`: the recording device chosen in WE's "Audio recording device"
+///   (`InputDeviceAudioCapture`). It needs the Microphone permission.
+/// - `processTap`: a Core Audio process tap (macOS 14.2+), the system output, WE's default device.
+///   It needs only the System Audio Recording permission.
 /// - `screenCapture`: a ScreenCaptureKit stream, which needs Screen Recording. Used before macOS
 ///   14.2, and when the tap can't start.
 enum SystemAudioBackend: Equatable {
+    case inputDevice(uid: String)
     case processTap
     case screenCapture
 
@@ -17,10 +20,17 @@ enum SystemAudioBackend: Equatable {
     /// tap permission (its TCC functions are missing) still tries the tap, because then nothing
     /// can tell whether it was granted. ScreenCaptureKit follows as the fallback when Screen
     /// Recording is already granted, so a user who granted only that keeps their audio.
+    ///
+    /// A chosen recording device (`inputDevice`, its UID) comes before both when the Microphone
+    /// permission is granted; the system output stays as the fallback for a device that is
+    /// disconnected or can't start, as WE falls back to its default device.
     static func candidates(tapSupported: Bool,
                            tapPermission: SystemAudioRecordingPermission.Status,
-                           screenRecordingGranted: Bool) -> [SystemAudioBackend] {
+                           screenRecordingGranted: Bool,
+                           inputDevice: String? = nil,
+                           microphoneGranted: Bool = false) -> [SystemAudioBackend] {
         var result: [SystemAudioBackend] = []
+        if let inputDevice, microphoneGranted { result.append(.inputDevice(uid: inputDevice)) }
         if tapSupported, tapPermission == .authorized || tapPermission == .unknown {
             result.append(.processTap)
         }
