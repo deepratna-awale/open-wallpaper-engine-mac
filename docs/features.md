@@ -113,6 +113,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - **Library folders** — add folders of wallpapers beside Wallpaper Storage (Settings › Assets); they're watched and never written to.
 - **Animated previews** — wallpaper tiles in the library play their Workshop preview animation (GIF), so you can see a wallpaper move before applying it. They play only while visible, and pause when the window is hidden or in Low Power Mode.
 - Installed wallpapers show and filter by their Workshop tags; asset-only and dependency-only items stay out of Installed.
+- Installed sorts, in Wallpaper Engine's order: Name, Rating, Favorite (favourites first, then by name), File Size, Date Downloaded and Last Updated (when the Workshop item last changed on Steam, else when its folder last changed; local wallpapers, which have no update date, come last). Wallpaper Engine's *Last Date Modified* belongs to its editor's Open Project list, not to the library.
 - Missing Workshop dependencies download automatically, and unused ones are removed after a delete. Every download lands in the Wallpaper Storage folder.
 - **Reset** in Details returns a wallpaper's properties, and its scene edits, to the defaults its author set.
 - **iPhone & iPad Export** in Scene Edit / Export turns a scene or video wallpaper into a Live Photo lock screen for any iPhone or iPad that shows one, with AirDrop, to a folder or into a Photos album, without changing your desktop, one wallpaper or a batch.
