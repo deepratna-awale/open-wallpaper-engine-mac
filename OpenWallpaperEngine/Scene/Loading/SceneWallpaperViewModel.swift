@@ -904,7 +904,8 @@ class SceneWallpaperViewModel: ObservableObject {
         // Runs on the content queue: a video AVFoundation refuses as it is plays from its repaired
         // copy, made here on first play when the import didn't make it.
         let url = videoStream == nil ? RepairedVideoCache.current.playableURL(for: currentWallpaper.mediaURL) : currentWallpaper.mediaURL
-        let stream = videoStream ?? VideoTextureStream(url: url, device: device)
+        let stream = videoStream ?? VideoTextureStream(file: VideoFileSource(url: url, mode: renderSettings.videoReadMode),
+                                                       device: device)
         guard let stream else {
             OWELog.error(.scene, "Could not open video \(url.lastPathComponent) for Metal playback")
             return nil

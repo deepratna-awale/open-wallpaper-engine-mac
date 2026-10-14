@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Video loading: From disk or In memory** (Settings › Optimizations › Video), Wallpaper Engine's `videoreadmode`. From disk (the default) is as before. AVFoundation reads a video past the system's file cache, so a looping video reads its whole file from the disk again on every loop: a 137 MB 4K video with a 27.6 s loop read 143 MB per loop, about 5 MB/s for as long as it plays. In memory reads the file once and plays it from memory, so nothing more is read from the disk (a hard disk can sleep, a network volume stays quiet), for about the file's size in memory (215 MB against 18 MB for that video). It applies to video wallpapers on both the AVKit and the Metal path, from the next time a video opens.
 - **Settings › General › Screen Saver Same as Wallpaper** (on by default, below Show Wallpaper on Lock Screen): on, each display's screen saver shows that display's own wallpaper. It is read from what is set as the screen saver, so Set as Screen Saver (a menu, the Details panel, the Screen Saver tab or MCP) turns it off, turning it on clears what was set, and turning it off sets the main display's wallpaper as the screen saver. Restore Defaults and Reset Config turn it back on; MCP's `screensaver_get` reports it as `same_as_wallpaper`.
 
 ### Changed

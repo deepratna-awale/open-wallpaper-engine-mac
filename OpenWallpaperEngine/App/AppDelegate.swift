@@ -267,6 +267,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var displayFlipCancellable: AnyCancellable?
     private var stretchCanvasCancellable: AnyCancellable?
     private var mediaIntegrationCancellable: AnyCancellable?
+    private var videoReadModeCancellable: AnyCancellable?
     private var recordingThresholdCancellable: AnyCancellable?
     /// Follows the default output device: capture always restarts, wallpapers reload when the
     /// setting is on. `rebuildWallpaperWindows` is the same reload an asset change uses.
@@ -373,6 +374,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Settings › Optimizations › Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
             .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }
+        // Settings › Optimizations › Video loading: videos opened from now on read their file this way.
+        videoReadModeCancellable = globalSettingsViewModel.$settings.map(\.videoReadMode).removeDuplicates()
+            .sink { [weak self] mode in self?.wallpaperViewModel.videoReadMode = mode }
 
         // Settings → Audio → Reload when changing output device (`OutputDeviceChangeMonitor`).
         outputDeviceMonitor.start()
