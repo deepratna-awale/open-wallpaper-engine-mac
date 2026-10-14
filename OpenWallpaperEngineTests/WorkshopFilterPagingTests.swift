@@ -40,6 +40,9 @@ final class WorkshopFilterPagingTests: XCTestCase {
     }
 
     private var root: URL!
+    /// The view model's own defaults, so Hide Anime never reaches another test.
+    private var defaults: UserDefaults!
+    private var suiteName = ""
     private var steam: FakeSteam!
     private var viewModel: WorkshopViewModel!
 
@@ -68,11 +71,15 @@ final class WorkshopFilterPagingTests: XCTestCase {
                                        presentPreview: { _ in }, restoresSession: false)
         let steam = FakeSteam(catalogue: Self.catalogue)
         self.steam = steam
-        viewModel = WorkshopViewModel(steamCmd: steamCmd, searchPage: steam.search)
+        suiteName = "WorkshopFilterPagingTests.\(UUID().uuidString)"
+        defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        viewModel = WorkshopViewModel(steamCmd: steamCmd, searchPage: steam.search, defaults: defaults)
     }
 
     override func tearDownWithError() throws {
         viewModel = nil
+        defaults.removePersistentDomain(forName: suiteName)
+        defaults = nil
         try FileManager.default.removeItem(at: root)
     }
 
@@ -255,10 +262,7 @@ final class WorkshopFilterPagingTests: XCTestCase {
                        WorkshopTags.hiddenByHideAnime)
     }
 
-    func testHideAnimeIsSavedForTheNextLaunch() throws {
-        let suite = "WorkshopFilterPagingTests.\(UUID().uuidString)"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
+    func testHideAnimeIsSavedForTheNextLaunch() {
         let first = WorkshopViewModel(steamCmd: viewModel.steamCmd, searchPage: steam.search, defaults: defaults)
         XCTAssertFalse(first.filter.hidesAnime, "WE shows Anime until asked to hide it")
         first.setHidesAnime(true)
