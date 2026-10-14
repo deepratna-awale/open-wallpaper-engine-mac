@@ -118,6 +118,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - **iPhone & iPad Export** in Scene Edit / Export turns a scene or video wallpaper into a Live Photo lock screen for any iPhone or iPad that shows one, with AirDrop, to a folder or into a Photos album, without changing your desktop, one wallpaper or a batch.
 - **Android Export** in Scene Edit / Export writes Wallpaper Engine's `.mpkg` packages for its Android app, one wallpaper or a batch, sent to the device over Wi-Fi or copied.
 - Property conditions, text rows and slider formats from the wallpaper's settings are honoured.
+- **Author translations** (project.json `general.localization`): a wallpaper's property titles, text rows and combo choices written as `ui_` keys show in the app's language, from the author's own tables, as in Wallpaper Engine: Wallpaper Engine's own text first, then the author's, then English, then the key. In Details, Scene Edit / Export, the Wallpaper Editor's property choices and the MCP property listing.
 - Steam passwords are never stored, and the Steam Web API key is kept in the Keychain.
 
 ### Interface & languages
