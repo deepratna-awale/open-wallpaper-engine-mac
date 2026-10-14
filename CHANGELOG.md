@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Hotkeys for wallpapers and display profiles**, as Wallpaper Engine's. A wallpaper's context menu has **Assign Hotkey…**: the shortcut, pressed in any app, sets that wallpaper on the display that was selected when it was assigned (found again by the display's identity after reconnecting). Once assigned, the menu shows **Hotkey: ⌃⌥1** with Change Hotkey… and Remove Hotkey. The Displays sheet's Profile menu has **Hotkeys**, listing each profile with its hotkey; choosing one assigns, changes or removes it, and a deleted profile's hotkey goes with it. A shortcut that a playlist, a hotkey action, another wallpaper or profile, a menu command, macOS or another app uses asks first and names it, as the other hotkeys do. Settings › General › Hotkeys lists them in WE's **Change Wallpaper** group, with a Remove button each. A wallpaper that runs code still asks for trust the first time.
 - **Settings › General › Screen Saver Same as Wallpaper** (on by default, below Show Wallpaper on Lock Screen): on, each display's screen saver shows that display's own wallpaper. It is read from what is set as the screen saver, so Set as Screen Saver (a menu, the Details panel, the Screen Saver tab or MCP) turns it off, turning it on clears what was set, and turning it off sets the main display's wallpaper as the screen saver. Restore Defaults and Reset Config turn it back on; MCP's `screensaver_get` reports it as `same_as_wallpaper`.
 
 ### Changed
