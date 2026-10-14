@@ -122,6 +122,9 @@ struct OptimizationsPage: SettingsPage {
                 Toggle("Media integration support", isOn: $viewModel.settings.mediaIntegration)
                     .changedFromDefault(viewModel.isChanged(\.mediaIntegration))
                     .help("Lets wallpapers show the title, artist and album cover of what's playing now. Off hides it from every wallpaper.")
+                MediaBlocklistRow(blocklist: $viewModel.settings.mediaBlocklist, source: AppDelegate.shared.mediaSession)
+                    .disabled(!viewModel.settings.mediaIntegration)
+                    .changedFromDefault(viewModel.isChanged(\.mediaBlocklist))
             } header: {
                 Label("Audio", systemImage: "speaker.3.fill")
             } footer: {

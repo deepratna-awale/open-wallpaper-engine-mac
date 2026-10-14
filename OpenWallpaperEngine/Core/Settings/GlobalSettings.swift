@@ -459,6 +459,11 @@ struct GlobalSettings: Codable, Equatable {
     /// (`AudioSpectrumBlockTransform.inputVolume(setting:)`).
     var audioRecordingVolume: Double = 50
 
+    // MARK: Media blocklist
+    /// WE's media blocklist (`mediablocklist`, empty by default): the apps, by bundle id, whose
+    /// now-playing sessions wallpapers don't see (`MacMediaSessionSource.setBlocklist`).
+    var mediaBlocklist: [String] = []
+
     /// The stored keys. `postProcessing`, `reflections` and `antiAliasing` moved to new keys when
     /// the renderer started reading them: the old keys hold values saved while the settings did
     /// nothing (post-processing then defaulted to "disabled", anti-aliasing to MSAA x2), so they
@@ -489,6 +494,7 @@ struct GlobalSettings: Codable, Equatable {
         case theming
         case browseTransition = "browsetransition"
         case audioRecordingDevice, audioRecordingVolume
+        case mediaBlocklist
     }
 }
 
@@ -575,6 +581,7 @@ extension GlobalSettings {
         read(.audioRecordingDevice, &audioRecordingDevice)
         read(.audioRecordingVolume, &audioRecordingVolume)
         audioRecordingVolume = min(max(audioRecordingVolume, 0), 200)
+        read(.mediaBlocklist, &mediaBlocklist)
         if fromPoints {
             let migration = decoder.userInfo[.settingsMigration] as? GlobalSettingsMigration
             migrateFromPoints(backingScale: migration?.mainBackingScale ?? 1)

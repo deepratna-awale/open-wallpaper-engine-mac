@@ -66,6 +66,7 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
 - Per-player taps (`AudioLevelTap`).
 - Spectrum and waveform snapshots.
 - One producer, many consumers: scene shaders, SceneScript `registerAudioBuffers`, video music sync.
+- Now Playing (WE's media integration) is `Scene/Scripting/Media/MacMediaSessionSource`, one per process for scenes, SceneScript's media events and web wallpapers' media listeners. It applies WE's media blocklist: a session of a blocked app (by bundle id, `sessionBundleIdentifier`) reaches them as nothing playing.
 
 ### `Video/` and `Web/`
 

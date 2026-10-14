@@ -267,6 +267,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var displayFlipCancellable: AnyCancellable?
     private var stretchCanvasCancellable: AnyCancellable?
     private var mediaIntegrationCancellable: AnyCancellable?
+    private var mediaBlocklistCancellable: AnyCancellable?
     private var recordingThresholdCancellable: AnyCancellable?
     private var recordingVolumeCancellable: AnyCancellable?
     private var recordingDeviceCancellable: AnyCancellable?
@@ -381,6 +382,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Settings › Optimizations › Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
             .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }
+        // Settings › Optimizations › Media blocklist: apps whose sessions wallpapers don't see.
+        mediaBlocklistCancellable = globalSettingsViewModel.$settings.map(\.mediaBlocklist).removeDuplicates()
+            .sink { [weak self] blocked in self?.mediaSession.setBlocklist(blocked) }
 
         // Settings → Audio → Reload when changing output device (`OutputDeviceChangeMonitor`).
         outputDeviceMonitor.start()
