@@ -186,7 +186,8 @@ final class WorkshopFilterTests: XCTestCase {
             .topRated: ("0", nil), .trendYear: ("3", "365"), .trendMonth: ("3", "30"), .trendWeek: ("3", "7"),
             .trendToday: ("3", "1"), .mostRecent: ("1", nil), .mostUpVotes: ("11", nil), .subscriptions: ("9", nil),
         ]
-        for (sort, (type, days)) in expected {
+        for (sort, value) in expected {
+            let (type, days) = value
             let sent = parameters(sort)
             XCTAssertEqual(sent.type, type, "\(sort)")
             XCTAssertEqual(sent.days, days, "\(sort)")
