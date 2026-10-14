@@ -55,6 +55,21 @@ with its own wallpaper and properties, as if it were a display of its own. Regio
 again. **Edit Split** moves the divider, **Remove Split** and **Remove All Splits** undo them. A
 stretch group removes its displays' splits.
 
+## Copy to and Swap with
+
+Under **Wallpaper per display**, right-click a display (or a split display's region) that shows
+a wallpaper:
+
+- **Copy to** puts its wallpaper on the display you pick, with the wallpaper's properties and
+  display options as they are on this display.
+- **Swap with** exchanges the two displays' wallpapers, each with its properties and display
+  options. When both show the same wallpaper, its two sets of settings change places; a display
+  without a wallpaper leaves the other without one.
+
+The displays you can pick are the others that show a wallpaper of their own: not the members of
+a clone or stretch group. With *Sync properties across displays* on, every display has the same
+properties, so only the wallpaper and its display options move.
+
 ## Mute
 
 **Mute** silences one display. A wallpaper's sound comes from a display that shows it unmuted,
