@@ -47,6 +47,9 @@ enum WebWallpaperPropertyBridge {
             return value.lowercased() == "true" || value == "1"
         case "slider":
             return Double(value).map { $0.rounded() == $0 && abs($0) < 1e15 ? NSNumber(value: Int64($0)) : NSNumber(value: $0) } ?? value
+        case "file", "directory":
+            // WE's pages prefix `file:///`; its paths start with the drive, these with no slash.
+            return WebDirectoryProperty.pagePath(value)
         default:
             return value
         }
@@ -250,7 +253,10 @@ enum WebWallpaperPropertyBridge {
         Object.defineProperty(window, 'wallpaperPropertyListener', {
           configurable: true, enumerable: true,
           get: function(){ return listener; },
-          set: function(value){ listener = value; flush(); }
+          set: function(value){
+            listener = value; flush();
+            if (window.__oweDirectoryListenerAssigned) window.__oweDirectoryListenerAssigned();
+          }
         });
       } catch(e) {}
       window.__oweSetUserProperties = function(all){ user = copy(all); userSent = null; flush(); };

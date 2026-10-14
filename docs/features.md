@@ -78,7 +78,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - A complete **SceneScript runtime** — modules, the scene/layer/effect/material object model, animation events, `localStorage`, and cursor hit testing, with each wallpaper's scripts on their own thread.
 - Scripts can create layers, particle systems and sounds, move the fog, drive bloom, and pose puppets and models.
 - **Now Playing** — scenes and web wallpapers receive the current track and playback state (macOS 15.4 or later).
-- Web wallpapers receive their user properties and live audio.
+- Web wallpapers receive their user properties and live audio. Folder (`directory`) properties hand the page the folder's pictures or videos, all of them and each change (`fetchall`) or one at random on request (`ondemand`), and pages open chosen files as `'file:///' + path` in both web engines.
 
 ### Audio
 - The audio spectrum is computed the way Wallpaper Engine computes it, in stereo.
