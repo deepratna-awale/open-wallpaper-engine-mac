@@ -50,6 +50,7 @@ struct ExplorerItemMenu: SubviewOfContentView {
                     }
                 }
                 .disabled(!WallpaperSetAsRules.canSetScreenSaver(hoveredWallpaper))
+                PlayInWindowMenu(wallpaper: hoveredWallpaper)
             }
 
             Section {
