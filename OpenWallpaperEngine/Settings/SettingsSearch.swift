@@ -112,6 +112,8 @@ struct SettingsSearch {
             entry("Audio Output", .optimizations, SettingsAnchor.audio),
             entry("Media integration support", .optimizations, SettingsAnchor.audio),
             entry("Recording threshold", .optimizations, SettingsAnchor.audio),
+            entry("Audio recording device", .optimizations, SettingsAnchor.audio),
+            entry("Recording volume", .optimizations, SettingsAnchor.audio),
             entry("Rendering", .optimizations, SettingsAnchor.rendering),
             entry("Process Priority", .optimizations, SettingsAnchor.rendering),
             entry("Restart after crashing", .optimizations, SettingsAnchor.rendering),

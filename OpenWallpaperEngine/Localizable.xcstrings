@@ -304,6 +304,100 @@
         }
       }
     },
+    "%@ (disconnected)" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (غير متصل)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (getrennt)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (desconectado)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (déconnecté)"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (डिस्कनेक्ट है)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (disconnesso)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@（未接続）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@(연결 끊김)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (odłączone)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (desconectado)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (отключено)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (bağlı değil)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (від’єднано)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@（已断开）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@（已中斷連線）"
+          }
+        }
+      }
+    },
     "%@ Copy" : {
       "comment" : "The name of a copy of a layer",
       "localizations" : {
@@ -16247,6 +16341,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "授與權限後即會自動開始擷取音訊，無需重新啟動。"
+          }
+        }
+      }
+    },
+    "Audio recording device" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جهاز تسجيل الصوت"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audioaufnahmegerät"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dispositivo de grabación de audio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appareil d’enregistrement audio"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑडियो रिकॉर्डिंग डिवाइस"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dispositivo di registrazione audio"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "録音デバイス"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오디오 녹음 장치"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Urządzenie nagrywania dźwięku"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dispositivo de Gravação de Áudio"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Устройство записи звука"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses kayıt aygıtı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пристрій запису звуку"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "录音设备"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "錄音裝置"
           }
         }
       }
@@ -34686,6 +34874,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "डिफ़ॉल्ट"
+          }
+        }
+      }
+    },
+    "Default (system audio)" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "افتراضي (صوت النظام)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard (Systemaudio)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Predeterminado (audio del sistema)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par défaut (sons du système)"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डिफ़ॉल्ट (सिस्टम ऑडियो)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Predefinito (audio di sistema)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デフォルト（システムオーディオ）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기본(시스템 오디오)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domyślne (dźwięk systemu)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Padrão (áudio do sistema)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По умолчанию (системный звук)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varsayılan (sistem sesi)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стандартний (системний звук)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认（系统音频）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "預設（系統音訊）"
           }
         }
       }
@@ -63241,6 +63523,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "音訊驅動此參數的強度。"
+          }
+        }
+      }
+    },
+    "How strongly audio-reactive wallpapers react to the recorded sound. 50 is normal, 100 doubles it, 0 silences it." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مدى قوة تفاعل الخلفيات المتجاوبة مع الصوت مع الصوت المسجّل. القيمة 50 عادية، و100 تضاعفه، و0 تكتمه."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie stark audioreaktive Hintergrundbilder auf den aufgenommenen Ton reagieren. 50 ist normal, 100 verdoppelt es, 0 schaltet es stumm."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con qué intensidad reaccionan al sonido grabado los fondos de pantalla que reaccionan al audio. 50 es lo normal, 100 lo duplica y 0 lo silencia."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’intensité avec laquelle les fonds d’écran réactifs au son réagissent au son enregistré. 50 est normal, 100 la double, 0 la coupe."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑडियो पर प्रतिक्रिया देने वाले वॉलपेपर रिकॉर्ड की गई आवाज़ पर कितनी तेज़ी से प्रतिक्रिया देते हैं। 50 सामान्य है, 100 इसे दोगुना करता है, 0 इसे शांत करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quanto intensamente gli sfondi che reagiscono all’audio reagiscono al suono registrato. 50 è normale, 100 lo raddoppia, 0 lo silenzia."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オーディオに反応する壁紙が録音された音にどれだけ強く反応するか。50 が標準で、100 で 2 倍、0 で無音になります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오디오에 반응하는 배경화면이 녹음된 소리에 얼마나 강하게 반응하는지입니다. 50이 보통이고, 100은 두 배, 0은 무음입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jak mocno tapety reagujące na dźwięk reagują na nagrany dźwięk. 50 to normalnie, 100 podwaja reakcję, 0 ją wycisza."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Com que intensidade as imagens de fundo que reagem ao áudio reagem ao som gravado. 50 é o normal, 100 dobra e 0 silencia."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Насколько сильно обои, реагирующие на звук, реагируют на записанный звук. 50 — обычно, 100 — вдвое сильнее, 0 — без звука."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sese duyarlı duvar kâğıtlarının kaydedilen sese ne kadar güçlü tepki verdiği. 50 normaldir, 100 iki katına çıkarır, 0 sessize alır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наскільки сильно шпалери, що реагують на звук, реагують на записаний звук. 50 — звичайно, 100 — удвічі сильніше, 0 — без звуку."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音频响应墙纸对录制声音的反应强度。50 为正常，100 加倍，0 则静音。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音訊回應背景圖片對錄製聲音的反應強度。50 為正常，100 加倍，0 則靜音。"
           }
         }
       }
@@ -110660,6 +111036,100 @@
         }
       }
     },
+    "Recording a device needs the Microphone permission; until it's granted, the system audio is recorded." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتطلب التسجيل من جهاز إذن الميكروفون؛ وإلى أن يُمنح، يُسجَّل صوت النظام."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für die Aufnahme von einem Gerät ist die Mikrofonberechtigung nötig; bis sie erteilt ist, wird das Systemaudio aufgenommen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grabar un dispositivo necesita el permiso de Micrófono; hasta que lo concedas, se graba el audio del sistema."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’enregistrement d’un appareil nécessite l’autorisation Micro ; tant qu’elle n’est pas accordée, ce sont les sons du système qui sont enregistrés."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "किसी डिवाइस से रिकॉर्ड करने के लिए माइक्रोफ़ोन अनुमति चाहिए; अनुमति मिलने तक सिस्टम ऑडियो रिकॉर्ड होता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Per registrare da un dispositivo serve il permesso Microfono; finché non viene concesso, viene registrato l’audio di sistema."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デバイスから録音するにはマイクへのアクセス許可が必要です。許可されるまではシステムオーディオが録音されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장치에서 녹음하려면 마이크 권한이 필요합니다. 권한이 허용될 때까지는 시스템 오디오가 녹음됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nagrywanie z urządzenia wymaga uprawnienia Mikrofon; dopóki nie zostanie przyznane, nagrywany jest dźwięk systemu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gravar um dispositivo exige a permissão de Microfone; até que ela seja concedida, o áudio do sistema é gravado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для записи с устройства нужно разрешение «Микрофон»; пока оно не выдано, записывается системный звук."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir aygıttan kayıt için Mikrofon izni gerekir; izin verilene kadar sistem sesi kaydedilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для запису з пристрою потрібен дозвіл «Мікрофон»; доки його не надано, записується системний звук."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从设备录音需要“麦克风”权限；在授予之前，录制的是系统音频。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從裝置錄音需要「麥克風」權限；在授予之前，錄製的是系統音訊。"
+          }
+        }
+      }
+    },
     "Recording threshold" : {
       "localizations" : {
         "ar" : {
@@ -110750,6 +111220,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "錄製閾值"
+          }
+        }
+      }
+    },
+    "Recording volume" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مستوى صوت التسجيل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufnahmelautstärke"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volumen de grabación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume d’enregistrement"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रिकॉर्डिंग वॉल्यूम"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume di registrazione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "録音音量"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "녹음 음량"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Głośność nagrywania"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume de Gravação"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Громкость записи"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kayıt ses düzeyi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гучність запису"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "录音音量"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "錄音音量"
           }
         }
       }
@@ -171817,6 +172381,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "登入時"
+          }
+        }
+      }
+    },
+    "Where audio-reactive wallpapers hear sound from. Default is the sound your Mac plays; a microphone or a loopback device such as BlackHole records that input instead." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المصدر الذي تسمع منه الخلفيات المتجاوبة مع الصوت. الافتراضي هو الصوت الذي يشغّله الـ Mac؛ ويسجّل الميكروفون أو جهاز الحلقة الراجعة مثل BlackHole ذلك الإدخال بدلًا منه."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Woher audioreaktive Hintergrundbilder den Ton hören. Standard ist der Ton, den dein Mac abspielt; ein Mikrofon oder ein Loopback-Gerät wie BlackHole nimmt stattdessen diesen Eingang auf."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De dónde oyen el sonido los fondos de pantalla que reaccionan al audio. Por omisión, el sonido que reproduce tu Mac; un micrófono o un dispositivo de bucle como BlackHole graba esa entrada en su lugar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La source du son qu’entendent les fonds d’écran réactifs au son. Par défaut, le son que lit votre Mac ; un micro ou un appareil de bouclage comme BlackHole enregistre plutôt cette entrée."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑडियो पर प्रतिक्रिया देने वाले वॉलपेपर आवाज़ कहाँ से सुनते हैं। डिफ़ॉल्ट वह आवाज़ है जो आपका Mac चलाता है; माइक्रोफ़ोन या BlackHole जैसा लूपबैक डिवाइस उसके बजाय वह इनपुट रिकॉर्ड करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Da dove gli sfondi che reagiscono all’audio sentono il suono. Per impostazione predefinita, il suono riprodotto dal Mac; un microfono o un dispositivo loopback come BlackHole registra invece quell’ingresso."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オーディオに反応する壁紙がどこから音を聞くか。デフォルトは Mac が再生している音です。マイクや BlackHole などのループバックデバイスを選ぶと、その入力を代わりに録音します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오디오에 반응하는 배경화면이 소리를 듣는 곳입니다. 기본값은 Mac에서 재생되는 소리이며, 마이크나 BlackHole 같은 루프백 장치를 선택하면 대신 그 입력을 녹음합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skąd tapety reagujące na dźwięk słyszą dźwięk. Domyślnie jest to dźwięk odtwarzany przez Maca; mikrofon lub urządzenie pętli zwrotnej, takie jak BlackHole, nagrywa zamiast tego swoje wejście."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De onde as imagens de fundo que reagem ao áudio ouvem o som. O padrão é o som que o Mac reproduz; um microfone ou um dispositivo de loopback como o BlackHole grava essa entrada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откуда обои, реагирующие на звук, слышат звук. По умолчанию — звук, который воспроизводит Mac; микрофон или петлевое устройство, например BlackHole, записывает вместо него свой вход."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sese duyarlı duvar kâğıtlarının sesi nereden duyduğu. Varsayılan, Mac’inizin çaldığı sestir; bir mikrofon veya BlackHole gibi bir geri döngü aygıtı onun yerine o girişi kaydeder."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звідки шпалери, що реагують на звук, чують звук. Стандартно — звук, який відтворює Mac; мікрофон або петльовий пристрій, як-от BlackHole, натомість записує свій вхід."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音频响应墙纸从哪里听取声音。默认是 Mac 正在播放的声音；麦克风或 BlackHole 等回环设备会改为录制其输入。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音訊回應背景圖片從哪裡聽取聲音。預設是 Mac 正在播放的聲音；麥克風或 BlackHole 等回送裝置會改為錄製其輸入。"
           }
         }
       }

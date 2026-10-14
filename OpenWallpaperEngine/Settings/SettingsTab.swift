@@ -101,7 +101,8 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
         case .optimizations:
             return [SettingField(\.syncPropertiesAcrossDisplays), SettingField(\.videoFramework),
                     SettingField(\.audioOutput), SettingField(\.reloadWhenChangingOutputDevice),
-                    SettingField(\.audioRecordingThreshold),
+                    SettingField(\.audioRecordingThreshold), SettingField(\.audioRecordingDevice),
+                    SettingField(\.audioRecordingVolume),
                     SettingField(\.mediaIntegration), SettingField(\.processPiority),
                     SettingField(\.pauseOnVRAMExhausted), SettingField(\.restartAfterCrashing),
                     SettingField(\.optimiseTextures), SettingField(\.cheaperShadows),

@@ -450,6 +450,15 @@ struct GlobalSettings: Codable, Equatable {
     // MARK: Misc
     var autoRefresh = true
 
+    // MARK: Audio recording
+    /// WE's "Audio recording device" (`audioinputdevice`, default "default"): nil is WE's default,
+    /// which on macOS is the system output; a device records that input instead
+    /// (`SystemAudioCapture.recordingDevice`).
+    var audioRecordingDevice: AudioInputDevice?
+    /// WE's "Recording volume" (`audioinputvolume`, 0…200, default 50): the spectrum's boost
+    /// (`AudioSpectrumBlockTransform.inputVolume(setting:)`).
+    var audioRecordingVolume: Double = 50
+
     /// The stored keys. `postProcessing`, `reflections` and `antiAliasing` moved to new keys when
     /// the renderer started reading them: the old keys hold values saved while the settings did
     /// nothing (post-processing then defaulted to "disabled", anti-aliasing to MSAA x2), so they
@@ -479,6 +488,7 @@ struct GlobalSettings: Codable, Equatable {
         case audioRecordingThreshold
         case theming
         case browseTransition = "browsetransition"
+        case audioRecordingDevice, audioRecordingVolume
     }
 }
 
@@ -562,6 +572,9 @@ extension GlobalSettings {
         read(.theming, &theming)
         read(.browseTransition, &browseTransition)
         audioRecordingThreshold = min(max(audioRecordingThreshold, 0), 10)
+        read(.audioRecordingDevice, &audioRecordingDevice)
+        read(.audioRecordingVolume, &audioRecordingVolume)
+        audioRecordingVolume = min(max(audioRecordingVolume, 0), 200)
         if fromPoints {
             let migration = decoder.userInfo[.settingsMigration] as? GlobalSettingsMigration
             migrateFromPoints(backingScale: migration?.mainBackingScale ?? 1)
