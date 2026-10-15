@@ -28647,6 +28647,101 @@
         }
       }
     },
+    "Chromium's DevTools list the web wallpapers at %@" : {
+      "comment" : "%@ is a local address, e.g. http://127.0.0.1:9222/",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعرض أدوات المطوّر في Chromium خلفيات الشاشة من نوع الويب على %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Chromium-Entwicklertools listen die Web-Hintergrundbilder unter %@ auf"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las herramientas de desarrollo de Chromium muestran los fondos de pantalla web en %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les outils de développement de Chromium listent les fonds d’écran web à l’adresse %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium के डेवलपर टूल वेब वॉलपेपर को %@ पर दिखाते हैं"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gli strumenti di sviluppo di Chromium elencano gli sfondi web su %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ChromiumのDevToolsは %@ にWeb壁紙を一覧表示します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium 개발자 도구는 %@에서 웹 배경화면을 보여줍니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Narzędzia deweloperskie Chromium wyświetlają tapety internetowe pod adresem %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As ferramentas de desenvolvedor do Chromium listam as imagens de fundo da web em %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Инструменты разработчика Chromium показывают веб-обои по адресу %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium geliştirici araçları web duvar kâğıtlarını %@ adresinde listeler"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інструменти розробника Chromium показують вебшпалери за адресою %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium 开发者工具在 %@ 列出网页墙纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium 開發者工具在 %@ 列出網頁背景圖片"
+          }
+        }
+      }
+    },
     "Circular" : {
       "comment" : "Wallpaper transition",
       "localizations" : {
@@ -38751,6 +38846,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "開發者"
+          }
+        }
+      }
+    },
+    "Developer Tools" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أدوات المطوّر"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entwicklertools"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herramientas para desarrolladores"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outils de développement"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डेवलपर टूल"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strumenti per sviluppatori"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開発ツール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "개발자 도구"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Narzędzia deweloperskie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ferramentas de desenvolvedor"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Инструменты разработчика"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geliştirici Araçları"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інструменти розробника"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开发者工具"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開發者工具"
           }
         }
       }
@@ -70013,6 +70202,100 @@
         }
       }
     },
+    "In Safari, choose Develop, then this Mac, then the wallpaper's page. Turn on “Show features for web developers” in Safari's Advanced settings if there is no Develop menu." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "في Safari، اختر «تطوير» ثم هذا الـ Mac ثم صفحة خلفية الشاشة. شغّل «إظهار ميزات مطوري الويب» في إعدادات Safari المتقدمة إذا لم تظهر قائمة «تطوير»."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle in Safari „Entwickler“, dann diesen Mac und dann die Seite des Hintergrundbilds. Gibt es kein Menü „Entwickler“, aktiviere „Funktionen für Webentwickler anzeigen“ in den erweiterten Einstellungen von Safari."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En Safari, elige Desarrollo, luego este Mac y luego la página del fondo de pantalla. Si no aparece el menú Desarrollo, activa “Mostrar funciones para desarrolladores web” en los ajustes avanzados de Safari."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dans Safari, choisissez Développement, puis ce Mac, puis la page du fond d’écran. S’il n’y a pas de menu Développement, activez « Afficher les fonctionnalités pour les développeurs web » dans les réglages avancés de Safari."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Safari में Develop चुनें, फिर यह Mac, फिर वॉलपेपर का पेज। Develop मेनू न हो तो Safari की Advanced सेटिंग्स में “Show features for web developers” चालू करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Safari, scegli Sviluppo, poi questo Mac, poi la pagina dello sfondo. Se il menu Sviluppo non c’è, attiva “Mostra funzionalità per sviluppatori web” nelle impostazioni avanzate di Safari."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Safariで「開発」、このMac、壁紙のページの順に選びます。「開発」メニューがない場合は、Safariの詳細設定で「Web開発者向け機能を表示」をオンにします。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Safari에서 개발, 이 Mac, 배경화면 페이지 순으로 선택하세요. 개발 메뉴가 없으면 Safari 고급 설정에서 ‘웹 개발자용 기능 보기’를 켜세요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "W Safari wybierz Programowanie, potem ten Mac, a potem stronę tapety. Jeśli nie ma menu Programowanie, włącz „Pokazuj funkcje dla twórców witryn” w zaawansowanych ustawieniach Safari."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Safari, escolha Desenvolvedor, depois este Mac e depois a página da imagem de fundo. Se não houver o menu Desenvolvedor, ative “Mostrar recursos para desenvolvedores web” nos ajustes avançados do Safari."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В Safari выберите «Разработка», затем этот Mac, затем страницу обоев. Если меню «Разработка» нет, включите «Показывать функции для веб-разработчиков» в дополнительных настройках Safari."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Safari’de Geliştir’i, sonra bu Mac’i, sonra duvar kâğıdının sayfasını seçin. Geliştir menüsü yoksa Safari’nin gelişmiş ayarlarında “Web geliştiricileri için özellikleri göster”i açın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У Safari виберіть «Розробка», потім цей Mac, потім сторінку шпалер. Якщо меню «Розробка» немає, увімкніть «Показувати функції для веброзробників» у додаткових параметрах Safari."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Safari 中依次选择“开发”、这台 Mac 和墙纸的页面。如果没有“开发”菜单，请在 Safari 的高级设置中打开“显示网页开发者功能”。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Safari 中依序選擇「開發」、這台 Mac 和背景圖片的頁面。如果沒有「開發」選單，請在 Safari 的進階設定中開啟「顯示網頁開發者功能」。"
+          }
+        }
+      }
+    },
     "In memory" : {
       "localizations" : {
         "ar" : {
@@ -75582,6 +75865,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "讓 MCP 用戶端（例如 AI 助理和自動化工具）透過 Model Context Protocol 控制這台 Mac 上的 Open Wallpaper Engine：列出和設定背景圖片、暫停和繼續、更改音量和使用者屬性、播放播放列表、輸入背景圖片，以及打開編輯器。"
+          }
+        }
+      }
+    },
+    "Lets Safari's Web Inspector attach to web wallpapers and opens Chromium's DevTools to this Mac only (127.0.0.1, port 9222). Web wallpapers in Chromium reload when you switch it. Turns off when Open Wallpaper Engine quits." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتيح لأداة Web Inspector في Safari الاتصال بخلفيات الشاشة من نوع الويب، ويفتح أدوات المطوّر في Chromium لهذا الـ Mac فقط (127.0.0.1، المنفذ 9222). تُعاد تحميل خلفيات الويب في Chromium عند تبديله. يتوقف عند إنهاء Open Wallpaper Engine."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erlaubt dem Web-Inspektor von Safari, sich mit Web-Hintergrundbildern zu verbinden, und öffnet die Chromium-Entwicklertools nur für diesen Mac (127.0.0.1, Port 9222). Web-Hintergrundbilder in Chromium laden beim Umschalten neu. Wird beim Beenden von Open Wallpaper Engine ausgeschaltet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permite que el Inspector web de Safari se conecte a los fondos de pantalla web y abre las herramientas de desarrollo de Chromium solo para este Mac (127.0.0.1, puerto 9222). Los fondos de pantalla web en Chromium se recargan al cambiarlo. Se desactiva al salir de Open Wallpaper Engine."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permet à l’Inspecteur web de Safari de se connecter aux fonds d’écran web et ouvre les outils de développement de Chromium à ce Mac uniquement (127.0.0.1, port 9222). Les fonds d’écran web dans Chromium se rechargent quand vous le changez. Se désactive quand Open Wallpaper Engine se ferme."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Safari के Web Inspector को वेब वॉलपेपर से जुड़ने देता है और Chromium के डेवलपर टूल केवल इस Mac के लिए खोलता है (127.0.0.1, पोर्ट 9222)। इसे बदलने पर Chromium में वेब वॉलपेपर फिर से लोड होते हैं। Open Wallpaper Engine बंद होने पर यह बंद हो जाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consente all’Inspector web di Safari di collegarsi agli sfondi web e apre gli strumenti di sviluppo di Chromium solo a questo Mac (127.0.0.1, porta 9222). Gli sfondi web in Chromium si ricaricano quando lo cambi. Si disattiva alla chiusura di Open Wallpaper Engine."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SafariのWebインスペクタをWeb壁紙に接続できるようにし、ChromiumのDevToolsをこのMacだけに開きます（127.0.0.1、ポート9222）。切り替えるとChromiumのWeb壁紙が再読み込みされます。Open Wallpaper Engineを終了するとオフになります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Safari 웹 속성 보기가 웹 배경화면에 연결되도록 하고, Chromium 개발자 도구를 이 Mac에만 엽니다(127.0.0.1, 포트 9222). 전환하면 Chromium의 웹 배경화면이 다시 로드됩니다. Open Wallpaper Engine을 종료하면 꺼집니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pozwala Inspektorowi WWW w Safari łączyć się z tapetami internetowymi i otwiera narzędzia deweloperskie Chromium tylko dla tego Maca (127.0.0.1, port 9222). Tapety internetowe w Chromium wczytują się ponownie po przełączeniu. Wyłącza się po zamknięciu Open Wallpaper Engine."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permite que o Inspetor Web do Safari se conecte às imagens de fundo da web e abre as ferramentas de desenvolvedor do Chromium somente para este Mac (127.0.0.1, porta 9222). As imagens de fundo da web no Chromium são recarregadas quando você o altera. Desativa ao encerrar o Open Wallpaper Engine."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Позволяет веб-инспектору Safari подключаться к веб-обоям и открывает инструменты разработчика Chromium только для этого Mac (127.0.0.1, порт 9222). При переключении веб-обои в Chromium перезагружаются. Выключается при выходе из Open Wallpaper Engine."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Safari’nin Web Denetçisi’nin web duvar kâğıtlarına bağlanmasına izin verir ve Chromium geliştirici araçlarını yalnızca bu Mac’e açar (127.0.0.1, bağlantı noktası 9222). Değiştirdiğinizde Chromium’daki web duvar kâğıtları yeniden yüklenir. Open Wallpaper Engine’den çıkıldığında kapanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дозволяє вебінспектору Safari підключатися до вебшпалер і відкриває інструменти розробника Chromium лише для цього Mac (127.0.0.1, порт 9222). Під час перемикання вебшпалери в Chromium перезавантажуються. Вимикається, коли ви виходите з Open Wallpaper Engine."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许 Safari 的网页检查器连接网页墙纸，并仅对这台 Mac 打开 Chromium 开发者工具（127.0.0.1，端口 9222）。切换时，Chromium 中的网页墙纸会重新载入。退出 Open Wallpaper Engine 后关闭。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允許 Safari 的網頁檢閱器連接網頁背景圖片，並只對這台 Mac 開啟 Chromium 開發者工具（127.0.0.1，連接埠 9222）。切換時，Chromium 中的網頁背景圖片會重新載入。結束 Open Wallpaper Engine 後關閉。"
           }
         }
       }
@@ -92691,6 +93068,100 @@
         }
       }
     },
+    "No web wallpaper active." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا توجد خلفية شاشة من نوع الويب نشطة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Web-Hintergrundbild aktiv."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay ningún fondo de pantalla web activo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun fond d’écran web actif."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोई वेब वॉलपेपर सक्रिय नहीं है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuno sfondo web attivo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アクティブなWeb壁紙はありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "활성화된 웹 배경화면이 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak aktywnej tapety internetowej."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhuma imagem de fundo da web ativa."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет активных веб-обоев."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etkin web duvar kâğıdı yok."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає активних вебшпалер."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有正在使用的网页墙纸。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有正在使用的網頁背景圖片。"
+          }
+        }
+      }
+    },
     "None" : {
       "localizations" : {
         "ar" : {
@@ -96183,6 +96654,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "全部顯示於 Finder"
+          }
+        }
+      }
+    },
+    "Open Devtools" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح أدوات المطوّر"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entwicklertools öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir herramientas de desarrollo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir les outils de développement"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डेवलपर टूल खोलें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri strumenti di sviluppo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開発ツールを開く"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "개발자 도구 열기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otwórz narzędzia deweloperskie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir ferramentas de desenvolvedor"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть инструменты разработчика"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geliştirici Araçlarını Aç"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити інструменти розробника"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开开发者工具"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打開開發者工具"
           }
         }
       }
@@ -177322,6 +177887,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "網頁引擎"
+          }
+        }
+      }
+    },
+    "Web wallpaper devtools" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أدوات المطوّر لخلفيات الشاشة من نوع الويب"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entwicklertools für Web-Hintergrundbilder"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herramientas de desarrollo para fondos de pantalla web"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outils de développement des fonds d’écran web"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वेब वॉलपेपर के डेवलपर टूल"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strumenti di sviluppo per gli sfondi web"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web壁紙の開発ツール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "웹 배경화면 개발자 도구"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Narzędzia deweloperskie tapet internetowych"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ferramentas de desenvolvedor para imagens de fundo da web"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Инструменты разработчика для веб-обоев"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web duvar kâğıdı geliştirici araçları"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інструменти розробника для вебшпалер"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网页墙纸开发者工具"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "網頁背景圖片開發者工具"
           }
         }
       }

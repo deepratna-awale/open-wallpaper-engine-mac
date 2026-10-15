@@ -180,6 +180,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// The Chromium engine's installer that Settings › Plugins and the screen saver's install
     /// offer share, so an install started from either shows its progress in both.
     lazy var chromiumEngine = ChromiumEngineInstaller()
+    /// Settings › Optimizations › Developer Tools: web wallpaper devtools for this session only.
+    lazy var webDevtools = WebDevtools(chromium: ChromiumBrowserHost.shared)
     /// The live screen saver's broker, a launch agent registered while the Screen Saver plugin is on.
     lazy var screenSaverBroker = ScreenSaverBrokerAgent()
     private var screenSaverBrokerCancellable: AnyCancellable?
