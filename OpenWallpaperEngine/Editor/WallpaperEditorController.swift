@@ -177,6 +177,12 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.commands = commands
         services.document = document
         services.thumbnail = thumbnail
+        // A 3D scene's camera as the canvas's renderer drew its last frame (its own lock).
+        services.sceneCamera = { [weak preview] in
+            guard let preview, let scene = preview.sceneInstances.instance(for: preview.instanceKey(for: preview.selectedScreenId)),
+                  let camera = scene.renderLoop.renderer?.lastPerspectiveCamera else { return nil }
+            return EditorSceneCamera(camera)
+        }
         // In the editor's own process the app's Settings are another process's (`sync`).
         let openSettings: @MainActor (AppSettingsRequest) -> Void = { [sync] request in
             if let sync { sync.openSettings(request) } else { AppDelegate.shared.openSettings(for: request) }

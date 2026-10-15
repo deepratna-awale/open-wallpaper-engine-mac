@@ -69,6 +69,9 @@ public struct WallpaperEditorServices {
     public var openAssetsSetup: () -> Void = {}
     /// Take Snapshot and Record GIF: the library thumbnail made from the canvas; nil leaves them out.
     public var thumbnail: EditorThumbnail?
+    /// A 3D scene's camera as the canvas's renderer drew its last frame, for the 3D gizmo; nil
+    /// in a 2D scene or before the scene has drawn.
+    public var sceneCamera: () -> EditorSceneCamera? = { nil }
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,

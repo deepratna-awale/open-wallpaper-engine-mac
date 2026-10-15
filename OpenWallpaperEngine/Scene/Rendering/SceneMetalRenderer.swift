@@ -403,6 +403,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var editorLive = SceneEditorLive()
     /// `editorLive`'s revision the frame analysis last saw: a live edit redraws an idle scene.
     private var analysedEditorRevision = 0
+    /// A perspective scene's camera as the last frame drew it, for the Wallpaper Editor's 3D gizmo.
+    /// Its lock owns it alone, so the main thread reads it (`lastPerspectiveCamera`) while the
+    /// render thread draws.
+    private let perspectiveCameraLock = NSLock()
+    private var perspectiveCamera: SceneFrameCamera?
+    var lastPerspectiveCamera: SceneFrameCamera? { perspectiveCameraLock.withLock { perspectiveCamera } }
     private var placement: WallpaperPlacement = .fill
     /// Drawable pixels per view point (the backing scale), refreshed every frame.
     private var drawablePixelsPerPoint: Float = 1
@@ -1627,6 +1633,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // WE's camera eye and forward (ctx+0x68, ctx+0x160). An orthographic scene's camera stays
         // still and the objects move by the shake instead (`SceneFrameLightingInput.cameraShake`).
         effectFrame.camera = cameraRig.frameCamera(cameraRigInput(time: sceneTime, motion: motion))
+        if isPerspective { perspectiveCameraLock.withLock { perspectiveCamera = effectFrame.camera } }
         // An orthographic scene is drawn in its camera's drawn space: the zoom and the view a
         // camera layer or path gives it this frame (docs/models-plan.md §5.19).
         if !isPerspective { frameZoom = effectFrame.camera.drawnSpace }
