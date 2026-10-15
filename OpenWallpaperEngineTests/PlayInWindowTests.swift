@@ -80,6 +80,8 @@ final class PlayInWindowTests: XCTestCase {
         controller.open(PlayInWindowRequest(wallpaper: image("Click"), size: .pixels(width: 400, height: 300),
                                             activates: false))
         let window = try XCTUnwrap(controller.windows[PlayInWindowRequest.defaultName])
+        // Above every other app's window, so the point is the test window's.
+        window.level = .floating
         window.orderFrontRegardless()
         let point = CGPoint(x: window.frame.midX, y: window.frame.midY)
         guard NSWindow.windowNumber(at: point, belowWindowWithWindowNumber: 0) == window.windowNumber else {
