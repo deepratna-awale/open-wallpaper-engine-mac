@@ -37,7 +37,7 @@ final class ScenePerspectiveCameraRig: SceneCameraRig {
 
     func frameCamera(_ input: SceneCameraRigInput) -> SceneFrameCamera {
         let layerInput = SceneCameraLayers.FrameInput(deltaTime: input.deltaTime, isVisible: input.isVisible,
-                                                      live: input.live, fov: input.layerFov)
+                                                      live: input.live, fov: input.layerFov, zoom: input.layerZoom)
         var pose: SceneCameraPose
         var fov = input.fov ?? Float(settings.fov)
         if let layer = layers.update(layerInput) {
