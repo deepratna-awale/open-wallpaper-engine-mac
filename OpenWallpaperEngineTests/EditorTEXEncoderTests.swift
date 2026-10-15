@@ -102,7 +102,8 @@ final class EditorTEXEncoderTests: XCTestCase {
     }
 
     func testBlockEncoderKeepsAFlatColourExactly() {
-        let block = [UInt8](repeating: 0, count: 64).enumerated().map { $0.offset % 4 == 3 ? 255 : [255, 0, 0][$0.offset % 4] }
+        let red: [UInt8] = [255, 0, 0, 255]
+        let block: [UInt8] = (0..<64).map { red[$0 % 4] }
         let encoded = BCBlockEncoder.encode(block, width: 4, height: 4, dxt5: false)
         XCTAssertEqual(encoded.count, 8)
         let color0 = UInt16(encoded[0]) | UInt16(encoded[1]) << 8
