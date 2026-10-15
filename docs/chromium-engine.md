@@ -146,6 +146,15 @@ How each part matches the WebKit path:
 - **Input:** wallpaper windows ignore the mouse, so `ChromiumMouseForwarder` watches global and local mouse events like `DesktopClickMonitor` and forwards moves, presses, drags, releases and wheel to the browser (`send_mouse_*_event`) only where they land on the wallpaper (`DesktopClickMonitor.landsOnWallpaper`).
 - **Sound:** CEF plays the page's audio itself; media autoplays without a gesture (`--autoplay-policy=no-user-gesture-required`), as WebKit is configured. Popups are refused.
 
+### DevTools
+
+Wallpaper Engine's *CEF devtools* row (Settings › Advanced, **Open Devtools**; its docs describe a devtools port whose `localhost` page lists the wallpapers) is **Settings › Optimizations › Developer Tools** here (`WebDevtools`, `WebDevtoolsSection`), for both engines:
+
+- Off by default and kept for the session only: it is not a stored setting, so the port never opens on its own after a restart.
+- WebKit: every wallpaper `WKWebView` is `isInspectable` while it is on, so Safari's Develop menu lists the pages under this Mac.
+- Chromium: the helper starts CEF with `remote_debugging_port` 9222 (`--remote-debugging-address=127.0.0.1`, and `--remote-allow-origins` for that port's own origin only, so the frontend CEF serves there can connect). CEF opens the port only as it starts, so switching it lets the running helper go and its pages reopen in a new one (`ChromiumBrowserHost.remoteDebuggingPort`). Only processes on this Mac can reach it. Chrome's chrome://inspect lists 9222 without being told.
+- **Open Devtools** opens `http://127.0.0.1:9222/` (the page list) while a Chromium page plays, else Safari while a WebKit page plays, else says "No web wallpaper active." as Wallpaper Engine does.
+
 Still to do: drive frames from the display link (`send_external_begin_frame`), keyboard input, and installing a new pin in the background.
 
 ## Wallpapers that need Chromium

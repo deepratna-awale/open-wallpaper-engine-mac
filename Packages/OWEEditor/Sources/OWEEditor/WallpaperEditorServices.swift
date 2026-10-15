@@ -67,6 +67,8 @@ public struct WallpaperEditorServices {
     public var hasWEAssets: () -> Bool = { true }
     /// Opens the app's setup of WE's assets (Settings › Assets).
     public var openAssetsSetup: () -> Void = {}
+    /// Take Snapshot and Record GIF: the library thumbnail made from the canvas; nil leaves them out.
+    public var thumbnail: EditorThumbnail?
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,

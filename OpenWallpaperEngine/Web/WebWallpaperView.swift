@@ -33,6 +33,7 @@ struct WebWallpaperView: NSViewRepresentable {
 
         let nsView = WKWebView(frame: .zero, configuration: configuration)
         wallpaperViewModel.webProcessGroup.register(nsView, for: pageURL)
+        AppDelegate.shared.webDevtools.register(nsView)
         nsView.navigationDelegate = viewModel
         viewModel.webView = nsView
         viewModel.applySchedulingPolicy()

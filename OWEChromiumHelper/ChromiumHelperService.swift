@@ -90,7 +90,7 @@ final class ChromiumHelperService: NSObject, ChromiumBrowserHelperProtocol {
     // MARK: Browsers
 
     func initialize(engineBundle: String, cacheDirectory: String, debugNoSandbox: Bool,
-                    reply: @escaping (String?) -> Void) {
+                    remoteDebuggingPort: Int, reply: @escaping (String?) -> Void) {
         guard device != nil else {
             reply("No Metal device")
             return
@@ -121,7 +121,8 @@ final class ChromiumHelperService: NSObject, ChromiumBrowserHelperProtocol {
                 ChromiumHelperService.service(context).resource(browserId: Int(browserId), url: String(cString: url),
                                                range: range.map { String(cString: $0) }, request: request)
             }
-            let status = owe_cef_initialize(engineBundle, cacheDirectory, debugNoSandbox ? 1 : 0, &callbacks,
+            let status = owe_cef_initialize(engineBundle, cacheDirectory, debugNoSandbox ? 1 : 0,
+                                            Int32(clamping: remoteDebuggingPort), &callbacks,
                                             &error, error.count)
             reply(status == 0 ? nil : String(cString: error))
             // Only the first successful call runs the loop; later ones return at once.

@@ -22,6 +22,7 @@ struct DisplayProfilesMenu: View {
                         Button(name) { profiles.load(name: name) }
                     }
                 }
+                ProfileHotKeysMenu(names: profiles.names, hotKeys: AppDelegate.shared.userHotKeys)
                 Menu("Delete Profile") {
                     ForEach(profiles.names, id: \.self) { name in
                         Button(name, role: .destructive) { profiles.delete(name: name) }
