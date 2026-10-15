@@ -464,6 +464,11 @@ struct GlobalSettings: Codable, Equatable {
     /// now-playing sessions wallpapers don't see (`MacMediaSessionSource.setBlocklist`).
     var mediaBlocklist: [String] = []
 
+    // MARK: Video loading
+    /// WE's "Video loading" (`videoreadmode`, default from disk): video wallpapers play from their
+    /// file, or from a copy read into memory once (`VideoFileSource`).
+    var videoReadMode = GSVideoReadMode.fromDisk
+
     /// The stored keys. `postProcessing`, `reflections` and `antiAliasing` moved to new keys when
     /// the renderer started reading them: the old keys hold values saved while the settings did
     /// nothing (post-processing then defaulted to "disabled", anti-aliasing to MSAA x2), so they
@@ -495,6 +500,7 @@ struct GlobalSettings: Codable, Equatable {
         case browseTransition = "browsetransition"
         case audioRecordingDevice, audioRecordingVolume
         case mediaBlocklist
+        case videoReadMode
     }
 }
 
@@ -582,6 +588,7 @@ extension GlobalSettings {
         read(.audioRecordingVolume, &audioRecordingVolume)
         audioRecordingVolume = min(max(audioRecordingVolume, 0), 200)
         read(.mediaBlocklist, &mediaBlocklist)
+        read(.videoReadMode, &videoReadMode)
         if fromPoints {
             let migration = decoder.userInfo[.settingsMigration] as? GlobalSettingsMigration
             migrateFromPoints(backingScale: migration?.mainBackingScale ?? 1)
