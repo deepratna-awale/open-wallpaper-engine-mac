@@ -49,6 +49,14 @@ final class SceneScriptVideoTextureTests: XCTestCase {
         }
     }
 
+    /// WE's `IVideoTexture` doesn't extend `IObject`, so it has no `getAnimation` (lib.sceneScript.d.ts);
+    /// the copy of `IAnimationLayer.getAnimation` it once carried threw a TypeError.
+    func testVideoTextureHasNoGetAnimation() throws {
+        let f = try fixture()
+        XCTAssertEqual(string(f, "typeof thisScene.getLayer('background').getVideoTexture().getAnimation"), "undefined")
+        XCTAssertTrue(f.scriptHost.errors.isEmpty, "\(f.scriptHost.errors)")
+    }
+
     /// The renderer's write of the player's state into the layer's row before a frame.
     private func player(_ f: SceneScriptObjectFixture, time: Float, playing: Bool) throws {
         let slot = try XCTUnwrap(f.model.slot(forObjectID: 1))
