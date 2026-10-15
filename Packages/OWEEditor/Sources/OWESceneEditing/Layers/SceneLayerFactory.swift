@@ -124,9 +124,9 @@ public enum SceneLayerFactory {
     /// The model WE's editor writes into the project for a Solid Placeholder
     /// (`models/solid_instance_model_<hash>.json`): an instanced solid layer whose look is the
     /// layer's own `instance` (combos and textures), so a script or a user texture can replace it.
-    public static let solidPlaceholderModel: [String: Any] = [
-        "instanced": true, "material": "materials/util/solidlayer_instance_4.json", "solidlayer": true,
-    ]
+    public static var solidPlaceholderModel: [String: Any] {
+        ["instanced": true, "material": "materials/util/solidlayer_instance_4.json", "solidlayer": true]
+    }
 
     /// A Solid Placeholder (WE's `replaceablesolidlayer`): a fill of `color` drawn through
     /// `model` (`solidPlaceholderModel`, kept in the project), with the per-layer `instance` WE's
