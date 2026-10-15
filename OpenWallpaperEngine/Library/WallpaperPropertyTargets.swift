@@ -79,12 +79,15 @@ struct WallpaperPropertyTargets {
     }
 
     /// Applies a preset ("Your Presets"): each scope's values become `values`, Scene Edit / Export
-    /// edits included, and a property the preset doesn't name falls back to its default. Returns
+    /// edits included, and a property the preset doesn't name falls back to its default. The keys
+    /// in `keeping` (user shortcuts, which presets leave out) keep each scope's own value. Returns
     /// the shown scope's new values.
     @discardableResult
-    func apply(preset values: [String: String], defaults: UserDefaults = .app,
+    func apply(preset values: [String: String], keeping: Set<String> = [], defaults: UserDefaults = .app,
                publish: (String, [String: String]) -> Void = Self.publishReplacing) -> [String: String] {
-        rewrite(defaults: defaults, publish: publish) { _ in values }
+        rewrite(defaults: defaults, publish: publish) { stored in
+            values.filter { !keeping.contains($0.key) }.merging(stored.filter { keeping.contains($0.key) }) { _, own in own }
+        }
     }
 
     /// Scene Edit / Export's Reset: each scope's inspector edits are dropped, its other

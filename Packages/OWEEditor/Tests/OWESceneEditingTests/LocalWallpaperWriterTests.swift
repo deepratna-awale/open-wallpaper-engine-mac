@@ -46,6 +46,30 @@ final class LocalWallpaperWriterTests: XCTestCase {
         XCTAssertEqual(Set(try snapshot(folder).keys), ["project.json", "scene.json", "preview.jpg", "materials/rain.tex"])
     }
 
+    func testAThumbnailReplacesTheSourcesPreviewInTheCopyOnly() throws {
+        let before = try snapshot(source)
+        let gif = WallpaperThumbnail(kind: .gif, data: Data("GIF89a-new".utf8), side: 256)
+        let folder = try LocalWallpaperWriter().save(.init(directory: source, sceneFile: "scene.json"), scene: Fixtures.sceneData,
+                                                     title: "Animated", into: library, thumbnail: gif)
+        XCTAssertEqual(try snapshot(source), before, "the installed wallpaper keeps its preview")
+        let written = try snapshot(folder)
+        XCTAssertEqual(written["preview.gif"], gif.data)
+        XCTAssertNil(written["preview.jpg"], "the source's preview.jpg, which project.json named, goes")
+        let project = try XCTUnwrap(try JSONSerialization.jsonObject(with: XCTUnwrap(written["project.json"])) as? [String: Any])
+        XCTAssertEqual(project["preview"] as? String, "preview.gif")
+    }
+
+    func testWritingAThumbnailInPlaceNamesItAndKeepsOtherFiles() throws {
+        let still = WallpaperThumbnail(kind: .image, data: Data("jpg-new".utf8), side: 1024)
+        try LocalWallpaperWriter().writeThumbnail(still, into: source)
+        let written = try snapshot(source)
+        XCTAssertEqual(written["preview.jpg"], still.data, "the same name is written over")
+        XCTAssertEqual(written["materials/rain.tex"], Data("tex".utf8))
+        let project = try XCTUnwrap(try JSONSerialization.jsonObject(with: XCTUnwrap(written["project.json"])) as? [String: Any])
+        XCTAssertEqual(project["preview"] as? String, "preview.jpg")
+        XCTAssertEqual(project["workshopid"] as? String, "123456", "nothing else in project.json changes")
+    }
+
     func testWritesANewLocalWallpaperWithTheEdits() throws {
         let before = try snapshot(source)
         var overlay = SceneEditOverlay()

@@ -19,6 +19,13 @@ public enum AppMain {
             exit(status)
         }
 
+        // `--control <command>` (WE's `-control`): a command for the running app, which this
+        // process hands over and exits with its answer (`CommandLineControlCommand`). No Metal,
+        // no app lifecycle, nothing of the running app's taken over.
+        if let status = MainActor.assumeIsolated({ CommandLineControlCommand.run(arguments: ProcessInfo.processInfo.arguments) }) {
+            exit(status)
+        }
+
         // Before any Metal work: the Metal shader cache goes when the shaders changed or Metal's
         // usage database filled up, and this process holds it from now on.
         MetalShaderCacheLaunch.run()

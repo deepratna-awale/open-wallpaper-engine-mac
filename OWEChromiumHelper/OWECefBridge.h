@@ -48,11 +48,14 @@ void owe_cef_prepare_application(void);
 /// Loads the framework from the engine bundle `engine_bundle` (`OWE Chromium.app`, CEF's macOS
 /// app layout: framework and helpers in `Contents/Frameworks`) and starts CEF with its profile in
 /// `cache_dir`, the `owe-wallpaper` scheme registered and its message loop pumped on the main run
-/// loop. `no_sandbox` turns CEF's sandbox off in Debug builds and is ignored otherwise. Main thread
+/// loop. `no_sandbox` turns CEF's sandbox off in Debug builds and is ignored otherwise.
+/// `remote_debugging_port` (1024…65535, else none) opens Chromium's DevTools on 127.0.0.1 at that
+/// port, for the frontend CEF serves there and Chrome's chrome://inspect. Main thread
 /// only. Returns 0 on success (also when CEF already runs), else writes a message into `error`
 /// and returns nonzero. On success the caller runs `owe_cef_run` next, from the same callout.
 int owe_cef_initialize(const char *engine_bundle, const char *cache_dir, int no_sandbox,
-                       const owe_cef_callbacks *callbacks, char *error, size_t error_size);
+                       int remote_debugging_port, const owe_cef_callbacks *callbacks,
+                       char *error, size_t error_size);
 
 /// Runs the main run loop from inside the call that started CEF, until `owe_cef_stop`. Call right
 /// after the first successful `owe_cef_initialize` (or `owe_cef_start`), from the same main-thread
