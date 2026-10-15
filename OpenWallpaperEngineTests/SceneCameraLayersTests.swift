@@ -47,9 +47,9 @@ final class SceneCameraLayersTests: XCTestCase {
     }
 
     private static func input(visible: Set<String>? = nil, live: [String: SceneLocalTransform3D] = [:],
-                              fov: [String: Float] = [:]) -> SceneCameraLayers.FrameInput {
+                              fov: [String: Float] = [:], zoom: [String: Float] = [:]) -> SceneCameraLayers.FrameInput {
         SceneCameraLayers.FrameInput(deltaTime: 0.1, isVisible: { visible?.contains($0) ?? true },
-                                     live: { live[$0] }, fov: { fov[$0] })
+                                     live: { live[$0] }, fov: { fov[$0] }, zoom: { zoom[$0] })
     }
 
     // MARK: - The active layer and its view
@@ -72,6 +72,9 @@ final class SceneCameraLayersTests: XCTestCase {
         XCTAssertNil(layers.update(Self.input(visible: [])))
         // A script's `fov` on the layer.
         XCTAssertEqual(try XCTUnwrap(layers.update(Self.input(fov: ["b": 70]))).fov, 70)
+        // A script's `zoom` (`ICamera.zoom`) on the layer, over its authored 1.
+        XCTAssertEqual(try XCTUnwrap(layers.update(Self.input())).zoom, 1)
+        XCTAssertEqual(try XCTUnwrap(layers.update(Self.input(zoom: ["b": 2.5]))).zoom, 2.5)
         // A script's transform on the layer wins.
         let moved = try XCTUnwrap(layers.update(Self.input(live: ["b": Self.local(origin: SIMD3(1, 1, 1))])))
         Self.assertClose(moved.pose.eye, SIMD3(1, 1, 1))

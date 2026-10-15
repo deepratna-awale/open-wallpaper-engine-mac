@@ -186,6 +186,29 @@ final class SceneRootMotionTests: XCTestCase {
         XCTAssertGreaterThan(travel, 0.1, "the strip lands on the parent's axes, so the root still moves")
     }
 
+    /// `IModelLayer.rootmotion` written by a script: switched off, the model plays as one authored
+    /// without root motion; switched back on, from the next frame as one authored with it.
+    func testRootMotionSwitchesPerFrame() throws {
+        let model = try MDLReader.read(try Self.data(Self.allOn))
+        var switched = try Self.stack(model, rootMotion: true)
+        var plain = try Self.stack(model, rootMotion: false)
+        var rooted = try Self.stack(model, rootMotion: true)
+        var updates = (SceneAnimationLayerUpdate(), SceneAnimationLayerUpdate(), SceneAnimationLayerUpdate())
+        switched.runsRootMotion = false
+        for _ in 0..<40 {
+            let a = switched.evaluate(delta: 1.0 / 30, update: &updates.0)
+            let b = plain.evaluate(delta: 1.0 / 30, update: &updates.1)
+            _ = rooted.evaluate(delta: 1.0 / 30, update: &updates.2)
+            XCTAssertLessThan(simd_distance(a[2].translation, b[2].translation), 1e-6)
+        }
+        switched.runsRootMotion = true
+        let a = switched.evaluate(delta: 1.0 / 30, update: &updates.0)
+        let b = plain.evaluate(delta: 1.0 / 30, update: &updates.1)
+        let c = rooted.evaluate(delta: 1.0 / 30, update: &updates.2)
+        XCTAssertLessThan(simd_distance(a[2].translation, c[2].translation), 1e-6, "on again: as authored with it")
+        XCTAssertGreaterThan(simd_distance(a[2].translation, b[2].translation), 1e-3, "root motion moves the root")
+    }
+
     /// The box's path through a loop, played as the capture's project plays it (layer on clip 26,
     /// model scale 0.01, camera 8 6 8 → 0 1 0, fov 50, 1920×1080), against WE's MG4 captures, with
     /// the object never moved by root motion. All off is the root bone with no axis, the same
