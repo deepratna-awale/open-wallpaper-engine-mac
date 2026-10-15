@@ -21,6 +21,8 @@ enum SceneGeneralValueField: String, CaseIterable {
     case fogdistance, fogheight, fogdistancecolor, fogheightcolor
     case fogdistancestart, fogdistanceend, fogdistancestartdensity, fogdistanceenddensity
     case fogheightstart, fogheightend, fogheightstartdensity, fogheightenddensity
+    /// The scene-wide gravity and wind (`ScenePhysicsSettings`).
+    case gravitydirection, gravitystrength, windenabled, winddirection, windstrength
 }
 
 /// Fields any scene object may author that decide how it draws in a 3D scene
