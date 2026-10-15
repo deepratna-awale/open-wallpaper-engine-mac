@@ -83,6 +83,8 @@ final class SceneModelRenderer: SceneModelDrawing {
 
     /// Meshes drawn and models culled, for tests and diagnostics.
     private(set) var drawsEncoded = 0
+    /// Instances those draws drew (`ModelMaterialPlan.instanceCount`).
+    private(set) var instancesEncoded = 0
     private(set) var modelsCulled = 0
     /// Meshes drawn per model object, and the model objects culled, since the content was set
     /// (tests, diagnostics).
@@ -228,10 +230,14 @@ final class SceneModelRenderer: SceneModelDrawing {
             if program.size > 0 {
                 program.bytes.withUnsafeBytes { raw in uniformArena.bind(raw, index: 0, to: encoder, commandBuffer: commandBuffer) }
             }
+            // Every instance in one draw, as WE's `INSTANCECOUNT` shaders read them (`fur4`'s shells,
+            // `gl_InstanceID` 0 the mesh itself, the last pushed out by the fur distance).
             encoder.drawIndexedPrimitives(type: .triangle, indexCount: indexCount(of: mesh, in: plan),
                                           indexType: mesh.usesUInt32Indices ? .uint32 : .uint16,
-                                          indexBuffer: buffers.indices, indexBufferOffset: 0)
+                                          indexBuffer: buffers.indices, indexBufferOffset: 0,
+                                          instanceCount: mesh.material.instanceCount)
             drawsEncoded += 1
+            instancesEncoded += mesh.material.instanceCount
             meshDraws[model.id, default: 0] += 1
             drew = true
         }
