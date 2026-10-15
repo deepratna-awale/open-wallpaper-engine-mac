@@ -30,6 +30,8 @@ struct WESceneObject: Decodable {
     /// Dynamic screen anchor: none, center, top, topright, …
     var anchor: String?
     var blockalign: Bool?
+    /// `spacing` (WE 2.8's letter spacing), "x y" or one number for both.
+    var spacing: String?
     /// `outline`, `blur`, `dropshadow` and their values (`msdf` too).
     var textEffects = WETextEffectFields()
 
@@ -94,7 +96,7 @@ struct WESceneObject: Decodable {
 
     enum CodingKeys: String, CodingKey {
         case id, parent, name, origin, scale, angles, visible, effects, text, font, pointsize, horizontalalign, verticalalign
-        case padding, maxwidth, maxrows, limitwidth, limitrows, limituseellipsis, anchor, blockalign
+        case padding, maxwidth, maxrows, limitwidth, limitrows, limituseellipsis, anchor, blockalign, spacing
         case image, alpha, brightness, color, colorBlendMode, clampuvs, size, alignment, shape
         case solid, disablepropagation, copybackground, parallaxDepth, perspective
         case particle, instanceoverride, instance, sound, light
@@ -172,6 +174,7 @@ struct WESceneObject: Decodable {
         limituseellipsis = literal(.limituseellipsis)?.literalBool
         anchor = literal(.anchor)?.literalString
         blockalign = literal(.blockalign)?.literalBool
+        spacing = literal(.spacing)?.literalString
         // Optional: each field is read on its own, and an object without them has none.
         textEffects = (try? WETextEffectFields(from: decoder)) ?? WETextEffectFields()
 

@@ -1475,6 +1475,10 @@ class SceneWallpaperViewModel: ObservableObject {
         textConfig.maxWidthValue = Float(object.maxwidth ?? WETextDefaults.maxWidth)
         textConfig.maxRowsValue = object.maxrows ?? WETextDefaults.maxRows
         textConfig.fonts = textFontLoader()
+        let spacingParts = (object.spacing ?? "").split(separator: " ").compactMap { Float($0) }
+        if let first = spacingParts.first {
+            textConfig.spacing = SIMD2(first, spacingParts.count > 1 ? spacingParts[1] : first)
+        }
         var layer = SceneMetalLayer(id: String(id), name: object.name ?? String(id),
                                source: .image(transparentPlaceholderImage),
                                position: localOrigin(for: object),

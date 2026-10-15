@@ -213,11 +213,14 @@ struct SceneMetalText {
     /// Loads a font a script names (`thisLayer.font`) that the scene didn't; nil keeps the
     /// fonts the scene registered.
     var fonts: SceneTextFontLoader? = nil
+    /// `spacing` (WE 2.8's letter spacing): added to each glyph's advance (x) and to the line
+    /// height (y), in scene units (`SceneTextLayout`).
+    var spacing = WETextDefaults.spacing
 
     /// Everything but `value` and `pointSize` that changes the laid-out raster, for the text cache.
     var layoutKey: String {
         "\(font ?? "")|\(horizontalAlignment ?? "")|\(verticalAlignment ?? "")|\(padding.x),\(padding.y)"
-            + "|\(maxWidth.map { "\($0)" } ?? "")|\(maxRows.map { "\($0)" } ?? "")|\(useEllipsis)|\(blockAlign)"
+            + "|\(maxWidth.map { "\($0)" } ?? "")|\(maxRows.map { "\($0)" } ?? "")|\(useEllipsis)|\(blockAlign)|\(spacing.x),\(spacing.y)"
     }
 }
 
