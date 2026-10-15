@@ -152,6 +152,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }()
     /// Play in Window: wallpapers in windows of their own beside the desktop (`App/PlayInWindow`).
     lazy var playInWindow = PlayInWindowController(desktop: wallpaperViewModel)
+    /// Wallpaper Engine's command line: `--control` commands from the app's executable
+    /// (`App/Launch/CommandLineControlCommand`, docs/command-line.md) run here.
+    private lazy var commandLineControl = CommandLineControlListener { [unowned self] request in
+        CommandLineControlPerformer(app: self, control: AppControlModel(app: self)).perform(request)
+    }
     /// The wallpaper windows sit above the desktop icons, hiding them (`toggleDesktopIcons`).
     var hidesDesktopIcons = false
     lazy var crashWatcher = CrashWatcher()
@@ -546,6 +551,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         // MCP clients connect once the app is set up, while the MCP Server plugin is installed.
         mcpServerPlugin.start()
+        // And the command line's `--control` commands.
+        commandLineControl.start()
 
         // Theming: puts back what a crashed session changed, then follows the wallpaper's colour.
         DesktopPictureTheming.provider = { [unowned self] in theming.strips }
