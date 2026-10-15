@@ -107,6 +107,7 @@ groups:
     - "UpdateShaderPrewarmer*"
   script:
     - "SceneScript*"
+    - "UserShortcut*"
     - "ModelScript*"
     - "UniformScript*"
     - "WECursorCapture*"
@@ -149,11 +150,11 @@ map:
   "OpenWallpaperEngine/Scene/Sound/**": ["@audio"]
   "OpenWallpaperEngine/Scene/Rendering/**": ["@scene"]
   "OpenWallpaperEngine/Scene/Shaders/**": ["@scene"]
-  "OpenWallpaperEngine/Scene/Format/**": ["@scene", "@script", "MobilePackage*", "MobileFormat*", "DepthMask*"]
+  "OpenWallpaperEngine/Scene/Format/**": ["@scene", "@script", "WallpaperAuthorLocalization*", "MobilePackage*", "MobileFormat*", "DepthMask*"]
   "OpenWallpaperEngine/Scene/Loading/**": ["@scene", "@script", "@audio"]
   "OpenWallpaperEngine/Scene/Values/**": ["@scene", "@script"]
   "OpenWallpaperEngine/Scene/Prewarm/**": ["Shader*", "UpdateShaderPrewarmer*"]
-  "OpenWallpaperEngine/Scene/UI/**": ["Scene*", "UserProperty*", "WallpaperProperty*", "NumericSlider*", "LivePhoto*", "ScreenSaver*"]
+  "OpenWallpaperEngine/Scene/UI/**": ["Scene*", "UserProperty*", "WallpaperProperty*", "WallpaperAuthorLocalization*", "WallpaperEngineLabels*", "NumericSlider*", "LivePhoto*", "ScreenSaver*"]
   "OpenWallpaperEngine/LivePhoto/**": ["LivePhoto*", "AndroidExport*", "SceneEditorExport*"]
   "OpenWallpaperEngine/AndroidExport/**": ["AndroidExport*", "AndroidWiFi*", "MobilePackage*", "MobileFormat*", "MCPSystem*", "SceneEditorExport*"]
   "OpenWallpaperEngine/Web/**": ["Web*", "ChromiumWebWallpaper*", "UserPropertyHTML*", "WallpaperProperty*", "Display*"]

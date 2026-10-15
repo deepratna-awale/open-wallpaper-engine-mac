@@ -251,7 +251,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             storage: SceneScriptStorage(directory: SceneScriptStorage.defaultDirectory),
             media: mediaSession,
             spectrum: { WallpaperServices.shared.audioSpectrumSnapshot },
-            clicks: clicks)
+            clicks: clicks,
+            userShortcuts: UserShortcutLauncher(opener: WorkspaceUserShortcutOpener(),
+                                                systemHash: UserShortcutSystemHash.current()))
     }()
     /// The Wallpaper Engine assets scenes need, from the user's own Steam copy (Settings › Assets).
     lazy var assets = WallpaperEngineAssetsService(steamCmd: contentViewModel.steamCmd)
