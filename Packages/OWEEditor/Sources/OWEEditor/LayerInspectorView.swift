@@ -48,6 +48,9 @@ private struct LayerForm: View {
             if layer.kind != .sound && !layer.fillsScene {
                 transformSection
             }
+            if layer.kind == .sound {
+                LayerSoundSection(session: session, services: services, layer: layer)
+            }
             if layer.kind == .text {
                 LayerTextSection(session: session, tools: tools, services: services, layer: layer)
             }
