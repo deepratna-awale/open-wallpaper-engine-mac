@@ -4,8 +4,9 @@ import simd
 /// which objects' scripts get which cursor callbacks. One per wallpaper instance; the state is the
 /// set of objects under the cursor, the set pressed, and last frame's cursor and button.
 ///
-/// The pass walks the layers from the top of the draw order down, skipping objects that aren't
-/// solid, and hit tests each (`SceneScriptCursorHitTest`). For each object, all of its events come before
+/// The pass walks the layers from the top of the draw order down (a perspective scene: nearest
+/// first, `SceneScriptCursorFrame.visitOrder`), skipping objects that aren't solid, and hit tests
+/// each against the frame's ray (`SceneScriptCursorHitTest`). For each object, all of its events come before
 /// the next object's:
 /// - **Dragging** (objects were pressed before this frame and the button is still down): only the
 ///   pressed objects get `cursorMove`, when the cursor moved, hit or not. No enter, leave or other
@@ -44,10 +45,11 @@ struct SceneScriptCursorPass {
         let changed = down != previousLeftButtonDown
         let dragging = !pressed.isEmpty && down
 
+        let ray = frame.cursorRay
         var events: [SceneScriptCursorEvent] = []
-        for layer in frame.layers.reversed() where layer.isSolid {
-            let hit = SceneScriptCursorHitTest.test(layer, cursor: cursor, offset: frame.parallaxOffset(of: layer))
-            let local = SIMD3(hit.localPosition.x, hit.localPosition.y, 0)
+        for layer in frame.visitOrder where layer.isSolid {
+            let hit = SceneScriptCursorHitTest.test(layer, ray: ray, offset: frame.parallaxOffset(of: layer))
+            let local = hit.localPosition
             func emit(_ callback: SceneScriptCursorEvent.Callback) {
                 events.append(SceneScriptCursorEvent(callback: callback, slot: layer.slot, worldPosition: world, localPosition: local))
             }

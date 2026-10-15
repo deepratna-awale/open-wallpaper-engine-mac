@@ -54,4 +54,6 @@ struct SceneScriptObjectDescription {
     var initialConfigurationJSON: String?
     /// A Puppet Warp image's rig (bones, clips, animation layers, attachments).
     var rig: SceneScriptRigDescription?
+    /// What the cursor pass tests a model with, beyond its world matrix.
+    var cursorShape: SceneScriptCursorShape?
 }
