@@ -25,6 +25,8 @@ final class EditorTools: ObservableObject {
     var externalEditor: ExternalImageEditor?
     /// A message for the window's banner (an import that failed, say).
     @Published var problem: String?
+    /// Images waiting for the importer's options (`ImportOptionsSheet`).
+    @Published var pendingImport: PendingImageImport?
 
     /// Canvas points within which a drag snaps.
     static let snapDistance: Double = 6
@@ -38,7 +40,9 @@ enum EditorFilePicker {
 
         var allowedExtensions: [String] {
             switch self {
-            case .image, .mask: return ["png", "jpg", "jpeg", "gif", "tif", "tiff", "bmp", "heic", "webp", "psd", "tga"]
+            case .image: return ["png", "jpg", "jpeg", "gif", "tif", "tiff", "bmp", "heic", "webp", "psd", "tga"]
+                + EditorAssetStore.videoTypes.sorted()
+            case .mask: return ["png", "jpg", "jpeg", "gif", "tif", "tiff", "bmp", "heic", "webp", "psd", "tga"]
             case .sound: return EditorAssetStore.soundTypes.sorted()
             case .font: return EditorAssetStore.fontTypes.sorted()
             }
@@ -55,4 +59,12 @@ enum EditorFilePicker {
         guard panel.runModal() == .OK else { return [] }
         return panel.urls
     }
+}
+
+/// Images chosen or dropped for new image layers, waiting for the importer's options.
+struct PendingImageImport: Identifiable {
+    let id = UUID()
+    var urls: [URL]
+    /// Where on the scene they were dropped; nil for its centre.
+    var point: SIMD2<Double>?
 }

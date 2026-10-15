@@ -1,4 +1,5 @@
 import Foundation
+import simd
 
 /// The scene.json objects of the layers WE's editor adds, with the fields its new layers carry
 /// (as WE's own scenes write them: `models/util/*.json` for solid, composition and fullscreen
@@ -107,6 +108,114 @@ public enum SceneLayerFactory {
             "parallaxDepth": .string("1 1"),
             "visible": .bool(true),
         ]
+    }
+
+    /// The scene drawn so far under the whole wallpaper as its image (`models/util/projectlayer.json`,
+    /// WE's Full Composition Layer, offered for 2D scenes only): it covers the scene, so it has the
+    /// scene's size, and WE's scenes give it no parallax and no shadow.
+    public static func fullComposition(name: String, size: SIMD2<Double>, origin: SIMD2<Double>) -> [String: SceneJSONValue] {
+        var object = planar(name: name, origin: origin, size: size)
+        object["image"] = .string("models/util/projectlayer.json")
+        object["parallaxDepth"] = .string("0 0")
+        object["castshadow"] = .bool(false)
+        return object
+    }
+
+    /// The model WE's editor writes into the project for a Solid Placeholder
+    /// (`models/solid_instance_model_<hash>.json`): an instanced solid layer whose look is the
+    /// layer's own `instance` (combos and textures), so a script or a user texture can replace it.
+    public static var solidPlaceholderModel: [String: Any] {
+        ["instanced": true, "material": "materials/util/solidlayer_instance_4.json", "solidlayer": true]
+    }
+
+    /// A Solid Placeholder (WE's `replaceablesolidlayer`): a fill of `color` drawn through
+    /// `model` (`solidPlaceholderModel`, kept in the project), with the per-layer `instance` WE's
+    /// scenes give one (`util/white`, combo `version` 2).
+    public static func solidPlaceholder(name: String, model: String, color: SIMD3<Double>, size: SIMD2<Double>,
+                                        origin: SIMD2<Double>) -> [String: SceneJSONValue] {
+        var object = planar(name: name, origin: origin, size: size)
+        object["image"] = .string(model)
+        object["color"] = SceneVector.value([color.x, color.y, color.z])
+        object["instance"] = .object([
+            "combos": .object(["version": .number(2)]),
+            "textures": .array([.string("util/white")]),
+        ])
+        return object
+    }
+
+    /// A 3D model layer drawing `model` (`models/…/….mdl`).
+    public static func model(name: String, model: String, origin: SIMD3<Double>) -> [String: SceneJSONValue] {
+        [
+            "name": .string(name),
+            "model": .string(model),
+            "origin": SceneVector.value([origin.x, origin.y, origin.z]),
+            "scale": .string("1 1 1"),
+            "angles": .string("0 0 0"),
+            "parallaxDepth": .string("1 1"),
+            "visible": .bool(true),
+        ]
+    }
+
+    /// WE's light types (the `light` key; the inspector's Type).
+    public enum LightKind: String, CaseIterable, Sendable {
+        case point = "lpoint", spot = "lspot", tube = "ltube", directional = "ldirectional"
+    }
+
+    /// A light as WE's editor adds one (`wallpaperui.exe` 0x1400a2efb…0x1400a3454,
+    /// docs/lighting-plan.md): in a 2D scene radius 500 and intensity 10, at the view's centre
+    /// raised to z 250; in a 3D scene radius 5 and intensity 5, at the camera's centre. WE adds a
+    /// point light and its inspector changes the type; `kind` is that choice made at once.
+    public static func light(name: String, kind: LightKind = .point, color: SIMD3<Double> = SIMD3(1, 1, 1),
+                             is2D: Bool, centre: SIMD3<Double>) -> [String: SceneJSONValue] {
+        let origin = is2D ? SIMD3(centre.x, centre.y, 250) : centre
+        return [
+            "name": .string(name),
+            "light": .string(kind.rawValue),
+            "color": SceneVector.value([color.x, color.y, color.z]),
+            "intensity": .number(is2D ? 10 : 5),
+            "radius": .number(is2D ? 500 : 5),
+            "origin": SceneVector.value([origin.x, origin.y, origin.z]),
+            "scale": .string("1 1 1"),
+            "angles": .string("0 0 0"),
+            "parallaxDepth": .string("0 0"),
+            "visible": .bool(true),
+        ]
+    }
+
+    /// A camera layer (`"camera": "default"`) framing what the scene's camera (`camera` of
+    /// scene.json: eye, centre, up) frames now, so adding one doesn't move the view: at the eye,
+    /// turned as `lookAt(eye, centre, up)` (WE's write-back of a camera path, 0x1401f31f2), with
+    /// the scene's `fov`. It authors `visible`, without which WE plays no camera path on it.
+    public static func camera(name: String, eye: SIMD3<Double>, centre: SIMD3<Double>, up: SIMD3<Double>,
+                              fov: Double) -> [String: SceneJSONValue] {
+        let angles = lookAtAngles(eye: eye, centre: centre, up: up)
+        return [
+            "name": .string(name),
+            "camera": .string("default"),
+            "origin": SceneVector.value([eye.x, eye.y, eye.z]),
+            "angles": SceneVector.value([angles.x, angles.y, angles.z]),
+            "scale": .string("1 1 1"),
+            "fov": .number(fov),
+            "zoom": .number(1),
+            "visible": .bool(true),
+        ]
+    }
+
+    /// The angles (radians, WE's `R = Rz·Ry·Rx`) of an object at `eye` looking at `centre`:
+    /// `lookAtRH`'s basis as rows (side, up, −forward), taken apart as WE does (0x1401f31f7).
+    static func lookAtAngles(eye: SIMD3<Double>, centre: SIMD3<Double>, up: SIMD3<Double>) -> SIMD3<Double> {
+        let toward = centre - eye
+        guard simd_length(toward) > 0 else { return .zero }
+        let forward = simd_normalize(toward)
+        var side = simd_cross(forward, up)
+        if simd_length(side) == 0 { side = simd_cross(forward, SIMD3(0, 0, 1)) }
+        side = simd_normalize(side)
+        let trueUp = simd_cross(side, forward)
+        let row0 = side, row1 = trueUp, row2 = -forward
+        let z = atan2(row0.y, row0.x)
+        let y = atan2(-row0.z, (row1.z * row1.z + row2.z * row2.z).squareRoot())
+        let x = atan2(row2.x * sin(z) - row2.y * cos(z), row1.y * cos(z) - row1.x * sin(z))
+        return SIMD3(x, y, z)
     }
 
     // MARK: Text scripts

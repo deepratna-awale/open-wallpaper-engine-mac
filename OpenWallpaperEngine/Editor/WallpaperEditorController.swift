@@ -167,11 +167,14 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.effectCatalog = { resources.effectCatalog(outline: session.authored) }
         services.effectSchema = { resources.effectSchema($0) }
         services.prepareEffect = { try resources.prepareEffect($0) }
-        services.assetStore = resources.assets
+        // Imports that aren't kept as PNG or JPEG are written as `.tex` files by the app's writer.
+        services.assetStore = { var store = resources.assets; store.encoder = EditorTEXEncoder(); return store }()
         services.wallpaperAssets = { resources.wallpaperAssets() }
         services.texture = { resources.texture($0) }
         services.fonts = { resources.fonts() }
         services.userPropertyChoices = { resources.userPropertyChoices() }
+        services.models = { resources.modelChoices() }
+        services.layerPresets = { resources.layerPresets(labels: labels) }
         services.timeline = timeline
         services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
         services.commands = commands

@@ -11,7 +11,7 @@ final class EditorWallpaperResources {
     let wallpaper: WEWallpaper
     let assets: EditorAssetStore
     private let labels: WallpaperEngineLabels
-    private let package: PKGParser?
+    let package: PKGParser?
     private var schemas: [String: EffectSchema?] = [:]
     private var textures: [String: CGImage?] = [:]
     private var catalog: [EffectCatalogEntry]?
