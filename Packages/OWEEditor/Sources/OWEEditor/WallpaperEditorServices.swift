@@ -69,6 +69,11 @@ public struct WallpaperEditorServices {
     public var openAssetsSetup: () -> Void = {}
     /// Take Snapshot and Record GIF: the library thumbnail made from the canvas; nil leaves them out.
     public var thumbnail: EditorThumbnail?
+    /// The 3D models Add Layer › Model offers (`models/…/….mdl`): the wallpaper's own, then WE's.
+    public var models: () -> [EditorModelChoice] = { [] }
+    /// WE's presets that add other layers than particle systems (Clock, Countdown, Light Shafts),
+    /// for Add Layer › Preset; empty without WE's assets.
+    public var layerPresets: () -> [ParticlePreset] = { [] }
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,
@@ -163,4 +168,21 @@ public struct EditorUserPropertyChoice: Hashable, Identifiable, Sendable {
         self.title = title
         self.type = type
     }
+}
+
+/// A 3D model Add Layer › Model can draw.
+public struct EditorModelChoice: Hashable, Identifiable, Sendable {
+    /// Its path in the scene (`models/tree/tree.mdl`), the layer's `model`.
+    public var path: String
+    /// From WE's assets rather than the wallpaper.
+    public var isShared: Bool
+    public var id: String { path }
+
+    public init(path: String, isShared: Bool) {
+        self.path = path
+        self.isShared = isShared
+    }
+
+    /// The file's name without its extension, for the layer's name.
+    public var title: String { ((path as NSString).lastPathComponent as NSString).deletingPathExtension }
 }

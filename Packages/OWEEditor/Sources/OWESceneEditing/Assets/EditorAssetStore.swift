@@ -186,9 +186,15 @@ public struct EditorAssetStore: Sendable {
         try data.write(to: url, options: .atomic)
     }
 
+    /// The first `bytes` bytes of the content's SHA-256, in hex: the part of a file's name that
+    /// names its content.
+    public static func contentHash(_ data: Data, bytes: Int) -> String {
+        SHA256.hash(data: data).prefix(bytes).map { String(format: "%02x", $0) }.joined()
+    }
+
     /// `<title>-<hash>`: the title kept readable (letters, digits, `-`, `_`), the hash naming the content.
     static func assetName(_ title: String, data: Data) -> String {
-        let hash = SHA256.hash(data: data).prefix(6).map { String(format: "%02x", $0) }.joined()
+        let hash = contentHash(data, bytes: 6)
         let cleaned = title.unicodeScalars.map { CharacterSet.alphanumerics.contains($0) || $0 == "-" || $0 == "_" ? Character($0) : "_" }
         var base = String(cleaned).trimmingCharacters(in: CharacterSet(charactersIn: "_"))
         if base.isEmpty { base = "asset" }
