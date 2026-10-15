@@ -722,6 +722,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                             clearColor: scene.general.clearColor(in: valueContext),
                                             wallpaperKey: propertyStoreKey)
             content.general = scene.general
+            content.clearEnabled = scene.general.clearEnabled(in: valueContext)
             content.motions = objectMotions(scene.objects, besides: layers, context: valueContext)
             content.visibility = visibility
             content.userVisibility = SceneUserVisibility(objects: scene.objects)
