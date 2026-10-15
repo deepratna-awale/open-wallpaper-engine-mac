@@ -131,12 +131,14 @@ final class SceneEditorExportTests: XCTestCase {
     // MARK: Library entry points
 
     /// The library, its menus and the Details panel no longer export: every export is in the
-    /// Scene Edit / Export. The sheet that did is gone.
+    /// Scene Edit / Export. The sheet that did is gone. The Installed tab only shows the Android
+    /// Export mode's batch picker (`AndroidBatchPicker`); it never starts one itself.
     func testTheLibraryHasNoExportEntryPoints() throws {
         let source = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .appending(path: "OpenWallpaperEngine", directoryHint: .isDirectory)
         let banned = ["AndroidExportSheet", "AndroidExportModel(", "AndroidExportSelection", "Export for Android",
-                      "LivePhotoExportModel(", "mode: .deviceExport", "mode: .androidExport", "androidExport ="]
+                      "LivePhotoExportModel(", "mode: .deviceExport", "mode: .androidExport", "androidExport =",
+                      "AndroidBatchPicker(model", "beginAndroidBatchPicking(", "chooseMoreWallpapers(", "exportMore("]
         var found: [String] = []
         for folder in ["UI", "Library", "App/Menus"] {
             let enumerator = try XCTUnwrap(FileManager.default.enumerator(at: source.appending(path: folder), includingPropertiesForKeys: nil))
@@ -146,7 +148,8 @@ final class SceneEditorExportTests: XCTestCase {
             }
         }
         XCTAssertEqual(found, [], "export entry points left in the library")
-        for removed in ["AndroidExport/AndroidExportSheet.swift", "AndroidExport/AndroidExportModel.swift"] {
+        for removed in ["AndroidExport/AndroidExportSheet.swift", "AndroidExport/AndroidExportModel.swift",
+                        "AndroidExport/Editor/AndroidBatchExportSheet.swift"] {
             XCTAssertFalse(FileManager.default.fileExists(atPath: source.appending(path: removed).path(percentEncoded: false)), removed)
         }
     }

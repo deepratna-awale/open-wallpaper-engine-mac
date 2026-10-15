@@ -6,8 +6,34 @@ import Security
 /// Items are this-device-only and never synced through iCloud. The data protection keychain is
 /// tried first; a build without a keychain entitlement (ad-hoc or unsigned, as in CI) gets
 /// `errSecMissingEntitlement` there and falls back to the login keychain.
+///
+/// An isolated copy (the test host, a copy started with `OWE_ISOLATED_STATE`) keeps its items in
+/// memory instead (`Backend.processDefault`) and never calls the Security framework: a keychain
+/// prompt there blocked whole test runs, and its items would otherwise sit in the login keychain.
 struct KeychainStore: KeychainStoring {
+    /// Where the items live.
+    enum Backend: Sendable {
+        /// The keychain.
+        case system
+        /// This process's memory.
+        case memory(InMemoryKeychain)
+
+        /// The keychain for the user's real state, memory for an isolated copy.
+        static func `for`(_ location: AppStorageLocation) -> Backend {
+            location.isIsolated ? .memory(.shared) : .system
+        }
+
+        /// This process's backend, chosen once from its store.
+        static let processDefault = Backend.for(.current)
+    }
+
     let service: String
+    let backend: Backend
+
+    init(service: String, backend: Backend = .processDefault) {
+        self.service = service
+        self.backend = backend
+    }
 
     struct Failure: Error, CustomStringConvertible {
         let operation: String
@@ -21,6 +47,7 @@ struct KeychainStore: KeychainStoring {
 
     /// The value stored for `account`, or `nil` when there is none.
     func string(forAccount account: String) throws -> String? {
+        if case .memory(let memory) = backend { return memory.string(service: service, account: account) }
         var query = baseQuery(account: account)
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
@@ -47,6 +74,7 @@ struct KeychainStore: KeychainStoring {
 
     /// Stores `value` for `account`, replacing any existing value.
     func set(_ value: String, forAccount account: String) throws {
+        if case .memory(let memory) = backend { return memory.set(value, service: service, account: account) }
         let data = Data(value.utf8)
         var status = write(data, query: baseQuery(account: account))
         if status == errSecMissingEntitlement {
@@ -59,6 +87,7 @@ struct KeychainStore: KeychainStoring {
 
     /// Deletes the value for `account` from both keychains. Deleting a missing value succeeds.
     func removeValue(forAccount account: String) throws {
+        if case .memory(let memory) = backend { return memory.removeValue(service: service, account: account) }
         var query = baseQuery(account: account)
         for usesDataProtection in [true, false] {
             query[kSecUseDataProtectionKeychain as String] = usesDataProtection

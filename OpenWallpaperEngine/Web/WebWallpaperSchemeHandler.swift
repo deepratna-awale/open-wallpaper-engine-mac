@@ -27,6 +27,8 @@ final class WebWallpaperSchemeHandler: NSObject, WKURLSchemeHandler {
     /// when the wallpaper changes.
     var directory: URL?
     var patches = WebCompatPatches(actions: [])
+    /// The files outside the folder the page's `file` and `directory` properties let it read.
+    var userFiles: WebUserFiles?
 
     static func url(forRelativePath path: String) -> URL? {
         var components = URLComponents()
@@ -96,8 +98,20 @@ final class WebWallpaperSchemeHandler: NSObject, WKURLSchemeHandler {
         Reply(status: 404, headers: ["Access-Control-Allow-Origin": "*"], body: .data(Data()))
     }
 
-    /// The reply to `request` from the wallpaper in `directory`, with `patches` applied.
-    static func reply(to request: URLRequest, directory: URL?, patches: WebCompatPatches) -> Reply {
+    /// The reply to `request` from the wallpaper in `directory`, with `patches` applied, or from
+    /// the user's files (`WebUserFiles.pathPrefix`) that `userFiles` allows.
+    static func reply(to request: URLRequest, directory: URL?, patches: WebCompatPatches,
+                      userFiles: WebUserFiles? = nil) -> Reply {
+        if let requestURL = request.url {
+            let relative = WebCompatPatches.normalize(requestURL.path(percentEncoded: false))
+            if relative.hasPrefix(WebUserFiles.pathPrefix + "/") {
+                guard let file = userFiles?.file(forServedPath: relative) else {
+                    OWELog.debug(.web, "Web wallpaper request for a file the user didn't choose refused")
+                    return notFound()
+                }
+                return userFileReply(file, request: request)
+            }
+        }
         // Pages probe for optional files; a miss is reported to the page as a 404.
         guard let requestURL = request.url, let directory,
               let target = fileURL(for: requestURL, in: directory) else {
@@ -136,6 +150,22 @@ final class WebWallpaperSchemeHandler: NSObject, WKURLSchemeHandler {
         return fileReply(target.url, size: size, request: request, headers: headers)
     }
 
+    private static func userFileReply(_ url: URL, request: URLRequest) -> Reply {
+        let size: UInt64
+        do {
+            size = (try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber)?.uint64Value ?? 0
+        } catch {
+            OWELog.debug(.web, "User file \(url.lastPathComponent) unavailable: \(error)")
+            return notFound()
+        }
+        guard size <= maxFileSize else {
+            OWELog.error(.web, "User file \(url.lastPathComponent) is \(size) bytes, over the \(maxFileSize)-byte limit")
+            return notFound()
+        }
+        let mime = UTType(filenameExtension: url.pathExtension)?.preferredMIMEType ?? "application/octet-stream"
+        return fileReply(url, size: size, request: request, headers: ["Content-Type": mime, "Access-Control-Allow-Origin": "*"])
+    }
+
     private static func fileReply(_ url: URL, size: UInt64, request: URLRequest, headers: [String: String]) -> Reply {
         var headers = headers
         headers["Accept-Ranges"] = "bytes"
@@ -159,7 +189,7 @@ final class WebWallpaperSchemeHandler: NSObject, WKURLSchemeHandler {
             urlSchemeTask.didFailWithError(URLError(.badURL))
             return
         }
-        let reply = Self.reply(to: urlSchemeTask.request, directory: directory, patches: patches)
+        let reply = Self.reply(to: urlSchemeTask.request, directory: directory, patches: patches, userFiles: userFiles)
         let response = HTTPURLResponse(url: requestURL, statusCode: reply.status, httpVersion: "HTTP/1.1",
                                        headerFields: reply.headers)!
         switch reply.body {

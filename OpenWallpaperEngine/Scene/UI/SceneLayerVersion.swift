@@ -22,9 +22,9 @@ struct SceneLayerVersion: Equatable {
         label = definition.options.first { $0.value == value }?.label ?? value
     }
 
-    /// The label as the inspector shows it: WE's translation of a localisation key, else the text
-    /// without its markup.
+    /// The label as the inspector shows it: the translation of a localisation key (WE's or the
+    /// wallpaper's own), else the text, without its markup.
     func title(labels: WallpaperEngineLabels) -> String {
-        labels.translation(label) ?? UserPropertyHTML.plainText(label)
+        UserPropertyHTML.plainText(labels.translation(label) ?? label)
     }
 }

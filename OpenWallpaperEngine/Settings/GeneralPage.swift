@@ -144,7 +144,7 @@ struct ScreenSaverSameAsWallpaperToggle: View {
             get: { selection.followsDesktop },
             set: { selection.setFollowsDesktop($0) }))
             .changedFromDefault(!follows)
-            .disabled(follows && selection.wallpaperForStoppingFollowingDesktop() == nil || selection.isSettingVideo)
+            .disabled(follows && selection.wallpaperForStoppingFollowingDesktop() == nil)
             .help("The screen saver shows each display's own wallpaper. Turning it off sets the main display's wallpaper as the screen saver on every display; Set as Screen Saver on another wallpaper turns it off too.")
     }
 }

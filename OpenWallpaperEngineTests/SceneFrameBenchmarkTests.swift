@@ -78,10 +78,22 @@ final class SceneFrameBenchmarkTests: XCTestCase {
     /// texture reduction), `match` (Effect Detail Match Display), the render resolutions as the app
     /// draws them, without the authored-size floor (`yourdisplay`: the drawable's pixels, `uhd4k`:
     /// 4K at its shape, `authored`: Full, the scene's authored size), `scale50` (drawn at 50% and
-    /// upscaled; `scale67`, `scale75` likewise), `textures` ("Optimise textures" on: BC7 colour images, `TexturePreparation`), and
+    /// upscaled; `scale67`, `scale75` likewise), `textures` ("Optimise textures" on: BC7 colour images, `TexturePreparation`),
+    /// the quality presets (`ultra`, `high`, `medium`, `low`), Ultra lowered on battery (`battery-medium`, …), and
     /// `+` joins them (`yourdisplay+scale50`). With the variable set, only these and `full` are drawn.
     /// `OWE_SCENE_BENCH_TEXTURES=1` adds the `textures` row to the default variants, so the rows
     /// show the setting off (`full`) and on.
+    /// The settings a quality preset sets, by its name.
+    private static func preset(_ name: String) -> GlobalSettings {
+        let quality: GSQuality = switch name {
+        case "low": .low
+        case "medium": .medium
+        case "high": .high
+        default: .ultra
+        }
+        return GlobalSettingsViewModel.applying(quality, to: GlobalSettings())
+    }
+
     private static func renderModes(_ request: String) -> [Variant] {
         request.split(separator: ",").map { name in
             var settings = SceneRenderSettings()
@@ -103,6 +115,15 @@ final class SceneFrameBenchmarkTests: XCTestCase {
                     settings.upscaling = .bilinear
                     settings.renderScale = part == "scale50" ? .percent50 : part == "scale67" ? .percent67 : .percent75
                 case "textures": settings.optimiseTextures = true
+                case "ultra", "high", "medium", "low":
+                    // A quality preset as the app draws it (`GlobalSettingsViewModel.applying`).
+                    settings = SceneRenderSettings(Self.preset(String(part)))
+                case "battery-high", "battery-medium", "battery-low":
+                    // Ultra lowered by "On battery: use a lower quality preset" (`BatteryQuality`).
+                    var ultra = Self.preset("ultra")
+                    ultra.batteryQuality = true
+                    ultra.batteryQualityPreset = GSBatteryPreset(rawValue: String(part.dropFirst("battery-".count))) ?? .medium
+                    settings = SceneRenderSettings(BatteryQuality.lowered(ultra))
                 default: XCTFail("unknown render mode \(part)")
                 }
             }

@@ -11,10 +11,13 @@ struct WorkshopPresetBase: Equatable {
 class WorkshopViewModel: ObservableObject {
     @Published var items: [WorkshopItem] = []
     @Published var searchText = ""
+    /// WE's "Exact phrase": the search is sent quoted, so Steam matches it as a phrase
+    /// (`WorkshopSearchText`). Not saved, as in WE.
+    @Published private(set) var exactPhrase = false
     @Published var authorId: String?
     /// Lists this wallpaper's presets instead of searching (WE's "Browse Presets").
     @Published private(set) var presetBase: WorkshopPresetBase?
-    @Published var sortOrder: WorkshopSortOrder = .trending
+    @Published var sortOrder: WorkshopSortOrder = .default
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var currentPage = 1
@@ -37,6 +40,9 @@ class WorkshopViewModel: ObservableObject {
     private(set) var setAs: WorkshopSetAsFlow?
     private var setAsCancellable: AnyCancellable?
     private let api = WorkshopAPIService()
+    /// Where Hide Anime is saved.
+    private let defaults: UserDefaults
+    static let hidesAnimeKey = "WorkshopHidesAnime"
     /// One QueryFiles page: search text, filter, sort, page, page size.
     typealias PageSearch = (String, WorkshopQuery, WorkshopSortOrder, Int, Int) async throws -> [WorkshopItem]
     private let searchPage: PageSearch
@@ -57,13 +63,16 @@ class WorkshopViewModel: ObservableObject {
     /// (Show Only options Steam can't express): 2,000 items.
     static let maxSourcePages = 40
 
-    init(steamCmd: SteamCmdService, blockList: WorkshopBlockList = WorkshopBlockList(), searchPage: PageSearch? = nil) {
+    init(steamCmd: SteamCmdService, blockList: WorkshopBlockList = WorkshopBlockList(), searchPage: PageSearch? = nil,
+         defaults: UserDefaults = .app) {
         self.steamCmd = steamCmd
         self.blockList = blockList
+        self.defaults = defaults
         let service = WorkshopAPIService()
         self.searchPage = searchPage ?? { text, query, sortOrder, page, perPage in
             try await service.searchItems(query: text, filter: query, sortOrder: sortOrder, page: page, perPage: perPage)
         }
+        filter.hidesAnime = defaults.bool(forKey: Self.hidesAnimeKey)
         // Forward steamCmd changes (e.g. downloadProgress) to trigger view updates
         self.cancellable = steamCmd.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
@@ -118,7 +127,7 @@ class WorkshopViewModel: ObservableObject {
             isLoading = false
             return
         }
-        let searchKey = "\(searchText)|\(sortOrder.rawValue)|\(filter.cacheKey)|\(itemsPerPage)|\(presetBase?.id ?? "")"
+        let searchKey = "\(steamSearchText)|\(sortOrder.rawValue)|\(filter.cacheKey)|\(itemsPerPage)|\(presetBase?.id ?? "")"
 
         if cachedSearchKey != searchKey {
             cachedPages.removeAll()
@@ -289,8 +298,34 @@ class WorkshopViewModel: ObservableObject {
         Task { @MainActor in await search() }
     }
 
+    /// Back to the default filter, Hide Anime kept (WE applies it again on every reset).
     func resetFilters() {
-        updateFilter { $0 = WorkshopFilter() }
+        updateFilter { filter in
+            let hidesAnime = filter.hidesAnime
+            filter = WorkshopFilter()
+            filter.hidesAnime = hidesAnime
+        }
+    }
+
+    /// WE's Show Anime / Hide Anime, saved for the next launch.
+    func setHidesAnime(_ hides: Bool) {
+        defaults.set(hides, forKey: Self.hidesAnimeKey)
+        updateFilter { $0.hidesAnime = hides }
+    }
+
+    /// Turns "Exact phrase" on or off and searches again from the first page.
+    func setExactPhrase(_ isOn: Bool) {
+        guard isOn != exactPhrase else { return }
+        exactPhrase = isOn
+        currentPage = 1
+        guard !searchText.isEmpty else { return }
+        items = []
+        Task { @MainActor in await search() }
+    }
+
+    /// The search text QueryFiles gets: quoted for "Exact phrase".
+    var steamSearchText: String {
+        WorkshopSearchText.steamText(searchText, exactPhrase: exactPhrase)
     }
 
     @MainActor
@@ -361,7 +396,7 @@ class WorkshopViewModel: ObservableObject {
     private func displayedPageItems(for displayedPage: Int, searchKey: String) async throws -> [WorkshopItem] {
         let sourcePageSize = 50
         let query = browseQuery
-        let text = searchText
+        let text = steamSearchText
         let sortOrder = sortOrder
         let itemsPerPage = itemsPerPage
         var sourcePage = 1

@@ -43,6 +43,15 @@ struct ExplorerItem: SubviewOfContentView {
     }
 
     var body: some View {
+        if let selection = viewModel.androidBatchPicker {
+            exportTile(selection)
+        } else {
+            libraryTile
+        }
+    }
+
+    /// The preview with the title and tags under it.
+    private var tile: some View {
         ZStack(alignment: .bottom) {
             // The library already decoded project.json; decoding it again per redraw made tab
             // switches slow.
@@ -75,50 +84,80 @@ struct ExplorerItem: SubviewOfContentView {
         }
         .clipShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
         .onHover { isHovered = $0 }
-        .help(tooltip)
-        .selectionHighlight(wallpaper.wallpaperDirectory == wallpaperViewModel.displayedWallpaper.wallpaperDirectory,
-                            cornerRadius: Self.cornerRadius)
-        .overlay(alignment: .topLeading) {
-            if !viewModel.library.selectedWallpapers.isEmpty {
-                Button {
-                    viewModel.library.toggleSelection(for: wallpaper)
-                } label: {
-                    Image(systemName: viewModel.library.isSelected(wallpaper) ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(viewModel.library.isSelected(wallpaper) ? accentColor : .white)
+    }
+
+    /// The library's tile: a click inspects it (⌘ and ⇧ select), a double click opens its
+    /// Workshop page, and it drags into folders.
+    private var libraryTile: some View {
+        tile
+            .help(tooltip)
+            .selectionHighlight(wallpaper.wallpaperDirectory == wallpaperViewModel.displayedWallpaper.wallpaperDirectory,
+                                cornerRadius: Self.cornerRadius)
+            .overlay(alignment: .topLeading) {
+                if !viewModel.library.selectedWallpapers.isEmpty {
+                    Button {
+                        viewModel.library.toggleSelection(for: wallpaper)
+                    } label: {
+                        Image(systemName: viewModel.library.isSelected(wallpaper) ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(viewModel.library.isSelected(wallpaper) ? accentColor : .white)
+                    }
+                    .buttonStyle(.plain)
+                    .shadow(color: .black.opacity(0.8), radius: 3, x: 0, y: 1)
+                        .padding(4)
+                    .help("Select wallpaper")
                 }
-                .buttonStyle(.plain)
-                .shadow(color: .black.opacity(0.8), radius: 3, x: 0, y: 1)
-                    .padding(4)
-                .help("Select wallpaper")
             }
-        }
-        .overlay(alignment: .topTrailing) {
-            if safeRestart.flaggedKeys.contains(SafeRestartLedger.key(for: wallpaper)) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.yellow)
+            .overlay(alignment: .topTrailing) {
+                if safeRestart.flaggedKeys.contains(SafeRestartLedger.key(for: wallpaper)) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.yellow)
+                        .shadow(color: .black.opacity(0.8), radius: 3, x: 0, y: 1)
+                        .padding(4)
+                        .help("Open Wallpaper Engine didn't quit cleanly twice in a row while this wallpaper was showing")
+                }
+            }
+            .onTapGesture {
+                viewModel.library.selectWallpaper(
+                    wallpaper,
+                    from: viewModel.library.autoRefreshWallpapers,
+                    inspectingWith: wallpaperViewModel
+                )
+                wallpaperViewModel.inspect(wallpaper)
+            }
+            // Onto a folder tile or a breadcrumb: the selection when this tile is in it, as WE moves
+            // it, shown as a stack of its tiles.
+            .draggable(InstalledDragPayload.wallpapers(
+                viewModel.library.wallpapersActedOn(from: wallpaper).map(FavoritesStore.key(for:))).text) {
+                InstalledTileDragPreview(library: viewModel.library, wallpaper: wallpaper,
+                                         size: viewModel.navigation.explorerIconSize)
+            }
+            .onTapGesture(count: 2) {
+                wallpaperViewModel.inspect(wallpaper)
+                AppDelegate.shared.showWorkshopPreview(wallpaper)
+            }
+    }
+
+    /// Picking wallpapers for an Android batch (`AndroidBatchPicker`): a click picks it (⇧
+    /// adds the run), nothing else; one Android can't play is dimmed, says why and can't be picked.
+    private func exportTile(_ selection: AndroidBatchPicker) -> some View {
+        let reason = selection.reason(for: wallpaper)
+        let isPicked = selection.isSelected(wallpaper)
+        return tile
+            .saturation(reason == nil ? 1 : 0)
+            .opacity(reason == nil ? 1 : 0.4)
+            .help(Text(verbatim: reason.map { wallpaper.project.title + "\n" + $0 } ?? tooltip))
+            .selectionHighlight(isPicked, cornerRadius: Self.cornerRadius)
+            .overlay(alignment: .topLeading) {
+                Image(systemName: reason != nil ? "nosign" : isPicked ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(isPicked ? accentColor : .white)
                     .shadow(color: .black.opacity(0.8), radius: 3, x: 0, y: 1)
                     .padding(4)
-                    .help("Open Wallpaper Engine didn't quit cleanly twice in a row while this wallpaper was showing")
+                    .allowsHitTesting(false)
             }
-        }
-        .onTapGesture {
-            viewModel.library.selectWallpaper(
-                wallpaper,
-                from: viewModel.library.autoRefreshWallpapers,
-                inspectingWith: wallpaperViewModel
-            )
-            wallpaperViewModel.inspect(wallpaper)
-        }
-        // Onto a folder tile or a breadcrumb: the selection when this tile is in it, as WE moves
-        // it, shown as a stack of its tiles.
-        .draggable(InstalledDragPayload.wallpapers(
-            viewModel.library.wallpapersActedOn(from: wallpaper).map(FavoritesStore.key(for:))).text) {
-            InstalledTileDragPreview(library: viewModel.library, wallpaper: wallpaper,
-                                     size: viewModel.navigation.explorerIconSize)
-        }
-        .onTapGesture(count: 2) {
-            wallpaperViewModel.inspect(wallpaper)
-            AppDelegate.shared.showWorkshopPreview(wallpaper)
-        }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                selection.click(wallpaper, kind: ClickSelection.current, in: viewModel.library.displayedWallpapers)
+            }
+            .accessibilityAddTraits(reason == nil ? .isButton : [])
     }
 }

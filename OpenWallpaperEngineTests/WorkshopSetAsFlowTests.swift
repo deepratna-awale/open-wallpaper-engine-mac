@@ -8,7 +8,6 @@ final class WorkshopSetAsFlowTests: XCTestCase {
     private final class Stub {
         var installed: [String: WEWallpaper] = [:]
         var canDownload = true
-        var isSettingScreenSaver = false
         var downloads: [String] = []
         var finishDownload: ((URL?) -> Void)?
         var folders: [URL: WEWallpaper] = [:]
@@ -29,7 +28,6 @@ final class WorkshopSetAsFlowTests: XCTestCase {
                 },
                 wallpaper: { [unowned self] in folders[$0] },
                 setWallpaper: { [unowned self] in applied.append($0) },
-                isSettingScreenSaver: { [unowned self] in isSettingScreenSaver },
                 screenSaverAvailability: { [unowned self] in
                     ScreenSaverSelectionService.availability(of: $0, chromiumInstalled: chromiumInstalled)
                 },
@@ -171,11 +169,6 @@ final class WorkshopSetAsFlowTests: XCTestCase {
         XCTAssertTrue(flow.canRun(.wallpaper, for: item("8", tags: ["Web"])))
         XCTAssertTrue(flow.canRun(.screenSaver, for: item("8", tags: ["Web"])))
 
-        stub.isSettingScreenSaver = true
-        XCTAssertFalse(flow.canRun(.screenSaver, for: item("9")), "one recording at a time")
-        XCTAssertTrue(flow.canRun(.wallpaper, for: item("9")))
-
-        stub.isSettingScreenSaver = false
         stub.canDownload = false
         XCTAssertFalse(flow.canRun(.wallpaper, for: item("10")), "not installed and steamcmd can't download")
         stub.installed["10"] = wallpaper("10")

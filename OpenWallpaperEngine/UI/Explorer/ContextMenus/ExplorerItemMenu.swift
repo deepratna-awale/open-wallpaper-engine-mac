@@ -50,6 +50,7 @@ struct ExplorerItemMenu: SubviewOfContentView {
                     }
                 }
                 .disabled(!WallpaperSetAsRules.canSetScreenSaver(hoveredWallpaper))
+                PlayInWindowMenu(wallpaper: hoveredWallpaper)
             }
 
             Section {
@@ -101,6 +102,11 @@ struct ExplorerItemMenu: SubviewOfContentView {
                 }
             }
             
+            Section {
+                WallpaperHotKeyMenu(wallpaper: hoveredWallpaper, wallpaperViewModel: wallpaperViewModel,
+                                    hotKeys: AppDelegate.shared.userHotKeys)
+            }
+
             Section {
                 Button {
                     if let id = workshopId { WorkshopPageLink.open(id) }

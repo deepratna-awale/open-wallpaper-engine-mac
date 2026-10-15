@@ -21,6 +21,53 @@ final class AppStorageIsolationTests: XCTestCase {
         XCTAssertTrue(store.keychainServicePrefix.contains("isolated"))
     }
 
+    /// The test host never calls the keychain: a run once sat for half an hour on a macOS prompt
+    /// for the isolated steamcmd account item, read by `SteamCmdService.attemptCachedLogin`.
+    /// Every keychain item of an isolated copy lives in memory; the user's launch keeps the keychain.
+    func testTheTestHostKeepsKeychainItemsInMemory() throws {
+        guard case .memory(let memory) = KeychainStore.Backend.processDefault else {
+            return XCTFail("the test host must not use the system keychain")
+        }
+        XCTAssertTrue(memory === InMemoryKeychain.shared)
+        for secret in [SteamCredentials.webAPIKey(), SteamCredentials.steamCmdAccount()] {
+            guard case .memory = secret.keychain.backend else { return XCTFail("\(secret.keychain.service) uses the keychain") }
+        }
+        guard case .memory = KeychainStore(service: "any").backend else { return XCTFail("the default backend is memory") }
+        guard case .memory = KeychainStore.Backend.for(AppStorageLocation(isolationTag: "shots")) else {
+            return XCTFail("an isolated copy keeps its items in memory")
+        }
+        guard case .system = KeychainStore.Backend.for(AppStorageLocation(isolationTag: nil)) else {
+            return XCTFail("the user's launch keeps the keychain")
+        }
+
+        let store = KeychainStore(service: "\(AppStorageLocation.current.keychainServicePrefix).guard.\(UUID().uuidString)")
+        try store.set("value", forAccount: "a")
+        XCTAssertEqual(InMemoryKeychain.shared.string(service: store.service, account: "a"), "value")
+        try store.removeValue(forAccount: "a")
+        XCTAssertNil(try store.string(forAccount: "a"))
+    }
+
+    /// `KeychainStore` is the only code that calls the keychain, so its in-memory backend covers
+    /// every keychain user.
+    func testOnlyKeychainStoreCallsTheKeychain() throws {
+        let repository = AppIdentityLintTests.repository
+        let keychainAPIs = ["SecItem", "kSecClass", "SecKeychain", "SecAccess"]
+        var callers: [String] = []
+        let roots = ["OpenWallpaperEngine", "OpenWallpaperEngineApp", "OpenWallpaperEngineSaver",
+                     "OpenWallpaperEngineSaverExtension", "OWESaverBroker", "OWEChromiumHelper", "EditorHelper",
+                     "MCPServer", "Packages"]
+        for root in roots {
+            let url = repository.appending(path: root, directoryHint: .isDirectory)
+            guard let files = FileManager.default.enumerator(at: url, includingPropertiesForKeys: nil) else { continue }
+            for case let file as URL in files where ["swift", "m", "mm", "c", "h"].contains(file.pathExtension) {
+                guard !file.pathComponents.contains(where: AppIdentityLintTests.skippedFolders.contains) else { continue }
+                let text = (try? String(contentsOf: file, encoding: .utf8)) ?? ""
+                if keychainAPIs.contains(where: text.contains) { callers.append(file.lastPathComponent) }
+            }
+        }
+        XCTAssertEqual(callers, ["KeychainStore.swift"])
+    }
+
     /// Metal keeps its shader cache in `<Darwin user cache>/<bundle id>/com.apple.metal`, which
     /// every copy with the app's bundle id would share; the test host moved its Darwin folders into
     /// a subfolder of its own at launch (`DarwinUserDirectories`), so it never fills the user's.

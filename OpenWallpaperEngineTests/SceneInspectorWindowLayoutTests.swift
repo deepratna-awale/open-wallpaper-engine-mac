@@ -1,3 +1,4 @@
+import OSLog
 import SwiftUI
 import XCTest
 @testable import OpenWallpaperEngine
@@ -29,6 +30,37 @@ final class SceneInspectorWindowLayoutTests: XCTestCase {
         }
     }
 
+    /// The window lays out in a few passes. With the object list's search on the split view
+    /// instead of its column, the search field's place and the columns' widths kept re-laying each
+    /// other out: AppKit stopped the first layout after 300 passes and warned (`-layoutSubtreeIfNeeded
+    /// … continued for 300 iterations`). It showed only for the first editor window of a process,
+    /// so this test runs first in the class (every mode did it; it was seen in Android Export).
+    func testTheFirstWindowLaysOutWithoutALayoutLoop() throws {
+        let start = Date()
+        try withEditor(mode: .androidExport, size: NSSize(width: 1120, height: 560)) { window in
+            let host = try XCTUnwrap(window.contentView as? LayoutCountingHostingView<SceneInspectorView>)
+            let passes = host.passesWhenOrderedFront
+            XCTAssertLessThan(passes, 100, "the first layout took \(passes) passes")
+            XCTAssertEqual(try Self.layoutLoopWarnings(since: start), [])
+
+            // The search field stays at the top of the object list.
+            let frameView = try XCTUnwrap(host.superview)
+            let field = try XCTUnwrap(Self.views(in: frameView) { $0 is NSSearchField }.first as? NSSearchField, "no search field")
+            let sidebar = try XCTUnwrap(Self.sidebarPane(in: host))
+            let fieldFrame = field.convert(field.bounds, to: nil), sidebarFrame = sidebar.convert(sidebar.bounds, to: nil)
+            XCTAssertTrue(sidebarFrame.minX - 1 <= fieldFrame.minX && fieldFrame.maxX <= sidebarFrame.maxX + 1,
+                          "the search field \(fieldFrame) isn't over the object list \(sidebarFrame)")
+        }
+    }
+
+    private static func layoutLoopWarnings(since date: Date) throws -> [String] {
+        let store = try OSLogStore(scope: .currentProcessIdentifier)
+        return try store.getEntries(at: store.position(date: date))
+            .compactMap { $0 as? OSLogEntryLog }
+            .filter { $0.subsystem == "com.apple.AppKit" && $0.composedMessage.contains("iterations") }
+            .map(\.composedMessage)
+    }
+
     private func assertObjectListLaidOut(in window: NSWindow, _ when: String,
                                          file: StaticString = #filePath, line: UInt = #line) throws {
         let sidebar = try XCTUnwrap(Self.sidebarPane(in: window.contentView), "no split view", file: file, line: line)
@@ -50,7 +82,8 @@ final class SceneInspectorWindowLayoutTests: XCTestCase {
         }
     }
 
-    private func withEditor(mode: SceneInspectorMode, _ body: (NSWindow) throws -> Void) throws {
+    private func withEditor(mode: SceneInspectorMode, size: NSSize = NSSize(width: 1400, height: 820),
+                            _ body: (NSWindow) throws -> Void) throws {
         let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: folder) }
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -65,13 +98,15 @@ final class SceneInspectorWindowLayoutTests: XCTestCase {
         let wallpaper = WEWallpaper(using: WEProject(file: "scene.json", title: "Layout", type: "scene"), where: folder)
 
         // As `AppDelegate.showSceneInspector` makes it.
-        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1400, height: 820),
+        let window = NSWindow(contentRect: NSRect(origin: .zero, size: size),
                               styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
-        let host = NSHostingView(rootView: SceneInspectorView(wallpaper: wallpaper, initialMode: mode))
+        window.titleVisibility = .hidden
+        let host = LayoutCountingHostingView(rootView: SceneInspectorView(wallpaper: wallpaper, initialMode: mode))
         host.sizingOptions = [.minSize]
         window.contentView = host
         window.orderFront(nil)
+        host.passesWhenOrderedFront = host.layoutPasses
         defer {
             window.contentView = NSView()
             window.close()
@@ -107,3 +142,16 @@ final class SceneInspectorWindowLayoutTests: XCTestCase {
         return found
     }
 }
+
+/// Counts its layout passes.
+private final class LayoutCountingHostingView<Content: View>: NSHostingView<Content> {
+    var layoutPasses = 0
+    /// The passes counted while its window was ordered front.
+    var passesWhenOrderedFront = 0
+
+    override func layout() {
+        layoutPasses += 1
+        super.layout()
+    }
+}
+

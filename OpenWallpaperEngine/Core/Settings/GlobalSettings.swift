@@ -14,7 +14,7 @@ extension GlobalSettings {
     }
 }
 
-enum GSQuality {
+enum GSQuality: CaseIterable {
     case low, medium, high, ultra
 
     /// The frame rate the preset sets (`GlobalSettings.fps`): Ultra draws at the display's refresh.
@@ -328,6 +328,12 @@ struct GlobalSettings: Codable, Equatable {
     var otherApplicationPlayingAudio = GSPlayback.keepRunning
     var displayAsleep = GSPlayback.keepRunning
     var laptopOnBattery = GSPlayback.keepRunning
+    /// "On battery: use a lower quality preset" (`BatteryQuality`): off by default, as WE has no such setting.
+    var batteryQuality = false
+    /// The preset `batteryQuality` applies; Medium by default.
+    var batteryQualityPreset = GSBatteryPreset.medium
+    /// The frame rate cap `batteryQuality` applies; none by default.
+    var batteryFrameRateCap = GSBatteryFrameRate.none
     /// Settings › Performance › Application Rules (`ApplicationRule`), in the order listed.
     var applicationRules: [ApplicationRule] = []
     
@@ -450,6 +456,25 @@ struct GlobalSettings: Codable, Equatable {
     // MARK: Misc
     var autoRefresh = true
 
+    // MARK: Audio recording
+    /// WE's "Audio recording device" (`audioinputdevice`, default "default"): nil is WE's default,
+    /// which on macOS is the system output; a device records that input instead
+    /// (`SystemAudioCapture.recordingDevice`).
+    var audioRecordingDevice: AudioInputDevice?
+    /// WE's "Recording volume" (`audioinputvolume`, 0…200, default 50): the spectrum's boost
+    /// (`AudioSpectrumBlockTransform.inputVolume(setting:)`).
+    var audioRecordingVolume: Double = 50
+
+    // MARK: Media blocklist
+    /// WE's media blocklist (`mediablocklist`, empty by default): the apps, by bundle id, whose
+    /// now-playing sessions wallpapers don't see (`MacMediaSessionSource.setBlocklist`).
+    var mediaBlocklist: [String] = []
+
+    // MARK: Video loading
+    /// WE's "Video loading" (`videoreadmode`, default from disk): video wallpapers play from their
+    /// file, or from a copy read into memory once (`VideoFileSource`).
+    var videoReadMode = GSVideoReadMode.fromDisk
+
     /// The stored keys. `postProcessing`, `reflections` and `antiAliasing` moved to new keys when
     /// the renderer started reading them: the old keys hold values saved while the settings did
     /// nothing (post-processing then defaulted to "disabled", anti-aliasing to MSAA x2), so they
@@ -457,6 +482,7 @@ struct GlobalSettings: Codable, Equatable {
     enum CodingKeys: String, CodingKey {
         case otherApplicationFocused, otherApplicationMaximized, otherApplicationFullscreen, otherApplicationPlayingAudio
         case displayAsleep, applicationRules
+        case batteryQuality, batteryQualityPreset, batteryFrameRateCap
         case laptopOnBattery, textureResolution, shadows, volumetrics, fps, fpsSetByUser, particleBudget, optimiseTextures
         case webStandardResolution, reducedResolutionParticles
         case qualityEfficiency
@@ -479,6 +505,9 @@ struct GlobalSettings: Codable, Equatable {
         case audioRecordingThreshold
         case theming
         case browseTransition = "browsetransition"
+        case audioRecordingDevice, audioRecordingVolume
+        case mediaBlocklist
+        case videoReadMode
     }
 }
 
@@ -504,6 +533,9 @@ extension GlobalSettings {
         read(.otherApplicationPlayingAudio, &otherApplicationPlayingAudio)
         read(.displayAsleep, &displayAsleep)
         read(.laptopOnBattery, &laptopOnBattery)
+        read(.batteryQuality, &batteryQuality)
+        read(.batteryQualityPreset, &batteryQualityPreset)
+        read(.batteryFrameRateCap, &batteryFrameRateCap)
         var ruleList = ApplicationRuleList()
         read(.applicationRules, &ruleList)
         applicationRules = ruleList.rules
@@ -562,6 +594,11 @@ extension GlobalSettings {
         read(.theming, &theming)
         read(.browseTransition, &browseTransition)
         audioRecordingThreshold = min(max(audioRecordingThreshold, 0), 10)
+        read(.audioRecordingDevice, &audioRecordingDevice)
+        read(.audioRecordingVolume, &audioRecordingVolume)
+        audioRecordingVolume = min(max(audioRecordingVolume, 0), 200)
+        read(.mediaBlocklist, &mediaBlocklist)
+        read(.videoReadMode, &videoReadMode)
         if fromPoints {
             let migration = decoder.userInfo[.settingsMigration] as? GlobalSettingsMigration
             migrateFromPoints(backingScale: migration?.mainBackingScale ?? 1)

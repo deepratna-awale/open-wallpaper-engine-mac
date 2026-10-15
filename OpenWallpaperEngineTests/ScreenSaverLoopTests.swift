@@ -2,7 +2,7 @@ import XCTest
 @testable import OpenWallpaperEngine
 
 /// The loops' crossfade and frame signature the exports use, and the screen saver's folder:
-/// names, isolation, pruning and the manifest.
+/// isolation, and what earlier versions left in it.
 final class ScreenSaverLoopTests: XCTestCase {
     // MARK: Seam
 
@@ -32,23 +32,6 @@ final class ScreenSaverLoopTests: XCTestCase {
 }
 
 final class ScreenSaverStorageTests: XCTestCase {
-    func testPropertyHashIgnoresOrderAndFollowsValues() {
-        let a = ScreenSaverVideoStore.propertyHash(["speed": "1", "color": "0 0 1"])
-        let b = ScreenSaverVideoStore.propertyHash(["color": "0 0 1", "speed": "1"])
-        XCTAssertEqual(a, b)
-        XCTAssertNotEqual(a, ScreenSaverVideoStore.propertyHash(["speed": "2", "color": "0 0 1"]))
-    }
-
-    func testFileNameKeysWallpaperPropertiesSizeAndRevision() {
-        let name = ScreenSaverVideoStore.fileName(wallpaperKey: "123-abc", contentKey: "c0ffee", propertyHash: "beef",
-                                                  pixelSize: SIMD2(3840, 2160))
-        XCTAssertEqual(name, "123-abc_c0ffee-beef-3840x2160-r\(ScreenSaverVideoStore.revision).mov")
-        XCTAssertNotEqual(name, ScreenSaverVideoStore.fileName(wallpaperKey: "123-abc", contentKey: "c0ffee",
-                                                               propertyHash: "beef", pixelSize: SIMD2(2560, 1440)))
-        XCTAssertNotEqual(name, ScreenSaverVideoStore.fileName(wallpaperKey: "123-abc", contentKey: "d00d",
-                                                               propertyHash: "beef", pixelSize: SIMD2(3840, 2160)))
-    }
-
     func testIsolatedCopiesWriteWhereNoSaverReads() throws {
         let home = URL(filePath: "/Users/someone", directoryHint: .isDirectory)
         let isolated = ScreenSaverVideoStore(location: AppStorageLocation(isolationTag: "screensaver-test"), home: home)
@@ -85,40 +68,23 @@ final class ScreenSaverStorageTests: XCTestCase {
         XCTAssertFalse(user.isInstalled)
     }
 
-    func testRetainAndTurningOffKeepTheStills() throws {
+    func testTurningOffKeepsTheStills() throws {
         let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: folder) }
         let store = ScreenSaverVideoStore(directory: folder)
-        try store.writeManifest(ScreenSaverManifest(videos: [.init(file: "new.mov", width: 1, height: 1)]))
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        func exists(_ name: String) -> Bool { FileManager.default.fileExists(atPath: store.url(fileName: name).path(percentEncoded: false)) }
         let stills = [ScreenSaverStills.fileName, "still-A.heic", "still-pick.jpg", ".1F2E-still-B.heic"]
-        for name in ["new.mov", "old.mov", ".partial-new.mov", ScreenSaverLiveManifest.fileName] + stills {
+        for name in [ScreenSaverLiveManifest.fileName] + stills {
             try Data().write(to: store.url(fileName: name))
         }
-        store.retain(["new.mov"])
-        XCTAssertTrue(store.exists(fileName: "new.mov"))
-        XCTAssertTrue(store.exists(fileName: ScreenSaverManifest.fileName))
-        XCTAssertTrue(store.exists(fileName: ScreenSaverLiveManifest.fileName), "the live frames' manifest stays")
-        for still in stills { XCTAssertTrue(store.exists(fileName: still), "\(still): the saver's stills stay") }
-        XCTAssertFalse(store.exists(fileName: "old.mov"))
-        XCTAssertFalse(store.exists(fileName: ".partial-new.mov"))
         store.removeAll()
-        XCTAssertFalse(store.exists(fileName: "new.mov"))
-        XCTAssertFalse(store.exists(fileName: ScreenSaverManifest.fileName))
-        for still in stills { XCTAssertTrue(store.exists(fileName: still), "\(still): turning the plugin off keeps the stills") }
+        XCTAssertFalse(exists(ScreenSaverLiveManifest.fileName))
+        for still in stills { XCTAssertTrue(exists(still), "\(still): turning the plugin off keeps the stills") }
         for still in stills { try FileManager.default.removeItem(at: store.url(fileName: still)) }
-        try Data().write(to: store.url(fileName: "again.mov"))
+        try Data().write(to: store.url(fileName: "again.json"))
         store.removeAll()
         XCTAssertFalse(FileManager.default.fileExists(atPath: folder.path), "an emptied folder goes")
-    }
-
-    func testManifestPicksTheVideoForTheViewSize() {
-        let manifest = ScreenSaverManifest(videos: [.init(file: "4k.mov", width: 3840, height: 2160),
-                                                    .init(file: "air.mov", width: 2560, height: 1664),
-                                                    .init(file: "qhd.mov", width: 2560, height: 1440)])
-        XCTAssertEqual(manifest.video(forPixels: (2560, 1440))?.file, "qhd.mov")
-        XCTAssertEqual(manifest.video(forPixels: (5120, 2880))?.file, "4k.mov", "same aspect first")
-        XCTAssertEqual(manifest.video(forPixels: (2940, 1912))?.file, "air.mov")
-        XCTAssertNil(ScreenSaverManifest().video(forPixels: (100, 100)))
     }
 
     func testHelperRunArgumentsAreReadOnlyHelperRuns() {
@@ -138,38 +104,59 @@ final class ScreenSaverStorageTests: XCTestCase {
         XCTAssertFalse(ScreenSaverVideoStore.isOldRecording("ab12_cd34-video-r3-rec1790000000.mov"), "a video set as the screen saver")
         XCTAssertFalse(ScreenSaverVideoStore.isOldRecording("holiday.mov"))
         XCTAssertFalse(ScreenSaverVideoStore.isOldRecording("still-A.heic"))
-        XCTAssertFalse(ScreenSaverVideoStore.isOldRecording(ScreenSaverManifest.fileName))
+        XCTAssertFalse(ScreenSaverVideoStore.isOldRecording(ScreenSaverVideoStore.oldVideoManifest))
     }
 
-    func testOldRecordingsAreDeletedAndNothingElse() throws {
+    func testOldRecordingsAndVideoFilesAreDeletedAndNothingElse() throws {
         let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: folder) }
         let shared = folder.appending(path: "ScreenSaver", directoryHint: .isDirectory)
         let caches = folder.appending(path: "Caches", directoryHint: .isDirectory)
         let staging = caches.appending(path: "ScreenSaverRecordings", directoryHint: .isDirectory)
         let elsewhere = folder.appending(path: "Library", directoryHint: .isDirectory)
-        for dir in [shared, staging, elsewhere, shared.appending(path: "sub-0a1b2c3d4e5f-1x1-r1.mov")] {
+        let folderNamedLikeAVideo = "sub_c-video-r3.mp4"
+        for dir in [shared, staging, elsewhere, shared.appending(path: "sub-0a1b2c3d4e5f-1x1-r1.mov"),
+                    shared.appending(path: folderNamedLikeAVideo)] {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         }
         let loop = "w_c-0a1b2c3d4e5f-3840x2160-r3.mov", recording = "w_c-0a1b2c3d4e5f-3840x2160-r3-rec42.mov"
-        let video = "v_c-video-r3.mp4", kept = "k_c-0a1b2c3d4e5f-1920x1080-r3.mov"
-        for name in [loop, recording, video, kept, "still-A.heic", ScreenSaverStills.fileName, ScreenSaverManifest.fileName] {
+        let copy = "v_c-video-r3.mp4", selected = "s_c-video-r3-rec1790000000.mov"
+        let stagingCopy = ".staging-1B4E28BA-2FA1-11D2-883F-0016D3CCA427.m4v"
+        let others = ["still-A.heic", ScreenSaverStills.fileName, ScreenSaverLiveManifest.fileName, "holiday.mov", "notes-video-r3.txt"]
+        for name in [loop, recording, copy, selected, stagingCopy, ScreenSaverVideoStore.oldVideoManifest] + others {
             try Data("x".utf8).write(to: shared.appending(path: name))
         }
         try Data("x".utf8).write(to: staging.appending(path: recording))
-        // A library file linked in under a recording's name is never followed or deleted.
-        let libraryFile = elsewhere.appending(path: "clip.mov")
+        // The library's files: one hard-linked in, one linked symbolically under a recording's
+        // name, one under a video file's. Links go; what they point to stays.
+        let libraryFile = elsewhere.appending(path: "clip.mov"), libraryVideo = elsewhere.appending(path: "video.mp4")
         try Data("library".utf8).write(to: libraryFile)
-        let link = "l_c-0a1b2c3d4e5f-640x480-r3.mov"
-        try FileManager.default.createSymbolicLink(at: shared.appending(path: link), withDestinationURL: libraryFile)
+        try Data("video".utf8).write(to: libraryVideo)
+        let hardLink = "h_c-video-r3.mp4"
+        try FileManager.default.linkItem(at: libraryVideo, to: shared.appending(path: hardLink))
+        let recordingLink = "l_c-0a1b2c3d4e5f-640x480-r3.mov", videoLink = "y_c-video-r2.mov"
+        try FileManager.default.createSymbolicLink(at: shared.appending(path: recordingLink), withDestinationURL: libraryFile)
+        try FileManager.default.createSymbolicLink(at: shared.appending(path: videoLink), withDestinationURL: libraryVideo)
 
-        ScreenSaverVideoStore(directory: shared).removeOldRecordings(cachesDirectory: caches, keeping: [kept])
+        ScreenSaverVideoStore(directory: shared).removeOldFiles(cachesDirectory: caches)
 
         let left = try Set(FileManager.default.contentsOfDirectory(atPath: shared.path(percentEncoded: false)))
-        XCTAssertEqual(left, [video, kept, link, "still-A.heic", ScreenSaverStills.fileName, ScreenSaverManifest.fileName,
-                              "sub-0a1b2c3d4e5f-1x1-r1.mov"])
+        XCTAssertEqual(left, Set(others + [recordingLink, "sub-0a1b2c3d4e5f-1x1-r1.mov", folderNamedLikeAVideo]))
         XCTAssertEqual(try String(contentsOf: libraryFile, encoding: .utf8), "library")
+        XCTAssertEqual(try String(contentsOf: libraryVideo, encoding: .utf8), "video", "the library's video stays")
         XCTAssertFalse(FileManager.default.fileExists(atPath: staging.path(percentEncoded: false)), "the emptied staging folder goes")
+    }
+
+    func testOnlyOWEsOwnVideoFileNamesAreOldVideoFiles() {
+        XCTAssertTrue(ScreenSaverVideoStore.isOldVideoFile("ab12_cd34-video-r3.mp4"))
+        XCTAssertTrue(ScreenSaverVideoStore.isOldVideoFile("ab12_cd34-video-r3-rec1790000000.mov"))
+        XCTAssertTrue(ScreenSaverVideoStore.isOldVideoFile(".staging-1B4E28BA-2FA1-11D2-883F-0016D3CCA427.mp4"))
+        XCTAssertTrue(ScreenSaverVideoStore.isOldVideoFile("current.json"))
+        XCTAssertFalse(ScreenSaverVideoStore.isOldVideoFile("holiday.mov"))
+        XCTAssertFalse(ScreenSaverVideoStore.isOldVideoFile("ab12_cd34-video-r3.webm"))
+        XCTAssertFalse(ScreenSaverVideoStore.isOldVideoFile("ab12-video-r3.mp4.partial"))
+        XCTAssertFalse(ScreenSaverVideoStore.isOldVideoFile(ScreenSaverLiveManifest.fileName))
+        XCTAssertFalse(ScreenSaverVideoStore.isOldVideoFile("still-A.heic"))
     }
 
     func testRetiredSettingsAreRemovedAndOldSelectionsStillDecode() throws {
@@ -186,5 +173,28 @@ final class ScreenSaverStorageTests: XCTestCase {
         XCTAssertEqual(store.selection?.wallpaperDirectory, "/w/1")
         XCTAssertNil(store.livePick)
         store.removeRetiredKeys()
+        // It becomes the live pick of its wallpaper (a video's too: drawn live now).
+        XCTAssertTrue(store.migrateSelection())
+        XCTAssertNil(store.selection)
+        XCTAssertEqual(store.livePick?.wallpaperDirectory, "/w/1")
+        XCTAssertFalse(store.migrateSelection(), "once")
+    }
+
+    func testAnUnreadableOldSelectionIsDroppedAndAPickIsKept() throws {
+        let suite = "owe-screensaver-selection-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = ScreenSaverSettingsStore(defaults: defaults)
+        defaults.set(Data("not json".utf8), forKey: ScreenSaverSettingsStore.selectionKey)
+        XCTAssertFalse(store.migrateSelection())
+        XCTAssertNil(defaults.object(forKey: ScreenSaverSettingsStore.selectionKey), "dropped harmlessly")
+        XCTAssertNil(store.livePick)
+
+        let pick = ScreenSaverSettingsStore.LivePick(wallpaperDirectory: "/w/scene", picked: Date(timeIntervalSince1970: 1))
+        store.livePick = pick
+        store.selection = .init(wallpaperDirectory: "/w/video", fileName: "v-video-r3-rec1.mp4", width: 1, height: 1, recorded: Date())
+        XCTAssertFalse(store.migrateSelection(), "a pick made since stays the screen saver")
+        XCTAssertEqual(store.livePick, pick)
+        XCTAssertNil(store.selection)
     }
 }

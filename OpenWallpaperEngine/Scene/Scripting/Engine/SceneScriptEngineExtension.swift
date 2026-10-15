@@ -42,9 +42,9 @@ final class SceneScriptEngineExtension: SceneScriptRuntimeExtension {
         didSet { publish() }
     }
 
-    /// Runs the user shortcut bound to a `usershortcut` user property; true when it ran. Nil
-    /// until the app supports user shortcuts: `engine.openUserShortcut` then logs once per
-    /// property and returns false.
+    /// Opens the user shortcut bound to a `usershortcut` user property; true when it started
+    /// (`UserShortcutLauncher`). Nil where no shortcut may open (offscreen renders: Live Photos,
+    /// depth captures): `engine.openUserShortcut` then logs once per property and returns false.
     var userShortcutHandler: ((String) -> Bool)?
 
     /// `engine.runtime`: seconds of scene time since the runtime started.
@@ -191,7 +191,7 @@ final class SceneScriptEngineExtension: SceneScriptRuntimeExtension {
     private func openUserShortcut(_ name: String) -> Bool {
         if let userShortcutHandler { return userShortcutHandler(name) }
         if unsupportedShortcuts.insert(name).inserted {
-            OWELog.info(.script, "engine.openUserShortcut('\(name)'): user shortcuts are not supported yet")
+            OWELog.info(.script, "engine.openUserShortcut('\(name)'): user shortcuts don't open in this render")
         }
         return false
     }

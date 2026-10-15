@@ -39,14 +39,18 @@ extension WallpaperViewModel {
     /// trusted (read off the main thread); otherwise it waits in `trustRequest` for the prompt,
     /// and nothing else changes until the user answers.
     func apply(_ wallpaper: WEWallpaper) {
+        apply(wallpaper, on: selectedScreenIds)
+    }
+
+    /// `apply(_:)` on `screenIds` instead of the selected displays: a wallpaper hotkey's display.
+    func apply(_ wallpaper: WEWallpaper, on screenIds: Set<String>) {
         trustCheck?.cancel()
         trustCheck = nil
         guard confirmApply?(wallpaper) ?? true else { return }
         guard Self.runsCode(wallpaper) else {
-            setWallpaper(wallpaper, for: selectedScreenIds, transition: .manual)
+            setWallpaper(wallpaper, for: screenIds, transition: .manual)
             return
         }
-        let screenIds = selectedScreenIds
         guard trustStore.isListed(wallpaper) else {
             requestTrust(for: wallpaper, on: screenIds, contentChanged: false, fingerprint: nil)
             return

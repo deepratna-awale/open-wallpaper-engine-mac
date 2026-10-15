@@ -41,7 +41,7 @@ final class WorkshopPageLinkTests: XCTestCase {
         let query = model.browseQuery
         XCTAssertEqual(query.childOf, "3100000001")
         XCTAssertTrue(query.excludedTags.contains("Wallpaper"))
-        let request = WorkshopAPIService.queryItems(text: "", filter: query, sortOrder: .trending, page: 1, perPage: 50)
+        let request = WorkshopAPIService.queryItems(text: "", filter: query, sortOrder: .default, page: 1, perPage: 50)
         XCTAssertTrue(request.contains(URLQueryItem(name: "child_publishedfileid", value: "3100000001")))
         model.clearPresetFilter()
         XCTAssertNil(model.browseQuery.childOf)

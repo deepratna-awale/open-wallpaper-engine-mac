@@ -4,7 +4,7 @@ import Foundation
 /// (`notify_set_state`): the manifest's generation, the frame's number and the ring slot it was
 /// drawn into. A saver shows the slot when the generation is the manifest's it read and the frame
 /// is newer than the one it shows; a frame number that stops moving means the app stopped
-/// drawing, and the saver falls back to its video (`LiveFrameFallback`).
+/// drawing, and the saver falls back to its still (`LiveFrameFallback`).
 ///
 /// Layout: bits 0–7 the slot, 8–39 the frame (wrapping), 40–55 the generation; 0 is no frame.
 struct ScreenSaverLiveStamp: Equatable {
