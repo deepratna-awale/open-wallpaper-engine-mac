@@ -172,6 +172,11 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.texture = { resources.texture($0) }
         services.fonts = { resources.fonts() }
         services.userPropertyChoices = { resources.userPropertyChoices() }
+        services.timeline = timeline
+        services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
+        services.commands = commands
+        services.document = document
+        services.thumbnail = thumbnail
         services.readFile = { resources.data($0) }
         services.projectReferences = { [weak self] in
             // The saved edits keep naming their files while the draft changes; the scene may too.
@@ -195,11 +200,6 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
             directory: AppStorageLocation.current.cachesDirectory.appending(path: "editor/External/\(identity.rawValue)",
                                                                            directoryHint: .isDirectory),
             defaults: .app)
-        services.timeline = timeline
-        services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
-        services.commands = commands
-        services.document = document
-        services.thumbnail = thumbnail
         // In the editor's own process the app's Settings are another process's (`sync`).
         let openSettings: @MainActor (AppSettingsRequest) -> Void = { [sync] request in
             if let sync { sync.openSettings(request) } else { AppDelegate.shared.openSettings(for: request) }
