@@ -304,6 +304,100 @@
         }
       }
     },
+    "%@ (disconnected)" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (غير متصل)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (getrennt)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (desconectado)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (déconnecté)"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (डिस्कनेक्ट है)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (disconnesso)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@（未接続）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@(연결 끊김)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (odłączone)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (desconectado)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (отключено)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (bağlı değil)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (від’єднано)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@（已断开）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@（已中斷連線）"
+          }
+        }
+      }
+    },
     "%@ Copy" : {
       "comment" : "The name of a copy of a layer",
       "localizations" : {
@@ -16251,6 +16345,100 @@
         }
       }
     },
+    "Audio recording device" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جهاز تسجيل الصوت"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audioaufnahmegerät"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dispositivo de grabación de audio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appareil d’enregistrement audio"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑडियो रिकॉर्डिंग डिवाइस"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dispositivo di registrazione audio"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "録音デバイス"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오디오 녹음 장치"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Urządzenie nagrywania dźwięku"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dispositivo de Gravação de Áudio"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Устройство записи звука"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses kayıt aygıtı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пристрій запису звуку"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "录音设备"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "錄音裝置"
+          }
+        }
+      }
+    },
     "Audio-reactive wallpapers react only to sound at least this loud; quieter sound reads as silence. 0 reacts to everything, 10 needs about −40 dB." : {
       "localizations" : {
         "ar" : {
@@ -18418,6 +18606,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "混合"
+          }
+        }
+      }
+    },
+    "Block" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حظر"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blockieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bloquear"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bloquer"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ब्लॉक करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blocca"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブロック"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "차단"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zablokuj"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bloquear"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заблокировать"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Engelle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заблокувати"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阻止"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "封鎖"
           }
         }
       }
@@ -33270,6 +33552,100 @@
         }
       }
     },
+    "Current media session:" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جلسة الوسائط الحالية:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuelle Mediensitzung:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesión multimedia actual:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session multimédia actuelle :"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वर्तमान मीडिया सत्र:"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sessione multimediale attuale:"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在のメディアセッション："
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 미디어 세션:"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bieżąca sesja multimediów:"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sessão de mídia atual:"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текущий медиасеанс:"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçerli medya oturumu:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поточний медіасеанс:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前媒体会话："
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前媒體工作階段："
+          }
+        }
+      }
+    },
     "Custom" : {
       "comment" : "Android Export: the custom screen size, chosen in the device list",
       "localizations" : {
@@ -34686,6 +35062,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "डिफ़ॉल्ट"
+          }
+        }
+      }
+    },
+    "Default (system audio)" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "افتراضي (صوت النظام)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard (Systemaudio)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Predeterminado (audio del sistema)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par défaut (sons du système)"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डिफ़ॉल्ट (सिस्टम ऑडियो)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Predefinito (audio di sistema)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デフォルト（システムオーディオ）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기본(시스템 오디오)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domyślne (dźwięk systemu)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Padrão (áudio do sistema)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По умолчанию (системный звук)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varsayılan (sistem sesi)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стандартний (системний звук)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "默认（系统音频）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "預設（系統音訊）"
           }
         }
       }
@@ -63433,6 +63903,100 @@
         }
       }
     },
+    "How strongly audio-reactive wallpapers react to the recorded sound. 50 is normal, 100 doubles it, 0 silences it." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مدى قوة تفاعل الخلفيات المتجاوبة مع الصوت مع الصوت المسجّل. القيمة 50 عادية، و100 تضاعفه، و0 تكتمه."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie stark audioreaktive Hintergrundbilder auf den aufgenommenen Ton reagieren. 50 ist normal, 100 verdoppelt es, 0 schaltet es stumm."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con qué intensidad reaccionan al sonido grabado los fondos de pantalla que reaccionan al audio. 50 es lo normal, 100 lo duplica y 0 lo silencia."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’intensité avec laquelle les fonds d’écran réactifs au son réagissent au son enregistré. 50 est normal, 100 la double, 0 la coupe."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑडियो पर प्रतिक्रिया देने वाले वॉलपेपर रिकॉर्ड की गई आवाज़ पर कितनी तेज़ी से प्रतिक्रिया देते हैं। 50 सामान्य है, 100 इसे दोगुना करता है, 0 इसे शांत करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quanto intensamente gli sfondi che reagiscono all’audio reagiscono al suono registrato. 50 è normale, 100 lo raddoppia, 0 lo silenzia."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オーディオに反応する壁紙が録音された音にどれだけ強く反応するか。50 が標準で、100 で 2 倍、0 で無音になります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오디오에 반응하는 배경화면이 녹음된 소리에 얼마나 강하게 반응하는지입니다. 50이 보통이고, 100은 두 배, 0은 무음입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jak mocno tapety reagujące na dźwięk reagują na nagrany dźwięk. 50 to normalnie, 100 podwaja reakcję, 0 ją wycisza."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Com que intensidade as imagens de fundo que reagem ao áudio reagem ao som gravado. 50 é o normal, 100 dobra e 0 silencia."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Насколько сильно обои, реагирующие на звук, реагируют на записанный звук. 50 — обычно, 100 — вдвое сильнее, 0 — без звука."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sese duyarlı duvar kâğıtlarının kaydedilen sese ne kadar güçlü tepki verdiği. 50 normaldir, 100 iki katına çıkarır, 0 sessize alır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наскільки сильно шпалери, що реагують на звук, реагують на записаний звук. 50 — звичайно, 100 — удвічі сильніше, 0 — без звуку."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音频响应墙纸对录制声音的反应强度。50 为正常，100 加倍，0 则静音。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音訊回應背景圖片對錄製聲音的反應強度。50 為正常，100 加倍，0 則靜音。"
+          }
+        }
+      }
+    },
     "How strongly noise distorts the result. Small values keep it organic; large values look grainy." : {
       "comment" : "Scene Edit / Export tooltip for an effect parameter named like noise_amount",
       "localizations" : {
@@ -78889,6 +79453,100 @@
         }
       }
     },
+    "Media blocklist" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قائمة حظر الوسائط"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medien-Sperrliste"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lista de bloqueo multimedia"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liste de blocage des médias"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मीडिया ब्लॉकलिस्ट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elenco app multimediali bloccate"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メディアブロックリスト"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "미디어 차단 목록"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lista blokowanych multimediów"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lista de Bloqueio de Mídia"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Черный список медиа"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medya engelleme listesi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Список блокування медіа"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "媒体阻止列表"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "媒體封鎖清單"
+          }
+        }
+      }
+    },
     "Media integration lets wallpapers read the title, artist and album cover of the music playing now." : {
       "localizations" : {
         "ar" : {
@@ -88134,6 +88792,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "沒有符合的裝置"
+          }
+        }
+      }
+    },
+    "No media playing." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا توجد وسائط قيد التشغيل."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Medienwiedergabe."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se está reproduciendo nada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun média en lecture."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोई मीडिया नहीं चल रहा।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun contenuto in riproduzione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再生中のメディアはありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재생 중인 미디어가 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nic nie jest odtwarzane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhuma mídia em reprodução."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ничего не воспроизводится."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oynatılan medya yok."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нічого не відтворюється."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有正在播放的媒体。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有正在播放的媒體。"
           }
         }
       }
@@ -110942,6 +111694,100 @@
         }
       }
     },
+    "Recording a device needs the Microphone permission; until it's granted, the system audio is recorded." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتطلب التسجيل من جهاز إذن الميكروفون؛ وإلى أن يُمنح، يُسجَّل صوت النظام."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für die Aufnahme von einem Gerät ist die Mikrofonberechtigung nötig; bis sie erteilt ist, wird das Systemaudio aufgenommen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grabar un dispositivo necesita el permiso de Micrófono; hasta que lo concedas, se graba el audio del sistema."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’enregistrement d’un appareil nécessite l’autorisation Micro ; tant qu’elle n’est pas accordée, ce sont les sons du système qui sont enregistrés."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "किसी डिवाइस से रिकॉर्ड करने के लिए माइक्रोफ़ोन अनुमति चाहिए; अनुमति मिलने तक सिस्टम ऑडियो रिकॉर्ड होता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Per registrare da un dispositivo serve il permesso Microfono; finché non viene concesso, viene registrato l’audio di sistema."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デバイスから録音するにはマイクへのアクセス許可が必要です。許可されるまではシステムオーディオが録音されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장치에서 녹음하려면 마이크 권한이 필요합니다. 권한이 허용될 때까지는 시스템 오디오가 녹음됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nagrywanie z urządzenia wymaga uprawnienia Mikrofon; dopóki nie zostanie przyznane, nagrywany jest dźwięk systemu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gravar um dispositivo exige a permissão de Microfone; até que ela seja concedida, o áudio do sistema é gravado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для записи с устройства нужно разрешение «Микрофон»; пока оно не выдано, записывается системный звук."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir aygıttan kayıt için Mikrofon izni gerekir; izin verilene kadar sistem sesi kaydedilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для запису з пристрою потрібен дозвіл «Мікрофон»; доки його не надано, записується системний звук."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从设备录音需要“麦克风”权限；在授予之前，录制的是系统音频。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從裝置錄音需要「麥克風」權限；在授予之前，錄製的是系統音訊。"
+          }
+        }
+      }
+    },
     "Recording threshold" : {
       "localizations" : {
         "ar" : {
@@ -111032,6 +111878,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "錄製閾值"
+          }
+        }
+      }
+    },
+    "Recording volume" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مستوى صوت التسجيل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufnahmelautstärke"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volumen de grabación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume d’enregistrement"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रिकॉर्डिंग वॉल्यूम"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume di registrazione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "録音音量"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "녹음 음량"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Głośność nagrywania"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume de Gravação"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Громкость записи"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kayıt ses düzeyi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гучність запису"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "录音音量"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "錄音音量"
           }
         }
       }
@@ -170496,6 +171436,100 @@
         }
       }
     },
+    "Wallpapers don't see what a blocked app plays: no title, artist or album cover." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا ترى الخلفيات ما يشغّله التطبيق المحظور: لا عنوان ولا فنان ولا غلاف ألبوم."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrundbilder sehen nicht, was eine blockierte App abspielt: keinen Titel, Interpreten oder Albumcover."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los fondos de pantalla no ven lo que reproduce una app bloqueada: ni título, ni artista, ni portada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les fonds d’écran ne voient pas ce que lit une app bloquée : ni titre, ni artiste, ni pochette."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर यह नहीं देखते कि ब्लॉक की गई ऐप क्या चला रही है: न शीर्षक, न कलाकार, न एल्बम कवर।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gli sfondi non vedono cosa riproduce un’app bloccata: niente titolo, artista o copertina."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブロックしたアプリが再生している内容は壁紙に伝わりません（タイトル、アーティスト、アルバムアートワークのいずれも）。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면은 차단된 앱이 재생하는 항목을 볼 수 없습니다. 제목, 아티스트, 앨범 커버 모두 표시되지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tapety nie widzą, co odtwarza zablokowana aplikacja: ani tytułu, ani wykonawcy, ani okładki albumu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As imagens de fundo não veem o que um app bloqueado reproduz: nem título, nem artista, nem capa do álbum."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обои не видят, что воспроизводит заблокированное приложение: ни названия, ни исполнителя, ни обложки альбома."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıtları engellenen bir uygulamanın çaldığını görmez: başlık, sanatçı veya albüm kapağı yok."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шпалери не бачать, що відтворює заблокована програма: ні назви, ні виконавця, ні обкладинки альбому."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "墙纸看不到被阻止的 App 正在播放的内容：没有标题、艺人或专辑封面。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景圖片看不到被封鎖的 App 正在播放的內容：沒有標題、演出者或專輯封面。"
+          }
+        }
+      }
+    },
     "Wallpapers for Wallpaper Engine" : {
       "comment" : "Send over Wi-Fi page on the phone: heading",
       "localizations" : {
@@ -172193,6 +173227,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "登入時"
+          }
+        }
+      }
+    },
+    "Where audio-reactive wallpapers hear sound from. Default is the sound your Mac plays; a microphone or a loopback device such as BlackHole records that input instead." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المصدر الذي تسمع منه الخلفيات المتجاوبة مع الصوت. الافتراضي هو الصوت الذي يشغّله الـ Mac؛ ويسجّل الميكروفون أو جهاز الحلقة الراجعة مثل BlackHole ذلك الإدخال بدلًا منه."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Woher audioreaktive Hintergrundbilder den Ton hören. Standard ist der Ton, den dein Mac abspielt; ein Mikrofon oder ein Loopback-Gerät wie BlackHole nimmt stattdessen diesen Eingang auf."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De dónde oyen el sonido los fondos de pantalla que reaccionan al audio. Por omisión, el sonido que reproduce tu Mac; un micrófono o un dispositivo de bucle como BlackHole graba esa entrada en su lugar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La source du son qu’entendent les fonds d’écran réactifs au son. Par défaut, le son que lit votre Mac ; un micro ou un appareil de bouclage comme BlackHole enregistre plutôt cette entrée."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑडियो पर प्रतिक्रिया देने वाले वॉलपेपर आवाज़ कहाँ से सुनते हैं। डिफ़ॉल्ट वह आवाज़ है जो आपका Mac चलाता है; माइक्रोफ़ोन या BlackHole जैसा लूपबैक डिवाइस उसके बजाय वह इनपुट रिकॉर्ड करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Da dove gli sfondi che reagiscono all’audio sentono il suono. Per impostazione predefinita, il suono riprodotto dal Mac; un microfono o un dispositivo loopback come BlackHole registra invece quell’ingresso."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オーディオに反応する壁紙がどこから音を聞くか。デフォルトは Mac が再生している音です。マイクや BlackHole などのループバックデバイスを選ぶと、その入力を代わりに録音します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오디오에 반응하는 배경화면이 소리를 듣는 곳입니다. 기본값은 Mac에서 재생되는 소리이며, 마이크나 BlackHole 같은 루프백 장치를 선택하면 대신 그 입력을 녹음합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skąd tapety reagujące na dźwięk słyszą dźwięk. Domyślnie jest to dźwięk odtwarzany przez Maca; mikrofon lub urządzenie pętli zwrotnej, takie jak BlackHole, nagrywa zamiast tego swoje wejście."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De onde as imagens de fundo que reagem ao áudio ouvem o som. O padrão é o som que o Mac reproduz; um microfone ou um dispositivo de loopback como o BlackHole grava essa entrada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откуда обои, реагирующие на звук, слышат звук. По умолчанию — звук, который воспроизводит Mac; микрофон или петлевое устройство, например BlackHole, записывает вместо него свой вход."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sese duyarlı duvar kâğıtlarının sesi nereden duyduğu. Varsayılan, Mac’inizin çaldığı sestir; bir mikrofon veya BlackHole gibi bir geri döngü aygıtı onun yerine o girişi kaydeder."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звідки шпалери, що реагують на звук, чують звук. Стандартно — звук, який відтворює Mac; мікрофон або петльовий пристрій, як-от BlackHole, натомість записує свій вхід."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音频响应墙纸从哪里听取声音。默认是 Mac 正在播放的声音；麦克风或 BlackHole 等回环设备会改为录制其输入。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音訊回應背景圖片從哪裡聽取聲音。預設是 Mac 正在播放的聲音；麥克風或 BlackHole 等回送裝置會改為錄製其輸入。"
           }
         }
       }

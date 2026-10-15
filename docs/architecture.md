@@ -62,9 +62,11 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
 ### `Audio/`
 
 - System audio capture (a Core Audio process tap on macOS 14.2+, ScreenCaptureKit before or as the fallback) with a restart lifecycle.
+- WE's "Audio recording device": a recording device chosen in Settings › Optimizations › Audio (a microphone, or a loopback driver such as BlackHole) is read by an IO block on that device (`InputDeviceAudioCapture`, Microphone permission) instead of the system output, which stays the fallback while the device is disconnected or the permission is missing. WE's "Recording volume" (0…200, default 50) and "Recording threshold" are applied in the spectrum analyzer, so scenes, SceneScript and web listeners all follow them live.
 - Per-player taps (`AudioLevelTap`).
 - Spectrum and waveform snapshots.
 - One producer, many consumers: scene shaders, SceneScript `registerAudioBuffers`, video music sync.
+- Now Playing (WE's media integration) is `Scene/Scripting/Media/MacMediaSessionSource`, one per process for scenes, SceneScript's media events and web wallpapers' media listeners. It applies WE's media blocklist: a session of a blocked app (by bundle id, `sessionBundleIdentifier`) reaches them as nothing playing.
 
 ### `Video/` and `Web/`
 

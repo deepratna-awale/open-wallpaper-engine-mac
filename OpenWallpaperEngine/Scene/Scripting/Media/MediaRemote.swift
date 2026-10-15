@@ -30,6 +30,9 @@ struct MediaRemote: NowPlayingFramework {
         /// Not MediaRemote's: the bundle id of the app playing an item without artwork of its own,
         /// added by this struct and by `nowPlayingAdapter.pl` (`MacMediaSessionSource` shows its icon).
         static let playerBundleIdentifier = "playerBundleIdentifier"
+        /// Not MediaRemote's: the bundle id of the app the session belongs to, whatever its artwork
+        /// (its parent app's for a helper process), for WE's media blocklist.
+        static let sessionBundleIdentifier = "sessionBundleIdentifier"
     }
 
     static let path = "/System/Library/PrivateFrameworks/MediaRemote.framework/MediaRemote"
@@ -60,12 +63,13 @@ struct MediaRemote: NowPlayingFramework {
         getNowPlayingInfo(queue) { [self] dictionary in
             let info = (dictionary as? [String: Any]) ?? [:]
             let hasArtwork = [Key.artworkData, Key.artworkIdentifier, Key.artworkMIMEType].contains { info[$0] != nil }
-            guard !info.isEmpty, !hasArtwork, let getNowPlayingClient else { return handler(info) }
+            guard !info.isEmpty, let getNowPlayingClient else { return handler(info) }
             getNowPlayingClient(queue) { [self] client in
                 var info = info
                 if let client, let player = clientBundleIdentifiers.lazy
                     .compactMap({ $0(client)?.takeUnretainedValue() as String? }).first(where: { !$0.isEmpty }) {
-                    info[Key.playerBundleIdentifier] = player
+                    info[Key.sessionBundleIdentifier] = player
+                    if !hasArtwork { info[Key.playerBundleIdentifier] = player }
                 }
                 handler(info)
             }
