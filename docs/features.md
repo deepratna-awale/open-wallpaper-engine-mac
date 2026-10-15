@@ -90,9 +90,11 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - **Pause per Display** or **Pause All**, with the playback rules checked for each display, including Wallpaper Engine's maximized-window rule.
 - **Application Rules** — pause, stop or mute wallpapers, or load a wallpaper, playlist or display profile, while an app is running, focused, maximized, in full screen or playing audio.
 - **Playlists** as in Wallpaper Engine: change wallpaper on a timer, at login, by time of day or by day of week; begin with the first wallpaper, an intro played at startup only, changing while paused; and Wallpaper Engine's 27 **transitions** between wallpapers (or a random one), drawn on the GPU, also for wallpapers chosen in the library ([docs/playlists.md](playlists.md)).
-- **Hotkeys** for Wallpaper Engine's actions (including Stop wallpapers) and for each playlist, system-wide, with no Accessibility permission; **Next and Previous Wallpaper** in the menu bar menu.
+- **Hotkeys** for Wallpaper Engine's actions (including Stop wallpapers), for each playlist, for a wallpaper on a display (its context menu's Assign Hotkey…) and for each display profile (the Displays sheet's Profile › Hotkeys), system-wide, with no Accessibility permission; **Next and Previous Wallpaper** in the menu bar menu.
 - **Stop Wallpapers** (menu bar menu, Playback menu, a hotkey): unloads every wallpaper, freeing its CPU, GPU and memory, and shows the macOS desktop picture until Resume.
 - **Take Screenshot** of the wallpaper alone, at the display's size, 4K or 8K.
+- **Play in Window** (a wallpaper's context menu): the wallpaper in a resizable window beside the desktop, as Wallpaper Engine's Full HD, Phone or Maximized Preview, taking the mouse and keyboard.
+- **Command line**: Wallpaper Engine's `-control` commands (pause, stop, play, mute, open a wallpaper on a display or in a window, next, close, playlists, profiles, properties, desktop icons, get the wallpaper), in WE's spelling or as `--control open-wallpaper …` ([docs/command-line.md](command-line.md)).
 - Per-wallpaper **position, zoom and flip** on each display, and a video's playback rate.
 - Per-display user properties, with "Sync properties across displays".
 - A wallpaper shown on several displays renders once and is presented on each.
@@ -122,6 +124,8 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - **iPhone & iPad Export** in Scene Edit / Export turns a scene or video wallpaper into a Live Photo lock screen for any iPhone or iPad that shows one, with AirDrop, to a folder or into a Photos album, without changing your desktop, one wallpaper or a batch.
 - **Android Export** in Scene Edit / Export writes Wallpaper Engine's `.mpkg` packages for its Android app, one wallpaper or a batch, sent to the device over Wi-Fi or copied.
 - Property conditions, text rows and slider formats from the wallpaper's settings are honoured.
+- **User shortcuts** (Wallpaper Engine 2.7's `usershortcut` property): a wallpaper's clickable element opens what you assign it in Details: a file in its default app (an app with its arguments), a folder in Finder, a website in your browser, or a command run in zsh with your login environment. Only you choose what it opens: the author's project.json, presets and Share JSON never bind one, and a binding copied from another Mac doesn't open until you assign it again. Scripts get `engine.openUserShortcut(name)` (true when something opened) and `{isbound, commandtype, file}` in their user properties, as in Wallpaper Engine; web wallpapers have no user shortcuts there either.
+- **Author translations** (project.json `general.localization`): a wallpaper's property titles, text rows and combo choices written as `ui_` keys show in the app's language, from the author's own tables, as in Wallpaper Engine: Wallpaper Engine's own text first, then the author's, then English, then the key. In Details, Scene Edit / Export, the Wallpaper Editor's property choices and the MCP property listing.
 - Steam passwords are never stored, and the Steam Web API key is kept in the Keychain.
 
 ### Interface & languages

@@ -3,7 +3,7 @@ import Foundation
 /// A command with a system-wide hotkey, as Wallpaper Engine's Settings › Hotkeys lists them
 /// (`ui_settings_hotkeys_action_*`; the raw values are the `action` names WE stores in its
 /// `hotkeys` config). Wallpapers, playlists and profiles get their own hotkeys elsewhere (playlists:
-/// `PlaylistShortcutController`).
+/// `PlaylistShortcutController`; wallpapers and profiles: `UserHotKeyController`).
 ///
 /// Added: Previous Wallpaper, which the app's menus already have.
 enum GlobalHotKeyAction: String, CaseIterable, Identifiable, Codable {

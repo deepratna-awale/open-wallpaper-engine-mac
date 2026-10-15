@@ -1,6 +1,7 @@
 import AppKit
 
-/// What each hotkey action (`GlobalHotKeyAction`) does when its shortcut is pressed.
+/// What each hotkey action (`GlobalHotKeyAction`), and each wallpaper's or profile's hotkey, does
+/// when its shortcut is pressed.
 extension AppDelegate {
     /// macOS's screen saver, which "Start screensaver" opens as WE starts Windows' own.
     static let screenSaverEngineURL = URL(fileURLWithPath: "/System/Library/CoreServices/ScreenSaverEngine.app")
@@ -34,6 +35,34 @@ extension AppDelegate {
                 return
             }
             showWallpaperEditorForDisplayedWallpaper()
+        }
+    }
+
+    /// A wallpaper's or profile's hotkey (`UserHotKey`): the wallpaper on its display, as Set as
+    /// Wallpaper applies it there (one that runs code asks for trust first), or the profile.
+    func performUserHotKey(_ hotKey: UserHotKey) {
+        switch hotKey.target {
+        case let .wallpaper(wallpaper, location):
+            guard let screenId = UserHotKey.screenId(ofLocation: location, connected: wallpaperViewModel.connectedDisplays()) else {
+                OWELog.info(.app, "Hotkey of \"\(hotKey.title)\": its display \(location) isn't connected")
+                NSSound.beep()
+                return
+            }
+            guard FileManager.default.fileExists(atPath: wallpaper.wallpaperDirectory.path(percentEncoded: false)) else {
+                OWELog.info(.app, "Hotkey of \"\(hotKey.title)\": the wallpaper is no longer installed")
+                NSSound.beep()
+                return
+            }
+            wallpaperViewModel.apply(wallpaper, on: [screenId])
+        case let .profile(name):
+            if !wallpaperViewModel.displayProfiles.load(name: name) { NSSound.beep() }
+        }
+    }
+
+    /// Opens Assign Hotkey for a wallpaper on a display, or for a profile (`AssignHotKeySheet`).
+    func showAssignHotKey(_ target: UserHotKey.Target) {
+        AssignHotKeyPresenter.present(target, hotKeys: userHotKeys) { [unowned self] recording in
+            recording ? globalHotKeys.suspend() : globalHotKeys.resume()
         }
     }
 
