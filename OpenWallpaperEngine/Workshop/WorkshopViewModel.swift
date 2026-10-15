@@ -14,7 +14,7 @@ class WorkshopViewModel: ObservableObject {
     @Published var authorId: String?
     /// Lists this wallpaper's presets instead of searching (WE's "Browse Presets").
     @Published private(set) var presetBase: WorkshopPresetBase?
-    @Published var sortOrder: WorkshopSortOrder = .trending
+    @Published var sortOrder: WorkshopSortOrder = .default
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var currentPage = 1
