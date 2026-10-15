@@ -115,10 +115,13 @@ extension SceneEditSession {
     /// `next` (the overlay `outline` now shows) with the camera parallax the effect needs: on a
     /// scene authored with parallax off, the first depth parallax turns it on at amount 0 (only
     /// `g_ParallaxPosition` moves; the scene's own influence and delay stay), and removing the
-    /// last one drops those edits again. A scene authored with parallax on is left as it is.
-    func settlingDepthParallaxCamera(_ next: SceneEditOverlay) -> SceneEditOverlay {
+    /// last one drops those edits again. A scene authored with parallax on is left as it is, and
+    /// so is a change that neither adds the first depth parallax nor removes the last
+    /// (`hadDepthParallax`: the overlay before it had one), so the Scene Options' camera
+    /// parallax stays as the user set it.
+    func settlingDepthParallaxCamera(_ next: SceneEditOverlay, hadDepthParallax: Bool) -> SceneEditOverlay {
         let authoredSetting = SceneFieldBinding.literal(of: authored.general[SceneDepthParallax.cameraParallaxSetting])
-        guard authoredSetting?.boolValue != true else { return next }
+        guard authoredSetting?.boolValue != true, hasDepthParallax != hadDepthParallax else { return next }
         var settled = next
         if hasDepthParallax {
             settled.setGeneralSetting(SceneDepthParallax.cameraParallaxSetting, to: .bool(true))

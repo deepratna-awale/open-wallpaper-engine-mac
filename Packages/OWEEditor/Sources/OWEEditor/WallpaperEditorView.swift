@@ -92,7 +92,7 @@ public struct WallpaperEditorView: View {
         }
         .modifier(OptionalThumbnailSheet(thumbnail: services.thumbnail) { show(Notice(text: $0, isError: true)) })
         .sheet(isPresented: $isSaving) {
-            SaveAsNewSheet(suggestedTitle: services.suggestedNewTitle) { title in
+            SaveAsNewSheet(suggestedTitle: session.projectTitle ?? services.suggestedNewTitle) { title in
                 do {
                     let saved = try services.saveAsNewWallpaper(title)
                     show(Notice(text: L("Saved “\(saved)” to the library."), isError: false))
