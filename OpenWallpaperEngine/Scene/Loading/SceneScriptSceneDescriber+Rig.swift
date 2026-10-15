@@ -26,12 +26,12 @@ extension SceneScriptSceneDescriber {
     func modelObject(_ path: String, animationLayers: SceneJSON?) -> (rig: SceneScriptRigDescription?, cursor: SceneScriptCursorShape?) {
         guard let mdl = readMDL(path, of: path) else { return (nil, nil) }
         let description = rig(mdl, of: path, animationLayers: animationLayers)
-        return (description.bones.isEmpty ? nil : description, .model(mdl))
+        return (description.flatMap { $0.bones.isEmpty ? nil : $0 }, .model(mdl))
     }
 
     /// The rig of `.mdl` `path` (named by `owner`), played by `animationLayers`.
     private func rig(mdl path: String, of owner: String, animationLayers: SceneJSON?) -> SceneScriptRigDescription? {
-        readMDL(path, of: owner).map { rig($0, of: owner, animationLayers: animationLayers) }
+        readMDL(path, of: owner).flatMap { rig($0, of: owner, animationLayers: animationLayers) }
     }
 
     /// `.mdl` `path` (named by `owner`), or nil (logged) when it is missing or can't be read.
@@ -48,7 +48,7 @@ extension SceneScriptSceneDescriber {
         }
     }
 
-    private func rig(_ mdl: MDLModel, of owner: String, animationLayers: SceneJSON?) -> SceneScriptRigDescription {
+    private func rig(_ mdl: MDLModel, of owner: String, animationLayers: SceneJSON?) -> SceneScriptRigDescription? {
         var layers: [WEAnimationLayer] = []
         if let animationLayers, let text = Self.jsonText(animationLayers) {
             do {
