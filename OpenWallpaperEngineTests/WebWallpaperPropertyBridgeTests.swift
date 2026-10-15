@@ -66,6 +66,10 @@ final class WebWallpaperPropertyBridgeTests: XCTestCase {
             "s": ["type": "slider", "value": 100, "min": 10, "max": 200],
             "f": ["type": "slider", "value": 0.5, "min": 0, "max": 1, "precision": 2],
             "c": ["type": "combo", "value": 2, "options": [["label": "A", "value": 1], ["label": "B", "value": 2]]],
+            "cs": ["type": "combo", "value": "b", "options": [["label": "A", "value": "a"], ["label": "B", "value": "b"]]],
+            "cf": ["type": "combo", "value": 0.5, "options": [["label": "Half", "value": 0.5], ["label": "One", "value": 1.5]]],
+            "cb": ["type": "combo", "value": true, "options": [["label": "On", "value": true], ["label": "Off", "value": false]]],
+            "cn": ["type": "combo", "value": "1", "options": [["label": "One", "value": "1"], ["label": "Two", "value": "2"]]],
             "col": ["type": "color", "value": "1 1 1"],
             "t": ["type": "textinput", "value": "hello"],
             "file": ["type": "file", "value": ""],
@@ -73,14 +77,20 @@ final class WebWallpaperPropertyBridgeTests: XCTestCase {
         ]]]
         let properties = WebWallpaperPropertyBridge.declaredProperties(projectRoot: project)
         let values = WebWallpaperPropertyBridge.currentValues(
-            properties: properties, stored: ["b": "true", "s": "150", "col": "0 0.5 1", "dir": "/tmp/x"])
+            properties: properties, stored: ["b": "true", "s": "150", "col": "0 0.5 1", "dir": "/tmp/x", "cb": "false"])
         let payload = WebWallpaperPropertyBridge.payload(properties: properties, values: values)
         func value(_ key: String) -> Any? { (payload[key] as? [String: Any])?["value"] }
         XCTAssertEqual(value("b") as? Bool, true)
         XCTAssertFalse(value("b") is String)
         XCTAssertEqual((value("s") as? NSNumber)?.stringValue, "150")
         XCTAssertEqual(value("f") as? Double, 0.5)
-        XCTAssertEqual(value("c") as? String, "2")
+        // A combo's value keeps the JSON type its option was authored with, as WE passes it.
+        XCTAssertEqual((value("c") as? NSNumber)?.intValue, 2)
+        XCTAssertFalse(value("c") is String, "an int option arrives as a number")
+        XCTAssertEqual(value("cs") as? String, "b")
+        XCTAssertEqual((value("cf") as? NSNumber)?.doubleValue, 0.5)
+        XCTAssertEqual(value("cb") as? Bool, false, "the user's choice keeps the option's type")
+        XCTAssertEqual(value("cn") as? String, "1", "a string option stays a string even when it looks numeric")
         XCTAssertEqual(value("col") as? String, "0 0.5 1")
         XCTAssertEqual(value("t") as? String, "hello")
         XCTAssertEqual(value("file") as? String, "")
