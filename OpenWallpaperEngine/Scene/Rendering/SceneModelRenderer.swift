@@ -38,8 +38,8 @@ final class SceneModelRenderer: SceneModelDrawing {
     private var objects: [String: SceneModelObject] = [:]
     /// Each plan's GPU buffers, shared by the objects drawing it.
     private var buffers: [ObjectIdentifier: [MeshBuffers?]] = [:]
-    /// Per object: each mesh's uniforms (the world differs per object).
-    private var uniforms: [String: [ModelMaterialUniforms]] = [:]
+    /// Per object: each mesh's uniforms, one per pass of its material (the world differs per object).
+    private var uniforms: [String: [[ModelMaterialUniforms]]] = [:]
     /// Per object with bones: its skeleton in motion (the same animator puppets use).
     private var animators: [String: ScenePuppetAnimator] = [:]
     /// The frame time each animator last advanced at (one evaluation a frame), and its pose's
@@ -183,66 +183,81 @@ final class SceneModelRenderer: SceneModelDrawing {
         let meshBuffers = self.meshBuffers(plan)
         let meshUniforms = self.uniforms(for: model.id, plan: plan)
         let depthFormat = draw.depth == nil ? MTLPixelFormat.invalid : SceneDepthStates.format
-        let placement = draw.placement
         var drew = false
         for (index, mesh) in plan.meshes.enumerated() {
             // A mesh wholly outside the view draws nothing (its triangles are all clipped).
             if let bounds = mesh.bounds, !viewFrustum.contains(SceneModelCulling.Sphere(bounds, world: draw.world)) { continue }
-            guard let buffers = meshBuffers[index], mesh.material.pass.variant != nil,
-                  let pipeline = pipeline(for: mesh, pixelFormat: draw.pixelFormat, sampleCount: draw.sampleCount,
-                                          depthFormat: depthFormat),
-                  let bound = textures(of: mesh.material, draw, morph: morphTextures.texture(plan, mesh: mesh.index))
-            else { continue }
-            let program = meshUniforms[index]
-            if program.size > 0 {
-                let key = ModelMaterialUniforms.PassKey(
-                    world: draw.world, view: draw.camera.view, viewProjection: placement.shaderViewProjection,
-                    eye: draw.frame.eyePosition, screen: draw.frame.screenSize, target: draw.frame.screenSize,
-                    textures: bound.map { SIMD4(Float($0.texture.width), Float($0.texture.height),
-                                                $0.contentSize?.x ?? 0, $0.contentSize?.y ?? 0) })
-                program.update(key: key, frame: draw.frame, values: draw.values, shared: (frameValues, mesh.material)) {
-                    var pass = BuiltinPassContext(targetSize: draw.frame.screenSize)
-                    pass.place(placement)
-                    for entry in bound {
-                        pass.textures[entry.slot] = EffectGraphRenderer.textureInfo(for: entry.texture, contentSize: entry.contentSize)
-                    }
-                    return pass
+            guard let buffers = meshBuffers[index] else { continue }
+            // The material's passes in its order, each over what the one before drew.
+            for (passIndex, material) in mesh.material.passes.enumerated() {
+                if drawPass(material, of: mesh, in: plan, buffers: buffers, program: meshUniforms[index][passIndex], bones: bones,
+                            model: model, draw, depthFormat: depthFormat, encoder: encoder, commandBuffer: commandBuffer) {
+                    drew = true
                 }
-                if let bones { program.writeBones(bones) }
-                if mesh.material.meshCombos.morphing { program.writeMorphs(morphUniforms(model.id, plan: plan, mesh: mesh)) }
             }
-            encoder.setRenderPipelineState(pipeline)
-            if let depth = draw.depth {
-                depth.apply(mesh.material.raster, to: encoder)
-            } else {
-                encoder.setCullMode(mesh.material.raster.cullMode)
-            }
-            // The planar reflection's mirror flips every triangle's winding (WE flips its cull mode).
-            encoder.setFrontFacing(draw.mirrored ? .clockwise : Self.frontFacing)
-            buffers.bindVertices(to: encoder)
-            encoder.setVertexBuffer(zeroAttributes, offset: 0, index: EffectGraphRenderer.zeroBuffer)
-            for entry in bound {
-                encoder.setFragmentTexture(entry.texture, index: entry.slot)
-                encoder.setFragmentSamplerState(entry.sampler, index: entry.slot)
-                encoder.setVertexTexture(entry.texture, index: entry.slot)
-                encoder.setVertexSamplerState(entry.sampler, index: entry.slot)
-            }
-            if program.size > 0 {
-                program.bytes.withUnsafeBytes { raw in uniformArena.bind(raw, index: 0, to: encoder, commandBuffer: commandBuffer) }
-            }
-            // Every instance in one draw, as WE's `INSTANCECOUNT` shaders read them (`fur4`'s shells,
-            // `gl_InstanceID` 0 the mesh itself, the last pushed out by the fur distance).
-            encoder.drawIndexedPrimitives(type: .triangle, indexCount: indexCount(of: mesh, in: plan),
-                                          indexType: mesh.usesUInt32Indices ? .uint32 : .uint16,
-                                          indexBuffer: buffers.indices, indexBufferOffset: 0,
-                                          instanceCount: mesh.material.instanceCount)
-            drawsEncoded += 1
-            instancesEncoded += mesh.material.instanceCount
-            meshDraws[model.id, default: 0] += 1
-            drew = true
         }
         // A pass without depth doesn't set its own cull state for the draws after.
         if drew, draw.depth == nil { encoder.setCullMode(.none) }
+    }
+
+    /// One pass of a mesh's material; false when it draws nothing yet (its pipeline compiling, a
+    /// texture missing).
+    private func drawPass(_ material: ModelMaterialPlan, of mesh: SceneModelPlan.Mesh, in plan: SceneModelPlan,
+                          buffers: MeshBuffers, program: ModelMaterialUniforms, bones: [Float]?, model: SceneModelObject,
+                          _ draw: SceneModelDraw, depthFormat: MTLPixelFormat, encoder: MTLRenderCommandEncoder,
+                          commandBuffer: MTLCommandBuffer) -> Bool {
+        let placement = draw.placement
+        guard material.pass.variant != nil,
+              let pipeline = pipeline(for: material, format: mesh.format, pixelFormat: draw.pixelFormat,
+                                      sampleCount: draw.sampleCount, depthFormat: depthFormat),
+              let bound = textures(of: material, draw, morph: morphTextures.texture(plan, mesh: mesh.index))
+        else { return false }
+        if program.size > 0 {
+            let key = ModelMaterialUniforms.PassKey(
+                world: draw.world, view: draw.camera.view, viewProjection: placement.shaderViewProjection,
+                eye: draw.frame.eyePosition, screen: draw.frame.screenSize, target: draw.frame.screenSize,
+                textures: bound.map { SIMD4(Float($0.texture.width), Float($0.texture.height),
+                                            $0.contentSize?.x ?? 0, $0.contentSize?.y ?? 0) })
+            program.update(key: key, frame: draw.frame, values: draw.values, shared: (frameValues, material)) {
+                var pass = BuiltinPassContext(targetSize: draw.frame.screenSize)
+                pass.place(placement)
+                for entry in bound {
+                    pass.textures[entry.slot] = EffectGraphRenderer.textureInfo(for: entry.texture, contentSize: entry.contentSize)
+                }
+                return pass
+            }
+            if let bones { program.writeBones(bones) }
+            if material.meshCombos.morphing { program.writeMorphs(morphUniforms(model.id, plan: plan, mesh: mesh)) }
+        }
+        encoder.setRenderPipelineState(pipeline)
+        if let depth = draw.depth {
+            depth.apply(material.raster, to: encoder)
+        } else {
+            encoder.setCullMode(material.raster.cullMode)
+        }
+        // The planar reflection's mirror flips every triangle's winding (WE flips its cull mode).
+        encoder.setFrontFacing(draw.mirrored ? .clockwise : Self.frontFacing)
+        buffers.bindVertices(to: encoder)
+        encoder.setVertexBuffer(zeroAttributes, offset: 0, index: EffectGraphRenderer.zeroBuffer)
+        for entry in bound {
+            encoder.setFragmentTexture(entry.texture, index: entry.slot)
+            encoder.setFragmentSamplerState(entry.sampler, index: entry.slot)
+            encoder.setVertexTexture(entry.texture, index: entry.slot)
+            encoder.setVertexSamplerState(entry.sampler, index: entry.slot)
+        }
+        if program.size > 0 {
+            program.bytes.withUnsafeBytes { raw in uniformArena.bind(raw, index: 0, to: encoder, commandBuffer: commandBuffer) }
+        }
+        // Every instance in one draw, as WE's `INSTANCECOUNT` shaders read them (`fur4`'s shells,
+        // `gl_InstanceID` 0 the mesh itself, the last pushed out by the fur distance).
+        encoder.drawIndexedPrimitives(type: .triangle, indexCount: indexCount(of: mesh, in: plan),
+                                      indexType: mesh.usesUInt32Indices ? .uint32 : .uint16,
+                                      indexBuffer: buffers.indices, indexBufferOffset: 0,
+                                      instanceCount: material.instanceCount)
+        drawsEncoded += 1
+        instancesEncoded += material.instanceCount
+        meshDraws[model.id, default: 0] += 1
+        return true
     }
 
     /// WE's front faces (`FrontCounterClockwise = FALSE`, 0x1400990f9): clockwise on D3D's
@@ -486,9 +501,11 @@ final class SceneModelRenderer: SceneModelDrawing {
         geometryIndexCounts[ObjectIdentifier(plan)]?[mesh.index] ?? mesh.indexCount
     }
 
-    private func uniforms(for id: String, plan: SceneModelPlan) -> [ModelMaterialUniforms] {
+    private func uniforms(for id: String, plan: SceneModelPlan) -> [[ModelMaterialUniforms]] {
         if let existing = uniforms[id], existing.count == plan.meshes.count { return existing }
-        let made = plan.meshes.map { ModelMaterialUniforms(layout: $0.material.pass.variant?.uniforms, constants: $0.material.pass.constants) }
+        let made = plan.meshes.map { mesh in
+            mesh.material.passes.map { ModelMaterialUniforms(layout: $0.pass.variant?.uniforms, constants: $0.pass.constants) }
+        }
         uniforms[id] = made
         return made
     }
@@ -552,10 +569,10 @@ final class SceneModelRenderer: SceneModelDrawing {
     /// The mesh's other attributes when its vertices are split (`SceneModelVertexStreams`).
     static let meshAttributesBuffer = 27
 
-    static func pipelineKey(_ mesh: SceneModelPlan.Mesh, pixelFormat: MTLPixelFormat, sampleCount: Int,
-                            depthFormat: MTLPixelFormat) -> String {
-        "model|\(mesh.material.pass.variantKey)|\(mesh.format.rawValue)|\(mesh.material.blending)|\(pixelFormat.rawValue)"
-            + "|x\(sampleCount)|d\(depthFormat.rawValue)" + (mesh.material.customShader ? "|custom" : "")
+    static func pipelineKey(_ material: ModelMaterialPlan, format: MDLVertexFormat, pixelFormat: MTLPixelFormat,
+                            sampleCount: Int, depthFormat: MTLPixelFormat) -> String {
+        "model|\(material.pass.variantKey)|\(format.rawValue)|\(material.blending)|\(pixelFormat.rawValue)"
+            + "|x\(sampleCount)|d\(depthFormat.rawValue)" + (material.customShader ? "|custom" : "")
     }
 
     var hasPendingPipelines: Bool { pipelineLock.withLock { !pending.isEmpty } }
@@ -565,37 +582,42 @@ final class SceneModelRenderer: SceneModelDrawing {
                         depthFormat: MTLPixelFormat = SceneDepthStates.format, timeout: TimeInterval = 120) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         for mesh in plan.meshes {
-            let key = Self.pipelineKey(mesh, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat)
-            while pipeline(for: mesh, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat) == nil {
-                if pipelineLock.withLock({ failed.contains(key) }) || Date() > deadline { return false }
-                Thread.sleep(forTimeInterval: 0.005)
+            for material in mesh.material.passes {
+                let key = Self.pipelineKey(material, format: mesh.format, pixelFormat: pixelFormat, sampleCount: sampleCount,
+                                           depthFormat: depthFormat)
+                while pipeline(for: material, format: mesh.format, pixelFormat: pixelFormat, sampleCount: sampleCount,
+                               depthFormat: depthFormat) == nil {
+                    if pipelineLock.withLock({ failed.contains(key) }) || Date() > deadline { return false }
+                    Thread.sleep(forTimeInterval: 0.005)
+                }
             }
         }
         return true
     }
 
-    private func pipeline(for mesh: SceneModelPlan.Mesh, pixelFormat: MTLPixelFormat, sampleCount: Int,
-                          depthFormat: MTLPixelFormat) -> MTLRenderPipelineState? {
-        let key = Self.pipelineKey(mesh, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat)
+    private func pipeline(for material: ModelMaterialPlan, format: MDLVertexFormat, pixelFormat: MTLPixelFormat,
+                          sampleCount: Int, depthFormat: MTLPixelFormat) -> MTLRenderPipelineState? {
+        let key = Self.pipelineKey(material, format: format, pixelFormat: pixelFormat, sampleCount: sampleCount,
+                                   depthFormat: depthFormat)
         let state: (pipeline: MTLRenderPipelineState?, busy: Bool) = pipelineLock.withLock {
             (pipelines[key], pending.contains(key) || failed.contains(key))
         }
         if let pipeline = state.pipeline { return pipeline }
-        if !state.busy, let variant = mesh.material.pass.variant {
-            compile(variant, mesh: mesh, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat, key: key)
+        if !state.busy, let variant = material.pass.variant {
+            compile(variant, material: material, format: format, pixelFormat: pixelFormat, sampleCount: sampleCount,
+                    depthFormat: depthFormat, key: key)
         }
         return nil
     }
 
-    private func compile(_ variant: TranslatedShaderVariant, mesh: SceneModelPlan.Mesh, pixelFormat: MTLPixelFormat,
-                         sampleCount: Int, depthFormat: MTLPixelFormat, key: String) {
+    private func compile(_ variant: TranslatedShaderVariant, material plan: ModelMaterialPlan, format: MDLVertexFormat,
+                         pixelFormat: MTLPixelFormat, sampleCount: Int, depthFormat: MTLPixelFormat, key: String) {
         pipelineLock.withLock { _ = pending.insert(key) }
         let device = self.device
         let archive = self.archive
-        let format = mesh.format
-        let blending = mesh.material.blending
-        let material = mesh.material.materialPath
-        let customShader = mesh.material.customShader
+        let blending = plan.blending
+        let material = plan.materialPath
+        let customShader = plan.customShader
         compileQueue.async { [weak self] in
             let result: MTLRenderPipelineState?
             do {
