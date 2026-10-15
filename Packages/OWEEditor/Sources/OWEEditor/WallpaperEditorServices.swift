@@ -69,6 +69,9 @@ public struct WallpaperEditorServices {
     public var openAssetsSetup: () -> Void = {}
     /// Take Snapshot and Record GIF: the library thumbnail made from the canvas; nil leaves them out.
     public var thumbnail: EditorThumbnail?
+    /// A file of the wallpaper (its package's, else its folder's, else WE's assets), as the scene
+    /// loader reads it: an image layer's model for its `cropoffset`; nil when there's none.
+    public var wallpaperFile: (String) -> Data? = { _ in nil }
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,

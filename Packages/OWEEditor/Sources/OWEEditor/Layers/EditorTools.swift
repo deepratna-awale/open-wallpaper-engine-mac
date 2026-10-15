@@ -21,6 +21,13 @@ final class EditorTools: ObservableObject {
     @Published var sidebarTab: SidebarTab = .layers
     /// The layer whose name is being edited in the list.
     @Published var renaming: Int?
+    /// Copy Transforms' `origin`, `scale` and `angles`, for Paste Transforms.
+    @Published var copiedTransform: LayerTransform?
+    /// Copy Effect's effect, and Copy all Effects' list, for pasting on any layer of the window.
+    @Published var copiedEffect: SceneJSONValue?
+    @Published var copiedEffects: [SceneJSONValue] = []
+    /// The layer Move to Custom Position asks a list position for.
+    @Published var choosingListPosition: Int?
     /// A message for the window's banner (an import that failed, say).
     @Published var problem: String?
 

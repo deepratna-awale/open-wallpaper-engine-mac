@@ -177,6 +177,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.commands = commands
         services.document = document
         services.thumbnail = thumbnail
+        services.wallpaperFile = { resources.data($0) }
         // In the editor's own process the app's Settings are another process's (`sync`).
         let openSettings: @MainActor (AppSettingsRequest) -> Void = { [sync] request in
             if let sync { sync.openSettings(request) } else { AppDelegate.shared.openSettings(for: request) }

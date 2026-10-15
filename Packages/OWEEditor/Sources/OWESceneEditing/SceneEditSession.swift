@@ -20,7 +20,18 @@ public final class SceneEditSession: ObservableObject {
     public var authoredOutline: SceneOutline { authored }
     public let undoManager: UndoManager
     @Published public private(set) var overlay: SceneEditOverlay
-    @Published public var selection: Int?
+    /// The layer the inspector shows: the one clicked last, one of `selectedLayers`.
+    @Published public var selection: Int? {
+        didSet { if selection != oldValue { keepSelectedLayers() } }
+    }
+    /// Every selected layer (Shift- or ⌘-click, a marquee, the list's multiple selection), with
+    /// `selection` among them; setting `selection` alone selects that layer only.
+    @Published public var selectedLayers: Set<Int> = []
+    /// A drag of several layers: each one's transform as dragged, drawn like `dragPreview` until
+    /// the drag ends and commits them as one undo step (`endGroupDrag`).
+    @Published public var groupDragPreview: [Int: LayerTransform] = [:] {
+        didSet { if !groupDragPreview.isEmpty { onLivePreview?(previewOverlay) } }
+    }
     /// A gizmo drag in progress: the layer's transform as dragged, drawn on the canvas (and, through
     /// `onLivePreview`, by the running wallpaper) until the drag ends and commits it.
     @Published public var dragPreview: (layer: Int, transform: LayerTransform)? {
@@ -63,16 +74,20 @@ public final class SceneEditSession: ObservableObject {
 
     /// The overlay with the drag in progress applied.
     public var previewOverlay: SceneEditOverlay {
-        guard let preview = dragPreview else { return overlay }
+        var previews = groupDragPreview
+        if let preview = dragPreview { previews[preview.layer] = preview.transform }
+        guard !previews.isEmpty else { return overlay }
         var next = overlay
-        let current = storedTransform(of: preview.layer)
-        func set(_ field: String, _ vector: SIMD3<Double>, _ was: SIMD3<Double>) {
-            guard vector != was, isEditable(field, of: preview.layer) else { return }
-            next.setField(field, to: SceneVector.value([vector.x, vector.y, vector.z]), of: preview.layer)
+        for (layer, transform) in previews {
+            let current = storedTransform(of: layer)
+            func set(_ field: String, _ vector: SIMD3<Double>, _ was: SIMD3<Double>) {
+                guard vector != was, isEditable(field, of: layer) else { return }
+                next.setField(field, to: SceneVector.value([vector.x, vector.y, vector.z]), of: layer)
+            }
+            set("origin", transform.origin, current.origin)
+            set("scale", transform.scale, current.scale)
+            set("angles", transform.angles, current.angles)
         }
-        set("origin", preview.transform.origin, current.origin)
-        set("scale", preview.transform.scale, current.scale)
-        set("angles", preview.transform.angles, current.angles)
         return next
     }
 
@@ -85,6 +100,7 @@ public final class SceneEditSession: ObservableObject {
             outline = authored.applying(overlay.particles)
             baseOutline = outline
             if let selection, outline.layer(selection) == nil { self.selection = nil }
+            pruneSelectedLayers()
             return
         }
         do {
@@ -95,6 +111,7 @@ public final class SceneEditSession: ObservableObject {
             baseOutline = authored
         }
         if let selection, outline.layer(selection) == nil { self.selection = nil }
+        pruneSelectedLayers()
         if let editing = editingText, outline.layer(editing) == nil { editingText = nil }
     }
 
@@ -160,6 +177,7 @@ public final class SceneEditSession: ObservableObject {
 
     public func transform(of layerID: Int) -> LayerTransform {
         if let preview = dragPreview, preview.layer == layerID { return preview.transform }
+        if let preview = groupDragPreview[layerID] { return preview }
         return storedTransform(of: layerID)
     }
 
@@ -411,6 +429,7 @@ public final class SceneEditSession: ObservableObject {
         registerUndo(restoring: overlay, actionName: actionName)
         lastCoalescing = nil
         dragPreview = nil
+        groupDragPreview = [:]
         let previous = overlay
         overlay = snapshot
         refreshOutlines(from: previous)

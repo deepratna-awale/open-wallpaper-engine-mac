@@ -7,8 +7,11 @@ import OWESceneEditing
 /// it. Click picks the topmost layer under the pointer, dragging moves it (snapping to the scene
 /// and the other layers; ⌘ while dragging moves freely); the corners scale (Shift: each side on its
 /// own) and the handle above the top edge rotates (Shift: 15° steps). Double-click a text layer to
-/// edit its text. Scroll or Space-drag pans, pinch or ⌘-scroll zooms, the arrow keys nudge, Delete
-/// deletes. Files dropped on it are imported (images become layers where they are dropped). While
+/// edit its text. Shift- or ⌘-click adds a layer to the selection or takes it out, dragging from
+/// an empty place selects the layers a marquee touches (with Shift or ⌘, adding them), Option-click
+/// picks the layer under the selected one where several are stacked, and dragging one of several
+/// selected layers moves them all. Scroll or Space-drag pans, pinch or ⌘-scroll zooms, the arrow
+/// keys nudge, Delete deletes. Files dropped on it are imported (images become layers where they are dropped). While
 /// a mask is being painted, dragging over its layer paints.
 struct EditorCanvasView: View {
     @Environment(\.appAccentColor) private var accentColor
@@ -30,6 +33,10 @@ struct EditorCanvasView: View {
         case transform(layer: Int, drag: LayerGizmo.Drag, startPoint: SIMD2<Double>, moved: Bool)
         case paint
         case particle(ParticleCanvasDrag)
+        /// A marquee from an empty place, in canvas points; `extending` adds to the selection.
+        case marquee(start: SIMD2<Double>, current: SIMD2<Double>, extending: Bool)
+        /// Several selected layers dragged together from `clicked`.
+        case groupMove(layers: [Int], start: [Int: LayerTransform], startPoint: SIMD2<Double>, clicked: Int, moved: Bool)
     }
 
     /// A press moves this far (points) before it drags, so a click never nudges a layer.
@@ -48,6 +55,12 @@ struct EditorCanvasView: View {
 
     private var actions: LayerActions { LayerActions(session: session, services: services, tools: tools) }
 
+    /// The marquee being dragged, in canvas points.
+    private var marquee: (SIMD2<Double>, SIMD2<Double>)? {
+        if case .marquee(let start, let current, _)? = gesture { return (start, current) }
+        return nil
+    }
+
     var body: some View {
         GeometryReader { (proxy: GeometryProxy) in
             canvasStack(proxy: proxy)
@@ -61,7 +74,7 @@ struct EditorCanvasView: View {
         ZStack(alignment: .topLeading) {
             Color(nsColor: .underPageBackgroundColor)
             sceneCanvas
-            GizmoOverlay(session: session, tools: tools, viewport: viewport, hovered: hovered, pointer: pointer)
+            GizmoOverlay(session: session, tools: tools, viewport: viewport, hovered: hovered, pointer: pointer, marquee: marquee)
                 .allowsHitTesting(false)
             if let particles {
                 ParticleCanvasOverlay(services: particles, viewport: viewport)
@@ -236,9 +249,27 @@ struct EditorCanvasView: View {
                                  startPoint: point, moved: false)
             return
         }
-        let picked = session.layer(at: scenePoint)
+        let extending = event.modifierFlags.contains(.shift) || event.modifierFlags.contains(.command)
+        // Option-click goes down through the layers stacked here, from the selected one.
+        let picked = event.modifierFlags.contains(.option) ? session.layer(at: scenePoint, below: session.selection)
+            : session.layer(at: scenePoint)
+        if extending {
+            if let picked { session.select(picked, extending: true) }
+            gesture = picked == nil ? .marquee(start: point, current: point, extending: true) : nil
+            return
+        }
+        if let picked, session.selectedLayers.count > 1, session.isSelected(picked) {
+            let layers = session.selectedRoots.filter { !session.isLocked($0) }
+            gesture = .groupMove(layers: layers, start: Dictionary(uniqueKeysWithValues: layers.map { ($0, session.transform(of: $0)) }),
+                                 startPoint: point, clicked: picked, moved: false)
+            return
+        }
         session.selection = picked
         if session.editingText != nil, session.editingText != picked { session.editingText = nil }
+        if picked == nil {
+            gesture = .marquee(start: point, current: point, extending: false)
+            return
+        }
         if let picked, let geometry = session.geometry(of: picked) {
             gesture = .transform(layer: picked, drag: LayerGizmo.Drag(handle: .body, start: geometry, startPoint: scenePoint),
                                  startPoint: point, moved: false)
@@ -271,6 +302,14 @@ struct EditorCanvasView: View {
             if let painting = tools.maskPainting, let local = maskPoint(viewport.scenePoint(point), painting: painting, clamped: true) {
                 painting.dab(to: local)
             }
+        case .marquee(let start, _, let extending):
+            gesture = .marquee(start: start, current: point, extending: extending)
+        case .groupMove(let layers, let start, let startPoint, let clicked, let moved):
+            let distance = ((point - startPoint) * (point - startPoint)).sum().squareRoot()
+            guard moved || distance >= Self.dragThreshold else { return }
+            if !moved { gesture = .groupMove(layers: layers, start: start, startPoint: startPoint, clicked: clicked, moved: true) }
+            let delta = viewport.scenePoint(point) - viewport.scenePoint(startPoint)
+            session.groupDragPreview = session.transforms(moving: layers, bySceneOffset: delta, from: start)
         case .particle(var drag):
             guard let particles else { return }
             ParticleCanvasInteraction.drag(&drag, to: point, viewport: viewport,
@@ -290,6 +329,22 @@ struct EditorCanvasView: View {
         }
         if case .paint? = gesture {
             tools.maskPainting?.end()
+            return
+        }
+        if case .marquee(let start, let current, let extending)? = gesture {
+            let size = current - start
+            guard (size * size).sum().squareRoot() >= Self.dragThreshold else { return }
+            let corners = [viewport.scenePoint(start), viewport.scenePoint(current)]
+            let rect = SceneRect(minimum: SIMD2(min(corners[0].x, corners[1].x), min(corners[0].y, corners[1].y)),
+                                 maximum: SIMD2(max(corners[0].x, corners[1].x), max(corners[0].y, corners[1].y)))
+            var layers = Set(session.layers(in: rect))
+            if extending { layers.formUnion(session.selectedIDs) }
+            session.select(layers)
+            return
+        }
+        if case .groupMove(_, _, _, let clicked, let moved)? = gesture {
+            // A click on one of several selected layers selects it alone.
+            if moved { session.endGroupDrag(actionName: L("Move Layer")) } else { session.select(clicked) }
             return
         }
         guard case .transform(_, let drag, _, let moved)? = gesture else { return }
@@ -319,7 +374,7 @@ struct EditorCanvasView: View {
             return true
         }
         if event.keyCode == 51 || event.keyCode == 117, let selected = session.selection, tools.maskPainting == nil {
-            actions.delete(selected)
+            actions.deleteSelection(selected)
             return true
         }
         guard let selected = session.selection, !session.isLocked(selected),
@@ -333,10 +388,16 @@ struct EditorCanvasView: View {
         case NSRightArrowFunctionKey: delta.x = step
         default: return false
         }
-        var transform = session.transform(of: selected)
-        transform.origin.x += delta.x
-        transform.origin.y += delta.y
-        session.setTransform(transform, of: selected, actionName: L("Move Layer"), coalescing: true)
+        // Every selected layer (not those a selected group carries), each in its parent's space.
+        let layers = actions.targets(selected).filter { !session.isLocked($0) }
+        var transforms: [Int: LayerTransform] = [:]
+        for layer in layers {
+            var transform = session.transform(of: layer)
+            transform.origin.x += delta.x
+            transform.origin.y += delta.y
+            transforms[layer] = transform
+        }
+        session.setTransforms(transforms, actionName: L("Move Layer"), coalescing: true)
         return true
     }
 
@@ -365,6 +426,8 @@ private struct GizmoOverlay: View {
     let viewport: CanvasViewport
     let hovered: Int?
     let pointer: SIMD2<Double>?
+    /// A marquee being dragged, corner to corner in canvas points.
+    let marquee: (SIMD2<Double>, SIMD2<Double>)?
 
     var body: some View {
         Canvas { context, _ in
@@ -376,6 +439,18 @@ private struct GizmoOverlay: View {
                 context.stroke(outline(geometry), with: .color(accentColor.opacity(0.6)), lineWidth: 1)
             }
             drawGuides(in: &context)
+            // The other selected layers' outlines; the gizmo is on the one the inspector shows.
+            for other in session.selectedLayers where other != session.selection {
+                if let geometry = session.geometry(of: other) {
+                    context.stroke(outline(geometry), with: .color(accentColor.opacity(0.7)), lineWidth: 1.5)
+                }
+            }
+            if let marquee {
+                let rect = CGRect(x: min(marquee.0.x, marquee.1.x), y: min(marquee.0.y, marquee.1.y),
+                                  width: abs(marquee.1.x - marquee.0.x), height: abs(marquee.1.y - marquee.0.y))
+                context.fill(Path(rect), with: .color(accentColor.opacity(0.12)))
+                context.stroke(Path(rect), with: .color(accentColor), lineWidth: 1)
+            }
             guard let selected = session.selection, session.editingText != selected,
                   let geometry = session.geometry(of: selected) else { return }
             let locked = session.isLocked(selected)
