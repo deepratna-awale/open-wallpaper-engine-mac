@@ -144,6 +144,27 @@ final class WorkshopFilterTests: XCTestCase {
         XCTAssertEqual(WorkshopQuery(filter).clientShowOnly, [.favourites])
     }
 
+    func testHideAnimeExcludesWEsGenresButTheTickedOnes() {
+        var filter = WorkshopFilter()
+        filter.hidesAnime = true
+        XCTAssertEqual(WorkshopQuery(filter).excludedTags, ["Questionable", "Mature", "Anime", "MMD", "Girls", "Guys", "Music"])
+        filter.genres = ["Girls"]
+        let ticked = WorkshopQuery(filter)
+        XCTAssertFalse(ticked.excludedTags.contains("Girls"))
+        XCTAssertEqual(ticked.requiredTags, ["Girls"])
+        XCTAssertNotEqual(filter.cacheKey, WorkshopFilter().cacheKey)
+    }
+
+    func testExactPhraseQuotesTheSearchAsWE() {
+        XCTAssertFalse(WorkshopSearchText.offersExactPhrase("rain"))
+        XCTAssertFalse(WorkshopSearchText.offersExactPhrase(" rain "))
+        XCTAssertTrue(WorkshopSearchText.offersExactPhrase("rainy night"))
+        XCTAssertEqual(WorkshopSearchText.steamText("rainy night", exactPhrase: false), "rainy night")
+        XCTAssertEqual(WorkshopSearchText.steamText("rainy night", exactPhrase: true), "\"rainy night\"")
+        XCTAssertEqual(WorkshopSearchText.steamText("\"rainy\" night", exactPhrase: true), "\"rainy\" night")
+        XCTAssertEqual(WorkshopSearchText.steamText("", exactPhrase: true), "")
+    }
+
     // MARK: Request parameters
 
     func testQueryFilesParameters() {
