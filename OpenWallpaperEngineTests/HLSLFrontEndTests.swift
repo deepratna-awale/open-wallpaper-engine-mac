@@ -138,6 +138,62 @@ final class HLSLFrontEndTests: XCTestCase {
                        "for (int s = 0; s < 2; ++s) { float a = float(s); float s_weBody = a * 2.0; b += s_weBody; }")
     }
 
+    /// Only a declaration directly in the body is the body's own: one in a nested block already
+    /// has a scope of its own (GLSL allows it), and a nested loop's header belongs to that loop.
+    /// Members (`p.s`, `p . s`) keep their names; any scalar, vector or matrix type declares.
+    func testLoopBodyScopesTakeOnlyTheBodysOwnDeclaration() {
+        let nested = "for (int s = 0; s < 2; ++s) { if (s > 0) { float s = 1.0; a += s; } b += s; }"
+        XCTAssertEqual(HLSLFrontEnd.loopBodyScopes(nested), nested)
+        let header = "for (int s = 0; s < 2; ++s) { for (float s = 0.0; s < 1.0; s += 0.5) { a += s; } }"
+        XCTAssertEqual(HLSLFrontEnd.loopBodyScopes(header), header)
+        XCTAssertEqual(HLSLFrontEnd.loopBodyScopes("for (int s = 0; s < 2; ++s) { mat2x3 s = m; a = p.s + p . s + s[0].x; }"),
+                       "for (int s = 0; s < 2; ++s) { mat2x3 s_weBody = m; a = p.s + p . s + s_weBody[0].x; }")
+        XCTAssertEqual(HLSLFrontEnd.loopBodyScopes("for(uint s=0u;s<2u;s++){\n  bvec2 s =\n b;\n}"),
+                       "for(uint s=0u;s<2u;s++){\n  bvec2 s_weBody =\n b;\n}")
+        // A loop without a declaration, a body without braces, a declaration of another name.
+        for text in ["for (s = 0; s < 2; ++s) { float s = 1.0; }", "for (int s = 0; s < 2; ++s) a += s;",
+                     "for (int s = 0; s < 2; ++s) { float t = 1.0; float s2 = t; }"] {
+            XCTAssertEqual(HLSLFrontEnd.loopBodyScopes(text), text)
+        }
+    }
+
+    /// The prelude's end is the marker's tokens however the preprocessor spaced them, as a UTF-16
+    /// offset; a marker in a comment doesn't count, and without one the whole text is the shader's.
+    func testEndOfPreludeIsTheMarkersTokens() {
+        let prelude = "// é\n/* void weEndOfPrelude() {} */\nvoid  weEndOfPrelude ( )\n{\n}"
+        let text = prelude + "\nvoid main() {}"
+        XCTAssertEqual(HLSLFrontEnd.endOfPrelude(utf16In: text), prelude.utf16.count)
+        XCTAssertEqual(HLSLFrontEnd.endOfPrelude(GLSLTokenizer.tokens(Array(text.utf16))), prelude.utf16.count)
+        XCTAssertEqual(HLSLFrontEnd.endOfPrelude(utf16In: "void void weEndOfPrelude() {}"), 29)
+        XCTAssertEqual(HLSLFrontEnd.endOfPrelude(utf16In: "void main() { weEndOfPrelude(); }"), 0)
+        XCTAssertEqual(HLSLFrontEnd.endOfPrelude(utf16In: ShaderPrelude.endMarker), ShaderPrelude.endMarker.utf16.count)
+    }
+
+    /// A loop in the prelude isn't the shader's: only loops after the marker are scoped.
+    func testLoopsInThePreludeAreNotScoped() {
+        let prelude = "void h() { for (int s = 0; s < 2; ++s) { float s = 1.0; } }\n" + ShaderPrelude.endMarker + "\n"
+        let out = convert(prelude + "void main() { for (int s = 0; s < 2; ++s) { float s = 1.0; } }")
+        XCTAssertTrue(out.hasPrefix(prelude), out)
+        XCTAssertTrue(out.contains("float s_weBody = 1.0;"), out)
+    }
+
+    /// HLSL declares system values as inputs (`in uint gl_InstanceID;`, `varying uint
+    /// gl_ViewportIndex;`); GLSL has them built in, so file-scope declarations are dropped. A
+    /// shader that still names `gl_ViewportIndex` takes the layer extension after `#version`.
+    func testSystemValueDeclarationsAreDropped() {
+        let text = "#version 450\n#define X 1\nin uint gl_InstanceID;\nout\n  uint gl_ViewportIndex ;\nin int gl_VertexID; in vec2 a;\nvoid main() { gl_ViewportIndex = gl_InstanceID; }\n"
+        XCTAssertEqual(ShaderPrelude.builtInDeclarations(text),
+                       "#version 450\n#extension GL_ARB_shader_viewport_layer_array : require\n#define X 1\n\n\n in vec2 a;\nvoid main() { gl_ViewportIndex = gl_InstanceID; }\n")
+        // Declaring the viewport index without naming it again takes no extension.
+        XCTAssertEqual(ShaderPrelude.builtInDeclarations("#version 450\nout uint gl_ViewportIndex;\nvoid main() {}\n"),
+                       "#version 450\n\nvoid main() {}\n")
+        // Only file-scope declarations of these names, each its own statement.
+        for kept in ["#version 450\nvoid main() { in uint gl_InstanceID; }\n", "layout(location = 0) in uint gl_InstanceID;\n",
+                     "in uint gl_InstanceIDs;\n", "in float gl_InstanceID;\n", "uniform uint gl_VertexID;\n"] {
+            XCTAssertEqual(ShaderPrelude.builtInDeclarations(kept), kept)
+        }
+    }
+
     /// The prelude is read for signatures but never rewritten.
     func testThePreludeIsNotRewritten() {
         let prelude = "float h(int x) { float y = x; return y; }\n" + ShaderPrelude.endMarker + "\n"

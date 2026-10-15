@@ -22,6 +22,10 @@ import UniformTypeIdentifiers
 /// thumbnail from nearly every player, browsers included; macOS players often send none, and
 /// wallpapers that start their media layout on `mediaThumbnailChanged` (a paused timeline played
 /// by it, say) would otherwise never start it.
+///
+/// WE's media blocklist (`mediablocklist`, `setBlocklist`): a session of a blocked app reaches no
+/// wallpaper, which sees nothing playing (no title, cover, colours or timeline) until another app
+/// plays. macOS has one now-playing session, so there is no other session to fall back to.
 final class MacMediaSessionSource: MediaSessionSource {
     private let queue = DispatchQueue(label: "OpenWallpaperEngine.MediaSession", qos: .utility)
     private let framework: NowPlayingFramework?
@@ -35,6 +39,9 @@ final class MacMediaSessionSource: MediaSessionSource {
     private var subscribers: [Int: (MediaSessionState) -> Void] = [:]
     private var nextID = 0
     private var latest: MediaSessionState?
+    /// The bundle id of the app the current session belongs to, blocked or not; nil when nothing
+    /// plays or the app is unknown. For the blocklist's "Current media session".
+    private var sessionPlayer: String?
 
     // Confined to `queue`.
     private var active = false
@@ -46,6 +53,8 @@ final class MacMediaSessionSource: MediaSessionSource {
     private var artworkData: Data?
     /// WE's "Media integration support" setting.
     private var integrationEnabled = true
+    /// WE's media blocklist: bundle ids whose sessions wallpapers don't see.
+    private var blocklist: Set<String> = []
     private var observers: [NSObjectProtocol] = []
     private var timer: DispatchSourceTimer?
     private var fetchGeneration = 0
@@ -94,6 +103,25 @@ final class MacMediaSessionSource: MediaSessionSource {
             integrationEnabled = enabled
             reconcile()
         }
+    }
+
+    /// WE's media blocklist (`GlobalSettings.mediaBlocklist`): apps, by bundle id, whose
+    /// sessions no wallpaper sees. Applies to the current session at once.
+    func setBlocklist(_ bundleIdentifiers: [String]) {
+        queue.async { [self] in
+            let blocked = Set(bundleIdentifiers)
+            guard blocked != blocklist else { return }
+            blocklist = blocked
+            if active { publish() }
+        }
+    }
+
+    /// The bundle id of the app the current session belongs to, blocked or not (nil while nothing
+    /// plays, the app is unknown, or nobody subscribes). Read after an update.
+    var currentSessionPlayer: String? {
+        lock.lock()
+        defer { lock.unlock() }
+        return sessionPlayer
     }
 
     /// Waits until the work queued so far has run. Tests use it.
@@ -146,6 +174,7 @@ final class MacMediaSessionSource: MediaSessionSource {
         artwork = nil
         lock.lock()
         latest = nil
+        sessionPlayer = nil
         lock.unlock()
     }
 
@@ -174,11 +203,30 @@ final class MacMediaSessionSource: MediaSessionSource {
     }
 
     private func publish() {
+        let player = Self.sessionPlayer(of: info)
+        lock.lock()
+        sessionPlayer = player
+        lock.unlock()
+        let enabled = framework?.isAvailable ?? false
+        if let player, blocklist.contains(player) {
+            var state = MediaSessionState()
+            state.enabled = enabled
+            deliver(state)
+            scheduleTimeline(running: false)
+            return
+        }
         let colors = artworkColors()
-        let state = Self.state(from: info, isPlaying: isPlaying, enabled: framework?.isAvailable ?? false, now: now(),
-                               artwork: colors)
+        let state = Self.state(from: info, isPlaying: isPlaying, enabled: enabled, now: now(), artwork: colors)
         deliver(state)
         scheduleTimeline(running: active && state.playback == .playing && state.timeline.duration > 0)
+    }
+
+    /// The bundle id of the app a now-playing dictionary belongs to, or nil.
+    static func sessionPlayer(of info: [String: Any]) -> String? {
+        for key in [MediaRemote.Key.sessionBundleIdentifier, MediaRemote.Key.playerBundleIdentifier] {
+            if let player = info[key] as? String, !player.isEmpty { return player }
+        }
+        return nil
     }
 
     private func deliver(_ state: MediaSessionState) {

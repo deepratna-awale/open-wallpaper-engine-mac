@@ -1,6 +1,6 @@
 import Foundation
 
-/// Whether a saver shows the app's live frames or its fallback (the loop video, or black without
+/// Whether a saver shows the app's live frames or its fallback (its still, or black without
 /// one): live once frames arrive steadily, back to the fallback as soon as they stop (the app
 /// quit, crashed, paused or stopped drawing for the screen saver). Times are seconds on one
 /// monotonic clock.

@@ -156,7 +156,6 @@
 				LiveSaverPresenter.swift,
 				OWESaverView.swift,
 				SaverLog.swift,
-				SaverVideoPlayer.swift,
 				thumbnail.png,
 				"thumbnail@2x.png",
 			);
@@ -219,7 +218,6 @@
 				OWESaverView.swift,
 				SaverLog.swift,
 				SaverParkPolicy.swift,
-				SaverVideoPlayer.swift,
 				thumbnail.png,
 				"thumbnail@2x.png",
 			);

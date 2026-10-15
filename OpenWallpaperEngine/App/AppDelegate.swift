@@ -178,6 +178,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             guard key == WallpaperInstanceKey(wallpaper, properties: scope),
                   let instance = wallpaperViewModel.sceneInstances.instance(for: key), instance.hasContent else { return nil }
             return instance.renderLoop
+        },
+        videoSharing: { [unowned self] screenId, wallpaper in
+            // The video the display shows, whatever the screen saver's own values: a video has none.
+            let key = wallpaperViewModel.instanceKey(for: screenId)
+            guard key.wallpaper == WallpaperInstanceKey(wallpaper) else { return nil }
+            if let instance = wallpaperViewModel.sceneInstances.instance(for: key), instance.hasContent {
+                return .scene(instance.renderLoop)
+            }
+            if let video = wallpaperViewModel.videoInstances.instance(for: key.wallpaper), video.player.currentItem != nil {
+                return .player(video)
+            }
+            return nil
+        },
+        videoSpeed: { [unowned self] wallpaper in
+            let speed = wallpaperViewModel.playRate > 0 ? wallpaperViewModel.playRate : wallpaperViewModel.lastPlayRate
+            return (speed > 0 ? speed : 1) * wallpaperViewModel.displayPlaybackRate(of: wallpaper)
         }))
     /// Settings › General › Theming: macOS follows the wallpaper's scheme colour.
     private(set) lazy var theming = ThemingController.make { [unowned self] in
@@ -251,7 +267,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var displayFlipCancellable: AnyCancellable?
     private var stretchCanvasCancellable: AnyCancellable?
     private var mediaIntegrationCancellable: AnyCancellable?
+    private var mediaBlocklistCancellable: AnyCancellable?
+    private var videoReadModeCancellable: AnyCancellable?
     private var recordingThresholdCancellable: AnyCancellable?
+    private var recordingVolumeCancellable: AnyCancellable?
+    private var recordingDeviceCancellable: AnyCancellable?
     /// Follows the default output device: capture always restarts, wallpapers reload when the
     /// setting is on. `rebuildWallpaperWindows` is the same reload an asset change uses.
     private lazy var outputDeviceMonitor = OutputDeviceChangeMonitor(
@@ -333,6 +353,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Settings › Optimizations › Recording threshold: quieter captured audio reads as silence.
         recordingThresholdCancellable = globalSettingsViewModel.$settings.map(\.audioRecordingThreshold).removeDuplicates()
             .sink { WallpaperServices.shared.audioCapture.recordingThreshold = $0 }
+        // Settings › Optimizations › Recording volume and Audio recording device: the spectrum's
+        // boost, and the device it is recorded from.
+        recordingVolumeCancellable = globalSettingsViewModel.$settings.map(\.audioRecordingVolume).removeDuplicates()
+            .sink { WallpaperServices.shared.audioCapture.recordingVolume = $0 }
+        recordingDeviceCancellable = globalSettingsViewModel.$settings.map(\.audioRecordingDevice).removeDuplicates()
+            .sink { device in MainActor.assumeIsolated { WallpaperServices.shared.audioCapture.recordingDevice = device } }
         // Flipped clone displays mirror their window's content (`WallpaperWindowContentView`).
         displayFlipCancellable = wallpaperViewModel.$layoutResolution.map(\.flipped).removeDuplicates()
             .sink { [weak self] flipped in self?.applyDisplayFlips(flipped) }
@@ -357,6 +383,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Settings › Optimizations › Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
             .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }
+        // Settings › Optimizations › Media blocklist: apps whose sessions wallpapers don't see.
+        mediaBlocklistCancellable = globalSettingsViewModel.$settings.map(\.mediaBlocklist).removeDuplicates()
+            .sink { [weak self] blocked in self?.mediaSession.setBlocklist(blocked) }
+        // Settings › Optimizations › Video loading: videos opened from now on read their file this way.
+        videoReadModeCancellable = globalSettingsViewModel.$settings.map(\.videoReadMode).removeDuplicates()
+            .sink { [weak self] mode in self?.wallpaperViewModel.videoReadMode = mode }
 
         // Settings → Audio → Reload when changing output device (`OutputDeviceChangeMonitor`).
         outputDeviceMonitor.start()
@@ -442,6 +474,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // A test copy wears "TEST", a local build "Dev", on its Dock icon (`DockBadge`).
         DockBadge.current.apply()
+        #if DEBUG
+        AndroidBatchPicker.openScreenshotFixtureIfRequested(library: contentViewModel.library)
+        #endif
         AppDelegate.shared.setPlacehoderWallpaper(with: wallpaperViewModel.currentWallpaper)
         // Each display's desktop picture (lock screen, menu bar tint) follows what it shows.
         desktopPictures.observe(wallpaperViewModel, settings: globalSettingsViewModel)
@@ -538,36 +573,34 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
     }
     
-    /// What earlier versions left for the screen saver: a scene's recording set as the screen saver
-    /// becomes the live pick of that wallpaper, with its picture as the still; one of a wallpaper no
-    /// longer in the library goes, so the screen saver follows the desktop again; a video's own
-    /// file stays as it is. The old recordings and the retired settings are deleted.
+    /// What earlier versions left for the screen saver: what they set as the screen saver (a
+    /// scene's recording, a video's own file copied in) becomes the live pick of that wallpaper,
+    /// with its picture as the still; one of a wallpaper no longer in the library goes, so the
+    /// screen saver follows the desktop again. The old recordings and video files (only OWE's own,
+    /// in the screen saver's folder) and the retired settings are deleted.
     private func migrateScreenSaverRecording() {
         let store = screenSaverSelection.store
         store.removeRetiredKeys()
-        // Recordings are gone: the old loop videos too, once the selection is settled, in the
-        // background (only the user's own copy wrote them where the saver reads). A video set as
-        // the screen saver keeps its file.
+        // Nothing is recorded, linked or copied any more: the old files go, in the background
+        // (only the user's own copy wrote them where the saver reads).
         defer {
             if ScreenSaverInstaller.current.mayInstall {
                 let videos = ScreenSaverVideoStore.current, caches = AppStorageLocation.current.cachesDirectory
-                let keep = Set([store.selection?.fileName].compactMap { $0 })
-                DispatchQueue.global(qos: .utility).async { videos.removeOldRecordings(cachesDirectory: caches, keeping: keep) }
+                DispatchQueue.global(qos: .utility).async { videos.removeOldFiles(cachesDirectory: caches) }
             }
         }
-        guard let selection = store.selection else { return }
+        guard let selection = store.selection else {
+            store.migrateSelection() // Drops one that no longer decodes.
+            return
+        }
         let folder = URL(filePath: selection.wallpaperDirectory, directoryHint: .isDirectory)
         guard let wallpaper = InstalledLibrary.wallpaper(at: folder, hiding: []) else {
             store.selection = nil
             OWELog.info(.app, "Screen saver: \(folder.lastPathComponent), set as the screen saver, is no longer in the library")
             return
         }
-        guard store.migrateRecordedSelection(isVideo: { _ in ScreenSaverVideoSource.isEligible(wallpaper) }) else {
-            // A video an earlier version linked from another volume is put in place again.
-            if ScreenSaverInstaller.current.mayInstall { screenSaverSelection.replaceLinkedSelection(wallpaper) }
-            return
-        }
-        OWELog.info(.app, "Screen saver: \(folder.lastPathComponent)'s recording is now drawn live")
+        guard store.migrateSelection() else { return }
+        OWELog.info(.app, "Screen saver: \(folder.lastPathComponent), set as the screen saver by an earlier version, is now drawn live")
         // Its still now, once the app is set up (`renderPickStill`).
         DispatchQueue.main.async { [weak self] in self?.liveScreenSaver.renderPickStill(wallpaper) }
     }

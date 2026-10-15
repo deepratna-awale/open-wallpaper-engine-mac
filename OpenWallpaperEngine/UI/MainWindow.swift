@@ -70,7 +70,12 @@ class MainWindowController: NSWindowController, NSWindowDelegate {
         switch content.navigation.topTabBarSelection {
         case 0:
             let library = content.library
-            return library.displayedWallpapers.isEmpty ? nil : { library.selectAll() }
+            guard !library.displayedWallpapers.isEmpty else { return nil }
+            // Picking wallpapers for an export: every exportable one shown joins the picks.
+            if let selection = content.androidBatchPicker {
+                return { selection.selectAll(library.displayedWallpapers) }
+            }
+            return { library.selectAll() }
         case 1:
             let workshop = content.workshopVM
             return workshop.items.isEmpty ? nil : { workshop.selectAll() }

@@ -15,7 +15,8 @@ import Foundation
 ///     wraps), but at most one past the previous bin's band, so the lowest 16 bands get a bin each;
 ///   - weight w = 0.501 − 0.499 · cos(π·t), rising from 0.002 at the bottom to 1 at the top;
 ///   - band value = the maximum over its bins of √(w·p).
-/// - Values are scaled by the input volume (`audioinputvolume`, default 50 → 1) · 0.001 · N / (L/2).
+/// - Values are scaled by the input volume (WE's "Recording volume", `audioinputvolume`, 0…200,
+///   default 50 → 1) · 0.001 · N / (L/2).
 ///
 /// Left then right, 64 each. A mono source passes the same samples for both.
 ///
@@ -35,13 +36,19 @@ final class AudioSpectrumBlockTransform {
     static let sampleOffset: Float = 127
 
     let blockLength: Int
-    /// `audioinputvolume` × 0.02.
+    /// `audioinputvolume` × 0.02 (`inputVolume(setting:)`).
     var inputVolume: Float = 1
     /// `audioinputthreshold` × 0.001 (`threshold(setting:)`): the sample level a packet must reach.
     var threshold: Float = 0
 
     /// The gate's sample level for WE's threshold setting (0…10).
     static func threshold(setting: Double) -> Float { Float(max(setting, 0)) * 0.001 }
+
+    /// WE's "Recording volume" default (`audioinputvolume` 50, a scale of 1).
+    static let defaultVolumeSetting: Double = 50
+    /// The band scale for WE's "Recording volume" setting (0…200 in its slider): × 0.02, so the
+    /// default 50 is 1 and 200 boosts four times.
+    static func inputVolume(setting: Double) -> Float { Float(max(setting, 0)) * 0.02 }
 
     private let dft: BluesteinDFT
     private let bandOfBin: [Int]

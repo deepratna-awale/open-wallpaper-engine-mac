@@ -80,6 +80,12 @@ struct OptimizationsPage: SettingsPage {
                 }
                 .changedFromDefault(viewModel.isChanged(\.videoFramework))
                 .help("AVKit plays videos with Apple's player. Metal draws them through the scene renderer so their effects apply; it needs the Wallpaper Engine assets, and without them videos play through AVKit.")
+                Picker("Video loading", selection: $viewModel.settings.videoReadMode) {
+                    Text("From disk").tag(GSVideoReadMode.fromDisk)
+                    Text("In memory").tag(GSVideoReadMode.inMemory)
+                }
+                .changedFromDefault(viewModel.isChanged(\.videoReadMode))
+                .help("From disk reads the video file again on every loop. In memory reads it once and plays it from memory, so the disk can rest (useful for a hard disk or a network volume), for the file's size in memory. Applies to videos opened from now on.")
             } header: {
                 Label("Video", systemImage: "film")
             } footer: {
@@ -98,6 +104,18 @@ struct OptimizationsPage: SettingsPage {
                 }
                 .changedFromDefault(viewModel.isChanged(\.reloadWhenChangingOutputDevice))
                 .help("Reloads the wallpapers and their audio when you switch the sound output, such as to headphones or another speaker.")
+                AudioRecordingDeviceRow(selection: $viewModel.settings.audioRecordingDevice)
+                    .changedFromDefault(viewModel.isChanged(\.audioRecordingDevice))
+                    .help("Where audio-reactive wallpapers hear sound from. Default is the sound your Mac plays; a microphone or a loopback device such as BlackHole records that input instead.")
+                HStack {
+                    Text("Recording volume")
+                    Spacer()
+                    NumericSliderInput(value: $viewModel.settings.audioRecordingVolume, range: 0...200,
+                                       defaultValue: 50, step: 1, fractionDigits: 0,
+                                       sliderWidth: 150, fieldWidth: 44)
+                }
+                .changedFromDefault(viewModel.isChanged(\.audioRecordingVolume))
+                .help("How strongly audio-reactive wallpapers react to the recorded sound. 50 is normal, 100 doubles it, 0 silences it.")
                 HStack {
                     Text("Recording threshold")
                     Spacer()
@@ -110,6 +128,9 @@ struct OptimizationsPage: SettingsPage {
                 Toggle("Media integration support", isOn: $viewModel.settings.mediaIntegration)
                     .changedFromDefault(viewModel.isChanged(\.mediaIntegration))
                     .help("Lets wallpapers show the title, artist and album cover of what's playing now. Off hides it from every wallpaper.")
+                MediaBlocklistRow(blocklist: $viewModel.settings.mediaBlocklist, source: AppDelegate.shared.mediaSession)
+                    .disabled(!viewModel.settings.mediaIntegration)
+                    .changedFromDefault(viewModel.isChanged(\.mediaBlocklist))
             } header: {
                 Label("Audio", systemImage: "speaker.3.fill")
             } footer: {

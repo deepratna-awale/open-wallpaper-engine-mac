@@ -27,6 +27,8 @@ class VideoWallpaperViewModel: ObservableObject {
 
     /// A copy of the video AVFoundation can play is being made (`RepairedVideoCache`).
     @Published private(set) var isPreparingVideo = false
+    /// The file the players read, kept while they do: from memory, it owns the bytes.
+    private var videoFile: VideoFileSource?
     /// Finds the file the players open, off the main thread.
     private var preparation: Task<Void, Never>?
     /// Identifies the preparation in flight; nil once its file is open.
@@ -166,6 +168,7 @@ class VideoWallpaperViewModel: ObservableObject {
         audioPlayer.pause()
         player.replaceCurrentItem(with: nil)
         audioPlayer.replaceCurrentItem(with: nil)
+        videoFile = nil
     }
 
     deinit {
@@ -238,12 +241,24 @@ class VideoWallpaperViewModel: ObservableObject {
         // A paused wallpaper stays paused; pacing only modulates a video that is playing. The
         // wallpaper's own playback rate (WE's per-wallpaper option) scales the app's.
         let displayRate = wallpaperViewModel.displayPlaybackRate(of: currentWallpaper)
+        // Held for the screen saver: the picture plays at the wallpaper's speed (the last one
+        // while paused), silent, whatever the rules and the windows covering it say.
+        if heldForScreenSaver {
+            let speed = playRate > 0 ? playRate : (wallpaperViewModel.lastPlayRate > 0 ? wallpaperViewModel.lastPlayRate : 1)
+            setVideoRate(speed * displayRate)
+            setAudioRate(0)
+            return
+        }
         let rate = displayPlayback.rendersFrames ? playRate * displayRate : 0
         setVideoRate(rate > 0 ? max(0, rate + Float(smoothedAudioLevel * paceAmount)) : 0)
         // Audio runs on a second player, so a paused wallpaper keeps playing sound unless the
         // pause is applied here too.
         setAudioRate(playsAudio && !audioPlayer.isMuted && rate > 0 ? wallpaperViewModel.audioPlayRate * displayRate : 0)
     }
+
+    /// The live screen saver draws this video's frames (`ScreenSaverVideoSharing`): it plays,
+    /// silent, while the screen saver runs.
+    private(set) var heldForScreenSaver = false
 
     /// Assigning `AVPlayer.rate` restarts the timebase, so doing it on every audio sample stutters
     /// the video and pitches the audio. Only meaningful changes are forwarded.
@@ -296,42 +311,49 @@ class VideoWallpaperViewModel: ObservableObject {
     /// Opens the wallpaper's video in the players once the file to open is known: a video whose
     /// track AVFoundation refuses as it is plays from its repaired copy, which is made first when
     /// it doesn't exist yet (a few seconds, shown as "Preparing video…").
+    ///
+    /// WE's "Video loading" set to in memory reads the file into memory here too, off the main
+    /// thread (`VideoFileSource`).
     private func preparePlayers(for wallpaper: WEWallpaper) {
         preparation?.cancel()
         pendingPreparation = nil
         isPreparingVideo = false
         let source = wallpaper.mediaURL
-        guard RepairedVideoCache.mayNeedRepair(source) else {
-            replacePlayers(with: source)
+        let readMode = wallpaperViewModel.videoReadMode
+        guard RepairedVideoCache.mayNeedRepair(source) || readMode == .inMemory else {
+            replacePlayers(with: VideoFileSource(url: source, mode: .fromDisk))
             return
         }
         let cache = RepairedVideoCache.current
         let id = UUID()
         pendingPreparation = id
         preparation = Task { [weak self] in
-            let url = await Task.detached(priority: .userInitiated) {
-                cache.playableURL(for: source) {
+            let file = await Task.detached(priority: .userInitiated) {
+                let url = cache.playableURL(for: source) {
                     Task { @MainActor [weak self] in
                         guard let self, self.pendingPreparation == id else { return }
                         self.isPreparingVideo = true
                     }
                 }
+                return VideoFileSource(url: url, mode: readMode)
             }.value
             guard let self, !Task.isCancelled, !self.stopped, self.pendingPreparation == id else { return }
             self.pendingPreparation = nil
             self.isPreparingVideo = false
-            self.replacePlayers(with: url)
+            self.replacePlayers(with: file)
         }
     }
 
-    private func replacePlayers(with url: URL) {
+    private func replacePlayers(with file: VideoFileSource) {
+        let url = file.url
+        videoFile = file
         mediaLease = CacheLeases.current.lease(url)
         // New AVPlayers start at rate 0, so the cached values no longer describe them.
         appliedVideoRate = nil
         appliedAudioRate = nil
         probe.reset()
-        let videoItem = AVPlayerItem(url: url)
-        let audioItem = AVPlayerItem(url: url)
+        let videoItem = file.makeItem()
+        let audioItem = file.makeItem()
         audioItem.audioTimePitchAlgorithm = .timeDomain
 
         player.replaceCurrentItem(with: videoItem)
@@ -340,6 +362,16 @@ class VideoWallpaperViewModel: ObservableObject {
         audioPlayer.isMuted = !playsAudio
         ownAudioTap.attach(to: audioItem)
         observeItemEnd(of: videoItem)
+        updatePlaybackRates(audioLevel: WallpaperServices.shared.audioLevel)
+    }
+}
+
+extension VideoWallpaperViewModel: ScreenSaverVideoSharing {
+    var sharedPlayer: AVPlayer { player }
+
+    func holdForScreenSaver(_ hold: Bool) {
+        guard hold != heldForScreenSaver else { return }
+        heldForScreenSaver = hold
         updatePlaybackRates(audioLevel: WallpaperServices.shared.audioLevel)
     }
 }

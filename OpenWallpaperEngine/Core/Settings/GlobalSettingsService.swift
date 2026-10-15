@@ -229,6 +229,18 @@ class GlobalSettingsViewModel: ObservableObject {
         settings = Self.applying(quality, to: settings)
     }
 
+    /// The preset whose values `settings` holds, or nil (Custom) when it matches none. Derived
+    /// from the values themselves, so it follows every change: the controls, Restore Defaults, an
+    /// import, MCP and the Quality ↔ Efficiency slider. Whether the FPS came from the slider or a
+    /// preset (`fpsSetByUser`) is not a value the preset compares.
+    nonisolated static func matchingPreset(_ settings: GlobalSettings) -> GSQuality? {
+        GSQuality.allCases.first { quality in
+            var applied = applying(quality, to: settings)
+            applied.fpsSetByUser = settings.fpsSetByUser
+            return applied == settings
+        }
+    }
+
     /// `settings` with `quality`'s preset applied.
     nonisolated static func applying(_ quality: GSQuality, to settings: GlobalSettings) -> GlobalSettings {
         var settings = settings

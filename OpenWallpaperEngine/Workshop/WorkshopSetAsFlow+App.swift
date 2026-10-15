@@ -24,7 +24,6 @@ extension WorkshopSetAsFlow.Environment {
             },
             wallpaper: { folder in InstalledLibrary.wallpaper(at: folder, hiding: []) },
             setWallpaper: { AppDelegate.shared.wallpaperViewModel.inspectAndApply($0) },
-            isSettingScreenSaver: { AppDelegate.shared.screenSaverSelection.isSettingVideo },
             screenSaverAvailability: { ScreenSaverSelectionService.availability(of: $0) },
             offerChromium: { AppDelegate.shared.screenSaverSelection.chromiumOffer = $0 },
             setScreenSaver: { wallpaper, completion in

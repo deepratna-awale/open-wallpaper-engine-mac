@@ -834,6 +834,9 @@ class WallpaperViewModel: ObservableObject {
 
     /// The app's "Audio Output" setting; off silences every wallpaper. Set by the app delegate.
     @Published var audioOutputEnabled = true
+    /// WE's "Video loading" (`GlobalSettings.videoReadMode`): video wallpapers play from their
+    /// file or from memory (`VideoFileSource`).
+    @Published var videoReadMode = GSVideoReadMode.fromDisk
 
     /// Whether a running wallpaper instance (scene, video) plays its sound: each plays it once,
     /// however many displays show it (`WallpaperAudioRouting`).
