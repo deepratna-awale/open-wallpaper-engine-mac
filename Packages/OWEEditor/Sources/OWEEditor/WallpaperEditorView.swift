@@ -4,7 +4,7 @@ import OWESceneEditing
 
 /// The Wallpaper Editor window (editor-plan notes): the layer list on the left, the canvas
 /// running the window's draft in the middle, the selected layer's inspector on the right, and the
-/// document actions (undo, redo, Revert to Saved, Save, Save as New Wallpaper) in the toolbar.
+/// document actions (undo, redo, Revert to Saved, the thumbnail, Save, Save as New Wallpaper) in the toolbar.
 public struct WallpaperEditorView: View {
     @ObservedObject private var session: SceneEditSession
     @ObservedObject private var document: WallpaperEditorDocument
@@ -90,6 +90,7 @@ public struct WallpaperEditorView: View {
         } message: {
             Text(L("Every change since the last save is dropped. You can undo this."))
         }
+        .modifier(OptionalThumbnailSheet(thumbnail: services.thumbnail) { show(Notice(text: $0, isError: true)) })
         .sheet(isPresented: $isSaving) {
             SaveAsNewSheet(suggestedTitle: services.suggestedNewTitle) { title in
                 do {
@@ -133,6 +134,11 @@ public struct WallpaperEditorView: View {
         }
         if #available(macOS 26, *) {
             ToolbarSpacer(.fixed)
+        }
+        if let thumbnail = services.thumbnail {
+            ToolbarItem {
+                ThumbnailMenu(thumbnail: thumbnail)
+            }
         }
         ToolbarItemGroup {
             if services.document != nil {
@@ -255,6 +261,20 @@ private struct SaveAsNewSheet: View {
         let title = trimmed
         dismiss()
         save(title)
+    }
+}
+
+/// `ThumbnailSheetHost` when the app makes thumbnails.
+private struct OptionalThumbnailSheet: ViewModifier {
+    let thumbnail: EditorThumbnail?
+    let showProblem: (String) -> Void
+
+    func body(content: Content) -> some View {
+        if let thumbnail {
+            content.modifier(ThumbnailSheetHost(thumbnail: thumbnail, showProblem: showProblem))
+        } else {
+            content
+        }
     }
 }
 
