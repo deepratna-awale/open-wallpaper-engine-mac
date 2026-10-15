@@ -4,11 +4,36 @@ import Foundation
 /// wallpapers and shaders use as labels (`ui_editor_properties_speed` → "Speed"). The assets cache
 /// carries WE's files in `.owe-assets/locale`; a WE install keeps them in `<install>/locale`,
 /// beside `<install>/assets`.
+///
+/// A wallpaper's own translations (project.json `general.localization`) join them through
+/// `addingAuthorTranslations`, in the order WE's UI resolves a key: its language's table, where
+/// WE's own text wins over the author's (`localeLoader` extends the author's table with WE's),
+/// then English the same way (`fallbackLanguage("en-us")`), then nothing (the caller shows the key).
 struct WallpaperEngineLabels {
-    private let strings: [String: String]
+    /// WE's English table.
+    private let english: [String: String]
+    /// WE's table of the user's language; empty for English.
+    private let localized: [String: String]
+    /// The wallpaper's own tables for the user's language and for English.
+    private var authorLocalized: [String: String] = [:]
+    private var authorEnglish: [String: String] = [:]
 
     init(strings: [String: String] = [:]) {
-        self.strings = strings
+        self.init(english: strings, localized: [:])
+    }
+
+    init(english: [String: String], localized: [String: String]) {
+        self.english = english
+        self.localized = localized
+    }
+
+    /// These labels with a wallpaper's own translations: `localized` is its table for the user's
+    /// language, `english` its `en-us` table.
+    func addingAuthorTranslations(localized: [String: String], english: [String: String]) -> WallpaperEngineLabels {
+        var labels = self
+        labels.authorLocalized = localized
+        labels.authorEnglish = english
+        return labels
     }
 
     /// English, overlaid by the first of `languages` WE ships a file for. WE's translations are
@@ -16,21 +41,25 @@ struct WallpaperEngineLabels {
     static func load(assets: URL? = WallpaperEngineAssets.directory,
                      languages: [String] = Locale.preferredLanguages) -> WallpaperEngineLabels {
         guard let assets, let directory = localeDirectory(assets: assets) else { return WallpaperEngineLabels() }
-        var strings = table(directory.appending(path: "ui_en-us.json"))
+        let english = table(directory.appending(path: "ui_en-us.json"))
         let available = availableLanguages(in: directory)
-        if let language = languages.lazy.compactMap({ weLanguage(for: $0, available: available) }).first,
-           language != "en-us" {
-            strings.merge(table(directory.appending(path: "ui_\(language).json"))) { _, translated in translated }
-        }
-        return WallpaperEngineLabels(strings: strings)
+        guard let language = languages.lazy.compactMap({ weLanguage(for: $0, available: available) }).first,
+              language != "en-us" else { return WallpaperEngineLabels(english: english, localized: [:]) }
+        return WallpaperEngineLabels(english: english, localized: table(directory.appending(path: "ui_\(language).json")))
     }
 
-    /// WE's text for a localisation key, matched case-insensitively as keys are authored with
-    /// mixed case; nil for plain text and unknown keys.
+    /// The text for a localisation key: WE's in the user's language, the wallpaper's own in it,
+    /// WE's English, the wallpaper's English. WE's keys match case-insensitively as wallpapers
+    /// write them with mixed case; the wallpaper's own match exactly, as in WE. Nil for plain
+    /// text and unknown keys.
     func translation(_ key: String) -> String? {
         let trimmed = key.trimmingCharacters(in: .whitespaces)
-        if let exact = strings[trimmed] { return exact }
-        return strings[trimmed.lowercased()]
+        return Self.lookUp(trimmed, in: localized) ?? authorLocalized[trimmed]
+            ?? Self.lookUp(trimmed, in: english) ?? authorEnglish[trimmed]
+    }
+
+    private static func lookUp(_ key: String, in table: [String: String]) -> String? {
+        table[key] ?? table[key.lowercased()]
     }
 
     /// WE's code (the suffix of `ui_<code>.json`: `de-de`, `pt-br`, `zh-chs`) for a BCP 47

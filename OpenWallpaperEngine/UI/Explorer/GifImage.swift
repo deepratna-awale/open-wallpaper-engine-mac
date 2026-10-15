@@ -70,7 +70,7 @@ struct GifImage: NSViewRepresentable {
         let url = gifUrl ?? gifName.flatMap { AppBundleLayout.framework.url(forResource: $0, withExtension: "gif") }
         guard let url else { return }
         nsView.animationURL = url
-        let key = url.path + "#still"
+        let key = Self.stillKey(url)
         guard coordinator.loadedKey != key else { return }
         if let cached = Self.imageCache.object(forKey: key as NSString) {
             nsView.still = cached.image
@@ -95,11 +95,18 @@ struct GifImage: NSViewRepresentable {
     /// The downsampled still a tile shows for `url`: the one already loaded, else read now and
     /// kept for the tiles. For a few pictures at once, such as a drag's image.
     static func still(at url: URL) -> CGImage? {
-        let key = url.path + "#still"
+        let key = Self.stillKey(url)
         if let cached = imageCache.object(forKey: key as NSString) { return cached.image }
         guard let image = downsampledImage(at: url, maxPixelSize: 512) else { return nil }
         imageCache.setObject(StillImage(image: image), forKey: key as NSString)
         return image
+    }
+
+    /// The cache key of `url`'s still: its path and modification date, so a preview the Wallpaper
+    /// Editor writes again under the same name (`preview.jpg`) shows the new picture.
+    private static func stillKey(_ url: URL) -> String {
+        let modified = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate // Optional: a missing file has no date.
+        return url.path + "#" + String(modified?.timeIntervalSinceReferenceDate ?? 0) + "#still"
     }
 
     private final class StillImage {

@@ -43,6 +43,9 @@ final class ChromiumBrowserHost: NSObject, ChromiumBrowserHostProtocol, @uncheck
     private var clients: [Int: Client] = [:]
     private var nextId = 1
     private var idleGeneration = 0
+    private var requestedDebuggingPort = 0
+    /// The DevTools port the current connection's helper was started with.
+    private var connectionDebuggingPort = 0
 
     init(makeConnection: @escaping () -> NSXPCConnection, device: MTLDevice?,
          engine: @escaping () -> (install: URL, profile: URL)?) {
@@ -51,9 +54,35 @@ final class ChromiumBrowserHost: NSObject, ChromiumBrowserHostProtocol, @uncheck
         self.engine = engine
     }
 
+    /// Chromium's DevTools port on 127.0.0.1 (`WebDevtools`), 0 for closed. CEF opens it only as it
+    /// starts, so a change lets the running helper go and its pages reopen in a new one.
+    var remoteDebuggingPort: Int {
+        get { lock.withLock { requestedDebuggingPort } }
+        set {
+            let (released, open): (NSXPCConnection?, [ChromiumBrowserClient]) = lock.withLock {
+                requestedDebuggingPort = newValue
+                guard let connection, connectionDebuggingPort != newValue else { return (nil, []) }
+                self.connection = nil
+                let open = clients.values.compactMap(\.client)
+                clients.removeAll()
+                return (connection, open)
+            }
+            guard let released else { return }
+            OWELog.info(.web, "Restarting the Chromium helper with DevTools \(newValue > 0 ? "on port \(newValue)" : "off")")
+            released.invalidate()
+            DispatchQueue.main.async {
+                open.forEach { $0.chromiumTerminated(reason: "The Chromium helper restarted for DevTools") }
+            }
+        }
+    }
+
+    /// Whether any web wallpaper page has a browser.
+    var hasBrowsers: Bool { lock.withLock { clients.values.contains { $0.client != nil } } }
+
     private func helper(onError: @escaping (Error) -> Void) -> ChromiumBrowserHelperProtocol? {
         let connection: NSXPCConnection = lock.withLock {
             if let connection = self.connection { return connection }
+            connectionDebuggingPort = requestedDebuggingPort
             let connection = makeConnection()
             connection.remoteObjectInterface = .chromiumBrowserHelper
             connection.exportedInterface = .chromiumBrowserHost
@@ -124,8 +153,9 @@ final class ChromiumBrowserHost: NSObject, ChromiumBrowserHostProtocol, @uncheck
         let bundle = engine.install.appending(path: ChromiumHelperIPC.engineBundleName, directoryHint: .isDirectory)
         // Debug builds only (the helper ignores it otherwise): tells a sandbox problem from anything else.
         let noSandbox = ProcessInfo.processInfo.environment["OWE_CEF_NO_SANDBOX"] == "1"
+        let debuggingPort = lock.withLock { connectionDebuggingPort }
         helper.initialize(engineBundle: bundle.path, cacheDirectory: engine.profile.path,
-                          debugNoSandbox: noSandbox) { error in
+                          debugNoSandbox: noSandbox, remoteDebuggingPort: debuggingPort) { error in
             if let error {
                 fail(error)
                 return
@@ -268,7 +298,7 @@ enum ChromiumResourceServing {
     static let embedPageURL = "https://localhost/"
 
     static func response(for urlString: String, range: String?, directory: URL?, patches: WebCompatPatches,
-                         embedHTML: String?) -> ChromiumResourceResponse {
+                         embedHTML: String?, userFiles: WebUserFiles? = nil) -> ChromiumResourceResponse {
         if urlString == embedPageURL {
             guard let embedHTML else { return .notFound() }
             return ChromiumResourceResponse(status: 200, headers: ["Content-Type": "text/html; charset=utf-8"],
@@ -278,7 +308,7 @@ enum ChromiumResourceServing {
               url.host == WebWallpaperSchemeHandler.host else { return .notFound() }
         var request = URLRequest(url: url)
         if let range { request.setValue(range, forHTTPHeaderField: "Range") }
-        let reply = WebWallpaperSchemeHandler.reply(to: request, directory: directory, patches: patches)
+        let reply = WebWallpaperSchemeHandler.reply(to: request, directory: directory, patches: patches, userFiles: userFiles)
         switch reply.body {
         case .data(let data):
             return ChromiumResourceResponse(status: reply.status, headers: reply.headers, data: data)

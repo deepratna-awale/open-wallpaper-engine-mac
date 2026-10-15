@@ -90,6 +90,20 @@ final class ChromiumWebWallpaperBridgeTests: XCTestCase {
         XCTAssertTrue(created.script.contains("wallpaperRegisterMediaPropertiesListener"))
     }
 
+    func testDevtoolsPortReachesTheHelperAndAChangeReopensThePageInANewOne() {
+        let (page, _, _) = makePage()
+        XCTAssertEqual(helper.debuggingPorts, [0])
+        XCTAssertTrue(host.hasBrowsers)
+        host.remoteDebuggingPort = WebDevtools.chromiumPort
+        waitUntil("the page reopening with DevTools") { helper.created.count == 2 }
+        XCTAssertEqual(helper.debuggingPorts.last, WebDevtools.chromiumPort)
+        // The same port again keeps the running helper.
+        host.remoteDebuggingPort = WebDevtools.chromiumPort
+        RunLoop.main.run(until: Date().addingTimeInterval(1.5))
+        XCTAssertEqual(helper.created.count, 2)
+        page.close()
+    }
+
     func testUserAndGeneralPropertiesOnLoadThenChanges() throws {
         let (page, viewModel, id) = makePage()
         defer { page.close() }
@@ -375,6 +389,7 @@ private final class FakeBrowserHelper: NSObject, NSXPCListenerDelegate, Chromium
     private let lock = NSLock()
     private var connection: NSXPCConnection?
     private var _initialized: [(framework: String, cache: String)] = []
+    private var _debuggingPorts: [Int] = []
     private var _created: [Created] = []
     private var _scripts: [Int: [String]] = [:]
     private var _hidden: [Int: Bool] = [:]
@@ -387,6 +402,7 @@ private final class FakeBrowserHelper: NSObject, NSXPCListenerDelegate, Chromium
 
     var initialized: [(framework: String, cache: String)] { lock.withLock { _initialized } }
     var created: [Created] { lock.withLock { _created } }
+    var debuggingPorts: [Int] { lock.withLock { _debuggingPorts } }
     func scripts(for id: Int) -> [String] { lock.withLock { _scripts[id] ?? [] } }
     var hidden: [Int: Bool] { lock.withLock { _hidden } }
     var muted: [Int: Bool] { lock.withLock { _muted } }
@@ -459,8 +475,11 @@ private final class FakeBrowserHelper: NSObject, NSXPCListenerDelegate, Chromium
     func stop() {}
 
     func initialize(engineBundle: String, cacheDirectory: String, debugNoSandbox: Bool,
-                    reply: @escaping (String?) -> Void) {
-        lock.withLock { _initialized.append((engineBundle, cacheDirectory)) }
+                    remoteDebuggingPort: Int, reply: @escaping (String?) -> Void) {
+        lock.withLock {
+            _initialized.append((engineBundle, cacheDirectory))
+            _debuggingPorts.append(remoteDebuggingPort)
+        }
         reply(nil)
     }
 

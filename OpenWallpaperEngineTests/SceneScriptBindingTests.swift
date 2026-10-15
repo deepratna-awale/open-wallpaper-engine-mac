@@ -429,21 +429,24 @@ final class SceneScriptBindingTests: XCTestCase {
 
     func testTheUserPropertiesPayloadIsWEsRawForm() throws {
         _ = try Fixtures.assets()
-        let properties = try SceneScriptUserProperties.parsing("""
+        var properties = try SceneScriptUserProperties.parsing("""
             {"tint": {"type": "color", "value": "1 0.5 0", "text": "Tint", "order": 1},
-             "go": {"type": "usershortcut", "value": "", "isbound": true, "commandtype": 1, "file": "a.exe"}}
+             "go": {"type": "usershortcut", "value": "", "isbound": false}}
             """)
+        // A user shortcut reads from the user's binding (WE's stored form), never project.json.
+        properties.setStoredValues(["go": "file:a1b2c3:/Applications/a.app|-x"])
         let payload = properties.payload()
         XCTAssertEqual((payload["tint"] as? [String: Any])?["type"] as? String, "color")
         XCTAssertEqual((payload["tint"] as? [String: Any])?["value"] as? String, "1 0.5 0")
         XCTAssertNil((payload["tint"] as? [String: Any])?["text"])
         XCTAssertEqual((payload["go"] as? [String: Any])?["isbound"] as? Bool, true)
+        XCTAssertNil((payload["go"] as? [String: Any])?["value"], "the binding itself stays out of scripts")
         let f = try fixture()
         try f.load(scene(object: 1, field: "alpha", value: "1", script: """
             export function applyUserProperties(changed) { shared.tint = changed.tint; shared.file = changed.go.file; }
             """), userProperties: properties)
         XCTAssertEqual(vector(f.evaluate("shared.tint")), [1, 0.5, 0], "WE's convertUserProperties makes colours Vec3s")
-        XCTAssertEqual(f.evaluate("shared.file")?.toString(), "a.exe")
+        XCTAssertEqual(f.evaluate("shared.file")?.toString(), "a.app")
         XCTAssertEqual(vector(f.evaluate("engine.userProperties.tint")), [1, 0.5, 0])
     }
 }

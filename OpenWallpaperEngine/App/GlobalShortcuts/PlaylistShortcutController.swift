@@ -13,6 +13,8 @@ final class PlaylistShortcutController: ObservableObject {
     @Published private(set) var unregisteredPlaylists: Set<UUID> = []
     /// The hotkey actions' shortcuts (`GlobalHotKeyController`), which a playlist's mustn't repeat.
     weak var hotKeys: GlobalHotKeyController?
+    /// The wallpapers' and profiles' hotkeys, which a playlist's mustn't repeat either.
+    weak var userHotKeys: UserHotKeyController?
 
     private let viewModel: WallpaperViewModel
     private let registrar: HotKeyRegistering
@@ -103,11 +105,12 @@ final class PlaylistShortcutController: ObservableObject {
     /// and, by trying to register it, other apps.
     func conflicts(for shortcut: GlobalShortcut, playlistID: UUID) -> [GlobalShortcutConflict] {
         var conflicts = finder.conflicts(for: shortcut, playlistID: playlistID, playlists: viewModel.playlists,
-                                         hotKeys: hotKeys?.bindings ?? GlobalHotKeyBindings())
+                                         hotKeys: hotKeys?.bindings ?? GlobalHotKeyBindings(),
+                                         userHotKeys: userHotKeys?.hotKeys ?? [])
         let ownedHere = registered[playlistID]?.shortcut == shortcut
         let ownedInApp = conflicts.contains {
             switch $0 {
-            case .playlist, .action: return true
+            case .playlist, .action, .userHotKey: return true
             default: return false
             }
         }
@@ -133,6 +136,8 @@ final class PlaylistShortcutController: ObservableObject {
                 if let index = playlists.firstIndex(where: { $0.id == otherID }) { playlists[index].shortcut = nil }
             case let .action(action):
                 hotKeys?.clear(action)
+            case let .userHotKey(id, _, _):
+                userHotKeys?.remove(id)
             default:
                 break
             }
