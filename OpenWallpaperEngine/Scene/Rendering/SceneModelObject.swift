@@ -12,12 +12,16 @@ struct SceneModelObject: Equatable {
     var animationLayers: [WEAnimationLayer] = []
     /// `sortorder`, `castshadow` (true for models unless authored), `reflected`, `depthtest`.
     var renderValues: [SceneObjectRenderField: SceneRawValue] = [:]
+    /// The object's `perspective` (flag 0x80): in an orthographic scene it draws through a
+    /// perspective layer's temporary camera (0x140222770 → 0x1401e5b60).
+    var perspective = false
     /// What draws it; nil when its `.mdl` couldn't be loaded or none of its meshes can draw
     /// (logged by the builder), and before the builder has run.
     var plan: SceneModelPlan?
 
     static func == (lhs: SceneModelObject, rhs: SceneModelObject) -> Bool {
         lhs.id == rhs.id && lhs.name == rhs.name && lhs.order == rhs.order && lhs.authored == rhs.authored
-            && lhs.animationLayers == rhs.animationLayers && lhs.renderValues == rhs.renderValues && lhs.plan === rhs.plan
+            && lhs.animationLayers == rhs.animationLayers && lhs.renderValues == rhs.renderValues
+            && lhs.perspective == rhs.perspective && lhs.plan === rhs.plan
     }
 }
