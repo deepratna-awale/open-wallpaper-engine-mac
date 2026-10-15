@@ -114,6 +114,18 @@ final class SceneSpatialDecodeTests: XCTestCase {
         XCTAssertNil(model.animationLayers[2].animation)
     }
 
+    /// A model object's `perspective` (flag 0x80) reaches the spatial content, off unless authored.
+    func testModelObjectsKeepPerspective() throws {
+        var scene = try decodeTolerant(WEScene.self, from: Data(#"""
+        {"camera": {}, "general": {}, "objects": [{"id": 3, "model": "models/a.mdl", "perspective": true},
+                                                  {"id": 4, "model": "models/b.mdl"}]}
+        """#.utf8))
+        scene.objects = SceneObjectIdentity.assigningFallbackIDs(scene.objects)
+        let content = SceneSpatialContentBuilder(readFile: { _ in nil }, wallpaperName: "test")
+            .build(scene, context: SpatialProperties())
+        XCTAssertEqual(content.models.map(\.perspective), [true, false])
+    }
+
     /// WE's dispatcher: `model` first, as a string, number or object; `camera` as a string.
     func testWhichObjectsAreModelsAndCameraLayers() throws {
         XCTAssertEqual(try object(#"{"model": 12}"#).model?.source, .loadedID(12))
