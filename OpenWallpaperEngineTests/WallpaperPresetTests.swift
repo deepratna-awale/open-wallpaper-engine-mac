@@ -98,6 +98,20 @@ final class WallpaperPresetTests: XCTestCase {
         XCTAssertEqual(published.values.first, Self.userValues)
     }
 
+    /// WE leaves user shortcuts out of presets: applying one keeps each store's own binding, and
+    /// a preset that names one (a hand-made file) can't bind it.
+    func testApplyKeepsEachStoresUserShortcuts() throws {
+        let targets = WallpaperPropertyTargets(wallpaper: try wallpaper(), scopes: [.display("A"), .display("B")])
+        for (scope, binding) in zip(targets.scopes, ["cmd:a1b2c3:say a", ""]) {
+            defaults.set(["rain": "true", "go": binding], forKey: targets.identity.key(.userProperties, scope: scope))
+        }
+        _ = targets.apply(preset: ["rain": "false", "go": "cmd:a1b2c3:say preset"], keeping: ["go"], defaults: defaults) { _, _ in }
+        let stored: [[String: String]] = targets.scopes.map {
+            defaults.dictionary(forKey: targets.identity.key(.userProperties, scope: $0)) as? [String: String] ?? [:]
+        }
+        XCTAssertEqual(stored, [["rain": "false", "go": "cmd:a1b2c3:say a"], ["rain": "false", "go": ""]])
+    }
+
     // MARK: - Rename and delete
 
     func testRename() throws {
