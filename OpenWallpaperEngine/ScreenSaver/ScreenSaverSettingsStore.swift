@@ -9,16 +9,16 @@ import Foundation
 ///   wallpaper doesn't change them.
 /// - **The live pick** (`ScreenSaverLivePick`): the wallpaper set as the screen saver, which the
 ///   live screen saver draws with these values instead of the desktop's wallpapers.
-/// - **The selection** (`ScreenSaverSelection`): a video wallpaper's own file set as the screen
-///   saver, which the saver plays. Earlier versions also kept a scene's recording here;
-///   `migrateRecordedSelection` turns that into the live pick of its wallpaper.
+/// - **The selection** (`ScreenSaverSelection`): what earlier versions set as the screen saver, a
+///   scene's recording or a video wallpaper's own file copied for the saver. Nothing writes it any
+///   more; `migrateSelection` turns it into the live pick of its wallpaper.
 struct ScreenSaverSettingsStore {
     static let valuesPrefix = "ScreenSaverValues."
     static let selectionKey = "ScreenSaverSelection"
     static let livePickKey = "ScreenSaverLivePick"
 
-    /// A video wallpaper's own file set as the screen saver (earlier versions: also a scene's
-    /// recording, `migrateRecordedSelection`).
+    /// What earlier versions set as the screen saver: a scene's recording, or a video wallpaper's
+    /// own file in the saver's folder (`migrateSelection`).
     struct Selection: Codable, Equatable, Sendable {
         /// The wallpaper's folder.
         var wallpaperDirectory: String
@@ -79,16 +79,19 @@ struct ScreenSaverSettingsStore {
         nonmutating set { encode(newValue, forKey: Self.livePickKey) }
     }
 
-    /// A scene's recording set as the screen saver (earlier versions) becomes the live pick of its
-    /// wallpaper; a video's own file (`isVideo` of its folder) stays the selection. Returns whether
+    /// What an earlier version set as the screen saver (a scene's recording, a video's own file)
+    /// becomes the live pick of its wallpaper, unless something is picked already. Returns whether
     /// it moved.
     @discardableResult
-    func migrateRecordedSelection(isVideo: (URL) -> Bool) -> Bool {
-        guard let selection else { return false }
-        let folder = URL(filePath: selection.wallpaperDirectory, directoryHint: .isDirectory)
-        guard !isVideo(folder) else { return false }
-        livePick = LivePick(wallpaperDirectory: selection.wallpaperDirectory, picked: selection.recorded)
+    func migrateSelection() -> Bool {
+        guard let selection else {
+            // One that no longer decodes is dropped.
+            if defaults.object(forKey: Self.selectionKey) != nil { defaults.removeObject(forKey: Self.selectionKey) }
+            return false
+        }
         self.selection = nil
+        guard livePick == nil else { return false }
+        livePick = LivePick(wallpaperDirectory: selection.wallpaperDirectory, picked: selection.recorded)
         return true
     }
 

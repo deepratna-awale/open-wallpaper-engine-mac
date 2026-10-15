@@ -61,10 +61,10 @@ final class ScreenSaverEditorTests: XCTestCase {
 
     @MainActor
     private func makeService(_ store: ScreenSaverSettingsStore, plugin: ScreenSaverPlugin,
-                             videos: ScreenSaverVideoStore, main: WEWallpaper? = nil) -> ScreenSaverSelectionService {
+                             main: WEWallpaper? = nil) -> ScreenSaverSelectionService {
         let environment = ScreenSaverSelectionService.Environment(isPluginEnabled: { true }, enablePlugin: {},
                                                                   desktopWallpaper: { nil }, mainDisplayWallpaper: { main })
-        return ScreenSaverSelectionService(plugin: plugin, environment: environment, store: store, videos: videos)
+        return ScreenSaverSelectionService(plugin: plugin, environment: environment, store: store)
     }
 
     // MARK: Isolation
@@ -83,7 +83,7 @@ final class ScreenSaverEditorTests: XCTestCase {
         let store = ScreenSaverSettingsStore(defaults: defaults)
         let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
         let plugin = makePlugin(store, videos: videos)
-        let service = makeService(store, plugin: plugin, videos: videos)
+        let service = makeService(store, plugin: plugin)
 
         let session = IsolatedSceneEditSession(wallpaper: wallpaper, purpose: ScreenSaverEditorModel.purpose,
                                                seededFrom: [.shared], defaults: defaults)
@@ -127,7 +127,7 @@ final class ScreenSaverEditorTests: XCTestCase {
         let store = ScreenSaverSettingsStore(defaults: defaults)
         let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
         let plugin = makePlugin(store, videos: videos)
-        let service = makeService(store, plugin: plugin, videos: videos)
+        let service = makeService(store, plugin: plugin)
         func open(_ wallpaper: WEWallpaper) -> ScreenSaverEditorModel {
             ScreenSaverEditorModel(session: IsolatedSceneEditSession(wallpaper: wallpaper, purpose: ScreenSaverEditorModel.purpose,
                                                                      seededFrom: [.shared], defaults: defaults),
@@ -175,13 +175,12 @@ final class ScreenSaverEditorTests: XCTestCase {
         let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
         let plugin = makePlugin(store, videos: videos)
         plugin.update(enabled: true, wallpaper: nil)
-        let service = makeService(store, plugin: plugin, videos: videos)
+        let service = makeService(store, plugin: plugin)
         let values = ["speed": "0.7", sceneObjectVisibilityKey(objectID: 2): "false"]
 
         var succeeded: Bool?
         service.set(wallpaper, values: values) { succeeded = $0 }
         XCTAssertEqual(succeeded, true, "at once: nothing is recorded")
-        XCTAssertFalse(service.isSettingVideo)
         let pick = try XCTUnwrap(store.livePick)
         XCTAssertEqual(pick.wallpaperDirectory, wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false))
         XCTAssertNil(store.selection)
@@ -189,11 +188,6 @@ final class ScreenSaverEditorTests: XCTestCase {
         XCTAssertEqual(store.values(for: WallpaperSettingsIdentity.resolve(wallpaper, defaults: defaults)), values)
         XCTAssertFalse(plugin.followsDesktop)
         XCTAssertEqual(plugin.livePick?.wallpaperDirectory.standardizedFileURL, wallpaper.wallpaperDirectory.standardizedFileURL)
-
-        let settled = expectation(description: "file queue")
-        DispatchQueue.global().asyncAfter(deadline: .now() + 0.3) { settled.fulfill() }
-        wait(for: [settled], timeout: 2)
-        XCTAssertEqual(try JSONDecoder().decode(ScreenSaverManifest.self, from: Data(contentsOf: videos.manifestURL)).videos, [])
 
         plugin.update(enabled: false, wallpaper: nil)
         XCTAssertNotNil(store.livePick)
@@ -205,13 +199,13 @@ final class ScreenSaverEditorTests: XCTestCase {
     // MARK: Screen Saver Same as Wallpaper
 
     /// Settings › General › Screen Saver Same as Wallpaper reads the selection: on with nothing set,
-    /// off once a wallpaper is picked or a video set, from any of the ways to set one.
+    /// off once a wallpaper is picked, from any of the ways to set one.
     @MainActor
     func testSameAsWallpaperFollowsTheSelection() throws {
         let wallpaper = try wallpaper()
         let store = ScreenSaverSettingsStore(defaults: defaults)
         let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
-        let service = makeService(store, plugin: makePlugin(store, videos: videos), videos: videos)
+        let service = makeService(store, plugin: makePlugin(store, videos: videos))
         XCTAssertTrue(service.followsDesktop, "on by default")
 
         service.setAsScreenSaver(wallpaper)
@@ -222,32 +216,21 @@ final class ScreenSaverEditorTests: XCTestCase {
         service.pick(wallpaper, values: ["speed": "0.5"])
         XCTAssertFalse(service.followsDesktop, "the Screen Saver tab's pick turns it off")
         service.stopUsingSelection()
-
-        store.selection = ScreenSaverSettingsStore.Selection(
-            wallpaperDirectory: wallpaper.wallpaperDirectory.path(percentEncoded: false), fileName: "v.mp4",
-            width: 1920, height: 1080, recorded: Date())
-        XCTAssertFalse(service.followsDesktop, "a video set as the screen saver turns it off")
+        XCTAssertTrue(service.followsDesktop)
     }
 
-    /// Turning it on clears a pick and a video alike.
+    /// Turning it on clears the pick.
     @MainActor
     func testTurningSameAsWallpaperOnClearsWhatIsSet() throws {
         let wallpaper = try wallpaper()
         let store = ScreenSaverSettingsStore(defaults: defaults)
         let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
-        let service = makeService(store, plugin: makePlugin(store, videos: videos), videos: videos)
+        let service = makeService(store, plugin: makePlugin(store, videos: videos))
         service.pick(wallpaper, values: [:])
         var result: Bool?
         service.setFollowsDesktop(true) { result = $0 }
         XCTAssertEqual(result, true)
         XCTAssertNil(store.livePick)
-        XCTAssertTrue(service.followsDesktop)
-
-        store.selection = ScreenSaverSettingsStore.Selection(
-            wallpaperDirectory: wallpaper.wallpaperDirectory.path(percentEncoded: false), fileName: "v.mp4",
-            width: 1920, height: 1080, recorded: Date())
-        service.setFollowsDesktop(true)
-        XCTAssertNil(store.selection)
         XCTAssertTrue(service.followsDesktop)
     }
 
@@ -261,7 +244,7 @@ final class ScreenSaverEditorTests: XCTestCase {
         let identity = WallpaperSettingsIdentity.resolve(wallpaper, defaults: defaults)
         let choices = ["speed": "0.8"]
         store.setValues(choices, for: identity)
-        let service = makeService(store, plugin: makePlugin(store, videos: videos), videos: videos, main: wallpaper)
+        let service = makeService(store, plugin: makePlugin(store, videos: videos), main: wallpaper)
         XCTAssertEqual(service.wallpaperForStoppingFollowingDesktop()?.wallpaperDirectory, wallpaper.wallpaperDirectory)
         var result: Bool?
         service.setFollowsDesktop(false) { result = $0 }
@@ -270,7 +253,7 @@ final class ScreenSaverEditorTests: XCTestCase {
         XCTAssertTrue(service.isSelected(wallpaper))
         XCTAssertEqual(store.values(for: identity), choices, "its Screen Saver tab choices are kept")
 
-        let empty = makeService(ScreenSaverSettingsStore(defaults: defaults), plugin: makePlugin(store, videos: videos), videos: videos)
+        let empty = makeService(ScreenSaverSettingsStore(defaults: defaults), plugin: makePlugin(store, videos: videos))
         empty.stopUsingSelection()
         XCTAssertNil(empty.wallpaperForStoppingFollowingDesktop())
         empty.setFollowsDesktop(false) { result = $0 }
@@ -284,7 +267,7 @@ final class ScreenSaverEditorTests: XCTestCase {
         let wallpaper = try wallpaper()
         let store = ScreenSaverSettingsStore(defaults: defaults)
         let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
-        let service = makeService(store, plugin: makePlugin(store, videos: videos), videos: videos)
+        let service = makeService(store, plugin: makePlugin(store, videos: videos))
         let viewModel = GlobalSettingsViewModel()
         let saved = viewModel.settings
         defer { viewModel.settings = saved }
@@ -307,7 +290,7 @@ final class ScreenSaverEditorTests: XCTestCase {
         let store = ScreenSaverSettingsStore(defaults: defaults)
         let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
         let plugin = makePlugin(store, videos: videos)
-        let service = makeService(store, plugin: plugin, videos: videos)
+        let service = makeService(store, plugin: plugin)
         let identity = WallpaperSettingsIdentity.resolve(wallpaper, defaults: defaults)
         save(["speed": "0.3"], .shared, of: wallpaper)
         store.setValues(["speed": "0.9", sceneObjectVisibilityKey(objectID: 4): "false"], for: identity)
@@ -331,7 +314,7 @@ final class ScreenSaverEditorTests: XCTestCase {
         let web = WEWallpaper(using: WEProject(file: "index.html", preview: "p.jpg", title: "Web", type: "web"), where: folder)
         let store = ScreenSaverSettingsStore(defaults: defaults)
         let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
-        let service = makeService(store, plugin: makePlugin(store, videos: videos), videos: videos)
+        let service = makeService(store, plugin: makePlugin(store, videos: videos))
         var succeeded: Bool?
         service.setAsScreenSaver(web) { succeeded = $0 }
         if ChromiumEngineInstaller.hasActiveInstall {
@@ -345,27 +328,37 @@ final class ScreenSaverEditorTests: XCTestCase {
         }
     }
 
-    /// A video an earlier version linked from another volume (a symbolic link the saver can't
-    /// follow) is set again at launch; one in place is left as it is.
+    /// A video wallpaper is set as the screen saver at once, picked to be drawn live: nothing is
+    /// linked or copied into the saver's folder, and it keeps no values of its own.
     @MainActor
-    func testALinkedSelectionIsSetAgain() throws {
-        let wallpaper = try wallpaper()
+    func testSettingAVideoPicksItLiveWithoutAFile() throws {
+        let folder = directory.appending(path: "video", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try Data("movie".utf8).write(to: folder.appending(path: "clip.mp4"))
+        let video = WEWallpaper(using: WEProject(file: "clip.mp4", preview: "p.jpg", title: "Clip", type: "video"), where: folder)
         let store = ScreenSaverSettingsStore(defaults: defaults)
         let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
-        let service = makeService(store, plugin: makePlugin(store, videos: videos), videos: videos)
-        try FileManager.default.createDirectory(at: videos.directory, withIntermediateDirectories: true)
-        let folder = wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false)
-        store.selection = .init(wallpaperDirectory: folder, fileName: "copy.mp4", width: 1, height: 1, recorded: Date())
-        try Data("movie".utf8).write(to: videos.url(fileName: "copy.mp4"))
-        XCTAssertFalse(service.replaceLinkedSelection(wallpaper), "a file in the folder plays")
+        let plugin = makePlugin(store, videos: videos)
+        plugin.update(enabled: true, wallpaper: nil)
+        let service = makeService(store, plugin: plugin)
+        var picked: [WEWallpaper] = []
+        service.onPicked = { picked.append($0) }
+        var succeeded: Bool?
+        service.setAsScreenSaver(video) { succeeded = $0 }
+        XCTAssertEqual(succeeded, true, "at once")
+        XCTAssertTrue(service.isSelected(video))
+        XCTAssertEqual(store.livePick?.wallpaperDirectory, folder.standardizedFileURL.path(percentEncoded: false))
+        XCTAssertNil(store.selection)
+        XCTAssertEqual(picked.map(\.wallpaperDirectory), [folder], "its still is made now (its first frame)")
+        XCTAssertNil(store.values(for: WallpaperSettingsIdentity.resolve(video, defaults: defaults)), "a video plays as it is")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: videos.directory.path(percentEncoded: false)), "no file goes in the saver's folder")
 
-        let target = directory.appending(path: "elsewhere.mp4")
-        try Data("movie".utf8).write(to: target)
-        try FileManager.default.createSymbolicLink(at: videos.url(fileName: "link.mp4"), withDestinationURL: target)
-        store.selection = .init(wallpaperDirectory: folder, fileName: "link.mp4", width: 1, height: 1, recorded: Date())
-        XCTAssertTrue(service.replaceLinkedSelection(wallpaper))
-        store.selection = .init(wallpaperDirectory: "/another", fileName: "link.mp4", width: 1, height: 1, recorded: Date())
-        XCTAssertFalse(service.replaceLinkedSelection(wallpaper), "only the selected wallpaper's")
+        let model = VideoScreenSaverModel(wallpaper: video, selectionService: service)
+        XCTAssertTrue(model.isScreenSaver)
+        model.stopUsingAsScreenSaver()
+        XCTAssertFalse(model.isScreenSaver)
+        model.setAsScreenSaver()
+        XCTAssertTrue(service.isSelected(video))
     }
 
     /// What Set as Screen Saver takes: scenes, playable video files, web pages and WebM videos
@@ -397,22 +390,20 @@ final class ScreenSaverEditorTests: XCTestCase {
         XCTAssertFalse(Service.canSet(make("application", "a.exe")))
     }
 
-    /// A scene's recording set as the screen saver by an earlier version becomes the live pick of
-    /// its wallpaper; a video's own file stays the selection.
-    func testARecordedSelectionMigratesToTheLivePick() throws {
+    /// What an earlier version set as the screen saver (a scene's recording, a video's own file)
+    /// becomes the live pick of its wallpaper.
+    func testAnEarlierSelectionMigratesToTheLivePick() throws {
         let store = ScreenSaverSettingsStore(defaults: defaults)
         let recorded = Date(timeIntervalSince1970: 1_790_000_000)
-        let selection = ScreenSaverSettingsStore.Selection(wallpaperDirectory: "/w/3810943704", fileName: "a-rec1.mov",
-                                                           width: 3840, height: 2160, recorded: recorded)
-        store.selection = selection
-        XCTAssertFalse(store.migrateRecordedSelection(isVideo: { _ in true }))
-        XCTAssertEqual(store.selection, selection, "a video's file stays")
-        XCTAssertNil(store.livePick)
-
-        XCTAssertTrue(store.migrateRecordedSelection(isVideo: { _ in false }))
-        XCTAssertNil(store.selection)
-        XCTAssertEqual(store.livePick, ScreenSaverSettingsStore.LivePick(wallpaperDirectory: "/w/3810943704", picked: recorded))
-        XCTAssertFalse(store.migrateRecordedSelection(isVideo: { _ in false }), "once")
+        for file in ["a-rec1.mov", "v_c-video-r3-rec1790000000.mp4"] {
+            store.livePick = nil
+            store.selection = ScreenSaverSettingsStore.Selection(wallpaperDirectory: "/w/3810943704", fileName: file,
+                                                                 width: 3840, height: 2160, recorded: recorded)
+            XCTAssertTrue(store.migrateSelection(), file)
+            XCTAssertNil(store.selection)
+            XCTAssertEqual(store.livePick, ScreenSaverSettingsStore.LivePick(wallpaperDirectory: "/w/3810943704", picked: recorded))
+            XCTAssertFalse(store.migrateSelection(), "once")
+        }
     }
 
     /// The pick is drawn with the screen saver's own values (properties and layer edits), put in
@@ -430,29 +421,5 @@ final class ScreenSaverEditorTests: XCTestCase {
         ScreenSaverPlugin.publishPickValues(for: wallpaper, store: store)
         XCTAssertEqual(stored(ScreenSaverPlugin.pickScope, of: wallpaper), own)
         XCTAssertEqual(stored(.shared, of: wallpaper), ["speed": "0.3"])
-    }
-
-    // MARK: Atomic replace
-
-    /// The store's install (a video wallpaper's own file set as the screen saver): the new video is in place before the manifest switches to it, the old
-    /// one goes only after, and an install that fails leaves the manifest and old video as they were.
-    func testStoreInstallSwitchesTheVideoAtOnce() throws {
-        let videos = ScreenSaverVideoStore(directory: directory.appending(path: "Videos"))
-        let staged = directory.appending(path: "staged.mov")
-        try Data("day-1".utf8).write(to: staged)
-        try videos.install(staged, as: "a-rec1.mov", pixelSize: SIMD2(1920, 1080))
-        try Data("day-2".utf8).write(to: staged)
-        try videos.install(staged, as: "a-rec2.mov", pixelSize: SIMD2(1920, 1080))
-
-        let manifest = try JSONDecoder().decode(ScreenSaverManifest.self, from: Data(contentsOf: videos.manifestURL))
-        XCTAssertEqual(manifest.videos, [ScreenSaverManifest.Video(file: "a-rec2.mov", width: 1920, height: 1080)])
-        XCTAssertEqual(try String(contentsOf: videos.url(fileName: "a-rec2.mov"), encoding: .utf8), "day-2")
-        XCTAssertFalse(videos.exists(fileName: "a-rec1.mov"), "the previous video goes once the manifest moved on")
-        XCTAssertFalse(FileManager.default.fileExists(atPath: staged.path(percentEncoded: false)))
-
-        XCTAssertThrowsError(try videos.install(directory.appending(path: "missing.mov"), as: "a-rec3.mov", pixelSize: SIMD2(1920, 1080)))
-        let unchanged = try JSONDecoder().decode(ScreenSaverManifest.self, from: Data(contentsOf: videos.manifestURL))
-        XCTAssertEqual(unchanged, manifest)
-        XCTAssertTrue(videos.exists(fileName: "a-rec2.mov"))
     }
 }

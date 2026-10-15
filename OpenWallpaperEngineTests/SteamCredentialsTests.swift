@@ -2,7 +2,8 @@ import Security
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// Keychain storage of Steam secrets, and keeping them out of URLs, logs and argv.
+/// Keychain storage of Steam secrets, and keeping them out of URLs, logs and argv. The test host's
+/// `KeychainStore` keeps its items in memory (`AppStorageIsolationTests`), so these never call the keychain.
 final class SteamCredentialsTests: XCTestCase {
     private var keychain: KeychainStore!
 

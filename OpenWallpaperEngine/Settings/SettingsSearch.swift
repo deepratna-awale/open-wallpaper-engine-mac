@@ -20,6 +20,7 @@ enum SettingsAnchor {
     static let video = "video"
     static let audio = "audio"
     static let rendering = "rendering"
+    static let webDevtools = "webdevtools"
     static let assets = "assets"
     static let steamCmd = "steamcmd"
     static let storage = "storage"
@@ -86,6 +87,7 @@ struct SettingsSearch {
 
             entry("Playback", .performance, SettingsAnchor.playback),
             entry("Laptop on battery", .performance, SettingsAnchor.playback),
+            entry("On battery: use a lower quality preset", .performance, SettingsAnchor.playback),
             entry("Display asleep", .performance, SettingsAnchor.playback),
             entry("Quality", .performance, SettingsAnchor.quality),
             entry("Anti-aliasing", .performance, SettingsAnchor.quality),
@@ -108,10 +110,14 @@ struct SettingsSearch {
             entry("Displays", .optimizations, SettingsAnchor.displays),
             entry("Sync properties across displays", .optimizations, SettingsAnchor.displays),
             entry("Video Framework", .optimizations, SettingsAnchor.video),
+            entry("Video loading", .optimizations, SettingsAnchor.video),
             entry("Audio", .optimizations, SettingsAnchor.audio),
             entry("Audio Output", .optimizations, SettingsAnchor.audio),
             entry("Media integration support", .optimizations, SettingsAnchor.audio),
+            entry("Media blocklist", .optimizations, SettingsAnchor.audio),
             entry("Recording threshold", .optimizations, SettingsAnchor.audio),
+            entry("Audio recording device", .optimizations, SettingsAnchor.audio),
+            entry("Recording volume", .optimizations, SettingsAnchor.audio),
             entry("Rendering", .optimizations, SettingsAnchor.rendering),
             entry("Process Priority", .optimizations, SettingsAnchor.rendering),
             entry("Restart after crashing", .optimizations, SettingsAnchor.rendering),
@@ -119,6 +125,8 @@ struct SettingsSearch {
             entry("Cheaper shadows", .optimizations, SettingsAnchor.rendering),
             entry("Render web wallpapers at standard resolution", .optimizations, SettingsAnchor.rendering),
             entry("Draw large glowing particles at half resolution", .optimizations, SettingsAnchor.rendering),
+            entry("Developer Tools", .optimizations, SettingsAnchor.webDevtools),
+            entry("Web wallpaper devtools", .optimizations, SettingsAnchor.webDevtools),
 
             entry("Wallpaper Engine Assets", .assets, SettingsAnchor.assets),
             entry("SteamCMD", .assets, SettingsAnchor.steamCmd),

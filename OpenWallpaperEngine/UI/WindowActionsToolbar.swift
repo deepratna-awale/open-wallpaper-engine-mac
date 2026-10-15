@@ -8,6 +8,8 @@ struct WindowActionsToolbar: ToolbarContent {
     var viewModel: ContentViewModel
     /// Installed only: the Details panel is its inspector.
     var showsDetails = false
+    /// Off while the Installed tab picks wallpapers for an export.
+    var isEnabled = true
 
     var body: some ToolbarContent {
         // On macOS 26 a fixed spacer gives each group its own glass capsule.
@@ -21,12 +23,14 @@ struct WindowActionsToolbar: ToolbarContent {
                 Label("Displays", systemImage: "display")
             }
             .help("Display Settings")
+            .disabled(!isEnabled)
             Button {
                 AppDelegate.shared.openSettingsWindow()
             } label: {
                 Label("Settings", systemImage: "gearshape")
             }
             .help("Settings", shortcut: .settings)
+            .disabled(!isEnabled)
         }
         if showsDetails {
             if #available(macOS 26, *) {
@@ -39,6 +43,7 @@ struct WindowActionsToolbar: ToolbarContent {
                     Label("Details", systemImage: "sidebar.right")
                 }
                 .help("Show or hide the wallpaper details")
+                .disabled(!isEnabled)
             }
         }
     }

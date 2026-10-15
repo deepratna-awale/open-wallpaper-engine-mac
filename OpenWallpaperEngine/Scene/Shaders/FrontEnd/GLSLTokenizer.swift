@@ -26,6 +26,12 @@ enum GLSLTokenizer {
     static func tokens(_ code: [UInt16]) -> [GLSLToken] {
         var result: [GLSLToken] = []
         result.reserveCapacity(code.count / 3)
+        scan(code) { result.append($0); return true }
+        return result
+    }
+
+    /// Reads the tokens of `code` in order until `body` returns false.
+    static func scan(_ code: [UInt16], _ body: (GLSLToken) -> Bool) {
         let count = code.count
         var index = 0
         var lineStart = true
@@ -52,13 +58,13 @@ enum GLSLTokenizer {
             if isIdentifierStart(c) {
                 var end = index + 1
                 while end < count, isIdentifier(code[end]) { end += 1 }
-                result.append(GLSLToken(kind: .identifier, start: index, end: end, text: text(index, end)))
+                guard body(GLSLToken(kind: .identifier, start: index, end: end, text: text(index, end))) else { return }
                 index = end
                 continue
             }
             if isDigit(c) || (c == 46 && index + 1 < count && isDigit(code[index + 1])) {
                 let (end, scalar) = number(code, from: index)
-                result.append(GLSLToken(kind: .number(scalar), start: index, end: end, text: text(index, end)))
+                guard body(GLSLToken(kind: .number(scalar), start: index, end: end, text: text(index, end))) else { return }
                 index = end
                 continue
             }
@@ -68,10 +74,9 @@ enum GLSLTokenizer {
             } else if index + 1 < count, twoCharacterOperators.contains(text(index, index + 2)) {
                 length = 2
             }
-            result.append(GLSLToken(kind: .punctuation, start: index, end: index + length, text: text(index, index + length)))
+            guard body(GLSLToken(kind: .punctuation, start: index, end: index + length, text: text(index, index + length))) else { return }
             index += length
         }
-        return result
     }
 
     /// The end of the number literal at `start` and its type: a float with a point, an exponent or

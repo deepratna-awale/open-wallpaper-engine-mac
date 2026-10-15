@@ -3,12 +3,13 @@ import OWESceneEditing
 
 /// Save as New Wallpaper: a copy of the wallpaper in the library with an overlay's edits (the
 /// Wallpaper Editor's draft) baked into its scene.json, its puppets as `.mdl` files, its user
-/// properties in project.json and the particle editor's documents as files; the wallpaper itself
-/// isn't touched. The editor window's File menu and an MCP client's `wallpaper_editor_save_as_new`
+/// properties in project.json, the particle editor's documents as files and, when the user made
+/// one, the editor's thumbnail as its preview; the wallpaper itself isn't touched. The editor window's File menu and an MCP client's `wallpaper_editor_save_as_new`
 /// both save through here.
 enum LocalWallpaperSave {
     /// Saves the copy into the library; returns its folder.
-    static func save(_ wallpaper: WEWallpaper, overlay: SceneEditOverlay, assetsDirectory: URL, title: String) throws -> URL {
+    static func save(_ wallpaper: WEWallpaper, overlay: SceneEditOverlay, assetsDirectory: URL, title: String,
+                     thumbnail: WallpaperThumbnail? = nil) throws -> URL {
         let source = try WallpaperEditorSource.read(wallpaper)
         var writerSource = LocalWallpaperWriter.Source(directory: wallpaper.wallpaperDirectory,
                                                        sceneFile: wallpaper.project.file,
@@ -31,7 +32,8 @@ enum LocalWallpaperSave {
                                                      into: FileManager.default.wallpapersDirectory,
                                                      editProject: { authoring?.applyProperties(to: &$0) },
                                                      files: baked.files,
-                                                     additionalFiles: try overlay.particles?.assetFiles() ?? [:])
+                                                     additionalFiles: try overlay.particles?.assetFiles() ?? [:],
+                                                     thumbnail: thumbnail)
         OWELog.info(.library, "Saved \(wallpaper.project.title) with its editor edits as \(folder.path)")
         return folder
     }

@@ -1,7 +1,8 @@
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// The library's title, rating and file size orders compare the sorted value in both directions.
+/// The library's orders compare the sorted value in both directions; WE's Favorite and Last
+/// Updated sorts order equal values by title.
 final class SortByOrderTests: XCTestCase {
     func testFileSizesSortByTheirSizeInBothDirections() {
         // Titles in the opposite order to the sizes, so comparing titles would give the wrong order.
@@ -24,5 +25,32 @@ final class SortByOrderTests: XCTestCase {
         }
         XCTAssertEqual(decreasing, [nil, "Everyone", "Questionable", "Mature"])
         XCTAssertEqual(InstalledLibraryModel.ratingRank(" mature"), InstalledLibraryModel.ratingRank("Mature"))
+    }
+
+    func testKeyedSortsPutTheLargerKeyFirstAndTiesByTitleAsWE() {
+        let items: [(key: Int, title: String)] = [(0, "b"), (1, "z"), (0, "a"), (1, "c")]
+        let ascending = items.sorted { InstalledLibraryModel.precedes($0, $1, in: .increase) }
+        XCTAssertEqual(ascending.map(\.title), ["c", "z", "a", "b"])
+        let descending = items.sorted { InstalledLibraryModel.precedes($0, $1, in: .decrease) }
+        XCTAssertEqual(descending.map(\.title), ["b", "a", "z", "c"])
+        XCTAssertFalse(InstalledLibraryModel.precedes((1, "a"), (1, "a"), in: .increase))
+    }
+
+    func testLastUpdatedIsSteamsTimeElseTheFolderDateAndNoneForLocalWallpapers() throws {
+        let root = FileManager.default.temporaryDirectory.appending(path: "SortByOrderTests-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let workshop = root.appending(path: "123456"), local = root.appending(path: "My Wallpaper")
+        for folder in [workshop, local] {
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        }
+        let modified = Date(timeIntervalSince1970: 1_700_000_000)
+        try FileManager.default.setAttributes([.modificationDate: modified], ofItemAtPath: workshop.path)
+        let workshopWallpaper = WEWallpaper(using: .invalid, where: workshop)
+        let localWallpaper = WEWallpaper(using: .invalid, where: local)
+
+        XCTAssertEqual(InstalledLibraryModel.lastUpdated(of: workshopWallpaper) { $0 == "123456" ? 1_750_000_000 : nil },
+                       1_750_000_000)
+        XCTAssertEqual(InstalledLibraryModel.lastUpdated(of: workshopWallpaper) { _ in nil }, 1_700_000_000)
+        XCTAssertEqual(InstalledLibraryModel.lastUpdated(of: localWallpaper) { _ in 1_750_000_000 }, 0)
     }
 }

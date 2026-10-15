@@ -33,6 +33,7 @@ struct WebWallpaperView: NSViewRepresentable {
 
         let nsView = WKWebView(frame: .zero, configuration: configuration)
         wallpaperViewModel.webProcessGroup.register(nsView, for: pageURL)
+        AppDelegate.shared.webDevtools.register(nsView)
         nsView.navigationDelegate = viewModel
         viewModel.webView = nsView
         viewModel.applySchedulingPolicy()
@@ -86,6 +87,7 @@ struct WebWallpaperView: NSViewRepresentable {
             }
             viewModel.schemeHandler.directory = viewModel.readAccessURL
             viewModel.schemeHandler.patches = patches ?? WebCompatPatches(actions: [])
+            viewModel.schemeHandler.userFiles = viewModel.userFiles
             webView.load(URLRequest(url: url))
         case nil:
             OWELog.error(.web, "Can't load web wallpaper \(wallpaper.project.title): invalid page path \(wallpaper.project.file)")

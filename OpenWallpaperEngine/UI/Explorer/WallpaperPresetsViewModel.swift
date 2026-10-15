@@ -41,7 +41,7 @@ final class WallpaperPresetsViewModel: ObservableObject {
             guard let current = try store.presets().first(where: { $0.id == preset.id }) else {
                 throw WallpaperPresetError.notFound
             }
-            targets.apply(preset: current.values)
+            targets.apply(preset: current.values, keeping: userShortcutKeys)
             applied = true
             OWELog.info(.library, "Applied preset \(current.name) to \(title)")
         }
@@ -87,9 +87,15 @@ final class WallpaperPresetsViewModel: ObservableObject {
 
     /// The shown display's properties as they are: the saved values over the project's defaults,
     /// so a wallpaper never edited still saves (and shares) every property, as WE's Save does.
+    /// User shortcuts stay out: WE leaves them out of presets, as they belong to this Mac.
     private var currentValues: [String: String] {
-        definitions.filter { $0.value.type != "usershortcut" }.mapValues(\.defaultValue)
-            .merging(targets.storedValues) { _, stored in stored }
+        definitions.filter { $0.value.type != SceneScriptUserProperties.Property.userShortcutType }.mapValues(\.defaultValue)
+            .merging(targets.storedValues.filter { !userShortcutKeys.contains($0.key) }) { _, stored in stored }
+    }
+
+    /// The wallpaper's `usershortcut` properties, which presets neither save nor change.
+    private var userShortcutKeys: Set<String> {
+        Set(definitions.values.filter { $0.type == SceneScriptUserProperties.Property.userShortcutType }.map(\.key))
     }
 
     // MARK: Wallpaper Engine's Share JSON

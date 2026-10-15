@@ -1,4 +1,5 @@
 import Accelerate
+import AVFoundation
 import Cocoa
 import CoreMedia
 import ScreenCaptureKit
@@ -9,21 +10,23 @@ import ScreenCaptureKit
 ///
 /// The audio comes from a Core Audio process tap on macOS 14.2+ (System Audio Recording
 /// permission), or from a ScreenCaptureKit stream (Screen Recording) before that or when the tap
-/// can't start (`SystemAudioBackend`). Both feed `consume(left:right:)`.
+/// can't start, or from the recording device chosen in Settings (`recordingDevice`, Microphone
+/// permission) (`SystemAudioBackend`). All feed `consume(left:right:)`.
 final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
     private let levelLock = NSLock()
     private var level: Double = 0
 
-    /// Guards `stream` and `processTap`, the one running capture (at most one is set); capture
-    /// starts and stops on arbitrary tasks.
+    /// Guards `stream`, `processTap` and `inputCapture`, the one running capture (at most one is
+    /// set); capture starts and stops on arbitrary tasks.
     private let captureLock = NSLock()
     private var stream: SCStream?
     private var processTap: ProcessTapAudioCapture?
+    private var inputCapture: InputDeviceAudioCapture?
 
     /// Only touched on the main actor. Never starts a capture that would make macOS prompt:
     /// ScreenCaptureKit shows the Screen Recording prompt itself whenever that grant is missing.
     @MainActor private lazy var permissionGate = AudioCapturePermissionGate(
-        preflight: { !Self.backendCandidates().isEmpty },
+        preflight: { [weak self] in !(self?.backendCandidates().isEmpty ?? true) },
         isAlertDismissed: { GlobalSettingsViewModel.isAudioPermissionAlertDismissed })
     /// Only touched on the main actor. The single owner of capture starts, so at most one
     /// capture exists app-wide.
@@ -48,12 +51,44 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
     }
 
     /// The backends a start may try now, without prompting (`SystemAudioBackend.candidates`).
-    static func backendCandidates() -> [SystemAudioBackend] {
+    @MainActor
+    func backendCandidates() -> [SystemAudioBackend] {
         let tapSupported = ProcessTapAudioCapture.isSupported
         return SystemAudioBackend.candidates(
             tapSupported: tapSupported,
             tapPermission: tapSupported ? SystemAudioRecordingPermission.status : .notDetermined,
-            screenRecordingGranted: CGPreflightScreenCaptureAccess())
+            screenRecordingGranted: CGPreflightScreenCaptureAccess(),
+            inputDevice: recordingDevice?.uid,
+            microphoneGranted: recordingDevice != nil && AVCaptureDevice.authorizationStatus(for: .audio) == .authorized)
+    }
+
+    /// WE's "Audio recording device" (`GlobalSettings.audioRecordingDevice`): nil records the
+    /// system output (WE's default), a device records that device while it is connected and the
+    /// Microphone permission is granted, and the system output otherwise. A change restarts capture.
+    @MainActor var recordingDevice: AudioInputDevice? {
+        didSet {
+            guard recordingDevice != oldValue else { return }
+            OWELog.info(.audio, "Audio recording device: \(recordingDevice.map { "\($0.name) (\($0.uid))" } ?? "system output").")
+            guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
+            deviceListMonitor = recordingDevice == nil ? nil : AudioDeviceListMonitor { [weak self] in
+                self?.deviceListDidChange()
+            }
+            restartSystemAudioCapture(reason: "the recording device changed")
+        }
+    }
+    /// Watches for the chosen recording device being connected or disconnected.
+    @MainActor private var deviceListMonitor: AudioDeviceListMonitor?
+
+    /// Moves capture to the chosen device when it is connected, and off it when it goes away.
+    @MainActor
+    private func deviceListDidChange() {
+        guard let recordingDevice else { return }
+        captureLock.lock()
+        let recordsDevice = inputCapture != nil
+        captureLock.unlock()
+        let connected = AudioInputDevices.deviceID(uid: recordingDevice.uid) != nil
+        guard connected != recordsDevice else { return }
+        restartSystemAudioCapture(reason: connected ? "the recording device was connected" : "the recording device was disconnected")
     }
 
     @MainActor
@@ -104,6 +139,24 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
 
     @MainActor @objc private func applicationDidBecomeActive() {
         recheckCapturePermission()
+        followRecordingDevicePermission()
+    }
+
+    /// The Microphone permission for the chosen recording device may have been granted or revoked
+    /// (in Settings, or System Settings › Privacy & Security): capture moves to the device, or
+    /// back to the system output. Never prompts.
+    @MainActor
+    func followRecordingDevicePermission() {
+        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil,
+              let recordingDevice else { return }
+        captureLock.lock()
+        let recordsDevice = inputCapture != nil
+        let running = recordsDevice || stream != nil || processTap != nil
+        captureLock.unlock()
+        let wantsDevice = backendCandidates().first == .inputDevice(uid: recordingDevice.uid)
+            && AudioInputDevices.deviceID(uid: recordingDevice.uid) != nil
+        guard running, wantsDevice != recordsDevice else { return }
+        restartSystemAudioCapture(reason: wantsDevice ? "the Microphone permission was granted" : "the Microphone permission was revoked")
     }
 
     /// Starts capture if a permission was granted since the last check. Never prompts, so it is
@@ -138,7 +191,7 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
     private func demandDidChange(active: Bool) {
         guard active else { return stopSystemAudioCapture() }
         captureLock.lock()
-        let running = stream != nil || processTap != nil
+        let running = stream != nil || processTap != nil || inputCapture != nil
         captureLock.unlock()
         guard !running else { return }
         restartSystemAudioCapture(reason: "a wallpaper needs audio")
@@ -150,7 +203,7 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
         restartScheduler.reset()
         let current = takeRunningCapture()
         resetAudioLevels()
-        guard current.stream != nil || current.tap != nil else { return }
+        guard current.stream != nil || current.tap != nil || current.input != nil else { return }
         OWELog.info(.audio, "No wallpaper needs audio; stopping system audio capture.")
         Task { await Self.stop(current) }
     }
@@ -183,19 +236,21 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
         return level
     }
 
-    private typealias RunningCapture = (stream: SCStream?, tap: ProcessTapAudioCapture?)
+    private typealias RunningCapture = (stream: SCStream?, tap: ProcessTapAudioCapture?, input: InputDeviceAudioCapture?)
 
     private func takeRunningCapture() -> RunningCapture {
         captureLock.lock()
         defer { captureLock.unlock() }
-        let current = (stream, processTap)
+        let current = (stream, processTap, inputCapture)
         stream = nil
         processTap = nil
+        inputCapture = nil
         return current
     }
 
     private static func stop(_ capture: RunningCapture) async {
         capture.tap?.stop()
+        capture.input?.stop()
         guard let stream = capture.stream else { return }
         do { try await stream.stopCapture() } catch {
             OWELog.debug(.audio, "Stopping capture stream failed: \(error.localizedDescription)")
@@ -208,7 +263,7 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
     private func startSystemAudioCapture() {
         let previous = takeRunningCapture()
         resetAudioLevels()
-        let candidates = Self.backendCandidates()
+        let candidates = backendCandidates()
         guard !candidates.isEmpty else {
             // Revoked while the start was queued. Touching ScreenCaptureKit now would prompt.
             Task { await Self.stop(previous) }
@@ -234,6 +289,8 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
     private func startCapture(trying candidates: [SystemAudioBackend]) async -> Bool {
         for backend in candidates {
             switch backend {
+            case .inputDevice(let uid):
+                if startInputDevice(uid: uid) { return true }
             case .processTap:
                 if startProcessTap() { return true }
             case .screenCapture:
@@ -259,6 +316,26 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
         processTap = tap
         captureLock.unlock()
         OWELog.info(.audio, "Core Audio process tap audio capture started.")
+        return true
+    }
+
+    private func startInputDevice(uid: String) -> Bool {
+        let capture = InputDeviceAudioCapture(
+            uid: uid,
+            consume: { [weak self] left, right in self?.consume(left: left, right: right) },
+            onInterruption: { [weak self] reason in
+                Task { @MainActor [weak self] in self?.restartSystemAudioCapture(reason: reason) }
+            })
+        do {
+            try capture.start()
+        } catch {
+            OWELog.error(.audio, "Failed to record from the chosen audio recording device, recording the system output instead: \(error)")
+            return false
+        }
+        captureLock.lock()
+        inputCapture = capture
+        captureLock.unlock()
+        OWELog.info(.audio, "Recording device audio capture started.")
         return true
     }
 
@@ -343,6 +420,13 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
     var recordingThreshold: Double {
         get { audioSpectrumAnalyzer.recordingThreshold }
         set { audioSpectrumAnalyzer.recordingThreshold = newValue }
+    }
+
+    /// WE's "Recording volume" (`GlobalSettings.audioRecordingVolume`), applied to the spectrum
+    /// from the next captured buffer.
+    var recordingVolume: Double {
+        get { audioSpectrumAnalyzer.recordingVolume }
+        set { audioSpectrumAnalyzer.recordingVolume = newValue }
     }
 
     /// A consumer's own spectrum smoothing over this capture (`AudioSpectrumClock`).

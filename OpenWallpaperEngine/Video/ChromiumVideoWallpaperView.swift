@@ -13,7 +13,7 @@ struct ChromiumVideoWallpaperView: NSViewRepresentable {
 
     func makeNSView(context: Context) -> ChromiumPageView {
         let wallpaper = wallpaperViewModel.wallpaper(for: screenId)
-        let page = ChromiumBrowserPage(startScripts: [], frameRate: Int(AppDelegate.shared.globalSettingsViewModel.settings.fps))
+        let page = ChromiumBrowserPage(startScripts: [], frameRate: Int(AppDelegate.shared.globalSettingsViewModel.effectiveSettings.fps))
         let view = ChromiumPageView(page: page)
         let player = WebKitVideoPlayer(chromiumPage: page, url: wallpaper.mediaURL, readAccess: wallpaper.wallpaperDirectory)
         context.coordinator.player = player

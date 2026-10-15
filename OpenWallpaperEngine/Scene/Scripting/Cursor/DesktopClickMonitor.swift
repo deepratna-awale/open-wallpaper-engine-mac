@@ -81,11 +81,18 @@ final class DesktopClickMonitor {
     }
 
     /// Whether a press at `point` reaches the wallpaper: no window that takes mouse events is at
-    /// that point (`windowNumber(at:)` skips click-through windows such as ours and overlays), or
-    /// the one that is sits at or below the desktop icons' level (Finder's desktop).
+    /// that point (`windowNumber(at:)` skips click-through windows such as ours and overlays), the
+    /// one that is sits at or below the desktop icons' level (Finder's desktop), or it is a Play
+    /// in Window window, whose wallpaper takes the window's clicks.
     static func landsOnWallpaper(_ point: NSPoint) -> Bool {
         let number = NSWindow.windowNumber(at: point, belowWindowWithWindowNumber: 0)
         guard number > 0 else { return true }
+        // The monitors call this on the main thread.
+        if Thread.isMainThread, MainActor.assumeIsolated({
+            NSApp.window(withWindowNumber: number)?.identifier == PlayInWindowWindow.identifier
+        }) {
+            return true
+        }
         guard let info = (CGWindowListCopyWindowInfo([.optionIncludingWindow], CGWindowID(number)) as? [[String: Any]])?.first,
               let layer = info[kCGWindowLayer as String] as? Int else { return false }
         return layer <= Int(CGWindowLevelForKey(.desktopIconWindow))

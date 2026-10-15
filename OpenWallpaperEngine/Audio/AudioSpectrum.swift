@@ -58,11 +58,10 @@ final class AudioSpectrumAnalyzer {
     // Audio-thread only.
     private let transform: AudioSpectrumBlockTransform?
 
-    /// `sampleRate` is the capture stream's; `inputVolume` is WE's `audioinputvolume` × 0.02.
-    init(sampleRate: Double = 48_000, inputVolume: Float = 1,
+    /// `sampleRate` is the capture stream's.
+    init(sampleRate: Double = 48_000,
          uptime: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }) {
         transform = AudioSpectrumBlockTransform(sampleRate: sampleRate)
-        transform?.inputVolume = inputVolume
         self.uptime = uptime
         frames = AudioSpectrumClock(feed: feed, publishes: true, uptime: uptime)
         if transform == nil {
@@ -79,9 +78,20 @@ final class AudioSpectrumAnalyzer {
     private let thresholdLock = NSLock()
     private var pendingThreshold: Double = 0
 
+    /// WE's "Recording volume" setting (`audioinputvolume`, 0…200, default 50;
+    /// `AudioSpectrumBlockTransform.inputVolume(setting:)`), set from any thread; the audio thread
+    /// takes it with the next buffer. `thresholdLock` owns it too.
+    var recordingVolume: Double {
+        get { thresholdLock.withLock { pendingVolume } }
+        set { thresholdLock.withLock { pendingVolume = newValue } }
+    }
+    private var pendingVolume = AudioSpectrumBlockTransform.defaultVolumeSetting
+
     /// Adds one buffer of non-interleaved float samples. Pass the same buffer twice for mono.
     func ingest(left: UnsafeBufferPointer<Float>, right: UnsafeBufferPointer<Float>) {
-        transform?.threshold = AudioSpectrumBlockTransform.threshold(setting: recordingThreshold)
+        let (threshold, volume) = thresholdLock.withLock { (pendingThreshold, pendingVolume) }
+        transform?.threshold = AudioSpectrumBlockTransform.threshold(setting: threshold)
+        transform?.inputVolume = AudioSpectrumBlockTransform.inputVolume(setting: volume)
         guard let raw = transform?.append(left: left, right: right) else { return }
         feed.setLatestRaw(raw)
     }
