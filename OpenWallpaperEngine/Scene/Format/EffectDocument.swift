@@ -32,9 +32,11 @@ struct EffectDocument: Decodable {
     var dependencies: [String]
     var passes: [EffectPass]
     var fbos: [EffectFBO]
+    /// WE's cost class (`"expensive"`, `"veryexpensive"`), which its editor's stats count.
+    var performance: EffectPerformance?
 
     enum CodingKeys: String, CodingKey {
-        case version, name, description, group, replacementkey, dependencies, passes, fbos
+        case version, name, description, group, replacementkey, dependencies, passes, fbos, performance
     }
 
     init(from decoder: Decoder) throws {
@@ -48,7 +50,14 @@ struct EffectDocument: Decodable {
         dependencies = c.decodeElements(String.self, forKey: .dependencies, userInfo: info) ?? []
         passes = c.decodeElements(EffectPass.self, forKey: .passes, userInfo: info) ?? []
         fbos = c.decodeElements(EffectFBO.self, forKey: .fbos, userInfo: info) ?? []
+        performance = c.decodeLogged(String.self, forKey: .performance, userInfo: info).flatMap(EffectPerformance.init(rawValue:))
     }
+}
+
+/// An effect.json `performance`: the effects WE's editor warns about (`ui_editor_stats_performance_group_*`).
+enum EffectPerformance: String, Sendable {
+    case expensive
+    case veryExpensive = "veryexpensive"
 }
 
 /// One step of an effect: either a material draw into `target` (nil = the layer's ping-pong

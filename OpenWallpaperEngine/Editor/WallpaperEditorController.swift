@@ -177,6 +177,10 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.commands = commands
         services.document = document
         services.thumbnail = thumbnail
+        services.renderStats = SceneRenderStatsSampler(instance: { [weak preview] in
+            preview.flatMap { $0.sceneInstances.instance(for: $0.instanceKey(for: $0.selectedScreenId)) }
+        }).makeFeed()
+        services.preferences = .app
         // In the editor's own process the app's Settings are another process's (`sync`).
         let openSettings: @MainActor (AppSettingsRequest) -> Void = { [sync] request in
             if let sync { sync.openSettings(request) } else { AppDelegate.shared.openSettings(for: request) }

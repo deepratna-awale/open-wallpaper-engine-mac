@@ -69,6 +69,10 @@ public struct WallpaperEditorServices {
     public var openAssetsSetup: () -> Void = {}
     /// Take Snapshot and Record GIF: the library thumbnail made from the canvas; nil leaves them out.
     public var thumbnail: EditorThumbnail?
+    /// The canvas renderer's frame statistics for the stats overlay; nil leaves the overlay out.
+    public var renderStats: RenderStatsFeed?
+    /// Where the editor keeps its own choices (the stats overlay's mode).
+    public var preferences: UserDefaults = .standard
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,

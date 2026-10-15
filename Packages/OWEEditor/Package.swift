@@ -18,7 +18,8 @@ let package = Package(
     ],
     targets: [
         .target(name: "OWESceneEditing"),
-        .target(name: "OWEInspectorKit"),
+        // The stats overlay's own string catalog (`Resources/Stats.xcstrings`).
+        .target(name: "OWEInspectorKit", resources: [.process("Resources")]),
         .target(name: "OWEEditor",
                 dependencies: ["OWESceneEditing", "OWEInspectorKit"],
                 // The particle editor's catalog and its copy of WE's editor schema

@@ -500,6 +500,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private(set) var sharedFrame: MTLTexture?
     /// The last `present(in:)`'s command buffer (tests and benchmarks).
     private(set) var lastPresentCommandBuffer: MTLCommandBuffer?
+    /// Counts this renderer's frames while the Wallpaper Editor's stats overlay shows them; nil,
+    /// counting nothing, the rest of the time (`SceneFrameStatsRecorder`).
+    var frameStats: SceneFrameStatsRecorder?
+    /// The CPU time of the frame's particle step and its light objects, for `frameStats`.
+    private var particleStepMilliseconds = 0.0
+    private var lastLightCount = 0
     /// A screen's EDR headroom (tests set their own); a view without a window has none.
     var displayHeadroom: (NSScreen?) -> SceneDisplayHeadroom = { SceneDisplayHeadroom(screen: $0) }
 
@@ -1637,11 +1643,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                                             orthographicSize: isPerspective ? nil : sceneSize)
         effectFrame.lighting = frameLighting(eye: effectFrame.eyePosition, forward: effectFrame.viewForward,
                                              shake: motion.shake)
+        if frameStats != nil { lastLightCount = effectFrame.lighting.objects.count }
         analyseLayers(effectFrame: effectFrame, motion: motion, drawableSize: drawableSize)
         guard redrawing || paceFrame(effectFrame, at: wallTime()) else { return }
         // Only a frame that is drawn takes its targets, and the drawable only once its work is
         // encoded (F1), unless the scene draws straight into it (`FrameTargets`, S2).
-        guard let commandBuffer = commandQueue.makeCommandBuffer(),
+        let madeCommandBuffer = commandQueue.makeCommandBuffer()
+        guard let commandBuffer = frameStats?.wrap(madeCommandBuffer) ?? madeCommandBuffer,
               let targets = frameTargets(output, destination: destination, format: scenePixelFormat, size: sceneTargetSize,
                                          frame: effectFrame) else { return }
         let sceneTexture = targets.scene
@@ -1745,6 +1753,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             .sorted { ($0.element.configuration.order, $0.offset) < ($1.element.configuration.order, $1.offset) }
             .map(\.element)
         let particleSignpost = OWESignpost.begin(OWESignpost.render, "updateParticles")
+        let particleStepStart = frameStats == nil ? 0 : CACurrentMediaTime()
         // Each visible system's step this frame, for the renderers after its first.
         var steppedInputs: [ObjectIdentifier: ParticleFrameInputs] = [:]
         for system in orderedSystems {
@@ -1859,6 +1868,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             particleBatches.append((system, base, particleInstances.count - base, false, false))
         }
         particleSignpost.end()
+        if frameStats != nil { particleStepMilliseconds = (CACurrentMediaTime() - particleStepStart) * 1000 }
         particleSimulator?.encode(particleRequests, sceneSize: sceneSize, targetSize: drawableSize,
                                   commandBuffer: commandBuffer)
         frameReflection = drawReflection(frame: effectFrame, scene: sceneTexture, draws: draws,
@@ -2149,11 +2159,39 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         }
         commandBuffer.commit()
         lastCommandBuffer = commandBuffer
+        if let frameStats { frameStats.finishFrame(sceneStats) }
         // Nothing was compiling when the frame started, nor started or landed while it was
         // encoded: every pass drew.
         if let landedBefore, !pipelinesCompiling, pipelinesLanded == landedBefore, pendingScriptLayers == 0,
            pendingReplacements == 0, textRaster.inFlight == 0 {
             hasCompleteFrame = true
+        }
+    }
+
+    /// The scene's own numbers for the stats overlay, at the end of a counted frame (WE's
+    /// `renderStats`): particles, lights, video textures, the scripts' time and expensive effects.
+    private func sceneStats(_ stats: inout SceneFrameStats) {
+        for system in particleSystems where system.simulation == nil {
+            if let gpu = system.gpu {
+                stats.particleCount += gpu.completedCount
+                stats.particleBytes += gpu.particles?.length ?? 0
+            } else {
+                stats.particleCount += system.particles.count
+                stats.particleBytes += system.particles.count * MemoryLayout<Particle>.stride
+            }
+        }
+        stats.particleMilliseconds = particleStepMilliseconds
+        stats.scriptMilliseconds = scripts.wallpaper?.frameTiming.lastMilliseconds ?? 0
+        stats.lightCount = lastLightCount
+        for entry in layers where scripts.isVisible(entry.layer.id) {
+            if case .video = entry.layer.source { stats.videoTextureCount += 1 }
+            for effect in entry.layer.weEffects where effect.visible {
+                switch effect.performance {
+                case .expensive?: stats.expensiveEffects += 1
+                case .veryExpensive?: stats.veryExpensiveEffects += 1
+                case nil: break
+                }
+            }
         }
     }
 
