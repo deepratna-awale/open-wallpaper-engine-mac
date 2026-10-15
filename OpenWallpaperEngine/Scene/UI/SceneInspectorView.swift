@@ -192,7 +192,7 @@ private final class SceneInspectorModel: ObservableObject {
 
         let storedValues: [String: String] = targets.storedValues
         let definitions = WallpaperEngineShareJSON.definitions(in: directory)
-        let labels = WallpaperEngineLabels.load()
+        let labels = WallpaperEngineLabels.load(wallpaperDirectory: directory)
         items = scene.objects.enumerated().map { index, object in
             let objectID = object.id ?? index
             var rawObject = rawObjects.indices.contains(index) ? prettyJSON(rawObjects[index]) : "{}"
@@ -249,7 +249,7 @@ private final class SceneInspectorModel: ObservableObject {
             .filter { versionKeys.contains($0.key) }
             .sorted { ($0.order ?? .max, $0.key) < ($1.order ?? .max, $1.key) }
             .map { definition in
-                let title = { (text: String) in labels.translation(text) ?? UserPropertyHTML.plainText(text) }
+                let title = { (text: String) in UserPropertyHTML.plainText(labels.translation(text) ?? text) }
                 let condition = definition.condition?.trimmingCharacters(in: .whitespaces)
                 return SceneVersionProperty(id: definition.key, title: title(definition.text),
                                             options: definition.options.map { ($0.value, title($0.label)) },
@@ -1316,6 +1316,11 @@ private struct SceneInspectorContent: View {
     private var inspectorSplitView: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             sidebarColumn
+                // On the column, not the split view: there, with the right-hand inspector, the
+                // search field's place in the toolbar and the columns' widths kept re-laying each
+                // other out, and AppKit stopped the window's first layout after 300 passes.
+                .searchable(text: $searchText, placement: .sidebar, prompt: "Search")
+                .modifier(SearchFieldFocus(isFocused: $isSearchFocused))
                 // `sidebarToggle` takes its place, right before the modes.
                 .toolbar(removing: .sidebarToggle)
                 // Outermost, after `toolbar(removing:)`: inside it the width never reached the
@@ -1401,8 +1406,6 @@ private struct SceneInspectorContent: View {
                     Text("Do you want to undo every scene edit of “\(wallpaper.project.displayTitle)”? Its properties are kept.")
                 }
         }
-        .searchable(text: $searchText, placement: .sidebar, prompt: "Search")
-        .modifier(SearchFieldFocus(isFocused: $isSearchFocused))
         .background {
             Button("") { focusSearch() }
                 .keyboardShortcut("k", modifiers: .command)

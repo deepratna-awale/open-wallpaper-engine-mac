@@ -136,9 +136,27 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let controller = GlobalHotKeyController(viewModel: wallpaperViewModel)
         controller.playlistShortcuts = playlistShortcuts
         playlistShortcuts.hotKeys = controller
+        controller.userHotKeys = userHotKeys
+        userHotKeys.actionHotKeys = controller
         controller.perform = { [weak self] in self?.performHotKey($0) }
         return controller
     }()
+    /// The wallpapers' and display profiles' system-wide hotkeys (`UserHotKey`).
+    lazy var userHotKeys: UserHotKeyController = {
+        let profiles = wallpaperViewModel.displayProfiles
+        let controller = UserHotKeyController(viewModel: wallpaperViewModel,
+                                              profileNames: profiles.$profiles.map { $0.map(\.name) }.eraseToAnyPublisher())
+        playlistShortcuts.userHotKeys = controller
+        controller.perform = { [weak self] in self?.performUserHotKey($0) }
+        return controller
+    }()
+    /// Play in Window: wallpapers in windows of their own beside the desktop (`App/PlayInWindow`).
+    lazy var playInWindow = PlayInWindowController(desktop: wallpaperViewModel)
+    /// Wallpaper Engine's command line: `--control` commands from the app's executable
+    /// (`App/Launch/CommandLineControlCommand`, docs/command-line.md) run here.
+    private lazy var commandLineControl = CommandLineControlListener { [unowned self] request in
+        CommandLineControlPerformer(app: self, control: AppControlModel(app: self)).perform(request)
+    }
     /// The wallpaper windows sit above the desktop icons, hiding them (`toggleDesktopIcons`).
     var hidesDesktopIcons = false
     lazy var crashWatcher = CrashWatcher()
@@ -162,6 +180,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// The Chromium engine's installer that Settings › Plugins and the screen saver's install
     /// offer share, so an install started from either shows its progress in both.
     lazy var chromiumEngine = ChromiumEngineInstaller()
+    /// Settings › Optimizations › Developer Tools: web wallpaper devtools for this session only.
+    lazy var webDevtools = WebDevtools(chromium: ChromiumBrowserHost.shared)
     /// The live screen saver's broker, a launch agent registered while the Screen Saver plugin is on.
     lazy var screenSaverBroker = ScreenSaverBrokerAgent()
     private var screenSaverBrokerCancellable: AnyCancellable?
@@ -240,7 +260,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             storage: SceneScriptStorage(directory: SceneScriptStorage.defaultDirectory),
             media: mediaSession,
             spectrum: { WallpaperServices.shared.audioSpectrumSnapshot },
-            clicks: clicks)
+            clicks: clicks,
+            userShortcuts: UserShortcutLauncher(opener: WorkspaceUserShortcutOpener(),
+                                                systemHash: UserShortcutSystemHash.current()))
     }()
     /// The Wallpaper Engine assets scenes need, from the user's own Steam copy (Settings › Assets).
     lazy var assets = WallpaperEngineAssetsService(steamCmd: contentViewModel.steamCmd)
@@ -525,12 +547,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             self.mainWindowController.window.makeKeyAndOrderFront(nil)
         }
 
-        // Registers the playlists' and the hotkey actions' global shortcuts.
+        // Registers the playlists', the hotkey actions', the wallpapers' and the profiles' global shortcuts.
         _ = playlistShortcuts
         _ = globalHotKeys
 
         // MCP clients connect once the app is set up, while the MCP Server plugin is installed.
         mcpServerPlugin.start()
+        // And the command line's `--control` commands.
+        commandLineControl.start()
 
         // Theming: puts back what a crashed session changed, then follows the wallpaper's colour.
         DesktopPictureTheming.provider = { [unowned self] in theming.strips }

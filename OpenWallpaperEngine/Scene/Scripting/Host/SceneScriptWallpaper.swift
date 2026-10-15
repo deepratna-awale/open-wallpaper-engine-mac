@@ -74,6 +74,10 @@ final class SceneScriptWallpaper {
     /// new one when the user's preferred languages change.
     private var lastLanguage = SceneScriptGeneralSettings.defaultLanguage
     private var localeObserver: NSObjectProtocol?
+    /// Each `usershortcut` property's binding as stored: set on the main thread, read by
+    /// `engine.openUserShortcut` on the script thread (under `shortcutLock`).
+    private var shortcutBindings: [String: String] = [:]
+    private let shortcutLock = NSLock()
 
     /// Creates the runtime on its thread and starts loading the scripts there. Nil (logged) when
     /// the scene has no scripts.
@@ -92,6 +96,7 @@ final class SceneScriptWallpaper {
             services.storage.adoptLegacyStore(from: legacyStorageID, to: content.wallpaperID)
         }
         for (name, property) in properties.properties { lastUserValues[name] = property.value }
+        shortcutBindings = properties.userShortcutBindings
         try thread.sync { try create(properties: properties) }
         let generalSettings = SceneScriptGeneralSettings.current()
         lastLanguage = generalSettings["language"] as? String ?? SceneScriptGeneralSettings.defaultLanguage
@@ -112,6 +117,13 @@ final class SceneScriptWallpaper {
         let describer = SceneScriptSceneDescriber(userProperties: properties, file: content.file)
         let mirror = SceneScriptSceneMirror(document: content.document, describer: describer, wallpaperID: content.wallpaperID)
         let engine = SceneScriptEngineExtension(storage: services.storage)
+        if let launcher = services.userShortcuts {
+            engine.userShortcutHandler = { [weak self] name in
+                guard let self else { return false }
+                let binding = self.shortcutLock.withLock { self.shortcutBindings[name] }
+                return binding.map(launcher.open) ?? false
+            }
+        }
         let cursor = SceneScriptCursorExtension()
         let model = SceneScriptObjectModel(host: mirror, modelData: content.modelData)
         let binding = SceneScriptBindingExtension()
@@ -210,6 +222,8 @@ final class SceneScriptWallpaper {
     /// name.) Main thread.
     func userPropertiesDidChange(_ names: Set<String>) {
         let properties = content.userProperties()
+        let bindings = properties.userShortcutBindings
+        shortcutLock.withLock { shortcutBindings = bindings }
         let changed = names.filter { name in
             guard let value = properties.value(of: name), lastUserValues[name] != value else { return false }
             lastUserValues[name] = value

@@ -267,11 +267,12 @@ final class EditorWallpaperResources {
     private func readUserPropertyChoices() -> [EditorUserPropertyChoice] {
         guard let data = try? Data(contentsOf: wallpaper.wallpaperDirectory.appending(path: "project.json")),
               let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [] }
+        let labels = self.labels.addingAuthorTranslations(projectJSON: root)
         return UserPropertyDefinition.all(projectJSON: root)
             .filter { !["text", "group"].contains($0.type) }
             .sorted { ($0.order ?? .max, $0.key) < ($1.order ?? .max, $1.key) }
             .map { definition in
-                let title = labels.translation(definition.text) ?? Self.plain(definition.text)
+                let title = Self.plain(labels.translation(definition.text) ?? definition.text)
                 return EditorUserPropertyChoice(key: definition.key, title: title.isEmpty ? definition.key : title,
                                                 type: definition.type)
             }
