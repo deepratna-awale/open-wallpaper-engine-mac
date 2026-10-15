@@ -115,6 +115,33 @@ final class SceneScriptRenderTests: XCTestCase {
 
     // MARK: - Instances
 
+    /// `general.clearenabled`: on unless authored false (`null` too, as 44 of WE's own scenes have it).
+    func testClearEnabledDecodesWithWEsDefault() throws {
+        func general(_ json: String) throws -> WESceneGeneral { try decodeTolerant(WESceneGeneral.self, from: Data(json.utf8)) }
+        let context = SpatialProperties()
+        XCTAssertTrue(try general("{}").clearEnabled(in: context))
+        XCTAssertTrue(try general(#"{"clearenabled": null}"#).clearEnabled(in: context))
+        XCTAssertTrue(try general(#"{"clearenabled": true}"#).clearEnabled(in: context))
+        XCTAssertFalse(try general(#"{"clearenabled": false}"#).clearEnabled(in: context))
+    }
+
+    /// With `clearenabled` off WE doesn't clear the scene before a frame: Mover's script moves it
+    /// from x = 16 to x = 48 on its third frame, and both places stay red. Once its script sets
+    /// `thisScene.clearenabled` back on (frame 20), a frame shows only where it is now.
+    func testClearEnabledOffKeepsTheLastFrame() throws {
+        _ = try Fixtures.assets()
+        let scene = try Scene(fixture: "scripted-clear", services: services(), size: SIMD2(128, 64))
+        defer { scene.close() }
+        let kept = try scene.render(frames: 6)
+        XCTAssertEqual(kept.color(atScene: SIMD2(48, 32)), .red, "where Mover is")
+        XCTAssertEqual(kept.color(atScene: SIMD2(16, 32)), .red, "where Mover was: the scene wasn't cleared")
+        XCTAssertEqual(kept.color(atScene: SIMD2(100, 32)), .black)
+
+        let cleared = try scene.render(frames: 22)
+        XCTAssertEqual(cleared.color(atScene: SIMD2(48, 32)), .red)
+        XCTAssertEqual(cleared.color(atScene: SIMD2(16, 32)), .black, "a cleared frame shows only the current place")
+    }
+
     /// S22: two displays showing the same wallpaper run two runtimes that share nothing: module
     /// variables, `shared` and frame counts are their own.
     func testTwoDisplaysShareNothing() throws {

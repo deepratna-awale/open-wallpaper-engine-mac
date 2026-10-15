@@ -392,6 +392,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var cameraGeneral: WESceneGeneral?
     /// `general.clearcolor` (`SceneMetalContent.clearColor`); a script's `thisScene.clearcolor` wins.
     private var clearColor = SceneGeneralDefaults.clearColor
+    /// `general.clearenabled` (`SceneMetalContent.clearEnabled`); a script's `thisScene.clearenabled` wins.
+    private var clearEnabled = true
+    /// This frame keeps the last frame's scene (`clearenabled` off): its own scene target, loaded
+    /// instead of cleared, and the pass's samples and depth stored.
+    private var keepsScene = false
+    /// The scene targets (colour, samples, depth) the last frame that kept its scene drew into:
+    /// a frame loads them only while they are the same textures; new ones start cleared.
+    private var keptSceneTargets: [ObjectIdentifier?] = []
     /// WE's parallax camera position, eased across frames (`SceneCameraParallax`).
     private var cameraParallax = SceneCameraParallax(sceneSize: SIMD2<Float>(1920, 1080))
     /// Whose user properties this renderer's frames read (see `SceneMetalContent.wallpaperKey`).
@@ -881,6 +889,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.camera = content.camera
                 self.cameraGeneral = content.general
                 self.clearColor = content.clearColor
+                self.clearEnabled = content.clearEnabled
+                self.keptSceneTargets = []
                 self.cameraParallax = SceneCameraParallax(sceneSize: content.size, enabled: Self.parallaxEnabled(content.camera))
                 self.parallaxSettledPointer = nil
                 self.lastCameraMotion = nil
@@ -1440,7 +1450,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func frameTargets(_ output: FrameOutput, destination: SceneFrameDestination, format: MTLPixelFormat,
                               size: SIMD2<Int>, frame: BuiltinFrameContext) -> FrameTargets? {
         let outputSize = SIMD2<Float>(Float(size.x), Float(size.y))
-        let passesThrough = skipsIdentityComposite && !drawsAtRenderScale && !postProcess.drawsHDR && format == destination.pixelFormat
+        // A scene that keeps its last frame draws into its own target, never the drawable.
+        let passesThrough = skipsIdentityComposite && !keepsScene && !drawsAtRenderScale && !postProcess.drawsHDR && format == destination.pixelFormat
             && postProcess.passesThrough(
                 bloom: liveBloom(), extras: appExtras(), settings: renderSettings, colorCorrection: colorCorrection(),
                 display: displayOutput, sceneSize: size, outputSize: size,
@@ -1642,6 +1653,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                              shake: motion.shake)
         analyseLayers(effectFrame: effectFrame, motion: motion, drawableSize: drawableSize)
         guard redrawing || paceFrame(effectFrame, at: wallTime()) else { return }
+        keepsScene = !(scripts.state.scene.flag(.clearenabled) ?? clearEnabled)
         // Only a frame that is drawn takes its targets, and the drawable only once its work is
         // encoded (F1), unless the scene draws straight into it (`FrameTargets`, S2).
         guard let commandBuffer = commandQueue.makeCommandBuffer(),
@@ -1738,6 +1750,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         sceneRenderPass.colorAttachments[0].clearColor = MTLClearColor(red: Double(clear.x), green: Double(clear.y),
                                                                        blue: Double(clear.z), alpha: 1)
         attachSceneDepth(to: sceneRenderPass, scene: sceneTexture)
+        keepScene(sceneRenderPass, scene: sceneTexture, multisampled: multisampledScene)
         // One instanced draw per system rather than one per particle (or per rope segment, which
         // multiplies out to thousands on trail renderers).
         particleInstances.removeAll(keepingCapacity: true)
@@ -2078,7 +2091,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             guard fed.resumed else { return }
             detailBase = fed.base
         }
-        endScenePass(encoder, resumes: false)
+        endScenePass(encoder, resumes: keepsScene)
 
         var stageContext = SceneFrameStageContext(scene: sceneTexture, commandBuffer: commandBuffer, sceneSize: sceneSize,
                                                   frame: effectFrame, settings: renderSettings)
@@ -3924,6 +3937,24 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             format: postProcess.drawsHDR ? .rgba16Float : .rgba8Unorm, commandBuffer: commandBuffer)
         prelitImages[entry.layer.id] = lit
         return lit
+    }
+
+    /// With `clearenabled` off (WE skips its scene pass's clear, 0x140183588), the pass loads the
+    /// last frame's colour and depth instead of clearing them, while it draws into the same targets.
+    private func keepScene(_ pass: MTLRenderPassDescriptor, scene: MTLTexture, multisampled: MTLTexture?) {
+        guard keepsScene else {
+            keptSceneTargets = []
+            return
+        }
+        let targets: [ObjectIdentifier?] = [ObjectIdentifier(scene), multisampled.map(ObjectIdentifier.init),
+                       frameDepth == nil ? nil : depthBuffer.texture.map(ObjectIdentifier.init),
+                       frameDepth == nil ? nil : depthBuffer.multisampled.map(ObjectIdentifier.init)]
+        guard targets == keptSceneTargets else {
+            keptSceneTargets = targets
+            return
+        }
+        pass.colorAttachments[0].loadAction = .load
+        if frameDepth != nil { pass.depthAttachment.loadAction = .load }
     }
 
     /// Ends an encoder of the scene pass, storing only what is read afterwards: the samples and
