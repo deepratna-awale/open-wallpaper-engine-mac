@@ -179,6 +179,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// The renderer draws the live screen saver (`ScreenSaverLiveScene`): scripts see
     /// `engine.isScreensaver()` true. Set before the first frame.
     var rendersScreenSaver = false
+    /// The renderer draws the Wallpaper Editor's canvas: scripts see `engine.isRunningInEditor()`
+    /// true, as in Wallpaper Engine's editor. Set before the first frame.
+    var runsInEditor = false
     /// While true the scene's clock text layers (`SceneClockLayers`) draw nothing: set for the
     /// Live Photo export (iOS draws its own clock) and while capturing the loading snapshot the
     /// lock screen shows.
@@ -2762,6 +2765,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             canvasSize: SIMD2(Double(sceneSize.x), Double(sceneSize.y)), placement: placement,
             pixelsPerPoint: Double(drawablePixelsPerPoint), isScreensaver: rendersScreenSaver)
         input.environment.zoom = frameZoom
+        input.environment.isRunningInEditor = runsInEditor
         input.input = SceneScriptInput(cursorScreenPosition: cursorScreenPixels(viewports),
                                        cursorLeftDown: leftDown)
         // The cursor tracks the drawn plane; scripts and their hit tests see WE's world under it.
