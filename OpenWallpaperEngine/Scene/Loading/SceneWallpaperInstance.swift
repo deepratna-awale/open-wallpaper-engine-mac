@@ -348,6 +348,7 @@ final class SceneWallpaperInstance {
     /// Sets the renderer up before any frame (no frame runs until a display attaches).
     private func configureRenderer(_ renderer: SceneMetalRenderer?) {
         guard let renderer else { return }
+        renderer.runsInEditor = runsEditorDraft
         renderer.sounds.setTarget(level: soundTarget.level, audible: soundTarget.audible)
         renderer.scripts.onHalt = { [weak self] error in
             // Thread boundary: `take()` reports it from the renderer's draw, on the render thread.
