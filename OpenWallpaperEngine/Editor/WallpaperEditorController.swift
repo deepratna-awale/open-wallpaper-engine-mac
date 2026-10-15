@@ -175,6 +175,14 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.timeline = timeline
         services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
         services.commands = commands
+        // The View menu's settings, kept as the app keeps its own; Low FPS Simulation caps the canvas.
+        services.editorDefaults = UserDefaults.app
+        services.setCanvasFrameRateCap = { [weak preview] cap in
+            guard let preview, let scene = preview.sceneInstances.instance(for: preview.instanceKey(for: preview.selectedScreenId)) else {
+                return
+            }
+            scene.frameRateCap = cap
+        }
         services.document = document
         services.thumbnail = thumbnail
         // In the editor's own process the app's Settings are another process's (`sync`).
@@ -414,9 +422,20 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         commands.send(.revertToSaved)
     }
 
-    /// Save and Revert to Saved need something unsaved.
+    /// View › …: the command the item carries (`WallpaperEditorMenu.viewCommand`).
+    @objc func performViewCommand(_ sender: NSMenuItem) {
+        guard let command = (sender.representedObject as? WallpaperEditorMenu.ViewCommandBox)?.command else { return }
+        commands.send(.view(command))
+    }
+
+    /// Save and Revert to Saved need something unsaved; the View menu's items show their state.
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         guard let action = menuItem.action else { return true }
+        if action == WallpaperEditorMenu.viewCommand,
+           let command = (menuItem.representedObject as? WallpaperEditorMenu.ViewCommandBox)?.command {
+            menuItem.state = commands.isOn(command) ? .on : .off
+            return commands.isEnabled(command)
+        }
         return action == WallpaperEditorMenu.save || action == WallpaperEditorMenu.revertToSaved ? isEdited : true
     }
 

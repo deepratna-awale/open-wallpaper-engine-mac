@@ -12,6 +12,40 @@ public final class WallpaperEditorCommands {
         case saveAsNewWallpaper
         /// Asks before going back to the last save (undoable).
         case revertToSaved
+        /// The View menu.
+        case view(EditorViewCommand)
+    }
+
+    /// The window's view options, for the View menu's checkmarks; set while its window is open.
+    public internal(set) weak var viewOptions: EditorViewOptions?
+    /// Whether the window has particle systems to show Show Particle Control Points for.
+    public internal(set) var hasParticles = false
+    /// The particle editor's Show Control Points, for its checkmark.
+    var showsParticleControlPoints: () -> Bool = { false }
+
+    /// Whether the View menu's `command` is on (its checkmark).
+    public func isOn(_ command: EditorViewCommand) -> Bool {
+        guard let options = viewOptions else { return false }
+        switch command {
+        case .resetCamera: return false
+        case .previewRatio(let ratio): return options.previewRatio == ratio
+        case .showGrid: return options.showsGrid
+        case .showSelectionBox: return options.showsSelectionBox
+        case .showParticleCollision: return options.showsParticleCollision
+        case .showParticleControlPoints: return showsParticleControlPoints()
+        case .desktopPreview: return options.preview == .desktop
+        case .phonePreview: return options.preview == .phone
+        case .lowFrameRate: return options.simulatesLowFrameRate
+        }
+    }
+
+    /// Whether the View menu's `command` can be chosen now.
+    public func isEnabled(_ command: EditorViewCommand) -> Bool {
+        guard viewOptions != nil else { return false }
+        switch command {
+        case .showParticleControlPoints, .showParticleCollision: return hasParticles
+        default: return true
+        }
     }
 
     let requests = PassthroughSubject<Command, Never>()

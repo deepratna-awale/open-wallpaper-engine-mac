@@ -69,6 +69,11 @@ public struct WallpaperEditorServices {
     public var openAssetsSetup: () -> Void = {}
     /// Take Snapshot and Record GIF: the library thumbnail made from the canvas; nil leaves them out.
     public var thumbnail: EditorThumbnail?
+    /// Where the View menu's settings are kept between windows and launches (the app's own
+    /// defaults); nil keeps them for the window only.
+    public var editorDefaults: UserDefaults?
+    /// Caps the canvas's frame rate (Low FPS Simulation), nil for none.
+    public var setCanvasFrameRateCap: (Int?) -> Void = { _ in }
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,

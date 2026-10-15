@@ -10,6 +10,7 @@ public struct WallpaperEditorView: View {
     @ObservedObject private var document: WallpaperEditorDocument
     private let services: WallpaperEditorServices
     @StateObject private var tools = EditorTools()
+    @StateObject private var viewOptions: EditorViewOptions
     @State private var isInspectorPresented = true
     @AppStorage("WallpaperEditorScriptHeight") private var scriptHeight: Double = 340
     @State private var isConfirmingRevert = false
@@ -27,6 +28,7 @@ public struct WallpaperEditorView: View {
         self.session = session
         self.services = services
         document = services.document ?? WallpaperEditorDocument()
+        _viewOptions = StateObject(wrappedValue: EditorViewOptions(defaults: services.editorDefaults))
         _authoring = StateObject(wrappedValue: EditorAuthoringModel(session: session, projectJSON: services.projectJSON,
                                                                     console: services.scriptConsole,
                                                                     services: services))
@@ -43,7 +45,7 @@ public struct WallpaperEditorView: View {
                 // sizes back and forth until AppKit stopped the layout ("more Update Constraints
                 // passes than there are views") and the app crashed.
                 VStack(spacing: 0) {
-                    EditorCanvasView(session: session, tools: tools, services: services)
+                    EditorCanvasView(session: session, tools: tools, services: services, viewOptions: viewOptions)
                         .overlay(alignment: .top) { noticeBanner }
                         .frame(minHeight: 200)
                     // The script editor docks under the canvas, which keeps running what it applies.
@@ -76,7 +78,19 @@ public struct WallpaperEditorView: View {
             case .revertToSaved:
                 guard document.isEdited else { return }
                 isConfirmingRevert = true
+            case .view(let command):
+                perform(command)
             }
+        }
+        .onAppear {
+            services.commands?.viewOptions = viewOptions
+            services.commands?.hasParticles = services.particles != nil
+            let particles = services.particles
+            services.commands?.showsParticleControlPoints = { particles?.model.showsControlPoints ?? false }
+            if viewOptions.simulatesLowFrameRate { services.setCanvasFrameRateCap(EditorViewOptions.lowFrameRate) }
+        }
+        .onChange(of: viewOptions.simulatesLowFrameRate) { _, low in
+            services.setCanvasFrameRateCap(low ? EditorViewOptions.lowFrameRate : nil)
         }
         .sheet(item: $authoring.bindingTarget) { target in
             BindPropertySheet(authoring: authoring, target: target)
@@ -202,6 +216,21 @@ public struct WallpaperEditorView: View {
                 .padding(.top, 12)
                 .transition(.move(edge: .top).combined(with: .opacity))
                 .id(notice.id)
+        }
+    }
+
+    /// The View menu's commands.
+    private func perform(_ command: EditorViewCommand) {
+        switch command {
+        case .resetCamera: viewOptions.resetCount += 1
+        case .previewRatio(let ratio): viewOptions.previewRatio = ratio
+        case .showGrid: viewOptions.showsGrid.toggle()
+        case .showSelectionBox: viewOptions.showsSelectionBox.toggle()
+        case .showParticleCollision: viewOptions.showsParticleCollision.toggle()
+        case .showParticleControlPoints: services.particles?.model.showsControlPoints.toggle()
+        case .desktopPreview: viewOptions.toggle(.desktop)
+        case .phonePreview: viewOptions.toggle(.phone)
+        case .lowFrameRate: viewOptions.simulatesLowFrameRate.toggle()
         }
     }
 
