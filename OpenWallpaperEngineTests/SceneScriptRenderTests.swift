@@ -244,6 +244,28 @@ final class SceneScriptRenderTests: XCTestCase {
                       "brightness 0.5 halves Dimmed's white: \(dimmed)")
     }
 
+    /// `IImageLayer.alignment` and `IEffectLayer.perspective` written by scripts are drawn: Aligned
+    /// (8 × 8 at x = 16) sits right of its origin once a script sets `left`, and Near (z = 15)
+    /// draws larger than its 8 × 8 through the temporary camera once a script turns `perspective` on.
+    func testScriptSetAlignmentAndPerspectiveAreDrawn() throws {
+        _ = try Fixtures.assets()
+        let plain = try Scene(fixture: "scripted-fields", services: nil, size: SIMD2(128, 64))
+        let authored = try plain.render(frames: 3)
+        plain.close()
+        XCTAssertEqual(authored.color(atScene: SIMD2(13, 32)), .red, "centred on its origin as authored")
+        XCTAssertEqual(authored.color(atScene: SIMD2(22, 32)), .black)
+        let flat = authored.litPixels(from: SIMD2(70, 2), to: SIMD2(122, 62))
+        XCTAssertEqual(Double(flat), 64, accuracy: 12, "Near draws flat, 8 × 8")
+
+        let scene = try Scene(fixture: "scripted-fields", services: services(), size: SIMD2(128, 64))
+        defer { scene.close() }
+        let pixels = try scene.render(frames: 4)
+        XCTAssertEqual(pixels.color(atScene: SIMD2(22, 32)), .red, "alignment 'left' puts the quad right of its origin")
+        XCTAssertEqual(pixels.color(atScene: SIMD2(13, 32)), .black)
+        let deep = pixels.litPixels(from: SIMD2(70, 2), to: SIMD2(122, 62))
+        XCTAssertGreaterThan(abs(deep - flat), 20, "perspective draws Near through the temporary camera: \(deep) vs \(flat)")
+    }
+
     // MARK: - Draw order
 
     func testDrawOrderPutsParticlesBetweenTheLayersAroundThem() {
