@@ -1,38 +1,5 @@
 import Foundation
 
-/// WE's Discover sorts (`querytype` in `ui/dist/scripts/scripts.js`) as QueryFiles query types.
-/// WE's "trend" lists are Steam's RankedByTrend over a number of days.
-enum WorkshopDiscoverSort: String, Equatable, CaseIterable {
-    case trendToday = "trend_today"
-    case trendWeek = "trend_week"
-    case trendMonth = "trend_month"
-    case trendYear = "trend_year"
-    case topRated = "top_rated"
-    case mostRecent = "most_recent"
-    case subscriptions
-
-    /// `EPublishedFileQueryType`.
-    var queryType: Int {
-        switch self {
-        case .trendToday, .trendWeek, .trendMonth, .trendYear: return 3 // RankedByTrend
-        case .topRated: return 0                                          // RankedByVote
-        case .mostRecent: return 1                                        // RankedByPublicationDate
-        case .subscriptions: return 9                                     // RankedByTotalUniqueSubscriptions
-        }
-    }
-
-    /// QueryFiles `days`: the window RankedByTrend counts votes in.
-    var trendDays: Int? {
-        switch self {
-        case .trendToday: return 1
-        case .trendWeek: return 7
-        case .trendMonth: return 30
-        case .trendYear: return 365
-        case .topRated, .mostRecent, .subscriptions: return nil
-        }
-    }
-}
-
 /// One list of the Discover tab, as WE's `getStaticExploreQueries` defines them: a sort, the
 /// tags every item has (`tags`, AND-ed) and the tags none has.
 struct WorkshopDiscoverSection: Identifiable, Equatable {
@@ -48,7 +15,7 @@ struct WorkshopDiscoverSection: Identifiable, Equatable {
 
     let id: String
     let title: Title
-    let sort: WorkshopDiscoverSort
+    let sort: WorkshopSortOrder
     let tags: [String]
     var excludedTags: [String] = []
 

@@ -100,6 +100,7 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
                     SettingField(\.reflections)]
         case .optimizations:
             return [SettingField(\.syncPropertiesAcrossDisplays), SettingField(\.videoFramework),
+                    SettingField(\.videoReadMode),
                     SettingField(\.audioOutput), SettingField(\.reloadWhenChangingOutputDevice),
                     SettingField(\.audioRecordingThreshold), SettingField(\.audioRecordingDevice),
                     SettingField(\.audioRecordingVolume),
