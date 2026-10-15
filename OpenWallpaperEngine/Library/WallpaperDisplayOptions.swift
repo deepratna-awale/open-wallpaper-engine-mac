@@ -122,6 +122,18 @@ final class WallpaperDisplayOptionsStore: ObservableObject {
         save()
     }
 
+    /// WE's "Copy to": `wallpaper`'s options on `source` become its options on `destination`.
+    func copy(for wallpaper: WEWallpaper, from source: String, to destination: String) {
+        set(options(for: wallpaper, on: source), for: wallpaper, on: [destination])
+    }
+
+    /// WE's "Swap with" of one wallpaper shown on both: its options on `first` and `second` change places.
+    func swap(for wallpaper: WEWallpaper, _ first: String, _ second: String) {
+        let firstOptions = options(for: wallpaper, on: first), secondOptions = options(for: wallpaper, on: second)
+        set(secondOptions, for: wallpaper, on: [first])
+        set(firstOptions, for: wallpaper, on: [second])
+    }
+
     private func identity(of wallpaper: WEWallpaper) -> String {
         let path = wallpaper.settingsDirectory.standardizedFileURL.path
         if let identity = identities[path] { return identity }
