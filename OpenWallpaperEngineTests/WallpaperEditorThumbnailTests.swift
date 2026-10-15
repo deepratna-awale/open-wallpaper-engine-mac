@@ -59,7 +59,7 @@ final class WallpaperEditorThumbnailTests: XCTestCase {
         editor.window.orderFront(nil)
         defer { editor.window.close() }
         // The canvas loads its scene; a snapshot then comes from its renderer.
-        let deadline = Date().addingTimeInterval(20)
+        let deadline = Date().addingTimeInterval(120) // A cold CI runner translates the scene's shaders first.
         while editor.thumbnail.pending == nil, Date() < deadline {
             editor.thumbnail.problem = nil
             await editor.thumbnail.takeSnapshot()
