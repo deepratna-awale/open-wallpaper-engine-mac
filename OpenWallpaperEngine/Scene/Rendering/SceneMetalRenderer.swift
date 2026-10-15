@@ -4243,7 +4243,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let italic = WallpaperServices.shared.userPropertyString("_owe_text_\(layerID)_italic") == "true"
         let rasterScale = textRasterScales[stateKey, default: SceneTextRasterScale.Tracker()].scale(for: pixelsPerUnit)
         let cacheKey = "\(stateKey)|\(value)|\(boxSize.x)|\(boxSize.y)|\(fontName)|\(sizeValue)|\(bold)|\(italic)|\(rasterScale)"
-            + "|\(text.horizontalAlignment ?? "")|\(text.verticalAlignment ?? "")"
+            + "|\(text.layoutKey)"
             + (fill.map { "|\($0)" } ?? "")
         let slot = "\(stateKey)|\(fill != nil)|\(pixelsPerUnit == 1)"
         for done in textRaster.takeFinished() {
