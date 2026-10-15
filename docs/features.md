@@ -93,6 +93,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - **Stop Wallpapers** (menu bar menu, Playback menu, a hotkey): unloads every wallpaper, freeing its CPU, GPU and memory, and shows the macOS desktop picture until Resume.
 - **Take Screenshot** of the wallpaper alone, at the display's size, 4K or 8K.
 - **Play in Window** (a wallpaper's context menu): the wallpaper in a resizable window beside the desktop, as Wallpaper Engine's Full HD, Phone or Maximized Preview, taking the mouse and keyboard.
+- **Command line**: Wallpaper Engine's `-control` commands (pause, stop, play, mute, open a wallpaper on a display or in a window, next, close, playlists, profiles, properties, desktop icons, get the wallpaper), in WE's spelling or as `--control open-wallpaper …` ([docs/command-line.md](command-line.md)).
 - Per-wallpaper **position, zoom and flip** on each display, and a video's playback rate.
 - Per-display user properties, with "Sync properties across displays".
 - A wallpaper shown on several displays renders once and is presented on each.
