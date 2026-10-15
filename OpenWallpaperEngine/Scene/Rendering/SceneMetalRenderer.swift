@@ -2282,7 +2282,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // Text is rasterised white; its user colour tints it when drawn, like its authored one.
         // Text with font effects or layer effects has its colours in its raster (`textFill`).
         let textTint = entry.layer.text == nil ? SIMD3<Float>(repeating: 1) : self.textTint(layerID: entry.layer.id)
-        uniform.color = entry.layer.text?.effects == nil && entry.layer.weEffects.isEmpty ? draw.color * SIMD4(textTint, 1)
+        uniform.color = !textRastersInColor(entry) && entry.layer.weEffects.isEmpty ? draw.color * SIMD4(textTint, 1)
             : SIMD4(1, 1, 1, draw.color.w)
         // The layer's brightness and a video's music-synced saturation; the other adjustments
         // stay at their identity (`layerUniform`).
@@ -2989,8 +2989,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let scripted = scripts.text(authored, of: entry.layer.id)
         return makeTextFrame(scripted.text, value: scripted.value, pointSize: scripted.pointSize, boxSize: boxSize,
                              pixelsPerUnit: pixelsPerUnit, layerID: entry.layer.id,
-                             fill: authored.effects == nil && entry.layer.weEffects.isEmpty ? nil : textFill(entry))
+                             fill: !scripted.text.rastersInColor && entry.layer.weEffects.isEmpty ? nil : textFill(entry))
             ?? (textureFrame(for: entry), boxSize)
+    }
+
+    /// Whether a text layer's raster this frame holds its colours (font effects or a background
+    /// box, authored or scripted: `SceneMetalText.rastersInColor`); false for other layers.
+    private func textRastersInColor(_ entry: PreparedLayer) -> Bool {
+        guard let authored = entry.layer.text else { return false }
+        return scripts.text(authored, of: entry.layer.id).text.rastersInColor
     }
 
     /// A text layer's colour this frame (a script's, else its timeline's, else authored, with the
@@ -3652,7 +3659,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             sceneSnapshot: snapshot,
             // The scripted/animated values the layer is drawn with this frame, not the authored ones
             // (in the raster already for text with font effects).
-            layerColor: entry.layer.text?.effects == nil ? SIMD3(draw.color.x, draw.color.y, draw.color.z) : SIMD3(repeating: 1),
+            layerColor: !textRastersInColor(entry) ? SIMD3(draw.color.x, draw.color.y, draw.color.z) : SIMD3(repeating: 1),
             layerAlpha: draw.opacity)
         context.mipMappedFrameBuffer = mipMappedTarget
         context.layerComposite = { [unowned self] id in self.layerComposites[id] }

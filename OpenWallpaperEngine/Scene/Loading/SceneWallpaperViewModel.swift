@@ -1475,6 +1475,10 @@ class SceneWallpaperViewModel: ObservableObject {
         textConfig.maxWidthValue = Float(object.maxwidth ?? WETextDefaults.maxWidth)
         textConfig.maxRowsValue = object.maxrows ?? WETextDefaults.maxRows
         textConfig.fonts = textFontLoader()
+        textConfig.opaqueBackground = object.opaquebackground ?? false
+        if let color = object.backgroundcolor?.parseVector3() {
+            textConfig.backgroundColor = SIMD3(Float(color.0), Float(color.1), Float(color.2))
+        }
         let spacingParts = (object.spacing ?? "").split(separator: " ").compactMap { Float($0) }
         if let first = spacingParts.first {
             textConfig.spacing = SIMD2(first, spacingParts.count > 1 ? spacingParts[1] : first)
@@ -1495,7 +1499,7 @@ class SceneWallpaperViewModel: ObservableObject {
         // Drawn through WE's `font` material, which reads its texture as coverage: effects' output
         // isn't that, and `font` has no blend-mode combo, so those layers keep the native draw.
         // Text with font effects draws its coloured raster (`SceneTextEffects`), not coverage.
-        if layer.weEffects.isEmpty, (object.colorBlendMode ?? 0) == 0, textConfig.effects == nil {
+        if layer.weEffects.isEmpty, (object.colorBlendMode ?? 0) == 0, !textConfig.rastersInColor {
             layer.imageMaterial = buildTextMaterial(object, id: id, wallpaperDir: wallpaperDir)
         }
         return layer

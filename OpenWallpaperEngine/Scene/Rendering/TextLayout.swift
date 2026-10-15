@@ -148,7 +148,8 @@ struct SceneTextLayout {
     /// Draws the block into a new bitmap at `pixelsPerUnit` device pixels per scene unit, so
     /// the glyphs are rasterised at the size they are shown at instead of being upscaled. Each
     /// glyph is drawn at its whole-unit pen position, as WE's glyph quads are.
-    func rasterize(font: NSFont, color: NSColor, pixelsPerUnit: CGFloat) -> CGImage? {
+    /// `background` fills the whole block (padding included) under the glyphs, opaque.
+    func rasterize(font: NSFont, color: NSColor, pixelsPerUnit: CGFloat, background: SIMD3<Float>? = nil) -> CGImage? {
         let width = Int(saturating: ceil(CGFloat(boxSize.x) * pixelsPerUnit), in: 1...Int.max)
         let height = Int(saturating: ceil(CGFloat(boxSize.y) * pixelsPerUnit), in: 1...Int.max)
         guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
@@ -156,6 +157,11 @@ struct SceneTextLayout {
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
         context.setShouldAntialias(true)
         context.setShouldSmoothFonts(false)
+        if let background {
+            context.setFillColor(CGColor(srgbRed: CGFloat(background.x), green: CGFloat(background.y),
+                                         blue: CGFloat(background.z), alpha: 1))
+            context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        }
         context.scaleBy(x: CGFloat(width) / CGFloat(max(boxSize.x, 0.0001)),
                         y: CGFloat(height) / CGFloat(max(boxSize.y, 0.0001)))
         // The origin sits where the block's centre is offset from it (WE's 0x140257e43…0x140257f3f
