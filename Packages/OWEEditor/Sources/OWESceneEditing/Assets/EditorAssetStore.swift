@@ -13,20 +13,27 @@ import UniformTypeIdentifiers
 /// the scene cache key (which covers the overlay) changes with them, and importing twice writes once.
 public struct EditorAssetStore: Sendable {
     public let directory: URL
+    /// Writes `.tex` files for imports that aren't kept as they are (another format, Pixel Art,
+    /// a GIF, a sequence, a video, a normal map); nil when only PNG and JPEG can be imported.
+    public var encoder: (any EditorTextureEncoding)?
 
-    public init(directory: URL) {
+    public init(directory: URL, encoder: (any EditorTextureEncoding)? = nil) {
         self.directory = directory
+        self.encoder = encoder
     }
 
     public enum ImportError: Error, Equatable, LocalizedError {
         /// Not a file the editor can turn into the asset asked for.
         case unsupported(String)
         case unreadable(String)
+        /// The import needs a `.tex` written and the store has no encoder.
+        case needsEncoder(String)
 
         public var errorDescription: String? {
             switch self {
             case .unsupported(let name): return "“\(name)” isn’t a kind of file this can use."
             case .unreadable(let name): return "“\(name)” can’t be read."
+            case .needsEncoder(let name): return "“\(name)” needs a texture written, which this window can’t do."
             }
         }
     }
@@ -50,20 +57,22 @@ public struct EditorAssetStore: Sendable {
     /// other image is converted to PNG.
     static let keptImageTypes: Set<String> = ["png", "jpg", "jpeg"]
 
-    /// Imports an image for a new image layer: the texture (PNG or JPEG as it is, any other image
-    /// converted to PNG), and the material and model WE's editor writes for one
-    /// (`genericimage2`, translucent).
+    /// Imports an image for a new image layer with WE's default import options: the texture (PNG
+    /// or JPEG as it is, any other still image converted to PNG, an animated GIF a sprite sheet,
+    /// an MP4 a video texture), and the material and model WE's editor writes for one
+    /// (`genericimage2`, translucent). `importImage(from:options:)` takes the importer's choices.
     public func importImage(from url: URL) throws -> ImportedImage {
-        let title = url.deletingPathExtension().lastPathComponent
-        let (data, fileExtension, size) = try Self.textureData(from: url)
-        let name = Self.assetName(title, data: data)
-        let texture = "editor/\(name)"
-        try write(data, to: "materials/\(texture).\(fileExtension)")
+        try importImage(from: url, options: TextureImportOptions())
+    }
+
+    /// Writes the material and model of an image layer drawing `texture` (and its normal map).
+    func writeImageMaterial(name: String, texture: String, normalMap: String?, size: SIMD2<Double>,
+                            title: String) throws -> ImportedImage {
         let material = "materials/editor/\(name).json"
         let materialJSON: [String: Any] = [
             "passes": [[
                 "blending": "translucent", "cullmode": "nocull", "depthtest": "disabled", "depthwrite": "disabled",
-                "shader": "genericimage2", "textures": [texture],
+                "shader": "genericimage2", "textures": [texture] + (normalMap.map { [$0] } ?? []),
             ]],
         ]
         try write(try JSONSerialization.data(withJSONObject: materialJSON, options: [.prettyPrinted, .sortedKeys]), to: material)
