@@ -125,7 +125,7 @@ final class EditorTEXEncoderTests: XCTestCase {
         XCTAssertEqual(size, SIMD2(40, 30))
         let table = try XCTUnwrap(TEXSpriteFrames.frames([UInt8](data)))
         XCTAssertEqual(table.count, 5)
-        XCTAssertEqual(table.map(\.duration), [0.1, 0.2, 0.3, 0.4, 0.5].map(Float.init))
+        XCTAssertEqual(table.map(\.duration), [Float(0.1), Float(0.2), Float(0.3), Float(0.4), Float(0.5)])
         XCTAssertEqual(table.map(\.x), [0, 20, 0, 20, 0])
         XCTAssertEqual(table.map(\.y), [0, 0, 10, 10, 20])
         XCTAssertEqual(Set(table.map(\.width)), [20])
