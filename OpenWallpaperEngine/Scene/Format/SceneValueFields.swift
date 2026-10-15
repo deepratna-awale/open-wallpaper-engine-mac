@@ -8,7 +8,7 @@ enum SceneObjectValueField: String, CaseIterable {
 
 /// Value-bearing fields of `general` in scene.json. The raw forms are kept in `WESceneGeneral.values`.
 enum SceneGeneralValueField: String, CaseIterable {
-    case bloom, bloomstrength, bloomthreshold, clearcolor
+    case bloom, bloomstrength, bloomthreshold, clearcolor, clearenabled
     case camerashake, camerashakeamplitude, camerashakespeed, camerashakeroughness
     case cameraparallax, cameraparallaxamount, cameraparallaxdelay, cameraparallaxmouseinfluence
     case ambientcolor, skylightcolor
