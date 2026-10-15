@@ -12,6 +12,13 @@ extension WESceneGeneral {
     func clearColor(in context: SceneValueContext) -> SIMD3<Float> {
         value(.clearcolor, in: context)?.vec3 ?? SceneGeneralDefaults.clearColor
     }
+
+    /// `general.clearenabled`: whether WE clears the scene target (colour and depth) before each
+    /// frame's scene pass (0x140183588 tests scene flag 0x20, 0x14019b920 sets it). On unless
+    /// authored false: the constructor's flags (0x26) hold it. Off, each frame draws over the last.
+    func clearEnabled(in context: SceneValueContext) -> Bool {
+        (value(.clearenabled, in: context)?.float ?? 1) != 0
+    }
 }
 
 /// WE's defaults for the `general` block when a scene doesn't author a field: the scene

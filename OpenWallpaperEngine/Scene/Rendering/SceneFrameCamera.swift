@@ -47,6 +47,8 @@ struct SceneCameraRigInput {
     var live: SceneTransformHierarchy3D.Live = { _ in nil }
     /// A camera layer's `fov` as a script set it.
     var layerFov: (String) -> Float? = { _ in nil }
+    /// A camera layer's `zoom` as a script set it (`ICamera.zoom`).
+    var layerZoom: (String) -> Float? = { _ in nil }
     /// `thisScene.fov`, `nearz`, `farz` and `camerafade` as scripts or timelines set them; nil
     /// keeps the scene's.
     var fov: Float?
@@ -130,7 +132,7 @@ final class SceneOrthographicCameraRig: SceneCameraRig {
         let size = simd_max(input.sceneSize, SIMD2(1, 1))
         var pose: SceneCameraPose?
         let layerInput = SceneCameraLayers.FrameInput(deltaTime: input.deltaTime, isVisible: input.isVisible,
-                                                      live: input.live, fov: input.layerFov)
+                                                      live: input.live, fov: input.layerFov, zoom: input.layerZoom)
         if let layer = layers?.update(layerInput) {
             pose = layer.pose
             pose?.zoom = layer.zoom
