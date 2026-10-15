@@ -93,6 +93,52 @@ final class EffectDocumentTests: XCTestCase {
         XCTAssertEqual(failures.messages.count, 4, failures.messages.joined(separator: "\n"))
     }
 
+    /// Conditions in both of WE's forms: `{COMBO: n}` and WE 2.x's `{COMBO: {"op": …, "value": n}}`,
+    /// as a list or a single object, on passes, binds and FBOs. An unknown op never holds.
+    func testDecodesOpConditions() throws {
+        let failures = DecodeFailureLog()
+        let json = #"""
+            {"passes": [{"material": "materials/effects/a.json",
+                         "conditions": [{"POINTEMITTER": {"op": "ge", "value": 2}, "MODE": 1}, {"LINEEMITTER": {"op": "lt", "value": 3}}],
+                         "bind": [{"name": "_rt_A", "index": 1, "conditions": {"MODE": {"op": "gt", "value": 0.0}}},
+                                  {"name": "_rt_B", "index": 2, "conditions": [{"MODE": {"value": 4}}]}]}],
+             "fbos": [{"name": "_rt_A", "format": "rgba8888", "conditions": [{"COUNT": {"op": "le", "value": 1}}]},
+                      {"name": "_rt_B", "format": "rgba8888", "conditions": [{"COUNT": {"op": "between", "value": 1}}]}]}
+            """#
+        let effect = try decodeTolerant(EffectDocument.self, from: Data(json.utf8), failures: failures)
+        let pass = try XCTUnwrap(effect.passes.first)
+        XCTAssertEqual(pass.conditions, [["POINTEMITTER": EffectComboCondition(.ge, 2), "MODE": 1],
+                                         ["LINEEMITTER": EffectComboCondition(.lt, 3)]])
+        XCTAssertEqual(pass.bind.map(\.conditions), [[["MODE": EffectComboCondition(.gt, 0)]], [["MODE": 4]]])
+        XCTAssertEqual(effect.fbos[0].conditions, [["COUNT": EffectComboCondition(.le, 1)]])
+        XCTAssertEqual(effect.fbos[1].conditions, [["COUNT": EffectComboCondition(nil, 1)]])
+        XCTAssertEqual(failures.messages.count, 1, "the unknown op: \(failures.messages.joined(separator: "\n"))")
+    }
+
+    func testOpConditionsHold() {
+        func holds(_ conditions: EffectConditions?, _ combos: [String: Int]) -> Bool {
+            SceneEffectPlanBuilder.conditionsHold(conditions, combos: combos)
+        }
+        XCTAssertTrue(holds(nil, [:]))
+        XCTAssertTrue(holds([], [:]))
+        XCTAssertTrue(holds([[:]], [:]), "an empty requirement always holds")
+        let ge2: EffectConditions = [["POINTEMITTER": EffectComboCondition(.ge, 2)]]
+        XCTAssertEqual([1, 2, 3].map { holds(ge2, ["POINTEMITTER": $0]) }, [false, true, true])
+        XCTAssertEqual([1, 2, 3].map { holds([["N": EffectComboCondition(.gt, 2)]], ["N": $0]) }, [false, false, true])
+        XCTAssertEqual([1, 2, 3].map { holds([["N": EffectComboCondition(.le, 2)]], ["N": $0]) }, [true, true, false])
+        XCTAssertEqual([1, 2, 3].map { holds([["N": EffectComboCondition(.lt, 2)]], ["N": $0]) }, [true, false, false])
+        XCTAssertEqual([1, 2, 3].map { holds([["N": EffectComboCondition(.eq, 2)]], ["N": $0]) }, [false, true, false])
+        XCTAssertFalse(holds([["N": EffectComboCondition(nil, 2)]], ["N": 2]), "an unknown op never holds")
+        XCTAssertTrue(holds(ge2, ["pointemitter": 0, "POINTEMITTER": 4]))
+        XCTAssertTrue(holds([["pointemitter": EffectComboCondition(.ge, 2)]], ["POINTEMITTER": 2]), "combo names are upper case")
+        XCTAssertFalse(holds(ge2, [:]), "a combo the pass doesn't have")
+        // Any one requirement, all of its combos.
+        let either: EffectConditions = [["A": 1, "B": EffectComboCondition(.ge, 1)], ["C": EffectComboCondition(.lt, 1)]]
+        XCTAssertTrue(holds(either, ["A": 1, "B": 2, "C": 5]))
+        XCTAssertFalse(holds(either, ["A": 1, "B": 0, "C": 5]))
+        XCTAssertTrue(holds(either, ["A": 0, "B": 0, "C": 0]))
+    }
+
     func testMaterialKeepsNullTexturesAndEveryValueForm() throws {
         let failures = DecodeFailureLog()
         let material = try decodeTolerant(MaterialDocument.self,

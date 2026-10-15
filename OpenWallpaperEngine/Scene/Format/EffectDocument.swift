@@ -1,17 +1,17 @@
 import Foundation
 
-/// Combo conditions on an effect pass, bind or FBO. WE authors a list of `{COMBO: value}` objects
-/// (an empty object means "always"); a single object is accepted too.
-typealias EffectConditions = [[String: Int]]
+/// Combo conditions on an effect pass, bind or FBO. WE authors a list of `{COMBO: requirement}`
+/// objects (an empty object means "always"); a single object is accepted too.
+typealias EffectConditions = [[String: EffectComboCondition]]
 
 private func decodeConditions<K>(_ c: KeyedDecodingContainer<K>, key: K,
                                  userInfo: [CodingUserInfoKey: Any]) -> EffectConditions? {
     guard c.contains(key) else { return nil }
     switch c.decodeLogged(SceneJSON.self, forKey: key, userInfo: userInfo) {
     case .object?:
-        return c.decodeEntries(Int.self, forKey: key, userInfo: userInfo).map { [$0] }
+        return c.decodeEntries(EffectComboCondition.self, forKey: key, userInfo: userInfo).map { [$0] }
     case .array?:
-        return c.decodeElements([String: Int].self, forKey: key, userInfo: userInfo)
+        return c.decodeElements([String: EffectComboCondition].self, forKey: key, userInfo: userInfo)
     case nil, .null?:
         return nil
     case let other?:
