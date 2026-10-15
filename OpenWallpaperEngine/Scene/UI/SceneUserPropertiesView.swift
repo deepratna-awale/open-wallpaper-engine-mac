@@ -8,8 +8,11 @@ import OWESceneEditing
 /// a key it doesn't know is turned into readable words instead of being shown raw.
 private func sceneUserPropertyTitle(_ raw: String, labels: WallpaperEngineLabels = WallpaperEngineLabels()) -> String {
     let trimmed = raw.trimmingCharacters(in: .whitespaces)
-    // WE's own translation of a localisation key.
-    if let translated = labels.translation(trimmed) { return translated }
+    // WE's (or the wallpaper's own) translation of a localisation key; authors' often carry
+    // markup (`<u><h4>Audio Settings</h4></u>`), which a title shows as text.
+    if let translated = labels.translation(trimmed) {
+        return UserPropertyHTML.containsMarkup(translated) ? UserPropertyHTML.plainText(translated) : translated
+    }
     // Authors write these keys inconsistently — ui_browse_ vs ui_browser_, property vs properties,
     // and stray hyphens — so the prefix is matched loosely rather than from a fixed list.
     guard let range = trimmed.range(of: #"(?i)^ui[_-][a-z]+[_-]propert(y|ies)[_-]"#,
@@ -140,7 +143,7 @@ final class SceneUserPropertiesModel: ObservableObject {
         let definitions = UserPropertyDefinition.all(projectJSON: root)
         // A Workshop preset item's values are its defaults (what Reset returns to).
         let presetDefaults = WorkshopPresetItem.defaultValues(for: wallpaper)
-        let labels = WallpaperEngineLabels.load()
+        let labels = WallpaperEngineLabels.load(projectJSON: root)
         authoredPropertyIDs = Set(definitions.map(\.key))
         properties = definitions.map { definition in
             let plainTitle = UserPropertyHTML.containsMarkup(definition.text)
