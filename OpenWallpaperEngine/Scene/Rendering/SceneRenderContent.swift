@@ -213,6 +213,20 @@ struct SceneMetalText {
     /// Loads a font a script names (`thisLayer.font`) that the scene didn't; nil keeps the
     /// fonts the scene registered.
     var fonts: SceneTextFontLoader? = nil
+    /// `opaquebackground` and `backgroundcolor` (WE 2.x): the block (the lines' bounds plus
+    /// `padding`) filled with the colour behind the glyphs. WE's text object keeps the switch as
+    /// flag 0x2 at +0x594 and the colour at +0x4d0 (default black, constructor 0x140256baf); with
+    /// it on, the text's buffer is sized with its padding (0x140258966) and cleared to the colour,
+    /// times `brightness` under engine flag 0x2000, before the glyphs are drawn (0x140257c30).
+    var opaqueBackground = false
+    var backgroundColor = SIMD3<Float>(repeating: 0)
+
+    /// The box's colour, or nil without one.
+    var background: SIMD3<Float>? { opaqueBackground ? backgroundColor : nil }
+
+    /// Whether the raster holds the text's colours (font effects, or a background box) instead of
+    /// white coverage the draw tints: such text draws natively, in its raster's colours.
+    var rastersInColor: Bool { effects != nil || opaqueBackground }
     /// `spacing` (WE 2.8's letter spacing): added to each glyph's advance (x) and to the line
     /// height (y), in scene units (`SceneTextLayout`).
     var spacing = WETextDefaults.spacing
@@ -221,6 +235,7 @@ struct SceneMetalText {
     var layoutKey: String {
         "\(font ?? "")|\(horizontalAlignment ?? "")|\(verticalAlignment ?? "")|\(padding.x),\(padding.y)"
             + "|\(maxWidth.map { "\($0)" } ?? "")|\(maxRows.map { "\($0)" } ?? "")|\(useEllipsis)|\(blockAlign)|\(spacing.x),\(spacing.y)"
+            + (background.map { "|bg\($0.x),\($0.y),\($0.z)" } ?? "")
     }
 }
 
