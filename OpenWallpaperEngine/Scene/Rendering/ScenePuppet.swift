@@ -57,14 +57,18 @@ final class ScenePuppetPlan {
     let drawOrder: ScenePuppetDrawOrder?
     /// The rig's texture channels, drawn over the image the mesh samples; nil without.
     let channels: ScenePuppetChannelPlan?
+    /// The rig's box (`MDLModel.bounds`), which a particle `collisionmodel` collides with when the
+    /// rig has no per-bone boxes (0x1401d50ac reads the puppet's `.mdl` as a model's); nil unknown.
+    let bounds: MDLBounds?
 
     var boneCount: Int { combos.boneCount }
 
     init(rigPath: String, material: ImageMaterialPlan, combos: ImagePuppetCombos, mesh: MDLMesh, vertexData: Data,
          imageSize: SIMD2<Float>, contentPixels: SIMD2<Int>, skeleton: MDLSkeleton, clips: [MDLAnimation] = [],
          animationLayers: [WEAnimationLayer] = [], attachments: [MDLAttachment] = [], morphs: MDLMorphTargets? = nil,
-         channels: ScenePuppetChannelPlan? = nil) {
+         channels: ScenePuppetChannelPlan? = nil, bounds: MDLBounds? = nil) {
         self.rigPath = rigPath
+        self.bounds = bounds
         self.material = material
         self.combos = combos
         format = mesh.format
@@ -264,7 +268,8 @@ final class ScenePuppetPlan {
                                vertexData: scaledTexCoords(mesh, by: fraction), imageSize: imageSize,
                                contentPixels: content, skeleton: skeleton, clips: model.animations ?? [],
                                animationLayers: animationLayers, attachments: model.attachments ?? [],
-                               morphs: model.morphTargets?.first { $0.mesh == 0 }, channels: channels)
+                               morphs: model.morphTargets?.first { $0.mesh == 0 }, channels: channels,
+                               bounds: model.bounds)
     }
 
     /// The vertices with the first texture coordinate's u and v multiplied by `scale`, as WE's copy
