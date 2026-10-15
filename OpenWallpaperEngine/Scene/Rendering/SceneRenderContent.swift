@@ -252,6 +252,9 @@ struct SceneMetalContent {
     var spatial = SceneSpatialContent()
     /// `general.clearcolor`, resolved against the user properties: the scene target's clear colour.
     var clearColor = SceneGeneralDefaults.clearColor
+    /// `general.clearenabled`, resolved against the user properties: whether the scene target is
+    /// cleared before each frame.
+    var clearEnabled = true
     /// The wallpaper instance's key in the user-property store (its directory path).
     var wallpaperKey = ""
     /// Every object's own `visible` before scripts (authored, user-bound or the app's toggle), by

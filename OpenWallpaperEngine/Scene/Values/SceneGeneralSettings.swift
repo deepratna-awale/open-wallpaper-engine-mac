@@ -12,6 +12,13 @@ extension WESceneGeneral {
     func clearColor(in context: SceneValueContext) -> SIMD3<Float> {
         value(.clearcolor, in: context)?.vec3 ?? SceneGeneralDefaults.clearColor
     }
+
+    /// `general.clearenabled`: whether WE clears the scene target (colour and depth) before each
+    /// frame's scene pass (0x140183588 tests scene flag 0x20, 0x14019b920 sets it). On unless
+    /// authored false: the constructor's flags (0x26) hold it. Off, each frame draws over the last.
+    func clearEnabled(in context: SceneValueContext) -> Bool {
+        (value(.clearenabled, in: context)?.float ?? 1) != 0
+    }
 }
 
 /// WE's defaults for the `general` block when a scene doesn't author a field: the scene
@@ -131,4 +138,49 @@ struct SceneCameraEffects: Equatable {
         parallaxMouseInfluence = float(.cameraparallaxmouseinfluence, SceneGeneralDefaults.cameraParallaxMouseInfluence)
         orthographic = !general.projection.isPerspective
     }
+}
+
+/// `general.gravitydirection`, `gravitystrength`, `windenabled`, `winddirection` and
+/// `windstrength`, resolved against the user properties: the scene options' Physics section
+/// (`ui_editor_scene_options_physics`). WE registers them in its `general` property table
+/// (0x14019b2b7…0x14019b4b6: the direction at +0x3e4, the strength at +0x3f0, wind on as bit
+/// 0x10000 of the flags at +0xe0, its direction at +0x3f4 and strength at +0x400) and the
+/// constructor sets the defaults below (0x140187006…0x140187104; the flags' 0x26 leaves wind off).
+///
+/// In WE 2.8.42 only Puppet Warp's rope simulation reads them: the scene's physics interface
+/// (`general` + 0x50, vtable 0x14048ea08) answers `gravity` (+0x30) and `wind` (+0x38), and the
+/// only caller of either is the puppet update's kinematic-chain step (0x1402036c4…0x140203744,
+/// docs/models-plan.md §2.14). Spring and rigid bones keep their own `gd`/`m` gravity, and model
+/// bones neither, so the app applies neither there.
+struct ScenePhysicsSettings: Equatable {
+    var gravityDirection = SceneGeneralDefaults.gravityDirection
+    var gravityStrength = SceneGeneralDefaults.gravityStrength
+    var windEnabled = false
+    var windDirection = SceneGeneralDefaults.windDirection
+    var windStrength = SceneGeneralDefaults.windStrength
+
+    init() {}
+
+    init(_ general: WESceneGeneral, in context: SceneValueContext) {
+        func float(_ field: SceneGeneralValueField, _ fallback: Float) -> Float {
+            general.value(field, in: context)?.float ?? fallback
+        }
+        gravityDirection = general.value(.gravitydirection, in: context)?.vec3 ?? SceneGeneralDefaults.gravityDirection
+        gravityStrength = float(.gravitystrength, SceneGeneralDefaults.gravityStrength)
+        windEnabled = float(.windenabled, 0) != 0
+        windDirection = general.value(.winddirection, in: context)?.vec3 ?? SceneGeneralDefaults.windDirection
+        windStrength = float(.windstrength, SceneGeneralDefaults.windStrength)
+    }
+
+    /// The interface's `gravity` (0x1401988e0): the direction times the strength, unnormalised.
+    var gravity: SIMD3<Float> { gravityDirection * gravityStrength }
+}
+
+extension SceneGeneralDefaults {
+    /// The constructor's (0, −1, 0) (0x140187006…0x14018701c).
+    static let gravityDirection = SIMD3<Float>(0, -1, 0)
+    static let gravityStrength: Float = 1
+    /// 0.707 0.707 0 (0x140187023…0x14018702e).
+    static let windDirection = SIMD3<Float>(0.707, 0.707, 0)
+    static let windStrength: Float = 1
 }
