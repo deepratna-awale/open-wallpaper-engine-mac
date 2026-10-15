@@ -12,6 +12,8 @@ final class WorkshopFilterPagingTests: XCTestCase {
     private final class FakeSteam {
         let catalogue: [WorkshopItem]
         var requests: [WorkshopQuery] = []
+        /// The `search_text` of each request.
+        var texts: [String] = []
         /// Delay for the n-th request (0-based); none by default.
         var delay: (Int) -> Duration = { _ in .zero }
 
@@ -21,6 +23,7 @@ final class WorkshopFilterPagingTests: XCTestCase {
                     _ page: Int, _ perPage: Int) async throws -> [WorkshopItem] {
             let index = requests.count
             requests.append(query)
+            texts.append(text)
             let wait = delay(index)
             if wait > .zero { try await Task.sleep(for: wait) }
             let matching = catalogue.filter { item in
@@ -37,6 +40,9 @@ final class WorkshopFilterPagingTests: XCTestCase {
     }
 
     private var root: URL!
+    /// The view model's own defaults, so Hide Anime never reaches another test.
+    private var defaults: UserDefaults!
+    private var suiteName = ""
     private var steam: FakeSteam!
     private var viewModel: WorkshopViewModel!
 
@@ -65,11 +71,15 @@ final class WorkshopFilterPagingTests: XCTestCase {
                                        presentPreview: { _ in }, restoresSession: false)
         let steam = FakeSteam(catalogue: Self.catalogue)
         self.steam = steam
-        viewModel = WorkshopViewModel(steamCmd: steamCmd, searchPage: steam.search)
+        suiteName = "WorkshopFilterPagingTests.\(UUID().uuidString)"
+        defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        viewModel = WorkshopViewModel(steamCmd: steamCmd, searchPage: steam.search, defaults: defaults)
     }
 
     override func tearDownWithError() throws {
         viewModel = nil
+        defaults.removePersistentDomain(forName: suiteName)
+        defaults = nil
         try FileManager.default.removeItem(at: root)
     }
 
@@ -230,5 +240,47 @@ final class WorkshopFilterPagingTests: XCTestCase {
         let any = WorkshopQuery(filter)
         let shownAny = Self.catalogue.filter { any.matchesAllTags($0, isFavorite: { _ in false }) }.map(\.id)
         XCTAssertEqual(shownAny, expected { $0.contains("Scene") && ($0.contains("Anime") || $0.contains("Girls")) })
+    }
+
+    // MARK: Hide Anime and Exact phrase
+
+    func testHideAnimeLeavesOutWEsAnimeGenresUnlessOneIsTicked() async throws {
+        viewModel.setHidesAnime(true)
+        try await settle()
+        XCTAssertEqual(shownIds, Array(expected { $0.isDisjoint(with: ["Anime", "Girls", "Music"]) }
+            .prefix(viewModel.itemsPerPage)))
+
+        try await tick("Girls")
+        XCTAssertEqual(shownIds, Array(expected { $0.contains("Girls") && $0.isDisjoint(with: ["Anime", "Music"]) }
+            .prefix(viewModel.itemsPerPage)), "a ticked genre shows again")
+
+        viewModel.resetFilters()
+        try await settle()
+        XCTAssertTrue(viewModel.filter.hidesAnime, "Reset Filters keeps Hide Anime, as WE applies it again")
+        XCTAssertTrue(viewModel.filter.genres.isEmpty)
+        XCTAssertEqual(steam.requests.last?.excludedTags.filter(WorkshopTags.hiddenByHideAnime.contains),
+                       WorkshopTags.hiddenByHideAnime)
+    }
+
+    func testHideAnimeIsSavedForTheNextLaunch() {
+        let first = WorkshopViewModel(steamCmd: viewModel.steamCmd, searchPage: steam.search, defaults: defaults)
+        XCTAssertFalse(first.filter.hidesAnime, "WE shows Anime until asked to hide it")
+        first.setHidesAnime(true)
+        let next = WorkshopViewModel(steamCmd: viewModel.steamCmd, searchPage: steam.search, defaults: defaults)
+        XCTAssertTrue(next.filter.hidesAnime)
+    }
+
+    func testExactPhraseSendsTheSearchQuoted() async throws {
+        viewModel.searchText = "rainy night"
+        await viewModel.search()
+        XCTAssertEqual(steam.texts.last, "rainy night")
+
+        viewModel.setExactPhrase(true)
+        try await settle()
+        XCTAssertEqual(steam.texts.last, "\"rainy night\"")
+
+        viewModel.searchText = "\"rainy\" night"
+        await viewModel.search()
+        XCTAssertEqual(steam.texts.last, "\"rainy\" night", "a search with a quote is sent as typed")
     }
 }
