@@ -42,6 +42,16 @@ public struct WallpaperEditorServices {
     public var texture: (String) -> CGImage? = { _ in nil }
     /// Fonts a text layer can use: WE's, the wallpaper's, imported ones.
     public var fonts: () -> [EditorFont] = { [] }
+    /// A file of the scene as the loader finds it (the wallpaper's, the editor's, WE's), by path.
+    public var readFile: (String) -> Data? = { _ in nil }
+    /// What else names the editor's files besides the draft (the saved edits, the scene), for
+    /// Clean Project.
+    public var projectReferences: () -> [Data] = { [] }
+    /// The wallpaper's SceneScript `localStorage`, for Clean Local Storage; nil leaves it out.
+    public var localStorage: EditorLocalStorage?
+    /// Where Edit with External Image Editor keeps the pictures it hands out, and the editor's
+    /// defaults (the chosen app); nil leaves it out.
+    public var externalEditing: ExternalImageEditing?
     /// The wallpaper's user properties a value can be bound to (key, title), with their type.
     public var userPropertyChoices: () -> [EditorUserPropertyChoice] = { [] }
 
@@ -69,6 +79,11 @@ public struct WallpaperEditorServices {
     public var openAssetsSetup: () -> Void = {}
     /// Take Snapshot and Record GIF: the library thumbnail made from the canvas; nil leaves them out.
     public var thumbnail: EditorThumbnail?
+    /// The 3D models Add Layer › Model offers (`models/…/….mdl`): the wallpaper's own, then WE's.
+    public var models: () -> [EditorModelChoice] = { [] }
+    /// WE's presets that add other layers than particle systems (Clock, Countdown, Light Shafts),
+    /// for Add Layer › Preset; empty without WE's assets.
+    public var layerPresets: () -> [ParticlePreset] = { [] }
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,
@@ -88,8 +103,9 @@ public struct WallpaperEditorServices {
 
 /// A file the asset browser lists.
 public struct EditorAsset: Hashable, Identifiable, Sendable {
+    /// WE's asset folders (Materials, Models, Particles, Sounds), textures and fonts apart.
     public enum Kind: String, CaseIterable, Sendable {
-        case texture, model, sound, font, other
+        case texture, material, model, particle, sound, font, other
     }
 
     /// Its path in the scene (`materials/foo.tex`, `models/foo.json`).
@@ -112,6 +128,8 @@ public struct EditorAsset: Hashable, Identifiable, Sendable {
         let fileExtension = (lowered as NSString).pathExtension
         if ["tex", "png", "jpg", "jpeg", "gif"].contains(fileExtension), lowered.hasPrefix("materials/") { return .texture }
         if fileExtension == "json", lowered.hasPrefix("models/") { return .model }
+        if fileExtension == "json", lowered.hasPrefix("materials/") { return .material }
+        if fileExtension == "json", lowered.hasPrefix("particles/") { return .particle }
         if EditorAssetStore.soundTypes.contains(fileExtension) { return .sound }
         if EditorAssetStore.fontTypes.contains(fileExtension) { return .font }
         return .other
@@ -163,4 +181,21 @@ public struct EditorUserPropertyChoice: Hashable, Identifiable, Sendable {
         self.title = title
         self.type = type
     }
+}
+
+/// A 3D model Add Layer › Model can draw.
+public struct EditorModelChoice: Hashable, Identifiable, Sendable {
+    /// Its path in the scene (`models/tree/tree.mdl`), the layer's `model`.
+    public var path: String
+    /// From WE's assets rather than the wallpaper.
+    public var isShared: Bool
+    public var id: String { path }
+
+    public init(path: String, isShared: Bool) {
+        self.path = path
+        self.isShared = isShared
+    }
+
+    /// The file's name without its extension, for the layer's name.
+    public var title: String { ((path as NSString).lastPathComponent as NSString).deletingPathExtension }
 }
