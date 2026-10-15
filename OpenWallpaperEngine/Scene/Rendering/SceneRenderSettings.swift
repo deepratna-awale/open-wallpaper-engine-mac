@@ -41,6 +41,9 @@ struct SceneRenderSettings: Equatable {
     var sceneDetail = GSSceneDetail.full
     /// WE's `msaa`: the scene pass's samples per pixel.
     var antiAliasing = GSAntiAliasingQuality.none
+    /// WE's "Video loading": a video wallpaper on the Metal path opens its file from disk or reads
+    /// it into memory (`VideoFileSource`). Read when the video opens; not part of the content key.
+    var videoReadMode = GSVideoReadMode.fromDisk
 
     init() {}
 
@@ -59,6 +62,7 @@ struct SceneRenderSettings: Equatable {
         antiAliasing = settings.antiAliasing
         optimiseTextures = settings.optimiseTextures
         reducedResolutionParticles = settings.reducedResolutionParticles
+        videoReadMode = settings.videoReadMode
     }
 
     /// The share of each side of the scene target that is drawn: 1 without upscaling.

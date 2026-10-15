@@ -128,29 +128,61 @@ struct SteamPlayer: Codable, Equatable {
     }
 }
 
-enum WorkshopSortOrder: Int, CaseIterable, Identifiable {
-    case trending = 0
-    case mostRecent = 1
-    case mostPopular = 2
-    case mostSubscribed = 3
+/// The Workshop tab's sorts: WE's own list (`sortOptions` in `ui/dist/scripts/scripts.js`), its
+/// `querytype` values as raw values, in WE's order. Each is a QueryFiles `query_type`
+/// (`EPublishedFileQueryType`), WE's "Most Popular" lists Steam's RankedByTrend over a number of
+/// days. The Discover lists use the same sorts.
+///
+/// WE's other sorts (My Favorites, Voted Up, Friends' Favorites, Created By Friends, Created By
+/// Followed Users) are lists of the signed-in Steam account, which WE reads through the Steam
+/// client; they aren't here.
+enum WorkshopSortOrder: String, CaseIterable, Identifiable {
+    case topRated = "top_rated"
+    case trendYear = "trend_year"
+    case trendMonth = "trend_month"
+    case trendWeek = "trend_week"
+    case trendToday = "trend_today"
+    case mostRecent = "most_recent"
+    case mostUpVotes = "most_up_votes"
+    case subscriptions
 
-    var id: Int { rawValue }
+    /// WE's default sort for the Workshop tab.
+    static let `default` = WorkshopSortOrder.trendYear
+
+    var id: String { rawValue }
 
     var displayName: LocalizedStringResource {
         switch self {
-        case .trending: return LocalizedStringResource("Trending", comment: "Workshop sort order")
+        case .topRated: return LocalizedStringResource("Top Rated", comment: "Workshop sort order")
+        case .trendYear: return LocalizedStringResource("Most Popular (Year)", comment: "Workshop sort order: most popular over the last year")
+        case .trendMonth: return LocalizedStringResource("Most Popular (Month)", comment: "Workshop sort order: most popular over the last month")
+        case .trendWeek: return LocalizedStringResource("Most Popular (Week)", comment: "Discover list: the week's most popular wallpapers")
+        case .trendToday: return LocalizedStringResource("Most Popular (Today)", comment: "Workshop sort order: most popular today")
         case .mostRecent: return LocalizedStringResource("Most Recent", comment: "Workshop sort order")
-        case .mostPopular: return LocalizedStringResource("Most Popular", comment: "Workshop sort order: highest rated")
-        case .mostSubscribed: return LocalizedStringResource("Most Subscribed", comment: "Workshop sort order")
+        case .mostUpVotes: return LocalizedStringResource("Most Up Votes", comment: "Workshop sort order: most votes up")
+        case .subscriptions: return LocalizedStringResource("Most Subscriptions", comment: "Workshop sort order")
         }
     }
 
+    /// `EPublishedFileQueryType`.
     var queryType: Int {
         switch self {
-        case .trending: return 3      // RankedByTrend
-        case .mostRecent: return 1     // RankedByPublicationDate
-        case .mostPopular: return 0    // RankedByVote
-        case .mostSubscribed: return 9 // RankedByTotalUniqueSubscriptions
+        case .topRated: return 0                                          // RankedByVote
+        case .trendYear, .trendMonth, .trendWeek, .trendToday: return 3   // RankedByTrend
+        case .mostRecent: return 1                                        // RankedByPublicationDate
+        case .mostUpVotes: return 11                                      // RankedByVotesUp
+        case .subscriptions: return 9                                     // RankedByTotalUniqueSubscriptions
+        }
+    }
+
+    /// QueryFiles `days`: the window RankedByTrend counts votes in.
+    var trendDays: Int? {
+        switch self {
+        case .trendToday: return 1
+        case .trendWeek: return 7
+        case .trendMonth: return 30
+        case .trendYear: return 365
+        case .topRated, .mostRecent, .mostUpVotes, .subscriptions: return nil
         }
     }
 
@@ -180,7 +212,7 @@ class WorkshopAPIService {
     func searchItems(
         query: String = "",
         filter: WorkshopQuery = WorkshopQuery(),
-        sortOrder: WorkshopSortOrder = .trending,
+        sortOrder: WorkshopSortOrder = .default,
         page: Int = 1,
         perPage: Int = 20
     ) async throws -> [WorkshopItem] {
@@ -189,11 +221,16 @@ class WorkshopAPIService {
     }
 
     /// QueryFiles' parameters for a search: `requiredtags[n]` with `match_all_tags`, and
-    /// `excludedtags[n]`, as `WorkshopQuery` plans them.
+    /// `excludedtags[n]`, as `WorkshopQuery` plans them, and the sort's `days` (a text search is
+    /// ranked by relevance, so it has none).
     static func queryItems(text: String, filter: WorkshopQuery, sortOrder: WorkshopSortOrder,
                            page: Int, perPage: Int) -> [URLQueryItem] {
-        queryItems(queryType: sortOrder.queryTypeForSearch(hasText: !text.isEmpty), text: text, filter: filter,
-                   page: page, perPage: perPage)
+        var items = queryItems(queryType: sortOrder.queryTypeForSearch(hasText: !text.isEmpty), text: text,
+                               filter: filter, page: page, perPage: perPage)
+        if text.isEmpty, let days = sortOrder.trendDays {
+            items.append(URLQueryItem(name: "days", value: "\(days)"))
+        }
+        return items
     }
 
     /// QueryFiles' parameters for `queryType` (`EPublishedFileQueryType`) and `filter`'s tags.
