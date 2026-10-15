@@ -64,9 +64,11 @@ struct UserPropertyDefinition: Equatable {
     }
 
     /// The value the sidebar starts from: the authored one, else a combo's first option, else
-    /// false for a bool.
+    /// false for a bool. A user shortcut starts unbound whatever the author wrote: only the user
+    /// binds one (`UserShortcutBinding`).
     var defaultValue: String {
-        value ?? (type == "combo" ? options.first?.value : nil) ?? (type == "bool" ? "false" : "")
+        if type == SceneScriptUserProperties.Property.userShortcutType { return "" }
+        return value ?? (type == "combo" ? options.first?.value : nil) ?? (type == "bool" ? "false" : "")
     }
 
     var sliderFormat: UserPropertySliderFormat {

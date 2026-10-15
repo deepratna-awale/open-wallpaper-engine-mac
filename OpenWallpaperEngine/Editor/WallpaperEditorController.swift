@@ -28,6 +28,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
     let document = WallpaperEditorDocument()
     /// The canvas's own wallpaper model, as the Workshop preview has: one display, muted.
     private let preview: WallpaperViewModel
+    /// Take Snapshot and Record GIF: the library thumbnail drawn offscreen by the canvas's renderer.
+    let thumbnail: EditorThumbnail
     private let userPropertyUndo: EditorUserPropertyUndo
     /// The effects, files, fonts and properties the editor offers.
     private let resources: EditorWallpaperResources
@@ -105,6 +107,12 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         // The canvas is framed to the scene's own aspect, so stretching is exact.
         preview.wallpaperPlacement = .stretch
         self.preview = preview
+        thumbnail = EditorThumbnail(sceneSize: session.outline.size ?? SIMD2(1920, 1080),
+                                    savesInPlace: Self.savesThumbnailInPlace(wallpaper),
+                                    frame: { [weak preview] size in
+                                        guard let preview else { return nil }
+                                        return await Self.drawCanvas(preview, at: size)
+                                    })
         timeline = SceneTimelineEditor(session: session, index: (try? TimelineSceneIndex(sceneData: source.scene)) ?? .empty)
         timelineCanvas = EditorTimelineCanvas(preview: preview)
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1360, height: 840),
@@ -124,6 +132,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
                                        transient: true, draft: true)
         }
         userPropertyUndo.onChange = { [weak self] in self?.refreshEditedState() }
+        thumbnail.onChosenChange = { [weak self] in self?.refreshEditedState() }
         document.save = { [weak self] in try self?.saveDraft() }
         document.revertToSaved = { [weak self] in self?.revertToSaved() }
         timeline.onCanvasTime = { [weak self] seconds in self?.timelineCanvas.show(seconds) }
@@ -167,6 +176,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
         services.commands = commands
         services.document = document
+        services.thumbnail = thumbnail
         // In the editor's own process the app's Settings are another process's (`sync`).
         let openSettings: @MainActor (AppSettingsRequest) -> Void = { [sync] request in
             if let sync { sync.openSettings(request) } else { AppDelegate.shared.openSettings(for: request) }
@@ -235,7 +245,9 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
 
     /// The window's edited state, from the draft against the wallpaper as last saved.
     private func refreshEditedState() {
+        // A thumbnail File › Save writes into the wallpaper is a change too.
         let edited = session.overlay != savedOverlay || draft.propertiesDiffer
+            || (thumbnail.savesInPlace && thumbnail.chosen != nil)
         if document.isEdited != edited { document.isEdited = edited }
         window.isDocumentEdited = edited
     }
@@ -253,7 +265,36 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
                                             wallpaperDirectory: wallpaper.wallpaperDirectory)
             sync?.overlayDidSave(folder: wallpaper.wallpaperDirectory)
         }
+        if thumbnail.savesInPlace, let chosen = thumbnail.chosen {
+            try LocalWallpaperWriter().writeThumbnail(chosen, into: wallpaper.wallpaperDirectory)
+            OWELog.info(.library, "Saved a new thumbnail (\(chosen.fileName)) for \(wallpaper.project.title)")
+            thumbnail.didSaveInPlace()
+            // Open Wallpaper Engine's library reads the new preview.
+            sync?.libraryDidChange()
+        }
         refreshEditedState()
+    }
+
+    /// File › Save writes a thumbnail into the wallpaper only when it is the user's own (not a
+    /// Workshop item, a preset or one of WE's, and in the Wallpaper Storage folder, not a read-only
+    /// Library folder); otherwise Save as New Wallpaper gives it to the copy.
+    nonisolated static func savesThumbnailInPlace(_ wallpaper: WEWallpaper) -> Bool {
+        guard wallpaper.project.workshopid == nil, !wallpaper.isWorkshopPreset, wallpaper.project.official != true else { return false }
+        let storage = FileManager.default.wallpapersDirectory.standardizedFileURL.path
+        let folder = wallpaper.wallpaperDirectory.standardizedFileURL.path
+        return folder.hasPrefix(storage.hasSuffix("/") ? storage : storage + "/")
+    }
+
+    /// The canvas's scene drawn again, offscreen and unstepped, at `size` (the screenshot path,
+    /// `SceneRenderLoop.captureScreenshot`); nil while it has no scene.
+    private static func drawCanvas(_ preview: WallpaperViewModel, at size: SIMD2<Int>) async -> CGImage? {
+        guard let scene = preview.sceneInstances.instance(for: preview.instanceKey(for: preview.selectedScreenId)) else {
+            OWELog.error(.ui, "Thumbnail: the Wallpaper Editor's canvas has no scene to draw")
+            return nil
+        }
+        return await withCheckedContinuation { continuation in
+            scene.renderLoop.captureScreenshot(pixelSize: size) { continuation.resume(returning: $0) }
+        }
     }
 
     /// File › Revert to Saved: the draft back to the last save, the layer edits and the Details
@@ -349,7 +390,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
     /// Save as New Wallpaper: a new wallpaper in the library with the draft in its scene.json; the
     /// wallpaper and its draft aren't touched, and the window goes on editing them.
     private func saveAsNewWallpaper(title: String) throws -> String {
-        _ = try LocalWallpaperSave.save(wallpaper, overlay: session.overlay, assetsDirectory: resources.assets.directory, title: title)
+        _ = try LocalWallpaperSave.save(wallpaper, overlay: session.overlay, assetsDirectory: resources.assets.directory, title: title,
+                                        thumbnail: thumbnail.chosen)
         // Open Wallpaper Engine's library lists it.
         sync?.libraryDidChange()
         return title

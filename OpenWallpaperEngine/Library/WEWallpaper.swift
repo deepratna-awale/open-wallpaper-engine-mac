@@ -106,21 +106,30 @@ struct WEWallpaper: Codable, RawRepresentable, Identifiable {
     }
 }
 
+/// The Installed tab's sorts, in WE's order (its `sortOptions` for the installed list in
+/// `ui/dist/scripts/scripts.js`: name, rating, favorite, filesize, subscriptiondate, updatedate).
+/// The raw values are what the setting stores.
 enum WEWallpaperSortingMethod: String, CaseIterable, Identifiable {
     
     var id: Self { self }
     
     case name = "Name"
     case rating = "Rating"
+    /// WE's Favorite: favourites first, each part by name.
+    case favorite = "Favorite"
     case fileSize = "File Size"
     case dateAdded = "Date Added"
+    /// WE's Last Updated: when the Workshop item last changed, newest first.
+    case lastUpdated = "Last Updated"
 
     var displayName: LocalizedStringResource {
         switch self {
         case .name: return LocalizedStringResource("Name", comment: "Sort wallpapers by name")
         case .rating: return LocalizedStringResource("Rating", comment: "Sort wallpapers by age rating")
+        case .favorite: return LocalizedStringResource("Favorite", comment: "Sort wallpapers with the favourites first")
         case .fileSize: return LocalizedStringResource("File Size", comment: "Sort wallpapers by size on disk")
         case .dateAdded: return LocalizedStringResource("Date Downloaded", comment: "Sort wallpapers by when they were added")
+        case .lastUpdated: return LocalizedStringResource("Last Updated", comment: "Sort wallpapers by when their Workshop item last changed")
         }
     }
 }
