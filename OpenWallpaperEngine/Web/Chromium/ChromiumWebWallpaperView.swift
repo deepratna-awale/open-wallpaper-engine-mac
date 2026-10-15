@@ -58,7 +58,7 @@ struct ChromiumWebWallpaperView: NSViewRepresentable {
                 OWELog.info(.web, "Serving \(wallpaper.project.title) with WE's compatibility patches")
             }
             page.load(.init(url: url, directory: viewModel.readAccessURL,
-                            patches: patches ?? WebCompatPatches(actions: [])))
+                            patches: patches ?? WebCompatPatches(actions: []), userFiles: viewModel.userFiles))
         case nil:
             OWELog.error(.web, "Can't load web wallpaper \(wallpaper.project.title): invalid page path \(wallpaper.project.file)")
         }

@@ -298,7 +298,7 @@ enum ChromiumResourceServing {
     static let embedPageURL = "https://localhost/"
 
     static func response(for urlString: String, range: String?, directory: URL?, patches: WebCompatPatches,
-                         embedHTML: String?) -> ChromiumResourceResponse {
+                         embedHTML: String?, userFiles: WebUserFiles? = nil) -> ChromiumResourceResponse {
         if urlString == embedPageURL {
             guard let embedHTML else { return .notFound() }
             return ChromiumResourceResponse(status: 200, headers: ["Content-Type": "text/html; charset=utf-8"],
@@ -308,7 +308,7 @@ enum ChromiumResourceServing {
               url.host == WebWallpaperSchemeHandler.host else { return .notFound() }
         var request = URLRequest(url: url)
         if let range { request.setValue(range, forHTTPHeaderField: "Range") }
-        let reply = WebWallpaperSchemeHandler.reply(to: request, directory: directory, patches: patches)
+        let reply = WebWallpaperSchemeHandler.reply(to: request, directory: directory, patches: patches, userFiles: userFiles)
         switch reply.body {
         case .data(let data):
             return ChromiumResourceResponse(status: reply.status, headers: reply.headers, data: data)

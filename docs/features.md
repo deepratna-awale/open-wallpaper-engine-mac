@@ -80,6 +80,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - **Now Playing** — scenes and web wallpapers receive the current track and playback state (macOS 15.4 or later).
 - Web wallpapers receive their user properties and live audio.
 - **Web wallpaper devtools** (Settings › Optimizations › Developer Tools, off by default, for the session only): Safari's Web Inspector for WebKit pages, Chromium's DevTools on 127.0.0.1:9222 for Chromium ones.
+- Web wallpapers receive their user properties and live audio. Folder (`directory`) properties hand the page the folder's pictures or videos, all of them and each change (`fetchall`) or one at random on request (`ondemand`), and pages open chosen files as `'file:///' + path` in both web engines.
 
 ### Audio
 - The audio spectrum is computed the way Wallpaper Engine computes it, in stereo.

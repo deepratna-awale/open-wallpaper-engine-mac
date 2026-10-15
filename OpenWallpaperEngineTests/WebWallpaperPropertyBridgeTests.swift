@@ -84,7 +84,7 @@ final class WebWallpaperPropertyBridgeTests: XCTestCase {
         XCTAssertEqual(value("col") as? String, "0 0.5 1")
         XCTAssertEqual(value("t") as? String, "hello")
         XCTAssertEqual(value("file") as? String, "")
-        XCTAssertEqual(value("dir") as? String, "/tmp/x")
+        XCTAssertEqual(value("dir") as? String, "tmp/x", "without the slash, for the page's 'file:///' + path")
         XCTAssertEqual(WebWallpaperPropertyBridge.jsonValue(type: "bool", value: "false") as? Bool, false)
     }
 
