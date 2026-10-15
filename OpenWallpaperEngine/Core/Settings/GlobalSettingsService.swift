@@ -29,7 +29,32 @@ class GlobalSettingsViewModel: ObservableObject {
             OWELog.apply(logLevel: settings.logLevel)
             // Only on a change: following the system mustn't clear a language set in System Settings.
             if settings.language != oldValue.language { settings.language.apply(to: .app) }
+            updateEffectiveSettings()
         }
+    }
+
+    /// The settings wallpapers render with (`BatteryQuality`): `settings`, lowered while the Mac
+    /// runs on battery or in Low Power Mode when "On battery: use a lower quality preset" is on.
+    /// Never saved; the controls show and edit `settings`.
+    @Published private(set) var effectiveSettings: GlobalSettings
+
+    /// The power state `effectiveSettings` follows.
+    @Published private(set) var powerState: PowerState
+    private let powerSource: PowerPolicySource?
+    private var powerObserver: UUID?
+
+    /// The battery quality applies now.
+    var isBatteryQualityActive: Bool { BatteryQuality.applies(settings, power: powerState) }
+
+    /// Follows a new power state: wallpapers switch quality at once, without a reload.
+    func setPowerState(_ state: PowerState) {
+        powerState = state
+        updateEffectiveSettings()
+    }
+
+    private func updateEffectiveSettings() {
+        let effective = BatteryQuality.effective(settings, power: powerState)
+        if effective != effectiveSettings { effectiveSettings = effective }
     }
     
     /// The setup assistant is showing (at launch until finished, or from "Run setup again…").
@@ -51,13 +76,22 @@ class GlobalSettingsViewModel: ObservableObject {
     /// `followsLaunch`: at launch, the settings that act on the system (launch at login, the menu
     /// bar tint and lock-screen pictures, the screen saver) start following the app's wallpaper.
     /// Only Open Wallpaper Engine's own settings do; the Wallpaper Editor's process reads them.
-    init(followsLaunch: Bool = true) {
+    ///
+    /// `power`: the power source `effectiveSettings` follows; nil for none (always on AC).
+    init(followsLaunch: Bool = true, power: PowerPolicySource? = PowerPolicyMonitor.shared) {
         let migration = GlobalSettingsMigration.current()
         let loaded: GlobalSettings = Self.loadSettings(from: UserDefaults.app.data(forKey: Self.defaultsKey),
                                                        backupDirectory: AppStorageLocation.current.supportDirectory,
                                                        migration: migration)
         self.settings = loaded
+        let state = power?.policy.state ?? PowerState()
+        powerState = state
+        effectiveSettings = BatteryQuality.effective(loaded, power: state)
+        powerSource = power
         languageChange = LanguageChange(atLaunch: loaded.language)
+        powerObserver = power?.observe { [weak self] policy in
+            DispatchQueue.main.async { MainActor.assumeIsolated { self?.setPowerState(policy.state) } }
+        }
         OWELog.apply(logLevel: settings.logLevel)
 
         // Add observers
@@ -103,6 +137,7 @@ class GlobalSettingsViewModel: ObservableObject {
     }
 
     deinit {
+        if let powerObserver { powerSource?.removeObserver(powerObserver) }
         didFinishLaunchingNotificationCancellable?.cancel()
         didCurrentWallpaperChangeCancellable?.cancel()
         didAddToLoginItemCancellable?.cancel()

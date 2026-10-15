@@ -328,6 +328,12 @@ struct GlobalSettings: Codable, Equatable {
     var otherApplicationPlayingAudio = GSPlayback.keepRunning
     var displayAsleep = GSPlayback.keepRunning
     var laptopOnBattery = GSPlayback.keepRunning
+    /// "On battery: use a lower quality preset" (`BatteryQuality`): off by default, as WE has no such setting.
+    var batteryQuality = false
+    /// The preset `batteryQuality` applies; Medium by default.
+    var batteryQualityPreset = GSBatteryPreset.medium
+    /// The frame rate cap `batteryQuality` applies; none by default.
+    var batteryFrameRateCap = GSBatteryFrameRate.none
     /// Settings › Performance › Application Rules (`ApplicationRule`), in the order listed.
     var applicationRules: [ApplicationRule] = []
     
@@ -476,6 +482,7 @@ struct GlobalSettings: Codable, Equatable {
     enum CodingKeys: String, CodingKey {
         case otherApplicationFocused, otherApplicationMaximized, otherApplicationFullscreen, otherApplicationPlayingAudio
         case displayAsleep, applicationRules
+        case batteryQuality, batteryQualityPreset, batteryFrameRateCap
         case laptopOnBattery, textureResolution, shadows, volumetrics, fps, fpsSetByUser, particleBudget, optimiseTextures
         case webStandardResolution, reducedResolutionParticles
         case qualityEfficiency
@@ -526,6 +533,9 @@ extension GlobalSettings {
         read(.otherApplicationPlayingAudio, &otherApplicationPlayingAudio)
         read(.displayAsleep, &displayAsleep)
         read(.laptopOnBattery, &laptopOnBattery)
+        read(.batteryQuality, &batteryQuality)
+        read(.batteryQualityPreset, &batteryQualityPreset)
+        read(.batteryFrameRateCap, &batteryFrameRateCap)
         var ruleList = ApplicationRuleList()
         read(.applicationRules, &ruleList)
         applicationRules = ruleList.rules

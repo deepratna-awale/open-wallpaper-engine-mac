@@ -167,7 +167,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var screenSaverBrokerCancellable: AnyCancellable?
     /// The screen saver drawn live while it runs, the savers showing the frames.
     lazy var liveScreenSaver = ScreenSaverLiveController(plugin: screenSaver, environment: .init(
-        settings: { [unowned self] in globalSettingsViewModel.settings },
+        settings: { [unowned self] in globalSettingsViewModel.effectiveSettings },
         placement: { [unowned self] in wallpaperViewModel.wallpaperPlacement },
         scriptServices: { [unowned self] in sceneScriptServices },
         pageSharing: { [unowned self] screenId, wallpaper in

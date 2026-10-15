@@ -86,6 +86,7 @@ struct SettingsSearch {
 
             entry("Playback", .performance, SettingsAnchor.playback),
             entry("Laptop on battery", .performance, SettingsAnchor.playback),
+            entry("On battery: use a lower quality preset", .performance, SettingsAnchor.playback),
             entry("Display asleep", .performance, SettingsAnchor.playback),
             entry("Quality", .performance, SettingsAnchor.quality),
             entry("Anti-aliasing", .performance, SettingsAnchor.quality),

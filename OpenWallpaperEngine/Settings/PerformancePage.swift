@@ -32,6 +32,43 @@ struct PerformancePage: SettingsPage {
         }
     }
 
+    /// The Mac has an internal battery.
+    private var hasBattery: Bool { viewModel.powerState.batteryLevel != nil }
+
+    /// "On battery: use a lower quality preset" (`BatteryQuality`): its preset and frame rate cap
+    /// show while it is on.
+    @ViewBuilder
+    private var batteryQuality: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Toggle("On battery: use a lower quality preset", isOn: $viewModel.settings.batteryQuality)
+            if viewModel.isBatteryQualityActive {
+                Text("In use now: your Mac is on battery or in Low Power Mode.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .changedFromDefault(viewModel.isChanged(\.batteryQuality))
+        .help("While your Mac runs on battery or in Low Power Mode, wallpapers draw with the preset and frame rate cap below. A setting already lower stays as you set it, and your own settings come back on power.")
+        if viewModel.settings.batteryQuality {
+            Picker("Battery preset", selection: $viewModel.settings.batteryQualityPreset) {
+                Text("Keep My Settings").tag(GSBatteryPreset.keepSettings)
+                Text("Low").tag(GSBatteryPreset.low)
+                Text("Medium").tag(GSBatteryPreset.medium)
+                Text("High").tag(GSBatteryPreset.high)
+            }
+            .changedFromDefault(viewModel.isChanged(\.batteryQualityPreset))
+            .help("The quality preset wallpapers use on battery. Keep My Settings changes only the frame rate.")
+            Picker("Battery frame rate cap", selection: $viewModel.settings.batteryFrameRateCap) {
+                Text("None").tag(GSBatteryFrameRate.none)
+                ForEach(GSBatteryFrameRate.allCases.filter { $0 != .none }) { cap in
+                    Text("\(cap.rawValue) FPS").tag(cap)
+                }
+            }
+            .changedFromDefault(viewModel.isChanged(\.batteryFrameRateCap))
+            .help("The most frames per second wallpapers draw on battery. None leaves the frame rate to the preset.")
+        }
+    }
+
     var body: some View {
         SettingsForm {
             Section {
@@ -77,13 +114,18 @@ struct PerformancePage: SettingsPage {
                 .changedFromDefault(viewModel.isChanged(\.displayAsleep))
                 .help("What wallpapers do while the displays sleep. Pause keeps the last frame; Stop (free memory) also hides the wallpaper to free its memory.")
                 
-                Picker("Laptop on battery", selection: $viewModel.settings.laptopOnBattery) {
-                    Text("Keep Running").tag(GSPlayback.keepRunning)
-                    Text("Pause").tag(GSPlayback.pause)
-                    Text("Stop (free memory)").tag(GSPlayback.stop)
+                // WE lists this rule on laptops only (`runtime.islaptop`); kept while set otherwise.
+                if hasBattery || viewModel.isChanged(\.laptopOnBattery) {
+                    Picker("Laptop on battery", selection: $viewModel.settings.laptopOnBattery) {
+                        Text("Keep Running").tag(GSPlayback.keepRunning)
+                        Text("Pause").tag(GSPlayback.pause)
+                        Text("Stop (free memory)").tag(GSPlayback.stop)
+                    }
+                    .changedFromDefault(viewModel.isChanged(\.laptopOnBattery))
+                    .help("What wallpapers do while your Mac runs on battery. Pause or Stop saves the most battery.")
                 }
-                .changedFromDefault(viewModel.isChanged(\.laptopOnBattery))
-                .help("What wallpapers do while your Mac runs on battery. Pause or Stop saves the most battery.")
+
+                batteryQuality
                 
                 HStack {
                     Text("Application Rules")

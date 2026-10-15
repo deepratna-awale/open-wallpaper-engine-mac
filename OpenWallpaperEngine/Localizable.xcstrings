@@ -2293,6 +2293,100 @@
       "shouldTranslate" : false,
       "localizations" : {}
     },
+    "%lld FPS" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld إطار/ث"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld FPS"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld FPS"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld i/s"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld FPS"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld FPS"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld FPS"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldFPS"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kl./s"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld FPS"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld к/с"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld FPS"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld к/с"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 帧/秒"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld FPS"
+          }
+        }
+      }
+    },
     "%lld more" : {
       "comment" : "Ends a list of wallpaper titles: and 2 more",
       "localizations" : {
@@ -17755,6 +17849,194 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "確認批次取消訂閱"
+          }
+        }
+      }
+    },
+    "Battery frame rate cap" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حد معدل الإطارات على البطارية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildratenbegrenzung im Batteriebetrieb"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Límite de fotogramas con batería"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limite d’images sur batterie"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बैटरी पर फ़्रेम रेट सीमा"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limite frame rate a batteria"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バッテリー駆動中のフレームレート上限"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배터리 프레임률 제한"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limit liczby klatek na baterii"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limite de quadros na bateria"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ограничение частоты кадров от аккумулятора"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pilde kare hızı sınırı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обмеження частоти кадрів від акумулятора"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "电池帧速率上限"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "電池影格速率上限"
+          }
+        }
+      }
+    },
+    "Battery preset" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعداد البطارية المسبق"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voreinstellung im Batteriebetrieb"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preajuste con batería"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préréglage sur batterie"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बैटरी प्रीसेट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preset a batteria"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バッテリー駆動中のプリセット"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배터리 사전 설정"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profil na baterii"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Predefinição na bateria"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Набор настроек от аккумулятора"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pil hazır ayarı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Набір параметрів від акумулятора"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "电池预设"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "電池預設組合"
           }
         }
       }
@@ -68396,6 +68678,100 @@
         }
       }
     },
+    "In use now: your Mac is on battery or in Low Power Mode." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قيد الاستخدام الآن: يعمل Mac على البطارية أو في وضع الطاقة المنخفضة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt aktiv: Ihr Mac läuft im Batteriebetrieb oder im Stromsparmodus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En uso ahora: el Mac funciona con batería o en modo de bajo consumo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En cours : votre Mac est sur batterie ou en mode Économie d’énergie."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी लागू: आपका Mac बैटरी पर या लो पावर मोड में है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In uso ora: il Mac è a batteria o in modalità Risparmio energetico."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在使用中：Mac はバッテリーまたは低電力モードで動作しています。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 사용 중: Mac이 배터리 또는 저전력 모드로 작동 중입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teraz w użyciu: Mac działa na baterii lub w trybie niskiego zużycia energii."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Em uso agora: o Mac está na bateria ou no Modo de Baixa Energia."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сейчас используется: Mac работает от аккумулятора или в режиме энергосбережения."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şu anda kullanılıyor: Mac’iniz pilde veya Düşük Güç Modu’nda."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зараз використовується: Mac працює від акумулятора або в режимі низького енергоспоживання."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前生效：你的 Mac 正在使用电池或处于低电量模式。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前生效：你的 Mac 正在使用電池或處於低耗電模式。"
+          }
+        }
+      }
+    },
     "Include ⌘, ⌥ or ⌃." : {
       "localizations" : {
         "ar" : {
@@ -71227,6 +71603,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "讓圖層抖動。透過遮罩只讓部分影像移動。"
+          }
+        }
+      }
+    },
+    "Keep My Settings" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإبقاء على إعداداتي"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meine Einstellungen behalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener mis ajustes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garder mes réglages"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेरी सेटिंग्स रखें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantieni le mie impostazioni"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自分の設定を維持"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내 설정 유지"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowaj moje ustawienia"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manter meus ajustes"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оставить мои настройки"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayarlarımı Koru"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Залишити мої параметри"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留我的设置"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留我的設定"
           }
         }
       }
@@ -92677,6 +93147,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "根據計時器"
+          }
+        }
+      }
+    },
+    "On battery: use a lower quality preset" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "على البطارية: استخدام إعداد مسبق بجودة أقل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Batteriebetrieb: Voreinstellung mit geringerer Qualität verwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con batería: usar un preajuste de menor calidad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur batterie : utiliser un préréglage de qualité inférieure"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बैटरी पर: कम क्वालिटी वाला प्रीसेट इस्तेमाल करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A batteria: usa un preset di qualità inferiore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バッテリー駆動中：低い品質のプリセットを使用"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배터리 사용 시: 더 낮은 품질 사전 설정 사용"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na baterii: użyj profilu niższej jakości"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na bateria: usar uma predefinição de qualidade menor"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "От аккумулятора: использовать набор настроек ниже качеством"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pildeyken: Daha düşük kaliteli hazır ayar kullan"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Від акумулятора: використовувати набір параметрів нижчої якості"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用电池时：使用较低画质的预设"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用電池時：使用較低畫質的預設組合"
           }
         }
       }
@@ -152163,6 +152727,100 @@
         }
       }
     },
+    "The most frames per second wallpapers draw on battery. None leaves the frame rate to the preset." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أقصى عدد من الإطارات في الثانية ترسمه الخلفيات على البطارية. يترك «لا شيء» معدل الإطارات للإعداد المسبق."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die meisten Bilder pro Sekunde, die Hintergrundbilder im Batteriebetrieb zeichnen. „Ohne“ überlässt die Bildrate der Voreinstellung."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El máximo de fotogramas por segundo que dibujan los fondos de pantalla con batería. Ninguno deja la frecuencia al preajuste."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nombre maximal d’images par seconde que dessinent les fonds d’écran sur batterie. Aucun laisse la fréquence au préréglage."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बैटरी पर वॉलपेपर प्रति सेकंड ज़्यादा से ज़्यादा जितने फ़्रेम बनाते हैं। कोई नहीं फ़्रेम रेट को प्रीसेट पर छोड़ देता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il numero massimo di frame al secondo che gli sfondi disegnano a batteria. Nessuno lascia il frame rate al preset."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バッテリー駆動中に壁紙が描画する 1 秒あたりの最大フレーム数です。「なし」ではフレームレートをプリセットに任せます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배터리 사용 시 배경화면이 그리는 초당 최대 프레임 수입니다. 없음은 프레임률을 사전 설정에 맡깁니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Największa liczba klatek na sekundę, jaką tapety rysują na baterii. Brak pozostawia liczbę klatek profilowi."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O máximo de quadros por segundo que as imagens de fundo desenham na bateria. Nenhum deixa a taxa de quadros com a predefinição."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наибольшее число кадров в секунду, которое обои рисуют от аккумулятора. «Нет» оставляет частоту кадров набору настроек."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıtlarının pildeyken saniyede çizdiği en fazla kare sayısı. Yok, kare hızını hazır ayara bırakır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найбільша кількість кадрів за секунду, яку шпалери малюють від акумулятора. «Немає» залишає частоту кадрів набору параметрів."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "墙纸使用电池时每秒最多绘制的帧数。“无”将帧速率交给预设。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景圖片使用電池時每秒最多繪製的影格數。「無」將影格速率交給預設組合。"
+          }
+        }
+      }
+    },
     "The most particles one wallpaper may hold. A wallpaper made with more draws every particle system thinner, keeping its look." : {
       "localizations" : {
         "ar" : {
@@ -153386,6 +154044,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "「加入效果」和「加入粒子系統」的預覽會以低優先順序在背景渲染，因此瀏覽器能立即開啟。Mac 電量不足或過熱時，渲染會等待。"
+          }
+        }
+      }
+    },
+    "The quality preset wallpapers use on battery. Keep My Settings changes only the frame rate." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإعداد المسبق للجودة الذي تستخدمه الخلفيات على البطارية. لا يغيّر «الإبقاء على إعداداتي» إلا معدل الإطارات."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Qualitätsvoreinstellung, die Hintergrundbilder im Batteriebetrieb verwenden. „Meine Einstellungen behalten“ ändert nur die Bildrate."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El preajuste de calidad que usan los fondos de pantalla con batería. Mantener mis ajustes solo cambia la frecuencia de fotogramas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le préréglage de qualité qu’utilisent les fonds d’écran sur batterie. Garder mes réglages ne change que la fréquence d’images."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बैटरी पर वॉलपेपर जो क्वालिटी प्रीसेट इस्तेमाल करते हैं। मेरी सेटिंग्स रखें सिर्फ़ फ़्रेम रेट बदलता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il preset di qualità che gli sfondi usano a batteria. Mantieni le mie impostazioni cambia solo il frame rate."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バッテリー駆動中に壁紙が使う品質プリセットです。「自分の設定を維持」はフレームレートだけを変更します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배터리 사용 시 배경화면이 사용하는 품질 사전 설정입니다. 내 설정 유지는 프레임률만 바꿉니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profil jakości, którego tapety używają na baterii. Zachowaj moje ustawienia zmienia tylko liczbę klatek."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A predefinição de qualidade que as imagens de fundo usam na bateria. Manter meus ajustes muda só a taxa de quadros."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Набор настроек качества, который обои используют от аккумулятора. «Оставить мои настройки» меняет только частоту кадров."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıtlarının pildeyken kullandığı kalite hazır ayarı. Ayarlarımı Koru yalnızca kare hızını değiştirir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Набір параметрів якості, який шпалери використовують від акумулятора. «Залишити мої параметри» змінює лише частоту кадрів."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "墙纸使用电池时采用的画质预设。“保留我的设置”只更改帧速率。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景圖片使用電池時採用的畫質預設組合。「保留我的設定」只更改影格速率。"
           }
         }
       }
@@ -174648,6 +175400,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "螢幕保護程式執行時，Open Wallpaper Engine 會即時繪製此版本的桌布：時鐘、日期、媒體資訊和音訊回應部分會像在桌面上一樣變化，且聲音保持關閉。"
+          }
+        }
+      }
+    },
+    "While your Mac runs on battery or in Low Power Mode, wallpapers draw with the preset and frame rate cap below. A setting already lower stays as you set it, and your own settings come back on power." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أثناء عمل Mac على البطارية أو في وضع الطاقة المنخفضة، ترسم الخلفيات بالإعداد المسبق وحد معدل الإطارات أدناه. ويبقى الإعداد الأقل أصلًا كما ضبطته، وتعود إعداداتك عند توصيل الطاقة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Während Ihr Mac im Batteriebetrieb oder im Stromsparmodus läuft, zeichnen Hintergrundbilder mit der Voreinstellung und der Bildratenbegrenzung unten. Eine bereits niedrigere Einstellung bleibt, wie Sie sie gewählt haben, und Ihre eigenen Einstellungen kehren am Netzteil zurück."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mientras el Mac funciona con batería o en modo de bajo consumo, los fondos de pantalla se dibujan con el preajuste y el límite de fotogramas de abajo. Un ajuste que ya es menor se queda como lo configuraste, y tus ajustes vuelven al conectar la corriente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quand votre Mac fonctionne sur batterie ou en mode Économie d’énergie, les fonds d’écran sont dessinés avec le préréglage et la limite d’images ci-dessous. Un réglage déjà inférieur reste tel que vous l’avez choisi, et vos réglages reviennent sur secteur."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "जब Mac बैटरी पर या लो पावर मोड में चलता है, तब वॉलपेपर नीचे दिए प्रीसेट और फ़्रेम रेट सीमा के साथ बनते हैं। जो सेटिंग पहले से कम है वह आपकी चुनी हुई ही रहती है, और पावर पर आपकी अपनी सेटिंग्स लौट आती हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mentre il Mac è alimentato a batteria o in modalità Risparmio energetico, gli sfondi vengono disegnati con il preset e il limite di frame rate qui sotto. Un'impostazione già inferiore resta come l'hai scelta, e le tue impostazioni tornano con l'alimentatore."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac がバッテリーまたは低電力モードで動作している間、壁紙は下のプリセットとフレームレート上限で描画されます。すでに低い設定はそのまま保たれ、電源に接続すると元の設定に戻ります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac이 배터리나 저전력 모드로 작동하는 동안 배경화면은 아래의 사전 설정과 프레임률 제한으로 그려집니다. 이미 더 낮은 설정은 그대로 유지되며, 전원에 연결하면 원래 설정으로 돌아갑니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gdy Mac działa na baterii lub w trybie niskiego zużycia energii, tapety są rysowane z profilem i limitem liczby klatek poniżej. Ustawienie, które jest już niższe, pozostaje takie, jak je ustawiono, a Twoje ustawienia wracają po podłączeniu zasilania."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enquanto o Mac usa a bateria ou o Modo de Baixa Energia, as imagens de fundo são desenhadas com a predefinição e o limite de quadros abaixo. Um ajuste que já é menor fica como você definiu, e seus ajustes voltam na tomada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока Mac работает от аккумулятора или в режиме энергосбережения, обои рисуются с набором настроек и ограничением частоты кадров ниже. Настройка, которая уже ниже, остается как есть, а ваши настройки возвращаются при питании от сети."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac’iniz pille veya Düşük Güç Modu’nda çalışırken duvar kâğıtları aşağıdaki hazır ayar ve kare hızı sınırıyla çizilir. Zaten daha düşük olan bir ayar sizin belirlediğiniz gibi kalır ve prize takıldığında kendi ayarlarınız geri gelir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поки Mac працює від акумулятора або в режимі низького енергоспоживання, шпалери малюються з набором параметрів і обмеженням частоти кадрів нижче. Параметр, який уже нижчий, лишається як є, а ваші параметри повертаються під час живлення від мережі."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac 使用电池或处于低电量模式时，墙纸以下方的预设和帧速率上限绘制。已经更低的设置保持你的选择，接上电源后恢复你自己的设置。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac 使用電池或處於低耗電模式時，背景圖片以下方的預設組合和影格速率上限繪製。已經更低的設定維持你的選擇，接上電源後恢復你自己的設定。"
           }
         }
       }
