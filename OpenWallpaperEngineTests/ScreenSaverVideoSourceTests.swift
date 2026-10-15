@@ -1,11 +1,33 @@
+import AVFoundation
+import AppKit
+import CoreVideo
+import Metal
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// Video wallpapers' screen saver: eligibility per container and codec, the store entry (a link
-/// to the library file), the manifest entry and the Details status.
+/// Video wallpapers in the screen saver, drawn live by the app: eligibility, the track info that
+/// sizes and paces a ring, the placement drawing, and the frames a player of its own or the
+/// desktop's player publish (`ScreenSaverLiveVideo`).
+@MainActor
 final class ScreenSaverVideoSourceTests: XCTestCase {
     private typealias Plugin = ScreenSaverPlugin
+    private typealias Video = ScreenSaverLiveVideo
     private var root: URL!
+
+    private final class SilentNotifier: ScreenSaverFrameNotifier, @unchecked Sendable {
+        func post(_ name: String, state: UInt64) {}
+    }
+
+    /// The desktop's player, as `VideoWallpaperViewModel` lends it.
+    private final class DesktopPlayer: ScreenSaverVideoSharing {
+        let sharedPlayer: AVPlayer
+        private(set) var holds: [Bool] = []
+        init(_ player: AVPlayer) { sharedPlayer = player }
+        func holdForScreenSaver(_ hold: Bool) {
+            holds.append(hold)
+            if hold { sharedPlayer.play() }
+        }
+    }
 
     override func setUpWithError() throws {
         root = FileManager.default.temporaryDirectory.appending(path: "ScreenSaverVideoSourceTests-\(UUID().uuidString)")
@@ -16,182 +38,177 @@ final class ScreenSaverVideoSourceTests: XCTestCase {
         try? FileManager.default.removeItem(at: root)
     }
 
-    private func wallpaper(file: String, type: String = "video", directory: URL? = nil) -> WEWallpaper {
-        WEWallpaper(using: WEProject(file: file, preview: "p.jpg", title: "t", type: type), where: directory ?? root)
+    private func wallpaper(file: String, type: String = "video") -> WEWallpaper {
+        WEWallpaper(using: WEProject(file: file, preview: "p.jpg", title: "t", type: type), where: root)
     }
 
-    // MARK: - Synthetic MP4
-
-    private static func box(_ type: String, _ payload: Data) -> Data {
-        var data = Data()
-        data.appendMP4(UInt32(payload.count + 8))
-        data.appendMP4FourCC(type)
-        data.append(payload)
-        return data
+    private func publisher(ring: SIMD2<Int>) throws -> ScreenSaverFramePublisher {
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        let publisher = ScreenSaverFramePublisher(manifestURL: nil, notifier: SilentNotifier(), device: device)
+        try publisher.publish(sizes: [ring], displays: [.init(display: nil, ring: 0)], frameRate: 30)
+        return publisher
     }
 
-    private static func fullBox(_ type: String, _ payload: Data) -> Data {
-        box(type, Data([0, 0, 0, 0]) + payload)
+    /// Runs the main run loop until `publisher` drew `count` frames into ring 0, or 10 s passed.
+    private func waitForFrames(_ publisher: ScreenSaverFramePublisher, count: Int) -> Int {
+        var drawn = 0
+        let deadline = Date().addingTimeInterval(10)
+        while drawn < count, Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            drawn += publisher.takeCounts()[0]?.drawn ?? 0
+        }
+        return drawn
     }
 
-    /// An MP4 whose one track has a sample entry of `entryType` (no samples).
-    private func mp4(entryType: String, name: String) throws -> URL {
-        var count = Data()
-        count.appendMP4(UInt32(1))
-        let stsd = Self.fullBox("stsd", count + Self.box(entryType, Data(count: 78)))
-        let trak = Self.box("trak", Self.box("mdia", Self.box("minf", Self.box("stbl", stsd))))
-        var brand = Data("isom".utf8)
-        brand.appendMP4(UInt32(512))
-        let data = Self.box("ftyp", brand + Data("isomiso2mp41".utf8))
-            + Self.box("moov", Self.fullBox("mvhd", Data(count: 96)) + trak)
-            + Self.box("mdat", Data())
-        let url = root.appending(path: name)
-        try data.write(to: url)
-        return url
+    /// The red, green and blue of the newest frame's pixel at (`x`, `y`) from the top-left.
+    private func pixel(_ publisher: ScreenSaverFramePublisher, x: Int, y: Int) throws -> SIMD3<Int> {
+        let image = try XCTUnwrap(publisher.newestImage(ring: 0))
+        var bytes = [UInt8](repeating: 0, count: 4)
+        let context = try XCTUnwrap(CGContext(data: &bytes, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+                                              space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                              bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        context.draw(image, in: CGRect(x: -x, y: y - image.height + 1, width: image.width, height: image.height))
+        return SIMD3(Int(bytes[0]), Int(bytes[1]), Int(bytes[2]))
     }
 
     // MARK: - Eligibility
 
     func testEligibilityPerContainer() {
         for file in ["video.mp4", "video.MOV", "video.m4v"] {
-            XCTAssertTrue(Plugin.isEligible(wallpaper(file: file)), file)
+            XCTAssertTrue(ScreenSaverVideoSource.isEligible(wallpaper(file: file)), file)
+            XCTAssertEqual(Plugin.liveKind(of: wallpaper(file: file), chromiumInstalled: false), .video, "drawn live without Chromium")
         }
         for file in ["video.mkv", "https://example.com/video.mp4"] {
             XCTAssertFalse(Plugin.isEligible(wallpaper(file: file)), file)
         }
-        // WebM and web pages are recorded instead of linked.
+        // WebM is drawn as a page through Chromium.
         XCTAssertTrue(Plugin.isEligible(wallpaper(file: "video.webm")))
         XCTAssertFalse(ScreenSaverVideoSource.isEligible(wallpaper(file: "video.webm")))
+        XCTAssertNotEqual(Plugin.liveKind(of: wallpaper(file: "video.webm"), chromiumInstalled: true), .video)
         XCTAssertTrue(Plugin.isEligible(wallpaper(file: "index.html", type: "web")))
         XCTAssertTrue(Plugin.isEligible(wallpaper(file: "scene.json", type: "scene")))
     }
 
-    func testEligibilityPerCodec() {
-        for codec in ["avc1", "avc3", "hvc1", "hev1"] {
-            XCTAssertTrue(ScreenSaverVideoSource.isPlayable(sampleEntryTypes: [codec, "mp4a"]), codec)
-        }
-        for codec in ["vp09", "vp08", "av01", "mp4v"] {
-            XCTAssertFalse(ScreenSaverVideoSource.isPlayable(sampleEntryTypes: [codec, "mp4a"]), codec)
-        }
-        XCTAssertTrue(ScreenSaverVideoSource.needsRepair(sampleEntryTypes: ["hev1"]))
-        XCTAssertTrue(ScreenSaverVideoSource.needsRepair(sampleEntryTypes: ["avc3"]))
-        XCTAssertFalse(ScreenSaverVideoSource.needsRepair(sampleEntryTypes: ["hvc1", "avc1", "mp4a"]))
-    }
-
-    // MARK: - Store entry
-
-    func testPlayableFileIsLinkedNotCopied() throws {
-        let source = try mp4(entryType: "hvc1", name: "video.mp4")
-        let destination = root.appending(path: "store/entry.mp4")
-        XCTAssertEqual(ScreenSaverVideoSource.prepare(source, at: destination), .ready(repaired: false))
-        let path = destination.path(percentEncoded: false)
-        let attributes = try FileManager.default.attributesOfItem(atPath: path)
-        let sourceAttributes = try FileManager.default.attributesOfItem(atPath: source.path(percentEncoded: false))
-        // Same volume: a hard link (same inode), never a symbolic link.
-        XCTAssertTrue(ScreenSaverVideoSource.isInPlace(destination))
-        XCTAssertEqual(attributes[.systemFileNumber] as? NSNumber, sourceAttributes[.systemFileNumber] as? NSNumber)
-        XCTAssertEqual(try Data(contentsOf: destination), try Data(contentsOf: source))
-    }
-
-    /// A library on another volume (the hard link fails, as across volumes): the file is copied
-    /// into the saver's folder, never linked there, since neither saver can follow a link out of it.
-    func testAFileOnAnotherVolumeIsCopiedNotSymlinked() throws {
-        let source = try mp4(entryType: "avc1", name: "video.mp4")
-        let destination = root.appending(path: "store/entry.mp4")
-        var announced = false
-        let outcome = ScreenSaverVideoSource.prepare(source, at: destination, willWrite: { announced = true },
-                                                     hardLink: { _, _ in throw CocoaError(.fileWriteUnknown) })
-        XCTAssertEqual(outcome, .ready(repaired: false))
-        XCTAssertTrue(announced, "a copy takes a while: the panel says so")
-        XCTAssertTrue(ScreenSaverVideoSource.isInPlace(destination))
-        XCTAssertNil(try? FileManager.default.destinationOfSymbolicLink(atPath: destination.path(percentEncoded: false)))
-        XCTAssertEqual(try Data(contentsOf: destination), try Data(contentsOf: source))
-    }
-
-    /// An earlier version's symbolic link out of the folder isn't in place: it is replaced.
-    func testASymbolicLinkIsNotInPlace() throws {
-        let source = try mp4(entryType: "avc1", name: "video.mp4")
-        let link = root.appending(path: "store/link.mp4")
-        try FileManager.default.createDirectory(at: link.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: source)
-        XCTAssertFalse(ScreenSaverVideoSource.isInPlace(link))
-        XCTAssertFalse(ScreenSaverVideoSource.isInPlace(root.appending(path: "store/missing.mp4")))
-        XCTAssertEqual(ScreenSaverVideoSource.prepare(source, at: link, hardLink: { _, _ in throw CocoaError(.fileWriteUnknown) }),
-                       .ready(repaired: false))
-        XCTAssertTrue(ScreenSaverVideoSource.isInPlace(link), "the link was replaced by the file")
-    }
-
-    func testPreparingAgainReplacesTheEntry() throws {
-        let source = try mp4(entryType: "avc1", name: "video.mov")
-        let destination = root.appending(path: "store/entry.mov")
-        XCTAssertEqual(ScreenSaverVideoSource.prepare(source, at: destination), .ready(repaired: false))
-        XCTAssertEqual(ScreenSaverVideoSource.prepare(source, at: destination), .ready(repaired: false))
-    }
-
-    func testUnsupportedCodecIsNotLinked() throws {
-        let source = try mp4(entryType: "vp09", name: "video.mp4")
-        let destination = root.appending(path: "store/entry.mp4")
-        XCTAssertEqual(ScreenSaverVideoSource.prepare(source, at: destination), .unsupported)
-        XCTAssertFalse(FileManager.default.fileExists(atPath: destination.path(percentEncoded: false)))
-    }
-
-    func testCodecCheckUpFront() throws {
-        XCTAssertTrue(ScreenSaverVideoSource.hasPlayableTrack(try mp4(entryType: "hev1", name: "a.mp4")))
-        let vp9 = try mp4(entryType: "vp09", name: "b.mp4")
-        XCTAssertFalse(ScreenSaverVideoSource.hasPlayableTrack(vp9))
-        XCTAssertFalse(ScreenSaverVideoSource.hasPlayableTrack(vp9), "cached")
-        // A new version of the same file is read again.
-        _ = try mp4(entryType: "avc1", name: "b.mp4")
-        try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSinceNow: 60)],
-                                              ofItemAtPath: vp9.path(percentEncoded: false))
-        XCTAssertTrue(ScreenSaverVideoSource.hasPlayableTrack(vp9))
-        XCTAssertFalse(ScreenSaverVideoSource.hasPlayableTrack(root.appending(path: "missing.mp4")))
-    }
-
-    func testUnreadableFileIsUnsupported() throws {
-        let source = root.appending(path: "broken.mp4")
-        try Data("not a movie".utf8).write(to: source)
-        XCTAssertEqual(ScreenSaverVideoSource.prepare(source, at: root.appending(path: "store/x.mp4")), .unsupported)
-    }
-
-    func testFileNameKeepsTheExtensionAndKey() {
-        let key = Plugin.StatusKey(wallpaperKey: "w", contentKey: "c", propertyHash: "h")
-        XCTAssertEqual(ScreenSaverVideoSource.fileName(key: key, source: URL(filePath: "/x/Video.MOV")),
-                       "w_c-video-r\(ScreenSaverVideoStore.revision).mov")
-    }
-
-    // MARK: - Manifest
-
-    func testManifestEntryUsesTheTrackSizeAndSpeed() throws {
-        let loop = ScreenSaverLayoutPlan.Loop(content: .init(id: "/w"), sizes: [], displays: ["A"])
-        func videos(size: SIMD2<Int>, rate: Float) -> [ScreenSaverManifest.Video] {
-            Plugin.manifestVideos(for: loop, file: "a.mp4", size: size, rate: rate, everyDisplay: true)
-        }
-        XCTAssertEqual(videos(size: SIMD2(1080, 1920), rate: 1), [ScreenSaverManifest.Video(file: "a.mp4", width: 1080, height: 1920)])
-        XCTAssertNil(videos(size: SIMD2(1080, 1920), rate: 1).first?.rate)
-        XCTAssertEqual(videos(size: SIMD2(1, 1), rate: 1.5).first?.rate, 1.5)
-        XCTAssertNil(videos(size: SIMD2(1, 1), rate: 0).first?.rate)
-    }
-
-    func testManifestWithoutRateStillDecodes() throws {
-        let json = #"{"revision":1,"videos":[{"file":"a.mov","width":1920,"height":1080}]}"#
-        let manifest = try JSONDecoder().decode(ScreenSaverManifest.self, from: Data(json.utf8))
-        XCTAssertNil(manifest.videos.first?.rate)
-    }
-
-    // MARK: - Status
-
-    func testVideoStatus() throws {
-        _ = try mp4(entryType: "avc1", name: "video.mp4")
+    func testVideosAreAvailableAtOnce() {
         let video = wallpaper(file: "video.mp4")
-        let key = try XCTUnwrap(Plugin.statusKey(for: video))
-        XCTAssertEqual(key.propertyHash, ScreenSaverVideoStore.propertyHash([:]), "a video's properties don't change its file")
-        XCTAssertNil(Plugin.status(for: video, enabled: true, statuses: [:], chromiumInstalled: true))
-        XCTAssertEqual(Plugin.status(for: video, enabled: true, statuses: [key: .rendering], chromiumInstalled: true), .rendering)
-        XCTAssertEqual(Plugin.status(for: video, enabled: true, statuses: [key: .available], chromiumInstalled: true), .available)
-        XCTAssertEqual(Plugin.status(for: video, enabled: true, statuses: [key: .notEligible], chromiumInstalled: true), .notEligible,
-                       "a codec AVFoundation can't play")
-        XCTAssertNil(Plugin.status(for: video, enabled: false, statuses: [key: .available], chromiumInstalled: true))
-        XCTAssertEqual(Plugin.status(for: wallpaper(file: "video.mkv"), enabled: true, statuses: [:], chromiumInstalled: true), .notEligible)
+        XCTAssertEqual(Plugin.status(for: video, enabled: true, chromiumInstalled: false), .available)
+        XCTAssertNil(Plugin.status(for: video, enabled: false, chromiumInstalled: true))
+        XCTAssertEqual(Plugin.status(for: wallpaper(file: "video.mkv"), enabled: true, chromiumInstalled: true), .notEligible)
+    }
+
+    // MARK: - Track info
+
+    func testTheTrackInfoIsReadOnceAndKept() async throws {
+        let clip = try VideoClipFixture.make(frames: 24, fps: 24, in: root)
+        XCTAssertNil(ScreenSaverVideoSource.cachedInfo(of: clip), "not read yet")
+        let loaded = await ScreenSaverVideoSource.loadInfo(of: clip)
+        let info = try XCTUnwrap(loaded)
+        XCTAssertEqual(info.size, SIMD2(64, 64))
+        XCTAssertEqual(info.frameRate, 24, accuracy: 0.5)
+        XCTAssertEqual(ScreenSaverVideoSource.cachedInfo(of: clip), info)
+        let missing = await ScreenSaverVideoSource.loadInfo(of: root.appending(path: "missing.mp4"))
+        XCTAssertNil(missing)
+    }
+
+    // MARK: - Sizing, pacing and placement
+
+    func testTheRingIsNeverLargerThanThePlacedVideo() {
+        let uhd = SIMD2(3840, 2160), hd = SIMD2(1920, 1080), fiveK = SIMD2(5120, 2880)
+        XCTAssertEqual(Video.ringPixels(loop: fiveK, video: hd, placement: .fill), hd, "a 1080p video on a 5K display: a 1080p ring")
+        XCTAssertEqual(Video.ringPixels(loop: hd, video: uhd, placement: .fill), hd, "a 4K video on a 1080p display: the display's")
+        XCTAssertEqual(Video.ringPixels(loop: fiveK, video: nil, placement: .fill), fiveK, "unknown yet: the display's")
+        XCTAssertEqual(Video.ringPixels(loop: SIMD2(2560, 1600), video: hd, placement: .fit), SIMD2(1920, 1200),
+                       "fitted: the bars come with it, the display's shape kept")
+        XCTAssertEqual(Video.ringPixels(loop: SIMD2(2560, 1600), video: hd, placement: .fill), SIMD2(1728, 1080))
+    }
+
+    func testTheLinkTicksAtTheVideosOwnRate() {
+        XCTAssertEqual(Video.frameRate(videoRate: 24, refresh: 60, limit: 60), 30, "every frame of 24 fps shows on a 60 Hz display")
+        XCTAssertEqual(Video.frameRate(videoRate: 29.97, refresh: 60, limit: 60), 30)
+        XCTAssertEqual(Video.frameRate(videoRate: 30, refresh: 60, limit: 60), 30)
+        XCTAssertEqual(Video.frameRate(videoRate: 25, refresh: 60, limit: 60), 30)
+        XCTAssertEqual(Video.frameRate(videoRate: 24, refresh: 120, limit: 120), 24)
+        XCTAssertEqual(Video.frameRate(videoRate: 60, refresh: 165, limit: 55), 55, "the user's rate and the power policy cap it")
+        XCTAssertEqual(Video.frameRate(videoRate: 0, refresh: 60, limit: 60), 60, "unknown: the display's paced rate")
+    }
+
+    func testTheDecoderHandsFramesAtThePlacedSize() {
+        XCTAssertEqual(Video.decodedPixels(video: SIMD2(3840, 2160), ring: SIMD2(1920, 1080), placement: .fill), SIMD2(1920, 1080))
+        XCTAssertEqual(Video.decodedPixels(video: SIMD2(1920, 1080), ring: SIMD2(1920, 1080), placement: .fill), SIMD2(1920, 1080))
+        XCTAssertEqual(Video.decodedPixels(video: SIMD2(3840, 2160), ring: SIMD2(1920, 1200), placement: .fit), SIMD2(1920, 1080))
+        XCTAssertEqual(Video.decodedPixels(video: SIMD2(1280, 720), ring: SIMD2(1920, 1080), placement: .fill), SIMD2(1280, 720),
+                       "never above the video's own")
+    }
+
+    func testTheQuadFollowsThePlacement() {
+        XCTAssertEqual(VideoFrameDrawer.quad(frame: SIMD2(16, 9), target: SIMD2(16, 9), placement: .fill), SIMD4(-1, -1, 1, 1))
+        XCTAssertEqual(VideoFrameDrawer.quad(frame: SIMD2(16, 9), target: SIMD2(16, 18), placement: .fit), SIMD4(-1, -0.5, 1, 0.5))
+        XCTAssertEqual(VideoFrameDrawer.quad(frame: SIMD2(16, 9), target: SIMD2(16, 18), placement: .stretch), SIMD4(-1, -1, 1, 1))
+        let fill = VideoFrameDrawer.quad(frame: SIMD2(16, 9), target: SIMD2(16, 18), placement: .fill)
+        XCTAssertEqual(fill.y, -1)
+        XCTAssertLessThan(fill.x, -1, "filled: the sides are cropped")
+    }
+
+    func testAFittedFrameIsDrawnBetweenBlackBars() throws {
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        let drawer = try XCTUnwrap(VideoFrameDrawer(device: device))
+        let publisher = try publisher(ring: SIMD2(8, 8))
+        var made: CVPixelBuffer?
+        let attributes: [String: Any] = [kCVPixelBufferMetalCompatibilityKey as String: true,
+                                         kCVPixelBufferIOSurfacePropertiesKey as String: [:]]
+        XCTAssertEqual(CVPixelBufferCreate(nil, 8, 4, kCVPixelFormatType_32BGRA, attributes as CFDictionary, &made), kCVReturnSuccess)
+        let buffer = try XCTUnwrap(made)
+        CVPixelBufferLockBaseAddress(buffer, [])
+        memset(try XCTUnwrap(CVPixelBufferGetBaseAddress(buffer)), 0xFF, CVPixelBufferGetBytesPerRow(buffer) * 4)
+        CVPixelBufferUnlockBaseAddress(buffer, [])
+        XCTAssertTrue(drawer.draw(buffer, ring: 0, placement: .fit, publisher: publisher))
+        let deadline = Date().addingTimeInterval(5)
+        while publisher.newestImage(ring: 0) == nil, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.02)) }
+        XCTAssertEqual(try pixel(publisher, x: 4, y: 0), SIMD3(0, 0, 0), "the bar above")
+        XCTAssertEqual(try pixel(publisher, x: 4, y: 4), SIMD3(255, 255, 255), "the frame")
+        XCTAssertEqual(try pixel(publisher, x: 4, y: 7), SIMD3(0, 0, 0), "the bar below")
+    }
+
+    // MARK: - Live frames
+
+    func testAPlayerOfItsOwnPublishesTheVideosFrames() throws {
+        let clip = try VideoClipFixture.make(frames: 60, fps: 30, in: root)
+        let publisher = try publisher(ring: SIMD2(64, 64))
+        let video = try XCTUnwrap(Video(url: clip, name: "clip", ring: 0, pixels: SIMD2(64, 64), frameRate: 30, rate: 1,
+                                        placement: .fill, screen: NSScreen.main, sharing: nil, publisher: publisher))
+        defer { video.shutdown() }
+        XCTAssertFalse(video.sharesDesktopPlayer)
+        XCTAssertGreaterThanOrEqual(waitForFrames(publisher, count: 10), 10, "the decoded frames reach the ring")
+        let image = try XCTUnwrap(publisher.newestImage(ring: 0))
+        XCTAssertEqual(image.width, 64)
+        let files = try FileManager.default.contentsOfDirectory(atPath: root.path(percentEncoded: false))
+        XCTAssertEqual(files, ["clip.mov"], "nothing is linked or copied")
+    }
+
+    func testTheDesktopsPlayerIsDrawnFromAndGivenBack() throws {
+        let clip = try VideoClipFixture.make(frames: 60, fps: 30, in: root)
+        let player = WallpaperAVPlayer.make(item: AVPlayerItem(url: clip))
+        player.isMuted = true
+        let desktop = DesktopPlayer(player)
+        let publisher = try publisher(ring: SIMD2(64, 64))
+        let video = try XCTUnwrap(Video(url: clip, name: "clip", ring: 0, pixels: SIMD2(64, 64), frameRate: 30, rate: 1,
+                                        placement: .fill, screen: NSScreen.main, sharing: desktop, publisher: publisher))
+        XCTAssertTrue(video.sharesDesktopPlayer)
+        XCTAssertEqual(desktop.holds, [true], "held playing for the screen saver")
+        let item = try XCTUnwrap(player.currentItem)
+        XCTAssertEqual(item.outputs.count, 1, "its frames are read from the desktop's own item: no second decoder")
+        XCTAssertGreaterThanOrEqual(waitForFrames(publisher, count: 10), 10)
+
+        // The desktop switches its item (another wallpaper, a repair): the frames follow it.
+        let next = AVPlayerItem(url: clip)
+        player.replaceCurrentItem(with: next)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+        XCTAssertTrue(item.outputs.isEmpty)
+        XCTAssertEqual(next.outputs.count, 1)
+
+        video.shutdown()
+        XCTAssertEqual(desktop.holds, [true, false], "given back to its own rules")
+        XCTAssertTrue(next.outputs.isEmpty)
+        XCTAssertNotNil(player.currentItem, "the desktop keeps its video")
     }
 }

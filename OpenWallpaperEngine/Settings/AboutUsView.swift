@@ -38,9 +38,6 @@ struct AboutUsView: View {
                     .textSelection(.enabled)
                 Link(String("openwallpaperengine.app"), destination: Self.websiteURL)
                     .font(.callout)
-                Text("Released and maintained by \("Deepratna Awale")",
-                     comment: "%@ is the maintainer's name")
-                    .font(.callout)
 
                 Divider().frame(width: 200)
 

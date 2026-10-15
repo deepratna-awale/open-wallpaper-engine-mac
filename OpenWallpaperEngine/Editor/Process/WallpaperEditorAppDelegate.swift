@@ -37,7 +37,8 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
 
     static func makeSceneHost() -> SceneWallpaperHost {
         SceneWallpaperHost(
-            settings: GlobalSettingsViewModel(followsLaunch: false),
+            // The editor shows wallpapers at the user's quality, on battery too.
+            settings: GlobalSettingsViewModel(followsLaunch: false, power: nil),
             scriptServices: SceneScriptServices(prelude: SceneScriptPrelude.load(),
                                                 storage: SceneScriptStorage(directory: SceneScriptStorage.defaultDirectory),
                                                 media: MacMediaSessionSource(),

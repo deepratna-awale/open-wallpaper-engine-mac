@@ -5,12 +5,13 @@ import notify
 
 /// The live screen saver, the app's side: while the screen saver runs and an Open Wallpaper Engine
 /// saver shows (`ScreenSaverLiveState`), the loops of the screen saver's layout
-/// (`ScreenSaverPlugin.liveLoops`) are drawn live (scenes by `ScreenSaverLiveScene`, web pages and
-/// WebM videos through Chromium by `ScreenSaverLiveWeb`) into rings of surfaces
+/// (`ScreenSaverPlugin.liveLoops`) are drawn live (scenes by `ScreenSaverLiveScene`, video
+/// wallpapers by `ScreenSaverLiveVideo`, web pages and WebM videos through Chromium by
+/// `ScreenSaverLiveWeb`) into rings of surfaces
 /// published for the `.saver` (`live.json`, Darwin notifications) and the extension (XPC,
 /// `ScreenSaverFrameService`) by `ScreenSaverFramePublisher`. Nothing is drawn at any other time:
 /// drawing stops on `willstop`/`didstop`, an unlock, or when no saver has said it is there for
-/// `ScreenSaverLiveState.saverTimeout`. The savers play their videos whenever frames stop.
+/// `ScreenSaverLiveState.saverTimeout`. The savers show their stills whenever frames stop.
 ///
 /// Only the user's own copy draws (an isolated copy, like the tests, never installs the saver
 /// and never publishes), and only while the Screen Saver plugin is on.
@@ -26,6 +27,20 @@ final class ScreenSaverLiveController {
         /// The desktop's running scene on a display, loaded, while it shows the wallpaper with
         /// `scope`'s values.
         var sceneSharing: (_ screenId: String, _ wallpaper: WEWallpaper, _ scope: WallpaperPropertyScope) -> SceneRenderLoop? = { _, _, _ in nil }
+        /// The desktop's player of a video wallpaper on a display, or its running scene on the
+        /// Metal path, while it shows the video.
+        var videoSharing: (_ screenId: String, _ wallpaper: WEWallpaper) -> VideoSharing? = { _, _ in nil }
+        /// The speed a video plays at in a player of its own: the app's (its last while paused)
+        /// times the wallpaper's own.
+        var videoSpeed: (_ wallpaper: WEWallpaper) -> Float = { _ in 1 }
+    }
+
+    /// Where a video loop's frames come from on the desktop.
+    enum VideoSharing {
+        /// The AVKit path's player.
+        case player(ScreenSaverVideoSharing)
+        /// The Metal path's scene, which draws the video with its effects.
+        case scene(SceneRenderLoop)
     }
 
     /// How often the frames each ring drew are logged while drawing.
@@ -52,6 +67,7 @@ final class ScreenSaverLiveController {
     /// Counts `renderPickStill`s: a still drawn for an earlier pick is dropped.
     private var pickStillGeneration = 0
     private var pages: [ScreenSaverLiveWeb] = []
+    private var videos: [ScreenSaverLiveVideo] = []
     /// Loops drawn from the desktop's own running scene (`ScreenSaverSharedScene`).
     private var sharedScenes: [ScreenSaverSharedScene] = []
     private var countsSince: TimeInterval = 0
@@ -194,12 +210,13 @@ final class ScreenSaverLiveController {
     }
 
     private func startDrawing() {
-        guard let publisher, scenes.isEmpty, pages.isEmpty else { return }
+        guard let publisher, scenes.isEmpty, pages.isEmpty, videos.isEmpty, sharedScenes.isEmpty else { return }
         let (loops, displays) = plugin.liveLoops()
         guard !loops.isEmpty else {
-            OWELog.info(.app, "Live screen saver: nothing to draw live; the saver plays its videos")
+            OWELog.info(.app, "Live screen saver: nothing to draw live; the savers show their stills")
             return
         }
+        let placement = environment.placement()
         let settings = environment.settings()
         let limits = FramePacing.Limits(settings, power: PowerPolicyMonitor.shared.policy)
         let screens = Dictionary(NSScreen.screens.map { (WallpaperViewModel.screenId(for: $0), $0) }, uniquingKeysWith: { first, _ in first })
@@ -211,15 +228,29 @@ final class ScreenSaverLiveController {
             let target = max(1, min(limits.userLimit, limits.powerCap ?? .max))
             return FramePacing.cadence(target, refreshRate: refresh > 0 ? refresh : 60)
         }
-        let frameRate = loops.map { rate(for: $0.screenId.flatMap { screens[$0] }) }.max() ?? 30
+        // A video at its own frame rate (`ScreenSaverLiveVideo.frameRate`), read ahead of time
+        // (`ScreenSaverVideoSource.prefetchInfo`); at the display's while it isn't known yet.
+        func videoInfo(_ loop: ScreenSaverPlugin.LiveLoop) -> ScreenSaverVideoSource.Info? {
+            loop.kind == .video ? ScreenSaverVideoSource.cachedInfo(of: loop.wallpaper.mediaURL) : nil
+        }
+        func loopRate(_ loop: ScreenSaverPlugin.LiveLoop) -> Int {
+            let screen = loop.screenId.flatMap { screens[$0] }
+            guard let info = videoInfo(loop) else { return rate(for: screen) }
+            let refresh = screen?.maximumFramesPerSecond ?? 60
+            return ScreenSaverLiveVideo.frameRate(videoRate: info.frameRate, refresh: refresh > 0 ? refresh : 60, limit: rate(for: screen))
+        }
+        let frameRate = loops.map(loopRate).max() ?? 30
         // A page's ring is the page's own pixels (Web Standard Resolution and Texture Resolution
         // may draw it below the display's); a scene's the loop's.
         func pagePixelsPerPoint(_ loop: ScreenSaverPlugin.LiveLoop) -> CGFloat {
             ScreenSaverLiveWeb.pixelsPerPoint(settings, backingScale: CGFloat(loop.pixels.x) / CGFloat(max(loop.points.x, 1)))
         }
         let sizes = loops.map { loop in
-            loop.kind == .scene ? loop.pixels
-                : ScreenSaverLiveWeb.pixels(points: loop.points, pixelsPerPoint: pagePixelsPerPoint(loop))
+            switch loop.kind {
+            case .scene: loop.pixels
+            case .video: ScreenSaverLiveVideo.ringPixels(loop: loop.pixels, video: videoInfo(loop)?.size, placement: placement)
+            case .page: ScreenSaverLiveWeb.pixels(points: loop.points, pixelsPerPoint: pagePixelsPerPoint(loop))
+            }
         }
         do {
             try publisher.publish(sizes: sizes,
@@ -243,6 +274,11 @@ final class ScreenSaverLiveController {
                                                  sharing: sharing, publisher: publisher) {
                     pages.append(page)
                 }
+                continue
+            }
+            if loop.kind == .video {
+                startVideo(loop, ring: ring, pixels: sizes[ring], frameRate: loopRate(loop), screen: screen,
+                           placement: placement, publisher: publisher)
                 continue
             }
             let target = ScreenSaverLiveScene.Target(ring: ring, pixels: loop.pixels, points: loop.points, frameRate: rate(for: screen))
@@ -272,8 +308,33 @@ final class ScreenSaverLiveController {
         }
     }
 
+    /// A video loop: from the desktop's running video on its display (its scene on the Metal path,
+    /// its player on the AVKit path), else from a player of its own.
+    private func startVideo(_ loop: ScreenSaverPlugin.LiveLoop, ring: Int, pixels: SIMD2<Int>, frameRate: Int, screen: NSScreen?,
+                            placement: WallpaperPlacement, publisher: ScreenSaverFramePublisher) {
+        let name = loop.wallpaper.wallpaperDirectory.lastPathComponent
+        let sharing = loop.screenId.flatMap { environment.videoSharing($0, loop.wallpaper) }
+        if case .scene(let renderLoop) = sharing, let paceScreen = screen ?? NSScreen.main {
+            let target = ScreenSaverLiveScene.Target(ring: ring, pixels: pixels, points: loop.points, frameRate: frameRate)
+            if let shared = ScreenSaverSharedScene(renderLoop: renderLoop, target: target, screen: paceScreen,
+                                                   publisher: publisher, name: name) {
+                sharedScenes.append(shared)
+                return
+            }
+        }
+        var player: ScreenSaverVideoSharing?
+        if case .player(let shared) = sharing { player = shared }
+        if let video = ScreenSaverLiveVideo(url: loop.wallpaper.mediaURL, name: name, ring: ring, pixels: pixels,
+                                            frameRate: frameRate, rate: environment.videoSpeed(loop.wallpaper),
+                                            placement: placement, screen: screen, sharing: player, publisher: publisher) {
+            videos.append(video)
+        }
+    }
+
     private func stopDrawing() {
-        let drew = !scenes.isEmpty || !pages.isEmpty || !sharedScenes.isEmpty
+        let drew = !scenes.isEmpty || !pages.isEmpty || !sharedScenes.isEmpty || !videos.isEmpty
+        videos.forEach { $0.shutdown() }
+        videos.removeAll()
         sharedScenes.forEach { $0.shutdown() }
         sharedScenes.removeAll()
         // Kept loaded for a while: the next session draws them at once.
@@ -351,10 +412,16 @@ final class ScreenSaverLiveController {
                                              < $1.frame.width * $1.backingScaleFactor * $1.frame.height }) else { return }
         let pixels = SIMD2(Int(screen.frame.width * screen.backingScaleFactor), Int(screen.frame.height * screen.backingScaleFactor))
         let points = SIMD2(Int(screen.frame.width), Int(screen.frame.height))
-        stills.publishPreview(of: wallpaper, filling: pixels)
         cancelPickStill()
         pickStillGeneration += 1
         let generation = pickStillGeneration
+        // A video's still is its first frame, filling the screen (a video has no text or clock to
+        // leave out); its preview when that can't be read.
+        if ScreenSaverVideoSource.isEligible(wallpaper) {
+            stills.publishFirstFrame(of: wallpaper, filling: pixels) { [weak self] in self?.pickStillGeneration == generation }
+            return
+        }
+        stills.publishPreview(of: wallpaper, filling: pixels)
         guard ScreenSaverPlugin.isScene(wallpaper), let device = MTLCreateSystemDefaultDevice() else { return }
         let ring = ScreenSaverFramePublisher(manifestURL: nil, notifier: SilentFrameNotifier(), device: device)
         do {

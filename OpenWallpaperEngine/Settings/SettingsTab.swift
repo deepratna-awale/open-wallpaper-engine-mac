@@ -92,6 +92,7 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
             return [SettingField(\.otherApplicationFocused), SettingField(\.otherApplicationMaximized),
                     SettingField(\.otherApplicationFullscreen), SettingField(\.otherApplicationPlayingAudio),
                     SettingField(\.displayAsleep), SettingField(\.laptopOnBattery), SettingField(\.applicationRules),
+                    SettingField(\.batteryQuality), SettingField(\.batteryQualityPreset), SettingField(\.batteryFrameRateCap),
                     SettingField(\.antiAliasing), SettingField(\.postProcessing), SettingField(\.textureResolution),
                     SettingField(\.sceneDetail), SettingField(\.renderResolution), SettingField(\.upscaling),
                     SettingField(\.renderScale), SettingField(\.shadows),
@@ -100,9 +101,11 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
                     SettingField(\.reflections)]
         case .optimizations:
             return [SettingField(\.syncPropertiesAcrossDisplays), SettingField(\.videoFramework),
+                    SettingField(\.videoReadMode),
                     SettingField(\.audioOutput), SettingField(\.reloadWhenChangingOutputDevice),
-                    SettingField(\.audioRecordingThreshold),
-                    SettingField(\.mediaIntegration), SettingField(\.processPiority),
+                    SettingField(\.audioRecordingThreshold), SettingField(\.audioRecordingDevice),
+                    SettingField(\.audioRecordingVolume),
+                    SettingField(\.mediaIntegration), SettingField(\.mediaBlocklist), SettingField(\.processPiority),
                     SettingField(\.pauseOnVRAMExhausted), SettingField(\.restartAfterCrashing),
                     SettingField(\.optimiseTextures), SettingField(\.cheaperShadows),
                     SettingField(\.webStandardResolution),

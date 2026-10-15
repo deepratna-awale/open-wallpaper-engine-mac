@@ -77,6 +77,72 @@ final class QualitySettingsTests: XCTestCase {
         XCTAssertEqual(volumetrics, [.low, .medium, .high, .ultra])
     }
 
+    /// The Preset control shows the preset the settings hold: each preset, once applied, is the
+    /// one matched, from any starting settings.
+    func testAppliedPresetIsTheMatchingPreset() {
+        var start = GlobalSettings()
+        start.antiAliasing = .msaa_x8
+        start.renderResolution = .full
+        start.upscaling = .bilinear
+        start.fps = 45
+        start.fpsSetByUser = true
+        for quality in GSQuality.allCases {
+            for base in [GlobalSettings(), start] {
+                let applied = GlobalSettingsViewModel.applying(quality, to: base)
+                XCTAssertEqual(GlobalSettingsViewModel.matchingPreset(applied), quality)
+            }
+        }
+    }
+
+    /// Changing any value a preset sets so that it no longer matches shows Custom (nil); setting
+    /// it back shows the preset again.
+    func testChangingAPresetValueShowsCustom() {
+        let high = GlobalSettingsViewModel.applying(.high, to: GlobalSettings())
+        let changes: [(String, (inout GlobalSettings) -> Void)] = [
+            ("anti-aliasing", { $0.antiAliasing = .msaa_x4 }),
+            ("post-processing", { $0.postProcessing = .ultra }),
+            ("texture resolution", { $0.textureResolution = .highPerformance }),
+            ("render resolution", { $0.renderResolution = .full }),
+            ("upscaling", { $0.upscaling = .bilinear }),
+            ("shadows", { $0.shadows = .low }),
+            ("volumetrics", { $0.volumetrics = .ultra }),
+            ("fps", { $0.fps = 59 }),
+            ("quality ↔ efficiency", { $0.qualityEfficiency = 5 }),
+            ("particle budget", { $0.particleBudget = .unlimited }),
+            ("reflections", { $0.reflections = false }),
+        ]
+        for (name, change) in changes {
+            var settings = high
+            change(&settings)
+            XCTAssertNil(GlobalSettingsViewModel.matchingPreset(settings), name)
+        }
+        var back = high
+        back.shadows = .low
+        back.shadows = .high
+        XCTAssertEqual(GlobalSettingsViewModel.matchingPreset(back), .high)
+    }
+
+    /// Settings a preset leaves alone, and whether the FPS was set by hand, don't change the match:
+    /// a rate typed in that equals the preset's still shows the preset.
+    func testValuesOutsideThePresetKeepTheMatch() {
+        var settings = GlobalSettingsViewModel.applying(.medium, to: GlobalSettings())
+        settings.sceneDetail = settings.sceneDetail == .full ? .matchDisplay : .full
+        settings.renderScale = GSRenderScale.allCases.last { $0 != settings.renderScale } ?? settings.renderScale
+        settings.fpsSetByUser = true
+        XCTAssertEqual(GlobalSettingsViewModel.matchingPreset(settings), .medium)
+    }
+
+    /// Settings that came from elsewhere (an import, MCP, Restore Defaults) are matched by their
+    /// values alone: a hand-made copy of the Low preset's values shows Low.
+    func testSettingsMatchByValueAlone() throws {
+        let low = GlobalSettingsViewModel.applying(.low, to: GlobalSettings())
+        let decoded = try JSONDecoder().decode(GlobalSettings.self, from: JSONEncoder().encode(low))
+        XCTAssertEqual(GlobalSettingsViewModel.matchingPreset(decoded), .low)
+        let reset = GlobalSettings()
+        XCTAssertEqual(GlobalSettingsViewModel.matchingPreset(reset),
+                       GSQuality.allCases.first { GlobalSettingsViewModel.applying($0, to: reset) == reset })
+    }
+
     func testSettingsRoundTrip() throws {
         var settings = GlobalSettings()
         settings.postProcessing = .displayhdr

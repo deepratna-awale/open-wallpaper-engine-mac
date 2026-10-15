@@ -34,6 +34,22 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
 
     /// Serves the wallpaper's folder, with WE's patches (`assets/zcompat/web`) applied.
     let schemeHandler = WebWallpaperSchemeHandler()
+    /// The files the page's `file` and `directory` properties let it read, in both engines.
+    let userFiles = WebUserFiles()
+    /// The page's `directory` properties: their folders' files, delivered or picked at random.
+    private(set) lazy var directoryFeed: WebDirectoryFeed = MainActor.assumeIsolated {
+        let feed = WebDirectoryFeed()
+        feed.send = { [weak self] script in self?.page?.evaluate(script) }
+        feed.onFoldersChange = { [weak self] folders in
+            self?.userFolders = folders
+            self?.allowUserFiles()
+        }
+        return feed
+    }
+    /// Values changed since the page loaded: the panel announces a change before it stores it.
+    private var changedValues: [String: String] = [:]
+    /// The folders `directoryFeed` watches, with their file types.
+    private var userFolders: [(path: String, type: WebDirectoryProperty.FileType)] = []
 
     /// WE's compatibility patches for the current wallpaper, if it has any.
     var compatPatches: WebCompatPatches? {
@@ -112,7 +128,7 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     }
 
     /// The user's frame rate.
-    var frameRate: Int { Int(settings.settings.fps) }
+    var frameRate: Int { Int(settings.effectiveSettings.fps) }
 
     // MARK: Heartbeat
 
@@ -150,6 +166,11 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     /// A new page is loading; it is judged from its first heartbeat on.
     func pageWillLoad() {
         stopMedia()
+        changedValues = [:]
+        MainActor.assumeIsolated {
+            directoryFeed.pageWillLoad()
+            updateUserFiles()
+        }
         pageHasBeaten = false
         renderWatchdog?.recordHeartbeat(from: ObjectIdentifier(self), expectingMore: false)
     }
@@ -177,6 +198,8 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         WebWallpaperPropertyBridge.pauseScript,
         WebWallpaperPropertyBridge.bootstrapScript,
         WebWallpaperMediaBridge.bootstrapScript,
+        WebDirectoryFeed.bootstrapScript,
+        WebUserFiles.userFileScript,
     ]
 
     /// The messages the bridge posts.
@@ -184,6 +207,7 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         WebWallpaperPropertyBridge.audioMessageName,
         WebWallpaperPropertyBridge.frameMessageName,
         WebWallpaperMediaBridge.messageName,
+        WebDirectoryFeed.randomFileMessageName,
     ]
 
     func installBridge(on controller: WKUserContentController) {
@@ -206,6 +230,8 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
             audioListenerRegistered()
         case WebWallpaperMediaBridge.messageName:
             mediaListenerRegistered()
+        case WebDirectoryFeed.randomFileMessageName:
+            MainActor.assumeIsolated { directoryFeed.receiveRequest(body) }
         case WebWallpaperPropertyBridge.frameMessageName:
             guard let heartbeat = WebWallpaperPropertyBridge.heartbeat(from: body) else {
                 OWELog.debug(.web, "Ignoring a malformed heartbeat message")
@@ -262,20 +288,42 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         return properties
     }
 
+    /// Every declared property's current value: the user's, else project.json's.
+    private func currentPropertyValues(_ properties: [String: WebWallpaperPropertyBridge.Property]) -> [String: String] {
+        let stored = WallpaperSettingsIdentity.resolve(currentWallpaper)
+            .userSetValues(scope: propertyScope)
+            .merging(changedValues) { _, changed in changed }
+        return WebWallpaperPropertyBridge.currentValues(properties: properties, stored: stored)
+    }
+
+    /// Points the directory feed at the folders the properties are set to now; the files the
+    /// page may read follow (`allowUserFiles`).
+    @MainActor
+    private func updateUserFiles() {
+        directoryFeed.update(properties: WebDirectoryProperty.declared(wallpaperDirectory: currentWallpaper.wallpaperDirectory),
+                             values: currentPropertyValues(declaredProperties))
+    }
+
+    /// Lets the page read its `file` properties' files and its watched folders' files.
+    private func allowUserFiles() {
+        let properties = declaredProperties
+        let values = currentPropertyValues(properties)
+        let files = properties.filter { $0.value.type == "file" }.compactMap { values[$0.key] }.filter { !$0.isEmpty }
+        userFiles.allow(filePaths: files, folders: userFolders)
+    }
+
     /// Sends every declared property, as WE does once the page has loaded; the bootstrap holds
     /// them for a listener the page assigns later.
     private func applyAllProperties(to page: WebWallpaperPage) {
         let properties = declaredProperties
-        let stored = WallpaperSettingsIdentity.resolve(currentWallpaper)
-            .userSetValues(scope: propertyScope)
-        let values = WebWallpaperPropertyBridge.currentValues(properties: properties, stored: stored)
+        let values = currentPropertyValues(properties)
         if let script = WebWallpaperPropertyBridge.applyUserPropertiesScript(
             WebWallpaperPropertyBridge.payload(properties: properties, values: values), full: true) {
             page.evaluate(script)
         }
         page.evaluate(WebWallpaperPropertyBridge.applyGeneralPropertiesScript(fps: frameRate))
         if fpsObserver == nil {
-            fpsObserver = settings.$settings.map { Int($0.fps) }.removeDuplicates().dropFirst()
+            fpsObserver = settings.$effectiveSettings.map { Int($0.fps) }.removeDuplicates().dropFirst()
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] fps in
                     self?.page?.evaluate(WebWallpaperPropertyBridge.applyGeneralPropertiesScript(fps: fps))
@@ -292,7 +340,11 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
               let key = notification.userInfo?["key"] as? String,
               let value = notification.userInfo?["value"] as? String,
               let page else { return }
-        let payload = WebWallpaperPropertyBridge.payload(properties: declaredProperties, values: [key: value])
+        let properties = declaredProperties
+        changedValues[key] = value
+        let payload = WebWallpaperPropertyBridge.payload(properties: properties, values: [key: value])
+        // The new file or folder is readable before the page hears of it.
+        if ["file", "directory"].contains(properties[key]?.type) { MainActor.assumeIsolated { updateUserFiles() } }
         if let script = WebWallpaperPropertyBridge.applyUserPropertiesScript(payload) {
             page.evaluate(script)
         }
@@ -426,6 +478,8 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         let javascriptStyle = "var css = '*{-webkit-touch-callout:none;-webkit-user-select:none}'; var head = document.head || document.getElementsByTagName('head')[0]; var style = document.createElement('style'); style.type = 'text/css'; style.appendChild(document.createTextNode(css)); head.appendChild(style);"
         page.evaluate(javascriptStyle)
         applyAllProperties(to: page)
+        // A fetchall directory's files follow the properties, as WE sends them.
+        MainActor.assumeIsolated { directoryFeed.pageDidLoad() }
         // A new page starts unmuted by script, and playing.
         if isSilent { page.setPageMuted(true) }
         if isPaused { applyPaused(to: page) }

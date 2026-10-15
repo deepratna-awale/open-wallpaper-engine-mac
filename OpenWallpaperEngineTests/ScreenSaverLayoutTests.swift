@@ -125,11 +125,11 @@ final class ScreenSaverLayoutTests: XCTestCase {
         assertEqual(loop.crops["B"], CGRect(x: 0, y: 0, width: 1280.0 / 5200, height: 1024.0 / 1224))
         assertEqual(loop.crops["C"], CGRect(x: 3280.0 / 5200, y: 144.0 / 1224, width: 1920.0 / 5200, height: 1080.0 / 1224))
 
-        // The manifest lists the one file once per display, each with its crop.
-        let videos = Plugin.manifestVideos(for: loop, file: "s.mov", size: SIMD2(5200, 1224), rate: nil, everyDisplay: true)
-        XCTAssertEqual(videos.map(\.file), ["s.mov", "s.mov", "s.mov"])
-        XCTAssertEqual(videos.map(\.displays), [["A"], ["B"], ["C"]])
-        let crop = try XCTUnwrap(videos.first?.crop)
+        // The live frames list the one ring once per display, each with its crop.
+        let entries = Plugin.liveDisplayEntries([loop], pixels: [SIMD2(5200, 1224)], displays: ["A", "B", "C"])
+        XCTAssertEqual(entries.map(\.ring), [0, 0, 0])
+        XCTAssertEqual(entries.map(\.display), ["A", "B", "C"])
+        let crop = try XCTUnwrap(entries.first?.crop)
         XCTAssertEqual(crop.x, 1280.0 / 5200, accuracy: 1e-9)
         XCTAssertEqual(crop.height, 1080.0 / 1224, accuracy: 1e-9)
     }
@@ -171,92 +171,35 @@ final class ScreenSaverLayoutTests: XCTestCase {
 
     // MARK: Video wallpapers
 
-    func testAVideoWallpapersStretchPlaysItsOwnFileCropped() throws {
-        let directory = FileManager.default.temporaryDirectory.appending(path: "owe-ss-layout-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        try Data("not a real movie".utf8).write(to: directory.appending(path: "clip.mp4"))
-        let video = WEWallpaper(using: WEProject(file: "clip.mp4", preview: "p.jpg", title: "t", type: "video"), where: directory)
-        let content = Plan.Content(id: directory.standardizedFileURL.path)
+    func testAVideoWallpapersStretchIsOneLiveRingCroppedPerDisplay() throws {
+        let content = Plan.Content(id: "/videos/clip")
         let plan = plan(ScreenSaverDisplayLayout(sameAsWallpaper: false, layout: .stretch), displays: [a, b],
                         shown: ["1": content])
-        let work = Plugin.work(for: plan, wallpapers: [content.id: video])
-        XCTAssertEqual(work.videos.count, 1)
-        let entry = try XCTUnwrap(work.entries.first)
-        XCTAssertEqual(entry.file, work.videos.first?.file)
+        let loop = try XCTUnwrap(plan.loops.first)
+        let canvas = try XCTUnwrap(loop.sizes.first?.pixels)
+        // A 1080p video over the 4480×1440 pt canvas: the ring keeps the canvas's shape at the
+        // video's scale, so each display's rect of it is its rect of the canvas.
+        let ring = ScreenSaverLiveVideo.ringPixels(loop: canvas, video: SIMD2(1920, 1080), placement: .fill)
+        XCTAssertLessThan(ring.x, canvas.x, "not enlarged past the video")
+        XCTAssertEqual(Double(ring.x) / Double(ring.y), Double(canvas.x) / Double(canvas.y), accuracy: 0.01)
+        let entries = Plugin.liveDisplayEntries([loop], pixels: [ring], displays: ["A", "B"])
+        XCTAssertEqual(entries.map(\.display), ["A", "B"])
+        for entry in entries {
+            let crop = try XCTUnwrap(entry.crop)
+            let unit = try XCTUnwrap(loop.crops[try XCTUnwrap(entry.display)])
+            XCTAssertEqual(crop.x, unit.minX, accuracy: 0.002)
+            XCTAssertEqual(crop.width, unit.width, accuracy: 0.002)
+            XCTAssertEqual(crop.height, unit.height, accuracy: 0.002)
+        }
+    }
 
-        // A 16:9 file filling the 4480×1440 canvas: its middle band, split between the displays.
-        let videos = Plugin.manifestVideos(for: entry.loop, file: entry.file, size: SIMD2(1920, 1080), rate: 1, everyDisplay: true)
-        XCTAssertEqual(videos.map(\.file), [entry.file, entry.file])
-        XCTAssertEqual(videos.map(\.displays), [["A"], ["B"]])
+    func testACropOfAFrameFillingTheCanvasIsItsMiddleBand() {
+        // A 16:9 frame filling a 4480×1440 canvas: its middle band, the right half of it for B.
+        let crop = ScreenSaverManifest.Crop(CGRect(x: 0.5, y: 0, width: 0.5, height: 1), canvas: CGSize(width: 4480, height: 1440),
+                                            video: CGSize(width: 1920, height: 1080))
         let band = (1920.0 / 1080) / (4480.0 / 1440)
-        let crops = videos.compactMap(\.crop)
-        XCTAssertEqual(crops.count, 2)
-        XCTAssertEqual(crops[0].x, 0, accuracy: 1e-9)
-        XCTAssertEqual(crops[0].width, 1920.0 / 4480, accuracy: 1e-9)
-        XCTAssertEqual(crops[1].x + crops[1].width, 1, accuracy: 1e-9)
-        XCTAssertEqual(crops[1].height, band, accuracy: 1e-9, "B is the canvas's full height")
-        XCTAssertEqual(crops[1].y, (1 - band) / 2, accuracy: 1e-9)
-        // Each crop has its display's aspect, so the saver scales it without distortion.
-        XCTAssertEqual(crops[0].width * 1920 / (crops[0].height * 1080), 1920.0 / 1080, accuracy: 1e-9)
-        XCTAssertEqual(crops[1].width * 1920 / (crops[1].height * 1080), 2560.0 / 1440, accuracy: 1e-9)
-    }
-
-    func testAScenesLoopListsNoVideo() throws {
-        let directory = FileManager.default.temporaryDirectory.appending(path: "owe-ss-layout-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        try Data("{}".utf8).write(to: directory.appending(path: "scene.json"))
-        let scene = WEWallpaper(using: WEProject(file: "scene.json", preview: "p.jpg", title: "t", type: "scene"), where: directory)
-        let content = Plan.Content(id: directory.standardizedFileURL.path)
-        let plan = plan(ScreenSaverDisplayLayout(), displays: [a, b], shown: ["1": content, "2": content])
-        let work = Plugin.work(for: plan, wallpapers: [content.id: scene])
-        XCTAssertTrue(work.entries.isEmpty && work.videos.isEmpty, "a scene is drawn live: no video, nothing rendered")
-        let videos = Plugin.manifestVideos(for: try XCTUnwrap(plan.loops.first), file: "f.mov", size: SIMD2(3840, 2160),
-                                           rate: nil, everyDisplay: true)
-        XCTAssertEqual(videos, [ScreenSaverManifest.Video(file: "f.mov", width: 3840, height: 2160)], "plays on any display")
-    }
-
-    // MARK: Saver
-
-    func testTheSaverPicksItsDisplaysVideo() {
-        let manifest = ScreenSaverManifest(videos: [
-            .init(file: "a.mov", width: 3840, height: 2160, displays: ["A"]),
-            .init(file: "b.mov", width: 3840, height: 2160, displays: ["B"]),
-            .init(file: "any.mov", width: 1920, height: 1080),
-        ])
-        XCTAssertEqual(manifest.video(forDisplay: "A", pixels: (3840, 2160))?.file, "a.mov")
-        XCTAssertEqual(manifest.video(forDisplay: "B", pixels: (1920, 1080))?.file, "b.mov")
-        XCTAssertEqual(manifest.video(forDisplay: "C", pixels: (3840, 2160))?.file, "any.mov", "a new display")
-        XCTAssertEqual(manifest.video(forDisplay: nil, pixels: (3840, 2160))?.file, "any.mov")
-
-        let stretched = ScreenSaverManifest(videos: [
-            .init(file: "s.mov", width: 3840, height: 1080, displays: ["A"], crop: .init(x: 0, y: 0, width: 0.5, height: 1)),
-            .init(file: "s.mov", width: 3840, height: 1080, displays: ["B"], crop: .init(x: 0.5, y: 0, width: 0.5, height: 1)),
-        ])
-        XCTAssertEqual(stretched.video(forDisplay: "B", pixels: (1920, 1080))?.crop?.x, 0.5)
-        XCTAssertNotNil(stretched.video(forDisplay: "C", pixels: (1920, 1080)), "an unknown display still plays something")
-    }
-
-    func testACropFillsTheView() {
-        let bounds = CGRect(x: 0, y: 0, width: 100, height: 50)
-        let right = ScreenSaverManifest.Crop(x: 0.5, y: 0, width: 0.5, height: 1)
-        XCTAssertEqual(right.playerFrame(in: bounds), CGRect(x: -100, y: 0, width: 200, height: 50))
-        // The top half (crops run from the top-left; the view's origin is bottom-left).
-        let top = ScreenSaverManifest.Crop(x: 0, y: 0, width: 1, height: 0.5)
-        XCTAssertEqual(top.playerFrame(in: bounds), CGRect(x: 0, y: -50, width: 100, height: 100))
-    }
-
-    func testAnOlderManifestStillDecodesAndPlaysEverywhere() throws {
-        let json = #"{"revision":1,"videos":[{"file":"a.mov","width":1920,"height":1080}]}"#
-        let manifest = try JSONDecoder().decode(ScreenSaverManifest.self, from: Data(json.utf8))
-        XCTAssertNil(manifest.videos.first?.displays)
-        XCTAssertNil(manifest.videos.first?.crop)
-        XCTAssertEqual(manifest.video(forDisplay: "A", pixels: (3840, 2160))?.file, "a.mov")
-        XCTAssertEqual(ScreenSaverManifest.revision, 1)
-        // Entries without displays or a crop are written as before.
-        let written = String(decoding: try JSONEncoder().encode(manifest), as: UTF8.self)
-        XCTAssertFalse(written.contains("displays"))
-        XCTAssertFalse(written.contains("crop"))
+        XCTAssertEqual(crop.x + crop.width, 1, accuracy: 1e-9)
+        XCTAssertEqual(crop.height, band, accuracy: 1e-9)
+        XCTAssertEqual(crop.y, (1 - band) / 2, accuracy: 1e-9)
     }
 }

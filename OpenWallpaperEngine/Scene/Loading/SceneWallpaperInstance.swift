@@ -127,6 +127,7 @@ final class SceneWallpaperInstance {
                                      snapshots: snapshotCapture)
         // Set up before any frame; from here on only the render thread touches the renderer.
         configureRenderer(renderer)
+        renderLoop.onLoanChanged = { [weak self] in self?.updateVideoPlayback() }
         observeChanges()
         metalRevision = viewModel.metalRevision
         loadContent()
@@ -231,7 +232,7 @@ final class SceneWallpaperInstance {
             loadContent()
         }
         // A display that joined or changed size can change WE's automatic texture resolution.
-        applyRenderSettings(renderSettings(for: environment.settings.settings))
+        applyRenderSettings(renderSettings(for: environment.settings.effectiveSettings))
         updateVideoPlayback()
         var playback = SceneRenderLoop.Playback()
         for (id, display) in displays {
@@ -251,7 +252,7 @@ final class SceneWallpaperInstance {
         let presentation = presentation
         let placement = wallpapers.wallpaperPlacement
         let sound = soundTarget
-        let limits = FramePacing.Limits(environment.settings.settings, power: PowerPolicyMonitor.shared.policy)
+        let limits = FramePacing.Limits(environment.settings.effectiveSettings, power: PowerPolicyMonitor.shared.policy)
         // Thread boundary: main → render thread (applied before the playback, which reads the rate).
         renderLoop.perform { renderer in
             if let presentation { presentation.apply(to: renderer) } else { renderer.setPlacement(placement) }
@@ -280,13 +281,17 @@ final class SceneWallpaperInstance {
     private func updateVideoPlayback() {
         guard SceneWallpaperViewModel.isVideoType(viewModel.currentWallpaper.project.type),
               let wallpapers = environment.wallpapers else { return }
-        let rendering = wallpapers.playback(of: key).rendersFrames
         // The wallpaper's own playback rate (WE's per-wallpaper option) scales the app's.
         let displayRate = wallpapers.displayPlaybackRate(of: viewModel.currentWallpaper)
-        viewModel.updateVideoPlayback(playRate: rendering ? wallpapers.playRate * displayRate : 0,
+        // Lent to the screen saver: the video plays for it (at the last speed while paused),
+        // silent, whatever the rules say (the lock pauses the desktop).
+        let lent = renderLoop.isLent
+        let speed = lent && wallpapers.playRate <= 0 ? (wallpapers.lastPlayRate > 0 ? wallpapers.lastPlayRate : 1) : wallpapers.playRate
+        let rendering = lent || wallpapers.playback(of: key).rendersFrames
+        viewModel.updateVideoPlayback(playRate: rendering ? speed * displayRate : 0,
                                       audioRate: wallpapers.audioPlayRate * displayRate,
                                       audioLevel: WallpaperServices.shared.audioLevel,
-                                      audioEnabled: wallpapers.playsAudio(for: key) && wallpapers.wallpaperPlayback(of: key).playsSound,
+                                      audioEnabled: !lent && wallpapers.playsAudio(for: key) && wallpapers.wallpaperPlayback(of: key).playsSound,
                                       volume: wallpapers.playVolume)
     }
 
@@ -334,8 +339,9 @@ final class SceneWallpaperInstance {
             // One frame time per rendered frame, however many displays show it (the watchdog locks).
             renderer.frameTimeObserver = { watchdog.recordFrame(duration: $0) }
         }
-        // The user's quality settings: the renderer reads them per frame, the content is built for them.
-        let renderSettings = renderSettings(for: environment.settings.settings)
+        // The quality settings (the user's, or the battery's): the renderer reads them per frame,
+        // the content is built for them.
+        let renderSettings = renderSettings(for: environment.settings.effectiveSettings)
         renderer.renderSettings = renderSettings
         sentRenderSettings = renderSettings
         viewModel.setRenderSettings(renderSettings)
@@ -481,12 +487,17 @@ final class SceneWallpaperInstance {
                 self.viewModel.invalidateContent()
             }
         })
-        environment.settings.$settings
+        // The settings, or the battery quality switching on or off: applied in place, the content
+        // rebuilt only for what it is built for.
+        environment.settings.$effectiveSettings
             .dropFirst()
             .sink { [weak self] settings in
                 MainActor.assumeIsolated {
                     guard let self else { return }
                     self.applyRenderSettings(self.renderSettings(for: settings))
+                    let limits = FramePacing.Limits(settings, power: PowerPolicyMonitor.shared.policy)
+                    // Thread boundary: main → render thread.
+                    self.renderLoop.perform { $0.framePacing.limits = limits }
                 }
             }
             .store(in: &cancellables)

@@ -1,6 +1,102 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "NSMicrophoneUsageDescription" : {
+      "comment" : "Privacy - Microphone Usage Description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يقرأ Open Wallpaper Engine جهاز التسجيل الذي تختاره في الإعدادات لتشغيل الخلفيات المتجاوبة مع الصوت. لا يُسجَّل شيء ولا يُرسل إلى أي مكان."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine liest das in den Einstellungen gewählte Aufnahmegerät, um audioreaktive Hintergrundbilder anzutreiben. Nichts wird gespeichert oder irgendwohin gesendet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine lee el dispositivo de grabación que eliges en Ajustes para animar los fondos de pantalla que reaccionan al audio. No se guarda ni se envía nada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine lit l’appareil d’enregistrement choisi dans les réglages pour animer les fonds d’écran réactifs au son. Rien n’est conservé ni envoyé."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine ऑडियो पर प्रतिक्रिया देने वाले वॉलपेपर चलाने के लिए सेटिंग में आपका चुना हुआ रिकॉर्डिंग डिवाइस पढ़ता है। कुछ भी सहेजा या कहीं भेजा नहीं जाता।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine legge il dispositivo di registrazione scelto nelle impostazioni per animare gli sfondi che reagiscono all’audio. Nulla viene salvato o inviato."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine は、オーディオに反応する壁紙を動かすために、設定で選んだ録音デバイスを読み取ります。何も保存・送信されません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine은 오디오에 반응하는 배경화면을 구동하기 위해 설정에서 선택한 녹음 장치를 읽습니다. 아무것도 저장되거나 전송되지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine odczytuje urządzenie nagrywania wybrane w ustawieniach, aby napędzać tapety reagujące na dźwięk. Nic nie jest zapisywane ani wysyłane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Open Wallpaper Engine lê o dispositivo de gravação escolhido nos Ajustes para animar as imagens de fundo que reagem ao áudio. Nada é gravado em arquivo nem enviado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine считывает выбранное в настройках устройство записи, чтобы управлять обоями, реагирующими на звук. Ничего не сохраняется и никуда не отправляется."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine, sese duyarlı duvar kâğıtlarını çalıştırmak için ayarlarda seçtiğiniz kayıt aygıtını okur. Hiçbir şey saklanmaz veya bir yere gönderilmez."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine зчитує вибраний у параметрах пристрій запису, щоб керувати шпалерами, що реагують на звук. Нічого не зберігається й нікуди не надсилається."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 读取你在设置中选择的录音设备，以驱动音频响应墙纸。不会保存或发送任何内容。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 讀取你在設定中選擇的錄音裝置，以驅動音訊回應背景圖片。不會儲存或傳送任何內容。"
+          }
+        }
+      }
+    },
     "NSPhotoLibraryAddUsageDescription" : {
       "comment" : "Privacy - Photo Library Additions Usage Description",
       "extractionState" : "manual",

@@ -3,15 +3,19 @@ import Foundation
 /// A wallpaper's user properties in the raw form WE hands to scripts: `{name: {type, value}}` as
 /// in project.json's `general.properties`, with the user's current values. The runtime passes it
 /// to WE's `_Internal.convertUserProperties` (colours become `Vec3`, user shortcuts
-/// `{isbound, commandtype, file}`, everything else its value) for `applyUserProperties` and
+/// `{isbound, commandtype, file}` from the user's binding, everything else its value) for `applyUserProperties` and
 /// `engine.userProperties`, and property binding reads user-bound values from it.
 struct SceneScriptUserProperties {
     struct Property: Equatable {
         /// project.json `type`: `bool`, `slider`, `color`, `combo`, `textinput`, `usershortcut`, …
         var type: String
         var value: SceneJSON
-        /// The members a `usershortcut` carries besides its value (`isbound`, `commandtype`, `file`).
+        /// What a `usershortcut` gives scripts besides its type (`isbound`, `commandtype`, `file`),
+        /// from the user's binding (`UserShortcutBinding.scriptMembers`); its `value` is the
+        /// binding as stored, which scripts never see.
         var shortcut: [String: SceneJSON] = [:]
+
+        static let userShortcutType = "usershortcut"
     }
 
     private(set) var properties: [String: Property] = [:]
@@ -26,8 +30,11 @@ struct SceneScriptUserProperties {
             var type = "text"
             if case .string(let declared)? = fields["type"] { type = declared }
             var property = Property(type: type, value: fields["value"] ?? .null)
-            for key in ["isbound", "commandtype", "file"] {
-                if let member = fields[key] { property.shortcut[key] = member }
+            if type == Property.userShortcutType {
+                // Only the user binds a shortcut: what project.json says (value, isbound,
+                // commandtype, file) is never used.
+                property.value = .string("")
+                property.shortcut = UserShortcutBinding.scriptMembers(storedValue: "")
             }
             properties[name] = property
         }
@@ -51,6 +58,23 @@ struct SceneScriptUserProperties {
     /// declared properties).
     mutating func set(_ name: String, to value: SceneJSON) {
         properties[name]?.value = value
+        if properties[name]?.type == Property.userShortcutType {
+            guard case .string(let stored) = value else {
+                properties[name]?.value = .string("")
+                properties[name]?.shortcut = UserShortcutBinding.scriptMembers(storedValue: "")
+                return
+            }
+            properties[name]?.shortcut = UserShortcutBinding.scriptMembers(storedValue: stored)
+        }
+    }
+
+    /// The stored binding of each `usershortcut` property, for `engine.openUserShortcut`.
+    var userShortcutBindings: [String: String] {
+        var bindings: [String: String] = [:]
+        for (name, property) in properties where property.type == Property.userShortcutType {
+            if case .string(let stored) = property.value { bindings[name] = stored }
+        }
+        return bindings
     }
 
     /// `{name: {type, value}}` for `SceneScriptRuntime.load(userProperties:)`, or only `names`
@@ -58,7 +82,10 @@ struct SceneScriptUserProperties {
     func payload(only names: Set<String>? = nil) -> [String: Any] {
         var payload: [String: Any] = [:]
         for (name, property) in properties where names?.contains(name) ?? true {
-            var entry: [String: Any] = ["type": property.type, "value": property.value.foundationObject]
+            var entry: [String: Any] = ["type": property.type]
+            // A user shortcut's value is the user's binding, path or command included: wallpaper64.exe
+            // hands scripts only its type, isbound, commandtype and file.
+            if property.type != Property.userShortcutType { entry["value"] = property.value.foundationObject }
             for (key, member) in property.shortcut { entry[key] = member.foundationObject }
             payload[name] = entry
         }

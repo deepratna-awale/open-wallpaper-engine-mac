@@ -46,9 +46,17 @@ final class VideoTextureStream {
     private static let audioSmoothing = 0.25
     /// The file is in use while the stream plays it: Clear Caches and the cache expiry keep it.
     private let fileLease: CacheLease
+    /// The file the players read, kept while they do: from memory, it owns the bytes.
+    private let file: VideoFileSource
 
-    init?(url: URL, device: MTLDevice) {
-        fileLease = CacheLeases.current.lease(url)
+    convenience init?(url: URL, device: MTLDevice) {
+        self.init(file: VideoFileSource(url: url, mode: .fromDisk), device: device)
+    }
+
+    /// Plays `file` (WE's "Video loading", `VideoFileSource`).
+    init?(file: VideoFileSource, device: MTLDevice) {
+        self.file = file
+        fileLease = CacheLeases.current.lease(file.url)
         var cache: CVMetalTextureCache?
         guard CVMetalTextureCacheCreate(kCFAllocatorDefault, nil, device, nil, &cache) == kCVReturnSuccess,
               let cache else { return nil }
@@ -58,13 +66,13 @@ final class VideoTextureStream {
             kCVPixelBufferMetalCompatibilityKey as String: true,
             kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
         ])
-        let item = AVPlayerItem(url: url)
+        let item = file.makeItem()
         item.add(output)
         player = WallpaperAVPlayer.make(item: item)
         player.isMuted = true
         player.actionAtItemEnd = .none
 
-        let audioItem = AVPlayerItem(url: url)
+        let audioItem = file.makeItem()
         audioItem.audioTimePitchAlgorithm = .timeDomain
         audioPlayer = WallpaperAVPlayer.make(item: audioItem)
         audioPlayer.actionAtItemEnd = .none

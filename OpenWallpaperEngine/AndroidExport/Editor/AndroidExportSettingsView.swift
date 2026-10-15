@@ -251,6 +251,10 @@ struct AndroidExportLayerPanel<Layer: View>: View {
                     AndroidEditorExportProgress(queue: queue, model: model)
                     Divider()
                 }
+                if let queue = model.batchQueue {
+                    AndroidEditorBatchProgress(queue: queue, model: model)
+                    Divider()
+                }
                 if let error = model.errorMessage {
                     Text(error)
                         .font(.caption)
@@ -300,6 +304,46 @@ private struct AndroidEditorExportProgress: View {
     }
 }
 
+/// "Export More with These Settings…"'s batch, once the library's export selection started it:
+/// its progress and each package's, then Send over Wi-Fi.
+private struct AndroidEditorBatchProgress: View {
+    @ObservedObject var queue: AndroidExportQueue
+    @ObservedObject var model: AndroidExportEditorModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Export More with These Settings")
+                .font(.headline)
+            ExportBatchProgressView(
+                progress: queue.progress, isRunning: queue.isRunning,
+                rows: queue.entries.map { ExportBatchRow(id: $0.id, title: $0.item.wallpaper.project.displayTitle, status: $0.status, progress: $0.progress) },
+                skipped: queue.skipped.map { (title: $0.title, reason: $0.reason) },
+                accessory: { _ in EmptyView() })
+                .frame(height: 220)
+            if queue.isRunning {
+                Button("Cancel", role: .cancel) { model.cancelBatch() }
+                    .glassButtonStyle()
+            } else {
+                Text("The packages are in the Android exports list.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack {
+                    Button {
+                        AndroidWiFiShareWindow.show()
+                    } label: {
+                        Label("Send over Wi-Fi…", systemImage: "wifi")
+                    }
+                    .glassButtonStyle()
+                    .disabled(queue.batch.outputs.isEmpty)
+                    Button("Done") { model.dismissBatch() }
+                        .glassButtonStyle()
+                }
+            }
+        }
+    }
+}
+
 /// The Export Settings as a sheet: before an export (Cancel, and the export as the confirm
 /// button), or opened from the toolbar (Done, both exports and Export More).
 struct AndroidExportSettingsSheetView: View {
@@ -329,11 +373,12 @@ struct AndroidExportSettingsSheetView: View {
     @ViewBuilder private var footer: some View {
         if sheet == .settings {
             Button {
-                model.showBatchAfterSheet()
+                model.chooseMoreAfterSheet()
             } label: {
                 Label("Export More with These Settings…", systemImage: "square.stack.3d.down.right")
             }
             .glassButtonStyle()
+            .disabled(model.isBatchRunning)
             .help("Pick more wallpapers from your library and export them as .mpkg packages with this device, output, quality and frame rate")
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.bottom, 8)
@@ -372,7 +417,7 @@ struct AndroidExportSettingsSheetView: View {
     }
 }
 
-/// Presents the Android Export Settings sheet and the Wi-Fi sheet while `model` asks for them;
+/// Presents the Android Export Settings sheet while `model` asks for it;
 /// `onClose` runs when the settings sheet closes. Without a model (another mode) it does nothing.
 struct AndroidExportSheetHost: ViewModifier {
     let model: AndroidExportEditorModel?
@@ -398,9 +443,6 @@ private struct AndroidExportSheetPresenter: ViewModifier {
                 model.sheetDidClose()
             }) { sheet in
                 AndroidExportSettingsSheetView(model: model, sheet: sheet)
-            }
-            .sheet(isPresented: $model.isBatchPresented, onDismiss: { model.closeBatch() }) {
-                AndroidBatchExportSheet(model: model)
             }
     }
 }
