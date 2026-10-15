@@ -270,6 +270,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var stretchCanvasCancellable: AnyCancellable?
     private var mediaIntegrationCancellable: AnyCancellable?
     private var mediaBlocklistCancellable: AnyCancellable?
+    private var videoReadModeCancellable: AnyCancellable?
     private var recordingThresholdCancellable: AnyCancellable?
     private var recordingVolumeCancellable: AnyCancellable?
     private var recordingDeviceCancellable: AnyCancellable?
@@ -387,6 +388,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Settings › Optimizations › Media blocklist: apps whose sessions wallpapers don't see.
         mediaBlocklistCancellable = globalSettingsViewModel.$settings.map(\.mediaBlocklist).removeDuplicates()
             .sink { [weak self] blocked in self?.mediaSession.setBlocklist(blocked) }
+        // Settings › Optimizations › Video loading: videos opened from now on read their file this way.
+        videoReadModeCancellable = globalSettingsViewModel.$settings.map(\.videoReadMode).removeDuplicates()
+            .sink { [weak self] mode in self?.wallpaperViewModel.videoReadMode = mode }
 
         // Settings → Audio → Reload when changing output device (`OutputDeviceChangeMonitor`).
         outputDeviceMonitor.start()
