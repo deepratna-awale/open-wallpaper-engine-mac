@@ -31,9 +31,7 @@ enum SceneTextRaster {
                        loader: MTKTextureLoader) -> SceneTextRasterResult? {
         let text = request.text
         let pixelSize = SceneTextLayout.pixelSize(pointSize: CGFloat(request.pointSize))
-        var font = SceneFontRegistry.font(named: request.fontName, size: pixelSize)
-            ?? NSFont(name: request.fontName, size: pixelSize)
-            ?? SceneTextFallbackFont.font(size: pixelSize)
+        var font = Self.font(named: request.fontName, size: pixelSize, loader: text.fonts)
         if request.bold { font = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask) }
         if request.italic { font = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask) }
         let layout = SceneTextLayout(text: request.value, font: font, padding: text.padding,
@@ -70,6 +68,18 @@ enum SceneTextRaster {
                                        textCenter: layout.boxCenter)
         return SceneTextRasterResult(frame: frame, baseSize: layout.boxSize,
                                      cost: texture.allocatedSize + (coverage?.allocatedSize ?? 0))
+    }
+
+    /// The font `name` (a scene's font path, or an installed font's name) names: one the scene
+    /// registered, an installed one, else one `loader` finds and registers now (a path only a
+    /// script named), else Arial, as in WE.
+    static func font(named name: String, size: CGFloat, loader: SceneTextFontLoader?) -> NSFont {
+        if let font = SceneFontRegistry.font(named: name, size: size) ?? NSFont(name: name, size: size) { return font }
+        if !name.isEmpty, let registered = loader?.register(name),
+           let font = SceneFontRegistry.font(named: name, size: size) ?? NSFont(name: registered, size: size) {
+            return font
+        }
+        return SceneTextFallbackFont.font(size: size)
     }
 
     /// The glyphs of `image` (a white raster) with their font effects, as straight-alpha RGBA in
