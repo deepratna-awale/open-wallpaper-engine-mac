@@ -38,7 +38,7 @@ enum SceneTextRaster {
                                      horizontalAlignment: text.horizontalAlignment,
                                      verticalAlignment: text.verticalAlignment,
                                      maxWidth: text.maxWidth, maxRows: text.maxRows, useEllipsis: text.useEllipsis,
-                                     blockAlign: text.blockAlign)
+                                     blockAlign: text.blockAlign, spacing: text.spacing)
         // A white coverage mask, as WE's `font` shader samples its glyphs: colour (authored and
         // the user's), alpha and brightness are applied when the quad is drawn. Font effects colour
         // a white raster themselves (`effectText`).
