@@ -13,6 +13,26 @@ enum WebWallpaperPropertyBridge {
     struct Property: Equatable {
         var type: String
         var defaultValue: String
+        /// A combo's option values (as stored) with the JSON type the author gave each one.
+        var optionKinds: [String: OptionKind] = [:]
+    }
+
+    /// The JSON type of a combo option's authored `value`: WE hands the page the option's value
+    /// as authored (`"value": 3` arrives as the number 3, so a page's `case 3:` matches).
+    enum OptionKind: Equatable {
+        case integer, number, bool, string
+
+        init(_ value: Any) {
+            if let number = value as? NSNumber {
+                if CFGetTypeID(number) == CFBooleanGetTypeID() {
+                    self = .bool
+                } else {
+                    self = CFNumberIsFloatType(number) ? .number : .integer
+                }
+            } else {
+                self = .string
+            }
+        }
     }
 
     /// Declared properties from a project.json root object, keyed by name.
@@ -28,7 +48,14 @@ enum WebWallpaperPropertyBridge {
                let first = (entry["options"] as? [[String: Any]])?.first?["value"] {
                 value = sceneUserPropertyString(first)
             }
-            result[key] = Property(type: type, defaultValue: value ?? (type == "bool" ? "false" : ""))
+            var property = Property(type: type, defaultValue: value ?? (type == "bool" ? "false" : ""))
+            if type == "combo" {
+                for option in (entry["options"] as? [[String: Any]]) ?? [] {
+                    guard let optionValue = option["value"] else { continue }
+                    property.optionKinds[sceneUserPropertyString(optionValue)] = OptionKind(optionValue)
+                }
+            }
+            result[key] = property
         }
         return result
     }
@@ -39,8 +66,8 @@ enum WebWallpaperPropertyBridge {
         return declaredProperties(projectRoot: root)
     }
 
-    /// The JSON value WE hands the page: numbers for sliders, booleans for bools, and the raw
-    /// string ("r g b" for colors, the option value for combos) otherwise.
+    /// The JSON value WE hands the page by type alone: numbers for sliders, booleans for bools, and
+    /// the raw string ("r g b" for colors) otherwise. Combos go through `jsonValue(_:value:)`.
     static func jsonValue(type: String, value: String) -> Any {
         switch type {
         case "bool":
@@ -55,12 +82,30 @@ enum WebWallpaperPropertyBridge {
         }
     }
 
+    /// The JSON value of `value` for `property`: a combo's value keeps its option's authored type
+    /// (a value that isn't one of the options, as an editable combo allows, stays a string).
+    static func jsonValue(_ property: Property, value: String) -> Any {
+        guard property.type == "combo", let kind = property.optionKinds[value] else {
+            return jsonValue(type: property.type, value: value)
+        }
+        switch kind {
+        case .integer:
+            return Int64(value).map { NSNumber(value: $0) } ?? Double(value).map { NSNumber(value: $0) } ?? value
+        case .number:
+            return Double(value).map { NSNumber(value: $0) } ?? value
+        case .bool:
+            return value.lowercased() == "true" || value == "1"
+        case .string:
+            return value
+        }
+    }
+
     /// `{key: {value: …}}` for the given stored values (keys absent from `properties` are skipped).
     static func payload(properties: [String: Property], values: [String: String]) -> [String: Any] {
         var result: [String: Any] = [:]
         for (key, value) in values {
             guard let property = properties[key] else { continue }
-            result[key] = ["type": property.type, "value": jsonValue(type: property.type, value: value)]
+            result[key] = ["type": property.type, "value": jsonValue(property, value: value)]
         }
         return result
     }
