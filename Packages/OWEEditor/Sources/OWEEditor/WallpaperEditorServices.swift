@@ -69,6 +69,16 @@ public struct WallpaperEditorServices {
     public var openAssetsSetup: () -> Void = {}
     /// Take Snapshot and Record GIF: the library thumbnail made from the canvas; nil leaves them out.
     public var thumbnail: EditorThumbnail?
+    /// A file of the scene as the loader finds it (the wallpaper's, the editor's, WE's), by path.
+    public var readFile: (String) -> Data? = { _ in nil }
+    /// What else names the editor's files besides the draft (the saved edits, the scene), for
+    /// Clean Project.
+    public var projectReferences: () -> [Data] = { [] }
+    /// The wallpaper's SceneScript `localStorage`, for Clean Local Storage; nil leaves it out.
+    public var localStorage: EditorLocalStorage?
+    /// Where Edit with External Image Editor keeps the pictures it hands out, and the editor's
+    /// defaults (the chosen app); nil leaves it out.
+    public var externalEditing: ExternalImageEditing?
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,
@@ -88,8 +98,9 @@ public struct WallpaperEditorServices {
 
 /// A file the asset browser lists.
 public struct EditorAsset: Hashable, Identifiable, Sendable {
+    /// WE's asset folders (Materials, Models, Particles, Sounds), textures and fonts apart.
     public enum Kind: String, CaseIterable, Sendable {
-        case texture, model, sound, font, other
+        case texture, material, model, particle, sound, font, other
     }
 
     /// Its path in the scene (`materials/foo.tex`, `models/foo.json`).
@@ -112,6 +123,8 @@ public struct EditorAsset: Hashable, Identifiable, Sendable {
         let fileExtension = (lowered as NSString).pathExtension
         if ["tex", "png", "jpg", "jpeg", "gif"].contains(fileExtension), lowered.hasPrefix("materials/") { return .texture }
         if fileExtension == "json", lowered.hasPrefix("models/") { return .model }
+        if fileExtension == "json", lowered.hasPrefix("materials/") { return .material }
+        if fileExtension == "json", lowered.hasPrefix("particles/") { return .particle }
         if EditorAssetStore.soundTypes.contains(fileExtension) { return .sound }
         if EditorAssetStore.fontTypes.contains(fileExtension) { return .font }
         return .other
@@ -162,5 +175,31 @@ public struct EditorUserPropertyChoice: Hashable, Identifiable, Sendable {
         self.key = key
         self.title = title
         self.type = type
+    }
+}
+
+/// The wallpaper's SceneScript `localStorage` (WE's Clean Local Storage).
+public struct EditorLocalStorage {
+    /// Whether the wallpaper's scripts stored anything.
+    public var hasData: () -> Bool
+    /// Deletes what they stored and runs the canvas's scripts again from nothing.
+    public var clean: () throws -> Void
+
+    public init(hasData: @escaping () -> Bool, clean: @escaping () throws -> Void) {
+        self.hasData = hasData
+        self.clean = clean
+    }
+}
+
+/// What Edit with External Image Editor needs from the app.
+public struct ExternalImageEditing {
+    /// Where the pictures handed to the external editor are written (one per layer).
+    public var directory: URL
+    /// The editor's defaults, which keep the chosen app (WE's "Custom image editor path").
+    public var defaults: UserDefaults
+
+    public init(directory: URL, defaults: UserDefaults) {
+        self.directory = directory
+        self.defaults = defaults
     }
 }

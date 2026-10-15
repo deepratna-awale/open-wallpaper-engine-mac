@@ -172,6 +172,29 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.texture = { resources.texture($0) }
         services.fonts = { resources.fonts() }
         services.userPropertyChoices = { resources.userPropertyChoices() }
+        services.readFile = { resources.data($0) }
+        services.projectReferences = { [weak self] in
+            // The saved edits keep naming their files while the draft changes; the scene may too.
+            var roots: [Data] = []
+            if let saved = try? self?.savedOverlay.encoded() { roots.append(saved) } // Optional: nothing saved yet.
+            if let scene = session.authored.sceneData { roots.append(scene) }
+            return roots
+        }
+        if let storage = preview.sceneHost?.scriptServices?.storage {
+            let wallpaperID = SceneScriptStorageKey.key(forWallpaperDirectory: wallpaper.wallpaperDirectory)
+            services.localStorage = EditorLocalStorage(
+                hasData: { storage.hasStores(of: wallpaperID) },
+                clean: {
+                    try storage.removeStores(of: wallpaperID)
+                    // The canvas's scripts start again from nothing.
+                    SceneEditOverlayFiles.post(session.overlay, base: nil, wallpaperDirectory: wallpaper.wallpaperDirectory,
+                                               transient: false, draft: true)
+                })
+        }
+        services.externalEditing = ExternalImageEditing(
+            directory: AppStorageLocation.current.cachesDirectory.appending(path: "editor/External/\(identity.rawValue)",
+                                                                           directoryHint: .isDirectory),
+            defaults: .app)
         services.timeline = timeline
         services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
         services.commands = commands
