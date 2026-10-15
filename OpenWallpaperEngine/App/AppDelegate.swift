@@ -150,6 +150,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         controller.perform = { [weak self] in self?.performUserHotKey($0) }
         return controller
     }()
+    /// Play in Window: wallpapers in windows of their own beside the desktop (`App/PlayInWindow`).
+    lazy var playInWindow = PlayInWindowController(desktop: wallpaperViewModel)
     /// The wallpaper windows sit above the desktop icons, hiding them (`toggleDesktopIcons`).
     var hidesDesktopIcons = false
     lazy var crashWatcher = CrashWatcher()
