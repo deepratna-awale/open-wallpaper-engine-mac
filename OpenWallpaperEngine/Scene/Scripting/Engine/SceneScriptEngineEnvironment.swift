@@ -15,7 +15,8 @@ struct SceneScriptEngineEnvironment: Equatable {
     var zoom = SceneOrthographicZoom.none
     /// `engine.isScreensaver()`; `engine.isWallpaper()` is its opposite.
     var isScreensaver = false
-    /// `engine.isRunningInEditor()`: always false here, there is no editor.
+    /// `engine.isRunningInEditor()`: true in the Wallpaper Editor's canvas (`SceneMetalRenderer.runsInEditor`),
+    /// false on the displays, the screen saver and Scene Edit / Export, as WE's is false outside its editor.
     var isRunningInEditor = false
 
     init(screenResolution: SIMD2<Double>, canvasSize: SIMD2<Double>, placement: WallpaperPlacement = .fill,
