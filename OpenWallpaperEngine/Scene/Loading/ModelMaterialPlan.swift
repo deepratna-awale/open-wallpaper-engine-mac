@@ -24,9 +24,13 @@ final class ModelMaterialPlan {
     /// The pass's shader is the wallpaper's own, not one of WE's (`ModelMaterialPlanBuilder.isBuiltinShader`):
     /// only then does a mesh lacking an input the shader reads draw nothing (`SceneModelMissingInputs`).
     let customShader: Bool
+    /// How many instances each draw of the mesh is: the pass's resolved `INSTANCECOUNT` combo when
+    /// its shader declares one (`fur4`'s shells, "Fur quality" 5, 9, 13 or 21, each instance
+    /// pushed out along the normal by `gl_InstanceID / (INSTANCECOUNT - 1)`), else 1.
+    let instanceCount: Int
 
     init(materialPath: String, pass: SceneEffectPassPlan, raster: SceneRasterState, clampedSlots: Set<Int>,
-         meshCombos: ModelMeshCombos, shadowCaster: ModelMaterialPlan? = nil, customShader: Bool) {
+         meshCombos: ModelMeshCombos, shadowCaster: ModelMaterialPlan? = nil, customShader: Bool, instanceCount: Int = 1) {
         self.materialPath = materialPath
         self.pass = pass
         self.raster = raster
@@ -34,6 +38,7 @@ final class ModelMaterialPlan {
         self.meshCombos = meshCombos
         self.shadowCaster = shadowCaster
         self.customShader = customShader
+        self.instanceCount = max(1, instanceCount)
     }
 
     /// WE's blending byte (+0x1f0): normal 0, translucent 1, additive 2, alphatocoverage 3.
@@ -187,8 +192,20 @@ struct ModelMaterialPlanBuilder {
                                  raster: SceneRasterState(depthtest: materialPass.depthtest, depthwrite: materialPass.depthwrite,
                                                           cullmode: materialPass.cullmode, blending: materialPass.blending),
                                  clampedSlots: clampedSlots, meshCombos: mesh, shadowCaster: shadowCaster,
-                                 customShader: isCustom(materialPass.shader))
+                                 customShader: isCustom(materialPass.shader),
+                                 instanceCount: Self.instanceCount(vertex: vertex, fragment: fragment, combos: combos))
     }
+
+    /// The instances a pass draws: its `INSTANCECOUNT` combo's value when either stage declares
+    /// that combo (`fur4.frag`'s "Fur quality"), else 1.
+    static func instanceCount(vertex: ShaderSource, fragment: ShaderSource, combos: [String: Int]) -> Int {
+        guard (vertex.combos + fragment.combos).contains(where: { $0.name == instanceCountCombo }),
+              let count = combos[instanceCountCombo] else { return 1 }
+        return max(1, count)
+    }
+
+    /// The combo naming a pass's instance count.
+    static let instanceCountCombo = "INSTANCECOUNT"
 
     /// What a material's shadow variant takes from it.
     struct ShadowCasterSource {
