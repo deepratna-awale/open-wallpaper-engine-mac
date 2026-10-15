@@ -206,6 +206,36 @@ final class SceneScriptStorage: @unchecked Sendable {
         }
     }
 
+    // MARK: - Clean Local Storage
+
+    /// Whether the wallpaper's scripts stored anything, in memory or on disk.
+    func hasStores(of wallpaperID: String) -> Bool {
+        let folder = storeFolder(for: wallpaperID).path + "/"
+        lock.lock()
+        let inMemory = stores.contains { $0.key.hasPrefix(folder) && !$0.value.entries.isEmpty }
+        lock.unlock()
+        if inMemory { return true }
+        // Optional: no folder, no stores.
+        let files = (try? FileManager.default.contentsOfDirectory(atPath: folder)) ?? []
+        return files.contains { $0.hasSuffix(".json") }
+    }
+
+    /// WE's Clean Local Storage: forgets every store of the wallpaper (`'global'` and each
+    /// screen's) and deletes its folder. Runtimes reading the stores see them empty.
+    func removeStores(of wallpaperID: String) throws {
+        let folder = storeFolder(for: wallpaperID)
+        flushLock.lock()
+        defer { flushLock.unlock() }
+        lock.lock()
+        for key in stores.keys where key.hasPrefix(folder.path + "/") {
+            stores[key]?.entries.removeAll()
+            stores[key]?.size = 0
+            stores[key]?.dirty = false
+        }
+        lock.unlock()
+        if FileManager.default.fileExists(atPath: folder.path) { try FileManager.default.removeItem(at: folder) }
+    }
+
     static func size(key: String, json: String) -> Int {
         entryOverhead + key.utf8.count + json.utf8.count
     }
