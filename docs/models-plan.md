@@ -105,7 +105,7 @@ u32 boneCount NB  (≤ 128)
 bone[NB]: cstr name; u32 flags; u32 parent (0xFFFFFFFF = root; parents come first);
           capped(64) localBindMatrix (row-vector mat4, translation in 12..14); cstr propsJSON
 if S >= 2: links, optional bind matrices, constraints, u32-keyed maps, IK sets,
-           an optional per-bone {vec3, mat4} block, an optional per-bone u32 array
+           an optional per-bone {vec3, mat4} block (the hit boxes: half extents, frame in the bone; docs/scenescript-plan.md §4.8), an optional per-bone u32 array
 if S >= 3: one more optional per-bone u32 array
 if S >= 4: constraint flags (two floats when flags & 2)
 ```
