@@ -136,7 +136,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let controller = GlobalHotKeyController(viewModel: wallpaperViewModel)
         controller.playlistShortcuts = playlistShortcuts
         playlistShortcuts.hotKeys = controller
+        controller.userHotKeys = userHotKeys
+        userHotKeys.actionHotKeys = controller
         controller.perform = { [weak self] in self?.performHotKey($0) }
+        return controller
+    }()
+    /// The wallpapers' and display profiles' system-wide hotkeys (`UserHotKey`).
+    lazy var userHotKeys: UserHotKeyController = {
+        let profiles = wallpaperViewModel.displayProfiles
+        let controller = UserHotKeyController(viewModel: wallpaperViewModel,
+                                              profileNames: profiles.$profiles.map { $0.map(\.name) }.eraseToAnyPublisher())
+        playlistShortcuts.userHotKeys = controller
+        controller.perform = { [weak self] in self?.performUserHotKey($0) }
         return controller
     }()
     /// The wallpaper windows sit above the desktop icons, hiding them (`toggleDesktopIcons`).
@@ -527,7 +538,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             self.mainWindowController.window.makeKeyAndOrderFront(nil)
         }
 
-        // Registers the playlists' and the hotkey actions' global shortcuts.
+        // Registers the playlists', the hotkey actions', the wallpapers' and the profiles' global shortcuts.
         _ = playlistShortcuts
         _ = globalHotKeys
 

@@ -5683,6 +5683,196 @@
         }
       }
     },
+    "A system-wide shortcut that loads a profile." : {
+      "comment" : "Tooltip of the profiles menu's Hotkeys submenu",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختصار على مستوى النظام يحمّل ملفًا شخصيًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine systemweite Tastenkombination, die ein Profil lädt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una función rápida de todo el sistema que carga un perfil."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un raccourci global qui charge un profil."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सिस्टम-भर का शॉर्टकट जो कोई प्रोफ़ाइल लोड करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un’abbreviazione di sistema che carica un profilo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プロファイルを読み込む、システム全体のショートカットです。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프로필을 적용하는 시스템 전체 단축키입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skrót działający w całym systemie, który wczytuje profil."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um atalho global que carrega um perfil."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Общесистемное сочетание клавиш, которое загружает профиль."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir profili yükleyen, sistem genelinde bir kısayol."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загальносистемне скорочення, яке завантажує профіль."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "载入配置文件的系统级快捷键。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "載入設定檔的系統層級快速鍵。"
+          }
+        }
+      }
+    },
+    "A system-wide shortcut that sets this wallpaper on the selected display." : {
+      "comment" : "Tooltip of the wallpaper context menu's Assign Hotkey",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختصار على مستوى النظام يعيّن هذه الخلفية على شاشة العرض المحددة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine systemweite Tastenkombination, die dieses Hintergrundbild auf dem ausgewählten Display festlegt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una función rápida de todo el sistema que pone este fondo de pantalla en la pantalla seleccionada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un raccourci global qui place ce fond d’écran sur le moniteur sélectionné."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सिस्टम-भर का शॉर्टकट जो यह वॉलपेपर चुने गए डिस्प्ले पर लगाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un’abbreviazione di sistema che imposta questo sfondo sullo schermo selezionato."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択したディスプレイにこの壁紙を設定する、システム全体のショートカットです。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택한 디스플레이에 이 배경화면을 설정하는 시스템 전체 단축키입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skrót działający w całym systemie, który ustawia tę tapetę na wybranym wyświetlaczu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um atalho global que define este papel de parede na tela selecionada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Общесистемное сочетание клавиш, которое ставит эти обои на выбранный дисплей."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu duvar kâğıdını seçili ekrana ayarlayan, sistem genelinde bir kısayol."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загальносистемне скорочення, яке ставить ці шпалери на вибраний дисплей."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将此墙纸设置到所选显示器的系统级快捷键。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將此背景圖片設定到所選顯示器的系統層級快速鍵。"
+          }
+        }
+      }
+    },
     "A video has no layers to adjust." : {
       "comment" : "Scene Edit / Export: the export modes' Layer Adjustments panel for a video wallpaper",
       "localizations" : {
@@ -15688,6 +15878,291 @@
         }
       }
     },
+    "Assign Hotkey to Profile “%@”" : {
+      "comment" : "Assign Hotkey dialog's title; the display profile's name",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعيين اختصار للملف الشخصي ”%@“"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastenkombination für Profil „%@“ festlegen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asignar tecla de acceso rápido al perfil «%@»"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attribuer un raccourci au profil « %@ »"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्रोफ़ाइल “%@” को हॉटकी दें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assegna tasto di scelta rapida al profilo “%@”"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プロファイル「%@」にホットキーを割り当て"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’ 프로필에 단축키 지정"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przypisz klawisz dostępu do profilu „%@”"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atribuir Atalho ao Perfil “%@”"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назначить горячую клавишу профилю «%@»"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” Profiline Kısayol Tuşu Ata"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Призначити гарячу клавішу профілю «%@»"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为配置文件“%@”指定热键"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "為設定檔「%@」指定快速鍵"
+          }
+        }
+      }
+    },
+    "Assign Hotkey to Wallpaper “%@”" : {
+      "comment" : "Assign Hotkey dialog's title; the wallpaper's title",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعيين اختصار للخلفية ”%@“"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastenkombination für Hintergrundbild „%@“ festlegen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asignar tecla de acceso rápido al fondo de pantalla «%@»"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attribuer un raccourci au fond d’écran « %@ »"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर “%@” को हॉटकी दें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assegna tasto di scelta rapida allo sfondo “%@”"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙「%@」にホットキーを割り当て"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’ 배경화면에 단축키 지정"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przypisz klawisz dostępu do tapety „%@”"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atribuir Atalho ao Papel de Parede “%@”"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назначить горячую клавишу обоям «%@»"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” Duvar Kâğıdına Kısayol Tuşu Ata"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Призначити гарячу клавішу шпалерам «%@»"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为墙纸“%@”指定热键"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "為背景圖片「%@」指定快速鍵"
+          }
+        }
+      }
+    },
+    "Assign Hotkey…" : {
+      "comment" : "Wallpaper context menu: opens Assign Hotkey for the wallpaper on the selected display",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعيين اختصار…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastenkombination festlegen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asignar tecla de acceso rápido…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attribuer un raccourci…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हॉटकी दें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assegna tasto di scelta rapida…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホットキーを割り当て…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "단축키 지정…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przypisz klawisz dostępu…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atribuir Atalho…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назначить горячую клавишу…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısayol Tuşu Ata…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Призначити гарячу клавішу…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指定热键…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指定快速鍵⋯"
+          }
+        }
+      }
+    },
     "Assign Shortcut" : {
       "comment" : "Button: binds a wallpaper's user shortcut property",
       "localizations" : {
@@ -23637,6 +24112,101 @@
         }
       }
     },
+    "Change Hotkey…" : {
+      "comment" : "Wallpaper context menu, the hotkey submenu: opens Assign Hotkey to record another shortcut",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تغيير الاختصار…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastenkombination ändern …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar tecla de acceso rápido…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier le raccourci…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हॉटकी बदलें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia tasto di scelta rapida…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホットキーを変更…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "단축키 변경…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmień klawisz dostępu…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alterar Atalho…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменить горячую клавишу…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısayol Tuşunu Değiştir…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінити гарячу клавішу…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更改热键…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更改快速鍵⋯"
+          }
+        }
+      }
+    },
     "Change Icon" : {
       "comment" : "Context menu of a folder in the Installed tab",
       "localizations" : {
@@ -23823,6 +24393,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "更改使用者屬性"
+          }
+        }
+      }
+    },
+    "Change Wallpaper" : {
+      "comment" : "Settings › Hotkeys group: the hotkeys of wallpapers and display profiles",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تغيير الخلفية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrundbild wechseln"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar fondo de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changer de fond d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर बदलें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia sfondo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙を変更"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면 변경"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmień tapetę"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mudar Papel de Parede"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Смена обоев"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar Kâğıdını Değiştir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зміна шпалер"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更换墙纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更換背景圖片"
           }
         }
       }
@@ -26848,6 +27513,101 @@
         }
       }
     },
+    "Choose profile" : {
+      "comment" : "Settings › Hotkeys, Change Wallpaper group: what a hotkey does, under the profile's name (WE: ui_settings_hotkeys_action_user_profile)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختيار ملف شخصي"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profil auswählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir perfil"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir un profil"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्रोफ़ाइल चुनें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli profilo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プロファイルを選択"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프로필 선택"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz profil"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolher perfil"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выбрать профиль"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profil seç"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вибрати профіль"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选取配置文件"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇設定檔"
+          }
+        }
+      }
+    },
     "Choose the Android phone or tablet the wallpaper is made for, or a custom size" : {
       "localizations" : {
         "ar" : {
@@ -27127,6 +27887,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "選擇要為其製作原況照片的 iPhone 或 iPad"
+          }
+        }
+      }
+    },
+    "Choose wallpaper" : {
+      "comment" : "Settings › Hotkeys, Change Wallpaper group: what a hotkey does, under the wallpaper's title (WE: ui_settings_hotkeys_action_user_wallpaper)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختيار خلفية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrundbild auswählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegir fondo de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir un fond d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर चुनें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli sfondo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙を選択"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면 선택"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz tapetę"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolher papel de parede"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выбрать обои"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıdı seç"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вибрати шпалери"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选取墙纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇背景圖片"
           }
         }
       }
@@ -47723,6 +48578,101 @@
         }
       }
     },
+    "Enter Hotkey:" : {
+      "comment" : "Assign Hotkey dialog: the label of the shortcut recorder",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أدخل الاختصار:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastenkombination eingeben:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce la tecla de acceso rápido:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez le raccourci :"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हॉटकी दर्ज करें:"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inserisci il tasto di scelta rapida:"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホットキーを入力:"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "단축키 입력:"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wprowadź klawisz dostępu:"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite o atalho:"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите горячую клавишу:"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısayol tuşunu girin:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введіть гарячу клавішу:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入热键："
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輸入快速鍵："
+          }
+        }
+      }
+    },
     "Enter Steam Guard Code" : {
       "localizations" : {
         "ar" : {
@@ -60389,6 +61339,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "水平速度。負值會反向移動，0 為停止。"
+          }
+        }
+      }
+    },
+    "Hotkey: %@" : {
+      "comment" : "Wallpaper context menu: the submenu of the wallpaper's hotkey on the selected display; the shortcut, e.g. ⌃⌥1",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاختصار: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastenkombination: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tecla de acceso rápido: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raccourci : %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हॉटकी: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasto di scelta rapida: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホットキー: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "단축키: %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klawisz dostępu: %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atalho: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Горячая клавиша: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısayol tuşu: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гаряча клавіша: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "热键：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速鍵：%@"
           }
         }
       }
@@ -76140,6 +77185,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重新載入列表"
+          }
+        }
+      }
+    },
+    "Loads it from any app. Click, then press the keys." : {
+      "comment" : "Assign Hotkey dialog: the shortcut recorder's tooltip",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحمّله من أي تطبيق. انقر، ثم اضغط على المفاتيح."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lädt es aus jeder App. Klicken Sie und drücken Sie dann die Tasten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo carga desde cualquier app. Haz clic y pulsa las teclas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le charge depuis n’importe quelle app. Cliquez, puis appuyez sur les touches."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इसे किसी भी ऐप से लोड करता है। क्लिक करें, फिर कुंजियाँ दबाएँ।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo carica da qualsiasi app. Fai clic, poi premi i tasti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "どのアプリからでも読み込みます。クリックしてからキーを押してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "어떤 앱에서든 불러옵니다. 클릭한 다음 키를 누르십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wczytuje z dowolnej aplikacji. Kliknij, a następnie naciśnij klawisze."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carrega em qualquer app. Clique e pressione as teclas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загружает из любого приложения. Нажмите, а затем нажмите клавиши."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herhangi bir uygulamadan yükler. Tıklayın, sonra tuşlara basın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажує з будь-якої програми. Клацніть, а потім натисніть клавіші."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从任何 App 中载入。点按，然后按下按键。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從任何 App 中載入。按一下，然後按下按鍵。"
           }
         }
       }
@@ -108689,6 +109829,196 @@
         }
       }
     },
+    "Pressing the hotkey in any app loads this profile on your displays." : {
+      "comment" : "Assign Hotkey dialog for a display profile",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يؤدي الضغط على الاختصار في أي تطبيق إلى تحميل هذا الملف الشخصي على شاشات العرض."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn Sie die Tastenkombination in einer beliebigen App drücken, wird dieses Profil auf Ihren Displays geladen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al pulsar la tecla de acceso rápido en cualquier app, este perfil se carga en tus pantallas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appuyer sur le raccourci dans n’importe quelle app charge ce profil sur vos moniteurs."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "किसी भी ऐप में हॉटकी दबाने पर यह प्रोफ़ाइल आपके डिस्प्ले पर लोड हो जाती है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Premendo il tasto di scelta rapida in qualsiasi app, questo profilo viene caricato sui tuoi schermi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "どのアプリでもホットキーを押すと、このプロファイルがディスプレイに読み込まれます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "어떤 앱에서든 단축키를 누르면 이 프로필이 디스플레이에 적용됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naciśnięcie klawisza dostępu w dowolnej aplikacji wczytuje ten profil na wyświetlacze."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pressionar o atalho em qualquer app carrega este perfil nas suas telas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажатие горячей клавиши в любом приложении загружает этот профиль на дисплеи."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısayol tuşuna herhangi bir uygulamada basmak bu profili ekranlarınıza yükler."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Натискання гарячої клавіші в будь-якій програмі завантажує цей профіль на дисплеї."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在任何 App 中按下此热键，都会将此配置文件载入到你的显示器。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在任何 App 中按下此快速鍵，都會將此設定檔載入到你的顯示器。"
+          }
+        }
+      }
+    },
+    "Pressing the hotkey in any app sets this wallpaper on “%@”, the display it was assigned on." : {
+      "comment" : "Assign Hotkey dialog for a wallpaper; the display's name",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يؤدي الضغط على الاختصار في أي تطبيق إلى تعيين هذه الخلفية على ”%@“، شاشة العرض التي عُيّن عليها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn Sie die Tastenkombination in einer beliebigen App drücken, wird dieses Hintergrundbild auf „%@“ festgelegt, dem Display, auf dem sie zugewiesen wurde."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al pulsar la tecla de acceso rápido en cualquier app, este fondo de pantalla se pone en «%@», la pantalla en la que se asignó."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appuyer sur le raccourci dans n’importe quelle app place ce fond d’écran sur « %@ », le moniteur sur lequel il a été attribué."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "किसी भी ऐप में हॉटकी दबाने पर यह वॉलपेपर “%@” पर लग जाता है, जिस डिस्प्ले पर इसे दिया गया था।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Premendo il tasto di scelta rapida in qualsiasi app, questo sfondo viene impostato su “%@”, lo schermo su cui è stato assegnato."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "どのアプリでもホットキーを押すと、割り当てたディスプレイ「%@」にこの壁紙が設定されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "어떤 앱에서든 단축키를 누르면 지정한 디스플레이인 ‘%@’에 이 배경화면이 설정됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naciśnięcie klawisza dostępu w dowolnej aplikacji ustawia tę tapetę na „%@”, wyświetlaczu, na którym go przypisano."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pressionar o atalho em qualquer app define este papel de parede em “%@”, a tela em que ele foi atribuído."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажатие горячей клавиши в любом приложении ставит эти обои на «%@» — дисплей, на котором она назначена."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısayol tuşuna herhangi bir uygulamada basmak, bu duvar kâğıdını atandığı ekran olan “%@” üzerine ayarlar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Натискання гарячої клавіші в будь-якій програмі ставить ці шпалери на «%@» — дисплей, на якому її призначено."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在任何 App 中按下此热键，都会将此墙纸设置到指定它时所在的显示器“%@”上。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在任何 App 中按下此快速鍵，都會將此背景圖片設定到指定時所在的顯示器「%@」上。"
+          }
+        }
+      }
+    },
     "Preview" : {
       "comment" : "Android export",
       "localizations" : {
@@ -116143,6 +117473,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "移除群組"
+          }
+        }
+      }
+    },
+    "Remove Hotkey" : {
+      "comment" : "Removes a wallpaper's or display profile's hotkey (context menu, Assign Hotkey dialog, Settings › Hotkeys)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إزالة الاختصار"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastenkombination entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar tecla de acceso rápido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer le raccourci"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हॉटकी हटाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rimuovi tasto di scelta rapida"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホットキーを削除"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "단축키 제거"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuń klawisz dostępu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remover Atalho"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить горячую клавишу"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısayol Tuşunu Kaldır"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити гарячу клавішу"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除热键"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除快速鍵"
           }
         }
       }
@@ -154911,6 +156336,101 @@
         }
       }
     },
+    "The profile “%@” uses this shortcut as its hotkey." : {
+      "comment" : "Hotkey conflict, first sentence: a display profile's hotkey has the shortcut being assigned",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستخدم الملف الشخصي ”%@“ هذا الاختصار كمفتاح اختصار له."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Profil „%@“ verwendet diesen Kurzbefehl als Tastenkombination."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El perfil «%@» usa esta función rápida como tecla de acceso rápido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le profil « %@ » utilise ce raccourci."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्रोफ़ाइल “%@” यह शॉर्टकट अपनी हॉटकी के रूप में इस्तेमाल करती है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il profilo “%@” usa questa abbreviazione come tasto di scelta rapida."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プロファイル「%@」がこのショートカットをホットキーとして使用しています。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’ 프로필이 이 키 조합을 단축키로 사용합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profil „%@” używa tego skrótu jako klawisza dostępu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O perfil “%@” usa este atalho."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Профиль «%@» использует это сочетание клавиш как горячую клавишу."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” profili bu kısayolu kısayol tuşu olarak kullanıyor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Профіль «%@» використовує це скорочення як гарячу клавішу."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配置文件“%@”将此快捷键用作热键。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定檔「%@」將此按鍵組合用作快速鍵。"
+          }
+        }
+      }
+    },
     "The same shortcuts are shown in the menus. You can change them in System Settings › Keyboard › Keyboard Shortcuts › App Shortcuts." : {
       "localizations" : {
         "ar" : {
@@ -156695,6 +158215,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法將桌布設為螢幕保護程式。日誌中有原因。"
+          }
+        }
+      }
+    },
+    "The wallpaper “%@” uses this shortcut as its hotkey." : {
+      "comment" : "Hotkey conflict, first sentence: a wallpaper's hotkey has the shortcut being assigned",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تستخدم الخلفية ”%@“ هذا الاختصار كمفتاح اختصار لها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Hintergrundbild „%@“ verwendet diesen Kurzbefehl als Tastenkombination."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El fondo de pantalla «%@» usa esta función rápida como tecla de acceso rápido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le fond d’écran « %@ » utilise ce raccourci."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर “%@” यह शॉर्टकट अपनी हॉटकी के रूप में इस्तेमाल करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo sfondo “%@” usa questa abbreviazione come tasto di scelta rapida."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙「%@」がこのショートカットをホットキーとして使用しています。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’ 배경화면이 이 키 조합을 단축키로 사용합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tapeta „%@” używa tego skrótu jako klawisza dostępu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O papel de parede “%@” usa este atalho."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обои «%@» используют это сочетание клавиш как горячую клавишу."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” duvar kâğıdı bu kısayolu kısayol tuşu olarak kullanıyor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шпалери «%@» використовують це скорочення як гарячу клавішу."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "墙纸“%@”将此快捷键用作热键。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景圖片「%@」將此按鍵組合用作快速鍵。"
           }
         }
       }
@@ -167676,6 +169291,196 @@
         }
       }
     },
+    "Use Anyway moves it to this hotkey." : {
+      "comment" : "Hotkey conflict, second sentence, after one naming what has the shortcut",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يؤدي «الاستخدام على أي حال» إلى نقله إلى هذا الاختصار."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Trotzdem verwenden“ überträgt ihn auf diese Tastenkombination."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Usar de todos modos» la pasa a esta tecla de acceso rápido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« Utiliser quand même » le déplace vers ce raccourci."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“फिर भी इस्तेमाल करें” इसे इस हॉटकी पर ले आता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Usa comunque” la sposta su questo tasto di scelta rapida."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「このまま使用」を選ぶと、このホットキーに移動します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘그래도 사용’을 선택하면 이 단축키로 옮겨집니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Użyj mimo to” przenosi go do tego klawisza dostępu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar Mesmo Assim o move para este atalho."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Всё равно использовать» переносит его на эту горячую клавишу."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Yine de Kullan” onu bu kısayol tuşuna taşır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Усе одно використати» переносить його на цю гарячу клавішу."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“仍然使用”会将它移到此热键。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「仍要使用」會將它移到此快速鍵。"
+          }
+        }
+      }
+    },
+    "Use Anyway moves it to this playlist." : {
+      "comment" : "Hotkey conflict, second sentence, after one naming what has the shortcut",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يؤدي «الاستخدام على أي حال» إلى نقله إلى قائمة التشغيل هذه."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Trotzdem verwenden“ überträgt ihn auf diese Playlist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Usar de todos modos» la pasa a esta playlist."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« Utiliser quand même » le déplace vers cette playlist."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“फिर भी इस्तेमाल करें” इसे इस प्लेलिस्ट पर ले आता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Usa comunque” la sposta su questa playlist."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「このまま使用」を選ぶと、このプレイリストに移動します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘그래도 사용’을 선택하면 이 플레이리스트로 옮겨집니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Użyj mimo to” przenosi go do tej playlisty."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar Mesmo Assim o move para esta playlist."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Всё равно использовать» переносит его на этот плейлист."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Yine de Kullan” onu bu çalma listesine taşır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Усе одно використати» переносить його на цей список відтворення."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“仍然使用”会将它移到此播放列表。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「仍要使用」會將它移到此播放列表。"
+          }
+        }
+      }
+    },
     "Use Cached Session" : {
       "localizations" : {
         "ar" : {
@@ -177967,6 +179772,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "你即將打開外部網頁作為背景圖片："
+          }
+        }
+      }
+    },
+    "You can assign hotkeys to wallpapers in their context menu, and to profiles in the Displays sheet's Profile menu." : {
+      "comment" : "Settings › Hotkeys, Change Wallpaper group, when no wallpaper or profile has a hotkey (WE: ui_settings_hotkeys_group_wallpaper_stub)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يمكنك تعيين اختصارات للخلفيات من قائمة السياق الخاصة بها، وللملفات الشخصية من قائمة «الملف الشخصي» في ورقة شاشات العرض."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastenkombinationen für Hintergrundbilder legen Sie in deren Kontextmenü fest, für Profile im Menü „Profil“ des Blatts „Displays“."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puedes asignar teclas de acceso rápido a los fondos de pantalla desde su menú contextual, y a los perfiles desde el menú Perfil de la hoja Pantallas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous pouvez attribuer des raccourcis aux fonds d’écran dans leur menu contextuel, et aux profils dans le menu Profil de la feuille Moniteurs."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर को हॉटकी उनके संदर्भ मेनू से, और प्रोफ़ाइल को डिस्प्ले शीट के प्रोफ़ाइल मेनू से दी जा सकती है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puoi assegnare tasti di scelta rapida agli sfondi dal loro menu contestuale, e ai profili dal menu Profilo del foglio Schermi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙にはそのコンテキストメニューから、プロファイルには「ディスプレイ」シートの「プロファイル」メニューからホットキーを割り当てられます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면은 해당 컨텍스트 메뉴에서, 프로필은 디스플레이 시트의 프로필 메뉴에서 단축키를 지정할 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klawisze dostępu możesz przypisać tapetom w ich menu podręcznym, a profilom w menu Profil arkusza Wyświetlacze."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Você pode atribuir atalhos aos papéis de parede no menu de contexto deles, e aos perfis no menu Perfil da folha Telas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Горячие клавиши для обоев назначаются в их контекстном меню, а для профилей — в меню «Профиль» окна «Дисплеи»."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıtlarına bağlam menülerinden, profillere ise Ekranlar sayfasının Profil menüsünden kısayol tuşu atayabilirsiniz."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гарячі клавіші для шпалер призначаються в їхньому контекстному меню, а для профілів — у меню «Профіль» аркуша «Дисплеї»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你可以在墙纸的上下文菜单中为墙纸指定热键，在“显示器”表单的“配置文件”菜单中为配置文件指定热键。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你可以在背景圖片的快速選單中為其指定快速鍵，在「顯示器」表單的「設定檔」選單中為設定檔指定快速鍵。"
           }
         }
       }

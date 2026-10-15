@@ -5,6 +5,8 @@ import SwiftUI
 /// naming what uses it (`GlobalShortcutConflict`).
 struct HotKeysSection: View {
     @ObservedObject var hotKeys: GlobalHotKeyController
+    /// The wallpapers' and profiles' hotkeys, WE's Change Wallpaper group.
+    @ObservedObject var userHotKeys: UserHotKeyController = AppDelegate.shared.userHotKeys
     @State private var recordingAction: GlobalHotKeyAction?
     /// A recorded shortcut something else uses, until the warning is answered.
     @State private var pending: Pending?
@@ -37,6 +39,7 @@ struct HotKeysSection: View {
             }
             .settingsAnchor(index == 0 ? SettingsAnchor.hotKeys : "\(SettingsAnchor.hotKeys).\(index)")
         }
+        changeWallpaperSection
         .alert(
             Text("\(pending?.shortcut.symbols ?? "") is already in use"),
             isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } }),
@@ -50,6 +53,45 @@ struct HotKeysSection: View {
         } message: { pending in
             Text(verbatim: pending.conflicts.map { $0.message(forHotKey: true) }.joined(separator: "\n\n"))
         }
+    }
+
+    /// WE's Change Wallpaper group: the hotkeys assigned to wallpapers and profiles, each with
+    /// what it loads and a Remove button.
+    private var changeWallpaperSection: some View {
+        Section {
+            if userHotKeys.hotKeys.isEmpty {
+                Text("You can assign hotkeys to wallpapers in their context menu, and to profiles in the Displays sheet's Profile menu.")
+                    .foregroundStyle(.secondary)
+            }
+            ForEach(userHotKeys.hotKeys) { hotKey in
+                LabeledContent {
+                    HStack(spacing: 6) {
+                        if userHotKeys.unregistered.contains(hotKey.id) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.yellow)
+                                .help("Another app holds this shortcut, so it may not work.")
+                                .accessibilityLabel(Text("Another app holds this shortcut, so it may not work."))
+                        }
+                        Text(verbatim: hotKey.shortcut.symbols)
+                            .monospaced()
+                        Button {
+                            userHotKeys.remove(hotKey.id)
+                        } label: {
+                            Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help("Remove Hotkey")
+                        .accessibilityLabel(Text("Remove Hotkey"))
+                    }
+                } label: {
+                    Text(verbatim: hotKey.title)
+                    Text(hotKey.isProfile ? "Choose profile" : "Choose wallpaper")
+                }
+            }
+        } header: {
+            Text("Change Wallpaper", comment: "Settings › Hotkeys group: the hotkeys of wallpapers and display profiles")
+        }
+        .settingsAnchor("\(SettingsAnchor.hotKeys).user")
     }
 
     private func row(_ action: GlobalHotKeyAction) -> some View {
