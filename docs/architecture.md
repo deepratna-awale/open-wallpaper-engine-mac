@@ -62,13 +62,16 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
 ### `Audio/`
 
 - System audio capture (a Core Audio process tap on macOS 14.2+, ScreenCaptureKit before or as the fallback) with a restart lifecycle.
+- WE's "Audio recording device": a recording device chosen in Settings › Optimizations › Audio (a microphone, or a loopback driver such as BlackHole) is read by an IO block on that device (`InputDeviceAudioCapture`, Microphone permission) instead of the system output, which stays the fallback while the device is disconnected or the permission is missing. WE's "Recording volume" (0…200, default 50) and "Recording threshold" are applied in the spectrum analyzer, so scenes, SceneScript and web listeners all follow them live.
 - Per-player taps (`AudioLevelTap`).
 - Spectrum and waveform snapshots.
 - One producer, many consumers: scene shaders, SceneScript `registerAudioBuffers`, video music sync.
+- Now Playing (WE's media integration) is `Scene/Scripting/Media/MacMediaSessionSource`, one per process for scenes, SceneScript's media events and web wallpapers' media listeners. It applies WE's media blocklist: a session of a blocked app (by bundle id, `sessionBundleIdentifier`) reaches them as nothing playing.
 
 ### `Video/` and `Web/`
 
 - Each holds its player, view, view model and type-specific features: video music sync, and the web wallpaper property/audio bridge.
+- A video wallpaper's player items come from `Video/VideoFileSource`, which follows WE's "Video loading": from disk, or the file read into memory once and served to AVFoundation by a resource loader (`MemoryVideoLoader`, custom URL scheme), so loops read nothing more from the disk.
 - **`Web/Chromium/`:** the optional Chromium engine (CEF), installed on demand and pinned by SHA-256. CEF runs only in the `owe-chromium-helper` XPC service (target `OWEChromiumHelper/`), never in the app, and its frames reach the app as IOSurfaces. See [`docs/chromium-engine.md`](chromium-engine.md).
 - **Web engine routing:** WebKit by default; Chromium only for a wallpaper that needs it (a Chromium-only API found) while the engine is installed, or when the wallpaper's override says so (`WebEngineRouting`). `WebWallpaperViewModel` drives either engine through `WebWallpaperPage` (a `WKWebView` or a `ChromiumBrowserPage`), so the WE bridge is one implementation. Without Chromium, `ChromiumFeatureAdvisor` points out wallpapers that use Chromium-only APIs (static scan plus WebKit's runtime probe).
 
