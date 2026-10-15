@@ -53954,6 +53954,194 @@
         }
       }
     },
+    "From disk" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "من القرص"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vom Datenträger"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desde el disco"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depuis le disque"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डिस्क से"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dal disco"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ディスクから"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "디스크에서"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Z dysku"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do Disco"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "С диска"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diskten"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З диска"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从磁盘"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從磁碟"
+          }
+        }
+      }
+    },
+    "From disk reads the video file again on every loop. In memory reads it once and plays it from memory, so the disk can rest (useful for a hard disk or a network volume), for the file's size in memory. Applies to videos opened from now on." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«من القرص» يقرأ ملف الفيديو من جديد في كل تكرار. «في الذاكرة» يقرؤه مرة واحدة ويشغّله من الذاكرة، فيرتاح القرص (مفيد للقرص الصلب أو وحدة تخزين الشبكة)، مقابل حجم الملف في الذاكرة. يسري على مقاطع الفيديو التي تُفتح من الآن."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Vom Datenträger“ liest die Videodatei bei jeder Wiederholung erneut. „Im Arbeitsspeicher“ liest sie einmal und spielt sie aus dem Speicher ab, sodass der Datenträger ruhen kann (nützlich bei einer Festplatte oder einem Netzwerkvolume), auf Kosten der Dateigröße im Speicher. Gilt für Videos, die ab jetzt geöffnet werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Desde el disco» vuelve a leer el archivo de vídeo en cada repetición. «En memoria» lo lee una vez y lo reproduce desde la memoria, así el disco puede descansar (útil con un disco duro o un volumen de red), a cambio del tamaño del archivo en memoria. Se aplica a los vídeos que se abran a partir de ahora."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« Depuis le disque » relit le fichier vidéo à chaque boucle. « En mémoire » le lit une fois et le lit depuis la mémoire, ce qui laisse le disque au repos (utile pour un disque dur ou un volume réseau), au prix de la taille du fichier en mémoire. S’applique aux vidéos ouvertes à partir de maintenant."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“डिस्क से” हर लूप पर वीडियो फ़ाइल फिर से पढ़ता है। “मेमोरी में” उसे एक बार पढ़कर मेमोरी से चलाता है, ताकि डिस्क आराम कर सके (हार्ड डिस्क या नेटवर्क वॉल्यूम के लिए उपयोगी), बदले में फ़ाइल के आकार जितनी मेमोरी लगती है। अब से खुलने वाले वीडियो पर लागू होता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Dal disco» rilegge il file video a ogni ripetizione. «In memoria» lo legge una volta e lo riproduce dalla memoria, così il disco può riposare (utile con un disco rigido o un volume di rete), al costo della dimensione del file in memoria. Vale per i video aperti da ora in poi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「ディスクから」はループのたびにビデオファイルを読み直します。「メモリ内」は一度だけ読み込んでメモリから再生するので、ディスクを休ませられます（ハードディスクやネットワークボリュームで便利）。その分ファイルサイズのメモリを使います。これから開くビデオに適用されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘디스크에서’는 반복할 때마다 비디오 파일을 다시 읽습니다. ‘메모리에서’는 한 번 읽어 메모리에서 재생하므로 디스크가 쉴 수 있습니다(하드 디스크나 네트워크 볼륨에 유용). 대신 파일 크기만큼 메모리를 사용합니다. 지금부터 여는 비디오에 적용됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Z dysku” odczytuje plik wideo ponownie przy każdym zapętleniu. „W pamięci” odczytuje go raz i odtwarza z pamięci, dzięki czemu dysk może odpocząć (przydatne przy dysku twardym lub woluminie sieciowym), kosztem rozmiaru pliku w pamięci. Dotyczy filmów otwieranych od teraz."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Do Disco” lê o arquivo de vídeo de novo a cada repetição. “Na Memória” lê uma vez e reproduz da memória, para que o disco possa descansar (útil em um disco rígido ou volume de rede), ao custo do tamanho do arquivo na memória. Vale para os vídeos abertos a partir de agora."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«С диска» заново читает видеофайл при каждом повторе. «В памяти» читает его один раз и воспроизводит из памяти, так что диск может отдыхать (полезно для жесткого диска или сетевого тома), ценой размера файла в памяти. Применяется к видео, открытым с этого момента."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Diskten” video dosyasını her döngüde yeniden okur. “Bellekte” onu bir kez okuyup bellekten oynatır; böylece disk dinlenebilir (sabit disk veya ağ birimi için kullanışlı), karşılığında dosya boyutu kadar bellek kullanılır. Bundan sonra açılan videolara uygulanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«З диска» знову читає відеофайл під час кожного повтору. «У пам’яті» читає його один раз і відтворює з пам’яті, тож диск може відпочивати (корисно для жорсткого диска чи мережевого тому), ціною розміру файлу в пам’яті. Застосовується до відео, відкритих відтепер."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“从磁盘”在每次循环时重新读取视频文件。“在内存中”只读取一次并从内存播放，让磁盘得以休息（适用于硬盘或网络宗卷），代价是占用与文件大小相当的内存。适用于此后打开的视频。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「從磁碟」在每次循環時重新讀取影片檔案。「在記憶體中」只讀取一次並從記憶體播放，讓磁碟得以休息（適用於硬碟或網路卷宗），代價是佔用與檔案大小相當的記憶體。適用於此後開啟的影片。"
+          }
+        }
+      }
+    },
     "From the library folder %@" : {
       "comment" : "%@ is a folder path",
       "localizations" : {
@@ -67924,6 +68112,100 @@
         }
       }
     },
+    "In memory" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "في الذاكرة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Arbeitsspeicher"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En memoria"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En mémoire"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेमोरी में"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In memoria"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メモリ内"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메모리에서"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "W pamięci"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na Memória"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В памяти"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bellekte"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У пам’яті"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在内存中"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在記憶體中"
+          }
+        }
+      }
+    },
     "Include ⌘, ⌥ or ⌃." : {
       "localizations" : {
         "ar" : {
@@ -81817,97 +82099,192 @@
         }
       }
     },
-    "Most Popular" : {
-      "comment" : "Workshop sort order: highest rated",
+    "Most Popular (Month)" : {
+      "comment" : "Workshop sort order: most popular over the last month",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "الأكثر شيوعًا"
+            "value" : "الأكثر شعبية (هذا الشهر)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Beliebteste"
+            "value" : "Beliebteste (Monat)"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Más populares"
+            "value" : "Más populares (mes)"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les plus populaires"
+            "value" : "Populaires (mois)"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "सबसे लोकप्रिय"
+            "value" : "सबसे लोकप्रिय (महीना)"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Più popolari"
+            "value" : "I più popolari (mese)"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "人気順"
+            "value" : "人気（今月）"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "인기순"
+            "value" : "인기 항목(이번 달)"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Najpopularniejsze"
+            "value" : "Najpopularniejsze (miesiąc)"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mais Populares"
+            "value" : "Mais Populares (Mês)"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Самые популярные"
+            "value" : "Популярные (месяц)"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "En Popüler"
+            "value" : "En Beğenilenler (Bu Ay)"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Найпопулярніші"
+            "value" : "Найпопулярніші (за місяць)"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "最受欢迎"
+            "value" : "最热门（本月）"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "最受歡迎"
+            "value" : "最受歡迎（本月）"
+          }
+        }
+      }
+    },
+    "Most Popular (Today)" : {
+      "comment" : "Workshop sort order: most popular today",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الأكثر شعبية (اليوم)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beliebteste (heute)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más populares (hoy)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Populaires (aujourd’hui)"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सबसे लोकप्रिय (आज)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I più popolari (oggi)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "人気（今日）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인기 항목(오늘)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najpopularniejsze (dziś)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mais Populares (Hoje)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Популярные (сегодня)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En Beğenilenler (Bugün)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найпопулярніші (за сьогодні)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最热门（今日）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最受歡迎（今天）"
           }
         }
       }
@@ -82007,6 +82384,101 @@
         }
       }
     },
+    "Most Popular (Year)" : {
+      "comment" : "Workshop sort order: most popular over the last year",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الأكثر شعبية (هذه السنة)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beliebteste (Jahr)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más populares (año)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Populaires (année)"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सबसे लोकप्रिय (वर्ष)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I più popolari (anno)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "人気（今年）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인기 항목(올해)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najpopularniejsze (rok)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mais Populares (Ano)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Популярные (год)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En Beğenilenler (Bu Yıl)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найпопулярніші (за рік)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最热门（今年）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最受歡迎（今年）"
+          }
+        }
+      }
+    },
     "Most Recent" : {
       "comment" : "Workshop sort order",
       "localizations" : {
@@ -82102,7 +82574,7 @@
         }
       }
     },
-    "Most Subscribed" : {
+    "Most Subscriptions" : {
       "comment" : "Workshop sort order",
       "localizations" : {
         "ar" : {
@@ -82193,6 +82665,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "最多訂閱"
+          }
+        }
+      }
+    },
+    "Most Up Votes" : {
+      "comment" : "Workshop sort order: most votes up",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اعلى التقييمات الايجابية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meiste gute Bewertungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más votados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plus de votes positifs"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सबसे ज़्यादा अपवोट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sfondi con più \"Mi Piace\""
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最も投票された"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최다 투표"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najwięcej pozytywnych głosów"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mais Votos Positivos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Больше всего оценок"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En Fazla Olumlu Oy Alanlar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найкращі оцінки"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最多投票"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最多正評"
           }
         }
       }
@@ -160561,101 +161128,6 @@
         }
       }
     },
-    "Trending" : {
-      "comment" : "Workshop sort order",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الرائجة"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Im Trend"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tendencias"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tendances"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ट्रेंडिंग"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Di tendenza"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "トレンド"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "인기 급상승"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Popularne teraz"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Em Alta"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Популярное сейчас"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Popüler"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Популярні зараз"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "热门"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "熱門"
-          }
-        }
-      }
-    },
     "Triple Monitor" : {
       "comment" : "Resolution filter group: wallpapers spanning three displays",
       "localizations" : {
@@ -168134,6 +168606,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "影片速度"
+          }
+        }
+      }
+    },
+    "Video loading" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحميل الفيديو"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video laden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carga de vídeo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chargement des vidéos"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वीडियो लोड करना"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caricamento video"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ビデオの読み込み"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비디오 불러오기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ładowanie wideo"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carregamento de Vídeo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загрузка видео"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video yükleme"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантаження відео"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "视频加载"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "影片載入"
           }
         }
       }

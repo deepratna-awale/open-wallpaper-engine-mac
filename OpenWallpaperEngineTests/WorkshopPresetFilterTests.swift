@@ -29,7 +29,7 @@ final class WorkshopPresetFilterTests: XCTestCase {
         XCTAssertFalse(query.excludedTags.contains("Preset"))
         XCTAssertNotEqual(filter.cacheKey, WorkshopFilter().cacheKey)
 
-        let items = WorkshopAPIService.queryItems(text: "", filter: query, sortOrder: .trending, page: 1, perPage: 20)
+        let items = WorkshopAPIService.queryItems(text: "", filter: query, sortOrder: .default, page: 1, perPage: 20)
         XCTAssertTrue(items.contains { $0.name.hasPrefix("excludedtags[") && $0.value == "Wallpaper" })
         XCTAssertTrue(items.contains(URLQueryItem(name: "return_children", value: "true")))
     }
