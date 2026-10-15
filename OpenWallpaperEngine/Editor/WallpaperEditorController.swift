@@ -177,6 +177,14 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.commands = commands
         services.document = document
         services.thumbnail = thumbnail
+        services.scriptSnippet = { EditorScriptTools.snippet(named: $0) }
+        services.customScriptModules = { EditorScriptTools.customModules() }
+        services.setScriptsRunning = { [weak preview] running in
+            guard let preview, let scene = preview.sceneInstances.instance(for: preview.instanceKey(for: preview.selectedScreenId))
+            else { return }
+            scene.setScriptsRunning(running)
+        }
+        services.preferences = .app
         // In the editor's own process the app's Settings are another process's (`sync`).
         let openSettings: @MainActor (AppSettingsRequest) -> Void = { [sync] request in
             if let sync { sync.openSettings(request) } else { AppDelegate.shared.openSettings(for: request) }

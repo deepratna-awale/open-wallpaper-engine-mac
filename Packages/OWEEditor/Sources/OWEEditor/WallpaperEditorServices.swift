@@ -70,6 +70,20 @@ public struct WallpaperEditorServices {
     /// Take Snapshot and Record GIF: the library thumbnail made from the canvas; nil leaves them out.
     public var thumbnail: EditorThumbnail?
 
+    // MARK: Script editor
+
+    /// WE's own snippet script by its file name (`ui/dist/monaco/snippets/<name>.js` of the user's
+    /// WE copy, as WE's editor reads it); nil when it has none, and the editor's own is used.
+    public var scriptSnippet: (String) -> String? = { _ in nil }
+    /// The modules a script can import besides WE's base ones: the other files of WE's
+    /// `scripts/jsmodules`, which the runtime resolves the same way.
+    public var customScriptModules: () -> [String] = { [] }
+    /// Run Preview / Stop Preview: whether the canvas runs the wallpaper's scripts; nil leaves the
+    /// toggle out.
+    public var setScriptsRunning: ((Bool) -> Void)?
+    /// Where the editor keeps its own choices (the console's Clear Log on Run and Auto Scroll).
+    public var preferences: UserDefaults = .standard
+
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,
                 suggestedNewTitle: String, saveAsNewWallpaper: @escaping (String) throws -> String,

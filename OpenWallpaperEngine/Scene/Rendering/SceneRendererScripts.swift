@@ -37,6 +37,9 @@ final class SceneRendererScripts {
     var frameWait = SceneScriptWallpaper.Timing.frameWait
     /// The renderer's builder for created objects, handed to each new `SceneScriptWallpaper`.
     var prepareCreated: SceneScriptWallpaper.PrepareCreated?
+    /// The Wallpaper Editor's Stop Preview: content set while it holds runs no scripts (fields keep
+    /// their authored values); the next content after it ends starts them again.
+    var isSuspended = false
 
     init(services: SceneScriptServices?, screenID: String) {
         self.services = services
@@ -52,14 +55,14 @@ final class SceneRendererScripts {
         baseVisibility = visibility
         self.parents = parents
         userEffectVisibility = [:]
-        if let wallpaper, let content, wallpaper.identity.wallpaperID == content.wallpaperID,
+        if !isSuspended, let wallpaper, let content, wallpaper.identity.wallpaperID == content.wallpaperID,
            wallpaper.documentSignature == content.documentSignature {
             self.content = content
             return
         }
         stop()
         self.content = content
-        guard let content, let services else { return }
+        guard let content, let services, !isSuspended else { return }
         do {
             let started = try SceneScriptWallpaper(content: content, services: services, screenID: screenID,
                                                    prepareCreated: prepareCreated)
