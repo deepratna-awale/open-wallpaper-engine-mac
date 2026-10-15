@@ -69,7 +69,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - **HDR** — HDR scenes render with Wallpaper Engine's HDR bloom, and the "Ultra (Display HDR)" quality outputs EDR on displays that can show it.
 
 ### Particles
-- **GPU particles** — every particle system is simulated on the GPU, in 3D, with 3D control points.
+- **GPU particles** — every particle system is simulated on the GPU, in 3D, with 3D control points (on the emitter, the cursor, a scene position or the parent system's point, raw or carried into the child's space).
 - Child systems, including ones triggered by their parent's particles; emitter bursts, delays and periodic emission; emitting from a layer's image.
 - Collision, including with a model's bones, audio response, and rotation about every axis.
 - Particle settings bound to a wallpaper's user properties.
