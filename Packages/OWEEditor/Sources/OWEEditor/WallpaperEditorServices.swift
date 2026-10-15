@@ -199,3 +199,29 @@ public struct EditorModelChoice: Hashable, Identifiable, Sendable {
     /// The file's name without its extension, for the layer's name.
     public var title: String { ((path as NSString).lastPathComponent as NSString).deletingPathExtension }
 }
+
+/// The wallpaper's SceneScript `localStorage` (WE's Clean Local Storage).
+public struct EditorLocalStorage {
+    /// Whether the wallpaper's scripts stored anything.
+    public var hasData: () -> Bool
+    /// Deletes what they stored and runs the canvas's scripts again from nothing.
+    public var clean: () throws -> Void
+
+    public init(hasData: @escaping () -> Bool, clean: @escaping () throws -> Void) {
+        self.hasData = hasData
+        self.clean = clean
+    }
+}
+
+/// What Edit with External Image Editor needs from the app.
+public struct ExternalImageEditing {
+    /// Where the pictures handed to the external editor are written (one per layer).
+    public var directory: URL
+    /// The editor's defaults, which keep the chosen app (WE's "Custom image editor path").
+    public var defaults: UserDefaults
+
+    public init(directory: URL, defaults: UserDefaults) {
+        self.directory = directory
+        self.defaults = defaults
+    }
+}
