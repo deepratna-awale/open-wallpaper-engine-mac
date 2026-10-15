@@ -1316,6 +1316,11 @@ private struct SceneInspectorContent: View {
     private var inspectorSplitView: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             sidebarColumn
+                // On the column, not the split view: there, with the right-hand inspector, the
+                // search field's place in the toolbar and the columns' widths kept re-laying each
+                // other out, and AppKit stopped the window's first layout after 300 passes.
+                .searchable(text: $searchText, placement: .sidebar, prompt: "Search")
+                .modifier(SearchFieldFocus(isFocused: $isSearchFocused))
                 // `sidebarToggle` takes its place, right before the modes.
                 .toolbar(removing: .sidebarToggle)
                 // Outermost, after `toolbar(removing:)`: inside it the width never reached the
@@ -1401,8 +1406,6 @@ private struct SceneInspectorContent: View {
                     Text("Do you want to undo every scene edit of “\(wallpaper.project.displayTitle)”? Its properties are kept.")
                 }
         }
-        .searchable(text: $searchText, placement: .sidebar, prompt: "Search")
-        .modifier(SearchFieldFocus(isFocused: $isSearchFocused))
         .background {
             Button("") { focusSearch() }
                 .keyboardShortcut("k", modifiers: .command)
