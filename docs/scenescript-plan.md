@@ -85,7 +85,7 @@ The d.ts header states the binding model: a script is bound to **one property**;
 | `frametime`, `runtime`, `timeOfDay` | number | seconds since last frame; seconds since start; fraction of the day 0…1 |
 | `screenResolution`, `canvasSize` | Vec2 | screen pixels; scene (canvas) size |
 | `userProperties` | object | converted by `_Internal.convertUserProperties`: `color` → `Vec3`, `usershortcut` → `{isbound, commandtype, file}`, others their value |
-| `isRunningInEditor()`, `isPortrait()`, `isLandscape()`, `isDesktopDevice()`, `isMobileDevice()`, `isWallpaper()`, `isScreensaver()` | **functions** | |
+| `isRunningInEditor()`, `isPortrait()`, `isLandscape()`, `isDesktopDevice()`, `isMobileDevice()`, `isWallpaper()`, `isScreensaver()` | **functions** | `isRunningInEditor()` is true only in the Wallpaper Editor's canvas (`SceneMetalRenderer.runsInEditor`) |
 | `AUDIO_RESOLUTION_16/32/64` | 16/32/64 | there is **no** 128 ("Resolution must be either 16, 32 or 64.") |
 | `registerAudioBuffers(res)` | → `AudioBuffers {left, right, average: Float32Array}` | global scope only; the arrays are live and refreshed each frame |
 | `registerAsset(file, precache)` | → `IAssetHandle` | global scope only |
