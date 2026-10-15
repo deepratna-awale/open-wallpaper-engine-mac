@@ -20,6 +20,7 @@ enum SettingsAnchor {
     static let video = "video"
     static let audio = "audio"
     static let rendering = "rendering"
+    static let webDevtools = "webdevtools"
     static let assets = "assets"
     static let steamCmd = "steamcmd"
     static let storage = "storage"
@@ -123,6 +124,8 @@ struct SettingsSearch {
             entry("Cheaper shadows", .optimizations, SettingsAnchor.rendering),
             entry("Render web wallpapers at standard resolution", .optimizations, SettingsAnchor.rendering),
             entry("Draw large glowing particles at half resolution", .optimizations, SettingsAnchor.rendering),
+            entry("Developer Tools", .optimizations, SettingsAnchor.webDevtools),
+            entry("Web wallpaper devtools", .optimizations, SettingsAnchor.webDevtools),
 
             entry("Wallpaper Engine Assets", .assets, SettingsAnchor.assets),
             entry("SteamCMD", .assets, SettingsAnchor.steamCmd),

@@ -14,6 +14,9 @@ enum WorkshopTags {
         "Sci-Fi", "Sports", "Technology", "Television", "Vehicle", "Unspecified",
     ]
 
+    /// The genres WE's Hide Anime leaves out of the Workshop (`xe` in its `scripts.js`).
+    static let hiddenByHideAnime = ["Anime", "MMD", "Girls", "Guys", "Music"]
+
     static let approved = "Approved"
     static let audioResponsive = "Audio responsive"
     static let customizable = "Customizable"
@@ -87,6 +90,10 @@ struct WorkshopFilter: Equatable {
     var resolutions: Set<String> = []
     var genres: Set<String> = []
     var genreMatch: WorkshopTagMatch = .all
+    /// WE's Hide Anime (its Workshop Filter Settings): the genres `WorkshopTags.hiddenByHideAnime`
+    /// are left out, all but those checked in `genres`. A setting of its own, which Reset Filters
+    /// keeps, as WE applies it again on every reset.
+    var hidesAnime = false
 
     /// Changes whenever the results would.
     var cacheKey: String {
@@ -94,7 +101,7 @@ struct WorkshopFilter: Equatable {
          ratings.sorted().joined(separator: ","), types.sorted().joined(separator: ","),
          categories.sorted().joined(separator: ","),
          resolutions.sorted().joined(separator: ","), genres.sorted().joined(separator: ","),
-         genreMatch.rawValue].joined(separator: "|")
+         genreMatch.rawValue, hidesAnime ? "hide-anime" : ""].joined(separator: "|")
     }
 }
 
@@ -144,6 +151,11 @@ struct WorkshopQuery: Equatable {
             + exclusions(filter.types, of: WorkshopTags.types)
             + exclusions(filter.categories, of: WorkshopTags.categories)
             + exclusions(filter.resolutions, of: WEResolutionTags.all)
+        // WE unchecks these genres, which sends them as excluded tags; a genre the user checks
+        // again is shown.
+        if filter.hidesAnime {
+            excludedTags += WorkshopTags.hiddenByHideAnime.filter { !filter.genres.contains($0) }
+        }
 
         let genres = WorkshopTags.genres.filter(filter.genres.contains)
         let genresAreAND = filter.genreMatch == .all || genres.count <= 1

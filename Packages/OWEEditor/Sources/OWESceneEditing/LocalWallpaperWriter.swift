@@ -46,11 +46,14 @@ public struct LocalWallpaperWriter {
     /// folder and renamed into place, so the library never lists half a wallpaper. `editProject`
     /// changes the copy's project.json first (the editor's user properties). `files` are written
     /// into the copy by their path (the editor's puppets, `PuppetSceneBake`), then
-    /// `additionalFiles` (the particle editor's documents) over it.
+    /// `additionalFiles` (the particle editor's documents) over it. `thumbnail`, when the user made
+    /// one (Take Snapshot, Record GIF), replaces the source's preview (`writeThumbnail`); without
+    /// one the copy keeps the source's.
     @discardableResult
     public func save(_ source: Source, scene: Data, title: String, into library: URL,
                      editProject: ((inout [String: Any]) -> Void)? = nil,
-                     files: [String: Data] = [:], additionalFiles: [String: Data] = [:]) throws -> URL {
+                     files: [String: Data] = [:], additionalFiles: [String: Data] = [:],
+                     thumbnail: WallpaperThumbnail? = nil) throws -> URL {
         try fileManager.createDirectory(at: library, withIntermediateDirectories: true)
         let staging = library.appending(path: ".owe-editor-\(UUID().uuidString)", directoryHint: .isDirectory)
         do {
@@ -71,6 +74,7 @@ public struct LocalWallpaperWriter {
             }
             try scene.write(to: try Self.contained(source.sceneFile, in: staging), options: .atomic)
             try writeProject(in: staging, title: title, edit: editProject)
+            if let thumbnail { try writeThumbnail(thumbnail, into: staging) }
             let destination = uniqueFolder(named: Self.folderName(title), in: library)
             try fileManager.moveItem(at: staging, to: destination)
             return destination
@@ -128,6 +132,25 @@ public struct LocalWallpaperWriter {
         for key in Self.workshopKeys { project.removeValue(forKey: key) }
         let written = try JSONSerialization.data(withJSONObject: project, options: [.prettyPrinted, .sortedKeys])
         try written.write(to: url, options: .atomic)
+    }
+
+    /// Writes `thumbnail` into the wallpaper `folder` as WE's editor does (`preview.jpg` or
+    /// `preview.gif`) and names it in project.json's `preview`; the other of the two goes when the
+    /// project named it, so the folder keeps one preview. File › Save writes a local wallpaper's
+    /// this way; Save as New Wallpaper its copy's.
+    public func writeThumbnail(_ thumbnail: WallpaperThumbnail, into folder: URL) throws {
+        let url = folder.appending(path: "project.json")
+        guard let data = fileManager.contents(atPath: url.path),
+              var project = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw WriteError.noProject }
+        try thumbnail.data.write(to: folder.appending(path: thumbnail.fileName), options: .atomic)
+        let previous = project["preview"] as? String
+        project["preview"] = thumbnail.fileName
+        let written = try JSONSerialization.data(withJSONObject: project, options: [.prettyPrinted, .sortedKeys])
+        try written.write(to: url, options: .atomic)
+        if let previous, previous.lowercased() != thumbnail.fileName, WallpaperThumbnail.fileNames.contains(previous.lowercased()) {
+            let old = folder.appending(path: previous)
+            if fileManager.fileExists(atPath: old.path) { try fileManager.removeItem(at: old) }
+        }
     }
 
     /// What ties a project to its Workshop item.
