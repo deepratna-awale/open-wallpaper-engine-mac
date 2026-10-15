@@ -138,6 +138,27 @@ final class SceneScriptWallpaperTests: XCTestCase {
         XCTAssertEqual(try shared(wallpaper, "parent"), 2)
     }
 
+    /// `IEffect.executeMaterialFunction(name)` reaches the renderer as a render event with the
+    /// object's scene id, the effect's index and the name, once per call.
+    func testExecuteMaterialFunctionBecomesARenderEvent() throws {
+        let script = "export function update(value) { if (shared.done) return value; shared.done = true; "
+            + "thisLayer.getEffect(0).executeMaterialFunction('clearDye'); return value; }"
+        let effects = #""effects": [{"file": "effects/fluidsimulation/effect.json", "name": "fluid", "passes": [{}]}]"#
+        let wallpaper = try make(objects: [object(id: 4, fields: #""origin": {"script": "\#(script)", "value": "0 0 0"}, "#
+                                                  + effects)])
+        var input = SceneScriptFrameInput()
+        input.deltaTime = 1.0 / 60
+        for _ in 0..<2 {
+            wallpaper.submit(input)
+            wallpaper.waitUntilIdle()
+        }
+        let calls = wallpaper.take().events.compactMap { event -> String? in
+            guard case let .materialFunction(id, effect, name) = event else { return nil }
+            return "\(id).\(effect).\(name)"
+        }
+        XCTAssertEqual(calls, ["4.0.clearDye"])
+    }
+
     /// test-risks S11's clone stress test: a layer created and destroyed every frame for 1000
     /// frames leaves the scene as it was (every create has its destroy; slots are reused).
     func testCreatingAndDestroyingALayerEveryFrameStaysFlat() throws {
