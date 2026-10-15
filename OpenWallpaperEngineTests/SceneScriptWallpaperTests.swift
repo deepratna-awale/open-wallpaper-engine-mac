@@ -345,6 +345,39 @@ final class SceneScriptWallpaperTests: XCTestCase {
         XCTAssertEqual(try shared(wallpaper, "clicks"), 1)
     }
 
+    /// `engine.openUserShortcut` in a click opens the user's binding of the property through the
+    /// app's launcher and returns true; a property only project.json "binds" opens nothing.
+    func testAClickOpensTheUserShortcutTheUserBound() throws {
+        _ = try Fixtures.assets()
+        let project = try SceneScriptSiteBuilder.document(from: Data(#"""
+            {"general": {"properties": {
+             "mine": {"type": "usershortcut", "text": "Mine"},
+             "authored": {"type": "usershortcut", "text": "Authored", "value": "cmd:a1b2c3:say authored", "isbound": true}}}}
+            """#.utf8))
+        let opener = RecordingUserShortcutOpener()
+        let clicker = #"export function cursorClick() { shared.authored = engine.openUserShortcut('authored') ? 1 : 0; shared.mine = engine.openUserShortcut('mine'); }"#
+        let wallpaper = try make(objects: [
+            object(id: 1, fields: #""image": "models/a.json", "size": "100 100", "origin": {"script": "\#(clicker) export function update(value) { return value; }", "value": "50 50 0"}"#),
+        ], project: project, userValues: ["mine": "web:a1b2c3:https://example.com"],
+           userShortcuts: UserShortcutLauncher(opener: opener, systemHash: "a1b2c3"))
+        var input = SceneScriptFrameInput()
+        input.deltaTime = 1.0 / 60
+        var layer = feedback(origin: SIMD2(50, 50), scale: SIMD2(1, 1))
+        layer.world = SceneAffineTransform(linear: matrix_identity_float2x2, translation: SIMD2(50, 50))
+        layer.size = SIMD2(100, 100)
+        input.objects[1] = layer
+        input.cursorScenePosition = SIMD2(60, 40)
+        for down in [false, true, false] {
+            input.input.cursorLeftDown = down
+            _ = try frame(wallpaper, input)
+        }
+        _ = try frame(wallpaper, input)
+        let opened: Bool? = wallpaper.thread.sync { wallpaper.scriptRuntime?.context.evaluateScript("shared.mine")?.toBool() }
+        XCTAssertEqual(opened, true)
+        XCTAssertEqual(opener.calls, ["web https://example.com"], "the authored shortcut opened nothing")
+        XCTAssertEqual(try shared(wallpaper, "authored"), 0, "false, so the click could still open one")
+    }
+
     /// The user's values reach `engine.userProperties` in WE's raw form, typed as project.json declares.
     func testUserPropertiesKeepTheirDeclaredTypes() throws {
         var properties = SceneScriptUserProperties(project: try SceneScriptSiteBuilder.document(from: Data(#"""
@@ -364,17 +397,19 @@ final class SceneScriptWallpaperTests: XCTestCase {
         #"{"id": \#(id), "name": "Object \#(id)", \#(fields)}"#
     }
 
-    private func make(objects: [String], general: String = "",
+    private func make(objects: [String], general: String = "", project: SceneJSON? = nil,
+                      userValues: [String: String] = [:], userShortcuts: UserShortcutLauncher? = nil,
                       makeLayer: @escaping ([String: SceneJSON]) -> SceneScriptCreatedObject? = { _ in nil },
                       prepareCreated: SceneScriptWallpaper.PrepareCreated? = nil) throws -> SceneScriptWallpaper {
         let settings = general.isEmpty ? "" : ", " + general
         let text = #"{"general": {"orthogonalprojection": {"width": 200, "height": 100}\#(settings)}, "objects": [\#(objects.joined(separator: ", "))]}"#
         let document = try SceneScriptSiteBuilder.document(from: Data(text.utf8))
         let content = SceneScriptSceneContent(wallpaperID: "test-\(UUID().uuidString.prefix(8))", document: document,
-                                              documentSignature: "1", project: nil, userValues: { [:] },
+                                              documentSignature: "1", project: project, userValues: { userValues },
                                               file: { _ in nil }, makeLayer: makeLayer)
         let services = SceneScriptServices(prelude: SceneScriptPrelude.load(), storage: SceneScriptStorage(directory: storage),
-                                           media: SceneScriptReplayMediaSource(), spectrum: { .silent })
+                                           media: SceneScriptReplayMediaSource(), spectrum: { .silent },
+                                           userShortcuts: userShortcuts)
         let wallpaper = try XCTUnwrap(try SceneScriptWallpaper(content: content, services: services, screenID: "test",
                                                                   prepareCreated: prepareCreated))
         addTeardownBlock { wallpaper.tearDown(); wallpaper.waitUntilIdle() }

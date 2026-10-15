@@ -5,7 +5,7 @@ import SwiftUI
 
 /// The displays as arranged in System Settings: click to select, Shift-click to add to the
 /// selection, right-click for WE's monitor menu (stretch and clone groups, the main clone display,
-/// flip, splits and mute). Each group is outlined around its displays, a stretch with a solid line
+/// flip, splits, Copy to and Swap with, and mute). Each group is outlined around its displays, a stretch with a solid line
 /// and a clone with a dashed one; a split display shows its regions, each selectable.
 struct MonitorLayoutView: View {
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
@@ -44,9 +44,8 @@ struct MonitorLayoutView: View {
                 ForEach(screens, id: \.self) { screen in
                     let screenId = WallpaperViewModel.screenId(for: screen)
                     if let regions = resolution.regions[screenId] {
-                        ForEach(Array(regions.enumerated()), id: \.element.id) { index, region in
-                            tile(region.id, name: String(localized: "\(WallpaperViewModel.screenName(for: screen)) Split \(index + 1)"),
-                                 frame: rect(region.rect), isMain: false)
+                        ForEach(regions, id: \.id) { region in
+                            tile(region.id, name: displayName(region.id), frame: rect(region.rect), isMain: false)
                         }
                     } else {
                         tile(screenId, name: WallpaperViewModel.screenName(for: screen), frame: rect(screen.frame),
@@ -134,12 +133,38 @@ struct MonitorLayoutView: View {
                 Button("Remove All Splits") { model.removeAllSplits(id) }
             }
         }
+        // WE's Copy to and Swap with, before Mute as in WE's menu.
+        let transferTargets = model.transferTargets(from: id)
+        if !transferTargets.isEmpty {
+            Divider()
+            Menu("Copy to") {
+                ForEach(transferTargets, id: \.self) { target in
+                    Button(displayName(target)) { model.copyWallpaper(from: id, to: target) }
+                }
+            }
+            Menu("Swap with") {
+                ForEach(transferTargets, id: \.self) { target in
+                    Button(displayName(target)) { model.swapWallpapers(id, target) }
+                }
+            }
+        }
         Divider()
         if model.isMuted(id) {
             Button("Unmute") { model.toggleMute(id) }
         } else {
             Button("Mute") { model.toggleMute(id) }
         }
+    }
+
+    /// The name a display or a split display's region goes by, as its tile shows it.
+    private func displayName(_ id: String) -> String {
+        let screenId = DisplayLayoutResolution.screen(of: id)
+        guard let screen = NSScreen.screens.first(where: { WallpaperViewModel.screenId(for: $0) == screenId }) else { return id }
+        let name = WallpaperViewModel.screenName(for: screen)
+        guard let index = wallpaperViewModel.layoutResolution.regions[screenId]?.firstIndex(where: { $0.id == id }) else {
+            return name
+        }
+        return String(localized: "\(name) Split \(index + 1)")
     }
 
     private func combinedBounds(_ screens: [NSScreen]) -> CGRect {

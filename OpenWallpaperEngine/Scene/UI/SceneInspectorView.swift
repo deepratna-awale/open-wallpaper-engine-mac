@@ -192,7 +192,7 @@ private final class SceneInspectorModel: ObservableObject {
 
         let storedValues: [String: String] = targets.storedValues
         let definitions = WallpaperEngineShareJSON.definitions(in: directory)
-        let labels = WallpaperEngineLabels.load()
+        let labels = WallpaperEngineLabels.load(wallpaperDirectory: directory)
         items = scene.objects.enumerated().map { index, object in
             let objectID = object.id ?? index
             var rawObject = rawObjects.indices.contains(index) ? prettyJSON(rawObjects[index]) : "{}"
@@ -249,7 +249,7 @@ private final class SceneInspectorModel: ObservableObject {
             .filter { versionKeys.contains($0.key) }
             .sorted { ($0.order ?? .max, $0.key) < ($1.order ?? .max, $1.key) }
             .map { definition in
-                let title = { (text: String) in labels.translation(text) ?? UserPropertyHTML.plainText(text) }
+                let title = { (text: String) in UserPropertyHTML.plainText(labels.translation(text) ?? text) }
                 let condition = definition.condition?.trimmingCharacters(in: .whitespaces)
                 return SceneVersionProperty(id: definition.key, title: title(definition.text),
                                             options: definition.options.map { ($0.value, title($0.label)) },

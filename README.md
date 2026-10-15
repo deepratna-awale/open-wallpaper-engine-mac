@@ -71,7 +71,7 @@ Everything the app saves stays on your Mac, and it collects no data or analytics
 
 - [Getting started](docs/getting-started.md) — requirements, assets, the Workshop and importing
 - [Features](docs/features.md) — everything the app supports, and how to use it
-- Guides: [display layouts](docs/display-layouts.md) · [playlists](docs/playlists.md) · [screen saver](docs/screen-saver.md) · [iPhone & iPad export](docs/iphone-ipad-export.md) · [Android export](docs/android-export.md) · [depth maps](docs/depth-maps.md) · [theming](docs/theming.md) · [MCP Server](docs/mcp.md) · [Chromium web engine](docs/chromium-engine.md)
+- Guides: [display layouts](docs/display-layouts.md) · [playlists](docs/playlists.md) · [screen saver](docs/screen-saver.md) · [iPhone & iPad export](docs/iphone-ipad-export.md) · [Android export](docs/android-export.md) · [depth maps](docs/depth-maps.md) · [theming](docs/theming.md) · [MCP Server](docs/mcp.md) · [command line](docs/command-line.md) · [Chromium web engine](docs/chromium-engine.md)
 - [Development](docs/development.md) — building from source and the project layout; [CONTRIBUTING.md](CONTRIBUTING.md) and [architecture](docs/architecture.md)
 - [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki) — guides, settings reference and troubleshooting
 
