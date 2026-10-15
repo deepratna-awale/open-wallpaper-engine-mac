@@ -80,6 +80,12 @@ struct OptimizationsPage: SettingsPage {
                 }
                 .changedFromDefault(viewModel.isChanged(\.videoFramework))
                 .help("AVKit plays videos with Apple's player. Metal draws them through the scene renderer so their effects apply; it needs the Wallpaper Engine assets, and without them videos play through AVKit.")
+                Picker("Video loading", selection: $viewModel.settings.videoReadMode) {
+                    Text("From disk").tag(GSVideoReadMode.fromDisk)
+                    Text("In memory").tag(GSVideoReadMode.inMemory)
+                }
+                .changedFromDefault(viewModel.isChanged(\.videoReadMode))
+                .help("From disk reads the video file again on every loop. In memory reads it once and plays it from memory, so the disk can rest (useful for a hard disk or a network volume), for the file's size in memory. Applies to videos opened from now on.")
             } header: {
                 Label("Video", systemImage: "film")
             } footer: {

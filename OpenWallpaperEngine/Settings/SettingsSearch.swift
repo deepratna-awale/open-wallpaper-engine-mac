@@ -109,6 +109,7 @@ struct SettingsSearch {
             entry("Displays", .optimizations, SettingsAnchor.displays),
             entry("Sync properties across displays", .optimizations, SettingsAnchor.displays),
             entry("Video Framework", .optimizations, SettingsAnchor.video),
+            entry("Video loading", .optimizations, SettingsAnchor.video),
             entry("Audio", .optimizations, SettingsAnchor.audio),
             entry("Audio Output", .optimizations, SettingsAnchor.audio),
             entry("Media integration support", .optimizations, SettingsAnchor.audio),

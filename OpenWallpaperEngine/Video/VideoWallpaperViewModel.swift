@@ -27,6 +27,8 @@ class VideoWallpaperViewModel: ObservableObject {
 
     /// A copy of the video AVFoundation can play is being made (`RepairedVideoCache`).
     @Published private(set) var isPreparingVideo = false
+    /// The file the players read, kept while they do: from memory, it owns the bytes.
+    private var videoFile: VideoFileSource?
     /// Finds the file the players open, off the main thread.
     private var preparation: Task<Void, Never>?
     /// Identifies the preparation in flight; nil once its file is open.
@@ -166,6 +168,7 @@ class VideoWallpaperViewModel: ObservableObject {
         audioPlayer.pause()
         player.replaceCurrentItem(with: nil)
         audioPlayer.replaceCurrentItem(with: nil)
+        videoFile = nil
     }
 
     deinit {
@@ -308,42 +311,49 @@ class VideoWallpaperViewModel: ObservableObject {
     /// Opens the wallpaper's video in the players once the file to open is known: a video whose
     /// track AVFoundation refuses as it is plays from its repaired copy, which is made first when
     /// it doesn't exist yet (a few seconds, shown as "Preparing video…").
+    ///
+    /// WE's "Video loading" set to in memory reads the file into memory here too, off the main
+    /// thread (`VideoFileSource`).
     private func preparePlayers(for wallpaper: WEWallpaper) {
         preparation?.cancel()
         pendingPreparation = nil
         isPreparingVideo = false
         let source = wallpaper.mediaURL
-        guard RepairedVideoCache.mayNeedRepair(source) else {
-            replacePlayers(with: source)
+        let readMode = wallpaperViewModel.videoReadMode
+        guard RepairedVideoCache.mayNeedRepair(source) || readMode == .inMemory else {
+            replacePlayers(with: VideoFileSource(url: source, mode: .fromDisk))
             return
         }
         let cache = RepairedVideoCache.current
         let id = UUID()
         pendingPreparation = id
         preparation = Task { [weak self] in
-            let url = await Task.detached(priority: .userInitiated) {
-                cache.playableURL(for: source) {
+            let file = await Task.detached(priority: .userInitiated) {
+                let url = cache.playableURL(for: source) {
                     Task { @MainActor [weak self] in
                         guard let self, self.pendingPreparation == id else { return }
                         self.isPreparingVideo = true
                     }
                 }
+                return VideoFileSource(url: url, mode: readMode)
             }.value
             guard let self, !Task.isCancelled, !self.stopped, self.pendingPreparation == id else { return }
             self.pendingPreparation = nil
             self.isPreparingVideo = false
-            self.replacePlayers(with: url)
+            self.replacePlayers(with: file)
         }
     }
 
-    private func replacePlayers(with url: URL) {
+    private func replacePlayers(with file: VideoFileSource) {
+        let url = file.url
+        videoFile = file
         mediaLease = CacheLeases.current.lease(url)
         // New AVPlayers start at rate 0, so the cached values no longer describe them.
         appliedVideoRate = nil
         appliedAudioRate = nil
         probe.reset()
-        let videoItem = AVPlayerItem(url: url)
-        let audioItem = AVPlayerItem(url: url)
+        let videoItem = file.makeItem()
+        let audioItem = file.makeItem()
         audioItem.audioTimePitchAlgorithm = .timeDomain
 
         player.replaceCurrentItem(with: videoItem)
