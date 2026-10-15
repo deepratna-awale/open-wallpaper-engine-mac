@@ -27,6 +27,8 @@ final class EditorTools: ObservableObject {
     @Published var problem: String?
     /// Images waiting for the importer's options (`ImportOptionsSheet`).
     @Published var pendingImport: PendingImageImport?
+    /// Normal Map Generation's options by material, kept while the window is open (as WE's editor).
+    var normalMapSettings: [String: NormalMapGenerator.Settings] = [:]
 
     /// Canvas points within which a drag snaps.
     static let snapDistance: Double = 6
