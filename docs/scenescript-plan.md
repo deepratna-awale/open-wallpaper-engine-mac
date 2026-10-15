@@ -105,7 +105,7 @@ The d.ts header states the binding model: a script is bound to **one property**;
 - Structure: `createLayer(path|IAssetHandle|config|IModelData)`, `destroyLayer(layer)` ("removed after all scripts on that frame updated"), `sortLayer(layer, index)`, `createModelData(config)` / `destroyModelData`.
 - Camera: `getCameraTransforms()` / `setCameraTransforms({eye, center, up, zoom})`, `fov`, `nearz`, `farz`.
 - `getAnimation(name?)` from any layer.
-- Scene settings (read/write): `bloom`, `bloomstrength`, `bloomthreshold`, `clearenabled`, `clearcolor`, `ambientcolor`, `skylightcolor`, `camerafade`, `camerashake`, `camerashakespeed`, `camerashakeamplitude`, `camerashakeroughness`, `cameraparallax`, `cameraparallaxamount`, `cameraparallaxdelay`, `cameraparallaxmouseinfluence`.
+- Scene settings (read/write): `bloom`, `bloomstrength`, `bloomthreshold`, `clearenabled`, `clearcolor`, `ambientcolor`, `skylightcolor`, `camerafade`, `camerashake`, `camerashakespeed`, `camerashakeamplitude`, `camerashakeroughness`, `cameraparallax`, `cameraparallaxamount`, `cameraparallaxdelay`, `cameraparallaxmouseinfluence`. `clearenabled` (and `general.clearenabled`, on unless authored false: scene flag 0x20, which WE's scene pass tests before its clear, 0x140183588) off keeps the last frame: the scene pass loads its colour and depth instead of clearing them, into the scene's own target.
 
 `createLayer` config objects may carry `name`, `origin`, `angles`, `scale`, `text`, `color`, … and `model` (IModelData); the doc example passes `thisLayer.origin` directly.
 
