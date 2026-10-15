@@ -128,7 +128,7 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     }
 
     /// The user's frame rate.
-    var frameRate: Int { Int(settings.settings.fps) }
+    var frameRate: Int { Int(settings.effectiveSettings.fps) }
 
     // MARK: Heartbeat
 
@@ -323,7 +323,7 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         }
         page.evaluate(WebWallpaperPropertyBridge.applyGeneralPropertiesScript(fps: frameRate))
         if fpsObserver == nil {
-            fpsObserver = settings.$settings.map { Int($0.fps) }.removeDuplicates().dropFirst()
+            fpsObserver = settings.$effectiveSettings.map { Int($0.fps) }.removeDuplicates().dropFirst()
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] fps in
                     self?.page?.evaluate(WebWallpaperPropertyBridge.applyGeneralPropertiesScript(fps: fps))

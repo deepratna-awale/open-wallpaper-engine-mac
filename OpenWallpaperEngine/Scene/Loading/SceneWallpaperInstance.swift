@@ -232,7 +232,7 @@ final class SceneWallpaperInstance {
             loadContent()
         }
         // A display that joined or changed size can change WE's automatic texture resolution.
-        applyRenderSettings(renderSettings(for: environment.settings.settings))
+        applyRenderSettings(renderSettings(for: environment.settings.effectiveSettings))
         updateVideoPlayback()
         var playback = SceneRenderLoop.Playback()
         for (id, display) in displays {
@@ -252,7 +252,7 @@ final class SceneWallpaperInstance {
         let presentation = presentation
         let placement = wallpapers.wallpaperPlacement
         let sound = soundTarget
-        let limits = FramePacing.Limits(environment.settings.settings, power: PowerPolicyMonitor.shared.policy)
+        let limits = FramePacing.Limits(environment.settings.effectiveSettings, power: PowerPolicyMonitor.shared.policy)
         // Thread boundary: main → render thread (applied before the playback, which reads the rate).
         renderLoop.perform { renderer in
             if let presentation { presentation.apply(to: renderer) } else { renderer.setPlacement(placement) }
@@ -339,8 +339,9 @@ final class SceneWallpaperInstance {
             // One frame time per rendered frame, however many displays show it (the watchdog locks).
             renderer.frameTimeObserver = { watchdog.recordFrame(duration: $0) }
         }
-        // The user's quality settings: the renderer reads them per frame, the content is built for them.
-        let renderSettings = renderSettings(for: environment.settings.settings)
+        // The quality settings (the user's, or the battery's): the renderer reads them per frame,
+        // the content is built for them.
+        let renderSettings = renderSettings(for: environment.settings.effectiveSettings)
         renderer.renderSettings = renderSettings
         sentRenderSettings = renderSettings
         viewModel.setRenderSettings(renderSettings)
@@ -486,12 +487,17 @@ final class SceneWallpaperInstance {
                 self.viewModel.invalidateContent()
             }
         })
-        environment.settings.$settings
+        // The settings, or the battery quality switching on or off: applied in place, the content
+        // rebuilt only for what it is built for.
+        environment.settings.$effectiveSettings
             .dropFirst()
             .sink { [weak self] settings in
                 MainActor.assumeIsolated {
                     guard let self else { return }
                     self.applyRenderSettings(self.renderSettings(for: settings))
+                    let limits = FramePacing.Limits(settings, power: PowerPolicyMonitor.shared.policy)
+                    // Thread boundary: main → render thread.
+                    self.renderLoop.perform { $0.framePacing.limits = limits }
                 }
             }
             .store(in: &cancellables)

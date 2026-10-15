@@ -65,10 +65,17 @@ struct PowerPolicy: Equatable, Sendable {
     }
 }
 
+/// A live `PowerPolicy`: `PowerPolicyMonitor`, or a stand-in in tests.
+protocol PowerPolicySource: AnyObject, Sendable {
+    var policy: PowerPolicy { get }
+    @discardableResult func observe(_ body: @escaping @Sendable (PowerPolicy) -> Void) -> UUID
+    func removeObserver(_ id: UUID)
+}
+
 /// Watches power source, Low Power Mode and thermal state and reports a new `PowerPolicy` when its
 /// decisions change. Event driven; user idle is polled only while library preparation is waiting
 /// on it (on battery), once every 15 s, on a utility queue.
-final class PowerPolicyMonitor: @unchecked Sendable {
+final class PowerPolicyMonitor: PowerPolicySource, @unchecked Sendable {
     static let shared = PowerPolicyMonitor()
 
     private let queue = DispatchQueue(label: "owe.power-policy", qos: .utility)
@@ -135,6 +142,9 @@ final class PowerPolicyMonitor: @unchecked Sendable {
             let changed = previous.allowsLibraryPreparation != next.allowsLibraryPreparation
                 || previous.efficiencySteps != next.efficiencySteps
                 || previous.frameRateCap != next.frameRateCap
+                // The battery quality (`BatteryQuality`) follows these two.
+                || previous.state.onBattery != next.state.onBattery
+                || previous.state.lowPowerMode != next.state.lowPowerMode
             let callbacks = Array(observers.values)
             lock.unlock()
             updateIdlePolling(for: next)
