@@ -173,6 +173,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.texture = { resources.texture($0) }
         services.fonts = { resources.fonts() }
         services.userPropertyChoices = { resources.userPropertyChoices() }
+        services.models = { resources.modelChoices() }
+        services.layerPresets = { resources.layerPresets(labels: labels) }
         services.timeline = timeline
         services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
         services.commands = commands
