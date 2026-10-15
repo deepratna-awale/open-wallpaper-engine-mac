@@ -83,6 +83,8 @@ final class SceneScriptEngineTests: XCTestCase {
 
         fixture.engine.environment.isScreensaver = true
         XCTAssertEqual(fixture.evaluate("engine.isScreensaver() + ',' + engine.isWallpaper()")?.toString(), "true,false")
+        fixture.engine.environment.isRunningInEditor = true
+        XCTAssertEqual(fixture.evaluate("engine.isRunningInEditor()")?.toBool(), true, "the Wallpaper Editor's canvas")
     }
 
     // MARK: - User properties
