@@ -13,6 +13,8 @@ final class GlobalHotKeyController: ObservableObject {
     var perform: (GlobalHotKeyAction) -> Void = { _ in }
     /// The playlists' shortcuts, suspended with these while a recorder listens.
     weak var playlistShortcuts: PlaylistShortcutController?
+    /// The wallpapers' and profiles' hotkeys, suspended with these too.
+    weak var userHotKeys: UserHotKeyController?
 
     private let viewModel: WallpaperViewModel
     private let registrar: HotKeyRegistering
@@ -73,9 +75,11 @@ final class GlobalHotKeyController: ObservableObject {
         if unregistered != unregisteredActions { unregisteredActions = unregistered }
     }
 
-    /// Unregisters every hotkey, and the playlists' shortcuts, while a recorder field listens.
+    /// Unregisters every hotkey, and the playlists', wallpapers' and profiles' shortcuts, while a
+    /// recorder field listens.
     func suspend() {
         playlistShortcuts?.suspend()
+        userHotKeys?.suspend()
         guard !isSuspended else { return }
         for action in registered.keys { registrar.unregister(id: Self.id(of: action)) }
         registered.removeAll()
@@ -84,6 +88,7 @@ final class GlobalHotKeyController: ObservableObject {
 
     func resume() {
         playlistShortcuts?.resume()
+        userHotKeys?.resume()
         guard isSuspended else { return }
         isSuspended = false
         sync()
@@ -100,11 +105,12 @@ final class GlobalHotKeyController: ObservableObject {
     /// What already uses `shortcut`: playlists, other actions, this app's menus, macOS and, by
     /// trying to register it, other apps.
     func conflicts(for shortcut: GlobalShortcut, action: GlobalHotKeyAction) -> [GlobalShortcutConflict] {
-        var conflicts = finder.conflicts(for: shortcut, action: action, playlists: viewModel.playlists, hotKeys: bindings)
+        var conflicts = finder.conflicts(for: shortcut, action: action, playlists: viewModel.playlists, hotKeys: bindings,
+                                         userHotKeys: userHotKeys?.hotKeys ?? [])
         let ownedHere = registered[action] == shortcut
         let ownedInApp = conflicts.contains {
             switch $0 {
-            case .playlist, .action: return true
+            case .playlist, .action, .userHotKey: return true
             default: return false
             }
         }
@@ -132,6 +138,8 @@ final class GlobalHotKeyController: ObservableObject {
                 if let index = playlists.firstIndex(where: { $0.id == id }) { playlists[index].shortcut = nil }
             case let .action(other):
                 bindings[other] = nil
+            case let .userHotKey(id, _, _):
+                userHotKeys?.remove(id)
             default:
                 break
             }
