@@ -54,12 +54,15 @@ final class WallpaperEditorThumbnailTests: XCTestCase {
     }
 
     func testTakeSnapshotIsDrawnByTheCanvasRenderer() async throws {
+        // The fixture's image layer is drawn by WE's own genericimage2 shader.
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: ShaderVariantTests.weAssets.appending(path: "shaders/genericimage2.vert").path),
+                          "needs Wallpaper Engine's assets (OWE_ASSETS)")
         let editor = try WallpaperEditorController(wallpaper: wallpaper, host: WallpaperEditorAppDelegate.makeSceneHost(),
                                                    resumesDraft: false)
         editor.window.orderFront(nil)
         defer { editor.window.close() }
         // The canvas loads its scene; a snapshot then comes from its renderer.
-        let deadline = Date().addingTimeInterval(120) // A cold CI runner translates the scene's shaders first.
+        let deadline = Date().addingTimeInterval(60) // A cold runner translates the scene's shaders first.
         while editor.thumbnail.pending == nil, Date() < deadline {
             editor.thumbnail.problem = nil
             await editor.thumbnail.takeSnapshot()
