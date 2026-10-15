@@ -21,6 +21,8 @@ final class EditorTools: ObservableObject {
     @Published var sidebarTab: SidebarTab = .layers
     /// The layer whose name is being edited in the list.
     @Published var renaming: Int?
+    /// Edit with External Image Editor's watches, made on first use.
+    var externalEditor: ExternalImageEditor?
     /// A message for the window's banner (an import that failed, say).
     @Published var problem: String?
     /// Images waiting for the importer's options (`ImportOptionsSheet`).
