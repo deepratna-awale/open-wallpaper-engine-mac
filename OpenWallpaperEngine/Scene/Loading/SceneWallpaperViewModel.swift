@@ -373,7 +373,7 @@ class SceneWallpaperViewModel: ObservableObject {
         guard isCurrent() else { return nil }
         var read = SceneRead(wallpaper: wallpaper, signature: key.name + "|" + sceneFile, hasPackage: hasPackage)
         read.overlay = request.overlay
-        read.editorAssets = request.overlay?.particles?.assetData() ?? [:]
+        read.editorAssets = request.overlay?.editorFileData() ?? [:]
         if let cached = Self.cachedParse(for: dir, signature: read.signature) {
             read.parser = cached.parser
             read.scene = cached.scene
@@ -1699,7 +1699,9 @@ class SceneWallpaperViewModel: ObservableObject {
             },
             sceneEngineCombos: sceneEngineCombos,
             readWallpaperFile: { [weak self] path in
-                guard let self, let data = self.wallpaperData(named: path, wallpaperDir: wallpaperDir) else { return nil }
+                // The editor's files of the wallpaper (an effect made in the Wallpaper Editor) are its own.
+                guard let self, let data = self.editorAssetsLock.withLock({ self.editorAssets[path] })
+                        ?? self.wallpaperData(named: path, wallpaperDir: wallpaperDir) else { return nil }
                 return self.bindingTable.resolvedData(data, path: path, properties: self.userProperty)
             })
         builder.objectCombos = objectCombos

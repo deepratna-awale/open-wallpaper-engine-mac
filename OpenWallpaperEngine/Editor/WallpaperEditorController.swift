@@ -82,6 +82,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         self.session = session
         resources = EditorWallpaperResources(wallpaper: wallpaper, package: source.package,
                                              assets: SceneEditOverlayFiles.assets(for: identity))
+        resources.draftFiles = { [weak session] in session?.overlay.effectFiles ?? [:] }
         appliedSceneDigest = Self.sceneDigest(session.overlay)
         appliedOverlay = session.overlay
         particleAssets = WallpaperEditorParticleAssets(wallpaper: wallpaper, package: source.package)

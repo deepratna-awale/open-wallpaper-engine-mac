@@ -5206,6 +5206,101 @@
         }
       }
     },
+    "Are you sure that you want to delete the effect “%@”?\n\nThis will break all usages of that effect inside the wallpaper." : {
+      "comment" : "Wallpaper Editor › Add Effect › Delete: the confirmation; %@ is the effect's title",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل أنت متأكد من أنك تريد حذف التأثير “%@”؟\n\nسيؤدي ذلك إلى تعطيل كل استخدامات هذا التأثير داخل الخلفية."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Möchtest du den Effekt „%@“ wirklich löschen?\n\nDadurch funktionieren alle Verwendungen dieses Effekts im Hintergrundbild nicht mehr."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Seguro que quieres eliminar el efecto «%@»?\n\nTodos los usos de ese efecto en el fondo de pantalla dejarán de funcionar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voulez-vous vraiment supprimer l’effet « %@ » ?\n\nToutes les utilisations de cet effet dans le fond d’écran ne fonctionneront plus."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "क्या आप वाकई इफ़ेक्ट “%@” हटाना चाहते हैं?\n\nवॉलपेपर में इस इफ़ेक्ट के सभी उपयोग काम करना बंद कर देंगे।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuoi davvero eliminare l’effetto «%@»?\n\nTutti gli utilizzi di questo effetto nello sfondo smetteranno di funzionare."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エフェクト「%@」を削除してもよろしいですか？\n\n壁紙内でこのエフェクトを使用している箇所はすべて機能しなくなります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "효과 “%@”을(를) 삭제하시겠습니까?\n\n배경 화면에서 이 효과를 사용하는 모든 곳이 작동하지 않게 됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czy na pewno chcesz usunąć efekt „%@”?\n\nWszystkie użycia tego efektu w tapecie przestaną działać."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tem certeza de que deseja excluir o efeito “%@”?\n\nTodos os usos desse efeito no papel de parede deixarão de funcionar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы действительно хотите удалить эффект «%@»?\n\nВсе использования этого эффекта в обоях перестанут работать."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” efektini silmek istediğinizden emin misiniz?\n\nBu efektin duvar kâğıdındaki tüm kullanımları çalışmaz hâle gelir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ви справді хочете видалити ефект «%@»?\n\nУсі використання цього ефекту в шпалерах перестануть працювати."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "确定要删除效果“%@”吗？\n\n壁纸中所有使用该效果的地方都将失效。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "確定要刪除效果「%@」嗎？\n\n桌布中所有使用該效果的地方都將失效。"
+          }
+        }
+      }
+    },
     "Arrange" : {
       "comment" : "Wallpaper Editor",
       "localizations" : {
@@ -11631,6 +11726,101 @@
         }
       }
     },
+    "Copy the selected effect into a new effect whose shaders you can edit." : {
+      "comment" : "Wallpaper Editor › Add Effect › Duplicate: help tag",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "انسخ التأثير المحدد إلى تأثير جديد يمكنك تعديل مظللاته."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den ausgewählten Effekt in einen neuen Effekt kopieren, dessen Shader du bearbeiten kannst."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia el efecto seleccionado en un efecto nuevo cuyos sombreadores puedes editar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier l’effet sélectionné dans un nouvel effet dont vous pouvez modifier les nuanceurs."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "चुने गए इफ़ेक्ट को एक नए इफ़ेक्ट में कॉपी करें जिसके शेडर आप संपादित कर सकें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia l’effetto selezionato in un nuovo effetto di cui puoi modificare gli shader."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択したエフェクトを、シェーダーを編集できる新しいエフェクトにコピーします。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택한 효과를 셰이더를 편집할 수 있는 새 효과로 복사합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skopiuj wybrany efekt do nowego efektu, którego shadery możesz edytować."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copie o efeito selecionado para um novo efeito cujos shaders você pode editar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопировать выбранный эффект в новый эффект, шейдеры которого можно редактировать."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçili efekti, gölgelendiricilerini düzenleyebileceğiniz yeni bir efekte kopyalayın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопіювати вибраний ефект у новий ефект, шейдери якого можна редагувати."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将所选效果复制为一个可以编辑其着色器的新效果。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將所選效果複製為一個可以編輯其著色器的新效果。"
+          }
+        }
+      }
+    },
     "Create" : {
       "comment" : "Wallpaper Editor: button creating the new material",
       "localizations" : {
@@ -11722,6 +11912,196 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "建立"
+          }
+        }
+      }
+    },
+    "Create New Effect" : {
+      "comment" : "Wallpaper Editor › Add Effect › New: the dialog's title and its undo step (WE's)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "انشاء تأثير جديد"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuen Effekt erstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crear nuevo efecto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer un nouvel effet"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "नया इफ़ेक्ट बनाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea nuovo effetto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新規エフェクト作成"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새 효과 생성"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utwórz nowy efekt"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Criar Novo Efeito"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Создать новый эффект"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeni Efekt Oluştur"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створити новий ефект"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "创建新效果"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增效果"
+          }
+        }
+      }
+    },
+    "Create a new effect whose shaders you can edit." : {
+      "comment" : "Wallpaper Editor › Add Effect › New: help tag",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أنشئ تأثيرًا جديدًا يمكنك تعديل مظللاته."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einen neuen Effekt erstellen, dessen Shader du bearbeiten kannst."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea un efecto nuevo cuyos sombreadores puedes editar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer un nouvel effet dont vous pouvez modifier les nuanceurs."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक नया इफ़ेक्ट बनाएँ जिसके शेडर आप संपादित कर सकें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea un nuovo effetto di cui puoi modificare gli shader."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シェーダーを編集できる新しいエフェクトを作成します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "셰이더를 편집할 수 있는 새 효과를 만듭니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utwórz nowy efekt, którego shadery możesz edytować."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crie um novo efeito cujos shaders você pode editar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Создать новый эффект, шейдеры которого можно редактировать."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gölgelendiricilerini düzenleyebileceğiniz yeni bir efekt oluşturun."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створити новий ефект, шейдери якого можна редагувати."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建一个可以编辑其着色器的效果。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增一個可以編輯其著色器的效果。"
           }
         }
       }
@@ -12290,6 +12670,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "刪除"
+          }
+        }
+      }
+    },
+    "Delete Effect" : {
+      "comment" : "Wallpaper Editor › Add Effect › Delete: the dialog's title and its undo step (WE's)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حذف تأثير"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effekt löschen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borrar efecto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer l'effet"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इफ़ेक्ट हटाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancella effetto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エフェクトを削除"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "효과 삭제"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuń efekt"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apagar Efeito"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить эффект"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efekti Sil"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити ефект"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除效果"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刪除效果"
           }
         }
       }
@@ -13143,6 +13618,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "複製"
+          }
+        }
+      }
+    },
+    "Duplicate Effect" : {
+      "comment" : "Wallpaper Editor › Add Effect › Duplicate: the dialog's title and its undo step (WE's)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تأثير مكرر"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effekt duplizieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duplicar efecto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dupliquer l'effet"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इफ़ेक्ट डुप्लिकेट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effetto duplica"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エフェクトの複製"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "효과 중복"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duplikuj efekt"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duplicar efeitos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эффект Копирования"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efekti Kopyala"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дублювати ефект"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制效果"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重複效果"
           }
         }
       }
@@ -20997,6 +21567,101 @@
         }
       }
     },
+    "My Effects" : {
+      "comment" : "Wallpaper Editor › Add Effect: the group of the wallpaper's own editable effects (WE's)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تأثيراتي"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meine Effekte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus efectos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mes Effets"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेरे इफ़ेक्ट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I miei effetti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "マイエフェクト"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "나의 효과"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moje efekty"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meus Efeitos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мои эффекты"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efektlerim"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мої ефекти"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我的效果"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我的效果"
+          }
+        }
+      }
+    },
     "Name" : {
       "localizations" : {
         "ar" : {
@@ -21182,6 +21847,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此背景圖片和 Wallpaper Engine 資源中都沒有 3D 模型（.mdl）。"
+          }
+        }
+      }
+    },
+    "New" : {
+      "comment" : "Wallpaper Editor › Add Effect: button that creates a new, editable effect (WE's)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جديد"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouveau"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "नया"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuovo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新規"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새로 만들기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nowy"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Novo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новый"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeni"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новий"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新增"
           }
         }
       }
@@ -22979,6 +23739,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "提示"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "comment" : "Wallpaper Editor: confirms a dialog (WE's)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "موافق"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aceptar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ठीक है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "확인"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ОК"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TAMAM"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ОК"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "确认"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "確定"
           }
         }
       }
@@ -33282,6 +34137,101 @@
         }
       }
     },
+    "The Effect Couldn’t Be Made" : {
+      "comment" : "Wallpaper Editor › Add Effect: alert title when New or Duplicate fails",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر إنشاء التأثير"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Effekt konnte nicht erstellt werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido crear el efecto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de créer l’effet"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इफ़ेक्ट नहीं बनाया जा सका"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile creare l’effetto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エフェクトを作成できませんでした"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "효과를 만들 수 없습니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można utworzyć efektu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível criar o efeito"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось создать эффект"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efekt oluşturulamadı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося створити ефект"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法创建效果"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法建立效果"
+          }
+        }
+      }
+    },
     "The Solid Placeholder couldn’t be added: %@" : {
       "comment" : "Wallpaper Editor: banner when the Solid Placeholder's model can't be written; the argument is the reason",
       "localizations" : {
@@ -38197,6 +39147,196 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "工作坊"
+          }
+        }
+      }
+    },
+    "You are about to create a new, editable effect. You can change the shaders in any way you like.\n\nChoose a unique name for the new effect:" : {
+      "comment" : "Wallpaper Editor › Add Effect › New: the dialog's message (WE's)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أنت على وشك إنشاء تأثير جديد قابل للتعديل. يمكنك تغيير التظليل بأي طريقة تريدها.\n\n اختر اسمًا فريدًا للتأثير الجديد:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du bist dabei den Effekt '{{effect}}' zu duplizieren und einen neuen, editierbaren Effekt zu erstellen. Dies erlaubt es dir, die Shader des Effektes im Detail anzupassen.\n\nWähle einen einzigartigen Namen für deinen neuen Effekt:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estás a punto de crear un nuevo efecto editable, al cual podrás cambiar las sombras de la forma que quieras.\n\nElije un nombre para el nuevo efecto:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous êtes sur le point de créer un nouvel effet modifiable. Vous pouvez changer les shaders comme vous le souhaitez.\n\nChoisissez un nom unique pour le nouvel effet :"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आप एक नया, संपादन योग्य इफ़ेक्ट बनाने वाले हैं। आप उसके शेडर अपनी इच्छा से बदल सकते हैं।\n\nनए इफ़ेक्ट के लिए एक अनोखा नाम चुनें:"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stai per creare un nuovo effetto modificabile. Puoi cambiare gli shader nel modo che preferisci.\n\nScegli un nome unico per il nuovo effetto:"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "編集可能な新しいエフェクトを作成しようとされています。シェーダーは好きなように変更することができます。\n\n新エフェクトに付けるユニークな名前を選択してください:"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새로운 편집 가능한 효과를 생성하려 합니다. 원하는 대로 셰이더를 변경할 수 있습니다.\n\n새 효과의 특별한 이름 선택:"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Za chwilę stworzysz nowy, edytowalny efekt. Możesz zmieniać w nim Shader w dowolny sposób.\n \nWybierz unikalną nazwę dla swojego nowego efektu:"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Você está prestes a duplicar o efeito '{{effect}}' e criar um novo efeito editável onde você pode alterar os sombreadores de qualquer maneira que você goste.\n\nEscolha um nome único para o novo efeito:"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы собираетесь повторить эффект '{{effect}}' и создайте новый редактируемый эффект, где вы можете изменить шейдеры любым удобным вам способом.\n\nВыберите уникальное имя для нового эффекта:"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeni ve düzenlenebilir bir efekt oluşturmak üzeresiniz. Gölgelendiricileri istediğiniz şekilde değiştirebilirsiniz.\n\nYeni efekt için benzersiz bir isim seçin:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ви створюєте новий ефект, який можна редагувати. Ви можете змінювати будівники тіней як забажаєте.\n\nОберіть унікальну назву для ефекту:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您将复制效果 “{{effect}}” 并且创造一个新的可编辑效果，您可以在其中随意更改着色器。\n\n选择新效果的唯一名称："
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您將新增一個可編輯效果，您可以在其中隨意更改著色器。\n\n選擇新效果的唯一名稱："
+          }
+        }
+      }
+    },
+    "You are about to duplicate the effect “%@” and create a new, editable effect where you can change the shaders in any way you like.\n\nChoose a unique name for the new effect:" : {
+      "comment" : "Wallpaper Editor › Add Effect › Duplicate: the dialog's message; %@ is the effect's title (WE's)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أنت على وشك تكرار التأثير “%@” وإنشاء تأثير جديد قابل للتعديل حيث يمكنك تغيير الظلال بأي طريقة تريدها.\n\nاختر اسمًا فريدًا للتأثير الجديد:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Du bist dabei den Effekt “%@” zu duplizieren und einen neuen, editierbaren Effekt zu erstellen, bei welchem du die Shader selbst umschreiben.\n\nWähle einen neuen einzigartigen Namen für deinen Effekt:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estás a punto de duplicar el efecto “%@” y crear uno nuevo editable, al cual podrás cambiar las sombras de la forma que quieras.\n\nElije un nombre para el nuevo efecto:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous êtes sur le point de dupliquer l’effet “%@” et créer un nouvel effet modifiable, où vous pouvez changer les shaders comme vous le souhaitez.\n\nChoisissez un nom unique pour le nouvel effet :"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आप इफ़ेक्ट “%@” को डुप्लिकेट करके एक नया, संपादन योग्य इफ़ेक्ट बनाने वाले हैं, जिसके शेडर आप अपनी इच्छा से बदल सकते हैं।\n\nनए इफ़ेक्ट के लिए एक अनोखा नाम चुनें:"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stai per duplicare l'effetto “%@” e creare un nuovo effetto modificabile dove potrai modificare gli shader come meglio crederai.\n\nScegli un nome unico per il nuovo effetto:"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エフェクト「%@」を複製し、シェーダーを好きなように変更できる、編集可能な新しいエフェクトを作成しようとされています。\n\n新エフェクトに付けるユニークな名前を選択してください:"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” 효과를 중복하고, 원하는 대로 셰이더를 변경할 수 있는 새로운 편집 가능한 효과를 생성하려 합니다.\n\n새 효과의 특별한 이름 선택:'"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Za chwilę zduplikujesz efekt “%@” i stworzysz nowy, edytowalny efekt. Możesz zmieniać w nim Shader w dowolny sposób.\n\nWybierz unikalną nazwę dla swojego nowego efektu:"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Você está prestes a duplicar o efeito “%@” e criar um novo efeito editável onde você pode alterar os sombreadores de qualquer maneira que você desejar.\n\nInsira um novo nome único para o efeito:"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы собираетесь скопировать эффект “%@” и создать новый редактируемый эффект, где вы можете изменить шейдер как захотите.\n\nВыберите уникальное имя для нового эффекта:"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” efektini kopyalamak ve gölgelendiricileri istediğiniz şekilde değiştirebileceğiniz yeni ve düzenlenebilir bir efekt oluşturmak üzeresiniz.\n\nYeni efekt için benzersiz bir isim seçin:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ви збираєтесь дублювати ефект “%@” та створити новий ефект, який можна редагувати, і де ви зможете змінювати будівники тіней як забажаєте.\n\nОберіть унікальну назву для нового ефекту:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你即将复制“%@”效果并新建一个可以按你的想法随意调整着色的可编辑效果。\n\n请为新效果选择一个独特的名称："
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您將重複效果 「%@」 並且新增一個可編輯效果，您可以在其中隨意變更著色器。\n\n選擇新效果的唯一名稱："
           }
         }
       }
