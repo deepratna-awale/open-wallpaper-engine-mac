@@ -100,8 +100,11 @@ final class SceneTextScriptLayoutTests: XCTestCase {
         guard FileManager.default.fileExists(atPath: sceneURL.path) else { throw XCTSkip("no local copy of 3238423642") }
         let data = try Data(contentsOf: sceneURL)
         let scene = try JSONDecoder().decode(WEScene.self, from: data)
-        let layers = scene.objects.filter { $0.name == "Artist Name" || $0.name == "Song Title" }
-        XCTAssertEqual(layers.filter { $0.maxwidth == 1200 && $0.limitwidth == true }.count, 2)
+        // The scene has a second "Song Title" (another widget's, without the script).
+        let layers = scene.objects.filter {
+            ($0.name == "Artist Name" || $0.name == "Song Title") && $0.maxwidth == 1200 && $0.limitwidth == true
+        }
+        XCTAssertEqual(layers.count, 2)
 
         let document = try SceneScriptSiteBuilder.document(from: data)
         let content = SceneScriptSceneContent(wallpaperID: "katana-\(UUID().uuidString.prefix(8))", document: document,
