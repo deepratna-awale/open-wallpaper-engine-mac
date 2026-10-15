@@ -107,6 +107,7 @@ groups:
     - "UpdateShaderPrewarmer*"
   script:
     - "SceneScript*"
+    - "UserShortcut*"
     - "ModelScript*"
     - "UniformScript*"
     - "WECursorCapture*"

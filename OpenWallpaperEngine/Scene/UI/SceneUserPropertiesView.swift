@@ -69,6 +69,9 @@ final class SceneUserPropertiesModel: ObservableObject {
     private let wallpaperPath: String
     /// The text layers' Font and Size settings that hold the user's own value.
     private var userLayerSettings: Set<String> = []
+    /// Tests and opens the user shortcuts bound here (this Mac's hash, read once).
+    private(set) lazy var userShortcutLauncher = UserShortcutLauncher(opener: WorkspaceUserShortcutOpener(),
+                                                                      systemHash: UserShortcutSystemHash.current())
 
     init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope]) {
         wallpaperPath = wallpaper.settingsDirectory.path
@@ -523,14 +526,12 @@ struct SceneUserPropertiesView: View {
                 .anchorsColorPanel()
             case "file", "directory", "texture":
                 pathPicker(property)
-            case "usershortcut":
-                VStack(alignment: .leading, spacing: 2) {
-                    Button(property.title.isEmpty ? String(localized: "Shortcut") : property.title) {}
-                        .disabled(true)
-                    Text("Custom shortcuts are not supported yet.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+            case SceneScriptUserProperties.Property.userShortcutType:
+                UserShortcutPropertyRow(title: property.title.isEmpty ? String(localized: "Shortcut") : property.title,
+                                        help: parameterHelp(property),
+                                        value: model.values[property.id] ?? property.defaultValue,
+                                        launcher: model.userShortcutLauncher,
+                                        onChange: { model.set($0, for: property) })
             default:
                 // "text" and untyped rows: author notices, headers and dividers.
                 noticeRow(property)
