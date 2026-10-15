@@ -32,14 +32,15 @@ final class SceneTextSpacingTests: XCTestCase {
         XCTAssertEqual(spaced.lineHeight - plain.lineHeight, 12)
         let plainOrigins = plain.baselineOrigins(), spacedOrigins = spaced.baselineOrigins()
         XCTAssertEqual((spacedOrigins[0].y - spacedOrigins[1].y) - (plainOrigins[0].y - plainOrigins[1].y), 12)
-        XCTAssertEqual(spaced.boxSize.y - plain.boxSize.y, 12, accuracy: 0.001)
+        // One gap, and the last line's bottom (its ascender less the line height, 0x9c/0x94 of WE's layout).
+        XCTAssertEqual(spaced.boxSize.y - plain.boxSize.y, 24, accuracy: 0.001)
     }
 
     func testWrappingCountsTheSpacing() throws {
-        let text = "aaaa aaaa aaaa aaaa"
-        let width = Float(layout("aaaa aaaa", spacing: .zero).lines[0].width) + 4
-        XCTAssertEqual(layout(text, spacing: .zero, maxWidth: width).lines.count, 2)
-        XCTAssertGreaterThan(layout(text, spacing: SIMD2(20, 0), maxWidth: width).lines.count, 2)
+        let text = String(repeating: "aaaa ", count: 12)
+        let plain = layout(text, spacing: .zero, maxWidth: 800).lines.count
+        XCTAssertGreaterThan(plain, 1)
+        XCTAssertGreaterThan(layout(text, spacing: SIMD2(20, 0), maxWidth: 800).lines.count, plain)
     }
 
     /// 3802509485 (Everyone) authors `"spacing": "10.48000 10.48000"`; a single number is both axes.
