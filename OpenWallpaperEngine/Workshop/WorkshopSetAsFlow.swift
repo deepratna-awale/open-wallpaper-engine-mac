@@ -33,7 +33,6 @@ final class WorkshopSetAsFlow: ObservableObject {
         /// The wallpaper in a downloaded folder, as the library reads it.
         var wallpaper: @MainActor (_ folder: URL) -> WEWallpaper?
         var setWallpaper: @MainActor (WEWallpaper) -> Void
-        var isSettingScreenSaver: @MainActor () -> Bool
         /// Whether the downloaded wallpaper can be set as the screen saver now (`ScreenSaverSelectionService.availability`).
         var screenSaverAvailability: @MainActor (WEWallpaper) -> ScreenSaverSelectionService.Availability
         /// Offers to install the Chromium engine, which the wallpaper needs in the screen saver.
@@ -49,13 +48,13 @@ final class WorkshopSetAsFlow: ObservableObject {
     }
 
     /// Whether the menu item can run for `item`: its type can be set, it isn't running already,
-    /// it is installed or can be downloaded, and no screen saver recording is running.
+    /// and it is installed or can be downloaded.
     func canRun(_ action: Action, for item: WorkshopItem) -> Bool {
         switch action {
         case .wallpaper:
             guard WallpaperSetAsRules.canSetWallpaper(item) else { return false }
         case .screenSaver:
-            guard WallpaperSetAsRules.canSetScreenSaver(item), !environment.isSettingScreenSaver() else { return false }
+            guard WallpaperSetAsRules.canSetScreenSaver(item) else { return false }
         }
         switch phases[item.id] {
         case .downloading?, .settingScreenSaver?: return false

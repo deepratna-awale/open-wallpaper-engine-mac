@@ -104,10 +104,8 @@ struct SystemScreenSaverValues: Equatable {
 /// The wallpaper set as the screen saver.
 struct SystemScreenSaverSelection: Equatable {
     enum Kind: String, Equatable {
-        /// Drawn live with the screen saver's choices for it.
+        /// Drawn live: a scene or a page with the screen saver's choices for it, a video as it is.
         case live
-        /// A video wallpaper's own file, played as it is.
-        case video
     }
 
     /// The wallpaper; nil when it is no longer in the library.

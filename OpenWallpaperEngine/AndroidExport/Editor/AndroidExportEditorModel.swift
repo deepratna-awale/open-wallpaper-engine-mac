@@ -76,11 +76,15 @@ final class AndroidExportEditorModel: ObservableObject {
     @Published private(set) var batch: AndroidExportBatch?
     @Published var errorMessage: String?
     @Published var sheet: AndroidEditorSheet?
-    /// "Export More with These Settings…": its sheet is open, and the batch it started.
-    @Published var isBatchPresented = false
-    /// Export More was picked in the Export Settings sheet: the batch opens once that sheet has closed.
-    var opensBatchWhenSheetCloses = false
+    /// Export More was picked in the Export Settings sheet: the library's export selection opens
+    /// once that sheet has closed.
+    var choosesMoreWhenSheetCloses = false
+    /// "Export More with These Settings…"'s batch, shown in the mode's panel.
     @Published private(set) var batchQueue: AndroidExportQueue?
+    /// Shows the library's export selection for this mode (`AndroidBatchPicker`).
+    var beginsSelection: @MainActor (AndroidExportEditorModel) -> Void = { AppDelegate.shared.beginAndroidBatchPicking(for: $0) }
+    /// Ends this mode's export selection, if one is shown.
+    var endsSelection: @MainActor (AndroidExportEditorModel) -> Void = { AppDelegate.shared.contentViewModel.endAndroidBatchPicker(for: $0) }
 
     init(session: IsolatedSceneEditSession, sceneSize: SIMD2<Double>, defaults: UserDefaults = .app,
          worker: AndroidExportWorking? = nil) {
@@ -311,22 +315,23 @@ final class AndroidExportEditorModel: ObservableObject {
         return (items, plan.skipped)
     }
 
-    func showBatch() {
-        guard !isExporting else { return }
-        isBatchPresented = true
+    /// Opens the library's export selection, to pick the wallpapers the batch exports.
+    func chooseMoreWallpapers() {
+        guard !isExporting, !isBatchRunning else { return }
+        beginsSelection(self)
     }
 
-    /// Export More from the Export Settings sheet: one sheet at a time, so the batch waits for it to close.
-    func showBatchAfterSheet() {
-        opensBatchWhenSheetCloses = true
+    /// Export More from the Export Settings sheet: the selection opens once the sheet has closed.
+    func chooseMoreAfterSheet() {
+        choosesMoreWhenSheetCloses = true
         sheet = nil
     }
 
     /// The Export Settings sheet closed.
     func sheetDidClose() {
-        guard opensBatchWhenSheetCloses else { return }
-        opensBatchWhenSheetCloses = false
-        showBatch()
+        guard choosesMoreWhenSheetCloses else { return }
+        choosesMoreWhenSheetCloses = false
+        chooseMoreWallpapers()
     }
 
     var isBatchRunning: Bool { batchQueue?.isRunning == true }
@@ -352,11 +357,18 @@ final class AndroidExportEditorModel: ObservableObject {
 
     func cancelBatch() { batchQueue?.cancel() }
 
-    /// The sheet closed: a running batch stops (what it finished stays in the exports list).
+    /// Done: the panel stops showing the finished batch.
+    func dismissBatch() {
+        guard !isBatchRunning else { return }
+        batchQueue = nil
+    }
+
+    /// The mode closed: its export selection ends and a running batch stops (what it finished
+    /// stays in the exports list).
     func closeBatch() {
+        endsSelection(self)
         batchQueue?.cancel()
         batchQueue = nil
-        isBatchPresented = false
     }
 
     func showInFinder() {

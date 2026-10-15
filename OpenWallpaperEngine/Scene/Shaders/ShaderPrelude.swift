@@ -249,18 +249,60 @@ enum ShaderPrelude {
     /// declarations, so they are dropped, and writing the viewport index from the vertex stage
     /// takes `GL_ARB_shader_viewport_layer_array` (Metal's `[[viewport_array_index]]`).
     static func builtInDeclarations(_ text: String) -> String {
-        let range = NSRange(text.startIndex..., in: text)
-        guard builtInDeclarationPattern.firstMatch(in: text, range: range) != nil else { return text }
-        var result = builtInDeclarationPattern.stringByReplacingMatches(in: text, range: range, withTemplate: "")
-        if result.contains("gl_ViewportIndex"), let version = versionPattern.firstRange(in: result) {
-            result.insert(contentsOf: "\n#extension GL_ARB_shader_viewport_layer_array : require", at: version.upperBound)
-        }
-        return result
+        let code = Array(text.utf16)
+        var edits = HLSLEdits(editableFrom: 0)
+        dropBuiltInDeclarations(code, GLSLTokenizer.tokens(code), into: &edits)
+        return edits.count == 0 ? text : String(decoding: edits.apply(to: code), as: UTF16.self)
     }
 
-    private static let builtInDeclarationPattern = NSRegularExpression.shader(
-        #"(?m)^[ \t]*(?:in|out)[ \t]+u?int[ \t]+gl_(?:InstanceID|VertexID|ViewportIndex)[ \t]*;"#)
-    private static let versionPattern = NSRegularExpression.shader(#"(?m)^[ \t]*#[ \t]*version[^\n]*"#)
+    /// The edits of `builtInDeclarations` on `tokens` of `code`. A declaration is a statement of
+    /// its own outside every bracket: `in`/`out`, `int`/`uint`, the name, `;`. Where any is dropped
+    /// and the shader still names `gl_ViewportIndex`, the extension goes after `#version`.
+    static func dropBuiltInDeclarations(_ code: [UInt16], _ tokens: [GLSLToken], into edits: inout HLSLEdits) {
+        var depth = 0
+        var dropped: [Range<Int>] = []
+        for (index, token) in tokens.enumerated() {
+            if token.text == "(" || token.text == "[" || token.text == "{" { depth += 1 }
+            if token.text == ")" || token.text == "]" || token.text == "}" { depth -= 1 }
+            guard depth == 0, token.text == "in" || token.text == "out", index + 3 < tokens.count,
+                  index == 0 || [";", "}"].contains(tokens[index - 1].text),
+                  tokens[index + 1].text == "int" || tokens[index + 1].text == "uint",
+                  builtInNames.contains(tokens[index + 2].text), tokens[index + 3].text == ";" else { continue }
+            edits.replace(token.start, tokens[index + 3].end, "")
+            dropped.append(index..<(index + 4))
+        }
+        guard !dropped.isEmpty else { return }
+        let readsViewport = tokens.indices.contains { index in
+            tokens[index].text == "gl_ViewportIndex" && !dropped.contains { $0.contains(index) }
+        }
+        if readsViewport, let version = endOfVersionLine(code) {
+            edits.prefix(version, "\n#extension GL_ARB_shader_viewport_layer_array : require")
+        }
+    }
+
+    private static let builtInNames: Set<String> = ["gl_InstanceID", "gl_VertexID", "gl_ViewportIndex"]
+
+    /// The UTF-16 offset of the end of the first `#version` line (`#` and `version` may have
+    /// spaces or tabs before and between them).
+    static func endOfVersionLine(_ code: [UInt16]) -> Int? {
+        let newline: UInt16 = 10, space: UInt16 = 32, tab: UInt16 = 9, hash: UInt16 = 35
+        let version = Array("version".utf16)
+        var lineStart = 0
+        while lineStart < code.count {
+            let lineEnd = code[lineStart...].firstIndex(of: newline) ?? code.count
+            var index = lineStart
+            while index < lineEnd, code[index] == space || code[index] == tab { index += 1 }
+            if index < lineEnd, code[index] == hash {
+                index += 1
+                while index < lineEnd, code[index] == space || code[index] == tab { index += 1 }
+                if lineEnd - index >= version.count, Array(code[index..<(index + version.count)]) == version {
+                    return lineEnd
+                }
+            }
+            lineStart = lineEnd + 1
+        }
+        return nil
+    }
 }
 
 // MARK: - Helpers of the typed pass

@@ -58,7 +58,7 @@ certificate.
 | The Chromium engine bundle (OWE Chromium.app) | `app.openwallpaperengine.chromium` |
 | CEF's helper apps | `app.openwallpaperengine.chromium.helper[.renderer\|.gpu\|.plugin].app` |
 | The unit tests | `app.openwallpaperengine.tests` |
-| An isolated copy's defaults and keychain services | `app.openwallpaperengine.isolated.<tag>` |
+| An isolated copy's defaults and (in-memory) keychain services | `app.openwallpaperengine.isolated.<tag>` |
 
 The log subsystem (`OWELog`, `OWESignpost`) is `app.openwallpaperengine` too:
 `/usr/bin/log show --predicate 'subsystem == "app.openwallpaperengine"'`. `AppIdentityLintTests`

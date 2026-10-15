@@ -273,8 +273,24 @@ final class InstalledLibraryModel {
 
     private func computeSortedWallpapers() -> [WEWallpaper] {
         let sortingBy = self.sortingBy, sortingSequence = self.sortingSequence
-        return filteredWallpapers.sorted {
+        let wallpapers = filteredWallpapers
+        // WE's Favorite and Last Updated sorts: a key per wallpaper, read once, then the title.
+        let keys: [URL: Int]
+        switch sortingBy {
+        case .favorite:
+            keys = Dictionary(wallpapers.map { ($0.wallpaperDirectory, FavoritesStore.shared.contains($0) ? 1 : 0) },
+                              uniquingKeysWith: { first, _ in first })
+        case .lastUpdated:
+            keys = Dictionary(wallpapers.map { ($0.wallpaperDirectory, Self.lastUpdated(of: $0)) },
+                              uniquingKeysWith: { first, _ in first })
+        case .name, .rating, .fileSize, .dateAdded:
+            keys = [:]
+        }
+        return wallpapers.sorted {
             switch sortingBy {
+            case .favorite, .lastUpdated:
+                return Self.precedes((keys[$0.wallpaperDirectory] ?? 0, $0.project.title),
+                                     (keys[$1.wallpaperDirectory] ?? 0, $1.project.title), in: sortingSequence)
             case .name:
                 return Self.precedes($0.project.title, $1.project.title, in: sortingSequence)
             case .rating:
@@ -291,6 +307,35 @@ final class InstalledLibraryModel {
                 return firstDate > secondDate
             }
         }
+    }
+
+    /// WE's order for its Favorite and Last Updated sorts: the larger key first (`.increase`, WE's
+    /// ascending) or last, and equal keys by title, A to Z in WE's ascending.
+    nonisolated static func precedes(_ lhs: (key: Int, title: String), _ rhs: (key: Int, title: String),
+                                     in sequence: WEWallpaperSortingSequence) -> Bool {
+        if lhs.key != rhs.key { return precedes(lhs.key, rhs.key, in: sequence) }
+        let order = lhs.title.localizedStandardCompare(rhs.title)
+        return sequence == .increase ? order == .orderedAscending : order == .orderedDescending
+    }
+
+    /// WE's `updatedate` of an installed wallpaper, in Unix seconds: Steam's `time_updated` of its
+    /// Workshop item when known (from browsing or from reading its tags), else when its folder last
+    /// changed (a Workshop download is rewritten on each update). 0 for a local wallpaper, which
+    /// has none and sorts after the others, as in WE.
+    nonisolated static func lastUpdated(of wallpaper: WEWallpaper,
+                                        known: (String) -> Int? = InstalledLibraryModel.knownTimeUpdated) -> Int {
+        guard let workshopId = InstalledWorkshopTags.workshopId(of: wallpaper) else { return 0 }
+        if let time = known(workshopId) { return time }
+        // A folder without a readable date counts as never updated.
+        let modified = try? wallpaper.wallpaperDirectory.resourceValues(forKeys: [.contentModificationDateKey])
+            .contentModificationDate
+        return modified.map { Int($0.timeIntervalSince1970) } ?? 0
+    }
+
+    /// Steam's `time_updated` of a Workshop item the app has read.
+    nonisolated static func knownTimeUpdated(_ workshopId: String) -> Int? {
+        WorkshopMetadataStore.shared.item(for: workshopId)?.timeUpdated
+            ?? DownloadedWallpaperIndex.shared.workshopTags(for: workshopId)?.timeUpdated
     }
 
     /// The content rating's place in the Rating sort: Everyone, then Questionable (partial

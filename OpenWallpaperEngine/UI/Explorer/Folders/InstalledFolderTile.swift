@@ -46,17 +46,38 @@ struct InstalledFolderTile: View {
         .contentShape(Rectangle())
         .help(folder.title)
         .onTapGesture { viewModel.library.open(folder: folder.id) }
-        .draggable(InstalledDragPayload.folder(folder.id).text)
-        .dropDestination(for: String.self) { texts, _ in
-            let moved = withAnimation(InstalledDropAnimation.move(reduceMotion: reduceMotion)) {
-                viewModel.library.drop(texts, into: folder.id)
-            }
-            if moved { drops += 1 }
-            return moved
-        } isTargeted: { isTargeted = $0 }
-        .dropFeedback(trigger: drops, cornerRadius: ExplorerItem.cornerRadius)
+        .modifier(FolderTileDragAndDrop(isEnabled: viewModel.allowsLibraryActions, viewModel: viewModel,
+                                        folder: folder, isTargeted: $isTargeted, drops: $drops, reduceMotion: reduceMotion))
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
+    }
+}
+
+/// A folder tile drags into another folder and takes the tiles dropped on it, except while the
+/// Installed tab picks wallpapers for an export, when it only opens.
+private struct FolderTileDragAndDrop: ViewModifier {
+    let isEnabled: Bool
+    var viewModel: ContentViewModel
+    var folder: InstalledFolder
+    @Binding var isTargeted: Bool
+    @Binding var drops: Int
+    let reduceMotion: Bool
+
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content
+                .draggable(InstalledDragPayload.folder(folder.id).text)
+                .dropDestination(for: String.self) { texts, _ in
+                    let moved = withAnimation(InstalledDropAnimation.move(reduceMotion: reduceMotion)) {
+                        viewModel.library.drop(texts, into: folder.id)
+                    }
+                    if moved { drops += 1 }
+                    return moved
+                } isTargeted: { isTargeted = $0 }
+                .dropFeedback(trigger: drops, cornerRadius: ExplorerItem.cornerRadius)
+        } else {
+            content
+        }
     }
 }
 

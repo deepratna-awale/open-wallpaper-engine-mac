@@ -60,7 +60,7 @@ final class WorkshopFilterTests: XCTestCase {
                     if query.matchAllTags {
                         XCTAssertLessThanOrEqual(query.requiredTags.count, 1, "\(genres) \(match) \(showOnly)")
                     }
-                    let items = WorkshopAPIService.queryItems(text: "", filter: query, sortOrder: .trending,
+                    let items = WorkshopAPIService.queryItems(text: "", filter: query, sortOrder: .default,
                                                               page: 1, perPage: 50)
                     let required = items.filter { $0.name.hasPrefix("requiredtags[") }.map(\.name)
                     XCTAssertEqual(required, required.indices.map { "requiredtags[\($0)]" }, "0-based, contiguous")
@@ -144,6 +144,27 @@ final class WorkshopFilterTests: XCTestCase {
         XCTAssertEqual(WorkshopQuery(filter).clientShowOnly, [.favourites])
     }
 
+    func testHideAnimeExcludesWEsGenresButTheTickedOnes() {
+        var filter = WorkshopFilter()
+        filter.hidesAnime = true
+        XCTAssertEqual(WorkshopQuery(filter).excludedTags, ["Questionable", "Mature", "Anime", "MMD", "Girls", "Guys", "Music"])
+        filter.genres = ["Girls"]
+        let ticked = WorkshopQuery(filter)
+        XCTAssertFalse(ticked.excludedTags.contains("Girls"))
+        XCTAssertEqual(ticked.requiredTags, ["Girls"])
+        XCTAssertNotEqual(filter.cacheKey, WorkshopFilter().cacheKey)
+    }
+
+    func testExactPhraseQuotesTheSearchAsWE() {
+        XCTAssertFalse(WorkshopSearchText.offersExactPhrase("rain"))
+        XCTAssertFalse(WorkshopSearchText.offersExactPhrase(" rain "))
+        XCTAssertTrue(WorkshopSearchText.offersExactPhrase("rainy night"))
+        XCTAssertEqual(WorkshopSearchText.steamText("rainy night", exactPhrase: false), "rainy night")
+        XCTAssertEqual(WorkshopSearchText.steamText("rainy night", exactPhrase: true), "\"rainy night\"")
+        XCTAssertEqual(WorkshopSearchText.steamText("\"rainy\" night", exactPhrase: true), "\"rainy\" night")
+        XCTAssertEqual(WorkshopSearchText.steamText("", exactPhrase: true), "")
+    }
+
     // MARK: Request parameters
 
     func testQueryFilesParameters() {
@@ -170,6 +191,32 @@ final class WorkshopFilterTests: XCTestCase {
         XCTAssertEqual(allTags.first { $0.name == "match_all_tags" }?.value, "true")
         XCTAssertEqual(allTags.first { $0.name == "query_type" }?.value, "1")
         XCTAssertNil(allTags.first { $0.name == "search_text" })
+    }
+
+    func testSortsAreWEsListAsQueryFilesQueryTypes() {
+        XCTAssertEqual(WorkshopSortOrder.allCases.map(\.rawValue),
+                       ["top_rated", "trend_year", "trend_month", "trend_week", "trend_today", "most_recent",
+                        "most_up_votes", "subscriptions"])
+        XCTAssertEqual(WorkshopSortOrder.default, .trendYear)
+        func parameters(_ sort: WorkshopSortOrder, text: String = "") -> (type: String?, days: String?) {
+            let items = WorkshopAPIService.queryItems(text: text, filter: WorkshopQuery(), sortOrder: sort,
+                                                      page: 1, perPage: 20)
+            return (items.first { $0.name == "query_type" }?.value, items.first { $0.name == "days" }?.value)
+        }
+        let expected: [WorkshopSortOrder: (String, String?)] = [
+            .topRated: ("0", nil), .trendYear: ("3", "365"), .trendMonth: ("3", "30"), .trendWeek: ("3", "7"),
+            .trendToday: ("3", "1"), .mostRecent: ("1", nil), .mostUpVotes: ("11", nil), .subscriptions: ("9", nil),
+        ]
+        for (sort, value) in expected {
+            let (type, days) = value
+            let sent = parameters(sort)
+            XCTAssertEqual(sent.type, type, "\(sort)")
+            XCTAssertEqual(sent.days, days, "\(sort)")
+        }
+        // A text search is ranked by relevance, without a trend window.
+        let search = parameters(.trendWeek, text: "rain")
+        XCTAssertEqual(search.type, "12")
+        XCTAssertNil(search.days)
     }
 
     // MARK: Response parsing

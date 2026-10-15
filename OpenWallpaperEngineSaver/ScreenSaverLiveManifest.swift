@@ -2,13 +2,13 @@ import Foundation
 
 /// The live screen saver's frames: while the screen saver runs, the app renders each loop of the
 /// screen saver's layout (`ScreenSaverLayoutPlan`) into a ring of global IOSurfaces and lists them
-/// here, in `live.json` next to the videos' manifest (`ScreenSaverManifest.sharedFolder`). The
+/// here, in `live.json` in the shared folder (`ScreenSaverManifest.sharedFolder`). The
 /// legacy `.saver` looks the surfaces up by id (`IOSurfaceLookup`), which its host's sandbox
 /// allows, and shows the newest one a Darwin notification names (`ScreenSaverLiveStamp`).
 ///
 /// The file changes only when the rings do (the screen saver starts or stops, the plan changes);
 /// frames are announced by the notification alone. An empty manifest (no rings) means no live
-/// frames: the saver plays its video. Shared by the app, the `.saver` and the extension, so it
+/// frames: the saver shows its still. Shared by the app, the `.saver` and the extension, so it
 /// uses Foundation only.
 struct ScreenSaverLiveManifest: Codable, Equatable {
     /// Bump when the format changes; a saver ignores a manifest of another revision.
@@ -52,7 +52,7 @@ struct ScreenSaverLiveManifest: Codable, Equatable {
 
     /// The ring and display entry for the display `display` (its identity; nil when unknown) in a
     /// view of `pixels`: the entry naming it, else one for any display. A known display that isn't
-    /// listed has no live frames (it plays its video: its loop isn't drawn live); an unknown one
+    /// listed has no live frames (it shows its still: its loop isn't drawn live); an unknown one
     /// takes the whole ring nearest the view's size and shape.
     func entry(forDisplay display: String?, pixels: (width: Int, height: Int)) -> (display: Display, ring: Ring)? {
         func resolved(_ entry: Display) -> (display: Display, ring: Ring)? {
@@ -81,7 +81,7 @@ struct ScreenSaverLiveManifest: Codable, Equatable {
             let manifest = try JSONDecoder().decode(ScreenSaverLiveManifest.self, from: data)
             return manifest.revision == revision ? manifest : nil
         } catch {
-            return nil // A half-written or foreign file: no live frames, the video plays.
+            return nil // A half-written or foreign file: no live frames, the still shows.
         }
     }
 }

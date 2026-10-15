@@ -2,26 +2,18 @@ import AVFoundation
 import Foundation
 import os
 
-/// A video wallpaper's screen saver: its own video file, played by the saver as it is, with no
-/// render. The file goes in the saver's folder (`ScreenSaverVideoStore`) as a hard link to the
-/// library file, else (a library on another volume: hard links can't cross it) as a copy (a
-/// clone where the file system makes one), or, when the file keeps its parameter sets in band
-/// (`hev1`, `avc3`), as its repaired copy (`VideoSampleEntryRepair`).
+/// A video wallpaper in the screen saver: drawn live by the app like a scene or a page
+/// (`ScreenSaverLiveVideo`), from the desktop's player when a display already plays it, else from
+/// a player of its own. Nothing is linked or copied into the saver's folder.
 ///
-/// Never a symbolic link: the extension's sandbox grants only that folder, and the classic
-/// saver's host (`legacyScreenSaver`) didn't play a link to a library on an external disk either
-/// (macOS guards other volumes from sandboxed processes), so only repaired copies played there.
-///
-/// WebM (VP8/VP9) isn't eligible: AVFoundation can't play it, and the desktop plays it through
-/// WebKit, which the saver doesn't have.
+/// WebM (VP8/VP9) isn't one: AVFoundation can't play it, so it is drawn as a page through
+/// Chromium (`ScreenSaverLiveWeb`).
 enum ScreenSaverVideoSource {
     /// Containers AVFoundation plays.
     static let containers: Set<String> = ["mp4", "m4v", "mov"]
-    /// Video sample entries of H.264 and HEVC, in either form (the in-band ones after the repair).
-    static let playableSampleEntries: Set<String> = ["avc1", "avc3", "hvc1", "hev1"]
 
     /// Whether `wallpaper` is a video wallpaper whose local file is in a container AVFoundation
-    /// plays. Doesn't read the file; `isPlayable(sampleEntryTypes:)` checks the codec.
+    /// plays. Doesn't read the file.
     static func isEligible(_ wallpaper: WEWallpaper) -> Bool {
         guard wallpaper.project != .invalid,
               wallpaper.project.type.caseInsensitiveCompare("video") == .orderedSame else { return false }
@@ -29,131 +21,54 @@ enum ScreenSaverVideoSource {
         return url.isFileURL && containers.contains(url.pathExtension.lowercased())
     }
 
-    /// Whether a file with these sample entries has a video track AVFoundation decodes.
-    static func isPlayable(sampleEntryTypes: [String]) -> Bool {
-        sampleEntryTypes.contains { playableSampleEntries.contains($0) }
+    /// A video's track as the live draw sizes and paces it.
+    struct Info: Equatable, Sendable {
+        /// The display size (its transform applied), in pixels.
+        var size: SIMD2<Int>
+        /// The nominal frame rate; 0 when the file doesn't say.
+        var frameRate: Double
     }
 
-    /// Whether the file needs the in-band → out-of-band repair before AVFoundation plays it.
-    static func needsRepair(sampleEntryTypes: [String]) -> Bool {
-        sampleEntryTypes.contains { VideoSampleEntryRepair.repairedTypes[$0] != nil }
-    }
+    private static let infoCache = OSAllocatedUnfairLock(initialState: [String: Info]())
 
-    private static let codecCache = OSAllocatedUnfairLock(initialState: [String: Bool]())
-
-    /// Whether `source` has an H.264/HEVC track: reads `moov` only, once per file version (path,
-    /// size, modification date). Never call it on the main thread.
-    static func hasPlayableTrack(_ source: URL) -> Bool {
-        let path = source.standardizedFileURL.path(percentEncoded: false)
-        guard let attributes = try? FileManager.default.attributesOfItem(atPath: path) else { return false }
+    /// The cache's key for `url` as it is now (path, size, modification date); nil when it can't be read.
+    private static func key(_ url: URL) -> String? {
+        let path = url.standardizedFileURL.path(percentEncoded: false)
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: path) else { return nil } // Optional: unreadable has no info.
         let size = (attributes[.size] as? NSNumber)?.int64Value ?? 0
         let modified = (attributes[.modificationDate] as? Date)?.timeIntervalSince1970 ?? 0
-        let key = "\(path)|\(size)|\(modified)"
-        if let cached = codecCache.withLock({ $0[key] }) { return cached }
-        let playable = (try? VideoSampleEntryRepair.sampleEntryTypes(source)).map { isPlayable(sampleEntryTypes: $0) } ?? false
-        codecCache.withLock { $0[key] = playable }
-        return playable
+        return "\(path)|\(size)|\(modified)"
     }
 
-    /// The store's name for `source` of the wallpaper keyed `key`: the wallpaper and its content,
-    /// keeping the source's extension.
-    static func fileName(key: ScreenSaverPlugin.StatusKey, source: URL) -> String {
-        "\(key.wallpaperKey)_\(key.contentKey)-video-r\(ScreenSaverVideoStore.revision).\(source.pathExtension.lowercased())"
+    /// `url`'s track info once `loadInfo` read it, nil before. Doesn't read the file's tracks.
+    static func cachedInfo(of url: URL) -> Info? {
+        guard let key = key(url) else { return nil }
+        return infoCache.withLock { $0[key] }
     }
 
-    enum Outcome: Equatable {
-        /// The video is at the destination: linked, or repaired when `repaired`.
-        case ready(repaired: Bool)
-        /// No H.264/HEVC track, or the file can't be read.
-        case unsupported
-        /// Linking or repairing failed (logged).
-        case failed
+    /// Reads `url`'s video track (`moov` only) and keeps its info for `cachedInfo`.
+    static func loadInfo(of url: URL) async -> Info? {
+        guard let key = key(url) else { return nil }
+        if let cached = infoCache.withLock({ $0[key] }) { return cached }
+        let asset = AVURLAsset(url: url)
+        guard let track = try? await asset.loadTracks(withMediaType: .video).first, // Optional: no track, no info.
+              let (natural, transform, rate) = try? await track.load(.naturalSize, .preferredTransform, .nominalFrameRate)
+        else { return nil }
+        let rect = CGRect(origin: .zero, size: natural).applying(transform)
+        let size = SIMD2(Int(abs(rect.width).rounded()), Int(abs(rect.height).rounded()))
+        guard size.x > 0, size.y > 0 else { return nil }
+        let info = Info(size: size, frameRate: Double(rate))
+        infoCache.withLock { $0[key] = info }
+        return info
     }
 
-    /// Whether the file at `url` is one the saver can open: a regular file in its folder, not a
-    /// symbolic link out of it (which earlier versions made, `prepare`).
-    static func isInPlace(_ url: URL) -> Bool {
-        // The entry itself, not what a link points to (`attributesOfItem` doesn't follow links,
-        // and unlike `URL.resourceValues` caches nothing). Missing is not in place.
-        let type = (try? FileManager.default.attributesOfItem(atPath: url.path(percentEncoded: false)))?[.type] as? FileAttributeType
-        return type == .typeRegular
-    }
-
-    /// Puts `source` at `destination` for the saver. `willWrite` is called before the file is
-    /// written out (a repair, or a copy from another volume), which takes a while for a large
-    /// video. `hardLink` is `FileManager.linkItem` (tests make it fail as across volumes).
-    /// Reads the file: never call it on the main thread.
-    static func prepare(_ source: URL, at destination: URL, willWrite: () -> Void = {},
-                        hardLink: (URL, URL) throws -> Void = { try FileManager.default.linkItem(at: $0, to: $1) }) -> Outcome {
-        let types: [String]
-        do { types = try VideoSampleEntryRepair.sampleEntryTypes(source) } catch {
-            OWELog.error(.app, "Screen saver: can't read the video track of \(source.lastPathComponent): \(error)")
-            return .unsupported
+    /// Reads the info of `urls` in the background, so the next screen saver sizes and paces their
+    /// rings right from the start (`ScreenSaverLiveVideo.ringPixels`, `frameRate`).
+    static func prefetchInfo(of urls: [URL]) {
+        let missing = urls.filter { cachedInfo(of: $0) == nil }
+        guard !missing.isEmpty else { return }
+        Task.detached(priority: .utility) {
+            for url in missing { _ = await loadInfo(of: url) }
         }
-        guard isPlayable(sampleEntryTypes: types) else { return .unsupported }
-        let manager = FileManager.default
-        let path = destination.path(percentEncoded: false)
-        do {
-            try manager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
-            // A stale or dangling entry (a link whose target moved) is replaced.
-            if (try? manager.destinationOfSymbolicLink(atPath: path)) != nil || manager.fileExists(atPath: path) {
-                try manager.removeItem(at: destination)
-            }
-        } catch {
-            OWELog.error(.app, "Screen saver: can't prepare \(destination.lastPathComponent): \(error)")
-            return .failed
-        }
-        if needsRepair(sampleEntryTypes: types) {
-            willWrite()
-            do {
-                guard try VideoSampleEntryRepair.repair(source, to: destination) else {
-                    return place(source, at: destination, willWrite: {}, hardLink: hardLink)
-                }
-                return .ready(repaired: true)
-            } catch {
-                OWELog.error(.app, "Screen saver: can't repair \(source.lastPathComponent): \(error)")
-                return .failed
-            }
-        }
-        return place(source, at: destination, willWrite: willWrite, hardLink: hardLink)
-    }
-
-    /// A hard link (same volume), else a copy: `copyItem` clones it where the file system can.
-    private static func place(_ source: URL, at destination: URL, willWrite: () -> Void,
-                              hardLink: (URL, URL) throws -> Void) -> Outcome {
-        do {
-            try hardLink(source, destination)
-            return .ready(repaired: false)
-        } catch {
-            // Another volume: hard links can't cross it, and the saver can't follow a link there.
-        }
-        willWrite()
-        do {
-            try FileManager.default.copyItem(at: source, to: destination)
-            OWELog.info(.app, "Screen saver: copied \(source.lastPathComponent) into the screen saver's folder (it is on another volume)")
-            return .ready(repaired: false)
-        } catch {
-            try? FileManager.default.removeItem(at: destination) // Optional: a partial copy, if any.
-            OWELog.error(.app, "Screen saver: can't copy \(source.lastPathComponent) into the screen saver's folder: \(error)")
-            return .failed
-        }
-    }
-
-    /// The video track's display size (its transform applied), or nil when it can't be read.
-    static func displaySize(of url: URL) -> SIMD2<Int>? {
-        let semaphore = DispatchSemaphore(value: 0)
-        final class Box: @unchecked Sendable { var size: SIMD2<Int>? } // Written before the signal, read after the wait.
-        let box = Box()
-        Task.detached {
-            defer { semaphore.signal() }
-            let asset = AVURLAsset(url: url)
-            guard let track = try? await asset.loadTracks(withMediaType: .video).first,
-                  let (natural, transform) = try? await track.load(.naturalSize, .preferredTransform) else { return }
-            let rect = CGRect(origin: .zero, size: natural).applying(transform)
-            box.size = SIMD2(Int(abs(rect.width).rounded()), Int(abs(rect.height).rounded()))
-        }
-        semaphore.wait()
-        guard let size = box.size, size.x > 0, size.y > 0 else { return nil }
-        return size
     }
 }

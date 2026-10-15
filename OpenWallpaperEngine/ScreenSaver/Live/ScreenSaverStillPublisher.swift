@@ -1,3 +1,4 @@
+import AVFoundation
 import CoreGraphics
 import Foundation
 import CoreImage
@@ -71,6 +72,47 @@ final class ScreenSaverStillPublisher {
                 MainActor.assumeIsolated { self.publishPick(filled) }
             }
         }
+    }
+
+    /// A video wallpaper's picture: its first frame filling `pixels` (aspect kept, centred), read
+    /// by the hardware decoder from its file (a file that keeps its parameter sets in band from
+    /// its repaired copy, `RepairedVideoCache`); its preview when the frame can't be read. Nothing
+    /// is kept once `isCurrent` says another wallpaper was picked meanwhile.
+    func publishFirstFrame(of wallpaper: WEWallpaper, filling pixels: SIMD2<Int>,
+                           isCurrent: @escaping @MainActor () -> Bool = { true }) {
+        let source = wallpaper.mediaURL
+        Task { [weak self] in
+            let image = await Task.detached(priority: .utility) { () -> CGImage? in
+                let url = RepairedVideoCache.current.playableURL(for: source)
+                let generator = AVAssetImageGenerator(asset: AVURLAsset(url: url))
+                generator.appliesPreferredTrackTransform = true
+                generator.requestedTimeToleranceBefore = .zero
+                generator.requestedTimeToleranceAfter = .positiveInfinity
+                guard let frame = try? await generator.image(at: .zero).image else { return nil } // Optional: falls back to the preview.
+                return Self.filled(frame, pixels: pixels)
+            }.value
+            guard let self, isCurrent() else { return }
+            if let image {
+                self.publishPick(image)
+                OWELog.info(.app, "Screen saver: kept the first frame of \(wallpaper.wallpaperDirectory.lastPathComponent) as its still")
+            } else {
+                OWELog.info(.app, "Screen saver: can't read the first frame of \(wallpaper.wallpaperDirectory.lastPathComponent); its preview is the still")
+                self.publishPreview(of: wallpaper, filling: pixels)
+            }
+        }
+    }
+
+    /// `image` covering `pixels`, centred.
+    nonisolated static func filled(_ image: CGImage, pixels: SIMD2<Int>) -> CGImage? {
+        guard pixels.x > 0, pixels.y > 0, image.width > 0, image.height > 0,
+              let context = CGContext(data: nil, width: pixels.x, height: pixels.y, bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue)
+        else { return nil }
+        context.interpolationQuality = .high
+        context.draw(image, in: WallpaperTransitionCapture.placedRect(imageSize: CGSize(width: image.width, height: image.height),
+                                                                      in: CGSize(width: pixels.x, height: pixels.y), placement: .fill))
+        return context.makeImage()
     }
 
     /// `image` covering `pixels`, centred, blurred by about a 200th of the larger side.

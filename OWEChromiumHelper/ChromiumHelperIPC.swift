@@ -89,8 +89,10 @@ final class ChromiumFrameMessage: NSObject, NSSecureCoding {
 protocol ChromiumBrowserHelperProtocol: ChromiumHelperProtocol {
     /// Loads and starts CEF from `engineBundle` (the installed version's `OWE Chromium.app`) once
     /// per helper; later calls reply with the first outcome. `debugNoSandbox` as for `start`.
+    /// `remoteDebuggingPort` opens Chromium's DevTools on 127.0.0.1 at that port (0: closed); it
+    /// holds for the helper's life, so the app starts a new helper to change it.
     func initialize(engineBundle: String, cacheDirectory: String, debugNoSandbox: Bool,
-                    reply: @escaping (String?) -> Void)
+                    remoteDebuggingPort: Int, reply: @escaping (String?) -> Void)
     /// Opens `url` in a new browser numbered `browserId` (chosen by the app). `startScript` runs in
     /// the page's main frame before any of its own scripts, as a WKUserScript at document start does.
     func createBrowser(_ browserId: Int, url: String, width: Int, height: Int, scale: Double, frameRate: Int,

@@ -212,6 +212,15 @@ private struct WorkshopBrowserView: View {
             viewModel.currentPage = 1
             Task { await viewModel.search() }
         }
+        // WE shows "Exact phrase" by the search field once the search has a space in it.
+        if WorkshopSearchText.offersExactPhrase(viewModel.searchText) {
+            ToolbarItem {
+                Toggle("Exact phrase", isOn: Binding(get: { viewModel.exactPhrase },
+                                                     set: { viewModel.setExactPhrase($0) }))
+                    .toggleStyle(.checkbox)
+                    .help("Find the words together and in this order")
+            }
+        }
         if #available(macOS 26, *) {
             ToolbarSpacer(.fixed)
         }
@@ -439,7 +448,7 @@ private struct WorkshopPagination: View {
 /// all or any, as the toggle beside them says; the sections narrow the results together.
 struct WorkshopFiltersSidebar: View {
     @ObservedObject var viewModel: WorkshopViewModel
-    @State private var expandedSections: Set<String> = ["Show Only", "Rating", "Type", "Category", "Resolution", "Genre"]
+    @State private var expandedSections: Set<String> = ["Filter Settings", "Show Only", "Rating", "Type", "Category", "Resolution", "Genre"]
 
     var body: some View {
         List {
@@ -451,6 +460,14 @@ struct WorkshopFiltersSidebar: View {
             }
             .glassButtonStyle(.prominent)
             .listRowSeparator(.hidden)
+
+            // WE's Workshop Filter Settings: Show Anime or Hide Anime, kept by Reset Filters.
+            Section("Filter Settings", isExpanded: isExpanded("Filter Settings")) {
+                Toggle("Hide Anime", isOn: Binding(get: { viewModel.filter.hidesAnime },
+                                                   set: { viewModel.setHidesAnime($0) }))
+                    .toggleStyle(.checkbox)
+                    .help("Leaves out wallpapers tagged Anime, MMD, Girls, Guys or Music, unless you check that genre")
+            }
 
             Section("Show Only:", isExpanded: isExpanded("Show Only")) {
                 ShowOnlyFilterRows(

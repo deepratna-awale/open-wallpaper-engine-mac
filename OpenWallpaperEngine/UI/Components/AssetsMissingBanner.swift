@@ -6,19 +6,31 @@ struct AssetsMissingBanner: View {
     @ObservedObject var assets: WallpaperEngineAssetsService
 
     var body: some View {
-        if assets.isMissing {
-            HStack(spacing: 10) {
-                Image(systemName: "shippingbox")
-                    .foregroundStyle(.orange)
-                Text("Scenes need Wallpaper Engine assets from your Steam copy.")
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer()
-                Button("Set Up Assets…") { AppDelegate.shared.openAssetsSettings() }
-                    .glassButtonStyle(.prominent)
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+        if assets.isMissing { AssetsMissingNotice() }
+    }
+}
+
+/// The banner's line and its button.
+///
+/// The line wraps to at most two lines. Sized to its full height at any width
+/// (`fixedSize(horizontal: false, vertical: true)`), it reported hundreds of points when the split
+/// view measured the column narrow. In the library's top safe-area inset that height pushed the
+/// grid and the buttons under it past the window's bottom edge.
+struct AssetsMissingNotice: View {
+    static let lineLimit = 2
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "shippingbox")
+                .foregroundStyle(.orange)
+            Text("Scenes need Wallpaper Engine assets from your Steam copy.")
+                .lineLimit(Self.lineLimit)
+            Spacer()
+            Button("Set Up Assets…") { AppDelegate.shared.openAssetsSettings() }
+                .glassButtonStyle(.prominent)
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
     }
 }
 

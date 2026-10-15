@@ -15,6 +15,8 @@ final class ChromiumBrowserPage: NSObject, WebWallpaperPage, ChromiumBrowserClie
         var patches: WebCompatPatches = WebCompatPatches(actions: [])
         /// A remote embed page, served at `ChromiumResourceServing.embedPageURL`.
         var embedHTML: String?
+        /// The user's files the page may read (`WebUserFiles`).
+        var userFiles: WebUserFiles?
     }
 
     private let host: ChromiumBrowserHost
@@ -347,6 +349,7 @@ final class ChromiumBrowserPage: NSObject, WebWallpaperPage, ChromiumBrowserClie
     func chromiumResource(url: String, range: String?) -> ChromiumResourceResponse {
         guard let content = lock.withLock({ servedContent }) else { return .notFound() }
         return ChromiumResourceServing.response(for: url, range: range, directory: content.directory,
-                                                patches: content.patches, embedHTML: content.embedHTML)
+                                                patches: content.patches, embedHTML: content.embedHTML,
+                                                userFiles: content.userFiles)
     }
 }
