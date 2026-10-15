@@ -22,7 +22,8 @@ struct ParticleChildLink {
     /// Index of the parent in the scene's particle systems (it always comes first).
     var parentIndex: Int
     let kind: Kind
-    /// The link's origin, scale and `angles.z` relative to the parent's emitter.
+    /// The link's origin, scale and angles relative to the parent's emitter, in the plane: the x
+    /// and y of its turned axes, as a tilted layer's (`ParticleLinkSpace` keeps the depth).
     let local: SceneLocalTransform
     /// Chance an event makes an instance.
     let probability: Float

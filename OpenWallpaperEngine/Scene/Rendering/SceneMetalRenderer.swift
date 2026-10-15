@@ -3136,7 +3136,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// The matrix from the space a system's particles are simulated in (the scene plane its
     /// object's 2D transform places them in, and their depth) to where its 3D world matrix puts
-    /// them: identity in an orthographic scene, or when the two agree.
+    /// them, through a child's links in depth (`ParticleLinkSpace`): identity in an orthographic
+    /// scene, or when the two agree.
     private func particleSpaceModel(_ system: ParticleSystemRuntime) -> simd_float4x4 {
         guard isPerspective, let id = particleObjectID(system) else { return matrix_identity_float4x4 }
         let planar = transforms.world(of: id, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine)
@@ -3144,7 +3145,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let embedded = simd_float4x4(columns: (SIMD4<Float>(x.x, x.y, 0, 0), SIMD4<Float>(y.x, y.y, 0, 0),
                                                SIMD4<Float>(0, 0, 1, 0), SIMD4<Float>(t.x, t.y, 0, 1)))
         guard abs(simd_determinant(planar.linear)) > 1e-12 else { return matrix_identity_float4x4 }
-        return world3D(id, in: spatial.transforms) * embedded.inverse
+        return world3D(id, in: spatial.transforms) * system.configuration.linkSpace * embedded.inverse
     }
 
     /// The capsules a `collisionmodel` operator of `system` collides with (docs/models-plan.md

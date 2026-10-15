@@ -70,7 +70,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 
 ### Particles
 - **GPU particles** — every particle system is simulated on the GPU, in 3D, with 3D control points.
-- Child systems, including ones triggered by their parent's particles; emitter bursts, delays and periodic emission; emitting from a layer's image.
+- Child systems, placed by their links in 3D, including ones triggered by their parent's particles; emitter bursts, delays and periodic emission; emitting from a layer's image.
 - Collision, including with a model's bones, audio response, and rotation about every axis.
 - Particle settings bound to a wallpaper's user properties.
 
