@@ -31,8 +31,8 @@ final class SceneCameraLayers {
         var pose: SceneCameraPose
         /// Degrees, before the clamp.
         var fov: Float
-        /// The playing path's `zoom` (1 without a channel), else the layer's: an orthographic
-        /// scene's camera zoom.
+        /// The playing path's `zoom` (1 without a channel), else the layer's as a script set it
+        /// (`ICamera.zoom`) or as authored: an orthographic scene's camera zoom.
         var zoom: Float = 1
     }
 
@@ -47,6 +47,8 @@ final class SceneCameraLayers {
         var live: SceneTransformHierarchy3D.Live
         /// A camera layer's `fov` a script set.
         var fov: (String) -> Float?
+        /// A camera layer's `zoom` a script set (`ICamera.zoom`).
+        var zoom: (String) -> Float? = { _ in nil }
     }
 
     private final class Path {
@@ -187,7 +189,8 @@ final class SceneCameraLayers {
         let pose = SceneCameraPose(eye: row(3), center: row(3) - row(2), up: row(1))
         let pathFov: Float? = active.current.map { active.paths[$0].fov }
         let fov: Float = pathFov ?? input.fov(active.object.id) ?? active.fov
-        let zoom = active.current.map { active.paths[$0].zoom } ?? active.zoom
+        let pathZoom: Float? = active.current.map { active.paths[$0].zoom }
+        let zoom: Float = pathZoom ?? input.zoom(active.object.id) ?? active.zoom
         return Camera(id: active.object.id, pose: pose, fov: fov, zoom: zoom)
     }
 

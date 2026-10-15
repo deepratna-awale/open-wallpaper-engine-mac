@@ -38,7 +38,8 @@ struct SceneSpatialContentBuilder {
             if let model = object.model {
                 content.models.append(SceneModelObject(id: id, name: name, order: index, authored: model,
                                                        animationLayers: object.animationLayers,
-                                                       renderValues: object.renderValues))
+                                                       renderValues: object.renderValues,
+                                                       perspective: object.perspective ?? false))
             } else if let layer = object.cameraLayer {
                 content.cameraLayers.append(SceneCameraLayerObject(id: id, name: name, order: index, authored: layer,
                                                                    pathFile: layer.path.flatMap(cameraLayerPaths)))

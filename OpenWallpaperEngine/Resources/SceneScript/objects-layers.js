@@ -260,27 +260,6 @@
             this._setTime(Math.max(0, Math.min(time, this._duration)));
             this._command(3, this.getCurrentTime());
         }
-        // The timeline of one of the layer's own fields (`rate`, `blend`): the one named so
-        // (`options.name`), else the one on the field of that key. WE's typings don't list it, but
-        // 3159348391 plays its moves with `getAnimationLayer('Kick').getAnimation('go').play()` and
-        // WE runs them (its blend timelines raise the move over the idle). Null for a layer a
-        // script created and when the layer has no such timeline.
-        getAnimation(name) {
-            const rig = rigOf(this._owner);
-            if (!rig || this._index() < 0 || name === undefined || name === null) return null;
-            let authored = -1;
-            for (let i = 0; i < rig.layers.length; i++) {
-                if (rig.layers[i].key === this._key) authored = rig.layers[i].authored;
-            }
-            if (typeof authored !== 'number' || authored < 0) return null;
-            const prefix = objects.animationLayerPrefix + authored + '.', key = String(name);
-            const records = (this._owner._record.animations || []).filter(function (record) {
-                return typeof record.property === 'string' && record.property.indexOf(prefix) === 0;
-            });
-            const found = records.find(function (record) { return record.name === key; })
-                || records.find(function (record) { return record.property === prefix + key; });
-            return found ? objects.animationFor(this._owner, found, false) : null;
-        }
         addEndedCallback(callback) {
             if (typeof callback === 'function') this._ended.push(callback);
         }
