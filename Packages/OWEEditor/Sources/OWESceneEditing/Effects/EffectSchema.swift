@@ -15,11 +15,19 @@ public struct EffectSchema: Hashable, Sendable {
         public var isColor: Bool
         /// WE's linked vec2: one slider for both components while they are equal.
         public var isLinked: Bool
+        /// `"position": true`: a point in the layer's UV (0…1, y down), which the canvas shows as a
+        /// handle to drag.
+        public var isPosition: Bool
+        /// `"direction": true`: an angle in radians, shown as a dial.
+        public var isDirection: Bool
+        /// `"conversion": "rad2deg"`: radians stored, degrees shown.
+        public var showsDegrees: Bool
 
         public var id: String { key }
 
         public init(key: String, title: String, defaultValue: [Double], minimum: Double = 0, maximum: Double = 1,
-                    isInteger: Bool = false, isColor: Bool = false, isLinked: Bool = false) {
+                    isInteger: Bool = false, isColor: Bool = false, isLinked: Bool = false,
+                    isPosition: Bool = false, isDirection: Bool = false, showsDegrees: Bool = false) {
             self.key = key
             self.title = title
             self.defaultValue = defaultValue
@@ -28,6 +36,9 @@ public struct EffectSchema: Hashable, Sendable {
             self.isInteger = isInteger
             self.isColor = isColor
             self.isLinked = isLinked
+            self.isPosition = isPosition
+            self.isDirection = isDirection
+            self.showsDegrees = showsDegrees
         }
 
         /// The control WE's editor shows for it.
@@ -38,10 +49,16 @@ public struct EffectSchema: Hashable, Sendable {
             case color
             /// Several components, each a slider.
             case vector(Int)
+            /// A point on the layer: X and Y fields, dragged on the canvas.
+            case position
+            /// An angle: a dial with its value in degrees or radians.
+            case direction
         }
 
         public var control: Control {
             if isColor { return .color }
+            if isPosition, defaultValue.count == 2 { return .position }
+            if isDirection, defaultValue.count == 1 { return .direction }
             if defaultValue.count > 1 { return .vector(defaultValue.count) }
             if isInteger, minimum == 0, maximum == 1 { return .toggle }
             return .slider
@@ -130,12 +147,20 @@ public struct EffectSchema: Hashable, Sendable {
     public var textures: [TextureSlot]
     /// How many passes `effect.json` lists, which an added effect's scene object lists too.
     public var passCount: Int
+    /// `effect.json`'s `gizmos`: the handles the canvas shows for the effect.
+    public var gizmos: [EffectGizmo]
 
-    public init(parameters: [Parameter] = [], combos: [Combo] = [], textures: [TextureSlot] = [], passCount: Int = 1) {
+    public init(parameters: [Parameter] = [], combos: [Combo] = [], textures: [TextureSlot] = [], passCount: Int = 1,
+                gizmos: [EffectGizmo] = []) {
         self.parameters = parameters
         self.combos = combos
         self.textures = textures
         self.passCount = passCount
+        self.gizmos = gizmos
+    }
+
+    public func parameter(_ key: String) -> Parameter? {
+        parameters.first { $0.key.caseInsensitiveCompare(key) == .orderedSame }
     }
 
     /// Whether `combo` shows given the effect's current combo values (WE hides one whose

@@ -128,7 +128,9 @@ final class EditorWallpaperResources {
         let parameters = SceneEffectParameters.parameters(for: file, readFile: read).map { parameter in
             EffectSchema.Parameter(key: parameter.materialKey, title: labels.translation(parameter.label) ?? parameter.title,
                                    defaultValue: parameter.defaultValue, minimum: parameter.minimum, maximum: parameter.maximum,
-                                   isInteger: parameter.isInteger, isColor: parameter.isColor, isLinked: parameter.isLinked)
+                                   isInteger: parameter.isInteger, isColor: parameter.isColor, isLinked: parameter.isLinked,
+                                   isPosition: parameter.isPosition, isDirection: parameter.isDirection,
+                                   showsDegrees: parameter.showsDegrees)
         }
         let combos = SceneEffectParameters.combos(for: file, readFile: read).filter(\.isEditable).map { combo in
             EffectSchema.Combo(name: combo.combo, title: labels.translation(combo.label) ?? SceneEffectParameters.title(combo.label),
@@ -143,9 +145,19 @@ final class EditorWallpaperResources {
         }
         let schema = EffectSchema(parameters: parameters, combos: combos,
                                   textures: textureSlots(file, document: document, read: read),
-                                  passCount: max(document.passes.count, 1))
+                                  passCount: max(document.passes.count, 1), gizmos: gizmos(file, data: effectData))
         schemas[file] = schema
         return schema
+    }
+
+    /// `effect.json`'s `gizmos`, which the canvas draws; none when they can't be read (logged).
+    private func gizmos(_ file: String, data: Data) -> [EffectGizmo] {
+        do {
+            return try EffectGizmo.gizmos(effectJSON: data)
+        } catch {
+            OWELog.error(.ui, "Wallpaper Editor: \(file)'s gizmos couldn't be read: \(error.localizedDescription)")
+            return []
+        }
     }
 
     /// The samplers WE's editor shows, of every pass that draws a material: those not hidden, past
