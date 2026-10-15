@@ -107,6 +107,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 
 ### Workshop & library
 - Wallpaper Engine's Workshop filters: Show Only, a resolution filter, genres combined with AND/OR, a Wallpaper/Preset category, and tags on every card.
+- Wallpaper Engine's Workshop sorts: Top Rated, Most Popular (Year, Month, Week, Today), Most Recent, Most Up Votes and Most Subscriptions, Most Popular (Year) first. The sorts of the signed-in Steam account (My Favorites, Voted Up, Friends' Favorites, Created By Friends, Created By Followed Users) aren't offered: Wallpaper Engine reads them through the Steam client.
 - **Discover** — Wallpaper Engine's curated Workshop lists; Workshop items can be blocked (or their author), reported in Steam, and lead to related wallpapers.
 - **Set as Wallpaper** and **Set as Screen Saver** in the Installed, Discover and Workshop context menus; a Workshop item downloads first.
 - **Installed** is one scrolling grid of the whole library.
