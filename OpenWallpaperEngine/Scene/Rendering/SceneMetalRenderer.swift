@@ -1663,7 +1663,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                              shake: motion.shake)
         if frameStats != nil { lastLightCount = effectFrame.lighting.objects.count }
         analyseLayers(effectFrame: effectFrame, motion: motion, drawableSize: drawableSize)
-        guard redrawing || paceFrame(effectFrame, at: wallTime()) else { return }
+        // While the stats overlay counts, every frame is drawn, so it shows what a frame costs.
+        guard redrawing || paceFrame(effectFrame, at: wallTime()) || frameStats != nil else { return }
         keepsScene = !(scripts.state.scene.flag(.clearenabled) ?? clearEnabled)
         // Only a frame that is drawn takes its targets, and the drawable only once its work is
         // encoded (F1), unless the scene draws straight into it (`FrameTargets`, S2).
