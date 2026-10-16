@@ -23,11 +23,11 @@ struct ParticleFamilyBuilder {
     func family(_ path: String, world: SceneAffineTransform,
                 overrides: SceneParticleOverrides) -> [SceneMetalParticleSystem] {
         var family: [SceneMetalParticleSystem] = []
-        append(path, link: nil, world: world, overrides: overrides, ancestors: [], into: &family)
+        append(path, link: nil, linkSpace: .identity, world: world, overrides: overrides, ancestors: [], into: &family)
         return family
     }
 
-    private func append(_ path: String, link: ParticleChildLink?, world: SceneAffineTransform,
+    private func append(_ path: String, link: ParticleChildLink?, linkSpace: ParticleLinkSpace, world: SceneAffineTransform,
                         overrides: SceneParticleOverrides, ancestors: [String],
                         into family: inout [SceneMetalParticleSystem]) {
         guard let json = load(path) else {
@@ -40,6 +40,7 @@ struct ParticleFamilyBuilder {
         }
         let children = json.children ?? []
         system.link = link
+        system.linkSpace = linkSpace.space
         system.hasEventChildren = children.contains { Self.kind($0) != .static }
         let index = family.count
         family.append(system)
@@ -62,7 +63,8 @@ struct ParticleFamilyBuilder {
                 continue
             }
             let childLink = Self.link(child, kind: kind, parentIndex: index, parent: link)
-            append(name, link: childLink, world: childLink.emitter(parent: world), overrides: overrides,
+            append(name, link: childLink, linkSpace: linkSpace.appending(Self.local(child), kind: kind),
+                   world: childLink.emitter(parent: world), overrides: overrides,
                    ancestors: ancestors + [path], into: &family)
         }
     }
@@ -78,13 +80,20 @@ struct ParticleFamilyBuilder {
         }
     }
 
+    /// A link's `origin`, `scale` and `angles` (0x1401d09ea…0x1401d0c43: "0 0 0", "1 1 1", "0 0 0").
+    static func local(_ child: WEParticleChild) -> SceneLocalTransform3D {
+        func vector(_ value: WEFlexValue?, _ fallback: SIMD3<Float>) -> SIMD3<Float> {
+            guard let v = value?.vectorValue else { return fallback }
+            return SIMD3(Float(v.0), Float(v.1), Float(v.2))
+        }
+        return SceneLocalTransform3D(origin: vector(child.origin, .zero), scale: vector(child.scale, SIMD3(repeating: 1)),
+                                     angles: vector(child.angles, .zero))
+    }
+
     static func link(_ child: WEParticleChild, kind: ParticleChildLink.Kind, parentIndex: Int,
                      parent: ParticleChildLink?) -> ParticleChildLink {
-        let origin = child.origin?.vectorValue ?? (0, 0, 0)
-        let scale = child.scale?.vectorValue ?? (1, 1, 1)
-        let angles = child.angles?.vectorValue ?? (0, 0, 0)
-        let local = SceneLocalTransform(origin: SIMD2(Float(origin.0), Float(origin.1)),
-                                        scale: SIMD2(Float(scale.0), Float(scale.1)), angle: Float(angles.2))
+        // The plane's part; the rest is `ParticleLinkSpace`'s.
+        let local = Self.local(child).planar
         let parentInstanced = parent?.instanced == true
         let instances: Int
         if kind != .static {
