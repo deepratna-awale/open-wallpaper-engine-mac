@@ -67,6 +67,8 @@ struct SceneMetalParticleSystem {
     var emitterTiming = ParticleEmitterTiming()
     /// Set for a child system: how it hangs off its parent.
     var link: ParticleChildLink? = nil
+    /// The depth part of its `children` links (`ParticleLinkSpace.space`); identity for a root.
+    var linkSpace = matrix_identity_float4x4
     /// The object's `instanceoverride` as resolved at load. Emission rate, maximum, size, alpha,
     /// lifetime, speed and colour above are authored; these scale them every frame.
     var overrides = SceneParticleOverrides()
@@ -219,6 +221,9 @@ struct ParticleControlPoint: Equatable {
     var worldSpace = false
     /// Flag 4: copies its parent system's control point `parentcontrolpoint`.
     var parentControlPoint: Int?
+    /// Flag 8 ("raw value", with flag 4): the parent's point as it is in the parent's space, not
+    /// carried into this system's (0x14022e6b3 copies the parent's matrix unchanged).
+    var parentRawValue = false
 
     static let count = 8
     static let defaults = [ParticleControlPoint](repeating: ParticleControlPoint(), count: count)
