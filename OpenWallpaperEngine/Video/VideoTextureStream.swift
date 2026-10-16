@@ -179,8 +179,8 @@ final class VideoTextureStream {
     /// Keeps the current frame's CVMetalTexture alive until `commandBuffer` completes. Call it for
     /// every command buffer that sampled `currentTexture()`, before committing it.
     func holdCurrentFrame(until commandBuffer: MTLCommandBuffer) {
-        guard let retainedTexture else { return }
-        let frame = HeldVideoFrame(retainedTexture)
+        guard let retainedTexture, let textureCache else { return }
+        let frame = HeldVideoFrame(retainedTexture, cache: textureCache)
         commandBuffer.addCompletedHandler { _ in withExtendedLifetime(frame) {} }
     }
 
@@ -286,11 +286,26 @@ final class VideoTextureStream {
     }
 }
 
-/// A decoded frame kept alive by a command buffer's completion handler; CoreVideo objects are
-/// thread-safe to retain and release.
-private final class HeldVideoFrame: @unchecked Sendable {
-    let texture: CVMetalTexture
-    init(_ texture: CVMetalTexture) { self.texture = texture }
+/// A decoded frame kept alive by a command buffer's completion handler, with the texture cache
+/// that made it; CoreVideo objects are thread-safe to retain and release.
+///
+/// The cache must outlive the texture: a CVMetalTexture's last release hands its backing back to
+/// the cache that made it (`CVMetalTextureCache::bufferBackingNotInUse`) without retaining it, so
+/// a cache freed by its owner on the main thread while a completion handler on Metal's queue lets
+/// go of the frame wrote into freed memory (EXC_BAD_ACCESS). The frame goes first, then the cache.
+final class HeldVideoFrame: @unchecked Sendable {
+    private var texture: CVMetalTexture?
+    private let cache: CVMetalTextureCache
+
+    init(_ texture: CVMetalTexture, cache: CVMetalTextureCache) {
+        self.texture = texture
+        self.cache = cache
+    }
+
+    deinit {
+        texture = nil
+        withExtendedLifetime(cache) {}
+    }
 }
 
 /// The MP4 files of scene video textures, written once per content into the caches folder
