@@ -67,6 +67,8 @@ struct SceneMetalParticleSystem {
     var emitterTiming = ParticleEmitterTiming()
     /// Set for a child system: how it hangs off its parent.
     var link: ParticleChildLink? = nil
+    /// The depth part of its `children` links (`ParticleLinkSpace.space`); identity for a root.
+    var linkSpace = matrix_identity_float4x4
     /// The object's `instanceoverride` as resolved at load. Emission rate, maximum, size, alpha,
     /// lifetime, speed and colour above are authored; these scale them every frame.
     var overrides = SceneParticleOverrides()
