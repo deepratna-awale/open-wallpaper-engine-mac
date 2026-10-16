@@ -530,6 +530,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var clickReader = DesktopClickReader()
     /// The last drawn frame's camera motion and text sizes (by layer id), for the next script frame.
     private var lastCameraMotion: CameraMotion?
+    /// The last drawn frame's camera, for the next script frame's cursor ray.
+    private var lastFrameCamera: SceneFrameCamera?
     /// Per-layer dependencies, coverage, class and this frame's dirty state
     /// (efficiency-plan-2d notes WP1-A); built with the content, off the main thread.
     private(set) var layerAnalysis: SceneLayerAnalysis?
@@ -802,6 +804,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             planarReflection?.release()
             lastPointer = nil
             lastCameraMotion = nil
+            lastFrameCamera = nil
             lastTextSizes.removeAll()
             cameraParallax = SceneCameraParallax(sceneSize: sceneSize)
             parallaxSettledPointer = nil
@@ -894,6 +897,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.cameraParallax = SceneCameraParallax(sceneSize: content.size, enabled: Self.parallaxEnabled(content.camera))
                 self.parallaxSettledPointer = nil
                 self.lastCameraMotion = nil
+                self.lastFrameCamera = nil
                 self.lastTextSizes.removeAll()
                 self.textFrameCache.removeAll()
                 self.textRaster.reset()
@@ -1741,6 +1745,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         lastTextSizes.removeAll(keepingCapacity: true)
         for (index, frame) in textFrames { lastTextSizes[layers[index].layer.id] = frame.baseSize }
         lastCameraMotion = motion
+        lastFrameCamera = effectFrame.camera
 
         // WE clears the scene to `general.clearcolor` (the composite's letterbox stays black).
         let clear = scripts.state.scene.vector3(.clearcolor) ?? clearColor
@@ -2298,7 +2303,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // Text is rasterised white; its user colour tints it when drawn, like its authored one.
         // Text with font effects or layer effects has its colours in its raster (`textFill`).
         let textTint = entry.layer.text == nil ? SIMD3<Float>(repeating: 1) : self.textTint(layerID: entry.layer.id)
-        uniform.color = entry.layer.text?.effects == nil && entry.layer.weEffects.isEmpty ? draw.color * SIMD4(textTint, 1)
+        uniform.color = !textRastersInColor(entry) && entry.layer.weEffects.isEmpty ? draw.color * SIMD4(textTint, 1)
             : SIMD4(1, 1, 1, draw.color.w)
         // The layer's brightness and a video's music-synced saturation; the other adjustments
         // stay at their identity (`layerUniform`).
@@ -2787,6 +2792,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         if let parallax = lastCameraMotion?.parallax {
             input.parallax = SceneScriptCursorFrame.Parallax(state: parallax.state, amount: parallax.amount)
         }
+        describeCursorTargets(into: &input, cursor: cursor.position)
         for entry in layers {
             guard let id = Int(entry.layer.id) else { continue }
             let script = scripts.object(entry.layer.id)
@@ -2832,6 +2838,24 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         }
 
         scripts.submit(input)
+    }
+
+    /// What the cursor pass tests beyond the object table (docs/scenescript-plan.md §4.8): every
+    /// model's 3D world (WE's, unzoomed), and in a perspective scene the ray from the last drawn
+    /// frame's eye through the cursor, its view direction and every layer's 3D world.
+    private func describeCursorTargets(into input: inout SceneScriptFrameInput, cursor: SIMD2<Float>) {
+        for model in spatial.models {
+            guard let id = Int(model.id) else { continue }
+            input.cursorWorlds[id] = world3D(model.id, in: spatial.transforms)
+        }
+        guard isPerspective, let camera = lastFrameCamera, sceneSize.x > 0, sceneSize.y > 0 else { return }
+        input.cursorRay = SceneScriptCursorRay.perspective(eye: camera.eye, viewProjection: camera.viewProjection,
+                                                            normalized: cursor / sceneSize)
+        input.cursorViewForward = camera.forward
+        for entry in layers {
+            guard let id = Int(entry.layer.id) else { continue }
+            input.cursorWorlds[id] = world3D(entry.layer.id, in: spatial.transforms)
+        }
     }
 
     /// The cursor in display pixels from the top-left of the wallpaper's view on the display it is
@@ -3007,8 +3031,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let scripted = scripts.text(authored, of: entry.layer.id)
         return makeTextFrame(scripted.text, value: scripted.value, pointSize: scripted.pointSize, boxSize: boxSize,
                              pixelsPerUnit: pixelsPerUnit, layerID: entry.layer.id,
-                             fill: authored.effects == nil && entry.layer.weEffects.isEmpty ? nil : textFill(entry))
+                             fill: !scripted.text.rastersInColor && entry.layer.weEffects.isEmpty ? nil : textFill(entry))
             ?? (textureFrame(for: entry), boxSize)
+    }
+
+    /// Whether a text layer's raster this frame holds its colours (font effects or a background
+    /// box, authored or scripted: `SceneMetalText.rastersInColor`); false for other layers.
+    private func textRastersInColor(_ entry: PreparedLayer) -> Bool {
+        guard let authored = entry.layer.text else { return false }
+        return scripts.text(authored, of: entry.layer.id).text.rastersInColor
     }
 
     /// A text layer's colour this frame (a script's, else its timeline's, else authored, with the
@@ -3693,7 +3724,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             sceneSnapshot: snapshot,
             // The scripted/animated values the layer is drawn with this frame, not the authored ones
             // (in the raster already for text with font effects).
-            layerColor: entry.layer.text?.effects == nil ? SIMD3(draw.color.x, draw.color.y, draw.color.z) : SIMD3(repeating: 1),
+            layerColor: !textRastersInColor(entry) ? SIMD3(draw.color.x, draw.color.y, draw.color.z) : SIMD3(repeating: 1),
             layerAlpha: draw.opacity)
         context.mipMappedFrameBuffer = mipMappedTarget
         context.layerComposite = { [unowned self] id in self.layerComposites[id] }
@@ -4243,7 +4274,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let italic = WallpaperServices.shared.userPropertyString("_owe_text_\(layerID)_italic") == "true"
         let rasterScale = textRasterScales[stateKey, default: SceneTextRasterScale.Tracker()].scale(for: pixelsPerUnit)
         let cacheKey = "\(stateKey)|\(value)|\(boxSize.x)|\(boxSize.y)|\(fontName)|\(sizeValue)|\(bold)|\(italic)|\(rasterScale)"
-            + "|\(text.horizontalAlignment ?? "")|\(text.verticalAlignment ?? "")"
+            + "|\(text.layoutKey)"
             + (fill.map { "|\($0)" } ?? "")
         let slot = "\(stateKey)|\(fill != nil)|\(pixelsPerUnit == 1)"
         for done in textRaster.takeFinished() {

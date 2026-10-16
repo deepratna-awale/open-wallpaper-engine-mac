@@ -180,17 +180,12 @@ final class SceneRendererScripts {
         userVisibilityRevision &+= 1
     }
 
-    /// A text layer's configuration with what scripts set: `text`, `pointsize` and alignments.
+    /// A text layer's configuration with what scripts set (`SceneMetalText.scripted(by:)`), its
+    /// string and its `pointsize`.
     func text(_ text: SceneMetalText, of id: String) -> (text: SceneMetalText, value: String, pointSize: Float?) {
         guard let object = object(id) else { return (text, text.value, nil) }
-        let scripted = SceneMetalText(
-            value: text.value, font: text.font, pointSize: text.pointSize,
-            horizontalAlignment: object.strings[.horizontalalign] ?? text.horizontalAlignment,
-            verticalAlignment: object.strings[.verticalalign] ?? text.verticalAlignment,
-            padding: text.padding, maxWidth: text.maxWidth, maxRows: text.maxRows, useEllipsis: text.useEllipsis,
-            anchor: text.anchor, blockAlign: text.blockAlign, effects: text.effects)
         let pointSize = object.scalar(.pointsize).flatMap { $0.isFinite && $0 > 0 ? $0 : nil }
-        return (scripted, object.strings[.text] ?? text.value, pointSize)
+        return (text.scripted(by: object), object.strings[.text] ?? text.value, pointSize)
     }
 
     /// The effect graph's view of a layer's effects this frame: which are hidden (a script's
