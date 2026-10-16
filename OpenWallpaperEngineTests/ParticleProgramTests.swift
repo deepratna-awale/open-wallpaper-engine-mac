@@ -218,6 +218,34 @@ final class ParticleProgramTests: XCTestCase {
         XCTAssertEqual(hues.count, 6, "six hues, 60° apart")
     }
 
+    /// `colorlist` keeps every colour (WE's list is a vector, 0x1401ba740; its editor offers 1…10):
+    /// ten pure hues each turn up, through the colour records past the fourth.
+    func testColorListPicksFromAllTenColors() throws {
+        let hues = (0..<10).map { Float($0) / 10 }
+        let colors = hues.map { hue -> String in
+            let rgb = ParticleProgramCPU.hsvToRGB(hue, 1, 1)
+            return "\"\(rgb.x) \(rgb.y) \(rgb.z)\""
+        }
+        let element: WEParticleInitializer = try decode(#"{"name":"colorlist","colors":[\#(colors.joined(separator: ","))]}"#)
+        let initializer = try XCTUnwrap(ParticleInitializerBuilder.make(element, defaults: ParticleDefaults(pixelUnits: true), path: "t"))
+        XCTAssertEqual(initializer.record.a.x, 10)
+        XCTAssertEqual(initializer.moreColors.count, 6)
+        let records = ParticleInitializer.encoded([initializer], records: [initializer.record])
+        XCTAssertEqual(records.count, 2, "one colour record holds the six past the fourth")
+        XCTAssertEqual(records[0].header.w, 1)
+        var seen: Set<Int> = []
+        for serial in UInt32(0)..<400 {
+            var particle = state(age: 0)
+            particle.baseColor = SIMD3(repeating: 1)
+            var context = ParticleProgramContext()
+            context.serial = serial
+            ParticleProgramCPU.runInitializers(records, on: &particle, context: context)
+            let picked = try XCTUnwrap(hues.indices.first { simd_distance(ParticleProgramCPU.hsvToRGB(hues[$0], 1, 1), particle.baseColor) < 1e-3 })
+            seen.insert(picked)
+        }
+        XCTAssertEqual(seen, Set(0..<10))
+    }
+
     /// `remapvalue`'s `flags` (VM 0x140244996…0x1402457a3): bit 1 clamps the normalised input, bit 2
     /// the output. The parser reads an absent `flags` as 0 (0x1401ce803; its filler 0x1401bfbb0 writes
     /// none), so it clamps nothing. WE 2.8.0.42's flagtests (lifetimefraction 0…0.5 → size × 0…1)
