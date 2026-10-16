@@ -269,6 +269,9 @@ struct SceneMetalContent {
     /// WE's camera fade, made for a scene with camera paths; nil otherwise or without a shader
     /// toolchain.
     var cameraFade: SceneCameraFade?
+    /// A HDR video drawn as linear light (`VideoTextureStream` in HDR mode): the HDR frame is
+    /// finished by `combine_video_hdr` instead of `combine_srgb` (WE's render flag 0x10000).
+    var videoHDR = false
 }
 
 /// `scene.json` as the content was built from it, for the wallpaper instance's `SceneAnimationSet`

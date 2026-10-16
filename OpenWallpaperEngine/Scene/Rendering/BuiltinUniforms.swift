@@ -40,6 +40,10 @@ struct BuiltinFrameContext {
     /// This frame's scene colours and lights (`SceneFrameLighting`): `g_LightAmbientColor`,
     /// `g_LightSkylightColor`, the `LightingV1` arrays and the legacy `g_Lights*`.
     var lighting = SceneFrameLighting()
+    /// `g_HDRParams`: the device's HDR pair in SDR-white units, (SDR white, max luminance − SDR
+    /// white), which `combine_video_hdr` reads (`SceneHDRChain.videoHDRParams`); (1, 0) on an SDR
+    /// display, as WE's device pair.
+    var hdrParams = SIMD2<Float>(1, 0)
 
     /// `g_PointerState` for the current button state. `.x` mirrors `.z` so a shader that
     /// declares the uniform as a scalar `float` still sees the press.
@@ -114,6 +118,7 @@ enum BuiltinUniforms {
         "g_EyePosition", "g_ViewUp", "g_ViewRight",
         "g_ViewForward", "g_TextureReductionScale",
         "g_FogDistanceColor", "g_FogDistanceParams", "g_FogHeightColor", "g_FogHeightParams",
+        "g_HDRParams",
     ]
 
     static func isBuiltin(_ name: String) -> Bool {
@@ -133,6 +138,7 @@ enum BuiltinUniforms {
         case color4, color, alpha, userAlpha, brightness
         case lightAmbientColor, lightSkylightColor, eyePosition, viewUp, viewRight, viewForward
         case textureReductionScale, fogDistanceColor, fogDistanceParams, fogHeightColor, fogHeightParams
+        case hdrParams
         /// A `LightingV1` array (`SceneFrameLighting.uniformComponents`) and its components per element.
         case lighting(name: String, perElement: Int)
         case texture(slot: Int, suffix: String)
@@ -192,6 +198,7 @@ enum BuiltinUniforms {
             "g_ViewRight": .viewRight, "g_ViewForward": .viewForward, "g_TextureReductionScale": .textureReductionScale,
             "g_FogDistanceColor": .fogDistanceColor, "g_FogDistanceParams": .fogDistanceParams,
             "g_FogHeightColor": .fogHeightColor, "g_FogHeightParams": .fogHeightParams,
+            "g_HDRParams": .hdrParams,
         ]
     }
 
@@ -248,6 +255,7 @@ enum BuiltinUniforms {
         case .viewRight: return flat(frame.viewRight)
         case .viewForward: return flat(frame.viewForward)
         case .textureReductionScale: return [frame.textureReductionScale]
+        case .hdrParams: return flat(frame.hdrParams)
         case .fogDistanceColor: return flat(frame.lighting.fog.distanceColor)
         case .fogDistanceParams: return flat(frame.lighting.fog.distanceParams)
         case .fogHeightColor: return flat(frame.lighting.fog.heightColor)
