@@ -1,5 +1,6 @@
 import XCTest
 import Metal
+import simd
 @testable import OpenWallpaperEngine
 
 /// `g_LayerModelMatrix` reaches an effect's shaders: the fixture's vertex stage reads the layer's
