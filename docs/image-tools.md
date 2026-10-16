@@ -51,3 +51,44 @@ layer's material and model are copied into the edits' files with the map as `g_T
 layer's `image` names the copy, so the wallpaper's files never change. WE draws a normal map only
 with Lighting or Reflection on (its Generate button shows after one is turned on), so when neither
 is, the copy turns Lighting on (`LIGHTING: 1`).
+
+## Foreground Separation
+
+An image layer's context menu has **Image Editing › Foreground Separation** (WE runs it only on
+an image layer without effects, and says so otherwise). The window is WE's:
+
+- **Editing**: **Polygon** (the default) or **Brush**. The brush marks foreground (white),
+  background (black) or erases; Brush size is WE's 1–100 % (a diameter of up to 200 pixels per 400
+  of the picture's long side, at least 200, growing as `((size − 1) / 99)^1.5`), and ⌃-dragging
+  sideways changes it. The polygon tool adds a point per click, closes an outline on its first
+  point, inserts a point when a side is clicked, moves a dragged point, and removes a point on
+  ⌥-click or Delete (WE: the middle button); overlapping outlines cancel out, as WE fills them with
+  xor, and Smoothing curves them through their points. **Reset Mask** clears the marks; Undo and
+  Redo keep 30 steps.
+- **Fine-tuning**: Fill gaps (0–100, 100 is off), Mask tolerance (−20–20, default −1), Smoothing
+  (0–5, default 1) and Quality level (0–2, default 1).
+- **View**: Original, Foreground & Original (the original faded under it when *Improve visibility*
+  is on), Foreground, Background; the Mask (M) over it at Mask opacity (10–100 %, default 50);
+  Reset View. **Recalculate** (R) and **Auto Recalculate**, on by default.
+
+How the mask is made (`ForegroundSeparator`, WE's `performGrabCut`):
+
+- With polygons, the mask is their inside, as WE's polygon tool (no GrabCut).
+- With the brush, the marks are GrabCut's sure foreground and background (OpenCV's `grabCut`:
+  five-component colour mixtures, gamma 50, the min cut of `MaxFlowGraph`), at the Quality
+  level's size: 512 pixels on the long side, 1024, or the picture's own.
+- **The automatic part.** WE's GrabCut starts from the strokes alone. Here it starts from the
+  objects macOS's Vision finds in front of the picture's background
+  (`VNGenerateForegroundInstanceMaskRequest`, on the Mac, nothing downloaded): the unmarked
+  pixels are probably foreground where the objects the foreground strokes touch are (all of them
+  before there are strokes), so a picture is separated before anything is drawn, and the brush or
+  the polygons correct it.
+- Smoothing blurs the mask at that size; Mask tolerance grows (or shrinks) it by as many pixels at
+  that size; the edge is softened by a pixel.
+
+OK asks WE's question and then, in one undo step, gives the layer the **background** (the picture
+with the foreground's area filled from around it, as WE's "blurred area": Telea at a fifth of the
+working size, radius 5 % of that picture's long side, 4–32 pixels) and adds the **foreground** (the
+picture with the mask as its alpha) as a new image layer just above it, with the layer's place,
+size, parent and look. Both pictures are PNGs with the editor's files; the layer's material is
+copied for each.
