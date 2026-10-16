@@ -84,6 +84,8 @@ public struct WallpaperEditorServices {
     /// WE's presets that add other layers than particle systems (Clock, Countdown, Light Shafts),
     /// for Add Layer › Preset; empty without WE's assets.
     public var layerPresets: () -> [ParticlePreset] = { [] }
+    /// The shader editor's translator and WE's snippets; nil edits shaders without checking them.
+    public var shaders: ShaderEditorServices?
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,

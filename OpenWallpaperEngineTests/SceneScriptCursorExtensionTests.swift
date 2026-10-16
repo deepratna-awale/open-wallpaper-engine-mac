@@ -88,6 +88,25 @@ final class SceneScriptCursorExtensionTests: XCTestCase {
         XCTAssertFalse(log("b", in: runtime).contains { $0.hasPrefix("hitTest") }, "WE never sends cursorHitTest")
     }
 
+    func testAHitBoxNameReachesTheEventObject() throws {
+        _ = try Fixtures.assets()
+        let runtime = try makeRuntime()
+        runtime.add(SceneScriptInstance(id: "p", source: """
+            shared.boxes = [];
+            function cursorDown(event) { shared.boxes.push(String(event.hitBox)); }
+            function cursorEnter(event) { shared.boxes.push(String(event.hitBox)); }
+            """, objectSlot: 0))
+        runtime.load()
+        let box = SceneScriptCursorShape.HitBox(name: "head", halfExtents: SIMD3(repeating: 1000), matrix: matrix_identity_float4x4)
+        let puppet = SceneScriptCursorLayer(slot: 0, worldMatrix: sceneScriptCursorMatrix(translation: .zero), size: SIMD2(100, 100),
+                                            hitBoxes: .init(boxes: [box], order: [0], boneWorlds: [matrix_identity_float4x4]))
+        cursor.publish(SceneScriptCursorFrame(cursorWorldPosition: SIMD3(10, 10, 0), leftButtonDown: false, layers: [puppet]))
+        cursor.publish(SceneScriptCursorFrame(cursorWorldPosition: SIMD3(10, 10, 0), leftButtonDown: true, layers: [puppet]))
+        runtime.frame(deltaTime: 1.0 / 60)
+        XCTAssertEqual(runtime.context.evaluateScript("shared.boxes")?.toArray() as? [String], ["undefined", "head"],
+                       "named only on the frame the button changed")
+    }
+
     func testEachScriptGetsItsOwnEventObject() throws {
         _ = try Fixtures.assets()
         let runtime = try makeRuntime()
