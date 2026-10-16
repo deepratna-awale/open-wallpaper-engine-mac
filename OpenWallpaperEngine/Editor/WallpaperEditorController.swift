@@ -187,6 +187,14 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
                   let camera = scene.renderLoop.renderer?.lastPerspectiveCamera else { return nil }
             return EditorSceneCamera(camera)
         }
+        services.scriptSnippet = { EditorShaderSnippets.snippet(named: $0) }
+        services.customScriptModules = { EditorScriptTools.customModules() }
+        services.setScriptsRunning = { [weak preview] running in
+            guard let preview, let scene = preview.sceneInstances.instance(for: preview.instanceKey(for: preview.selectedScreenId))
+            else { return }
+            scene.setScriptsRunning(running)
+        }
+        services.preferences = .app
         services.readFile = { resources.data($0) }
         if let translator = SceneWallpaperViewModel.defaultEffectTranslator {
             services.shaders = ShaderEditorServices(checker: EditorShaderChecker(translator: translator, read: { resources.data($0) }),
@@ -228,6 +236,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.hasWEAssets = hasWEAssets
         services.openAssetsSetup = openAssetsSetup
         let assets = particleAssets, directory = wallpaper.wallpaperDirectory
+        services.readAsset = { assets.data($0) }
         do {
             let particles = try ParticleEditorServices.make(
                 session: session, readAsset: { assets.data($0) }, catalog: { assets.catalog(labels: labels) },

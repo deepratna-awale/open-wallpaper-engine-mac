@@ -43,6 +43,8 @@ struct SceneEffectPassPlan {
     /// Slots a `usertextures` entry binds to a texture WE supplies at run time (the now-playing
     /// artwork): it replaces the slot's input while there is one, which stands in otherwise.
     var systemTextures: [Int: SceneSystemTexture] = [:]
+    /// The combos the pass's variant was resolved with, which the effect's FBO conditions read.
+    var combos: [String: Int] = [:]
 
     var readsSceneSnapshot: Bool {
         textures.values.contains { if case .sceneSnapshot = $0 { return true } else { return false } }
@@ -65,6 +67,8 @@ struct SceneEffectPlan {
     /// scene.json `visible` (authored or user-bound). A hidden effect is built but skipped, so a
     /// script can show it (`thisObject.visible = true`).
     var visible = true
+    /// effect.json's `functions`, by name (`IEffect.executeMaterialFunction`).
+    var functions: [String: EffectFunction] = [:]
 
     /// The effect reads what an earlier frame left in its buffers: a pass samples, or a copy
     /// reads, an FBO before this frame writes it (motion blur's accumulation), or passes swap
@@ -175,7 +179,17 @@ struct SceneEffectPlanBuilder {
                 passes.append(plan)
             }
         }
-        return SceneEffectPlan(file: effect.file, fbos: document.fbos, passes: passes)
+        // An FBO whose conditions no render pass's combos meet is never made: fluid simulation's
+        // `_rt_SmokeNormal` is only made with `LIGHTING` on, which its normal pass needs.
+        let renderCombos = passes.compactMap { pass -> [String: Int]? in
+            if case .render = pass.command { return pass.combos } else { return nil }
+        }
+        let fbos = document.fbos.filter { fbo in
+            fbo.conditions == nil || renderCombos.contains { Self.conditionsHold(fbo.conditions, combos: $0) }
+        }
+        var plan = SceneEffectPlan(file: effect.file, fbos: fbos, passes: passes)
+        plan.functions = document.functions
+        return plan
     }
 
     private static func commandPass(_ command: SceneEffectPassCommand) -> SceneEffectPassPlan {
@@ -192,28 +206,43 @@ struct SceneEffectPlanBuilder {
         let fragment = try loader.load(materialPass.shader, stage: .fragment)
 
         // Texture names per slot: material, then instance overrides (nil keeps), then binds.
-        var names: [Int: String] = [:]
-        for (slot, name) in materialPass.textures.enumerated() { if let name { names[slot] = name } }
-        for (slot, name) in (instance?.textures ?? []).enumerated() { if let name { names[slot] = name } }
+        var authoredNames: [Int: String] = [:]
+        for (slot, name) in materialPass.textures.enumerated() { if let name { authoredNames[slot] = name } }
+        for (slot, name) in (instance?.textures ?? []).enumerated() { if let name { authoredNames[slot] = name } }
         let fboNames = Set(fbos.map(\.name))
-        for bind in pass.bind { names[bind.index] = bind.name }
-
         let samplers = vertex.samplers + fragment.samplers
-        var inputs: [Int: SceneEffectTextureInput] = [:]
-        for (slot, name) in names {
-            if let input = textureInput(named: name, materialPath: materialPath, fboNames: fboNames,
-                                        effectDirectory: effectDirectory) {
-                inputs[slot] = input
+        var found: [String: SceneEffectTextureInput?] = [:]
+        // The pass's textures and combos with `binds` over the authored names.
+        func resolve(_ binds: [EffectBind]) -> (inputs: [Int: SceneEffectTextureInput], combos: [String: Int]) {
+            var names = authoredNames
+            for bind in binds { names[bind.index] = bind.name }
+            var inputs: [Int: SceneEffectTextureInput] = [:]
+            for (slot, name) in names {
+                let input = found[name] ?? textureInput(named: name, materialPath: materialPath, fboNames: fboNames,
+                                                        effectDirectory: effectDirectory)
+                found.updateValue(input, forKey: name)
+                if let input { inputs[slot] = input }
             }
+            // Explicitly bound slots decide combos (MASK etc.); defaults below don't.
+            let boundSlots = Set(inputs.keys)
+            let formats = formatCombos(samplers, names: names, materialPath: materialPath, effectDirectory: effectDirectory)
+            let combos = sceneEngineCombos.applied(to: ShaderVariantTranslator.resolveCombos(
+                vertex: vertex, fragment: fragment,
+                overrides: [formats, materialPass.combos, instance?.combos ?? [:], objectCombos,
+                            Self.comboOverrides(overrides, declared: vertex.combos + fragment.combos)],
+                boundTextureSlots: boundSlots.union([0])))
+            return (inputs, combos)
         }
-        // Explicitly bound slots decide combos (MASK etc.); defaults below don't.
-        let boundSlots = Set(inputs.keys)
-        let formats = formatCombos(samplers, names: names, materialPath: materialPath, effectDirectory: effectDirectory)
-        let combos = sceneEngineCombos.applied(to: ShaderVariantTranslator.resolveCombos(
-            vertex: vertex, fragment: fragment,
-            overrides: [formats, materialPass.combos, instance?.combos ?? [:], objectCombos,
-                        Self.comboOverrides(overrides, declared: vertex.combos + fragment.combos)],
-            boundTextureSlots: boundSlots.union([0])))
+        // A bind's conditions are on the pass's combos, which the bound slots help decide: the
+        // combos are resolved without the conditional binds, then again with those that hold
+        // (fluid simulation binds `_rt_SmokeNormal` only with `LIGHTING` on).
+        var resolved = resolve(pass.bind.filter { $0.conditions == nil })
+        if pass.bind.contains(where: { $0.conditions != nil }) {
+            let combos = resolved.combos
+            resolved = resolve(pass.bind.filter { Self.conditionsHold($0.conditions, combos: combos) })
+        }
+        var inputs = resolved.inputs
+        let combos = resolved.combos
         guard Self.conditionsHold(pass.conditions, combos: combos) else { return nil }
 
         let variant = try translator.variant(vertex: vertex, fragment: fragment, combos: combos)
@@ -247,6 +276,7 @@ struct SceneEffectPlanBuilder {
                                    variantKey: ShaderVariantTranslator.cacheKey(vertex: vertex, fragment: fragment, combos: combos),
                                    variant: variant, blending: materialPass.blending ?? "normal", target: pass.target,
                                    textures: inputs, constants: constants, textureFlags: textureFlags)
+        plan.combos = combos
         // `usertextures`: the object's pass over the material's, slot by slot.
         plan.systemTextures = SceneSystemTexture.bindings(in: [instance?.usertextures, materialPass.usertextures],
                                                           owner: "Effect pass (\(materialPass.shader))")
@@ -365,11 +395,12 @@ struct SceneEffectPlanBuilder {
         return result
     }
 
-    /// WE conditions are a list of combo requirements; any one fully matching enables the pass.
+    /// WE conditions are a list of combo requirements; any one fully met enables the pass, bind or
+    /// FBO. A requirement on a combo the pass doesn't have isn't met.
     static func conditionsHold(_ conditions: EffectConditions?, combos: [String: Int]) -> Bool {
         guard let conditions, !conditions.isEmpty else { return true }
         return conditions.contains { requirement in
-            requirement.allSatisfy { combos[$0.key.uppercased()] == $0.value }
+            requirement.allSatisfy { key, condition in combos[key.uppercased()].map(condition.holds) ?? false }
         }
     }
 

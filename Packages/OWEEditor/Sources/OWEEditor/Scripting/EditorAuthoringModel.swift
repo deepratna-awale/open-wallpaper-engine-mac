@@ -37,6 +37,17 @@ final class EditorAuthoringModel: ObservableObject {
     @Published var draft: ScriptDraft?
     @Published var bindingTarget: FieldTarget?
     @Published var isEditingProperties = false
+    /// Whether the canvas runs the scripts (WE's Run Preview / Stop Preview).
+    @Published private(set) var scriptsRunning = true
+    /// The console empties when a script is applied (WE's Clear log on run).
+    @Published var clearsLogOnRun: Bool { didSet { preferences.set(clearsLogOnRun, forKey: Self.clearsLogKey) } }
+    /// The console follows its newest line (WE's Auto scroll).
+    @Published var autoScrollsLog: Bool { didSet { preferences.set(autoScrollsLog, forKey: Self.autoScrollKey) } }
+    /// The editor's text handle, for the panel's menus.
+    let codeEditor = CodeEditorController()
+    private let preferences: UserDefaults
+    static let clearsLogKey = "WallpaperEditorScriptConsoleClearsOnRun"
+    static let autoScrollKey = "WallpaperEditorScriptConsoleAutoScroll"
     private var syntaxCheck: DispatchWorkItem?
     private var forward: [AnyCancellable] = []
 
@@ -46,6 +57,11 @@ final class EditorAuthoringModel: ObservableObject {
         properties = UserPropertyAuthoring(session: session, projectJSON: projectJSON)
         self.console = console
         self.services = services
+        let preferences = services?.preferences ?? .standard
+        self.preferences = preferences
+        // Clear Log on Run starts off and Auto Scroll on.
+        clearsLogOnRun = preferences.bool(forKey: Self.clearsLogKey)
+        autoScrollsLog = preferences.object(forKey: Self.autoScrollKey) == nil ? true : preferences.bool(forKey: Self.autoScrollKey)
         forward.append(session.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() })
         if let console {
             forward.append(console.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() })
@@ -90,6 +106,65 @@ final class EditorAuthoringModel: ObservableObject {
         checkSyntax(now: true)
     }
 
+    // MARK: Snippets
+
+    /// Snippets › Replace Script: WE's own script from the user's WE copy, else the editor's.
+    func useSnippet(_ snippet: SceneScriptSnippet) {
+        let source = snippet.resolvedSource(weSource: { [services] in services?.scriptSnippet($0) })
+        codeEditor.replaceText { _ in source }
+        if draft?.text != source { setDraftText(source) }
+        checkSyntax(now: true)
+    }
+
+    /// Snippets › Insert Function, documented for the field's type.
+    func insertFunction(_ callback: SceneScriptSourceEdits.Callback) {
+        let type = draft.map { Self.valueType(of: $0.target.path) }
+        editDraft { SceneScriptSourceEdits.inserting(callback, into: $0, valueType: type) }
+    }
+
+    /// Snippets › Insert Property.
+    func insertProperty(_ kind: SceneScriptSourceEdits.PropertyKind) {
+        editDraft { SceneScriptSourceEdits.inserting(kind, into: $0) }
+    }
+
+    /// Snippets › Import Base Module / Import Custom Module.
+    func importModule(_ name: String) {
+        editDraft { SceneScriptSourceEdits.importing(name, into: $0) }
+    }
+
+    private func editDraft(_ edit: (String) -> String) {
+        codeEditor.replaceText(edit)
+        // Without a text view (tests), the draft changes directly.
+        if codeEditor.textView == nil, let text = draft?.text { setDraftText(edit(text)) }
+    }
+
+    /// The JSDoc type of a field's value, as WE documents a bound script's `init` and `update`.
+    static func valueType(of path: SceneFieldPath) -> String {
+        if path.effectIndex != nil { return path.name == "visible" ? "Boolean" : "Number" }
+        switch path.objectField {
+        case "origin", "scale", "angles", "color": return "Vec3"
+        case "parallaxDepth": return "Vec2"
+        case "alpha", "pointsize": return "Number"
+        case "text": return "String"
+        case "visible": return "Boolean"
+        default: return "*"
+        }
+    }
+
+    // MARK: Run Preview
+
+    /// Stops or runs the canvas's scripts, saying so in the console as WE does.
+    func setScriptsRunning(_ running: Bool) {
+        guard let set = services?.setScriptsRunning, running != scriptsRunning else { return }
+        scriptsRunning = running
+        if running, clearsLogOnRun { console?.clear() }
+        console?.append(level: .log, message: running ? L("Running script preview.") : L("Stopping script preview."),
+                        scriptID: "", line: nil)
+        set(running)
+    }
+
+    var canStopScripts: Bool { services?.setScriptsRunning != nil }
+
     /// Applies the draft: the script is attached in the overlay (one undo step), and the scene
     /// runs it from the next reload of the canvas and the desktop. A draft with a syntax error
     /// isn't applied (the runtime would only disable it).
@@ -101,6 +176,7 @@ final class EditorAuthoringModel: ObservableObject {
         let declared = Set(SceneScriptPropertyDeclaration.declarations(in: draft.text).map(\.name))
         // Script-property values the script no longer declares are dropped.
         let kept = existing?.scriptProperties?.filter { declared.contains($0.key) }
+        if clearsLogOnRun { console?.clear() }
         session.attachScript(SceneScriptAttachment(source: draft.text, scriptProperties: kept ?? [:]),
                              to: target.path, of: target.layer,
                              actionName: existing == nil ? L("Add Script") : L("Edit Script"))

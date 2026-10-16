@@ -5,7 +5,7 @@ import Foundation
 /// precision, combo options, condition, order) plus every other authored key kept as it was, so a
 /// property the editor doesn't know all of round-trips unchanged.
 public struct UserPropertyDraft: Codable, Hashable, Sendable, Identifiable {
-    /// project.json `type`. Unknown types (`scenetexture`, `usershortcut`, …) are kept as authored.
+    /// project.json `type`. Unknown types are kept as authored.
     public struct Kind: RawRepresentable, Codable, Hashable, Sendable {
         public let rawValue: String
         public init(rawValue: String) { self.rawValue = rawValue.lowercased() }
@@ -27,14 +27,44 @@ public struct UserPropertyDraft: Codable, Hashable, Sendable, Identifiable {
         public static let textInput = Kind(rawValue: "textinput")
         public static let file = Kind(rawValue: "file")
         public static let directory = Kind(rawValue: "directory")
+        /// A user's own image or video in place of a texture (WE's "Texture"; the docs' `texture`),
+        /// bound to a layer's texture slot by `usertextures`.
+        public static let sceneTexture = Kind(rawValue: "scenetexture")
+        /// A shortcut the user sets to a file, folder, website or command, opened from a script
+        /// (`engine.openUserShortcut`); its icon can be bound to a texture slot.
+        public static let userShortcut = Kind(rawValue: "usershortcut")
+        /// Starts a group: the properties after it, up to the next group, fold under its label.
+        public static let group = Kind(rawValue: "group")
         /// A label row with no value (an untyped entry reads as one, as WE's sidebar shows it).
         public static let text = Kind(rawValue: "text")
 
-        /// The kinds the editor creates, in WE's editor's order.
-        public static let authorable: [Kind] = [.bool, .slider, .color, .combo, .textInput, .file, .directory, .text]
+        /// The kinds the editor creates: WE's editor's scene types (`EditorUserPropertyDetailsModalCtrl`
+        /// `typeOptions`), its web types (file, folder) and the label row.
+        public static let authorable: [Kind] = [.bool, .slider, .color, .combo, .textInput, .file, .directory,
+                                                .sceneTexture, .userShortcut, .group, .text]
 
-        /// Whether a property of this kind has a value a field can be bound to.
-        public var hasValue: Bool { self != .text }
+        /// Whether a property of this kind has a value (a group and a label have none).
+        public var hasValue: Bool { self != .text && self != .group }
+
+        /// Whether the editor sets a default for it: a user texture and a shortcut start unset, as
+        /// WE writes them (`value: ""`), and only the user picks them.
+        public var hasDefault: Bool { hasValue && self != .sceneTexture && self != .userShortcut }
+
+        /// Whether a texture slot is bound to it (`usertextures`) rather than a field (`user`).
+        public var bindsTexture: Bool { self == .sceneTexture || self == .userShortcut }
+    }
+
+    /// A directory's `mode`: how a web wallpaper gets the folder's files.
+    public enum FetchMode: String, CaseIterable, Sendable {
+        /// `wallpaperRequestRandomFileForProperty` asks for one at a time (WE's default).
+        case onDemand = "ondemand"
+        /// `userDirectoryFilesAddedOrChanged` sends every file.
+        case fetchAll = "fetchall"
+    }
+
+    /// A file's `fileType`: what the picker accepts.
+    public enum FileType: String, CaseIterable, Sendable {
+        case image, video
     }
 
     public struct Option: Codable, Hashable, Sendable {
@@ -67,7 +97,7 @@ public struct UserPropertyDraft: Codable, Hashable, Sendable, Identifiable {
     /// `condition`: a JavaScript expression over the other properties (`clock.value == 1`); the
     /// property shows only while it holds.
     public var condition: String?
-    /// Every other authored key (`index`, `fileType`, `editable`, …), written back as it was.
+    /// Every other authored key (`index`, `fileType`, `mode`, `editable`, …), written back as it was.
     public var extra: [String: SceneJSONValue]
 
     public var id: String { key }
@@ -125,6 +155,10 @@ public struct UserPropertyDraft: Codable, Hashable, Sendable, Identifiable {
         entry["text"] = .string(text)
         entry["order"] = .number(Double(order))
         if kind.hasValue, let value = writtenValue { entry["value"] = value }
+        // WE writes an empty value for the kinds without one it shows (`EditorUserPropertyDetailsModalCtrl`).
+        if kind == .group { entry["value"] = .string("") }
+        if kind != .directory { entry["mode"] = nil }
+        if kind != .file { entry["fileType"] = nil }
         if kind == .slider {
             entry["min"] = minimum.map(SceneJSONValue.number)
             entry["max"] = maximum.map(SceneJSONValue.number)
@@ -178,6 +212,18 @@ public struct UserPropertyDraft: Codable, Hashable, Sendable, Identifiable {
         }
     }
 
+    /// A directory's fetch mode; nil when not authored (WE's web runtime then sends nothing).
+    public var fetchMode: FetchMode? {
+        get { extra["mode"]?.stringValue.flatMap(FetchMode.init(rawValue:)) }
+        set { extra["mode"] = newValue.map { .string($0.rawValue) } }
+    }
+
+    /// A file's type; nil accepts any file.
+    public var fileType: FileType? {
+        get { extra["fileType"]?.stringValue.flatMap(FileType.init(rawValue:)) }
+        set { extra["fileType"] = newValue.map { .string($0.rawValue) } }
+    }
+
     /// The decimals a slider shows (`precision` minus one, at least 0).
     public var decimals: Int {
         get { max(0, (precision ?? 1) - 1) }
@@ -203,8 +249,11 @@ public struct UserPropertyDraft: Codable, Hashable, Sendable, Identifiable {
         case .combo:
             draft.options = [Option(label: "Option 1", value: "1"), Option(label: "Option 2", value: "2")]
             draft.value = .string("1")
-        case .textInput, .file, .directory:
+        case .textInput, .file, .sceneTexture, .userShortcut:
             draft.value = .string("")
+        case .directory:
+            draft.value = .string("")
+            draft.fetchMode = .onDemand
         default:
             break
         }

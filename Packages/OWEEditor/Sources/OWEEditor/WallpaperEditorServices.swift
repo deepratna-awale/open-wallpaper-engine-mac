@@ -58,6 +58,9 @@ public struct WallpaperEditorServices {
     /// The wallpaper's project.json as it ships, whose `general.properties` the user-property
     /// editor starts from; nil hides the editor.
     public var projectJSON: Data?
+    /// A file as the scene reads it (the wallpaper's, else WE's assets): an image layer's model
+    /// and material for Lighting & Reflections.
+    public var readAsset: (String) -> Data? = { _ in nil }
     /// What the wallpaper's running scripts log and the errors they raise; nil when the app
     /// doesn't report them.
     public var scriptConsole: SceneScriptConsoleFeed?
@@ -89,6 +92,20 @@ public struct WallpaperEditorServices {
     public var layerPresets: () -> [ParticlePreset] = { [] }
     /// The shader editor's translator and WE's snippets; nil edits shaders without checking them.
     public var shaders: ShaderEditorServices?
+
+    // MARK: Script editor
+
+    /// WE's own snippet script by its file name (`ui/dist/monaco/snippets/<name>.js` of the user's
+    /// WE copy, as WE's editor reads it); nil when it has none, and the editor's own is used.
+    public var scriptSnippet: (String) -> String? = { _ in nil }
+    /// The modules a script can import besides WE's base ones: the other files of WE's
+    /// `scripts/jsmodules`, which the runtime resolves the same way.
+    public var customScriptModules: () -> [String] = { [] }
+    /// Run Preview / Stop Preview: whether the canvas runs the wallpaper's scripts; nil leaves the
+    /// toggle out.
+    public var setScriptsRunning: ((Bool) -> Void)?
+    /// Where the editor keeps its own choices (the console's Clear Log on Run and Auto Scroll).
+    public var preferences: UserDefaults = .standard
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,
