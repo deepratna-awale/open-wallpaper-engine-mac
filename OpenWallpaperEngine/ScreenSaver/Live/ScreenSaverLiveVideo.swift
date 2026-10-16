@@ -318,10 +318,11 @@ final class VideoFrameDrawer: @unchecked Sendable {
         encoder.setFragmentTexture(frame, index: 0)
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
         encoder.endEncoding()
-        let held = HeldFrame(made)
+        let held = HeldVideoFrame(made, cache: textureCache)
         let slot = target.slot, generation = target.generation
         commandBuffer.addCompletedHandler { done in
-            // The decoder reuses the frame's buffer once let go: held until drawn.
+            // The decoder reuses the frame's buffer once let go: held until drawn, with its cache,
+            // which this drawer's owner may free meanwhile (`HeldVideoFrame`).
             withExtendedLifetime(held) {}
             guard done.status == .completed else { return }
             publisher.drawn(ring: ring, slot: slot, generation: generation)
@@ -329,10 +330,5 @@ final class VideoFrameDrawer: @unchecked Sendable {
         commandBuffer.commit()
         CVMetalTextureCacheFlush(textureCache, 0)
         return true
-    }
-
-    private final class HeldFrame: @unchecked Sendable { // CoreVideo objects are thread-safe to retain and release.
-        let texture: CVMetalTexture
-        init(_ texture: CVMetalTexture) { self.texture = texture }
     }
 }
