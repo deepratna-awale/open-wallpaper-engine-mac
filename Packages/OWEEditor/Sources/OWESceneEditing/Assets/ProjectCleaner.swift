@@ -11,7 +11,8 @@ import Foundation
 /// key or value, equal to the file's path, to it without its extension, or to either without its
 /// first folder: WE's own ways of naming one (`models/editor/a.json`, the texture `editor/a` of
 /// `materials/editor/a.png`, the mask `masks/editor_a`, the shader `effects/x` of
-/// `shaders/effects/x.frag`). A `.tex-json` goes with its `.tex`.
+/// `shaders/effects/x.frag`). A `.tex-json` goes with its `.tex`. A model (`.mdl`) names its
+/// materials, and an imported one its configuration and sources (`collectModelNames`).
 public enum ProjectCleaner {
     /// The store's files no root names, by scene path, sorted.
     public static func unusedAssets(in store: EditorAssetStore, roots: [Data]) -> [EditorAssetStore.Asset] {
@@ -29,9 +30,38 @@ public enum ProjectCleaner {
                     // Optional: a JSON file that can't be read names nothing (it is still kept).
                     collectStrings(in: data, into: &names)
                 }
+                if asset.path.lowercased().hasSuffix(".mdl"), let data = try? Data(contentsOf: asset.url) {
+                    collectModelNames(asset.path, data: data, assets: assets, into: &names)
+                }
             }
         }
         return assets.filter { !used.contains($0.path) }
+    }
+
+    /// What a used `.mdl` names: its materials (the paths in its mesh records), and for a model
+    /// imported in the editor (`EditorAssetStore+Models`) its configuration and the source files
+    /// in its folder, which the Model Editor compiles it from again.
+    static func collectModelNames(_ path: String, data: Data, assets: [EditorAssetStore.Asset], into names: inout Set<String>) {
+        var current: [UInt8] = []
+        for byte in data {
+            if byte == 0 {
+                if current.count > 10, let text = String(bytes: current, encoding: .utf8), text.lowercased().hasPrefix("materials/") {
+                    names.insert(text.lowercased())
+                }
+                current.removeAll(keepingCapacity: true)
+            } else if byte >= 0x20 {
+                current.append(byte)
+                if current.count > 1024 { current.removeAll(keepingCapacity: true) }
+            } else {
+                current.removeAll(keepingCapacity: true)
+            }
+        }
+        names.insert(((path as NSString).deletingPathExtension + ".json").lowercased())
+        let folder = (path as NSString).deletingLastPathComponent.lowercased() + "/"
+        for asset in assets where asset.path.lowercased().hasPrefix(folder) {
+            let ext = (asset.path as NSString).pathExtension.lowercased()
+            if ["fbx", "obj", "mtl"].contains(ext) { names.insert(asset.path.lowercased()) }
+        }
     }
 
     /// Whether any of `names` (lowercased) names `path`.
