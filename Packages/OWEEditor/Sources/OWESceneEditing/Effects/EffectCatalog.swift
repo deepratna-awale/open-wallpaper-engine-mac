@@ -16,6 +16,11 @@ public struct EffectCatalogEntry: Hashable, Sendable, Identifiable {
     public var isWorkshop: Bool
     /// The effect's passes, which an added effect's scene object lists.
     public var passCount: Int
+    /// One of the wallpaper's own effects that can be edited (WE's "My Effects", `group`
+    /// `localeffects`): made in the editor, or shipped by the wallpaper with `editable` set.
+    public var isEditable = false
+    /// Made in this editor (its files are in the edits): it can be deleted.
+    public var isMadeHere = false
 
     public var id: String { file }
 
@@ -58,11 +63,14 @@ public enum EffectCatalog {
         }
     }
 
-    /// Entries by group title, groups in title order, WE's before the Workshop's.
+    /// Entries by group title, groups in title order, WE's before the Workshop's; the wallpaper's
+    /// editable effects ("My Effects") first, as WE's dialog lists them.
     public static func grouped(_ entries: [EffectCatalogEntry]) -> [(title: String, entries: [EffectCatalogEntry])] {
         var groups: [String: [EffectCatalogEntry]] = [:]
         for entry in entries { groups[entry.groupTitle, default: []].append(entry) }
         return groups.keys.sorted { lhs, rhs in
+            let leftOwn = groups[lhs]!.allSatisfy(\.isEditable), rightOwn = groups[rhs]!.allSatisfy(\.isEditable)
+            if leftOwn != rightOwn { return leftOwn }
             let left = groups[lhs]!.allSatisfy(\.isWorkshop), right = groups[rhs]!.allSatisfy(\.isWorkshop)
             if left != right { return !left }
             return lhs.localizedStandardCompare(rhs) == .orderedAscending
@@ -87,10 +95,11 @@ public enum EffectCatalog {
 
     /// Effects the scene's layers use from outside WE's own set (`builtIn` folder names): the
     /// Workshop effects a wallpaper ships, which it can add again.
-    public static func workshopEffects(in outline: SceneOutline, builtIn: Set<String>) -> [String] {
+    /// `excluded` (lower-cased files) are listed elsewhere (the wallpaper's editable effects).
+    public static func workshopEffects(in outline: SceneOutline, builtIn: Set<String>, excluded: Set<String> = []) -> [String] {
         var seen = Set<String>(), files: [String] = []
         for layer in outline.layers {
-            for effect in layer.effects where !effect.file.isEmpty {
+            for effect in layer.effects where !effect.file.isEmpty && !excluded.contains(effect.file.lowercased()) {
                 let isBuiltIn = effect.file.lowercased().hasPrefix("effects/") && builtIn.contains(effect.folderName)
                     && effect.file.split(separator: "/").count == 3
                 guard !isBuiltIn, seen.insert(effect.file.lowercased()).inserted else { continue }
