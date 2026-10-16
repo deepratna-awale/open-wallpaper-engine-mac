@@ -66,6 +66,8 @@ public enum ModelCompiler {
     public struct Output: Sendable, Equatable {
         public var mdl: Data
         public var materials: [MaterialFile]
+        /// The names of the materials the meshes draw with, in order.
+        public var meshMaterials: [String]
         public var animations: [AnimationInfo]
         /// The skeleton's bone names (empty for a static model).
         public var bones: [String]
@@ -86,7 +88,10 @@ public enum ModelCompiler {
         guard source.meshes.contains(where: { !$0.positions.isEmpty }) else { throw CompileError.noMeshes }
         let skeleton = source.isSkinned ? Skeleton(source) : nil
         if let skeleton, skeleton.nodes.count > maximumBones { throw CompileError.tooManyBones(skeleton.nodes.count) }
-        let materials = materialFiles(source, folder: folder, skins: skins)
+        var materials = materialFiles(source, folder: folder, skins: skins)
+        for index in materials.indices {
+            if let edited = config.materials[materials[index].name] { materials[index].path = edited }
+        }
 
         var out = PuppetMDLOutput()
         let parts = skeleton == nil ? mergedByMaterial(source.meshes) : source.meshes.filter { !$0.positions.isEmpty }
@@ -97,9 +102,12 @@ public enum ModelCompiler {
         out.u32(UInt32(materialsPerMesh))
         out.u32(UInt32(meshes.count))
         var low = SIMD3<Float>(repeating: .greatestFiniteMagnitude), high = -low
+        var meshMaterials: [String] = []
         for (mesh, part) in zip(meshes, parts) {
             for skin in 0..<materialsPerMesh {
-                out.cstring(materials[materialIndex(part.material, skin: skin, of: source, skins: skins)].path)
+                let material = materials[materialIndex(part.material, skin: skin, of: source, skins: skins)]
+                out.cstring(material.path)
+                if !meshMaterials.contains(material.name) { meshMaterials.append(material.name) }
             }
             mesh.write(into: &out)
             low = simd_min(low, mesh.boundsMin)
@@ -132,7 +140,7 @@ public enum ModelCompiler {
             }
         }
         out.cstring("")
-        return Output(mdl: Data(out.bytes), materials: materials, animations: animations,
+        return Output(mdl: Data(out.bytes), materials: materials, meshMaterials: meshMaterials, animations: animations,
                       bones: skeleton?.nodes.map(\.name) ?? [], boundsMin: low, boundsMax: high,
                       vertexCount: meshes.reduce(0) { $0 + $1.vertexCount }, triangleCount: meshes.reduce(0) { $0 + $1.indices.count / 3 })
     }
