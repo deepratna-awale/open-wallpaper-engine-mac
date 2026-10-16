@@ -32,9 +32,11 @@ final class SceneFrameStatsTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(stats.framesPerSecond, 3)
         XCTAssertGreaterThan(stats.gpuMilliseconds, 0, "the last finished frame's GPU time")
 
+        // Off again: frames are neither counted nor forced (an idle scene skips them as before).
         harness.renderer.frameStats = nil
-        harness.draw(frames: 1)
-        XCTAssertFalse((harness.renderer.lastCommandBuffer as AnyObject?) is SceneStatsCommandBuffer)
+        let counted = recorder.latest
+        harness.draw(frames: 3)
+        XCTAssertEqual(recorder.latest, counted)
     }
 
     func testParticlesAndLightsAreCounted() throws {
