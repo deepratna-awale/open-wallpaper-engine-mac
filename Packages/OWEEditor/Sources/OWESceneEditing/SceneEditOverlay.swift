@@ -127,6 +127,9 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// edits) by their path in the wallpaper (`effects/<name>/effect.json`, its materials and
     /// shaders), as text (`SceneEditOverlay+EffectFiles`); nil for none (version 2).
     public var effectFiles: [String: String]?
+    /// project.json edits besides the user properties (the title, `SceneProjectEdits`); nil for
+    /// none (version 2).
+    public var project: SceneProjectEdits?
 
     public init(objects: [String: ObjectEdit] = [:]) {
         self.objects = objects
@@ -136,7 +139,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     public var isEmpty: Bool {
         objects.values.allSatisfy(\.isEmpty) && !hasStructureEdits && timelines?.isEmpty != false
             && authoring?.isEmpty != false && !hasPuppetEdits && particles?.isEmpty != false && !hasGeneralEdits
-            && !hasEffectFiles
+            && !hasEffectFiles && project?.isEmpty != false
     }
 
     /// Something changes the scene (locks don't). Authored properties count: they are edits of
@@ -144,6 +147,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     public var hasSceneEdits: Bool {
         objects.values.contains(where: \.hasSceneEdits) || hasStructureEdits || timelines?.isEmpty == false
             || authoring?.isEmpty == false || particles?.isEmpty == false || hasGeneralEdits || hasEffectFiles
+            || project?.isEmpty == false
     }
 
     /// Scene settings changed.
@@ -155,7 +159,8 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// Holds something version 1 can't apply.
     var needsVersion2: Bool {
         hasStructureEdits || timelines?.isEmpty == false || authoring?.isEmpty == false || hasPuppetEdits
-            || particles?.isEmpty == false || hasGeneralEdits || hasEffectFiles || objects.values.contains(where: \.needsVersion2)
+            || particles?.isEmpty == false || hasGeneralEdits || hasEffectFiles || project?.isEmpty == false
+            || objects.values.contains(where: \.needsVersion2)
     }
 
     // MARK: Reading
@@ -246,10 +251,12 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
         return overlay
     }
 
-    /// Names the scene edits (not the locks, nor the user properties, which change project.json
-    /// only) for the scene cache key: a parse is only reused for the edits it was made with.
+    /// Names the scene edits (not the locks, nor the user properties and project settings, which
+    /// change project.json only) for the scene cache key: a parse is only reused for the edits it
+    /// was made with.
     public var digest: String {
         var sceneEdits = self
+        sceneEdits.project = nil
         sceneEdits.authoring?.properties = nil
         if sceneEdits.authoring?.isEmpty == true { sceneEdits.authoring = nil }
         sceneEdits.puppets = nil
