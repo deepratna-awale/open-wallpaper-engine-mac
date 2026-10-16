@@ -17,8 +17,9 @@ import OWESceneEditing
 /// - **Sprite sheets** (a GIF, an image sequence): the frames in a grid, RGBA 8888 in one mipmap
 ///   in a `TEXB0003` container followed by the `TEXS0003` frame table (the frame size, then each
 ///   frame's time and pixel rectangle), as 3809943023's `background.tex`.
-/// - **Videos**: the MP4 as the single mipmap of a `TEXB0004` whose FreeImage format is MP4 (35),
-///   after the per-image preamble `TEXParser.readV4ConditionalPreamble` reads.
+/// - **Videos**: the MP4 as the single, stored mipmap of a `TEXB0004` with no variants, flagged
+///   Clamp UVs and video (`TEXFlags.video`), format 0, FreeImage format -1 and an uncompressed size
+///   of 0, as library video textures (3802509485's `bg_2560x1600_nobars.tex`).
 struct EditorTEXEncoder: EditorTextureEncoding {
     enum Failure: LocalizedError {
         case unreadable
@@ -177,17 +178,17 @@ struct EditorTEXEncoder: EditorTextureEncoding {
         func tag(_ text: String) { data.append(contentsOf: Array(text.utf8) + [0]) }
         tag("TEXV0005")
         tag("TEXI0001")
-        for value in [0, TEXFlags.clampUVs.rawValue, UInt32(width), UInt32(height), UInt32(width), UInt32(height), 0xFF00_0000] {
+        let flags: TEXFlags = [.clampUVs, .video]
+        for value in [0, flags.rawValue, UInt32(width), UInt32(height), UInt32(width), UInt32(height), 0] {
             word(value)
         }
         tag("TEXB0004")
         word(1)       // one image
-        word(35)      // FreeImage's MP4
-        word(1)       // is a video
-        word(1); word(2); tag(""); word(1) // the conditional-variant preamble
+        word(UInt32(bitPattern: -1)) // no FreeImage format
+        word(0)       // no variants
         word(1)       // one mipmap
         word(UInt32(width)); word(UInt32(height))
-        word(0); word(0) // stored as is
+        word(0); word(0) // stored as is, no uncompressed size
         word(UInt32(movie.count))
         data.append(movie)
         return data

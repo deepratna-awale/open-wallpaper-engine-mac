@@ -10,6 +10,9 @@ struct TEXFlags: OptionSet, Equatable {
     static let clampUVs = TEXFlags(rawValue: 2)
     /// The texture is a sprite sheet (a `.tex-json` describes its frames).
     static let sprite = TEXFlags(rawValue: 4)
+    /// The texture's one mipmap is an MP4 (library video textures such as 3802509485's
+    /// `bg_2560x1600_nobars.tex` and 3315123651's: flags 34, FreeImage format -1).
+    static let video = TEXFlags(rawValue: 32)
 
     /// Reads the flags from a `.tex` file (`TEXV0005\0TEXI0001\0`, format, flags…). Nil when the
     /// data isn't a `.tex`.
