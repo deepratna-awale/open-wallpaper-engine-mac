@@ -18,11 +18,23 @@ enum ContainedPath {
         return path == root || path.hasPrefix(prefix)
     }
 
-    /// Whether the item at `url` is itself a symbolic link (not following it).
+    /// Whether the item at `url` is itself a symbolic link (not following it). A directory URL's
+    /// trailing slash is dropped first: `lstat` follows a link named with one.
     static func isSymbolicLink(_ url: URL) -> Bool {
+        var path = url.path(percentEncoded: false)
+        while path.count > 1, path.hasSuffix("/") { path.removeLast() }
         var info = stat()
-        guard lstat(url.path(percentEncoded: false), &info) == 0 else { return false }
+        guard lstat(path, &info) == 0 else { return false }
         return (info.st_mode & S_IFMT) == S_IFLNK
+    }
+
+    /// The folder a symbolic link at `url` points to (its canonical path), or `url` itself when it
+    /// isn't a link or the link is broken. Foundation's URL-based listings
+    /// (`contentsOfDirectory(at:)`, `enumerator(at:)`) don't follow a link they start from: listing
+    /// a linked folder fails with "Not a directory", or lists nothing.
+    static func followingFolderLink(_ url: URL) -> URL {
+        guard isSymbolicLink(url), let target = canonical(url) else { return url }
+        return URL(filePath: target, directoryHint: .isDirectory)
     }
 
     /// Whether no existing component of `relativePath` below `root` is a symbolic link, so a

@@ -78,7 +78,8 @@ struct WorkshopAssetResolver {
             let candidate = root.appending(path: workshopId, directoryHint: .isDirectory)
             var isDirectory: ObjCBool = false
             if fm.fileExists(atPath: candidate.path, isDirectory: &isDirectory), isDirectory.boolValue {
-                return candidate
+                // A dependency linked into the library is listed through the folder it points to.
+                return ContainedPath.followingFolderLink(candidate)
             }
         }
         return nil
