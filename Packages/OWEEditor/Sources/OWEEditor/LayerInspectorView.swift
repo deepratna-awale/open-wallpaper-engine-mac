@@ -287,6 +287,11 @@ private struct SceneForm: View {
                 } label: {
                     Text(L("Scene")).font(.headline)
                 }
+                ProjectSettingsSection(session: session, services: services)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(L("Scene Options")).font(.headline)
+                    SceneOptionsSection(session: session, services: services)
+                }
                 if let depthMaps = services.depthMaps {
                     DepthMapBox(session: session, layerID: nil, services: depthMaps)
                 }
