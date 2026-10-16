@@ -8,8 +8,9 @@ import Foundation
 /// preview projects), the GLSL shaders and shared headers (without Direct3D or editor shaders),
 /// materials, models, particles, the editor's particle presets (without their preview projects),
 /// the SceneScript runtime, the compatibility patches, the built-in fonts with their licence files,
-/// the UI strings (`<install>/locale/ui_*.json`, beside `assets`) that translate label keys, and
-/// the script editor's snippets (`<install>/ui/dist/monaco/snippets/*.js`, into `snippets`).
+/// the UI strings (`<install>/locale/ui_*.json`, beside `assets`) that translate label keys, the
+/// script editor's snippets (`<install>/ui/dist/monaco/snippets/*.js`, into `snippets`), and
+/// WE's project templates for New Wallpaper (`<install>/projects/templates`, into `templates`).
 enum WallpaperEngineAssetsCache {
     /// What the cache was filled from, stored beside it.
     struct Info: Codable, Equatable {
@@ -44,6 +45,9 @@ enum WallpaperEngineAssetsCache {
     /// The folders copied without some of their files (`isExcluded`).
     static let filteredFolders = ["effects", "presets", "shaders"]
     static let infoFileName = ".owe-assets-info.json"
+    /// WE's project templates, relative to the install, and the cache's copy of them.
+    static let installTemplatesPath = "projects/templates"
+    static let templatesFolder = "templates"
     /// Where WE's editor keeps its script and shader snippets, relative to the install.
     static let installSnippetsPath = "ui/dist/monaco/snippets"
     /// The cache's copy of them.
@@ -116,6 +120,12 @@ enum WallpaperEngineAssetsCache {
                     try fileManager.copyItem(at: locale.appending(path: name), to: destination.appending(path: name))
                     count += 1
                 }
+            }
+            let templates = assets.deletingLastPathComponent().appending(path: installTemplatesPath, directoryHint: .isDirectory)
+            // An assets folder alone has no templates to keep.
+            if fileManager.fileExists(atPath: templates.path) {
+                count += try copyTree(templates, to: staging.appending(path: templatesFolder), folder: templatesFolder,
+                                      isCancelled: isCancelled, fileManager: fileManager)
             }
             count += try copySnippets(of: assets.deletingLastPathComponent(), to: staging, fileManager: fileManager)
             try checkCancelled(isCancelled)

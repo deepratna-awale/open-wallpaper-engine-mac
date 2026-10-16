@@ -84,6 +84,8 @@ public struct WallpaperEditorServices {
     public var thumbnail: EditorThumbnail?
     /// Caps the canvas's frame rate (Low FPS Simulation), nil for none.
     public var setCanvasFrameRateCap: (Int?) -> Void = { _ in }
+    /// The canvas renderer's frame statistics for the stats overlay; nil leaves the overlay out.
+    public var renderStats: RenderStatsFeed?
     /// The 3D models Add Layer › Model offers (`models/…/….mdl`): the wallpaper's own, then WE's.
     public var models: () -> [EditorModelChoice] = { [] }
     /// WE's presets that add other layers than particle systems (Clock, Countdown, Light Shafts),
