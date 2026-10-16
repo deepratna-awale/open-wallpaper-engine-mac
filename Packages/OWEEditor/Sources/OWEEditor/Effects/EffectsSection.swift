@@ -80,6 +80,8 @@ struct EffectsSection: View {
             Spacer(minLength: 4)
             InfoTip(services.effectHelp(effect.folderName))
             Menu {
+                EffectClipboardItems(actions: LayerActions(session: session, services: services, tools: tools), layer: layer, effect: effect)
+                Divider()
                 Button(L("Move Up")) { move(position, by: -1) }
                     .disabled(position == 0)
                 Button(L("Move Down")) { move(position, by: 1) }

@@ -39,7 +39,14 @@ struct LayerListView: View {
 
     private var layers: some View {
         let tree = LayerNode.tree(session.outline)
-        return List(selection: $session.selection) {
+        // Several rows select with Shift and ⌘ (`SceneEditSession.selectedLayers`); the inspector
+        // shows the one clicked last.
+        return List(selection: Binding<Set<Int>>(
+            get: { session.selectedLayers.isEmpty ? Set(session.selection.map { [$0] } ?? []) : session.selectedLayers },
+            set: { (rows: Set<Int>) in
+                let added = rows.subtracting(session.selectedLayers)
+                session.select(rows, primary: added.count == 1 ? added.first : nil)
+            })) {
             Section {
                 OutlineGroup(tree, children: \.children) { node in
                     LayerRow(session: session, tools: tools, services: services, layer: node.layer, actions: actions)
@@ -62,7 +69,13 @@ struct LayerListView: View {
             }
         }
         .onDeleteCommand {
-            if let selected = session.selection { actions.delete(selected) }
+            if let selected = session.selection { actions.deleteSelection(selected) }
+        }
+        .sheet(isPresented: Binding(get: { tools.choosingListPosition != nil },
+                                    set: { if !$0 { tools.choosingListPosition = nil } })) {
+            if let layer = tools.choosingListPosition {
+                ListPositionSheet(session: session, tools: tools, layerID: layer)
+            }
         }
     }
 
