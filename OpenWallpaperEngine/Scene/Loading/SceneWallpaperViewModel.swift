@@ -1645,7 +1645,9 @@ class SceneWallpaperViewModel: ObservableObject {
             },
             sceneEngineCombos: sceneEngineCombos,
             readWallpaperFile: { [weak self] path in
-                guard let self, let data = self.wallpaperData(named: path, wallpaperDir: wallpaperDir) else { return nil }
+                // The editor's files of the wallpaper (an effect made in the Wallpaper Editor) are its own.
+                guard let self, let data = self.editorAssetsLock.withLock({ self.editorAssets[path] })
+                        ?? self.wallpaperData(named: path, wallpaperDir: wallpaperDir) else { return nil }
                 return self.bindingTable.resolvedData(data, path: path, properties: self.userProperty)
             })
         builder.objectCombos = objectCombos

@@ -27,7 +27,8 @@ enum LocalWallpaperSave {
         let read = EditorPuppetAssets.make(for: wallpaper).readFile
         let baked = try PuppetSceneBake.bake(overlay, into: try overlay.applied(to: source.scene), readFile: read)
         // The user properties as authored in the editor go into the copy's project.json; the
-        // particle editor's documents (definitions, materials) are files of the copy.
+        // particle editor's documents (definitions, materials) and the effects made in the editor
+        // are files of the copy.
         let folder = try LocalWallpaperWriter().save(writerSource, scene: baked.scene, title: title,
                                                      into: FileManager.default.wallpapersDirectory,
                                                      editProject: { authoring?.applyProperties(to: &$0) },

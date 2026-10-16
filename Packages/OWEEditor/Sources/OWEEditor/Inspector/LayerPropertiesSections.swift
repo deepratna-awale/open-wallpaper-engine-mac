@@ -87,7 +87,7 @@ struct LayerLightingSection: View {
     let services: WallpaperEditorServices
     let layer: SceneLayer
 
-    private var material: ImageLayerMaterial? {
+    private var material: ImageLayerLighting? {
         session.imageMaterial(of: layer.id, readAsset: services.readAsset)
     }
 
@@ -113,7 +113,7 @@ struct LayerLightingSection: View {
                         .labelsHidden()
                         .frame(maxWidth: 180)
                     }
-                    ForEach(ImageLayerMaterial.constants(shader: material.shader)) { constant in
+                    ForEach(ImageLayerLighting.constants(shader: material.shader)) { constant in
                         constantRow(constant, material)
                     }
                 }
@@ -122,18 +122,18 @@ struct LayerLightingSection: View {
     }
 
     /// The wallpaper's textures (and the one the material names, if it isn't among them).
-    private func normalMapChoices(_ material: ImageLayerMaterial) -> [String] {
+    private func normalMapChoices(_ material: ImageLayerLighting) -> [String] {
         var names = services.wallpaperAssets().compactMap(\.textureName)
         if let current = material.normalMap, !names.contains(current) { names.insert(current, at: 0) }
         return names
     }
 
-    private func write(_ document: SceneJSONValue, _ material: ImageLayerMaterial, _ title: String, coalescing: String? = nil) {
+    private func write(_ document: SceneJSONValue, _ material: ImageLayerLighting, _ title: String, coalescing: String? = nil) {
         session.setImageMaterial(document, path: material.path, readAsset: services.readAsset,
                                  actionName: L("Change \(title)"), coalescingKey: coalescing.map { "\(material.path):\($0)" })
     }
 
-    private func comboToggle(_ material: ImageLayerMaterial, combo: String, title: String) -> some View {
+    private func comboToggle(_ material: ImageLayerLighting, combo: String, title: String) -> some View {
         LabeledContent(title) {
             Toggle(isOn: Binding(
                 get: { material.combo(combo) != 0 },
@@ -146,7 +146,7 @@ struct LayerLightingSection: View {
         }
     }
 
-    @ViewBuilder private func constantRow(_ constant: ImageLayerMaterial.Constant, _ material: ImageLayerMaterial) -> some View {
+    @ViewBuilder private func constantRow(_ constant: ImageLayerLighting.Constant, _ material: ImageLayerLighting) -> some View {
         let title = Self.title(constant.label)
         LabeledContent(title) {
             switch constant.kind {

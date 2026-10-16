@@ -74,9 +74,9 @@ final class LayerPropertiesEditTests: XCTestCase {
         XCTAssertTrue(material.isLightable)
         XCTAssertFalse(material.lighting)
         XCTAssertNil(material.normalMap)
-        let roughness = try XCTUnwrap(ImageLayerMaterial.constants(shader: material.shader).first { $0.key == "roughness" })
+        let roughness = try XCTUnwrap(ImageLayerLighting.constants(shader: material.shader).first { $0.key == "roughness" })
         XCTAssertEqual(material.constant(roughness), [0.55])
-        let metallic = try XCTUnwrap(ImageLayerMaterial.constants(shader: material.shader).first { $0.key == "metallic" })
+        let metallic = try XCTUnwrap(ImageLayerLighting.constants(shader: material.shader).first { $0.key == "metallic" })
         XCTAssertEqual(material.constant(metallic), [0], "genericimage4's default")
         XCTAssertNil(session.imageMaterial(of: 2, readAsset: read), "a composition layer has no material of its own")
     }

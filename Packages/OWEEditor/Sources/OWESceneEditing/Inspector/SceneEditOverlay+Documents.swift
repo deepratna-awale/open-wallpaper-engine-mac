@@ -18,10 +18,10 @@ extension SceneEditOverlay {
 
     var hasDocumentEdits: Bool { !(documents ?? [:]).isEmpty }
 
-    /// Every document the scene loader reads in place of a file, the particle editor's included,
-    /// as compact JSON.
+    /// Every file the scene loader reads in place of the wallpaper's: the particle editor's
+    /// documents and the effects' files (`editorFileData`) with these, as compact JSON.
     public func editorDocumentData() -> [String: Data] {
-        var files = particles?.assetData() ?? [:]
+        var files = editorFileData()
         for (path, document) in documents ?? [:] {
             // Values read from JSON always write back as JSON.
             if let data = try? JSONSerialization.data(withJSONObject: document.any, options: [.fragmentsAllowed]) {
@@ -33,7 +33,7 @@ extension SceneEditOverlay {
 
     /// Every edited document as a file of a saved copy, written as WE writes its JSON.
     public func editorDocumentFiles() throws -> [String: Data] {
-        var files = try particles?.assetFiles() ?? [:]
+        var files = try editorFiles()
         for (path, document) in documents ?? [:] { files[path] = try ParticleDefinition.encode(document) }
         return files
     }

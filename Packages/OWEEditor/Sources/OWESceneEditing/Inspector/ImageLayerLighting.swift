@@ -5,7 +5,7 @@ import Foundation
 /// material constants of WE's generic image shaders. WE's editor writes them into the material
 /// file the layer's model names; the editor keeps the edited material in the overlay
 /// (`SceneEditOverlay.documents`) instead.
-public struct ImageLayerMaterial: Hashable, Sendable {
+public struct ImageLayerLighting: Hashable, Sendable {
     /// One of the shader's material constants (`"material"` in its annotation).
     public struct Constant: Hashable, Sendable, Identifiable {
         public enum Kind: Hashable, Sendable {
@@ -145,13 +145,13 @@ extension SceneEditSession {
     /// The material the image layer's model names (`material`), as the scene now reads it: the
     /// editor's edit, else the file `readAsset` reads (the wallpaper's, else WE's). Nil for a
     /// layer without one, or a file that can't be read.
-    public func imageMaterial(of layerID: Int, readAsset: (String) -> Data?) -> ImageLayerMaterial? {
+    public func imageMaterial(of layerID: Int, readAsset: (String) -> Data?) -> ImageLayerLighting? {
         guard let layer = outline.layer(layerID), layer.imageRole == .picture,
               let modelPath = value("image", of: layerID)?.stringValue,
-              let model = Self.json(readAsset(modelPath)), let path = model["material"]?.stringValue else { return nil }
-        if let edited = overlay.document(path) { return ImageLayerMaterial(path: path, document: edited) }
-        guard let document = Self.json(readAsset(path)) else { return nil }
-        return ImageLayerMaterial(path: path, document: document)
+              let model = Self.documentJSON(readAsset(modelPath)), let path = model["material"]?.stringValue else { return nil }
+        if let edited = overlay.document(path) { return ImageLayerLighting(path: path, document: edited) }
+        guard let document = Self.documentJSON(readAsset(path)) else { return nil }
+        return ImageLayerLighting(path: path, document: document)
     }
 
     /// Writes `document` as the image layer's material, one undo step (a run of one control's
@@ -159,14 +159,14 @@ extension SceneEditSession {
     public func setImageMaterial(_ document: SceneJSONValue, path: String, readAsset: (String) -> Data?,
                                  actionName: String, coalescingKey: String? = nil) {
         var next = overlay
-        let authored = Self.json(readAsset(path))
+        let authored = Self.documentJSON(readAsset(path))
         next.setDocument(path, to: document == authored ? nil : document)
         commit(next, actionName: actionName, coalescingKey: coalescingKey)
     }
 
     /// A WE JSON document as the editor holds it; nil for no file or one that isn't JSON (the
     /// scene's build logs it when it reads it).
-    static func json(_ data: Data?) -> SceneJSONValue? {
+    static func documentJSON(_ data: Data?) -> SceneJSONValue? {
         guard let data, let object = try? WETolerantJSON.object(from: data) else { return nil }
         return SceneJSONValue(any: object)
     }
