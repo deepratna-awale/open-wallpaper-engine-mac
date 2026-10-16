@@ -61,7 +61,7 @@ final class SceneFrameStatsTests: XCTestCase {
         recorder.copy()
         recorder.finishFrame({ $0.particleCount = 5 }, now: 100)
         recorder.finishFrame({ _ in }, now: 100.5)
-        recorder.finishFrame({ _ in }, now: 101.6)
+        recorder.finishFrame({ _ in }, now: 101.4)
         // Only the last frame is published, its fps the frames in the second before it.
         XCTAssertEqual(recorder.latest.drawCalls, 0)
         XCTAssertEqual(recorder.latest.framesPerSecond, 2)
