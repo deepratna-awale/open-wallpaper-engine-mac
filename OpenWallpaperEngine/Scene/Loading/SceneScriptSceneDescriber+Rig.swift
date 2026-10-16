@@ -17,24 +17,38 @@ extension SceneScriptSceneDescriber {
     /// attachment points, played by the object's `animationlayers`. Scripts get its animation-layer
     /// and attachment API; models have no bone API (0x140227814). Nil for a model without bones.
     func rig(modelObject path: String, animationLayers: SceneJSON?) -> SceneScriptRigDescription? {
-        guard let description = rig(mdl: path, of: path, animationLayers: animationLayers),
-              !description.bones.isEmpty else { return nil }
-        return description
+        modelObject(path, animationLayers: animationLayers).rig
+    }
+
+    /// A model object's rig (`rig(modelObject:animationLayers:)`) and what the cursor pass tests it
+    /// with (`SceneScriptCursorShape`), from one read of its `.mdl`. Both nil when the file is
+    /// missing or can't be read: WE's test has no model data then and never hits it.
+    func modelObject(_ path: String, animationLayers: SceneJSON?) -> (rig: SceneScriptRigDescription?, cursor: SceneScriptCursorShape?) {
+        guard let mdl = readMDL(path, of: path) else { return (nil, nil) }
+        let description = rig(mdl, of: path, animationLayers: animationLayers)
+        return (description.flatMap { $0.bones.isEmpty ? nil : $0 }, .model(mdl))
     }
 
     /// The rig of `.mdl` `path` (named by `owner`), played by `animationLayers`.
     private func rig(mdl path: String, of owner: String, animationLayers: SceneJSON?) -> SceneScriptRigDescription? {
+        readMDL(path, of: owner).flatMap { rig($0, of: owner, animationLayers: animationLayers) }
+    }
+
+    /// `.mdl` `path` (named by `owner`), or nil (logged) when it is missing or can't be read.
+    private func readMDL(_ path: String, of owner: String) -> MDLModel? {
         guard let data = file(path) else {
             OWELog.error(.script, "Rig \(path) of \(owner) is missing; its bone and animation-layer API is inert")
             return nil
         }
-        let mdl: MDLModel
         do {
-            mdl = try MDLModel(data: data)
+            return try MDLModel(data: data)
         } catch {
             OWELog.error(.script, "Rig \(path) of \(owner) can't be read; its bone and animation-layer API is inert: \(error)")
             return nil
         }
+    }
+
+    private func rig(_ mdl: MDLModel, of owner: String, animationLayers: SceneJSON?) -> SceneScriptRigDescription? {
         var layers: [WEAnimationLayer] = []
         if let animationLayers, let text = Self.jsonText(animationLayers) {
             do {
