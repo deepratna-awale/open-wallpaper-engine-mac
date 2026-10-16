@@ -68,6 +68,7 @@ private struct LayerForm: View {
             if let depthMaps = services.depthMaps, SceneDepthParallax.placement(for: layer) == .onLayer {
                 DepthMapSection(session: session, layerID: layer.id, services: depthMaps)
             }
+            if layer.kind == .model { ModelInspectorSection(session: session, layer: layer, services: services) }
             if layer.kind == .image, let assets = services.puppetAssets {
                 PuppetInspectorSection(session: session, layer: layer, assets: assets)
             }
