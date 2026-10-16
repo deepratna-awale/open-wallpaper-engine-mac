@@ -225,6 +225,24 @@ final class SceneWallpaperInstance {
     /// the pause and each display's state (`SceneRenderLoop.applyPlayback`): a paused wallpaper
     /// eases its clock to a stop first; a display the rules pause, or that is asleep or covered,
     /// keeps its last frame at once while the others play.
+    /// The Wallpaper Editor's Low FPS Simulation: its canvas drawn at most this many frames a
+    /// second (WE's editor: 22, wallpaperui.exe 0x140088b6e); nil for no cap of its own.
+    var frameRateCap: Int? {
+        didSet {
+            guard frameRateCap != oldValue else { return }
+            let limits = frameLimits(environment.settings.effectiveSettings)
+            // Thread boundary: main → render thread.
+            renderLoop.perform { $0.framePacing.limits = limits }
+        }
+    }
+
+    /// The pacing's limits for `settings`, the power policy's cap and `frameRateCap` included.
+    private func frameLimits(_ settings: GlobalSettings) -> FramePacing.Limits {
+        var limits = FramePacing.Limits(settings, power: PowerPolicyMonitor.shared.policy)
+        if let cap = frameRateCap { limits.powerCap = min(limits.powerCap ?? cap, cap) }
+        return limits
+    }
+
     func update() {
         guard let wallpapers = environment.wallpapers else { return }
         if metalRevision != viewModel.metalRevision {
@@ -252,7 +270,7 @@ final class SceneWallpaperInstance {
         let presentation = presentation
         let placement = wallpapers.wallpaperPlacement
         let sound = soundTarget
-        let limits = FramePacing.Limits(environment.settings.effectiveSettings, power: PowerPolicyMonitor.shared.policy)
+        let limits = frameLimits(environment.settings.effectiveSettings)
         // Thread boundary: main → render thread (applied before the playback, which reads the rate).
         renderLoop.perform { renderer in
             if let presentation { presentation.apply(to: renderer) } else { renderer.setPlacement(placement) }
@@ -496,7 +514,7 @@ final class SceneWallpaperInstance {
                 MainActor.assumeIsolated {
                     guard let self else { return }
                     self.applyRenderSettings(self.renderSettings(for: settings))
-                    let limits = FramePacing.Limits(settings, power: PowerPolicyMonitor.shared.policy)
+                    let limits = self.frameLimits(settings)
                     // Thread boundary: main → render thread.
                     self.renderLoop.perform { $0.framePacing.limits = limits }
                 }

@@ -1,8 +1,10 @@
 import AppKit
+import OWEEditor
 
 /// The Wallpaper Editor process's menu bar: the app menu, File (Close, Save, Save as New
-/// Wallpaper…, Revert to Saved…), Edit, Window and Help. File's document actions go to the key
-/// editor window (`WallpaperEditorController`) through the responder chain.
+/// Wallpaper…, Revert to Saved…), Edit, View (Wallpaper Engine's editor View menu,
+/// `EditorViewCommand.menu`), Window and Help. File's document actions and the View menu go to the
+/// key editor window (`WallpaperEditorController`) through the responder chain.
 @MainActor
 enum WallpaperEditorMenu {
     /// File › Save (the key editor window answers it).
@@ -11,6 +13,34 @@ enum WallpaperEditorMenu {
     static let saveAsNewWallpaper = #selector(WallpaperEditorController.saveAsNewWallpaper(_:))
     /// File › Revert to Saved… (the key editor window answers it).
     static let revertToSaved = #selector(WallpaperEditorController.revertToSaved(_:))
+    /// View › …: each item carries its command (`ViewCommandBox`).
+    static let viewCommand = #selector(WallpaperEditorController.performViewCommand(_:))
+
+    /// A View menu item's command, as its `representedObject`.
+    final class ViewCommandBox: NSObject {
+        let command: EditorViewCommand
+        init(_ command: EditorViewCommand) { self.command = command }
+    }
+
+    /// The View menu from the editor's own list, titled in its catalog.
+    static func viewMenu(_ entries: [EditorViewCommand.MenuEntry], title: String) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        let menu = NSMenu(title: title)
+        for entry in entries {
+            switch entry {
+            case .command(let command):
+                let commandItem = NSMenuItem(title: command.title, action: viewCommand, keyEquivalent: "")
+                commandItem.representedObject = ViewCommandBox(command)
+                menu.addItem(commandItem)
+            case .submenu(let title, let entries):
+                menu.addItem(viewMenu(entries, title: title))
+            case .separator:
+                menu.addItem(.separator())
+            }
+        }
+        item.submenu = menu
+        return item
+    }
 
     static func make(helpTarget: AnyObject, help: Selector) -> NSMenu {
         func submenu(_ title: String, _ items: [NSMenuItem]) -> NSMenuItem {
@@ -71,7 +101,8 @@ enum WallpaperEditorMenu {
         ])
 
         let menu = NSMenu()
-        menu.items = [appMenu, fileMenu, editMenu, windowMenu, helpMenu]
+        let viewMenu = viewMenu(EditorViewCommand.menu, title: EditorViewCommand.menuTitle)
+        menu.items = [appMenu, fileMenu, editMenu, viewMenu, windowMenu, helpMenu]
         return menu
     }
 

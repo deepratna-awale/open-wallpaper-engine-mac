@@ -85,6 +85,8 @@ public struct WallpaperEditorServices {
     /// A 3D scene's camera as the canvas's renderer drew its last frame, for the 3D gizmo; nil
     /// in a 2D scene or before the scene has drawn.
     public var sceneCamera: () -> EditorSceneCamera? = { nil }
+    /// Caps the canvas's frame rate (Low FPS Simulation), nil for none.
+    public var setCanvasFrameRateCap: (Int?) -> Void = { _ in }
     /// The canvas renderer's frame statistics for the stats overlay; nil leaves the overlay out.
     public var renderStats: RenderStatsFeed?
     /// The 3D models Add Layer › Model offers (`models/…/….mdl`): the wallpaper's own, then WE's.

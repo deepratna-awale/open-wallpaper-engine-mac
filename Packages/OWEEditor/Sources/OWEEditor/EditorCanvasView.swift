@@ -20,6 +20,8 @@ struct EditorCanvasView: View {
     @ObservedObject var session: SceneEditSession
     @ObservedObject var tools: EditorTools
     let services: WallpaperEditorServices
+    /// The View menu's options (the grid, the selection box, the previews).
+    @ObservedObject var viewOptions: EditorViewOptions
     @State private var viewport: CanvasViewport
     @State private var canvas: AnyView?
     @State private var hovered: Int?
@@ -48,10 +50,11 @@ struct EditorCanvasView: View {
     /// A press moves this far (points) before it drags, so a click never nudges a layer.
     private static let dragThreshold: Double = 3
 
-    init(session: SceneEditSession, tools: EditorTools, services: WallpaperEditorServices) {
+    init(session: SceneEditSession, tools: EditorTools, services: WallpaperEditorServices, viewOptions: EditorViewOptions) {
         self.session = session
         self.tools = tools
         self.services = services
+        self.viewOptions = viewOptions
         makeCanvas = services.makeCanvas
         particles = services.particles
         // A 3D scene has no 2D size: its view is framed 16:9 and has no gizmo.
@@ -106,12 +109,18 @@ struct EditorCanvasView: View {
         ZStack(alignment: .topLeading) {
             Color(nsColor: .underPageBackgroundColor)
             sceneCanvas
+            if session.outline.size != nil {
+                CanvasViewOverlay(options: viewOptions, viewport: viewport)
+            }
             GizmoOverlay(session: session, tools: tools, viewport: viewport, hovered: hovered, pointer: pointer, camera: camera,
-                         marquee: marquee)
+                         marquee: marquee, showsSelectionBox: viewOptions.showsSelectionBox, showsHandles: viewOptions.preview == nil)
                 .allowsHitTesting(false)
             if let particles {
                 ParticleCanvasOverlay(services: particles, viewport: viewport)
                     .allowsHitTesting(false)
+                if viewOptions.showsParticleCollision {
+                    ParticleCollisionOverlay(model: particles.model, viewport: viewport)
+                }
             }
             EffectGizmoOverlay(session: session, tools: tools, services: services, viewport: viewport)
                 .allowsHitTesting(false)
@@ -140,6 +149,9 @@ struct EditorCanvasView: View {
         .onChange(of: proxy.size) { (_: CGSize, size: CGSize) in
             viewport.resize(canvas: SIMD2<Double>(Double(size.width), Double(size.height)))
         }
+        // Reset Camera, and a preview turning on or off, fit the scene again (WE resets the view).
+        .onChange(of: viewOptions.resetCount) { withAnimation(.snappy) { viewport.fit() } }
+        .onChange(of: viewOptions.preview) { withAnimation(.snappy) { viewport.fit() } }
     }
 
     /// The scene's render, at the viewport's rectangle.
@@ -217,6 +229,9 @@ struct EditorCanvasView: View {
             }
             .toggleStyle(.button)
             .help(L("Snap layers to the scene and to each other while dragging"))
+            Divider().frame(height: 16)
+            CanvasViewButtons(options: viewOptions, isPlanar: session.outline.size != nil)
+                .toggleStyle(.button)
         }
         .buttonStyle(.borderless)
         .padding(.horizontal, 10)
@@ -288,8 +303,9 @@ struct EditorCanvasView: View {
         }
         let mode = tools.gizmoMode
         let unitsPerPoint = 1 / max(viewport.scale, 1e-9)
-        // The selection's handles first, so a corner over another layer still scales.
-        if let selected = session.selection, !session.isLocked(selected), let geometry = session.geometry(of: selected),
+        // The selection's handles first, so a corner over another layer still scales; a preview
+        // shows none (WE's previews turn the gizmo off).
+        if viewOptions.preview == nil, let selected = session.selection, !session.isLocked(selected), let geometry = session.geometry(of: selected),
            let handle = LayerGizmo.handle(at: point, geometry: geometry, viewport: viewport, mode: mode, space: tools.gizmoSpace),
            handle != .body || mode.translates {
             gesture = .transform(layer: selected, drag: LayerGizmo.Drag(handle: handle, start: geometry, startPoint: scenePoint,
@@ -492,7 +508,7 @@ struct EditorCanvasView: View {
         if let particles, let cursor = ParticleCanvasInteraction.cursor(at: point, viewport: viewport, services: particles) {
             return cursor
         }
-        guard let selected = session.selection, !session.isLocked(selected) else { return .arrow }
+        guard viewOptions.preview == nil, let selected = session.selection, !session.isLocked(selected) else { return .arrow }
         if let camera {
             guard let spatial = session.spatial(of: selected),
                   let frame = Gizmo3D.frame(spatial, space: tools.gizmoSpace, camera: camera, viewport: viewport),
@@ -528,6 +544,10 @@ private struct GizmoOverlay: View {
     let camera: EditorSceneCamera?
     /// A marquee being dragged, corner to corner in canvas points.
     let marquee: (SIMD2<Double>, SIMD2<Double>)?
+    /// Show Selection Box: the selected layer's outline.
+    let showsSelectionBox: Bool
+    /// The handles; a preview hides them.
+    let showsHandles: Bool
 
     var body: some View {
         Canvas { context, _ in
@@ -558,9 +578,11 @@ private struct GizmoOverlay: View {
             guard let selected = session.selection, session.editingText != selected,
                   let geometry = session.geometry(of: selected) else { return }
             let locked = session.isLocked(selected)
-            context.stroke(outline(geometry), with: .color(accentColor),
-                           style: StrokeStyle(lineWidth: 1.5, dash: locked ? [4, 3] : []))
-            guard !locked else { return }
+            if showsSelectionBox {
+                context.stroke(outline(geometry), with: .color(accentColor),
+                               style: StrokeStyle(lineWidth: 1.5, dash: locked ? [4, 3] : []))
+            }
+            guard !locked, showsHandles else { return }
             GizmoDrawing.draw2D(geometry, mode: tools.gizmoMode, space: tools.gizmoSpace, viewport: viewport, accent: accentColor,
                                 in: &context)
         }
