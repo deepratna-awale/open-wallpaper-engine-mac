@@ -25,17 +25,20 @@ extension SceneEditOverlay {
     }
 
     /// Every document the editor wrote that the scene loader reads in place of a file: the
-    /// particle editor's (as compact JSON) and the effects' files (as written).
+    /// particle editor's and the layers' edited documents (`documents`, as compact JSON) and the
+    /// effects' files (as written).
     public func editorFileData() -> [String: Data] {
         var files = particles?.assetData() ?? [:]
+        files.merge(documentData()) { _, document in document }
         for (path, text) in effectFiles ?? [:] { files[path] = Data(text.utf8) }
         return files
     }
 
     /// The same documents as files of a wallpaper (Save as New Wallpaper): the particle editor's
-    /// as WE writes them, the effects' files as they are.
+    /// and the layers' as WE writes them, the effects' files as they are.
     public func editorFiles() throws -> [String: Data] {
         var files = try particles?.assetFiles() ?? [:]
+        files.merge(try documentFiles()) { _, document in document }
         for (path, text) in effectFiles ?? [:] { files[path] = Data(text.utf8) }
         return files
     }
