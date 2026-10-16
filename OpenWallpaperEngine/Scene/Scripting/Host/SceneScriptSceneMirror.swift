@@ -14,6 +14,8 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
         var disablesPropagation: Bool
         /// Its effects' slots in the effect buffer, in effect order.
         var effectSlots: [Int]
+        /// A model's box and a model's or puppet's hit boxes, for the cursor pass.
+        var cursorShape: SceneScriptCursorShape?
     }
 
     /// What an animation slot shows scripts: a timeline of the instance's `SceneAnimationSet`, or
@@ -51,7 +53,7 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
     private var animationTargetsValid = false
     /// The set's frame the animation slots were last published for (`animationFrame`).
     private var publishedAnimationFrame: UInt64 = 0
-    /// The image and text layers in draw order, for the cursor pass; rebuilt with the order.
+    /// The image, text and model layers in draw order, for the cursor pass; rebuilt with the order.
     private var hitTestable: [SceneScriptCursorLayer.TableEntry] = []
     private var hitTestableValid = false
     private var reported = Set<String>()
@@ -88,7 +90,8 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
     private func register(_ object: SceneScriptObjectDescription, slot: Int, disablesPropagation: Bool) {
         objects[slot] = Object(id: object.id, kind: object.kind, parentID: object.parentID,
                                disablesPropagation: disablesPropagation,
-                               effectSlots: model?.store?.effectBufferSlots(of: slot) ?? [])
+                               effectSlots: model?.store?.effectBufferSlots(of: slot) ?? [],
+                               cursorShape: object.cursorShape)
         slotsByID[object.id] = slot
         animationTargetsValid = false
         hitTestableValid = false
@@ -228,17 +231,38 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
         if !hitTestableValid {
             hitTestableValid = true
             hitTestable = order.compactMap { slot -> SceneScriptCursorLayer.TableEntry? in
-                guard let object = objects[slot], object.kind == .image || object.kind == .text else { return nil }
-                return SceneScriptCursorLayer.TableEntry(slot: slot, disablesPropagation: object.disablesPropagation)
+                guard let object = objects[slot] else { return nil }
+                switch object.kind {
+                case .image, .text:
+                    var order: [Int]?
+                    if case .puppet(let bones)? = object.cursorShape?.kind { order = bones }
+                    return SceneScriptCursorLayer.TableEntry(slot: slot, disablesPropagation: object.disablesPropagation,
+                                                             hitBoxes: order == nil ? [] : object.cursorShape?.hitBoxes ?? [],
+                                                             hitBoxOrder: order)
+                case .model:
+                    // Without model data (a missing `.mdl`, or a script's model data) WE never hits it.
+                    var bounds: MDLBounds?
+                    if case .model(let box)? = object.cursorShape?.kind { bounds = box }
+                    return SceneScriptCursorLayer.TableEntry(slot: slot, disablesPropagation: object.disablesPropagation,
+                                                             shape: .model(bounds), hitBoxes: object.cursorShape?.hitBoxes ?? [])
+                default:
+                    return nil
+                }
             }
         }
-        let layers = SceneScriptCursorLayer.layers(in: table, drawOrder: hitTestable) { [objects, slotsByID] slot in
+        let worlds = input.cursorWorlds
+        let layers = SceneScriptCursorLayer.layers(in: table, drawOrder: hitTestable, parentOf: { [objects, slotsByID] slot in
             objects[slot]?.parentID.flatMap { slotsByID[$0] }
-        }
+        }, world: { [objects] slot in
+            worlds.isEmpty ? nil : objects[slot].flatMap { worlds[$0.id] }
+        }, boneWorlds: { [objects] slot in
+            objects[slot].flatMap { input.rigs[$0.id]?.worlds }
+        })
         let world = input.cursorScenePosition + input.shakeOffset
         cursor.publish(SceneScriptCursorFrame(cursorWorldPosition: SIMD3(world.x, world.y, 0),
                                               leftButtonDown: input.input.cursorLeftDown,
-                                              parallax: input.parallax, layers: layers))
+                                              parallax: input.parallax, ray: input.cursorRay,
+                                              viewForward: input.cursorViewForward, layers: layers))
     }
 
     /// Writes every animation slot's state as the renderer's set left it this frame (the clocks

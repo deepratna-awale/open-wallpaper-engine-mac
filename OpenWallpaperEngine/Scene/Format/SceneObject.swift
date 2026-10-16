@@ -30,6 +30,11 @@ struct WESceneObject: Decodable {
     /// Dynamic screen anchor: none, center, top, topright, …
     var anchor: String?
     var blockalign: Bool?
+    /// `opaquebackground` and `backgroundcolor` ("r g b"): a box behind the text.
+    var opaquebackground: Bool?
+    var backgroundcolor: String?
+    /// `spacing` (WE 2.8's letter spacing), "x y" or one number for both.
+    var spacing: String?
     /// `outline`, `blur`, `dropshadow` and their values (`msdf` too).
     var textEffects = WETextEffectFields()
 
@@ -94,7 +99,8 @@ struct WESceneObject: Decodable {
 
     enum CodingKeys: String, CodingKey {
         case id, parent, name, origin, scale, angles, visible, effects, text, font, pointsize, horizontalalign, verticalalign
-        case padding, maxwidth, maxrows, limitwidth, limitrows, limituseellipsis, anchor, blockalign
+        case padding, maxwidth, maxrows, limitwidth, limitrows, limituseellipsis, anchor, blockalign, spacing
+        case opaquebackground, backgroundcolor
         case image, alpha, brightness, color, colorBlendMode, clampuvs, size, alignment, shape
         case solid, disablepropagation, copybackground, parallaxDepth, perspective
         case particle, instanceoverride, instance, sound, light
@@ -154,20 +160,27 @@ struct WESceneObject: Decodable {
         } else {
             textValue = try? c.decodeIfPresent(String.self, forKey: .text)
         }
-        font = try? c.decodeIfPresent(String.self, forKey: .font)
         pointsize = values[.pointsize]?.literalDouble
-        horizontalalign = try? c.decodeIfPresent(String.self, forKey: .horizontalalign)
-        verticalalign = try? c.decodeIfPresent(String.self, forKey: .verticalalign)
-        let paddingText: String? = try? c.decodeIfPresent(String.self, forKey: .padding)
-        let paddingNumber: Double? = try? c.decodeIfPresent(Double.self, forKey: .padding)
-        padding = paddingText ?? paddingNumber.map { String($0) }
-        maxwidth = try? c.decodeIfPresent(Double.self, forKey: .maxwidth)
-        maxrows = try? c.decodeIfPresent(Int.self, forKey: .maxrows)
-        limitwidth = try? c.decodeIfPresent(Bool.self, forKey: .limitwidth)
-        limitrows = try? c.decodeIfPresent(Bool.self, forKey: .limitrows)
-        limituseellipsis = try? c.decodeIfPresent(Bool.self, forKey: .limituseellipsis)
-        anchor = try? c.decodeIfPresent(String.self, forKey: .anchor)
-        blockalign = try? c.decodeIfPresent(Bool.self, forKey: .blockalign)
+        // A text object's layout fields may be bound like any other (`{"script": …, "value": 1200}`,
+        // `{"user": …, "value": …}`): each keeps its authored value, which a script or user
+        // property then replaces.
+        func literal(_ key: CodingKeys) -> SceneRawValue? {
+            c.decodeLogged(SceneRawValue.self, forKey: key, userInfo: decoder.userInfo)
+        }
+        font = literal(.font)?.literalString
+        horizontalalign = literal(.horizontalalign)?.literalString
+        verticalalign = literal(.verticalalign)?.literalString
+        padding = literal(.padding)?.literalString
+        maxwidth = literal(.maxwidth)?.literalDouble
+        maxrows = literal(.maxrows)?.literalInt
+        limitwidth = literal(.limitwidth)?.literalBool
+        limitrows = literal(.limitrows)?.literalBool
+        limituseellipsis = literal(.limituseellipsis)?.literalBool
+        anchor = literal(.anchor)?.literalString
+        blockalign = literal(.blockalign)?.literalBool
+        spacing = literal(.spacing)?.literalString
+        opaquebackground = literal(.opaquebackground)?.literalBool
+        backgroundcolor = literal(.backgroundcolor)?.literalString
         // Optional: each field is read on its own, and an object without them has none.
         textEffects = (try? WETextEffectFields(from: decoder)) ?? WETextEffectFields()
 
