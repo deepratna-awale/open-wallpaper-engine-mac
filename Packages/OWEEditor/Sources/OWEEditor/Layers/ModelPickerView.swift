@@ -1,10 +1,15 @@
 import SwiftUI
 import OWESceneEditing
 
-/// Add Layer › Model: the 3D models the scene can draw (`.mdl`), the wallpaper's own and WE's,
-/// searchable; choosing one adds a model layer drawing it.
+/// Add Layer › Model: the 3D models the scene can draw (`.mdl`), the wallpaper's own, the ones
+/// imported in the editor and WE's, searchable; choosing one adds a model layer drawing it.
+/// Import FBX or OBJ… imports a model file as WE's Add Asset › Model does and adds it.
 struct ModelPickerView: View {
     let models: [EditorModelChoice]
+    /// The models imported into the edits' files, listed apart.
+    var imported: Set<String> = []
+    /// Chooses FBX or OBJ files to import; nil without the edits' files.
+    var importFiles: (() -> Void)?
     let choose: (EditorModelChoice) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
@@ -28,7 +33,8 @@ struct ModelPickerView: View {
             .padding(14)
             Divider()
             List(selection: $selection) {
-                section(L("This Wallpaper"), filtered.filter { !$0.isShared })
+                section(L("This Wallpaper"), filtered.filter { !$0.isShared && !imported.contains($0.path) })
+                section(L("Imported"), filtered.filter { imported.contains($0.path) })
                 section(L("Wallpaper Engine"), filtered.filter(\.isShared))
             }
             .overlay {
@@ -42,6 +48,12 @@ struct ModelPickerView: View {
             }
             Divider()
             HStack {
+                if let importFiles {
+                    Button(L("Import FBX or OBJ…")) {
+                        dismiss()
+                        importFiles()
+                    }
+                }
                 Spacer()
                 Button(L("Cancel"), role: .cancel) { dismiss() }
                     .keyboardShortcut(.cancelAction)

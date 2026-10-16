@@ -113,6 +113,22 @@ final class ScenePuppetTests: XCTestCase {
         XCTAssertEqual(original.floatValues(.blendWeights), mesh.floatValues(.blendWeights))
     }
 
+    /// A particle `collisionmodel` can take a Puppet Warp image: WE reads its rig's `.mdl` as a
+    /// model's (0x1401d4a69), so a rig without per-bone boxes collides through its box, which the
+    /// plan keeps.
+    func testThePlanKeepsTheRigsBoxForParticleCollisions() throws {
+        var mesh = Self.gridMesh(size: SIMD2(8, 4), columns: 1, rows: 1)
+        mesh.bounds = MDLBounds(min: SIMD3(-4, -2, 0), max: SIMD3(4, 2, 0))
+        let plan = try plan(mesh, bones: 1, size: SIMD2(8, 4))
+        let bounds = try XCTUnwrap(plan.bounds)
+        XCTAssertEqual(bounds, MDLBounds(min: SIMD3(-4, -2, 0), max: SIMD3(4, 2, 0)))
+        let capsules = ParticleCapsule.capsules(boneVectors: plan.skeleton.boneVectors, boneWorlds: [], bounds: bounds,
+                                                world: matrix_identity_float4x4)
+        XCTAssertEqual(capsules.count, 1)
+        XCTAssertEqual(capsules.first?.length ?? 0, 4, accuracy: 1e-5)
+        XCTAssertEqual(capsules.first?.radius ?? 0, 2, accuracy: 1e-5)
+    }
+
     // MARK: - Pixels
 
     /// The bind pose (every bone the identity) of a rig laid over its image reproduces the image,
