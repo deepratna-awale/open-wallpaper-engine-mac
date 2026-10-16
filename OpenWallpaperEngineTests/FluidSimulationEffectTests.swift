@@ -76,8 +76,34 @@ final class FluidSimulationEffectTests: XCTestCase {
         XCTAssertEqual(EffectGraphRenderer.pixelFormat("rg1616f", frameBuffer: .rgba8Unorm), .rg16Float)
         XCTAssertEqual(EffectGraphRenderer.pixelFormat("r16f", frameBuffer: .rgba8Unorm), .r16Float)
         XCTAssertEqual(fbos["_rt_SmokeDye1"]?.scale, 2)
+        XCTAssertNil(fbos["_rt_SmokeNormal"], "its conditions want LIGHTING 1: never made")
+        XCTAssertEqual(plan.fbos.count, 8)
         let size = EffectGraphRenderer.fboSize(try XCTUnwrap(fbos["_rt_SmokeVelocity1"]), width: 1920, height: 1080)
         XCTAssertEqual(max(size.x, size.y), 256)
+    }
+
+    /// FBO and bind conditions: `_rt_SmokeNormal` is made and bound to the combine pass only with
+    /// `LIGHTING` 1, `_rt_SmokeVelocity2` bound to its slot 4 only with `RENDERING` 3.
+    func testConditionalFBOsAndBinds() throws {
+        let raw = try XCTUnwrap(FileManager.default.contents(atPath: ShaderVariantTests.weAssets.appending(path: Self.file).path))
+        let document = try decodeTolerant(EffectDocument.self, from: raw)
+        let combine = try XCTUnwrap(document.passes.firstIndex { $0.material?.hasSuffix("fluidsimulation_combine.json") == true })
+        func combinePass(_ plan: SceneEffectPlan) throws -> SceneEffectPassPlan {
+            try XCTUnwrap(plan.passes.first { $0.materialIndex == combine })
+        }
+        func fbo(_ input: SceneEffectTextureInput?) -> String? {
+            if case .fbo(let name)? = input { return name } else { return nil }
+        }
+        let plain = try plan()
+        XCTAssertNil(fbo(try combinePass(plain).textures[2]))
+        XCTAssertNil(fbo(try combinePass(plain).textures[4]))
+        let lit = try plan(combos: ["LIGHTING": 1])
+        XCTAssertTrue(lit.fbos.contains { $0.name == "_rt_SmokeNormal" })
+        XCTAssertEqual(lit.passes.count, Self.authoredPasses, "the normal pass runs")
+        XCTAssertEqual(fbo(try combinePass(lit).textures[2]), "_rt_SmokeNormal")
+        let distortion = try plan(combos: ["RENDERING": 3])
+        XCTAssertFalse(distortion.fbos.contains { $0.name == "_rt_SmokeNormal" })
+        XCTAssertEqual(fbo(try combinePass(distortion).textures[4]), "_rt_SmokeVelocity2")
     }
 
     /// Every variant the effect's options reach translates: rendering modes, emitter counts.
