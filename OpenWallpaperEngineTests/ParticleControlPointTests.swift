@@ -54,6 +54,31 @@ final class ParticleControlPointTests: XCTestCase {
         XCTAssertTrue(parsed[2].worldSpace)
         XCTAssertEqual(parsed[2].offset, SIMD3(1, 2, 3), "z too (0x14022cdc0)")
         XCTAssertEqual(parsed[3].parentControlPoint, 3)
+        XCTAssertFalse(parsed[3].parentRawValue)
+    }
+
+    /// Flag 4 copies the parent's control point into the child's space; with flag 8 ("raw value")
+    /// the parent's point is copied as it is in the parent's space (0x14022e6b3). Flag 4 wins over
+    /// flag 2 (0x14022e66e runs before the scene-position placement, 0x14022a070).
+    func testAParentsPointCopiesRawWithFlagEight() throws {
+        var parentSystem = ParticleTestSystem()
+        parentSystem.origin = SIMD2(500, 500)
+        parentSystem.controlPoints[1] = ParticleTestSystem.point(SIMD2(30, -40))
+        let parent = ParticleSystemRuntime(texture: texture, configuration: parentSystem.configuration, seed: 1)
+        _ = ParticleFrameInputs.advance(parent, deltaTime: 1 / 60, cursor: .zero)
+        XCTAssertEqual(parent.lastControlPoints[1], SIMD3(530, 460, 0))
+
+        var childSystem = ParticleTestSystem()
+        childSystem.origin = SIMD2(600, 400)
+        childSystem.controlPoints[1] = ParticleControlPoint(parentControlPoint: 1)
+        childSystem.controlPoints[2] = ParticleControlPoint(parentControlPoint: 1, parentRawValue: true)
+        childSystem.controlPoints[3] = ParticleControlPoint(offset: SIMD3(5, 5, 0), worldSpace: true, parentControlPoint: 1)
+        let child = ParticleSystemRuntime(texture: texture, configuration: childSystem.configuration, seed: 2)
+        child.parent = parent
+        let inputs = ParticleFrameInputs.advance(child, deltaTime: 1 / 60, cursor: .zero)
+        XCTAssertEqual(inputs.controlPoints[1], SIMD3(-70, 60, 0), "the parent's point, in the child's space")
+        XCTAssertEqual(inputs.controlPoints[2], SIMD3(30, -40, 0), "the parent's own value")
+        XCTAssertEqual(inputs.controlPoints[3], inputs.controlPoints[1], "flag 4 before flag 2")
     }
 
     /// Flag 16 changes nothing at run time: `wallpaper64.exe` reads a control point's flags only for

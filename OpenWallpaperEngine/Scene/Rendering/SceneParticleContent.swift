@@ -219,6 +219,9 @@ struct ParticleControlPoint: Equatable {
     var worldSpace = false
     /// Flag 4: copies its parent system's control point `parentcontrolpoint`.
     var parentControlPoint: Int?
+    /// Flag 8 ("raw value", with flag 4): the parent's point as it is in the parent's space, not
+    /// carried into this system's (0x14022e6b3 copies the parent's matrix unchanged).
+    var parentRawValue = false
 
     static let count = 8
     static let defaults = [ParticleControlPoint](repeating: ParticleControlPoint(), count: count)

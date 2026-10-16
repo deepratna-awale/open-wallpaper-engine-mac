@@ -338,8 +338,9 @@ struct ParticleFrameInputs {
     }
 
     /// The control points this frame, as `wallpaper64.exe` 0x14022e3e0 updates them: on the
-    /// cursor (flag 1), at a scene position (flag 2, control points 1…7), on the parent system's
-    /// control point `parentcontrolpoint` (flag 4) or at their offset in the emitter's space. The
+    /// cursor (flag 1), on the parent system's control point `parentcontrolpoint` (flag 4, before
+    /// flag 2; with flag 8 its value in the parent's space, unchanged), at a scene position (flag 2,
+    /// control points 1…7) or at their offset in the emitter's space. The
     /// object's `controlpoint<n>` override replaces the offset (3D) and `controlpointangle<n>` turns
     /// the point (0x14022bf15); neither moves a point on the cursor or the parent's. Orientation
     /// (0x14022a070): the point's own; in a `worldspace` system composed with the emitter's scale
@@ -375,14 +376,19 @@ struct ParticleFrameInputs {
                 controlPoints[index] = inSpace(SIMD3(cursor, 0))
                 controlPointAxes[index] = matrix_identity_float3x3
                 absolutePoints |= 1 << UInt32(index)
+            } else if let parentIndex = point.parentControlPoint, let parent = system.parent,
+                      parentIndex >= 0, parentIndex < parent.lastControlPoints.count {
+                // 0x14022e6b3: both in the scene, or flag 8, copy the parent's point as it is.
+                if point.parentRawValue, let raw = parent.previousControlPoints, parentIndex < raw.count {
+                    controlPoints[index] = raw[parentIndex]
+                } else {
+                    controlPoints[index] = inSpace(parent.lastControlPoints[parentIndex])
+                }
+                controlPointAxes[index] = parent.lastControlPointAxes[parentIndex]
+                absolutePoints |= 1 << UInt32(index)
             } else if point.worldSpace, index != 0 {
                 controlPoints[index] = inSpace(offset)
                 controlPointAxes[index] = configuration.worldSpace ? turn : unmodel * turn
-                absolutePoints |= 1 << UInt32(index)
-            } else if let parentIndex = point.parentControlPoint, let parent = system.parent,
-                      parentIndex >= 0, parentIndex < parent.lastControlPoints.count {
-                controlPoints[index] = inSpace(parent.lastControlPoints[parentIndex])
-                controlPointAxes[index] = parent.lastControlPointAxes[parentIndex]
                 absolutePoints |= 1 << UInt32(index)
             } else {
                 controlPoints[index] = SIMD3(emitterToSpace.apply(SIMD2(offset.x, offset.y)), offset.z)
