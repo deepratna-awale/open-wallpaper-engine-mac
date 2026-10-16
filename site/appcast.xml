@@ -6,6 +6,64 @@
         <description>Open Wallpaper Engine updates. Items are added by .github/workflows/appcast.yml when a release is published.</description>
         <language>en</language>
         <item>
+            <title>1.0.0-beta.7</title>
+            <pubDate>Fri, 16 Oct 2026 22:38:45 +0000</pubDate>
+            <sparkle:version>11</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.7</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.7/OpenWallpaperEngine-1.0.0-beta.7.zip" length="91937227" type="application/octet-stream" sparkle:edSignature="2Rjf6jdxKQrMrxsuVMrvegC1Hib60DCvas57MG8o6/nl35eyZmz98A5nzUgsy1qAjQ+AS+YKr1wp004sCFgBCw==" />
+            <sparkle:deltas>
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.7/OpenWallpaperEngine-1.0.0-beta.7-from-9.delta" sparkle:deltaFrom="9" length="11947802" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="JnWb7DdIL1W5ybWT0q0KlJCeezAD/iLaMGfEwJigXV2zgphmk2VJVx9gXmua25LFIatMrGYMjTE3GZ2DylOQAg==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.7/OpenWallpaperEngine-1.0.0-beta.7-from-7.delta" sparkle:deltaFrom="7" length="14529174" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="MMIztE7EC+Z18CkEC39b0ldFcu2Zk7pXQwiusB1hZBfpfKLmGOFCqfVbM21Ae6OBCLu733iNwOCxiWQb/gClDg==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.7/OpenWallpaperEngine-1.0.0-beta.7-from-5.delta" sparkle:deltaFrom="5" length="22909830" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="fCIwMRpUnsER067vXvIpmeVPOcwXCu2yPXAWl97Y5oja20CHIGCtisAcpSJeKNP/FnyXFn0qPRNZgIxQrMMPAA==" />
+            </sparkle:deltas>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:fullReleaseNotesLink>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.7</sparkle:fullReleaseNotesLink>
+            <link>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.7</link>
+            <description>&lt;p dir="auto"&gt;Beta 7 is the biggest release yet: a full Wallpaper Editor with Wallpaper Engine's own tools, a screen saver that runs your wallpaper live, much closer Wallpaper Engine parity in scenes, and a long list of new app features.&lt;/p&gt;
+&lt;h2 dir="auto"&gt;Highlights&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;A live screen saver.&lt;/strong&gt; The screen saver runs the wallpaper itself, live: scenes, videos and web wallpapers, no recordings. &lt;strong&gt;Screen Saver Same as Wallpaper&lt;/strong&gt; shows each display's own wallpaper, or pick one with &lt;strong&gt;Set as Screen Saver&lt;/strong&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;The Wallpaper Editor grows into Wallpaper Engine's editor.&lt;/strong&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;Scene Options&lt;/strong&gt; and &lt;strong&gt;Project Settings&lt;/strong&gt;, every missing layer field, and a sound layer inspector.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Add&lt;/strong&gt; lights, cameras, models, a Full Composition, a Solid Placeholder and Wallpaper Engine's presets.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Gizmo modes&lt;/strong&gt; with a 3D gizmo, effect gizmos and position/direction controls, multi-select with Wallpaper Engine's context menus, and a View menu.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Import&lt;/strong&gt; FBX and OBJ models, then configure them in the &lt;strong&gt;Model Editor&lt;/strong&gt;.&lt;/li&gt;
+&lt;li&gt;A &lt;strong&gt;Shader Editor&lt;/strong&gt; with New and Duplicate Effect.&lt;/li&gt;
+&lt;li&gt;Foreground Separation, Normal Map Generation and Character Sheet tools.&lt;/li&gt;
+&lt;li&gt;Script snippets, the stats overlay, a &lt;strong&gt;New Wallpaper…&lt;/strong&gt; wizard, and &lt;strong&gt;Take Snapshot&lt;/strong&gt; / &lt;strong&gt;Record GIF&lt;/strong&gt; for the thumbnail.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Scenes look more like Wallpaper Engine.&lt;/strong&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;Text: script-driven layout, letter spacing and background boxes.&lt;/li&gt;
+&lt;li&gt;Fur, multi-pass model materials, perspective models in 2D scenes, texture variants and texture user properties.&lt;/li&gt;
+&lt;li&gt;HDR video in scenes, effect functions and conditions.&lt;/li&gt;
+&lt;li&gt;Particle colour lists, child systems in 3D, collisions with puppets.&lt;/li&gt;
+&lt;li&gt;Cursor events on 3D models and named hit boxes; scene-wide wind and gravity settings.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;More of Wallpaper Engine's app.&lt;/strong&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;Custom shortcut properties, wallpaper authors' own translations, folder properties for web wallpapers, web devtools.&lt;/li&gt;
+&lt;li&gt;Recording device and volume, a media blocklist, and loading videos into memory.&lt;/li&gt;
+&lt;li&gt;Workshop and Installed sorts, Exact phrase and Hide Anime, display Copy to and Swap with.&lt;/li&gt;
+&lt;li&gt;Hotkeys for wallpapers and display profiles, &lt;strong&gt;Play in Window&lt;/strong&gt;, and Wallpaper Engine's &lt;code class="notranslate"&gt;-control&lt;/code&gt; command line.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;On battery: use a lower quality preset.&lt;/strong&gt; Off by default; your own settings come back when you plug in.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 dir="auto"&gt;Fixes&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;No Microphone prompt unless you choose an input device under Settings › Audio.&lt;/li&gt;
+&lt;li&gt;Libraries made of folder links load their wallpapers.&lt;/li&gt;
+&lt;li&gt;A crash when the screen saver's video drawing stopped.&lt;/li&gt;
+&lt;li&gt;Export previews no longer trip the desktop's "unresponsive" check.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p dir="auto"&gt;The full list is in &lt;a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/blob/main/CHANGELOG.md#100-beta7---2026-10-16"&gt;CHANGELOG.md&lt;/a&gt;.&lt;/p&gt;</description>
+        </item>
+        <item>
             <title>1.0.0-beta.6</title>
             <pubDate>Fri, 09 Oct 2026 23:45:51 +0000</pubDate>
             <sparkle:version>9</sparkle:version>
