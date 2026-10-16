@@ -180,6 +180,16 @@ final class ParticleSimulationParityTests: XCTestCase {
         try assertParity(system, cursor: { frame in SIMD2(640 + 3 * Float(frame), 360) })
     }
 
+    /// A `colorlist` past four colours reads its colour records the same on both.
+    func testColorListPastFourColors() throws {
+        var system = ParticleTestSystem()
+        var list = ParticleInitializer(.colorList, a: SIMD4(9, 0, 0, 0), b: SIMD4(0, 1, 1, 0), c: SIMD4(0.1, 1, 1, 0),
+                                       d: SIMD4(0.2, 1, 1, 0), e: SIMD4(0.3, 1, 1, 0))
+        list.moreColors = (4..<9).map { SIMD4(Float($0) / 9, 1, Float($0 % 2 == 0 ? 1 : 0.4), 0) }
+        system.initializers = [list, ParticleInitializer(.alphaRandom, a: SIMD4(0.5, 1, 1, 0))]
+        try assertParity(system)
+    }
+
     func testChangesAndFadesOverLife() throws {
         var system = ParticleTestSystem()
         // Two of a kind apply in turn.

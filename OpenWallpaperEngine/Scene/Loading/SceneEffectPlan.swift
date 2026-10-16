@@ -67,6 +67,8 @@ struct SceneEffectPlan {
     var visible = true
     /// effect.json `performance`, for the Wallpaper Editor's stats.
     var performance: EffectPerformance?
+    /// effect.json's `functions`, by name (`IEffect.executeMaterialFunction`).
+    var functions: [String: EffectFunction] = [:]
 
     /// The effect reads what an earlier frame left in its buffers: a pass samples, or a copy
     /// reads, an FBO before this frame writes it (motion blur's accumulation), or passes swap
@@ -179,6 +181,7 @@ struct SceneEffectPlanBuilder {
         }
         var plan = SceneEffectPlan(file: effect.file, fbos: document.fbos, passes: passes)
         plan.performance = document.performance
+        plan.functions = document.functions
         return plan
     }
 

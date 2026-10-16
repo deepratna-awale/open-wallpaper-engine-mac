@@ -130,7 +130,7 @@ extension ParticleProgramCPU {
                 let value = record.b.z + random(2) * (record.b.w - record.b.z)
                 p.baseColor *= hsvToRGB(hue, saturation, value)
             case .colorList:
-                p.baseColor *= colorList(record, random: random)
+                p.baseColor *= colorList(record, in: initializers, random: random)
             case .velocityRandom:
                 // 0x14023bbce: through the emitter's control point's orientation, in 3D.
                 p.velocity += context.emitterAxes * (vector(0) * context.spawnScale.w)
@@ -167,10 +167,10 @@ extension ParticleProgramCPU {
     }
 
     /// `colorlist` (0x14023b86b): a random colour of the list (HSV), each part jittered by its noise.
-    static func colorList(_ record: ParticleProgramOp, random: (Int) -> Float) -> SIMD3<Float> {
+    /// `records` holds its colours past the fourth (`ParticleInitializer.encoded`).
+    static func colorList(_ record: ParticleProgramOp, in records: [ParticleProgramOp], random: (Int) -> Float) -> SIMD3<Float> {
         let count = Int(saturating: record.a.x, in: 1...Int.max)
-        let colors = [record.b, record.c, record.d, record.e]
-        let pick = colors[min(Int(random(0) * Float(count)), min(count, colors.count) - 1)]
+        let pick = record.listColor(min(Int(random(0) * Float(count)), count - 1), in: records)
         let noise = SIMD3(record.a.y, record.a.z, record.a.w)
         var hsv = SIMD3(pick.x, pick.y, pick.z)
         for channel in 0..<3 {
