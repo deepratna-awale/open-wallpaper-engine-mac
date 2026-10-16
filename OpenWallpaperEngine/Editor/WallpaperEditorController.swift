@@ -179,8 +179,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.timeline = timeline
         services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
         services.commands = commands
-        // The View menu's settings, kept as the app keeps its own; Low FPS Simulation caps the canvas.
-        services.editorDefaults = UserDefaults.app
+        // Low FPS Simulation caps the canvas (the View menu's settings are kept in `preferences`).
         services.setCanvasFrameRateCap = { [weak preview] cap in
             guard let preview, let scene = preview.sceneInstances.instance(for: preview.instanceKey(for: preview.selectedScreenId)) else {
                 return

@@ -30,7 +30,7 @@ public struct WallpaperEditorView: View {
         self.session = session
         self.services = services
         document = services.document ?? WallpaperEditorDocument()
-        _viewOptions = StateObject(wrappedValue: EditorViewOptions(defaults: services.editorDefaults))
+        _viewOptions = StateObject(wrappedValue: EditorViewOptions(defaults: services.preferences))
         _shaderEditor = StateObject(wrappedValue: ShaderEditorModel(session: session, read: services.readFile,
                                                                     services: services.shaders))
         _authoring = StateObject(wrappedValue: EditorAuthoringModel(session: session, projectJSON: services.projectJSON,
