@@ -29,16 +29,28 @@ struct SceneScriptCursorEvent: Equatable {
     var callback: Callback
     var slot: Int
     var worldPosition: SIMD3<Float>
-    /// x and y from the hit test; z is always 0.
+    /// From the hit test: the quad's x and y (z 0), or where the ray enters a model's box or
+    /// named hit box.
     var localPosition: SIMD3<Float>
+    /// `CursorEvent.hitBox`: the name of the hit box under the cursor, when the pass asked for one.
+    var hitBox: String?
+
+    init(callback: Callback, slot: Int, worldPosition: SIMD3<Float>, localPosition: SIMD3<Float>, hitBox: String? = nil) {
+        self.callback = callback
+        self.slot = slot
+        self.worldPosition = worldPosition
+        self.localPosition = localPosition
+        self.hitBox = hitBox
+    }
 
     /// The inbox event `sceneScriptCursor.js` turns into WE's `CursorEvent`.
     var inboxEvent: SceneScriptEvent {
-        let payload: [String: Any] = [
+        var payload: [String: Any] = [
             "callback": callback.rawValue,
             "worldPosition": [Double(worldPosition.x), Double(worldPosition.y), Double(worldPosition.z)],
             "localPosition": [Double(localPosition.x), Double(localPosition.y), Double(localPosition.z)],
         ]
+        if let hitBox { payload["hitBox"] = hitBox }
         let isMove = callback == .cursorMove
         return SceneScriptEvent(kind: isMove ? .cursorMove : .cursor, payload: payload, target: slot,
                                 coalescing: isMove ? .latest : .keep)
