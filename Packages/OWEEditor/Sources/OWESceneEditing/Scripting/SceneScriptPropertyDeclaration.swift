@@ -83,7 +83,9 @@ enum SceneScriptValueText {
 /// A JavaScript object or array literal of literals (strings, numbers, flags, `null`, nested
 /// literals; keys bare or quoted; trailing commas) read as JSON; nil for anything else.
 enum JavaScriptLiteral {
-    static func value(of literal: String) -> SceneJSONValue? {
+    static func value(of source: String) -> SceneJSONValue? {
+        // A colour's `new Vec3(1, 0, 0)` (WE's Insert Property › Color) reads as WE stores it, "1 0 0".
+        let literal = vectorsAsText(source)
         let text = literal as NSString
         var json = ""
         var expectsKey = false
@@ -132,6 +134,24 @@ enum JavaScriptLiteral {
         guard stack.isEmpty, let data = json.data(using: .utf8),
               let decoded = try? JSONDecoder().decode(SceneJSONValue.self, from: data) else { return nil }
         return decoded
+    }
+
+    /// `new Vec2/3/4(…)` of number literals replaced by the string of its components.
+    static func vectorsAsText(_ source: String) -> String {
+        guard source.contains("new"),
+              let regex = try? NSRegularExpression(pattern: #"\bnew\s+Vec[234]\s*\(\s*(-?[0-9.]+(?:[eE][-+]?[0-9]+)?(?:\s*,\s*-?[0-9.]+(?:[eE][-+]?[0-9]+)?)*)\s*\)"#)
+        else { return source }
+        let text = source as NSString
+        var result = ""
+        var location = 0
+        for match in regex.matches(in: source, range: NSRange(location: 0, length: text.length)) {
+            result += text.substring(with: NSRange(location: location, length: match.range.location - location))
+            let components = text.substring(with: match.range(at: 1)).split(separator: ",")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+            result += "'" + components.joined(separator: " ") + "'"
+            location = NSMaxRange(match.range)
+        }
+        return result + text.substring(from: location)
     }
 
     /// A string literal's text, escapes resolved; nil when unterminated.
