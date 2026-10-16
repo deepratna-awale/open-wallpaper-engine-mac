@@ -182,6 +182,10 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.document = document
         services.thumbnail = thumbnail
         services.readFile = { resources.data($0) }
+        if let translator = SceneWallpaperViewModel.defaultEffectTranslator {
+            services.shaders = ShaderEditorServices(checker: EditorShaderChecker(translator: translator, read: { resources.data($0) }),
+                                                    snippet: { EditorShaderSnippets.snippet(named: $0) })
+        }
         services.projectReferences = { [weak self] in
             // The saved edits keep naming their files while the draft changes; the scene may too.
             var roots: [Data] = []
