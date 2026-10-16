@@ -5,6 +5,19 @@ import simd
 /// test (`SceneScriptCursorHitTest`); every other object is left out of
 /// `SceneScriptCursorFrame.layers`.
 struct SceneScriptCursorLayer {
+    /// A model's or puppet's named hit boxes this frame (`SceneScriptCursorShape`).
+    struct HitBoxes {
+        /// One per bone, by bone index.
+        var boxes: [SceneScriptCursorShape.HitBox]
+        /// A puppet's bones in draw-depth order, tried from the end, the first hit winning; nil for a
+        /// model, whose boxes are all tried and the nearest wins.
+        var order: [Int]?
+        /// Each bone's world matrix this frame (the object's world times the bone's posed model
+        /// matrix: puppet+0x340; a model's world times its animator's pose). Empty for a model
+        /// without a pose, whose boxes then hang from its world matrix alone.
+        var boneWorlds: [simd_float4x4]
+    }
+
     /// Which test the object takes.
     enum Shape: Equatable {
         /// An image or text layer: the `size` quad.
@@ -33,13 +46,15 @@ struct SceneScriptCursorLayer {
     var isSolid: Bool
     /// `disablepropagation` (flag 0x4000).
     var disablesPropagation: Bool
+    /// Its named hit boxes, if it has any.
+    var hitBoxes: HitBoxes?
     /// `visible`, and every parent visible (0x140185010). Hidden objects are still hit and get
     /// their events; only a visible one stops propagation.
     var isVisible: Bool
 
     init(slot: Int, worldMatrix: simd_float4x4, size: SIMD2<Float> = .zero, shape: Shape = .quad,
          origin: SIMD2<Float> = .zero, parallaxDepth: SIMD2<Float> = SIMD2(1, 1), originZ: Float = 0,
-         isSolid: Bool = true, disablesPropagation: Bool = false, isVisible: Bool = true) {
+         isSolid: Bool = true, disablesPropagation: Bool = false, isVisible: Bool = true, hitBoxes: HitBoxes? = nil) {
         self.slot = slot
         self.worldMatrix = worldMatrix
         self.size = size
@@ -50,6 +65,7 @@ struct SceneScriptCursorLayer {
         self.isSolid = isSolid
         self.disablesPropagation = disablesPropagation
         self.isVisible = isVisible
+        self.hitBoxes = hitBoxes
     }
 
     /// Whether a hit on this layer keeps the cursor pass from reaching the layers under it.

@@ -8,11 +8,18 @@ extension SceneScriptCursorLayer {
         /// scene.json `disablepropagation`.
         var disablesPropagation: Bool
         var shape: Shape
+        /// Its named hit boxes (`SceneScriptCursorShape`), posed each frame by `boneWorlds`.
+        var hitBoxes: [SceneScriptCursorShape.HitBox]
+        /// A puppet's draw-depth order of its bones.
+        var hitBoxOrder: [Int]?
 
-        init(slot: Int, disablesPropagation: Bool = false, shape: Shape = .quad) {
+        init(slot: Int, disablesPropagation: Bool = false, shape: Shape = .quad,
+             hitBoxes: [SceneScriptCursorShape.HitBox] = [], hitBoxOrder: [Int]? = nil) {
             self.slot = slot
             self.disablesPropagation = disablesPropagation
             self.shape = shape
+            self.hitBoxes = hitBoxes
+            self.hitBoxOrder = hitBoxOrder
         }
     }
 
@@ -24,7 +31,8 @@ extension SceneScriptCursorLayer {
     /// outside the table are skipped. On the runtime's thread, like every read of the table.
     static func layers(in table: SceneScriptObjectTable, drawOrder: [TableEntry],
                        parentOf: (Int) -> Int?,
-                       world: (Int) -> simd_float4x4? = { _ in nil }) -> [SceneScriptCursorLayer] {
+                       world: (Int) -> simd_float4x4? = { _ in nil },
+                       boneWorlds: (Int) -> [simd_float4x4]? = { _ in nil }) -> [SceneScriptCursorLayer] {
         // Every frame, for every image and text layer: straight reads of the table's floats.
         let values = table.values.pointer
         typealias Layout = SceneScriptObjectTable.Layout
@@ -50,9 +58,18 @@ extension SceneScriptCursorLayer {
                 slot: slot, worldMatrix: matrix, size: SIMD2(row[size], row[size + 1]), shape: shape,
                 origin: SIMD2(row[origin], row[origin + 1]), parallaxDepth: SIMD2(row[depth], row[depth + 1]),
                 originZ: row[origin + 2], isSolid: row[solid] != 0, disablesPropagation: entry.disablesPropagation,
-                isVisible: isVisible(slot, in: table, parentOf: parentOf)))
+                isVisible: isVisible(slot, in: table, parentOf: parentOf),
+                hitBoxes: hitBoxes(entry, boneWorlds: boneWorlds(slot))))
         }
         return layers
+    }
+
+    /// An entry's hit boxes this frame: a puppet's need its posed bones; a model's hang from its
+    /// world matrix without them.
+    private static func hitBoxes(_ entry: TableEntry, boneWorlds: [simd_float4x4]?) -> HitBoxes? {
+        guard !entry.hitBoxes.isEmpty else { return nil }
+        if entry.hitBoxOrder != nil && boneWorlds == nil { return nil }
+        return HitBoxes(boxes: entry.hitBoxes, order: entry.hitBoxOrder, boneWorlds: boneWorlds ?? [])
     }
 
     /// `visible` of the object and every parent (0x140185010). A parent chain longer than the table

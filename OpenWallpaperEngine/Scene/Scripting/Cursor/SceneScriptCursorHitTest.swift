@@ -73,6 +73,60 @@ enum SceneScriptCursorHitTest {
         return Result(isInside: true, localPosition: start + enter * direction)
     }
 
+    /// A named hit box under the ray: its name, and on a model the local position in its frame.
+    struct NamedHit: Equatable {
+        var name: String
+        var localPosition: SIMD3<Float>?
+    }
+
+    /// The hit box of `layer` the ray meets (the object's vt+0x88; nil without one).
+    ///
+    /// Each box is tested in its own frame, `boneWorld · box.matrix`: the ray goes in through the
+    /// frame's inverse, its direction normalized there, and meets the box `−halfExtents…halfExtents`
+    /// (`slab`).
+    /// - **Puppet** (0x1401fd690): the bones of its draw-depth order from the end (the topmost
+    ///   limb first); the first box hit names it. No local position.
+    /// - **Model** (0x140223810): every bone's box; the nearest entering parameter (each measured in
+    ///   its own frame's units, below `FLT_MAX`) names it and gives the local position, the entry
+    ///   point in that box's frame. A model without a pose (no animator) hangs its boxes from its
+    ///   world matrix and names them by index (0x140224519).
+    static func hitBox(_ layer: SceneScriptCursorLayer, ray: SceneScriptCursorRay) -> NamedHit? {
+        guard let set = layer.hitBoxes, !set.boxes.isEmpty else { return nil }
+        func enter(_ box: SceneScriptCursorShape.HitBox, frame: simd_float4x4) -> (t: Float, local: SIMD3<Float>)? {
+            let inverse = frame.inverse
+            let origin4: SIMD4<Float> = inverse * SIMD4<Float>(ray.origin, 1)
+            let direction4: SIMD4<Float> = inverse * SIMD4<Float>(ray.direction, 0)
+            let origin = SIMD3<Float>(origin4.x, origin4.y, origin4.z)
+            let raw = SIMD3<Float>(direction4.x, direction4.y, direction4.z)
+            let direction: SIMD3<Float> = raw * (1 / simd_length(raw))
+            guard let t = slab(origin: origin, direction: direction, half: box.halfExtents) else { return nil }
+            return (t, origin + t * direction)
+        }
+        if let order = set.order {
+            for bone in order.reversed() where set.boxes.indices.contains(bone) && set.boneWorlds.indices.contains(bone) {
+                let box = set.boxes[bone]
+                if enter(box, frame: set.boneWorlds[bone] * box.matrix) != nil { return NamedHit(name: box.name) }
+            }
+            return nil
+        }
+        var best = Float.greatestFiniteMagnitude
+        var found: NamedHit?
+        let posed = !set.boneWorlds.isEmpty
+        for (index, box) in set.boxes.enumerated() {
+            let frame: simd_float4x4
+            if posed {
+                guard index < set.boneWorlds.count else { break }
+                frame = set.boneWorlds[index] * box.matrix
+            } else {
+                frame = layer.worldMatrix * box.matrix
+            }
+            guard let hit = enter(box, frame: frame), hit.t < best else { continue }
+            best = hit.t
+            found = NamedHit(name: posed ? box.name : String(index), localPosition: hit.local)
+        }
+        return found
+    }
+
     /// The slab test of the box `−half…half` (wallpaper64.exe 0x1401853c0, also inlined in
     /// 0x140185520 and 0x1401fd690): the entering parameter, or nil when the ray misses. It keeps
     /// SSE's `minss`/`maxss` and the compiler's `comiss`/`cmovbe` picks, so an axis the ray runs

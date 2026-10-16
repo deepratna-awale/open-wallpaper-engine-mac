@@ -14,7 +14,7 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
         var disablesPropagation: Bool
         /// Its effects' slots in the effect buffer, in effect order.
         var effectSlots: [Int]
-        /// A model's box, for the cursor pass.
+        /// A model's box and a model's or puppet's hit boxes, for the cursor pass.
         var cursorShape: SceneScriptCursorShape?
     }
 
@@ -234,13 +234,17 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
                 guard let object = objects[slot] else { return nil }
                 switch object.kind {
                 case .image, .text:
-                    return SceneScriptCursorLayer.TableEntry(slot: slot, disablesPropagation: object.disablesPropagation)
+                    var order: [Int]?
+                    if case .puppet(let bones)? = object.cursorShape?.kind { order = bones }
+                    return SceneScriptCursorLayer.TableEntry(slot: slot, disablesPropagation: object.disablesPropagation,
+                                                             hitBoxes: order == nil ? [] : object.cursorShape?.hitBoxes ?? [],
+                                                             hitBoxOrder: order)
                 case .model:
                     // Without model data (a missing `.mdl`, or a script's model data) WE never hits it.
                     var bounds: MDLBounds?
                     if case .model(let box)? = object.cursorShape?.kind { bounds = box }
                     return SceneScriptCursorLayer.TableEntry(slot: slot, disablesPropagation: object.disablesPropagation,
-                                                             shape: .model(bounds))
+                                                             shape: .model(bounds), hitBoxes: object.cursorShape?.hitBoxes ?? [])
                 default:
                     return nil
                 }
@@ -251,6 +255,8 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
             objects[slot]?.parentID.flatMap { slotsByID[$0] }
         }, world: { [objects] slot in
             worlds.isEmpty ? nil : objects[slot].flatMap { worlds[$0.id] }
+        }, boneWorlds: { [objects] slot in
+            objects[slot].flatMap { input.rigs[$0.id]?.worlds }
         })
         let world = input.cursorScenePosition + input.shakeOffset
         cursor.publish(SceneScriptCursorFrame(cursorWorldPosition: SIMD3(world.x, world.y, 0),

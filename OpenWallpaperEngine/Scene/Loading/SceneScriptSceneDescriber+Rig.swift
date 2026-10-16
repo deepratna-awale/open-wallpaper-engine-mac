@@ -4,13 +4,20 @@ extension SceneScriptSceneDescriber {
     /// A Puppet Warp image's rig for scripts: model JSON → `puppet` `.mdl`, played by the object's
     /// `animationlayers`. Nil for an image without a rig.
     func rig(model path: String, animationLayers: SceneJSON?) -> SceneScriptRigDescription? {
+        puppetImage(path, animationLayers: animationLayers).rig
+    }
+
+    /// A Puppet Warp image's rig (`rig(model:animationLayers:)`) and its hit boxes for the cursor
+    /// pass (`SceneScriptCursorShape.puppet`), from one read of its `.mdl`.
+    func puppetImage(_ path: String, animationLayers: SceneJSON?) -> (rig: SceneScriptRigDescription?, cursor: SceneScriptCursorShape?) {
         guard let modelData = file(path),
               case .object(let model)? = try? decodeTolerant(SceneJSON.self, from: modelData),
               case .string(let puppet)? = model["puppet"] else {
             // Optional: most images have no rig.
-            return nil
+            return (nil, nil)
         }
-        return rig(mdl: puppet, of: path, animationLayers: animationLayers)
+        guard let mdl = readMDL(puppet, of: path) else { return (nil, nil) }
+        return (rig(mdl, of: path, animationLayers: animationLayers), .puppet(mdl))
     }
 
     /// A model object's rig for scripts (docs/models-plan.md §2.8): its `.mdl`'s skeleton, clips and
