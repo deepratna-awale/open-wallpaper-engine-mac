@@ -306,6 +306,12 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
             // Open Wallpaper Engine's library reads the new preview.
             sync?.libraryDidChange()
         }
+        // Project Settings' title, as WE's editor saves it: into the user's own wallpaper.
+        if thumbnail.savesInPlace, let project = overlay.project, !project.isEmpty {
+            try LocalWallpaperWriter().writeProjectEdits(project, into: wallpaper.wallpaperDirectory)
+            OWELog.info(.library, "Saved the project settings of \(wallpaper.project.title)")
+            sync?.libraryDidChange()
+        }
         refreshEditedState()
     }
 
