@@ -106,6 +106,13 @@ configuration (`ModelImportConfig`) and compiles with it to fill its lists
   storage format.
 - **Clean Project** keeps a used model's materials (the paths in the `.mdl`), configuration and
   sources (`ProjectCleaner.collectModelNames`).
+## Adding a model from a file
+
+Add Layer › Model… lists the wallpaper's models, the ones imported in the editor (Imported) and
+WE's; **Import FBX or OBJ…** (and an FBX or OBJ dropped on the canvas or the asset browser)
+imports the file (`EditorModelImporter.importModel`) and adds a model layer drawing it
+(`LayerActions+Models`), at the scene's centre or the drop point in 2D, the camera's centre in
+3D, with scale 1. WE's docs say its importer normalises a model's size; its rule isn't known.
 
 ## Guessed fields
 
