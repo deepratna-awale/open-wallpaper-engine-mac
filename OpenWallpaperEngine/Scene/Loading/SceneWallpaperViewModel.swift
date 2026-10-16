@@ -374,7 +374,7 @@ class SceneWallpaperViewModel: ObservableObject {
         guard isCurrent() else { return nil }
         var read = SceneRead(wallpaper: wallpaper, signature: key.name + "|" + sceneFile, hasPackage: hasPackage)
         read.overlay = request.overlay
-        read.editorAssets = request.overlay?.editorDocumentData() ?? [:]
+        read.editorAssets = request.overlay?.editorFileData() ?? [:]
         if let cached = Self.cachedParse(for: dir, signature: read.signature) {
             read.parser = cached.parser
             read.scene = cached.scene

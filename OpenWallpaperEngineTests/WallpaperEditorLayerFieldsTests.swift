@@ -4,7 +4,7 @@ import OWESceneEditing
 
 /// The Wallpaper Editor's image layer fields reach the player: the fields the session writes
 /// into the overlay are what the scene's object decodes, and the material Lighting & Reflections
-/// writes is a document the scene's build reads in place of the file (`editorDocumentData`,
+/// writes is a document the scene's build reads in place of the file (`editorFileData`,
 /// `SceneWallpaperViewModel.setEditorAssets`), as the player's material type.
 @MainActor
 final class WallpaperEditorLayerFieldsTests: XCTestCase {
@@ -52,7 +52,7 @@ final class WallpaperEditorLayerFieldsTests: XCTestCase {
         session.setImageMaterial(material.settingConstant("metallic", to: [0.8]), path: material.path, readAsset: read,
                                  actionName: "Metallic")
 
-        let document = try XCTUnwrap(session.overlay.editorDocumentData()["materials/sword.json"])
+        let document = try XCTUnwrap(session.overlay.editorFileData()["materials/sword.json"])
         let pass = try XCTUnwrap(try JSONDecoder().decode(MaterialDocument.self, from: document).passes.first)
         XCTAssertEqual(pass.shader, "genericimage4")
         XCTAssertEqual(pass.combos["LIGHTING"], 1)

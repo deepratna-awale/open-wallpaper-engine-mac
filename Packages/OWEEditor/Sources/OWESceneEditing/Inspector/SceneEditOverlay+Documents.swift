@@ -2,7 +2,7 @@ import Foundation
 
 /// The JSON documents the scene's own layers read that the editor changed (an image layer's
 /// material, for Lighting & Reflections), kept in the overlay (`SceneEditOverlay.documents`) by
-/// their path in the wallpaper. The scene loader reads them, with the particle editor's, in place
+/// their path in the wallpaper. The scene loader reads them through `editorFileData`, with the particle editor's, in place
 /// of the wallpaper's files; a change of one reads the scene again; Save as New Wallpaper writes
 /// them into the copy.
 extension SceneEditOverlay {
@@ -18,10 +18,10 @@ extension SceneEditOverlay {
 
     var hasDocumentEdits: Bool { !(documents ?? [:]).isEmpty }
 
-    /// Every file the scene loader reads in place of the wallpaper's: the particle editor's
-    /// documents and the effects' files (`editorFileData`) with these, as compact JSON.
-    public func editorDocumentData() -> [String: Data] {
-        var files = editorFileData()
+    /// The edited documents as the scene loader reads files, as compact JSON; `editorFileData`
+    /// hands them to the loader with the editor's other files.
+    func documentData() -> [String: Data] {
+        var files: [String: Data] = [:]
         for (path, document) in documents ?? [:] {
             // Values read from JSON always write back as JSON.
             if let data = try? JSONSerialization.data(withJSONObject: document.any, options: [.fragmentsAllowed]) {
@@ -31,9 +31,9 @@ extension SceneEditOverlay {
         return files
     }
 
-    /// Every edited document as a file of a saved copy, written as WE writes its JSON.
-    public func editorDocumentFiles() throws -> [String: Data] {
-        var files = try editorFiles()
+    /// The edited documents as files of a saved copy, written as WE writes its JSON (`editorFiles`).
+    func documentFiles() throws -> [String: Data] {
+        var files: [String: Data] = [:]
         for (path, document) in documents ?? [:] { files[path] = try ParticleDefinition.encode(document) }
         return files
     }

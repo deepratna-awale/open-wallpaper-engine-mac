@@ -33,7 +33,7 @@ enum LocalWallpaperSave {
                                                      into: FileManager.default.wallpapersDirectory,
                                                      editProject: { authoring?.applyProperties(to: &$0) },
                                                      files: baked.files,
-                                                     additionalFiles: try overlay.editorDocumentFiles(),
+                                                     additionalFiles: try overlay.editorFiles(),
                                                      thumbnail: thumbnail)
         OWELog.info(.library, "Saved \(wallpaper.project.title) with its editor edits as \(folder.path)")
         return folder

@@ -93,7 +93,7 @@ final class LayerPropertiesEditTests: XCTestCase {
         XCTAssertTrue(material.lighting)
         XCTAssertEqual(material.normalMap, "sword_normal")
 
-        let data = try XCTUnwrap(session.overlay.editorDocumentData()["materials/sword.json"])
+        let data = try XCTUnwrap(session.overlay.editorFileData()["materials/sword.json"])
         let pass = try XCTUnwrap(((try JSONSerialization.jsonObject(with: data) as? [String: Any])?["passes"] as? [[String: Any]])?.first)
         XCTAssertEqual((pass["combos"] as? [String: Any])?["LIGHTING"] as? Int, 1)
         XCTAssertEqual(pass["textures"] as? [String], ["sword", "sword_normal"])
@@ -102,7 +102,7 @@ final class LayerPropertiesEditTests: XCTestCase {
         XCTAssertEqual(constants["roughness"] as? Double, 0.55, "other constants stay")
         XCTAssertEqual(pass["shader"] as? String, "genericimage4")
 
-        XCTAssertNotNil(try session.overlay.editorDocumentFiles()["materials/sword.json"], "Save as New writes it")
+        XCTAssertNotNil(try session.overlay.editorFiles()["materials/sword.json"], "Save as New writes it")
         XCTAssertEqual(session.overlay.liveChange(from: SceneEditOverlay()), .scene, "the scene is read again")
 
         session.undo()
