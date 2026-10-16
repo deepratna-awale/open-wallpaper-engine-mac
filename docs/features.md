@@ -74,6 +74,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - Collision, including with a model's bones, audio response, and rotation about every axis.
 - Particle settings bound to a wallpaper's user properties.
 - Texture variants (Wallpaper Engine 2.6): textures with Replace and Alpha-blended options that a checkbox or combo property swaps in, composed as Wallpaper Engine loads them.
+- Texture user properties (`scenetexture`): a picture or video you pick replaces an image layer's image.
 
 ### SceneScript & media
 - A complete **SceneScript runtime** — modules, the scene/layer/effect/material object model, animation events, `localStorage`, and cursor hit testing, with each wallpaper's scripts on their own thread.
