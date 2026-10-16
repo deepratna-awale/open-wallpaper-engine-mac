@@ -141,7 +141,7 @@ extension SceneEditSession {
     }
 
     /// Drops an order that is the scene's own (the authored effects, then the added ones).
-    private func normalizeEffectOrder(of layerID: Int, in next: inout SceneEditOverlay) {
+    func normalizeEffectOrder(of layerID: Int, in next: inout SceneEditOverlay) {
         let authoredCount = authoredEffectCount(of: layerID)
         next.update(layerID) { edit in
             guard let order = edit.effectOrder else { return }

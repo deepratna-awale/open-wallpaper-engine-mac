@@ -12,7 +12,6 @@ struct EffectsSection: View {
     let services: WallpaperEditorServices
     let layer: SceneLayer
     @State private var isBrowsing = false
-    @State private var expanded: Set<String> = []
 
     var body: some View {
         Section {
@@ -20,9 +19,10 @@ struct EffectsSection: View {
                 Text(L("No effects")).foregroundStyle(.secondary)
             }
             ForEach(Array(layer.effects.enumerated()), id: \.element.key) { position, effect in
+                // An open effect shows its gizmos on the canvas (`EffectGizmoCanvas`).
                 DisclosureGroup(isExpanded: Binding(
-                    get: { expanded.contains(effect.key) },
-                    set: { if $0 { expanded.insert(effect.key) } else { expanded.remove(effect.key) } })) {
+                    get: { tools.isExpanded(effect.key, of: layer.id) },
+                    set: { tools.setExpanded($0, effect.key, of: layer.id) })) {
                     EffectParametersView(session: session, tools: tools, services: services, layer: layer, effect: effect)
                     CustomEffectSection(session: session, layer: layer, effect: effect)
                 } label: {
@@ -49,7 +49,7 @@ struct EffectsSection: View {
                     tools.problem = L("“\(title)” couldn’t be added: \(error.localizedDescription)")
                     return
                 }
-                if let key = session.addEffect(entry, to: layer.id, actionName: L("Add Effect")) { expanded.insert(key) }
+                if let key = session.addEffect(entry, to: layer.id, actionName: L("Add Effect")) { tools.setExpanded(true, key, of: layer.id) }
             }
         }
     }
@@ -80,6 +80,8 @@ struct EffectsSection: View {
             Spacer(minLength: 4)
             InfoTip(services.effectHelp(effect.folderName))
             Menu {
+                EffectClipboardItems(actions: LayerActions(session: session, services: services, tools: tools), layer: layer, effect: effect)
+                Divider()
                 Button(L("Move Up")) { move(position, by: -1) }
                     .disabled(position == 0)
                 Button(L("Move Down")) { move(position, by: 1) }
@@ -212,6 +214,12 @@ struct EffectParametersView: View {
                 .labelsHidden()
         case .slider:
             slider(parameter, component: 0)
+        case .position:
+            EffectPositionField(value: Binding(get: { components(parameter) }, set: { set(parameter, $0, coalescing: true) }),
+                                defaultValue: parameter.defaultValue)
+        case .direction:
+            EffectDirectionDial(radians: Binding(get: { components(parameter)[safe: 0] ?? 0 }, set: { set(parameter, [$0], coalescing: true) }),
+                                defaultValue: parameter.defaultValue[safe: 0] ?? 0, showsDegrees: parameter.showsDegrees)
         case .color:
             ColorPicker(selection: Binding(
                 get: {

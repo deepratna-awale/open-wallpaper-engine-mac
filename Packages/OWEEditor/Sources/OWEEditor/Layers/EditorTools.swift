@@ -18,14 +18,39 @@ final class EditorTools: ObservableObject {
     @Published var snapping = true
     /// Where the drag in progress snapped, drawn on the canvas.
     @Published var guides: [LayerSnapping.Guide] = []
+    /// The effects open in the inspector, as `<layer>:<effect key>`: the canvas draws their gizmos.
+    @Published var expandedEffects: Set<String> = []
     @Published var maskPainting: MaskPainting?
     @Published var sidebarTab: SidebarTab = .layers
     /// The layer whose name is being edited in the list.
     @Published var renaming: Int?
+    /// Copy Transforms' `origin`, `scale` and `angles`, for Paste Transforms.
+    @Published var copiedTransform: LayerTransform?
+    /// Copy Effect's effect, and Copy all Effects' list, for pasting on any layer of the window.
+    @Published var copiedEffect: SceneJSONValue?
+    @Published var copiedEffects: [SceneJSONValue] = []
+    /// The layer Move to Custom Position asks a list position for.
+    @Published var choosingListPosition: Int?
     /// Edit with External Image Editor's watches, made on first use.
     var externalEditor: ExternalImageEditor?
     /// A message for the window's banner (an import that failed, say).
     @Published var problem: String?
+    /// The canvas's gizmo: which handles the selection shows (Multi, every one, in a 2D scene; the
+    /// canvas switches a 3D scene to Translate).
+    @Published var gizmoMode: GizmoMode = .multi
+    /// Each mode's space as last chosen; unset, the mode's own (`GizmoMode.defaultSpace`).
+    @Published var gizmoSpaces: [GizmoMode: GizmoSpace] = [:]
+
+    /// The current mode's axes: the scene's or the object's own.
+    var gizmoSpace: GizmoSpace {
+        get { gizmoSpaces[gizmoMode] ?? gizmoMode.defaultSpace }
+        set { if gizmoMode.hasSpaceChoice { gizmoSpaces[gizmoMode] = newValue } }
+    }
+
+    /// A gizmo button: its mode, or none when it is the mode already (WE's `setGizmoMode`).
+    func toggleGizmoMode(_ mode: GizmoMode) {
+        gizmoMode = gizmoMode == mode ? .none : mode
+    }
     /// Images waiting for the importer's options (`ImportOptionsSheet`).
     @Published var pendingImport: PendingImageImport?
     /// Normal Map Generation's options by material, kept while the window is open (as WE's editor).
@@ -35,6 +60,13 @@ final class EditorTools: ObservableObject {
 
     /// Canvas points within which a drag snaps.
     static let snapDistance: Double = 6
+
+    func isExpanded(_ effectKey: String, of layerID: Int) -> Bool { expandedEffects.contains("\(layerID):\(effectKey)") }
+
+    func setExpanded(_ expanded: Bool, _ effectKey: String, of layerID: Int) {
+        let key = "\(layerID):\(effectKey)"
+        if expanded { expandedEffects.insert(key) } else { expandedEffects.remove(key) }
+    }
 }
 
 /// Choosing files to import, as the Add menu and the asset browser do.

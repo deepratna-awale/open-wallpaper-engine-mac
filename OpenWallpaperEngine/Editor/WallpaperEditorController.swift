@@ -188,6 +188,12 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         }
         services.document = document
         services.thumbnail = thumbnail
+        // A 3D scene's camera as the canvas's renderer drew its last frame (its own lock).
+        services.sceneCamera = { [weak preview] in
+            guard let preview, let scene = preview.sceneInstances.instance(for: preview.instanceKey(for: preview.selectedScreenId)),
+                  let camera = scene.renderLoop.renderer?.lastPerspectiveCamera else { return nil }
+            return EditorSceneCamera(camera)
+        }
         services.renderStats = SceneRenderStatsSampler(instance: { [weak preview] in
             preview.flatMap { $0.sceneInstances.instance(for: $0.instanceKey(for: $0.selectedScreenId)) }
         }).makeFeed()

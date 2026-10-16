@@ -82,6 +82,9 @@ public struct WallpaperEditorServices {
     public var openAssetsSetup: () -> Void = {}
     /// Take Snapshot and Record GIF: the library thumbnail made from the canvas; nil leaves them out.
     public var thumbnail: EditorThumbnail?
+    /// A 3D scene's camera as the canvas's renderer drew its last frame, for the 3D gizmo; nil
+    /// in a 2D scene or before the scene has drawn.
+    public var sceneCamera: () -> EditorSceneCamera? = { nil }
     /// Caps the canvas's frame rate (Low FPS Simulation), nil for none.
     public var setCanvasFrameRateCap: (Int?) -> Void = { _ in }
     /// The canvas renderer's frame statistics for the stats overlay; nil leaves the overlay out.

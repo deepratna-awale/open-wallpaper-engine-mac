@@ -70,8 +70,8 @@ struct LayerContextMenu: View {
     var body: some View {
         Button(L("Rename")) { actions.tools.renaming = layer.id }
             .disabled(!session.isEditable("name", of: layer.id))
-        Button(L("Duplicate")) { actions.duplicate(layer.id) }
-        Button(L("Delete"), role: .destructive) { actions.delete(layer.id) }
+        Button(L("Duplicate")) { actions.duplicateSelection(layer.id) }
+        Button(L("Delete"), role: .destructive) { actions.deleteSelection(layer.id) }
         ExternalEditMenuItems(session: session, layer: layer, actions: actions)
         ImageEditingMenuItems(layer: layer, actions: actions)
         Divider()
@@ -86,6 +86,7 @@ struct LayerContextMenu: View {
                 AlignmentButtons(actions: actions, layerID: layer.id)
             }
         }
+        LayerCommandItems(session: session, layer: layer, actions: actions)
         Divider()
         Button(L("Group")) { actions.group(layer.id) }
         if !session.outline.children(of: layer.id).isEmpty {
