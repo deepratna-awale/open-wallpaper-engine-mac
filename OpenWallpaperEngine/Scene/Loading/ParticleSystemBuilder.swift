@@ -200,7 +200,9 @@ enum ParticleSystemBuilder {
         return low + 0.5 * (high - low)
     }
 
-    /// The eight control points by index (WE ignores `id` and `locktopointer`, 0x1401d0530).
+    /// The eight control points by index (WE ignores `id` and `locktopointer`, 0x1401d0530). WE
+    /// parses `angles` (0x1401d06ce) but never reads them: a point starts unturned (0x14022cdf4),
+    /// and only the object's `controlpointangle<n>` turns it.
     static func controlPoints(_ authored: [WEParticleControlPoint]) -> [ParticleControlPoint] {
         var points = ParticleControlPoint.defaults
         for (index, point) in authored.enumerated() where index < ParticleControlPoint.count {
@@ -209,7 +211,8 @@ enum ParticleSystemBuilder {
             points[index] = ParticleControlPoint(offset: SIMD3(Float(offset.0), Float(offset.1), Float(offset.2)),
                                                  followsCursor: flags & 1 != 0,
                                                  worldSpace: flags & 2 != 0 && index != 0,
-                                                 parentControlPoint: flags & 4 != 0 ? point.parentcontrolpoint ?? 0 : nil)
+                                                 parentControlPoint: flags & 4 != 0 ? point.parentcontrolpoint ?? 0 : nil,
+                                                 parentRawValue: flags & 8 != 0)
         }
         return points
     }
