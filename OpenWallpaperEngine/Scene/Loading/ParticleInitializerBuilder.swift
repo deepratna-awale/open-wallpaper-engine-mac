@@ -59,19 +59,19 @@ enum ParticleInitializerBuilder {
                                        b: SIMD4(f(element.saturationmin, 0.5), f(element.saturationmax, 1),
                                                 f(element.valuemin, 0.5), f(element.valuemax, 1)))
         case "colorlist":
-            // 0x1401ba740: colours ["1 1 1"] (0…1), no noise; an empty list is red.
-            let colors = (element.colors ?? ["1 1 1"]).prefix(4).map { string -> SIMD4<Float> in
+            // 0x1401ba740: colours ["1 1 1"] (0…1), no noise; an empty list is red. WE keeps the whole
+            // list (a vector the pick at 0x14023b86b indexes); its editor offers 1…10 colours.
+            let colors = (element.colors ?? ["1 1 1"]).map { string -> SIMD4<Float> in
                 let rgb = string.parseVector3()
                 return SIMD4(hsv(SIMD3(Float(rgb.0), Float(rgb.1), Float(rgb.2))), 0)
             }
             let list = colors.isEmpty ? [SIMD4<Float>(0, 1, 1, 0)] : colors
-            if (element.colors?.count ?? 0) > 4 {
-                OWELog.error(.scene, "Particle system \(path): colorlist keeps its first 4 of \(element.colors?.count ?? 0) colours")
-            }
-            let padded = list + Array(repeating: list[0], count: 4 - list.count)
-            return ParticleInitializer(.colorList, a: SIMD4(Float(list.count), f(element.huenoise, 0), f(element.saturationnoise, 0),
-                                                           f(element.valuenoise, 0)),
-                                       b: padded[0], c: padded[1], d: padded[2], e: padded[3])
+            let padded = list + Array(repeating: list[0], count: max(4 - list.count, 0))
+            var initializer = ParticleInitializer(.colorList, a: SIMD4(Float(list.count), f(element.huenoise, 0),
+                                                                       f(element.saturationnoise, 0), f(element.valuenoise, 0)),
+                                                  b: padded[0], c: padded[1], d: padded[2], e: padded[3])
+            initializer.moreColors = Array(list.dropFirst(4))
+            return initializer
         case "velocityrandom":
             // 0x1401bac50: "-32 -32 0"…"32 32 0" (2D) / "-1 -1 -1"…"1 1 1".
             return vector(.velocityRandom, d.pick(SIMD3(-32, -32, 0), SIMD3(-1, -1, -1)),

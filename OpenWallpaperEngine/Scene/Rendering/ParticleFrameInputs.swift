@@ -462,7 +462,7 @@ struct ParticleFrameInputs {
             }
             return ParticleOverrideBindings.bind(record, operator: element.kind, overrides: overrides)
         }
-        initializers = program.initializers.map { element in
+        initializers = ParticleInitializer.encoded(program.initializers, records: program.initializers.map { element in
             var record = element.record
             if let response = element.audio { record.e.w = response.response(audio) }
             if let count = element.sequenceCount {
@@ -472,7 +472,7 @@ struct ParticleFrameInputs {
                 record.a.x = 1 / max(between ? scaled - 1 : scaled, 0.0001)
             }
             return ParticleOverrideBindings.bind(record, initializer: element.kind, overrides: overrides)
-        }
+        })
     }
 
     /// These inputs for one instance of an instanced system, whose emitter sits at `translation`

@@ -17,7 +17,8 @@ import Metal
 ///
 /// RT*i* is `_rt_<2^(i+1)>FrameBuffer`, RGBA16F at 1/2^(i+1). WE's constants go to D0
 /// (`bloomstrength` normalised by the scatter, `blend`, `bloomtint`) and both upsample materials
-/// (`scatter`). A HDR frame without bloom goes through `combine_srgb` instead.
+/// (`scatter`). A HDR frame without bloom goes through `combine_srgb` instead, or `combine_video_hdr` for a HDR
+/// video (below).
 ///
 /// Both combines write linear values; WE shows them through its swap chain's sRGB view, so the
 /// output here is an sRGB target that the composite reads as the encoded bytes (`encodedView`).
@@ -26,6 +27,13 @@ import Metal
 /// the combine is `combine_dhdr_upsample` and the output an RGBA16F target of linear values that
 /// the EDR drawable shows as they are, with RV = (1, headroom − 1) (`SceneDisplayOutput.renderVar`);
 /// otherwise RV is (1, 0).
+///
+/// A HDR video (WE 2.8's "Scene DX11 (HDR Support)" video framework) fills the float frame with
+/// linear light rather than sRGB-encoded colour, so WE swaps `combine_srgb` for
+/// `combine_video_hdr` (render flag 0x10000, 0x14017fb82): no linearisation, only a clamp to
+/// [0, 2 · `g_HDRParams.y`]. `g_HDRParams` is the device's HDR pair, RV's (SDR white, max
+/// luminance − SDR white) / 80 nits (`passthroughlinear` divides by its `.x` to get back SDR), so
+/// here, in SDR-white units, (1, headroom − 1) on the EDR output (`videoHDRParams`).
 struct SceneHDRChain {
     /// Every pass of the chain at 8 levels, both upsample variants and both combines; `plan(levels:)`
     /// picks a frame's passes from it.
@@ -54,6 +62,8 @@ struct SceneHDRChain {
         static let combineSRGB = 23
         /// `combine_dhdr_upsample` (`DISPLAYHDR` 1), display HDR's combine (0x14017fb49).
         static let combineDisplayHDR = 24
+        /// `combine_video_hdr`, a HDR video's combine without bloom in place of `combine_srgb`.
+        static let combineVideoHDR = 25
     }
 
     /// `_rt_<2^(i+1)>FrameBuffer`, level *i*'s target.
@@ -82,6 +92,7 @@ struct SceneHDRChain {
         passes.append(pass("combine_hdr_upsample", bloom: target(0)))
         passes.append(pass("combine_srgb"))
         passes.append(pass("combine_dhdr_upsample", bloom: target(0)))
+        passes.append(pass("combine_video_hdr"))
         let fbos = (0..<maxLevels).map {
             #"{"name": "\#(target($0))", "scale": \#(2 << $0), "format": "rgba16161616f"}"#
         }
@@ -108,8 +119,8 @@ struct SceneHDRChain {
             sceneEngineCombos: builder.sceneEngineCombos)
         let effect = try JSONDecoder().decode(WEObjectEffect.self, from: Data(#"{"file": "\#(effectFile)"}"#.utf8))
         let plan = try engine.build(effect)
-        guard plan.passes.count == Pass.combineDisplayHDR + 1 else {
-            throw BuildError.incomplete("\(plan.passes.count) of \(Pass.combineDisplayHDR + 1) passes planned")
+        guard plan.passes.count == Pass.combineVideoHDR + 1 else {
+            throw BuildError.incomplete("\(plan.passes.count) of \(Pass.combineVideoHDR + 1) passes planned")
         }
         for pass in plan.passes where pass.variant == nil {
             throw BuildError.incomplete("pass \(pass.materialIndex) has no shader")
@@ -159,6 +170,14 @@ struct SceneHDRChain {
     /// The device's `g_RenderVar0.xy` for the combine without display HDR (see the type's comment).
     static let deviceRenderVar = SIMD2<Float>(1, 0)
 
+    /// `g_HDRParams` of `combine_video_hdr` for display HDR's RV, or for a frame on a display
+    /// without headroom (nil). WE makes the video HDR only on a HDR display, where the pair is RV;
+    /// a frame of it shown on another display is clamped to SDR white instead (y = 0.5), which a
+    /// device pair of (1, 0) would turn black.
+    static func videoHDRParams(displayHDR: SIMD2<Float>?) -> SIMD2<Float> {
+        displayHDR ?? SIMD2(1, 0.5)
+    }
+
     /// `g_RenderVar0` of each pass of `levels` levels on a `size` frame, by material index
     /// (`0x140183610`, `0x140180b26`); `displayHDR` is display HDR's RV, whose combine then takes it.
     static func renderVars(levels: Int, size: SIMD2<Float>, displayHDR: SIMD2<Float>? = nil) -> [Int: SIMD4<Float>] {
@@ -179,11 +198,12 @@ struct SceneHDRChain {
     }
 
     /// The plan for a frame: `levels` levels of bloom, or `combine_srgb` alone when `levels` is nil
-    /// (a HDR frame without bloom, with display HDR too: 0x140180b9c). `displayHDR` combines with
-    /// `combine_dhdr_upsample`.
-    func plan(levels: Int?, displayHDR: Bool = false) -> SceneEffectPlan {
+    /// (a HDR frame without bloom, with display HDR too: 0x140180b9c), `combine_video_hdr` for a
+    /// HDR video (`videoHDR`). `displayHDR` combines with `combine_dhdr_upsample`.
+    func plan(levels: Int?, displayHDR: Bool = false, videoHDR: Bool = false) -> SceneEffectPlan {
         guard let levels else {
-            return SceneEffectPlan(file: full.file, fbos: [], passes: full.passes.filter { $0.materialIndex == Pass.combineSRGB })
+            let combine = videoHDR ? Pass.combineVideoHDR : Pass.combineSRGB
+            return SceneEffectPlan(file: full.file, fbos: [], passes: full.passes.filter { $0.materialIndex == combine })
         }
         let n = min(max(levels, 1), Self.maxLevels)
         var indices = [Pass.downsampleBloom] + (1..<n).map(Pass.downsample)
@@ -216,7 +236,8 @@ struct SceneHDRChain {
     // MARK: - Running it
 
     /// Encodes the chain on `frame` (`_rt_FullFrameBuffer`, RGBA16F) with `constants` for
-    /// `levels` levels, or `combine_srgb` alone when `levels` is nil; returns the combined frame,
+    /// `levels` levels, or `combine_srgb` alone when `levels` is nil (`combine_video_hdr` with
+    /// `videoHDR`, the frame then holding linear light); returns the combined frame,
     /// an sRGB texture of its size (RGBA16F with `displayHDR`, display HDR's RV), or nil while a
     /// pass's pipeline is still compiling or one failed.
     /// `referenceSize` is the frame's size at full detail (`ScenePostProcess.Frame.bloomReferenceSize`;
@@ -224,9 +245,11 @@ struct SceneHDRChain {
     func encode(on frame: MTLTexture, levels: Int?, constants: Constants,
                 effects: EffectGraphRenderer, builtins: BuiltinFrameContext, values: SceneValueContext,
                 frameIndex: UInt64, referenceSize: SIMD2<Float>? = nil, displayHDR: SIMD2<Float>? = nil,
-                commandBuffer: MTLCommandBuffer) -> MTLTexture? {
-        let plan = plan(levels: levels, displayHDR: displayHDR != nil)
+                videoHDR: Bool = false, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+        let plan = plan(levels: levels, displayHDR: displayHDR != nil, videoHDR: videoHDR)
         let size = referenceSize ?? SIMD2(Float(frame.width), Float(frame.height))
+        var builtins = builtins
+        if videoHDR { builtins.hdrParams = Self.videoHDRParams(displayHDR: displayHDR) }
         var context = EffectGraphRenderer.Context(
             frame: builtins, values: values,
             // The util materials of the chain sample no asset.

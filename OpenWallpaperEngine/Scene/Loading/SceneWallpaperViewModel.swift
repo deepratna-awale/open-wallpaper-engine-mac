@@ -94,6 +94,8 @@ class SceneWallpaperViewModel: ObservableObject {
     private var loggedParticleBudget: (directory: URL, report: ParticleBudget.Report)?
     /// Retained for video wallpapers rendered through the scene pipeline.
     private var videoStream: VideoTextureStream?
+    /// The last video's range (`videoDynamicRange(of:)`), read once per file.
+    private var videoRangeByURL: (url: URL, range: VideoDynamicRange)?
     /// Scene images' video textures, which follow the wallpaper's playback (`setEmbeddedVideoRate`).
     private let embeddedVideoStreams = NSHashTable<VideoTextureStream>.weakObjects()
     private var embeddedVideoRate: Float = 1
@@ -264,7 +266,10 @@ class SceneWallpaperViewModel: ObservableObject {
     func setRenderSettings(_ settings: SceneRenderSettings) {
         let rebuild: Bool? = stateLock.withLock {
             guard settings != pendingRenderSettings else { return nil }
+            // A video's HDR follows display HDR itself (`videoDynamicRange(of:)`).
             let rebuild = settings.contentKey != pendingRenderSettings.contentKey
+                || (Self.isVideoType(currentWallpaper.project.type)
+                    && (settings.postProcessing == .displayhdr) != (pendingRenderSettings.postProcessing == .displayhdr))
             pendingRenderSettings = settings
             return rebuild
         }
@@ -906,8 +911,14 @@ class SceneWallpaperViewModel: ObservableObject {
         // Runs on the content queue: a video AVFoundation refuses as it is plays from its repaired
         // copy, made here on first play when the import didn't make it.
         let url = videoStream == nil ? RepairedVideoCache.current.playableURL(for: currentWallpaper.mediaURL) : currentWallpaper.mediaURL
+        let dynamicRange = videoDynamicRange(of: url)
+        // The stream decodes for one range: a change of the setting reopens it.
+        if let videoStream, videoStream.dynamicRange != dynamicRange {
+            videoStream.stop()
+            self.videoStream = nil
+        }
         let stream = videoStream ?? VideoTextureStream(file: VideoFileSource(url: url, mode: renderSettings.videoReadMode),
-                                                       device: device)
+                                                       device: device, dynamicRange: dynamicRange)
         guard let stream else {
             OWELog.error(.scene, "Could not open video \(url.lastPathComponent) for Metal playback")
             return nil
@@ -938,9 +949,30 @@ class SceneWallpaperViewModel: ObservableObject {
             brightness: 1, color: SIMD4<Float>(repeating: 1), text: nil, parallaxDepth: .zero, perspective: false,
             rotation: 0)
         layer.musicSync = musicSync
-        return SceneMetalContent(size: sceneSize, layers: [layer], particleSystems: [],
-                                 bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7,
-                                                           tint: SIMD3<Float>(repeating: 1)))
+        var content = SceneMetalContent(size: sceneSize, layers: [layer], particleSystems: [],
+                                        bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7,
+                                                                  tint: SIMD3<Float>(repeating: 1)))
+        if stream.dynamicRange.isHDR {
+            // WE 2.8's HDR video: a float frame of linear light, finished by `combine_video_hdr`.
+            sceneEngineCombos = SceneEngineCombos(hdr: true)
+            content.engineCombos = sceneEngineCombos
+            content.hdrChain = engineChain("WE's HDR video combine", wallpaperDir: currentWallpaper.wallpaperDirectory,
+                                           SceneHDRChain.build)
+            content.videoHDR = true
+        }
+        return content
+    }
+
+    /// The range the Metal path decodes `url` in: its own when it is HDR and the post-processing
+    /// setting is "Ultra (Display HDR)", WE 2.8's condition for a HDR video (a HDR swap chain);
+    /// SDR otherwise, the 8-bit path at its usual cost. The settings offer display HDR only where a
+    /// display can show it (`DisplayHDRSupport`).
+    private func videoDynamicRange(of url: URL) -> VideoDynamicRange {
+        guard renderSettings.postProcessing == .displayhdr else { return .sdr }
+        if let known = videoRangeByURL, known.url == url { return known.range }
+        let range = VideoDynamicRange.of(url)
+        videoRangeByURL = (url, range)
+        return range
     }
 
     /// Plays or pauses every scene image's video texture with the wallpaper: 0 while it is
@@ -1204,6 +1236,27 @@ class SceneWallpaperViewModel: ObservableObject {
         return SceneSystemTexture.bindings(in: userTextures, owner: "Layer \(id)")[0]
     }
 
+    /// The picture or video a texture user property (`SceneUserTexture`) puts in an image
+    /// object's image slot (0); nil keeps the authored image. The binding is recorded either way,
+    /// so picking or clearing a file rebuilds the layer.
+    private func userTexture(of object: WESceneObject, material: WEMaterial, id: Int,
+                             wallpaperDir: URL) -> SceneMetalTextureSource? {
+        guard let property = SceneUserTexture.property(in: [object.instance?.usertextures,
+                                                            material.passes?.first?.usertextures], slot: 0) else { return nil }
+        bindingTable.record(.asset(SceneUserTexture.documentPath(owner: id, slot: 0)),
+                            json: SceneUserTexture.bindingDocument(property: property))
+        guard let path = userProperty(property)?.trimmingCharacters(in: .whitespaces), !path.isEmpty,
+              let source = SceneUserTexture.source(path: path, wallpaperDir: wallpaperDir,
+                                                   device: MTLCreateSystemDefaultDevice()) else { return nil }
+        if case .video(let stream) = source {
+            embeddedVideoLock.withLock {
+                embeddedVideoStreams.add(stream)
+                stream.setHostRate(embeddedVideoRate)
+            }
+        }
+        return source
+    }
+
     private func buildImageLayer(_ object: WESceneObject, id: Int, wallpaperDir: URL, sceneSize: SIMD2<Float>) -> SceneMetalLayer? {
         guard let imagePath = object.image,
               let model: WEModel = loadJSON(path: imagePath, wallpaperDir: wallpaperDir),
@@ -1266,6 +1319,11 @@ class SceneWallpaperViewModel: ObservableObject {
         layer.fillsScene = model.fullscreen == true
         // A layer whose image is the scene only exists to run effects on it; WE skips it without any.
         if sceneInput, effectPlans.plans.isEmpty { return nil }
+        if !sceneInput, let picked = userTexture(of: object, material: material, id: id, wallpaperDir: wallpaperDir) {
+            // Drawn in the authored image's place and size; its frames aren't the image's.
+            layer.source = picked
+            layer.textureKey = nil
+        }
         if !sceneInput {
             // A puppet is lit like any image: its mesh draws the image (`layer.puppet`) that its
             // effects, prelighting and own draw read.
