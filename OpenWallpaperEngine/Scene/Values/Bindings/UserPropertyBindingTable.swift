@@ -152,9 +152,11 @@ final class UserPropertyBindingTable {
     }
 
     /// The bytes of the asset document at `path` as its parser should read them: recorded on first
-    /// read, and resolved with `properties` when it binds anything. Files that aren't JSON objects
-    /// (textures, shaders, models) pass through untouched.
+    /// read, and resolved with `properties` when it binds anything. A `.tex` with texture variants
+    /// is composed as the properties choose (`resolvedTexture`); other files that aren't JSON
+    /// objects (textures, shaders, models) pass through untouched.
     func resolvedData(_ data: Data, path: String, properties: (String) -> String?) -> Data {
+        if path.lowercased().hasSuffix(".tex") { return resolvedTexture(data, path: path, properties: properties) }
         guard path.lowercased().hasSuffix(".json"), data.range(of: Data("\"user".utf8)) != nil else { return data }
         let document = UserPropertyBindingDocument.asset(path)
         let recorded = lock.withLock { bindingsByDocument[document] != nil }
@@ -174,6 +176,20 @@ final class UserPropertyBindingTable {
             OWELog.error(.scene, "Can't write \(path) with its user properties resolved: \(error)")
             return data
         }
+    }
+
+    /// A `.tex` with texture variants (`TEXVariants`) with the options `properties` turn on composed
+    /// in (`TEXVariantResolver`). Its conditions are recorded as the texture's bindings, so a change
+    /// rebuilds every object that read it, as WE reloads the texture. Any other `.tex` as it is.
+    private func resolvedTexture(_ data: Data, path: String, properties: (String) -> String?) -> Data {
+        guard TEXVariants.declares(in: data), let variants = TEXVariants(texData: data) else { return data }
+        let document = UserPropertyBindingDocument.asset(path)
+        if lock.withLock({ bindingsByDocument[document] != nil }) {
+            noteRead(path)
+        } else {
+            record(document, json: variants.bindingDocument)
+        }
+        return TEXVariantResolver.resolve(data, enabled: variants.enabled { $0.isMet(properties) }) ?? data
     }
 
     /// The build of `owner` baked `target` into a resource (a solid layer's colour is its image):
