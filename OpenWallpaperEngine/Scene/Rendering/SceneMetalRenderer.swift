@@ -1673,6 +1673,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // Draws sample the last frame's copy; this frame's is made after the scene pass.
         mipMappedTarget = mipMappedFrameBuffer?.target(matching: sceneTexture, commandBuffer: commandBuffer)
         encodedFrames &+= 1
+        // A HDR video converts its new frame before anything samples it (`VideoTextureStream`).
+        for entry in layers { if case let .video(stream) = entry.layer.source { stream.prepareFrame(on: commandBuffer) } }
         drawProbe?.record(lighting: effectFrame.lighting)
         frameShadowAtlas = drawShadows(frame: effectFrame, commandBuffer: commandBuffer)
         // Text is rasterised first so its effects run on the finished text, like an image layer's.
