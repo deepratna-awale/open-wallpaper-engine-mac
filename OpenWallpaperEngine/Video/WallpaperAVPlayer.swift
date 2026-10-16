@@ -7,10 +7,15 @@ import AVFoundation
 /// wallpaper kept the displays awake all night, and the "displays asleep → pause" playback rule
 /// (`DisplayPlaybackMonitor`) could never fire. Wallpaper Engine doesn't keep the display awake
 /// either; the user's energy settings apply.
+///
+/// Its sound plays on the default output device without its inputs (`OutputOnlyAudioDevice`):
+/// on a device that also records (a headset), the player's own output would make macOS ask for
+/// the microphone and hold the main thread until the prompt is answered.
 enum WallpaperAVPlayer {
-    static func make(item: AVPlayerItem? = nil) -> AVPlayer {
+    static func make(item: AVPlayerItem? = nil, output: OutputOnlyAudioDevice? = WallpaperServices.shared.soundOutput) -> AVPlayer {
         let player = AVPlayer(playerItem: item)
         player.preventsDisplaySleepDuringVideoPlayback = false
+        if let output, output.deviceID != nil { player.audioOutputDeviceUniqueID = output.uid }
         return player
     }
 }

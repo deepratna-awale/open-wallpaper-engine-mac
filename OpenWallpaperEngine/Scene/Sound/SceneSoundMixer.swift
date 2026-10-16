@@ -3,32 +3,58 @@ import AVFoundation
 /// One wallpaper instance's audio graph: an `AVAudioEngine` whose main mixer takes every sound
 /// layer's voices. It is made when a voice first plays (a muted wallpaper, or a display that
 /// doesn't play the wallpaper's sound, never touches the audio hardware), starts then, and pauses
-/// when the layers go silent. Offline (manual rendering) for tests. Main thread.
+/// when the layers go silent. Owner thread (the renderer's render thread).
+///
+/// The engine always renders in manual rendering mode, so it never makes its own hardware output:
+/// that `AUHAL` would open the default output device with its inputs, which makes macOS ask for
+/// the microphone and holds the calling thread (here the render thread) in coreaudiod until the
+/// prompt is answered. Live, a `ManualRenderingOutput` pulls its frames onto the default output
+/// device without its inputs (`OutputOnlyAudioDevice`), starting and stopping off this thread;
+/// offline (tests) the caller pulls them (`AVAudioEngine.renderOffline`).
 final class SceneSoundMixer {
     let engine = AVAudioEngine()
     private var failed = false
     private let label: String
+    /// Where a live engine plays; nil offline, or without an output device (silent, logged).
+    private let output: ManualRenderingOutput?
     /// Where spatialized voices meet (`attachSpatial`), made with the first of them.
     private var spatialBus: AVAudioMixerNode?
 
-    /// `offline` renders on demand (`AVAudioEngine.renderOffline`) instead of to the output device.
-    init(label: String, offline: AVAudioFormat? = nil) {
+    /// `offline` renders on demand (`AVAudioEngine.renderOffline`) instead of to `device`.
+    init(label: String, offline: AVAudioFormat? = nil, device: OutputOnlyAudioDevice? = WallpaperServices.shared.soundOutput) {
         self.label = label
-        if let offline {
-            do {
-                try engine.enableManualRenderingMode(.offline, format: offline, maximumFrameCount: 4096)
-            } catch {
-                OWELog.error(.audio, "\(label): offline sound rendering is unavailable: \(error)")
-                failed = true
-            }
+        let mode: AVAudioEngineManualRenderingMode = offline == nil ? .realtime : .offline
+        // Live: the device's rate, so the output copies frames without resampling.
+        let rate = device?.sampleRate ?? 48_000
+        guard let format = offline ?? AVAudioFormat(standardFormatWithSampleRate: rate, channels: 2) else {
+            failed = true
+            output = nil
+            return
+        }
+        do {
+            try engine.enableManualRenderingMode(mode, format: format, maximumFrameCount: ManualRenderingOutput.maximumFrameCount)
+        } catch {
+            OWELog.error(.audio, "\(label): \(offline == nil ? "" : "offline ")sound rendering is unavailable: \(error)")
+            failed = true
+            output = nil
+            return
+        }
+        if offline == nil, let device {
+            output = ManualRenderingOutput(device: device, render: engine.manualRenderingBlock, format: format, label: label)
+        } else {
+            output = nil
         }
     }
 
     deinit {
-        // Disposing an engine's output talks to coreaudiod; a stalled daemon must not stall the
-        // renderer, so the engine goes on a queue of its own.
+        // The engine stays until its output no longer pulls from it; disposing it talks to
+        // coreaudiod, which must not stall the renderer, so it goes on a queue of its own.
         let engine = self.engine
-        DispatchQueue.global(qos: .utility).async { engine.stop() }
+        guard let output else {
+            DispatchQueue.global(qos: .utility).async { engine.stop() }
+            return
+        }
+        output.shutdown { engine.stop() }
     }
 
     func attach(_ node: AVAudioPlayerNode, format: AVAudioFormat) {
@@ -71,13 +97,15 @@ final class SceneSoundMixer {
         stage.pan = level > 0 ? (right - left) / level : 0
     }
 
-    /// Starts the engine if it isn't running; false (logged once) when it can't.
+    /// Starts the engine if it isn't running, and its output; false (logged once) when it can't.
+    /// Starting a manual-rendering engine touches no hardware, so this never waits on coreaudiod.
     func run() -> Bool {
         if engine.isRunning { return true }
         guard !failed else { return false }
         do {
             engine.prepare()
             try engine.start()
+            output?.setRunning(true)
             return true
         } catch {
             failed = true
@@ -86,8 +114,10 @@ final class SceneSoundMixer {
         }
     }
 
-    /// Pauses the engine (nothing plays).
+    /// Pauses the engine and its output (nothing plays).
     func idle() {
-        if engine.isRunning { engine.pause() }
+        guard engine.isRunning else { return }
+        output?.setRunning(false)
+        engine.pause()
     }
 }
