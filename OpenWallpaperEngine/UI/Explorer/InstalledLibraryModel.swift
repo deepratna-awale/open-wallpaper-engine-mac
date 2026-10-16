@@ -158,8 +158,9 @@ final class InstalledLibraryModel {
     /// `wallpaper_delete` tool answers with it).
     func deleteWallpapersNow(at directories: [URL], toTrash: Bool,
                              wallpaperViewModel: WallpaperViewModel) async -> WallpaperDeletion.Failure? {
+        let libraries = [FileManager.default.wallpapersDirectory] + LibraryFolders().folders
         let result: (deleted: [URL], failure: WallpaperDeletion.Failure?) = await Task.detached(priority: .userInitiated) {
-            WallpaperDeletion.delete(directories, toTrash: toTrash)
+            WallpaperDeletion.delete(directories, toTrash: toTrash, libraries: libraries)
         }.value
         for directory in result.deleted { forgetDeletedWallpaper(at: directory) }
         for directory in directories { wallpaperViewModel.removeWallpaperFromAllScreens(directory: directory) }

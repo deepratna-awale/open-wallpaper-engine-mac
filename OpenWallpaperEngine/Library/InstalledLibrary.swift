@@ -17,7 +17,7 @@ enum InstalledLibrary {
     static func wallpapers(in directory: URL, hiding dependencyIds: Set<String>) -> [WEWallpaper] {
         let folders: [URL]
         do {
-            folders = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil,
+            folders = try FileManager.default.contentsOfDirectory(at: ContainedPath.followingFolderLink(directory), includingPropertiesForKeys: nil,
                                                                   options: .skipsHiddenFiles)
         } catch {
             OWELog.error(.library, "Can't list the wallpaper library at \(directory.path): \(error)")

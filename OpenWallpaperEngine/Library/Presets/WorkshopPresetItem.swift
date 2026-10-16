@@ -73,7 +73,7 @@ enum WorkshopPresetItem {
             project.file = "scene.json"
         }
         var wallpaper = WEWallpaper(using: project, where: base ?? folder)
-        wallpaper.presetDirectory = folder
+        wallpaper.presetDirectory = ContainedPath.followingFolderLink(folder)
         return wallpaper
     }
 
