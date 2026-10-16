@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import OWEModelImport
 import OWESceneEditing
 
 /// Adding and rearranging layers, as the Add menu, the layer list's menus, the asset browser and
@@ -81,13 +82,16 @@ struct LayerActions {
     func chooseSounds() { addSounds(EditorFilePicker.choose(.sound, multiple: true)) }
 
     /// Files dropped on the canvas or the asset browser: images become image layers at the drop
-    /// point, sounds a sound layer, fonts are imported for text layers.
+    /// point, sounds a sound layer, FBX and OBJ models model layers, fonts are imported for text
+    /// layers.
     func importDropped(_ urls: [URL], at point: SIMD2<Double>? = nil) {
         guard let store = services.assetStore else { return }
-        var images: [URL] = [], sounds: [URL] = []
+        var images: [URL] = [], sounds: [URL] = [], models: [URL] = []
         for url in urls {
             let fileExtension = url.pathExtension.lowercased()
-            if EditorAssetStore.soundTypes.contains(fileExtension) {
+            if EditorModelImporter.fileExtensions.contains(fileExtension) {
+                models.append(url)
+            } else if EditorAssetStore.soundTypes.contains(fileExtension) {
                 sounds.append(url)
             } else if EditorAssetStore.fontTypes.contains(fileExtension) {
                 do { _ = try store.importFont(from: url) } catch {
@@ -99,6 +103,7 @@ struct LayerActions {
         }
         addImages(images, at: point)
         if !sounds.isEmpty { addSounds(sounds) }
+        if !models.isEmpty { importModels(models, at: point) }
     }
 
     // MARK: Arranging
