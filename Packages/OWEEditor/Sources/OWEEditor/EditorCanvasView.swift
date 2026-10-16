@@ -4,14 +4,16 @@ import OWEInspectorKit
 import OWESceneEditing
 
 /// The canvas: the live wallpaper at the viewport's zoom and pan, with the selection's gizmo over
-/// it. Click picks the topmost layer under the pointer, dragging moves it (snapping to the scene
-/// and the other layers; ⌘ while dragging moves freely); the corners scale (Shift: each side on its
-/// own) and the handle above the top edge rotates (Shift: 15° steps). Double-click a text layer to
+/// it in the mode the upper left corner picks (`GizmoToolbar`). Click picks the topmost layer
+/// under the pointer, dragging moves it (snapping to the scene and the other layers; ⌘ while
+/// dragging moves freely); in Multi the corners scale (Shift: each side on its own) and the handle
+/// above the top edge rotates (Shift: 15° steps). In a 3D scene the gizmo sits on the object's
+/// origin through the scene's camera, and clicking near an origin picks it. Double-click a text layer to
 /// edit its text. Shift- or ⌘-click adds a layer to the selection or takes it out, dragging from
 /// an empty place selects the layers a marquee touches (with Shift or ⌘, adding them), Option-click
 /// picks the layer under the selected one where several are stacked, and dragging one of several
-/// selected layers moves them all. Scroll or Space-drag pans, pinch or ⌘-scroll zooms, the arrow
-/// keys nudge, Delete deletes. Files dropped on it are imported (images become layers where they are dropped). While
+/// selected layers moves them all. Scroll or Space-drag pans, pinch or ⌘-scroll zooms, the arrow keys nudge, Delete
+/// deletes. Files dropped on it are imported (images become layers where they are dropped). While
 /// a mask is being painted, dragging over its layer paints.
 struct EditorCanvasView: View {
     @Environment(\.appAccentColor) private var accentColor
@@ -24,6 +26,8 @@ struct EditorCanvasView: View {
     @State private var pointer: SIMD2<Double>?
     @State private var gesture: CanvasGesture?
     @State private var isDropTargeted = false
+    /// A 3D scene's camera as the canvas's renderer last drew it; nil in a 2D scene.
+    @State private var camera: EditorSceneCamera?
     private let makeCanvas: () -> AnyView
     /// The particle systems' handles (`ParticleCanvasInteraction`); nil without the particle editor.
     private let particles: ParticleEditorServices?
@@ -31,12 +35,14 @@ struct EditorCanvasView: View {
     private enum CanvasGesture {
         case pan(startPan: SIMD2<Double>, startPoint: SIMD2<Double>)
         case transform(layer: Int, drag: LayerGizmo.Drag, startPoint: SIMD2<Double>, moved: Bool)
+        case transform3D(layer: Int, drag: Gizmo3D.Drag, moved: Bool)
         case paint
         case particle(ParticleCanvasDrag)
         /// A marquee from an empty place, in canvas points; `extending` adds to the selection.
         case marquee(start: SIMD2<Double>, current: SIMD2<Double>, extending: Bool)
         /// Several selected layers dragged together from `clicked`.
         case groupMove(layers: [Int], start: [Int: LayerTransform], startPoint: SIMD2<Double>, clicked: Int, moved: Bool)
+        case effectGizmo(EffectGizmoCanvas.Drag)
     }
 
     /// A press moves this far (points) before it drags, so a click never nudges a layer.
@@ -67,19 +73,48 @@ struct EditorCanvasView: View {
         }
         .overlay(alignment: .bottom) { zoomControls }
         .overlay(alignment: .top) { maskPaintingHUD }
-        .overlay(alignment: .topLeading) { sceneKindNote }
+        .overlay(alignment: .topLeading) {
+            VStack(alignment: .leading, spacing: 0) {
+                if tools.maskPainting == nil {
+                    GizmoToolbar(tools: tools, isSpatial: session.outline.size == nil)
+                }
+                sceneKindNote
+            }
+        }
+        .task(id: session.outline.size == nil) {
+            // A 3D scene has no Multi: it opens in Translate, as WE's editor opens it.
+            if session.outline.size == nil, tools.gizmoMode == .multi { tools.gizmoMode = GizmoMode.initial(spatial: true) }
+            await followCamera()
+        }
+    }
+
+    /// A 3D scene's camera, read from the canvas's renderer ten times a second while the window is
+    /// open (a camera path or a script moves it), so the gizmo stays on its object.
+    private func followCamera() async {
+        guard session.outline.size == nil else {
+            camera = nil
+            return
+        }
+        while !Task.isCancelled {
+            let latest = services.sceneCamera()
+            if latest != camera { camera = latest }
+            try? await Task.sleep(for: .milliseconds(100)) // cancelled with the view: the loop ends
+        }
     }
 
     private func canvasStack(proxy: GeometryProxy) -> some View {
         ZStack(alignment: .topLeading) {
             Color(nsColor: .underPageBackgroundColor)
             sceneCanvas
-            GizmoOverlay(session: session, tools: tools, viewport: viewport, hovered: hovered, pointer: pointer, marquee: marquee)
+            GizmoOverlay(session: session, tools: tools, viewport: viewport, hovered: hovered, pointer: pointer, camera: camera,
+                         marquee: marquee)
                 .allowsHitTesting(false)
             if let particles {
                 ParticleCanvasOverlay(services: particles, viewport: viewport)
                     .allowsHitTesting(false)
             }
+            EffectGizmoOverlay(session: session, tools: tools, services: services, viewport: viewport)
+                .allowsHitTesting(false)
             CanvasEventView(handlers: handlers)
             if let editing = session.editingText {
                 CanvasTextEditor(session: session, layerID: editing, viewport: viewport)
@@ -128,7 +163,7 @@ struct EditorCanvasView: View {
     }
 
     @ViewBuilder private var sceneKindNote: some View {
-        if session.outline.size == nil {
+        if session.outline.size == nil, camera == nil {
             Label(L("Layers of a 3D scene are edited in the inspector."), systemImage: "cube")
                 .font(.callout)
                 .padding(.horizontal, 12)
@@ -225,6 +260,11 @@ struct EditorCanvasView: View {
             gesture = .particle(drag)
             return
         }
+        // An open effect's handles, over the layer's own gizmo.
+        if let drag = EffectGizmoCanvas.press(at: point, session: session, tools: tools, services: services, viewport: viewport) {
+            gesture = .effectGizmo(drag)
+            return
+        }
         let scenePoint = viewport.scenePoint(point)
         if let painting = tools.maskPainting {
             if let local = maskPoint(scenePoint, painting: painting) {
@@ -242,10 +282,18 @@ struct EditorCanvasView: View {
             gesture = nil
             return
         }
+        if let camera {
+            spatialMouseDown(point, camera: camera)
+            return
+        }
+        let mode = tools.gizmoMode
+        let unitsPerPoint = 1 / max(viewport.scale, 1e-9)
         // The selection's handles first, so a corner over another layer still scales.
         if let selected = session.selection, !session.isLocked(selected), let geometry = session.geometry(of: selected),
-           let handle = LayerGizmo.handle(at: point, geometry: geometry, viewport: viewport) {
-            gesture = .transform(layer: selected, drag: LayerGizmo.Drag(handle: handle, start: geometry, startPoint: scenePoint),
+           let handle = LayerGizmo.handle(at: point, geometry: geometry, viewport: viewport, mode: mode, space: tools.gizmoSpace),
+           handle != .body || mode.translates {
+            gesture = .transform(layer: selected, drag: LayerGizmo.Drag(handle: handle, start: geometry, startPoint: scenePoint,
+                                                                        unitsPerPoint: unitsPerPoint, space: tools.gizmoSpace),
                                  startPoint: point, moved: false)
             return
         }
@@ -258,7 +306,8 @@ struct EditorCanvasView: View {
             gesture = picked == nil ? .marquee(start: point, current: point, extending: true) : nil
             return
         }
-        if let picked, session.selectedLayers.count > 1, session.isSelected(picked) {
+        // Dragging one of several selected layers moves them all, where the mode moves.
+        if let picked, mode.translates, session.selectedLayers.count > 1, session.isSelected(picked) {
             let layers = session.selectedRoots.filter { !session.isLocked($0) }
             gesture = .groupMove(layers: layers, start: Dictionary(uniqueKeysWithValues: layers.map { ($0, session.transform(of: $0)) }),
                                  startPoint: point, clicked: picked, moved: false)
@@ -270,12 +319,27 @@ struct EditorCanvasView: View {
             gesture = .marquee(start: point, current: point, extending: false)
             return
         }
-        if let picked, let geometry = session.geometry(of: picked) {
-            gesture = .transform(layer: picked, drag: LayerGizmo.Drag(handle: .body, start: geometry, startPoint: scenePoint),
+        // Pressing a layer's body moves it where the mode moves; Rotate, Scale and none only pick it.
+        if let picked, mode.translates, let geometry = session.geometry(of: picked) {
+            gesture = .transform(layer: picked, drag: LayerGizmo.Drag(handle: .body, start: geometry, startPoint: scenePoint,
+                                                                      unitsPerPoint: unitsPerPoint),
                                  startPoint: point, moved: false)
         } else {
             gesture = nil
         }
+    }
+
+    /// A 3D scene: the selection's gizmo handles, else the object whose origin is under the pointer.
+    private func spatialMouseDown(_ point: SIMD2<Double>, camera: EditorSceneCamera) {
+        if let selected = session.selection, !session.isLocked(selected), let spatial = session.spatial(of: selected),
+           let frame = Gizmo3D.frame(spatial, space: tools.gizmoSpace, camera: camera, viewport: viewport),
+           let handle = Gizmo3D.handle(at: point, frame: frame, mode: tools.gizmoMode) {
+            gesture = .transform3D(layer: selected, drag: Gizmo3D.Drag(handle: handle, start: spatial, frame: frame, startPoint: point),
+                                   moved: false)
+            return
+        }
+        session.selection = session.spatialLayer(at: point, camera: camera, viewport: viewport)
+        gesture = nil
     }
 
     private func mouseDragged(_ point: SIMD2<Double>, event: NSEvent) {
@@ -298,6 +362,12 @@ struct EditorCanvasView: View {
                 session.dragPreview = (layer, drag.transform(at: scenePoint, free: shift, snap: shift))
                 if !tools.guides.isEmpty { tools.guides = [] }
             }
+        case .transform3D(let layer, let drag, let moved):
+            let distance = ((point - drag.startPoint) * (point - drag.startPoint)).sum().squareRoot()
+            guard moved || distance >= Self.dragThreshold, let camera else { return }
+            if !moved { gesture = .transform3D(layer: layer, drag: drag, moved: true) }
+            session.dragPreview = (layer, drag.transform(at: point, camera: camera, viewport: viewport,
+                                                         snap: event.modifierFlags.contains(.shift)))
         case .paint:
             if let painting = tools.maskPainting, let local = maskPoint(viewport.scenePoint(point), painting: painting, clamped: true) {
                 painting.dab(to: local)
@@ -310,6 +380,9 @@ struct EditorCanvasView: View {
             if !moved { gesture = .groupMove(layers: layers, start: start, startPoint: startPoint, clicked: clicked, moved: true) }
             let delta = viewport.scenePoint(point) - viewport.scenePoint(startPoint)
             session.groupDragPreview = session.transforms(moving: layers, bySceneOffset: delta, from: start)
+        case .effectGizmo(var drag):
+            EffectGizmoCanvas.drag(&drag, to: point, session: session)
+            gesture = .effectGizmo(drag)
         case .particle(var drag):
             guard let particles else { return }
             ParticleCanvasInteraction.drag(&drag, to: point, viewport: viewport,
@@ -347,11 +420,21 @@ struct EditorCanvasView: View {
             if moved { session.endGroupDrag(actionName: L("Move Layer")) } else { session.select(clicked) }
             return
         }
+        if case .effectGizmo? = gesture { return }
+        if case .transform3D(_, let drag, let moved)? = gesture {
+            guard moved else { session.dragPreview = nil; return }
+            switch drag.handle {
+            case .move, .moveFree: session.endDrag(actionName: L("Move Layer"))
+            case .rotate: session.endDrag(actionName: L("Rotate Layer"))
+            case .scale, .scaleUniform: session.endDrag(actionName: L("Scale Layer"))
+            }
+            return
+        }
         guard case .transform(_, let drag, _, let moved)? = gesture else { return }
         guard moved else { session.dragPreview = nil; return }
         switch drag.handle {
-        case .body: session.endDrag(actionName: L("Move Layer"))
-        case .corner: session.endDrag(actionName: L("Scale Layer"))
+        case .body, .axis: session.endDrag(actionName: L("Move Layer"))
+        case .corner, .scaleAxis, .scaleUniform: session.endDrag(actionName: L("Scale Layer"))
         case .rotate: session.endDrag(actionName: L("Rotate Layer"))
         }
     }
@@ -403,15 +486,30 @@ struct EditorCanvasView: View {
 
     private func cursor(at point: SIMD2<Double>) -> NSCursor {
         if tools.maskPainting != nil { return .crosshair }
+        if let cursor = EffectGizmoCanvas.cursor(at: point, session: session, tools: tools, services: services, viewport: viewport) {
+            return cursor
+        }
         if let particles, let cursor = ParticleCanvasInteraction.cursor(at: point, viewport: viewport, services: particles) {
             return cursor
         }
-        guard let selected = session.selection, !session.isLocked(selected),
-              let geometry = session.geometry(of: selected),
-              let handle = LayerGizmo.handle(at: point, geometry: geometry, viewport: viewport) else { return .arrow }
+        guard let selected = session.selection, !session.isLocked(selected) else { return .arrow }
+        if let camera {
+            guard let spatial = session.spatial(of: selected),
+                  let frame = Gizmo3D.frame(spatial, space: tools.gizmoSpace, camera: camera, viewport: viewport),
+                  let handle = Gizmo3D.handle(at: point, frame: frame, mode: tools.gizmoMode) else { return .arrow }
+            switch handle {
+            case .move, .moveFree: return .openHand
+            case .rotate: return .pointingHand
+            case .scale, .scaleUniform: return .crosshair
+            }
+        }
+        guard let geometry = session.geometry(of: selected),
+              let handle = LayerGizmo.handle(at: point, geometry: geometry, viewport: viewport, mode: tools.gizmoMode,
+                                             space: tools.gizmoSpace),
+              handle != .body || tools.gizmoMode.translates else { return .arrow }
         switch handle {
-        case .body: return .openHand
-        case .corner: return .crosshair
+        case .body, .axis: return .openHand
+        case .corner, .scaleAxis, .scaleUniform: return .crosshair
         case .rotate: return .pointingHand
         }
     }
@@ -426,6 +524,8 @@ private struct GizmoOverlay: View {
     let viewport: CanvasViewport
     let hovered: Int?
     let pointer: SIMD2<Double>?
+    /// A 3D scene's camera: the objects' origins and the selection's 3D gizmo are drawn through it.
+    let camera: EditorSceneCamera?
     /// A marquee being dragged, corner to corner in canvas points.
     let marquee: (SIMD2<Double>, SIMD2<Double>)?
 
@@ -451,35 +551,33 @@ private struct GizmoOverlay: View {
                 context.fill(Path(rect), with: .color(accentColor.opacity(0.12)))
                 context.stroke(Path(rect), with: .color(accentColor), lineWidth: 1)
             }
+            if let camera {
+                drawSpatial(camera: camera, in: &context)
+                return
+            }
             guard let selected = session.selection, session.editingText != selected,
                   let geometry = session.geometry(of: selected) else { return }
             let locked = session.isLocked(selected)
             context.stroke(outline(geometry), with: .color(accentColor),
                            style: StrokeStyle(lineWidth: 1.5, dash: locked ? [4, 3] : []))
             guard !locked else { return }
-            let corners = geometry.corners.map(viewport.canvasPoint)
-            let top = (corners[2] + corners[3]) / 2
-            let rotate = LayerGizmo.rotateHandle(geometry, in: viewport)
-            var stem = Path()
-            stem.move(to: CGPoint(top))
-            stem.addLine(to: CGPoint(rotate))
-            context.stroke(stem, with: .color(accentColor), lineWidth: 1)
-            for point in corners + [rotate] {
-                let isRotate = point == rotate
-                let size: Double = 8
-                let rect = CGRect(x: point.x - size / 2, y: point.y - size / 2, width: size, height: size)
-                let shape = isRotate ? Path(ellipseIn: rect) : Path(roundedRect: rect, cornerRadius: 1.5)
-                context.fill(shape, with: .color(.white))
-                context.stroke(shape, with: .color(accentColor), lineWidth: 1.5)
-            }
-            let pivot = viewport.canvasPoint(geometry.pivot)
-            var cross = Path()
-            cross.move(to: CGPoint(x: pivot.x - 4, y: pivot.y))
-            cross.addLine(to: CGPoint(x: pivot.x + 4, y: pivot.y))
-            cross.move(to: CGPoint(x: pivot.x, y: pivot.y - 4))
-            cross.addLine(to: CGPoint(x: pivot.x, y: pivot.y + 4))
-            context.stroke(cross, with: .color(accentColor), lineWidth: 1)
+            GizmoDrawing.draw2D(geometry, mode: tools.gizmoMode, space: tools.gizmoSpace, viewport: viewport, accent: accentColor,
+                                in: &context)
         }
+    }
+
+    /// A 3D scene: every visible object's origin, and the selection's gizmo.
+    private func drawSpatial(camera: EditorSceneCamera, in context: inout GraphicsContext) {
+        let selected = session.selection
+        let origins: [(point: SIMD2<Double>, selected: Bool)] = session.outline.layers.compactMap { layer in
+            guard session.isVisible(layer.id), let spatial = session.spatial(of: layer.id),
+                  let point = camera.canvasPoint(spatial.pivot, in: viewport) else { return nil }
+            return (point, layer.id == selected)
+        }
+        GizmoDrawing.drawOrigins(origins, accent: accentColor, in: &context)
+        guard let selected, !session.isLocked(selected), let spatial = session.spatial(of: selected),
+              let frame = Gizmo3D.frame(spatial, space: tools.gizmoSpace, camera: camera, viewport: viewport) else { return }
+        GizmoDrawing.draw3D(frame, mode: tools.gizmoMode, accent: accentColor, in: &context)
     }
 
     /// Snapping guides: magenta lines, as design tools draw them.

@@ -17,6 +17,12 @@ struct EffectShaderParameter: Equatable {
     let isColor: Bool
     /// `"linked": true`: a vec2 edited with one slider for both components while they are equal.
     let isLinked: Bool
+    /// `"position": true`: a point in the layer's UV, which the Wallpaper Editor's canvas drags.
+    var isPosition = false
+    /// `"direction": true`: an angle in radians, shown as a dial.
+    var isDirection = false
+    /// `"conversion": "rad2deg"`: stored in radians, shown in degrees.
+    var showsDegrees = false
 
     /// The label as words, without WE's translation table.
     var title: String { SceneEffectParameters.title(label) }
@@ -124,13 +130,17 @@ enum SceneEffectParameters {
         if isInteger { parsed = parsed.roundedToIntegers() }
         let range = (annotation["range"] as? [NSNumber])?.map(\.doubleValue)
         let hasRange = range.map { $0.count >= 2 } ?? false
-        return EffectShaderParameter(materialKey: key, label: annotation["label"] as? String ?? key,
-                                     defaultValue: parsed.components.map(Double.init),
-                                     minimum: hasRange ? range![0] : defaultRange.lowerBound,
-                                     maximum: hasRange ? range![1] : defaultRange.upperBound,
-                                     isInteger: isInteger,
-                                     isColor: (annotation["type"] as? String)?.lowercased() == "color",
-                                     isLinked: (annotation["linked"] as? NSNumber)?.boolValue == true)
+        var parameter = EffectShaderParameter(materialKey: key, label: annotation["label"] as? String ?? key,
+                                              defaultValue: parsed.components.map(Double.init),
+                                              minimum: hasRange ? range![0] : defaultRange.lowerBound,
+                                              maximum: hasRange ? range![1] : defaultRange.upperBound,
+                                              isInteger: isInteger,
+                                              isColor: (annotation["type"] as? String)?.lowercased() == "color",
+                                              isLinked: (annotation["linked"] as? NSNumber)?.boolValue == true)
+        parameter.isPosition = (annotation["position"] as? NSNumber)?.boolValue == true
+        parameter.isDirection = (annotation["direction"] as? NSNumber)?.boolValue == true
+        parameter.showsDegrees = (annotation["conversion"] as? String)?.lowercased() == "rad2deg"
+        return parameter
     }
 
     private static let comboPattern = try! NSRegularExpression(pattern: #"//\s*\[COMBO\]\s*(\{[^\n]*\})"#)
