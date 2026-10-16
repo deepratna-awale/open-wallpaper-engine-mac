@@ -72,7 +72,9 @@ struct TEXFileHeader: Equatable {
         containerVersion = version
         self.imageCount = Int(imageCount)
         freeImageFormat = -1
-        isVideo = false
+        // WE marks a video texture with the TEXI flag, not the FreeImage format (-1 in library
+        // video textures, `TEXFlags.video`).
+        isVideo = flags & TEXFlags.video.rawValue != 0
         variantCount = 0
         if version >= 3 {
             guard let value = word() else { return nil }
@@ -81,7 +83,6 @@ struct TEXFileHeader: Equatable {
         if version == 4 {
             guard let value = word() else { return nil }
             variantCount = Int(value)
-            isVideo = freeImageFormat == 35
         }
         mipmaps = []
         trailingByteCount = 0

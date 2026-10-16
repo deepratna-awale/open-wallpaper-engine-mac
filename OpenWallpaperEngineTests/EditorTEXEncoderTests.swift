@@ -143,7 +143,15 @@ final class EditorTEXEncoderTests: XCTestCase {
         let (data, size) = try EditorTEXEncoder().video(url)
         XCTAssertEqual(size, SIMD2(16, 16))
         XCTAssertEqual(TEXParser(data: data).extractVideoData(), movie, "the reader finds the movie")
-        XCTAssertTrue(TEXFileHeader(data)?.isVideo ?? false)
+        // Library video textures' layout (3802509485's `bg_2560x1600_nobars.tex`): format 0,
+        // flags Clamp UVs and video, FreeImage format -1, no variants.
+        let header = try XCTUnwrap(TEXFileHeader(data))
+        XCTAssertTrue(header.isVideo)
+        XCTAssertEqual(header.format, 0)
+        XCTAssertEqual(header.flags, TEXFlags.clampUVs.rawValue | TEXFlags.video.rawValue)
+        XCTAssertEqual(header.containerVersion, 4)
+        XCTAssertEqual(header.freeImageFormat, -1)
+        XCTAssertEqual(header.variantCount, 0)
         let text = FileManager.default.temporaryDirectory.appending(path: "EditorTEXEncoderTests-\(UUID().uuidString).mp4")
         try Data("not a movie".utf8).write(to: text)
         defer { try? FileManager.default.removeItem(at: text) }
