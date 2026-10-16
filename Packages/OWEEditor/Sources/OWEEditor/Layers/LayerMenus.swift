@@ -49,7 +49,8 @@ struct AddLayerMenu: View {
         }
         .help(L("Add a layer to the scene"))
         .sheet(isPresented: $isPickingModel) {
-            ModelPickerView(models: actions.services.models()) { actions.addModel($0) }
+            ModelPickerView(models: actions.modelChoices(), imported: actions.importedModels(),
+                            importFiles: actions.services.assetStore == nil ? nil : { actions.chooseModels() }) { actions.addModel($0) }
         }
         .sheet(isPresented: $isBrowsingPresets) {
             PresetBrowserView(presets: actions.services.layerPresets().filter { $0.tag.isEmpty || $0.is3D != actions.is2D },
@@ -72,6 +73,7 @@ struct LayerContextMenu: View {
         Button(L("Duplicate")) { actions.duplicate(layer.id) }
         Button(L("Delete"), role: .destructive) { actions.delete(layer.id) }
         ExternalEditMenuItems(session: session, layer: layer, actions: actions)
+        ImageEditingMenuItems(layer: layer, actions: actions)
         Divider()
         Menu(L("Arrange")) {
             Button(L("Bring to Front")) { actions.bringToFront(layer.id) }

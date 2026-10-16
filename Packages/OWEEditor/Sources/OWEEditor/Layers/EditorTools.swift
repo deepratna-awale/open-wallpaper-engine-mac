@@ -1,6 +1,7 @@
 import AppKit
 import UniformTypeIdentifiers
 import SwiftUI
+import OWEModelImport
 import OWESceneEditing
 
 /// The window's tool state the canvas, the layer list and the inspector share: snapping and its
@@ -27,6 +28,10 @@ final class EditorTools: ObservableObject {
     @Published var problem: String?
     /// Images waiting for the importer's options (`ImportOptionsSheet`).
     @Published var pendingImport: PendingImageImport?
+    /// Normal Map Generation's options by material, kept while the window is open (as WE's editor).
+    var normalMapSettings: [String: NormalMapGenerator.Settings] = [:]
+    /// The image tool window open over the editor (Image Editing).
+    @Published var imageTool: ImageToolRequest?
 
     /// Canvas points within which a drag snaps.
     static let snapDistance: Double = 6
@@ -36,7 +41,7 @@ final class EditorTools: ObservableObject {
 @MainActor
 enum EditorFilePicker {
     enum Kind {
-        case image, sound, font, mask
+        case image, sound, font, mask, model
 
         var allowedExtensions: [String] {
             switch self {
@@ -45,6 +50,7 @@ enum EditorFilePicker {
             case .mask: return ["png", "jpg", "jpeg", "gif", "tif", "tiff", "bmp", "heic", "webp", "psd", "tga"]
             case .sound: return EditorAssetStore.soundTypes.sorted()
             case .font: return EditorAssetStore.fontTypes.sorted()
+            case .model: return EditorModelImporter.fileExtensions.sorted()
             }
         }
     }

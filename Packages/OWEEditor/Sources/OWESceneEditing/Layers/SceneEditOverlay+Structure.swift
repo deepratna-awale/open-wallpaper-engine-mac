@@ -13,6 +13,8 @@ extension SceneEditOverlay {
         /// The particle editor's added and deleted systems.
         var particleObjects: [SceneJSONValue]?
         var particlesRemoved: [Int]?
+        /// The scene's size (`general.orthogonalprojection`), which the outline reads.
+        var projection: SceneJSONValue?
     }
 
     struct ObjectSignature: Hashable {
@@ -32,7 +34,8 @@ extension SceneEditOverlay {
             objects[key] = ObjectSignature(fields: fields, effectOrder: edit.effectOrder, addedEffects: edit.addedEffects)
         }
         return OutlineSignature(added: added, removed: removed, order: order, objects: objects,
-                                particleObjects: particles?.addedObjects, particlesRemoved: particles?.removedObjects)
+                                particleObjects: particles?.addedObjects, particlesRemoved: particles?.removedObjects,
+                                projection: general?["orthogonalprojection"])
     }
 
     /// The structure alone: what layers and effects there are, in which order, without any value edit.
@@ -41,6 +44,8 @@ extension SceneEditOverlay {
         result.added = added
         result.removed = removed
         result.order = order
+        // An effect's files change what the scene builds: never drawn live, always read again.
+        result.effectFiles = effectFiles
         if let particles, particles.changesObjects {
             result.particles = SceneParticleOverlay(addedObjects: particles.addedObjects,
                                                     removedObjects: particles.removedObjects)

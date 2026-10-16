@@ -532,6 +532,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var clickReader = DesktopClickReader()
     /// The last drawn frame's camera motion and text sizes (by layer id), for the next script frame.
     private var lastCameraMotion: CameraMotion?
+    /// The last drawn frame's camera, for the next script frame's cursor ray.
+    private var lastFrameCamera: SceneFrameCamera?
     /// Per-layer dependencies, coverage, class and this frame's dirty state
     /// (efficiency-plan-2d notes WP1-A); built with the content, off the main thread.
     private(set) var layerAnalysis: SceneLayerAnalysis?
@@ -804,6 +806,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             planarReflection?.release()
             lastPointer = nil
             lastCameraMotion = nil
+            lastFrameCamera = nil
             lastTextSizes.removeAll()
             cameraParallax = SceneCameraParallax(sceneSize: sceneSize)
             parallaxSettledPointer = nil
@@ -896,6 +899,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.cameraParallax = SceneCameraParallax(sceneSize: content.size, enabled: Self.parallaxEnabled(content.camera))
                 self.parallaxSettledPointer = nil
                 self.lastCameraMotion = nil
+                self.lastFrameCamera = nil
                 self.lastTextSizes.removeAll()
                 self.textFrameCache.removeAll()
                 self.textRaster.reset()
@@ -1743,6 +1747,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         lastTextSizes.removeAll(keepingCapacity: true)
         for (index, frame) in textFrames { lastTextSizes[layers[index].layer.id] = frame.baseSize }
         lastCameraMotion = motion
+        lastFrameCamera = effectFrame.camera
 
         // WE clears the scene to `general.clearcolor` (the composite's letterbox stays black).
         let clear = scripts.state.scene.vector3(.clearcolor) ?? clearColor
@@ -2789,6 +2794,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         if let parallax = lastCameraMotion?.parallax {
             input.parallax = SceneScriptCursorFrame.Parallax(state: parallax.state, amount: parallax.amount)
         }
+        describeCursorTargets(into: &input, cursor: cursor.position)
         for entry in layers {
             guard let id = Int(entry.layer.id) else { continue }
             let script = scripts.object(entry.layer.id)
@@ -2834,6 +2840,24 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         }
 
         scripts.submit(input)
+    }
+
+    /// What the cursor pass tests beyond the object table (docs/scenescript-plan.md §4.8): every
+    /// model's 3D world (WE's, unzoomed), and in a perspective scene the ray from the last drawn
+    /// frame's eye through the cursor, its view direction and every layer's 3D world.
+    private func describeCursorTargets(into input: inout SceneScriptFrameInput, cursor: SIMD2<Float>) {
+        for model in spatial.models {
+            guard let id = Int(model.id) else { continue }
+            input.cursorWorlds[id] = world3D(model.id, in: spatial.transforms)
+        }
+        guard isPerspective, let camera = lastFrameCamera, sceneSize.x > 0, sceneSize.y > 0 else { return }
+        input.cursorRay = SceneScriptCursorRay.perspective(eye: camera.eye, viewProjection: camera.viewProjection,
+                                                            normalized: cursor / sceneSize)
+        input.cursorViewForward = camera.forward
+        for entry in layers {
+            guard let id = Int(entry.layer.id) else { continue }
+            input.cursorWorlds[id] = world3D(entry.layer.id, in: spatial.transforms)
+        }
     }
 
     /// The cursor in display pixels from the top-left of the wallpaper's view on the display it is
