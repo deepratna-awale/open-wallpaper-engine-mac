@@ -176,7 +176,7 @@ A wallpaper runs **once**, however many displays show it with the same user prop
 - **AVKit videos:** one `VideoWallpaperViewModel` (one decoding player, one audio player) per video; each display's `AVPlayerView` shows the shared player.
 - **Web:** each display keeps its page, except a Chromium page's clone or stretch members, which mirror their source display's page ("Display layouts"). Only the page on the wallpaper's audible display (or mirrored there) plays sound; the others are muted (`WebPageAudio`).
 - **Sound** (`WallpaperAudioRouting`): each running wallpaper plays its sound once; a web wallpaper's from its audible display (the main display when it shows it, else the lowest display id), and a wallpaper running as several instances (different properties) from the instance on that display. Different wallpapers on different displays each play theirs. Settings → Optimizations → Audio Output silences all of them; volume and mute (the status menu) apply to all.
-- **The watchdog** gets one frame time per rendered frame of an instance, not one per display.
+- **The watchdog** gets one frame time per rendered frame of an instance, not one per display. Only instances a display can run report: an isolated one (Scene Edit / Export's iPhone & iPad, Android and Screen Saver previews, the Wallpaper Editor's draft, `WallpaperPropertyScope.isIsolated`) never does, so its frames are never blamed on the desktop's wallpapers.
 
 ## Display layouts
 
