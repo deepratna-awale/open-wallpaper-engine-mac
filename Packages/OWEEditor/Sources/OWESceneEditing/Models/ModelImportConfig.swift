@@ -107,6 +107,10 @@ public struct ModelImportConfig: Sendable, Equatable {
     public var attachments: [Attachment]
     /// Bone physics by bone name, compiled into the bones' properties JSON as Puppet Warp's are.
     public var constraints: [String: PuppetBonePhysics]
+    /// Materials edited in the Model Editor by source material name: the material file the
+    /// model names instead of the import's own. Not WE's: WE's editor changes the material file
+    /// in place, which the edits' files never do (`materials`).
+    public var materials: [String: String] = [:]
     /// Keys this type doesn't read, kept as they were.
     public var other: [String: SceneJSONValue]
 
@@ -138,7 +142,7 @@ public struct ModelImportConfig: Sendable, Equatable {
     // MARK: JSON
 
     static let knownKeys: Set<String> = ["normals", "tangentspace", "seconduvchannel", "additionalfiles", "clips", "events",
-                                         "attachments", "constraints"]
+                                         "attachments", "constraints", "materials"]
 
     public init(json data: Data) throws {
         guard case .object(let root)? = SceneJSONValue(any: try JSONSerialization.jsonObject(with: data)) else {
@@ -176,6 +180,9 @@ public struct ModelImportConfig: Sendable, Equatable {
                 }
             }
         }
+        if case .object(let materials)? = root["materials"] {
+            self.materials = materials.compactMapValues(\.stringValue)
+        }
         other = root.filter { !Self.knownKeys.contains($0.key) }
     }
 
@@ -209,6 +216,7 @@ public struct ModelImportConfig: Sendable, Equatable {
                          "origin": .string(Self.vectorString($0.origin)), "angles": .string(Self.vectorString($0.angles))])
             })
         }
+        if !materials.isEmpty { root["materials"] = .object(materials.mapValues { .string($0) }) }
         if !constraints.isEmpty {
             root["constraints"] = .object(constraints.mapValues { .object($0.properties(childDistance: nil)) })
         }
