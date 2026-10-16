@@ -92,3 +92,26 @@ working size, radius 5 % of that picture's long side, 4–32 pixels) and adds th
 picture with the mask as its alpha) as a new image layer just above it, with the layer's place,
 size, parent and look. Both pictures are PNGs with the editor's files; the layer's material is
 copied for each.
+
+## Character Sheet Creation
+
+**Image Editing › Character Sheet Creation** (WE's Puppet Sheet Creation window) splits a
+cut-out character into limbs for Puppet Warp
+([character sheets](https://docs.wallpaperengine.io/en/scene/puppet-warp/charactersheet.html)):
+
+- The **hierarchy** starts with the **Body**, which always exists. **Add Limb** asks for a name and
+  adds the limb under the selected one; a limb's × removes it, its own limbs moving up under its
+  parent. Each limb is a Foreground Separation (the same tools, Fill gaps at WE's 15) of the
+  picture it is cut from, as WE's hierarchy works it out (`CharacterSheet.sources`): the first limb
+  under another is cut from that limb, a later one from what the limb before it left, so a limb
+  already cut away is ignored. With Fill gaps on, what a limb leaves is filled only within Fill
+  gaps' reach (256 pixels at 100 %, at the working size) of the opaque picture left, so a limb
+  sticking out of the body leaves transparency, not a smear.
+- **OK** asks WE's question and collects WE's pieces (`CharacterSheet.pieces`): what is left of
+  each limb that has limbs under it (after its last one), and every limb without. Each is cut to
+  its opaque pixels and laid out on one transparent texture with WE's spacing (an eighth of the
+  pieces' mean side, 30–200 pixels), the tallest first, in rows as wide as gives the squarest
+  sheet ("place them into a square", WE's guide). The sheet, `<texture>_sheet`, replaces the
+  layer (WE: "The existing layer will be removed along with any effects or settings") as a new
+  image layer in its place, in one undo step, and the Puppet Warp editor opens on it, where WE's
+  guide continues (mesh, skeleton, weights, then the reference pose).

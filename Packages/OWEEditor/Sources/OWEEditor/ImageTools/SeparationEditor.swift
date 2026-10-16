@@ -27,10 +27,19 @@ final class SeparationEditor: ObservableObject {
         var id: String { rawValue }
     }
 
-    let picture: RGBAImage
-    let original: CGImage?
+    private(set) var picture: RGBAImage
+    private(set) var original: CGImage?
+    private var fadedCache: CGImage??
+
     /// The original at 30 %, under the foreground (WE's Improve visibility).
-    private(set) lazy var fadedOriginal: CGImage? = {
+    var fadedOriginal: CGImage? {
+        if let fadedCache { return fadedCache }
+        let made = Self.faded(original)
+        fadedCache = .some(made)
+        return made
+    }
+
+    private static func faded(_ original: CGImage?) -> CGImage? {
         guard let original else { return nil }
         let width = original.width, height = original.height
         guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
@@ -39,7 +48,22 @@ final class SeparationEditor: ObservableObject {
         context.setAlpha(0.3)
         context.draw(original, in: CGRect(x: 0, y: 0, width: width, height: height))
         return context.makeImage()
-    }()
+    }
+
+    /// Another picture to separate with the same marks (a limb whose source changed when a limb
+    /// before it was separated again): Vision looks again, and it separates again.
+    func setPicture(_ picture: RGBAImage) {
+        guard picture != self.picture else { return }
+        self.picture = picture
+        original = picture.cgImage
+        fadedCache = nil
+        instances = nil
+        result = nil
+        foregroundImage = nil
+        backgroundImage = nil
+        objectWillChange.send()
+        start()
+    }
 
     @Published private(set) var marks: SeparationMarks
     @Published var brush: Brush = .foreground

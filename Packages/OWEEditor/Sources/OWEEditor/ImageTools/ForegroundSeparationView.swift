@@ -5,6 +5,9 @@ import SwiftUI
 struct ImageToolRequest: Identifiable, Equatable {
     enum Tool: Equatable {
         case foregroundSeparation
+        case characterSheet
+        /// Puppet Warp on the sheet Character Sheet Creation made.
+        case puppetWarp
     }
 
     var tool: Tool
@@ -23,6 +26,12 @@ struct ImageToolSheet: View {
         switch request.tool {
         case .foregroundSeparation:
             ForegroundSeparationView(session: session, layerID: request.layerID, services: services, tools: tools)
+        case .characterSheet:
+            CharacterSheetView(session: session, layerID: request.layerID, services: services, tools: tools)
+        case .puppetWarp:
+            if let assets = services.puppetAssets, let layer = session.outline.layer(request.layerID) {
+                PuppetWorkspaceView(session: session, layer: layer, assets: assets)
+            }
         }
     }
 }
