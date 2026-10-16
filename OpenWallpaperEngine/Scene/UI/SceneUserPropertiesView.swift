@@ -524,7 +524,7 @@ struct SceneUserPropertiesView: View {
                     parameterLabel(property.title, help: parameterHelp(property))
                 }
                 .anchorsColorPanel()
-            case "file", "directory", "texture":
+            case "file", "directory", "texture", "scenetexture":
                 pathPicker(property)
             case SceneScriptUserProperties.Property.userShortcutType:
                 UserShortcutPropertyRow(title: property.title.isEmpty ? String(localized: "Shortcut") : property.title,
@@ -633,7 +633,7 @@ struct SceneUserPropertiesView: View {
         return "\(nsColor.redComponent) \(nsColor.greenComponent) \(nsColor.blueComponent)"
     }
 }
-/// Open panel for `file`, `directory` and `texture` properties; returns the chosen path.
+/// Open panel for `file`, `directory`, `texture` and `scenetexture` properties; returns the chosen path.
 enum UserPropertyPathPanel {
     @MainActor
     static func choose(type: String) -> String? {
@@ -643,6 +643,10 @@ enum UserPropertyPathPanel {
         panel.canChooseFiles = type != "directory"
         if type == "texture" {
             panel.allowedContentTypes = [.image]
+        }
+        // WE's texture property takes a picture or a video (`SceneUserTexture`).
+        if type == "scenetexture" {
+            panel.allowedContentTypes = [.image, .movie]
         }
         return panel.runModal() == .OK ? panel.url?.path : nil
     }

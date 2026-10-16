@@ -417,9 +417,17 @@ static void runInitializers(constant ProgramOp *records, uint count, thread Prog
         }
         case iColorList: {
             const int listCount = max(int(record.a.x), 1);
-            const float4 colors[4] = { record.b, record.c, record.d, record.e };
-            const int pick = min(int(unitRandom(seed, serial, initializerStream(index, 0)) * float(listCount)), min(listCount, 4) - 1);
-            float3 hsv = colors[pick].xyz;
+            // Colours past the fourth sit in colour records from `header.w` (`ParticleInitializer.encoded`).
+            const int pick = min(int(unitRandom(seed, serial, initializerStream(index, 0)) * float(listCount)), listCount - 1);
+            float3 hsv;
+            if (pick < 4) {
+                const float4 colors[4] = { record.b, record.c, record.d, record.e };
+                hsv = colors[pick].xyz;
+            } else {
+                const ProgramOp more = records[record.header.w + uint(pick - 4) / 6u];
+                const float4 colors[6] = { more.a, more.b, more.c, more.d, more.e, more.blend };
+                hsv = colors[uint(pick - 4) % 6u].xyz;
+            }
             const float3 noise = record.a.yzw;
             for (int channel = 0; channel < 3; ++channel) {
                 const float low = max(hsv[channel] - noise[channel], 0.0f), high = min(hsv[channel] + noise[channel], 1.0f);
