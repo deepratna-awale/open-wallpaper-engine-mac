@@ -31,16 +31,14 @@ enum SceneTextRaster {
                        loader: MTKTextureLoader) -> SceneTextRasterResult? {
         let text = request.text
         let pixelSize = SceneTextLayout.pixelSize(pointSize: CGFloat(request.pointSize))
-        var font = SceneFontRegistry.font(named: request.fontName, size: pixelSize)
-            ?? NSFont(name: request.fontName, size: pixelSize)
-            ?? SceneTextFallbackFont.font(size: pixelSize)
+        var font = Self.font(named: request.fontName, size: pixelSize, loader: text.fonts)
         if request.bold { font = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask) }
         if request.italic { font = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask) }
         let layout = SceneTextLayout(text: request.value, font: font, padding: text.padding,
                                      horizontalAlignment: text.horizontalAlignment,
                                      verticalAlignment: text.verticalAlignment,
                                      maxWidth: text.maxWidth, maxRows: text.maxRows, useEllipsis: text.useEllipsis,
-                                     blockAlign: text.blockAlign)
+                                     blockAlign: text.blockAlign, spacing: text.spacing)
         // A white coverage mask, as WE's `font` shader samples its glyphs: colour (authored and
         // the user's), alpha and brightness are applied when the quad is drawn. Font effects colour
         // a white raster themselves (`effectText`).
@@ -49,18 +47,20 @@ enum SceneTextRaster {
             : request.fill.map { NSColor(srgbRed: CGFloat($0.x), green: CGFloat($0.y), blue: CGFloat($0.z), alpha: 1) }
                 ?? white
         let pixels = SceneTextRasterScale.clamped(request.rasterScale, boxSize: layout.boxSize)
-        guard let image = layout.rasterize(font: font, color: color, pixelsPerUnit: CGFloat(pixels)),
+        // A background box is drawn under plain glyphs; font effects composite their output over it.
+        guard let image = layout.rasterize(font: font, color: color, pixelsPerUnit: CGFloat(pixels),
+                                           background: text.effects == nil ? text.background : nil),
               let texture = text.effects.map({ effectText(image, effects: $0, pointSize: request.pointSize,
                                                           pixelsPerUnit: pixels, fill: request.fill ?? SIMD3(repeating: 1),
-                                                          device: device) })
+                                                          background: text.background, device: device) })
                 ?? (try? SceneTextureUpload.texture(from: image, loader: loader, device: device)) else {
             OWELog.error(.scene, "Text: could not rasterise \(layout.boxSize) at \(pixels) px/unit")
             return nil
         }
         var coverage: MTLTexture?
         do {
-            // Text with font effects has no coverage mask: it draws its coloured raster.
-            if text.effects == nil { coverage = try SceneTextureUpload.coverageTexture(from: image, device: device) }
+            // Text with font effects or a background has no coverage mask: it draws its coloured raster.
+            if !text.rastersInColor { coverage = try SceneTextureUpload.coverageTexture(from: image, device: device) }
         } catch {
             OWELog.error(.scene, "Text: no coverage texture, drawn natively: \(error)")
             coverage = nil
@@ -72,13 +72,27 @@ enum SceneTextRaster {
                                      cost: texture.allocatedSize + (coverage?.allocatedSize ?? 0))
     }
 
+    /// The font `name` (a scene's font path, or an installed font's name) names: one the scene
+    /// registered, an installed one, else one `loader` finds and registers now (a path only a
+    /// script named), else Arial, as in WE.
+    static func font(named name: String, size: CGFloat, loader: SceneTextFontLoader?) -> NSFont {
+        if let font = SceneFontRegistry.font(named: name, size: size) ?? NSFont(name: name, size: size) { return font }
+        if !name.isEmpty, let registered = loader?.register(name),
+           let font = SceneFontRegistry.font(named: name, size: size) ?? NSFont(name: registered, size: size) {
+            return font
+        }
+        return SceneTextFallbackFont.font(size: size)
+    }
+
     /// The glyphs of `image` (a white raster) with their font effects, as straight-alpha RGBA in
     /// `fill`'s colour; nil (the caller logs) when it can't be read or uploaded.
+    /// Over `background`, when there is one, the result is opaque.
     static func effectText(_ image: CGImage, effects: SceneTextEffects, pointSize: Float, pixelsPerUnit: Float,
-                           fill: SIMD3<Float>, device: MTLDevice) -> MTLTexture? {
+                           fill: SIMD3<Float>, background: SIMD3<Float>? = nil, device: MTLDevice) -> MTLTexture? {
         guard let coverage = try? SceneTextureUpload.whiteCoverage(image) else { return nil }
-        let rgba = effects.render(coverage: coverage, width: image.width, height: image.height,
+        var rgba = effects.render(coverage: coverage, width: image.width, height: image.height,
                                   pixelsPerUnit: pixelsPerUnit, pointSize: pointSize, fill: fill)
+        if let background { composite(&rgba, over: background) }
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: image.width,
                                                                   height: image.height, mipmapped: false)
         descriptor.usage = [.shaderRead]
@@ -88,6 +102,21 @@ enum SceneTextRaster {
                             withBytes: raw.baseAddress!, bytesPerRow: image.width * 4)
         }
         return texture
+    }
+
+    /// Straight-alpha RGBA8 `rgba` drawn over an opaque `background` (0…1), in place.
+    static func composite(_ rgba: inout [UInt8], over background: SIMD3<Float>) {
+        let base = [background.x, background.y, background.z].map { min(max($0.isFinite ? $0 : 0, 0), 1) * 255 }
+        var index = 0
+        while index + 3 < rgba.count {
+            let alpha = Float(rgba[index + 3]) / 255
+            for channel in 0..<3 {
+                let value = Float(rgba[index + channel]) * alpha + base[channel] * (1 - alpha)
+                rgba[index + channel] = UInt8(min(max(value.rounded(), 0), 255))
+            }
+            rgba[index + 3] = 255
+            index += 4
+        }
     }
 }
 

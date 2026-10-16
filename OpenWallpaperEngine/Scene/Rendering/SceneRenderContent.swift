@@ -186,24 +186,57 @@ struct VideoMusicSyncVisuals {
 }
 
 struct SceneMetalText {
-    let value: String
-    let font: String?
-    let pointSize: CGFloat
-    let horizontalAlignment: String?
-    let verticalAlignment: String?
+    var value: String
+    var font: String?
+    var pointSize: CGFloat
+    var horizontalAlignment: String?
+    var verticalAlignment: String?
     /// Inset from the layer's own bounds; every authored text object declares one.
-    let padding: SIMD2<Float>
-    let maxWidth: Float?
-    let maxRows: Int?
-    let useEllipsis: Bool
+    var padding: SIMD2<Float>
+    /// The width lines wrap at: `maxwidth` while `limitwidth` is on, else nil.
+    var maxWidth: Float?
+    /// The rows kept: `maxrows` while `limitrows` is on, else nil.
+    var maxRows: Int?
+    var useEllipsis: Bool
     /// WE's `anchor` (none, center, top, topright, …, 0x14025a22b). WE's text translates its model
     /// matrix by four render-context floats per anchor (0x1402585c0), but nothing in
     /// `wallpaper64.exe` writes the first two, and WE's text captures (all `center`) sit where
     /// the unanchored layout puts them, so it moves nothing here (roadmap notes §8.13).
-    let anchor: String?
-    let blockAlign: Bool
+    var anchor: String?
+    var blockAlign: Bool
     /// `outline`, `blur` and `dropshadow` (`SceneTextEffects`); nil for plain text.
     var effects: SceneTextEffects? = nil
+    /// `maxwidth` and `maxrows` as authored (or WE's defaults), kept while their limit is off so a
+    /// script that turns `limitwidth` / `limitrows` on wraps at them.
+    var maxWidthValue = Float(WETextDefaults.maxWidth)
+    var maxRowsValue = WETextDefaults.maxRows
+    /// Loads a font a script names (`thisLayer.font`) that the scene didn't; nil keeps the
+    /// fonts the scene registered.
+    var fonts: SceneTextFontLoader? = nil
+    /// `opaquebackground` and `backgroundcolor` (WE 2.x): the block (the lines' bounds plus
+    /// `padding`) filled with the colour behind the glyphs. WE's text object keeps the switch as
+    /// flag 0x2 at +0x594 and the colour at +0x4d0 (default black, constructor 0x140256baf); with
+    /// it on, the text's buffer is sized with its padding (0x140258966) and cleared to the colour,
+    /// times `brightness` under engine flag 0x2000, before the glyphs are drawn (0x140257c30).
+    var opaqueBackground = false
+    var backgroundColor = SIMD3<Float>(repeating: 0)
+
+    /// The box's colour, or nil without one.
+    var background: SIMD3<Float>? { opaqueBackground ? backgroundColor : nil }
+
+    /// Whether the raster holds the text's colours (font effects, or a background box) instead of
+    /// white coverage the draw tints: such text draws natively, in its raster's colours.
+    var rastersInColor: Bool { effects != nil || opaqueBackground }
+    /// `spacing` (WE 2.8's letter spacing): added to each glyph's advance (x) and to the line
+    /// height (y), in scene units (`SceneTextLayout`).
+    var spacing = WETextDefaults.spacing
+
+    /// Everything but `value` and `pointSize` that changes the laid-out raster, for the text cache.
+    var layoutKey: String {
+        "\(font ?? "")|\(horizontalAlignment ?? "")|\(verticalAlignment ?? "")|\(padding.x),\(padding.y)"
+            + "|\(maxWidth.map { "\($0)" } ?? "")|\(maxRows.map { "\($0)" } ?? "")|\(useEllipsis)|\(blockAlign)|\(spacing.x),\(spacing.y)"
+            + (background.map { "|bg\($0.x),\($0.y),\($0.z)" } ?? "")
+    }
 }
 
 struct SceneBloomSettings {

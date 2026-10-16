@@ -214,10 +214,10 @@ struct SceneScriptSceneDescriber {
             description.videoDuration = videoDuration(model: image)
             // A video texture plays from the start (`IVideoTexture.isPlaying()`).
             if description.videoDuration != nil { description.values[.playing] = [1] }
-            description.rig = rig(model: image, animationLayers: json["animationlayers"])
+            (description.rig, description.cursorShape) = puppetImage(image, animationLayers: json["animationlayers"])
         }
         if kind == .model, case .string(let model)? = json["model"] {
-            description.rig = rig(modelObject: model, animationLayers: json["animationlayers"])
+            (description.rig, description.cursorShape) = modelObject(model, animationLayers: json["animationlayers"])
         }
         description.initialConfigurationJSON = Self.jsonText(.object(json))
         return description
