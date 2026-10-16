@@ -17,7 +17,7 @@ import UniformTypeIdentifiers
 /// - `still-image-time` (-1) with `com.apple.quicktime.live-photo-still-image-transform` (an
 ///   identity 3 × 3 matrix) in one sample at the still's frame, in the 600 timescale (`stillSample`).
 /// Both describe the video track (a `cdsc` track reference). The layout and the camera's reference
-/// values are LivePaper's measurements on an iPhone (github.com/Yuyang16Z/LivePaper, MIT; notice
+/// values are LivePaper's measurements on an iPhone (Yuyang Zeng, MIT; notice
 /// below), as Glitter Live also writes them (github.com/BuddhaNag12/glitter-live, MIT).
 enum LivePhotoMetadata {
     static let makerNoteIdentifierKey = "17"

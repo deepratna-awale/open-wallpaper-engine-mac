@@ -82,6 +82,11 @@ and region's wallpaper under a name, loads it, or deletes it. **Import Wallpaper
 Profile…** reads Wallpaper Engine's `config.json`. An application rule can load a profile while
 an application runs (Settings › Performance › Application Rules).
 
+**Profile › Hotkeys** lists the profiles: choose one to give it a system-wide shortcut that
+loads it, or to change or remove the one it has, as Wallpaper Engine's profile hotkeys. The
+command line loads a profile too (`--control open-profile --profile <name>`,
+[command-line.md](command-line.md)).
+
 ## Screen saver layout
 
 **Screen saver layout** is **Same as wallpaper** by default: the screen saver follows the
