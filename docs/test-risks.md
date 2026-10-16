@@ -1868,6 +1868,10 @@ Pulse (3.5 against 4.2), shimmer (1.05 against 1.48) and the fluid simulation (0
   - Since the clock change (c875295), a running clock steps at least 0.1 ms a frame, so an animated scene can fail to settle and wait out the 30 s settle limit (shimmer and swing did: 730 frames). Holding the clock while it settles brings that down to 0.6 s (`SceneMetalRenderer.holdsClock`, the clock owner's change).
 - **Now.** About 8 s a scene with the clock held (film grain, fluid simulation, pulse, shimmer and the control in 39 s), where it was about 27 s. The whole gallery takes about 8 minutes, and every effect still gets its own scene. Drawing several effects in one scene would put them in each other's bloom and cursor, so it wasn't done.
 
+### FX6. `g_LayerModelMatrix` has no capture (Low, effects)
+
+`g_LayerModelMatrix` (docs: "transform between layer local space and world space", a copy of the matrix applied to the layer object; the announcement's "g_LayerModalMatrix" is a typo, wallpaper64.exe has only `g_LayerModelMatrix`) is the layer's object transform with its parents', before the camera: axes scaled by the layer's `scale`, last column its `origin` (`BuiltinPassContext.layerModelMatrix`); a layer drawn through a 3D camera gets its world matrix. Parallax, camera shake and the orthographic zoom aren't in it. Which of those WE folds in, and whether a material (not an effect) sees the layer's matrix or its own, needs a capture; the one library shader that reads it (3651835769's rounded_mask) reads only the axes' lengths. A chain that reads it is kept only while it holds (`UniformProgram.readsLayerModelMatrix`).
+
 ## EX. WE 2.8's generated extras: what is still open (2026-09-26)
 
 From the effect gallery's extras (we-values-audit notes §9). Harness: `WEExtrasComparisonTests` (`OWE_WE_EXTRAS`). Comparison output is in `/Volumes/980Pro/agentEX-out`.

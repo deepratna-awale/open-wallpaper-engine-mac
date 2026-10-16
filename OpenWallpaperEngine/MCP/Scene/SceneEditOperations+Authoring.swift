@@ -138,7 +138,7 @@ extension SceneEditOperations {
         let name = try edit.required("property_kind").lowercased()
         let kind = UserPropertyDraft.Kind(rawValue: name == "text_input" ? "textinput" : name)
         guard UserPropertyDraft.Kind.authorable.contains(kind) else {
-            throw ControlError(.invalidParams, "property_kind must be one of bool, slider, color, combo, text_input, file, directory, text.")
+            throw ControlError(.invalidParams, "property_kind must be one of bool, slider, color, combo, text_input, file, directory, scenetexture, usershortcut, group, text.")
         }
         return kind
     }

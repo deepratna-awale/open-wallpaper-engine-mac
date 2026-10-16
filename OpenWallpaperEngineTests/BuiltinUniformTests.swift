@@ -28,6 +28,23 @@ final class BuiltinUniformTests: XCTestCase {
         XCTAssertEqual(value("g_TextureReductionScale"), [1])
     }
 
+    /// `g_LayerModelMatrix` is the layer's object matrix: its axes carry the layer's scale and
+    /// rotation, its last column the origin. Without one (a chain that isn't a layer's) it is the
+    /// pass's model matrix.
+    func testLayerModelMatrix() {
+        pass.modelMatrix = simd_float4x4(diagonal: SIMD4(5, 5, 1, 1))
+        XCTAssertEqual(value("g_LayerModelMatrix"), BuiltinUniforms.value(named: "g_ModelMatrix", frame: frame, pass: pass))
+        let world = SceneAffineTransform(SceneLocalTransform(origin: SIMD2(100, 50), scale: SIMD2(2, 3), angle: .pi / 2))
+        pass.layerModelMatrix = BuiltinPassContext.layerModelMatrix(world)
+        let m = value("g_LayerModelMatrix")
+        XCTAssertEqual(m.count, 16)
+        // Column 0: x scaled by 2, turned a quarter counter-clockwise; column 1: y scaled by 3.
+        let expected: [Float] = [0, 2, 0, 0, -3, 0, 0, 0, 0, 0, 1, 0, 100, 50, 0, 1]
+        for (got, want) in zip(m, expected) { XCTAssertEqual(got, want, accuracy: 1e-5, "\(m)") }
+        XCTAssertTrue(BuiltinUniforms.isBuiltin("g_LayerModelMatrix"))
+        XCTAssertEqual(BuiltinUniforms.Key("g_LayerModelMatrix")?.followsCamera, true)
+    }
+
     /// Like WE, `g_Time` is never wrapped: a week in, it is still the scene time (as a float),
     /// and consecutive frames never jump backwards.
     func testTimeIsNotWrappedOverLongRuns() {

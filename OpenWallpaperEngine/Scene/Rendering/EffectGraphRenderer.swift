@@ -151,6 +151,9 @@ final class EffectGraphRenderer {
     /// A monotonic clock in seconds (injectable for tests).
     private let now: () -> TimeInterval
 
+    /// `executeFunction` calls already reported as not runnable, by effect file and name.
+    private var reportedFunctions = Set<String>()
+
     /// Counters for tests and diagnostics.
     private(set) var passesEncoded = 0
     private(set) var layersReused = 0
@@ -312,6 +315,9 @@ final class EffectGraphRenderer {
         /// `g_EffectTextureProjectionMatrix`: where the layer's image lies on the screen
         /// (`effectTextureProjection(quad:sceneSize:)`); identity for a chain that isn't a layer's.
         var effectTextureProjection = matrix_identity_float4x4
+        /// `g_LayerModelMatrix`: the layer's object matrix (`BuiltinPassContext.layerModelMatrix`);
+        /// nil for a chain that isn't a layer's, whose passes get their own model matrix.
+        var layerModelMatrix: simd_float4x4? = nil
 
         /// The input's on-screen size in pixels when the scene's detail matches the display
         /// (`SceneEffectDetail`); nil draws the chain at the input's size, as WE does. A smaller
@@ -400,6 +406,12 @@ final class EffectGraphRenderer {
         for (effectIndex, programs) in state.programs.enumerated() where !context.hiddenEffects.contains(effectIndex) {
             defer { if effectIndex < prefix { prefixValueCount = dynamicValues.count } }
             for program in programs { program?.appendDynamicValues(to: &dynamicValues, values: context.values) }
+            // The layer's matrix moves with an animated or scripted layer while the chain's input
+            // stays: a chain that reads it is kept only while it holds.
+            if let layerModel = context.layerModelMatrix, programs.contains(where: { $0?.readsLayerModelMatrix == true }) {
+                dynamicValues += BuiltinUniforms.value(.layerModelMatrix, frame: context.frame,
+                                                       pass: BuiltinPassContext(targetSize: .one, layerModelMatrix: layerModel))
+            }
             // A sprite sheet's frame changes the output like a live constant does.
             guard let assetSprite = context.assetSprite else { continue }
             for pass in effects[effectIndex].passes {
@@ -954,6 +966,7 @@ final class EffectGraphRenderer {
             passContext.alpha = context.layerAlpha
             passContext.renderVars = context.passRenderVars[pass.materialIndex] ?? [:]
             passContext.effectTextureProjection = context.effectTextureProjection
+            passContext.layerModelMatrix = context.layerModelMatrix
             program.update(frame: context.frame, pass: passContext, values: context.values)
             program.write(scriptWrites.filter { $0.reaches(material: pass.materialIndex) })
             if let record = context.recordAnimated { program.recordAnimated(record) }
@@ -1083,6 +1096,34 @@ final class EffectGraphRenderer {
                 }
             }
         }
+    }
+
+    /// `IEffect.executeMaterialFunction(name)` on the effect whose `effectIndex` is `effectIndex`
+    /// in the chain `effects` of layer `stateId`: runs effect.json's function `name`. `clear` sets
+    /// its FBOs back to their start colour (`EffectFBO.clear`) before the chain's next frame reads
+    /// them, as when they were made; a swapped pair is cleared whole, whichever name holds which
+    /// buffer, and targets not made yet start cleared anyway. An unknown function or action is
+    /// logged once per effect and name.
+    func executeFunction(named name: String, effectIndex: Int, of effects: [SceneEffectPlan], layer stateId: String) {
+        guard let index = effects.firstIndex(where: { $0.effectIndex == effectIndex }) else { return }
+        let effect = effects[index]
+        guard let function = effect.functions[name], function.actionKind == .clear else {
+            if reportedFunctions.insert("\(effect.file)|\(name)").inserted {
+                let problem = effect.functions[name].map { "its action \"\($0.action)\" isn't one WE has" } ?? "it has no such function"
+                OWELog.error(.scene, "executeMaterialFunction(\"\(name)\") on \(effect.file) of layer \(stateId): \(problem)")
+            }
+            return
+        }
+        guard let state = layers[stateId], index < state.fbos.count else { return }
+        let declared = Dictionary(effect.fbos.map { ($0.name, $0) }, uniquingKeysWith: { first, _ in first })
+        for fbo in function.fbos {
+            guard let texture = state.fbos[index][fbo] else { continue }
+            state.pendingClears.append((texture, Self.clearColor(declared[fbo]?.clear)))
+        }
+        // A kept output was drawn from the buffers before the clear.
+        state.staticOutput = nil
+        state.staticDrawn = nil
+        state.prefixOutput = nil
     }
 
     /// Clears the FBOs made since the last frame to their start colour, before any pass reads one.
@@ -1303,6 +1344,8 @@ final class UniformProgram {
     /// Built-ins that follow the placement or the camera (`BuiltinUniforms.Key.followsCamera`):
     /// written when those change, which a camera path or shake does every frame.
     private let cameraBuiltins: [(member: UniformMember, key: BuiltinUniforms.Key)]
+    /// Reads `g_LayerModelMatrix`, which the chain's kept output depends on.
+    let readsLayerModelMatrix: Bool
     /// Built-ins that change every frame (time, pointer, audio).
     private let frameBuiltins: [UniformMember]
     private var passSignature: [Float] = []
@@ -1311,7 +1354,7 @@ final class UniformProgram {
     /// What `cameraBuiltins` are computed from.
     private struct CameraSignature: Equatable {
         var modelViewProjection, modelMatrix, viewMatrix, viewProjection, effectTextureProjection: simd_float4x4
-        var altModelMatrix, altViewProjection: simd_float4x4?
+        var altModelMatrix, altViewProjection, layerModelMatrix: simd_float4x4?
         var eye, viewUp, viewRight, viewForward: SIMD3<Float>
 
         init(frame: BuiltinFrameContext, pass: BuiltinPassContext) {
@@ -1322,6 +1365,7 @@ final class UniformProgram {
             effectTextureProjection = pass.effectTextureProjection
             altModelMatrix = pass.altModelMatrix
             altViewProjection = pass.altViewProjection
+            layerModelMatrix = pass.layerModelMatrix
             eye = frame.eyePosition
             viewUp = frame.viewUp
             viewRight = frame.viewRight
@@ -1372,6 +1416,7 @@ final class UniformProgram {
         }
         let cameraNames = Set(camera.map(\.member.name))
         cameraBuiltins = camera
+        readsLayerModelMatrix = camera.contains { $0.key == .layerModelMatrix }
         passBuiltins = fixed.filter { !cameraNames.contains($0.name) }
         needsTextureInfo = builtins.contains { $0.name.hasPrefix("g_Texture") }
         isReusable = frameBuiltins.isEmpty

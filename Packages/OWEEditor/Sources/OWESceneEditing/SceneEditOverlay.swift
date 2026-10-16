@@ -130,6 +130,9 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// project.json edits besides the user properties (the title, `SceneProjectEdits`); nil for
     /// none (version 2).
     public var project: SceneProjectEdits?
+    /// JSON documents the scene's own layers read that the editor changed (an image layer's
+    /// material), by path (`SceneEditOverlay+Documents`); nil for none (version 2).
+    public var documents: [String: SceneJSONValue]?
 
     public init(objects: [String: ObjectEdit] = [:]) {
         self.objects = objects
@@ -139,7 +142,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     public var isEmpty: Bool {
         objects.values.allSatisfy(\.isEmpty) && !hasStructureEdits && timelines?.isEmpty != false
             && authoring?.isEmpty != false && !hasPuppetEdits && particles?.isEmpty != false && !hasGeneralEdits
-            && !hasEffectFiles && project?.isEmpty != false
+            && !hasEffectFiles && project?.isEmpty != false && !hasDocumentEdits
     }
 
     /// Something changes the scene (locks don't). Authored properties count: they are edits of
@@ -147,7 +150,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     public var hasSceneEdits: Bool {
         objects.values.contains(where: \.hasSceneEdits) || hasStructureEdits || timelines?.isEmpty == false
             || authoring?.isEmpty == false || particles?.isEmpty == false || hasGeneralEdits || hasEffectFiles
-            || project?.isEmpty == false
+            || project?.isEmpty == false || hasDocumentEdits
     }
 
     /// Scene settings changed.
@@ -160,6 +163,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     var needsVersion2: Bool {
         hasStructureEdits || timelines?.isEmpty == false || authoring?.isEmpty == false || hasPuppetEdits
             || particles?.isEmpty == false || hasGeneralEdits || hasEffectFiles || project?.isEmpty == false
+            || hasDocumentEdits
             || objects.values.contains(where: \.needsVersion2)
     }
 
