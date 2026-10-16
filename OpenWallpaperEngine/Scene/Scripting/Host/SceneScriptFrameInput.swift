@@ -32,6 +32,14 @@ struct SceneScriptFrameInput {
     var textureAnimations: [Int: SceneTextureAnimations.State] = [:]
     /// Every puppet image's skeleton and animation layers, by id.
     var rigs: [Int: SceneScriptRigFeedback] = [:]
+    /// The cursor ray of a perspective scene (nil: an orthographic scene's, straight down through
+    /// `cursorScenePosition` plus the shake), and its view direction, by which the cursor pass
+    /// orders the objects (docs/scenescript-plan.md §4.8).
+    var cursorRay: SceneScriptCursorRay?
+    var cursorViewForward: SIMD3<Float>?
+    /// The 3D world matrices the cursor pass tests with, by object id, where the table's 2D one
+    /// isn't WE's: every model, and every image and text layer of a perspective scene.
+    var cursorWorlds: [Int: simd_float4x4] = [:]
 }
 
 /// One object as the renderer last drew it, in the object table's units. A value is written into

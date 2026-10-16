@@ -18,8 +18,12 @@ final class EditorWallpaperResources {
     /// Read once: the wallpaper's files, WE's and the wallpaper's fonts, and its properties don't
     /// change while it is edited.
     private var ownAssets: [EditorAsset]?
+    private var ownPaths: [String]?
     private var shippedFonts: [EditorFont]?
     private var propertyChoices: [EditorUserPropertyChoice]?
+    /// The draft's own files (the effects made in the editor, `SceneEditOverlay.effectFiles`),
+    /// which the loader reads before any other.
+    var draftFiles: () -> [String: String] = { [:] }
 
     init(wallpaper: WEWallpaper, package: PKGParser?, assets: EditorAssetStore,
          labels: WallpaperEngineLabels = WallpaperEngineLabels.load()) {
@@ -29,9 +33,10 @@ final class EditorWallpaperResources {
         self.labels = labels
     }
 
-    /// A file as the scene loader finds it: the wallpaper's package, its folder, the editor's
-    /// files, then WE's assets.
+    /// A file as the scene loader finds it: the draft's files, the wallpaper's package, its
+    /// folder, the editor's files, then WE's assets.
     func data(_ path: String) -> Data? {
+        if let text = draftFiles()[path] { return Data(text.utf8) }
         if let data = package?.extractFile(named: path) { return data }
         if let data = try? AssetPathResolver.data(path, in: wallpaper.wallpaperDirectory) { return data }
         if let url = assets.url(for: path), let data = try? Data(contentsOf: url) { return data }
@@ -49,14 +54,36 @@ final class EditorWallpaperResources {
             catalog = Self.builtInEffects(labels: labels, read: { self.data($0) })
         }
         let builtIn = Set((catalog ?? []).map(\.folderName))
-        let workshop = EffectCatalog.workshopEffects(in: outline, builtIn: builtIn).compactMap { file in
+        let own = ownEffects()
+        let workshop = EffectCatalog.workshopEffects(in: outline, builtIn: builtIn,
+                                                     excluded: Set(own.map { $0.file.lowercased() })).compactMap { file in
             Self.entry(file, data: data(file), labels: labels, preview: nil, isWorkshop: true).map { entry in
                 var entry = entry
                 entry.wallpaperDirectory = wallpaper.wallpaperDirectory.path(percentEncoded: false)
                 return entry
             }
         }
-        return (catalog ?? []) + workshop
+        return own + (catalog ?? []) + workshop
+    }
+
+    /// WE's "My Effects": the effects made in the editor (the draft's) and the wallpaper's own
+    /// `effects/<name>/effect.json` that it marks `editable`, which the shader editor edits.
+    private func ownEffects() -> [EffectCatalogEntry] {
+        let drafted = Set(CustomEffect.effectFiles(in: Array(draftFiles().keys)))
+        let shipped = CustomEffect.effectFiles(in: wallpaperFilePaths())
+        return Array(drafted.union(shipped)).sorted().compactMap { file in
+            guard let data = data(file),
+                  let json = try? WETolerantJSON.object(from: data) as? [String: Any] else { return nil }
+            let madeHere = drafted.contains(file) && !shipped.contains(file)
+            guard madeHere || json["editable"] as? Bool == true else { return nil }
+            guard var entry = Self.entry(file, data: data, labels: labels, preview: nil, isWorkshop: false) else { return nil }
+            entry.group = CustomEffect.group
+            entry.groupTitle = CustomEffect.group
+            entry.isEditable = true
+            entry.isMadeHere = madeHere
+            entry.wallpaperDirectory = wallpaper.wallpaperDirectory.path(percentEncoded: false)
+            return entry
+        }
     }
 
     /// WE's built-in effects (`effects/*/effect.json` in its assets), titled with `labels`; `read`
@@ -119,10 +146,14 @@ final class EditorWallpaperResources {
     /// The effect's constants, combos and texture slots, from its shaders (as Scene Edit / Export
     /// reads them: `SceneEffectParameters`), titled with WE's labels.
     func effectSchema(_ file: String) -> EffectSchema? {
-        if let cached = schemas[file] { return cached }
+        // An effect the editor's files hold changes as its shaders are edited: keyed by them too.
+        let folder = (file as NSString).deletingLastPathComponent + "/"
+        let ownFiles = draftFiles().filter { $0.key.hasPrefix(folder) }.sorted { $0.key < $1.key }
+        let cacheKey = ownFiles.isEmpty ? file : file + "\u{0}" + ownFiles.map { "\($0.key)\u{0}\($0.value)" }.joined(separator: "\u{0}")
+        if let cached = schemas[cacheKey] { return cached }
         let read: (String) -> Data? = { [weak self] path in self?.data(path) }
         guard let effectData = read(file), let document = try? decodeTolerant(EffectDocument.self, from: effectData) else {
-            schemas[file] = .some(nil)
+            schemas[cacheKey] = .some(nil)
             return nil
         }
         let parameters = SceneEffectParameters.parameters(for: file, readFile: read).map { parameter in
@@ -144,7 +175,7 @@ final class EditorWallpaperResources {
         let schema = EffectSchema(parameters: parameters, combos: combos,
                                   textures: textureSlots(file, document: document, read: read),
                                   passCount: max(document.passes.count, 1))
-        schemas[file] = schema
+        schemas[cacheKey] = schema
         return schema
     }
 
@@ -193,7 +224,9 @@ final class EditorWallpaperResources {
         return assets
     }
 
-    private func readWallpaperAssets() -> [EditorAsset] {
+    /// Every file of the wallpaper (its package's and its folder's), by path. Read once.
+    private func wallpaperFilePaths() -> [String] {
+        if let ownPaths { return ownPaths }
         var paths: [String] = package?.fileList ?? []
         let root = wallpaper.wallpaperDirectory.standardizedFileURL.path
         if let enumerator = FileManager.default.enumerator(at: wallpaper.wallpaperDirectory, includingPropertiesForKeys: [.isRegularFileKey],
@@ -202,6 +235,12 @@ final class EditorWallpaperResources {
                 paths.append(String(url.standardizedFileURL.path.dropFirst(root.count)).trimmingCharacters(in: CharacterSet(charactersIn: "/")))
             }
         }
+        ownPaths = paths
+        return paths
+    }
+
+    private func readWallpaperAssets() -> [EditorAsset] {
+        let paths = wallpaperFilePaths()
         var seen = Set<String>()
         return paths.compactMap { path in
             guard seen.insert(path.lowercased()).inserted else { return nil }

@@ -16,6 +16,8 @@ public struct WallpaperEditorView: View {
     @State private var isSaving = false
     @State private var notice: Notice?
     @StateObject private var authoring: EditorAuthoringModel
+    /// The shader editor (`ShaderEditorModel`), docked under the canvas while a shader is open.
+    @StateObject private var shaderEditor: ShaderEditorModel
 
     struct Notice: Identifiable, Equatable {
         let id = UUID()
@@ -27,6 +29,8 @@ public struct WallpaperEditorView: View {
         self.session = session
         self.services = services
         document = services.document ?? WallpaperEditorDocument()
+        _shaderEditor = StateObject(wrappedValue: ShaderEditorModel(session: session, read: services.readFile,
+                                                                    services: services.shaders))
         _authoring = StateObject(wrappedValue: EditorAuthoringModel(session: session, projectJSON: services.projectJSON,
                                                                     console: services.scriptConsole,
                                                                     services: services))
@@ -52,6 +56,11 @@ public struct WallpaperEditorView: View {
                         ScriptEditorPanel(authoring: authoring, draft: draft)
                             .frame(height: min(max(scriptHeight, 240), 640))
                     }
+                    if let document = shaderEditor.document {
+                        ScriptDockDivider(height: $scriptHeight)
+                        ShaderEditorPanel(model: shaderEditor, document: document)
+                            .frame(height: min(max(scriptHeight, 240), 640))
+                    }
                 }
             }
                 .inspector(isPresented: $isInspectorPresented) {
@@ -68,6 +77,7 @@ public struct WallpaperEditorView: View {
             show(Notice(text: problem, isError: true))
         }
         .environmentObject(authoring)
+        .environmentObject(shaderEditor)
         .onReceive(services.commands?.requests.eraseToAnyPublisher()
                    ?? Empty<WallpaperEditorCommands.Command, Never>().eraseToAnyPublisher()) { command in
             switch command {
@@ -94,6 +104,7 @@ public struct WallpaperEditorView: View {
         .sheet(item: $tools.pendingImport) { pending in
             ImportOptionsSheet(pending: pending, actions: LayerActions(session: session, services: services, tools: tools))
         }
+        .sheet(item: $tools.imageTool) { ImageToolSheet(request: $0, session: session, services: services, tools: tools) }
         .sheet(isPresented: $isSaving) {
             SaveAsNewSheet(suggestedTitle: services.suggestedNewTitle) { title in
                 do {
