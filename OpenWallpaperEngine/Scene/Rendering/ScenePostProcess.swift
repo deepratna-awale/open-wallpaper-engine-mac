@@ -118,6 +118,8 @@ final class ScenePostProcess {
     private var correctedFrames: UInt64 = 0
     /// The content draws in HDR: float targets, `HDR=1`, the HDR chain (`SceneEngineCombos.hdr`).
     private(set) var drawsHDR = false
+    /// The HDR frame holds a HDR video's linear light (`SceneMetalContent.videoHDR`).
+    private var videoHDR = false
     /// Frames bloomed so far: the chain's input changes every frame while its texture stays.
     private var bloomFrames: UInt64 = 0
     /// The chain whose targets the effect graph holds (released when it stops running).
@@ -148,6 +150,7 @@ final class ScenePostProcess {
         colorCorrection = content.colorCorrection
         cameraFade = content.cameraFade
         drawsHDR = content.engineCombos.hdr
+        videoHDR = content.videoHDR
         // The last frame's textures (a full-size float frame and combine at worst) go with it.
         encodedView = nil
         lastBloom = nil
@@ -294,7 +297,7 @@ final class ScenePostProcess {
         guard let combined = hdrChain.encode(on: frame.scene, levels: levels, constants: constants, effects: effects,
                                              builtins: frame.builtins, values: frame.values, frameIndex: bloomFrames,
                                              referenceSize: frame.bloomReferenceSize, displayHDR: frame.display.renderVar,
-                                             commandBuffer: frame.commandBuffer) else { return nil }
+                                             videoHDR: videoHDR, commandBuffer: frame.commandBuffer) else { return nil }
         lastHDR = HDRRecord(frame: frame.scene, combined: combined, levels: levels, constants: constants)
         if encodedView?.output != ObjectIdentifier(combined) {
             encodedView = SceneHDRChain.encodedView(of: combined).map { (ObjectIdentifier(combined), $0) }

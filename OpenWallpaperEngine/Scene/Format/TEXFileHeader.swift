@@ -7,7 +7,7 @@ import Foundation
 /// "TEXV0005\0" "TEXI0001\0"
 /// u32 format, flags, texture width, texture height, image width, image height, colour
 /// "TEXB000n\0"  u32 image count
-/// TEXB0003: i32 FreeImage format   TEXB0004: i32 FreeImage format, u32 is-MP4
+/// TEXB0003: i32 FreeImage format   TEXB0004: i32 FreeImage format, u32 variant count (`TEXVariants`)
 /// per image: u32 mipmap count, per mipmap: u32 width, height, [u32 compression, uncompressed size,] stored size, bytes
 /// ```
 struct TEXFileHeader: Equatable {
@@ -35,6 +35,9 @@ struct TEXFileHeader: Equatable {
     /// The FreeImage format of an embedded picture (PNG, JPEG…); -1 for raw pixels.
     var freeImageFormat: Int32
     var isVideo: Bool
+    /// The texture variants `TEXB0004` declares (`TEXVariants`); with any, the mipmaps aren't
+    /// listed, as variant patches follow each one.
+    var variantCount: Int
     var mipmaps: [Mipmap]
     /// Bytes after the first image's mipmaps (more images, a sprite sheet's frames).
     var trailingByteCount: Int
@@ -70,17 +73,19 @@ struct TEXFileHeader: Equatable {
         self.imageCount = Int(imageCount)
         freeImageFormat = -1
         isVideo = false
+        variantCount = 0
         if version >= 3 {
             guard let value = word() else { return nil }
             freeImageFormat = Int32(bitPattern: value)
         }
         if version == 4 {
             guard let value = word() else { return nil }
-            isVideo = value == 1 || freeImageFormat == 35
+            variantCount = Int(value)
+            isVideo = freeImageFormat == 35
         }
         mipmaps = []
         trailingByteCount = 0
-        guard !isVideo, imageCount > 0, let count = word(), count < 64 else { return }
+        guard !isVideo, variantCount == 0, imageCount > 0, let count = word(), count < 64 else { return }
         for _ in 0..<count {
             guard let width = word(), let height = word() else { return nil }
             var compression: UInt32 = 0, uncompressed = 0
