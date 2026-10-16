@@ -181,6 +181,14 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.commands = commands
         services.document = document
         services.thumbnail = thumbnail
+        services.scriptSnippet = { EditorShaderSnippets.snippet(named: $0) }
+        services.customScriptModules = { EditorScriptTools.customModules() }
+        services.setScriptsRunning = { [weak preview] running in
+            guard let preview, let scene = preview.sceneInstances.instance(for: preview.instanceKey(for: preview.selectedScreenId))
+            else { return }
+            scene.setScriptsRunning(running)
+        }
+        services.preferences = .app
         services.readFile = { resources.data($0) }
         if let translator = SceneWallpaperViewModel.defaultEffectTranslator {
             services.shaders = ShaderEditorServices(checker: EditorShaderChecker(translator: translator, read: { resources.data($0) }),

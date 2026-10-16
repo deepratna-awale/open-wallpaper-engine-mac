@@ -103,8 +103,8 @@ public final class UserPropertyAuthoring: ObservableObject {
         commit(list, actionName: actionName)
     }
 
-    /// Renames a property's key and re-points what names it: the other properties' conditions
-    /// and every field bound to it. False when `newKey` is invalid or taken.
+    /// Renames a property's key and re-points what names it: the other properties' conditions,
+    /// every field bound to it and every texture slot linked to it. False when `newKey` is invalid or taken.
     @discardableResult
     public func rename(_ key: String, to newKey: String, actionName: String) -> Bool {
         guard key != newKey, UserPropertyDraft.isValidKey(newKey), !keys.contains(newKey),
@@ -125,6 +125,7 @@ public final class UserPropertyAuthoring: ObservableObject {
                     edit.bind(SceneUserBinding(name: newKey, condition: condition))
                 }
             }
+            renameTextureBindings(key, to: newKey, in: &overlay)
             setProperties(normalized, in: &overlay)
         }
         return true

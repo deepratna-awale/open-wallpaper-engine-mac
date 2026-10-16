@@ -8,7 +8,8 @@ import Foundation
 /// preview projects), the GLSL shaders and shared headers (without Direct3D or editor shaders),
 /// materials, models, particles, the editor's particle presets (without their preview projects),
 /// the SceneScript runtime, the compatibility patches, the built-in fonts with their licence files,
-/// and the UI strings (`<install>/locale/ui_*.json`, beside `assets`) that translate label keys.
+/// the UI strings (`<install>/locale/ui_*.json`, beside `assets`) that translate label keys, and
+/// the script editor's snippets (`<install>/ui/dist/monaco/snippets/*.js`, into `snippets`).
 enum WallpaperEngineAssetsCache {
     /// What the cache was filled from, stored beside it.
     struct Info: Codable, Equatable {
@@ -43,6 +44,10 @@ enum WallpaperEngineAssetsCache {
     /// The folders copied without some of their files (`isExcluded`).
     static let filteredFolders = ["effects", "presets", "shaders"]
     static let infoFileName = ".owe-assets-info.json"
+    /// Where WE's editor keeps its script and shader snippets, relative to the install.
+    static let installSnippetsPath = "ui/dist/monaco/snippets"
+    /// The cache's copy of them.
+    static let snippetsFolder = "snippets"
 
     static func infoURL(cache: URL) -> URL { cache.appending(path: infoFileName) }
 
@@ -112,6 +117,7 @@ enum WallpaperEngineAssetsCache {
                     count += 1
                 }
             }
+            count += try copySnippets(of: assets.deletingLastPathComponent(), to: staging, fileManager: fileManager)
             try checkCancelled(isCancelled)
             try writeInfo(info, cache: staging)
             if fileManager.fileExists(atPath: cache.path) { try fileManager.removeItem(at: cache) }
@@ -121,6 +127,21 @@ enum WallpaperEngineAssetsCache {
             removeIfPresent(staging, fileManager: fileManager)
             throw error
         }
+    }
+
+    /// The script editor's snippets of the install `root` (none in an assets folder alone).
+    private static func copySnippets(of root: URL, to staging: URL, fileManager: FileManager) throws -> Int {
+        let snippets = root.appending(path: installSnippetsPath, directoryHint: .isDirectory)
+        // An assets folder alone, or a WE copy without the editor's UI: no snippets to keep.
+        guard fileManager.fileExists(atPath: snippets.path) else { return 0 }
+        let names = try fileManager.contentsOfDirectory(atPath: snippets.path).filter { $0.hasSuffix(".js") }
+        guard !names.isEmpty else { return 0 }
+        let destination = staging.appending(path: snippetsFolder, directoryHint: .isDirectory)
+        try fileManager.createDirectory(at: destination, withIntermediateDirectories: true)
+        for name in names {
+            try fileManager.copyItem(at: snippets.appending(path: name), to: destination.appending(path: name))
+        }
+        return names.count
     }
 
     /// Copies the files of `source` into `destination`, creating only folders that get a file.
