@@ -135,6 +135,65 @@ final class FluidSimulationEffectTests: XCTestCase {
         XCTAssertGreaterThan(change, 0.001, "the dye didn't move")
     }
 
+    /// effect.json's `functions`: `clearVelocity` and `clearDye` clear both buffers of a pair.
+    func testFunctionsDecode() throws {
+        let plan = try plan()
+        XCTAssertEqual(plan.functions["clearVelocity"], EffectFunction(action: "clear", fbos: ["_rt_SmokeVelocity1", "_rt_SmokeVelocity2"]))
+        XCTAssertEqual(plan.functions["clearDye"], EffectFunction(action: "clear", fbos: ["_rt_SmokeDye1", "_rt_SmokeDye2"]))
+        XCTAssertEqual(plan.functions["clearDye"]?.actionKind, .clear)
+    }
+
+    /// `executeMaterialFunction('clearDye')` and `('clearVelocity')` start the simulation over: the
+    /// next frame's dye is the first frame's again, not what 30 frames built up. An unknown name
+    /// leaves the buffers alone.
+    func testClearFunctionsRestartTheSimulation() throws {
+        let plan = try plan()
+        let renderer = try XCTUnwrap(EffectGraphRenderer(device: device, pipelineArchiveDirectory: cache.appending(path: "archives")))
+        defer { renderer.pipelineArchive?.flush() }
+        let queue = try XCTUnwrap(device.makeCommandQueue())
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: 256, height: 256, mipmapped: false)
+        descriptor.usage = [.shaderRead]
+        let input = try XCTUnwrap(device.makeTexture(descriptor: descriptor))
+        input.replace(region: MTLRegionMake2D(0, 0, 256, 256), mipmapLevel: 0,
+                      withBytes: [UInt8](repeating: 128, count: 256 * 256 * 4), bytesPerRow: 256 * 4)
+        XCTAssertTrue(renderer.waitUntilReady([plan], width: 256, height: 256), "pipelines still compiling")
+        let frameTime = 1.0 / 25
+        func render(_ frame: Int, at time: Int? = nil) throws -> [Float] {
+            var frameContext = BuiltinFrameContext(time: Double(time ?? frame) * frameTime)
+            frameContext.serial = UInt64(frame + 1)
+            frameContext.frameTime = frameTime
+            frameContext.pointer = SIMD2(-1, -1)
+            frameContext.pointerLast = SIMD2(-1, -1)
+            let context = EffectGraphRenderer.Context(frame: frameContext, values: NoValues(), assetTexture: { _, _ in nil },
+                                                      sceneSnapshot: nil, layerColor: SIMD3(1, 1, 1), layerAlpha: 1)
+            let buffer = try XCTUnwrap(queue.makeCommandBuffer())
+            XCTAssertNotNil(renderer.apply([plan], to: input, layerID: "fluid", context: context, commandBuffer: buffer))
+            buffer.commit()
+            buffer.waitUntilCompleted()
+            XCTAssertNil(buffer.error)
+            return try floats(XCTUnwrap(renderer.fboTexture("_rt_SmokeDye1", effect: 0, layer: "fluid")), queue: queue)
+        }
+        func distance(_ a: [Float], _ b: [Float]) -> Float {
+            zip(a, b).reduce(Float(0)) { $0 + abs($1.0 - $1.1) } / Float(max(a.count, 1))
+        }
+        let first = try render(0)
+        var last = first
+        for frame in 1..<30 { last = try render(frame) }
+        let builtUp = distance(last, first)
+        XCTAssertGreaterThan(builtUp, 0.001, "the dye didn't move")
+
+        renderer.executeFunction(named: "noSuchFunction", effectIndex: 0, of: [plan], layer: "fluid")
+        let kept = try render(30)
+        XCTAssertGreaterThan(distance(kept, first), builtUp / 2, "an unknown function cleared something")
+
+        renderer.executeFunction(named: "clearDye", effectIndex: 0, of: [plan], layer: "fluid")
+        renderer.executeFunction(named: "clearVelocity", effectIndex: 0, of: [plan], layer: "fluid")
+        let restarted = try render(31, at: 0)
+        XCTAssertLessThan(distance(restarted, first), builtUp / 4, "the dye wasn't cleared")
+        let velocity = try floats(XCTUnwrap(renderer.fboTexture("_rt_SmokeVelocity1", effect: 0, layer: "fluid")), queue: queue)
+        XCTAssertTrue(velocity.allSatisfy(\.isFinite))
+    }
+
     /// A texture's channels as floats (8-bit unorm or 16-bit float formats).
     private func floats(_ texture: MTLTexture, queue: MTLCommandQueue) throws -> [Float] {
         let (channels, bytes): (Int, Int)
