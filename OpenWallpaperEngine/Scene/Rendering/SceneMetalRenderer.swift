@@ -998,6 +998,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 removed.append(key)
             case .emit(let id, let count):
                 pendingEmits[String(id), default: 0] += count ?? 1
+            case let .materialFunction(id, effect, name):
+                let key = String(id)
+                for entry in layers where entry.layer.id == key {
+                    effectGraph?.executeFunction(named: name, effectIndex: effect, of: entry.layer.weEffects, layer: key)
+                }
             case .sound(let id, let playback):
                 sounds.perform(playback, on: id)
             case .video(let id, let command):
