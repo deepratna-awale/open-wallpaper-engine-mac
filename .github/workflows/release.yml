@@ -368,7 +368,8 @@ jobs:
             echo "::error::the framework links a non-system library"; exit 1
           fi
           # No executables besides the app's own, the Chromium helper, the bundled screen saver (copied to
-          # ~/Library/Screen Savers by the installer) and Sparkle's (nowPlayingAdapter.pl runs as an
+          # ~/Library/Screen Savers by the installer), the screen saver extension and its broker (the live
+          # screen saver's launch agent) and Sparkle's (nowPlayingAdapter.pl runs as an
           # argument to /usr/bin/perl and is a plain resource). Sparkle's are each verified; the
           # XPC services are unused (the app isn't sandboxed) but ship signed inside the framework.
           SPARKLE="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
@@ -386,6 +387,8 @@ jobs:
             "$APP/Contents/Helpers/Wallpaper Editor.app/Contents/MacOS/Wallpaper Editor"
             "$APP/Contents/Helpers/owe-mcp"
             "$APP/Contents/Resources/Open Wallpaper Engine.saver/Contents/MacOS/Open Wallpaper Engine"
+            "$APP/Contents/PlugIns/OpenWallpaperEngineSaverExtension.appex/Contents/MacOS/OpenWallpaperEngineSaverExtension"
+            "$APP/Contents/Helpers/owe-saver-broker"
             "$FRAMEWORK_BINARY"
           )
           for helper in "${sparkle_executables[@]}"; do
@@ -394,7 +397,9 @@ jobs:
           for code in "$SPARKLE/Updater.app" "$SPARKLE/Autoupdate" "$SPARKLE/XPCServices/Downloader.xpc" \
                       "$SPARKLE/XPCServices/Installer.xpc" "$APP/Contents/Frameworks/Sparkle.framework" \
                       "$APP/Contents/Frameworks/OpenWallpaperEngine.framework" \
-                      "$APP/Contents/Resources/Open Wallpaper Engine.saver"; do
+                      "$APP/Contents/Resources/Open Wallpaper Engine.saver" \
+                      "$APP/Contents/PlugIns/OpenWallpaperEngineSaverExtension.appex" \
+                      "$APP/Contents/Helpers/owe-saver-broker"; do
             [ -e "$code" ] || continue
             codesign --verify --strict --verbose=2 "$code"
           done
