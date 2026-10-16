@@ -7,7 +7,7 @@ enum SceneSystemTexture: String, CaseIterable {
     case mediaPreviousThumbnail = "$mediaPreviousThumbnail"
 
     /// The name of the system texture a `usertextures` array binds to `slot`; nil when the slot has
-    /// none or a user property's texture (a plain string).
+    /// none or a user property's texture (a plain string, `SceneUserTexture`).
     static func name(in userTextures: SceneJSON?, slot: Int) -> String? {
         guard case .array(let entries)? = userTextures, slot < entries.count,
               case .object(let entry) = entries[slot], case .string("system")? = entry["type"],
