@@ -73,6 +73,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - Child systems, including ones triggered by their parent's particles; emitter bursts, delays and periodic emission; emitting from a layer's image.
 - Collision, including with a model's bones, audio response, and rotation about every axis.
 - Particle settings bound to a wallpaper's user properties.
+- Texture user properties (`scenetexture`): a picture or video you pick replaces an image layer's image.
 
 ### SceneScript & media
 - A complete **SceneScript runtime** — modules, the scene/layer/effect/material object model, animation events, `localStorage`, and cursor hit testing, with each wallpaper's scripts on their own thread.

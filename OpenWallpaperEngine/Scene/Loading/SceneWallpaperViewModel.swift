@@ -1204,6 +1204,27 @@ class SceneWallpaperViewModel: ObservableObject {
         return SceneSystemTexture.bindings(in: userTextures, owner: "Layer \(id)")[0]
     }
 
+    /// The picture or video a texture user property (`SceneUserTexture`) puts in an image
+    /// object's image slot (0); nil keeps the authored image. The binding is recorded either way,
+    /// so picking or clearing a file rebuilds the layer.
+    private func userTexture(of object: WESceneObject, material: WEMaterial, id: Int,
+                             wallpaperDir: URL) -> SceneMetalTextureSource? {
+        guard let property = SceneUserTexture.property(in: [object.instance?.usertextures,
+                                                            material.passes?.first?.usertextures], slot: 0) else { return nil }
+        bindingTable.record(.asset(SceneUserTexture.documentPath(owner: id, slot: 0)),
+                            json: SceneUserTexture.bindingDocument(property: property))
+        guard let path = userProperty(property)?.trimmingCharacters(in: .whitespaces), !path.isEmpty,
+              let source = SceneUserTexture.source(path: path, wallpaperDir: wallpaperDir,
+                                                   device: MTLCreateSystemDefaultDevice()) else { return nil }
+        if case .video(let stream) = source {
+            embeddedVideoLock.withLock {
+                embeddedVideoStreams.add(stream)
+                stream.setHostRate(embeddedVideoRate)
+            }
+        }
+        return source
+    }
+
     private func buildImageLayer(_ object: WESceneObject, id: Int, wallpaperDir: URL, sceneSize: SIMD2<Float>) -> SceneMetalLayer? {
         guard let imagePath = object.image,
               let model: WEModel = loadJSON(path: imagePath, wallpaperDir: wallpaperDir),
@@ -1266,6 +1287,11 @@ class SceneWallpaperViewModel: ObservableObject {
         layer.fillsScene = model.fullscreen == true
         // A layer whose image is the scene only exists to run effects on it; WE skips it without any.
         if sceneInput, effectPlans.plans.isEmpty { return nil }
+        if !sceneInput, let picked = userTexture(of: object, material: material, id: id, wallpaperDir: wallpaperDir) {
+            // Drawn in the authored image's place and size; its frames aren't the image's.
+            layer.source = picked
+            layer.textureKey = nil
+        }
         if !sceneInput {
             // A puppet is lit like any image: its mesh draws the image (`layer.puppet`) that its
             // effects, prelighting and own draw read.
