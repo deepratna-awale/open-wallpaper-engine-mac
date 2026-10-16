@@ -13,6 +13,10 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 
 <!-- demo: desktop -->
 
+[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+
+[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+
 ![보관함](../../docs/images/library.jpg)
 
 ## 차별점
@@ -30,6 +34,8 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 
   <!-- demo: wallpaper-editor -->
 
+  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+
   ![배경화면 편집기](../../docs/images/wallpaper-editor.jpg)
 
   <!-- demo: model-import -->
@@ -37,6 +43,8 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
   <!-- demo: shader-editor -->
 
 - **장면 편집/내보내기**: 실행 중인 배경화면의 레이어와 효과를 데스크탑에서 실시간으로 바꾸고, 화면 보호기에 표시할 내용을 선택하거나, 배경화면을 Live Photo 또는 Android 패키지로 내보낼 수 있습니다.
+
+  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
 
   ![장면 편집/내보내기](../../docs/images/scene-editor-live.jpg)
 
@@ -48,7 +56,11 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 
   <!-- demo: live-photo-export -->
 
+  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+
   <!-- demo: android-export -->
+
+  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
 
   ![Wi-Fi로 보내기](../../docs/images/send-over-wifi.png)
 
