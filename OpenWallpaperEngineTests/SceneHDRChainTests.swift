@@ -223,6 +223,37 @@ final class SceneHDRChainTests: XCTestCase {
         XCTAssertEqual(Array(rendered[right..<right + 2]), [255, 255])
     }
 
+    /// A HDR video's frame holds linear light: `combine_video_hdr` replaces `combine_srgb`, with no
+    /// linearisation, clamped to [0, 2 · g_HDRParams.y]: 2 · (headroom − 1) on the EDR output, SDR
+    /// white on a display without headroom (then encoded to sRGB like every combine).
+    func testAHDRVideoCombinesWithCombineVideoHDR() throws {
+        _ = try Fixtures.assets()
+        let plan = chain.plan(levels: nil, videoHDR: true)
+        XCTAssertEqual(plan.passes.map(\.materialIndex), [SceneHDRChain.Pass.combineVideoHDR])
+        if case .sceneSnapshot? = plan.passes.first?.textures[0] {} else { XCTFail("combine_video_hdr reads _rt_FullFrameBuffer") }
+        XCTAssertEqual(chain.plan(levels: 2, videoHDR: true).passes.last?.materialIndex, SceneHDRChain.Pass.combine,
+                       "bloom keeps its own combine, as WE's does")
+
+        let values: [Float] = [0.5, 3, 40, -1]
+        let image = HDRReference.Image(width: 16, height: 4) { x, _ in SIMD3(repeating: values[x / 4]) }
+        let texture = try HDRReference.texture(image, device: device)
+        let constants = SceneHDRChain.Constants(SceneHDRBloomSettings(), levels: 1, tint: SIMD3(repeating: 1))
+        XCTAssertTrue(effects.waitUntilReady([chain.full], width: 16, height: 4, targetFormats: EffectGraphRenderer.TargetFormats(
+            frameBuffer: .rgba16Float, output: SceneHDRChain.displayHDROutputFormat)))
+        let edr = try encode(texture, levels: nil, constants: constants, displayHDR: SIMD2(1, 3), videoHDR: true)
+        XCTAssertEqual(edr.pixelFormat, SceneHDRChain.displayHDROutputFormat)
+        let shown = try HDRReference.read(edr, device: device)
+        for (band, expected) in [Float(0.5), 3, 6, 0].enumerated() {
+            XCTAssertEqual(shown[band * 4 + 1, 1].x, expected, accuracy: 0.01, "band \(band)")
+        }
+
+        let standard = try encode(texture, levels: nil, constants: constants, videoHDR: true)
+        XCTAssertEqual(standard.pixelFormat, SceneHDRChain.outputFormat)
+        let bytes = try TextureUploadTests.read(standard, device: device)
+        // sRGB(0.5) = 188; 3 and 40 clamp to SDR white; below 0 is black.
+        XCTAssertEqual([bytes[4], bytes[16], bytes[32], bytes[48]].map(Int.init), [188, 255, 255, 0])
+    }
+
     /// Only light above the threshold blooms: a patch at 1.0 stays (almost) dark around, one at 3 glows.
     func testBloomFollowsWEsKnee() throws {
         _ = try Fixtures.assets()
@@ -297,12 +328,14 @@ final class SceneHDRChainTests: XCTestCase {
     // MARK: - Helpers
 
     /// Encodes the chain in a command buffer of its own and waits for it.
-    private func encode(_ texture: MTLTexture, levels: Int?, constants: SceneHDRChain.Constants) throws -> MTLTexture {
+    private func encode(_ texture: MTLTexture, levels: Int?, constants: SceneHDRChain.Constants,
+                        displayHDR: SIMD2<Float>? = nil, videoHDR: Bool = false) throws -> MTLTexture {
         let buffer = try XCTUnwrap(queue.makeCommandBuffer())
         frameIndex += 1
         let output = try XCTUnwrap(chain.encode(on: texture, levels: levels, constants: constants, effects: effects,
                                                 builtins: BuiltinFrameContext(), values: NoValues(),
-                                                frameIndex: frameIndex, commandBuffer: buffer))
+                                                frameIndex: frameIndex, displayHDR: displayHDR, videoHDR: videoHDR,
+                                                commandBuffer: buffer))
         buffer.commit()
         buffer.waitUntilCompleted()
         XCTAssertNil(buffer.error)
