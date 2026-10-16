@@ -13,6 +13,10 @@ Open Wallpaper Engine è un’app gratuita e open source per macOS che riproduce
 
 <!-- demo: desktop -->
 
+[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+
+[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+
 ![La libreria](../../docs/images/library.jpg)
 
 ## Cosa lo distingue
@@ -30,6 +34,8 @@ Open Wallpaper Engine è un’app gratuita e open source per macOS che riproduce
 
   <!-- demo: wallpaper-editor -->
 
+  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+
   ![Editor sfondi](../../docs/images/wallpaper-editor.jpg)
 
   <!-- demo: model-import -->
@@ -37,6 +43,8 @@ Open Wallpaper Engine è un’app gratuita e open source per macOS che riproduce
   <!-- demo: shader-editor -->
 
 - **Modifica/esporta scena**: modifica dal vivo sulla scrivania i livelli e gli effetti dello sfondo in esecuzione, scegli cosa mostra il salvaschermo o esporta lo sfondo come Live Photo o come pacchetto Android.
+
+  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
 
   ![Modifica/esporta scena](../../docs/images/scene-editor-live.jpg)
 
@@ -48,7 +56,11 @@ Open Wallpaper Engine è un’app gratuita e open source per macOS che riproduce
 
   <!-- demo: live-photo-export -->
 
+  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+
   <!-- demo: android-export -->
+
+  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
 
   ![Invia via Wi-Fi](../../docs/images/send-over-wifi.png)
 
