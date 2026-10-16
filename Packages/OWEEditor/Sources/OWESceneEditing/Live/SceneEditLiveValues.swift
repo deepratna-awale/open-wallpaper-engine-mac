@@ -64,7 +64,9 @@ public struct SceneEditLiveValues: Hashable, Sendable {
     /// difference needs the scene read again. `base` is `SceneEditSession.baseOutline`.
     public static func make(built: SceneEditOverlay, current: SceneEditOverlay, base: SceneOutline) -> SceneEditLiveValues? {
         // The scene's settings are read when the scene is.
-        guard built.structureOnly == current.structureOnly, built.general == current.general else { return nil }
+        // So are the documents its layers read (an edited material).
+        guard built.structureOnly == current.structureOnly, built.general == current.general,
+              built.documents == current.documents else { return nil }
         var result = SceneEditLiveValues()
         let keys = Set(built.objects.keys).union(current.objects.keys)
         for key in keys {
