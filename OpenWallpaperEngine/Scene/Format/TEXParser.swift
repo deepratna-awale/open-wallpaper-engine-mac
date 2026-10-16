@@ -65,8 +65,10 @@ class TEXParser {
     /// rather than copying the whole file per attempt.
     private lazy var bytes: [UInt8] = [UInt8](data)
 
+    /// A texture with variants (`TEXVariants`) reads as its base: the variants a scene's user
+    /// properties choose are composed in before (`UserPropertyBindingTable.resolvedData`).
     init(data: Data) {
-        self.data = data
+        self.data = TEXVariants.declares(in: data) ? TEXVariantResolver.resolve(data, enabled: [:]) ?? data : data
     }
 
     /// The largest mipmap side read (Metal's texture limit).
@@ -138,7 +140,6 @@ class TEXParser {
               let imageCount = readUInt32(from: bytes, cursor: &cursor), imageCount > 0 else { return nil }
 
         let version: Int
-        var usesConditionalMipmapLayout = false
         switch container {
         case "TEXB0001": version = 1
         case "TEXB0002": version = 2
@@ -146,10 +147,9 @@ class TEXParser {
             version = 3
             guard readUInt32(from: bytes, cursor: &cursor) != nil else { return nil }
         case "TEXB0004":
+            // The FreeImage format, then the variant count, which `init` made 0.
             version = 3
-            guard let freeImageFormat = readUInt32(from: bytes, cursor: &cursor),
-                  let isVideoFlag = readUInt32(from: bytes, cursor: &cursor) else { return nil }
-            usesConditionalMipmapLayout = isConditionalVideoFormat(freeImageFormat, isVideoFlag: isVideoFlag)
+            guard readUInt32(from: bytes, cursor: &cursor) != nil, readUInt32(from: bytes, cursor: &cursor) == 0 else { return nil }
         default: return nil
         }
 
@@ -162,9 +162,6 @@ class TEXParser {
             var firstPayload: (stored: [UInt8], compression: UInt32, uncompressedSize: Int, width: Int, height: Int)?
             var fullSize = SIMD2<Float>(1, 1)
             for level in 0..<mipmapCount {
-                if usesConditionalMipmapLayout {
-                    guard readV4ConditionalPreamble(from: bytes, cursor: &cursor) else { return nil }
-                }
                 guard let width = readUInt32(from: bytes, cursor: &cursor),
                       let height = readUInt32(from: bytes, cursor: &cursor),
                       Self.isValidSize(width: Int(width), height: Int(height)) else { return nil }
@@ -259,11 +256,10 @@ class TEXParser {
             version = 3
             guard readUInt32(from: bytes, cursor: &cursor) != nil else { return nil }
         case "TEXB0004":
-            // TEXB0004 adds FreeImage format and video flags to the container.
-            // Non-video image mipmaps then use the TEXB0003 layout.
+            // TEXB0004 adds the variant count (`TEXVariants`), 0 here, to TEXB0003's container.
             version = 3
             guard readUInt32(from: bytes, cursor: &cursor) != nil,
-                  readUInt32(from: bytes, cursor: &cursor) != nil else { return nil }
+                  readUInt32(from: bytes, cursor: &cursor) == 0 else { return nil }
         default:
             return nil
         }
@@ -359,8 +355,7 @@ class TEXParser {
         }
     }
 
-    /// How many mipmaps the first image stores (1 for a video's conditional layout, which loads
-    /// whole); nil for a file that isn't a TEX container.
+    /// How many mipmaps the first image stores; nil for a file that isn't a TEX container.
     func firstImageMipmapCount() -> Int? {
         var cursor = 0
         guard readNullTerminatedString(from: bytes, cursor: &cursor) == "TEXV0005",
@@ -371,32 +366,10 @@ class TEXParser {
         switch container {
         case "TEXB0001", "TEXB0002": break
         case "TEXB0003": cursor += 4
-        case "TEXB0004":
-            guard let freeImageFormat = readUInt32(from: bytes, cursor: &cursor),
-                  let isVideoFlag = readUInt32(from: bytes, cursor: &cursor) else { return nil }
-            if isConditionalVideoFormat(freeImageFormat, isVideoFlag: isVideoFlag) { return 1 }
+        case "TEXB0004": cursor += 8
         default: return nil
         }
         return readUInt32(from: bytes, cursor: &cursor).map(Int.init)
-    }
-
-    /// TEXB0004 mipmaps use the conditional-variant layout (param1/param2/conditionJson/param3 preamble)
-    /// only when the container's declared FreeImage format resolves to MP4 video.
-    private func isConditionalVideoFormat(_ freeImageFormat: UInt32, isVideoFlag: UInt32) -> Bool {
-        let format = Int32(bitPattern: freeImageFormat)
-        return format == 35 || (format == -1 && isVideoFlag == 1)
-    }
-
-    /// Consumes the ReadMipmapV4 preamble (param1==1, param2==2, conditionJson string, param3==1)
-    /// that precedes the standard width/height/compression/size mipmap fields in conditional TEXB0004 mipmaps.
-    private func readV4ConditionalPreamble(from bytes: [UInt8], cursor: inout Int) -> Bool {
-        guard readUInt32(from: bytes, cursor: &cursor) == 1,
-              readUInt32(from: bytes, cursor: &cursor) == 2,
-              readNullTerminatedString(from: bytes, cursor: &cursor) != nil,
-              readUInt32(from: bytes, cursor: &cursor) == 1 else {
-            return false
-        }
-        return true
     }
 
     /// Extract the image from this TEX container. `reduction`: see `extractAnimatedImages(reduction:)`.
@@ -468,7 +441,6 @@ class TEXParser {
         }
 
         let version: Int
-        var usesConditionalMipmapLayout = false
         switch containerVersion {
         case "TEXB0001": version = 1
         case "TEXB0002": version = 2
@@ -476,25 +448,19 @@ class TEXParser {
             version = 3
             guard readUInt32(from: bytes, cursor: &cursor) != nil else { return nil }
         case "TEXB0004":
-            // TEXB0004 image mipmaps use the TEXB0003 layout, unless the container declares
-            // a video/MP4 format, in which case each mipmap has a conditional-variant preamble.
+            // TEXB0003's layout after the variant count, which `init` made 0 (a video's MP4 is
+            // its one mipmap, `extractVideoData`).
             version = 3
-            guard let freeImageFormat = readUInt32(from: bytes, cursor: &cursor),
-                  let isVideoFlag = readUInt32(from: bytes, cursor: &cursor) else { return nil }
-            usesConditionalMipmapLayout = isConditionalVideoFormat(freeImageFormat, isVideoFlag: isVideoFlag)
+            guard readUInt32(from: bytes, cursor: &cursor) != nil,
+                  readUInt32(from: bytes, cursor: &cursor) == 0 else { return nil }
         default:
             return nil
         }
 
-        // A video's conditional mipmap has its preamble before the count; it loads whole.
-        if usesConditionalMipmapLayout {
-            guard readV4ConditionalPreamble(from: bytes, cursor: &cursor) else { return nil }
-        }
         guard let mipmapCount = readUInt32(from: bytes, cursor: &cursor), mipmapCount > 0 else {
             return nil
         }
-        let loaded = usesConditionalMipmapLayout ? 0
-            : TextureReduction.loadedMipmap(reduction: reduction, mipmapCount: Int(mipmapCount))
+        let loaded = TextureReduction.loadedMipmap(reduction: reduction, mipmapCount: Int(mipmapCount))
         guard let mipmap = readMipmap(at: loaded, version: version, cursor: &cursor) else { return nil }
         let width = mipmap.width, height = mipmap.height
         guard Self.isValidSize(width: width, height: height) else { return nil }
