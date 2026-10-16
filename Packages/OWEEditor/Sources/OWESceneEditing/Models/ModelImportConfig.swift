@@ -249,9 +249,4 @@ extension SceneJSONValue {
     var intValue: Int? { numberValue.map { Int($0.rounded()) } }
 
     var idValue: UInt64? { numberValue.flatMap { $0 >= 0 ? UInt64($0.rounded()) : nil } }
-
-    var arrayValue: [SceneJSONValue]? {
-        if case .array(let values) = self { return values }
-        return nil
-    }
 }
