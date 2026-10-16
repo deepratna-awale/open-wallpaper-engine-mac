@@ -327,7 +327,7 @@ the first that fails names its place (`edits[2] (set_effect_combo): …`) and no
 | `remove_script` | `layer`, `field` | Removes the field's script; the field keeps its value. |
 | `bind_field` | `layer`, `field`, `property`, `condition?` | Binds a field to one of the wallpaper's user properties. |
 | `unbind_field` | `layer`, `field` | Frees a field from its user property. |
-| `add_user_property` | `property_kind`, `label`, `key?`, `value?`, `min?`, `max?`, `step?`, `whole_numbers?`, `options?`, `condition?` | Defines a user property of the wallpaper (bool, slider, color, combo, text_input, file, directory, or text for a label). Returns its key. |
+| `add_user_property` | `property_kind`, `label`, `key?`, `value?`, `min?`, `max?`, `step?`, `whole_numbers?`, `options?`, `condition?` | Defines a user property of the wallpaper (bool, slider, color, combo, text_input, file, directory, scenetexture, usershortcut, group, or text for a label). Returns its key. |
 | `update_user_property` | `key`, `label?`, `value?`, `min?`, `max?`, `step?`, `whole_numbers?`, `options?`, `condition?` | Changes a user property's definition (value is its default). |
 | `remove_user_property` | `key` | Removes a user property; bound fields keep their values. |
 | `rename_user_property` | `key`, `new_key` | Renames a user property's key, re-pointing conditions and bound fields. |

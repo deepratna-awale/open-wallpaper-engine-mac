@@ -5211,6 +5211,101 @@
         }
       }
     },
+    "All" : {
+      "comment" : "Wallpaper Editor, user property: a folder's fetch mode that sends every file (WE's fetchall)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الكل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सभी"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべて"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모두"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wszystkie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tümü"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部"
+          }
+        }
+      }
+    },
     "Alpha to coverage" : {
       "comment" : "Wallpaper Editor › Inspector › an editable effect's Shader Options: blending (WE's)",
       "localizations" : {
@@ -5678,6 +5773,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "另一個屬性使用此鍵值。"
+          }
+        }
+      }
+    },
+    "Any File" : {
+      "comment" : "Wallpaper Editor, user property: a file property that accepts any file type",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أي ملف"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beliebige Datei"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cualquier archivo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout fichier"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोई भी फ़ाइल"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qualsiasi file"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任意のファイル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모든 파일"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dowolny plik"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qualquer Arquivo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Любой файл"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herhangi Bir Dosya"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Будь-який файл"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任意文件"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任何檔案"
           }
         }
       }
@@ -7472,6 +7662,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "綁定使用者屬性"
+          }
+        }
+      }
+    },
+    "Bind to Layer" : {
+      "comment" : "Wallpaper Editor, user property: menu that binds a layer's texture to a texture or shortcut property",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ربط بطبقة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Ebene verknüpfen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vincular a una capa"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lier à un calque"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लेयर से बाइंड करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collega a un livello"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レイヤーにバインド"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "레이어에 연결"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Powiąż z warstwą"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vincular a uma Camada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Привязать к слою"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Katmana Bağla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Привʼязати до шару"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "绑定到图层"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "綁定到圖層"
           }
         }
       }
@@ -10116,6 +10401,196 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "更改效果選項"
+          }
+        }
+      }
+    },
+    "Change Fetch Mode" : {
+      "comment" : "Wallpaper Editor: undo action name",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تغيير وضع الجلب"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrufmodus ändern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar modo de obtención"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier le mode de récupération"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ेच मोड बदलें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia modalità di recupero"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取得モードを変更"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "가져오기 모드 변경"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmień tryb pobierania"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alterar Modo de Obtenção"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменить режим получения"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getirme Modunu Değiştir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінити режим отримання"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更改获取模式"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更改取得模式"
+          }
+        }
+      }
+    },
+    "Change File Type" : {
+      "comment" : "Wallpaper Editor: undo action name",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تغيير نوع الملف"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateityp ändern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar tipo de archivo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier le type de fichier"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ाइल प्रकार बदलें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia tipo di file"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ファイルの種類を変更"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "파일 유형 변경"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmień typ pliku"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alterar Tipo de Arquivo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменить тип файла"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dosya Türünü Değiştir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінити тип файлу"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更改文件类型"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更改檔案類型"
           }
         }
       }
@@ -21182,6 +21657,101 @@
         }
       }
     },
+    "Fetch Mode" : {
+      "comment" : "Wallpaper Editor, user property: how a web wallpaper gets a folder's files (WE's Fetch mode)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "وضع الجلب"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrufmodus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modo de obtención"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mode de récupération"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ेच मोड"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modalità di recupero"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取得モード"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "가져오기 모드"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tryb pobierania"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modo de Obtenção"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Режим получения"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getirme Modu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Режим отримання"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "获取模式"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取得模式"
+          }
+        }
+      }
+    },
     "File" : {
       "localizations" : {
         "ar" : {
@@ -21272,6 +21842,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "檔案"
+          }
+        }
+      }
+    },
+    "File Type" : {
+      "comment" : "Wallpaper Editor, user property: what a file property accepts",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نوع الملف"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateityp"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo de archivo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type de fichier"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ाइल प्रकार"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo di file"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ファイルの種類"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "파일 유형"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Typ pliku"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo de Arquivo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тип файла"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dosya Türü"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тип файлу"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件类型"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檔案類型"
           }
         }
       }
@@ -32632,6 +33297,101 @@
         }
       }
     },
+    "No layer uses it yet." : {
+      "comment" : "Wallpaper Editor, user property: no layer's texture is bound to this texture or shortcut property",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا تستخدمها أي طبقة بعد."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch keine Ebene verwendet sie."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ninguna capa la usa todavía."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun calque ne l’utilise encore."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी कोई लेयर इसका उपयोग नहीं करती।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun livello la usa ancora."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだどのレイヤーも使用していません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아직 이 속성을 사용하는 레이어가 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Żadna warstwa jeszcze jej nie używa."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhuma camada a usa ainda."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока ни один слой его не использует."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Henüz hiçbir katman kullanmıyor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поки жоден шар її не використовує."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚无图层使用它。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚無圖層使用它。"
+          }
+        }
+      }
+    },
     "No models match." : {
       "comment" : "Wallpaper Editor: the model picker's search found nothing",
       "localizations" : {
@@ -34328,6 +35088,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "開"
+          }
+        }
+      }
+    },
+    "On Demand" : {
+      "comment" : "Wallpaper Editor, user property: a folder's fetch mode that gives one random file when asked (WE's ondemand)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عند الطلب"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei Bedarf"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bajo demanda"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À la demande"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मांग पर"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Su richiesta"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オンデマンド"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "요청 시"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na żądanie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sob Demanda"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По запросу"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İsteğe Bağlı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На вимогу"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按需"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隨選"
           }
         }
       }
@@ -42645,6 +43500,101 @@
         }
       }
     },
+    "Scripts open the shortcut with engine.openUserShortcut('%@'). A bound layer shows its icon; keep it square, at most 256 × 256." : {
+      "comment" : "Wallpaper Editor, user shortcut property; %@ is the property key",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تفتح البرامج النصية الاختصار باستخدام engine.openUserShortcut('%@'). تعرض الطبقة المرتبطة أيقونته؛ اجعلها مربعة وبحجم 256 × 256 على الأكثر."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skripte öffnen die Verknüpfung mit engine.openUserShortcut('%@'). Eine verknüpfte Ebene zeigt ihr Symbol; halten Sie sie quadratisch, höchstens 256 × 256."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los scripts abren el acceso directo con engine.openUserShortcut('%@'). Una capa vinculada muestra su icono; mantenla cuadrada, de 256 × 256 como máximo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les scripts ouvrent le raccourci avec engine.openUserShortcut('%@'). Un calque lié affiche son icône ; gardez-le carré, 256 × 256 au plus."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रिप्ट engine.openUserShortcut('%@') से शॉर्टकट खोलती हैं। बाइंड की गई लेयर उसका आइकन दिखाती है; उसे वर्गाकार और अधिकतम 256 × 256 रखें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gli script aprono la scorciatoia con engine.openUserShortcut('%@'). Un livello collegato ne mostra l’icona; tienilo quadrato, al massimo 256 × 256."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリプトは engine.openUserShortcut('%@') でショートカットを開きます。バインドしたレイヤーにはそのアイコンが表示されます。正方形で最大 256 × 256 にしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스크립트는 engine.openUserShortcut('%@')로 바로 가기를 엽니다. 연결된 레이어에 아이콘이 표시되며, 정사각형으로 최대 256 × 256을 유지하세요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skrypty otwierają skrót za pomocą engine.openUserShortcut('%@'). Powiązana warstwa pokazuje jego ikonę; niech będzie kwadratowa, najwyżej 256 × 256."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scripts abrem o atalho com engine.openUserShortcut('%@'). Uma camada vinculada mostra o ícone dele; mantenha-a quadrada, com no máximo 256 × 256."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрипты открывают ярлык через engine.openUserShortcut('%@'). Привязанный слой показывает его значок; делайте его квадратным, не больше 256 × 256."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Betikler kısayolu engine.openUserShortcut('%@') ile açar. Bağlı katman simgesini gösterir; kare ve en fazla 256 × 256 tutun."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрипти відкривають ярлик через engine.openUserShortcut('%@'). Привʼязаний шар показує його значок; робіть його квадратним, не більше 256 × 256."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "脚本使用 engine.openUserShortcut('%@') 打开快捷方式。绑定的图层显示其图标；请保持正方形，最大 256 × 256。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指令碼以 engine.openUserShortcut('%@') 開啟捷徑。綁定的圖層會顯示其圖示；請保持正方形，最大 256 × 256。"
+          }
+        }
+      }
+    },
     "Search Assets" : {
       "comment" : "Wallpaper Editor",
       "localizations" : {
@@ -43590,6 +44540,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "分隔符號"
+          }
+        }
+      }
+    },
+    "Set Shortcut…" : {
+      "comment" : "Wallpaper Editor, properties preview: the button a user shortcut property shows",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعيين اختصار…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verknüpfung festlegen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Definir acceso directo…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Définir le raccourci…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शॉर्टकट सेट करें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imposta scorciatoia…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ショートカットを設定…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "바로 가기 설정…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ustaw skrót…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Definir Atalho…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Задать ярлык…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısayol Ayarla…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Задати ярлик…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置快捷方式…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定捷徑⋯"
           }
         }
       }
@@ -48132,11 +49177,12 @@
       }
     },
     "Texture" : {
+      "comment" : "Wallpaper Editor: the user property type that lets users replace a texture (WE's scenetexture)",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "النسيج"
+            "value" : "نسيج"
           }
         },
         "de" : {
@@ -48220,7 +49266,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "材質"
+            "value" : "紋理"
           }
         }
       }
@@ -49269,6 +50315,101 @@
         }
       }
     },
+    "The layer shows its own texture again" : {
+      "comment" : "Wallpaper Editor: help for the button that unbinds a layer's texture from a user property",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعرض الطبقة نسيجها الخاص مرة أخرى"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Ebene zeigt wieder ihre eigene Textur"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La capa vuelve a mostrar su propia textura"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le calque affiche de nouveau sa propre texture"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लेयर फिर से अपना टेक्सचर दिखाती है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il livello mostra di nuovo la propria texture"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レイヤーは自身のテクスチャを再び表示します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "레이어가 다시 자체 텍스처를 표시합니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warstwa znów pokazuje własną teksturę"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A camada volta a mostrar a própria textura"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Слой снова показывает свою текстуру"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Katman yeniden kendi dokusunu gösterir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шар знову показує власну текстуру"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图层重新显示自己的纹理"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "圖層重新顯示自己的紋理"
+          }
+        }
+      }
+    },
     "The local storage couldn’t be cleaned: %@" : {
       "comment" : "Wallpaper Editor: Clean Local Storage failed; the argument is the reason",
       "localizations" : {
@@ -49550,6 +50691,196 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法建立材質：%@"
+          }
+        }
+      }
+    },
+    "The page asks for one random file at a time (wallpaperRequestRandomFileForProperty)." : {
+      "comment" : "Wallpaper Editor: what a folder property's On Demand fetch mode does",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تطلب الصفحة ملفًا عشوائيًا واحدًا في كل مرة (wallpaperRequestRandomFileForProperty)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Seite fragt jeweils eine zufällige Datei an (wallpaperRequestRandomFileForProperty)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La página pide un archivo aleatorio cada vez (wallpaperRequestRandomFileForProperty)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La page demande un fichier aléatoire à la fois (wallpaperRequestRandomFileForProperty)."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पेज एक बार में एक रैंडम फ़ाइल मांगता है (wallpaperRequestRandomFileForProperty)।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La pagina chiede un file casuale alla volta (wallpaperRequestRandomFileForProperty)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ページはランダムなファイルを1つずつ要求します（wallpaperRequestRandomFileForProperty）。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "페이지가 한 번에 임의의 파일 하나를 요청합니다(wallpaperRequestRandomFileForProperty)."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strona prosi o jeden losowy plik naraz (wallpaperRequestRandomFileForProperty)."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A página pede um arquivo aleatório por vez (wallpaperRequestRandomFileForProperty)."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Страница запрашивает по одному случайному файлу (wallpaperRequestRandomFileForProperty)."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sayfa her seferinde rastgele bir dosya ister (wallpaperRequestRandomFileForProperty)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сторінка запитує по одному випадковому файлу (wallpaperRequestRandomFileForProperty)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "页面每次请求一个随机文件（wallpaperRequestRandomFileForProperty）。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "頁面每次要求一個隨機檔案（wallpaperRequestRandomFileForProperty）。"
+          }
+        }
+      }
+    },
+    "The page gets every file in the folder, and each change (userDirectoryFilesAddedOrChanged, userDirectoryFilesRemoved)." : {
+      "comment" : "Wallpaper Editor: what a folder property's All fetch mode does",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتلقى الصفحة كل ملف في المجلد وكل تغيير (userDirectoryFilesAddedOrChanged وuserDirectoryFilesRemoved)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Seite erhält jede Datei im Ordner und jede Änderung (userDirectoryFilesAddedOrChanged, userDirectoryFilesRemoved)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La página recibe todos los archivos de la carpeta y cada cambio (userDirectoryFilesAddedOrChanged, userDirectoryFilesRemoved)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La page reçoit tous les fichiers du dossier et chaque modification (userDirectoryFilesAddedOrChanged, userDirectoryFilesRemoved)."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पेज को फ़ोल्डर की हर फ़ाइल और हर बदलाव मिलता है (userDirectoryFilesAddedOrChanged, userDirectoryFilesRemoved)।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La pagina riceve ogni file della cartella e ogni modifica (userDirectoryFilesAddedOrChanged, userDirectoryFilesRemoved)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ページはフォルダ内のすべてのファイルと、その変更を受け取ります（userDirectoryFilesAddedOrChanged、userDirectoryFilesRemoved）。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "페이지가 폴더의 모든 파일과 각 변경 사항을 받습니다(userDirectoryFilesAddedOrChanged, userDirectoryFilesRemoved)."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strona dostaje każdy plik z folderu i każdą zmianę (userDirectoryFilesAddedOrChanged, userDirectoryFilesRemoved)."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A página recebe todos os arquivos da pasta e cada alteração (userDirectoryFilesAddedOrChanged, userDirectoryFilesRemoved)."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Страница получает все файлы папки и каждое изменение (userDirectoryFilesAddedOrChanged, userDirectoryFilesRemoved)."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sayfa klasördeki her dosyayı ve her değişikliği alır (userDirectoryFilesAddedOrChanged, userDirectoryFilesRemoved)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сторінка отримує всі файли папки й кожну зміну (userDirectoryFilesAddedOrChanged, userDirectoryFilesRemoved)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "页面获得文件夹中的每个文件及每次更改（userDirectoryFilesAddedOrChanged、userDirectoryFilesRemoved）。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "頁面取得檔案夾中的每個檔案及每次變更（userDirectoryFilesAddedOrChanged、userDirectoryFilesRemoved）。"
           }
         }
       }
@@ -49838,6 +51169,101 @@
         }
       }
     },
+    "The properties after this one, up to the next group, fold under its label. Properties that belong to no group go before the first one." : {
+      "comment" : "Wallpaper Editor: what a Group user property does",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تُطوى الخصائص التي تليها، حتى المجموعة التالية، تحت تسميتها. ضع الخصائص التي لا تنتمي إلى مجموعة قبل أول مجموعة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Eigenschaften danach, bis zur nächsten Gruppe, werden unter ihrem Label eingeklappt. Eigenschaften ohne Gruppe stehen vor der ersten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las propiedades que la siguen, hasta el siguiente grupo, se pliegan bajo su etiqueta. Las propiedades sin grupo van antes del primero."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les propriétés qui suivent, jusqu’au groupe suivant, se replient sous son libellé. Les propriétés sans groupe se placent avant le premier."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इसके बाद की प्रॉपर्टी, अगले समूह तक, इसके लेबल के नीचे समेटी जाती हैं। किसी समूह में न आने वाली प्रॉपर्टी पहले समूह से पहले रखें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le proprietà successive, fino al gruppo seguente, si raccolgono sotto la sua etichetta. Le proprietà senza gruppo vanno prima del primo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "これ以降、次のグループまでのプロパティはそのラベルの下に折りたたまれます。どのグループにも属さないプロパティは最初のグループの前に置きます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다음 그룹 전까지 이후의 속성은 이 레이블 아래로 접힙니다. 그룹에 속하지 않는 속성은 첫 그룹 앞에 둡니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Właściwości po niej, aż do następnej grupy, zwijają się pod jej etykietą. Właściwości bez grupy umieść przed pierwszą."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As propriedades seguintes, até o próximo grupo, ficam recolhidas sob o rótulo dele. Propriedades sem grupo vão antes do primeiro."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Свойства после него, до следующей группы, сворачиваются под его подписью. Свойства без группы ставьте перед первой."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bundan sonraki özellikler, sonraki gruba kadar, etiketinin altında katlanır. Gruba ait olmayan özellikler ilk gruptan önce gelir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Властивості після неї, до наступної групи, згортаються під її підписом. Властивості без групи ставте перед першою."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其后直到下一个组的属性都会折叠在它的标签下。不属于任何组的属性放在第一个组之前。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其後直到下一個群組的屬性都會收合在它的標籤下。不屬於任何群組的屬性放在第一個群組之前。"
+          }
+        }
+      }
+    },
     "The script reported errors" : {
       "localizations" : {
         "ar" : {
@@ -50117,6 +51543,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無論背景圖片在哪裡執行，都由使用者屬性設定「%@」。目前的值會保留為備用值。"
+          }
+        }
+      }
+    },
+    "The user’s image or video replaces the layer’s texture; the layer’s own image shows until they pick one. A small placeholder scaled up saves memory." : {
+      "comment" : "Wallpaper Editor: what a Texture user property does to the layers bound to it",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحل صورة المستخدم أو الفيديو محل نسيج الطبقة؛ وتظهر صورة الطبقة حتى يختار واحدة. يوفر عنصر نائب صغير مكبَّر الذاكرة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Bild oder Video der Benutzer ersetzt die Textur der Ebene; bis sie eines wählen, zeigt die Ebene ihr eigenes Bild. Ein kleiner, hochskalierter Platzhalter spart Speicher."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La imagen o el vídeo del usuario sustituye la textura de la capa; la imagen de la capa se muestra hasta que elija uno. Un marcador pequeño ampliado ahorra memoria."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’image ou la vidéo de l’utilisateur remplace la texture du calque ; l’image du calque s’affiche tant qu’il n’en a pas choisi. Un petit espace réservé agrandi économise la mémoire."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यूज़र की इमेज या वीडियो लेयर के टेक्सचर की जगह लेता है; जब तक वे कुछ न चुनें, लेयर की अपनी इमेज दिखती है। बड़ा किया गया छोटा प्लेसहोल्डर मेमोरी बचाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’immagine o il video dell’utente sostituisce la texture del livello; finché non ne sceglie uno si vede l’immagine del livello. Un piccolo segnaposto ingrandito risparmia memoria."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ユーザの画像やビデオがレイヤーのテクスチャを置き換えます。選ばれるまではレイヤー自身の画像が表示されます。小さなプレースホルダを拡大するとメモリを節約できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용자의 이미지나 비디오가 레이어의 텍스처를 대체합니다. 선택하기 전까지는 레이어 자체 이미지가 표시됩니다. 작은 자리표시자를 확대하면 메모리가 절약됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obraz lub wideo użytkownika zastępuje teksturę warstwy; dopóki go nie wybierze, widać obraz warstwy. Mały, powiększony obiekt zastępczy oszczędza pamięć."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A imagem ou o vídeo do usuário substitui a textura da camada; a imagem da camada aparece até ele escolher um. Um marcador pequeno ampliado economiza memória."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изображение или видео пользователя заменяет текстуру слоя; пока он его не выбрал, видно изображение слоя. Маленький увеличенный заполнитель экономит память."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kullanıcının görüntüsü veya videosu katmanın dokusunun yerine geçer; seçene kadar katmanın kendi görüntüsü görünür. Büyütülmüş küçük bir yer tutucu bellek tasarrufu sağlar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зображення або відео користувача замінює текстуру шару; доки він його не вибрав, видно зображення шару. Малий збільшений заповнювач заощаджує памʼять."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用户的图像或视频会替换图层的纹理；在用户选择之前显示图层自己的图像。放大的小占位图可节省内存。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用者的影像或影片會取代圖層的紋理；在使用者選擇之前顯示圖層自己的影像。放大的小型預留位置可節省記憶體。"
           }
         }
       }
@@ -53710,6 +55231,101 @@
         }
       }
     },
+    "User Shortcut" : {
+      "comment" : "Wallpaper Editor: the user property type for a shortcut the user sets (WE's usershortcut)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختصار المستخدم"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzerverknüpfung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acceso directo del usuario"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raccourci utilisateur"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यूज़र शॉर्टकट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scorciatoia utente"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ユーザショートカット"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용자 바로 가기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skrót użytkownika"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atalho do Usuário"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пользовательский ярлык"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kullanıcı Kısayolu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ярлик користувача"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用户快捷方式"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用者捷徑"
+          }
+        }
+      }
+    },
     "Value" : {
       "localizations" : {
         "ar" : {
@@ -54180,6 +55796,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "垂直對齊"
+          }
+        }
+      }
+    },
+    "Video" : {
+      "comment" : "Wallpaper Editor, user property: a file property that accepts videos",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فيديو"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vídeo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vidéo"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वीडियो"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ビデオ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비디오"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wideo"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vídeo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видео"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відео"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "视频"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "影片"
           }
         }
       }
