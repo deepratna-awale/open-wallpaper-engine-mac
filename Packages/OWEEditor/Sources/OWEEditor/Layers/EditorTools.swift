@@ -1,6 +1,7 @@
 import AppKit
 import UniformTypeIdentifiers
 import SwiftUI
+import OWEModelImport
 import OWESceneEditing
 
 /// The window's tool state the canvas, the layer list and the inspector share: snapping and its
@@ -36,7 +37,7 @@ final class EditorTools: ObservableObject {
 @MainActor
 enum EditorFilePicker {
     enum Kind {
-        case image, sound, font, mask
+        case image, sound, font, mask, model
 
         var allowedExtensions: [String] {
             switch self {
@@ -45,6 +46,7 @@ enum EditorFilePicker {
             case .mask: return ["png", "jpg", "jpeg", "gif", "tif", "tiff", "bmp", "heic", "webp", "psd", "tga"]
             case .sound: return EditorAssetStore.soundTypes.sorted()
             case .font: return EditorAssetStore.fontTypes.sorted()
+            case .model: return EditorModelImporter.fileExtensions.sorted()
             }
         }
     }

@@ -49,7 +49,8 @@ struct AddLayerMenu: View {
         }
         .help(L("Add a layer to the scene"))
         .sheet(isPresented: $isPickingModel) {
-            ModelPickerView(models: actions.services.models()) { actions.addModel($0) }
+            ModelPickerView(models: actions.modelChoices(), imported: actions.importedModels(),
+                            importFiles: actions.services.assetStore == nil ? nil : { actions.chooseModels() }) { actions.addModel($0) }
         }
         .sheet(isPresented: $isBrowsingPresets) {
             PresetBrowserView(presets: actions.services.layerPresets().filter { $0.tag.isEmpty || $0.is3D != actions.is2D },

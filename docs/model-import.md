@@ -82,6 +82,14 @@ imported models, and the docs at docs.wallpaperengine.io/en/scene/models/.
   draw WE's white and are reported). The store never overwrites, so a configuration the Model
   Editor compiles is `<name>-<hash>.json` and `.mdl`.
 
+## Adding a model from a file
+
+Add Layer › Model… lists the wallpaper's models, the ones imported in the editor (Imported) and
+WE's; **Import FBX or OBJ…** (and an FBX or OBJ dropped on the canvas or the asset browser)
+imports the file (`EditorModelImporter.importModel`) and adds a model layer drawing it
+(`LayerActions+Models`), at the scene's centre or the drop point in 2D, the camera's centre in
+3D, with scale 1. WE's docs say its importer normalises a model's size; its rule isn't known.
+
 ## Guessed fields
 
 What WE's own files didn't show, so the writer writes WE's common case:

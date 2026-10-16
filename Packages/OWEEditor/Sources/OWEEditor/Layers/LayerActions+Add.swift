@@ -62,9 +62,10 @@ extension LayerActions {
         }
     }
 
-    /// A model layer drawing `choice`, at a 2D scene's centre or a 3D scene's camera centre.
-    func addModel(_ choice: EditorModelChoice) {
-        let origin = is2D ? SIMD3(sceneCentre.x, sceneCentre.y, 0) : sceneCamera.centre
+    /// A model layer drawing `choice`, at a 2D scene's centre (or `point`) or a 3D scene's camera centre.
+    func addModel(_ choice: EditorModelChoice, at point: SIMD2<Double>? = nil) {
+        let centre = point ?? sceneCentre
+        let origin = is2D ? SIMD3(centre.x, centre.y, 0) : sceneCamera.centre
         session.addLayer(SceneLayerFactory.model(name: choice.title, model: choice.path, origin: origin),
                          actionName: L("Add Model"))
     }
