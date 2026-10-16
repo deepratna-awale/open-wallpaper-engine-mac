@@ -69,10 +69,15 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - **HDR** — HDR scenes render with Wallpaper Engine's HDR bloom, and the "Ultra (Display HDR)" quality outputs EDR on displays that can show it.
 
 ### Particles
+- **GPU particles** — every particle system is simulated on the GPU, in 3D, with 3D control points (on the emitter, the cursor, a scene position or the parent system's point, raw or carried into the child's space).
+- Child systems, including ones triggered by their parent's particles; emitter bursts, delays and periodic emission; emitting from a layer's image.
 - **GPU particles** — every particle system is simulated on the GPU, in 3D, with 3D control points.
 - Child systems, placed by their links in 3D, including ones triggered by their parent's particles; emitter bursts, delays and periodic emission; emitting from a layer's image.
 - Collision, including with a model's bones, audio response, and rotation about every axis.
 - Particle settings bound to a wallpaper's user properties.
+- Texture variants (Wallpaper Engine 2.6): textures with Replace and Alpha-blended options that a checkbox or combo property swaps in, composed as Wallpaper Engine loads them.
+- Texture user properties (`scenetexture`): a picture or video you pick replaces an image layer's image.
+- Every Wallpaper Engine initializer and operator, with its defaults; colour lists of any length.
 
 ### SceneScript & media
 - A complete **SceneScript runtime** — modules, the scene/layer/effect/material object model, animation events, `localStorage`, and cursor hit testing, with each wallpaper's scripts on their own thread.
