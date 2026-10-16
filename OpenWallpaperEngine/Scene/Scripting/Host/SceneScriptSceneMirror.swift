@@ -27,7 +27,6 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
 
     let describer: SceneScriptSceneDescriber
     private let description: SceneScriptSceneDescription
-    private let wallpaperID: String
     /// Authored configurations by object id, for `createLayer(layer)` copies.
     private var configurations: [Int: [String: SceneJSON]] = [:]
     /// Layers `createLayer` described, waiting for their `.create` command.
@@ -56,15 +55,13 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
     /// The image, text and model layers in draw order, for the cursor pass; rebuilt with the order.
     private var hitTestable: [SceneScriptCursorLayer.TableEntry] = []
     private var hitTestableValid = false
-    private var reported = Set<String>()
     private let rigs = SceneScriptRigMirror()
 
     private(set) var state = SceneScriptFrameState()
     private(set) var events: [SceneScriptRenderEvent] = []
 
-    init(document: SceneJSON, describer: SceneScriptSceneDescriber, wallpaperID: String) {
+    init(document: SceneJSON, describer: SceneScriptSceneDescriber) {
         self.describer = describer
-        self.wallpaperID = wallpaperID
         description = describer.scene(document)
         for (index, fields) in SceneScriptSceneDescriber.objects(of: document).enumerated() {
             configurations[SceneScriptSceneDescriber.objectID(fields, index: index)] = fields
@@ -163,8 +160,9 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
                 object.constants[effect] = writes
                 object.effectRevision &+= 1
             }
-        case .executeMaterialFunction:
-            reportOnce("IEffect.executeMaterialFunction", "material functions are not supported yet")
+        case .executeMaterialFunction(let slot, let effect, let name):
+            guard let id = objects[slot]?.id else { return }
+            events.append(.materialFunction(id: id, effect: effect, name: name))
         case .sound(let slot, let playback):
             guard let id = objects[slot]?.id else { return }
             events.append(.sound(id: id, playback))
@@ -197,11 +195,6 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
     private static func row(_ slot: Int, in store: SceneScriptObjectStore) -> [Float] {
         let base = SceneScriptObjectTable.index(slot: slot, field: 0)
         return (0..<SceneScriptObjectTable.Layout.stride).map { store.table.values[base + $0] }
-    }
-
-    private func reportOnce(_ key: String, _ message: String) {
-        guard reported.insert(key).inserted else { return }
-        OWELog.info(.script, "\(wallpaperID): \(message)")
     }
 
     // MARK: - Frame

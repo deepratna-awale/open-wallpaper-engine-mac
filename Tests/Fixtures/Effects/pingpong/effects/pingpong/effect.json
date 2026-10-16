@@ -22,5 +22,9 @@
 	[
 		{ "name" : "_rt_A", "scale" : 1, "format" : "rgba8888", "clear" : "0 0 0 0", "unique" : true },
 		{ "name" : "_rt_B", "scale" : 1, "format" : "rgba8888", "clear" : "0 0 0 0", "unique" : true }
-	]
+	],
+	"functions" :
+	{
+		"reset" : { "action" : "clear", "fbos" : [ "_rt_A", "_rt_B" ] }
+	}
 }
