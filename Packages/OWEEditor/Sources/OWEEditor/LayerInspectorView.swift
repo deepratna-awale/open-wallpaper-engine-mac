@@ -59,6 +59,7 @@ private struct LayerForm: View {
             if layer.kind == .image || layer.kind == .text {
                 appearanceSection
             }
+            LayerPropertiesSections(session: session, services: services, layer: layer)
             if layer.kind == .image || layer.kind == .text {
                 EffectsSection(session: session, tools: tools, services: services, layer: layer)
             } else if !layer.effects.isEmpty {
@@ -126,6 +127,7 @@ private struct LayerForm: View {
                     fieldWidth: 56, clampsTypedValue: false)
             }
             LayerSizeRows(session: session, layer: layer)
+            LayerParallaxDepthRow(session: session, services: services, layer: layer)
             if layer.isPlanar, session.outline.size != nil {
                 LabeledContent(L("Align")) {
                     Menu {
@@ -192,6 +194,8 @@ private struct LayerForm: View {
                 .labelsHidden()
             }
             if layer.kind == .image {
+                LayerNumberRow(session: session, services: services, layerID: layer.id, field: "brightness",
+                               title: L("Brightness"), range: 0...2, fallback: 1)
                 fieldRow("colorBlendMode", title: services.blendModeTitle) {
                     InspectorOptionPicker(options: services.blendModes, selection: Binding(
                         get: { Int(session.number("colorBlendMode", of: layer.id, default: 0)) },

@@ -123,6 +123,9 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// Scene settings (scene.json's `general`) by name, each replacing the authored value; nil
     /// for none (version 2).
     public var general: [String: SceneJSONValue]?
+    /// JSON documents the scene's own layers read that the editor changed (an image layer's
+    /// material), by path (`SceneEditOverlay+Documents`); nil for none (version 2).
+    public var documents: [String: SceneJSONValue]?
 
     public init(objects: [String: ObjectEdit] = [:]) {
         self.objects = objects
@@ -132,6 +135,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     public var isEmpty: Bool {
         objects.values.allSatisfy(\.isEmpty) && !hasStructureEdits && timelines?.isEmpty != false
             && authoring?.isEmpty != false && !hasPuppetEdits && particles?.isEmpty != false && !hasGeneralEdits
+            && !hasDocumentEdits
     }
 
     /// Something changes the scene (locks don't). Authored properties count: they are edits of
@@ -139,6 +143,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     public var hasSceneEdits: Bool {
         objects.values.contains(where: \.hasSceneEdits) || hasStructureEdits || timelines?.isEmpty == false
             || authoring?.isEmpty == false || particles?.isEmpty == false || hasGeneralEdits
+            || hasDocumentEdits
     }
 
     /// Scene settings changed.
@@ -150,7 +155,8 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// Holds something version 1 can't apply.
     var needsVersion2: Bool {
         hasStructureEdits || timelines?.isEmpty == false || authoring?.isEmpty == false || hasPuppetEdits
-            || particles?.isEmpty == false || hasGeneralEdits || objects.values.contains(where: \.needsVersion2)
+            || particles?.isEmpty == false || hasGeneralEdits || hasDocumentEdits
+            || objects.values.contains(where: \.needsVersion2)
     }
 
     // MARK: Reading
