@@ -17,17 +17,14 @@ struct LayerActions {
 
     // MARK: Adding
 
+    /// Images (and GIFs and MP4s) to add: WE's importer asks for their texture options first
+    /// (`ImportOptionsSheet`, then `importImages`); a video alone has none to ask.
     func addImages(_ urls: [URL], at point: SIMD2<Double>? = nil) {
-        guard let store = services.assetStore else { return }
-        for url in urls {
-            do {
-                let image = try store.importImage(from: url)
-                let object = SceneLayerFactory.image(name: image.title, model: image.model, size: image.size,
-                                                     origin: point ?? sceneCentre)
-                session.addLayer(object, actionName: L("Add Image Layer"))
-            } catch {
-                tools.problem = L("“\(url.lastPathComponent)” couldn’t be added: \(error.localizedDescription)")
-            }
+        guard services.assetStore != nil, !urls.isEmpty else { return }
+        if urls.allSatisfy({ EditorAssetStore.videoTypes.contains($0.pathExtension.lowercased()) }) {
+            importImages(urls, options: TextureImportOptions(), asSequence: false, at: point)
+        } else {
+            tools.pendingImport = PendingImageImport(urls: urls, point: point)
         }
     }
 

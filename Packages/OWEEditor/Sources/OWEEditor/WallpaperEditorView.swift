@@ -91,6 +91,9 @@ public struct WallpaperEditorView: View {
             Text(L("Every change since the last save is dropped. You can undo this."))
         }
         .modifier(OptionalThumbnailSheet(thumbnail: services.thumbnail) { show(Notice(text: $0, isError: true)) })
+        .sheet(item: $tools.pendingImport) { pending in
+            ImportOptionsSheet(pending: pending, actions: LayerActions(session: session, services: services, tools: tools))
+        }
         .sheet(isPresented: $isSaving) {
             SaveAsNewSheet(suggestedTitle: services.suggestedNewTitle) { title in
                 do {
