@@ -94,6 +94,7 @@ public struct WallpaperEditorView: View {
         .sheet(item: $tools.pendingImport) { pending in
             ImportOptionsSheet(pending: pending, actions: LayerActions(session: session, services: services, tools: tools))
         }
+        .sheet(item: $tools.imageTool) { ImageToolSheet(request: $0, session: session, services: services, tools: tools) }
         .sheet(isPresented: $isSaving) {
             SaveAsNewSheet(suggestedTitle: services.suggestedNewTitle) { title in
                 do {
