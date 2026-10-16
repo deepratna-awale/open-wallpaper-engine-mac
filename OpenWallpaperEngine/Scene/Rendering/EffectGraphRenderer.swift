@@ -151,6 +151,9 @@ final class EffectGraphRenderer {
     /// A monotonic clock in seconds (injectable for tests).
     private let now: () -> TimeInterval
 
+    /// `executeFunction` calls already reported as not runnable, by effect file and name.
+    private var reportedFunctions = Set<String>()
+
     /// Counters for tests and diagnostics.
     private(set) var passesEncoded = 0
     private(set) var layersReused = 0
@@ -1083,6 +1086,34 @@ final class EffectGraphRenderer {
                 }
             }
         }
+    }
+
+    /// `IEffect.executeMaterialFunction(name)` on the effect whose `effectIndex` is `effectIndex`
+    /// in the chain `effects` of layer `stateId`: runs effect.json's function `name`. `clear` sets
+    /// its FBOs back to their start colour (`EffectFBO.clear`) before the chain's next frame reads
+    /// them, as when they were made; a swapped pair is cleared whole, whichever name holds which
+    /// buffer, and targets not made yet start cleared anyway. An unknown function or action is
+    /// logged once per effect and name.
+    func executeFunction(named name: String, effectIndex: Int, of effects: [SceneEffectPlan], layer stateId: String) {
+        guard let index = effects.firstIndex(where: { $0.effectIndex == effectIndex }) else { return }
+        let effect = effects[index]
+        guard let function = effect.functions[name], function.actionKind == .clear else {
+            if reportedFunctions.insert("\(effect.file)|\(name)").inserted {
+                let problem = effect.functions[name].map { "its action \"\($0.action)\" isn't one WE has" } ?? "it has no such function"
+                OWELog.error(.scene, "executeMaterialFunction(\"\(name)\") on \(effect.file) of layer \(stateId): \(problem)")
+            }
+            return
+        }
+        guard let state = layers[stateId], index < state.fbos.count else { return }
+        let declared = Dictionary(effect.fbos.map { ($0.name, $0) }, uniquingKeysWith: { first, _ in first })
+        for fbo in function.fbos {
+            guard let texture = state.fbos[index][fbo] else { continue }
+            state.pendingClears.append((texture, Self.clearColor(declared[fbo]?.clear)))
+        }
+        // A kept output was drawn from the buffers before the clear.
+        state.staticOutput = nil
+        state.staticDrawn = nil
+        state.prefixOutput = nil
     }
 
     /// Clears the FBOs made since the last frame to their start colour, before any pass reads one.

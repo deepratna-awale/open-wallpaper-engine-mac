@@ -32,9 +32,11 @@ struct EffectDocument: Decodable {
     var dependencies: [String]
     var passes: [EffectPass]
     var fbos: [EffectFBO]
+    /// Named render functions scripts run with `IEffect.executeMaterialFunction(name)`.
+    var functions: [String: EffectFunction]
 
     enum CodingKeys: String, CodingKey {
-        case version, name, description, group, replacementkey, dependencies, passes, fbos
+        case version, name, description, group, replacementkey, dependencies, passes, fbos, functions
     }
 
     init(from decoder: Decoder) throws {
@@ -48,6 +50,36 @@ struct EffectDocument: Decodable {
         dependencies = c.decodeElements(String.self, forKey: .dependencies, userInfo: info) ?? []
         passes = c.decodeElements(EffectPass.self, forKey: .passes, userInfo: info) ?? []
         fbos = c.decodeElements(EffectFBO.self, forKey: .fbos, userInfo: info) ?? []
+        functions = c.decodeEntries(EffectFunction.self, forKey: .functions, userInfo: info) ?? [:]
+    }
+}
+
+/// One entry of effect.json's `functions`: what `IEffect.executeMaterialFunction(name)` does
+/// ("a custom render function defined by the effect", docs IEffect): an `action` on some of the
+/// effect's `fbos`. WE's effect loader reads `functions` (wallpaper64.exe, among its effect.json
+/// keys); the one action WE's effects use is `clear`, which fluidsimulation's `clearVelocity` and
+/// `clearDye` run to reset the simulation's buffers to their start colour (the FBO's `clear`).
+struct EffectFunction: Decodable, Equatable {
+    enum Action: String { case clear }
+
+    /// Raw `action` string; see `actionKind`.
+    var action: String
+    /// The effect's FBOs the action applies to, by name.
+    var fbos: [String]
+
+    var actionKind: Action? { Action(rawValue: action.lowercased()) }
+
+    enum CodingKeys: String, CodingKey { case action, fbos }
+
+    init(action: String, fbos: [String]) {
+        self.action = action
+        self.fbos = fbos
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        action = try c.decode(String.self, forKey: .action)
+        fbos = c.decodeElements(String.self, forKey: .fbos, userInfo: decoder.userInfo) ?? []
     }
 }
 

@@ -22,6 +22,38 @@ final class EffectGraphSwapTests: XCTestCase {
         cache = FileManager.default.temporaryDirectory.appending(path: "owe-swap-\(UUID().uuidString)")
         let renderer = try XCTUnwrap(EffectGraphRenderer(device: device, pipelineArchiveDirectory: cache.appending(path: "archives")))
         defer { renderer.pipelineArchive?.flush() }
+        let reds = try pingpongReds(try pingpongPlan(), renderer: renderer, device: device, frames: 3)
+        // 0.25, 0.5, 0.75: each frame adds to the last one's buffer. Without the swap carrying
+        // over, every frame read the cleared `_rt_A` and showed 0.25.
+        XCTAssertEqual(reds.count, 3)
+        for (frame, red) in reds.enumerated() {
+            XCTAssertEqual(red, 64 * (frame + 1), accuracy: 2, "frame \(frame): \(reds)")
+        }
+    }
+
+    /// `IEffect.executeMaterialFunction`: the fixture's `reset` function (`"action": "clear"` on
+    /// both buffers) starts the accumulation over from the FBOs' clear colour; a name the effect
+    /// doesn't have changes nothing.
+    func testClearFunctionStartsTheBuffersOver() throws {
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: ShaderVariantTests.weAssets.path), "WE install not present")
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        cache = FileManager.default.temporaryDirectory.appending(path: "owe-reset-\(UUID().uuidString)")
+        let renderer = try XCTUnwrap(EffectGraphRenderer(device: device, pipelineArchiveDirectory: cache.appending(path: "archives")))
+        defer { renderer.pipelineArchive?.flush() }
+        var plan = try pingpongPlan()
+        plan.effectIndex = 2
+        XCTAssertEqual(plan.functions["reset"], EffectFunction(action: "clear", fbos: ["_rt_A", "_rt_B"]))
+        var reds = try pingpongReds(plan, renderer: renderer, device: device, frames: 2)
+        renderer.executeFunction(named: "noSuchFunction", effectIndex: 2, of: [plan], layer: "pingpong")
+        reds += try pingpongReds(plan, renderer: renderer, device: device, frames: 1)
+        renderer.executeFunction(named: "reset", effectIndex: 2, of: [plan], layer: "pingpong")
+        reds += try pingpongReds(plan, renderer: renderer, device: device, frames: 2)
+        let expected = [1, 2, 3, 1, 2].map { 64 * $0 }
+        for (red, want) in zip(reds, expected) { XCTAssertEqual(red, want, accuracy: 2, "\(reds)") }
+        XCTAssertEqual(reds.count, expected.count)
+    }
+
+    private func pingpongPlan() throws -> SceneEffectPlan {
         let fixture = Fixtures.url("Effects/pingpong")
         let assets = ShaderVariantTests.weAssets
         let builder = SceneEffectPlanBuilder(
@@ -32,8 +64,12 @@ final class EffectGraphSwapTests: XCTestCase {
             },
             loadTexture: { _, _ in nil })
         let effect = try JSONDecoder().decode(WEObjectEffect.self, from: Data(#"{"file": "effects/pingpong/effect.json"}"#.utf8))
-        let plan = try builder.build(effect)
+        return try builder.build(effect)
+    }
 
+    /// The red of the middle pixel the pingpong fixture shows in each of `frames` frames.
+    private func pingpongReds(_ plan: SceneEffectPlan, renderer: EffectGraphRenderer, device: MTLDevice,
+                              frames: Int) throws -> [Int] {
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: 8, height: 8, mipmapped: false)
         descriptor.usage = [.shaderRead]
         let input = try XCTUnwrap(device.makeTexture(descriptor: descriptor))
@@ -43,7 +79,7 @@ final class EffectGraphSwapTests: XCTestCase {
                                                   layerColor: SIMD3(1, 1, 1), layerAlpha: 1)
         XCTAssertTrue(renderer.waitUntilReady([plan], width: 8, height: 8), "pipelines still compiling")
         var reds: [Int] = []
-        for _ in 0..<3 {
+        for _ in 0..<frames {
             let buffer = try XCTUnwrap(queue.makeCommandBuffer())
             let output = try XCTUnwrap(renderer.apply([plan], to: input, layerID: "pingpong", context: context,
                                                       commandBuffer: buffer))
@@ -60,12 +96,7 @@ final class EffectGraphSwapTests: XCTestCase {
             copy.getBytes(&pixel, bytesPerRow: output.width * 4, from: MTLRegionMake2D(4, 4, 1, 1), mipmapLevel: 0)
             reds.append(Int(pixel[0]))
         }
-        // 0.25, 0.5, 0.75: each frame adds to the last one's buffer. Without the swap carrying
-        // over, every frame read the cleared `_rt_A` and showed 0.25.
-        XCTAssertEqual(reds.count, 3)
-        for (frame, red) in reds.enumerated() {
-            XCTAssertEqual(red, 64 * (frame + 1), accuracy: 2, "frame \(frame): \(reds)")
-        }
+        return reds
     }
 
     /// A blended pass draws over what its target holds, and WE's targets start as transparent

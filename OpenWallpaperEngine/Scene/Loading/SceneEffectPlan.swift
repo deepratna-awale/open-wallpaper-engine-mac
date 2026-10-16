@@ -67,6 +67,8 @@ struct SceneEffectPlan {
     /// scene.json `visible` (authored or user-bound). A hidden effect is built but skipped, so a
     /// script can show it (`thisObject.visible = true`).
     var visible = true
+    /// effect.json's `functions`, by name (`IEffect.executeMaterialFunction`).
+    var functions: [String: EffectFunction] = [:]
 
     /// The effect reads what an earlier frame left in its buffers: a pass samples, or a copy
     /// reads, an FBO before this frame writes it (motion blur's accumulation), or passes swap
@@ -185,7 +187,9 @@ struct SceneEffectPlanBuilder {
         let fbos = document.fbos.filter { fbo in
             fbo.conditions == nil || renderCombos.contains { Self.conditionsHold(fbo.conditions, combos: $0) }
         }
-        return SceneEffectPlan(file: effect.file, fbos: fbos, passes: passes)
+        var plan = SceneEffectPlan(file: effect.file, fbos: fbos, passes: passes)
+        plan.functions = document.functions
+        return plan
     }
 
     private static func commandPass(_ command: SceneEffectPassCommand) -> SceneEffectPassPlan {
