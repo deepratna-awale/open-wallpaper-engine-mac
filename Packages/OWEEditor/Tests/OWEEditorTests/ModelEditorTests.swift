@@ -143,7 +143,9 @@ final class ModelEditorTests: XCTestCase {
                 if let value, !key.hasPrefix("ui_") { XCTAssertEqual(arguments(value), arguments(key), "\(key) in \(language)") }
             }
         }
-        XCTAssertEqual(ModelMaterialLabels.title("ui_editor_properties_rim_lighting"), "Rim lighting")
+        // The catalog's title, or the key's fallback where `swift test` doesn't compile string
+        // catalogs into the bundle (Xcode 26.3's SwiftPM, as on CI).
+        XCTAssertTrue(["Rim lighting", "Rim Lighting"].contains(ModelMaterialLabels.title("ui_editor_properties_rim_lighting")))
         XCTAssertEqual(ModelMaterialLabels.title("ui_editor_properties_something_new"), "Something New")
     }
 }
