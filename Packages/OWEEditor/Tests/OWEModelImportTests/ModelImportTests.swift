@@ -241,6 +241,17 @@ final class ModelImportTests: XCTestCase {
         XCTAssertEqual(output.animations.map(\.id), [1, 2])
     }
 
+    /// Clean Project keeps what a used model needs: its materials and textures, its
+    /// configuration and its sources; an unused import goes.
+    func testCleanProjectKeepsAUsedModelsFiles() throws {
+        let store = EditorAssetStore(directory: directory.appending(path: "store"))
+        let imported = try EditorModelImporter.importModel(from: try objFolder().appending(path: "two-materials.obj"), into: store)
+        let scene = try JSONSerialization.data(withJSONObject: ["objects": [["id": 1, "model": imported.model]]])
+        XCTAssertEqual(ProjectCleaner.unusedAssets(in: store, roots: [scene]).map(\.path), [])
+        let unused = ProjectCleaner.unusedAssets(in: store, roots: [Data("{}".utf8)]).map(\.path)
+        XCTAssertEqual(Set(unused), Set(store.assets().map(\.path)))
+    }
+
     func testFilesThatArentModelsAreRefused() throws {
         let text = directory.appending(path: "notes.txt")
         try Data("hello".utf8).write(to: text)

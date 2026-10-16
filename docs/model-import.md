@@ -82,6 +82,31 @@ imported models, and the docs at docs.wallpaperengine.io/en/scene/models/.
   draw WE's white and are reported). The store never overwrites, so a configuration the Model
   Editor compiles is `<name>-<hash>.json` and `.mdl`.
 
+## The Model Editor here
+
+`OWEEditor/ModelEditor/` (`ModelEditorView`, `ModelEditorModel`), opened from a model layer's
+inspector (Configure Model…) when the model's source is with the edits' files. It edits the
+configuration (`ModelImportConfig`) and compiles with it to fill its lists
+(`EditorModelImporter.inspect`); OK keeps edited materials, compiles the model again
+(`recompile`, a `<name>-<hash>.mdl`) and points every layer drawing the old model at it
+(`SceneEditSession.replaceModel`), one undo step.
+
+- **Animation, Attachments, Events, Constraints:** WE's tabs and options (above). WE's clip
+  options have no frame rate or playback mode (a clip keeps its animation's rate and loops);
+  this editor offers both because `MDLA` stores them per clip. WE previews the model in the
+  modal; here the play button plays a clip or animation on the layer itself, as WE's Skeletal
+  animation › Add makes an animation layer (`animationlayers`: rate 1, blend 1).
+- **Materials:** WE's Advanced Texture Settings, as a tab. The shader's combos, texture slots
+  and constants come from its annotations (`ModelShaderSchema`, the `// [COMBO]` lines and the
+  `uniform` comments of `shaders/<shader>.frag` and `.vert` read where the scene reads them), and
+  the edited pass is kept as a new material file (`materials/models/<folder>/<material>-<hash>.json`)
+  that the configuration's `materials` map names (ours: WE edits the material file in place,
+  which the edits' files never do).
+- **Blend Layers and Transitions:** not offered; WE 2.8.0.42 has them commented out, with no
+  storage format.
+- **Clean Project** keeps a used model's materials (the paths in the `.mdl`), configuration and
+  sources (`ProjectCleaner.collectModelNames`).
+
 ## Guessed fields
 
 What WE's own files didn't show, so the writer writes WE's common case:

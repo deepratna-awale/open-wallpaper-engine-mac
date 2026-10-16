@@ -59,7 +59,8 @@ extension EditorAssetStore {
 
         var missing: [String] = []
         let directory = sourceURL.deletingLastPathComponent()
-        for material in output.materials {
+        // The materials the meshes draw with that the configuration doesn't replace.
+        for material in output.materials where output.meshMaterials.contains(material.name) && config.materials[material.name] == nil {
             var textures: [String] = []
             if let albedo = material.albedo {
                 if let written = try storeModelTexture(albedo, near: directory, as: "materials/\(material.texturePath)") {
@@ -147,5 +148,40 @@ extension EditorAssetStore {
     /// The `.mdl` files the store holds (imported models), by scene path.
     public func importedModels() -> [String] {
         assets().map(\.path).filter { $0.lowercased().hasPrefix("models/") && $0.lowercased().hasSuffix(".mdl") }
+    }
+}
+
+// MARK: - Model Editor
+
+extension EditorAssetStore {
+    /// `<folder>` of `models/<folder>/<name>.mdl`.
+    public static func modelFolder(of model: String) -> String {
+        ((model as NSString).deletingLastPathComponent as NSString).lastPathComponent
+    }
+
+    /// The material file a model's material reads: the configuration's edited one, else the
+    /// import's (`materials/models/<folder>/<material>.json`).
+    public static func materialPath(_ material: String, model: String, config: ModelImportConfig) -> String {
+        config.materials[material] ?? "materials/models/\(modelFolder(of: model))/\(ModelCompiler.fileName(material)).json"
+    }
+
+    /// Keeps an edited material beside the model's, named by its content
+    /// (`materials/models/<folder>/<material>-<hash>.json`), and returns its path.
+    public func storeModelMaterial(_ document: ModelMaterialDocument, material: String, model: String) throws -> String {
+        let data = try document.jsonData()
+        let path = "materials/models/\(Self.modelFolder(of: model))/\(ModelCompiler.fileName(material))-\(Self.contentHash(data, bytes: 4)).json"
+        try write(data, to: path)
+        return path
+    }
+
+    /// Imports an image as one of a model material's textures (a PNG or JPEG as it is, any
+    /// other image as a PNG), named by its content; returns its texture path
+    /// (`models/<folder>/<material>_<slot>-<hash>`).
+    public func importModelTexture(from url: URL, material: String, slot: Int, model: String) throws -> String {
+        let (data, fileExtension, _) = try Self.textureData(from: url)
+        let name = "\(ModelCompiler.fileName(material))_\(slot)-\(Self.contentHash(data, bytes: 4))"
+        let texture = "models/\(Self.modelFolder(of: model))/\(name)"
+        try write(data, to: "materials/\(texture).\(fileExtension)")
+        return texture
     }
 }
