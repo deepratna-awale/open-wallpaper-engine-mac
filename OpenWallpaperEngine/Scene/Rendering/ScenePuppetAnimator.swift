@@ -220,6 +220,12 @@ final class ScenePuppetAnimator {
 
     // MARK: - Scripts
 
+    /// A model's `rootmotion` (`IModelLayer.rootmotion`): whether its clips' root motion runs.
+    var rootMotion: Bool {
+        get { stack.runsRootMotion }
+        set { stack.runsRootMotion = newValue }
+    }
+
     /// A script's call (`IImageLayer`, `IAnimationLayer`), in the order scripts made them.
     func perform(_ command: SceneScriptRigCommand) {
         switch command {

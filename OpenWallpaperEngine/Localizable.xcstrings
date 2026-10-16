@@ -155864,6 +155864,101 @@
         }
       }
     },
+    "The file isn’t an MP4 video with a picture." : {
+      "comment" : "Wallpaper Editor importer: an .mp4 without a readable video track",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الملف ليس فيديو MP4 يحتوي على صورة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei ist kein MP4-Video mit Bild."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El archivo no es un vídeo MP4 con imagen."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le fichier n’est pas une vidéo MP4 avec une image."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ाइल चित्र वाला MP4 वीडियो नहीं है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il file non è un video MP4 con immagine."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このファイルは映像を含む MP4 ビデオではありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "파일이 영상이 있는 MP4 비디오가 아닙니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plik nie jest wideo MP4 z obrazem."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O arquivo não é um vídeo MP4 com imagem."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл не является видео MP4 с изображением."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dosya görüntü içeren bir MP4 videosu değil."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл не є відео MP4 із зображенням."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "该文件不是带画面的 MP4 视频。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此檔案不是帶畫面的 MP4 影片。"
+          }
+        }
+      }
+    },
     "The first time a device connects, macOS may ask whether Open Wallpaper Engine may accept incoming network connections. Click Allow." : {
       "comment" : "Send over Wi-Fi sheet: firewall prompt tip",
       "localizations" : {
@@ -155955,6 +156050,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "裝置首次連線時，macOS 可能會詢問是否允許 Open Wallpaper Engine 接受傳入的網路連線。請按一下「允許」。"
+          }
+        }
+      }
+    },
+    "The frames don’t fit one texture (%lld × %lld pixels)." : {
+      "comment" : "Wallpaper Editor importer: a GIF or image sequence is too large for one sprite sheet; the arguments are its width and height",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا تتسع الإطارات في نسيج واحد (%1$lld × %2$lld بكسل)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Bilder passen nicht in eine Textur (%1$lld × %2$lld Pixel)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los fotogramas no caben en una textura (%1$lld × %2$lld píxeles)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les images ne tiennent pas dans une seule texture (%1$lld × %2$lld pixels)."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़्रेम एक टेक्सचर में नहीं समाते (%1$lld × %2$lld पिक्सेल)।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I fotogrammi non entrano in una texture (%1$lld × %2$lld pixel)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フレームが 1 つのテクスチャに収まりません（%1$lld × %2$lld ピクセル）。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프레임이 하나의 텍스처에 들어가지 않습니다(%1$lld × %2$lld픽셀)."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klatki nie mieszczą się w jednej teksturze (%1$lld × %2$lld pikseli)."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os quadros não cabem em uma textura (%1$lld × %2$lld pixels)."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кадры не помещаются в одну текстуру (%1$lld × %2$lld пикс.)."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kareler tek bir dokuya sığmıyor (%1$lld × %2$lld piksel)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кадри не вміщаються в одну текстуру (%1$lld × %2$lld пікселів)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这些帧无法放入一张纹理（%1$lld × %2$lld 像素）。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這些影格無法放入一張材質（%1$lld × %2$lld 像素）。"
           }
         }
       }
@@ -156143,6 +156333,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "快速鍵「%@」使用了此按鍵組合。「仍要使用」會將它移到此播放列表。"
+          }
+        }
+      }
+    },
+    "The image’s pixels can’t be read." : {
+      "comment" : "Wallpaper Editor importer: an image couldn't be turned into a texture",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتعذّر قراءة وحدات بكسل الصورة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Pixel des Bildes können nicht gelesen werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pueden leer los píxeles de la imagen."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de lire les pixels de l’image."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इमेज के पिक्सेल पढ़े नहीं जा सकते।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile leggere i pixel dell’immagine."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画像のピクセルを読み取れません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이미지의 픽셀을 읽을 수 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można odczytać pikseli obrazu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não é possível ler os pixels da imagem."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удаётся прочитать пиксели изображения."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Görüntünün pikselleri okunamıyor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдається прочитати пікселі зображення."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法读取图像的像素。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法讀取影像的像素。"
           }
         }
       }
