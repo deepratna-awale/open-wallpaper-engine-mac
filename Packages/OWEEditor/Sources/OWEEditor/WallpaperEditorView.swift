@@ -106,7 +106,7 @@ public struct WallpaperEditorView: View {
         }
         .sheet(item: $tools.imageTool) { ImageToolSheet(request: $0, session: session, services: services, tools: tools) }
         .sheet(isPresented: $isSaving) {
-            SaveAsNewSheet(suggestedTitle: services.suggestedNewTitle) { title in
+            SaveAsNewSheet(suggestedTitle: session.projectTitle ?? services.suggestedNewTitle) { title in
                 do {
                     let saved = try services.saveAsNewWallpaper(title)
                     show(Notice(text: L("Saved “\(saved)” to the library."), isError: false))
