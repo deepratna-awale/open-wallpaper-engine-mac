@@ -153,6 +153,18 @@ public struct LocalWallpaperWriter {
         }
     }
 
+    /// Writes the editor's project settings (`SceneProjectEdits`: the title) into the wallpaper
+    /// `folder`'s project.json. File › Save writes a local wallpaper's this way.
+    public func writeProjectEdits(_ edits: SceneProjectEdits, into folder: URL) throws {
+        guard !edits.isEmpty else { return }
+        let url = folder.appending(path: "project.json")
+        guard let data = fileManager.contents(atPath: url.path),
+              var project = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw WriteError.noProject }
+        edits.apply(to: &project)
+        let written = try JSONSerialization.data(withJSONObject: project, options: [.prettyPrinted, .sortedKeys])
+        try written.write(to: url, options: .atomic)
+    }
+
     /// What ties a project to its Workshop item.
     static let workshopKeys = ["workshopid", "workshopurl"]
 

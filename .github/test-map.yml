@@ -150,7 +150,7 @@ map:
   "OpenWallpaperEngine/Scene/Sound/**": ["@audio"]
   "OpenWallpaperEngine/Scene/Rendering/**": ["@scene"]
   "OpenWallpaperEngine/Scene/Shaders/**": ["@scene"]
-  "OpenWallpaperEngine/Scene/Format/**": ["@scene", "@script", "WallpaperAuthorLocalization*", "MobilePackage*", "MobileFormat*", "DepthMask*"]
+  "OpenWallpaperEngine/Scene/Format/**": ["@scene", "@script", "WallpaperAuthorLocalization*", "MobilePackage*", "MobileFormat*", "DepthMask*", "EditorTEXEncoder*"]
   "OpenWallpaperEngine/Scene/Loading/**": ["@scene", "@script", "@audio"]
   "OpenWallpaperEngine/Scene/Values/**": ["@scene", "@script"]
   "OpenWallpaperEngine/Scene/Prewarm/**": ["Shader*", "UpdateShaderPrewarmer*"]

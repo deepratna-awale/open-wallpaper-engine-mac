@@ -138,9 +138,11 @@ final class SceneModelPlan {
     /// The layers whose image a mesh samples (`_rt_imageLayerComposite_<id>_a`), by object id.
     var compositeLayerIDs: Set<String> {
         Set(meshes.flatMap { mesh in
-            mesh.material.pass.textures.values.compactMap { input -> String? in
-                if case .fbo(let name) = input { return ModelMaterialPlanBuilder.compositeLayerID(name) }
-                return nil
+            mesh.material.passes.flatMap { material in
+                material.pass.textures.values.compactMap { input -> String? in
+                    if case .fbo(let name) = input { return ModelMaterialPlanBuilder.compositeLayerID(name) }
+                    return nil
+                }
             }
         })
     }

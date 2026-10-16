@@ -252,6 +252,27 @@ final class SceneSharedInstanceTests: XCTestCase {
                              loop: instance.renderLoop, presenters: presenters, views: views, made: made, cleanup: cleanup)
     }
 
+    /// Only the Wallpaper Editor's canvas (the editor's draft) runs its scripts "in the editor"
+    /// (`engine.isRunningInEditor()`); a display's instance doesn't.
+    func testOnlyTheEditorCanvasRunsInTheEditor() throws {
+        let directory = Fixtures.url("Scenes/scripted-counter")
+        let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/scripted-counter/project.json"))
+        let wallpaper = WEWallpaper(using: project, where: directory)
+        let wallpapers = WallpaperViewModel(persistsWallpapers: false)
+        let services = SceneScriptServices(prelude: SceneScriptPrelude.load(), storage: SceneScriptStorage(directory: storage),
+                                           media: SceneScriptReplayMediaSource(), spectrum: { .silent })
+        let environment = SceneWallpaperEnvironment(wallpapers: wallpapers, settings: GlobalSettingsViewModel(),
+                                                    scriptServices: services, loadingSnapshots: nil)
+        defer { Fixtures.removeStoredSettings(for: directory) }
+        for (scope, expected) in [(WallpaperPropertyScope.editorDraft, true), (.shared, false)] {
+            let instance = SceneWallpaperInstance(wallpaper: wallpaper, environment: environment, screenID: "A", properties: scope)
+            let renderer = try XCTUnwrap(instance.renderer)
+            let runsInEditor: Bool = instance.renderLoop.thread.sync { renderer.runsInEditor }
+            XCTAssertEqual(runsInEditor, expected, "\(scope)")
+            instance.shutdown()
+        }
+    }
+
     /// The AVKit path: two displays of one video share its player, so its sound plays once.
     func testTwoDisplaysOfAVideoShareOnePlayer() {
         let wallpapers = WallpaperViewModel(persistsWallpapers: false)
