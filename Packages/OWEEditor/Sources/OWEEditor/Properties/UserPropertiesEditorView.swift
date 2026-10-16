@@ -57,9 +57,13 @@ struct UserPropertiesEditorView: View {
             List(selection: $selection) {
                 ForEach(properties.properties) { property in
                     HStack {
+                        if UserPropertyGroup.group(of: property.key, in: properties.properties) != nil {
+                            Spacer().frame(width: 12)
+                        }
                         Image(systemName: property.kind.symbol).foregroundStyle(.secondary).frame(width: 18)
                         VStack(alignment: .leading, spacing: 1) {
                             Text(PropertyTitle.title(property)).lineLimit(1)
+                                .fontWeight(property.kind == .group ? .semibold : nil)
                             Text(property.key).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                         }
                         if property.condition != nil {
@@ -174,11 +178,17 @@ private struct UserPropertyDetailForm: View {
             } footer: {
                 bindingsFooter
             }
-            if property.kind.hasValue {
+            if property.kind.hasDefault {
                 Section(L("Default")) { defaultControl }
             }
             if property.kind == .slider { sliderSection }
             if property.kind == .combo { comboSection }
+            if property.kind == .directory { fetchModeSection }
+            if property.kind == .file { fileTypeSection }
+            if property.kind == .group { groupSection }
+            if property.kind.bindsTexture {
+                UserTextureBindingSection(authoring: authoring, property: property)
+            }
             ConditionSection(authoring: authoring, property: property)
         }
         .formStyle(.grouped)
@@ -218,8 +228,50 @@ private struct UserPropertyDetailForm: View {
         update(L("Change Property Type"), coalescing: false) { draft in
             var changed = UserPropertyDraft.new(kind, key: draft.key, text: draft.text)
             changed.condition = draft.condition
-            changed.extra = draft.extra
+            // WE resets the type's own keys (`mode`, …) when the type changes; the rest stays.
+            changed.extra = draft.extra.filter { !["mode", "fileType"].contains($0.key) }
+                .merging(changed.extra) { _, new in new }
             draft = changed
+        }
+    }
+
+    // MARK: Folder, file and group
+
+    private var fetchModeSection: some View {
+        Section {
+            Picker(L("Fetch Mode"), selection: Binding(get: { property.fetchMode ?? .onDemand }, set: { mode in
+                update(L("Change Fetch Mode"), coalescing: false) { $0.fetchMode = mode }
+            })) {
+                Text(L("On Demand")).tag(UserPropertyDraft.FetchMode.onDemand)
+                Text(L("All")).tag(UserPropertyDraft.FetchMode.fetchAll)
+            }
+        } footer: {
+            Text(property.fetchMode == .fetchAll
+                 ? L("The page gets every file in the folder, and each change (userDirectoryFilesAddedOrChanged, userDirectoryFilesRemoved).")
+                 : L("The page asks for one random file at a time (wallpaperRequestRandomFileForProperty)."))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var fileTypeSection: some View {
+        Section {
+            Picker(L("File Type"), selection: Binding(get: { property.fileType }, set: { type in
+                update(L("Change File Type"), coalescing: false) { $0.fileType = type }
+            })) {
+                Text(L("Any File")).tag(UserPropertyDraft.FileType?.none)
+                Text(L("Image")).tag(UserPropertyDraft.FileType?.some(.image))
+                Text(L("Video")).tag(UserPropertyDraft.FileType?.some(.video))
+            }
+        }
+    }
+
+    private var groupSection: some View {
+        Section {
+            Text(L("The properties after this one, up to the next group, fold under its label. Properties that belong to no group go before the first one."))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -479,6 +531,9 @@ extension UserPropertyDraft.Kind {
         case .textInput: return L("Text Input")
         case .file: return L("File")
         case .directory: return L("Folder")
+        case .sceneTexture: return L("Texture")
+        case .userShortcut: return L("User Shortcut")
+        case .group: return L("Group")
         case .text: return L("Label")
         default: return rawValue
         }
@@ -501,6 +556,9 @@ extension UserPropertyDraft.Kind {
         case .textInput: return "character.cursor.ibeam"
         case .file: return "doc"
         case .directory: return "folder"
+        case .sceneTexture: return "photo"
+        case .userShortcut: return "arrow.up.forward.app"
+        case .group: return "rectangle.3.group"
         case .text: return "text.alignleft"
         default: return "questionmark.square"
         }
