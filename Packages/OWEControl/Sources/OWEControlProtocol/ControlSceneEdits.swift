@@ -97,7 +97,7 @@ public enum ControlSceneEdits {
         .init(name: "remove_script", parameters: "layer, field", summary: "Removes the field's script; the field keeps its value."),
         .init(name: "bind_field", parameters: "layer, field, property, condition?", summary: "Binds a field to one of the wallpaper's user properties."),
         .init(name: "unbind_field", parameters: "layer, field", summary: "Frees a field from its user property."),
-        .init(name: "add_user_property", parameters: "property_kind, label, key?, value?, min?, max?, step?, whole_numbers?, options?, condition?", summary: "Defines a user property of the wallpaper (bool, slider, color, combo, text_input, file, directory, or text for a label). Returns its key."),
+        .init(name: "add_user_property", parameters: "property_kind, label, key?, value?, min?, max?, step?, whole_numbers?, options?, condition?", summary: "Defines a user property of the wallpaper (bool, slider, color, combo, text_input, file, directory, scenetexture, usershortcut, group, or text for a label). Returns its key."),
         .init(name: "update_user_property", parameters: "key, label?, value?, min?, max?, step?, whole_numbers?, options?, condition?", summary: "Changes a user property's definition (value is its default)."),
         .init(name: "remove_user_property", parameters: "key", summary: "Removes a user property; bound fields keep their values."),
         .init(name: "rename_user_property", parameters: "key, new_key", summary: "Renames a user property's key, re-pointing conditions and bound fields."),

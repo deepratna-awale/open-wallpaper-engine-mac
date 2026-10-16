@@ -262,7 +262,7 @@ final class SceneWallpaperInstance {
         renderLoop.update(playback)
     }
 
-    private func loadContent() {
+    func loadContent() {
         viewModel.contentAsync { [weak self] content in
             guard let self else { return }
             // Thread boundary: main → render thread.

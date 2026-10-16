@@ -95,7 +95,7 @@ extension MCPToolCatalog {
             "pass": integer("The effect's material pass (0 first; for set_effect_texture, the pass effects_catalog lists for the slot, such as Blur's mask in 3)."),
             "script": text("A SceneScript (an ES module exporting update, init…)."),
             "script_properties": text("The script's options as a JSON object, such as {\"speed\": 2}."),
-            "property_kind": text("bool, slider, color, combo, text_input, file, directory or text."),
+            "property_kind": text("bool, slider, color, combo, text_input, file, directory, scenetexture, usershortcut, group or text."),
             "label": text("The text the user sees."),
             "new_key": text("The new key: letters, digits and underscores, starting with a letter."),
             "min": number("A slider's minimum."),
