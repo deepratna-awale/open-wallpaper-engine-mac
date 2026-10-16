@@ -4,37 +4,13 @@ import Foundation
 /// Run Preview / Stop Preview on the canvas.
 ///
 /// - Snippets: WE's editor reads its snippet scripts from its install
-///   (`ui/dist/monaco/snippets/<name>.js`, `scripteditor`'s `y()`); the assets cache keeps a copy
-///   in `<cache>/snippets` (`WallpaperEngineAssetsCache`). Nothing of them ships with the app; a
-///   snippet WE doesn't have is the editor's own (`SceneScriptSnippet`).
+///   (`ui/dist/monaco/snippets/<name>.js`, `scripteditor`'s `y()`), as the shader editor's
+///   (`EditorShaderSnippets`, which both read); the assets cache keeps a copy in `<cache>/snippets`
+///   (`WallpaperEngineAssetsCache`). Nothing of them ships with the app; a snippet WE doesn't have
+///   is the editor's own (`SceneScriptSnippet`).
 /// - Modules: the runtime imports WE's `scripts/jsmodules/<name>.js` by name, case-insensitively
 ///   (`SceneScriptPrelude`); Import Custom Module lists the ones besides WE's base three.
 enum EditorScriptTools {
-    /// The folder of WE's snippet scripts for an asset tree: the cache's copy, or an install's.
-    static func snippetsDirectory(assets: URL, fileManager: FileManager = .default) -> URL? {
-        [assets.appending(path: WallpaperEngineAssetsCache.snippetsFolder, directoryHint: .isDirectory),
-         assets.deletingLastPathComponent().appending(path: WallpaperEngineAssetsCache.installSnippetsPath,
-                                                      directoryHint: .isDirectory)]
-            .first { fileManager.fileExists(atPath: $0.path) }
-    }
-
-    /// WE's snippet script `name` (a file name without `.js`); nil when the WE copy has none.
-    static func snippet(named name: String, assets: URL? = WallpaperEngineAssets.directory,
-                        fileManager: FileManager = .default) -> String? {
-        // Only a plain file name: `script_vec3_color_rainbow`.
-        guard !name.isEmpty, name.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "_" }),
-              let assets, let directory = snippetsDirectory(assets: assets, fileManager: fileManager) else { return nil }
-        let file = directory.appending(path: name + ".js")
-        // A WE copy without this snippet: the editor uses its own.
-        guard fileManager.fileExists(atPath: file.path) else { return nil }
-        do {
-            return try String(contentsOf: file, encoding: .utf8)
-        } catch {
-            OWELog.error(.ui, "Can't read Wallpaper Engine's snippet \(file.path): \(error)")
-            return nil
-        }
-    }
-
     /// The modules of WE's `scripts/jsmodules` besides the base ones (WEColor, WEMath, WEVector),
     /// by file name, sorted.
     static func customModules(assets: URL? = WallpaperEngineAssets.directory, fileManager: FileManager = .default) -> [String] {

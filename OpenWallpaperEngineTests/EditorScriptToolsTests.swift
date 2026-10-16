@@ -29,16 +29,16 @@ final class EditorScriptToolsTests: XCTestCase {
         try write("{}", to: "assets/shaders/common.h", in: install)
         try write("{}", to: "assets/effects/tint/effect.json", in: install)
         let assets = install.appending(path: "assets")
-        XCTAssertEqual(EditorScriptTools.snippet(named: "script_vec3_color_rainbow", assets: assets), "// rainbow")
-        XCTAssertNil(EditorScriptTools.snippet(named: "script_click_wiggle", assets: assets), "not in WE's copy")
-        XCTAssertNil(EditorScriptTools.snippet(named: "../../../../etc/passwd", assets: assets), "a file name only")
-        XCTAssertNil(EditorScriptTools.snippet(named: "script_vec3_color_rainbow", assets: nil))
+        XCTAssertEqual(EditorShaderSnippets.snippet(named: "script_vec3_color_rainbow", assets: assets), "// rainbow")
+        XCTAssertNil(EditorShaderSnippets.snippet(named: "script_click_wiggle", assets: assets), "not in WE's copy")
+        XCTAssertNil(EditorShaderSnippets.snippet(named: "../../../../etc/passwd", assets: assets), "a file name only")
+        XCTAssertNil(EditorShaderSnippets.snippet(named: "script_vec3_color_rainbow", assets: nil))
 
         // The cache keeps a copy, so a cache filled from the install has them too.
         let cache = WallpaperEngineAssets.cacheDirectory(in: scratch.appending(path: "storage"))
         let info = WallpaperEngineAssetsCache.Info(origin: .folder, installedAt: .now, steamBuildID: nil)
         try WallpaperEngineAssetsCache.fill(cache, from: install, info: info)
-        XCTAssertEqual(EditorScriptTools.snippet(named: "script_vec3_color_rainbow", assets: cache), "// rainbow")
+        XCTAssertEqual(EditorShaderSnippets.snippet(named: "script_vec3_color_rainbow", assets: cache), "// rainbow")
         XCTAssertTrue(FileManager.default.fileExists(atPath: cache.appending(path: "snippets/script_vec3_color_rainbow.js").path))
     }
 

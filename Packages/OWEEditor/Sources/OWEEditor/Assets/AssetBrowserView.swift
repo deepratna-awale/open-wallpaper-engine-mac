@@ -4,7 +4,8 @@ import OWEInspectorKit
 import UniformTypeIdentifiers
 import OWESceneEditing
 
-/// The wallpaper's textures, models, sounds and fonts, and the files imported in the editor, with
+/// The wallpaper's textures, materials, models, particle systems, sounds and fonts (WE's asset
+/// folders), and the files imported in the editor, with
 /// import by the Import button or by dropping files: images become image layers, sounds sound
 /// layers, fonts are kept for text layers. Double-click (or Add to Scene) puts an asset in.
 struct AssetBrowserView: View {
@@ -16,6 +17,9 @@ struct AssetBrowserView: View {
     @State private var query = ""
     @State private var isTargeted = false
     @State private var selection: EditorAsset.ID?
+    @State private var isNamingMaterial = false
+    @State private var materialName = ""
+    @State private var isCleaning = false
 
     private var actions: LayerActions { LayerActions(session: session, services: services, tools: tools) }
 
@@ -34,6 +38,7 @@ struct AssetBrowserView: View {
                 .fixedSize()
                 .disabled(services.assetStore == nil)
                 .help(L("Import files into the wallpaper’s edits"))
+                ProjectToolsMenu(services: services, tools: tools, isNamingMaterial: $isNamingMaterial, isCleaning: $isCleaning)
             }
             .padding(.horizontal, 10)
             .padding(.bottom, 6)
@@ -85,6 +90,16 @@ struct AssetBrowserView: View {
         }
         .onAppear(perform: reload)
         .onChange(of: session.overlay) { _, _ in reload() }
+        .alert(L("New Material"), isPresented: $isNamingMaterial) {
+            TextField(L("Material name"), text: $materialName)
+            Button(L("Cancel"), role: .cancel) { materialName = "" }
+            Button(L("Create")) { createMaterial() }
+        } message: {
+            Text(L("Enter filename for the new material:"))
+        }
+        .sheet(isPresented: $isCleaning, onDismiss: reload) {
+            CleanProjectSheet(session: session, services: services, tools: tools)
+        }
     }
 
     private var filtered: [EditorAsset] {
@@ -103,6 +118,19 @@ struct AssetBrowserView: View {
             list.append(EditorAsset(path: asset.path, kind: kind, isImported: true))
         }
         assets = list.sorted { $0.path.localizedStandardCompare($1.path) == .orderedAscending }
+    }
+
+    /// WE's New Material: `materials/<name>.json`, selected in Materials once written.
+    private func createMaterial() {
+        defer { materialName = "" }
+        guard let store = services.assetStore else { return }
+        do {
+            guard let path = try store.createMaterial(named: materialName) else { return }
+            reload()
+            selection = path
+        } catch {
+            tools.problem = L("The material couldn’t be created: \(error.localizedDescription)")
+        }
     }
 
     private func importFonts() {
@@ -135,7 +163,7 @@ struct AssetBrowserView: View {
             if let model = modelFor(asset) { actions.addImage(fromModel: model, title: title, size: imageSize(asset)) }
         case .sound:
             actions.addSound(paths: [asset.path], title: title)
-        case .font, .other:
+        case .material, .particle, .font, .other:
             break
         }
     }
@@ -189,7 +217,9 @@ extension EditorAsset.Kind {
     var title: String {
         switch self {
         case .texture: return L("Textures")
+        case .material: return L("Materials")
         case .model: return L("Models")
+        case .particle: return L("Particles")
         case .sound: return L("Sounds")
         case .font: return L("Fonts")
         case .other: return L("Other Files")
@@ -199,7 +229,9 @@ extension EditorAsset.Kind {
     var symbol: String {
         switch self {
         case .texture: return "photo"
+        case .material: return "paintpalette"
         case .model: return "square.stack.3d.up"
+        case .particle: return "sparkles"
         case .sound: return "speaker.wave.2"
         case .font: return "textformat"
         case .other: return "doc"

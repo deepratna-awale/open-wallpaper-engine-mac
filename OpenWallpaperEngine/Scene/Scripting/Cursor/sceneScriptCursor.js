@@ -16,12 +16,15 @@
     }
 
     // scenescript64.dll builds the event for each call (0x18164ec5f): `button` (always 0, the
-    // left button), `worldPosition` and `localPosition` as Vec3, and `hitBox` only for a puppet
-    // warp hit box, which no layer here has. `Vec3` is baseclasses.js's global class binding.
+    // left button), `worldPosition` and `localPosition` as Vec3, and `hitBox` only when the pass
+    // named a hit box (a puppet's or model's, SceneScriptCursorPass). `Vec3` is baseclasses.js's
+    // global class binding.
     function cursorEvent(payload) {
         const world = payload.worldPosition, local = payload.localPosition;
-        return { button: 0, worldPosition: new Vec3(world[0], world[1], world[2]),
+        const event = { button: 0, worldPosition: new Vec3(world[0], world[1], world[2]),
             localPosition: new Vec3(local[0], local[1], local[2]) };
+        if (typeof payload.hitBox === 'string') event.hitBox = payload.hitBox;
+        return event;
     }
 
     function deliver(event) {
