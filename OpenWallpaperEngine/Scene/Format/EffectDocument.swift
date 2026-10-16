@@ -1,17 +1,17 @@
 import Foundation
 
-/// Combo conditions on an effect pass, bind or FBO. WE authors a list of `{COMBO: value}` objects
-/// (an empty object means "always"); a single object is accepted too.
-typealias EffectConditions = [[String: Int]]
+/// Combo conditions on an effect pass, bind or FBO. WE authors a list of `{COMBO: requirement}`
+/// objects (an empty object means "always"); a single object is accepted too.
+typealias EffectConditions = [[String: EffectComboCondition]]
 
 private func decodeConditions<K>(_ c: KeyedDecodingContainer<K>, key: K,
                                  userInfo: [CodingUserInfoKey: Any]) -> EffectConditions? {
     guard c.contains(key) else { return nil }
     switch c.decodeLogged(SceneJSON.self, forKey: key, userInfo: userInfo) {
     case .object?:
-        return c.decodeEntries(Int.self, forKey: key, userInfo: userInfo).map { [$0] }
+        return c.decodeEntries(EffectComboCondition.self, forKey: key, userInfo: userInfo).map { [$0] }
     case .array?:
-        return c.decodeElements([String: Int].self, forKey: key, userInfo: userInfo)
+        return c.decodeElements([String: EffectComboCondition].self, forKey: key, userInfo: userInfo)
     case nil, .null?:
         return nil
     case let other?:
@@ -32,11 +32,13 @@ struct EffectDocument: Decodable {
     var dependencies: [String]
     var passes: [EffectPass]
     var fbos: [EffectFBO]
+    /// WE's cost class (`"expensive"`, `"veryexpensive"`), which its editor's stats count.
+    var performance: EffectPerformance?
     /// Named render functions scripts run with `IEffect.executeMaterialFunction(name)`.
     var functions: [String: EffectFunction]
 
     enum CodingKeys: String, CodingKey {
-        case version, name, description, group, replacementkey, dependencies, passes, fbos, functions
+        case version, name, description, group, replacementkey, dependencies, passes, fbos, performance, functions
     }
 
     init(from decoder: Decoder) throws {
@@ -50,6 +52,7 @@ struct EffectDocument: Decodable {
         dependencies = c.decodeElements(String.self, forKey: .dependencies, userInfo: info) ?? []
         passes = c.decodeElements(EffectPass.self, forKey: .passes, userInfo: info) ?? []
         fbos = c.decodeElements(EffectFBO.self, forKey: .fbos, userInfo: info) ?? []
+        performance = c.decodeLogged(String.self, forKey: .performance, userInfo: info).flatMap(EffectPerformance.init(rawValue:))
         functions = c.decodeEntries(EffectFunction.self, forKey: .functions, userInfo: info) ?? [:]
     }
 }
@@ -81,6 +84,12 @@ struct EffectFunction: Decodable, Equatable {
         action = try c.decode(String.self, forKey: .action)
         fbos = c.decodeElements(String.self, forKey: .fbos, userInfo: decoder.userInfo) ?? []
     }
+}
+
+/// An effect.json `performance`: the effects WE's editor warns about (`ui_editor_stats_performance_group_*`).
+enum EffectPerformance: String, Sendable {
+    case expensive
+    case veryExpensive = "veryexpensive"
 }
 
 /// One step of an effect: either a material draw into `target` (nil = the layer's ping-pong

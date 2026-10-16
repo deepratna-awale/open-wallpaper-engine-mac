@@ -47391,6 +47391,101 @@
         }
       }
     },
+    "Show Stats" : {
+      "comment" : "Wallpaper Editor toolbar: when the canvas's stats overlay shows (WE's View › Show Stats)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إظهار الإحصاءات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statistik anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar estadísticas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher les statistiques"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आँकड़े दिखाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra statistiche"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "統計を表示"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "통계 보기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokaż statystyki"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar Estatísticas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать статистику"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İstatistikleri Göster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показувати статистику"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示统计"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示統計"
+          }
+        }
+      }
+    },
     "Show Weekday" : {
       "comment" : "Wallpaper Editor",
       "localizations" : {
@@ -47576,6 +47671,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示或隱藏檢閱器"
+          }
+        }
+      }
+    },
+    "Show the canvas’s frame statistics: draw calls, memory, particles, scripts" : {
+      "comment" : "Wallpaper Editor toolbar: help for Show Stats",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إظهار إحصاءات إطارات اللوحة: استدعاءات الرسم والذاكرة والجسيمات والبرامج النصية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frame-Statistik der Arbeitsfläche anzeigen: Draw Calls, Speicher, Partikel, Skripte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar las estadísticas de fotogramas del lienzo: llamadas de dibujo, memoria, partículas, scripts"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher les statistiques d’image du canevas : appels de dessin, mémoire, particules, scripts"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कैनवास के फ़्रेम आँकड़े दिखाएँ: ड्रॉ कॉल, मेमोरी, पार्टिकल, स्क्रिप्ट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra le statistiche dei fotogrammi della tela: chiamate di disegno, memoria, particelle, script"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャンバスのフレーム統計（ドローコール、メモリ、パーティクル、スクリプト）を表示します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "캔버스의 프레임 통계(그리기 호출, 메모리, 파티클, 스크립트)를 표시합니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokaż statystyki klatek płótna: wywołania rysowania, pamięć, cząsteczki, skrypty"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar as estatísticas de quadros da tela: chamadas de desenho, memória, partículas, scripts"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать статистику кадров холста: вызовы отрисовки, память, частицы, скрипты"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tuvalin kare istatistiklerini göster: çizim çağrıları, bellek, parçacıklar, betikler"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати статистику кадрів полотна: виклики малювання, памʼять, частинки, скрипти"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示画布的帧统计：绘制调用、内存、粒子、脚本"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示畫布的影格統計：繪製呼叫、記憶體、粒子、指令碼"
           }
         }
       }

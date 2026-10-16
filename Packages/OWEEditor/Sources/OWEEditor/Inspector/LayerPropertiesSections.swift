@@ -49,7 +49,11 @@ struct LayerPropertiesSections: View {
                 LayerFieldRow(session: session, services: services, layerID: layer.id, field: "alignment", title: L("Alignment")) {
                     Picker(selection: Binding(
                         get: { session.value("alignment", of: layer.id)?.stringValue?.lowercased() ?? "center" },
-                        set: { session.setValue(.string($0), for: "alignment", of: layer.id, actionName: L("Change \(L("Alignment"))")) })) {
+                        set: {
+                            // The inner text first: a nested L() hides the key from the catalog check.
+                            let field = L("Alignment")
+                            session.setValue(.string($0), for: "alignment", of: layer.id, actionName: L("Change \(field)"))
+                        })) {
                         ForEach(Self.alignments, id: \.self) { value in
                             Text(Self.alignmentTitle(value)).tag(value)
                         }
@@ -217,8 +221,9 @@ struct LayerParallaxDepthRow: View {
             set: { value in
                 var depth = session.vector("parallaxDepth", of: layer.id, default: [1, 1])
                 depth[component] = value
+                let field = L("Parallax Depth")
                 session.setValue(SceneVector.value(depth), for: "parallaxDepth", of: layer.id,
-                                 actionName: L("Change \(L("Parallax Depth"))"), coalescing: true)
+                                 actionName: L("Change \(field)"), coalescing: true)
             }), format: .number.precision(.fractionLength(0...3))) {
             Text(verbatim: axis)
         }

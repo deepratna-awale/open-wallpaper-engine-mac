@@ -39,7 +39,10 @@ struct LayerSoundSection: View {
             LayerFieldRow(session: session, services: services, layerID: layer.id, field: "playbackmode", title: L("Mode")) {
                 Picker(selection: Binding(
                     get: { Self.modes.contains(mode) ? mode : "loop" },
-                    set: { session.setValue(.string($0), for: "playbackmode", of: layer.id, actionName: L("Change \(L("Mode"))")) })) {
+                    set: {
+                        let field = L("Mode")
+                        session.setValue(.string($0), for: "playbackmode", of: layer.id, actionName: L("Change \(field)"))
+                    })) {
                     Text(L("Loop")).tag("loop")
                     Text(L("Random")).tag("random")
                     Text(L("Single")).tag("single")
