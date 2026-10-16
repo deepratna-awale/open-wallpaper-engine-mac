@@ -1,5 +1,6 @@
 import Combine
 import SwiftUI
+import OWEInspectorKit
 import OWESceneEditing
 
 /// The Wallpaper Editor window (editor-plan notes): the layer list on the left, the canvas
@@ -16,6 +17,7 @@ public struct WallpaperEditorView: View {
     @State private var isSaving = false
     @State private var notice: Notice?
     @StateObject private var authoring: EditorAuthoringModel
+    @StateObject private var statsSettings: EditorStatsSettings
     /// The shader editor (`ShaderEditorModel`), docked under the canvas while a shader is open.
     @StateObject private var shaderEditor: ShaderEditorModel
 
@@ -34,6 +36,7 @@ public struct WallpaperEditorView: View {
         _authoring = StateObject(wrappedValue: EditorAuthoringModel(session: session, projectJSON: services.projectJSON,
                                                                     console: services.scriptConsole,
                                                                     services: services))
+        _statsSettings = StateObject(wrappedValue: EditorStatsSettings(preferences: services.renderStats?.defaults ?? .standard))
     }
 
     public var body: some View {
@@ -49,6 +52,11 @@ public struct WallpaperEditorView: View {
                 VStack(spacing: 0) {
                     EditorCanvasView(session: session, tools: tools, services: services)
                         .overlay(alignment: .top) { noticeBanner }
+                        .overlay(alignment: .topTrailing) {
+                            if let feed = services.renderStats {
+                                RenderStatsFeedOverlay(feed: feed, mode: statsSettings.mode).padding(8)
+                            }
+                        }
                         .frame(minHeight: 200)
                     // The script editor docks under the canvas, which keeps running what it applies.
                     if let draft = authoring.draft {
@@ -191,8 +199,13 @@ public struct WallpaperEditorView: View {
         }
     }
 
-    /// The timeline and the inspector.
+    /// The stats, the timeline and the inspector.
     @ToolbarContentBuilder private var panelItems: some ToolbarContent {
+        if services.renderStats != nil {
+            ToolbarItem {
+                EditorStatsMenu(settings: statsSettings)
+            }
+        }
         if let timeline = services.timeline {
             ToolbarItem {
                 TimelineToolbarButton(timeline: timeline)

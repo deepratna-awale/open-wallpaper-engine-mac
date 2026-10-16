@@ -24,7 +24,8 @@ let package = Package(
     ],
     targets: [
         .target(name: "OWESceneEditing"),
-        .target(name: "OWEInspectorKit"),
+        // The stats overlay's own string catalog (`Resources/Stats.xcstrings`).
+        .target(name: "OWEInspectorKit", resources: [.process("Resources")]),
         .target(name: "OWEModelImport", dependencies: ["OWESceneEditing", .product(name: "CUfbx", package: "ufbx")]),
         .target(name: "OWEEditor",
                 dependencies: ["OWESceneEditing", "OWEInspectorKit", "OWEModelImport"],

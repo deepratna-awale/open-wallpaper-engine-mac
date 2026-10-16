@@ -80,6 +80,10 @@ struct ExplorerTopBar: ViewModifier {
     private var addWallpaperMenu: some ToolbarContent {
         ToolbarItem {
             Menu {
+                Button("New Wallpaper…", systemImage: "plus.rectangle.on.rectangle") {
+                    AppDelegate.shared.openNewWallpaperWizard()
+                }
+                Divider()
                 Button("Open Wallpaper…", systemImage: "arrow.up.bin.fill") {
                     AppDelegate.shared.openImportFromFolderPanel()
                 }
