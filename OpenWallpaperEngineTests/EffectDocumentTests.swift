@@ -93,6 +93,23 @@ final class EffectDocumentTests: XCTestCase {
         XCTAssertEqual(failures.messages.count, 4, failures.messages.joined(separator: "\n"))
     }
 
+    /// effect.json `functions` (`IEffect.executeMaterialFunction`): one bad entry is skipped alone.
+    func testDecodesFunctions() throws {
+        let failures = DecodeFailureLog()
+        let json = #"""
+            {"passes": [{"material": "materials/effects/a.json"}],
+             "functions": {"clearA": {"action": "clear", "fbos": ["_rt_A", "_rt_B"]},
+                           "later": {"action": "Clear"},
+                           "broken": {"fbos": ["_rt_A"]}}}
+            """#
+        let effect = try decodeTolerant(EffectDocument.self, from: Data(json.utf8), failures: failures)
+        XCTAssertEqual(effect.functions["clearA"], EffectFunction(action: "clear", fbos: ["_rt_A", "_rt_B"]))
+        XCTAssertEqual(effect.functions["later"]?.actionKind, .clear)
+        XCTAssertEqual(effect.functions["later"]?.fbos, [])
+        XCTAssertNil(effect.functions["broken"])
+        XCTAssertEqual(failures.messages.count, 1, failures.messages.joined(separator: "\n"))
+    }
+
     func testMaterialKeepsNullTexturesAndEveryValueForm() throws {
         let failures = DecodeFailureLog()
         let material = try decodeTolerant(MaterialDocument.self,
