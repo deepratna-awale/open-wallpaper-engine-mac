@@ -5,45 +5,69 @@ Open Wallpaper Engine
 
 [![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
 
-Open Wallpaper Engine to darmowy odtwarzacz open source dla macOS, który wyświetla tapety Wallpaper Engine: sceny, wideo i tapety internetowe. Ma natywny renderer Metal i obsługuje efekty, cząsteczki, modele 3D, oświetlenie, SceneScript, wizualizacje reagujące na dźwięk oraz Steam Workshop. Powstał jako fork [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) autorstwa Harena Chena i MrWindDoga, a od tamtej pory został w dużej mierze przepisany.
+Open Wallpaper Engine to darmowa aplikacja open source dla macOS, która odtwarza i edytuje tapety Wallpaper Engine: sceny, wideo i tapety internetowe. Sceny są rysowane natywnym rendererem Metal, z efektami, cząsteczkami, modelami 3D, oświetleniem, SceneScript i wizualizacjami reagującymi na dźwięk, a Warsztat Steam jest wbudowany. Powstała jako fork [Open Wallpaper Engine](https://github.com/MrWindDog) autorstwa Harena Chena i MrWindDoga, a od tamtej pory została w dużej mierze przepisana.
 
 > **Uwaga:** Ten projekt NIE jest powiązany z komercyjnym programem Wallpaper Engine dostępnym w Steam. To aplikacja open source dla macOS, która potrafi wyświetlać zasoby tapet z Warsztatu Steam programu Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
 **Strona internetowa:** [openwallpaperengine.app](https://openwallpaperengine.app/) · **Wiki:** [poradniki i rozwiązywanie problemów](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)
 
+<!-- demo: desktop -->
+
 ![Biblioteka](../../docs/images/library.jpg)
+
+## Co ją wyróżnia
+
+- **Jedyna aplikacja na macOS, która edytuje sceny Wallpaper Engine.** Edytor tapet otwiera warstwy, efekty, cząsteczki, oś czasu i skrypty sceny oraz zapisuje ją jako tapetę Wallpaper Engine.
+- **Eksport do Live Photo i do Wallpaper Engine na Androida.** Każda scena lub wideo staje się ruchomym ekranem blokady dla iPhone’a i iPada albo pakietem dla aplikacji Wallpaper Engine na Androida.
+- **Własne shadery Wallpaper Engine, przetłumaczone.** Każda warstwa, efekt i materiał jest rysowany oryginalnymi shaderami tapety, przetłumaczonymi na Metal, w tym efekty, które autorzy z Warsztatu napisali samodzielnie.
+- **Wygaszacz ekranu w pełni na żywo.** Wygaszacz ekranu rysuje tapetę każdego wyświetlacza w trakcie jej działania, więc zegary, skrypty i elementy reagujące na dźwięk wciąż się poruszają. Nic nie jest nagrywane.
 
 ## Najważniejsze funkcje
 
-- **Tapety typu scena, wideo i internetowe** — sceny są rysowane własnymi shaderami Wallpaper Engine każdej tapety, przetłumaczonymi na Metal, z efektami, cząsteczkami, modelami 3D, światłami, osiami czasu, SceneScript i wizualizacjami reagującymi na dźwięk. Tapety internetowe działają w WebKit lub w opcjonalnym silniku Chromium.
-- **Warsztat Steam** — przeglądaj, filtruj i pobieraj tapety z Warsztatu bezpośrednio w aplikacji albo importuj foldery i pliki zip z tapetami.
-- **Edycja/eksport sceny** — zmieniaj na żywo, na biurku, warstwy i efekty działającej tapety, ustaw ją jako wygaszacz ekranu albo wyeksportuj ją (sceny i wideo) jako ekran blokady Live Photo dla iPhone’a i iPada lub jako pakiet dla aplikacji Wallpaper Engine na Androida.
+- **Tapety typu scena, wideo i internetowe**: sceny z efektami, cząsteczkami, modelami 3D, światłami, osiami czasu, SceneScript i wizualizacjami reagującymi na dźwięk oraz wyjście HDR dla scen i filmów HDR10 lub HLG na wyświetlaczach, które potrafią je pokazać. Tapety internetowe działają w WebKit lub w opcjonalnym silniku Chromium, z właściwościami swojego folderu, dźwiękiem na żywo i funkcją Teraz odtwarzane.
+- **Warsztat Steam**: przeglądaj z sortowaniem i filtrami Wallpaper Engine, pobieraj przez SteamCMD z własnego konta Steam albo importuj foldery i pliki zip z tapetami. Karta Zainstalowane ma foldery i sortowanie Wallpaper Engine.
+- **Edytor tapet**: edytor wzorowany na edytorze Wallpaper Engine. Dodawaj i rozmieszczaj warstwy za pomocą uchwytów, dodawaj efekty z podglądem, pisz i edytuj własne efekty w Edytorze shaderów, importuj modele FBX i OBJ, animuj na osi czasu, pisz SceneScript, twórz właściwości użytkownika, edytuj systemy cząsteczek i szkielety Puppet Warp oraz korzystaj z narzędzi do obrazów Wallpaper Engine (Oddzielenie pierwszego planu, Stworzenie karty postaci, Generowanie mapy normalnych). **Nowa tapeta…** tworzy tapetę z obrazu lub z jednego z szablonów Wallpaper Engine. Edytujesz wersję roboczą: **Zachowaj** ją stosuje, **Zachowaj jako nową tapetę** dodaje kopię do biblioteki, a własne pliki tapety nigdy nie są zmieniane.
 
-  ![Edycja/eksport sceny](../../docs/images/scene-editor-live.jpg)
-
-- **Edytor tapet** — edytor wzorowany na edytorze Wallpaper Engine: warstwy, efekty z podglądem, oś czasu, SceneScript, właściwości użytkownika, cząsteczki, Puppet Warp i maski tworzone z mapy głębi. Edytujesz wersję roboczą: **Zachowaj** stosuje ją do tapety, **Zachowaj jako nową tapetę** dodaje kopię do biblioteki, a własne pliki tapety nigdy nie są zmieniane.
+  <!-- demo: wallpaper-editor -->
 
   ![Edytor tapet](../../docs/images/wallpaper-editor.jpg)
 
-- **Wyświetlacze** — osobna tapeta na każdym wyświetlaczu, jedna rozciągnięta na wszystkie lub sklonowana na każdy, grupy, podziały i profile, tak jak w Wallpaper Engine.
+  <!-- demo: model-import -->
 
-  ![Wyświetlacze](../../docs/images/displays.png)
+  <!-- demo: shader-editor -->
 
-- **Playlisty** — zmieniaj tapety według minutnika, przy logowaniu, o określonej porze dnia lub w wybrane dni tygodnia, z przejściami z Wallpaper Engine.
+- **Edycja/eksport sceny**: zmieniaj na żywo, na biurku, warstwy i efekty działającej tapety, wybierz, co pokazuje wygaszacz ekranu, albo wyeksportuj tapetę jako Live Photo lub pakiet na Androida.
 
-  ![Ustawienia playlisty](../../docs/images/playlists.png)
+  ![Edycja/eksport sceny](../../docs/images/scene-editor-live.jpg)
 
-- **Eksport** — ekrany blokady Live Photo dla iPhone’a i iPada oraz pakiety Wallpaper Engine na Androida, wysyłane na telefon przez Wi-Fi za pomocą kodu QR.
+- **Wygaszacz ekranu i ekran blokady**: wygaszacz ekranu pokazuje na żywo tapetę każdego wyświetlacza (*Wygaszacz ekranu taki sam jak tapeta*) albo wybraną przez Ciebie, a ekran blokady pokazuje jej obraz.
+
+  <!-- demo: screen-saver -->
+
+- **Eksport**: ekrany blokady Live Photo dla iPhone’a i iPada, wysyłane przez AirDrop lub zapisywane w Zdjęciach, oraz pakiety Wallpaper Engine na Androida, wysyłane na urządzenie przez Wi-Fi za pomocą kodu QR.
+
+  <!-- demo: live-photo-export -->
+
+  <!-- demo: android-export -->
 
   ![Wysyłanie przez Wi-Fi](../../docs/images/send-over-wifi.png)
 
-- **Motyw kolorów** — pasek menu, kolor akcentu oraz zabarwione ikony i foldery dopasowują się do koloru tapety; własne okna Open Wallpaper Engine mogą używać dokładnie tego koloru.
+- **Wyświetlacze**: osobna tapeta na każdym wyświetlaczu, jedna rozciągnięta na wszystkie lub sklonowana na każdy, grupy, podziały i profile, tak jak w Wallpaper Engine. **Odtwórz w oknie** odtwarza tapetę we własnym oknie.
 
-  ![Motyw kolorów](../../docs/images/theming.png)
+  ![Wyświetlacze](../../docs/images/displays.png)
 
-- **Wtyczka Serwer MCP** — klienty MCP mogą ustawiać tapety, playlisty i ustawienia oraz edytować sceny przez lokalne połączenie, które może otworzyć tylko Twoje konto.
+- **Playlisty**: zmieniaj tapety według minutnika, przy logowaniu, o określonej porze dnia lub w wybrane dni tygodnia, z przejściami z Wallpaper Engine.
+
+  ![Ustawienia playlisty](../../docs/images/playlists.png)
+
+- **Sterowanie**: klawisze dostępu dla akcji, playlist, tapet i profili wyświetlaczy; [wiersz poleceń](../../docs/command-line.md) `-control` z Wallpaper Engine; oraz wtyczka **Serwer MCP**, przez którą klienty MCP ustawiają tapety, playlisty i ustawienia oraz edytują sceny, przez lokalne połączenie, które może otworzyć tylko Twoje konto.
 
   ![Wtyczka Serwer MCP](../../docs/images/mcp-plugin.png)
+
+- **Zasilanie**: tapety wstrzymują się, gdy ekran jest zablokowany, stosują regułę *Laptop na baterii* z Wallpaper Engine i mogą przejść na niższy preset jakości i niższą liczbę klatek na baterii lub w trybie niskiego zużycia energii.
+- **Motyw kolorów**: pasek menu, kolor akcentu oraz zabarwione ikony i foldery dopasowują się do koloru tapety; własne okna Open Wallpaper Engine mogą używać dokładnie tego koloru.
+
+  ![Motyw kolorów](../../docs/images/theming.png)
 
 Wszystko inne, obszar po obszarze: [docs/features.md](../../docs/features.md).
 
@@ -52,13 +76,13 @@ Wszystko inne, obszar po obszarze: [docs/features.md](../../docs/features.md).
 1. Pobierz najnowsze wydanie ze strony [openwallpaperengine.app](https://openwallpaperengine.app/) lub z [GitHub Releases](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases). Jest podpisane i poświadczone notarialnie przez Apple, a do tego samo się aktualizuje.
 2. Otwórz plik DMG i przeciągnij **Open Wallpaper Engine** do folderu Aplikacje.
 
-Potrzebujesz **macOS 14.0 (Sonoma) lub nowszego**. Niektóre funkcje wymagają nowszej wersji macOS, uprawnienia lub wtyczki: zobacz [Pierwsze kroki](../../docs/getting-started.md#requirements).
+Potrzebujesz **macOS 14.0 (Sonoma) lub nowszego**. Tapety typu scena wymagają zasobów Wallpaper Engine z Twojej własnej kopii Wallpaper Engine w Steam; tapety wideo i internetowe ich nie wymagają. Niektóre funkcje wymagają nowszej wersji macOS, uprawnienia lub wtyczki: zobacz [Pierwsze kroki](../../docs/getting-started.md#requirements).
 
 ## Szybki start
 
-1. Otwórz aplikację. Asystent konfiguracji ustawia język, SteamCMD, logowanie do Steam i zasoby Wallpaper Engine, a także może zaimportować Twoje ulubione z Wallpaper Engine; każdy krok można pominąć.
+1. Otwórz aplikację. Asystent konfiguracji ustawia język, SteamCMD, logowanie do Steam i zasoby Wallpaper Engine, a także może zaimportować Twoje ulubione i foldery z Wallpaper Engine; każdy krok można pominąć.
 2. Zainstaluj zasoby Wallpaper Engine (*Ustawienia › Zasoby*), jeśli chcesz korzystać z tapet typu scena. Pochodzą one z Twojej własnej kopii Wallpaper Engine w Steam; tapety wideo i internetowe działają bez nich.
-3. Znajdź tapety na kartach **Odkryj** i **Warsztat** albo zaimportuj folder lub plik zip z tapetą (*Plik › Importuj tapetę z folderu…*, ⌘I).
+3. Znajdź tapety na kartach **Odkryj** i **Warsztat**, zaimportuj folder lub plik zip z tapetą (*Plik › Importuj tapetę z folderu…*, ⌘I) albo utwórz tapetę za pomocą **Dodaj tapetę › Nowa tapeta…**.
 4. Kliknij tapetę w bibliotece, a następnie **Ustaw tapetę** w jej szczegółach (albo kliknij ją prawym przyciskiem i wybierz **Ustaw jako tapetę**). Jej właściwości są wymienione poniżej.
 
 Więcej: [Pierwsze kroki](../../docs/getting-started.md) i [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
@@ -71,7 +95,7 @@ Wszystko, co zapisuje aplikacja, zostaje na Twoim Macu, a ona sama nie zbiera ż
 
 - [Pierwsze kroki](../../docs/getting-started.md) — wymagania, zasoby, Warsztat i importowanie
 - [Funkcje](../../docs/features.md) — wszystko, co obsługuje aplikacja, i jak z tego korzystać
-- Poradniki: [układy wyświetlaczy](../../docs/display-layouts.md) · [playlisty](../../docs/playlists.md) · [wygaszacz ekranu](../../docs/screen-saver.md) · [eksport na iPhone’a i iPada](../../docs/iphone-ipad-export.md) · [eksport na Androida](../../docs/android-export.md) · [mapy głębi](../../docs/depth-maps.md) · [motywy](../../docs/theming.md) · [Serwer MCP](../../docs/mcp.md) · [silnik internetowy Chromium](../../docs/chromium-engine.md)
+- Poradniki: [układy wyświetlaczy](../../docs/display-layouts.md) · [playlisty](../../docs/playlists.md) · [wygaszacz ekranu](../../docs/screen-saver.md) · [eksport na iPhone’a i iPada](../../docs/iphone-ipad-export.md) · [eksport na Androida](../../docs/android-export.md) · [mapy głębi](../../docs/depth-maps.md) · [motywy](../../docs/theming.md) · [import modeli](../../docs/model-import.md) · [narzędzia do obrazów](../../docs/image-tools.md) · [Serwer MCP](../../docs/mcp.md) · [wiersz poleceń](../../docs/command-line.md) · [silnik internetowy Chromium](../../docs/chromium-engine.md)
 - [Rozwój](../../docs/development.md) — kompilowanie ze źródeł i struktura projektu; [CONTRIBUTING.md](../../CONTRIBUTING.md) i [architektura](../../docs/architecture.md)
 - [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki) — poradniki, opis ustawień i rozwiązywanie problemów
 
@@ -83,7 +107,7 @@ Wszystko, co zapisuje aplikacja, zostaje na Twoim Macu, a ona sama nie zbiera ż
 
 Ten projekt powstał na bazie pracy następujących osób:
 
-- **[MrWindDog](https://github.com/MrWindDog)** — opiekun nadrzędnego forka [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac); dodał nowe funkcje i dopracował interfejs
+- **[MrWindDog](https://github.com/MrWindDog)** — opiekun nadrzędnego forka [wallpaper-engine-mac](https://github.com/MrWindDog); dodał nowe funkcje i dopracował interfejs
 - **[Haren Chen](https://github.com/haren724)** — twórca oryginalnego projektu [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac); zbudował podstawową architekturę aplikacji (SwiftUI, odtwarzanie tapet wideo, system importu, interfejs playlist)
 - **1ris_W** — tłumaczenie na język chiński
 - **[Klaus Zhu](https://github.com/klauszhu1105)** — oryginalny projekt logo

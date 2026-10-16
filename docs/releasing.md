@@ -345,7 +345,7 @@ validation are unchanged.
 
 `OpenWallpaperEngine/OpenWallpaperEngine.entitlements`: not sandboxed,
 `cs.allow-jit` (JavaScriptCore in SceneScript), network client, user-selected files,
-Downloads read-only, Photos library (for "Also Save to Photos Album"). Metal, WebKit (out of process), system audio capture (a TCC prompt,
+Downloads read-only, Photos library (for "Also Save to Photos Album"), `device.audio-input` (the audio recording device in Settings › Optimizations › Audio, under the hardened runtime). Metal, WebKit (out of process), system audio capture (a TCC prompt,
 not an entitlement) and running `/usr/bin/perl` with the bundled `nowPlayingAdapter.pl`
 (a resource, not an executable) need nothing more under the hardened runtime.
 

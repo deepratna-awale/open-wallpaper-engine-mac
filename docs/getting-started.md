@@ -12,10 +12,14 @@ Installing the app, the optional requirements, the Wallpaper Engine assets and b
 |---------|-------------|---------|
 | Browsing / downloading from Steam Workshop | `steamcmd` | Automatic (optional: `brew install steamcmd`) |
 | Audio visualizers & audio-reactive SceneScript | System Audio Recording permission (Screen & System Audio Recording before macOS 14.2) | Settings → Permissions |
+| A microphone or loopback device as the audio source | Microphone permission, asked when you choose the device | Settings → Optimizations › Audio |
 | App Rules' "Is playing audio" condition | macOS 14.2 or later | — |
 | Now Playing in wallpapers | macOS 15.4 or later for live updates | — |
 | Web wallpapers that need Chromium | The optional Chromium web engine | Settings → Plugins |
 | Depth maps in the editors | The Depth Map Generation plugin | Settings → Plugins |
+| The screen saver | The Screen Saver plugin; web and WebM wallpapers in it need the Chromium web engine | Settings → Plugins |
+| HDR output (scenes, HDR10 and HLG videos) | A display with HDR (EDR) headroom and Post-Processing set to Ultra (Display HDR) | Settings → Performance |
+| New effects, Replace Shader snippets and templates in the Wallpaper Editor | The Wallpaper Engine assets | Settings → Assets |
 | Control from MCP clients | The MCP Server plugin | Settings → Plugins |
 | Live Photo lock screens | iPhone or iPad with iOS / iPadOS 17 or later | — |
 | Android export | Wallpaper Engine's Android app on the device | — |
@@ -44,8 +48,9 @@ Wallpaper Engine keeps the folders of its Installed tab in its `config.json`, be
 ### Import from Local Files
 
 - **Folder or zip:** File › Import Wallpaper from Folder… (⌘I) — select wallpaper folders containing `project.json`, or `.zip` files of wallpapers; you can also drop them onto the library
-- **Manual:** Copy wallpaper folders directly into `~/Documents/Open Wallpaper Engine/`
+- **Manual:** Copy wallpaper folders directly into `~/Documents/Open Wallpaper Engine/` (the default Wallpaper Storage folder; Settings › Assets can move it)
+- **New:** Add Wallpaper › New Wallpaper… makes a scene from a picture or one of Wallpaper Engine's templates, or a web wallpaper from a folder with an `index.html`
 
 ## What the app connects to
 
-Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It contacts Valve (Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD), openwallpaperengine.app to check for app updates (its appcast) and GitHub to download them from GitHub Releases, without sending any personal data. Update checks can be turned off in Settings › Updates. Optional plugins download only when you install them: the Chromium web engine from the Chromium Embedded Framework's builds, and the depth model from Apple's Hugging Face repository, each checked against the version the app expects. Send over Wi-Fi serves an Android export only to devices on your local network, and stops once 15 minutes pass without a request. Web wallpapers may load their own online content. Your Steam password and Steam Guard code go straight to SteamCMD and are never stored, logged or sent anywhere else; only your account name is remembered, to reuse SteamCMD's saved login.
+Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It contacts Valve (Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD), openwallpaperengine.app to check for app updates (its appcast) and GitHub to download them from GitHub Releases, without sending any personal data. Update checks can be turned off in Settings › Updates. Optional plugins download only when you install them: the Chromium web engine from the Chromium Embedded Framework's builds, and the depth model from Apple's Hugging Face repository, each checked against the version the app expects. Send over Wi-Fi serves an Android export only to devices on your local network, and stops once 15 minutes pass without a request. Web wallpaper devtools, while you turn them on for a session, listen on this Mac only (127.0.0.1). Web wallpapers may load their own online content. Your Steam password and Steam Guard code go straight to SteamCMD and are never stored, logged or sent anywhere else; only your account name is remembered, to reuse SteamCMD's saved login.

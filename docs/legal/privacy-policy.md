@@ -95,6 +95,7 @@ OWE may ask for the following macOS permissions. Each is optional; the app works
 | Permission | Why | What happens to the data |
 |---|---|---|
 | **System Audio Recording** (Screen & System Audio Recording before macOS 14.2) | Some wallpapers react to the audio playing on your Mac. macOS grants access to system audio through this permission. | Audio is analysed on your Mac in real time to drive the wallpaper's visuals. It is never recorded, saved or sent anywhere. Screen frames are not captured or used. |
+| **Microphone** | Only when you choose a recording device (a microphone or a loopback device) in Settings › Optimizations › Audio, so audio-reactive wallpapers hear it instead of the audio your Mac plays. | Audio is analysed on your Mac in real time to drive the wallpaper's visuals. It is never recorded, saved or sent anywhere. |
 | **Photos** | Only when you turn on "Also Save to Photos Album" for iPhone & iPad exports. | The app finds or creates the album you chose and adds your exported Live Photos to it. Nothing else is read, stored or transmitted. |
 | **Local Network** | Send over Wi-Fi advertises the share's name on your local network. | Only the packages you selected are served, to devices on your local network. Nothing goes over the internet. |
 | **Window information** (no prompt) | To pause wallpapers when a window covers a display, saving power. | The app only checks window positions and sizes on your Mac. Nothing is stored or transmitted. |
