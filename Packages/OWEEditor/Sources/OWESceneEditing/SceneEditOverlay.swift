@@ -123,6 +123,10 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// Scene settings (scene.json's `general`) by name, each replacing the authored value; nil
     /// for none (version 2).
     public var general: [String: SceneJSONValue]?
+    /// The files of the effects made in the editor (New / Duplicate Effect, the shader editor's
+    /// edits) by their path in the wallpaper (`effects/<name>/effect.json`, its materials and
+    /// shaders), as text (`SceneEditOverlay+EffectFiles`); nil for none (version 2).
+    public var effectFiles: [String: String]?
     /// project.json edits besides the user properties (the title, `SceneProjectEdits`); nil for
     /// none (version 2).
     public var project: SceneProjectEdits?
@@ -135,14 +139,14 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     public var isEmpty: Bool {
         objects.values.allSatisfy(\.isEmpty) && !hasStructureEdits && timelines?.isEmpty != false
             && authoring?.isEmpty != false && !hasPuppetEdits && particles?.isEmpty != false && !hasGeneralEdits
-            && project?.isEmpty != false
+            && !hasEffectFiles && project?.isEmpty != false
     }
 
     /// Something changes the scene (locks don't). Authored properties count: they are edits of
     /// the wallpaper, and Save as New Wallpaper writes them.
     public var hasSceneEdits: Bool {
         objects.values.contains(where: \.hasSceneEdits) || hasStructureEdits || timelines?.isEmpty == false
-            || authoring?.isEmpty == false || particles?.isEmpty == false || hasGeneralEdits
+            || authoring?.isEmpty == false || particles?.isEmpty == false || hasGeneralEdits || hasEffectFiles
             || project?.isEmpty == false
     }
 
@@ -155,7 +159,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// Holds something version 1 can't apply.
     var needsVersion2: Bool {
         hasStructureEdits || timelines?.isEmpty == false || authoring?.isEmpty == false || hasPuppetEdits
-            || particles?.isEmpty == false || hasGeneralEdits || project?.isEmpty == false
+            || particles?.isEmpty == false || hasGeneralEdits || hasEffectFiles || project?.isEmpty == false
             || objects.values.contains(where: \.needsVersion2)
     }
 

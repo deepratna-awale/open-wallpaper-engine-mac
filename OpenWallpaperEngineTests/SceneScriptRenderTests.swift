@@ -115,6 +115,33 @@ final class SceneScriptRenderTests: XCTestCase {
 
     // MARK: - Instances
 
+    /// `general.clearenabled`: on unless authored false (`null` too, as 44 of WE's own scenes have it).
+    func testClearEnabledDecodesWithWEsDefault() throws {
+        func general(_ json: String) throws -> WESceneGeneral { try decodeTolerant(WESceneGeneral.self, from: Data(json.utf8)) }
+        let context = SpatialProperties()
+        XCTAssertTrue(try general("{}").clearEnabled(in: context))
+        XCTAssertTrue(try general(#"{"clearenabled": null}"#).clearEnabled(in: context))
+        XCTAssertTrue(try general(#"{"clearenabled": true}"#).clearEnabled(in: context))
+        XCTAssertFalse(try general(#"{"clearenabled": false}"#).clearEnabled(in: context))
+    }
+
+    /// With `clearenabled` off WE doesn't clear the scene before a frame: Mover's script moves it
+    /// from x = 16 to x = 48 on its third frame, and both places stay red. Once its script sets
+    /// `thisScene.clearenabled` back on (frame 20), a frame shows only where it is now.
+    func testClearEnabledOffKeepsTheLastFrame() throws {
+        _ = try Fixtures.assets()
+        let scene = try Scene(fixture: "scripted-clear", services: services(), size: SIMD2(128, 64))
+        defer { scene.close() }
+        let kept = try scene.render(frames: 6)
+        XCTAssertEqual(kept.color(atScene: SIMD2(48, 32)), .red, "where Mover is")
+        XCTAssertEqual(kept.color(atScene: SIMD2(16, 32)), .red, "where Mover was: the scene wasn't cleared")
+        XCTAssertEqual(kept.color(atScene: SIMD2(100, 32)), .black)
+
+        let cleared = try scene.render(frames: 22)
+        XCTAssertEqual(cleared.color(atScene: SIMD2(48, 32)), .red)
+        XCTAssertEqual(cleared.color(atScene: SIMD2(16, 32)), .black, "a cleared frame shows only the current place")
+    }
+
     /// S22: two displays showing the same wallpaper run two runtimes that share nothing: module
     /// variables, `shared` and frame counts are their own.
     func testTwoDisplaysShareNothing() throws {
@@ -215,6 +242,28 @@ final class SceneScriptRenderTests: XCTestCase {
         let dimmed = pixels.rgb(atScene: SIMD2(16, 48))
         XCTAssertTrue((90...170).contains(Int(dimmed.x)) && abs(Int(dimmed.x) - Int(dimmed.y)) < 8,
                       "brightness 0.5 halves Dimmed's white: \(dimmed)")
+    }
+
+    /// `IImageLayer.alignment` and `IEffectLayer.perspective` written by scripts are drawn: Aligned
+    /// (8 × 8 at x = 16) sits right of its origin once a script sets `left`, and Near (z = 15)
+    /// draws larger than its 8 × 8 through the temporary camera once a script turns `perspective` on.
+    func testScriptSetAlignmentAndPerspectiveAreDrawn() throws {
+        _ = try Fixtures.assets()
+        let plain = try Scene(fixture: "scripted-fields", services: nil, size: SIMD2(128, 64))
+        let authored = try plain.render(frames: 3)
+        plain.close()
+        XCTAssertEqual(authored.color(atScene: SIMD2(13, 32)), .red, "centred on its origin as authored")
+        XCTAssertEqual(authored.color(atScene: SIMD2(22, 32)), .black)
+        let flat = authored.litPixels(from: SIMD2(70, 2), to: SIMD2(122, 62))
+        XCTAssertEqual(Double(flat), 64, accuracy: 12, "Near draws flat, 8 × 8")
+
+        let scene = try Scene(fixture: "scripted-fields", services: services(), size: SIMD2(128, 64))
+        defer { scene.close() }
+        let pixels = try scene.render(frames: 4)
+        XCTAssertEqual(pixels.color(atScene: SIMD2(22, 32)), .red, "alignment 'left' puts the quad right of its origin")
+        XCTAssertEqual(pixels.color(atScene: SIMD2(13, 32)), .black)
+        let deep = pixels.litPixels(from: SIMD2(70, 2), to: SIMD2(122, 62))
+        XCTAssertGreaterThan(abs(deep - flat), 20, "perspective draws Near through the temporary camera: \(deep) vs \(flat)")
     }
 
     // MARK: - Draw order

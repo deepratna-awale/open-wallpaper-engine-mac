@@ -70,6 +70,7 @@ private struct LayerForm: View {
             if layer.kind == .image, let assets = services.puppetAssets {
                 PuppetInspectorSection(session: session, layer: layer, assets: assets)
             }
+            if layer.kind == .image { NormalMapSection(session: session, tools: tools, services: services, layer: layer) }
             LayerScriptsSection(layer: layer)
             Section {
                 DisclosureGroup(L("Details")) {

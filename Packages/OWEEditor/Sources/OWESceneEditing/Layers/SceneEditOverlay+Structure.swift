@@ -44,6 +44,8 @@ extension SceneEditOverlay {
         result.added = added
         result.removed = removed
         result.order = order
+        // An effect's files change what the scene builds: never drawn live, always read again.
+        result.effectFiles = effectFiles
         if let particles, particles.changesObjects {
             result.particles = SceneParticleOverlay(addedObjects: particles.addedObjects,
                                                     removedObjects: particles.removedObjects)

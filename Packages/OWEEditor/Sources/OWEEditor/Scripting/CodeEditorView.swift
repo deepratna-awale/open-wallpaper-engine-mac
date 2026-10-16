@@ -2,13 +2,16 @@ import AppKit
 import SwiftUI
 import OWESceneEditing
 
-/// The script editor's text: JavaScript highlighting, line numbers with error marks, the find bar
-/// (⌘F), autocomplete of SceneScript's API (after a `.`, or ⌥⎋ / F5 anywhere), automatic
-/// indentation, and an undo history of its own (the window's undo is the scene's edits).
+/// The script and shader editors' text: JavaScript or WE shader highlighting
+/// (`CodeEditorLanguage`), line numbers with error marks, the find bar (⌘F), autocomplete
+/// (SceneScript's API after a `.`, a shader's words; ⌥⎋ / F5 anywhere), automatic indentation,
+/// and an undo history of its own (the window's undo is the scene's edits).
 struct CodeEditorView: NSViewRepresentable {
     @Binding var text: String
     var diagnostics: [SceneScriptDiagnostic]
     var catalog: SceneScriptAPICatalog
+    /// A script, or a shader in the shader editor (`CodeEditorLanguage`).
+    var language: CodeEditorLanguage = .sceneScript
     /// ⌘↩: apply the script.
     var onCommit: () -> Void
 
@@ -25,6 +28,7 @@ struct CodeEditorView: NSViewRepresentable {
 
         let textView = ScriptTextView()
         textView.catalog = catalog
+        textView.language = language
         textView.onCommit = { [weak coordinator = context.coordinator] in coordinator?.parent.onCommit() }
         textView.delegate = context.coordinator
         textView.isRichText = false
@@ -51,7 +55,7 @@ struct CodeEditorView: NSViewRepresentable {
         textView.textContainer?.widthTracksTextView = false
         textView.textContainer?.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude,
                                                        height: CGFloat.greatestFiniteMagnitude)
-        textView.setAccessibilityLabel(L("Script"))
+        textView.setAccessibilityLabel(language.accessibilityLabel)
         textView.string = text
 
         scrollView.documentView = textView
@@ -109,7 +113,7 @@ struct CodeEditorView: NSViewRepresentable {
 
         func textView(_ textView: NSTextView, completions words: [String], forPartialWordRange charRange: NSRange,
                       indexOfSelectedItem index: UnsafeMutablePointer<Int>?) -> [String] {
-            let result = parent.catalog.completions(in: textView.string, at: NSMaxRange(charRange))
+            let result = parent.language.completions(in: textView.string, at: NSMaxRange(charRange), catalog: parent.catalog)
             index?.pointee = result.items.isEmpty ? -1 : 0
             return result.items.map(\.label)
         }
@@ -120,9 +124,8 @@ struct CodeEditorView: NSViewRepresentable {
             let full = NSRange(location: 0, length: storage.length)
             storage.beginEditing()
             storage.setAttributes(CodeEditorStyle.baseAttributes, range: full)
-            for token in JavaScriptTokenizer.tokens(in: storage.string) {
-                guard let color = CodeEditorStyle.color(token.kind) else { continue }
-                storage.addAttribute(.foregroundColor, value: color, range: token.range)
+            for (range, color) in parent.language.colors(in: storage.string) {
+                storage.addAttribute(.foregroundColor, value: color, range: range)
             }
             storage.endEditing()
             textView.typingAttributes = CodeEditorStyle.baseAttributes
@@ -188,22 +191,23 @@ enum CodeEditorStyle {
 /// suits code.
 final class ScriptTextView: NSTextView {
     var catalog = SceneScriptAPICatalog.standard
+    var language = CodeEditorLanguage.sceneScript
     var onCommit: (@MainActor () -> Void)?
 
     /// The word completion replaces: the identifier before the cursor (empty after a `.`).
     override var rangeForUserCompletion: NSRange {
         let selection = selectedRange()
         guard selection.length == 0 else { return super.rangeForUserCompletion }
-        return catalog.completions(in: string, at: selection.location).range
+        return language.completions(in: string, at: selection.location, catalog: catalog).range
     }
 
     override func insertText(_ string: Any, replacementRange: NSRange) {
         super.insertText(string, replacementRange: replacementRange)
         // A member access: offer the members.
-        if (string as? String) == "." {
+        if (string as? String) == ".", language.completesAfterDot {
             DispatchQueue.main.async { [weak self] in
                 guard let self, self.window?.firstResponder === self else { return }
-                if !self.catalog.completions(in: self.string, at: self.selectedRange().location).items.isEmpty {
+                if !self.language.completions(in: self.string, at: self.selectedRange().location, catalog: self.catalog).items.isEmpty {
                     self.complete(nil)
                 }
             }
