@@ -172,7 +172,8 @@ final class ShaderRevisionGuardTests: XCTestCase {
         }
         XCTAssertEqual(base.hash, expected.hash, """
             Translated shader output changed: bump ShaderVariantTranslator.revision and re-record: \
-            \(Self.recordCommand)
+            \(Self.recordCommand). A new or changed fixture shader under Tests/Fixtures changes this hash \
+            without any translator change: then re-record without a bump.
             """)
         if let assets {
             let sources: String = Self.sourcesHash(root: try Fixtures.assets())
