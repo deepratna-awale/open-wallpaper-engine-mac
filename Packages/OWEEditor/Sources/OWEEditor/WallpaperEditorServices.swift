@@ -82,6 +82,9 @@ public struct WallpaperEditorServices {
     public var openAssetsSetup: () -> Void = {}
     /// Take Snapshot and Record GIF: the library thumbnail made from the canvas; nil leaves them out.
     public var thumbnail: EditorThumbnail?
+    /// A 3D scene's camera as the canvas's renderer drew its last frame, for the 3D gizmo; nil
+    /// in a 2D scene or before the scene has drawn.
+    public var sceneCamera: () -> EditorSceneCamera? = { nil }
     /// The canvas renderer's frame statistics for the stats overlay; nil leaves the overlay out.
     public var renderStats: RenderStatsFeed?
     /// The 3D models Add Layer › Model offers (`models/…/….mdl`): the wallpaper's own, then WE's.

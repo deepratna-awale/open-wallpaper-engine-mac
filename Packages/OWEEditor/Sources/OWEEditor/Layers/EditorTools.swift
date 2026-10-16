@@ -26,6 +26,22 @@ final class EditorTools: ObservableObject {
     var externalEditor: ExternalImageEditor?
     /// A message for the window's banner (an import that failed, say).
     @Published var problem: String?
+    /// The canvas's gizmo: which handles the selection shows (Multi, every one, in a 2D scene; the
+    /// canvas switches a 3D scene to Translate).
+    @Published var gizmoMode: GizmoMode = .multi
+    /// Each mode's space as last chosen; unset, the mode's own (`GizmoMode.defaultSpace`).
+    @Published var gizmoSpaces: [GizmoMode: GizmoSpace] = [:]
+
+    /// The current mode's axes: the scene's or the object's own.
+    var gizmoSpace: GizmoSpace {
+        get { gizmoSpaces[gizmoMode] ?? gizmoMode.defaultSpace }
+        set { if gizmoMode.hasSpaceChoice { gizmoSpaces[gizmoMode] = newValue } }
+    }
+
+    /// A gizmo button: its mode, or none when it is the mode already (WE's `setGizmoMode`).
+    func toggleGizmoMode(_ mode: GizmoMode) {
+        gizmoMode = gizmoMode == mode ? .none : mode
+    }
     /// Images waiting for the importer's options (`ImportOptionsSheet`).
     @Published var pendingImport: PendingImageImport?
     /// Normal Map Generation's options by material, kept while the window is open (as WE's editor).
