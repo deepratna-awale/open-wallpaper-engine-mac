@@ -55,7 +55,13 @@ final class CharacterSheetTests: XCTestCase {
         XCTAssertEqual(CharacterSheet.croppedToContent(sparse).map { [$0.width, $0.height] }, [40, 40])
         XCTAssertNil(CharacterSheet.croppedToContent(RGBAImage(width: 3, height: 3)))
 
-        let pieces = (0..<6).map { piece(UInt8(10 + $0), width: 40 + $0 * 10, height: 30 + $0 * 5) }
+        var pieces: [RGBAImage] = []
+        for index in 0..<6 {
+            let value = UInt8(10 + index)
+            let width: Int = 40 + index * 10
+            let height: Int = 30 + index * 5
+            pieces.append(piece(value, width: width, height: height))
+        }
         let sheet = CharacterSheet.sheet(pieces)
         let gap = CharacterSheet.spacing(for: pieces)
         // Every piece's pixels are on the sheet once.
