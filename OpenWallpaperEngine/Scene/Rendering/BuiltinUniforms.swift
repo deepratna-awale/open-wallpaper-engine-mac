@@ -93,6 +93,10 @@ struct BuiltinPassContext {
     var altViewProjection: simd_float4x4? = nil
     /// `EffectGraphRenderer.effectTextureProjection(quad:sceneSize:)` for a layer's effects.
     var effectTextureProjection: simd_float4x4 = matrix_identity_float4x4
+    /// `g_LayerModelMatrix`: the layer's own object matrix (`layerModelMatrix(_:)`) while an effect
+    /// pass draws into the layer's buffers, where `modelMatrix` is the buffer's quad. nil:
+    /// `modelMatrix`.
+    var layerModelMatrix: simd_float4x4? = nil
     var textures: [Int: BuiltinTextureInfo] = [:]
     var color: SIMD3<Float> = SIMD3(repeating: 1)
     var alpha: Float = 1
@@ -100,6 +104,17 @@ struct BuiltinPassContext {
     var brightness: Float = 1
     /// `g_RenderVar0...4`; zeros unless the renderer (e.g. particles) provides them.
     var renderVars: [Int: SIMD4<Float>] = [:]
+
+    /// WE's `g_LayerModelMatrix` for a layer whose object transform (its parents' included) is
+    /// `world`: "a copy of the matrix applied to the layer object", which transforms between the
+    /// layer's local space (scene units of its `size`, origin at its `origin`) and world space
+    /// (docs.wallpaperengine.io, shader variables). Its axes carry the layer's scale, which
+    /// Workshop effects read back (`length(g_LayerModelMatrix[0].xy)`).
+    static func layerModelMatrix(_ world: SceneAffineTransform) -> simd_float4x4 {
+        let x = world.linear.columns.0, y = world.linear.columns.1
+        return simd_float4x4(columns: (SIMD4(x.x, x.y, 0, 0), SIMD4(y.x, y.y, 0, 0), SIMD4(0, 0, 1, 0),
+                                       SIMD4(world.translation.x, world.translation.y, 0, 1)))
+    }
 }
 
 /// Values of WE's built-in uniforms, as flat float arrays. Matrices are column-major (16 floats,
@@ -114,7 +129,7 @@ enum BuiltinUniforms {
         "g_ModelViewMatrix", "g_ModelViewMatrixInverse", "g_ViewProjectionMatrix",
         "g_ViewProjectionMatrixInverse", "g_AltViewProjectionMatrix", "g_ViewMatrix",
         "g_EffectTextureProjectionMatrix", "g_EffectTextureProjectionMatrixInverse", "g_NormalModelMatrix",
-        "g_Color4", "g_Color", "g_Alpha", "g_UserAlpha", "g_Brightness",
+        "g_LayerModelMatrix", "g_Color4", "g_Color", "g_Alpha", "g_UserAlpha", "g_Brightness",
         "g_EyePosition", "g_ViewUp", "g_ViewRight",
         "g_ViewForward", "g_TextureReductionScale",
         "g_FogDistanceColor", "g_FogDistanceParams", "g_FogHeightColor", "g_FogHeightParams",
@@ -134,7 +149,7 @@ enum BuiltinUniforms {
         case modelViewProjection, modelViewProjectionInverse, modelMatrix, altModelMatrix, modelMatrixInverse
         case modelViewMatrix, modelViewMatrixInverse, viewMatrix, viewProjection, altViewProjection
         case viewProjectionInverse, effectTextureProjection, effectTextureProjectionInverse
-        case normalModelMatrix, altNormalModelMatrix
+        case normalModelMatrix, altNormalModelMatrix, layerModelMatrix
         case color4, color, alpha, userAlpha, brightness
         case lightAmbientColor, lightSkylightColor, eyePosition, viewUp, viewRight, viewForward
         case textureReductionScale, fogDistanceColor, fogDistanceParams, fogHeightColor, fogHeightParams
@@ -152,7 +167,8 @@ enum BuiltinUniforms {
             case .modelViewProjection, .modelViewProjectionInverse, .modelMatrix, .altModelMatrix, .modelMatrixInverse,
                  .modelViewMatrix, .modelViewMatrixInverse, .viewMatrix, .viewProjection, .altViewProjection,
                  .viewProjectionInverse, .effectTextureProjection, .effectTextureProjectionInverse,
-                 .normalModelMatrix, .altNormalModelMatrix, .eyePosition, .viewUp, .viewRight, .viewForward:
+                 .normalModelMatrix, .altNormalModelMatrix, .layerModelMatrix, .eyePosition, .viewUp, .viewRight,
+                 .viewForward:
                 return true
             default:
                 return false
@@ -192,6 +208,7 @@ enum BuiltinUniforms {
             "g_EffectTextureProjectionMatrix": .effectTextureProjection,
             "g_EffectTextureProjectionMatrixInverse": .effectTextureProjectionInverse,
             "g_NormalModelMatrix": .normalModelMatrix, "g_AltNormalModelMatrix": .altNormalModelMatrix,
+            "g_LayerModelMatrix": .layerModelMatrix,
             "g_Color4": .color4, "g_Color": .color, "g_Alpha": .alpha, "g_UserAlpha": .userAlpha,
             "g_Brightness": .brightness, "g_LightAmbientColor": .lightAmbientColor,
             "g_LightSkylightColor": .lightSkylightColor, "g_EyePosition": .eyePosition, "g_ViewUp": .viewUp,
@@ -243,6 +260,7 @@ enum BuiltinUniforms {
         case .effectTextureProjectionInverse: return flat(pass.effectTextureProjection.inverse)
         case .normalModelMatrix: return normalMatrix(pass.modelMatrix)
         case .altNormalModelMatrix: return normalMatrix(pass.altModelMatrix ?? pass.modelMatrix)
+        case .layerModelMatrix: return flat(pass.layerModelMatrix ?? pass.modelMatrix)
         case .color4: return [pass.color.x, pass.color.y, pass.color.z, pass.alpha]
         case .color: return flat(pass.color)
         case .alpha: return [pass.alpha]
