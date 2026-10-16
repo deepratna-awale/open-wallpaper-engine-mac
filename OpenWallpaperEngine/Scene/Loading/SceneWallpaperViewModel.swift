@@ -211,7 +211,8 @@ class SceneWallpaperViewModel: ObservableObject {
         defer { sceneLock.unlock() }
         buildTextures.removeAll()
     }
-    private var registeredFontNames: [String: String] = [:]
+    /// Registers the text objects' fonts (`textFontLoader`); dropped with the wallpaper.
+    private var fontLoader: SceneTextFontLoader?
 
     /// `effectTranslator` translates and caches every shader variant the scene needs; the app's
     /// shared one (`defaultEffectTranslator`) unless a caller keeps its own cache (shader prewarm, tests).
@@ -373,7 +374,7 @@ class SceneWallpaperViewModel: ObservableObject {
         guard isCurrent() else { return nil }
         var read = SceneRead(wallpaper: wallpaper, signature: key.name + "|" + sceneFile, hasPackage: hasPackage)
         read.overlay = request.overlay
-        read.editorAssets = request.overlay?.particles?.assetData() ?? [:]
+        read.editorAssets = request.overlay?.editorFileData() ?? [:]
         if let cached = Self.cachedParse(for: dir, signature: read.signature) {
             read.parser = cached.parser
             read.scene = cached.scene
@@ -427,7 +428,7 @@ class SceneWallpaperViewModel: ObservableObject {
         // per wallpaper, so they survive switches and are reclaimed by NSCache under pressure.
         if loadedWallpaperDirectory != dir {
             assetDataCache.removeAll(keepingCapacity: true)
-            registeredFontNames.removeAll(keepingCapacity: true)
+            fontLoader = nil
             // Otherwise a stale stream either keeps playing the previous video's audio after
             // switching to a non-video wallpaper, or gets reused verbatim for a different video.
             videoStream?.stop()
@@ -721,6 +722,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                             clearColor: scene.general.clearColor(in: valueContext),
                                             wallpaperKey: propertyStoreKey)
             content.general = scene.general
+            content.clearEnabled = scene.general.clearEnabled(in: valueContext)
             content.motions = objectMotions(scene.objects, besides: layers, context: valueContext)
             content.visibility = visibility
             content.userVisibility = SceneUserVisibility(objects: scene.objects)
@@ -1460,7 +1462,7 @@ class SceneWallpaperViewModel: ObservableObject {
         let paddingParts = (object.padding ?? "").split(separator: " ").compactMap { Float($0) }
         let firstPadding = paddingParts.first ?? WETextDefaults.padding
         let padding = SIMD2<Float>(firstPadding, paddingParts.count > 1 ? paddingParts[1] : firstPadding)
-        let textConfig = SceneMetalText(value: text, font: registerFont(object.font),
+        var textConfig = SceneMetalText(value: text, font: registerFont(object.font),
                                          pointSize: CGFloat(object.pointsize ?? WETextDefaults.pointSize),
                                          horizontalAlignment: object.horizontalalign,
                                          verticalAlignment: object.verticalalign,
@@ -1471,6 +1473,17 @@ class SceneWallpaperViewModel: ObservableObject {
                                          useEllipsis: object.limituseellipsis ?? false,
                                          anchor: object.anchor, blockAlign: object.blockalign ?? false,
                                          effects: object.textEffects.effects)
+        textConfig.maxWidthValue = Float(object.maxwidth ?? WETextDefaults.maxWidth)
+        textConfig.maxRowsValue = object.maxrows ?? WETextDefaults.maxRows
+        textConfig.fonts = textFontLoader()
+        textConfig.opaqueBackground = object.opaquebackground ?? false
+        if let color = object.backgroundcolor?.parseVector3() {
+            textConfig.backgroundColor = SIMD3(Float(color.0), Float(color.1), Float(color.2))
+        }
+        let spacingParts = (object.spacing ?? "").split(separator: " ").compactMap { Float($0) }
+        if let first = spacingParts.first {
+            textConfig.spacing = SIMD2(first, spacingParts.count > 1 ? spacingParts[1] : first)
+        }
         var layer = SceneMetalLayer(id: String(id), name: object.name ?? String(id),
                                source: .image(transparentPlaceholderImage),
                                position: localOrigin(for: object),
@@ -1487,7 +1500,7 @@ class SceneWallpaperViewModel: ObservableObject {
         // Drawn through WE's `font` material, which reads its texture as coverage: effects' output
         // isn't that, and `font` has no blend-mode combo, so those layers keep the native draw.
         // Text with font effects draws its coloured raster (`SceneTextEffects`), not coverage.
-        if layer.weEffects.isEmpty, (object.colorBlendMode ?? 0) == 0, textConfig.effects == nil {
+        if layer.weEffects.isEmpty, (object.colorBlendMode ?? 0) == 0, !textConfig.rastersInColor {
             layer.imageMaterial = buildTextMaterial(object, id: id, wallpaperDir: wallpaperDir)
         }
         return layer
@@ -1561,84 +1574,18 @@ class SceneWallpaperViewModel: ObservableObject {
         Self.pixelImage([1, 1, 1, 0])
     }
 
+    /// The name a text object's `font` is registered under (`SceneTextFontLoader`).
     private func registerFont(_ path: String?) -> String? {
-        guard let path, !path.isEmpty else { return nil }
-        if let registered = registeredFontNames[path] { return registered }
-        let resolver = SceneFontResolver(
-            wallpaperData: { self.loadFontData(named: $0) },
-            assetDirectories: WallpaperEngineAssets.searchDirectories,
-            workshop: WorkshopAssetResolver(roots: WorkshopAssetResolver.defaultRoots()))
-        let data: Data
-        switch resolver.resolve(path) {
-        case .system(let family)?:
-            registeredFontNames[path] = family
-            // The per-layer font setting is seeded with the scene's name (`systemfont_*`).
-            if let installed = NSFontManager.shared.font(withFamily: family, traits: [], weight: 5, size: 12) {
-                SceneFontRegistry.register(postScriptName: installed.fontName, names: [path])
-            }
-            return family
-        case .data(let bytes, _)?:
-            data = bytes
-        case nil:
-            OWELog.error(.scene, "Font \"\(path)\" not found in the wallpaper, WE assets or workshop items; using Arial, as WE does")
-            return path
-        }
-        guard let descriptors = CTFontManagerCreateFontDescriptorsFromData(data as CFData) as? [CTFontDescriptor],
-              let descriptor = descriptors.first,
-              let name = CTFontDescriptorCopyAttribute(descriptor, kCTFontNameAttribute) as? String else {
-            return path
-        }
-
-        // Fonts inside a PKG have no filesystem URL, so register their in-memory
-        // CGFont before NSFont(name:) is used by either text rendering path.
-        if let provider = CGDataProvider(data: data as CFData),
-           let font = CGFont(provider) {
-            var error: Unmanaged<CFError>?
-            _ = CTFontManagerRegisterGraphicsFont(font, &error)
-            let family = CTFontDescriptorCopyAttribute(descriptor, kCTFontFamilyNameAttribute) as? String
-            SceneFontRegistry.register(font, names: [path, name, family ?? ""])
-        }
-        registeredFontNames[path] = name
-        return name
+        textFontLoader().register(path)
     }
 
-    /// The wallpaper's own package or folder; `SceneFontResolver` handles the other sources.
-    private func loadFontData(named path: String) -> Data? {
-        let normalized = path.replacingOccurrences(of: "\\", with: "/")
-        let keys = [path, normalized, (normalized as NSString).lastPathComponent]
-        for key in keys {
-            if let cached = assetDataCache[key] { return cached }
-            if let data = pkgParser?.extractFile(named: key) {
-                assetDataCache[key] = data
-                return data
-            }
-        }
-        if let entry = pkgParser?.fileList.first(where: {
-            let candidate = $0.replacingOccurrences(of: "\\", with: "/")
-            return candidate.caseInsensitiveCompare(normalized) == .orderedSame
-                || (candidate as NSString).lastPathComponent.caseInsensitiveCompare((normalized as NSString).lastPathComponent) == .orderedSame
-        }), let data = pkgParser?.extractFile(named: entry) {
-            assetDataCache[path] = data
-            return data
-        }
-        if let directory = loadedWallpaperDirectory {
-            for candidate in [normalized, (normalized as NSString).lastPathComponent] {
-                let data: Data?
-                do {
-                    data = try AssetPathResolver.data(candidate, in: directory)
-                } catch {
-                    OWELog.error(.scene, "Failed to read font \(candidate): \(error)")
-                    continue
-                }
-                if let data {
-                    assetDataCache[path] = data
-                    return data
-                }
-            }
-        }
-        return nil
+    /// This wallpaper's font loader, made on first use after a load of a different wallpaper.
+    private func textFontLoader() -> SceneTextFontLoader {
+        if let fontLoader { return fontLoader }
+        let loader = SceneTextFontLoader(package: pkgParser, directory: loadedWallpaperDirectory)
+        fontLoader = loader
+        return loader
     }
-
 
     /// Shared by every scene: translated variants are cached in memory and on disk.
     /// Optional only for its callers' `guard let`s; it always exists.
@@ -1698,7 +1645,9 @@ class SceneWallpaperViewModel: ObservableObject {
             },
             sceneEngineCombos: sceneEngineCombos,
             readWallpaperFile: { [weak self] path in
-                guard let self, let data = self.wallpaperData(named: path, wallpaperDir: wallpaperDir) else { return nil }
+                // The editor's files of the wallpaper (an effect made in the Wallpaper Editor) are its own.
+                guard let self, let data = self.editorAssetsLock.withLock({ self.editorAssets[path] })
+                        ?? self.wallpaperData(named: path, wallpaperDir: wallpaperDir) else { return nil }
                 return self.bindingTable.resolvedData(data, path: path, properties: self.userProperty)
             })
         builder.objectCombos = objectCombos

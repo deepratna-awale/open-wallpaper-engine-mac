@@ -84,6 +84,34 @@ extension SceneEditSession {
         return id
     }
 
+    /// Adds several layers in one undo step (a preset's objects), in order above the selection, or
+    /// on top, and selects the first. Returns their ids.
+    @discardableResult
+    public func addLayers(_ objects: [[String: SceneJSONValue]], actionName: String) -> [Int] {
+        guard !objects.isEmpty else { return [] }
+        var next = overlay
+        var ids: [Int] = []
+        var id = nextObjectID
+        for var object in objects {
+            object["id"] = nil
+            next.addObject(.object(object), id: id)
+            ids.append(id)
+            id += 1
+        }
+        if let selected = selection, outline.layer(selected) != nil {
+            var order = outline.layers.map(\.id)
+            let after = subtree(of: selected).compactMap { order.firstIndex(of: $0) }.max() ?? (order.count - 1)
+            order.insert(contentsOf: ids, at: min(after + 1, order.count))
+            next.order = order
+        } else if let order = next.order {
+            next.order = order + ids
+        }
+        normalizeOrder(&next)
+        commit(next, actionName: actionName, coalescingKey: nil)
+        selection = ids.first
+        return ids
+    }
+
     /// Copies of the layers (and the layers under them), placed just above the originals and
     /// selected; a copy's name says it is one.
     @discardableResult

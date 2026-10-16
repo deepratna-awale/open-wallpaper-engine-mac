@@ -131,10 +131,13 @@ struct SceneAnimationLayerStack: Equatable {
     let skeleton: SceneSkeleton
     let clips: [MDLAnimation]
     private(set) var layers: [SceneAnimationLayer] = []
-    /// Per clip, its root motion (`SceneRootMotion`); empty unless the stack's object runs it (a
-    /// model whose `rootmotion` is on: 0x14021cbf8 tests obj+0x310; puppets' update 0x1401fdf90
-    /// has none).
+    /// Per clip, its root motion (`SceneRootMotion`); empty unless the stack is a model's
+    /// (puppets' update 0x1401fdf90 has none).
     let rootMotions: [SceneRootMotion?]
+    /// Whether the object runs its clips' root motion this frame: a model's `rootmotion`, as
+    /// authored or as a script set it (`IModelLayer.rootmotion`; 0x14021cbf8 tests obj+0x310 on
+    /// every update, so a change applies from the next frame).
+    var runsRootMotion: Bool
 
     /// A model's stack (its update 0x14021c480), where a clip the editor cut without Match loop
     /// reads its source clip's tracks (`source(of:)`); puppets' update (0x1401fdf90) doesn't.
@@ -146,7 +149,8 @@ struct SceneAnimationLayerStack: Equatable {
         self.skeleton = skeleton
         self.clips = clips
         readsCutClipsFromSource = model
-        rootMotions = model && rootMotion ? clips.map { SceneRootMotion(clip: $0, clips: clips, skeleton: skeleton) } : []
+        rootMotions = model ? clips.map { SceneRootMotion(clip: $0, clips: clips, skeleton: skeleton) } : []
+        runsRootMotion = rootMotion
     }
 
     /// The clip whose tracks a layer on clip `index` samples, and the frame its frames count
@@ -255,7 +259,7 @@ struct SceneAnimationLayerStack: Equatable {
     /// by the sum, so later layers don't undo it. WE never moves the object by root motion (§2.8).
     private func applyRootMotion(at index: Int, weight: Float, to pose: inout [SceneBoneTransform]) -> Float {
         let clip = layers[index].clip
-        guard clip < rootMotions.count, let motion = rootMotions[clip] else { return 0 }
+        guard runsRootMotion, clip < rootMotions.count, let motion = rootMotions[clip] else { return 0 }
         var remaining: Float = 1
         for later in layers[(index + 1)...] where later.visible && !later.additive {
             var copy = later

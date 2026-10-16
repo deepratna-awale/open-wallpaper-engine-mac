@@ -85,7 +85,7 @@ The d.ts header states the binding model: a script is bound to **one property**;
 | `frametime`, `runtime`, `timeOfDay` | number | seconds since last frame; seconds since start; fraction of the day 0…1 |
 | `screenResolution`, `canvasSize` | Vec2 | screen pixels; scene (canvas) size |
 | `userProperties` | object | converted by `_Internal.convertUserProperties`: `color` → `Vec3`, `usershortcut` → `{isbound, commandtype, file}`, others their value |
-| `isRunningInEditor()`, `isPortrait()`, `isLandscape()`, `isDesktopDevice()`, `isMobileDevice()`, `isWallpaper()`, `isScreensaver()` | **functions** | |
+| `isRunningInEditor()`, `isPortrait()`, `isLandscape()`, `isDesktopDevice()`, `isMobileDevice()`, `isWallpaper()`, `isScreensaver()` | **functions** | `isRunningInEditor()` is true only in the Wallpaper Editor's canvas (`SceneMetalRenderer.runsInEditor`) |
 | `AUDIO_RESOLUTION_16/32/64` | 16/32/64 | there is **no** 128 ("Resolution must be either 16, 32 or 64.") |
 | `registerAudioBuffers(res)` | → `AudioBuffers {left, right, average: Float32Array}` | global scope only; the arrays are live and refreshed each frame |
 | `registerAsset(file, precache)` | → `IAssetHandle` | global scope only |
@@ -105,7 +105,7 @@ The d.ts header states the binding model: a script is bound to **one property**;
 - Structure: `createLayer(path|IAssetHandle|config|IModelData)`, `destroyLayer(layer)` ("removed after all scripts on that frame updated"), `sortLayer(layer, index)`, `createModelData(config)` / `destroyModelData`.
 - Camera: `getCameraTransforms()` / `setCameraTransforms({eye, center, up, zoom})`, `fov`, `nearz`, `farz`.
 - `getAnimation(name?)` from any layer.
-- Scene settings (read/write): `bloom`, `bloomstrength`, `bloomthreshold`, `clearenabled`, `clearcolor`, `ambientcolor`, `skylightcolor`, `camerafade`, `camerashake`, `camerashakespeed`, `camerashakeamplitude`, `camerashakeroughness`, `cameraparallax`, `cameraparallaxamount`, `cameraparallaxdelay`, `cameraparallaxmouseinfluence`.
+- Scene settings (read/write): `bloom`, `bloomstrength`, `bloomthreshold`, `clearenabled`, `clearcolor`, `ambientcolor`, `skylightcolor`, `camerafade`, `camerashake`, `camerashakespeed`, `camerashakeamplitude`, `camerashakeroughness`, `cameraparallax`, `cameraparallaxamount`, `cameraparallaxdelay`, `cameraparallaxmouseinfluence`. `clearenabled` (and `general.clearenabled`, on unless authored false: scene flag 0x20, which WE's scene pass tests before its clear, 0x140183588) off keeps the last frame: the scene pass loads its colour and depth instead of clearing them, into the scene's own target.
 
 `createLayer` config objects may carry `name`, `origin`, `angles`, `scale`, `text`, `color`, … and `model` (IModelData); the doc example passes `thisLayer.origin` directly.
 
@@ -119,7 +119,7 @@ The d.ts header states the binding model: a script is bound to **one property**;
 - **Text**: `text`, `color`, `alpha`, `opaquebackground`, `backgroundcolor`, `pointsize`, `font`, `padding`, `horizontalalign`, `verticalalign`, `anchor`, `limitrows`, `maxrows`, `limitwidth`, `maxwidth`.
 - **Sound**: `play()`, `stop()`, `pause()`, `isPlaying()`, `volume`. How WE plays them (modes, gain, timers, mute) is under "After WP11" in §5.
 - **Particle system**: `play/pause/stop/isPlaying`, `emitParticles(count?)`, `instance: {alpha, size, count, speed, lifetime, rate, colorn, controlpoint0…7}`.
-- **Model**: `perspective`, `rootmotion`, animation layers. **Camera**: `fov`, `zoom`.
+- **Model**: `perspective`, `rootmotion`, animation layers. **Camera**: `fov`, `zoom`. Script writes of `alignment`, `perspective` (image, text and model layers; in an orthographic scene a model then draws through the perspective layers' temporary camera, as WE's model draw does at 0x140222770), `rootmotion` (from the next pose) and a camera layer's `zoom` (a playing path's zoom still wins, as its fov does) are drawn.
 - `IEffect`: `visible`, `name`, `getMaterial(i) → IMaterial`, `getMaterialCount()`, `setMaterialProperty(name, number|Vec2|Vec3|Vec4)` ("on all materials of this effect that have a matching property"), `executeMaterialFunction(name)`, `getAnimation()`.
 - `ITextureAnimation`: `frameCount`, `duration`, `rate`, `play/pause/stop/isPlaying`, `getFrame/setFrame`, `join`.
 - `IVideoTexture`: `duration`, `rate`, `loop`, `play/pause/stop/isPlaying`, `getCurrentTime/setCurrentTime`, `addEndedCallback`.

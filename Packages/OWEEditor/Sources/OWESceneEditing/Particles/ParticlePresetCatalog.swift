@@ -13,6 +13,16 @@ public struct ParticlePreset: Identifiable, Hashable, Sendable {
         public let objects: [SceneJSONValue]
         /// Files it needs, by their path in the preset's folder and in the project alike.
         public let dependencies: [String]
+        /// WE's built-in effects its objects use (`{"file": "effects/lightshafts/effect.json"}`
+        /// in its `dependencies`), which WE's editor copies into the project as it does an added
+        /// effect's.
+        public var effects: [String] = []
+
+        /// It adds particle systems only (the particle browser's presets); otherwise its objects are
+        /// other layers (text, a light-shaft shape), which Add Layer › Preset offers.
+        public var addsParticlesOnly: Bool {
+            !objects.isEmpty && objects.allSatisfy { $0["particle"]?.stringValue != nil }
+        }
     }
 
     /// The preset's folder name (`rain`).
@@ -39,19 +49,39 @@ public struct ParticlePreset: Identifiable, Hashable, Sendable {
 }
 
 public enum ParticlePresetCatalog {
+    /// Which of a preset's variants a catalog keeps.
+    public enum Contents: Sendable {
+        /// Variants that add particle systems only: the particle browser's.
+        case particles
+        /// Variants that add other layers (WE's Clock, 3D Clock, Countdown, the light-shaft shapes):
+        /// Add Layer › Preset's.
+        case layers
+    }
+
     /// The particle presets under `presetsDirectory` (WE's `assets/presets`), sorted by title.
     /// `translate` reads WE's locale keys (`ui_editor_preset_rain_title`); a preset whose
     /// variants add anything but particle systems (text, light shafts) isn't one.
     public static func load(presetsDirectory: URL, translate: (String) -> String?) -> [ParticlePreset] {
+        load(presetsDirectory: presetsDirectory, contents: .particles, translate: translate)
+    }
+
+    /// The presets under `presetsDirectory` with variants of `contents`, sorted by title.
+    public static func load(presetsDirectory: URL, contents: Contents, translate: (String) -> String?) -> [ParticlePreset] {
         // No presets folder: no presets.
         let folders = (try? FileManager.default.contentsOfDirectory(at: presetsDirectory, includingPropertiesForKeys: nil,
                                                                     options: [.skipsHiddenFiles])) ?? []
-        return folders.compactMap { preset(in: $0, translate: translate) }
+        return folders.compactMap { preset(in: $0, contents: contents, translate: translate) }
             .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
     }
 
     /// The preset in `directory`; nil when it has no particle variant or its file can't be read.
     public static func preset(in directory: URL, translate: (String) -> String?) -> ParticlePreset? {
+        preset(in: directory, contents: .particles, translate: translate)
+    }
+
+    /// The preset in `directory` with its variants of `contents`; nil when it has none or its
+    /// file can't be read.
+    public static func preset(in directory: URL, contents: Contents, translate: (String) -> String?) -> ParticlePreset? {
         // Optional: a folder without a readable preset file isn't a preset. WE's reader allows
         // trailing commas, which its `water` preset has.
         guard let data = try? Data(contentsOf: directory.appending(path: "preset.json")),
@@ -69,11 +99,17 @@ public enum ParticlePresetCatalog {
         }
         let particleVariants = variants.enumerated().compactMap { index, variant -> ParticlePreset.Variant? in
             let objects = (variant["objects"] as? [[String: Any]] ?? []).compactMap { SceneJSONValue(any: $0) }
-            guard !objects.isEmpty, objects.allSatisfy({ $0["particle"]?.stringValue != nil }) else { return nil }
-            let dependencies = (variant["dependencies"] as? [Any] ?? []).compactMap { $0 as? String }
+            guard !objects.isEmpty else { return nil }
+            let listed = variant["dependencies"] as? [Any] ?? []
+            let dependencies = listed.compactMap { $0 as? String }
             let fallback = variants.count == 1 ? title : "\(title) \(index + 1)"
-            return ParticlePreset.Variant(id: index, title: labels[index] ?? fallback, objects: objects,
-                                          dependencies: dependencies)
+            var result = ParticlePreset.Variant(id: index, title: labels[index] ?? fallback, objects: objects,
+                                                dependencies: dependencies)
+            result.effects = listed.compactMap { ($0 as? [String: Any])?["file"] as? String }
+            switch contents {
+            case .particles: return result.addsParticlesOnly ? result : nil
+            case .layers: return result.addsParticlesOnly ? nil : result
+            }
         }
         guard !particleVariants.isEmpty else { return nil }
         let summary = (root["description"] as? String).map { translate($0) ?? $0 } ?? ""
