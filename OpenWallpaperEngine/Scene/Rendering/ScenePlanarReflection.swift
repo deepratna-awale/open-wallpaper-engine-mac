@@ -80,7 +80,7 @@ final class ScenePlanarReflection {
     }
 
     static func isReflective(_ plan: SceneModelPlan) -> Bool {
-        plan.meshes.contains { samples($0.material.pass) }
+        plan.meshes.contains { $0.material.passes.contains { samples($0.pass) } }
     }
 
     /// Whether a pass's variant samples `_rt_Reflection`.
