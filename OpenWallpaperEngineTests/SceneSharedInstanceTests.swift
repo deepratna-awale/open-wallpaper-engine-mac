@@ -273,6 +273,33 @@ final class SceneSharedInstanceTests: XCTestCase {
         }
     }
 
+    /// The render watchdog hears only instances a display can run: Scene Edit / Export's
+    /// isolated previews (and the Wallpaper Editor's draft) never report frame times, so their
+    /// slow frames aren't blamed on the desktop's wallpapers.
+    func testOnlyInstancesDisplaysRunReportFrameTimesToTheWatchdog() throws {
+        let directory = Fixtures.url("Scenes/scripted-counter")
+        let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/scripted-counter/project.json"))
+        let wallpaper = WEWallpaper(using: project, where: directory)
+        let wallpapers = WallpaperViewModel(persistsWallpapers: false)
+        wallpapers.renderWatchdog = RenderWatchdog()
+        let services = SceneScriptServices(prelude: SceneScriptPrelude.load(), storage: SceneScriptStorage(directory: storage),
+                                           media: SceneScriptReplayMediaSource(), spectrum: { .silent })
+        let environment = SceneWallpaperEnvironment(wallpapers: wallpapers, settings: GlobalSettingsViewModel(),
+                                                    scriptServices: services, loadingSnapshots: nil)
+        defer { Fixtures.removeStoredSettings(for: directory) }
+        let scopes: [(WallpaperPropertyScope, Bool)] = [
+            (.shared, true), (.display("1"), true),
+            (.isolated("iphone-ipad-export"), false), (.isolated("android-export-editor"), false), (.editorDraft, false),
+        ]
+        for (scope, expected) in scopes {
+            let instance = SceneWallpaperInstance(wallpaper: wallpaper, environment: environment, screenID: "A", properties: scope)
+            let renderer = try XCTUnwrap(instance.renderer)
+            let reports: Bool = instance.renderLoop.thread.sync { renderer.frameTimeObserver != nil }
+            XCTAssertEqual(reports, expected, "\(scope)")
+            instance.shutdown()
+        }
+    }
+
     /// The AVKit path: two displays of one video share its player, so its sound plays once.
     func testTwoDisplaysOfAVideoShareOnePlayer() {
         let wallpapers = WallpaperViewModel(persistsWallpapers: false)

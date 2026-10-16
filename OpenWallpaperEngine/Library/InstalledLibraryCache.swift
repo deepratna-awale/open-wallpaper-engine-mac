@@ -37,19 +37,23 @@ final class InstalledLibraryCache {
         var seen = Set<URL>()
         var result: [WEWallpaper] = []
         var listedIds = Set<String>()
-        for folder in Self.contents(of: directory) ?? [] {
+        // A linked wallpaper folder is kept by the folder it points to, which its wallpaper runs
+        // from (`WEWallpaper`), so `size(of:)` finds its entry; its id is the link's name.
+        for listed in Self.contents(of: directory) ?? [] {
+            let folder = ContainedPath.followingFolderLink(listed)
             seen.insert(folder)
-            guard !dependencyIds.contains(folder.lastPathComponent) else { continue }
-            append(folder, to: &result, listedIds: &listedIds)
+            guard !dependencyIds.contains(listed.lastPathComponent) else { continue }
+            append(folder, id: listed.lastPathComponent, to: &result, listedIds: &listedIds)
         }
         for libraryFolder in libraryFolders where libraryFolder.standardizedFileURL != directory.standardizedFileURL {
-            for folder in Self.contents(of: libraryFolder) ?? [] {
+            for listed in Self.contents(of: libraryFolder) ?? [] {
+                let folder = ContainedPath.followingFolderLink(listed)
                 seen.insert(folder)
-                let id = folder.lastPathComponent
+                let id = listed.lastPathComponent
                 guard !(WorkshopCollection.isID(id) && listedIds.contains(id)),
                       FileManager.default.fileExists(atPath: folder.appending(path: "project.json").path(percentEncoded: false))
                 else { continue }
-                append(folder, to: &result, listedIds: &listedIds)
+                append(folder, id: id, to: &result, listedIds: &listedIds)
             }
         }
         entries = entries.filter { seen.contains($0.key) }
@@ -57,11 +61,11 @@ final class InstalledLibraryCache {
         return result
     }
 
-    private func append(_ folder: URL, to result: inout [WEWallpaper], listedIds: inout Set<String>) {
+    private func append(_ folder: URL, id: String, to result: inout [WEWallpaper], listedIds: inout Set<String>) {
         let arrived = listedOnce && entries[folder] == nil
         guard let wallpaper = entry(for: folder).wallpaper else { return }
         result.append(wallpaper)
-        listedIds.insert(folder.lastPathComponent)
+        listedIds.insert(id)
         if arrived { onArrival(wallpaper) }
     }
 
@@ -69,7 +73,7 @@ final class InstalledLibraryCache {
     private static func contents(of directory: URL) -> [URL]? {
         do {
             return try FileManager.default.contentsOfDirectory(
-                at: directory, includingPropertiesForKeys: [.contentModificationDateKey], options: .skipsHiddenFiles)
+                at: ContainedPath.followingFolderLink(directory), includingPropertiesForKeys: [.contentModificationDateKey], options: .skipsHiddenFiles)
         } catch {
             OWELog.error(.library, "Can't list the wallpaper library at \(directory.path): \(error)")
             return nil

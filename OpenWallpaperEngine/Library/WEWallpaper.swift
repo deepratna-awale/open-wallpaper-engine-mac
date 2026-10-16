@@ -56,8 +56,10 @@ struct WEWallpaper: Codable, RawRepresentable, Identifiable {
         return sizeBytes
     }
     
+    /// A library entry that is a symbolic link to a wallpaper folder runs from the folder it points
+    /// to (`ContainedPath.followingFolderLink`), so every listing of the wallpaper's files works.
     init(using project: WEProject, where url: URL) {
-        self.wallpaperDirectory = url
+        self.wallpaperDirectory = ContainedPath.followingFolderLink(url)
         self.project = project
     }
     
@@ -70,9 +72,10 @@ struct WEWallpaper: Codable, RawRepresentable, Identifiable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.wallpaperDirectory = try container.decode(URL.self, forKey: .wallpaperDirectory)
+        // A link saved before links were followed is followed now, as a listed wallpaper's is.
+        self.wallpaperDirectory = ContainedPath.followingFolderLink(try container.decode(URL.self, forKey: .wallpaperDirectory))
         self.project = try container.decode(WEProject.self, forKey: .project)
-        self.presetDirectory = try container.decodeIfPresent(URL.self, forKey: .presetDirectory)
+        self.presetDirectory = try container.decodeIfPresent(URL.self, forKey: .presetDirectory).map(ContainedPath.followingFolderLink)
         // <and so on>
     }
 

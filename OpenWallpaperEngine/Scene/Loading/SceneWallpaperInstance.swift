@@ -354,7 +354,12 @@ final class SceneWallpaperInstance {
             // Thread boundary: `take()` reports it from the renderer's draw, on the render thread.
             DispatchQueue.main.async { MainActor.assumeIsolated { self?.showScriptsHalted(error: error) } }
         }
-        if let watchdog = environment.wallpapers?.renderWatchdog {
+        // The watchdog judges the wallpapers the displays show (`SafeRestart`'s session), so only
+        // an instance a display can run reports to it. An isolated one (Scene Edit / Export's
+        // iPhone & iPad, Android and Screen Saver previews, the Wallpaper Editor's draft) never
+        // runs on a display: its frames, slow while it previews an export's framing, would
+        // otherwise be blamed on the desktop's wallpapers.
+        if !key.properties.isIsolated, let watchdog = environment.wallpapers?.renderWatchdog {
             // One frame time per rendered frame, however many displays show it (the watchdog locks).
             renderer.frameTimeObserver = { watchdog.recordFrame(duration: $0) }
         }
