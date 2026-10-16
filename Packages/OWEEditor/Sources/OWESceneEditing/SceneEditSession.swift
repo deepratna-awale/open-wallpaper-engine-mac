@@ -373,6 +373,13 @@ public final class SceneEditSession: ObservableObject {
     static let defaults: [String: SceneJSONValue] = [
         "visible": .bool(true), "alpha": .number(1), "colorBlendMode": .number(0),
         "origin": .string("0 0 0"), "scale": .string("1 1 1"), "angles": .string("0 0 0"), "color": .string("1 1 1"),
+        // The inspector's other fields, as the player reads an object without them (`WESceneObject`,
+        // `WESceneSound`; WE's objects are solid).
+        "brightness": .number(1), "perspective": .bool(false), "solid": .bool(true), "disablepropagation": .bool(false),
+        "copybackground": .bool(true), "clampuvs": .bool(false), "alignment": .string("center"), "parallaxDepth": .string("1 1"),
+        "playbackmode": .string("loop"), "volume": .number(1), "mintime": .number(1), "maxtime": .number(5),
+        "startsilent": .bool(false), "muteineditor": .bool(false), "spatialization": .bool(false),
+        "mindistance": .number(1), "attenuation": .number(1),
     ]
 
     /// Equal, or the same numbers written differently (`"1 1 1"` and `"1.00000 1.00000 1.00000"`).

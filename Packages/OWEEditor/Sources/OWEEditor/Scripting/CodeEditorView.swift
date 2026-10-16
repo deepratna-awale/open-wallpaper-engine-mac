@@ -5,11 +5,13 @@ import OWESceneEditing
 /// The script and shader editors' text: JavaScript or WE shader highlighting
 /// (`CodeEditorLanguage`), line numbers with error marks, the find bar (⌘F), autocomplete
 /// (SceneScript's API after a `.`, a shader's words; ⌥⎋ / F5 anywhere), automatic indentation,
-/// and an undo history of its own (the window's undo is the scene's edits).
+/// commenting lines (⌘/, ⌥⌘/), and an undo history of its own (the window's undo is the scene's edits).
 struct CodeEditorView: NSViewRepresentable {
     @Binding var text: String
     var diagnostics: [SceneScriptDiagnostic]
     var catalog: SceneScriptAPICatalog
+    /// The panel's menus edit the text through it (Snippets, Format Document, Comment Selection).
+    var controller: CodeEditorController?
     /// A script, or a shader in the shader editor (`CodeEditorLanguage`).
     var language: CodeEditorLanguage = .sceneScript
     /// ⌘↩: apply the script.
@@ -67,6 +69,7 @@ struct CodeEditorView: NSViewRepresentable {
 
         context.coordinator.textView = textView
         context.coordinator.ruler = ruler
+        controller?.textView = textView
         context.coordinator.highlight()
         context.coordinator.show(diagnostics)
         return scrollView
@@ -75,6 +78,7 @@ struct CodeEditorView: NSViewRepresentable {
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         context.coordinator.parent = self
         guard let textView = context.coordinator.textView else { return }
+        controller?.textView = textView
         if textView.string != text {
             // A template or an undo of the scene replaced the text: keep it one undoable change.
             let range = NSRange(location: 0, length: (textView.string as NSString).length)
@@ -164,6 +168,44 @@ struct CodeEditorView: NSViewRepresentable {
     }
 }
 
+/// The panel's handle on the code editor's text: its menus' edits go through the text view, so
+/// they are steps of the editor's own undo and keep the selection where it belongs.
+@MainActor
+final class CodeEditorController {
+    weak var textView: ScriptTextView?
+
+    /// Replaces the text and selection with `edit`'s result, one undoable change.
+    func edit(_ edit: (String, NSRange) -> (text: String, selection: NSRange)) {
+        guard let textView else { return }
+        let result = edit(textView.string, textView.selectedRange())
+        replace(with: result.text, selecting: result.selection)
+    }
+
+    /// Replaces the whole text (a snippet, Format Document), the caret where it was or at the end.
+    func replaceText(_ edit: (String) -> String) {
+        guard let textView else { return }
+        let caret = textView.selectedRange().location
+        let text = edit(textView.string)
+        replace(with: text, selecting: NSRange(location: min(caret, (text as NSString).length), length: 0))
+    }
+
+    private func replace(with text: String, selecting selection: NSRange) {
+        guard let textView, textView.string != text || textView.selectedRange() != selection else { return }
+        let range = NSRange(location: 0, length: (textView.string as NSString).length)
+        if textView.string != text, textView.shouldChangeText(in: range, replacementString: text) {
+            textView.replaceCharacters(in: range, with: text)
+            textView.didChangeText()
+        }
+        textView.setSelectedRange(selection)
+        textView.scrollRangeToVisible(selection)
+        textView.window?.makeFirstResponder(textView)
+    }
+
+    func formatDocument() { replaceText(SceneScriptSourceEdits.formatted) }
+    func commentSelection() { edit(SceneScriptSourceEdits.commenting) }
+    func uncommentSelection() { edit(SceneScriptSourceEdits.uncommenting) }
+}
+
 /// Fonts and colours of the code editor, following the system's appearance.
 enum CodeEditorStyle {
     static let font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
@@ -234,6 +276,18 @@ final class ScriptTextView: NSTextView {
         let key = event.charactersIgnoringModifiers?.lowercased() ?? ""
         if flags == .command, key == "\r" {
             onCommit?()
+            return true
+        }
+        // ⌘/ comments the selected lines, ⌥⌘/ uncomments them (WE's Ctrl+K C and Ctrl+K U).
+        if key == "/", flags == .command || flags == [.command, .option] {
+            let edit = flags == .command ? SceneScriptSourceEdits.commenting : SceneScriptSourceEdits.uncommenting
+            let result = edit(string, selectedRange())
+            let range = NSRange(location: 0, length: (string as NSString).length)
+            if shouldChangeText(in: range, replacementString: result.text) {
+                replaceCharacters(in: range, with: result.text)
+                didChangeText()
+                setSelectedRange(result.selection)
+            }
             return true
         }
         let action: NSTextFinder.Action?

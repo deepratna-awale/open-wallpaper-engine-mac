@@ -166,6 +166,9 @@ enum SceneScriptRenderEvent {
     case setParent(id: Int, parentID: Int?, attachment: String?)
     /// `IParticleSystem.emitParticles(count)`.
     case emit(id: Int, count: Int?)
+    /// `IEffect.executeMaterialFunction(name)` on effect `effect` (its index in the object's
+    /// `effects`) of object `id`: runs effect.json's function `name` once.
+    case materialFunction(id: Int, effect: Int, name: String)
     /// `ISoundLayer.play()`, `pause()`, `stop()`.
     case sound(id: Int, SceneScriptObjectCommand.Playback)
     /// What a script's `IAnimation` calls left of a timeline's clock (`SceneAnimationSet.restore`),

@@ -2,11 +2,13 @@ import SwiftUI
 import OWESceneEditing
 
 /// The properties panel as the user will see it, live: the properties in order, each with its
-/// control, shown only while its condition holds. Values here are the preview's own (starting at
-/// the defaults) and never change the wallpaper.
+/// control, shown only while its condition holds, a group's properties folded under its label
+/// (closed at first, as in WE). Values here are the preview's own (starting at the defaults) and
+/// never change the wallpaper.
 struct UserPropertiesPreview: View {
     let properties: [UserPropertyDraft]
     @State private var values: [String: String] = [:]
+    @State private var openGroups: Set<String> = []
 
     var body: some View {
         let current = resolvedValues
@@ -17,8 +19,22 @@ struct UserPropertiesPreview: View {
             if visible.isEmpty {
                 Text(L("No properties to show.")).foregroundStyle(.secondary)
             }
-            ForEach(visible) { property in
-                row(property, value: current[property.key] ?? property.defaultText)
+            ForEach(UserPropertyGroup.groups(visible)) { group in
+                if let header = group.header {
+                    DisclosureGroup(isExpanded: Binding(get: { openGroups.contains(header.key) }, set: { open in
+                        if open { openGroups.insert(header.key) } else { openGroups.remove(header.key) }
+                    })) {
+                        ForEach(group.members) { property in
+                            row(property, value: current[property.key] ?? property.defaultText)
+                        }
+                    } label: {
+                        Text(PropertyTitle.title(header)).fontWeight(.semibold)
+                    }
+                } else {
+                    ForEach(group.members) { property in
+                        row(property, value: current[property.key] ?? property.defaultText)
+                    }
+                }
             }
             if !values.isEmpty {
                 Button(L("Reset Preview")) { values = [:] }
@@ -75,9 +91,14 @@ struct UserPropertiesPreview: View {
             }
         } else if property.kind == .textInput {
             TextField(title, text: Binding(get: { value }, set: { set(property.key, $0) }))
-        } else if property.kind == .file || property.kind == .directory {
+        } else if property.kind == .file || property.kind == .directory || property.kind == .sceneTexture {
             LabeledContent(title) {
-                Button(property.kind == .file ? L("Choose File…") : L("Choose Folder…")) {}
+                Button(property.kind == .directory ? L("Choose Folder…") : L("Choose File…")) {}
+                    .disabled(true)
+            }
+        } else if property.kind == .userShortcut {
+            LabeledContent(title) {
+                Button(L("Set Shortcut…")) {}
                     .disabled(true)
             }
         } else if property.kind == .text {

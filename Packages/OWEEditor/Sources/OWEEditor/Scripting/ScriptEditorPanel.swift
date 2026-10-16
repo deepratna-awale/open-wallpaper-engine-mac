@@ -20,7 +20,7 @@ struct ScriptEditorPanel: View {
             HSplitView {
                 CodeEditorView(text: Binding(get: { authoring.draft?.text ?? "" }, set: { authoring.setDraftText($0) }),
                                diagnostics: authoring.diagnostics, catalog: authoring.catalog,
-                               onCommit: apply)
+                               controller: authoring.codeEditor, onCommit: apply)
                     .frame(minWidth: 320, minHeight: 120)
                     .id(draft.target)
                 let declarations = SceneScriptPropertyDeclaration.declarations(in: draft.text)
@@ -48,6 +48,19 @@ struct ScriptEditorPanel: View {
                 Text(status).font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
+            if authoring.canStopScripts {
+                Button {
+                    authoring.setScriptsRunning(!authoring.scriptsRunning)
+                } label: {
+                    Label(authoring.scriptsRunning ? L("Stop Preview") : L("Run Preview"),
+                          systemImage: authoring.scriptsRunning ? "stop.fill" : "play.fill")
+                        .labelStyle(.titleAndIcon)
+                }
+                .help(authoring.scriptsRunning ? L("Stop the wallpaper’s scripts on the canvas")
+                                               : L("Run the wallpaper’s scripts on the canvas again"))
+            }
+            ScriptSnippetsMenu(authoring: authoring)
+            ScriptEditMenu(authoring: authoring)
             Menu {
                 ForEach(SceneScriptTemplate.templates(for: draft.target.path.name)) { template in
                     Button(template.id.title) { authoring.useTemplate(template.id) }
@@ -127,6 +140,14 @@ struct ScriptEditorPanel: View {
                     Toggle(L("This Script Only"), isOn: $onlyThisScript)
                         .toggleStyle(.checkbox)
                         .font(.caption)
+                    Toggle(L("Clear Log on Run"), isOn: $authoring.clearsLogOnRun)
+                        .toggleStyle(.checkbox)
+                        .font(.caption)
+                        .help(L("Empty the console when a script is applied or the preview runs"))
+                    Toggle(L("Auto Scroll"), isOn: $authoring.autoScrollsLog)
+                        .toggleStyle(.checkbox)
+                        .font(.caption)
+                        .help(L("Keep the newest line in view"))
                     Button {
                         authoring.console?.clear()
                     } label: {
@@ -142,7 +163,8 @@ struct ScriptEditorPanel: View {
             Divider()
             switch output {
             case .problems: problems
-            case .console: ScriptConsoleView(entries: consoleEntries, isAvailable: authoring.console != nil)
+            case .console: ScriptConsoleView(entries: consoleEntries, isAvailable: authoring.console != nil,
+                                             followsNewest: authoring.autoScrollsLog)
             }
         }
     }
@@ -178,6 +200,8 @@ struct ScriptEditorPanel: View {
 struct ScriptConsoleView: View {
     let entries: [SceneScriptConsoleEntry]
     let isAvailable: Bool
+    /// Scroll to each new line (Auto Scroll).
+    var followsNewest = true
 
     var body: some View {
         if !isAvailable || entries.isEmpty {
@@ -206,7 +230,9 @@ struct ScriptConsoleView: View {
                 }
                 .listStyle(.plain)
                 .onAppear { proxy.scrollTo(entries.last?.id, anchor: .bottom) }
-                .onChange(of: entries.last?.id) { _, last in proxy.scrollTo(last, anchor: .bottom) }
+                .onChange(of: entries.last?.id) { _, last in
+                    if followsNewest { proxy.scrollTo(last, anchor: .bottom) }
+                }
             }
         }
     }

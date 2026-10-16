@@ -32,6 +32,8 @@ private struct LayerDraw {
     /// The layer drawn through a 3D camera (a perspective scene's, or a `perspective` layer's in an
     /// orthographic scene, docs/models-plan.md §2.4); nil draws `quad` in the scene's plane.
     var placement: SceneLayerPlacement? = nil
+    /// The layer's object transform (parents included), before the camera: `g_LayerModelMatrix`.
+    var world = SceneAffineTransform.identity
 }
 
 /// Frame-wide camera motion applied to every layer.
@@ -996,6 +998,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 removed.append(key)
             case .emit(let id, let count):
                 pendingEmits[String(id), default: 0] += count ?? 1
+            case let .materialFunction(id, effect, name):
+                let key = String(id)
+                for entry in layers where entry.layer.id == key {
+                    effectGraph?.executeFunction(named: name, effectIndex: effect, of: entry.layer.weEffects, layer: key)
+                }
             case .sound(let id, let playback):
                 sounds.perform(playback, on: id)
             case .video(let id, let command):
@@ -2996,8 +3003,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // A fullscreen layer is drawn in screen space (`passthrough` without `TRANSFORM`), which
         // the orthographic zoom doesn't scale.
         let view = entry.layer.fillsScene ? SceneAffineTransform.identity : frameZoom.plane
-        let quad = SceneQuadGeometry(world: view * worldTransform(entry, local: local),
-                                     size: baseSize, alignment: alignment(entry))
+        let world = worldTransform(entry, local: local)
+        let quad = SceneQuadGeometry(world: view * world, size: baseSize, alignment: alignment(entry))
         // WE draws a layer where its transform and the camera put it; an oversized layer (sized
         // to hide its edges while it moves) isn't pinned inside the scene.
         let center = quad.center + view.linear * (parallaxOffset - motion.shake)
@@ -3011,7 +3018,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         drawProbe?.record(layer: entry.layer.id, .init(opacity: opacity, color: color, brightness: brightness, local: own))
         return LayerDraw(opacity: opacity, color: color, brightness: brightness,
                          quad: SceneQuadGeometry(center: center, axisX: quad.axisX, axisY: quad.axisY),
-                         musicSyncLevel: musicSyncLevel)
+                         musicSyncLevel: musicSyncLevel, world: world)
     }
 
     /// A layer's opacity before scripts: its timeline's value this frame, else authored or user-bound.
@@ -3741,6 +3748,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         context.planarReflection = frameReflection
         context.systemTexture = { [unowned self] kind in self.systemTexture(kind) }
         context.effectTextureProjection = EffectGraphRenderer.effectTextureProjection(quad: draw.quad, sceneSize: sceneSize)
+        context.layerModelMatrix = draw.placement?.world ?? BuiltinPassContext.layerModelMatrix(draw.world)
         // WE's layer buffers are frame-buffer class: RGBA16F in HDR.
         context.frameBufferFormat = postProcess.drawsHDR ? .rgba16Float : .rgba8Unorm
         context.assetContentSize = { _, source in source.contentSize }
