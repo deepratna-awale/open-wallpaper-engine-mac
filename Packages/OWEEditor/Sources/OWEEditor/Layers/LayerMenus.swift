@@ -1,9 +1,12 @@
 import SwiftUI
 import OWESceneEditing
 
-/// The toolbar's Add menu: the layers WE's editor adds.
+/// The toolbar's Add menu: the layers WE's editor adds (its Add Asset dialog: renderables, then
+/// utility layers, then presets).
 struct AddLayerMenu: View {
     let actions: LayerActions
+    @State private var isPickingModel = false
+    @State private var isBrowsingPresets = false
 
     var body: some View {
         Menu {
@@ -16,16 +19,45 @@ struct AddLayerMenu: View {
             } label: {
                 Label(L("Text"), systemImage: "textformat")
             }
+            Button { actions.chooseSounds() } label: { Label(L("Sound…"), systemImage: "speaker.wave.2") }
+                .disabled(actions.services.assetStore == nil)
+            Menu {
+                ForEach(SceneLayerFactory.LightKind.allCases, id: \.self) { kind in
+                    Button { actions.addLight(kind) } label: { Label(kind.title, systemImage: kind.symbol) }
+                }
+            } label: {
+                Label(L("Light"), systemImage: "lightbulb")
+            }
+            Button { isPickingModel = true } label: { Label(L("Model…"), systemImage: "cube") }
+            Divider()
             Button { actions.addSolid() } label: { Label(L("Solid Color"), systemImage: "square.fill") }
+            Button { actions.addSolidPlaceholder() } label: { Label(L("Solid Placeholder"), systemImage: "square.dashed") }
+                .disabled(actions.services.assetStore == nil)
             Button { actions.addComposition() } label: { Label(L("Composition Layer"), systemImage: "square.on.square.dashed") }
             Button { actions.addFullscreen() } label: { Label(L("Fullscreen Layer"), systemImage: "rectangle.inset.filled") }
+            if actions.is2D {
+                Button { actions.addFullComposition() } label: {
+                    Label(L("Full Composition Layer"), systemImage: "rectangle.stack")
+                }
+            }
+            Button { actions.addCamera() } label: { Label(L("Camera"), systemImage: "video") }
             Divider()
-            Button { actions.chooseSounds() } label: { Label(L("Sound…"), systemImage: "speaker.wave.2") }
+            Button { isBrowsingPresets = true } label: { Label(L("Preset…"), systemImage: "wand.and.stars") }
                 .disabled(actions.services.assetStore == nil)
         } label: {
             Label(L("Add Layer"), systemImage: "plus")
         }
         .help(L("Add a layer to the scene"))
+        .sheet(isPresented: $isPickingModel) {
+            ModelPickerView(models: actions.modelChoices(), imported: actions.importedModels(),
+                            importFiles: actions.services.assetStore == nil ? nil : { actions.chooseModels() }) { actions.addModel($0) }
+        }
+        .sheet(isPresented: $isBrowsingPresets) {
+            PresetBrowserView(presets: actions.services.layerPresets().filter { $0.tag.isEmpty || $0.is3D != actions.is2D },
+                              hasWEAssets: actions.services.hasWEAssets(), openAssetsSetup: actions.services.openAssetsSetup) {
+                actions.addPreset($0, variant: $1)
+            }
+        }
     }
 }
 
@@ -40,6 +72,8 @@ struct LayerContextMenu: View {
             .disabled(!session.isEditable("name", of: layer.id))
         Button(L("Duplicate")) { actions.duplicateSelection(layer.id) }
         Button(L("Delete"), role: .destructive) { actions.deleteSelection(layer.id) }
+        ExternalEditMenuItems(session: session, layer: layer, actions: actions)
+        ImageEditingMenuItems(layer: layer, actions: actions)
         Divider()
         Menu(L("Arrange")) {
             Button(L("Bring to Front")) { actions.bringToFront(layer.id) }

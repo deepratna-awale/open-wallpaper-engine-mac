@@ -406,11 +406,12 @@ public final class SceneEditSession: ObservableObject {
         if !continues { registerUndo(restoring: overlay, actionName: actionName) }
         lastCoalescing = coalescingKey.map { ($0, now) }
         let previous = overlay
+        let hadDepthParallax = hasDepthParallax
         overlay = next
         refreshOutlines(from: previous)
         // Scene settings follow from the layers (depth parallax needs camera parallax); they
         // leave the outline as it is.
-        overlay = settlingDepthParallaxCamera(next)
+        overlay = settlingDepthParallaxCamera(next, hadDepthParallax: hadDepthParallax)
         onChange?(overlay)
     }
 

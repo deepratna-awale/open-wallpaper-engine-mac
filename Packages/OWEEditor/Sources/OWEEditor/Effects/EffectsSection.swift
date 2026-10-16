@@ -24,6 +24,7 @@ struct EffectsSection: View {
                     get: { expanded.contains(effect.key) },
                     set: { if $0 { expanded.insert(effect.key) } else { expanded.remove(effect.key) } })) {
                     EffectParametersView(session: session, tools: tools, services: services, layer: layer, effect: effect)
+                    CustomEffectSection(session: session, layer: layer, effect: effect)
                 } label: {
                     header(effect, position: position)
                 }
@@ -39,7 +40,8 @@ struct EffectsSection: View {
         }
         .sheet(isPresented: $isBrowsing) {
             EffectBrowserView(entries: services.effectCatalog(), previews: services.previews,
-                              hasWEAssets: services.hasWEAssets(), openAssetsSetup: services.openAssetsSetup) { entry in
+                              hasWEAssets: services.hasWEAssets(), openAssetsSetup: services.openAssetsSetup,
+                              custom: CustomEffectActions(session: session, read: services.readFile)) { entry in
                 do {
                     try services.prepareEffect(entry)
                 } catch {
@@ -143,6 +145,8 @@ struct EffectParametersView: View {
                 wallpaperTextures = services.wallpaperAssets().compactMap(\.textureName)
             }
         }
+        // A shader edited in the shader editor declares its controls anew.
+        .onChange(of: session.overlay.effectFiles) { _, _ in schema = services.effectSchema(effect.file) }
     }
 
     // MARK: Combos

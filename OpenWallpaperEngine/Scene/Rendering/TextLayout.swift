@@ -8,6 +8,10 @@ import simd
 /// - each glyph's advance is floored to a whole unit and its box is the glyph's pixel box (the
 ///   layout loop 0x1401b10f2…0x1401b12b9: HarfBuzz's 26.6 `x_advance >> 6`, and
 ///   `FT_Glyph_Get_CBox(…, FT_GLYPH_BBOX_PIXELS)` at 0x1401addb0);
+/// - `spacing` (WE 2.8's letter spacing, scene units) adds its x to every glyph's advance
+///   (0x1401b1194: `addss` of the layout's spacing.x to the floored advance) and its y to the
+///   line height (0x1401b0c04: `size->metrics.height >> 6` plus spacing.y); a line's width is
+///   still its glyphs' boxes, so the last glyph's spacing adds nothing (0x1401b2190…0x1401b21e3);
 /// - text wraps only when `limitwidth` is set (at `maxwidth`), and `limitrows` keeps the first
 ///   `maxrows` lines, ending in an ellipsis when `limituseellipsis` is set; with `blockalign`, a
 ///   line the wrap broke is justified to `maxwidth` (0x1401b21ee);
@@ -50,6 +54,8 @@ struct SceneTextLayout {
     let ascent: CGFloat
     let descent: CGFloat
     let padding: SIMD2<Float>
+    /// `spacing`: added to each glyph's advance (x) and to the line height (y), in scene units.
+    let spacing: SIMD2<Float>
     let horizontalAlignment: String?
     let verticalAlignment: String?
 
@@ -59,11 +65,16 @@ struct SceneTextLayout {
     static let maxPadding: Float = 512
 
     init(text: String, font: NSFont, padding: SIMD2<Float>, horizontalAlignment: String?, verticalAlignment: String?,
-         maxWidth: Float?, maxRows: Int?, useEllipsis: Bool, blockAlign: Bool = false) {
+         maxWidth: Float?, maxRows: Int?, useEllipsis: Bool, blockAlign: Bool = false, spacing: SIMD2<Float> = .zero) {
         let attributes: [NSAttributedString.Key: Any] = [.font: font]
+        // Lines are measured for wrapping with the letter spacing in their advances.
+        var measuring = attributes
+        if spacing.x != 0 { measuring[.kern] = CGFloat(spacing.x) }
+        let letterSpacing = CGFloat(spacing.x)
         ascent = ceil(font.ascender)
         descent = floor(font.descender)
-        lineHeight = (font.ascender - font.descender + font.leading).rounded()
+        lineHeight = (font.ascender - font.descender + font.leading).rounded() + CGFloat(spacing.y)
+        self.spacing = spacing
         self.padding = simd_min(padding, SIMD2(repeating: Self.maxPadding))
         self.horizontalAlignment = horizontalAlignment
         self.verticalAlignment = verticalAlignment
@@ -72,7 +83,7 @@ struct SceneTextLayout {
         var lines: [(text: String, wrapped: Bool)] = []
         for paragraph in text.components(separatedBy: .newlines) {
             if let maxWidth, maxWidth > 0 {
-                let wrapped = Self.wrap(paragraph, attributes: attributes, width: CGFloat(maxWidth))
+                let wrapped = Self.wrap(paragraph, attributes: measuring, width: CGFloat(maxWidth))
                 lines += wrapped.enumerated().map { ($1, $0 < wrapped.count - 1) }
             } else {
                 lines.append((paragraph, false))
@@ -81,12 +92,14 @@ struct SceneTextLayout {
         if let maxRows, maxRows > 0, lines.count > maxRows {
             lines = Array(lines.prefix(maxRows))
             if useEllipsis, let last = lines.popLast() {
-                lines.append((Self.withEllipsis(last.text, attributes: attributes, width: maxWidth.map { CGFloat($0) }),
+                lines.append((Self.withEllipsis(last.text, attributes: measuring, width: maxWidth.map { CGFloat($0) }),
                               false))
             }
         }
         let justifyWidth = blockAlign ? maxWidth.flatMap { $0 > 0 ? CGFloat($0) : nil } : nil
-        let laidOut = lines.map { Self.line($0.text, attributes: attributes, justifiedTo: $0.wrapped ? justifyWidth : nil) }
+        let laidOut = lines.map {
+            Self.line($0.text, attributes: attributes, letterSpacing: letterSpacing, justifiedTo: $0.wrapped ? justifyWidth : nil)
+        }
         self.lines = laidOut
         let origins = Self.origins(laidOut, ascent: ascent, descent: descent, lineHeight: lineHeight,
                                    horizontal: horizontalAlignment, vertical: verticalAlignment)
@@ -135,7 +148,8 @@ struct SceneTextLayout {
     /// Draws the block into a new bitmap at `pixelsPerUnit` device pixels per scene unit, so
     /// the glyphs are rasterised at the size they are shown at instead of being upscaled. Each
     /// glyph is drawn at its whole-unit pen position, as WE's glyph quads are.
-    func rasterize(font: NSFont, color: NSColor, pixelsPerUnit: CGFloat) -> CGImage? {
+    /// `background` fills the whole block (padding included) under the glyphs, opaque.
+    func rasterize(font: NSFont, color: NSColor, pixelsPerUnit: CGFloat, background: SIMD3<Float>? = nil) -> CGImage? {
         let width = Int(saturating: ceil(CGFloat(boxSize.x) * pixelsPerUnit), in: 1...Int.max)
         let height = Int(saturating: ceil(CGFloat(boxSize.y) * pixelsPerUnit), in: 1...Int.max)
         guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
@@ -143,6 +157,11 @@ struct SceneTextLayout {
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
         context.setShouldAntialias(true)
         context.setShouldSmoothFonts(false)
+        if let background {
+            context.setFillColor(CGColor(srgbRed: CGFloat(background.x), green: CGFloat(background.y),
+                                         blue: CGFloat(background.z), alpha: 1))
+            context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        }
         context.scaleBy(x: CGFloat(width) / CGFloat(max(boxSize.x, 0.0001)),
                         y: CGFloat(height) / CGFloat(max(boxSize.y, 0.0001)))
         // The origin sits where the block's centre is offset from it (WE's 0x140257e43…0x140257f3f
@@ -169,9 +188,10 @@ struct SceneTextLayout {
     /// A line's glyphs placed as WE places them, with WE's width: pen positions advance by each
     /// glyph's advance floored to a whole unit (HarfBuzz's offsets floored the same way), and the
     /// width is the glyphs' pixel boxes (left edge floored, right edge rounded up) joined with the
-    /// pen's start. `justifiedTo` (`blockalign` on a line the wrap broke) spreads what the line
-    /// lacks of that width over its spaces, tabs and carriage returns, and the width becomes it.
-    private static func line(_ text: String, attributes: [NSAttributedString.Key: Any],
+    /// pen's start. `letterSpacing` is added to every glyph's advance. `justifiedTo` (`blockalign`
+    /// on a line the wrap broke) spreads what the line lacks of that width over its spaces, tabs
+    /// and carriage returns, and the width becomes it.
+    private static func line(_ text: String, attributes: [NSAttributedString.Key: Any], letterSpacing: CGFloat = 0,
                              justifiedTo justifyWidth: CGFloat?) -> Line {
         let ctLine = CTLineCreateWithAttributedString(NSAttributedString(string: text, attributes: attributes))
         let utf16 = Array(text.utf16)
@@ -213,7 +233,7 @@ struct SceneTextLayout {
             let box = glyph.box.isNull || glyph.box.isEmpty ? CGRect.zero : glyph.box
             minX = min(minX, x + floor(box.minX))
             maxX = max(maxX, x + ceil(box.maxX))
-            pen += floor(glyph.advance)
+            pen += floor(glyph.advance) + letterSpacing
         }
         var extra: CGFloat = 0
         var width = maxX - minX
@@ -230,7 +250,7 @@ struct SceneTextLayout {
             glyphs.append(Glyph(font: glyph.font, glyph: glyph.glyph,
                                 position: CGPoint(x: pen + floor(glyph.offset.x), y: floor(glyph.offset.y)),
                                 isWhitespace: glyph.isWhitespace))
-            pen += floor(glyph.advance) + (glyph.isWhitespace ? extra : 0)
+            pen += floor(glyph.advance) + letterSpacing + (glyph.isWhitespace ? extra : 0)
         }
         return Line(text: text, width: width, minX: minX, glyphs: glyphs)
     }

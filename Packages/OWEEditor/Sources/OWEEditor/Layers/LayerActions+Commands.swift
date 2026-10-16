@@ -38,7 +38,7 @@ extension LayerActions {
     /// opaque part when it was imported keeps where the crop was): Align with Background puts it
     /// back where it was on the full image.
     func cropOffset(_ layerID: Int) -> SIMD2<Double>? {
-        guard let model = session.outline.layer(layerID)?.fields["image"]?.stringValue, let data = services.wallpaperFile(model),
+        guard let model = session.outline.layer(layerID)?.fields["image"]?.stringValue, let data = services.readFile(model),
               let json = try? WETolerantJSON.object(from: data) as? [String: Any], // no crop offset when the model can't be read
               let text = json["cropoffset"] as? String else { return nil }
         let components = SceneVector.components(.string(text))
