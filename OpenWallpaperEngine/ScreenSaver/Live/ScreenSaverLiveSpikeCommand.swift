@@ -381,6 +381,7 @@ private final class SaverAVPlayerSpike {
     init(url: URL, size: SIMD2<Int>, stats: SpikeStats) {
         player.isMuted = true
         player.preventsDisplaySleepDuringVideoPlayback = false
+        WallpaperAVPlayer.route(player)
         looper = AVPlayerLooper(player: player, templateItem: AVPlayerItem(url: url))
         let layer = AVPlayerLayer(player: player)
         layer.videoGravity = .resizeAspectFill

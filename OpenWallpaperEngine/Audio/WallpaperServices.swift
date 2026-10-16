@@ -21,15 +21,21 @@ final class WallpaperServices {
     /// Whether a window that edits wallpaper properties is open.
     @MainActor let propertyEditing = ScenePropertyEditing()
     /// Where wallpaper sound plays: the default output device without its inputs, so playing
-    /// never asks for the microphone (`OutputOnlyAudioDevice`). Nil in unit tests, which play
-    /// nothing (sound layers render offline there).
+    /// never asks for the microphone (`OutputOnlyAudioDevice`). Video players use it in unit
+    /// tests too: a test host is the app, so a player there on a headset's output asked for the
+    /// microphone, again for every freshly signed build. Nil without an output device (logged).
     let soundOutput: OutputOnlyAudioDevice?
+    /// Where scene sound layers play live (`SceneSoundMixer`): `soundOutput`, or nil in unit
+    /// tests, which render them offline or keep them silent.
+    let sceneSoundOutput: OutputOnlyAudioDevice?
 
     private init() {
         let capture = SystemAudioCapture()
         audioCapture = capture
         propertyService = SceneUserPropertyService(audioLevel: { capture.audioLevel })
-        soundOutput = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil ? OutputOnlyAudioDevice() : nil
+        let output = OutputOnlyAudioDevice()
+        soundOutput = output
+        sceneSoundOutput = AppHostContext.current.isTestHost ? nil : output
     }
 
     /// Starts capture if a capture permission was granted since the last check. Never prompts, so it is
