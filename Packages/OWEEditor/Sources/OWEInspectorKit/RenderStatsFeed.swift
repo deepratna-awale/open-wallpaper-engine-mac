@@ -10,10 +10,13 @@ public final class RenderStatsFeed: ObservableObject {
     /// The latest frame's numbers; nil while nothing is counted.
     @Published public private(set) var stats: RenderStats?
     private var viewers = 0
+    /// Where the views keep their choices about the numbers (the editor's Show Stats mode).
+    public let defaults: UserDefaults
     private let start: (RenderStatsFeed) -> Void
     private let stop: () -> Void
 
-    public init(start: @escaping (RenderStatsFeed) -> Void, stop: @escaping () -> Void) {
+    public init(defaults: UserDefaults = .standard, start: @escaping (RenderStatsFeed) -> Void, stop: @escaping () -> Void) {
+        self.defaults = defaults
         self.start = start
         self.stop = stop
     }

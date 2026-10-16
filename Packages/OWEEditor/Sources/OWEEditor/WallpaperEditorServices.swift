@@ -81,8 +81,6 @@ public struct WallpaperEditorServices {
     public var thumbnail: EditorThumbnail?
     /// The canvas renderer's frame statistics for the stats overlay; nil leaves the overlay out.
     public var renderStats: RenderStatsFeed?
-    /// Where the editor keeps its own choices (the stats overlay's mode).
-    public var preferences: UserDefaults = .standard
     /// The 3D models Add Layer › Model offers (`models/…/….mdl`): the wallpaper's own, then WE's.
     public var models: () -> [EditorModelChoice] = { [] }
     /// WE's presets that add other layers than particle systems (Clock, Countdown, Light Shafts),

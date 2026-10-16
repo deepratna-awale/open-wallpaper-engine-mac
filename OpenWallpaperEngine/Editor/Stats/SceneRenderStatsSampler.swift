@@ -18,7 +18,7 @@ final class SceneRenderStatsSampler {
 
     /// A feed driven by this sampler (which it keeps alive while the feed lives).
     func makeFeed() -> RenderStatsFeed {
-        RenderStatsFeed(start: { [self] feed in start(feed) }, stop: { [self] in stop() })
+        RenderStatsFeed(defaults: .app, start: { [self] feed in start(feed) }, stop: { [self] in stop() })
     }
 
     private func start(_ feed: RenderStatsFeed) {

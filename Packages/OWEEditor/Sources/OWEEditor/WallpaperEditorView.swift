@@ -36,7 +36,7 @@ public struct WallpaperEditorView: View {
         _authoring = StateObject(wrappedValue: EditorAuthoringModel(session: session, projectJSON: services.projectJSON,
                                                                     console: services.scriptConsole,
                                                                     services: services))
-        _statsSettings = StateObject(wrappedValue: EditorStatsSettings(preferences: services.preferences))
+        _statsSettings = StateObject(wrappedValue: EditorStatsSettings(preferences: services.renderStats?.defaults ?? .standard))
     }
 
     public var body: some View {
