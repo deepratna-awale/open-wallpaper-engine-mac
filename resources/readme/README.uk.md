@@ -13,6 +13,10 @@ Open Wallpaper Engine — безкоштовна програма з відкр�
 
 <!-- demo: desktop -->
 
+[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+
+[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+
 ![Бібліотека](../../docs/images/library.jpg)
 
 ## Чим вона вирізняється
@@ -30,6 +34,8 @@ Open Wallpaper Engine — безкоштовна програма з відкр�
 
   <!-- demo: wallpaper-editor -->
 
+  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+
   ![Редактор шпалер](../../docs/images/wallpaper-editor.jpg)
 
   <!-- demo: model-import -->
@@ -37,6 +43,8 @@ Open Wallpaper Engine — безкоштовна програма з відкр�
   <!-- demo: shader-editor -->
 
 - **Редагування/експорт сцени**: змінюйте шари й ефекти запущеної шпалери просто на робочому столі, вибирайте, що показує заставка, або експортуйте шпалеру як Live Photo чи як пакет для Android.
+
+  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
 
   ![Редагування/експорт сцени](../../docs/images/scene-editor-live.jpg)
 
@@ -48,7 +56,11 @@ Open Wallpaper Engine — безкоштовна програма з відкр�
 
   <!-- demo: live-photo-export -->
 
+  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+
   <!-- demo: android-export -->
+
+  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
 
   ![Надсилання через Wi-Fi](../../docs/images/send-over-wifi.png)
 
