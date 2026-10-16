@@ -67,6 +67,7 @@ private struct LayerForm: View {
             if let depthMaps = services.depthMaps, SceneDepthParallax.placement(for: layer) == .onLayer {
                 DepthMapSection(session: session, layerID: layer.id, services: depthMaps)
             }
+            if layer.kind == .model { ModelInspectorSection(session: session, layer: layer, services: services) }
             if layer.kind == .image, let assets = services.puppetAssets {
                 PuppetInspectorSection(session: session, layer: layer, assets: assets)
             }
@@ -285,6 +286,11 @@ private struct SceneForm: View {
                     .padding(4)
                 } label: {
                     Text(L("Scene")).font(.headline)
+                }
+                ProjectSettingsSection(session: session, services: services)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(L("Scene Options")).font(.headline)
+                    SceneOptionsSection(session: session, services: services)
                 }
                 if let depthMaps = services.depthMaps {
                     DepthMapBox(session: session, layerID: nil, services: depthMaps)
