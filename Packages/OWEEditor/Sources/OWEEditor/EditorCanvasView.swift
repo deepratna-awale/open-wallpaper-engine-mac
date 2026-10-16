@@ -35,6 +35,7 @@ struct EditorCanvasView: View {
         case transform3D(layer: Int, drag: Gizmo3D.Drag, moved: Bool)
         case paint
         case particle(ParticleCanvasDrag)
+        case effectGizmo(EffectGizmoCanvas.Drag)
     }
 
     /// A press moves this far (points) before it drags, so a click never nudges a layer.
@@ -98,6 +99,8 @@ struct EditorCanvasView: View {
                 ParticleCanvasOverlay(services: particles, viewport: viewport)
                     .allowsHitTesting(false)
             }
+            EffectGizmoOverlay(session: session, tools: tools, services: services, viewport: viewport)
+                .allowsHitTesting(false)
             CanvasEventView(handlers: handlers)
             if let editing = session.editingText {
                 CanvasTextEditor(session: session, layerID: editing, viewport: viewport)
@@ -243,6 +246,11 @@ struct EditorCanvasView: View {
             gesture = .particle(drag)
             return
         }
+        // An open effect's handles, over the layer's own gizmo.
+        if let drag = EffectGizmoCanvas.press(at: point, session: session, tools: tools, services: services, viewport: viewport) {
+            gesture = .effectGizmo(drag)
+            return
+        }
         let scenePoint = viewport.scenePoint(point)
         if let painting = tools.maskPainting {
             if let local = maskPoint(scenePoint, painting: painting) {
@@ -331,6 +339,9 @@ struct EditorCanvasView: View {
             if let painting = tools.maskPainting, let local = maskPoint(viewport.scenePoint(point), painting: painting, clamped: true) {
                 painting.dab(to: local)
             }
+        case .effectGizmo(var drag):
+            EffectGizmoCanvas.drag(&drag, to: point, session: session)
+            gesture = .effectGizmo(drag)
         case .particle(var drag):
             guard let particles else { return }
             ParticleCanvasInteraction.drag(&drag, to: point, viewport: viewport,
@@ -352,6 +363,7 @@ struct EditorCanvasView: View {
             tools.maskPainting?.end()
             return
         }
+        if case .effectGizmo? = gesture { return }
         if case .transform3D(_, let drag, let moved)? = gesture {
             guard moved else { session.dragPreview = nil; return }
             switch drag.handle {
@@ -411,6 +423,9 @@ struct EditorCanvasView: View {
 
     private func cursor(at point: SIMD2<Double>) -> NSCursor {
         if tools.maskPainting != nil { return .crosshair }
+        if let cursor = EffectGizmoCanvas.cursor(at: point, session: session, tools: tools, services: services, viewport: viewport) {
+            return cursor
+        }
         if let particles, let cursor = ParticleCanvasInteraction.cursor(at: point, viewport: viewport, services: particles) {
             return cursor
         }

@@ -18,6 +18,8 @@ final class EditorTools: ObservableObject {
     @Published var snapping = true
     /// Where the drag in progress snapped, drawn on the canvas.
     @Published var guides: [LayerSnapping.Guide] = []
+    /// The effects open in the inspector, as `<layer>:<effect key>`: the canvas draws their gizmos.
+    @Published var expandedEffects: Set<String> = []
     @Published var maskPainting: MaskPainting?
     @Published var sidebarTab: SidebarTab = .layers
     /// The layer whose name is being edited in the list.
@@ -51,6 +53,13 @@ final class EditorTools: ObservableObject {
 
     /// Canvas points within which a drag snaps.
     static let snapDistance: Double = 6
+
+    func isExpanded(_ effectKey: String, of layerID: Int) -> Bool { expandedEffects.contains("\(layerID):\(effectKey)") }
+
+    func setExpanded(_ expanded: Bool, _ effectKey: String, of layerID: Int) {
+        let key = "\(layerID):\(effectKey)"
+        if expanded { expandedEffects.insert(key) } else { expandedEffects.remove(key) }
+    }
 }
 
 /// Choosing files to import, as the Add menu and the asset browser do.
