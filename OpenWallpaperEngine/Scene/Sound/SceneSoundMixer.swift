@@ -21,7 +21,7 @@ final class SceneSoundMixer {
     private var spatialBus: AVAudioMixerNode?
 
     /// `offline` renders on demand (`AVAudioEngine.renderOffline`) instead of to `device`.
-    init(label: String, offline: AVAudioFormat? = nil, device: OutputOnlyAudioDevice? = WallpaperServices.shared.soundOutput) {
+    init(label: String, offline: AVAudioFormat? = nil, device: OutputOnlyAudioDevice? = WallpaperServices.shared.sceneSoundOutput) {
         self.label = label
         let mode: AVAudioEngineManualRenderingMode = offline == nil ? .realtime : .offline
         // Live: the device's rate, so the output copies frames without resampling.

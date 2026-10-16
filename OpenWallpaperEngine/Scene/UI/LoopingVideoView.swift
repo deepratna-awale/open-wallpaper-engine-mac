@@ -43,6 +43,7 @@ final class VideoLoop: ObservableObject {
 
     init() {
         player.isMuted = true
+        WallpaperAVPlayer.route(player)
     }
 
     func play(_ url: URL) {

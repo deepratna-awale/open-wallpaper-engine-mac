@@ -42,6 +42,35 @@ final class AudioMicrophoneUseTests: XCTestCase {
         XCTAssertEqual(player.audioOutputDeviceUniqueID, device.uid, "video wallpapers play on it too")
     }
 
+    /// The test host is the app: its video players play on the output-only device too, or every
+    /// freshly signed test build asked for the microphone on a Mac whose output is a headset.
+    /// Scene sound layers stay silent or offline in tests.
+    @MainActor
+    func testTheTestHostsPlayersUseTheOutputOnlyDevice() throws {
+        let services = WallpaperServices.shared
+        XCTAssertNil(services.sceneSoundOutput, "sound layers never play live in a test host")
+        guard let output = services.soundOutput, let id = output.deviceID else { throw XCTSkip("no output device on this Mac") }
+        XCTAssertEqual(OutputOnlyAudioDevice.inputStreamCount(of: id), 0)
+        XCTAssertEqual(WallpaperAVPlayer.make().audioOutputDeviceUniqueID, output.uid)
+        XCTAssertEqual(VideoLoop().player.audioOutputDeviceUniqueID, output.uid, "muted previews are routed too")
+    }
+
+    /// Every player the app makes is routed (`WallpaperAVPlayer`): a file that makes an `AVPlayer`
+    /// or an `AVQueuePlayer` routes it.
+    func testEveryPlayerTheAppMakesIsRouted() throws {
+        let sources = AppIdentityLintTests.repository.appending(path: "OpenWallpaperEngine")
+        let walker = try XCTUnwrap(FileManager.default.enumerator(at: sources, includingPropertiesForKeys: nil))
+        var checked = 0
+        for case let url as URL in walker where url.pathExtension == "swift" {
+            let text = try String(contentsOf: url, encoding: .utf8)
+            guard text.contains("AVPlayer(") || text.contains("AVQueuePlayer(") else { continue }
+            checked += 1
+            XCTAssertTrue(text.contains("WallpaperAVPlayer.route(") || url.lastPathComponent == "WallpaperAVPlayer.swift",
+                          "\(url.lastPathComponent) makes a player without routing it to the output-only device")
+        }
+        XCTAssertGreaterThan(checked, 0)
+    }
+
     /// The scene engine renders manually, so it never opens the default output device itself.
     func testSceneSoundNeverMakesItsOwnHardwareOutput() {
         let live = SceneSoundMixer(label: "test", device: nil)

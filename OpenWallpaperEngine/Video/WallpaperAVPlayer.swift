@@ -15,7 +15,14 @@ enum WallpaperAVPlayer {
     static func make(item: AVPlayerItem? = nil, output: OutputOnlyAudioDevice? = WallpaperServices.shared.soundOutput) -> AVPlayer {
         let player = AVPlayer(playerItem: item)
         player.preventsDisplaySleepDuringVideoPlayback = false
-        if let output, output.deviceID != nil { player.audioOutputDeviceUniqueID = output.uid }
+        route(player, to: output)
         return player
+    }
+
+    /// Plays `player`'s sound on `output` (the default output device without its inputs), for
+    /// players made elsewhere (an `AVQueuePlayer` behind an `AVPlayerLooper`). A muted player
+    /// still opens its device, so muted ones are routed too.
+    static func route(_ player: AVPlayer, to output: OutputOnlyAudioDevice? = WallpaperServices.shared.soundOutput) {
+        if let output, output.deviceID != nil { player.audioOutputDeviceUniqueID = output.uid }
     }
 }
