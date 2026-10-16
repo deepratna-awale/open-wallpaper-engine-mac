@@ -13,6 +13,10 @@ Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・We
 
 <!-- demo: desktop -->
 
+[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+
+[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+
 ![ライブラリ](../../docs/images/library.jpg)
 
 ## ほかにない特長
@@ -30,6 +34,8 @@ Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・We
 
   <!-- demo: wallpaper-editor -->
 
+  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+
   ![壁紙エディタ](../../docs/images/wallpaper-editor.jpg)
 
   <!-- demo: model-import -->
@@ -37,6 +43,8 @@ Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・We
   <!-- demo: shader-editor -->
 
 - **シーン編集/書き出し**：再生中の壁紙のレイヤーやエフェクトをデスクトップ上でリアルタイムに変更したり、スクリーンセーバーに表示するものを選んだり、壁紙を Live Photo または Android パッケージとして書き出したりできます。
+
+  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
 
   ![シーン編集/書き出し](../../docs/images/scene-editor-live.jpg)
 
@@ -48,7 +56,11 @@ Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・We
 
   <!-- demo: live-photo-export -->
 
+  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+
   <!-- demo: android-export -->
+
+  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
 
   ![Wi-Fi で送信](../../docs/images/send-over-wifi.png)
 

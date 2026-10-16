@@ -13,6 +13,10 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
 
 <!-- demo: desktop -->
 
+[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+
+[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+
 ![लाइब्रेरी](../../docs/images/library.jpg)
 
 ## इसे क्या अलग बनाता है
@@ -30,6 +34,8 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
 
   <!-- demo: wallpaper-editor -->
 
+  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+
   ![वॉलपेपर एडिटर](../../docs/images/wallpaper-editor.jpg)
 
   <!-- demo: model-import -->
@@ -37,6 +43,8 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
   <!-- demo: shader-editor -->
 
 - **सीन एडिट/एक्सपोर्ट**: चल रहे वॉलपेपर की लेयर और इफ़ेक्ट सीधे डेस्कटॉप पर लाइव बदलें, चुनें कि स्क्रीन सेवर क्या दिखाए, या वॉलपेपर को Live Photo या Android पैकेज के रूप में एक्सपोर्ट करें.
+
+  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
 
   ![सीन एडिट/एक्सपोर्ट](../../docs/images/scene-editor-live.jpg)
 
@@ -48,7 +56,11 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
 
   <!-- demo: live-photo-export -->
 
+  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+
   <!-- demo: android-export -->
+
+  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
 
   ![Wi-Fi पर भेजें](../../docs/images/send-over-wifi.png)
 

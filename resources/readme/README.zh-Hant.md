@@ -13,6 +13,10 @@ Open Wallpaper Engine 是一款免費、開源的 macOS App，可播放與編輯
 
 <!-- demo: desktop -->
 
+[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+
+[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+
 ![資料庫](../../docs/images/library.jpg)
 
 ## 與眾不同之處
@@ -30,6 +34,8 @@ Open Wallpaper Engine 是一款免費、開源的 macOS App，可播放與編輯
 
   <!-- demo: wallpaper-editor -->
 
+  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+
   ![背景圖片編輯器](../../docs/images/wallpaper-editor.jpg)
 
   <!-- demo: model-import -->
@@ -37,6 +43,8 @@ Open Wallpaper Engine 是一款免費、開源的 macOS App，可播放與編輯
   <!-- demo: shader-editor -->
 
 - **場景編輯/輸出**：直接在桌面上即時修改正在執行的背景圖片的圖層與效果，選擇螢幕保護程式顯示的內容，或將背景圖片輸出為原況照片或 Android 套件。
+
+  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
 
   ![場景編輯/輸出](../../docs/images/scene-editor-live.jpg)
 
@@ -48,7 +56,11 @@ Open Wallpaper Engine 是一款免費、開源的 macOS App，可播放與編輯
 
   <!-- demo: live-photo-export -->
 
+  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+
   <!-- demo: android-export -->
+
+  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
 
   ![透過 Wi-Fi 傳送](../../docs/images/send-over-wifi.png)
 

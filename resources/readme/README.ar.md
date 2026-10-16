@@ -15,6 +15,10 @@ Open Wallpaper Engine تطبيق مجاني ومفتوح المصدر لنظام
 
 <!-- demo: desktop -->
 
+[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+
+[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+
 ![المكتبة](../../docs/images/library.jpg)
 
 ## ما يميّزه
@@ -32,6 +36,8 @@ Open Wallpaper Engine تطبيق مجاني ومفتوح المصدر لنظام
 
   <!-- demo: wallpaper-editor -->
 
+  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+
   ![محرر الخلفيات](../../docs/images/wallpaper-editor.jpg)
 
   <!-- demo: model-import -->
@@ -39,6 +45,8 @@ Open Wallpaper Engine تطبيق مجاني ومفتوح المصدر لنظام
   <!-- demo: shader-editor -->
 
 - **تحرير/تصدير المشهد**: غيّر طبقات الخلفية قيد التشغيل وتأثيراتها مباشرةً على سطح المكتب، أو اختر ما تعرضه شاشة التوقف، أو صدّر الخلفية كصورة حيّة (Live Photo) أو كحزمة Android.
+
+  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
 
   ![تحرير/تصدير المشهد](../../docs/images/scene-editor-live.jpg)
 
@@ -50,7 +58,11 @@ Open Wallpaper Engine تطبيق مجاني ومفتوح المصدر لنظام
 
   <!-- demo: live-photo-export -->
 
+  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+
   <!-- demo: android-export -->
+
+  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
 
   ![الإرسال عبر Wi-Fi](../../docs/images/send-over-wifi.png)
 
