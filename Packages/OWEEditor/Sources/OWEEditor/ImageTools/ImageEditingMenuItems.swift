@@ -12,6 +12,7 @@ struct ImageEditingMenuItems: View {
         if layer.imageRole == .picture {
             Menu(IL("Image Editing")) {
                 Button(IL("Foreground Separation")) { open(.foregroundSeparation) }
+                Button(IL("Character Sheet Creation")) { open(.characterSheet) }
             }
             .disabled(actions.services.assetStore == nil)
         }
