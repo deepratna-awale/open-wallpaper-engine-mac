@@ -115,7 +115,7 @@ final class SceneScriptWallpaper {
     /// On the script thread: the runtime with its extensions, the scene placed, the sites added.
     private func create(properties: SceneScriptUserProperties) throws {
         let describer = SceneScriptSceneDescriber(userProperties: properties, file: content.file)
-        let mirror = SceneScriptSceneMirror(document: content.document, describer: describer, wallpaperID: content.wallpaperID)
+        let mirror = SceneScriptSceneMirror(document: content.document, describer: describer)
         let engine = SceneScriptEngineExtension(storage: services.storage)
         if let launcher = services.userShortcuts {
             engine.userShortcutHandler = { [weak self] name in

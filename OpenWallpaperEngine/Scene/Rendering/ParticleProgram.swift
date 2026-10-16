@@ -119,6 +119,9 @@ struct ParticleInitializer: Equatable {
     /// A `mapsequence…` initializer's count, which the `count` instance override rescales (its
     /// flag 1 or 16): the step is `1 / count` (`1 / (count − 1)` between two points).
     var sequenceCount: Float?
+    /// A `colorlist`'s colours past the four its record holds (HSV), carried in colour records
+    /// after the initializers (`ParticleInitializer.encoded`).
+    var moreColors: [SIMD4<Float>] = []
 
     var kind: ParticleInitializerKind { ParticleInitializerKind(rawValue: record.header.x) ?? .lifetimeRandom }
 
@@ -154,4 +157,53 @@ extension ParticleProgramOp {
     /// The first control point (low byte of `header.z`) and the second (next byte).
     var controlPoint0: Int { Int(header.z & 0xFF) }
     var controlPoint1: Int { Int((header.z >> 8) & 0xFF) }
+}
+
+extension ParticleInitializer {
+    /// The colours one colour record holds: its six vectors (`a`…`e`, `blend`).
+    static let colorsPerRecord = 6
+
+    /// `records` (one per initializer, in order) with each `colorlist`'s further colours appended
+    /// as colour records (kind 0, which both simulations skip); the `colorlist` record's
+    /// `header.w` is the index of its first one. Initializer indices, and so their random
+    /// streams, stay as authored.
+    static func encoded(_ initializers: [ParticleInitializer], records: [ParticleProgramOp]) -> [ParticleProgramOp] {
+        var encoded = records
+        for (index, element) in initializers.enumerated() where !element.moreColors.isEmpty {
+            encoded[index].header.w = UInt32(encoded.count)
+            for start in stride(from: 0, to: element.moreColors.count, by: colorsPerRecord) {
+                var vectors = Array(element.moreColors[start..<min(start + colorsPerRecord, element.moreColors.count)])
+                vectors += Array(repeating: SIMD4<Float>.zero, count: colorsPerRecord - vectors.count)
+                encoded.append(ParticleProgramOp(header: .zero, a: vectors[0], b: vectors[1], c: vectors[2], d: vectors[3],
+                                                 e: vectors[4], blend: vectors[5]))
+            }
+        }
+        return encoded
+    }
+}
+
+extension ParticleProgramOp {
+    /// Colour `index` (HSV) of the `colorlist` record `self` in `records`: four in the record, the
+    /// rest in its colour records (`ParticleInitializer.encoded`).
+    func listColor(_ index: Int, in records: [ParticleProgramOp]) -> SIMD4<Float> {
+        switch index {
+        case 0: return b
+        case 1: return c
+        case 2: return d
+        case 3: return e
+        default:
+            let more = index - 4, perRecord = ParticleInitializer.colorsPerRecord
+            let slot = Int(header.w) + more / perRecord
+            guard records.indices.contains(slot) else { return b }
+            let record = records[slot]
+            switch more % perRecord {
+            case 0: return record.a
+            case 1: return record.b
+            case 2: return record.c
+            case 3: return record.d
+            case 4: return record.e
+            default: return record.blend
+            }
+        }
+    }
 }
