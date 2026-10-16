@@ -39,7 +39,8 @@ struct EffectsSection: View {
         }
         .sheet(isPresented: $isBrowsing) {
             EffectBrowserView(entries: services.effectCatalog(), previews: services.previews,
-                              hasWEAssets: services.hasWEAssets(), openAssetsSetup: services.openAssetsSetup) { entry in
+                              hasWEAssets: services.hasWEAssets(), openAssetsSetup: services.openAssetsSetup,
+                              custom: CustomEffectActions(session: session, read: services.readFile)) { entry in
                 do {
                     try services.prepareEffect(entry)
                 } catch {
