@@ -58,6 +58,9 @@ public struct WallpaperEditorServices {
     /// The wallpaper's project.json as it ships, whose `general.properties` the user-property
     /// editor starts from; nil hides the editor.
     public var projectJSON: Data?
+    /// A file as the scene reads it (the wallpaper's, else WE's assets): an image layer's model
+    /// and material for Lighting & Reflections.
+    public var readAsset: (String) -> Data? = { _ in nil }
     /// What the wallpaper's running scripts log and the errors they raise; nil when the app
     /// doesn't report them.
     public var scriptConsole: SceneScriptConsoleFeed?

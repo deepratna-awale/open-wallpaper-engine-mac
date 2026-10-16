@@ -225,6 +225,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.hasWEAssets = hasWEAssets
         services.openAssetsSetup = openAssetsSetup
         let assets = particleAssets, directory = wallpaper.wallpaperDirectory
+        services.readAsset = { assets.data($0) }
         do {
             let particles = try ParticleEditorServices.make(
                 session: session, readAsset: { assets.data($0) }, catalog: { assets.catalog(labels: labels) },
