@@ -8,7 +8,7 @@ enum SceneObjectValueField: String, CaseIterable {
 
 /// Value-bearing fields of `general` in scene.json. The raw forms are kept in `WESceneGeneral.values`.
 enum SceneGeneralValueField: String, CaseIterable {
-    case bloom, bloomstrength, bloomthreshold, clearcolor
+    case bloom, bloomstrength, bloomthreshold, clearcolor, clearenabled
     case camerashake, camerashakeamplitude, camerashakespeed, camerashakeroughness
     case cameraparallax, cameraparallaxamount, cameraparallaxdelay, cameraparallaxmouseinfluence
     case ambientcolor, skylightcolor
@@ -21,6 +21,8 @@ enum SceneGeneralValueField: String, CaseIterable {
     case fogdistance, fogheight, fogdistancecolor, fogheightcolor
     case fogdistancestart, fogdistanceend, fogdistancestartdensity, fogdistanceenddensity
     case fogheightstart, fogheightend, fogheightstartdensity, fogheightenddensity
+    /// The scene-wide gravity and wind (`ScenePhysicsSettings`).
+    case gravitydirection, gravitystrength, windenabled, winddirection, windstrength
 }
 
 /// Fields any scene object may author that decide how it draws in a 3D scene

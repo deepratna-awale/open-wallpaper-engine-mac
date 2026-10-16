@@ -94,6 +94,8 @@ class SceneWallpaperViewModel: ObservableObject {
     private var loggedParticleBudget: (directory: URL, report: ParticleBudget.Report)?
     /// Retained for video wallpapers rendered through the scene pipeline.
     private var videoStream: VideoTextureStream?
+    /// The last video's range (`videoDynamicRange(of:)`), read once per file.
+    private var videoRangeByURL: (url: URL, range: VideoDynamicRange)?
     /// Scene images' video textures, which follow the wallpaper's playback (`setEmbeddedVideoRate`).
     private let embeddedVideoStreams = NSHashTable<VideoTextureStream>.weakObjects()
     private var embeddedVideoRate: Float = 1
@@ -211,7 +213,8 @@ class SceneWallpaperViewModel: ObservableObject {
         defer { sceneLock.unlock() }
         buildTextures.removeAll()
     }
-    private var registeredFontNames: [String: String] = [:]
+    /// Registers the text objects' fonts (`textFontLoader`); dropped with the wallpaper.
+    private var fontLoader: SceneTextFontLoader?
 
     /// `effectTranslator` translates and caches every shader variant the scene needs; the app's
     /// shared one (`defaultEffectTranslator`) unless a caller keeps its own cache (shader prewarm, tests).
@@ -263,7 +266,10 @@ class SceneWallpaperViewModel: ObservableObject {
     func setRenderSettings(_ settings: SceneRenderSettings) {
         let rebuild: Bool? = stateLock.withLock {
             guard settings != pendingRenderSettings else { return nil }
+            // A video's HDR follows display HDR itself (`videoDynamicRange(of:)`).
             let rebuild = settings.contentKey != pendingRenderSettings.contentKey
+                || (Self.isVideoType(currentWallpaper.project.type)
+                    && (settings.postProcessing == .displayhdr) != (pendingRenderSettings.postProcessing == .displayhdr))
             pendingRenderSettings = settings
             return rebuild
         }
@@ -373,7 +379,7 @@ class SceneWallpaperViewModel: ObservableObject {
         guard isCurrent() else { return nil }
         var read = SceneRead(wallpaper: wallpaper, signature: key.name + "|" + sceneFile, hasPackage: hasPackage)
         read.overlay = request.overlay
-        read.editorAssets = request.overlay?.particles?.assetData() ?? [:]
+        read.editorAssets = request.overlay?.editorFileData() ?? [:]
         if let cached = Self.cachedParse(for: dir, signature: read.signature) {
             read.parser = cached.parser
             read.scene = cached.scene
@@ -427,7 +433,7 @@ class SceneWallpaperViewModel: ObservableObject {
         // per wallpaper, so they survive switches and are reclaimed by NSCache under pressure.
         if loadedWallpaperDirectory != dir {
             assetDataCache.removeAll(keepingCapacity: true)
-            registeredFontNames.removeAll(keepingCapacity: true)
+            fontLoader = nil
             // Otherwise a stale stream either keeps playing the previous video's audio after
             // switching to a non-video wallpaper, or gets reused verbatim for a different video.
             videoStream?.stop()
@@ -721,6 +727,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                             clearColor: scene.general.clearColor(in: valueContext),
                                             wallpaperKey: propertyStoreKey)
             content.general = scene.general
+            content.clearEnabled = scene.general.clearEnabled(in: valueContext)
             content.motions = objectMotions(scene.objects, besides: layers, context: valueContext)
             content.visibility = visibility
             content.userVisibility = SceneUserVisibility(objects: scene.objects)
@@ -904,8 +911,14 @@ class SceneWallpaperViewModel: ObservableObject {
         // Runs on the content queue: a video AVFoundation refuses as it is plays from its repaired
         // copy, made here on first play when the import didn't make it.
         let url = videoStream == nil ? RepairedVideoCache.current.playableURL(for: currentWallpaper.mediaURL) : currentWallpaper.mediaURL
+        let dynamicRange = videoDynamicRange(of: url)
+        // The stream decodes for one range: a change of the setting reopens it.
+        if let videoStream, videoStream.dynamicRange != dynamicRange {
+            videoStream.stop()
+            self.videoStream = nil
+        }
         let stream = videoStream ?? VideoTextureStream(file: VideoFileSource(url: url, mode: renderSettings.videoReadMode),
-                                                       device: device)
+                                                       device: device, dynamicRange: dynamicRange)
         guard let stream else {
             OWELog.error(.scene, "Could not open video \(url.lastPathComponent) for Metal playback")
             return nil
@@ -936,9 +949,30 @@ class SceneWallpaperViewModel: ObservableObject {
             brightness: 1, color: SIMD4<Float>(repeating: 1), text: nil, parallaxDepth: .zero, perspective: false,
             rotation: 0)
         layer.musicSync = musicSync
-        return SceneMetalContent(size: sceneSize, layers: [layer], particleSystems: [],
-                                 bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7,
-                                                           tint: SIMD3<Float>(repeating: 1)))
+        var content = SceneMetalContent(size: sceneSize, layers: [layer], particleSystems: [],
+                                        bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7,
+                                                                  tint: SIMD3<Float>(repeating: 1)))
+        if stream.dynamicRange.isHDR {
+            // WE 2.8's HDR video: a float frame of linear light, finished by `combine_video_hdr`.
+            sceneEngineCombos = SceneEngineCombos(hdr: true)
+            content.engineCombos = sceneEngineCombos
+            content.hdrChain = engineChain("WE's HDR video combine", wallpaperDir: currentWallpaper.wallpaperDirectory,
+                                           SceneHDRChain.build)
+            content.videoHDR = true
+        }
+        return content
+    }
+
+    /// The range the Metal path decodes `url` in: its own when it is HDR and the post-processing
+    /// setting is "Ultra (Display HDR)", WE 2.8's condition for a HDR video (a HDR swap chain);
+    /// SDR otherwise, the 8-bit path at its usual cost. The settings offer display HDR only where a
+    /// display can show it (`DisplayHDRSupport`).
+    private func videoDynamicRange(of url: URL) -> VideoDynamicRange {
+        guard renderSettings.postProcessing == .displayhdr else { return .sdr }
+        if let known = videoRangeByURL, known.url == url { return known.range }
+        let range = VideoDynamicRange.of(url)
+        videoRangeByURL = (url, range)
+        return range
     }
 
     /// Plays or pauses every scene image's video texture with the wallpaper: 0 while it is
@@ -1460,7 +1494,7 @@ class SceneWallpaperViewModel: ObservableObject {
         let paddingParts = (object.padding ?? "").split(separator: " ").compactMap { Float($0) }
         let firstPadding = paddingParts.first ?? WETextDefaults.padding
         let padding = SIMD2<Float>(firstPadding, paddingParts.count > 1 ? paddingParts[1] : firstPadding)
-        let textConfig = SceneMetalText(value: text, font: registerFont(object.font),
+        var textConfig = SceneMetalText(value: text, font: registerFont(object.font),
                                          pointSize: CGFloat(object.pointsize ?? WETextDefaults.pointSize),
                                          horizontalAlignment: object.horizontalalign,
                                          verticalAlignment: object.verticalalign,
@@ -1471,6 +1505,17 @@ class SceneWallpaperViewModel: ObservableObject {
                                          useEllipsis: object.limituseellipsis ?? false,
                                          anchor: object.anchor, blockAlign: object.blockalign ?? false,
                                          effects: object.textEffects.effects)
+        textConfig.maxWidthValue = Float(object.maxwidth ?? WETextDefaults.maxWidth)
+        textConfig.maxRowsValue = object.maxrows ?? WETextDefaults.maxRows
+        textConfig.fonts = textFontLoader()
+        textConfig.opaqueBackground = object.opaquebackground ?? false
+        if let color = object.backgroundcolor?.parseVector3() {
+            textConfig.backgroundColor = SIMD3(Float(color.0), Float(color.1), Float(color.2))
+        }
+        let spacingParts = (object.spacing ?? "").split(separator: " ").compactMap { Float($0) }
+        if let first = spacingParts.first {
+            textConfig.spacing = SIMD2(first, spacingParts.count > 1 ? spacingParts[1] : first)
+        }
         var layer = SceneMetalLayer(id: String(id), name: object.name ?? String(id),
                                source: .image(transparentPlaceholderImage),
                                position: localOrigin(for: object),
@@ -1487,7 +1532,7 @@ class SceneWallpaperViewModel: ObservableObject {
         // Drawn through WE's `font` material, which reads its texture as coverage: effects' output
         // isn't that, and `font` has no blend-mode combo, so those layers keep the native draw.
         // Text with font effects draws its coloured raster (`SceneTextEffects`), not coverage.
-        if layer.weEffects.isEmpty, (object.colorBlendMode ?? 0) == 0, textConfig.effects == nil {
+        if layer.weEffects.isEmpty, (object.colorBlendMode ?? 0) == 0, !textConfig.rastersInColor {
             layer.imageMaterial = buildTextMaterial(object, id: id, wallpaperDir: wallpaperDir)
         }
         return layer
@@ -1561,84 +1606,18 @@ class SceneWallpaperViewModel: ObservableObject {
         Self.pixelImage([1, 1, 1, 0])
     }
 
+    /// The name a text object's `font` is registered under (`SceneTextFontLoader`).
     private func registerFont(_ path: String?) -> String? {
-        guard let path, !path.isEmpty else { return nil }
-        if let registered = registeredFontNames[path] { return registered }
-        let resolver = SceneFontResolver(
-            wallpaperData: { self.loadFontData(named: $0) },
-            assetDirectories: WallpaperEngineAssets.searchDirectories,
-            workshop: WorkshopAssetResolver(roots: WorkshopAssetResolver.defaultRoots()))
-        let data: Data
-        switch resolver.resolve(path) {
-        case .system(let family)?:
-            registeredFontNames[path] = family
-            // The per-layer font setting is seeded with the scene's name (`systemfont_*`).
-            if let installed = NSFontManager.shared.font(withFamily: family, traits: [], weight: 5, size: 12) {
-                SceneFontRegistry.register(postScriptName: installed.fontName, names: [path])
-            }
-            return family
-        case .data(let bytes, _)?:
-            data = bytes
-        case nil:
-            OWELog.error(.scene, "Font \"\(path)\" not found in the wallpaper, WE assets or workshop items; using Arial, as WE does")
-            return path
-        }
-        guard let descriptors = CTFontManagerCreateFontDescriptorsFromData(data as CFData) as? [CTFontDescriptor],
-              let descriptor = descriptors.first,
-              let name = CTFontDescriptorCopyAttribute(descriptor, kCTFontNameAttribute) as? String else {
-            return path
-        }
-
-        // Fonts inside a PKG have no filesystem URL, so register their in-memory
-        // CGFont before NSFont(name:) is used by either text rendering path.
-        if let provider = CGDataProvider(data: data as CFData),
-           let font = CGFont(provider) {
-            var error: Unmanaged<CFError>?
-            _ = CTFontManagerRegisterGraphicsFont(font, &error)
-            let family = CTFontDescriptorCopyAttribute(descriptor, kCTFontFamilyNameAttribute) as? String
-            SceneFontRegistry.register(font, names: [path, name, family ?? ""])
-        }
-        registeredFontNames[path] = name
-        return name
+        textFontLoader().register(path)
     }
 
-    /// The wallpaper's own package or folder; `SceneFontResolver` handles the other sources.
-    private func loadFontData(named path: String) -> Data? {
-        let normalized = path.replacingOccurrences(of: "\\", with: "/")
-        let keys = [path, normalized, (normalized as NSString).lastPathComponent]
-        for key in keys {
-            if let cached = assetDataCache[key] { return cached }
-            if let data = pkgParser?.extractFile(named: key) {
-                assetDataCache[key] = data
-                return data
-            }
-        }
-        if let entry = pkgParser?.fileList.first(where: {
-            let candidate = $0.replacingOccurrences(of: "\\", with: "/")
-            return candidate.caseInsensitiveCompare(normalized) == .orderedSame
-                || (candidate as NSString).lastPathComponent.caseInsensitiveCompare((normalized as NSString).lastPathComponent) == .orderedSame
-        }), let data = pkgParser?.extractFile(named: entry) {
-            assetDataCache[path] = data
-            return data
-        }
-        if let directory = loadedWallpaperDirectory {
-            for candidate in [normalized, (normalized as NSString).lastPathComponent] {
-                let data: Data?
-                do {
-                    data = try AssetPathResolver.data(candidate, in: directory)
-                } catch {
-                    OWELog.error(.scene, "Failed to read font \(candidate): \(error)")
-                    continue
-                }
-                if let data {
-                    assetDataCache[path] = data
-                    return data
-                }
-            }
-        }
-        return nil
+    /// This wallpaper's font loader, made on first use after a load of a different wallpaper.
+    private func textFontLoader() -> SceneTextFontLoader {
+        if let fontLoader { return fontLoader }
+        let loader = SceneTextFontLoader(package: pkgParser, directory: loadedWallpaperDirectory)
+        fontLoader = loader
+        return loader
     }
-
 
     /// Shared by every scene: translated variants are cached in memory and on disk.
     /// Optional only for its callers' `guard let`s; it always exists.
@@ -1698,7 +1677,9 @@ class SceneWallpaperViewModel: ObservableObject {
             },
             sceneEngineCombos: sceneEngineCombos,
             readWallpaperFile: { [weak self] path in
-                guard let self, let data = self.wallpaperData(named: path, wallpaperDir: wallpaperDir) else { return nil }
+                // The editor's files of the wallpaper (an effect made in the Wallpaper Editor) are its own.
+                guard let self, let data = self.editorAssetsLock.withLock({ self.editorAssets[path] })
+                        ?? self.wallpaperData(named: path, wallpaperDir: wallpaperDir) else { return nil }
                 return self.bindingTable.resolvedData(data, path: path, properties: self.userProperty)
             })
         builder.objectCombos = objectCombos

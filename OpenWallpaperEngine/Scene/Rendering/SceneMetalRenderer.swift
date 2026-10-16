@@ -179,6 +179,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// The renderer draws the live screen saver (`ScreenSaverLiveScene`): scripts see
     /// `engine.isScreensaver()` true. Set before the first frame.
     var rendersScreenSaver = false
+    /// The renderer draws the Wallpaper Editor's canvas: scripts see `engine.isRunningInEditor()`
+    /// true, as in Wallpaper Engine's editor. Set before the first frame.
+    var runsInEditor = false
     /// While true the scene's clock text layers (`SceneClockLayers`) draw nothing: set for the
     /// Live Photo export (iOS draws its own clock) and while capturing the loading snapshot the
     /// lock screen shows.
@@ -389,6 +392,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var cameraGeneral: WESceneGeneral?
     /// `general.clearcolor` (`SceneMetalContent.clearColor`); a script's `thisScene.clearcolor` wins.
     private var clearColor = SceneGeneralDefaults.clearColor
+    /// `general.clearenabled` (`SceneMetalContent.clearEnabled`); a script's `thisScene.clearenabled` wins.
+    private var clearEnabled = true
+    /// This frame keeps the last frame's scene (`clearenabled` off): its own scene target, loaded
+    /// instead of cleared, and the pass's samples and depth stored.
+    private var keepsScene = false
+    /// The scene targets (colour, samples, depth) the last frame that kept its scene drew into:
+    /// a frame loads them only while they are the same textures; new ones start cleared.
+    private var keptSceneTargets: [ObjectIdentifier?] = []
     /// WE's parallax camera position, eased across frames (`SceneCameraParallax`).
     private var cameraParallax = SceneCameraParallax(sceneSize: SIMD2<Float>(1920, 1080))
     /// Whose user properties this renderer's frames read (see `SceneMetalContent.wallpaperKey`).
@@ -519,6 +530,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var clickReader = DesktopClickReader()
     /// The last drawn frame's camera motion and text sizes (by layer id), for the next script frame.
     private var lastCameraMotion: CameraMotion?
+    /// The last drawn frame's camera, for the next script frame's cursor ray.
+    private var lastFrameCamera: SceneFrameCamera?
     /// Per-layer dependencies, coverage, class and this frame's dirty state
     /// (efficiency-plan-2d notes WP1-A); built with the content, off the main thread.
     private(set) var layerAnalysis: SceneLayerAnalysis?
@@ -791,6 +804,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             planarReflection?.release()
             lastPointer = nil
             lastCameraMotion = nil
+            lastFrameCamera = nil
             lastTextSizes.removeAll()
             cameraParallax = SceneCameraParallax(sceneSize: sceneSize)
             parallaxSettledPointer = nil
@@ -878,9 +892,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.camera = content.camera
                 self.cameraGeneral = content.general
                 self.clearColor = content.clearColor
+                self.clearEnabled = content.clearEnabled
+                self.keptSceneTargets = []
                 self.cameraParallax = SceneCameraParallax(sceneSize: content.size, enabled: Self.parallaxEnabled(content.camera))
                 self.parallaxSettledPointer = nil
                 self.lastCameraMotion = nil
+                self.lastFrameCamera = nil
                 self.lastTextSizes.removeAll()
                 self.textFrameCache.removeAll()
                 self.textRaster.reset()
@@ -1437,7 +1454,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func frameTargets(_ output: FrameOutput, destination: SceneFrameDestination, format: MTLPixelFormat,
                               size: SIMD2<Int>, frame: BuiltinFrameContext) -> FrameTargets? {
         let outputSize = SIMD2<Float>(Float(size.x), Float(size.y))
-        let passesThrough = skipsIdentityComposite && !drawsAtRenderScale && !postProcess.drawsHDR && format == destination.pixelFormat
+        // A scene that keeps its last frame draws into its own target, never the drawable.
+        let passesThrough = skipsIdentityComposite && !keepsScene && !drawsAtRenderScale && !postProcess.drawsHDR && format == destination.pixelFormat
             && postProcess.passesThrough(
                 bloom: liveBloom(), extras: appExtras(), settings: renderSettings, colorCorrection: colorCorrection(),
                 display: displayOutput, sceneSize: size, outputSize: size,
@@ -1639,6 +1657,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                              shake: motion.shake)
         analyseLayers(effectFrame: effectFrame, motion: motion, drawableSize: drawableSize)
         guard redrawing || paceFrame(effectFrame, at: wallTime()) else { return }
+        keepsScene = !(scripts.state.scene.flag(.clearenabled) ?? clearEnabled)
         // Only a frame that is drawn takes its targets, and the drawable only once its work is
         // encoded (F1), unless the scene draws straight into it (`FrameTargets`, S2).
         guard let commandBuffer = commandQueue.makeCommandBuffer(),
@@ -1654,6 +1673,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // Draws sample the last frame's copy; this frame's is made after the scene pass.
         mipMappedTarget = mipMappedFrameBuffer?.target(matching: sceneTexture, commandBuffer: commandBuffer)
         encodedFrames &+= 1
+        // A HDR video converts its new frame before anything samples it (`VideoTextureStream`).
+        for entry in layers { if case let .video(stream) = entry.layer.source { stream.prepareFrame(on: commandBuffer) } }
         drawProbe?.record(lighting: effectFrame.lighting)
         frameShadowAtlas = drawShadows(frame: effectFrame, commandBuffer: commandBuffer)
         // Text is rasterised first so its effects run on the finished text, like an image layer's.
@@ -1726,6 +1747,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         lastTextSizes.removeAll(keepingCapacity: true)
         for (index, frame) in textFrames { lastTextSizes[layers[index].layer.id] = frame.baseSize }
         lastCameraMotion = motion
+        lastFrameCamera = effectFrame.camera
 
         // WE clears the scene to `general.clearcolor` (the composite's letterbox stays black).
         let clear = scripts.state.scene.vector3(.clearcolor) ?? clearColor
@@ -1735,6 +1757,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         sceneRenderPass.colorAttachments[0].clearColor = MTLClearColor(red: Double(clear.x), green: Double(clear.y),
                                                                        blue: Double(clear.z), alpha: 1)
         attachSceneDepth(to: sceneRenderPass, scene: sceneTexture)
+        keepScene(sceneRenderPass, scene: sceneTexture, multisampled: multisampledScene)
         // One instanced draw per system rather than one per particle (or per rope segment, which
         // multiplies out to thousands on trail renderers).
         particleInstances.removeAll(keepingCapacity: true)
@@ -2075,7 +2098,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             guard fed.resumed else { return }
             detailBase = fed.base
         }
-        endScenePass(encoder, resumes: false)
+        endScenePass(encoder, resumes: keepsScene)
 
         var stageContext = SceneFrameStageContext(scene: sceneTexture, commandBuffer: commandBuffer, sceneSize: sceneSize,
                                                   frame: effectFrame, settings: renderSettings)
@@ -2282,7 +2305,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // Text is rasterised white; its user colour tints it when drawn, like its authored one.
         // Text with font effects or layer effects has its colours in its raster (`textFill`).
         let textTint = entry.layer.text == nil ? SIMD3<Float>(repeating: 1) : self.textTint(layerID: entry.layer.id)
-        uniform.color = entry.layer.text?.effects == nil && entry.layer.weEffects.isEmpty ? draw.color * SIMD4(textTint, 1)
+        uniform.color = !textRastersInColor(entry) && entry.layer.weEffects.isEmpty ? draw.color * SIMD4(textTint, 1)
             : SIMD4(1, 1, 1, draw.color.w)
         // The layer's brightness and a video's music-synced saturation; the other adjustments
         // stay at their identity (`layerUniform`).
@@ -2762,6 +2785,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             canvasSize: SIMD2(Double(sceneSize.x), Double(sceneSize.y)), placement: placement,
             pixelsPerPoint: Double(drawablePixelsPerPoint), isScreensaver: rendersScreenSaver)
         input.environment.zoom = frameZoom
+        input.environment.isRunningInEditor = runsInEditor
         input.input = SceneScriptInput(cursorScreenPosition: cursorScreenPixels(viewports),
                                        cursorLeftDown: leftDown)
         // The cursor tracks the drawn plane; scripts and their hit tests see WE's world under it.
@@ -2770,6 +2794,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         if let parallax = lastCameraMotion?.parallax {
             input.parallax = SceneScriptCursorFrame.Parallax(state: parallax.state, amount: parallax.amount)
         }
+        describeCursorTargets(into: &input, cursor: cursor.position)
         for entry in layers {
             guard let id = Int(entry.layer.id) else { continue }
             let script = scripts.object(entry.layer.id)
@@ -2815,6 +2840,24 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         }
 
         scripts.submit(input)
+    }
+
+    /// What the cursor pass tests beyond the object table (docs/scenescript-plan.md §4.8): every
+    /// model's 3D world (WE's, unzoomed), and in a perspective scene the ray from the last drawn
+    /// frame's eye through the cursor, its view direction and every layer's 3D world.
+    private func describeCursorTargets(into input: inout SceneScriptFrameInput, cursor: SIMD2<Float>) {
+        for model in spatial.models {
+            guard let id = Int(model.id) else { continue }
+            input.cursorWorlds[id] = world3D(model.id, in: spatial.transforms)
+        }
+        guard isPerspective, let camera = lastFrameCamera, sceneSize.x > 0, sceneSize.y > 0 else { return }
+        input.cursorRay = SceneScriptCursorRay.perspective(eye: camera.eye, viewProjection: camera.viewProjection,
+                                                            normalized: cursor / sceneSize)
+        input.cursorViewForward = camera.forward
+        for entry in layers {
+            guard let id = Int(entry.layer.id) else { continue }
+            input.cursorWorlds[id] = world3D(entry.layer.id, in: spatial.transforms)
+        }
     }
 
     /// The cursor in display pixels from the top-left of the wallpaper's view on the display it is
@@ -2903,6 +2946,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             return motion.local3D(authored: authored, animation: animation, script: script)
         }
         input.layerFov = { [unowned self] id in scripts.object(id)?.scalar(.fov) }
+        input.layerZoom = { [unowned self] id in scripts.object(id)?.scalar(.zoom) }
         input.fov = sceneSetting(.fov)
         input.nearZ = sceneSetting(.nearz)
         input.farZ = sceneSetting(.farz)
@@ -2953,7 +2997,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // the orthographic zoom doesn't scale.
         let view = entry.layer.fillsScene ? SceneAffineTransform.identity : frameZoom.plane
         let quad = SceneQuadGeometry(world: view * worldTransform(entry, local: local),
-                                     size: baseSize, alignment: entry.layer.alignment)
+                                     size: baseSize, alignment: alignment(entry))
         // WE draws a layer where its transform and the camera put it; an oversized layer (sized
         // to hide its edges while it moves) isn't pinned inside the scene.
         let center = quad.center + view.linear * (parallaxOffset - motion.shake)
@@ -2989,8 +3033,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let scripted = scripts.text(authored, of: entry.layer.id)
         return makeTextFrame(scripted.text, value: scripted.value, pointSize: scripted.pointSize, boxSize: boxSize,
                              pixelsPerUnit: pixelsPerUnit, layerID: entry.layer.id,
-                             fill: authored.effects == nil && entry.layer.weEffects.isEmpty ? nil : textFill(entry))
+                             fill: !scripted.text.rastersInColor && entry.layer.weEffects.isEmpty ? nil : textFill(entry))
             ?? (textureFrame(for: entry), boxSize)
+    }
+
+    /// Whether a text layer's raster this frame holds its colours (font effects or a background
+    /// box, authored or scripted: `SceneMetalText.rastersInColor`); false for other layers.
+    private func textRastersInColor(_ entry: PreparedLayer) -> Bool {
+        guard let authored = entry.layer.text else { return false }
+        return scripts.text(authored, of: entry.layer.id).text.rastersInColor
     }
 
     /// A text layer's colour this frame (a script's, else its timeline's, else authored, with the
@@ -3030,18 +3081,31 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func layerPlacement(_ entry: PreparedLayer, size: SIMD2<Float>, musicSyncLevel: Double, motion: CameraMotion,
                                 camera: SceneFrameCamera) -> SceneLayerPlacement? {
         guard !entry.layer.fillsScene else { return nil }
-        let offset = SceneAlignment.centerOffset(entry.layer.alignment, size: size)
+        let offset = SceneAlignment.centerOffset(alignment(entry), size: size)
         if isPerspective {
             let world = layerWorld3D(entry, in: spatial.transforms, musicSyncLevel: musicSyncLevel)
             return SceneLayerPlacement(world: world, size: size, offset: offset, camera: camera)
         }
-        guard entry.layer.perspective else { return nil }
+        guard perspective(entry.layer.id, authored: entry.layer.perspective) else { return nil }
         var world = layerWorld3D(entry, in: spatial.transforms, musicSyncLevel: musicSyncLevel)
         let shift = parallaxOffset(entry, local: evaluatedLocal(entry), motion: motion) - motion.shake
         world.columns.3 += SIMD4(shift.x, shift.y, 0, 0)
         var temporary = SceneLayerPlacement.perspectiveLayerCamera(sceneSize: sceneSize, fov: Float(spatial.camera.sceneFov))
         temporary.projection = frameZoom.projection(temporary.projection)
         return SceneLayerPlacement(world: world, size: size, offset: offset, camera: temporary)
+    }
+
+    /// A layer's `alignment` this frame: as a script set it (`IImageLayer.alignment`), else as
+    /// authored. A fullscreen layer has none.
+    private func alignment(_ entry: PreparedLayer) -> String? {
+        guard !entry.layer.fillsScene else { return entry.layer.alignment }
+        return scripts.object(entry.layer.id)?.strings[.alignment] ?? entry.layer.alignment
+    }
+
+    /// An object's `perspective` this frame (`IEffectLayer.perspective`, `IModelLayer.perspective`):
+    /// as a script set it, else `authored`.
+    private func perspective(_ id: String, authored: Bool) -> Bool {
+        scripts.object(id)?.flag(.perspective) ?? authored
     }
 
     /// A layer's world matrix with its music sync (a video's zoom and tilt, applied to its own
@@ -3180,7 +3244,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let model = spatial.models[index]
         guard scripts.isVisible(model.id) else { return }
         modelDrawing.draw(model, SceneModelDraw(
-            world: drawnWorld3D(model.id), camera: frame.camera, frame: frame,
+            world: drawnWorld3D(model.id), camera: modelCamera(model, frame: frame), frame: frame,
             values: timelines.values, pixelFormat: pixelFormat, sampleCount: sceneSampleCount, depth: frameDepth,
             mipMappedFrameBuffer: mipMappedTarget,
             assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
@@ -3188,6 +3252,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             planarReflection: frameReflection),
             encoder: encoder, commandBuffer: commandBuffer)
         encoder.setRenderPipelineState(renderPipeline)
+    }
+
+    /// The camera model object `model` draws through: the frame's, or in an orthographic scene a
+    /// `perspective` model's temporary camera, a perspective layer's (WE's model draw tests the
+    /// object's flag 0x80 and pushes it, 0x140222770 → 0x1401e5b60).
+    private func modelCamera(_ model: SceneModelObject, frame: BuiltinFrameContext) -> SceneFrameCamera {
+        guard !isPerspective, perspective(model.id, authored: model.perspective) else { return frame.camera }
+        var temporary = SceneLayerPlacement.perspectiveLayerCamera(sceneSize: sceneSize, fov: Float(spatial.camera.sceneFov))
+        temporary.projection = frameZoom.projection(temporary.projection)
+        return temporary
     }
 
     /// This frame's object loop: the layers and models in draw order, each with the barrier below
@@ -3659,7 +3733,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             sceneSnapshot: snapshot,
             // The scripted/animated values the layer is drawn with this frame, not the authored ones
             // (in the raster already for text with font effects).
-            layerColor: entry.layer.text?.effects == nil ? SIMD3(draw.color.x, draw.color.y, draw.color.z) : SIMD3(repeating: 1),
+            layerColor: !textRastersInColor(entry) ? SIMD3(draw.color.x, draw.color.y, draw.color.z) : SIMD3(repeating: 1),
             layerAlpha: draw.opacity)
         context.mipMappedFrameBuffer = mipMappedTarget
         context.layerComposite = { [unowned self] id in self.layerComposites[id] }
@@ -3706,7 +3780,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// perspective layers.
     private func effectFootprint(_ entry: PreparedLayer, draw: LayerDraw, input: MTLTexture) -> SIMD2<Float>? {
         let layer = entry.layer
-        guard !layer.sceneInput, layer.text == nil, !layer.perspective, let frame = entry.frames.first,
+        guard !layer.sceneInput, layer.text == nil, !perspective(layer.id, authored: layer.perspective), let frame = entry.frames.first,
               frame.texture.width == input.width, frame.texture.height == input.height else { return nil }
         if case .video = layer.source { return nil }
         let shown = SIMD2(simd_length(frame.uvAxisX), simd_length(frame.uvAxisY))
@@ -3867,6 +3941,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         frame.time = clock.time
         frame.frameTime = clock.delta
         for model in spatial.models where scripts.isVisible(model.id) {
+            // `IModelLayer.rootmotion` as a script set it, else as authored.
+            if let rootMotion = scripts.object(model.id)?.flag(.rootmotion) {
+                models.animator(for: model.id)?.rootMotion = rootMotion
+            }
             guard let plan = model.plan,
                   models.advance(model, plan: plan, frame: frame, values: timelines.values) != nil,
                   !scripts.isRunning, let animator = models.animator(for: model.id) else { continue }
@@ -3899,6 +3977,24 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             format: postProcess.drawsHDR ? .rgba16Float : .rgba8Unorm, commandBuffer: commandBuffer)
         prelitImages[entry.layer.id] = lit
         return lit
+    }
+
+    /// With `clearenabled` off (WE skips its scene pass's clear, 0x140183588), the pass loads the
+    /// last frame's colour and depth instead of clearing them, while it draws into the same targets.
+    private func keepScene(_ pass: MTLRenderPassDescriptor, scene: MTLTexture, multisampled: MTLTexture?) {
+        guard keepsScene else {
+            keptSceneTargets = []
+            return
+        }
+        let targets: [ObjectIdentifier?] = [ObjectIdentifier(scene), multisampled.map(ObjectIdentifier.init),
+                       frameDepth == nil ? nil : depthBuffer.texture.map(ObjectIdentifier.init),
+                       frameDepth == nil ? nil : depthBuffer.multisampled.map(ObjectIdentifier.init)]
+        guard targets == keptSceneTargets else {
+            keptSceneTargets = targets
+            return
+        }
+        pass.colorAttachments[0].loadAction = .load
+        if frameDepth != nil { pass.depthAttachment.loadAction = .load }
     }
 
     /// Ends an encoder of the scene pass, storing only what is read afterwards: the samples and
@@ -4187,7 +4283,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let italic = WallpaperServices.shared.userPropertyString("_owe_text_\(layerID)_italic") == "true"
         let rasterScale = textRasterScales[stateKey, default: SceneTextRasterScale.Tracker()].scale(for: pixelsPerUnit)
         let cacheKey = "\(stateKey)|\(value)|\(boxSize.x)|\(boxSize.y)|\(fontName)|\(sizeValue)|\(bold)|\(italic)|\(rasterScale)"
-            + "|\(text.horizontalAlignment ?? "")|\(text.verticalAlignment ?? "")"
+            + "|\(text.layoutKey)"
             + (fill.map { "|\($0)" } ?? "")
         let slot = "\(stateKey)|\(fill != nil)|\(pixelsPerUnit == 1)"
         for done in textRaster.takeFinished() {

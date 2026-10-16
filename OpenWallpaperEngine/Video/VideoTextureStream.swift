@@ -11,10 +11,19 @@ import QuartzCore
 /// the movie as a `videotex` user texture on a `genericimage` material — which is why scene effects
 /// apply to video there. Rendering into `AVPlayerView` keeps the frames outside Metal entirely, so
 /// no effect can touch them.
+///
+/// An SDR video decodes to 8-bit BGRA, sampled as it is. A HDR one in HDR mode (`dynamicRange`,
+/// WE 2.8's "Scene DX11 (HDR Support)" framework) decodes to linear half floats that
+/// `VideoHDRConversion` turns into linear BT.709 light, 1.0 = 100 nits, which the scene's
+/// `combine_video_hdr` shows as EDR (`SceneHDRChain`).
 final class VideoTextureStream {
     let player: AVPlayer
     /// Natural frame size, once the first frame has arrived.
     private(set) var frameSize = SIMD2<Float>(1920, 1080)
+    /// How the frames decode: `.sdr` is the 8-bit path; PQ or HLG, linear light (`VideoHDRConversion`).
+    let dynamicRange: VideoDynamicRange
+    /// The HDR mode's conversion; nil for SDR.
+    private let hdrConversion: VideoHDRConversion?
 
     private let output: AVPlayerItemVideoOutput
     /// Audio is a second player on the same file, mirroring the AVKit path: the video player stays
@@ -49,12 +58,13 @@ final class VideoTextureStream {
     /// The file the players read, kept while they do: from memory, it owns the bytes.
     private let file: VideoFileSource
 
-    convenience init?(url: URL, device: MTLDevice) {
-        self.init(file: VideoFileSource(url: url, mode: .fromDisk), device: device)
+    convenience init?(url: URL, device: MTLDevice, dynamicRange: VideoDynamicRange = .sdr) {
+        self.init(file: VideoFileSource(url: url, mode: .fromDisk), device: device, dynamicRange: dynamicRange)
     }
 
-    /// Plays `file` (WE's "Video loading", `VideoFileSource`).
-    init?(file: VideoFileSource, device: MTLDevice) {
+    /// Plays `file` (WE's "Video loading", `VideoFileSource`); a HDR `dynamicRange` decodes it as
+    /// linear light, and falls back to SDR (logged) when its conversion can't be made.
+    init?(file: VideoFileSource, device: MTLDevice, dynamicRange: VideoDynamicRange = .sdr) {
         self.file = file
         fileLease = CacheLeases.current.lease(file.url)
         var cache: CVMetalTextureCache?
@@ -62,10 +72,17 @@ final class VideoTextureStream {
               let cache else { return nil }
         textureCache = cache
 
-        output = AVPlayerItemVideoOutput(pixelBufferAttributes: [
-            kCVPixelBufferMetalCompatibilityKey as String: true,
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
-        ])
+        hdrConversion = dynamicRange.isHDR ? VideoHDRConversion(device: device) : nil
+        if dynamicRange.isHDR, hdrConversion == nil {
+            OWELog.error(.scene, "Video \(file.url.lastPathComponent) plays as SDR: its HDR conversion can't be made")
+        }
+        self.dynamicRange = hdrConversion == nil ? .sdr : dynamicRange
+        output = hdrConversion == nil
+            ? AVPlayerItemVideoOutput(pixelBufferAttributes: [
+                kCVPixelBufferMetalCompatibilityKey as String: true,
+                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+            ])
+            : AVPlayerItemVideoOutput(outputSettings: Self.hdrOutputSettings)
         let item = file.makeItem()
         item.add(output)
         player = WallpaperAVPlayer.make(item: item)
@@ -110,22 +127,50 @@ final class VideoTextureStream {
         latestTexture == nil || output.hasNewPixelBuffer(forItemTime: output.itemTime(forHostTime: CACurrentMediaTime()))
     }
 
-    /// The frame for the current host time, or the previous one when no new frame is ready.
+    /// HDR mode's decoder output: linear half floats in BT.2020, whose range AVFoundation keeps
+    /// (1.0 = 100 nits). Asked for BT.709 it would tone map into 0…1.
+    static let hdrOutputSettings: [String: Any] = [
+        kCVPixelBufferMetalCompatibilityKey as String: true,
+        kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_64RGBAHalf,
+        AVVideoColorPropertiesKey: [
+            AVVideoColorPrimariesKey: AVVideoColorPrimaries_ITU_R_2020,
+            AVVideoTransferFunctionKey: AVVideoTransferFunction_Linear,
+            AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_2020,
+        ],
+    ]
+
+    /// The frame for the current host time, or the previous one when no new frame is ready. In HDR
+    /// mode, the frame `prepareFrame(on:)` converted last.
     func currentTexture() -> MTLTexture? {
+        guard hdrConversion == nil, let texture = takeNewFrame(format: .bgra8Unorm) else { return latestTexture }
+        latestTexture = texture
+        return texture
+    }
+
+    /// HDR mode: takes a new decoded frame, if there is one, and converts it on `commandBuffer`,
+    /// before anything this frame samples `currentTexture()`. SDR does nothing here.
+    func prepareFrame(on commandBuffer: MTLCommandBuffer) {
+        guard let hdrConversion, let decoded = takeNewFrame(format: .rgba16Float),
+              let converted = hdrConversion.encode(decoded, on: commandBuffer) else { return }
+        latestTexture = converted
+    }
+
+    /// The decoder's frame for the current host time as a `format` texture, when a new one is
+    /// ready; it becomes the frame `holdCurrentFrame(until:)` keeps.
+    private func takeNewFrame(format: MTLPixelFormat) -> MTLTexture? {
         let itemTime = output.itemTime(forHostTime: CACurrentMediaTime())
         guard output.hasNewPixelBuffer(forItemTime: itemTime),
               let buffer = output.copyPixelBuffer(forItemTime: itemTime, itemTimeForDisplay: nil),
-              let textureCache else { return latestTexture }
+              let textureCache else { return nil }
 
         let width = CVPixelBufferGetWidth(buffer)
         let height = CVPixelBufferGetHeight(buffer)
         var created: CVMetalTexture?
         guard CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, textureCache, buffer, nil,
-                                                        .bgra8Unorm, width, height, 0, &created) == kCVReturnSuccess,
-              let created, let texture = CVMetalTextureGetTexture(created) else { return latestTexture }
+                                                        format, width, height, 0, &created) == kCVReturnSuccess,
+              let created, let texture = CVMetalTextureGetTexture(created) else { return nil }
 
         retainedTexture = created
-        latestTexture = texture
         frameSize = SIMD2<Float>(Float(width), Float(height))
         CVMetalTextureCacheFlush(textureCache, 0)
         return texture
