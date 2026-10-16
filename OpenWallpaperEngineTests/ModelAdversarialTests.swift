@@ -346,8 +346,8 @@ final class ModelAdversarialTests: XCTestCase {
 
     // MARK: - Particles
 
-    /// `collisionmodel` linked to an image, a hidden model and an object that doesn't exist: the
-    /// non-models are logged once; the particles simulate and draw.
+    /// `collisionmodel` linked to an image without a rig, a hidden model and an object that doesn't
+    /// exist: the image is logged once; the particles simulate and draw.
     func testCollisionModelLinksToNonModelsFailCleanly() throws {
         _ = try Fixtures.assets()
         let log = ModelLogWindow()
@@ -369,7 +369,8 @@ final class ModelAdversarialTests: XCTestCase {
         let harness = try draw(wallpaper, frames: 30)
         defer { harness.close() }
         XCTAssertEqual(harness.renderer.particleSystemCount, 1)
-        XCTAssertEqual(log.lines(containing: "Particle collisionmodel: object 1 isn't a drawable model").count, 1, "logged once")
+        XCTAssertEqual(log.lines(containing: "Particle collisionmodel: object 1 is neither a drawable model nor a Puppet Warp image").count, 1,
+                       "logged once")
         XCTAssertEqual(harness.models?.meshDraws["2"] ?? 0, 0, "the hidden model isn't drawn")
     }
 

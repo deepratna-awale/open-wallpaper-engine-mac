@@ -1675,6 +1675,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // Draws sample the last frame's copy; this frame's is made after the scene pass.
         mipMappedTarget = mipMappedFrameBuffer?.target(matching: sceneTexture, commandBuffer: commandBuffer)
         encodedFrames &+= 1
+        // A HDR video converts its new frame before anything samples it (`VideoTextureStream`).
+        for entry in layers { if case let .video(stream) = entry.layer.source { stream.prepareFrame(on: commandBuffer) } }
         drawProbe?.record(lighting: effectFrame.lighting)
         frameShadowAtlas = drawShadows(frame: effectFrame, commandBuffer: commandBuffer)
         // Text is rasterised first so its effects run on the finished text, like an image layer's.
@@ -3200,7 +3202,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// The matrix from the space a system's particles are simulated in (the scene plane its
     /// object's 2D transform places them in, and their depth) to where its 3D world matrix puts
-    /// them: identity in an orthographic scene, or when the two agree.
+    /// them, through a child's links in depth (`ParticleLinkSpace`): identity in an orthographic
+    /// scene, or when the two agree.
     private func particleSpaceModel(_ system: ParticleSystemRuntime) -> simd_float4x4 {
         guard isPerspective, let id = particleObjectID(system) else { return matrix_identity_float4x4 }
         let planar = transforms.world(of: id, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine)
@@ -3208,25 +3211,32 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let embedded = simd_float4x4(columns: (SIMD4<Float>(x.x, x.y, 0, 0), SIMD4<Float>(y.x, y.y, 0, 0),
                                                SIMD4<Float>(0, 0, 1, 0), SIMD4<Float>(t.x, t.y, 0, 1)))
         guard abs(simd_determinant(planar.linear)) > 1e-12 else { return matrix_identity_float4x4 }
-        return world3D(id, in: spatial.transforms) * embedded.inverse
+        return world3D(id, in: spatial.transforms) * system.configuration.linkSpace * embedded.inverse
     }
 
     /// The capsules a `collisionmodel` operator of `system` collides with (docs/models-plan.md
     /// §2.12): model object `id`'s bones as last posed (its bind pose before its first frame) or
     /// its box, through its world matrix, in the space the system's particles are simulated in.
-    /// WE also takes a puppet image; that isn't supported here (logged once).
+    /// A Puppet Warp image is one too: WE reads its rig's `.mdl` and its posed bones (puppet+0x2c8,
+    /// 0x1401d4a69) as a model's, in the image's model space (its pixels, centred, y up).
     private func particleCapsules(_ id: String, for system: ParticleSystemRuntime) -> [ParticleCapsule] {
-        guard let plan = spatial.models.first(where: { $0.id == id })?.plan else {
-            if reportedCollisionTargets.insert(id).inserted {
-                OWELog.error(.scene, "Particle collisionmodel: object \(id) isn't a drawable model; its particles don't collide with it")
-            }
-            return []
-        }
         let space = particleSpaceModel(system)
         let toParticles = abs(space.determinant) > 1e-12 ? space.inverse : matrix_identity_float4x4
-        return ParticleCapsule.capsules(boneVectors: plan.skeleton?.boneVectors,
-                                        boneWorlds: models?.animator(for: id)?.worlds ?? [], bounds: plan.bounds,
-                                        world: toParticles * drawnWorld3D(id))
+        if let plan = spatial.models.first(where: { $0.id == id })?.plan {
+            return ParticleCapsule.capsules(boneVectors: plan.skeleton?.boneVectors,
+                                            boneWorlds: models?.animator(for: id)?.worlds ?? [], bounds: plan.bounds,
+                                            world: toParticles * drawnWorld3D(id))
+        }
+        if let index = layerIndexByStateId[id], let puppet = layers[index].layer.puppet {
+            return ParticleCapsule.capsules(boneVectors: puppet.skeleton.boneVectors,
+                                            boneWorlds: puppetAnimators[id]?.worlds ?? [],
+                                            bounds: puppet.bounds ?? MDLBounds(min: .zero, max: .zero),
+                                            world: toParticles * drawnWorld3D(id))
+        }
+        if reportedCollisionTargets.insert(id).inserted {
+            OWELog.error(.scene, "Particle collisionmodel: object \(id) is neither a drawable model nor a Puppet Warp image; its particles don't collide with it")
+        }
+        return []
     }
 
     /// Draws model object `index` (`SceneSpatialContent.models`) through `modelDrawing` at its

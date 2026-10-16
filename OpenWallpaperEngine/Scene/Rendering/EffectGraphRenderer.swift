@@ -1342,9 +1342,10 @@ final class UniformProgram {
         }
     }
 
-    /// Built-ins whose value changes from frame to frame.
+    /// Built-ins whose value changes from frame to frame (`g_HDRParams` follows the display's headroom).
     static let timeVarying: Set<String> = Set(["g_Time", "g_Frametime", "g_Daytime", "g_DayTime", "g_PointerPosition",
-                                               "g_PointerPositionLast", "g_PointerState", "g_ParallaxPosition"])
+                                               "g_PointerPositionLast", "g_PointerState", "g_ParallaxPosition",
+                                               "g_HDRParams"])
         .union(SceneFrameLighting.uniformNames)
 
     init(layout: UniformLayout?, constants: ShaderConstantResolver.ResolvedConstants) {
