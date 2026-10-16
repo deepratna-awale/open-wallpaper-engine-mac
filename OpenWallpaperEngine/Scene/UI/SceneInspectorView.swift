@@ -1189,6 +1189,8 @@ private struct SceneInspectorContent: View {
     @State private var selectedID: String?
     @State private var searchText = ""
     @State private var didCopyPath = false
+    /// The compact frame readout of the scene this mode runs (`SceneRenderStatsSampler`).
+    @State private var statsFeed: RenderStatsFeed?
     @State private var isMovementPresented = true
     @State private var isConfirmingReset = false
     @State private var columnVisibility: NavigationSplitViewVisibility
@@ -1275,6 +1277,7 @@ private struct SceneInspectorContent: View {
             .onAppear {
                 selectedID = model.initiallySelectedID
                 loadSelectedTextures()
+                if statsFeed == nil { statsFeed = Self.statsFeed(wallpaper: wallpaper, scopes: scopes, isolated: isolated) }
                 if initialMode != mode, SceneEditorModes.availability(of: initialMode, for: wallpaper) != nil {
                     onModeChange(initialMode, model.sceneSize)
                 }
@@ -1291,6 +1294,16 @@ private struct SceneInspectorContent: View {
 
     /// Both side columns (the object list and the movement controls) start at one width.
     private static let sidebarWidth: CGFloat = 300
+
+    /// The frame readout's feed: an isolated mode's private instance, else the desktop's.
+    private static func statsFeed(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope],
+                                  isolated: IsolatedSceneEditSession?) -> RenderStatsFeed {
+        SceneRenderStatsSampler(instance: { [weak isolated] in
+            if let isolated { return isolated.instances.instance(for: isolated.instanceKey) }
+            return AppDelegate.shared.wallpaperViewModel.sceneInstances
+                .instance(for: WallpaperInstanceKey(wallpaper, properties: scopes.first ?? .shared))
+        }).makeFeed()
+    }
 
     /// The symbol for an item's kind: particle systems and effects as everywhere in the editors.
     private static func kindSymbol(_ kind: String) -> String {
@@ -1328,6 +1341,9 @@ private struct SceneInspectorContent: View {
                 .navigationSplitViewColumnWidth(min: 240, ideal: Self.sidebarWidth, max: 440)
         } detail: {
             modeDetail
+                .overlay(alignment: .bottomTrailing) {
+                    if let statsFeed { RenderStatsFeedBadge(feed: statsFeed).padding(10) }
+                }
                 .inspector(isPresented: $isMovementPresented) {
                     Group {
                         if let exportModel {

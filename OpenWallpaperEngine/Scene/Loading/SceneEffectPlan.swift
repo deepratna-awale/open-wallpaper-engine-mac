@@ -67,6 +67,8 @@ struct SceneEffectPlan {
     /// scene.json `visible` (authored or user-bound). A hidden effect is built but skipped, so a
     /// script can show it (`thisObject.visible = true`).
     var visible = true
+    /// effect.json `performance`, for the Wallpaper Editor's stats.
+    var performance: EffectPerformance?
     /// effect.json's `functions`, by name (`IEffect.executeMaterialFunction`).
     var functions: [String: EffectFunction] = [:]
 
@@ -188,6 +190,7 @@ struct SceneEffectPlanBuilder {
             fbo.conditions == nil || renderCombos.contains { Self.conditionsHold(fbo.conditions, combos: $0) }
         }
         var plan = SceneEffectPlan(file: effect.file, fbos: fbos, passes: passes)
+        plan.performance = document.performance
         plan.functions = document.functions
         return plan
     }
