@@ -24,9 +24,19 @@ final class ModelMaterialPlan {
     /// The pass's shader is the wallpaper's own, not one of WE's (`ModelMaterialPlanBuilder.isBuiltinShader`):
     /// only then does a mesh lacking an input the shader reads draw nothing (`SceneModelMissingInputs`).
     let customShader: Bool
+    /// How many instances each draw of the mesh is: the pass's resolved `INSTANCECOUNT` combo when
+    /// its shader declares one (`fur4`'s shells, "Fur quality" 5, 9, 13 or 21, each instance
+    /// pushed out along the normal by `gl_InstanceID / (INSTANCECOUNT - 1)`), else 1.
+    let instanceCount: Int
+    /// The material's passes after the first, in its order: each draws the mesh again right after
+    /// the one before, through its own shader, combos, textures, constants, blending and depth and
+    /// cull state, as a material's passes draw everywhere in WE (an effect's or an image's). The
+    /// model's place in the draw order and its shadow variant are the first pass's.
+    let laterPasses: [ModelMaterialPlan]
 
     init(materialPath: String, pass: SceneEffectPassPlan, raster: SceneRasterState, clampedSlots: Set<Int>,
-         meshCombos: ModelMeshCombos, shadowCaster: ModelMaterialPlan? = nil, customShader: Bool) {
+         meshCombos: ModelMeshCombos, shadowCaster: ModelMaterialPlan? = nil, customShader: Bool, instanceCount: Int = 1,
+         laterPasses: [ModelMaterialPlan] = []) {
         self.materialPath = materialPath
         self.pass = pass
         self.raster = raster
@@ -34,7 +44,12 @@ final class ModelMaterialPlan {
         self.meshCombos = meshCombos
         self.shadowCaster = shadowCaster
         self.customShader = customShader
+        self.instanceCount = max(1, instanceCount)
+        self.laterPasses = laterPasses
     }
+
+    /// Every pass of the material in drawing order: this one, then `laterPasses`.
+    var passes: [ModelMaterialPlan] { [self] + laterPasses }
 
     /// WE's blending byte (+0x1f0): normal 0, translucent 1, additive 2, alphatocoverage 3.
     var blending: String { pass.blending.lowercased() }
@@ -108,10 +123,23 @@ struct ModelMaterialPlanBuilder {
         } catch {
             throw ModelMaterialPlanError.invalid(materialPath, error)
         }
-        guard let materialPass = material.passes.first else { throw ModelMaterialPlanError.missing("\(materialPath) passes") }
-        if material.passes.count > 1 {
-            OWELog.info(.scene, "Model material \(materialPath) has \(material.passes.count) passes; its first is drawn")
+        guard let first = material.passes.first else { throw ModelMaterialPlanError.missing("\(materialPath) passes") }
+        // A later pass that can't be made is logged and left out; the others draw.
+        var later: [ModelMaterialPlan] = []
+        for (index, materialPass) in material.passes.enumerated().dropFirst() {
+            do {
+                later.append(try build(materialPass, materialPath: materialPath, mesh: mesh, first: false))
+            } catch {
+                OWELog.error(.scene, "Model material \(materialPath)'s pass \(index + 1) can't be made; it isn't drawn: \(error)")
+            }
         }
+        return try build(first, materialPath: materialPath, mesh: mesh, first: true, laterPasses: later)
+    }
+
+    /// One pass of a material; only the `first` gets a shadow variant (the material's caster is
+    /// its first pass's, docs/models-plan.md §2.10).
+    private func build(_ materialPass: MaterialPass, materialPath: String, mesh: ModelMeshCombos, first: Bool,
+                       laterPasses: [ModelMaterialPlan] = []) throws -> ModelMaterialPlan {
         let loader = ShaderSourceLoader(readFile: readFile, memo: translator.sources)
         let vertex = try loader.load(materialPass.shader, stage: .vertex)
         let fragment = try loader.load(materialPass.shader, stage: .fragment)
@@ -174,7 +202,7 @@ struct ModelMaterialPlanBuilder {
             }
         }
         var shadowCaster: ModelMaterialPlan?
-        if sceneEngineCombos.castsShadows, ["normal", "alphatocoverage", "disabled", ""].contains(pass.blending.lowercased()) {
+        if first, sceneEngineCombos.castsShadows, ["normal", "alphatocoverage", "disabled", ""].contains(pass.blending.lowercased()) {
             do {
                 shadowCaster = try buildShadowCaster(
                     ShadowCasterSource(materialPath: materialPath, pass: materialPass, vertex: vertex, fragment: fragment,
@@ -187,8 +215,21 @@ struct ModelMaterialPlanBuilder {
                                  raster: SceneRasterState(depthtest: materialPass.depthtest, depthwrite: materialPass.depthwrite,
                                                           cullmode: materialPass.cullmode, blending: materialPass.blending),
                                  clampedSlots: clampedSlots, meshCombos: mesh, shadowCaster: shadowCaster,
-                                 customShader: isCustom(materialPass.shader))
+                                 customShader: isCustom(materialPass.shader),
+                                 instanceCount: Self.instanceCount(vertex: vertex, fragment: fragment, combos: combos),
+                                 laterPasses: laterPasses)
     }
+
+    /// The instances a pass draws: its `INSTANCECOUNT` combo's value when either stage declares
+    /// that combo (`fur4.frag`'s "Fur quality"), else 1.
+    static func instanceCount(vertex: ShaderSource, fragment: ShaderSource, combos: [String: Int]) -> Int {
+        guard (vertex.combos + fragment.combos).contains(where: { $0.name == instanceCountCombo }),
+              let count = combos[instanceCountCombo] else { return 1 }
+        return max(1, count)
+    }
+
+    /// The combo naming a pass's instance count.
+    static let instanceCountCombo = "INSTANCECOUNT"
 
     /// What a material's shadow variant takes from it.
     struct ShadowCasterSource {

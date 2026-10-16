@@ -104,7 +104,7 @@ enum SceneEditOverlayFiles {
                               objectIDs: Set<Int> = [], draft: Bool = false, center: NotificationCenter = .default) {
         center.post(name: .sceneEditParticlesDidChange, object: nil, userInfo: [
             "wallpaperDirectory": wallpaperDirectory.standardizedFileURL,
-            "assets": overlay.particles?.assetData() ?? [:],
+            "assets": overlay.editorFileData(),
             "paths": Array(paths),
             "objectIDs": Array(objectIDs),
             "draft": draft,

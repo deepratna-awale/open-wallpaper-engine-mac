@@ -73,6 +73,7 @@ struct LayerContextMenu: View {
         Button(L("Duplicate")) { actions.duplicate(layer.id) }
         Button(L("Delete"), role: .destructive) { actions.delete(layer.id) }
         ExternalEditMenuItems(session: session, layer: layer, actions: actions)
+        ImageEditingMenuItems(layer: layer, actions: actions)
         Divider()
         Menu(L("Arrange")) {
             Button(L("Bring to Front")) { actions.bringToFront(layer.id) }
