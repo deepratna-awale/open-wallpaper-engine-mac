@@ -3,7 +3,8 @@ import OWESceneEditing
 
 /// An editable effect's Shaders in the inspector (WE's `ui_editor_properties_shaders` with an
 /// Edit button beside each shader, `editablefile`): each material's vertex and fragment shader,
-/// opened in the shader editor. Only for the wallpaper's own editable effects (My Effects).
+/// opened in the shader editor, and its Shader Options. Only for the wallpaper's own editable
+/// effects (My Effects).
 struct CustomEffectSection: View {
     @ObservedObject var session: SceneEditSession
     @EnvironmentObject private var shaders: ShaderEditorModel
@@ -14,6 +15,9 @@ struct CustomEffectSection: View {
         if let effectInfo = CustomEffectInfo.read(effect.file, model: shaders) {
             Text(L("Shaders")).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
             ForEach(effectInfo.materials, id: \.path) { material in
+                if effectInfo.materials.count > 1 {
+                    Text((material.path as NSString).lastPathComponent).font(.caption).foregroundStyle(.secondary)
+                }
                 ForEach([ShaderDiagnostic.Stage.vertex, .fragment], id: \.self) { stage in
                     LabeledContent(stage == .vertex ? L("Vertex Shader") : L("Fragment Shader")) {
                         HStack(spacing: 6) {
@@ -27,7 +31,54 @@ struct CustomEffectSection: View {
                         }
                     }
                 }
+                ShaderOptionsRows(session: session, model: shaders, materialPath: material.path)
             }
+        }
+    }
+}
+
+/// A material's Shader Options (WE's Blending, Culling, Depth test and Depth write), each change
+/// written into the editor's copy of the material, one undo step.
+struct ShaderOptionsRows: View {
+    @ObservedObject var session: SceneEditSession
+    let model: ShaderEditorModel
+    let materialPath: String
+
+    var body: some View {
+        if let text = model.text(at: materialPath), let options = MaterialShaderOptions(material: text) {
+            Text(L("Shader Options")).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+            Picker(L("Blending"), selection: binding(text, options, \.blending)) {
+                ForEach(MaterialShaderOptions.Blending.allCases) { blending in
+                    Text(Self.title(blending)).tag(blending)
+                }
+            }
+            Picker(L("Culling"), selection: binding(text, options, \.culling)) {
+                Text(L("No cull")).tag(MaterialShaderOptions.Culling.nocull)
+                Text(L("Normal")).tag(MaterialShaderOptions.Culling.normal)
+            }
+            Toggle(L("Depth test"), isOn: binding(text, options, \.depthTest))
+                .toggleStyle(.checkbox)
+            Toggle(L("Depth write"), isOn: binding(text, options, \.depthWrite))
+                .toggleStyle(.checkbox)
+                .disabled(!options.depthWriteApplies)
+        }
+    }
+
+    private func binding<Value>(_ text: String, _ options: MaterialShaderOptions,
+                                _ keyPath: WritableKeyPath<MaterialShaderOptions, Value>) -> Binding<Value> {
+        Binding(get: { options[keyPath: keyPath] }, set: { value in
+            var changed = options
+            changed[keyPath: keyPath] = value
+            session.setMaterialOptions(changed, material: materialPath, text: text, actionName: L("Change Shader Option"))
+        })
+    }
+
+    static func title(_ blending: MaterialShaderOptions.Blending) -> String {
+        switch blending {
+        case .normal: return L("Normal")
+        case .translucent: return L("Translucent")
+        case .additive: return L("Additive")
+        case .alphatocoverage: return L("Alpha to coverage")
         }
     }
 }
