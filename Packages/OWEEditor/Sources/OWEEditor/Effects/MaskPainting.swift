@@ -5,7 +5,8 @@ import OWESceneEditing
 /// Painting an effect's mask on the canvas, as WE's editor does: a brush over the layer, white
 /// where the effect shows and black where it doesn't. The mask covers the layer's rectangle at a
 /// resolution kept under `maximumSide`; it is saved as a PNG (`EditorAssetStore.saveMask`) and set
-/// as the effect's texture in one undo step when painting ends.
+/// as the effect's texture in one undo step when painting ends. A Puppet Warp clipping mask is
+/// painted the same way over the puppet's image (`PuppetWorkspace`).
 @MainActor
 final class MaskPainting: ObservableObject {
     enum Mode: String, CaseIterable, Identifiable {
@@ -13,10 +14,21 @@ final class MaskPainting: ObservableObject {
         var id: String { rawValue }
     }
 
+    /// What the mask is for.
+    enum Target {
+        case effect(key: String, title: String, slot: EffectSchema.TextureSlot)
+        /// A puppet's clipping mask, by its id.
+        case clippingMask(id: UInt64, name: String)
+    }
+
     let layer: Int
-    let effectKey: String
-    let effectTitle: String
-    let slot: EffectSchema.TextureSlot
+    let target: Target
+    /// The effect's or the clipping mask's name.
+    var title: String {
+        switch target {
+        case .effect(_, let title, _), .clippingMask(_, let title): title
+        }
+    }
     /// The mask's size in pixels.
     let pixelSize: SIMD2<Int>
     /// The layer's size in its own units, which the mask stretches over.
@@ -48,8 +60,15 @@ final class MaskPainting: ObservableObject {
     }
 
     /// `existing`: the mask the effect has, painted over; else a fill of the slot's default.
-    init?(layer: Int, effectKey: String, effectTitle: String, slot: EffectSchema.TextureSlot, layerSize: SIMD2<Double>,
-          existing: CGImage?) {
+    convenience init?(layer: Int, effectKey: String, effectTitle: String, slot: EffectSchema.TextureSlot, layerSize: SIMD2<Double>,
+                      existing: CGImage?) {
+        // WE's `paintdefaultcolor` ("0 0 0 1": the effect off until painted); white without one.
+        self.init(layer: layer, target: .effect(key: effectKey, title: effectTitle, slot: slot), layerSize: layerSize,
+                  existing: existing, fill: slot.paintDefault.map(Self.gray(of:)) ?? 1)
+    }
+
+    /// `existing` painted over; else a fill of `fill` (0 black … 1 white).
+    init?(layer: Int, target: Target, layerSize: SIMD2<Double>, existing: CGImage?, fill: Double) {
         guard let size = Self.pixelSize(for: layerSize) else { return nil }
         let longest: Double = max(layerSize.x, layerSize.y)
         let width = size.x, height = size.y
@@ -58,9 +77,7 @@ final class MaskPainting: ObservableObject {
             return nil
         }
         self.layer = layer
-        self.effectKey = effectKey
-        self.effectTitle = effectTitle
-        self.slot = slot
+        self.target = target
         self.layerSize = layerSize
         pixelSize = SIMD2(width, height)
         self.context = context
@@ -70,9 +87,7 @@ final class MaskPainting: ObservableObject {
         if let existing {
             context.draw(existing, in: rect)
         } else {
-            // WE's `paintdefaultcolor` ("0 0 0 1": the effect off until painted); white without one.
-            let gray: Double = slot.paintDefault.map(Self.gray(of:)) ?? 1
-            context.setFillColor(gray: CGFloat(gray), alpha: 1)
+            context.setFillColor(gray: CGFloat(fill), alpha: 1)
             context.fill(rect)
         }
     }

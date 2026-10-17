@@ -11,7 +11,7 @@ import Foundation
 /// key or value, equal to the file's path, to it without its extension, or to either without its
 /// first folder: WE's own ways of naming one (`models/editor/a.json`, the texture `editor/a` of
 /// `materials/editor/a.png`, the mask `masks/editor_a`, the shader `effects/x` of
-/// `shaders/effects/x.frag`). A `.tex-json` goes with its `.tex`. A model (`.mdl`) names its
+/// `shaders/effects/x.frag`). A `.tex-json` goes with its `.tex` and names the files of its texture variants. A model (`.mdl`) names its
 /// materials, and an imported one its configuration and sources (`collectModelNames`).
 public enum ProjectCleaner {
     /// The store's files no root names, by scene path, sorted.
@@ -26,7 +26,9 @@ public enum ProjectCleaner {
             for asset in assets where !used.contains(asset.path) && isNamed(asset.path, by: names) {
                 used.insert(asset.path)
                 changed = true
-                if asset.path.lowercased().hasSuffix(".json"), let data = try? Data(contentsOf: asset.url) {
+                // A `.tex-json` names its texture variants' files.
+                if asset.path.lowercased().hasSuffix(".json") || asset.path.lowercased().hasSuffix(".tex-json"),
+                   let data = try? Data(contentsOf: asset.url) {
                     // Optional: a JSON file that can't be read names nothing (it is still kept).
                     collectStrings(in: data, into: &names)
                 }

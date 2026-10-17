@@ -28,7 +28,7 @@ struct SceneFrameStats: Equatable, Sendable {
     var scriptMilliseconds = 0.0
     var lightCount = 0
     var videoTextureCount = 0
-    /// WE's puppet clipping masks; none are drawn yet, so always 0.
+    /// The puppets' clipping mask passes: one per clipped draw of each visible puppet's last drawing.
     var clippingMaskPasses = 0
     /// Visible effects whose effect.json says `"performance": "expensive"` / `"veryexpensive"`.
     var expensiveEffects = 0

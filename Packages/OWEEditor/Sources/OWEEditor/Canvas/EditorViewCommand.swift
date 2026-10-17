@@ -13,6 +13,8 @@ public enum EditorViewCommand: Hashable, Sendable {
     case showSelectionBox
     case showParticleCollision
     case showParticleControlPoints
+    /// Show Hitboxes: the puppets' per-bone hit boxes (`PuppetHitBoxOverlay`).
+    case showHitboxes
     case desktopPreview
     case phonePreview
     /// Low FPS Simulation: the canvas drawn at WE's 22 frames a second.
@@ -27,6 +29,7 @@ public enum EditorViewCommand: Hashable, Sendable {
         case .showSelectionBox: return CV("Show Selection Box")
         case .showParticleCollision: return CV("Show Particle Collision")
         case .showParticleControlPoints: return CV("Show Particle Control Points")
+        case .showHitboxes: return CV("Show Hitboxes")
         case .desktopPreview: return CV("Show Desktop Preview")
         case .phonePreview: return CV("Show Phone Preview")
         case .lowFrameRate: return CV("Low FPS Simulation")
@@ -48,7 +51,8 @@ public enum EditorViewCommand: Hashable, Sendable {
             .separator,
             .command(.showGrid),
             .command(.showSelectionBox),
-            .submenu(CV("Show Debug"), [.command(.showParticleCollision), .command(.showParticleControlPoints)]),
+            .submenu(CV("Show Debug"), [.command(.showParticleCollision), .command(.showParticleControlPoints),
+                                             .command(.showHitboxes)]),
             .separator,
             .command(.desktopPreview),
             .command(.phonePreview),

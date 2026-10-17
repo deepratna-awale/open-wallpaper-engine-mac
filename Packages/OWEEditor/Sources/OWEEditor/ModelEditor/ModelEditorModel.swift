@@ -54,14 +54,17 @@ final class ModelEditorModel: ObservableObject {
 
     // MARK: Clips
 
-    /// Add Clip: a clip of the whole animation, named after it.
+    /// Add Clip: a clip of the whole animation as WE's makes one (capture 546): named
+    /// "<animation> (Clip 0)", counting the animation's clips from 0, Match loop on and root
+    /// motion's x, z and yaw flags set.
     @discardableResult
     func addClip(from animation: UInt64) -> UInt64 {
         let id = config.nextID(after: output?.animations.count ?? 0)
         let source = self.animation(animation)
-        let number = config.clips.count + 1
-        config.clips.append(ModelImportConfig.Clip(id: id, name: ML("Clip \(number)"), animation: animation, start: 0,
-                                                   end: source?.frames ?? 1, fps: nil, mode: "loop"))
+        let number = config.clips.filter { $0.animation == animation }.count
+        config.clips.append(ModelImportConfig.Clip(id: id, name: "\(source?.name ?? "") (\(ML("Clip \(number)")))", animation: animation,
+                                                   start: 0, end: source?.frames ?? 1,
+                                                   motionFlags: ModelImportConfig.Clip.defaultMotionFlags))
         refresh()
         return id
     }

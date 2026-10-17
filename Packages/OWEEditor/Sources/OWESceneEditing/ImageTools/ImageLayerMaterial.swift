@@ -118,7 +118,7 @@ extension EditorAssetStore {
         return modelPath
     }
 
-    /// Writes a generated normal map as WE imports one (`rg88n`): `materials/editor/<name>_normal.tex`
+    /// Writes a generated normal map as WE writes one (RG88, `rg88`): `materials/editor/<name>_normal.tex`
     /// after the picture's texture, as WE names it `<texture>_normal`. Returns its texture path.
     public func writeNormalMap(_ image: CGImage, forTexture texture: String) throws -> String {
         guard let encoder else { throw ImportError.needsEncoder(ImageLayerMaterial.baseName(of: texture)) }

@@ -255,6 +255,7 @@ public struct WallpaperEditorView: View {
         case .showSelectionBox: viewOptions.showsSelectionBox.toggle()
         case .showParticleCollision: viewOptions.showsParticleCollision.toggle()
         case .showParticleControlPoints: services.particles?.model.showsControlPoints.toggle()
+        case .showHitboxes: viewOptions.showsHitboxes.toggle()
         case .desktopPreview: viewOptions.toggle(.desktop)
         case .phonePreview: viewOptions.toggle(.phone)
         case .lowFrameRate: viewOptions.simulatesLowFrameRate.toggle()

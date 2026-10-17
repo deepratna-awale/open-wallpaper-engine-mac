@@ -15,10 +15,29 @@ public struct PuppetEditorAssets {
     public var readFile: (String) -> Data?
     /// The picture an image layer's model draws (its material's first texture), by the model's path.
     public var image: (String) -> CGImage?
+    /// Saves a painted clipping mask (a PNG) with the edits; returns its texture path (`masks/…`).
+    public var saveMask: ((Data) throws -> String)?
+    /// A texture's picture by its path (`masks/…`), for painting over a clipping mask.
+    public var texture: ((String) -> CGImage?)?
 
-    public init(readFile: @escaping (String) -> Data?, image: @escaping (String) -> CGImage?) {
+    public init(readFile: @escaping (String) -> Data?, image: @escaping (String) -> CGImage?,
+                saveMask: ((Data) throws -> String)? = nil, texture: ((String) -> CGImage?)? = nil) {
         self.readFile = readFile
         self.image = image
+        self.saveMask = saveMask
+        self.texture = texture
+    }
+}
+
+extension WallpaperEditorServices {
+    /// `puppetAssets` with the edit's asset store for painted clipping masks.
+    var puppetEditorAssets: PuppetEditorAssets? {
+        guard var assets = puppetAssets else { return nil }
+        if assets.saveMask == nil, let store = assetStore {
+            assets.saveMask = { try store.saveMask($0, title: "clipping_mask") }
+        }
+        if assets.texture == nil { assets.texture = texture }
+        return assets
     }
 }
 
@@ -83,6 +102,7 @@ public struct PuppetSource {
                     throw CocoaError(.fileReadNoSuchFile, userInfo: [NSFilePathErrorKey: rigPath])
                 }
                 var document = try PuppetMDLReader.read(data, imageSize: imageSize, sourcePath: rigPath)
+                applyEditorJSON(to: &document, rigPath: rigPath, assets: assets)
                 if case .array(let layers)? = layer.fields["animationlayers"] {
                     document.layers = layers.enumerated().compactMap { PuppetAnimationLayer(json: $0.element, fallbackID: $0.offset + 1) }
                 }
@@ -92,5 +112,19 @@ public struct PuppetSource {
             }
         }
         return source
+    }
+
+    /// The mask names WE's editor keeps in the rig's JSON beside the `.mdl` (`puppet.clippingmasks`).
+    static func applyEditorJSON(to document: inout PuppetDocument, rigPath: String, assets: PuppetEditorAssets) {
+        guard var clipping = document.clipping,
+              let data = assets.readFile((rigPath as NSString).deletingPathExtension + ".json"),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any], // optional editor file
+              let masks = (json["puppet"] as? [String: Any])?["clippingmasks"] as? [[String: Any]] else { return }
+        for entry in masks {
+            guard let id = (entry["id"] as? NSNumber)?.uint64Value, let name = entry["name"] as? String, !name.isEmpty,
+                  let index = clipping.masks.firstIndex(where: { $0.id == id }) else { continue }
+            clipping.masks[index].name = name
+        }
+        document.clipping = clipping
     }
 }
