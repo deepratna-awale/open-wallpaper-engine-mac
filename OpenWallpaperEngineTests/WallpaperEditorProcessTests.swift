@@ -65,7 +65,7 @@ final class WallpaperEditorProcessTests: XCTestCase {
                        "shots", "an isolated app opens an isolated editor")
         XCTAssertEqual(AppLaunchMode.wallpaperEditorArguments(folder: folder, isolationTag: nil),
                        ["--wallpaper-editor", "/library/My Wallpaper"])
-        XCTAssertFalse(ShaderPrewarmCommand.isHelperRun(arguments: ["/app"] + isolated),
+        XCTAssertFalse(HelperRunCommand.isHelperRun(arguments: ["/app"] + isolated),
                        "the editor saves overlays and properties: it isn't a read-only helper run")
         let german = AppLaunchMode.wallpaperEditorArguments(folder: folder, isolationTag: nil, languages: ["de"])
         XCTAssertEqual(Array(german.suffix(2)), ["-AppleLanguages", "(\"de\")"], "the editor speaks the app's language")

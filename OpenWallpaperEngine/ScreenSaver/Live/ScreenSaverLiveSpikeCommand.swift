@@ -27,7 +27,7 @@ enum ScreenSaverLiveSpikeCommand {
     static func run(arguments: [String]) -> Int32? {
         guard let index = arguments.firstIndex(of: argument) else { return nil }
         let rest = Array(arguments[(index + 1)...])
-        guard rest.count >= 4, let seconds = Double(rest[2]), let size = ShaderPrewarmCommand.size(rest[3]) else {
+        guard rest.count >= 4, let seconds = Double(rest[2]), let size = HelperRunCommand.size(rest[3]) else {
             print("usage: \(argument) scene|shared|chromium|webkit|video|sharedvideo|avplayer <target> <seconds> <width>x<height> [fps]")
             return 1
         }

@@ -17,7 +17,7 @@ protocol EditorPreviewLane: AnyObject {
 /// `--render-editor-previews -` (`EditorPreviewRenderer.runStream`), in this process's isolated
 /// state, fed one item at a time on its standard input. It starts at utility QoS and puts itself
 /// in the background state for every preview but a browser's tiles (`isUrgent`). The helper exits
-/// when its input closes, or with the app (`ShaderPrewarmCommand.exitWithParent`).
+/// when its input closes, or with the app (`HelperRunCommand.exitWithParent`).
 @MainActor
 final class EditorPreviewHelperLane: EditorPreviewLane {
     private let process = Process()
@@ -29,7 +29,7 @@ final class EditorPreviewHelperLane: EditorPreviewLane {
     init?() {
         guard let executable = AppRelauncher.helperExecutable else { return nil }
         process.executableURL = executable
-        process.arguments = [ShaderPrewarmCommand.editorPreviewArgument, EditorPreviewJob.streamArgument]
+        process.arguments = [HelperRunCommand.editorPreviewArgument, EditorPreviewJob.streamArgument]
         var environment = ProcessInfo.processInfo.environment
         if let tag = AppStorageLocation.current.isolationTag { environment[AppStorageLocation.environmentKey] = tag }
         process.environment = environment

@@ -37,9 +37,9 @@ final class ReadOnlyDefaultsTests: XCTestCase {
     }
 
     func testHelperRunsUseReadOnlyDefaults() {
-        XCTAssertTrue(ShaderPrewarmCommand.isHelperRun(arguments: ["app", "--prewarm-shaders"]))
-        XCTAssertTrue(ShaderPrewarmCommand.isHelperRun(arguments: ["app", "--print-shader-cache-key"]))
-        XCTAssertFalse(ShaderPrewarmCommand.isHelperRun(arguments: ["app", "-OWEIsolatedState", "x"]))
+        XCTAssertTrue(HelperRunCommand.isHelperRun(arguments: ["app", "--prewarm-shaders"]))
+        XCTAssertTrue(HelperRunCommand.isHelperRun(arguments: ["app", "--print-shader-cache-key"]))
+        XCTAssertFalse(HelperRunCommand.isHelperRun(arguments: ["app", "-OWEIsolatedState", "x"]))
         let location = AppStorageLocation(isolationTag: "tests", readOnlyDefaults: true)
         defer { location.discardReadOnlyScratch() }
         XCTAssertNotNil(location.readOnlyScratchSuite)
