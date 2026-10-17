@@ -13,15 +13,23 @@ import simd
 public enum MDLReader {
     /// `log` hears each section it skips (an unknown tag), with where it is.
     public static func read(_ data: Data, log: (String) -> Void = { _ in }) throws -> MDLModel {
+        try readWithMeshRanges(data, log: log).model
+    }
+
+    /// The model and where each mesh's record (its materials to its groups) lies in `data`, from
+    /// 0: what a writer that keeps a mesh byte for byte copies.
+    public static func readWithMeshRanges(_ data: Data, log: (String) -> Void = { _ in }) throws
+        -> (model: MDLModel, meshRanges: [Range<Int>]) {
         var reader = MDLByteReader([UInt8](data))
-        var model = try readMeshes(&reader)
+        var meshRanges: [Range<Int>] = []
+        var model = try readMeshes(&reader, ranges: &meshRanges)
         // 0x140262382: no sections before MDLV 13.
         if model.version >= 13 {
             try readSections(&reader, into: &model, log: log)
         }
         model.end = reader.offset
         model.trailingByteCount = reader.count - reader.offset
-        return model
+        return (model, meshRanges)
     }
 
     /// `atoi(tag + 4)` over ASCII digits (0x1402c82c0); 0 without any.
@@ -39,7 +47,7 @@ public enum MDLReader {
 
     // MARK: - MDLV
 
-    private static func readMeshes(_ r: inout MDLByteReader) throws -> MDLModel {
+    private static func readMeshes(_ r: inout MDLByteReader, ranges: inout [Range<Int>]) throws -> MDLModel {
         let tagBytes = try r.cstringBytes()
         let tag = String(decoding: tagBytes, as: UTF8.self)
         guard tagBytes.starts(with: Array("MDLV".utf8)) else { throw MDLError.notAModel(tag: String(tag.prefix(16))) }
@@ -49,8 +57,10 @@ public enum MDLReader {
         let meshCount = try r.u32()
         var meshes: [MDLMesh] = []
         for index in 0..<Int(meshCount) {
+            let start = r.offset
             meshes.append(try readMesh(&r, index: index, version: version, legacyFormat: legacyFormat,
                                        materials: Int(materialsPerMesh)))
+            ranges.append(start..<r.offset)
         }
         return MDLModel(tag: tag, version: version, legacyFormat: legacyFormat, materialsPerMesh: materialsPerMesh,
                         meshes: meshes, end: 0, trailingByteCount: 0)

@@ -1,76 +1,52 @@
 import Foundation
 import simd
+import WEFormat
 
-/// Reads an installed puppet's `.mdl` into the editor: every version WE's runtime reads (`MDLV`
-/// 4–23, `MDLS` 1–4, `MDLA` 1–6; docs/models-plan.md §1), the same layout as the app's
-/// `MDLReader`. The puppet is the first mesh (the only one WE draws, 0x14020aeb9) with its
-/// skeleton, weights and clips; what the editor doesn't edit is kept (`PuppetPreservedData`) or,
-/// for data no library rig has (morph-weight tracks), left out. Constraints are Puppet Warp's
-/// blend rules (`PuppetBlendRule`); IK sets with their links and link tracks are its kinematic
-/// chains and their controllers (`PuppetBoneIK`).
+/// Reads an installed puppet's `.mdl` into the editor. The file is read by WEFormat's `MDLReader`,
+/// the reader the player draws it with (every version WE's runtime reads: `MDLV` 4–23, `MDLS`
+/// 1–4, `MDLA` 1–6; docs/models-plan.md §1), so the editor opens exactly what the wallpaper shows.
+/// The puppet is the first mesh (the only one WE draws, 0x14020aeb9) with its skeleton, weights
+/// and clips; what the editor doesn't edit is kept (`PuppetPreservedData`) or, for data no library
+/// rig has (morph-weight tracks), left out. Constraints are Puppet Warp's blend rules
+/// (`PuppetBlendRule`); IK sets with their links and link tracks are its kinematic chains and
+/// their controllers (`PuppetBoneIK`).
 public enum PuppetMDLReader {
     /// `imageSize`: the image's pixels (the mesh's space has no size of its own).
     public static func read(_ data: Data, imageSize: SIMD2<Float>, sourcePath: String? = nil) throws -> PuppetDocument {
-        var r = PuppetMDLInput([UInt8](data))
-        let tag = try r.cstring()
-        guard tag.hasPrefix("MDLV") else { throw PuppetMDLError.notAModel }
-        let version = Int(tag.dropFirst(4).prefix { $0.isNumber }) ?? 0
-        let legacyFormat = try r.u32()
-        let materialsPerMesh = Int(try r.u32())
-        let meshCount = Int(try r.u32())
-        guard meshCount > 0 else { throw PuppetMDLError.unsupported("no mesh") }
-        var first: RawMesh?
+        let (model, meshRanges) = try readModel(data)
+        guard let first = model.meshes.first.map(RawMesh.init) else { throw PuppetMDLError.unsupported("no mesh") }
         var channels: [PuppetPreservedData.TextureChannelMesh] = []
-        for _ in 0..<meshCount {
-            let start = r.offset
-            let mesh = try readMesh(&r, version: version, legacyFormat: legacyFormat, materials: materialsPerMesh)
-            if first == nil {
-                first = mesh
-            } else if mesh.flags & 2 != 0, materialsPerMesh == 1, version == 23 {
-                // Texture channels, kept byte for byte for the writer's MDLV0023.
-                channels.append(.init(material: mesh.material, blendRows: mesh.flagsExtra ?? 1,
-                                      channelCount: channelCount(mesh), bytes: Data(r.bytes[start..<r.offset])))
-            }
+        for (mesh, range) in zip(model.meshes, meshRanges).dropFirst()
+        where mesh.flags & 2 != 0 && model.materialsPerMesh == 1 && model.version == 23 {
+            // Texture channels, kept byte for byte for the writer's MDLV0023.
+            let raw = RawMesh(mesh)
+            channels.append(.init(material: raw.material, blendRows: mesh.flagsExtra ?? 1,
+                                  channelCount: channelCount(raw), bytes: data.subdata(in: range.offset(by: data.startIndex))))
         }
-        var document = PuppetDocument(imageSize: imageSize, material: first!.material, sourcePath: sourcePath)
-        try decode(first!, into: &document)
+        var document = PuppetDocument(imageSize: imageSize, material: first.material, sourcePath: sourcePath)
+        try decode(first, into: &document)
         if !channels.isEmpty { document.preserved.textureChannels = channels }
-        guard version >= 13 else { throw PuppetMDLError.unsupported("no skeleton") }
-        var boneCount = 0
+        guard model.version >= 13 else { throw PuppetMDLError.unsupported("no skeleton") }
         var links: [LinkRecord] = []
         var constraints: [(bone: Int, rule: Int)?] = []
-        while true {
-            let tagBytes = try r.cstring()
-            if tagBytes.isEmpty { break }
-            let end = Int(try r.u32())
-            guard end >= r.offset, end <= r.bytes.count else { throw PuppetMDLError.malformed("section \(tagBytes) end") }
-            let sectionVersion = Int(tagBytes.dropFirst(4).prefix { $0.isNumber }) ?? 0
-            let bodyStart = r.offset
-            if tagBytes.hasPrefix("MDLS") {
-                let counts = try readSkeleton(&r, version: sectionVersion, into: &document)
-                boneCount = document.bones.count
-                links = counts.links
-                constraints = counts.constraints
-            } else if tagBytes.hasPrefix("MDLA") {
-                try readAnimations(&r, version: sectionVersion, links: links, constraints: constraints,
-                                   meshes: meshCount, into: &document)
-            } else if tagBytes == "MDAT0001" {
-                let count = try r.u16()
-                for _ in 0..<count {
-                    let bone = Int(try r.u16())
-                    let name = try r.cstring()
-                    document.preserved.attachments.append(.init(bone: bone, name: name, matrix: try r.f32s(16)))
-                }
-            } else if tagBytes == "MDMP0001" {
-                document.preserved.morphSection = Data(r.bytes[bodyStart..<end])
-            } else if tagBytes == "MDLE0002" {
-                let length = Int(try r.i32())
-                if length == 64 * boneCount {
-                    document.preserved.referencePose = try (0..<boneCount).map { _ in try r.f32s(16) }
-                }
-            }
-            guard r.offset <= end else { throw PuppetMDLError.malformed("section \(tagBytes) past its end") }
-            r.seek(to: end)
+        if let skeleton = model.skeleton {
+            (links, constraints) = read(skeleton, into: &document)
+        }
+        let boneCount = document.bones.count
+        if let clips = model.animations, let version = model.animationsVersion {
+            read(clips, version: version, links: links, constraints: constraints, into: &document)
+        }
+        for attachment in model.attachments ?? [] {
+            document.preserved.attachments.append(.init(bone: Int(attachment.bone), name: attachment.name,
+                                                        matrix: floats(attachment.matrix)))
+        }
+        if let morphs = model.sections.last(where: { $0.tag == "MDMP0001" }) {
+            // The section's body as the file has it: after the tag, its NUL and the u32 end.
+            let body = morphs.offset + morphs.tag.utf8.count + 1 + 4
+            document.preserved.morphSection = data.subdata(in: (body..<morphs.end).offset(by: data.startIndex))
+        }
+        if let pose = model.referencePose, pose.count == boneCount {
+            document.preserved.referencePose = pose.map(floats)
         }
         guard !document.bones.isEmpty else { throw PuppetMDLError.unsupported("no skeleton") }
         if document.preserved.morphSection != nil, document.preserved.morphIndices == nil { document.preserved.morphSection = nil }
@@ -80,6 +56,27 @@ public enum PuppetMDLReader {
         return document
     }
 
+    /// The model and where each mesh's record lies in the file, with `MDLReader`'s errors as the
+    /// editor reports them.
+    private static func readModel(_ data: Data) throws -> (MDLModel, [Range<Int>]) {
+        do {
+            return try MDLReader.readWithMeshRanges(data)
+        } catch let error as MDLError {
+            switch error {
+            case .truncated(let what, let offset): throw PuppetMDLError.truncated(what, offset: offset)
+            case .notAModel: throw PuppetMDLError.notAModel
+            case .tooManyBones(let count): throw PuppetMDLError.malformed("\(count) bones")
+            case .malformed(let reason): throw PuppetMDLError.malformed(reason)
+            case .missing(let path): throw PuppetMDLError.malformed("no model file \(path)")
+            }
+        }
+    }
+
+    /// A matrix's 16 floats in the file's order.
+    private static func floats(_ matrix: simd_float4x4) -> [Float] {
+        [matrix.columns.0, matrix.columns.1, matrix.columns.2, matrix.columns.3].flatMap { [$0.x, $0.y, $0.z, $0.w] }
+    }
+
     // MARK: MDLV
 
     struct RawMesh {
@@ -87,12 +84,25 @@ public enum PuppetMDLReader {
         var flags: UInt32
         var flagsExtra: UInt32?
         var format: UInt32
-        var vertices: ArraySlice<UInt8>
-        var indices: ArraySlice<UInt8>
+        var vertices: Data
+        var indices: Data
         /// The 16-byte records after the vertices (`MDLV` 21 and later), as u32s.
         var boneRanges: [SIMD4<UInt32>]?
         /// `MDLV` 23's groups: the clipping masks.
         var groups: [Group] = []
+
+        init(_ mesh: MDLMesh) {
+            material = mesh.materials.first ?? ""
+            flags = mesh.flags
+            flagsExtra = mesh.flagsExtra
+            format = mesh.format.rawValue
+            vertices = mesh.vertexData
+            indices = mesh.indexData
+            boneRanges = mesh.vector4Block?.map { SIMD4($0.x.bitPattern, $0.y.bitPattern, $0.z.bitPattern, $0.w.bitPattern) }
+            groups = (mesh.groups ?? []).map {
+                Group(id: $0.id, texture: $0.name, flags: $0.flags, clipped: $0.listA, masking: $0.listB)
+            }
+        }
     }
 
     struct Group {
@@ -101,47 +111,6 @@ public enum PuppetMDLReader {
         var flags: UInt32
         var clipped: [UInt32]
         var masking: [UInt32]
-    }
-
-    private static func readMesh(_ r: inout PuppetMDLInput, version: Int, legacyFormat: UInt32, materials: Int) throws -> RawMesh {
-        var names: [String] = []
-        for _ in 0..<materials { names.append(try r.cstring()) }
-        let flags = version >= 4 ? try r.u32() : 0
-        let extra = flags & 2 != 0 ? try r.u32() : nil
-        if version >= 17 { _ = try r.f32s(6) }
-        let format = version >= 15 ? try r.u32() : legacyFormat
-        guard format & ~PuppetVertexLayout.knownBits == 0 else { throw PuppetMDLError.malformed("vertex format") }
-        let vertices = try r.blob("vertices")
-        let indices = try r.blob("indices")
-        var ranges: [SIMD4<UInt32>]?
-        if version >= 21 {
-            if try r.u8() != 0 {
-                _ = try r.u32()
-                _ = try r.blob("extra positions")
-            }
-            if try r.u8() != 0 {
-                let block = try r.blob("vector4 block")
-                guard block.count % 16 == 0 else { throw PuppetMDLError.malformed("vector4 block") }
-                let values = Array(block)
-                func u32(_ at: Int) -> UInt32 {
-                    UInt32(values[at]) | UInt32(values[at + 1]) << 8 | UInt32(values[at + 2]) << 16 | UInt32(values[at + 3]) << 24
-                }
-                ranges = stride(from: 0, to: values.count, by: 16).map { SIMD4(u32($0), u32($0 + 4), u32($0 + 8), u32($0 + 12)) }
-            }
-        }
-        var groups: [Group] = []
-        if version >= 23 {
-            for _ in 0..<(try r.u32()) {
-                let id = try r.u64()
-                let texture = try r.cstring()
-                let flags = try r.u32()
-                let clipped = try r.u32s(Int(try r.u32()))
-                let masking = try r.u32s(Int(try r.u32()))
-                groups.append(Group(id: id, texture: texture, flags: flags, clipped: clipped, masking: masking))
-            }
-        }
-        return RawMesh(material: names.first ?? "", flags: flags, flagsExtra: extra, format: format, vertices: vertices,
-                       indices: indices, boneRanges: ranges, groups: groups)
     }
 
     /// The channels a texture-channel mesh's quads name: the largest `a_BlendIndices.x` + 1.
@@ -218,14 +187,7 @@ public enum PuppetMDLReader {
 
     /// The first mesh's groups as the file has them (tests, diagnostics).
     static func rawGroups(_ data: Data) throws -> [Group] {
-        var r = PuppetMDLInput([UInt8](data))
-        let tag = try r.cstring()
-        guard tag.hasPrefix("MDLV") else { throw PuppetMDLError.notAModel }
-        let version = Int(tag.dropFirst(4).prefix { $0.isNumber }) ?? 0
-        let legacyFormat = try r.u32()
-        let materials = Int(try r.u32())
-        guard try r.u32() > 0 else { return [] }
-        return try readMesh(&r, version: version, legacyFormat: legacyFormat, materials: materials).groups
+        try readModel(data).0.meshes.first.map(RawMesh.init)?.groups ?? []
     }
 
     /// The groups as clipping masks over the mesh's limbs: each range lies in one island (WE's
@@ -256,106 +218,66 @@ public enum PuppetMDLReader {
 
     // MARK: MDLS
 
-    private static func readSkeleton(_ r: inout PuppetMDLInput, version: Int,
-                                     into document: inout PuppetDocument) throws -> (links: [LinkRecord], constraints: [(bone: Int, rule: Int)?]) {
-        let count = Int(try r.u32())
-        guard count <= PuppetMDLWriter.maximumBones else { throw PuppetMDLError.malformed("\(count) bones") }
-        var bones: [PuppetBone] = []
+    /// The bones, then the skeleton's links (for the clips' link tracks) and where each constraint
+    /// went as a blend rule (for the clips' constraint tracks).
+    private static func read(_ skeleton: MDLSkeleton,
+                             into document: inout PuppetDocument) -> (links: [LinkRecord], constraints: [(bone: Int, rule: Int)?]) {
+        let count = skeleton.bones.count
         var propertiesText: [String] = []
-        for index in 0..<count {
-            let name = try r.cstring()
-            let flags = try r.u32()
-            let parent = try r.u32()
-            let length = Int(try r.i32())
-            guard length == 64 else { throw PuppetMDLError.malformed("bone matrix of \(length) bytes") }
-            let matrix = try r.matrix()
-            let properties = try r.cstring()
-            propertiesText.append(properties)
-            var bone = PuppetBone(name: name, parent: parent == 0xFFFF_FFFF || Int(parent) >= index ? nil : Int(parent),
-                                  local: PuppetTransform(matrix: matrix), flags: flags)
-            if let object = Self.properties(properties) {
+        document.bones = skeleton.bones.enumerated().map { index, file in
+            propertiesText.append(file.properties)
+            var bone = PuppetBone(name: file.name,
+                                  parent: file.parent == 0xFFFF_FFFF || Int(file.parent) >= index ? nil : Int(file.parent),
+                                  local: PuppetTransform(matrix: file.matrix), flags: file.flags)
+            if let object = Self.properties(file.properties) {
                 bone.physics = PuppetBonePhysics(properties: object)
                 bone.otherProperties = bone.physics == nil ? object : object.filter { !PuppetBonePhysics.keys.contains($0.key) }
             }
-            bones.append(bone)
+            return bone
         }
-        document.bones = bones
-        guard version >= 2 else { return ([], []) }
-        var linkRecords: [LinkRecord] = []
-        for _ in 0..<Int(try r.u16()) {
-            _ = try r.cstring()
-            let values = try r.u32s(2)
-            let matrix = try r.matrix()
-            linkRecords.append(LinkRecord(bone: Int(values[0]), type: values[1],
-                                          rest: SIMD2(matrix.columns.3.x, matrix.columns.3.y)))
+        guard skeleton.version >= 2 else { return ([], []) }
+        var linkRecords = skeleton.links.map {
+            LinkRecord(bone: Int($0.bone), type: $0.type, rest: SIMD2($0.matrix.columns.3.x, $0.matrix.columns.3.y))
         }
-        let links = linkRecords.count
-        if try r.u8() != 0 {
-            for index in 0..<count {
-                let rest = PuppetTransform(matrix: try r.matrix())
-                if !rest.isClose(to: document.bones[index].local, tolerance: 1e-6) { document.bones[index].rest = rest }
-            }
-            for _ in 0..<links { _ = try r.matrix() }
+        for (index, matrix) in (skeleton.bindMatrices ?? []).enumerated() {
+            let rest = PuppetTransform(matrix: matrix)
+            if !rest.isClose(to: document.bones[index].local, tolerance: 1e-6) { document.bones[index].rest = rest }
         }
         // Constraints: blend rules (docs/models-plan.md §2.15), each placed on its bone; one on a
         // flag-0x2 bone hangs on a link (IK), which the editor leaves out, as one out of range.
-        let constraintCount = Int(try r.u32())
         var constraints: [(bone: Int, rule: Int)?] = []
-        for _ in 0..<constraintCount {
-            let values = try r.u32s(3)
-            let flags = version >= 4 ? try r.u32() : 0
-            let floats = flags & 2 != 0 ? try r.f32s(2) : nil
-            let bone = Int(values[0]), target = Int(values[2])
+        for constraint in skeleton.constraints {
+            let bone = Int(constraint.bone), target = Int(constraint.b)
             guard bone < count, target < count, bone != target, document.bones[bone].flags & 2 == 0 else {
                 constraints.append(nil)
                 continue
             }
+            let floats = constraint.f0.flatMap { f0 in constraint.f1.map { SIMD2(f0, $0) } }
             var rules = document.bones[bone].blendRules ?? []
-            rules.append(PuppetBlendRule(target: target, flags: flags, floats: floats.map { SIMD2($0[0], $0[1]) }))
+            rules.append(PuppetBlendRule(target: target, flags: constraint.flags, floats: floats))
             document.bones[bone].blendRules = rules
             constraints.append((bone, rules.count - 1))
         }
-        let maps = Int(try r.u16())
-        _ = try r.u32s(maps)
-        for _ in 0..<maps {
-            for _ in 0..<(try r.u16()) {
-                _ = try r.u32()
-                _ = try r.f32s(3)
-            }
-        }
         // IK sets: each joint's end bone with `ik` in its properties is a kinematic chain (a rope
         // with joint flag 0x4); the links on that bone are its controllers.
-        for _ in 0..<(try r.u16()) {
-            _ = try r.u32()
-            _ = try r.u32s(Int(try r.u32()))
-            for _ in 0..<(try r.u16()) {
-                _ = try r.u32()
-                for _ in 0..<(try r.u16()) {
-                    let values = try r.u32s(2)
-                    _ = try r.f32s(2)
-                    _ = try r.u32s(Int(try r.u16()))
-                    let bone = Int(values[0])
-                    guard bone < count, document.bones[bone].ik == nil,
-                          let ik = PuppetBoneIK(properties: Self.properties(propertiesText[bone]) ?? [:],
-                                                rope: values[1] & 0x4 != 0) else { continue }
-                    document.bones[bone].ik = ik
-                    document.bones[bone].otherProperties = document.bones[bone].otherProperties
-                        .filter { !PuppetBoneIK.keys.contains($0.key) }
-                    for index in linkRecords.indices where linkRecords[index].bone == bone {
-                        linkRecords[index].chainEnd = bone
-                        if linkRecords[index].type == 1 { document.bones[bone].ik!.orientationRest = linkRecords[index].rest }
-                    }
-                }
+        for joint in skeleton.ikSets.lazy.flatMap(\.elements).flatMap(\.joints) {
+            let bone = Int(joint.bone)
+            guard bone < count, document.bones[bone].ik == nil,
+                  let ik = PuppetBoneIK(properties: Self.properties(propertiesText[bone]) ?? [:],
+                                        rope: joint.flags & 0x4 != 0) else { continue }
+            document.bones[bone].ik = ik
+            document.bones[bone].otherProperties = document.bones[bone].otherProperties
+                .filter { !PuppetBoneIK.keys.contains($0.key) }
+            for index in linkRecords.indices where linkRecords[index].bone == bone {
+                linkRecords[index].chainEnd = bone
+                if linkRecords[index].type == 1 { document.bones[bone].ik!.orientationRest = linkRecords[index].rest }
             }
         }
-        if try r.u8() != 0 {
-            document.preserved.boneBoxes = try (0..<count).map { _ in
-                let vector = try r.f32s(3)
-                return .init(vector: SIMD3(vector[0], vector[1], vector[2]), matrix: try r.f32s(16))
-            }
+        if let boxes = skeleton.boneVectors {
+            document.preserved.boneBoxes = boxes.map { .init(vector: $0.vector, matrix: floats($0.matrix)) }
         }
-        if try r.u8() != 0 { document.preserved.boneIndices = try r.u32s(count) }
-        if version >= 3, try r.u8() != 0 { document.preserved.bonePriorities = try r.u32s(count) }
+        document.preserved.boneIndices = skeleton.boneIndices
+        document.preserved.bonePriorities = skeleton.bonePriorities
         return (linkRecords, constraints)
     }
 
@@ -378,48 +300,21 @@ public enum PuppetMDLReader {
 
     // MARK: MDLA
 
-    /// One scalar track per bone track: its u32, then a sample per frame.
-    private static func boneScalars(_ r: inout PuppetMDLInput, count: Int) throws -> [PuppetChannelTrack] {
-        try (0..<max(count, 0)).map { _ in
-            let tag = try r.u32()
-            return PuppetChannelTrack(tag: tag, samples: PuppetMDLInput.floats(try r.blob("scalar track")))
-        }
-    }
-
-    private static func readAnimations(_ r: inout PuppetMDLInput, version: Int, links: [LinkRecord],
-                                       constraints: [(bone: Int, rule: Int)?], meshes: Int,
-                                       into document: inout PuppetDocument) throws {
-        let count = Int(try r.i32())
-        let rest = document.restLocals
-        for index in 0..<max(count, 0) {
-            let id = try r.u64()
-            let name = try r.cstring()
-            let modeName = try r.cstring()
-            let fps = try r.f32()
-            let frames = Int(try r.u32())
-            let flags = try r.u32()
-            let samples = frames + 1
-            let trackCount = Int(try r.i32())
-            var tracks: [PuppetTrack] = []
-            for track in 0..<max(trackCount, 0) {
-                let trackFlags = try r.u32()
-                let blob = try r.blob("bone track")
-                guard blob.count == 36 * samples else { throw PuppetMDLError.malformed("bone track of \(blob.count) bytes") }
-                guard track < document.bones.count else { continue }
-                if trackFlags & 1 != 0 {
-                    tracks.append(PuppetTrack())
-                    continue
-                }
-                let values = PuppetMDLInput.floats(blob)
-                let transforms = (0..<samples).map { PuppetTransform(samples: values[(9 * $0)..<(9 * $0 + 9)]) }
-                tracks.append(PuppetTrack(keys: PuppetClipBaker.keys(from: transforms)))
+    private static func read(_ clips: [MDLAnimation], version: Int, links: [LinkRecord],
+                             constraints: [(bone: Int, rule: Int)?], into document: inout PuppetDocument) {
+        for file in clips {
+            let id = file.id
+            let samples = Int(file.frames) + 1
+            var tracks: [PuppetTrack] = file.boneTracks.prefix(document.bones.count).map { track in
+                guard !track.isDisabled else { return PuppetTrack() }
+                let transforms = (0..<samples).map { PuppetTransform(samples: track.samples[(9 * $0)..<(9 * $0 + 9)]) }
+                return PuppetTrack(keys: PuppetClipBaker.keys(from: transforms))
             }
             while tracks.count < document.bones.count { tracks.append(PuppetTrack()) }
             if version >= 2 {
-                for link in links {
-                    let tag = try r.u32()
-                    let values = PuppetMDLInput.floats(try r.blob("link track"))
-                    guard tag & 1 == 0, values.count == 9 * samples, let bone = link.chainEnd,
+                for (link, track) in zip(links, file.linkTracks ?? []) {
+                    let values = track.samples
+                    guard !track.isDisabled, values.count == 9 * samples, let bone = link.chainEnd,
                           document.bones[bone].ik != nil else { continue }
                     // The controller's keys: its place each frame less its rest place.
                     let keys = (0..<samples).map { frame in
@@ -435,75 +330,53 @@ public enum PuppetMDLReader {
                                                         to: keys[frame])
                     }
                 }
-                for placement in constraints {
-                    let tag = try r.u32()
-                    let samples = PuppetMDLInput.floats(try r.blob("constraint track"))
-                    guard let placement, tag & 1 == 0, !samples.isEmpty else { continue }
-                    document.bones[placement.bone].blendRules?[placement.rule].weights[id] = PuppetBlendRule.keys(from: samples)
+                for (placement, track) in zip(constraints, file.constraintTracks ?? []) {
+                    guard let placement, track.tag & 1 == 0, !track.samples.isEmpty else { continue }
+                    document.bones[placement.bone].blendRules?[placement.rule].weights[id] = PuppetBlendRule.keys(from: track.samples)
                 }
             }
-            var channelTracks: [PuppetChannelTrack] = []
-            var boneAlpha: [PuppetChannelTrack]?, boneDepth: [PuppetChannelTrack]?
-            if version >= 3 {
-                for _ in 0..<(try r.u32()) {
-                    let tag = try r.u32()
-                    channelTracks.append(PuppetChannelTrack(tag: tag, samples: PuppetMDLInput.floats(try r.blob("scalar track"))))
-                }
-                if try r.u8() != 0 { boneAlpha = try boneScalars(&r, count: trackCount) }
-            }
-            if version >= 4, try r.u8() != 0 {
-                for _ in 0..<meshes {
-                    if try r.u32() & 1 != 0 {
-                        _ = try r.f32()
-                        for _ in 0..<(try r.u16()) {
-                            _ = try r.u16()
-                            _ = try r.blob("morph weight track")
-                        }
-                    }
-                }
-            }
-            if version >= 5 { _ = try r.f32s(6) }
-            if version >= 6, try r.u8() != 0 { boneDepth = try boneScalars(&r, count: trackCount) }
-            let mode = PuppetClip.Mode(rawValue: modeName) ?? .loop
-            var clip = PuppetClip(id: id, name: name, mode: mode, fps: fps, frames: frames, tracks: tracks,
+            let flags = file.flags
+            var clip = PuppetClip(id: id, name: file.name, mode: PuppetClip.Mode(rawValue: file.modeName) ?? .loop,
+                                  fps: file.fps, frames: Int(file.frames), tracks: tracks,
                                   otherFlags: flags & ~PuppetClip.RootMotion.ownedFlags)
+            let channelTracks = (file.scalarTracksA ?? []).map { PuppetChannelTrack(tag: $0.tag, samples: $0.samples) }
             if !channelTracks.isEmpty { clip.channelTracks = channelTracks }
             // One per bone the document kept; a bone past the file's tracks at rest.
             let boneCount = document.bones.count
-            func perBone(_ tracks: [PuppetChannelTrack]?, rest: Float) -> [PuppetChannelTrack]? {
+            func perBone(_ tracks: [MDLAnimation.ScalarTrack]?, rest: Float) -> [PuppetChannelTrack]? {
                 tracks.map { tracks in
-                    (0..<boneCount).map { tracks.indices.contains($0) ? tracks[$0] : PuppetChannelTrack(tag: 0, samples: [rest]) }
+                    (0..<boneCount).map {
+                        tracks.indices.contains($0) ? PuppetChannelTrack(tag: tracks[$0].tag, samples: tracks[$0].samples)
+                            : PuppetChannelTrack(tag: 0, samples: [rest])
+                    }
                 }
             }
-            clip.boneAlphaTracks = perBone(boneAlpha, rest: 1)
-            clip.boneDepthTracks = perBone(boneDepth, rest: 0)
-            if PuppetClip.Mode(rawValue: modeName) == nil { clip.modeName = modeName }
+            clip.boneAlphaTracks = perBone(file.boneAlphaTracks, rest: 1)
+            clip.boneDepthTracks = perBone(file.boneDepthTracks, rest: 0)
+            if PuppetClip.Mode(rawValue: file.modeName) == nil { clip.modeName = file.modeName }
             if flags & PuppetClip.RootMotion.ownedFlags != 0 {
                 var motion = PuppetClip.RootMotion(matchLoop: flags & PuppetClip.RootMotion.matchLoopFlag != 0,
                                                    positionX: flags & PuppetClip.RootMotion.positionXFlag != 0,
                                                    positionY: flags & PuppetClip.RootMotion.positionYFlag != 0,
                                                    positionZ: flags & PuppetClip.RootMotion.positionZFlag != 0,
                                                    rotationY: flags & PuppetClip.RootMotion.rotationYFlag != 0)
-                if flags & PuppetClip.RootMotion.referenceFlag != 0 {
-                    let source = Int(try r.u16())
-                    let values = try r.u32s(4)
-                    guard source < index else { throw PuppetMDLError.malformed("clip \(index) cut from clip \(source)") }
-                    motion.sourceClip = source
-                    motion.startFrame = Int(values[0])
-                    motion.endFrame = Int(values[1])
-                    motion.frameOffset = Int(values[2])
-                    let root = Int32(bitPattern: values[3])
+                if let reference = file.reference {
+                    motion.sourceClip = Int(reference.animation)
+                    motion.startFrame = Int(reference.startFrame)
+                    motion.endFrame = Int(reference.endFrame)
+                    motion.frameOffset = Int(reference.frameOffset)
+                    let root = reference.rootBone
                     motion.rootBone = root >= 0 && Int(root) < document.bones.count ? Int(root) : nil
                 }
                 clip.rootMotion = motion
             }
-            let events = Int(try r.i32())
-            for _ in 0..<max(events, 0) {
-                let frame = try r.f32()
-                clip.events.append(PuppetClipEvent(frame: frame, name: try r.cstring()))
-            }
-            _ = rest
+            clip.events = file.events.map { PuppetClipEvent(frame: $0.frame, name: $0.name) }
             document.clips.append(clip)
         }
     }
+}
+
+private extension Range where Bound == Int {
+    /// The range moved by `offset` (a `Data` slice's indices start at its `startIndex`).
+    func offset(by offset: Int) -> Range<Int> { (lowerBound + offset)..<(upperBound + offset) }
 }

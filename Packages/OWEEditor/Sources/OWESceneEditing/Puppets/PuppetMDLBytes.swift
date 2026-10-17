@@ -1,8 +1,9 @@
 import Foundation
 import simd
 
-/// The `.mdl` primitives (docs/models-plan.md §1.1): little-endian `u8/u16/u32/u64/f32`,
-/// NUL-terminated UTF-8 strings, blobs as a `u32` byte length and the bytes.
+/// The `.mdl` primitives the editor writes (docs/models-plan.md §1.1; WEFormat's `MDLByteReader`
+/// reads them): little-endian `u8/u16/u32/u64/f32`, NUL-terminated UTF-8 strings, blobs as a
+/// `u32` byte length and the bytes.
 struct PuppetMDLOutput {
     private(set) var bytes: [UInt8] = []
 
@@ -43,76 +44,6 @@ struct PuppetMDLOutput {
 
     private mutating func append<T: FixedWidthInteger>(_ value: T) {
         withUnsafeBytes(of: value.littleEndian) { bytes += $0 }
-    }
-}
-
-/// Reads the primitives strictly: a read past the end throws (WE reads zeros).
-struct PuppetMDLInput {
-    let bytes: [UInt8]
-    private(set) var offset = 0
-
-    init(_ bytes: [UInt8]) { self.bytes = bytes }
-
-    mutating func seek(to offset: Int) { self.offset = offset }
-
-    func need(_ size: Int, _ what: @autoclosure () -> String) throws {
-        guard size >= 0, size <= bytes.count - offset else { throw PuppetMDLError.truncated(what(), offset: offset) }
-    }
-
-    private mutating func little<T: FixedWidthInteger>(_ type: T.Type, _ what: String) throws -> T {
-        let size = MemoryLayout<T>.size
-        try need(size, what)
-        var value: T = 0
-        for index in 0..<size { value |= T(truncatingIfNeeded: bytes[offset + index]) << (8 * index) }
-        offset += size
-        return value
-    }
-
-    mutating func u8() throws -> UInt8 { try little(UInt8.self, "u8") }
-    mutating func u16() throws -> UInt16 { try little(UInt16.self, "u16") }
-    mutating func u32() throws -> UInt32 { try little(UInt32.self, "u32") }
-    mutating func i32() throws -> Int32 { try little(Int32.self, "i32") }
-    mutating func u64() throws -> UInt64 { try little(UInt64.self, "u64") }
-    mutating func f32() throws -> Float { Float(bitPattern: try little(UInt32.self, "f32")) }
-
-    mutating func f32s(_ count: Int) throws -> [Float] {
-        try need(4 * count, "f32[\(count)]")
-        return try (0..<count).map { _ in try f32() }
-    }
-
-    mutating func u32s(_ count: Int) throws -> [UInt32] {
-        try need(4 * count, "u32[\(count)]")
-        return try (0..<count).map { _ in try u32() }
-    }
-
-    mutating func matrix() throws -> simd_float4x4 { Self.matrix(try f32s(16)) }
-
-    static func matrix(_ v: [Float]) -> simd_float4x4 {
-        simd_float4x4(SIMD4(v[0], v[1], v[2], v[3]), SIMD4(v[4], v[5], v[6], v[7]),
-                      SIMD4(v[8], v[9], v[10], v[11]), SIMD4(v[12], v[13], v[14], v[15]))
-    }
-
-    mutating func raw(_ count: Int, _ what: String) throws -> ArraySlice<UInt8> {
-        try need(count, what)
-        defer { offset += count }
-        return bytes[offset..<(offset + count)]
-    }
-
-    mutating func blob(_ what: String) throws -> ArraySlice<UInt8> {
-        let size = Int(try u32())
-        return try raw(size, "\(what)[\(size)]")
-    }
-
-    mutating func cstring() throws -> String {
-        guard let end = bytes[offset...].firstIndex(of: 0) else { throw PuppetMDLError.truncated("string", offset: offset) }
-        defer { offset = end + 1 }
-        return String(decoding: bytes[offset..<end], as: UTF8.self)
-    }
-
-    static func floats(_ bytes: ArraySlice<UInt8>) -> [Float] {
-        bytes.withUnsafeBytes { raw in
-            (0..<(raw.count / 4)).map { Float(bitPattern: raw.loadUnaligned(fromByteOffset: 4 * $0, as: UInt32.self).littleEndian) }
-        }
     }
 }
 
