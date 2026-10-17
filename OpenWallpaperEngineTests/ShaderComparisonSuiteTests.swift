@@ -338,7 +338,7 @@ final class ShaderComparisonSuiteTests: XCTestCase {
             hasher.update(data: Data("\u{0}\(name):\(member.type):\(member.offset):\(member.count)".utf8))
         }
         hasher.update(data: Data("\u{0}\(variant.textureSlots)\(variant.attributes.sorted { $0.key < $1.key })".utf8))
-        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+        return Digest.hex(hasher.finalize())
     }
 
     /// nil when both stages compile with Metal; else the first error's class.

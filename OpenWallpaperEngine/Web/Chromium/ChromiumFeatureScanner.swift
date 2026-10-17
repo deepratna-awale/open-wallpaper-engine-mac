@@ -190,7 +190,7 @@ enum ChromiumFeatureScanner {
 
     private static func contentKey(of files: [(url: URL, relativePath: String, size: Int, modified: Double)]) -> String {
         let lines = files.map { "\($0.relativePath)|\($0.size)|\($0.modified)" }.joined(separator: "\n")
-        return SHA256.hash(data: Data(lines.utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
+        return Digest.hex(SHA256.hash(data: Data(lines.utf8)).prefix(8))
     }
 
     /// Scans every page and script in `directory`. Off the main thread: it reads files. A cap

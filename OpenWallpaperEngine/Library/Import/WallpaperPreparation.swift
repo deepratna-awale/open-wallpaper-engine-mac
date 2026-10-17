@@ -12,10 +12,10 @@ enum WallpaperPreparation {
 
     /// Makes the repaired copy of a local video wallpaper's file when it needs one.
     static func prepareVideo(wallpaperDirectory: URL) {
-        let projectURL = wallpaperDirectory.appending(path: "project.json")
+        let projectURL = WEProject.url(in: wallpaperDirectory)
         let project: WEProject
         do {
-            project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: projectURL))
+            project = try WEProject.read(in: wallpaperDirectory)
         } catch {
             OWELog.error(.importer, "Can't read \(projectURL.path(percentEncoded: false)) to prepare it: \(error)")
             return

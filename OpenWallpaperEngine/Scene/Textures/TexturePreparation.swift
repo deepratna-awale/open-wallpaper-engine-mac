@@ -64,7 +64,7 @@ enum TexturePreparation {
 
     /// The blob name for the `.tex` file `texData` loaded at mipmap `level`.
     static func key(texData: Data, level: Int) -> String {
-        let digest = SHA256.hash(data: texData).prefix(16).map { String(format: "%02x", $0) }.joined()
+        let digest = Digest.hex(SHA256.hash(data: texData).prefix(16))
         return "\(digest)-l\(level)"
     }
 

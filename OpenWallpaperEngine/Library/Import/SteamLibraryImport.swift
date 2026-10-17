@@ -164,7 +164,7 @@ enum SteamLibraryImport {
         }
         return ordered.compactMap { id -> Item? in
             let folder = content.appending(path: id, directoryHint: .isDirectory)
-            guard fileManager.fileExists(atPath: folder.appending(path: "project.json").path) else { return nil }
+            guard fileManager.fileExists(atPath: WEProject.url(in: folder).path) else { return nil }
             do {
                 return try item(id: id, folder: folder, isSubscribed: subscribed.contains(id))
             } catch {
@@ -175,8 +175,7 @@ enum SteamLibraryImport {
     }
 
     static func item(id: String, folder: URL, isSubscribed: Bool) throws -> Item {
-        var data = try Data(contentsOf: folder.appending(path: "project.json"))
-        if data.starts(with: [0xEF, 0xBB, 0xBF]) { data.removeFirst(3) }
+        let data = TolerantJSON.withoutBOM(try WEProject.data(in: folder))
         let root = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
         let title = (root["title"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? id
         let preview = (root["preview"] as? String).flatMap { name -> URL? in

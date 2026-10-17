@@ -35,7 +35,7 @@ enum SceneScriptStorageKey {
     /// `local-` and the first 8 bytes of the SHA-256 of the standardized folder path, in hex.
     static func localKey(forWallpaperDirectory directory: URL) -> String {
         let digest = SHA256.hash(data: Data(directory.standardizedFileURL.path.utf8))
-        return localPrefix + digest.prefix(8).map { String(format: "%02x", $0) }.joined()
+        return localPrefix + Digest.hex(digest.prefix(8))
     }
 
     /// The key an earlier version used for this wallpaper (`previousKey`: the numeric `workshopid`,

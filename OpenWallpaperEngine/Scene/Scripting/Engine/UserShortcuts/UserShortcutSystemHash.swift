@@ -16,7 +16,7 @@ enum UserShortcutSystemHash {
     /// The first `UserShortcutBinding.systemHashLength` lower-case hex digits of SHA-256(`machineID`).
     static func hash(machineID: String) -> String {
         let digest = SHA256.hash(data: Data(machineID.utf8))
-        let hex = digest.map { String(format: "%02x", $0) }.joined()
+        let hex = Digest.hex(digest)
         return String(hex.prefix(UserShortcutBinding.systemHashLength))
     }
 
