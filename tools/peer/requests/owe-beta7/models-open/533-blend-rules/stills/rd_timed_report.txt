@@ -1,0 +1,11 @@
+connected ident 38920
+p533_br_none still 0.25 triggered at 0.251 s frame 651
+p533_br_none still 0.5 triggered at 0.500 s frame 656
+p533_br_none still 0.75 triggered at 0.755 s frame 661
+p533_br_none still 1.0 triggered at 1.004 s frame 668
+p533_br_none still 1.5 triggered at 1.503 s frame 680
+p533_br_rule still 0.25 triggered at 0.254 s frame 779
+p533_br_rule still 0.5 triggered at 0.501 s frame 784
+p533_br_rule still 0.75 triggered at 0.755 s frame 790
+p533_br_rule still 1.0 triggered at 1.004 s frame 795
+p533_br_rule still 1.5 triggered at 1.504 s frame 806

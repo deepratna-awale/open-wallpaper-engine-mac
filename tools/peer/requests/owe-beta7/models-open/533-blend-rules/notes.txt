@@ -1,0 +1,34 @@
+533: Puppet Warp blend rule (WE 2.8.0.42)
+
+## Editor steps (project p533_br = 509's bars base puppet: red root, blue child)
+- **Skeleton:** with nothing selected, click at image (400, 30). This adds a new root bone, "Bone 3", renamed **anchor**: id 26, origin "143.83179 97.14941 0" in layer-centre coordinates, no weights.
+- **Blend rule:**
+  - Select blue (id 25) › Edit Constraints. The dialog has tabs **Physics | Blend Rules**.
+  - Blend Rules › "Add blend rule" › bone dropdown (lists "Bone red", "Bone anchor") › "Bone anchor" › green +. It then appears under "Active blend rules" with only a delete (x) button and no value fields. OK › Confirm.
+  - Puppet json: `bones[blue].blendrules = [{"amax": 5, "amin": 0, "target": "26"}]`. Target is the bone id as a string; amin/amax are defaults with no UI shown.
+  - The constraint editor also wrote blue's full default `constraints` block (ik/la/lt/r/t keys, preset "none"). It is in br_rule.json.
+- **Clip:** Animations › + Add › Animation Options. The defaults are already Loop, 2 s, 30 fps, smoothness 0.3, stiffness 1, "Create smooth animation loop" on. Result: id **28** "Animation 1".
+  - **anchor:** Origin y keyed 97.149 (f0) › −52.85 (f30, i.e. −150) › 97.149 (f59), via the Origin y field with Auto Keyframe on. In the json, the anchor track stores origin c1 as an **offset** from bind: (0, 0) (30, −150) (59, 0).
+  - **blue:** the properties panel shows a **"Blend rules › Bone anchor (3)"** slider (0..1), and the track list gains a "Bone anchor (3)" track. Keyed 1 (f0) › 0 (f30) › 1 (f59).
+  - In the json this is **`animations[i].blendrules = [{"id": 25, "target": 26, "animation": [keys…]}]`**: per clip, keyed by the source bone id and target bone id, with values 1/0/1. It is not inside the bone's track.
+  - The last keys landed on frame 59, not 60: a timeline click precision issue. The editor preview shows blue pulled toward the anchor at weight 1.
+- **Files:**
+  - **br_rule.mdl/.json:** rule plus keyed weight. br_rule_scene.json is the editor's scene; scene_runtime.json is the runtime copy with the animation layer.
+  - **br_none.mdl/.json:** the same clip, with the rule then deleted (x) in Blend Rules and saved. The bone loses `blendrules`, but **the clip keeps its orphaned `animations[].blendrules` weight curve**.
+  - br_static_rule.mdl/.json: the rule plus anchor, before any clip.
+
+## Runtime (RenderDoc stills at 0.25/0.5/0.75/1.0/1.5 s, animation layer on clip 28; stills/, sheet_533.png)
+Blue bar centroid / bbox in px on the 1920×1080 frame:
+
+| t (s) | br_none | br_rule |
+|---|---|---|
+| 0.25 | (1083,539) at rest | **(1180,474)**, bbox 1116-1249 × 433-539: pulled up/right toward anchor and deformed |
+| 0.5 | same | (1137,514) |
+| 0.75 | same | (1101,540) |
+| 1.0 | same | (1084,539), the same as rest: weight 0 at f30 |
+| 1.5 | same | (1110,543), being pulled again as the weight returns to 1 at f59 |
+
+- **br_none (no rule) never moves blue,** even though the orphaned weight curve is still in the clip.
+- **br_rule:** blue's displacement follows the keyed weight. It is largest near t = 0, zero at t = 1.0 s, and rises again toward 2 s.
+  - At t = 0.25, the anchor is about 37 px above bind (cosine-ish easing toward −150 at f30), and blue is pulled up by about 65 px at its centre, with its outer end deformed. So blue takes on the anchor's motion scaled by the weight, but the exact mapping (translation only versus full transform, and pivot) can't be settled from these few stills.
+- **The "Done." text** is WE's toast after a wallpaper switch.

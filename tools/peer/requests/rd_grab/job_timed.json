@@ -1,0 +1,30 @@
+{
+ "we": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\wallpaper_engine",
+ "ident": 38920,
+ "monitor": 0,
+ "out": "K:\\DeepWorkspace\\wem-images2\\tools\\peer\\requests\\owe-beta7\\models-open\\533-blend-rules\\stills",
+ "shots": [
+  {
+   "project": "p533_br_none",
+   "tag": "mo2_533_br_none",
+   "stills": [
+    0.25,
+    0.5,
+    0.75,
+    1.0,
+    1.5
+   ]
+  },
+  {
+   "project": "p533_br_rule",
+   "tag": "mo2_533_br_rule",
+   "stills": [
+    0.25,
+    0.5,
+    0.75,
+    1.0,
+    1.5
+   ]
+  }
+ ]
+}
