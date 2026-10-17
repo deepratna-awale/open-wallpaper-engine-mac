@@ -95,17 +95,17 @@ final class ParticleEmitterImageFlagsTests: XCTestCase {
         shape.takesImageColor = false
         shape.inheritsLayerMotion = true
         shape.speed = SIMD2(0.5, 0.5)
-        var step = ParticleEmitterStep()
-        step.frameTime = 0.5
-        step.bones = [ParticleImageBone(current: .identity, previous: .identity),
-                      ParticleImageBone(current: SceneAffineTransform(linear: matrix_identity_float2x2, translation: SIMD2(10, 0)),
-                                        previous: SceneAffineTransform(linear: matrix_identity_float2x2, translation: SIMD2(4, 0)))]
-        var context = ParticleProgramContext()
-        context.spawnScale.w = 1
-        let emitted = try XCTUnwrap(ParticleProgramCPU.emit(image: [SIMD4(2, 3, 0, 1)], shape: shape, step: step, context: context))
-        XCTAssertEqual(emitted.position, SIMD2(12, 3))
+        let gpu = try ParticleGPUStepper()
+        let runtime = try spawning(shape, points: [SIMD4(2, 3, 0, 1)], gpu: gpu)
+        let emitted = try XCTUnwrap(try spawn(runtime, gpu: gpu, layerWorld: .identity) { step in
+            step.frameTime = 0.5
+            step.bones = [ParticleImageBone(current: .identity, previous: .identity),
+                          ParticleImageBone(current: SceneAffineTransform(linear: matrix_identity_float2x2, translation: SIMD2(10, 0)),
+                                            previous: SceneAffineTransform(linear: matrix_identity_float2x2, translation: SIMD2(4, 0)))]
+        })
+        XCTAssertEqual(simd_distance(emitted.position, SIMD2<Float>(12, 3)), 0, accuracy: 1e-4, "\(emitted.position)")
         // (10 − 4) px in 0.5 s, half of it.
-        XCTAssertEqual(emitted.velocity, SIMD2(6, 0))
+        XCTAssertEqual(simd_distance(emitted.velocity, SIMD2<Float>(6, 0)), 0, accuracy: 1e-4, "\(emitted.velocity)")
     }
 
     /// Without a rig the motion is the layer's since the emitter's last step that spawned; before
@@ -115,22 +115,52 @@ final class ParticleEmitterImageFlagsTests: XCTestCase {
         shape.kind = .image
         shape.inheritsLayerMotion = true
         shape.speed = SIMD2(1, 1)
-        var step = ParticleEmitterStep()
-        step.frameTime = 0.25
-        step.layerWorld = SceneAffineTransform(linear: matrix_identity_float2x2, translation: SIMD2(100, 50))
-        step.image = step.layerWorld
-        var context = ParticleProgramContext()
-        context.spawnScale.w = 1
+        let world = SceneAffineTransform(linear: matrix_identity_float2x2, translation: SIMD2(100, 50))
         let point: [SIMD4<Int32>] = [SIMD4(0, 0, 0xFFFFFF, 0)]
-        let moved = try XCTUnwrap(ParticleProgramCPU.emit(
-            image: point, shape: shape, step: step,
-            lastLayerWorld: SceneAffineTransform(linear: matrix_identity_float2x2, translation: SIMD2(98, 50)), context: context))
-        XCTAssertEqual(moved.velocity, SIMD2(8, 0))
-        let first = try XCTUnwrap(ParticleProgramCPU.emit(image: point, shape: shape, step: step, context: context))
-        XCTAssertEqual(first.velocity, SIMD2(400, 200))
-        var held = step
-        held.frameTime = 0
-        XCTAssertEqual(ParticleProgramCPU.emit(image: point, shape: shape, step: held, context: context)?.velocity, .zero)
+        let gpu = try ParticleGPUStepper()
+        // A spawning step with the layer at (98, 50), then one with it at (100, 50).
+        let movedSystem = try spawning(shape, points: point, gpu: gpu)
+        _ = try spawn(movedSystem, gpu: gpu,
+                      layerWorld: SceneAffineTransform(linear: matrix_identity_float2x2, translation: SIMD2(98, 50))) { $0.frameTime = 0.25 }
+        let moved = try XCTUnwrap(try spawn(movedSystem, gpu: gpu, layerWorld: world) { $0.frameTime = 0.25 })
+        XCTAssertEqual(simd_distance(moved.velocity, SIMD2<Float>(8, 0)), 0, accuracy: 1e-3, "\(moved.velocity)")
+        let first = try XCTUnwrap(try spawn(try spawning(shape, points: point, gpu: gpu), gpu: gpu, layerWorld: world) {
+            $0.frameTime = 0.25
+        })
+        XCTAssertEqual(simd_distance(first.velocity, SIMD2<Float>(400, 200)), 0, accuracy: 1e-2, "\(first.velocity)")
+        let held = try XCTUnwrap(try spawn(try spawning(shape, points: point, gpu: gpu), gpu: gpu, layerWorld: world) {
+            $0.frameTime = 0
+        })
+        XCTAssertEqual(held.velocity, .zero)
+    }
+
+    /// A system at the scene's origin of one `layerimage` emitter (`shape`) on layer "4"'s
+    /// `points`, emitting only when `spawn` bursts it; its particles stay where they spawn, white.
+    private func spawning(_ shape: ParticleEmitterShape, points: [SIMD4<Int32>], gpu: ParticleGPUStepper) throws -> ParticleSystemRuntime {
+        var test = ParticleTestSystem()
+        test.origin = .zero
+        test.emissionRate = 0
+        test.lifetime = 10...10
+        test.minimumVelocity = .zero
+        test.maximumVelocity = .zero
+        var configuration = test.configuration
+        configuration.program.operators = []
+        configuration.emitter = shape
+        configuration.emitterImages = [ParticleEmitterImage(layerID: "4", points: points)]
+        return ParticleSystemRuntime(texture: try gpu.texture(), configuration: configuration)
+    }
+
+    /// One GPU step of `system` bursting one particle with layer "4" at `layerWorld`, its emitter's
+    /// step changed by `change` first; the particle it spawned.
+    private func spawn(_ system: ParticleSystemRuntime, gpu: ParticleGPUStepper, layerWorld: SceneAffineTransform,
+                       change: (inout ParticleEmitterStep) -> Void) throws -> ParticleGPUState? {
+        var inputs = ParticleFrameInputs.advance(system, deltaTime: 1 / 60, cursor: .zero,
+                                                 layerWorld: { $0 == "4" ? layerWorld : nil })
+        XCTAssertFalse(inputs.emitters.isEmpty)
+        inputs.emitters[0].burst = 1
+        change(&inputs.emitters[0])
+        gpu.step(system, inputs: inputs)
+        return gpu.particles(system).max { $0.serial < $1.serial }
     }
 
     // MARK: - Resampling (0x140238d4f, 0x1401d3ae0)

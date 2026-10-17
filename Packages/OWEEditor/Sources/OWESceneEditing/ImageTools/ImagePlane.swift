@@ -125,14 +125,6 @@ public struct RGBAImage: Equatable, Sendable {
         return plane
     }
 
-    /// Sets channel `channel` from a plane of 0…255 floats (rounded, clamped).
-    public mutating func setPlane(_ plane: ImagePlane, channel: Int) {
-        precondition(plane.width == width && plane.height == height, "the plane's size is the image's")
-        for index in 0..<(width * height) {
-            pixels[index * 4 + channel] = UInt8(clamping: Int((plane.pixels[index]).rounded()))
-        }
-    }
-
     /// Whether any pixel is less than fully opaque.
     public var hasTransparency: Bool {
         stride(from: 3, to: pixels.count, by: 4).contains { pixels[$0] < 255 }

@@ -13,17 +13,28 @@ final class ParticleSpriteSheetTests: XCTestCase {
     /// `sequencemultiplier` (0x14023703b…0x140237075) and the shader takes its fraction's frame
     /// (`ComputeSpriteFrame`): a sequence plays over the particle's life, `sequencemultiplier` times,
     /// whatever the sheet's `duration`.
-    func testASequencePlaysOverTheParticlesLife() {
-        let configuration = SceneMetalParticleSystem(
-            source: .image(NSImage()), origin: .zero, emissionRate: 1, maximumParticleCount: 1, rendererName: "sprite",
+    func testASequencePlaysOverTheParticlesLife() throws {
+        var configuration = SceneMetalParticleSystem(
+            source: .image(NSImage()), origin: .zero, emissionRate: 0, maximumParticleCount: 1, rendererName: "sprite",
             trailLength: 0, trailSegments: 1, ropeSubdivision: 0, fadeTrailAlpha: false, fadeTrailSize: false,
             spriteSheet: SpriteSheet(columns: 8, rows: 8, frames: 64, duration: 1), animationMode: "sequence",
             sequenceMultiplier: 3, opacityMultiplier: 1, refractive: false, blending: "translucent")
-        let particle = Particle(position: .zero, velocity: .zero, age: 1.25, lifetime: 2.5, size: 1, baseSize: 1, alpha: 1,
-                                baseAlpha: 1, rotation: 0, angularVelocity: 0, color: SIMD4(repeating: 1),
-                                baseColor: SIMD4(repeating: 1), spriteFrame: 0, history: [], historyStart: 0)
-        XCTAssertEqual(ParticleRecordWriter.spritePhase(particle, configuration: configuration), 0.5, accuracy: 1e-5,
-                       "halfway through its life, 3 plays: 1.5, frame 32 of 64")
+        configuration.instantaneous = 1
+        configuration.program = ParticleProgram(operators: [], initializers: [
+            ParticleInitializer(.lifetimeRandom, a: SIMD4<Float>(2.5, 2.5, 1, 0)),
+        ])
+        let gpu = try ParticleGPUStepper()
+        let runtime = ParticleSystemRuntime(texture: try gpu.texture(), configuration: configuration)
+        for _ in 0..<75 {
+            gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero))
+        }
+        let particle = try XCTUnwrap(gpu.particles(runtime).first)
+        let record = try XCTUnwrap(gpu.simulator.records(runtime, as: ParticleSpriteInstance.self, queue: gpu.queue).records.first)
+        let life: Float = particle.age / particle.lifetime
+        XCTAssertEqual(life, 0.5, accuracy: 0.02, "about halfway through its life")
+        let plays: Float = life * 3
+        XCTAssertEqual(record.velocityLifetime.w, plays - plays.rounded(.down), accuracy: 1e-4,
+                       "3 plays over its life: halfway is 1.5, frame 32 of 64")
     }
 
     // MARK: - The grid

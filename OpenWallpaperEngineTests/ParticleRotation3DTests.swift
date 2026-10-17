@@ -10,104 +10,92 @@ import simd
 /// `genericparticle.vert` turns the quad by all three (`ComputeParticleTangents`). The remap
 /// outputs stay on z (0x14023dd8e, 0x14023de1b).
 final class ParticleRotation3DTests: XCTestCase {
-    private func state() -> ParticleProgramState {
-        var p = ParticleProgramState()
-        p.lifetime = 10
-        p.age = 1
-        return p
+    private var gpu: ParticleGPUStepper!
+
+    override func setUpWithError() throws {
+        gpu = try ParticleGPUStepper()
     }
 
-    private func context(dt: Float = 0.5) -> ParticleProgramContext {
-        var c = ParticleProgramContext()
-        c.deltaTime = dt
-        c.dragDeltaTime = dt
-        return c
+    /// One particle at rest with `initializers` and `operators` (no other rotation), after a step
+    /// of `age` seconds past its spawn.
+    private func particle(initializers: [ParticleInitializer], operators: [ParticleOperator] = [],
+                          age: Float = 0) throws -> ParticleGPUState {
+        var system = ParticleTestSystem()
+        system.emissionRate = 0
+        system.instantaneous = 1
+        system.maximum = 1
+        system.spawnExtent = .zero
+        system.minimumVelocity = .zero
+        system.maximumVelocity = .zero
+        system.lifetime = 10...10
+        system.rotation = 0...0
+        system.angularVelocity = 0...0
+        system.spins = false
+        system.initializers = initializers
+        system.operators = operators
+        let runtime = ParticleSystemRuntime(texture: try gpu.texture(), configuration: system.configuration, seed: 3)
+        gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 0, cursor: .zero))
+        // A frame time of 25 ms or less leaves the drag undamped (`ParticleFrameInputs.dragDeltaTime`).
+        if age > 0 { gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: age, cursor: .zero,
+                                                                           frameTime: 0.025)) }
+        return try XCTUnwrap(gpu.particles(runtime).first)
     }
 
-    func testTheInitializersSetEveryAxis() {
+    func testTheInitializersSetEveryAxis() throws {
         let rotation = ParticleInitializer(.rotationRandom, a: SIMD4(0.1, 0.2, 0.3, 1), b: SIMD4(0.1, 0.2, 0.3, 0))
-        var c = context()
-        c.spawnScale.w = 2
         let spin = ParticleInitializer(.angularVelocityRandom, a: SIMD4(1, -2, 3, 1), b: SIMD4(1, -2, 3, 0))
-        var p = state()
-        ParticleProgramCPU.runInitializers([rotation.record, spin.record], on: &p, context: c)
-        XCTAssertEqual(p.rotationXY, SIMD2<Float>(0.1, 0.2))
+        let p = try particle(initializers: [rotation, spin])
+        XCTAssertEqual(p.rotationXY.x, 0.1, accuracy: 1e-6)
+        XCTAssertEqual(p.rotationXY.y, 0.2, accuracy: 1e-6)
         XCTAssertEqual(p.rotation, 0.3, accuracy: 1e-6)
-        XCTAssertEqual(p.angularVelocityXY, SIMD2<Float>(2, -4), "times the speed override, as z")
-        XCTAssertEqual(p.angularVelocity, 6, accuracy: 1e-6)
+        XCTAssertEqual(p.angularVelocityXY.x, 1, accuracy: 1e-6)
+        XCTAssertEqual(p.angularVelocityXY.y, -2, accuracy: 1e-6)
+        XCTAssertEqual(p.angularVelocity, 3, accuracy: 1e-6)
     }
 
     /// `angularmovement`: per axis, ω += force·dt; rotation += ω·dt; ω ×= 1 − min(drag·dt, 1).
-    func testAngularMovementSpinsEachAxis() {
+    func testAngularMovementSpinsEachAxis() throws {
+        let start = ParticleInitializer(.angularVelocityRandom, a: SIMD4(1, 1, 1, 1), b: SIMD4(1, 1, 1, 0))
         let move = ParticleOperator(.angularMovement, a: SIMD4(2, -4, 6, 0.5))
-        var p = state()
-        p.angularVelocityXY = SIMD2(1, 1)
-        p.angularVelocity = 1
-        _ = ParticleProgramCPU.runOperators([move.record], on: &p, context: context(), index: 0, neighbors: .init())
+        let p = try particle(initializers: [start], operators: [move], age: 0.5)
         let spin = SIMD3<Float>(1 + 2 * 0.5, 1 - 4 * 0.5, 1 + 6 * 0.5)
-        XCTAssertEqual(p.rotationXY, SIMD2(spin.x, spin.y) * 0.5)
-        XCTAssertEqual(p.rotation, spin.z * 0.5, accuracy: 1e-6)
-        XCTAssertEqual(p.angularVelocityXY, SIMD2(spin.x, spin.y) * 0.75)
-        XCTAssertEqual(p.angularVelocity, spin.z * 0.75, accuracy: 1e-6)
+        XCTAssertEqual(p.rotationXY.x, spin.x * 0.5, accuracy: 1e-5)
+        XCTAssertEqual(p.rotationXY.y, spin.y * 0.5, accuracy: 1e-5)
+        XCTAssertEqual(p.rotation, spin.z * 0.5, accuracy: 1e-5)
+        XCTAssertEqual(p.angularVelocityXY.x, spin.x * 0.75, accuracy: 1e-5)
+        XCTAssertEqual(p.angularVelocityXY.y, spin.y * 0.75, accuracy: 1e-5)
+        XCTAssertEqual(p.angularVelocity, spin.z * 0.75, accuracy: 1e-5)
     }
 
     /// A system whose rotations have no x or y (every 2D preset) draws exactly as before: the
     /// records' rotation is (0, 0, z).
     func testAFlatSystemKeepsFlatRecords() throws {
-        let texture = try self.texture()
-        let runtime = ParticleSystemRuntime(texture: texture, configuration: ParticleTestSystem().configuration, seed: 3)
+        let runtime = ParticleSystemRuntime(texture: try gpu.texture(), configuration: ParticleTestSystem().configuration, seed: 3)
         for _ in 0..<30 {
-            ParticleCPUSimulation.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero))
+            gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero))
         }
-        XCTAssertGreaterThan(runtime.particles.count, 10)
-        XCTAssertTrue(runtime.particles.allSatisfy { $0.rotationXY == .zero && $0.angularVelocityXY == .zero })
-        XCTAssertTrue(runtime.particles.contains { $0.rotation != 0 })
+        let particles = gpu.particles(runtime)
+        XCTAssertGreaterThan(particles.count, 10)
+        XCTAssertTrue(particles.allSatisfy { $0.rotationXY == .zero && $0.angularVelocityXY == .zero })
+        XCTAssertTrue(particles.contains { $0.rotation != 0 })
     }
 
-    /// The GPU runs the 3D rotation as the CPU does.
-    func testTheGPUSpinsEveryAxisAsTheCPUDoes() throws {
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice()), queue = try XCTUnwrap(device.makeCommandQueue())
-        let simulator = try ParticleGPUSimulator(device: device)
+    /// Random rotations and spins about x and y, driven by `angularmovement`, turn the particles
+    /// about x and y.
+    func testTheParticlesSpinAboutEveryAxis() throws {
         var system = ParticleTestSystem()
         system.spins = false
         system.initializers = [ParticleInitializer(.rotationRandom, a: SIMD4(-1, 0.5, 0, 1), b: SIMD4(1, 1.5, 0, 0)),
                                ParticleInitializer(.angularVelocityRandom, a: SIMD4(0.5, -3, 0, 1), b: SIMD4(1.5, -1, 0, 0))]
         system.operators = [ParticleOperator(.angularMovement, a: SIMD4(2, -1, 0.5, 0.2))]
-        let texture = try self.texture()
-        let cpu = ParticleSystemRuntime(texture: texture, configuration: system.configuration, seed: 11)
-        let gpu = ParticleSystemRuntime(texture: texture, configuration: system.configuration, seed: 11)
-        var last: MTLCommandBuffer?
+        let runtime = ParticleSystemRuntime(texture: try gpu.texture(), configuration: system.configuration, seed: 11)
         for _ in 0..<60 {
-            ParticleCPUSimulation.step(cpu, inputs: ParticleFrameInputs.advance(cpu, deltaTime: 1 / 60, cursor: .zero))
-            let inputs = ParticleFrameInputs.advance(gpu, deltaTime: 1 / 60, cursor: .zero)
-            let buffer = try XCTUnwrap(queue.makeCommandBuffer())
-            simulator.encode([.init(system: gpu, inputs: inputs, kind: .sprite, materialVertexCount: 6)],
-                             sceneSize: SIMD2(1280, 720), targetSize: SIMD2(1280, 720), commandBuffer: buffer)
-            buffer.commit()
-            last = buffer
+            gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero))
         }
-        last?.waitUntilCompleted()
-        XCTAssertNil(last?.error)
-        let states = simulator.snapshot(gpu, queue: queue)
-        XCTAssertGreaterThan(cpu.particles.count, 50)
-        let cpuCount = Double(cpu.particles.count)
-        let allowed: Double = max(2, cpuCount * 0.01)
-        XCTAssertEqual(Double(states.count), cpuCount, accuracy: allowed)
-        func mean(_ values: [SIMD4<Float>]) -> SIMD4<Float> {
-            let total: SIMD4<Float> = values.reduce(SIMD4<Float>.zero, +)
-            return total / Float(max(values.count, 1))
-        }
-        let expected = mean(cpu.particles.map { (p: Particle) -> SIMD4<Float> in
-            SIMD4<Float>(p.rotationXY.x, p.rotationXY.y, p.angularVelocityXY.x, p.angularVelocityXY.y)
-        })
-        let actual = mean(states.map { (s: ParticleGPUState) -> SIMD4<Float> in s.spin })
-        XCTAssertLessThan(simd_distance(actual, expected), 0.05, "\(actual) vs \(expected)")
-        XCTAssertGreaterThan(abs(expected.x) + abs(expected.w), 0.5, "the particles turn about x and y")
-    }
-
-    private func texture() throws -> MTLTexture {
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        return try XCTUnwrap(device.makeTexture(descriptor: .texture2DDescriptor(pixelFormat: .rgba8Unorm, width: 1, height: 1,
-                                                                                mipmapped: false)))
+        let states = gpu.particles(runtime)
+        XCTAssertGreaterThan(states.count, 50)
+        let total: SIMD4<Float> = states.map(\.spin).reduce(SIMD4<Float>.zero, +)
+        let mean: SIMD4<Float> = total / Float(max(states.count, 1))
+        XCTAssertGreaterThan(abs(mean.x) + abs(mean.w), 0.5, "the particles turn about x and y: \(mean)")
     }
 }

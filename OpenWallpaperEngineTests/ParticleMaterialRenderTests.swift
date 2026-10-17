@@ -5,12 +5,14 @@ import AppKit
 @testable import OpenWallpaperEngine
 
 /// Particles drawn headlessly through WE's `genericparticle` / `genericropeparticle` materials,
-/// with the emulated geometry stage and with WE's no-geometry-shader stream.
+/// with the emulated geometry stage and with WE's no-geometry-shader stream. The particles are
+/// placed by a GPU step (`ParticleGPUSimulator`), which writes the records the draw reads.
 final class ParticleMaterialRenderTests: XCTestCase {
     private static let size = 256
     private var device: MTLDevice!
     private var queue: MTLCommandQueue!
     private var renderer: ParticleMaterialRenderer!
+    private var simulator: ParticleGPUSimulator!
     private var builder: ParticleMaterialPlanBuilder!
     private var white: MTLTexture!
 
@@ -18,6 +20,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
         device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         queue = try XCTUnwrap(device.makeCommandQueue())
         renderer = try XCTUnwrap(ParticleMaterialRenderer(device: device))
+        simulator = try ParticleGPUSimulator(device: device)
         let roots = [Fixtures.url("Particles"), ShaderVariantTests.weAssets]
         builder = ParticleMaterialPlanBuilder(
             translator: ShaderVariantTranslator(compiler: InProcessShaderCompiler(), cacheDirectory: nil),
@@ -138,11 +141,12 @@ final class ParticleMaterialRenderTests: XCTestCase {
     func testRopeTrailFollowsEachParticlesHistory() throws {
         _ = try Fixtures.assets()
         let plan = try self.plan("materials/solid.json", renderer: "ropetrail", keeping: .emulated(vertexCount: 6))
-        var head = particle(at: SIMD2(200, 128), size: 16)
-        // A full ring whose oldest sample sits at `historyStart`.
-        head.history = [SIMD2(120, 128), SIMD2(40, 128)]
-        head.historyStart = 1
-        let pixels = try render(plan, particles: [head])
+        // A particle moving from x 0 to x 200 over a second: its trail's 4 samples a quarter of a
+        // second apart reach back past x 50.
+        var head = particle(at: SIMD2(0, 128), size: 16)
+        head.velocity = SIMD2(200, 0)
+        head.moves = true
+        let pixels = try render(plan, particles: [head], frames: 60)
         for x in [60, 160] { XCTAssertGreaterThan(pixels.red(x: x, y: 128), 250, "trail at x \(x)") }
         XCTAssertLessThan(pixels.red(x: 230, y: 128), 5, "nothing past the particle")
     }
@@ -166,11 +170,11 @@ final class ParticleMaterialRenderTests: XCTestCase {
                                         spriteSheet: frames)
         // Clamped, so the frames' outer edges don't pull in the opposite frame.
         plan.textureFlags[0] = .clampUVs
+        let chosen = particle(at: SIMD2(128, 128), size: 80)
         for frame in 0..<2 {
-            let chosen = Particle(position: SIMD2(128, 128), velocity: .zero, age: 0, lifetime: 10, size: 40, baseSize: 40,
-                                  alpha: 1, baseAlpha: 1, rotation: 0, angularVelocity: 0, color: SIMD4(repeating: 1),
-                                  baseColor: SIMD4(repeating: 1), spriteFrame: frame, history: [], historyStart: 0)
-            let pixels = try render(plan, particles: [chosen], texture: sheet, animationMode: "randomframe")
+            // WE picks a random frame per particle: a seed whose particle lands on `frame`.
+            let seed = try self.seed(placing: chosen, onFrame: frame, plan: plan, texture: sheet)
+            let pixels = try render(plan, particles: [chosen], seed: seed, texture: sheet, animationMode: "randomframe")
             let index = (128 * Self.size + 128) * 4
             let (own, other) = frame == 0 ? (pixels.bytes[index], pixels.bytes[index + 1])
                                           : (pixels.bytes[index + 1], pixels.bytes[index])
@@ -302,15 +306,14 @@ final class ParticleMaterialRenderTests: XCTestCase {
         // A pixel format no other test compiles for, so the pipeline is new here.
         let format = MTLPixelFormat.bgra8Unorm_srgb
         let plan = try self.plan("materials/additive_overbright.json", renderer: "sprite", keeping: .expandedQuads)
-        let system = ParticleSystemRuntime(texture: white, configuration: Self.configuration(plan: plan))
-        system.particles = [particle(at: SIMD2(128, 128), size: 80)]
+        let system = ParticleSystemRuntime(texture: white, configuration: Self.configuration(
+            plan: plan, placing: [particle(at: SIMD2(128, 128), size: 80)]))
         // The first frame starts the compile: the system stays on the material path, drawing nothing.
-        XCTAssertTrue(renderer.prepare(system, pixelFormat: format, opacity: { _ in 1 }))
-        XCTAssertFalse(renderer.readsSceneSnapshot(system))
         XCTAssertNotNil(renderer.prepareSimulated(system, pixelFormat: format))
+        XCTAssertFalse(renderer.readsSceneSnapshot(system))
         XCTAssertEqual(renderer.fallbacksReported, 0)
         XCTAssertTrue(renderer.waitUntilCompiled(plan, pixelFormat: format))
-        XCTAssertTrue(renderer.prepare(system, pixelFormat: format, opacity: { _ in 1 }))
+        XCTAssertNotNil(renderer.prepareSimulated(system, pixelFormat: format))
     }
 
     /// Uniform blocks over 4 KB come from the reused arena, not a new buffer per draw.
@@ -403,7 +406,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
         let system = ParticleSystemRuntime(texture: white, configuration: Self.configuration(plan: plan))
         XCTAssertTrue(renderer.waitUntilCompiled(plan, pixelFormat: .rgba8Unorm))
         XCTAssertNotNil(renderer.pipelineFailure(broken, plan: plan, pixelFormat: .rgba8Unorm))
-        XCTAssertFalse(renderer.prepare(system, pixelFormat: .rgba8Unorm, opacity: { _ in 1 }))
+        XCTAssertNil(renderer.prepareSimulated(system, pixelFormat: .rgba8Unorm))
     }
 
     func testSpriteSheetFrameVariables() {
@@ -444,7 +447,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
         _ = try Fixtures.assets()
         let plan = try self.plan("materials/solid.json", renderer: "sprite", keeping: .emulated(vertexCount: 6))
         var red = particle(at: SIMD2(128, 128), size: 80)
-        red.color = SIMD4(1, 0, 0, 0.5)
+        red.color = SIMD4<Float>(1, 0, 0, 0.5)
         let pixels = try render(plan, particles: [red])
         let index = (128 * Self.size + 128) * 4
         XCTAssertEqual(Double(pixels.bytes[index]), 128, accuracy: 2, "half-transparent red over black")
@@ -496,7 +499,6 @@ final class ParticleMaterialRenderTests: XCTestCase {
         XCTAssertTrue(renderer.waitUntilCompiled(plan, pixelFormat: .rgba8Unorm))
         let system = ParticleSystemRuntime(texture: white, configuration: Self.configuration(plan: plan))
         for _ in 0..<100 {
-            XCTAssertFalse(renderer.prepare(system, pixelFormat: .rgba8Unorm, opacity: { _ in 1 }))
             XCTAssertNil(renderer.prepareSimulated(system, pixelFormat: .rgba8Unorm))
         }
         XCTAssertEqual(renderer.fallbacksReported, 1)
@@ -723,10 +725,26 @@ final class ParticleMaterialRenderTests: XCTestCase {
 
     /// A particle of authored `sizerandom` `size`: WE's particle size is half that (its base size
     /// 0.5 times the random, `wallpaper64.exe` 0x14023b340), which the shaders read as the quad's width.
-    private func particle(at position: SIMD2<Float>, size: Float) -> Particle {
-        Particle(position: position, velocity: .zero, age: 0, lifetime: 10, size: size / 2, baseSize: size / 2,
-                 alpha: 1, baseAlpha: 1, rotation: 0, angularVelocity: 0, color: SIMD4(repeating: 1),
-                 baseColor: SIMD4(repeating: 1), spriteFrame: 0, history: [], historyStart: 0)
+    private func particle(at position: SIMD2<Float>, size: Float) -> Placed {
+        Placed(position: position, size: size / 2)
+    }
+
+    /// A seed whose GPU step gives `placed` sprite-sheet frame `frame` (`randomframe`).
+    private func seed(placing placed: Placed, onFrame frame: Int, plan: ParticleMaterialPlan,
+                      texture: MTLTexture) throws -> UInt32 {
+        XCTAssertTrue(renderer.waitUntilCompiled(plan, pixelFormat: .rgba8Unorm), "pipelines still compiling")
+        let configuration = Self.configuration(plan: plan, placing: [placed], animationMode: "randomframe")
+        for seed in UInt32(0)..<64 {
+            let system = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: seed)
+            let buffer = try XCTUnwrap(queue.makeCommandBuffer())
+            XCTAssertTrue(Self.step(system, renderer: renderer, simulator: simulator, pixelFormat: .rgba8Unorm,
+                                    sceneSize: SIMD2(Float(Self.size), Float(Self.size)), commandBuffer: buffer))
+            buffer.commit()
+            buffer.waitUntilCompleted()
+            if simulator.snapshot(system, queue: queue).first?.spriteFrame == frame { return seed }
+        }
+        XCTFail("no seed in 64 puts the particle on frame \(frame)")
+        return 0
     }
 
     struct Pixels {
@@ -748,22 +766,53 @@ final class ParticleMaterialRenderTests: XCTestCase {
     }
 
     /// Draws `particles` onto a target holding `scene` (black without one), which is also the
-    /// snapshot a refracting stage reads.
-    private func render(_ plan: ParticleMaterialPlan, particles: [Particle], texture: MTLTexture? = nil,
+    /// snapshot a refracting stage reads. The particles are spawned by a GPU step of an emitter
+    /// whose world transform is `drawLinear` at the first particle, and stepped `frames` times
+    /// (the last one drawn). Particles that differ in more than their position are spawned by
+    /// systems of their own, drawn in the order they first appear.
+    private func render(_ plan: ParticleMaterialPlan, particles: [Placed], frames: Int = 1, seed: UInt32 = 0,
+                        texture: MTLTexture? = nil,
                         animationMode: String = "sequence", cull: (MTLCullMode, MTLWinding)? = nil,
                         pixelFormat: MTLPixelFormat = .rgba8Unorm, scene: [UInt8]? = nil,
                         values: SceneValueContext = NoValues(), drawLinear: simd_float2x2 = matrix_identity_float2x2,
                         assetTexture: @escaping (String, SceneMetalTextureSource) -> MTLTexture? = { _, _ in nil }) throws -> Pixels {
         let size = Self.size
+        let sceneSize = SIMD2<Float>(Float(size), Float(size))
         XCTAssertTrue(renderer.waitUntilCompiled(plan, pixelFormat: pixelFormat), "pipelines still compiling")
         for stage in plan.stages {
             XCTAssertNil(renderer.pipelineFailure(stage, plan: plan, pixelFormat: pixelFormat))
         }
-        let system = ParticleSystemRuntime(texture: texture ?? white,
-                                           configuration: Self.configuration(plan: plan, animationMode: animationMode))
-        system.particles = particles
-        system.drawLinear = drawLinear
-        XCTAssertTrue(renderer.prepare(system, pixelFormat: pixelFormat, opacity: { _ in 1 }), "draws through the material")
+        let anchor = particles.first?.position ?? .zero
+        let emitter = SceneAffineTransform(linear: drawLinear, translation: anchor)
+        var groups: [[Placed]] = []
+        for var placed in particles {
+            placed.position -= anchor
+            if let index = groups.firstIndex(where: { $0[0].look == placed.look }) {
+                groups[index].append(placed)
+            } else {
+                groups.append([placed])
+            }
+        }
+        let systems = groups.map {
+            ParticleSystemRuntime(texture: texture ?? white,
+                                  configuration: Self.configuration(plan: plan, placing: $0, animationMode: animationMode),
+                                  seed: seed)
+        }
+        for _ in 1..<max(frames, 1) {
+            let buffer = try XCTUnwrap(queue.makeCommandBuffer())
+            for system in systems {
+                XCTAssertTrue(Self.step(system, renderer: renderer, simulator: simulator, pixelFormat: pixelFormat,
+                                        sceneSize: sceneSize, emitter: emitter, commandBuffer: buffer))
+            }
+            buffer.commit()
+            buffer.waitUntilCompleted()
+            XCTAssertNil(buffer.error)
+        }
+        let buffer = try XCTUnwrap(queue.makeCommandBuffer())
+        for system in systems {
+            XCTAssertTrue(Self.step(system, renderer: renderer, simulator: simulator, pixelFormat: pixelFormat,
+                                    sceneSize: sceneSize, emitter: emitter, commandBuffer: buffer), "draws through the material")
+        }
 
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: pixelFormat, width: size, height: size, mipmapped: false)
         descriptor.usage = [.renderTarget, .shaderRead]
@@ -777,21 +826,24 @@ final class ParticleMaterialRenderTests: XCTestCase {
             }
             snapshot = copy
         }
-        XCTAssertEqual(renderer.readsSceneSnapshot(system), plan.stages.first?.readsSceneSnapshot ?? false)
+        for system in systems {
+            XCTAssertEqual(renderer.readsSceneSnapshot(system), plan.stages.first?.readsSceneSnapshot ?? false)
+        }
         let pass = MTLRenderPassDescriptor()
         pass.colorAttachments[0].texture = target
         pass.colorAttachments[0].loadAction = scene == nil ? .clear : .load
         pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
         pass.colorAttachments[0].storeAction = .store
-        let buffer = try XCTUnwrap(queue.makeCommandBuffer())
         let encoder = try XCTUnwrap(buffer.makeRenderCommandEncoder(descriptor: pass))
         if let cull {
             encoder.setCullMode(cull.0)
             encoder.setFrontFacing(cull.1)
         }
-        renderer.draw(system, encoder: encoder, commandBuffer: buffer, context: .init(
-            sceneSize: SIMD2(Float(size), Float(size)), frame: BuiltinFrameContext(), values: values,
-            assetTexture: assetTexture, sceneSnapshot: snapshot))
+        for system in systems {
+            renderer.draw(system, encoder: encoder, commandBuffer: buffer, context: .init(
+                sceneSize: sceneSize, frame: BuiltinFrameContext(), values: values,
+                assetTexture: assetTexture, sceneSnapshot: snapshot))
+        }
         encoder.endEncoding()
         buffer.commit()
         buffer.waitUntilCompleted()
@@ -812,5 +864,83 @@ final class ParticleMaterialRenderTests: XCTestCase {
             opacityMultiplier: 1, refractive: false, blending: plan.blending)
         system.material = plan
         return system
+    }
+
+    /// A particle a draw test places: where it spawns and what it spawns with.
+    struct Placed {
+        /// In the system's space (the scene, for a system at the origin).
+        var position: SIMD2<Float>
+        /// WE's particle size, which the shaders read as the quad's width (half the `sizerandom`).
+        var size: Float
+        var velocity = SIMD2<Float>.zero
+        var rotation: Float = 0
+        /// The colour, and the particle's alpha in `w`.
+        var color = SIMD4<Float>(repeating: 1)
+        /// Moves along its velocity (WE's `movement` operator); otherwise it holds still.
+        var moves = false
+
+        /// Everything but the position, which one system's initializers give all its particles.
+        var look: [Float] {
+            [size, velocity.x, velocity.y, rotation, color.x, color.y, color.z, color.w, moves ? 1 : 0]
+        }
+    }
+
+    /// `configuration(plan:animationMode:)` spawning `particles` on its first step: a one-particle
+    /// burst from a zero-extent box at each position, and initializers that give every particle the
+    /// first's size, velocity, rotation, colour and alpha, and a lifetime of 10 seconds.
+    static func configuration(plan: ParticleMaterialPlan, placing particles: [Placed],
+                              animationMode: String = "sequence") -> SceneMetalParticleSystem {
+        placing(particles, in: configuration(plan: plan, animationMode: animationMode))
+    }
+
+    /// `system` spawning `particles` on its first step (see `configuration(plan:placing:)`).
+    static func placing(_ particles: [Placed], in system: SceneMetalParticleSystem) -> SceneMetalParticleSystem {
+        var system = system
+        guard let first = particles.first else { return system }
+        let emitters = particles.map { placed -> ParticleEmitter in
+            var shape = ParticleEmitterShape()
+            shape.kind = .box
+            shape.origin = SIMD3<Float>(placed.position.x, placed.position.y, 0)
+            shape.directions = SIMD3<Float>(1, 1, 0)
+            shape.distanceMaximum = .zero
+            return ParticleEmitter(shape: shape, rate: 0, instantaneous: 1)
+        }
+        system.emitter = emitters[0].shape
+        system.instantaneous = 1
+        system.extraEmitters = Array(emitters.dropFirst())
+        let size: Float = first.size * 2, color: SIMD4<Float> = first.color
+        system.program = ParticleProgram(
+            operators: first.moves ? [ParticleOperator(.movement)] : [],
+            initializers: [
+                ParticleInitializer(.lifetimeRandom, a: SIMD4<Float>(10, 10, 1, 0)),
+                ParticleInitializer(.sizeRandom, a: SIMD4<Float>(size, size, 1, 0)),
+                ParticleInitializer(.alphaRandom, a: SIMD4<Float>(color.w, color.w, 1, 0)),
+                ParticleInitializer(.colorRandom, a: SIMD4<Float>(color.x, color.y, color.z, 1),
+                                    b: SIMD4<Float>(color.x, color.y, color.z, 0)),
+                ParticleInitializer(.velocityRandom, a: SIMD4<Float>(first.velocity.x, first.velocity.y, 0, 1),
+                                    b: SIMD4<Float>(first.velocity.x, first.velocity.y, 0, 0)),
+                ParticleInitializer(.rotationRandom, a: SIMD4<Float>(0, 0, first.rotation, 1),
+                                    b: SIMD4<Float>(0, 0, first.rotation, 0)),
+            ])
+        return system
+    }
+
+    /// One frame of `system` on the GPU, encoded into `commandBuffer` as the renderer encodes it
+    /// before the draw: `prepareSimulated`, then a step that writes the material's records. False
+    /// when the system can't draw through its material.
+    @discardableResult
+    static func step(_ system: ParticleSystemRuntime, renderer: ParticleMaterialRenderer, simulator: ParticleGPUSimulator,
+                     pixelFormat: MTLPixelFormat, depthFormat: MTLPixelFormat = .invalid, sceneSize: SIMD2<Float>,
+                     emitter: SceneAffineTransform? = nil, commandBuffer: MTLCommandBuffer) -> Bool {
+        guard let simulated = renderer.prepareSimulated(system, pixelFormat: pixelFormat, depthFormat: depthFormat) else {
+            return false
+        }
+        let inputs = ParticleFrameInputs.advance(system, deltaTime: 1 / 60, cursor: .zero, emitter: emitter)
+        let kind = ParticleGPUDrawKind.material(simulated.format, rendererName: system.configuration.rendererName)
+        simulator.encode([ParticleGPUSimulator.Request(system: system, inputs: inputs, kind: kind,
+                                                       materialVertexCount: simulated.vertexCount,
+                                                       renderVar: simulated.renderVar)],
+                         sceneSize: sceneSize, targetSize: sceneSize, commandBuffer: commandBuffer)
+        return true
     }
 }

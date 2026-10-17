@@ -4,7 +4,7 @@ import simd
 @testable import OpenWallpaperEngine
 
 /// Child particle systems (`children`): decoding, how the loader flattens them, and how static and
-/// event children run on the CPU and GPU.
+/// event children run.
 final class ParticleChildrenTests: XCTestCase {
     private func particleSystem(_ name: String) throws -> WEParticleSystem {
         try JSONDecoder().decode(WEParticleSystem.self,
@@ -127,12 +127,14 @@ final class ParticleChildrenTests: XCTestCase {
 
     func testAStaticChildEmitsFromItsParentsEmitterAndFollowsIt() throws {
         let family = try Family(root: rocketTestSystem(), children: [(staticGlow(), 0)])
-        family.stepCPU(frames: 30, root: translation(SIMD2(500, 300)))
-        let glow = family.runtimes[1]
-        XCTAssertGreaterThan(glow.particles.count, 5)
-        for particle in glow.particles { XCTAssertLessThan(simd_distance(particle.position, SIMD2(500, 400)), 1) }
-        family.stepCPU(frames: 1, root: translation(SIMD2(700, 300)))
-        for particle in glow.particles { XCTAssertLessThan(simd_distance(particle.position, SIMD2(700, 400)), 1) }
+        try family.step(frames: 30, root: translation(SIMD2(500, 300)))
+        let glow = family.particles(1)
+        XCTAssertGreaterThan(glow.count, 5)
+        for particle in glow { XCTAssertLessThan(simd_distance(particle.position, SIMD2<Float>(500, 400)), 1) }
+        try family.step(frames: 1, root: translation(SIMD2(700, 300)))
+        for particle in family.particles(1) {
+            XCTAssertLessThan(simd_distance(particle.position, SIMD2<Float>(700, 400)), 1)
+        }
     }
 
     func testFollowInstancesTrackTheirParticleAndClearWithIt() throws {
@@ -144,27 +146,29 @@ final class ParticleChildrenTests: XCTestCase {
         trail.maximumVelocity = .zero
         trail.lifetime = 10...10
         let family = try Family(root: rocketTestSystem(), children: [(trail.link(.follow, instances: 4, probability: 1), 0)])
-        family.stepCPU(frames: 20, root: translation(SIMD2(500, 300)))
-        let parent = family.runtimes[0], child = family.runtimes[1]
-        let active = child.instances.filter(\.active)
-        XCTAssertEqual(active.count, min(parent.particles.count, 4))
+        try family.step(frames: 20, root: translation(SIMD2(500, 300)))
+        let parent = family.particles(0)
+        let instances = family.instances(1)
+        let active = instances.filter { $0.flags.contains(.active) }
+        XCTAssertEqual(active.count, min(parent.count, 4))
         for instance in active {
-            let source = try XCTUnwrap(parent.particles.first { $0.serial == instance.sourceSerial })
-            XCTAssertEqual(instance.translation, source.position)
+            let source = try XCTUnwrap(parent.first { $0.serial == instance.state.y })
+            XCTAssertLessThan(simd_distance(SIMD2<Float>(instance.place.x, instance.place.y), source.position), 1e-3)
         }
         // Local-space trail particles move with their source.
-        for particle in child.particles {
-            let instance = child.instances[particle.instance]
-            XCTAssertLessThan(simd_distance(particle.position, instance.translation), 1e-3)
+        for particle in family.particles(1) {
+            let instance = instances[particle.instance]
+            XCTAssertLessThan(simd_distance(particle.position, SIMD2<Float>(instance.place.x, instance.place.y)), 1e-3)
         }
         // Parent particles live 1 s: their followers and their particles go with them.
-        family.stepCPU(frames: 70, root: translation(SIMD2(500, 300)))
-        let serials = Set(parent.particles.map(\.serial))
-        for instance in child.instances where instance.active {
-            XCTAssertTrue(serials.contains(instance.sourceSerial) || instance.clearing)
+        try family.step(frames: 70, root: translation(SIMD2(500, 300)))
+        let serials = Set(family.particles(0).map(\.serial))
+        let later = family.instances(1)
+        for instance in later where instance.flags.contains(.active) {
+            XCTAssertTrue(serials.contains(instance.state.y) || instance.flags.contains(.clearing))
         }
-        for particle in child.particles {
-            XCTAssertTrue(serials.contains(child.instances[particle.instance].sourceSerial))
+        for particle in family.particles(1) {
+            XCTAssertTrue(serials.contains(later[particle.instance].state.y))
         }
     }
 
@@ -183,14 +187,14 @@ final class ParticleChildrenTests: XCTestCase {
         burst.worldSpace = true
         let family = try Family(root: rocketTestSystem(), children: [(spark.link(.spawn, instances: 100, probability: 1), 0),
                                                                     (burst.link(.death, instances: 100, probability: 1), 0)])
-        family.stepCPU(frames: 90, root: translation(SIMD2(500, 300)))
-        let parent = family.runtimes[0]
-        let spawned = parent.nextSerial, died = spawned - UInt32(parent.particles.count)
-        XCTAssertEqual(family.runtimes[1].particles.count, 3 * Int(spawned), "three sparks per rocket spawned")
-        XCTAssertEqual(family.runtimes[2].particles.count, 7 * Int(died), "seven per rocket died")
+        try family.step(frames: 90, root: translation(SIMD2(500, 300)))
+        let spawned = family.spawned(0), died = spawned - UInt32(family.particles(0).count)
+        XCTAssertEqual(family.particles(1).count, 3 * Int(spawned), "three sparks per rocket spawned")
+        let bursts = family.particles(2)
+        XCTAssertEqual(bursts.count, 7 * Int(died), "seven per rocket died")
         XCTAssertGreaterThan(died, 0)
         // Death bursts stay where their rocket died; the rockets rise at 400 units a second.
-        for particle in family.runtimes[2].particles { XCTAssertGreaterThan(particle.position.y, 600) }
+        for particle in bursts { XCTAssertGreaterThan(particle.position.y, 600) }
     }
 
     func testChildrenInheritFromTheirEventParticle() throws {
@@ -204,14 +208,15 @@ final class ParticleChildrenTests: XCTestCase {
         child.inheritOnSpawn = [.setColor, .setVelocity, .multiplySize]
         child.inheritEachStep = [.setOpacity]
         let family = try Family(root: root, children: [(child.link(.follow, instances: 20, probability: 1), 0)])
-        family.stepCPU(frames: 40, root: translation(SIMD2(500, 300)))
-        let parent = family.runtimes[0], children = family.runtimes[1]
-        XCTAssertGreaterThan(children.particles.count, 10)
-        for particle in children.particles {
-            let instance = children.instances[particle.instance]
-            guard let source = parent.particles.first(where: { $0.serial == instance.sourceSerial }) else { continue }
-            XCTAssertEqual(SIMD3(particle.color.x, particle.color.y, particle.color.z),
-                           SIMD3(source.color.x, source.color.y, source.color.z), "colour at spawn")
+        try family.step(frames: 40, root: translation(SIMD2(500, 300)))
+        let parent = family.particles(0), children = family.particles(1), instances = family.instances(1)
+        XCTAssertGreaterThan(children.count, 10)
+        for particle in children {
+            let instance = instances[particle.instance]
+            guard let source = parent.first(where: { $0.serial == instance.state.y }) else { continue }
+            let color = SIMD3<Float>(particle.color.x, particle.color.y, particle.color.z)
+            let sourceColor = SIMD3<Float>(source.color.x, source.color.y, source.color.z)
+            XCTAssertLessThan(simd_distance(color, sourceColor), 1e-5, "colour at spawn")
             XCTAssertEqual(particle.alpha, source.alpha, accuracy: 1e-6, "opacity every step")
         }
     }
@@ -226,18 +231,18 @@ final class ParticleChildrenTests: XCTestCase {
         root.emissionRate = 60
         root.maximum = 1000
         let half = try Family(root: root, children: [(child.link(.spawn, instances: 1000, probability: 0.5), 0)])
-        half.stepCPU(frames: 120, root: translation(SIMD2(500, 300)))
-        let ratio = Float(half.runtimes[1].particles.count) / Float(half.runtimes[0].nextSerial)
+        try half.step(frames: 120, root: translation(SIMD2(500, 300)))
+        let ratio = Float(half.particles(1).count) / Float(half.spawned(0))
         XCTAssertEqual(ratio, 0.5, accuracy: 0.12)
         let capped = try Family(root: root, children: [(child.link(.spawn, instances: 5, probability: 1), 0)])
-        capped.stepCPU(frames: 120, root: translation(SIMD2(500, 300)))
-        XCTAssertEqual(capped.runtimes[1].instances.filter(\.active).count, 5)
-        XCTAssertEqual(capped.runtimes[1].particles.count, 5)
+        try capped.step(frames: 120, root: translation(SIMD2(500, 300)))
+        XCTAssertEqual(capped.instances(1).filter { $0.flags.contains(.active) }.count, 5)
+        XCTAssertEqual(capped.particles(1).count, 5)
     }
 
-    // MARK: - GPU parity
-
-    func testEventChildrenRunTheSameOnTheGPU() throws {
+    /// Every kind of child (static, follow, spawn, death and an instanced static child of the death
+    /// child) runs under a moving, turning parent emitter.
+    func testEveryKindOfChildRunsUnderAMovingParent() throws {
         var trail = ParticleTestSystem()
         trail.emissionRate = 40
         trail.maximum = 30
@@ -269,35 +274,21 @@ final class ParticleChildrenTests: XCTestCase {
             SceneAffineTransform(SceneLocalTransform(origin: SIMD2(400 + Float(frame) * 2, 300), scale: SIMD2(1, 1),
                                                      angle: Float(frame) * 0.01))
         }
-        let cpu = try Family(root: rocketTestSystem(), children: links)
-        let gpu = try Family(root: rocketTestSystem(), children: links)
-        cpu.stepCPU(frames: 150, root: moving)
-        try gpu.stepGPU(frames: 150, root: moving)
-        for index in cpu.runtimes.indices {
-            let expected = cpu.runtimes[index].particles
-            let actual = gpu.simulator.snapshot(gpu.runtimes[index], queue: gpu.queue)
-            XCTAssertEqual(actual.count, expected.count, "system \(index)")
-            XCTAssertEqual(actual.map(\.identity.x), expected.map(\.serial), "system \(index): the same particles")
-            guard actual.count == expected.count, !expected.isEmpty else { continue }
-            for (a, e) in zip(actual, expected) {
-                XCTAssertLessThan(simd_distance(SIMD2(a.positionVelocity.x, a.positionVelocity.y), e.position), 0.5,
-                                  "system \(index)")
-                XCTAssertEqual(Int(a.trail.z), e.instance, "system \(index)")
-            }
-            let gpuInstances = gpu.simulator.instances(gpu.runtimes[index], queue: gpu.queue)
-            for (a, e) in zip(gpuInstances, cpu.runtimes[index].instances) {
-                XCTAssertEqual(a.flags.contains(.active), e.active, "system \(index) instances")
-                XCTAssertEqual(a.state.y, e.active ? e.sourceSerial : a.state.y, "system \(index) instances")
+        let family = try Family(root: rocketTestSystem(), children: links)
+        try family.step(frames: 150, root: moving)
+        for index in 1..<family.runtimes.count {
+            let particles = family.particles(index)
+            XCTAssertGreaterThan(particles.count, 0, "system \(index)")
+            let instances = family.instances(index)
+            for particle in particles where !instances.isEmpty {
+                XCTAssertLessThan(particle.instance, instances.count, "system \(index)")
             }
         }
-        XCTAssertGreaterThan(cpu.runtimes[3].particles.count, 0)
-        XCTAssertGreaterThan(cpu.runtimes[4].particles.count, 0)
-        XCTAssertGreaterThan(cpu.runtimes[5].particles.count, 0)
     }
 
-    /// A family over the particle budget is thinned alike on both simulations: every system, the
-    /// event children's instances included, holds the scaled maximum and emits at the scaled rate.
-    func testABudgetThinsAFamilyTheSameOnTheGPU() throws {
+    /// A family over the particle budget is thinned: every system, the event children's instances
+    /// included, holds the scaled maximum and emits at the scaled rate.
+    func testABudgetThinsAFamily() throws {
         var trail = ParticleTestSystem()
         trail.emissionRate = 120
         trail.maximum = 60
@@ -307,30 +298,25 @@ final class ParticleChildrenTests: XCTestCase {
         root.maximum = 200
         let authored = try Family(root: root, children: links).runtimes.reduce(0) { $0 + ParticleBudget.capacity(of: $1.configuration) }
         let budget = authored / 4
-        let cpu = try Family(root: root, children: links, budget: budget)
-        let gpu = try Family(root: root, children: links, budget: budget)
-        XCTAssertEqual(cpu.runtimes.map(\.configuration.budgetScale), Array(repeating: Float(budget) / Float(authored), count: 3))
+        let family = try Family(root: root, children: links, budget: budget)
+        XCTAssertEqual(family.runtimes.map(\.configuration.budgetScale), Array(repeating: Float(budget) / Float(authored), count: 3))
         let moving: (Int) -> SceneAffineTransform = { frame in
             SceneAffineTransform(SceneLocalTransform(origin: SIMD2(400 + Float(frame) * 2, 300), scale: SIMD2(1, 1), angle: 0))
         }
-        cpu.stepCPU(frames: 150, root: moving)
-        try gpu.stepGPU(frames: 150, root: moving)
+        try family.step(frames: 150, root: moving)
         var total = 0
-        for index in cpu.runtimes.indices {
-            let expected = cpu.runtimes[index].particles
-            let actual = gpu.simulator.snapshot(gpu.runtimes[index], queue: gpu.queue)
-            XCTAssertEqual(actual.count, expected.count, "system \(index)")
-            XCTAssertEqual(actual.map(\.identity.x), expected.map(\.serial), "system \(index): the same particles")
-            XCTAssertGreaterThan(expected.count, 0, "system \(index) still draws")
-            total += expected.count
+        for index in family.runtimes.indices {
+            let count = family.particles(index).count
+            XCTAssertGreaterThan(count, 0, "system \(index) still draws")
+            total += count
         }
         // Each system's maximum is rounded, instance by instance.
-        XCTAssertLessThanOrEqual(total, budget + cpu.runtimes.count + 6)
+        XCTAssertLessThanOrEqual(total, budget + family.runtimes.count + 6)
     }
 
     /// Each instance keeps its own emitter clock: a periodic follow child, and under it a delayed,
     /// time-limited static child that emits 8 a period (WE's thunderbolt beam).
-    func testTimedChildInstancesRunTheSameOnTheGPU() throws {
+    func testTimedChildInstancesKeepTheirOwnClocks() throws {
         var trail = ParticleTestSystem()
         trail.emissionRate = 60
         trail.maximum = 30
@@ -354,18 +340,9 @@ final class ParticleChildrenTests: XCTestCase {
             (trail.link(.follow, instances: 6, probability: 1), 0),
             (beam.link(.static, instances: 6, probability: 1, instanced: true), 1),
         ]
-        let cpu = try Family(root: rocketTestSystem(), children: links)
-        let gpu = try Family(root: rocketTestSystem(), children: links)
-        cpu.stepCPU(frames: 90, root: translation(SIMD2(500, 300)))
-        try gpu.stepGPU(frames: 90, root: translation(SIMD2(500, 300)))
-        for index in cpu.runtimes.indices {
-            let expected = cpu.runtimes[index].particles
-            let actual = gpu.simulator.snapshot(gpu.runtimes[index], queue: gpu.queue)
-            XCTAssertEqual(actual.map(\.identity.x), expected.map(\.serial), "system \(index): the same particles")
-            let instances: [Int] = actual.map { Int($0.trail.z) }
-            XCTAssertEqual(instances, expected.map(\.instance), "system \(index)")
-        }
-        let beams = cpu.runtimes[2].particles
+        let family = try Family(root: rocketTestSystem(), children: links)
+        try family.step(frames: 90, root: translation(SIMD2(500, 300)))
+        let beams = family.particles(2)
         XCTAssertGreaterThan(beams.count, 0)
         for slot in 0..<6 {
             XCTAssertLessThanOrEqual(beams.filter { $0.instance == slot }.count, 8, "8 a period, one period")
@@ -374,7 +351,7 @@ final class ParticleChildrenTests: XCTestCase {
 
     /// Each instance runs every emitter of the child, each on its own clock (WE's dripping-water
     /// droplets have two).
-    func testChildInstancesRunEveryEmitterTheSameOnTheGPU() throws {
+    func testChildInstancesRunEveryEmitter() throws {
         var drops = ParticleTestSystem()
         drops.emissionRate = 40
         drops.maximum = 40
@@ -391,119 +368,58 @@ final class ParticleChildrenTests: XCTestCase {
         sequence.sequenceCount = 8
         drops.initializers = [sequence]
         let links: [(ParticleTestSystem.Linked, Int)] = [(drops.link(.follow, instances: 6, probability: 1), 0)]
-        let cpu = try Family(root: rocketTestSystem(), children: links)
-        let gpu = try Family(root: rocketTestSystem(), children: links)
-        cpu.stepCPU(frames: 90, root: translation(SIMD2(500, 300)))
-        try gpu.stepGPU(frames: 90, root: translation(SIMD2(500, 300)))
-        let expected = cpu.runtimes[1].particles
-        let actual = gpu.simulator.snapshot(gpu.runtimes[1], queue: gpu.queue)
-        XCTAssertGreaterThan(expected.count, 20)
-        XCTAssertEqual(actual.map(\.identity.x), expected.map(\.serial), "the same particles")
-        XCTAssertEqual(actual.map { Int($0.trail.z) }, expected.map(\.instance))
-        for (a, e) in zip(actual, expected) {
-            XCTAssertLessThan(simd_distance(SIMD2(a.positionVelocity.x, a.positionVelocity.y), e.position), 0.05)
-        }
-    }
-
-    /// Each instance of a child whose remaps write control points writes its own.
-    func testChildInstancesWriteTheirOwnControlPointsTheSameOnTheGPU() throws {
-        var drops = ParticleTestSystem()
-        drops.emissionRate = 60
-        drops.maximum = 30
-        drops.lifetime = 0.3...0.6
-        drops.controlPoints[1] = ParticleTestSystem.point(SIMD2(20, 0))
-        var write = ParticleOperator(.remapValue, controlPoints: 1 << 8, b: SIMD4(1, 1, 1, 0), d: SIMD4(3, -2, 0, 0),
-                                     e: SIMD4(2, 0, 0, 1))
-        write.record.header.w = ParticleProgramCPU.RemapCode.pack(operation: 2, input: 0, output: 16, inputComponent: 0,
-                                                                    outputComponent: 0, transform: 0, octaves: 3)
-        drops.operators = [write, ParticleOperator(.controlPointAttract, controlPoints: 1, b: SIMD4(200, 300, 5, 0))]
-        let links: [(ParticleTestSystem.Linked, Int)] = [(drops.link(.follow, instances: 5, probability: 1), 0)]
-        let cpu = try Family(root: rocketTestSystem(), children: links)
-        let gpu = try Family(root: rocketTestSystem(), children: links)
-        cpu.stepCPU(frames: 60, root: translation(SIMD2(500, 300)))
-        try gpu.stepGPU(frames: 60, root: translation(SIMD2(500, 300)))
-        let expected = cpu.runtimes[1].particles
-        let actual = gpu.simulator.snapshot(gpu.runtimes[1], queue: gpu.queue)
-        XCTAssertGreaterThan(expected.count, 20)
-        XCTAssertEqual(actual.map(\.identity.x), expected.map(\.serial), "the same particles")
-        for (a, e) in zip(actual, expected) {
-            XCTAssertLessThan(simd_distance(SIMD2(a.positionVelocity.x, a.positionVelocity.y), e.position), 0.05)
-        }
+        let family = try Family(root: rocketTestSystem(), children: links)
+        try family.step(frames: 90, root: translation(SIMD2(500, 300)))
+        let particles = family.particles(1)
+        XCTAssertGreaterThan(particles.count, 20)
+        for particle in particles { XCTAssertLessThan(particle.instance, 6) }
     }
 
     /// WE's thunderbolt: each spawner instance flies one particle off the bolt, and a static child of
     /// it draws a beam from the instance to that particle through its control point 1 (link flag 1,
     /// start index 1).
     func testLinkedControlPointsFollowTheParentsParticles() throws {
-        let links = thunderboltLinks()
-        let cpu = try Family(root: rocketTestSystem(), children: links)
-        let gpu = try Family(root: rocketTestSystem(), children: links)
+        let family = try Family(root: rocketTestSystem(), children: thunderboltLinks())
+        var checked = 0
         for _ in 0..<40 {
-            cpu.stepCPU(frames: 1, root: translation(SIMD2(500, 300)))
+            try family.step(frames: 1, root: translation(SIMD2(500, 300)))
             // Beam particles spawned this step lie between their instance and its spawner's particle.
-            let beams = cpu.runtimes[2]
-            for particle in beams.particles where particle.age <= 1 / 60 + 1e-4 {
-                let start = beams.instances[particle.instance].translation
-                let points = ParticleControlPointLink.positions(for: beams, slot: particle.instance)
-                    .map { (p: SIMD3<Float>) -> SIMD2<Float> in SIMD2(p.x, p.y) }
-                let end: SIMD2<Float> = try XCTUnwrap(points.first, "the spawner instance has its particle")
-                XCTAssertEqual(points, cpu.runtimes[1].particles.filter { $0.instance == particle.instance }.map(\.position))
-                let t = simd_dot(particle.position - start, end - start) / max(simd_length_squared(end - start), 1e-6)
-                let closest = start + (end - start) * min(max(t, 0), 1)
-                XCTAssertLessThan(simd_distance(particle.position, closest), 1e-2)
+            let beams = family.particles(2), instances = family.instances(2), spawners = family.particles(1)
+            for particle in beams where particle.age <= 1 / 60 + 1e-4 {
+                let start = SIMD2<Float>(instances[particle.instance].place.x, instances[particle.instance].place.y)
+                let ends: [SIMD2<Float>] = spawners.filter { $0.instance == particle.instance }.map(\.position)
+                let end = try XCTUnwrap(ends.first, "the spawner instance has its particle")
+                let t: Float = simd_dot(particle.position - start, end - start) / max(simd_length_squared(end - start), 1e-6)
+                let closest: SIMD2<Float> = start + (end - start) * min(max(t, 0), 1)
+                XCTAssertLessThan(simd_distance(particle.position, closest), 0.05)
+                checked += 1
             }
         }
-        XCTAssertGreaterThan(cpu.runtimes[2].particles.count, 0)
-        try gpu.stepGPU(frames: 40, root: translation(SIMD2(500, 300)))
-        for index in cpu.runtimes.indices {
-            let expected = cpu.runtimes[index].particles
-            let actual = gpu.simulator.snapshot(gpu.runtimes[index], queue: gpu.queue)
-            XCTAssertEqual(actual.map(\.identity.x), expected.map(\.serial), "system \(index)")
-            for (a, e) in zip(actual, expected) {
-                XCTAssertLessThan(simd_distance(SIMD2(a.positionVelocity.x, a.positionVelocity.y), e.position), 0.05,
-                                  "system \(index)")
-            }
-        }
+        XCTAssertGreaterThan(family.particles(2).count, 0)
+        XCTAssertGreaterThan(checked, 0)
     }
 
-    /// An instanced rope draws one strand per instance: no segment joins two instances' particles,
-    /// on the CPU and the GPU.
+    /// An instanced rope draws one strand per instance: no segment joins two instances' particles.
     func testAnInstancedRopeDrawsOneStrandPerInstance() throws {
-        let links = thunderboltLinks()
-        let cpu = try Family(root: rocketTestSystem(), children: links)
-        let gpu = try Family(root: rocketTestSystem(), children: links)
-        cpu.stepCPU(frames: 40, root: translation(SIMD2(500, 300)))
-        try gpu.stepGPU(frames: 40, root: translation(SIMD2(500, 300)), kinds: [2: .rope])
-        let beams = cpu.runtimes[2]
-        let count = ParticleRecordWriter.recordCount(beams, format: .rope)
-        let pointer = UnsafeMutableRawPointer.allocate(byteCount: max(count, 1) * ParticleVertexFormat.rope.stride,
-                                                       alignment: 16)
-        defer { pointer.deallocate() }
-        ParticleRecordWriter.write(beams, format: .rope, count: count, into: pointer) { _ in 1 }
-        let expected = Array(UnsafeBufferPointer(start: pointer.bindMemory(to: ParticleRopeSegmentInstance.self,
-                                                                           capacity: count), count: count))
-        let strands = ParticleRopeStrands(beams.particles)
+        let family = try Family(root: rocketTestSystem(), children: thunderboltLinks())
+        try family.step(frames: 40, root: translation(SIMD2(500, 300)), kinds: [2: .rope])
+        let beams = family.particles(2)
+        let records = family.simulator.records(family.runtimes[2], as: ParticleRopeSegmentInstance.self,
+                                               queue: family.queue).records
+        XCTAssertGreaterThan(records.count, 0)
         var drawn = 0
-        for (index, record) in expected.enumerated() {
-            guard let next = strands.next[index] else {
-                XCTAssertEqual(record.start.w, 0, "the end of a strand joins nothing")
-                continue
-            }
+        for (index, record) in records.enumerated() where index < beams.count {
+            // The end of a strand joins nothing.
+            guard record.start.w != 0 else { continue }
             drawn += 1
-            XCTAssertEqual(beams.particles[index].instance, beams.particles[next].instance)
-            XCTAssertEqual(SIMD2(record.end.x, record.end.y), beams.particles[next].position)
-            XCTAssertEqual(Int(record.end.w), beams.particles.filter { $0.instance == beams.particles[index].instance }.count)
+            let end = SIMD2<Float>(record.end.x, record.end.y)
+            XCTAssertLessThan(simd_distance(SIMD2<Float>(record.start.x, record.start.y), beams[index].position), 1e-4)
+            let next = try XCTUnwrap(beams.firstIndex { simd_distance($0.position, end) < 1e-4 })
+            XCTAssertEqual(beams[index].instance, beams[next].instance)
+            XCTAssertEqual(Int(record.end.w), beams.filter { $0.instance == beams[index].instance }.count)
         }
         XCTAssertGreaterThan(drawn, 0)
-        XCTAssertLessThan(drawn, count, "more than one strand")
-        let actual = gpu.simulator.records(gpu.runtimes[2], as: ParticleRopeSegmentInstance.self, queue: gpu.queue).records
-        XCTAssertEqual(actual.count, expected.count)
-        for (a, e) in zip(actual, expected) {
-            XCTAssertLessThan(simd_distance(a.start, e.start), 0.05)
-            XCTAssertLessThan(simd_distance(a.end, e.end), 0.05)
-            XCTAssertLessThan(simd_distance(a.previous, e.previous), 0.05)
-            XCTAssertLessThan(simd_distance(a.next, e.next), 0.05)
-        }
+        XCTAssertLessThan(drawn, records.count, "more than one strand")
     }
 
     /// WE's thunderbolt children: a follow spawner flying one particle off each rocket, and under it
@@ -533,19 +449,13 @@ final class ParticleChildrenTests: XCTestCase {
         return [(spawner.link(.follow, instances: 4, probability: 1), 0), (beamLink, 1)]
     }
 
-    func testTheFixtureFamilyRunsTheSameOnTheGPU() throws {
+    func testTheFixtureFamilyRuns() throws {
         _ = try Fixtures.assets()
         let systems = try content().particleSystems
-        let cpu = try Family(systems)
-        let gpu = try Family(systems)
-        cpu.stepCPU(frames: 120, root: { _ in systems[0].authoredWorld })
-        try gpu.stepGPU(frames: 120, root: { _ in systems[0].authoredWorld })
-        for index in cpu.runtimes.indices {
-            let actual = gpu.simulator.snapshot(gpu.runtimes[index], queue: gpu.queue)
-            XCTAssertEqual(actual.map(\.identity.x), cpu.runtimes[index].particles.map(\.serial), "system \(index)")
-        }
-        XCTAssertGreaterThan(cpu.runtimes[4].particles.count, 0, "rockets burst")
-        XCTAssertGreaterThan(cpu.runtimes[5].particles.count, 0, "bursts glow")
+        let family = try Family(systems)
+        try family.step(frames: 120, root: { _ in systems[0].authoredWorld })
+        XCTAssertGreaterThan(family.particles(4).count, 0, "rockets burst")
+        XCTAssertGreaterThan(family.particles(5).count, 0, "bursts glow")
     }
 
     // MARK: - Helpers
@@ -617,15 +527,9 @@ private final class Family {
                                     emitter: runtime.configuration.link == nil ? root(frame) : nil)
     }
 
-    func stepCPU(frames: Int, root: (Int) -> SceneAffineTransform) {
-        for _ in 0..<frames {
-            for runtime in runtimes { ParticleCPUSimulation.step(runtime, inputs: inputs(runtime, root: root)) }
-            frame += 1
-        }
-    }
-
+    /// Steps the family `frames` times, one command buffer a frame, and waits for the last.
     /// `kinds`: what the step writes records for, by system (the built-in sprite otherwise).
-    func stepGPU(frames: Int, root: (Int) -> SceneAffineTransform, kinds: [Int: ParticleGPUDrawKind] = [:]) throws {
+    func step(frames: Int, root: (Int) -> SceneAffineTransform, kinds: [Int: ParticleGPUDrawKind] = [:]) throws {
         var last: MTLCommandBuffer?
         for _ in 0..<frames {
             let requests = runtimes.enumerated().map { index, runtime in
@@ -640,5 +544,21 @@ private final class Family {
         }
         last?.waitUntilCompleted()
         XCTAssertNil(last?.error)
+    }
+
+    /// System `index`'s live particles after the last step.
+    func particles(_ index: Int) -> [ParticleGPUState] {
+        simulator.snapshot(runtimes[index], queue: queue)
+    }
+
+    /// Instanced system `index`'s instances after the last step.
+    func instances(_ index: Int) -> [ParticleGPUInstance] {
+        simulator.instances(runtimes[index], queue: queue)
+    }
+
+    /// How many particles system `index` has spawned so far (the next serial).
+    func spawned(_ index: Int) -> UInt32 {
+        guard let gpu = runtimes[index].gpu else { return 0 }
+        return gpu.control.contents().load(fromByteOffset: ParticleGPUSystem.Control.serial * 4, as: UInt32.self)
     }
 }

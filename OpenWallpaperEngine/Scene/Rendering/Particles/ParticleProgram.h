@@ -4,8 +4,8 @@
 #include "ParticleShared.h"
 #include "ParticleNoise.h"
 
-// The particle program on the GPU: `ParticleProgramCPU` record for record (the initializer
-// switch and operator VM of `wallpaper64.exe`, 0x14023b5c0 / 0x14023fbc0). Change both together.
+// The particle program on the GPU, record for record as WE runs it (the initializer switch and
+// operator VM of `wallpaper64.exe`, 0x14023b5c0 / 0x14023fbc0).
 
 // Operator kinds (`ParticleOperatorKind`).
 constant uint oMovement = 1, oAngularMovement = 2, oAlphaFade = 3, oSizeChange = 4, oColorChange = 5;
@@ -20,7 +20,10 @@ constant uint iAlphaRandom = 6, iVelocityRandom = 7, iInheritControlPointVelocit
 constant uint iRotationRandom = 10, iPositionOffsetRandom = 11, iAngularVelocityRandom = 12;
 constant uint iSequenceAround = 13, iSequenceBetween = 14, iRemapInitialValue = 15, iInheritInitialValue = 16;
 
-/// `ParticleProgramState`.
+/// One particle as the program sees it: in the system's space (`ParticleFrameInputs.space`), y up,
+/// in 3D as WE simulates it (position and velocity x, y, z: `wallpaper64.exe` system+0x2b0…0x2d8).
+/// The system's space reaches the scene through a 2D transform of x and y; z is the depth along the
+/// system's z.
 struct ProgramState {
     float3 position, velocity, previous;
     float age, lifetime, size, baseSize, alpha, baseAlpha, rotation, angularVelocity;
@@ -29,7 +32,8 @@ struct ProgramState {
 };
 
 
-/// `ParticleProgramContext`.
+/// What a record reads beyond the particle: the step, times, control points and the particle's
+/// own random value.
 struct ProgramContext {
     float deltaTime, engineTime, systemTime, timeOfDay;
     float dragDeltaTime;
@@ -54,7 +58,7 @@ static float3 programPoint(thread const float3 *points, uint index) { return poi
 
 static float3x3 programAxes(thread const ProgramContext &c, uint index) { return c.axes[min(index, 7u)]; }
 
-/// `ParticleProgramCPU.turn`: a 2D linear map on x and y, z kept.
+/// A 2D linear map on x and y, z kept.
 static float3 turnXY(float2x2 linear, float3 v) { return float3(linear * v.xy, v.z); }
 
 /// A 3×3 inverse (the caller checks the determinant).
@@ -67,19 +71,19 @@ static float3x3 inverse3(float3x3 m) {
 
 static float shaped(float r, float exponent) { return exponent == 1 ? r : pow(r, exponent); }
 
-/// `ParticleProgramCPU.blendFactor`.
+/// The blend window's factor at the particle's life fraction (0x14022a530).
 static float blendFactor(float4 window, float t) {
     return saturateValue((t - window.x) * window.y) * saturateValue((window.z - t) * window.w);
 }
 
-/// `ParticleProgramCPU.progress`.
+/// `(t − start) / (end − start)` clamped to 0…1, a step at `start` when the two are equal.
 static float lifeStep(float t, float start, float end) {
     const float span = end - start;
     if (span == 0) return t >= start ? 1.0f : 0.0f;
     return saturateValue((t - start) / span);
 }
 
-/// `ParticleProgramCPU.hsvToRGB`.
+/// Hue in turns, saturation and value to RGB (0x1401b8c70).
 static float3 hsvToRGB(float h, float s, float v) {
     const float c = v * s;
     const float sector = fmod(h * 6, 6.0f);
@@ -96,7 +100,7 @@ static float3 hsvToRGB(float h, float s, float v) {
     return rgb + m;
 }
 
-/// `ParticleProgramCPU.rotate`.
+/// `v` turned by `angle` about `axis` (0x1401e2500).
 static float3 rotateAbout(float3 v, float3 axis, float angle) {
     const float axisLength = length(axis);
     if (!(axisLength > 1e-6f)) return v;
@@ -107,7 +111,9 @@ static float3 rotateAbout(float3 v, float3 axis, float angle) {
 
 // MARK: - Sequences
 
-/// `ParticleProgramCPU.sequencePosition`.
+/// Where the `index`-th spawn sits along a sequence of `step` (WE advances the position once per
+/// spawn, 0x14023c4cf / 0x14023ca93): `repeat` around a control point wraps with `fmod` (exactly 1
+/// stays 1), between two restarts at 0, `mirror` walks back and forth.
 static float sequencePosition(uint index, float step, bool mirror, bool between) {
     const float travelled = float(index) * step;
     if (mirror) return 1 - abs(fmod(travelled, 2.0f) - 1);
@@ -125,7 +131,8 @@ static uint sequenceIndex(ProgramOp record, thread const ProgramContext &context
     return (record.header.y & restart) ? context.sequenceRestartIndex : context.sequenceIndex;
 }
 
-/// `ParticleProgramCPU.sequenceBasis`.
+/// `axis` normalised (z when it is zero) and two unit vectors perpendicular to it (0x1401c19e0):
+/// `axis × z` and `axis × first`, or x and y for an axis along z.
 static void sequenceBasis(float3 axis, thread float3 &unit, thread float3 &first, thread float3 &second) {
     if (all(axis == float3(0))) { unit = float3(0, 0, 1); first = float3(1, 0, 0); second = float3(0, 1, 0); return; }
     unit = normalize(axis);
@@ -136,7 +143,7 @@ static void sequenceBasis(float3 axis, thread float3 &unit, thread float3 &first
 
 // MARK: - Remap
 
-/// `ParticleProgramCPU.remapInput`: the initializer's control point inputs zero the point first.
+/// The initializer's control point inputs zero the point first.
 static float3 remapInput(uint input, ProgramOp record, thread const ProgramState &p, thread ProgramContext &c,
                          bool initializer) {
     const uint pointIndex = min(record.header.z & 0xFFu, 7u);
@@ -177,7 +184,7 @@ static float3 remapInput(uint input, ProgramOp record, thread const ProgramState
     }
 }
 
-/// `ParticleProgramCPU.reduce`.
+/// A vector input reduced to one component (splatted), or kept whole.
 static float3 remapReduce(float3 v, uint component) {
     switch (component) {
     case 1: return float3(v.x);
@@ -191,7 +198,9 @@ static float3 remapReduce(float3 v, uint component) {
     }
 }
 
-/// `ParticleProgramCPU.transform`.
+/// The transform, per component: sine eases 0…1 (`0.5 − 0.5·cos(π·s·v)`), the waves repeat every
+/// 1/s, and the noises are FastNoise2's, seeded by the particle's random value (each component its
+/// own seed, 0x14024562a).
 static float3 remapTransform(float3 v, uint code, float scale, float random) {
     const int seed = as_type<int>(random);
     const int seeds[3] = { seed, seed ^ 188294317, seed ^ 1228574339 };
@@ -234,7 +243,9 @@ static float3 remapApplyVector(uint operation, uint component, float3 old, float
     return result;
 }
 
-/// `ParticleProgramCPU.remap`.
+/// `remapvalue` (operator, `wallpaper64.exe` 0x140244874) and `remapinitialvalue` (initializer,
+/// 0x14023ce53): reads an input, maps it from the input range through a transform to the output
+/// range, and sets, multiplies, adds to or subtracts from an output (`ParticleProgramEncoding.RemapCode`).
 static void remap(ProgramOp record, thread ProgramState &p, thread ProgramContext &c, bool initializer, float blend) {
     const uint code = record.header.w;
     const uint flags = record.header.y;
@@ -310,7 +321,8 @@ static void remap(ProgramOp record, thread ProgramState &p, thread ProgramContex
 
 // MARK: - Inheritance
 
-/// `ParticleProgramCPU.inheritValue` / `inheritInitialValue`.
+/// `inheritinitialvaluefromevent` (once, at spawn) and `inheritvaluefromevent` (0x140249c30, every
+/// step): the event's parent particle's values.
 static void inheritFromSource(uint verbs, thread ProgramState &p, thread const ProgramContext &c, bool initializer) {
     if (!c.hasSource) return;
     const ParticleInstanceState source = c.source;
@@ -335,7 +347,7 @@ static void inheritFromSource(uint verbs, thread ProgramState &p, thread const P
 
 // MARK: - Emitter and initializers
 
-/// `ParticleProgramCPU.signed`.
+/// `sign`: forces each axis with a non-zero sign to that sign.
 static float3 signedVector(float3 v, float3 sign) {
     float3 result = v;
     for (int i = 0; i < 3; ++i) {
@@ -344,7 +356,10 @@ static float3 signedVector(float3 v, float3 sign) {
     return result;
 }
 
-/// `ParticleProgramCPU.emit`.
+/// The emitter's placement and launch velocity for spawn `serial` (0x140237c14 sphere, 0x14023847f
+/// box). The emitter sits on its control point; the spawn offset and the fallback direction turn
+/// with the point's orientation (`emitterAxes`) when the system is `worldspace` or the point isn't
+/// 0 (0x140237ce3, applied at 0x140237f24 and 0x140238096).
 static void emitParticle(EmitterParameters e, thread const ProgramContext &c, thread float3 &position,
                          thread float3 &velocity) {
     const uint seed = c.seed, serial = c.serial;
@@ -384,7 +399,7 @@ static void emitParticle(EmitterParameters e, thread const ProgramContext &c, th
     velocity = headingLength > 0 ? heading / headingLength * speed : float3(0);
 }
 
-/// `ParticleProgramCPU.runInitializers`.
+/// Runs `initializers` on a spawned particle, in order.
 static void runInitializers(constant ProgramOp *records, uint count, thread ProgramState &p, thread ProgramContext &c) {
     for (uint index = 0; index < count; ++index) {
         const ProgramOp record = records[index];
@@ -556,11 +571,11 @@ static float oscillation(ProgramOp record, thread const ProgramState &p, thread 
     return record.c.x + (wave + 1) * 0.5f * r * (record.c.y - record.c.x);
 }
 
-/// `ParticleProgramCPU.collide`: `collisions[first…]`, carried by `shift`, in the scene.
+/// `collisions[first…]`, carried by `shift`, in the scene.
 static bool programCollide(ProgramOp record, thread ProgramState &p, thread const ProgramContext &c,
                            constant CollisionPlacement *collisions, uint collisionCount, float2 shift);
 
-/// `ParticleProgramCPU.beginRun`: the start of a VM run.
+/// The start of a VM run.
 static void beginRun(thread ProgramState &p) {
     p.size = p.baseSize;
     p.alpha = p.baseAlpha;
@@ -584,7 +599,7 @@ struct BoidsList {
     uint count;
 };
 
-/// `ParticleProgramCPU.runOperator`: one record. `neighbors` are the step's particles (scene space)
+/// One record. `neighbors` are the step's particles (scene space)
 /// for boids; true when it deletes the particle.
 static bool runOperator(ProgramOp record, thread ProgramState &p, thread ProgramContext &c,
                         constant CollisionPlacement *collisions, uint collisionCount, float2 shift,
@@ -838,7 +853,7 @@ static bool runOperator(ProgramOp record, thread ProgramState &p, thread Program
     return dies;
 }
 
-/// `ParticleProgramCPU.runOperators`: one VM run of every record, in order.
+/// One VM run of every record, in order.
 static bool runOperators(constant ProgramOp *records, uint count, thread ProgramState &p, thread ProgramContext &c,
                          constant CollisionPlacement *collisions, uint collisionCount, float2 shift,
                          device const ParticleState *neighbors, uint neighborCount, uint self, uint liveCount,
@@ -856,7 +871,7 @@ static bool runOperators(constant ProgramOp *records, uint count, thread Program
 
 // MARK: - Control point writes
 
-/// A slot's control points while a step writes them (`ParticleCPUSimulation+ControlPointWrites`):
+/// A slot's control points while a step writes them:
 /// the step's, the current group's start, the last step's result and whether there is one.
 struct PointState {
     float4 points[8];        // xyz

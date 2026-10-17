@@ -3,8 +3,8 @@ import Metal
 @testable import OpenWallpaperEngine
 
 /// Emitter `delay`, `duration`, random periodic emission and "limit to one per frame"
-/// (`ParticleEmitterTiming`), on the CPU; `ParticleSimulationParityTests` and
-/// `ParticleChildrenTests` run them against the GPU.
+/// (`ParticleEmitterTiming`): the emitter clock, and the counts a GPU-simulated system holds;
+/// `ParticleChildrenTests` covers them further.
 final class ParticleEmitterTimingTests: XCTestCase {
     /// Exact in binary, so the phase boundaries fall on whole steps.
     private static let step: Float = 1 / 64
@@ -126,9 +126,9 @@ final class ParticleEmitterTimingTests: XCTestCase {
                           ParticleEmitterClock.phaseLength(0, timing: timing, seed: 7, key: 2), "instances differ")
     }
 
-    // MARK: - Emission on the CPU
+    // MARK: - Emission on the GPU
 
-    func testAPeriodEmitsNoMoreThanItsLimit() {
+    func testAPeriodEmitsNoMoreThanItsLimit() throws {
         var system = ParticleTestSystem()
         system.emissionRate = 100
         system.maximum = 100
@@ -139,30 +139,30 @@ final class ParticleEmitterTimingTests: XCTestCase {
         system.emitterTiming.periodDelay = 1...1
         system.emitterTiming.maximumPerPeriod = 32
         let runtime = ParticleSystemRuntime(texture: texture(), configuration: system.configuration, seed: 3)
-        let counts = stepCPU(runtime, frames: 150)
+        let counts = try stepGPU(runtime, frames: 150)
         XCTAssertEqual(counts[63], 34, "the burst and 32 from the rate in the first second")
         XCTAssertEqual(counts[127], 34, "then nothing while paused")
         XCTAssertEqual(counts[149], 68, "a new period bursts and emits its 32 again")
     }
 
-    func testLimitToOnePerFrame() {
+    func testLimitToOnePerFrame() throws {
         var system = ParticleTestSystem()
         system.emissionRate = 600
         system.lifetime = 10...10
         system.emitterTiming.onePerFrame = true
         let runtime = ParticleSystemRuntime(texture: texture(), configuration: system.configuration, seed: 3)
-        XCTAssertEqual(stepCPU(runtime, frames: 30).last, 30, "one a step, however high the rate")
+        XCTAssertEqual(try stepGPU(runtime, frames: 30).last, 30, "one a step, however high the rate")
         XCTAssertLessThan(runtime.emissionRemainder, 1, "the excess isn't carried")
     }
 
-    func testDelayedEmitterStartsWithItsBurst() {
+    func testDelayedEmitterStartsWithItsBurst() throws {
         var system = ParticleTestSystem()
         system.emissionRate = 0
         system.instantaneous = 5
         system.lifetime = 10...10
         system.emitterTiming.delay = 0.5
         let runtime = ParticleSystemRuntime(texture: texture(), configuration: system.configuration, seed: 3)
-        let counts = stepCPU(runtime, frames: 40)
+        let counts = try stepGPU(runtime, frames: 40)
         XCTAssertEqual(counts[30], 0)
         XCTAssertEqual(counts[31], 5)
         XCTAssertEqual(counts[39], 5)
@@ -179,11 +179,12 @@ final class ParticleEmitterTimingTests: XCTestCase {
         (0..<frames).map { _ in clock.advance(Self.step, timing: timing, seed: 1, key: 0) }
     }
 
-    private func stepCPU(_ runtime: ParticleSystemRuntime, frames: Int) -> [Int] {
-        (0..<frames).map { _ in
-            ParticleCPUSimulation.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: Self.step,
-                                                                                    cursor: .zero))
-            return runtime.particles.count
+    /// The live particles after each of `frames` GPU steps.
+    private func stepGPU(_ runtime: ParticleSystemRuntime, frames: Int) throws -> [Int] {
+        let gpu = try ParticleGPUStepper()
+        return (0..<frames).map { _ in
+            gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: Self.step, cursor: .zero))
+            return gpu.particles(runtime).count
         }
     }
 

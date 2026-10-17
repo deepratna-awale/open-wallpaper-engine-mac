@@ -12,6 +12,7 @@ final class ParticleMaterialPerformanceTests: XCTestCase {
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let queue = try XCTUnwrap(device.makeCommandQueue())
         let renderer = try XCTUnwrap(ParticleMaterialRenderer(device: device))
+        let simulator = try ParticleGPUSimulator(device: device)
         let roots = [Fixtures.url("Particles"), ShaderVariantTests.weAssets]
         let builder = ParticleMaterialPlanBuilder(
             translator: ShaderVariantTranslator(compiler: InProcessShaderCompiler(), cacheDirectory: nil),
@@ -26,19 +27,29 @@ final class ParticleMaterialPerformanceTests: XCTestCase {
             descriptor.storageMode = .private
             return descriptor
         }()))
+        let sceneSize = SIMD2<Float>(1920, 1080)
 
-        // 200 trails of 10 segments: 2 000 segments across the scene.
-        let particles: [Particle] = (0..<200).map { (index: Int) -> Particle in
-            let x: Float = Float(index % 20) * 96 + 48
-            let y: Float = Float(index / 20) * 108 + 54
-            let history: [SIMD2<Float>] = (1...10).map { (step: Int) -> SIMD2<Float> in
-                let offset = Float(step)
-                return SIMD2<Float>(x - offset * 8, y + Float(step % 2) * 6)
-            }
-            return Particle(position: SIMD2(x, y), velocity: .zero, age: 0, lifetime: 10, size: 6, baseSize: 6,
-                            alpha: 1, baseAlpha: 1, rotation: 0, angularVelocity: 0, color: SIMD4(repeating: 1),
-                            baseColor: SIMD4(repeating: 1), spriteFrame: 0, history: history, historyStart: 0)
-        }
+        // 200 trails of 10 segments: 2 000 segments across the scene, from particles moving 8 units
+        // a sample (80 a second, a sample every tenth of a second).
+        var trails = ParticleTestSystem()
+        trails.origin = sceneSize / 2
+        trails.emitterName = "boxrandom"
+        trails.spawnExtent = SIMD2(900, 500)
+        trails.emissionRate = 0
+        trails.instantaneous = 200
+        trails.maximum = 200
+        trails.lifetime = 10...10
+        trails.size = 12...12
+        trails.alpha = 1...1
+        trails.minimumVelocity = SIMD2(80, 0)
+        trails.maximumVelocity = SIMD2(80, 0)
+        trails.minimumColor = SIMD4(repeating: 1)
+        trails.maximumColor = SIMD4(repeating: 1)
+        trails.rotation = 0...0
+        trails.angularVelocity = 0...0
+        trails.rendererName = "ropetrail"
+        trails.trailLength = 1
+        trails.trailSegments = 10
         var report: [String] = []
         for subdivision in [0, 4, 8] {
             let rendererJSON = #"{"name":"ropetrail","subdivision":\#(subdivision)}"#
@@ -50,14 +61,26 @@ final class ParticleMaterialPerformanceTests: XCTestCase {
                                             blending: built.blending, stages: stages, trailLengths: built.trailLengths,
                                             spriteSheet: nil)
             XCTAssertTrue(renderer.waitUntilCompiled(plan, pixelFormat: .bgra8Unorm))
-            let system = ParticleSystemRuntime(texture: texture,
-                                               configuration: ParticleMaterialRenderTests.configuration(plan: plan))
-            system.particles = particles
-            XCTAssertEqual(ParticleRecordWriter.recordCount(system, format: .rope), 2_000)
+            trails.ropeSubdivision = subdivision
+            trails.material = plan
+            let system = ParticleSystemRuntime(texture: texture, configuration: trails.configuration, seed: 1)
+            // A second and a half fills every trail's history.
+            for _ in 0..<90 {
+                let buffer = try XCTUnwrap(queue.makeCommandBuffer())
+                XCTAssertTrue(ParticleMaterialRenderTests.step(system, renderer: renderer, simulator: simulator,
+                                                               pixelFormat: .bgra8Unorm, sceneSize: sceneSize, commandBuffer: buffer))
+                buffer.commit()
+                buffer.waitUntilCompleted()
+            }
+            XCTAssertEqual(simulator.records(system, as: ParticleRopeSegmentInstance.self, queue: queue).records.count, 2_000)
 
             var gpu: [Double] = []
             for frame in 0..<25 {
-                XCTAssertTrue(renderer.prepare(system, pixelFormat: .bgra8Unorm, opacity: { _ in 1 }))
+                // The step in a command buffer of its own: the timing is the draw's.
+                let step = try XCTUnwrap(queue.makeCommandBuffer())
+                XCTAssertTrue(ParticleMaterialRenderTests.step(system, renderer: renderer, simulator: simulator,
+                                                               pixelFormat: .bgra8Unorm, sceneSize: sceneSize, commandBuffer: step))
+                step.commit()
                 let pass = MTLRenderPassDescriptor()
                 pass.colorAttachments[0].texture = target
                 pass.colorAttachments[0].loadAction = .clear

@@ -1,8 +1,8 @@
 #include "ParticleShared.h"
 
 // The GPU step's last stage: record counts, indirect draw arguments and the records a system is
-// drawn from, for WE's particle materials and for the renderer's built-in draw
-// (`ParticleRecordWriter` on the CPU). Run by `ParticleGPUSimulator` after the step.
+// drawn from, for WE's particle materials and for the renderer's built-in draw. Run by
+// `ParticleGPUSimulator` after the step.
 
 // MARK: - Draw
 
@@ -51,7 +51,7 @@ kernel void particleFollowControl(device const uint *simulation [[buffer(0)]],
     if (gid < cMaterialDraw) control[gid] = simulation[gid];
 }
 
-/// `ParticleRecordWriter.writeSprites`: one particle's record.
+/// One particle's record.
 static SpriteRecord spriteRecord(ParticleState particle, constant ParticleParameters &p, constant ParticleFrame &f) {
     SpriteRecord record;
     record.position = float4(particle.positionVelocity.xy, particle.depth.x, 0);
@@ -63,7 +63,7 @@ static SpriteRecord spriteRecord(ParticleState particle, constant ParticleParame
     return record;
 }
 
-/// `ParticleRecordWriter.writeSprites`.
+/// A sprite record for every live particle.
 kernel void particleWriteSprites(device const ParticleState *particles [[buffer(0)]],
                                  device SpriteRecord *records [[buffer(1)]],
                                  device const uint *control [[buffer(2)]],
@@ -74,8 +74,8 @@ kernel void particleWriteSprites(device const ParticleState *particles [[buffer(
     records[gid] = spriteRecord(particles[gid], p, f);
 }
 
-/// `ParticleRopeStrands` for an instanced system, in O(n): a stable counting sort of the particle
-/// indices by instance. `order` holds each instance's first place (`slots` words), its length
+/// A rope's strands (one per instance) for an instanced system, in O(n): a stable counting sort of
+/// the particle indices by instance. `order` holds each instance's first place (`slots` words), its length
 /// (`slots`), the sorted indices (`capacity`), then each particle's place in its strand. One thread,
 /// since the sort must keep spawn order within an instance.
 kernel void particleRopeOrder(device const ParticleState *particles [[buffer(0)]],
@@ -107,7 +107,7 @@ kernel void particleRopeOrder(device const ParticleState *particles [[buffer(0)]
     }
 }
 
-/// `ParticleRopeStrands` for particle `gid`: the next and previous particle of its strand (`count`
+/// The rope strand of particle `gid`: the next and previous particle of its strand (`count`
 /// for none), its place on the strand, the strand's length and its oldest particle. A system without
 /// instances is one strand; an instanced one has one per instance, read from `particleRopeOrder`'s
 /// `order` (`sizes`: slots, capacity).
@@ -154,7 +154,7 @@ static float2 ropeLayout(uint points, float oldestAge, uint died, constant Parti
     return float2(count * f.rope.w, shift);
 }
 
-/// `ParticleRecordWriter.writeRope`: one strand through the system (one per instance), oldest
+/// One strand through the system (one per instance), oldest
 /// particle first.
 kernel void particleWriteRope(device const ParticleState *particles [[buffer(0)]],
                               device RopeRecord *records [[buffer(1)]],
@@ -195,7 +195,9 @@ static float2 trailPointNewestFirst(ParticleState particle, device const float2 
     return own[(newest - (int(index) - 1) + count * 2) % count];
 }
 
-/// `ParticleRecordWriter.writeRopeTrails`.
+/// `ropetrail`: one strand per particle through its history, newest point first. Each segment holds
+/// the strand's sample count over uvscale (WE's `in_ParticleTrailLength`, 0x1402334be…0x1402334d8),
+/// or its own index when the trail scrolls, and its index (`in_ParticleTrailPosition`).
 kernel void particleWriteRopeTrails(device const ParticleState *particles [[buffer(0)]],
                                     device RopeRecord *records [[buffer(1)]],
                                     device const float2 *history [[buffer(2)]],

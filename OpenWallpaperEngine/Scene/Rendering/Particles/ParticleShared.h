@@ -95,7 +95,7 @@ struct CollisionPlacement {
     float4 response; // bounce coefficient, behaviour, stops rotation, kind
 };
 
-/// One instance of an instanced child system (`ParticleGPUInstance`, `ParticleInstance`).
+/// One instance of an instanced child system (`ParticleGPUInstance`).
 struct ParticleInstanceState {
     float4 place;       // translation xy, previous translation xy
     float4 source;      // source velocity xy, size, rotation
@@ -213,7 +213,7 @@ constant uint sPeriodDuration = 9;
 constant uint sPeriodDelay = 10;
 constant uint sOperator = 11;
 
-/// `ParticleProgramCPU.initializerStream`.
+/// Initializer `index`'s random draw `k` (WE draws them one after another from its generator).
 static uint initializerStream(uint index, uint k) { return 64u + index * 16u + k; }
 
 static uint pcg(uint value) {
@@ -244,7 +244,7 @@ static float4 recordColor(ParticleState particle, constant ParticleParameters &p
     return float4(particle.color.xyz, particle.color.w * particleOpacity(particle, p, f));
 }
 
-/// `ParticleRecordWriter.spritePhase`.
+/// Where in its sprite sheet a particle is, 0...1; the shader takes the frame from `frac`.
 static float spritePhase(ParticleState particle, constant ParticleParameters &p) {
     const int frames = int(p.spriteSheet.x);
     if ((p.counts.y & kSpriteSheet) == 0 || frames <= 0) return 0;
@@ -346,7 +346,8 @@ static uint groupExclusiveScan(uint value, uint lid, uint lane, uint simdIndex, 
 
 // MARK: - Emission
 
-/// `ParticleEmitterClock.rateLimit`, with `~0u` for no limit.
+/// The most the rate may emit this step: one with `onePerFrame`, what is left of the period's
+/// limit after `emitted`; `~0u` for no limit.
 static uint rateLimit(EmitterStep step, uint emitted) {
     const uint periodLimit = step.control.y;
     uint limit = periodLimit == 0xFFFFFFFFu ? 0xFFFFFFFFu : (periodLimit > emitted ? periodLimit - emitted : 0u);
@@ -354,7 +355,7 @@ static uint rateLimit(EmitterStep step, uint emitted) {
     return limit;
 }
 
-/// `ParticleCPUSimulation.emission`: the burst and the rate's spawns (at most `limit`), updating
+/// The burst and the rate's spawns (at most `limit`), updating
 /// the carry-over as WE does (the burst comes out of it too; a full system takes nothing from the
 /// rate).
 static uint2 emission(int live, int maximum, float rate, float deltaTime, thread float &carry, int burst, uint limit) {

@@ -2,9 +2,8 @@ import XCTest
 import Metal
 @testable import OpenWallpaperEngine
 
-/// Per-frame cost of the particle simulation at 1k, 10k and 100k live particles: the CPU step
-/// plus writing its records, against the GPU step's CPU encode time and GPU time. Prints the
-/// medians; the bounds only catch a pathological slowdown.
+/// Per-frame cost of the GPU particle simulation at 1k, 10k and 100k live particles: the step's
+/// CPU encode time and GPU time. Prints the medians; the bounds only catch a pathological slowdown.
 final class ParticleSimulationPerformanceTests: XCTestCase {
     private var device: MTLDevice!
     private var queue: MTLCommandQueue!
@@ -93,20 +92,9 @@ final class ParticleSimulationPerformanceTests: XCTestCase {
     }
 
     private func measure(_ label: String, _ system: ParticleTestSystem, count: Int, frames: Int = 30) throws -> String {
-        let configuration = system.configuration
-        let cpu = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 1)
-        let gpu = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 1)
-        let format = ParticleVertexFormat.sprite
-        let records = UnsafeMutableRawPointer.allocate(byteCount: count * format.stride, alignment: 16)
-        defer { records.deallocate() }
-        var cpuTimes: [Double] = [], encodeTimes: [Double] = [], gpuTimes: [Double] = []
+        let gpu = ParticleSystemRuntime(texture: texture, configuration: system.configuration, seed: 1)
+        var encodeTimes: [Double] = [], gpuTimes: [Double] = []
         for frame in 0..<(frames + 3) {
-            let start = CACurrentMediaTime()
-            ParticleCPUSimulation.update([cpu], deltaTime: 1 / 60, cursor: .zero)
-            let written = ParticleRecordWriter.recordCount(cpu, format: format)
-            ParticleRecordWriter.write(cpu, format: format, count: written, into: records, opacity: { $0.alpha })
-            let cpuTime = CACurrentMediaTime() - start
-
             let encodeStart = CACurrentMediaTime()
             let inputs = ParticleFrameInputs.advance(gpu, deltaTime: 1 / 60, cursor: .zero)
             let commandBuffer = try XCTUnwrap(queue.makeCommandBuffer())
@@ -118,16 +106,14 @@ final class ParticleSimulationPerformanceTests: XCTestCase {
             XCTAssertNil(commandBuffer.error)
             // The first frames fill the system and grow its buffers.
             guard frame >= 3 else { continue }
-            cpuTimes.append(cpuTime * 1000)
             encodeTimes.append(encodeTime * 1000)
             gpuTimes.append((commandBuffer.gpuEndTime - commandBuffer.gpuStartTime) * 1000)
         }
-        XCTAssertEqual(cpu.particles.count, count, label)
         XCTAssertEqual(gpu.gpu?.completedCount, count, label)
         func median(_ values: [Double]) -> Double { values.sorted()[values.count / 2] }
         // A hang guard, not a budget: CI runners have a slow virtual GPU (121 ms seen for 100k boids).
         XCTAssertLessThan(median(gpuTimes), 2000, "\(label) \(count)")
-        return String(format: "%@ %7d: CPU %8.3f ms | GPU %7.3f ms (+ %.3f ms CPU encode)",
-                      label, count, median(cpuTimes), median(gpuTimes), median(encodeTimes))
+        return String(format: "%@ %7d: GPU %7.3f ms (+ %.3f ms CPU encode)",
+                      label, count, median(gpuTimes), median(encodeTimes))
     }
 }

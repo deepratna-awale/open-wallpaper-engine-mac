@@ -3,31 +3,32 @@ import Metal
 import simd
 @testable import OpenWallpaperEngine
 
-final class ParticleCPUSimulationTests: XCTestCase {
+/// The simulation's seeding, random draws, emission cap and boids on a plain system.
+final class ParticleSimulationBasicsTests: XCTestCase {
+    private var gpu: ParticleGPUStepper!
     private var texture: MTLTexture!
 
     override func setUpWithError() throws {
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        texture = try XCTUnwrap(device.makeTexture(descriptor: .texture2DDescriptor(
-            pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)))
+        gpu = try ParticleGPUStepper()
+        texture = try gpu.texture()
     }
 
-    private func run(_ system: ParticleTestSystem, seed: UInt32, frames: Int = 60) -> ParticleSystemRuntime {
+    private func run(_ system: ParticleTestSystem, seed: UInt32, frames: Int = 60) -> [ParticleGPUState] {
         let runtime = ParticleSystemRuntime(texture: texture, configuration: system.configuration, seed: seed)
         for _ in 0..<frames {
-            ParticleCPUSimulation.update([runtime], deltaTime: 1 / 60, cursor: SIMD2(100, 100))
+            gpu.update([runtime], deltaTime: 1 / 60, cursor: SIMD2(100, 100))
         }
-        return runtime
+        return gpu.particles(runtime).sorted { $0.serial < $1.serial }
     }
 
     func testTheSameSeedReplaysTheSameParticles() {
         var system = ParticleTestSystem()
         system.operators = [ParticleOperator(.turbulence, a: SIMD4(1, 1, 0, 0), b: SIMD4(0.01, 100, 300, 1))]
         let first = run(system, seed: 7), second = run(system, seed: 7), other = run(system, seed: 8)
-        XCTAssertGreaterThan(first.particles.count, 100)
-        XCTAssertEqual(first.particles.map(\.position), second.particles.map(\.position))
-        XCTAssertEqual(first.particles.map(\.color), second.particles.map(\.color))
-        XCTAssertNotEqual(first.particles.map(\.position), other.particles.map(\.position))
+        XCTAssertGreaterThan(first.count, 100)
+        XCTAssertEqual(first.map(\.position), second.map(\.position))
+        XCTAssertEqual(first.map(\.color), second.map(\.color))
+        XCTAssertNotEqual(first.map(\.position), other.map(\.position))
     }
 
     func testRandomDrawsAreUniformAndStayInRange() {
@@ -46,8 +47,7 @@ final class ParticleCPUSimulationTests: XCTestCase {
         system.emissionRate = 100_000
         system.maximum = 25_000
         system.lifetime = 100...100
-        let runtime = run(system, seed: 1, frames: 30)
-        XCTAssertEqual(runtime.particles.count, 25_000)
+        XCTAssertEqual(run(system, seed: 1, frames: 30).count, 25_000)
     }
 
     func testBoidsSteerLargeSystems() {
@@ -62,10 +62,10 @@ final class ParticleCPUSimulationTests: XCTestCase {
         // WE updates one slice of N/200 + 1 each frame, with the weights scaled to match.
         system.operators = [ParticleOperator(.boids, flags: 0, a: SIMD4(20, 500, 500, 0), b: SIMD4(0, 2, 0, 0))]
         let flocking = run(system, seed: 2, frames: 40)
-        XCTAssertEqual(flocking.particles.count, 3_000)
-        func spread(_ runtime: ParticleSystemRuntime) -> Float {
-            let mean = runtime.particles.reduce(SIMD2<Float>.zero) { $0 + $1.velocity } / Float(runtime.particles.count)
-            return runtime.particles.reduce(0) { $0 + simd_length($1.velocity - mean) } / Float(runtime.particles.count)
+        XCTAssertEqual(flocking.count, 3_000)
+        func spread(_ particles: [ParticleGPUState]) -> Float {
+            let mean = particles.reduce(SIMD2<Float>.zero) { $0 + $1.velocity } / Float(particles.count)
+            return particles.reduce(Float(0)) { $0 + simd_length($1.velocity - mean) } / Float(particles.count)
         }
         XCTAssertLessThan(spread(flocking), spread(plain) * 0.8, "alignment pulls velocities together")
     }

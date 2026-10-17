@@ -1,12 +1,14 @@
 #include "ParticleShared.h"
 
-// Instanced child systems on the GPU (`ParticleChildLink`), step for step
-// `ParticleCPUSimulation+Instances.swift`. An event child reads its parent's step without a CPU
-// round trip: after the parent's step, `particleEventMark` flags the parent particles that make an
-// event (spawned or died this step, and passing the link's probability), a prefix sum orders them,
-// `particleEventScatter` lists them, and `particleInstanceStep` hands them out to free instances in
-// slot order, updates the instances and decides each one's emission. It replaces `particleBegin`
-// for an instanced system; emission, simulation and compaction then run as for any system.
+// Instanced child systems on the GPU (`ParticleChildLink`): every instance follows its source,
+// finished ones retire, new ones start for the parent's events and each decides its emission,
+// handed out in slot order to events in their parent's particle order. An event child reads its
+// parent's step without a CPU round trip: after the parent's step, `particleEventMark` flags the
+// parent particles that make an event (spawned or died this step, and passing the link's
+// probability), a prefix sum orders them, `particleEventScatter` lists them, and
+// `particleInstanceStep` hands them out to free instances in slot order, updates the instances and
+// decides each one's emission. It replaces `particleBegin` for an instanced system; emission,
+// simulation and compaction then run as for any system.
 
 /// Flags the parent particle `gid` when it makes an event for this child.
 kernel void particleEventMark(device const ParticleState *parentStepped [[buffer(0)]],
@@ -38,7 +40,7 @@ kernel void particleEventScatter(device const uint *flags [[buffer(0)]],
     events[offsets[gid] + blockSums[gid / kGroup]] = gid;
 }
 
-/// `ParticleInstance.track`.
+/// An instance takes its source particle's place and values (`follow`, `spawn`).
 static void trackSource(thread ParticleInstanceState &instance, ParticleState particle) {
     instance.place.xy = particle.positionVelocity.xy;
     instance.source = float4(particle.positionVelocity.zw, particle.life.z, particle.alphaRotation.z);
@@ -47,7 +49,8 @@ static void trackSource(thread ParticleInstanceState &instance, ParticleState pa
     instance.emission.y = particle.depth.y;
 }
 
-/// `ParticleInstance.inheritSource`.
+/// Takes another instance's source (a static child of an instanced system inherits from its parent
+/// instance's event).
 static void inheritSource(thread ParticleInstanceState &instance, ParticleInstanceState parent) {
     instance.source = parent.source;
     instance.sourceColor = parent.sourceColor;
@@ -107,12 +110,12 @@ static uint3 advanceClock(thread float4 &clock, float deltaTime, constant Partic
     return step;
 }
 
-/// `ParticleCPUSimulation.updateInstances`' emission for one instance: every emitter on its own
+/// One instance's emission this step: every emitter on its own
 /// clock, each counting what the earlier ones spawned.
 static uint instanceEmission(thread ParticleInstanceState &instance, uint slot, constant ParticleParameters &p,
                              constant ParticleFrame &f, constant EmitterParameters *emitterParameters,
                              constant EmitterStep *steps, device EmitterState *emitters) {
-    // `ParticleCPUSimulation.clockKey`.
+    // Names an instance's random periods: its event (the parent particle's serial) and its slot.
     const uint key = instance.state.y * 31u + slot + 1u;
     const uint emitterCount = p.instancing.z;
     uint live = instance.state.z;
@@ -147,7 +150,9 @@ static void resetEmitters(device EmitterState *emitters, uint emitterCount) {
     for (uint e = 0; e < emitterCount; ++e) emitters[e] = EmitterState{};
 }
 
-/// `ParticleCPUSimulation.updateInstances`, then the step's counters as `particleBegin` sets them.
+/// One step of the instances before their particles spawn (follow sources, retire finished
+/// instances, start instances for the parent's events, decide each one's emission), then the
+/// step's counters as `particleBegin` sets them.
 /// One thread: instances are few, and handing out slots in order keeps it deterministic.
 kernel void particleInstanceStep(device uint *control [[buffer(0)]],
                                  device ParticleInstanceState *instances [[buffer(1)]],
@@ -267,7 +272,7 @@ kernel void particleInstanceStep(device uint *control [[buffer(0)]],
     control[cDispatch + 2] = 1;
 }
 
-/// `ParticleControlPointLink.positions`: the parent particles a linked child's control points take
+/// The parent particles a linked child's control points take
 /// this step, one thread per instance (1 for a system without instances). After the parent's step.
 kernel void particleLinkPoints(device const ParticleState *parentParticles [[buffer(0)]],
                                device const uint *parentControl [[buffer(1)]],

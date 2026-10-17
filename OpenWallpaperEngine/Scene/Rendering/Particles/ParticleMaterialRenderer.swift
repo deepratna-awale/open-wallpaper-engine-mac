@@ -53,7 +53,6 @@ final class ParticleMaterialRenderer {
 
     private final class SystemState {
         weak var owner: ParticleSystemRuntime?
-        let records: ParticleRecordBuffer
         /// Uniform blocks the GPU simulation patches (`Simulated.renderVar`), ring-buffered.
         let uniformBlocks: ParticleRecordBuffer
         var programs: [String: UniformProgram] = [:]
@@ -64,26 +63,15 @@ final class ParticleMaterialRenderer {
         var members: [String: ParticleMaterialUniforms.Members] = [:]
         /// The uniform block being patched, reused frame to frame.
         var scratch: [UInt8] = []
-        /// This frame's draw, set by `prepare` or `prepareSimulated`.
-        var prepared: (stage: ParticleMaterialPlan.Stage, pipeline: MTLRenderPipelineState, records: Records)?
+        /// This frame's draw, set by `prepareSimulated`; `uniforms` is the block the GPU step
+        /// patches, when it does.
+        var prepared: (stage: ParticleMaterialPlan.Stage, pipeline: MTLRenderPipelineState, uniforms: MTLBuffer?)?
         var reportedFallback = false
-        /// This frame's refraction reach (`prepare`); nil when unknown.
-        var snapshotExtent: ParticleSnapshotExtent?
 
         init(owner: ParticleSystemRuntime, device: MTLDevice) {
             self.owner = owner
-            records = ParticleRecordBuffer(device: device)
             uniformBlocks = ParticleRecordBuffer(device: device)
         }
-    }
-
-    /// Where a prepared draw's records come from.
-    private enum Records {
-        /// Written by the CPU this frame.
-        case cpu(buffer: MTLBuffer?, count: Int)
-        /// Written by the GPU simulation (`ParticleGPUSystem.records`), drawn indirectly; the
-        /// uniforms go to `uniforms` when the simulation patches them.
-        case gpu(uniforms: MTLBuffer?)
     }
 
     /// What the GPU simulation writes for a system drawn through its material.
@@ -148,47 +136,15 @@ final class ParticleMaterialRenderer {
 
     // MARK: - Frame
 
-    /// Picks `system`'s stage and writes its records for this frame. False means the system
-    /// can't draw through its material; the caller draws it the built-in way. True while its
-    /// pipeline compiles, when `draw` draws nothing.
-    func prepare(_ system: ParticleSystemRuntime, pixelFormat: MTLPixelFormat, sampleCount: Int = 1,
-                 depthFormat: MTLPixelFormat = .invalid, opacity: (Particle) -> Float) -> Bool {
-        guard let plan = system.configuration.material else { return false }
-        let state = state(for: system)
-        state.prepared = nil
-        state.snapshotExtent = nil
-        let ready: (stage: ParticleMaterialPlan.Stage, pipeline: MTLRenderPipelineState)
-        switch readiness(plan, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat, state: state) {
-        case .unavailable: return false
-        case .compiling: return true
-        case .ready(let stage, let pipeline): ready = (stage, pipeline)
-        }
-        let count = ParticleRecordWriter.recordCount(system, format: plan.format)
-        var buffer: MTLBuffer?
-        if count > 0 {
-            guard let next = state.records.next(bytes: count * plan.format.stride) else { return false }
-            ParticleRecordWriter.write(system, format: plan.format, count: count, into: next.contents(), opacity: opacity)
-            buffer = next
-            if plan.format == .sprite, system.configuration.rendererName == "sprite", ready.stage.readsSceneSnapshot {
-                let records = UnsafeBufferPointer(start: next.contents().bindMemory(to: ParticleSpriteInstance.self, capacity: count),
-                                                  count: count)
-                let aspect = Float(system.texture.height) / Float(max(system.texture.width, 1))
-                state.snapshotExtent = ParticleSnapshotExtent(records: records, spriteLinear: system.spriteLinear, aspect: aspect)
-            }
-        }
-        state.prepared = (ready.stage, ready.pipeline, .cpu(buffer: buffer, count: count))
-        return true
-    }
-
     /// Picks `system`'s stage for a draw whose records the GPU simulation writes this frame.
-    /// Nil means the system can't draw through its material (see `prepare`); while its pipeline
+    /// Nil means the system can't draw through its material; the caller draws it the built-in way.
+    /// While its pipeline
     /// compiles, the simulation writes the compiling stage's records and `draw` draws nothing.
     func prepareSimulated(_ system: ParticleSystemRuntime, pixelFormat: MTLPixelFormat, sampleCount: Int = 1,
                           depthFormat: MTLPixelFormat = .invalid) -> Simulated? {
         guard let plan = system.configuration.material else { return nil }
         let state = state(for: system)
         state.prepared = nil
-        state.snapshotExtent = nil
         let ready: (stage: ParticleMaterialPlan.Stage, pipeline: MTLRenderPipelineState)
         switch readiness(plan, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat, state: state) {
         case .unavailable: return nil
@@ -205,7 +161,7 @@ final class ParticleMaterialRenderer {
             uniforms = block
             renderVar = (block, member.offset)
         }
-        state.prepared = (ready.stage, ready.pipeline, .gpu(uniforms: uniforms))
+        state.prepared = (ready.stage, ready.pipeline, uniforms)
         return Simulated(format: plan.format, vertexCount: Self.vertexCount(ready.stage), renderVar: renderVar)
     }
 
@@ -269,22 +225,6 @@ final class ParticleMaterialRenderer {
         var placement: ParticleMaterialUniforms.Placement? = nil
     }
 
-    /// The part of the scene `system`'s refracting draw reads this frame (`ParticleSnapshotExtent`),
-    /// or nil when it isn't known and the whole scene must be copied: records the GPU writes, a
-    /// renderer other than a plain sprite, or a refraction amount that is animated, user-bound or
-    /// scriptable. Only for a draw through the orthographic scene view (no placement).
-    func sceneSnapshotRect(_ system: ParticleSystemRuntime, sceneSize: SIMD2<Float>,
-                           targetSize: SIMD2<Int>) -> SceneSnapshotTracker.Rect? {
-        guard let state = systems[ObjectIdentifier(system)], state.owner === system,
-              let extent = state.snapshotExtent, let stage = state.prepared?.stage else { return nil }
-        let name = "g_RefractAmount"
-        let constants = stage.constants
-        guard !constants.dynamic.contains(where: { $0.uniform == name }),
-              !constants.scriptBindings.contains(where: { $0.uniform == name }),
-              let amount = constants.staticValues[name]?.components.first, amount.isFinite else { return nil }
-        return extent.pixelRect(refractAmount: amount, sceneSize: sceneSize, targetSize: targetSize)
-    }
-
     /// Whether `system`'s draw this frame reads the scene drawn so far, which the caller then
     /// snapshots right before it and passes in `DrawContext.sceneSnapshot`.
     func readsSceneSnapshot(_ system: ParticleSystemRuntime) -> Bool {
@@ -292,7 +232,7 @@ final class ParticleMaterialRenderer {
         return state.prepared?.stage.readsSceneSnapshot ?? false
     }
 
-    /// Encodes the draw `prepare` set up for `system` this frame.
+    /// Encodes the draw `prepareSimulated` set up for `system` this frame.
     func draw(_ system: ParticleSystemRuntime, encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer,
               context: DrawContext) {
         guard let plan = system.configuration.material,
@@ -303,7 +243,7 @@ final class ParticleMaterialRenderer {
                encoder: encoder, commandBuffer: commandBuffer, context: context)
     }
 
-    /// Encodes the draw `prepare` set up for `system` this frame into another pass as well, before
+    /// Encodes the draw `prepareSimulated` set up for `system` this frame into another pass as well, before
     /// `draw` encodes it into the scene pass: the planar reflection's (docs/models-plan.md §2.11),
     /// a `pixelFormat` target of `sampleCount` samples with `depthFormat` depth. The same stage and
     /// records draw through a pipeline for that target, and the uniforms, `context`'s camera
@@ -328,18 +268,11 @@ final class ParticleMaterialRenderer {
     /// Encodes `prepared` through `pipeline`; `reflected` for the planar reflection's draw, whose
     /// uniforms have their own program and go through the arena, not the block the GPU step patches.
     private func encode(_ system: ParticleSystemRuntime, plan: ParticleMaterialPlan, state: SystemState,
-                        prepared: (stage: ParticleMaterialPlan.Stage, pipeline: MTLRenderPipelineState, records: Records),
+                        prepared: (stage: ParticleMaterialPlan.Stage, pipeline: MTLRenderPipelineState, uniforms: MTLBuffer?),
                         pipeline: MTLRenderPipelineState, reflected: Bool, encoder: MTLRenderCommandEncoder,
                         commandBuffer: MTLCommandBuffer, context: DrawContext) {
-        let recordBuffer: MTLBuffer
-        switch prepared.records {
-        case .cpu(let buffer, let count):
-            guard count > 0, let buffer else { return }
-            recordBuffer = buffer
-        case .gpu:
-            guard let gpu = system.gpu, gpu.isReady, let records = gpu.records, gpu.recordKind?.isFallback == false else { return }
-            recordBuffer = records
-        }
+        // The records the GPU simulation wrote (`ParticleGPUSystem.records`), drawn indirectly.
+        guard let gpu = system.gpu, gpu.isReady, let recordBuffer = gpu.records, gpu.recordKind?.isFallback == false else { return }
         let stage = prepared.stage
         encoder.setRenderPipelineState(pipeline)
         // WE's particle vertices (`genericparticle`'s strip, the emulation keeps its winding) face
@@ -411,7 +344,7 @@ final class ParticleMaterialRenderer {
             state.scratch.append(contentsOf: program.bytes)
             uniforms.patch(&state.scratch, members: members)
             state.scratch.withUnsafeBytes { raw in
-                if !reflected, case .gpu(let block?) = prepared.records, block.length >= raw.count {
+                if !reflected, let block = prepared.uniforms, block.length >= raw.count {
                     // The simulation's step, which runs before this draw, patches the block.
                     block.contents().copyMemory(from: raw.baseAddress!, byteCount: raw.count)
                     encoder.setVertexBuffer(block, offset: 0, index: 0)
@@ -422,17 +355,10 @@ final class ParticleMaterialRenderer {
             }
         }
         guard let indices = indexBuffer(for: stage.geometry) else { return }
-        switch prepared.records {
-        case .cpu(_, let count):
-            encoder.drawIndexedPrimitives(type: .triangle, indexCount: Self.vertexCount(stage), indexType: indices.type,
-                                          indexBuffer: indices.buffer, indexBufferOffset: 0, instanceCount: count)
-        case .gpu:
-            // `ParticleGPUSimulator` wrote the arguments: the stage's index count and the records.
-            guard let control = system.gpu?.control else { return }
-            encoder.drawIndexedPrimitives(type: .triangle, indexType: indices.type, indexBuffer: indices.buffer,
-                                          indexBufferOffset: 0, indirectBuffer: control,
-                                          indirectBufferOffset: ParticleGPUSystem.Control.materialDrawOffset)
-        }
+        // `ParticleGPUSimulator` wrote the arguments: the stage's index count and the records.
+        encoder.drawIndexedPrimitives(type: .triangle, indexType: indices.type, indexBuffer: indices.buffer,
+                                      indexBufferOffset: 0, indirectBuffer: gpu.control,
+                                      indirectBufferOffset: ParticleGPUSystem.Control.materialDrawOffset)
         drawsEncoded += 1
     }
 

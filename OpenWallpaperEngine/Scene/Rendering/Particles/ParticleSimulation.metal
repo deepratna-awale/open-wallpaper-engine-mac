@@ -1,22 +1,21 @@
 #include "ParticleProgram.h"
 
-// The particle simulation on the GPU. It is `ParticleCPUSimulation` step for step: the same
-// emission arithmetic, program (`ParticleProgram.h`) and random draws (`ParticleRandom`), so the
-// two stay interchangeable (`ParticleSimulationParityTests`). Structures mirror
-// `ParticleGPUTypes.swift`; `particleLayoutSizes` lets a test check the two agree.
+// The particle simulation, on the GPU: WE's emission arithmetic, program (`ParticleProgram.h`)
+// and random draws (`ParticleRandom`). Structures mirror `ParticleGPUTypes.swift`;
+// `particleLayoutSizes` lets a test check the two agree (`ParticleGPULayoutTests`).
 //
 // One frame of one system, all in one compute encoder (`ParticleGPUSimulator`), in WE's order
 // (`wallpaper64.exe` 0x140236cd0: age and die, emit and initialize, operate):
 //   age → begin → emit → simulate → scan → compact → [trail scan] → finish → write records.
 // Particles stay in spawn order: the compaction is an order-preserving prefix sum, so rope
-// neighbours and boids' neighbours match the CPU's array.
+// neighbours and boids' neighbours are WE's.
 
 // MARK: - Step
 
 /// Particles the boids slice was counted into (`particleBoidsScatter`).
 constant uint cBoidsTotal = 5;
 
-/// `ParticleCPUSimulation.age`: every particle ages by the step; one past its lifetime dies. An
+/// Every particle ages by the step; one past its lifetime dies. An
 /// instanced system's instances lose their dead.
 kernel void particleAge(device ParticleState *particles [[buffer(0)]],
                         device uint *alive [[buffer(1)]],
@@ -42,7 +41,7 @@ kernel void particleAge(device ParticleState *particles [[buffer(0)]],
     }
 }
 
-/// Emission counts and the frame's dispatch size (`ParticleCPUSimulation.step`'s emission): every
+/// Emission counts and the frame's dispatch size: every
 /// emitter in turn, each counting what the earlier ones spawned (`wallpaper64.exe` 0x1402378a0).
 kernel void particleBegin(device uint *control [[buffer(0)]],
                           constant ParticleParameters &p [[buffer(1)]],
@@ -127,7 +126,7 @@ static void placeProgramPoints(thread ProgramContext &c, constant ParticleParame
     }
 }
 
-/// The program's view of the step for particle `serial` (`ParticleCPUSimulation.context`).
+/// The program's view of the step for particle `serial`.
 static ProgramContext programContext(constant ParticleParameters &p, constant ParticleFrame &f, uint serial) {
     ProgramContext c;
     c.deltaTime = f.time.x;
@@ -156,7 +155,7 @@ static float2 placed(float4 linear, float2 translation, float2 point) {
     return float2x2(linear.xy, linear.zw) * point + translation;
 }
 
-/// `ParticleProgramCPU.emit(image:…)`: a `layerimage` emitter's spawn, at one of its points at
+/// A `layerimage` emitter's spawn, at one of its points at
 /// random, through its bone on a rigged layer; with flag 0x40000 launched with the point's motion.
 /// False without points.
 static bool emitFromImage(EmitterParameters e, EmitterStep step, EmitterState emitterState, device const int4 *imagePoints,
@@ -196,7 +195,9 @@ static bool emitFromImage(EmitterParameters e, EmitterStep step, EmitterState em
     return true;
 }
 
-/// `ParticleCPUSimulation.spawn`.
+/// A new particle: the emitter's shape, WE's base values and every initializer (0x14023b340:
+/// lifetime 1, size 0.5, the instance colour and alpha). A `remapinitialvalue` that writes a
+/// control point writes it into `inputs` for the spawns and the operators after it.
 static ParticleState spawn(uint serial, constant ParticleParameters &p, constant ParticleFrame &f,
                            constant ProgramOp *program, thread ProgramContext &c, EmitterParameters emitter,
                            EmitterStep step, EmitterState emitterState, device const int4 *imagePoints,
@@ -244,8 +245,8 @@ static ParticleState spawn(uint serial, constant ParticleParameters &p, constant
 }
 
 
-/// The instance whose spawns this step include spawn `index` (`ParticleCPUSimulation.step`
-/// spawns instance by instance): the last one starting at or before it.
+/// The instance whose spawns this step include spawn `index` (a step spawns instance by
+/// instance): the last one starting at or before it.
 static uint spawningInstance(device const ParticleInstanceState *instances, uint count, uint index) {
     uint low = 0, high = count;
     while (low + 1 < high) {
@@ -297,7 +298,8 @@ kernel void particleEmit(device ParticleState *particles [[buffer(0)]],
     particles[control[cCount] + gid] = particle;
 }
 
-/// `ParticleCollisionPlacement.resolve`, the shape carried by `shift` (`moved(by:)`).
+/// Resolves a particle that moved from `previous` to `position` against a collision shape
+/// (`ParticleCollisionPlacement`), the shape carried by `shift` (`moved(by:)`).
 static void collide(CollisionPlacement collision, float2 shift, thread float2 &position, thread float2 &velocity,
                     thread float &angularVelocity, thread bool &dies, float2 previous) {
     float4 shape = collision.shape;
@@ -334,8 +336,13 @@ static void collide(CollisionPlacement collision, float2 shift, thread float2 &p
     if (collision.response.z > 0.5) angularVelocity = 0;
 }
 
-/// `ParticleCollisionPlacement.resolveCapsules`: a `collisionmodel`'s capsules, in 3D (the
-/// particle's depth is z), the last one hit giving the normal and depth.
+/// A `collisionmodel`'s capsules against a particle (0x1402508c0 bounce, 0x140250e00 slide,
+/// 0x140251320 stop, 0x1402517d0 delete), in 3D (the particle's depth is z). Every capsule tests
+/// the particle where it was when the operator started, as a point: the closest point of the
+/// segment, then a hit when it is nearer than the radius; the last capsule hit gives the normal
+/// (away from the segment) and the depth. A hit pushes the particle out to the surface and bounces
+/// (v += n·(n·v)·−(1 + bouncefactor)), slides (the normal part removed) or stops; "delete" only
+/// kills it. The placements share their response.
 static void collideCapsules(constant CollisionPlacement *collisions, uint first, uint end, thread float3 &position,
                             thread float3 &velocity, thread bool &dies) {
     const float3 point = position;
@@ -390,7 +397,7 @@ static bool programCollide(ProgramOp record, thread ProgramState &p, thread cons
     return dies;
 }
 
-/// `ParticleCPUSimulation.follow`: carries a particle along with its emitter's move, `linear`
+/// Carries a particle along with its emitter's move, `linear`
 /// and `translation`.
 static void follow(thread ParticleState &particle, device float2 *own, constant ParticleParameters &p,
                    float2x2 linear, float2 translation) {
@@ -409,7 +416,7 @@ struct SimulateStart {
     ParticleInstanceState instance;
 };
 
-/// The start of particle `gid`'s step (`ParticleCPUSimulation.advance`): it follows its emitter's (or
+/// The start of particle `gid`'s step: it follows its emitter's (or
 /// its instance's) move. False for a particle that died aging, which stays as it is.
 static bool beginSimulate(uint gid, thread ParticleState &particle, thread SimulateStart &start,
                           device const uint *alive, device float2 *history, uint aged, constant ParticleParameters &p,
@@ -424,7 +431,7 @@ static bool beginSimulate(uint gid, thread ParticleState &particle, thread Simul
     start.instance = ParticleInstanceState{};
     start.slot = (flags & kInstanced) ? uint(particle.trail.z) : 0;
     if (flags & kInstanced) {
-        // `ParticleCPUSimulation.followInstance`: the instance's move around its own position.
+        // The instance's move around its own position.
         start.instance = instances[start.slot];
         start.shift = start.instance.place.xy;
         start.previousShift = start.instance.place.zw;
@@ -457,7 +464,7 @@ static ProgramContext simulateContext(ParticleState particle, SimulateStart star
     return c;
 }
 
-/// `ParticleCPUSimulation.programState`.
+/// `particle` as the program sees it, in the system's space.
 static ProgramState simulateState(ParticleState particle, thread const ProgramContext &c) {
     ProgramState state;
     state.position = float3(c.toSpace * (particle.positionVelocity.xy - c.origin), particle.depth.x);
@@ -479,7 +486,7 @@ static ProgramState simulateState(ParticleState particle, thread const ProgramCo
     return state;
 }
 
-/// `ParticleCPUSimulation.finish`: the step's result into `stepped`, with its trail history and
+/// The step's result into `stepped`, with its trail history and
 /// the instance's live count.
 static void endSimulate(uint gid, ParticleState particle, ProgramState state, thread const ProgramContext &c, bool dies,
                         SimulateStart start, device ParticleState *stepped, device uint *alive, device float2 *history,
@@ -518,7 +525,7 @@ static void endSimulate(uint gid, ParticleState particle, ProgramState state, th
     }
 }
 
-/// `ParticleCPUSimulation.advance`: every operator. Reads `particles` (boids read neighbours from
+/// Every operator. Reads `particles` (boids read neighbours from
 /// there too), writes `stepped`; particles that died aging stay dead.
 kernel void particleSimulate(device const ParticleState *particles [[buffer(0)]],
                              device ParticleState *stepped [[buffer(1)]],
@@ -681,7 +688,7 @@ kernel void particleEmitSerial(device ParticleState *particles [[buffer(0)]],
 }
 
 /// `particleSimulate` for a program whose operators write control points
-/// (`ParticleCPUSimulation.advanceOperatorMajor`): one thread runs record by record over every
+/// (`ParticleProgram.operatorsWriteControlPoints`): one thread runs record by record over every
 /// particle, groups of four reading the points the previous group left and the first of each
 /// writing them. Keeps each slot's points for the next step.
 kernel void particleSimulateSerial(device const ParticleState *particles [[buffer(0)]],
@@ -764,8 +771,8 @@ kernel void particleSimulateSerial(device const ParticleState *particles [[buffe
         endSimulate(gid, particle, serial[gid].state, c, serial[gid].dies != 0, start, stepped, alive, history, p, f,
                     instances);
     }
-    // A system without instances keeps its points for the next step
-    // (`ParticleCPUSimulation.keepWrittenControlPoints`).
+    // A system without instances keeps its points for the next step: as the previous points, and
+    // on the points its instance override drives until the override changes (0x14022e468).
     for (uint slot = 0; slot < slots; ++slot) {
         for (uint i = 0; i < 8; ++i) points[slot].kept[i] = points[slot].points[i];
         points[slot].flags.x = instanced ? 0u : 1u;
@@ -849,7 +856,7 @@ kernel void particleCompact(device const ParticleState *stepped [[buffer(0)]],
 
 // MARK: - Layout
 
-/// The sizes of the shared structures, for the layout test (`ParticleSimulationParityTests`).
+/// The sizes of the shared structures, for the layout test (`ParticleGPULayoutTests`).
 kernel void particleLayoutSizes(device uint *sizes [[buffer(0)]]) {
     sizes[0] = sizeof(ParticleState);
     sizes[1] = sizeof(ParticleParameters);

@@ -4,7 +4,7 @@
 #include <metal_stdlib>
 using namespace metal;
 
-// `ParticleNoise.swift` for the GPU: WE's particle noise functions. Change both together.
+// WE's particle noise functions, on the GPU.
 
 constant int kNoisePermutation[256] = {
         151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225,
@@ -27,7 +27,8 @@ constant int kNoisePermutation[256] = {
 
 static int noisePerm(int index) { return kNoisePermutation[index & 255]; }
 
-/// `ParticleNoise.bounded`.
+/// Inputs are clamped to ±1e6, which keeps the integer lattice in range (and a non-finite input
+/// at 0).
 static float noiseBounded(float value) { return isfinite(value) ? clamp(value, -1e6f, 1e6f) : 0.0f; }
 
 static int noiseFloor(float value) {

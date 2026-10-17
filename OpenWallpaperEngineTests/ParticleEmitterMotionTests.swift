@@ -7,12 +7,12 @@ import simd
 /// turn and scale with it; `worldspace` ones stay where they spawned. And a live parent (moved by
 /// its timeline) moves the emitter, and particle systems in turn parent other objects.
 final class ParticleEmitterMotionTests: XCTestCase {
+    private var gpu: ParticleGPUStepper!
     private var texture: MTLTexture!
 
     override func setUpWithError() throws {
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        texture = try XCTUnwrap(device.makeTexture(descriptor: .texture2DDescriptor(
-            pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)))
+        gpu = try ParticleGPUStepper()
+        texture = try gpu.texture()
     }
 
     /// Still particles, so any change of position comes from the emitter.
@@ -29,9 +29,13 @@ final class ParticleEmitterMotionTests: XCTestCase {
 
     private func step(_ system: ParticleSystemRuntime, emitter: SceneAffineTransform, frames: Int = 1) {
         for _ in 0..<frames {
-            ParticleCPUSimulation.step(system, inputs: ParticleFrameInputs.advance(system, deltaTime: 1 / 60,
-                                                                                   cursor: .zero, emitter: emitter))
+            gpu.step(system, inputs: ParticleFrameInputs.advance(system, deltaTime: 1 / 60, cursor: .zero, emitter: emitter))
         }
+    }
+
+    /// `system`'s live particles by serial.
+    private func particles(_ system: ParticleSystemRuntime) -> [UInt32: ParticleGPUState] {
+        Dictionary(gpu.particles(system).map { ($0.serial, $0) }, uniquingKeysWith: { first, _ in first })
     }
 
     private func translation(_ point: SIMD2<Float>) -> SceneAffineTransform {
@@ -41,37 +45,45 @@ final class ParticleEmitterMotionTests: XCTestCase {
     func testLocalParticlesMoveWithTheirEmitter() throws {
         let system = stillSystem(worldSpace: false)
         step(system, emitter: translation(SIMD2(100, 100)), frames: 20)
-        let before = system.particles.map(\.position)
+        let before = particles(system)
         XCTAssertGreaterThan(before.count, 50)
         step(system, emitter: translation(SIMD2(300, 50)))
-        for (old, new) in zip(before, system.particles.map(\.position)) {
-            XCTAssertLessThan(simd_distance(new - old, SIMD2(200, -50)), 1e-3)
+        let after = particles(system)
+        for (serial, old) in before {
+            let new = try XCTUnwrap(after[serial])
+            XCTAssertLessThan(simd_distance(new.position - old.position, SIMD2<Float>(200, -50)), 1e-3)
         }
     }
 
     func testWorldSpaceParticlesStayWhereTheySpawned() throws {
         let system = stillSystem(worldSpace: true)
         step(system, emitter: translation(SIMD2(100, 100)), frames: 20)
-        let before = system.particles.map(\.position)
+        let before = particles(system)
         step(system, emitter: translation(SIMD2(300, 50)))
-        XCTAssertEqual(Array(system.particles.map(\.position).prefix(before.count)), before)
-        XCTAssertGreaterThan(system.particles.count, before.count)
-        let spawned = try XCTUnwrap(system.particles.last)
-        XCTAssertLessThan(simd_distance(spawned.position, SIMD2(300, 50)), 60, "new particles spawn at the emitter")
+        let after = particles(system)
+        for (serial, old) in before {
+            XCTAssertLessThan(simd_distance(try XCTUnwrap(after[serial]).position, old.position), 1e-4)
+        }
+        XCTAssertGreaterThan(after.count, before.count)
+        let newest = try XCTUnwrap(after.keys.max())
+        let spawned = try XCTUnwrap(after[newest])
+        XCTAssertLessThan(simd_distance(spawned.position, SIMD2<Float>(300, 50)), 60, "new particles spawn at the emitter")
     }
 
     func testTurningAndScalingTheEmitterTurnsAndScalesItsParticles() throws {
         let system = stillSystem(worldSpace: false)
         step(system, emitter: translation(SIMD2(100, 100)), frames: 20)
         XCTAssertEqual(system.drawLinear, matrix_identity_float2x2)
-        let before = system.particles
+        let before = particles(system)
         let turned = SceneAffineTransform(SceneLocalTransform(origin: SIMD2(100, 100), scale: SIMD2(2, 2), angle: .pi / 2))
         step(system, emitter: turned)
-        for (old, new) in zip(before, system.particles) {
-            let expected = turned.apply(old.position - SIMD2(100, 100))
+        let after = particles(system)
+        for (serial, old) in before {
+            let new = try XCTUnwrap(after[serial])
+            let expected: SIMD2<Float> = turned.apply(old.position - SIMD2<Float>(100, 100))
             XCTAssertLessThan(simd_distance(new.position, expected), 1e-3)
-            XCTAssertEqual(new.size, old.size, "sizes stay the emitter's own")
-            XCTAssertEqual(new.rotation, old.rotation)
+            XCTAssertEqual(new.size, old.size, accuracy: 1e-5, "sizes stay the emitter's own")
+            XCTAssertEqual(new.rotation, old.rotation, accuracy: 1e-5)
         }
         XCTAssertEqual(system.drawLinear, turned.linear, "the emitter's transform draws them, as WE's model matrix")
     }
@@ -82,13 +94,21 @@ final class ParticleEmitterMotionTests: XCTestCase {
         let system = stillSystem(worldSpace: false)
         let squashed = SceneAffineTransform(SceneLocalTransform(origin: SIMD2(100, 100), scale: SIMD2(3, 0.5), angle: 0))
         step(system, emitter: squashed)
-        let axes = system.spriteAxes(size: 10, rotation: 0, scale: SIMD2(1, 1))
+        // The quad's axes the GPU's built-in draw takes (`spriteAxes` in `ParticleShared.h`): a sprite
+        // of `size` turned by `rotation` in the shader's y-down corner space, through `spriteLinear`.
+        func spriteAxes(size: Float, rotation: Float) -> (x: SIMD2<Float>, y: SIMD2<Float>) {
+            let c = cos(rotation), s = sin(rotation)
+            let x: SIMD2<Float> = system.spriteLinear * (SIMD2<Float>(c, -s) * size)
+            let y: SIMD2<Float> = system.spriteLinear * (SIMD2<Float>(-s, -c) * size)
+            return (x, -y)
+        }
+        let axes = spriteAxes(size: 10, rotation: 0)
         XCTAssertEqual(axes.x.x, 30, accuracy: 1e-4)
         XCTAssertEqual(axes.x.y, 0, accuracy: 1e-4)
         XCTAssertEqual(axes.y.x, 0, accuracy: 1e-4)
         XCTAssertEqual(axes.y.y, 5, accuracy: 1e-4)
         // A quarter-turned sprite swaps its axes before the scale: now tall and narrow.
-        let turned = system.spriteAxes(size: 10, rotation: .pi / 2, scale: SIMD2(1, 1))
+        let turned = spriteAxes(size: 10, rotation: .pi / 2)
         XCTAssertEqual(simd_length(turned.x), 5, accuracy: 1e-4)
         XCTAssertEqual(simd_length(turned.y), 30, accuracy: 1e-4)
         XCTAssertEqual(system.drawSizeScale, 1, "sprites take the transform whole")
@@ -101,8 +121,11 @@ final class ParticleEmitterMotionTests: XCTestCase {
         XCTAssertEqual(system.drawLinear, matrix_identity_float2x2, "they left the emitter's space")
         let local = stillSystem(worldSpace: false)
         step(local, emitter: scaled, frames: 5)
-        for (world, own) in zip(system.particles, local.particles) {
-            XCTAssertEqual(world.size, own.size * 2, accuracy: 1e-4)
+        let world = particles(system), own = particles(local)
+        XCTAssertGreaterThan(world.count, 0)
+        for (serial, particle) in world {
+            let same = try XCTUnwrap(own[serial])
+            XCTAssertEqual(particle.size, same.size * 2, accuracy: 1e-4)
         }
     }
 

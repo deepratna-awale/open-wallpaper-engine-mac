@@ -25,6 +25,13 @@ final class ParticleCameraTests: XCTestCase {
     /// Engine defaults but blending: test on, back faces culled (translucent, so no write).
     private static let culling = SceneRasterState(depthTest: true, depthWrite: false, cullsBackFaces: true)
 
+    /// Steps the systems on the GPU, which writes the records the draws read.
+    private var simulator: ParticleGPUSimulator!
+
+    override func setUpWithError() throws {
+        simulator = try ParticleGPUSimulator(device: try device())
+    }
+
     func testACullingMaterialShowsItsParticlesThroughAPerspectiveCamera() throws {
         _ = try Fixtures.assets()
         let renderer = try XCTUnwrap(ParticleMaterialRenderer(device: try device()))
@@ -125,12 +132,9 @@ final class ParticleCameraTests: XCTestCase {
             trailLength: 1, trailSegments: 4, ropeSubdivision: 1, fadeTrailAlpha: false, fadeTrailSize: false, spriteSheet: nil,
             animationMode: "sequence", sequenceMultiplier: 1, opacityMultiplier: 1, refractive: false, blending: plan.blending)
         configuration.material = plan
-        let system = ParticleSystemRuntime(texture: try whiteTexture(), configuration: configuration)
-        let size: Float = 40
-        system.particles = [Particle(position: position, velocity: .zero, age: 0, lifetime: 10, size: size, baseSize: size,
-                                     alpha: 1, baseAlpha: 1, rotation: 0, angularVelocity: 0, color: SIMD4(repeating: 1),
-                                     baseColor: SIMD4(repeating: 1), spriteFrame: 0, history: [], historyStart: 0)]
-        return system
+        configuration = ParticleMaterialRenderTests.placing([ParticleMaterialRenderTests.Placed(position: position, size: 40)],
+                                                            in: configuration)
+        return ParticleSystemRuntime(texture: try whiteTexture(), configuration: configuration)
     }
 
     enum Depth { case none, scene, mirrored }
@@ -170,7 +174,6 @@ final class ParticleCameraTests: XCTestCase {
         while renderer.drawsEncoded == start {
             XCTAssertLessThan(Date(), deadline, "the pipeline never compiled")
             if Date() > deadline { break }
-            XCTAssertTrue(renderer.prepare(system, pixelFormat: .rgba8Unorm, depthFormat: depthFormat, opacity: { _ in 1 }))
             let pass = MTLRenderPassDescriptor()
             pass.colorAttachments[0].texture = target
             pass.colorAttachments[0].loadAction = .clear
@@ -183,6 +186,9 @@ final class ParticleCameraTests: XCTestCase {
                 pass.depthAttachment.storeAction = .dontCare
             }
             let buffer = try XCTUnwrap(queue.makeCommandBuffer())
+            XCTAssertTrue(ParticleMaterialRenderTests.step(system, renderer: renderer, simulator: simulator, pixelFormat: .rgba8Unorm,
+                                                           depthFormat: depthFormat, sceneSize: SIMD2(Float(Self.size), Float(Self.size)),
+                                                           commandBuffer: buffer))
             let encoder = try XCTUnwrap(buffer.makeRenderCommandEncoder(descriptor: pass))
             renderer.draw(system, encoder: encoder, commandBuffer: buffer, context: .init(
                 sceneSize: SIMD2(Float(Self.size), Float(Self.size)), frame: BuiltinFrameContext(), values: NoValues(),

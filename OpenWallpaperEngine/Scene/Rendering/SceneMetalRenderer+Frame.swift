@@ -274,7 +274,7 @@ extension SceneMetalRenderer {
                 OWEFrameMetrics.recordFrame(seconds: CACurrentMediaTime() - frameStart,
                                             layers: layers.count,
                                             particles: particleSystems.reduce(0) {
-                                                $1.simulation != nil ? $0 : $0 + ($1.gpu?.completedCount ?? $1.particles.count)
+                                                $1.simulation != nil ? $0 : $0 + ($1.gpu?.completedCount ?? 0)
                                             })
             }
         }
@@ -490,11 +490,9 @@ extension SceneMetalRenderer {
                                                                        blue: Double(clear.z), alpha: 1)
         attachSceneDepth(to: sceneRenderPass, scene: sceneTexture)
         keepScene(sceneRenderPass, scene: sceneTexture, multisampled: multisampledScene)
-        // One instanced draw per system rather than one per particle (or per rope segment, which
-        // multiplies out to thousands on trail renderers).
-        particleInstances.removeAll(keepingCapacity: true)
+        // One indirect draw per system, from the records its GPU step writes.
         particleRequests.removeAll(keepingCapacity: true)
-        var particleBatches: [(system: ParticleSystemRuntime, base: Int, count: Int, material: Bool, simulated: Bool)] = []
+        var particleBatches: [(system: ParticleSystemRuntime, material: Bool)] = []
         // Systems are drawn in scene.json order, between the layers around them.
         let orderedSystems = particleSystems.enumerated()
             .sorted { ($0.element.configuration.order, $0.offset) < ($1.element.configuration.order, $1.offset) }
@@ -503,8 +501,8 @@ extension SceneMetalRenderer {
         let particleStepStart = frameStats == nil ? 0 : CACurrentMediaTime()
         // Each visible system's step this frame, for the renderers after its first.
         var steppedInputs: [ObjectIdentifier: ParticleFrameInputs] = [:]
-        for system in orderedSystems {
-            let base = particleInstances.count
+        // Without the GPU simulation (it couldn't be made; logged at init) no particle system draws.
+        for system in orderedSystems where particleSimulator != nil {
             let prewarm: [ParticleFrameInputs]
             var inputs: ParticleFrameInputs
             if let simulation = system.simulation {
@@ -554,67 +552,25 @@ extension SceneMetalRenderer {
                 steppedInputs[ObjectIdentifier(system)] = inputs
                 if !system.imageResamplesDue.isEmpty { resampleEmitterImages(system) }
             }
-            if particleSimulator != nil {
-                // The GPU steps the system and writes whichever records it is drawn from.
-                let rendererName = system.configuration.rendererName
-                if let simulated = particleMaterials?.prepareSimulated(system, pixelFormat: sceneTexture.pixelFormat,
-                                                                       sampleCount: sceneSampleCount,
-                                                                       depthFormat: sceneDepthFormat) {
-                    let kind = ParticleGPUDrawKind.material(simulated.format, rendererName: rendererName)
-                    for step in prewarm {
-                        particleRequests.append(.init(system: system, inputs: step, kind: kind, materialVertexCount: simulated.vertexCount,
-                                                      writesRecords: false))
-                    }
-                    particleRequests.append(.init(system: system, inputs: inputs, kind: kind,
-                                                  materialVertexCount: simulated.vertexCount, renderVar: simulated.renderVar))
-                    particleBatches.append((system, base, 0, true, true))
-                } else {
-                    let kind = ParticleGPUDrawKind.fallback(rendererName: rendererName)
-                    for step in prewarm { particleRequests.append(.init(system: system, inputs: step, kind: kind, writesRecords: false)) }
-                    particleRequests.append(.init(system: system, inputs: inputs, kind: kind))
-                    particleBatches.append((system, base, 0, false, true))
+            // The GPU steps the system and writes whichever records it is drawn from.
+            let rendererName = system.configuration.rendererName
+            if let simulated = particleMaterials?.prepareSimulated(system, pixelFormat: sceneTexture.pixelFormat,
+                                                                   sampleCount: sceneSampleCount,
+                                                                   depthFormat: sceneDepthFormat) {
+                let kind = ParticleGPUDrawKind.material(simulated.format, rendererName: rendererName)
+                for step in prewarm {
+                    particleRequests.append(.init(system: system, inputs: step, kind: kind, materialVertexCount: simulated.vertexCount,
+                                                  writesRecords: false))
                 }
-                continue
-            }
-            if system.simulation == nil {
-                for step in prewarm { ParticleCPUSimulation.step(system, inputs: step) }
-                ParticleCPUSimulation.step(system, inputs: inputs)
-            }
-            if particleMaterials?.prepare(system, pixelFormat: sceneTexture.pixelFormat, sampleCount: sceneSampleCount,
-                                          depthFormat: sceneDepthFormat,
-                                          opacity: { [unowned self] in self.particleOpacity($0, in: system) }) == true {
-                particleBatches.append((system, base, 0, true, false))
-                continue
-            }
-            if system.configuration.rendererName == "rope" {
-                appendRope(system, drawableSize: drawableSize)
+                particleRequests.append(.init(system: system, inputs: inputs, kind: kind,
+                                              materialVertexCount: simulated.vertexCount, renderVar: simulated.renderVar))
+                particleBatches.append((system, true))
             } else {
-                for particle in system.particles {
-                    if system.configuration.rendererName == "ropetrail" {
-                        appendRopeTrail(particle, system: system, drawableSize: drawableSize)
-                    } else if system.configuration.rendererName.contains("trail") {
-                        appendParticleTrail(particle, system: system, drawableSize: drawableSize)
-                    } else {
-                        var uniform = layerUniform(position: particle.position,
-                                                   size: SIMD2<Float>(repeating: particle.size),
-                                                   opacity: particleOpacity(particle, in: system),
-                                                   drawableSize: drawableSize, placement: .stretch)
-                        uniform.particleShape = 1
-                        uniform.rotation = particle.rotation
-                        let axes = system.spriteAxes(size: particle.size, rotation: particle.rotation,
-                                                     scale: drawableSize / sceneSize)
-                        uniform.quadAxisX = axes.x
-                        uniform.quadAxisY = axes.y
-                        uniform.color = particle.color
-                        let uv = spriteSheetUV(for: particle, configuration: system.configuration)
-                        uniform.uvOrigin = uv.origin
-                        uniform.uvAxisX = SIMD2<Float>(uv.size.x, 0)
-                        uniform.uvAxisY = SIMD2<Float>(0, uv.size.y)
-                        particleInstances.append(uniform)
-                    }
-                }
+                let kind = ParticleGPUDrawKind.fallback(rendererName: rendererName)
+                for step in prewarm { particleRequests.append(.init(system: system, inputs: step, kind: kind, writesRecords: false)) }
+                particleRequests.append(.init(system: system, inputs: inputs, kind: kind))
+                particleBatches.append((system, false))
             }
-            particleBatches.append((system, base, particleInstances.count - base, false, false))
         }
         particleSignpost.end()
         if frameStats != nil { particleStepMilliseconds = (CACurrentMediaTime() - particleStepStart) * 1000 }
@@ -626,12 +582,6 @@ extension SceneMetalRenderer {
                                          batches: particleBatches.map { ($0.system, $0.material) }, commandBuffer: commandBuffer)
         guard var encoder = commandBuffer.makeRenderCommandEncoder(descriptor: sceneRenderPass) else { return }
         encoder.setRenderPipelineState(renderPipeline)
-        let particleBuffer = particleInstanceBuffer(for: particleInstances.count)
-        if let particleBuffer {
-            particleInstances.withUnsafeBytes { source in
-                particleBuffer.contents().copyMemory(from: source.baseAddress!, byteCount: source.count)
-            }
-        }
         // WE's object loop (docs/models-plan.md §2.4): the layers and models in draw order, each
         // after the particle systems whose key is below its barrier.
         let sequence = drawSequence(batches: particleBatches.map(\.system), forward: effectFrame.camera.forward)
@@ -703,12 +653,9 @@ extension SceneMetalRenderer {
                     let placement = particlePlacement(batch.system, camera: effectFrame.camera)
                     if particleMaterials?.readsSceneSnapshot(batch.system) == true {
                         // Refraction reads the scene drawn up to this system (`_rt_FullFrameBuffer`):
-                        // only around its particles when that is known, else all of it.
+                        // all of it, since where the GPU's particles are isn't known here.
                         endScenePass(encoder, resumes: true)
-                        let pixels = SIMD2(sceneTexture.width, sceneTexture.height)
-                        let needed = placement != nil ? nil
-                            : particleMaterials?.sceneSnapshotRect(batch.system, sceneSize: sceneSize, targetSize: pixels)
-                        snapshot = sceneSnapshot(of: sceneTexture, commandBuffer: commandBuffer, needing: needed)
+                        snapshot = sceneSnapshot(of: sceneTexture, commandBuffer: commandBuffer)
                         guard let resumed = resumeScenePass(on: sceneTexture, commandBuffer: commandBuffer) else { return false }
                         encoder = resumed
                     }
@@ -724,27 +671,16 @@ extension SceneMetalRenderer {
                 let pipeline = batch.system.configuration.blending == "additive" ? additiveRenderPipeline : renderPipeline
                 // The built-in draw has no material: nothing to test against [I].
                 frameDepth?.apply(.disabled, to: encoder)
-                if batch.simulated {
-                    // The built-in quads the GPU step wrote, counted by its indirect arguments.
-                    guard let gpu = batch.system.gpu, gpu.isReady, let records = gpu.records,
-                          gpu.recordKind?.isFallback == true else { continue }
-                    encoder.setVertexBuffer(records, offset: 0, index: 0)
-                    encoder.setFragmentBuffer(records, offset: 0, index: 0)
-                    encoder.setRenderPipelineState(pipeline)
-                    encoder.setFragmentTexture(batch.system.fallbackTexture, index: 0)
-                    encoder.drawPrimitives(type: .triangleStrip, indirectBuffer: gpu.control,
-                                           indirectBufferOffset: ParticleGPUSystem.Control.fallbackDrawOffset)
-                    drew = true
-                    continue
-                }
-                guard batch.count > 0, let particleBuffer else { continue }
-                // Layer draws rebind index 0 with setVertexBytes, so bind the instances per draw.
-                encoder.setVertexBuffer(particleBuffer, offset: 0, index: 0)
-                encoder.setFragmentBuffer(particleBuffer, offset: 0, index: 0)
+                // The built-in quads the GPU step wrote, counted by its indirect arguments.
+                guard let gpu = batch.system.gpu, gpu.isReady, let records = gpu.records,
+                      gpu.recordKind?.isFallback == true else { continue }
+                // Layer draws rebind index 0 with setVertexBytes, so bind the records per draw.
+                encoder.setVertexBuffer(records, offset: 0, index: 0)
+                encoder.setFragmentBuffer(records, offset: 0, index: 0)
                 encoder.setRenderPipelineState(pipeline)
                 encoder.setFragmentTexture(batch.system.fallbackTexture, index: 0)
-                encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4,
-                                       instanceCount: batch.count, baseInstance: batch.base)
+                encoder.drawPrimitives(type: .triangleStrip, indirectBuffer: gpu.control,
+                                       indirectBufferOffset: ParticleGPUSystem.Control.fallbackDrawOffset)
                 drew = true
             }
             if drew { encoder.setRenderPipelineState(renderPipeline) }
@@ -921,13 +857,9 @@ extension SceneMetalRenderer {
     /// `renderStats`): particles, lights, video textures, the scripts' time and expensive effects.
     private func sceneStats(_ stats: inout SceneFrameStats) {
         for system in particleSystems where system.simulation == nil {
-            if let gpu = system.gpu {
-                stats.particleCount += gpu.completedCount
-                stats.particleBytes += gpu.particles?.length ?? 0
-            } else {
-                stats.particleCount += system.particles.count
-                stats.particleBytes += system.particles.count * MemoryLayout<Particle>.stride
-            }
+            guard let gpu = system.gpu else { continue }
+            stats.particleCount += gpu.completedCount
+            stats.particleBytes += gpu.particles?.length ?? 0
         }
         stats.particleMilliseconds = particleStepMilliseconds
         stats.scriptMilliseconds = scripts.wallpaper?.frameTiming.lastMilliseconds ?? 0

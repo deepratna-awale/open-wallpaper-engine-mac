@@ -107,10 +107,29 @@ struct ParticleMaterialUniforms {
         var renderVars: [Int: SIMD4<Float>] = [:]
         switch plan.format {
         case .sprite: renderVars[0] = Self.trailRenderVar(plan.trailLengths, drawSizeScale: system.drawSizeScale)
-        case .rope: renderVars[0] = ParticleRecordWriter.ropeRenderVar(system)
+        case .rope: renderVars[0] = Self.ropeRenderVar(system)
         }
         renderVars[1] = Self.spriteSheetRenderVar(plan.spriteSheet, texture: texture0)
         self.renderVars = renderVars
+    }
+
+    /// `g_RenderVar0` for a rope: `(points, 0, 1, points)`, which only the GPU step knows this
+    /// frame and patches into the draw's block (`ParticleMaterialRenderer.Simulated.renderVar`);
+    /// zero points here. A `ropetrail` takes WE's
+    /// `(slots − 1, 0, offset, slots − 0.5)`, or `(slots − 1, 0, offset, (slots − 1) / uvscale)`
+    /// when it scrolls (`TRAILSCROLLALPHA`), where the offset is how far the system's trail
+    /// countdown has run, 0 at a sample and 1 at the next (0x14023695b…0x1402369d0). The shader
+    /// maps the texture by it: the newest segment, from the particle to its last sample, takes that
+    /// much of a segment's span, and every older one is pushed along by it, so the texture stays
+    /// on the samples as they age instead of jumping a segment at each sample.
+    static func ropeRenderVar(_ system: ParticleSystemRuntime) -> SIMD4<Float> {
+        let configuration = system.configuration
+        guard configuration.rendererName == "ropetrail" else { return SIMD4(0, 0, 1, 0) }
+        let history = configuration.trailHistory
+        let slots = Float(history.limit)
+        let offset = 1 - min(max(system.trailTimer, 0) / history.interval, 1)
+        let scale = configuration.ropeUV.scrolling ? (slots - 1) * configuration.ropeUV.inverseScale : slots - 0.5
+        return SIMD4(slots - 1, 0, offset, scale)
     }
 
     /// A sprite trail's `g_RenderVar0` for records in the scene: WE's shader stretches a trail by
