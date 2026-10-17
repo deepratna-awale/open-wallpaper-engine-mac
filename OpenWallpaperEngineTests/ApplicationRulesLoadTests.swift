@@ -187,13 +187,6 @@ final class ApplicationRulesLoadTests: XCTestCase {
         super.tearDown()
     }
 
-    private func spin(until condition: () -> Bool, timeout: TimeInterval = 3) {
-        let deadline = Date().addingTimeInterval(timeout)
-        while !condition(), Date() < deadline {
-            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
-        }
-    }
-
     func testPlayingAudioFollowsCoreAudioWithoutPolling() {
         let rules = PlaybackRules(applicationRules: [
             ApplicationRule(bundleIdentifier: game, name: "Game", condition: .playingAudio, action: .mute),

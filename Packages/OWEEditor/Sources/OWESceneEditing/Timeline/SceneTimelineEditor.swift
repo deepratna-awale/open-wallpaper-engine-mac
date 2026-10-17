@@ -35,6 +35,10 @@ public final class SceneTimelineEditor: ObservableObject {
     @Published public private(set) var preview: [TimelineTarget: TimelineClip] = [:]
     /// The frames the selection moved by in the drag in progress.
     @Published public private(set) var previewFrameDelta = 0
+    /// Whether a drag is drawing a preview, which Escape cancels.
+    public var isPreviewing: Bool { !preview.isEmpty }
+    /// Set when the drag in progress was cancelled: the rest of it previews and commits nothing.
+    private var isDragCancelled = false
 
     /// Shows a time on the canvas (seconds, its scene clock held) or, with nil, resumes it.
     public var onCanvasTime: ((Double?) -> Void)?
@@ -358,6 +362,7 @@ public final class SceneTimelineEditor: ObservableObject {
 
     /// A drag of the selection: `frames` later and `value` higher, drawn as a preview.
     public func previewMove(byFrames frames: Int, value: Double = 0) {
+        guard !isDragCancelled else { return }
         var clips: [TimelineTarget: TimelineClip] = [:]
         let selected = selectedFrames()
         // One delta for every track, as far as frame 0 lets the earliest keyframe go.
@@ -374,7 +379,7 @@ public final class SceneTimelineEditor: ObservableObject {
 
     /// A drag of one handle of a selected keyframe to `point` (frame, value), drawn as a preview.
     public func previewHandle(_ ref: TimelineKeyframeRef, side: TimelineHandleSide, to point: SIMD2<Double>) {
-        guard var clip = committedClip(ref.target) else { return }
+        guard !isDragCancelled, var clip = committedClip(ref.target) else { return }
         clip.setHandle(channel: ref.channel, frame: ref.frame, side: side, to: point)
         preview = [ref.target: clip]
         previewFrameDelta = 0
@@ -385,6 +390,10 @@ public final class SceneTimelineEditor: ObservableObject {
         let clips = preview, delta = previewFrameDelta
         preview = [:]
         previewFrameDelta = 0
+        guard !isDragCancelled else {
+            isDragCancelled = false
+            return
+        }
         guard !clips.isEmpty, clips.contains(where: { committedClip($0.key) != $0.value }) else { return }
         if delta != 0 {
             selection = Set(selection.map { TimelineKeyframeRef(target: $0.target, channel: $0.channel, frame: $0.frame + delta) })
@@ -392,7 +401,11 @@ public final class SceneTimelineEditor: ObservableObject {
         commit(clips.mapValues { Optional($0) }, actionName: actionName)
     }
 
+    /// Escape during a drag: drops its preview, and the rest of the drag does nothing; the drag's
+    /// end (`commitPreview`) commits nothing and the next drag works again.
     public func cancelPreview() {
+        guard isPreviewing else { return }
+        isDragCancelled = true
         preview = [:]
         previewFrameDelta = 0
     }

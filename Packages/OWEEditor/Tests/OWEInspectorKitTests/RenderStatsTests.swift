@@ -2,13 +2,10 @@ import XCTest
 @testable import OWEInspectorKit
 
 /// The stats overlay's rows follow WE's editor (`editorSceneStatsOverlay`): which numbers show
-/// only when non-zero, which warn past WE's limits, Auto showing only the warnings; its text is in
-/// its catalog in every language; and its feed counts only while watched.
+/// only when non-zero, which warn past WE's limits, Auto showing only the warnings; and its feed
+/// counts only while watched (its catalog is checked by OWEEditorTests' `CatalogCoverageTests`).
 @MainActor
 final class RenderStatsTests: XCTestCase {
-    static let languages = ["de", "fr", "es", "pt-BR", "it", "ja", "ko", "zh-Hans", "zh-Hant",
-                            "ru", "pl", "tr", "uk", "ar", "hi"]
-
     func testRowsHideZerosAndWarnPastWEsLimits() {
         var stats = RenderStats()
         XCTAssertEqual(stats.rows.map(\.id), [.fps, .gpu, .textureMemory, .scriptTime, .drawCalls, .primitives, .programs,
@@ -49,41 +46,6 @@ final class RenderStatsTests: XCTestCase {
         XCTAssertEqual(values[.particleTime], 0.5.formatted(.number.precision(.fractionLength(3))))
         XCTAssertEqual(values[.textureMemory], "3")
         XCTAssertEqual(stats.summary, "60 FPS · GPU \(1.2.formatted(.number.precision(.fractionLength(1)))) ms · 3 MB")
-    }
-
-    func testEveryTextIsInTheCatalogInEveryLanguage() throws {
-        var stats = RenderStats()
-        stats.lightCount = 1
-        stats.expensiveEffects = 11
-        stats.veryExpensiveEffects = 2
-        stats.videoTextureCount = 1
-        stats.clippingMaskPasses = 1
-        var titles = stats.rows.map(\.title)
-        stats.expensiveEffects = 1
-        stats.veryExpensiveEffects = 1
-        titles += stats.rows.map(\.title) + RenderStatsMode.allCases.map(\.title) + ["Stats per frame", "%lld FPS · GPU %@ ms · %@ MB"]
-        let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: sourceCatalog())) as? [String: Any])
-        let strings = try XCTUnwrap(json["strings"] as? [String: [String: Any]])
-        XCTAssertEqual(Set(titles).subtracting(strings.keys), [], "not in the catalog")
-        for (key, entry) in strings {
-            let localizations = entry["localizations"] as? [String: [String: Any]] ?? [:]
-            for language in Self.languages {
-                let value = (localizations[language]?["stringUnit"] as? [String: Any])?["value"] as? String
-                XCTAssertNotNil(value, "\(key) in \(language)")
-                XCTAssertEqual(value.map(Self.specifiers), Self.specifiers(key), "\(key) in \(language)")
-            }
-        }
-    }
-
-    private func sourceCatalog() -> URL {
-        URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-            .appending(path: "Sources/OWEInspectorKit/Resources/Stats.xcstrings")
-    }
-
-    static func specifiers(_ text: String) -> [String] {
-        let regex = try! NSRegularExpression(pattern: #"%(?:\d+\$)?(?:lld|@)"#)
-        return regex.matches(in: text, range: NSRange(text.startIndex..., in: text))
-            .map { String(text[Range($0.range, in: text)!]) }.sorted()
     }
 
     func testTheFeedCountsOnlyWhileWatched() {

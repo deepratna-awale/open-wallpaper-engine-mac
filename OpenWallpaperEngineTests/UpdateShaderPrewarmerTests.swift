@@ -30,11 +30,6 @@ final class UpdateShaderPrewarmerTests: XCTestCase {
                                      verifyBundle: verify, environment: ["OWE_ISOLATED_STATE": "tag"], timeout: timeout)
     }
 
-    private func spin(until condition: () -> Bool, seconds: TimeInterval = 5) {
-        let deadline = Date().addingTimeInterval(seconds)
-        while !condition(), Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
-    }
-
     private func settle() { RunLoop.main.run(until: Date().addingTimeInterval(0.1)) }
 
     func testSameKeyInstallsWithoutPrewarm() throws {
