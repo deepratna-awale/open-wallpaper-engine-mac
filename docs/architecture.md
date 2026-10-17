@@ -42,7 +42,7 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
 
 - **Logging and diagnostics:** `OWELog`, signposts and frame metrics.
 - **Settings:** the global settings model and store.
-- **Wallpaper model** (`Core/Wallpaper`): `WEWallpaper`, `WEProject`, `WallpaperPlacement`, `WallpaperInstanceKey`, `WallpaperPropertyScope`, `WallpaperSettingsIdentity`, `DisplayCanvas` and the storage folder (`WallpaperStorage`).
+- **Wallpaper model** (`Core/Wallpaper`): `WEWallpaper`, `WEProject`, `WallpaperPlacement`, `WallpaperInstanceKey`, `WallpaperPropertyScope`, `WallpaperSettingsIdentity`, `DisplayCanvas` and the storage folder (`WallpaperStorage`). A wallpaper folder's project.json is found and read only through `WEProject.url(in:)` / `read(in:)` (`WEProject+File.swift`; `data`, `object` and `json` for callers that need the bytes or fields `WEProject` doesn't model).
 - The **WE assets location**.
 - **The app's process:** its host context and relaunch (`AppHostContext`, `AppRelauncher`), the helper runs of the app itself (`Core/HelperRun`, `HelperRunCommand`), the shared wallpaper services (`Core/Services`, `WallpaperServices`: audio capture and user properties), folder watching (`Core/Files`, `DirectoryChangeWatcher`) and the video memory watch (`Core/Playback/VideoMemoryWatch`).
 - The **Objective-C exception catcher**.
