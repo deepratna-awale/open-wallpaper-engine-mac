@@ -16,7 +16,7 @@ final class ModelEditorModel: ObservableObject {
     @Published private(set) var output: ModelCompiler.Output?
     @Published var problem: String?
     /// Materials changed in the Materials tab, by source material name.
-    @Published var materials: [String: ModelMaterialDocument] = [:]
+    @Published var materials: [String: MaterialPassDocument] = [:]
     private let savedConfig: ModelImportConfig
 
     init(model: String, store: EditorAssetStore, readFile: @escaping (String) -> Data?) {
@@ -147,15 +147,15 @@ final class ModelEditorModel: ObservableObject {
     func materialPath(_ name: String) -> String { EditorAssetStore.materialPath(name, model: model, config: config) }
 
     /// The material as edited, else as its file has it.
-    func material(_ name: String) -> ModelMaterialDocument {
+    func material(_ name: String) -> MaterialPassDocument {
         if let edited = materials[name] { return edited }
         let path = materialPath(name)
         let data = store.url(for: path).flatMap { try? Data(contentsOf: $0) } ?? readFile(path)
-        return data.flatMap(ModelMaterialDocument.init(json:))
-            ?? ModelMaterialDocument(root: ModelCompiler.materialJSON(texture: nil))
+        return data.flatMap(MaterialPassDocument.init(json:))
+            ?? MaterialPassDocument(root: ModelCompiler.materialJSON(texture: nil))
     }
 
-    func updateMaterial(_ name: String, _ change: (inout ModelMaterialDocument) -> Void) {
+    func updateMaterial(_ name: String, _ change: (inout MaterialPassDocument) -> Void) {
         var document = material(name)
         change(&document)
         materials[name] = document

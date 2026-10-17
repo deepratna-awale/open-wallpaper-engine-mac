@@ -59,7 +59,7 @@ public struct TimelineSceneIndex: Sendable {
             var layerConstants: [Property] = []
             for (effectIndex, effect) in (object["effects"] as? [[String: Any]] ?? []).enumerated() {
                 for (passIndex, pass) in (effect["passes"] as? [[String: Any]] ?? []).enumerated() {
-                    guard let block = (pass["constantshadervalues"] ?? pass["constants"]) as? [String: Any] else { continue }
+                    guard let block = MaterialPassDocument.constants(of: pass) else { continue }
                     for key in block.keys.sorted() {
                         guard let value = SceneJSONValue(any: block[key]),
                               let count = Self.channelCount(of: value) else { continue }

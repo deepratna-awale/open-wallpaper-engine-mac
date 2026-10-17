@@ -251,15 +251,11 @@ public struct ParticleMaterial: Hashable, Sendable {
     public static let overbrightKey = "ui_editor_properties_overbright"
 
     private var pass: [String: SceneJSONValue] {
-        get {
-            if case .array(let passes)? = root["passes"], case .object(let pass)? = passes.first { return pass }
-            return [:]
-        }
+        get { MaterialPassDocument(root: root).pass }
         set {
-            var passes: [SceneJSONValue] = []
-            if case .array(let authored)? = root["passes"] { passes = authored }
-            if passes.isEmpty { passes = [.object(newValue)] } else { passes[0] = .object(newValue) }
-            root["passes"] = .array(passes)
+            var material = MaterialPassDocument(root: root)
+            material.pass = newValue
+            root = material.root
         }
     }
 

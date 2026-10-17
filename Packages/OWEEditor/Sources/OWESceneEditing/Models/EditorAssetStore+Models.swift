@@ -74,14 +74,11 @@ extension EditorAssetStore {
                 if textures.isEmpty { textures.append("util/white") }
                 textures.append(written)
             }
-            var json = ModelCompiler.materialJSON(texture: textures.first)
-            if textures.count > 1, case .array(var passes)? = json["passes"], case .object(var pass) = passes[0] {
-                pass["textures"] = .array(textures.map { .string($0) })
-                passes[0] = .object(pass)
-                json["passes"] = .array(passes)
+            var document = MaterialPassDocument(root: ModelCompiler.materialJSON(texture: textures.first))
+            if textures.count > 1 {
+                document.changeExistingPass { $0["textures"] = .array(textures.map { .string($0) }) }
             }
-            let data = try JSONSerialization.data(withJSONObject: SceneJSONValue.object(json).any, options: [.prettyPrinted, .sortedKeys])
-            try write(data, to: material.path)
+            try write(try document.jsonData(), to: material.path)
         }
         return ImportedModel(model: model, config: configPath, source: source, title: title, missingTextures: missing,
                              animations: output.animations, bones: output.bones, boundsMin: output.boundsMin,
@@ -167,7 +164,7 @@ extension EditorAssetStore {
 
     /// Keeps an edited material beside the model's, named by its content
     /// (`materials/models/<folder>/<material>-<hash>.json`), and returns its path.
-    public func storeModelMaterial(_ document: ModelMaterialDocument, material: String, model: String) throws -> String {
+    public func storeModelMaterial(_ document: MaterialPassDocument, material: String, model: String) throws -> String {
         let data = try document.jsonData()
         let path = "materials/models/\(Self.modelFolder(of: model))/\(ModelCompiler.fileName(material))-\(Self.contentHash(data, bytes: 4)).json"
         try write(data, to: path)

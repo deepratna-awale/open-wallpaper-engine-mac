@@ -67,7 +67,7 @@ final class ModelEditorTests: XCTestCase {
         XCTAssertEqual(config.events.map(\.name), ["step"])
         XCTAssertNotNil(config.constraints["Tip"])
         let material = try XCTUnwrap(config.materials["Skin"])
-        let document = try XCTUnwrap(store.url(for: material).flatMap { try? Data(contentsOf: $0) }.flatMap(ModelMaterialDocument.init(json:)))
+        let document = try XCTUnwrap(store.url(for: material).flatMap { try? Data(contentsOf: $0) }.flatMap(MaterialPassDocument.init(json:)))
         XCTAssertEqual(document.combo("RIMLIGHTING", default: 0), 1)
         undo.undo()
         XCTAssertEqual(session.value("model", of: 1)?.stringValue, model.model)

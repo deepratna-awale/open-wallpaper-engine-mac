@@ -41,7 +41,7 @@ final class ModelEditingTests: XCTestCase {
     }
 
     func testAMaterialsPassIsEditedAndTheRestKept() throws {
-        var document = ModelMaterialDocument(root: ModelCompiler.materialJSON(texture: "models/a/Skin"))
+        var document = MaterialPassDocument(root: ModelCompiler.materialJSON(texture: "models/a/Skin"))
         document.root["custom"] = .bool(true)
         XCTAssertEqual(document.shader, "generic4")
         document.shader = "fur4"
@@ -49,7 +49,7 @@ final class ModelEditingTests: XCTestCase {
         document.setTexture(2, "models/a/pbr")
         document.setConstant("metallic", [0.5])
         document.setConstant("emissivecolor", [1, 0, 0])
-        let read = try XCTUnwrap(ModelMaterialDocument(json: try document.jsonData()))
+        let read = try XCTUnwrap(MaterialPassDocument(json: try document.jsonData()))
         XCTAssertEqual(read.shader, "fur4")
         XCTAssertEqual(read.combo("LIGHTING", default: 1), 0)
         XCTAssertEqual(read.combo("FOG", default: 1), 1)
@@ -76,7 +76,7 @@ final class ModelEditingTests: XCTestCase {
         let folder = EditorAssetStore.modelFolder(of: imported.model)
         XCTAssertEqual(EditorAssetStore.materialPath("Skin", model: imported.model, config: ModelImportConfig()),
                        "materials/models/\(folder)/Skin.json")
-        var document = ModelMaterialDocument(root: ModelCompiler.materialJSON(texture: nil))
+        var document = MaterialPassDocument(root: ModelCompiler.materialJSON(texture: nil))
         document.setCombo("RIMLIGHTING", 1)
         let edited = try store.storeModelMaterial(document, material: "Skin", model: imported.model)
         XCTAssertTrue(edited.hasPrefix("materials/models/\(folder)/Skin-"))

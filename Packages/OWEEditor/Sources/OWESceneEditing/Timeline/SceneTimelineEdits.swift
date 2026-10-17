@@ -68,8 +68,7 @@ public struct SceneTimelineEdits: Codable, Hashable, Sendable {
                 guard pass >= 0 else { continue }
                 while passes.count <= pass { passes.append([:]) }
                 // WE's scene.json keeps a pass's values in `constantshadervalues`; older files in `constants`.
-                let block = passes[pass]["constantshadervalues"] != nil || passes[pass]["constants"] == nil
-                    ? "constantshadervalues" : "constants"
+                let block = MaterialPassDocument.constantsKey(of: passes[pass])
                 var constants = passes[pass][block] as? [String: Any] ?? [:]
                 let key = constants.keys.first { $0.caseInsensitiveCompare(target.key) == .orderedSame } ?? target.key
                 constants[key] = Self.animated(constants[key], clip: track.clip)
