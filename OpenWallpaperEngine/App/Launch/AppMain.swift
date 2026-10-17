@@ -41,10 +41,6 @@ public enum AppMain {
             if let status = ChromiumFrameCaptureCommand.run(arguments: ProcessInfo.processInfo.arguments) {
                 exit(status)
             }
-            // Spike harness for the live screen saver's frame sources.
-            if let status = ScreenSaverLiveSpikeCommand.run(arguments: ProcessInfo.processInfo.arguments) {
-                exit(status)
-            }
 #endif
             // Unit tests are hosted in the app; skip the delegate so a test run doesn't open
             // wallpaper windows, start playback or overwrite the user's saved state.
