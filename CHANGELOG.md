@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Wallpaper Editor: binding a texture to a Texture or User Shortcut property** now writes the link where Wallpaper Engine's editor does, into the layer's material (its first pass's `usertextures`, one entry per texture slot, any slot), not into the scene object; a layer whose material is shared with another keeps the old form, and drafts saved with it still read. New properties are numbered as Wallpaper Engine numbers them in project.json (`index` their place without the scheme colour, `order` 100 + `index`), and a new property's key is made from its title as Wallpaper Engine makes it ("Custom texture" is `customtexture`: lower case, without spaces or punctuation).
 - **Wallpaper Editor: importing an image with Crop transparent area** keeps the picture where it was in the full frame, as Wallpaper Engine does: the layer is placed by the crop's offset and the model records it as `cropoffset`, which Align with Background then uses.
 - **Wallpaper Editor: Character Sheet Creation** puts the new sheet layer at the scene's centre, as Wallpaper Engine does, instead of where the old layer was.
 - **Text with an opaque background at partial opacity** now fades as in Wallpaper Engine: the box shows through the faded glyphs instead of being covered by them, and `backgroundbrightness` is read (it scales the box where Wallpaper Engine applies brightness). Letter spacing, the box's size and padding and its bloom were checked against Wallpaper Engine 2.8 and already matched.

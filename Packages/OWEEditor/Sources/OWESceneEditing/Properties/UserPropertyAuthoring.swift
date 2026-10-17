@@ -11,16 +11,20 @@ public final class UserPropertyAuthoring: ObservableObject {
     /// project.json's properties as authored, in WE's order (`order`, then key).
     public let authored: [UserPropertyDraft]
     private var forward: AnyCancellable?
+    /// Reads a file of the wallpaper (else WE's), for the image layers' materials a texture
+    /// binding is written into (`bindTexture`); without one, bindings go into the layer's `instance`.
+    let readAsset: (String) -> Data?
 
-    public init(session: SceneEditSession, authored: [UserPropertyDraft]) {
+    public init(session: SceneEditSession, authored: [UserPropertyDraft], readAsset: @escaping (String) -> Data? = { _ in nil }) {
         self.session = session
         self.authored = authored
+        self.readAsset = readAsset
         forward = session.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
     }
 
     /// From project.json's data; no properties when it can't be read.
-    public convenience init(session: SceneEditSession, projectJSON: Data?) {
-        self.init(session: session, authored: projectJSON.map(Self.read) ?? [])
+    public convenience init(session: SceneEditSession, projectJSON: Data?, readAsset: @escaping (String) -> Data? = { _ in nil }) {
+        self.init(session: session, authored: projectJSON.map(Self.read) ?? [], readAsset: readAsset)
     }
 
     /// project.json's `general.properties`, ordered as WE's sidebar orders them.

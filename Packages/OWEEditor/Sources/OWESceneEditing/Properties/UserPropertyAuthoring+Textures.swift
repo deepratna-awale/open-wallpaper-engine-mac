@@ -12,11 +12,17 @@ public struct UserTextureBinding: Hashable, Sendable {
     }
 }
 
-/// Binding texture slots to user textures and shortcuts. WE's editor binds a layer's albedo
-/// texture (Advanced Texture Settings › Albedo › Bind User Property, `onTextureContextMenu`) and
-/// keeps the link in the object's `instance.usertextures`, one entry per slot, beside WE's own
-/// system textures (`{"name": "$mediaThumbnail", "type": "system"}`): a `scenetexture` link is the
-/// property's key, a `usershortcut` link `{"name": key, "type": "usershortcut"}`.
+/// Binding texture slots to user textures and shortcuts. WE's editor binds a layer's texture
+/// (Advanced Texture Settings › a texture's gear › Bind User Property, `onTextureContextMenu`, on
+/// any of the material's texture slots) and writes the link into the layer's MATERIAL, its first
+/// pass's `usertextures`, an array parallel to `textures` with one entry per slot (WE 2.8.0.42,
+/// capture 541: `"usertextures": ["customtexture"]` beside `"textures": ["variant_a"]`, the scene
+/// object unchanged). A `scenetexture` link is the property's key, a `usershortcut` link
+/// `{"name": key, "type": "usershortcut"}`; WE's own system textures
+/// (`{"name": "$mediaThumbnail", "type": "system"}`) sit in the same arrays. The edited material is
+/// kept in the overlay (`SceneEditOverlay.documents`), as Lighting & Reflections keeps it. A layer
+/// whose material can't be read, or is shared with another layer, keeps the link in its object's
+/// `instance.usertextures` (the player reads that first), as do drafts saved before.
 extension UserPropertyAuthoring {
     /// The layers that can take a user texture: images (a solid placeholder is an image).
     public var textureLayers: [SceneLayer] {
@@ -26,16 +32,19 @@ extension UserPropertyAuthoring {
     /// The slots bound to `key`.
     public func textureBindings(of key: String) -> [UserTextureBinding] {
         textureLayers.flatMap { layer in
-            Self.userTextures(in: session.value("instance", of: layer.id)).enumerated().compactMap { slot, entry in
-                Self.linkedKey(entry) == key ? UserTextureBinding(layer: layer.id, slot: slot) : nil
+            let count = max(Self.userTextures(in: session.value("instance", of: layer.id)).count,
+                            materialUserTextures(of: layer.id).count)
+            return (0..<count).compactMap { slot in
+                let binding = UserTextureBinding(layer: layer.id, slot: slot)
+                return textureProperty(of: binding) == key ? binding : nil
             }
         }
     }
 
-    /// The property a slot is bound to, if any (a system texture is none).
+    /// The property a slot is bound to, if any (a system texture is none): the object's
+    /// `instance` link first, as the player reads them, then its material's.
     public func textureProperty(of binding: UserTextureBinding) -> String? {
-        let entries = Self.userTextures(in: session.value("instance", of: binding.layer))
-        return entries.indices.contains(binding.slot) ? Self.linkedKey(entries[binding.slot]) : nil
+        linkedEntry(binding).flatMap(Self.linkedKey)
     }
 
     /// Binds a slot to the user texture or shortcut `key`, replacing what it had; one undo step.
@@ -60,9 +69,8 @@ extension UserPropertyAuthoring {
     /// Re-points every slot bound to `key` at `newKey` (inside a rename's undo step).
     func renameTextureBindings(_ key: String, to newKey: String, in overlay: inout SceneEditOverlay) {
         for binding in textureBindings(of: key) {
-            let entries = Self.userTextures(in: session.value("instance", of: binding.layer))
             let link: SceneJSONValue
-            if case .object(var fields) = entries[binding.slot] {
+            if case .object(var fields)? = linkedEntry(binding) {
                 fields["name"] = .string(newKey)
                 link = .object(fields)
             } else {
@@ -72,8 +80,61 @@ extension UserPropertyAuthoring {
         }
     }
 
+    // MARK: Where the links are
+
+    /// The entry naming a property for the slot: the instance's, else the material's.
+    private func linkedEntry(_ binding: UserTextureBinding) -> SceneJSONValue? {
+        let instance = Self.userTextures(in: session.value("instance", of: binding.layer))
+        if instance.indices.contains(binding.slot), Self.linkedKey(instance[binding.slot]) != nil { return instance[binding.slot] }
+        let material = materialUserTextures(of: binding.layer)
+        if material.indices.contains(binding.slot), Self.linkedKey(material[binding.slot]) != nil { return material[binding.slot] }
+        return nil
+    }
+
+    /// The layer's own material as the scene now reads it, when a binding can be written into it:
+    /// readable and named by no other image layer's model.
+    private func ownMaterial(of layerID: Int) -> ImageLayerLighting? {
+        guard let material = session.imageMaterial(of: layerID, readAsset: readAsset) else { return nil }
+        let shared = textureLayers.contains { other in
+            other.id != layerID && session.imageMaterial(of: other.id, readAsset: readAsset)?.path == material.path
+        }
+        return shared ? nil : material
+    }
+
+    /// The material's first pass's `usertextures` entries (null for a slot without one).
+    private func materialUserTextures(of layerID: Int) -> [SceneJSONValue] {
+        guard let material = session.imageMaterial(of: layerID, readAsset: readAsset),
+              case .array(let entries)? = material.firstPass["usertextures"] else { return [] }
+        return entries
+    }
+
     private func setUserTexture(_ link: SceneJSONValue?, _ binding: UserTextureBinding,
                                 in overlay: inout SceneEditOverlay) {
+        // A link of a draft saved with the instance form goes; the material gets the new one.
+        let instanceLinked = Self.userTextures(in: session.value("instance", of: binding.layer))
+        if instanceLinked.indices.contains(binding.slot), Self.linkedKey(instanceLinked[binding.slot]) != nil {
+            setInstanceUserTexture(nil, binding, in: &overlay)
+        }
+        if let material = ownMaterial(of: binding.layer) {
+            let authored = SceneEditSession.documentJSON(readAsset(material.path))
+            let edited = overlay.document(material.path).map { ImageLayerLighting(path: material.path, document: $0) } ?? material
+            let next = edited.changingFirstPass { pass in
+                var entries: [SceneJSONValue] = { if case .array(let entries)? = pass["usertextures"] { return entries }; return [] }()
+                while entries.count <= binding.slot { entries.append(.null) }
+                entries[binding.slot] = link ?? .null
+                while entries.last == .null { entries.removeLast() }
+                pass["usertextures"] = entries.isEmpty ? nil : .array(entries)
+            }
+            overlay.setDocument(material.path, to: next == authored ? nil : next)
+        } else if link != nil {
+            setInstanceUserTexture(link, binding, in: &overlay)
+        }
+    }
+
+    /// The object's `instance.usertextures` entry for the slot (the form for a layer without a
+    /// material of its own).
+    private func setInstanceUserTexture(_ link: SceneJSONValue?, _ binding: UserTextureBinding,
+                                        in overlay: inout SceneEditOverlay) {
         let layerID = binding.layer
         let current = overlay.field("instance", of: layerID)
             ?? SceneFieldBinding.literal(of: session.authoredOutline.layer(layerID)?.fields["instance"])
