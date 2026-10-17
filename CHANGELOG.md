@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **Wallpaper Editor: importing an image with Crop transparent area** keeps the picture where it was in the full frame, as Wallpaper Engine does: the layer is placed by the crop's offset and the model records it as `cropoffset`, which Align with Background then uses.
+- **Wallpaper Editor: Character Sheet Creation** puts the new sheet layer at the scene's centre, as Wallpaper Engine does, instead of where the old layer was.
+
 ## [1.0.0-beta.7] - 2026-10-16
 
 ### Added

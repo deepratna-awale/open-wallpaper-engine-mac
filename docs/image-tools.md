@@ -113,5 +113,5 @@ cut-out character into limbs for Puppet Warp
   pieces' mean side, 30–200 pixels), the tallest first, in rows as wide as gives the squarest
   sheet ("place them into a square", WE's guide). The sheet, `<texture>_sheet`, replaces the
   layer (WE: "The existing layer will be removed along with any effects or settings") as a new
-  image layer in its place, in one undo step, and the Puppet Warp editor opens on it, where WE's
+  image layer in its place (at the scene's centre, without the old image's `cropoffset`, as WE 2.8.0.42 puts it; capture 545 also checked the layout: a 512 × 512 picture gives a 64 px margin and gaps), in one undo step, and the Puppet Warp editor opens on it, where WE's
   guide continues (mesh, skeleton, weights, then the reference pose).
