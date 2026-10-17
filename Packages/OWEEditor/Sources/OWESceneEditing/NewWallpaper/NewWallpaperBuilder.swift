@@ -2,6 +2,7 @@ import CoreGraphics
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
+import WEFormat
 
 /// Makes a new wallpaper folder in the library, as Wallpaper Engine's editor makes a project from
 /// its welcome page (`createNewProject`): a scene from a picture (resized to a display size when
@@ -121,7 +122,7 @@ public struct NewWallpaperBuilder {
             previewImage = previewImage ?? picture.image
         }
         let sceneURL = try LocalWallpaperWriter.contained(template.sceneFile, in: folder)
-        if let sceneSize, var scene = try WETolerantJSON.object(from: Data(contentsOf: sceneURL)) as? [String: Any] {
+        if let sceneSize, var scene = try TolerantJSON.object(from: Data(contentsOf: sceneURL)) as? [String: Any] {
             var general = scene["general"] as? [String: Any] ?? [:]
             general["orthogonalprojection"] = ["width": sceneSize.width, "height": sceneSize.height]
             scene["general"] = general
@@ -129,7 +130,7 @@ public struct NewWallpaperBuilder {
                 .write(to: sceneURL, options: .atomic)
         }
         let projectURL = folder.appending(path: "project.json")
-        var project = try WETolerantJSON.object(from: Data(contentsOf: projectURL)) as? [String: Any] ?? [:]
+        var project = try TolerantJSON.object(from: Data(contentsOf: projectURL)) as? [String: Any] ?? [:]
         project.removeValue(forKey: "templateoptions")
         for key in LocalWallpaperWriter.workshopKeys { project.removeValue(forKey: key) }
         project["title"] = title

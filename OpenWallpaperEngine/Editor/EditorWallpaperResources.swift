@@ -1,6 +1,7 @@
 import AppKit
 import OWEEditor
 import OWESceneEditing
+import WEFormat
 
 /// What the Wallpaper Editor reads of the wallpaper and of Wallpaper Engine's assets
 /// (editor-plan notes, phases 2–3): the effects it can add, what each effect lets it change
@@ -73,7 +74,7 @@ final class EditorWallpaperResources {
         let shipped = CustomEffect.effectFiles(in: wallpaperFilePaths())
         return Array(drafted.union(shipped)).sorted().compactMap { file in
             guard let data = data(file),
-                  let json = try? WETolerantJSON.object(from: data) as? [String: Any] else { return nil }
+                  let json = try? TolerantJSON.object(from: data) as? [String: Any] else { return nil }
             let madeHere = drafted.contains(file) && !shipped.contains(file)
             guard madeHere || json["editable"] as? Bool == true else { return nil }
             guard var entry = Self.entry(file, data: data, labels: labels, preview: nil, isWorkshop: false) else { return nil }

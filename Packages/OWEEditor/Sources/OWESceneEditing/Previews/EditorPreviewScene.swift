@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import WEFormat
 
 /// The small wallpapers editor previews are rendered from (`EditorPreviewCache`), written into a
 /// scratch folder the real loader and renderer read like any wallpaper:
@@ -136,7 +137,7 @@ public enum EditorPreviewScene {
     /// reads them (`EditorWallpaperResources.prepareEffect`).
     public static func builtInDependencies(effectJSON: Data) -> [String] {
         // Optional: an effect file that can't be read has no dependencies (the load logs it).
-        guard let root = try? WETolerantJSON.object(from: effectJSON) as? [String: Any] else { return [] }
+        guard let root = try? TolerantJSON.object(from: effectJSON) as? [String: Any] else { return [] }
         return (root["dependencies"] as? [Any] ?? []).compactMap { $0 as? String }
     }
 
@@ -154,7 +155,7 @@ public enum EditorPreviewScene {
             return data
         }
         guard let effectData = add(effectFile),
-              let effect = try? WETolerantJSON.object(from: effectData) as? [String: Any] else { return files }
+              let effect = try? TolerantJSON.object(from: effectData) as? [String: Any] else { return files }
         for dependency in effect["dependencies"] as? [Any] ?? [] {
             if let path = dependency as? String { _ = add(path) }
         }
@@ -162,7 +163,7 @@ public enum EditorPreviewScene {
         for materialPath in materials {
             // Optional: a material the wallpaper doesn't ship is WE's (found in its assets).
             guard let data = add(materialPath),
-                  let material = try? WETolerantJSON.object(from: data) as? [String: Any] else { continue }
+                  let material = try? TolerantJSON.object(from: data) as? [String: Any] else { continue }
             for pass in material["passes"] as? [[String: Any]] ?? [] {
                 if let shader = pass["shader"] as? String {
                     for stage in ["vert", "frag", "geom"] {

@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import WEFormat
 
 /// An image layer's picture as its files say: the model (`image`), the model's material and the
 /// material's first pass, which the image tools read and write copies of.
@@ -44,9 +45,9 @@ public struct ImageLayerMaterial {
     public init?(modelPath: String, readFile: (String) -> Data?) {
         // Optional: a file that is missing or isn't JSON means there is no material to change.
         guard let modelData = readFile(modelPath),
-              let model = (try? WETolerantJSON.object(from: modelData)) as? [String: Any],
+              let model = (try? TolerantJSON.object(from: modelData)) as? [String: Any],
               let materialPath = model["material"] as? String, let materialData = readFile(materialPath),
-              let material = (try? WETolerantJSON.object(from: materialData)) as? [String: Any],
+              let material = (try? TolerantJSON.object(from: materialData)) as? [String: Any],
               material["passes"] is [[String: Any]] else { return nil }
         self.modelPath = modelPath
         self.model = model

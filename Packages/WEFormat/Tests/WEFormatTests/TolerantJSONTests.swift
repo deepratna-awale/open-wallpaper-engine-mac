@@ -28,4 +28,12 @@ final class TolerantJSONTests: XCTestCase {
         let data = Data(TolerantJSON.byteOrderMark) + Data("{ // note\n\"a\": 3, }".utf8)
         XCTAssertEqual(try decodeTolerant(Value.self, from: data), Value(a: 3))
     }
+
+    func testWEsTolerantJSONIsRead() throws {
+        let text = "\u{FEFF}{ // a comment\n \"a\": [1, 2, ], /* another */ \"b\": \"x, ]\", }"
+        let object = try XCTUnwrap(try TolerantJSON.object(from: Data(text.utf8)) as? [String: Any])
+        XCTAssertEqual(object["a"] as? [Int], [1, 2])
+        XCTAssertEqual(object["b"] as? String, "x, ]", "a string is kept as it is")
+        XCTAssertThrowsError(try TolerantJSON.object(from: Data("{\"a\": }".utf8)))
+    }
 }

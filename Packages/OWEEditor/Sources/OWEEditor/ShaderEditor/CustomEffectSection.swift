@@ -1,5 +1,6 @@
 import SwiftUI
 import OWESceneEditing
+import WEFormat
 
 /// An editable effect's Shaders in the inspector (WE's `ui_editor_properties_shaders` with an
 /// Edit button beside each shader, `editablefile`): each material's vertex and fragment shader,
@@ -99,7 +100,7 @@ struct CustomEffectInfo {
     @MainActor
     static func read(_ file: String, model: ShaderEditorModel) -> CustomEffectInfo? {
         guard let text = model.text(at: file),
-              let json = try? WETolerantJSON.object(from: Data(text.utf8)) as? [String: Any] else { return nil }
+              let json = try? TolerantJSON.object(from: Data(text.utf8)) as? [String: Any] else { return nil }
         let madeHere = model.session.overlay.effectFile(file) != nil
         guard madeHere || json["editable"] as? Bool == true else { return nil }
         let directory = (file as NSString).deletingLastPathComponent
@@ -108,7 +109,7 @@ struct CustomEffectInfo {
             guard let relative = pass["material"] as? String else { continue }
             let path = model.resolvedPath(relative, in: directory)
             guard !materials.contains(where: { $0.path == path }), let materialText = model.text(at: path),
-                  let material = try? WETolerantJSON.object(from: Data(materialText.utf8)) as? [String: Any],
+                  let material = try? TolerantJSON.object(from: Data(materialText.utf8)) as? [String: Any],
                   let shader = (material["passes"] as? [[String: Any]])?.first?["shader"] as? String else { continue }
             materials.append(Material(path: path, shader: shader))
         }

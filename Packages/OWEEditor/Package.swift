@@ -1,5 +1,6 @@
 // swift-tools-version:5.9
 // The Wallpaper Editor (editor-plan notes), kept out of the app target:
+// Wallpaper Engine's file formats come from Packages/WEFormat, which the app links too.
 // - OWESceneEditing: the edit model, no UI (no AppKit or SwiftUI): Foundation, CoreGraphics, ImageIO, Accelerate, Combine,
 //   and JavaScriptCore for property conditions (the overlay over scene.json, the layer
 //   outline, gizmo and canvas math, undo, Save as New Wallpaper). The app's scene loader applies
@@ -22,14 +23,15 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../../Vendor/ufbx"),
+        .package(path: "../WEFormat"),
     ],
     targets: [
-        .target(name: "OWESceneEditing"),
+        .target(name: "OWESceneEditing", dependencies: ["WEFormat"]),
         // The stats overlay's own string catalog (`Resources/Stats.xcstrings`).
         .target(name: "OWEInspectorKit", resources: [.process("Resources")]),
         .target(name: "OWEModelImport", dependencies: ["OWESceneEditing", .product(name: "CUfbx", package: "ufbx")]),
         .target(name: "OWEEditor",
-                dependencies: ["OWESceneEditing", "OWEInspectorKit", "OWEModelImport"],
+                dependencies: ["OWESceneEditing", "OWEInspectorKit", "OWEModelImport", "WEFormat"],
                 // The particle editor's catalog and its copy of WE's editor schema
                 // (docs/we-particle-editor-schema.json); the effect previews' test card.
                 resources: [.process("Resources"), .process("Particles/Resources"), .process("Previews/Resources")]),

@@ -1,4 +1,5 @@
 import Foundation
+import WEFormat
 
 /// The editor's previews of effects and particle systems on disk:
 /// `<Caches>/EditorPreviews/<assets build>-r<revision>/<subject>.heic` for a still preview, `.mov`
@@ -175,7 +176,7 @@ public struct EditorPreviewCache: Sendable {
         if let id = manifestBuildID(manifest) { return "steam-\(id)" }
         // Optional: an install without version.json falls through to the folder dates.
         if let data = try? Data(contentsOf: parent.appending(path: "version.json")),
-           let root = try? WETolerantJSON.object(from: data) as? [String: Any],
+           let root = try? TolerantJSON.object(from: data) as? [String: Any],
            let version = root["version"] as? String, !version.isEmpty {
             return "we-\(version)"
         }
