@@ -129,6 +129,18 @@ struct ParticleEmitterState: Equatable {
     /// Spawned this step and whether a period started (an instance's, `ParticleInstance`).
     var spawnCount = 0
     var startsPeriod = false
+    /// A `layerimage` emitter's layer world (`ParticleEmitterStep.layerWorld`) at its last step that
+    /// spawned, and the one before, which this step's spawns inherit the layer's motion from: WE
+    /// keeps the layer's matrix after each step that spawns (0x14023adef), starting from the
+    /// identity (0x1401c6ba2). Nil stands for that identity.
+    var lastLayerWorld: SceneAffineTransform?
+    var spawnLayerWorld: SceneAffineTransform?
+
+    /// A step that spawns: its spawns read the layer world of the step that spawned last.
+    mutating func spawns(layerWorld: SceneAffineTransform) {
+        spawnLayerWorld = lastLayerWorld
+        lastLayerWorld = layerWorld
+    }
 
     /// The key naming emitter `emitter`'s random periods, from the key of the system's (or the
     /// instance's) first emitter.

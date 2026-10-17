@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Particles: a layer image emitter's "update emission bitmap periodically" and "inherit layer motion"** (`layerimage` flags 0x20000 and 0x40000), as Wallpaper Engine 2.8 runs them. With the first, the emitter samples its layer again once a second while it emits, from the picture the layer shows then (a video's frame, a texture animation's frame, a texture a script set), on the GPU without holding up the frame, and keeps emitting from the old points until the new ones are in. With the second, a particle launches with its point's motion since the last time it emitted, times a share between the emitter's `speedmin` and `speedmax` (0.1 and 0.2 by default). On a Puppet Warp layer the points now follow the rig: each takes the bone whose hit box holds it, as Wallpaper Engine assigns them, and particles spawn where that bone has moved its part of the picture.
+
 ## [1.0.0-beta.7] - 2026-10-16
 
 ### Added

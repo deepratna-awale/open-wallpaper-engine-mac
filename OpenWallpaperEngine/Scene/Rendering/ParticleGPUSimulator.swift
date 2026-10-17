@@ -94,8 +94,13 @@ final class ParticleGPUSimulator {
 
     /// The system's GPU state, made on first use. Nil when its buffers can't be allocated.
     func state(for system: ParticleSystemRuntime) -> ParticleGPUSystem? {
-        if let gpu = system.gpu { return gpu }
-        system.gpu = ParticleGPUSystem(device: device, configuration: system.configuration, seed: system.seed)
+        if let gpu = system.gpu {
+            gpu.updateImagePoints(system)
+            return gpu
+        }
+        system.gpu = ParticleGPUSystem(device: device, configuration: system.configuration, seed: system.seed,
+                                       images: system.emitterImages)
+        system.gpu?.updateImagePoints(system)
         return system.gpu
     }
 
@@ -217,6 +222,8 @@ final class ParticleGPUSimulator {
         /// The initializers, then the operators (`ParticleProgramOp`).
         let program: [ParticleProgramOp]
         let steps: [ParticleGPUEmitterStep]
+        /// Every rigged layer image's bones this step (`ParticleGPUEmitterStep.bones`).
+        let bones: [ParticleGPUImageBone]
         let trails: Bool
         /// Spawns and steps in one thread (`ParticleGPUSystem.writesControlPoints`).
         let serialPoints: MTLBuffer?
@@ -277,9 +284,14 @@ final class ParticleGPUSimulator {
             instances = gpu.instances ?? gpu.control
             linked = gpu.linkedPoints ?? unlinkedPoints
             program = request.inputs.initializers + request.inputs.operators
-            var steps = request.inputs.emitters.prefix(gpu.emitterCount).map(ParticleGPUEmitterStep.init)
+            var bones: [ParticleGPUImageBone] = []
+            var steps = request.inputs.emitters.prefix(gpu.emitterCount).map { step -> ParticleGPUEmitterStep in
+                defer { bones += step.bones.map(ParticleGPUImageBone.init) }
+                return ParticleGPUEmitterStep(step, firstBone: bones.count)
+            }
             while steps.count < max(gpu.emitterCount, 1) { steps.append(ParticleGPUEmitterStep(ParticleEmitterStep())) }
             self.steps = steps
+            self.bones = bones
             trails = request.kind == .ropeTrail || request.kind == .fallbackRopeTrail
             serialPoints = gpu.writesControlPoints ? gpu.pointStates : nil
             let boids = request.inputs.operators.contains { $0.header.x == ParticleOperatorKind.boids.rawValue }
@@ -406,6 +418,7 @@ final class ParticleGPUSimulator {
             encoder.setBuffer(gpu.emitterStates, offset: 0, index: 8)
             bindEmitterSteps(plan.steps, index: 10, encoder: encoder)
             encoder.setBuffer(gpu.imagePoints ?? control, offset: 0, index: 11)
+            bindRecords(plan.bones, index: 12, fallback: control, encoder: encoder)
             if let serialPoints = plan.serialPoints {
                 encoder.setBuffer(serialPoints, offset: 0, index: 9)
                 encoder.dispatchThreads(single, threadsPerThreadgroup: single)
@@ -565,7 +578,12 @@ final class ParticleGPUSimulator {
 
     /// The step's program (`ParticleProgramOp`: initializers, then operators) at `index`.
     private func bindProgram(_ records: [ParticleProgramOp], index: Int, fallback: MTLBuffer, encoder: MTLComputeCommandEncoder) {
-        let bytes = records.count * MemoryLayout<ParticleProgramOp>.stride
+        bindRecords(records, index: index, fallback: fallback, encoder: encoder)
+    }
+
+    /// `records` at `index`: inline when small, else in a buffer of their own; `fallback` without any.
+    private func bindRecords<Record>(_ records: [Record], index: Int, fallback: MTLBuffer, encoder: MTLComputeCommandEncoder) {
+        let bytes = records.count * MemoryLayout<Record>.stride
         if records.isEmpty {
             encoder.setBuffer(fallback, offset: 0, index: index)
         } else if bytes <= 4096 {
