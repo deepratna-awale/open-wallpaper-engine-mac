@@ -80,10 +80,15 @@ final class LocalizationLintTests: XCTestCase {
         })
     }
 
+    /// Split out of the scanned files above: `AppDelegate`'s extensions and the window types it had.
+    static let scannedSplitFiles = ["App/AppDelegate+Lifecycle.swift", "App/AppDelegate+Actions.swift",
+                                    "App/AppDelegate+SettingsWindow.swift", "App/AppDelegate+WallpaperWindows.swift",
+                                    "App/WorkshopPreviewWindow.swift"]
+
     private func scannedSources() throws -> [String] {
         let root = Self.repository.appending(path: "OpenWallpaperEngine")
         let manager = FileManager.default
-        var files: [String] = Self.scannedFiles
+        var files: [String] = Self.scannedFiles + Self.scannedSplitFiles
         for folder in Self.scannedFolders {
             let enumerator = try XCTUnwrap(manager.enumerator(atPath: root.appending(path: folder).path))
             for case let path as String in enumerator where path.hasSuffix(".swift") {
