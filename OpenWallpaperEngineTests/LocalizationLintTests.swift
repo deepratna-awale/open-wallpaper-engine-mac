@@ -14,7 +14,7 @@ final class LocalizationLintTests: XCTestCase {
 
     /// The UI's source: views, menus, alerts, panels and the errors they show.
     static let scannedFolders = ["UI", "Settings", "Scene/UI", "App/Menus"]
-    static let scannedFiles = ["App/AppDelegate.swift", "App/SafeRestart.swift", "App/SafeRestartNotice.swift",
+    static let scannedFiles = ["App/AppDelegate.swift", "App/AppDelegate+SceneInspector.swift", "App/SafeRestart.swift", "App/SafeRestartNotice.swift",
                                "Library/Import/ImportPanels.swift"]
     /// Data, not text: English option ids and the table that maps them to labels.
     static let exemptFiles: Set<String> = ["UI/Explorer/FilterResultsOptions.swift", "UI/Components/LocalizedLabels.swift"]
