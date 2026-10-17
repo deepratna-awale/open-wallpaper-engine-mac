@@ -13,8 +13,11 @@ public struct PuppetRig: Sendable {
     /// Per clip, per bone: the samples, nil for a track without keys (disabled).
     public let samples: [[[PuppetPoseTransform]?]]
     public let clips: [PuppetClip]
+    /// Per bone, its blend rules (`PuppetBlendRule`).
+    public let blendRules: [[PuppetBlendRule]]
 
     public init(_ document: PuppetDocument) {
+        blendRules = document.bones.map { $0.blendRules ?? [] }
         parents = document.bones.map(\.parent)
         let locals = document.bones.map(\.local.matrix)
         bindWorld = PuppetMath.worlds(locals: locals, parents: parents)
@@ -34,6 +37,24 @@ public struct PuppetRig: Sendable {
     /// Model-space matrices of a pose.
     public func worlds(_ pose: [PuppetPoseTransform]) -> [simd_float4x4] {
         PuppetMath.worlds(locals: pose.map(\.matrix), parents: parents)
+    }
+
+    /// Model-space matrices of a pose with the blend rules pulled by `blendWeights` (one per rule,
+    /// in `PuppetDocument.blendRuleOrder`), as the player poses a puppet.
+    public func worlds(_ pose: [PuppetPoseTransform], blendWeights: [Float]) -> [simd_float4x4] {
+        guard blendRules.contains(where: { !$0.isEmpty }) else { return worlds(pose) }
+        return PuppetBlendMath.worlds(locals: pose.map(\.matrix), parents: parents, rules: blendRules, weights: blendWeights)
+    }
+
+    /// The blend rules' weights at a (fractional) frame of clip `clip`: the timeline's scrub.
+    public func blendWeights(clip: Int, frame: Float) -> [Float] {
+        guard clips.indices.contains(clip) else { return [] }
+        return blendRules.flatMap { $0.map { $0.weight(clip: clips[clip].id, at: frame) } }
+    }
+
+    /// The pose and blend-rule weights of clip `clip` at `frame`, as model-space matrices.
+    public func worlds(clip: Int, frame: Float) -> [simd_float4x4] {
+        worlds(pose(clip: clip, frame: frame), blendWeights: blendWeights(clip: clip, frame: frame))
     }
 
     /// The skinning palette `world · inverseBind` (the identity in the bind pose).
@@ -214,6 +235,9 @@ public struct PuppetLayerPlayer: Sendable {
 
     public let rig: PuppetRig
     public private(set) var layers: [Layer]
+    /// The blend rules' weights the layers last set (the player's rig+0x250): a replacing layer
+    /// sets its clip's values, any other layer `weight · value`.
+    public private(set) var blendWeights: [Float] = []
 
     public init(rig: PuppetRig, layers: [PuppetAnimationLayer]) {
         self.rig = rig
@@ -235,6 +259,9 @@ public struct PuppetLayerPlayer: Sendable {
             let position = layers[index].clock.samplePosition
             let sampled = rig.sample(clip: layers[index].clip, frame0: position.frame0, frame1: position.frame1,
                                      fraction: position.fraction)
+            let values = rig.blendWeights(clip: layers[index].clip, frame: Float(position.frame0) + position.fraction)
+            let replaces = weight == 1 && !layers[index].settings.additive
+            blendWeights = replaces ? values : values.map { $0 * weight }
             for bone in pose.indices {
                 guard bone < sampled.count, let sample = sampled[bone] else { continue }
                 if layers[index].settings.additive {

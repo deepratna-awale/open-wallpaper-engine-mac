@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Puppet Warp blend rules**, as Wallpaper Engine plays them. A bone with a blend rule (Edit Constraints › Blend Rules) is pulled toward its target bone by the weight its clip keys: its position, rotation and scale move toward the target's, its children follow, and bone physics then acts on the result. A rig whose rule was deleted keeps still, as in Wallpaper Engine.
+- **Wallpaper Editor › Puppet Warp: blend rules**, as Wallpaper Engine's Edit Constraints › Blend Rules. In the Skeleton tool the selected bone's **Blend Rules** section adds a rule toward another bone or deletes one; in the Animate tool each rule's weight (0 to 1) is keyed at the current frame of the animation, and Add Key and Delete Key include it. The preview pulls the bone as the wallpaper will, and rules made in Wallpaper Engine open and save back.
 - **Puppet Warp inverse kinematics**, as Wallpaper Engine plays it. A bone with the "Inverse kinematics arm/leg" constraint now reaches for its IK target while an animation plays: the limbs above it bend toward the target, on the side of the orientation controller, and lie straight toward it when it is out of reach; with **Rotate when overstretched** the end bone turns to point at the target over the **Full rotation distance**, otherwise it keeps the target's orientation. Bone constraints that limit an IK limb's angle and the target's bend rules apply too. Puppets without IK draw exactly as before.
 
 ## [1.0.0-beta.7] - 2026-10-16
