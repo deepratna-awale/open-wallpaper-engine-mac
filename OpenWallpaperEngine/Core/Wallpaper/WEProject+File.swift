@@ -1,26 +1,24 @@
 import Foundation
 
-/// The one place that finds and reads a wallpaper folder's project.json. Each reader keeps the
-/// tolerance it had: `read(in:)` and `object(in:)` are strict (as `JSONDecoder` and
-/// `JSONSerialization` are), and a caller that accepts WE's looser JSON decodes `data(in:)` with
-/// `decodeTolerant` itself.
+/// A wallpaper folder's project.json, found and read through WEFormat's `WEProjectFile` (the one
+/// implementation, which the editor uses too). `read(in:)` is strict, as `JSONDecoder` is.
 extension WEProject {
     /// The project file's name inside a wallpaper folder.
-    static let fileName = "project.json"
+    static let fileName = WEProjectFile.fileName
 
     /// project.json in `directory`.
     static func url(in directory: URL) -> URL {
-        directory.appending(path: fileName)
+        WEProjectFile.url(in: directory)
     }
 
     /// Whether `directory` has a project.json.
     static func exists(in directory: URL) -> Bool {
-        FileManager.default.fileExists(atPath: url(in: directory).path)
+        WEProjectFile.exists(in: directory)
     }
 
     /// project.json's bytes as written; throws when it can't be read.
     static func data(in directory: URL) throws -> Data {
-        try Data(contentsOf: url(in: directory))
+        try WEProjectFile.data(in: directory)
     }
 
     /// project.json decoded as a `WEProject`; throws when it can't be read or decoded.
@@ -31,11 +29,11 @@ extension WEProject {
     /// project.json parsed by `JSONSerialization`, for callers that need fields `WEProject` doesn't
     /// model; throws when it can't be read or parsed.
     static func object(in directory: URL) throws -> Any {
-        try JSONSerialization.jsonObject(with: data(in: directory))
+        try WEProjectFile.object(in: directory)
     }
 
     /// project.json's root object; nil when the root isn't an object. Throws as `object(in:)`.
     static func json(in directory: URL) throws -> [String: Any]? {
-        try object(in: directory) as? [String: Any]
+        try WEProjectFile.json(in: directory)
     }
 }

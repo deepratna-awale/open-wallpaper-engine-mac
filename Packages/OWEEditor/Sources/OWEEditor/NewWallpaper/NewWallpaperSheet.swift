@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 import OWESceneEditing
+import WEFormat
 
 /// What the New Wallpaper sheet needs from the app.
 public struct NewWallpaperServices {
@@ -259,7 +260,7 @@ public struct NewWallpaperSheet: View {
     }
 
     private func isWebFolder(_ url: URL) -> Bool {
-        !FileManager.default.fileExists(atPath: url.appending(path: "project.json").path)
+        !WEProjectFile.exists(in: url)
             && FileManager.default.fileExists(atPath: url.appending(path: "index.html").path)
     }
 
@@ -270,7 +271,7 @@ public struct NewWallpaperSheet: View {
         guard panel.runModal() == .OK, let url = panel.url else { return }
         folder = url
         if title.isEmpty { title = url.lastPathComponent }
-        let hasProject = FileManager.default.fileExists(atPath: url.appending(path: "project.json").path)
+        let hasProject = WEProjectFile.exists(in: url)
         problem = hasProject || isWebFolder(url) ? nil : L("The folder has no index.html or project.json.")
     }
 
@@ -288,7 +289,7 @@ public struct NewWallpaperSheet: View {
         case .folder:
             guard let folder else { return false }
             return isWebFolder(folder) ? !trimmedTitle.isEmpty
-                : FileManager.default.fileExists(atPath: folder.appending(path: "project.json").path)
+                : WEProjectFile.exists(in: folder)
         }
     }
 

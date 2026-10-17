@@ -503,7 +503,7 @@ public enum EditorPreviewScene {
 
     static func sceneFiles(_ scene: [String: Any]) throws -> [String: Data] {
         [
-            "project.json": try json(["file": "scene.json", "title": "Editor preview", "type": "scene"]),
+            WEProjectFile.fileName: try json(["file": "scene.json", "title": "Editor preview", "type": "scene"]),
             "scene.json": try json(scene),
         ]
     }
