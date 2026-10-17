@@ -13,78 +13,6 @@ import WebKit
 import OWEInspectorKit
 import OWETheming
 
-private final class WorkshopPreviewWindow: NSWindow {
-    var onDismiss: (() -> Void)?
-
-    override func performClose(_ sender: Any?) {
-        orderOut(sender)
-        onDismiss?()
-    }
-
-    override func cancelOperation(_ sender: Any?) {
-        performClose(sender)
-    }
-
-    override func resignKey() {
-        super.resignKey()
-        DispatchQueue.main.async { [weak self] in
-            guard let self, !self.isKeyWindow else { return }
-            self.orderOut(nil)
-            self.onDismiss?()
-        }
-    }
-}
-
-private struct WorkshopPreviewContent: View {
-    @ObservedObject var wallpaperViewModel: WallpaperViewModel
-
-    var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            WallpaperView(
-                viewModel: wallpaperViewModel,
-                screenId: wallpaperViewModel.selectedScreenId
-            )
-            .id(wallpaperViewModel.currentWallpaper.wallpaperDirectory)
-
-            // One small glass group over the live wallpaper.
-            GlassGroup(spacing: 10) {
-                HStack(spacing: 10) {
-                    if SceneContentLoader.isVideoType(wallpaperViewModel.currentWallpaper.project.type) {
-                        let isPaused = wallpaperViewModel.playRate == 0
-                        HStack(spacing: 8) {
-                            Button {
-                                wallpaperViewModel.playRate = isPaused ? max(wallpaperViewModel.lastPlayRate, 0.1) : 0
-                            } label: {
-                                Label(isPaused ? "Play" : "Pause", systemImage: isPaused ? "play.fill" : "pause.fill")
-                                    .labelStyle(.iconOnly)
-                            }
-                            .borderlessOnGlassButtonStyle()
-                            .help(isPaused ? "Play" : "Pause")
-
-                            NumericSliderInput(value: $wallpaperViewModel.playVolume, range: 0...1,
-                                               defaultValue: 1, displayScale: 100, suffix: "%",
-                                               fractionDigits: 0, sliderWidth: 110, fieldWidth: 36)
-                        }
-                        .glassBackground(in: Capsule(),
-                                         padding: EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)) { controls in
-                            // Before glass: a frosted capsule keeps the controls legible over the video.
-                            controls
-                                .padding(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
-                                .background(.regularMaterial, in: Capsule())
-                        }
-                    }
-
-                    Button("Set Wallpaper") {
-                        AppDelegate.shared.applyWorkshopPreview()
-                    }
-                    .glassButtonStyle(.prominent)
-                }
-            }
-            .padding()
-        }
-    }
-}
-
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     
@@ -94,8 +22,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var mainWindowController: MainWindowController!
     
     var wallpaperWindows: [String: NSWindow] = [:]
-    private var workshopPreviewWindow: NSWindow?
-    private var workshopPreviewViewModel: WallpaperViewModel?
+    var workshopPreviewWindow: NSWindow?
+    var workshopPreviewViewModel: WallpaperViewModel?
     var sceneInspectorWindow: NSWindow?
     /// The Wallpaper Editor, a process of its own (`WallpaperEditorAppDelegate`): opening a
     /// wallpaper in it, and its edits reaching the wallpapers running here.
@@ -154,7 +82,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     lazy var playInWindow = PlayInWindowController(desktop: wallpaperViewModel)
     /// Wallpaper Engine's command line: `--control` commands from the app's executable
     /// (`App/Launch/CommandLineControlCommand`, docs/command-line.md) run here.
-    private lazy var commandLineControl = CommandLineControlListener { [unowned self] request in
+    lazy var commandLineControl = CommandLineControlListener { [unowned self] request in
         CommandLineControlPerformer(app: self, control: AppControlModel(app: self)).perform(request)
     }
     /// The wallpaper windows sit above the desktop icons, hiding them (`toggleDesktopIcons`).
@@ -167,7 +95,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// Launched by the screen saver's broker for a saver showing while the app wasn't running
     /// (`ScreenSaverLiveNames.launchArgument`): no window and no Dock icon until that screen saver
     /// session ends or a window opens.
-    private(set) var launchedForScreenSaver = ProcessInfo.processInfo.arguments.contains(ScreenSaverLiveNames.launchArgument)
+    internal(set) var launchedForScreenSaver = ProcessInfo.processInfo.arguments.contains(ScreenSaverLiveNames.launchArgument)
     /// Sparkle, off in builds without an update signing key (`Core/Updates`).
     lazy var updater = AppUpdater(configuration: .main)
     /// The system's now-playing session, one for the process (MediaRemote registers per process):
@@ -221,8 +149,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         desktopPictures.refresh()
     }
     /// Theming's tint of the app's own windows, here and in the Wallpaper Editor's process.
-    private lazy var themeTint = ThemeTintSync(messaging: DistributedAppProcessMessaging())
-    private var themeTintCancellable: AnyCancellable?
+    lazy var themeTint = ThemeTintSync(messaging: DistributedAppProcessMessaging())
+    var themeTintCancellable: AnyCancellable?
     /// Each display's desktop picture, which the lock screen and the menu bar's tint show.
     lazy var desktopPictures = DesktopPictureController.system()
     /// Settings › Plugins › MCP Server: MCP clients' control of the app while installed (`MCP/`).
@@ -248,7 +176,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// Renders the Wallpaper Editor's browser previews in the background once WE's assets are there.
     private(set) lazy var editorPreviewPrewarm = EditorPreviewPrewarm(environment: .live)
     /// Expires cache entries unused for 60 days, at launch and daily.
-    private let cacheMaintenance = CacheMaintenance()
+    let cacheMaintenance = CacheMaintenance()
     lazy var sceneScriptServices: SceneScriptServices = {
         if !SceneScriptJIT.isEnabled {
             OWELog.info(.script, "JavaScriptCore runs without its JIT (no \(SceneScriptJIT.entitlement)): scripts run several times slower")
@@ -272,7 +200,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     })
     private var assetsCancellable: AnyCancellable?
     /// Lists wallpapers added to or removed from the library folders as they change.
-    private lazy var libraryFolderWatcher: LibraryFolderWatcher = {
+    lazy var libraryFolderWatcher: LibraryFolderWatcher = {
         let watcher = LibraryFolderWatcher()
         watcher.onChange = { [weak self] in self?.contentViewModel.refresh() }
         return watcher
@@ -310,13 +238,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private(set) lazy var applicationRuleLoader = makeApplicationRuleLoader()
     /// Advanced › "Pause when VRAM is exhausted", fed to `displayPlaybackMonitor`.
     private(set) lazy var videoMemoryWatch = makeVideoMemoryWatch()
-    private var videoMemorySettingCancellable: AnyCancellable?
+    var videoMemorySettingCancellable: AnyCancellable?
     
     /// Passes the mouse to web wallpapers while one is shown.
-    private lazy var webMouseForwarder = WebWallpaperMouseForwarder(windows: { [unowned self] in
+    lazy var webMouseForwarder = WebWallpaperMouseForwarder(windows: { [unowned self] in
         Array(wallpaperWindows.values)
     })
-    private var webMouseCancellable: AnyCancellable?
+    var webMouseCancellable: AnyCancellable?
     
     private static let instance = AppDelegate()
     /// Open Wallpaper Engine's delegate, made on first use. Never in the Wallpaper Editor's process
@@ -485,598 +413,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         return dockMenu
     }
-    
-// MARK: - delegate methods
-    /// Settings › Library Folders changed: watch the new set and list its wallpapers.
-    func libraryFoldersDidChange() {
-        libraryFolderWatcher.watch(LibraryFolders().folders)
-        contentViewModel.refresh()
-    }
 
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        // A test copy wears "TEST", a local build "Dev", on its Dock icon (`DockBadge`).
-        DockBadge.current.apply()
-        #if DEBUG
-        AndroidBatchPicker.openScreenshotFixtureIfRequested(library: contentViewModel.library)
-        #endif
-        AppDelegate.shared.setPlacehoderWallpaper(with: wallpaperViewModel.currentWallpaper)
-        // Each display's desktop picture (lock screen, menu bar tint) follows what it shows.
-        desktopPictures.observe(wallpaperViewModel, settings: globalSettingsViewModel)
-        #if DEBUG
-        // The live screen saver lab: each display's window stack during a screen saver or lock.
-        ScreenSaverWindowSampler.shared.startIfLab()
-        #endif
-        // The screen saver shows each display's picture until its live frames come.
-        if ScreenSaverInstaller.current.mayInstall {
-            let stills = ScreenSaverStillPublisher.current
-            desktopPictures.sync.onPictureWritten = { url, display in stills.publish(url, display: display) }
-            // With the lock-screen picture and the menu bar tint off, the same pictures are
-            // written for the screen saver alone while its plugin is on.
-            desktopPictures.saverSync?.onPictureWritten = { url, display in stills.publish(url, display: display) }
-            desktopPictures.wantsScreenSaverStills = { [unowned self] in globalSettingsViewModel.settings.screenSaver }
-            screenSaverSelection.stills = stills
-            liveScreenSaver.stills = stills
-        }
-
-        // 显示桌面壁纸
-        for (_, window) in self.wallpaperWindows {
-            window.orderFront(nil)
-        }
-        
-        safeRestart.showPendingNotice()
-        // Once, after the move from the old bundle id: macOS asks for its permissions again.
-        identityNotice.showIfPending()
-        updater.willRelaunch = { [unowned self] in
-            self.captureUpdateRelaunchState().save(to: .app)
-            // Sparkle quits next; a sheet would stop that.
-            AppTermination.shared.armDeadline()
-        }
-        // Logout, shutdown and scripted quits go through the same bounded quit.
-        AppTermination.shared.installQuitHandlers()
-        updater.start()
-        displayPlaybackMonitor.start(settings: globalSettingsViewModel.$settings)
-        videoMemorySettingCancellable = globalSettingsViewModel.$settings
-            .map(\.pauseOnVRAMExhausted)
-            .removeDuplicates()
-            .sink { [weak self] enabled in MainActor.assumeIsolated { self?.videoMemoryWatch.setEnabled(enabled) } }
-
-        // After an update relaunch, what was open before; otherwise the setup assistant if due.
-        if !restoreUpdateRelaunchState(), !launchedForScreenSaver,
-           globalSettingsViewModel.isFirstLaunch || globalSettingsViewModel.needsLegalNotice {
-            self.mainWindowController.window.center()
-            self.mainWindowController.window.makeKeyAndOrderFront(nil)
-        }
-
-        // Registers the playlists', the hotkey actions', the wallpapers' and the profiles' global shortcuts.
-        _ = playlistShortcuts
-        _ = globalHotKeys
-
-        // MCP clients connect once the app is set up, while the MCP Server plugin is installed.
-        mcpServerPlugin.start()
-        // And the command line's `--control` commands.
-        commandLineControl.start()
-
-        // Theming: puts back what a crashed session changed, then follows the wallpaper's colour.
-        DesktopPictureTheming.provider = { [unowned self] in theming.strips }
-        theming.start(settings: globalSettingsViewModel.$settings.map(\.theming).eraseToAnyPublisher(),
-                      wallpapers: wallpaperViewModel)
-        themeTintCancellable = theming.$appTint.removeDuplicates().sink { [unowned self] in themeTint.publish($0) }
-
-        // Launched into the menu bar only, the Dock icon goes until a window opens, unless Show in
-        // Dock keeps it.
-        dockPresence.keepsIcon = { [unowned self] in globalSettingsViewModel.settings.showInDock && !launchedForScreenSaver }
-        dockPresence.start()
-
-        // The Wallpaper Editor's browser previews, when any is missing.
-        editorPreviewPrewarm.start(reason: "launch", after: EditorPreviewPrewarm.launchDelay)
-
-        // Cache entries unused for 60 days go, a while after launch and then daily.
-        cacheMaintenance.start()
-
-        // Workshop downloads need SteamCMD; set it up from Valve in the background when it's missing.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
-            guard let self else { return }
-            self.steamCmdInstaller.detectThenAutoInstall(self.contentViewModel.steamCmd)
-        }
-
-        // Local wallpapers get their stable settings ids once, before any of them is edited.
-        let libraries = [FileManager.default.wallpapersDirectory] + LibraryFolders().folders
-        DispatchQueue.global(qos: .utility).async {
-            LocalWallpaperIdentities.registerLibrary(libraries)
-            WallpaperPackageConverter.convertInstalledLibrary()
-            if UserDefaults.app.bool(forKey: "ReclaimOriginalPackages") {
-                WallpaperPackageConverter.reclaimEligibleSources()
-            }
-            // Bundles left on an older conversion with no package to redo it from.
-            let stale = StaleBundleScanner.scan(storage: FileManager.default.wallpapersDirectory)
-            guard !stale.isEmpty else { return }
-            // Later, so the cached SteamCMD login restored at launch has had its turn.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [weak self] in
-                self?.refreshStaleBundles(stale)
-            }
-        }
-    }
-    
-    /// What earlier versions left for the screen saver: what they set as the screen saver (a
-    /// scene's recording, a video's own file copied in) becomes the live pick of that wallpaper,
-    /// with its picture as the still; one of a wallpaper no longer in the library goes, so the
-    /// screen saver follows the desktop again. The old recordings and video files (only OWE's own,
-    /// in the screen saver's folder) and the retired settings are deleted.
-    private func migrateScreenSaverRecording() {
-        let store = screenSaverSelection.store
-        store.removeRetiredKeys()
-        // Nothing is recorded, linked or copied any more: the old files go, in the background
-        // (only the user's own copy wrote them where the saver reads).
-        defer {
-            if ScreenSaverInstaller.current.mayInstall {
-                let videos = ScreenSaverVideoStore.current, caches = AppStorageLocation.current.cachesDirectory
-                DispatchQueue.global(qos: .utility).async { videos.removeOldFiles(cachesDirectory: caches) }
-            }
-        }
-        guard let selection = store.selection else {
-            store.migrateSelection() // Drops one that no longer decodes.
-            return
-        }
-        let folder = URL(filePath: selection.wallpaperDirectory, directoryHint: .isDirectory)
-        guard let wallpaper = InstalledLibrary.wallpaper(at: folder, hiding: []) else {
-            store.selection = nil
-            OWELog.info(.app, "Screen saver: \(folder.lastPathComponent), set as the screen saver, is no longer in the library")
-            return
-        }
-        guard store.migrateSelection() else { return }
-        OWELog.info(.app, "Screen saver: \(folder.lastPathComponent), set as the screen saver by an earlier version, is now drawn live")
-        // Its still now, once the app is set up (`renderPickStill`).
-        DispatchQueue.main.async { [weak self] in self?.liveScreenSaver.renderPickStill(wallpaper) }
-    }
+    // MARK: - Lifecycle state (AppDelegate+Lifecycle)
 
     /// A copy the broker launched for a screen saver (`launchedForScreenSaver`) quits once its
     /// sessions are over, after `ScreenSaverLiveController.warmGrace` (another session may follow),
     /// unless the user opened one of its windows meanwhile: the user had quit the app, and it
     /// shouldn't stay, with its desktop wallpapers, because a screen saver ran.
-    private var quitsAfterScreenSaver = false
-    private var screenSaverQuitTimer: Timer?
-    private var windowOpenedObserver: NSObjectProtocol?
+    var quitsAfterScreenSaver = false
 
-    private func screenSaverSessionChanged(_ running: Bool) {
-        if running {
-            screenSaverQuitTimer?.invalidate()
-            screenSaverQuitTimer = nil
-            return
-        }
-        if launchedForScreenSaver {
-            launchedForScreenSaver = false
-            dockPresence.update()
-        }
-        guard quitsAfterScreenSaver else { return }
-        screenSaverQuitTimer?.invalidate()
-        OWELog.info(.app, "Live screen saver: launched only for the screen saver; quitting in \(Int(ScreenSaverLiveController.warmGrace)) s unless a window opens")
-        screenSaverQuitTimer = Timer.scheduledTimer(withTimeInterval: ScreenSaverLiveController.warmGrace + 5, repeats: false) { [weak self] _ in
-            MainActor.assumeIsolated {
-                guard let self, self.quitsAfterScreenSaver else { return }
-                OWELog.info(.app, "Live screen saver: quitting the copy launched for the screen saver")
-                NSApp.terminate(nil)
-            }
-        }
-    }
+    var screenSaverQuitTimer: Timer?
 
-    /// The user opening one of the app's windows keeps a copy launched for the screen saver running.
-    private func observeWindowsOpenedAfterScreenSaverLaunch() {
-        windowOpenedObserver = NotificationCenter.default.addObserver(forName: NSWindow.didBecomeKeyNotification, object: nil,
-                                                                      queue: .main) { [weak self] note in
-            MainActor.assumeIsolated {
-                guard let self, let window = note.object as? NSWindow, window.styleMask.contains(.titled),
-                      !(window is NSPanel) else { return }
-                self.quitsAfterScreenSaver = false
-                self.screenSaverQuitTimer?.invalidate()
-                self.screenSaverQuitTimer = nil
-                if let observer = self.windowOpenedObserver { NotificationCenter.default.removeObserver(observer) }
-                self.windowOpenedObserver = nil
-                OWELog.info(.app, "Live screen saver: a window opened; the copy launched for the screen saver keeps running")
-            }
-        }
-    }
+    var windowOpenedObserver: NSObjectProtocol?
 
-    private lazy var identityNotice = AppIdentityNotice()
-    private var staleBundleRefresher: StaleBundleRefresher?
-    private var staleBundleNotice: SafeRestartNotice?
+    lazy var identityNotice = AppIdentityNotice()
 
-    private func refreshStaleBundles(_ stale: [StaleBundle]) {
-        let refresher = StaleBundleRefresher(
-            downloader: contentViewModel.steamCmd,
-            isShown: { [weak self] directory in
-                self?.wallpaperViewModel.wallpapers.values.contains {
-                    $0.wallpaperDirectory.standardizedFileURL == directory.standardizedFileURL
-                } ?? false
-            },
-            notify: { [weak self] titles in
-                guard let self else { return }
-                self.staleBundleNotice?.close()
-                self.staleBundleNotice = SafeRestartNotice(
-                    message: StaleBundleRefresher.noticeMessage(for: titles), onRetry: nil,
-                    onDismiss: { [weak self] in
-                        self?.staleBundleNotice?.close()
-                        self?.staleBundleNotice = nil
-                    })
-                self.staleBundleNotice?.show()
-            })
-        staleBundleRefresher = refresher
-        refresher.run(stale)
-    }
+    var staleBundleRefresher: StaleBundleRefresher?
 
-    func applicationDidBecomeActive(_ notification: Notification) {
-        contentViewModel.navigation.isApplicationActive = true
-        // Picks up a steamcmd installed meanwhile, e.g. with Homebrew.
-        if !steamCmdInstaller.isBusy {
-            contentViewModel.steamCmd.detectSteamCmd()
-        }
-    }
-
-    func applicationDidResignActive(_ notification: Notification) {
-        contentViewModel.navigation.isApplicationActive = false
-    }
-    
-    /// Settings › General › Show in Dock and Show in Menu Bar.
-    func applyAppPresence() {
-        statusItem?.isVisible = globalSettingsViewModel.settings.showInMenuBar
-        dockPresence.update()
-    }
-
-    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        if !self.mainWindowController.window.isVisible && !settingsWindow.isVisible {
-            self.mainWindowController.window?.makeKeyAndOrderFront(nil)
-        }
-        
-        return true
-    }
-    
-    func applicationWillTerminate(_ notification: Notification) {
-        // What an application rule loaded isn't the user's choice: the saved wallpapers and
-        // playlist go back to theirs before they are stored for the next launch.
-        if applicationRuleLoader.isHoldingRestorePoint { applicationRuleLoader.update(nil) }
-        safeRestart.applicationWillTerminate()
-        crashWatcher.applicationWillTerminate()
-        mcpServerPlugin.stop()
-        // The steamcmd kept logged in between Workshop downloads quits with the app.
-        contentViewModel.steamCmd.endSteamCmdSession()
-        updater.stopShaderPrewarm()
-        cacheMaintenance.stop()
-        // The system colours go back when the user chose "Restore on quit".
-        theming.stop()
-        // The editor's windows go back to the system accent with the app.
-        themeTintCancellable = nil
-        themeTint.publish(nil)
-        // The user's pictures go back where they still exist; OWE's pictures stay on disk, since
-        // a Space macOS doesn't let OWE reach may still show one. Full-screen TIFFs earlier
-        // versions left in Caches go to the Trash.
-        desktopPictures.restoreUsersPictures()
-        DesktopSnapshotCache.current.trashLegacySnapshots()
-    }
-    
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        return false
-    }
-
-// MARK: - misc methods
-    @objc func openSettingsWindow() {
-        // What Cancel goes back to.
-        globalSettingsViewModel.beginEditing()
-        NSApp.activate(ignoringOtherApps: true)
-        self.settingsWindow.makeKeyAndOrderFront(nil)
-    }
-    
-    /// Opens Settings on `tab`, scrolled to the section `anchor` names when given.
-    func openSettings(_ tab: SettingsTab, anchor: String? = nil) {
-        settingsNavigation.show(tab, anchor: anchor)
-        openSettingsWindow()
-    }
-
-    /// Settings › Assets, where the assets scenes need are installed.
-    @objc func openAssetsSettings() {
-        openSettings(.assets, anchor: SettingsAnchor.assets)
-    }
-
-    /// The Settings page the Wallpaper Editor asked for.
-    func openSettings(for request: AppSettingsRequest) {
-        switch request {
-        case .assets: openAssetsSettings()
-        case .depthMaps: openSettings(.plugins, anchor: SettingsAnchor.depthMaps)
-        }
-    }
-
-    /// The Workshop tab, where Steam's login form is.
-    @objc func openSteamLogin() {
-        contentViewModel.navigation.topTabBarSelection = 1
-        openMainWindow()
-    }
-
-    /// Nothing before launch has made the window (test hosts never get there).
-    @objc func openMainWindow() {
-        guard let window = self.mainWindowController?.window else { return }
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-    }
-    
-    @MainActor @objc func toggleFilter() {
-        self.contentViewModel.navigation.toggleFilter()
-    }
-
-    /// Posted at most once per launch by `AudioCapturePermissionGate`, and never after
-    /// "Don't Ask Again".
-    @objc func audioCapturePermissionMissing() {
-        let alert = NSAlert()
-        alert.messageText = String(localized: "Audio Visualizers Need Permission")
-        alert.informativeText = PermissionHelper.usesSystemAudioRecording
-            ? String(localized: """
-            Open Wallpaper Engine needs System Audio Recording permission to read system audio \
-            for audio bars and other audio-reactive wallpapers. Audio capture starts on its own once \
-            the permission is granted.
-            """, comment: "System Audio Recording is the name of the macOS privacy setting")
-            : String(localized: """
-            Open Wallpaper Engine needs Screen & System Audio Recording permission to read system audio \
-            for audio bars and other audio-reactive wallpapers. Audio capture starts on its own once \
-            the permission is granted.
-            """, comment: "Screen & System Audio Recording is the name of the macOS privacy setting")
-        alert.addButton(withTitle: String(localized: "Grant Access"))
-        alert.addButton(withTitle: String(localized: "Open Permissions Page"))
-        alert.addButton(withTitle: String(localized: "Later"))
-        alert.addButton(withTitle: String(localized: "Don't Ask Again"))
-        switch alert.runModal() {
-        case .alertFirstButtonReturn:
-            PermissionHelper.grantAudioCaptureAccess { WallpaperServices.shared.recheckCapturePermission() }
-        case .alertSecondButtonReturn:
-            openSettings(.permissions)
-        case .alertThirdButtonReturn:
-            break
-        default:
-            GlobalSettingsViewModel.isAudioPermissionAlertDismissed = true
-        }
-    }
-
-// MARK: Set Settings Window
-    /// The bare settings window: resizable to any width, with no minimum width.
-    static func makeSettingsWindow() -> NSWindow {
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: SettingsTab.toolbarFittingWidth(), height: 560),
-            styleMask: [.titled, .closable, .resizable, .fullSizeContentView],
-            backing: .buffered, defer: false)
-        window.title = String(localized: "Settings")
-        window.isReleasedWhenClosed = false
-        window.toolbarStyle = .preference
-        return window
-    }
-
-    func setSettingsWindow() {
-        self.settingsWindow = Self.makeSettingsWindow()
-
-        self.settingsWindow.delegate = self
-        
-        let toolbar = NSToolbar(identifier: "SettingsToolbar")
-        toolbar.delegate = self
-        
-        toolbar.selectedItemIdentifier = settingsNavigation.tab.toolbarIdentifier
-        settingsNavigation.toolbar = toolbar
-
-        self.settingsWindow.toolbar = toolbar
-        let ruleLibrary = ApplicationRuleLibrary(
-            wallpapers: { [weak self] in self?.contentViewModel.library.allWallpapers ?? [] },
-            playlists: { [weak self] in self?.wallpaperViewModel.playlists ?? [] },
-            profiles: { [weak self] in self?.displayProfiles ?? UnavailableDisplayProfiles() })
-        self.settingsWindow.contentView = NSHostingView(rootView: SettingsView()
-            .environmentObject(self.globalSettingsViewModel)
-            .environmentObject(settingsNavigation)
-            .environment(\.applicationRuleLibrary, ruleLibrary)
-            .appAccentTint())
-
-        // A saved frame is the size and place the user left the window at; only the first open
-        // gets the computed size. The frame autosaves into UserDefaults.standard, which an
-        // isolated copy must not write.
-        let autosaveName = "SettingsWindow"
-        let isIsolated = AppStorageLocation.current.isIsolated
-        let restored = !isIsolated && self.settingsWindow.setFrameUsingName(autosaveName)
-        if !isIsolated { self.settingsWindow.setFrameAutosaveName(autosaveName) }
-        if !restored, let screen = self.settingsWindow.screen ?? NSScreen.main {
-            let size = SettingsTab.initialWindowSize(visibleFrame: screen.visibleFrame)
-            self.settingsWindow.setFrame(NSRect(origin: .zero, size: size), display: false)
-            self.settingsWindow.center()
-        }
-    }
-    
-// MARK: Set Wallpaper Windows - One per screen
-    func setWallpaperWindows() {
-        // Stopped (`stopWallpapers`): no windows until Resume, whatever rebuilds them meanwhile.
-        guard !wallpaperViewModel.isStopped else { return }
-        for screen in NSScreen.screens {
-            let screenId = WallpaperViewModel.screenId(for: screen)
-            guard wallpaperViewModel.isScreenEnabled(screenId) else { continue }
-            wallpaperWindows[screenId] = makeWallpaperWindow(on: screen, screenId: screenId)
-        }
-        applyMenuBarStrips()
-    }
-
-    /// The wallpaper window for `screen`.
-    private func makeWallpaperWindow(on screen: NSScreen, screenId: String) -> NSWindow {
-        let window = WallpaperWindow()
-        window.styleMask = [.borderless, .fullSizeContentView]
-        window.level = Self.wallpaperWindowLevel(hidingDesktopIcons: hidesDesktopIcons)
-        window.collectionBehavior = [.stationary, .canJoinAllSpaces]
-        window.setFrame(screen.frame, display: true)
-        window.isMovable = false
-        window.titlebarAppearsTransparent = true
-        window.titleVisibility = .hidden
-        window.backgroundColor = .black
-        window.isOpaque = true
-        window.canHide = false
-        window.canBecomeVisibleWithoutLogin = true
-        window.isReleasedWhenClosed = false
-        window.ignoresMouseEvents = true
-        // The wallpaper's display options (offset, zoom, flip) place the view on the display,
-        // inside the layout's content (clone mirror, stretch canvas).
-        let content = WallpaperWindowContentView(content: WallpaperDisplayTransformView(
-            content: NSHostingView(rootView: DisplayWallpaperView(viewModel: self.wallpaperViewModel, screenId: screenId)),
-            screenID: screenId, viewModel: wallpaperViewModel))
-        content.isMirrored = wallpaperViewModel.isFlipped(screenId)
-        content.stretchCanvas = wallpaperViewModel.layoutResolution.canvases[screenId]
-        window.contentView = content
-        return window
-    }
-
-    /// Adds or removes `screenId`'s window as its wallpapers are turned on or off; the other
-    /// displays' windows stay as they are.
-    func updateWallpaperWindow(for screenId: String) {
-        let wanted = !wallpaperViewModel.isStopped && wallpaperViewModel.isScreenEnabled(screenId)
-        if !wanted, let window = wallpaperWindows.removeValue(forKey: screenId) {
-            Self.closeWallpaperWindows([screenId: window])
-        } else if wanted, wallpaperWindows[screenId] == nil,
-                  let screen = NSScreen.screens.first(where: { WallpaperViewModel.screenId(for: $0) == screenId }) {
-            wallpaperWindows[screenId] = makeWallpaperWindow(on: screen, screenId: screenId)
-            applyMenuBarStrips()
-            orderWallpaperWindowsFront()
-        }
-    }
-
-    /// Fills each wallpaper window's menu bar strip with theming's colour, or clears it.
-    func applyMenuBarStrips() {
-        let strips = theming.strips
-        for (screenId, window) in wallpaperWindows {
-            (window.contentView as? WallpaperWindowContentView)?.menuBarStrip =
-                MenuBarStripFill(strips, display: CGDirectDisplayID(screenId))
-        }
-    }
-
-    /// Mirrors the windows of flipped clone displays and only those.
-    private func applyDisplayFlips(_ flipped: Set<String>) {
-        for (screenId, window) in wallpaperWindows {
-            (window.contentView as? WallpaperWindowContentView)?.isMirrored = flipped.contains(screenId)
-        }
-    }
-
-    /// Names each stretched display's canvas in its window; the others have none.
-    private func applyStretchCanvases(_ canvases: [String: CGRect]) {
-        for (screenId, window) in wallpaperWindows {
-            (window.contentView as? WallpaperWindowContentView)?.stretchCanvas = canvases[screenId]
-        }
-    }
-
-    /// Rebuild wallpaper windows without changing enabled state.
-    func rebuildWallpaperWindows() {
-        Self.closeWallpaperWindows(wallpaperWindows)
-        wallpaperWindows.removeAll()
-        setWallpaperWindows()
-        orderWallpaperWindowsFront()
-    }
-
-    /// Closes wallpaper windows and drops their content, so every wallpaper view goes and with it
-    /// its hold on the running instance (`WallpaperInstanceRegistry`), page or player.
-    static func closeWallpaperWindows(_ windows: [String: NSWindow]) {
-        for (_, window) in windows {
-            // `isReleasedWhenClosed` is false, so the hosting view (and the video players inside
-            // it) survives a plain close and keeps playing.
-            window.contentView = nil
-            window.close()
-        }
-    }
-
-    @MainActor
-    func showWorkshopPreview(_ wallpaper: WEWallpaper) {
-        if let previewViewModel = workshopPreviewViewModel,
-           let window = workshopPreviewWindow {
-            previewViewModel.setWallpaper(wallpaper, for: previewViewModel.selectedScreenId)
-            previewViewModel.playRate = wallpaperViewModel.playRate
-            previewViewModel.playVolume = wallpaperViewModel.playVolume
-            window.title = wallpaper.project.title
-            window.makeKeyAndOrderFront(nil)
-            return
-        }
-
-        let previewViewModel = WallpaperViewModel(persistsWallpapers: false)
-        previewViewModel.setWallpaper(wallpaper, for: previewViewModel.selectedScreenId)
-        previewViewModel.playRate = wallpaperViewModel.playRate
-        previewViewModel.playVolume = wallpaperViewModel.playVolume
-
-        let window = WorkshopPreviewWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 960, height: 540),
-            styleMask: [.titled, .closable, .resizable, .miniaturizable],
-            backing: .buffered,
-            defer: false
-        )
-        window.isReleasedWhenClosed = false
-        window.onDismiss = { [weak self] in
-            // Hiding the window leaves its wallpaper view — and that view's video players — alive,
-            // so the preview has to be torn down rather than just paused.
-            guard let self else { return }
-            self.workshopPreviewViewModel?.playRate = 0
-            self.workshopPreviewViewModel?.playVolume = 0
-            self.workshopPreviewWindow?.contentView = nil
-            self.workshopPreviewWindow = nil
-            self.workshopPreviewViewModel = nil
-        }
-        window.title = wallpaper.project.title
-        window.contentView = NSHostingView(rootView: WorkshopPreviewContent(
-            wallpaperViewModel: previewViewModel
-        ).appAccentTint())
-        window.center()
-        window.makeKeyAndOrderFront(nil)
-
-        workshopPreviewViewModel = previewViewModel
-        workshopPreviewWindow = window
-    }
-
-    @MainActor
-    func applyWorkshopPreview() {
-        guard let wallpaper = workshopPreviewViewModel?.currentWallpaper else { return }
-        wallpaperViewModel.inspect(wallpaper)
-        wallpaperViewModel.applyInspectedWallpaper()
-    }
-
-    /// Displays connected, disconnected, woken, resized or rearranged. Only a display never
-    /// connected before gets wallpapers turned on; one the user turned off stays off. The windows
-    /// are rebuilt only when the displays with wallpapers or the layout changed; otherwise they
-    /// follow their displays' frames.
-    @objc func screensChanged() {
-        let screens = NSScreen.screens
-        let connected = screens.map { WallpaperViewModel.screenId(for: $0) }
-        wallpaperViewModel.enableNewDisplays(Set(connected))
-        // Groups whose displays came back wake up; those left with one display go dormant.
-        let layout = wallpaperViewModel.layoutResolution
-        wallpaperViewModel.refreshDisplayLayout()
-        let wanted: Set<String> = wallpaperViewModel.isStopped
-            ? [] : Set(connected.filter { wallpaperViewModel.isScreenEnabled($0) })
-        guard wanted == Set(wallpaperWindows.keys), layout == wallpaperViewModel.layoutResolution else {
-            rebuildWallpaperWindows()
-            return
-        }
-        for screen in screens {
-            if let window = wallpaperWindows[WallpaperViewModel.screenId(for: screen)], window.frame != screen.frame {
-                window.setFrame(screen.frame, display: true)
-            }
-        }
-    }
-
-    func windowDidBecomeKey(_ notification: Notification) {
-        // Settings opened some other way than `openSettingsWindow`: what Cancel goes back to.
-        guard (notification.object as? NSWindow) === settingsWindow else { return }
-        globalSettingsViewModel.beginEditing()
-    }
-
-    func windowWillClose(_ notification: Notification) {
-        // Closed without OK: back to the settings the window opened with.
-        guard (notification.object as? NSWindow) === settingsWindow else { return }
-        globalSettingsViewModel.reset()
-    }
-
-    /// Installs the mouse forwarding while a web wallpaper is shown on an enabled display, and
-    /// removes it otherwise: on every change of the shown wallpapers (and layouts), the enabled
-    /// displays, or Stop. The publishers send the new values.
-    private func observeWebWallpapers() {
-        webMouseCancellable = wallpaperViewModel.$instanceKeys
-            .combineLatest(wallpaperViewModel.$enabledScreens, wallpaperViewModel.$isStopped)
-            .map { WebWallpaperMouseForwarder.isNeeded(instanceKeys: $0, enabledScreens: $1, stopped: $2) }
-            .removeDuplicates()
-            .sink { [weak self] needed in self?.webMouseForwarder.update(needed: needed) }
-    }
-    
-    /// The screen saver follows the main display's wallpaper.
-    func setPlacehoderWallpaper(with wallpaper: WEWallpaper) {
-        screenSaver.update(enabled: globalSettingsViewModel.settings.screenSaver, wallpaper: wallpaper)
-    }
+    var staleBundleNotice: SafeRestartNotice?
 }
