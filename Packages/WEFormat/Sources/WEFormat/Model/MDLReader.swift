@@ -10,21 +10,30 @@ import simd
 /// this does too: a section it doesn't finish reading (a newer version of a known one, an unknown
 /// tag) continues at its stored end, and bytes after the terminating empty tag are ignored.
 /// (The reference script rejects those two, which no library file has.)
-enum MDLReader {
-    static func read(_ data: Data) throws -> MDLModel {
+public enum MDLReader {
+    /// `log` hears each section it skips (an unknown tag), with where it is.
+    public static func read(_ data: Data, log: (String) -> Void = { _ in }) throws -> MDLModel {
+        try readWithMeshRanges(data, log: log).model
+    }
+
+    /// The model and where each mesh's record (its materials to its groups) lies in `data`, from
+    /// 0: what a writer that keeps a mesh byte for byte copies.
+    public static func readWithMeshRanges(_ data: Data, log: (String) -> Void = { _ in }) throws
+        -> (model: MDLModel, meshRanges: [Range<Int>]) {
         var reader = MDLByteReader([UInt8](data))
-        var model = try readMeshes(&reader)
+        var meshRanges: [Range<Int>] = []
+        var model = try readMeshes(&reader, ranges: &meshRanges)
         // 0x140262382: no sections before MDLV 13.
         if model.version >= 13 {
-            try readSections(&reader, into: &model)
+            try readSections(&reader, into: &model, log: log)
         }
         model.end = reader.offset
         model.trailingByteCount = reader.count - reader.offset
-        return model
+        return (model, meshRanges)
     }
 
     /// `atoi(tag + 4)` over ASCII digits (0x1402c82c0); 0 without any.
-    static func version(ofTag tag: ArraySlice<UInt8>) -> Int {
+    public static func version(ofTag tag: ArraySlice<UInt8>) -> Int {
         var value = 0
         for byte in tag.dropFirst(4) {
             guard byte >= UInt8(ascii: "0"), byte <= UInt8(ascii: "9") else { break }
@@ -38,7 +47,7 @@ enum MDLReader {
 
     // MARK: - MDLV
 
-    private static func readMeshes(_ r: inout MDLByteReader) throws -> MDLModel {
+    private static func readMeshes(_ r: inout MDLByteReader, ranges: inout [Range<Int>]) throws -> MDLModel {
         let tagBytes = try r.cstringBytes()
         let tag = String(decoding: tagBytes, as: UTF8.self)
         guard tagBytes.starts(with: Array("MDLV".utf8)) else { throw MDLError.notAModel(tag: String(tag.prefix(16))) }
@@ -48,8 +57,10 @@ enum MDLReader {
         let meshCount = try r.u32()
         var meshes: [MDLMesh] = []
         for index in 0..<Int(meshCount) {
+            let start = r.offset
             meshes.append(try readMesh(&r, index: index, version: version, legacyFormat: legacyFormat,
                                        materials: Int(materialsPerMesh)))
+            ranges.append(start..<r.offset)
         }
         return MDLModel(tag: tag, version: version, legacyFormat: legacyFormat, materialsPerMesh: materialsPerMesh,
                         meshes: meshes, end: 0, trailingByteCount: 0)
@@ -120,7 +131,8 @@ enum MDLReader {
 
     // MARK: - Sections
 
-    private static func readSections(_ r: inout MDLByteReader, into model: inout MDLModel) throws {
+    private static func readSections(_ r: inout MDLByteReader, into model: inout MDLModel,
+                                     log: (String) -> Void) throws {
         while true {
             let offset = r.offset
             let tagBytes = try r.cstringBytes()
@@ -145,7 +157,7 @@ enum MDLReader {
                 model.referencePose = try readReferencePose(&r, bones: model.skeleton?.bones.count ?? 0)
             } else {
                 skipped = true
-                OWELog.debug(.scene, "MDL: skipped unknown section \(tag) at 0x\(String(offset, radix: 16)) (\(end - r.offset) bytes)")
+                log("MDL: skipped unknown section \(tag) at 0x\(String(offset, radix: 16)) (\(end - r.offset) bytes)")
             }
             guard r.offset <= end else {
                 throw MDLError.malformed("section \(tag) read to 0x\(String(r.offset, radix: 16)) past its end 0x\(String(end, radix: 16))")
@@ -176,7 +188,7 @@ enum MDLReader {
     }
 
     /// Little-endian f32s of `bytes` (a multiple of 4 long).
-    static func floats(_ bytes: ArraySlice<UInt8>) -> [Float] {
+    public static func floats(_ bytes: ArraySlice<UInt8>) -> [Float] {
         bytes.withUnsafeBytes { raw in
             (0..<(raw.count / 4)).map { Float(bitPattern: raw.loadUnaligned(fromByteOffset: 4 * $0, as: UInt32.self).littleEndian) }
         }

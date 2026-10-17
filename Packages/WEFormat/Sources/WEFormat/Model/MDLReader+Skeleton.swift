@@ -2,10 +2,10 @@ import simd
 
 extension MDLReader {
     /// WE's bone limit: more fast-fails the process (0x140262501).
-    static let maximumBones = 128
+    public static let maximumBones = 128
 
     /// The `MDLS` section (0x1402624f4…0x14026395a; docs/models-plan.md §1.3).
-    static func readSkeleton(_ r: inout MDLByteReader, version: Int) throws -> MDLSkeleton {
+    public static func readSkeleton(_ r: inout MDLByteReader, version: Int) throws -> MDLSkeleton {
         let boneCount = Int(try r.u32())
         guard boneCount <= maximumBones else { throw MDLError.tooManyBones(boneCount) }
         var bones: [MDLBone] = []

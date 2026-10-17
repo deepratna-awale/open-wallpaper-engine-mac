@@ -3,7 +3,7 @@ import Foundation
 extension MDLReader {
     /// The `MDLA` section (0x1402639b2…0x140265486; docs/models-plan.md §1.4). The link,
     /// constraint and mesh counts come from the sections already read.
-    static func readAnimations(_ r: inout MDLByteReader, version: Int, model: MDLModel) throws -> [MDLAnimation] {
+    public static func readAnimations(_ r: inout MDLByteReader, version: Int, model: MDLModel) throws -> [MDLAnimation] {
         let count = Int(try r.i32())
         var clips: [MDLAnimation] = []
         for index in 0..<max(count, 0) {
@@ -103,7 +103,7 @@ extension MDLReader {
 
     /// The `MDMP0001` section (0x1402656e5…0x140265886; docs/models-plan.md §1.5): per mesh, its
     /// targets, with the blobs the mesh's flags select.
-    static func readMorphTargets(_ r: inout MDLByteReader, model: MDLModel) throws -> [MDLMorphTargets] {
+    public static func readMorphTargets(_ r: inout MDLByteReader, model: MDLModel) throws -> [MDLMorphTargets] {
         let bones = model.skeleton?.bones.count ?? 0
         return try model.meshes.enumerated().map { index, mesh in
             let count = try r.u16()

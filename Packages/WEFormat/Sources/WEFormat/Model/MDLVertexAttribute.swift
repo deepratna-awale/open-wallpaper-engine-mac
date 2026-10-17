@@ -3,28 +3,28 @@ import Foundation
 /// One of the 26 vertex attributes a `.mdl` mesh's format bits select (docs/models-plan.md §1.2):
 /// WE's tables at 0x140484a20 (mask), 0x1404849b0 (byte size), 0x140484a90 (GLSL name) and
 /// 0x140482af0 (D3D11 input element: semantic, index, DXGI format).
-struct MDLVertexAttribute: Hashable, CustomStringConvertible {
-    enum ComponentType: Hashable {
+public struct MDLVertexAttribute: Hashable, CustomStringConvertible {
+    public enum ComponentType: Hashable {
         case float32
         /// `a_BlendIndices`: R32G32B32A32_UINT.
         case uint32
     }
 
     /// The format bit.
-    let mask: UInt32
+    public let mask: UInt32
     /// The GLSL input name the shaders declare (`a_Position`, `a_TexCoordVec4C2`, …).
-    let name: String
-    let semantic: String
-    let semanticIndex: Int
-    let componentType: ComponentType
-    let components: Int
+    public let name: String
+    public let semantic: String
+    public let semanticIndex: Int
+    public let componentType: ComponentType
+    public let components: Int
 
-    var byteSize: Int { 4 * components }
-    var description: String { name }
+    public var byteSize: Int { 4 * components }
+    public var description: String { name }
 
     /// Every attribute in WE's table order, which is the order they are interleaved in a vertex
     /// (the input layout accumulates offsets in this order, 0x1400d81c6), not bit order.
-    static let all: [MDLVertexAttribute] = {
+    public static let all: [MDLVertexAttribute] = {
         var table: [MDLVertexAttribute] = [
             .init(mask: 0x1, name: "a_Position", semantic: "POSITION", semanticIndex: 0, componentType: .float32, components: 3),
             // w is the morph index; selects MORPHING (0x14020730c).
@@ -52,15 +52,24 @@ struct MDLVertexAttribute: Hashable, CustomStringConvertible {
         return table
     }()
 
-    static let position = all[0]
-    static let positionVec4 = all[1]
-    static let normal = all[3]
-    static let tangent4 = all[4]
-    static let blendIndices = all[5]
-    static let blendWeights = all[6]
-    static let texCoord = all[7]
-    static let color = all[25]
+    public static let position = all[0]
+    public static let positionVec4 = all[1]
+    public static let normal = all[3]
+    public static let tangent4 = all[4]
+    public static let blendIndices = all[5]
+    public static let blendWeights = all[6]
+    public static let texCoord = all[7]
+    public static let color = all[25]
 
     /// The attribute with that GLSL name.
-    static func named(_ name: String) -> MDLVertexAttribute? { all.first { $0.name == name } }
+    public static func named(_ name: String) -> MDLVertexAttribute? { all.first { $0.name == name } }
+
+    public init(mask: UInt32, name: String, semantic: String, semanticIndex: Int, componentType: ComponentType, components: Int) {
+        self.mask = mask
+        self.name = name
+        self.semantic = semantic
+        self.semanticIndex = semanticIndex
+        self.componentType = componentType
+        self.components = components
+    }
 }

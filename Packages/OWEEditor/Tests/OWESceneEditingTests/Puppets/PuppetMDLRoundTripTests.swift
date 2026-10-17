@@ -1,3 +1,4 @@
+import WEFormat
 import XCTest
 import simd
 @testable import OWESceneEditing
@@ -98,7 +99,7 @@ final class PuppetMDLRoundTripTests: XCTestCase {
     func testTheBytesAreLaidOutAsWEReadsThem() throws {
         let document = PuppetFixtures.twoBoneStrip()
         let data = [UInt8](try PuppetMDLWriter.write(document))
-        var r = PuppetMDLInput(data)
+        var r = MDLByteReader(data)
         XCTAssertEqual(try r.cstring(), "MDLV0023")
         XCTAssertEqual(try r.u32(), 0x1800009, "the legacy format")
         XCTAssertEqual(try r.u32(), 1, "one material a mesh")
@@ -109,7 +110,7 @@ final class PuppetMDLRoundTripTests: XCTestCase {
         XCTAssertEqual(try r.u32(), 0x1800009, "position, blend indices, blend weights, texture coordinate")
         let vertices = try r.blob("vertices")
         XCTAssertEqual(vertices.count, 52 * document.mesh.vertices.count)
-        let first = PuppetMDLInput.floats(vertices.prefix(52))
+        let first = MDLReader.floats(vertices.prefix(52))
         XCTAssertEqual(Array(first[0..<3]), [-10, -100, 0])
         XCTAssertEqual(Array(first[7..<11]), [1, 0, 0, 0], "weights after the four indices")
         XCTAssertEqual(Array(first[11..<13]), [0, 1], "the bottom-left corner's texture coordinate (v down)")
