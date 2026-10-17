@@ -61,16 +61,9 @@ final class LibraryPreparationScheduler: @unchecked Sendable {
 
     /// Runs this app's executable with `--prepare-wallpapers`, in this process's isolated state.
     static func runHelper(_ folders: [URL]) {
-        guard let executable = AppRelauncher.helperExecutable else { return }
-        let process = Process()
-        process.executableURL = executable
-        process.arguments = [HelperRunCommand.prepareArgument] + folders.map { $0.path(percentEncoded: false) }
-        var environment = ProcessInfo.processInfo.environment
-        if let tag = AppStorageLocation.current.isolationTag { environment[AppStorageLocation.environmentKey] = tag }
-        process.environment = environment
-        process.qualityOfService = .background
+        guard let process = HelperProcess.make([HelperRunCommand.prepareArgument] + folders.map { $0.path(percentEncoded: false) },
+                                               qos: .background) else { return }
         process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
         let started = Date()
         do {
             try process.run()

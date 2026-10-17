@@ -26,7 +26,7 @@ struct MDLReferenceDump {
                     withUnsafeBytes(of: value.littleEndian) { bytes += $0 }
                 }
             }
-            return ["count": Int64(values.count), "sha256": SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()]
+            return ["count": Int64(values.count), "sha256": Digest.hex(SHA256.hash(data: bytes))]
         }
         switch kind {
         case .f32: return values.map { Float(bitPattern: $0) as Any }
