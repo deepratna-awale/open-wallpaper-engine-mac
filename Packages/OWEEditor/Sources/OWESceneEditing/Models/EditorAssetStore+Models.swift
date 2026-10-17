@@ -167,7 +167,7 @@ extension EditorAssetStore {
 
     /// Keeps an edited material beside the model's, named by its content
     /// (`materials/models/<folder>/<material>-<hash>.json`), and returns its path.
-    public func storeModelMaterial(_ document: ModelMaterialDocument, material: String, model: String) throws -> String {
+    public func storeModelMaterial(_ document: MaterialPassDocument, material: String, model: String) throws -> String {
         let data = try document.jsonData()
         let path = "materials/models/\(Self.modelFolder(of: model))/\(ModelCompiler.fileName(material))-\(Self.contentHash(data, bytes: 4)).json"
         try write(data, to: path)
