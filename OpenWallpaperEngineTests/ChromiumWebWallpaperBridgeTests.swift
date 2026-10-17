@@ -42,14 +42,6 @@ final class ChromiumWebWallpaperBridgeTests: XCTestCase {
         try? FileManager.default.removeItem(at: folder)
     }
 
-    private func waitUntil(_ what: String, timeout: TimeInterval = 5, _ condition: () -> Bool) {
-        let deadline = Date().addingTimeInterval(timeout)
-        while !condition() && Date() < deadline {
-            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
-        }
-        XCTAssertTrue(condition(), "Timed out waiting for \(what)")
-    }
-
     private var wallpaper: WEWallpaper {
         WEWallpaper(using: WEProject(file: "index.html", preview: "", title: "Bridge", type: "web"), where: folder)
     }
