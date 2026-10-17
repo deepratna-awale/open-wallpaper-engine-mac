@@ -34,6 +34,9 @@ final class ScenePuppetAnimator {
     let drawOrder: ScenePuppetDrawOrder?
     /// The rig's physics bones (docs/models-plan.md §2.14); nil without one.
     private(set) var physics: SceneBonePhysics?
+    /// The rig's blend rules (docs/models-plan.md §2.15); nil without one, and for a model, whose
+    /// update has none.
+    let blendRules: SceneBlendRules?
     /// The object's world matrix at the last `advance`, which with `worlds` gives the physics
     /// last frame's bones.
     private var lastObjectWorld: simd_float4x4?
@@ -75,7 +78,10 @@ final class ScenePuppetAnimator {
         self.objectID = objectID
         self.drawOrder = drawOrder
         // Models have no `g_BonesAlpha` or part order; their clips' per-bone lists stay unread.
-        boneScalars = model ? SceneBoneScalars() : SceneBoneScalars.rest(boneCount: skeleton.bones.count, clips: clips)
+        var scalars = model ? SceneBoneScalars() : SceneBoneScalars.rest(boneCount: skeleton.bones.count, clips: clips)
+        blendRules = model ? nil : SceneBlendRules(skeleton)
+        if let blendRules { scalars.blendRules = Array(repeating: 0, count: blendRules.weightCount) }
+        boneScalars = scalars
         physics = SceneBonePhysics(skeleton)
         let skeleton = SceneSkeleton(skeleton)
         self.skeleton = skeleton
@@ -133,7 +139,8 @@ final class ScenePuppetAnimator {
         var update = SceneAnimationLayerUpdate()
         for index in morphs.indices { morphs[index].reset() }
         if !stack.layers.isEmpty {
-            boneScalars = SceneBoneScalars(alpha: boneScalars.alpha.map { _ in 1 }, depth: boneScalars.depth.map { _ in 0 })
+            boneScalars = SceneBoneScalars(alpha: boneScalars.alpha.map { _ in 1 }, depth: boneScalars.depth.map { _ in 0 },
+                                           blendRules: boneScalars.blendRules)
             let transforms = stack.evaluate(delta: delta, update: &update, morphs: &morphs, kind: morphRig?.kind ?? .model,
                                             channels: &channelWeights, bones: &boneScalars)
             locals = transforms.map(\.matrix)
@@ -200,10 +207,18 @@ final class ScenePuppetAnimator {
         }
     }
 
-    /// Worlds from the locals (and the physics bones), then `setBoneTransform`'s overrides, then
-    /// the palette.
+    /// Worlds from the locals (with the blend rules and the physics bones), then
+    /// `setBoneTransform`'s overrides, then the palette.
     private func recompute(physics frame: SceneBonePhysics.Frame? = nil) {
-        var worlds = physics?.worlds(locals: locals, skeleton: skeleton, frame: frame) ?? skeleton.worlds(locals: locals)
+        var adjust: ((Int, simd_float4x4, [simd_float4x4]) -> simd_float4x4)?
+        if let blendRules {
+            let previous = self.worlds, weights = boneScalars.blendRules
+            adjust = { bone, model, posed in
+                blendRules.apply(bone: bone, to: model, posed: posed, previous: previous, weights: weights)
+            }
+        }
+        var worlds = physics?.worlds(locals: locals, skeleton: skeleton, frame: frame, adjust: adjust)
+            ?? skeleton.worlds(locals: locals, adjust: adjust)
         var palette = skeleton.palette(worlds: worlds)
         for (bone, matrix) in worldOverrides where bone < worlds.count {
             worlds[bone] = matrix

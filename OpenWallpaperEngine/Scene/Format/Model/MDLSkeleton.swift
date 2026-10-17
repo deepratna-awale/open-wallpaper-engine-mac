@@ -13,12 +13,16 @@ struct MDLSkeleton: Equatable {
         var matrix: simd_float4x4
     }
 
-    /// A constraint (the writer's `blendrules` [I]: a/b = target/mode, f0/f1 = amin/amax).
+    /// A constraint: Puppet Warp's blend rule (the editor's `blendrules`; WE 2.8's capture 533,
+    /// docs/models-plan.md §2.15; `SceneBlendRules`), unless the bone has flag 0x2.
     struct Constraint: Equatable {
         var bone: UInt32
+        /// The weight the clips key: the index of the clips' constraint track.
         var a: UInt32
+        /// The target bone.
         var b: UInt32
-        /// Read from version 4 on, else 0. Bit 1: the two floats follow.
+        /// Read from version 4 on, else 0. Bit 1: the two floats follow (the editor's `amin` and
+        /// `amax`, which WE's compiler leaves out of a blend rule).
         var flags: UInt32
         var f0: Float?
         /// WE clamps it to at least FLT_EPSILON when it uses it; this is the file's value.

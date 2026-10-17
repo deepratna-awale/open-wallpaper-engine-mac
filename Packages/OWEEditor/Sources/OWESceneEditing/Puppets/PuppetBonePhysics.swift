@@ -293,9 +293,10 @@ public struct PuppetPhysicsSimulation: Sendable {
     }
 
     /// One frame: model-space matrices of `locals`, parents first, every physics bone stepped
-    /// by `delta` with the object at `objectWorld`. Nothing moves on the first frame.
-    public mutating func step(locals: [simd_float4x4], parents: [Int?], delta: Float,
-                              objectWorld: simd_float4x4) -> [simd_float4x4] {
+    /// by `delta` with the object at `objectWorld`. Nothing moves on the first frame. `adjust`
+    /// changes a bone's matrix before its step (the blend rules, `PuppetBlendMath.adjust`).
+    public mutating func step(locals: [simd_float4x4], parents: [Int?], delta: Float, objectWorld: simd_float4x4,
+                              adjust: ((Int, simd_float4x4, [simd_float4x4]) -> simd_float4x4)? = nil) -> [simd_float4x4] {
         let scale = Self.meanScale(objectWorld)
         var models: [simd_float4x4] = []
         models.reserveCapacity(locals.count)
@@ -303,6 +304,7 @@ public struct PuppetPhysicsSimulation: Sendable {
         for index in locals.indices {
             let parent = index < parents.count ? parents[index].flatMap { $0 < index ? $0 : nil } : nil
             var model = parent.map { models[$0] * locals[index] } ?? locals[index]
+            if let adjust { model = adjust(index, model, models) }
             if index < constraints.count, let constraint = constraints[index] {
                 if let previous = previousWorlds, index < previous.count, delta > 0 {
                     transforms[index] = Self.step(constraint, state: &states[index], world: objectWorld * model,
