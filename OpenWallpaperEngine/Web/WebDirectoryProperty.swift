@@ -90,8 +90,7 @@ struct WebDirectoryProperty: Equatable, Sendable {
 extension WebDirectoryProperty {
     static func declared(wallpaperDirectory: URL) -> [WebDirectoryProperty] {
         // A wallpaper without a readable project.json has no properties (its load reports why).
-        guard let data = try? Data(contentsOf: wallpaperDirectory.appending(path: "project.json")),
-              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [] }
+        guard let root = try? WEProject.json(in: wallpaperDirectory) else { return [] }
         return declared(projectRoot: root)
     }
 }

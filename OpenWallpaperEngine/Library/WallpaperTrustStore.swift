@@ -119,6 +119,6 @@ struct WallpaperTrustStore {
             hash.update(data: Data(line.utf8))
             hash.update(data: Data([0x0A]))
         }
-        return hash.finalize().map { String(format: "%02x", $0) }.joined()
+        return Digest.hex(hash.finalize())
     }
 }

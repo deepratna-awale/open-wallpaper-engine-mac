@@ -96,7 +96,7 @@ final class ShaderRevisionGuardTests: XCTestCase {
                 count += 1
             }
         }
-        let hash: String = hasher.finalize().map { String(format: "%02x", $0) }.joined()
+        let hash: String = Digest.hex(hasher.finalize())
         return (hash, count)
     }
 
@@ -127,7 +127,7 @@ final class ShaderRevisionGuardTests: XCTestCase {
             hasher.update(data: Data("\(relative)\u{0}".utf8))
             hasher.update(data: (try? Data(contentsOf: url)) ?? Data())
         }
-        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+        return Digest.hex(hasher.finalize())
     }
 
     private static func loadExpected() throws -> Expected {

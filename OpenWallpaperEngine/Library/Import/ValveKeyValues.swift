@@ -56,8 +56,7 @@ enum ValveKeyValues {
 
     /// Reads a file as UTF-8 (with or without a BOM), falling back to Latin-1 for older files.
     static func parse(contentsOf url: URL) throws -> [Entry] {
-        var data = try Data(contentsOf: url)
-        if data.starts(with: [0xEF, 0xBB, 0xBF]) { data.removeFirst(3) }
+        let data = TolerantJSON.withoutBOM(try Data(contentsOf: url))
         let text = String(data: data, encoding: .utf8) ?? String(decoding: data, as: UTF8.self)
         return try parse(text)
     }

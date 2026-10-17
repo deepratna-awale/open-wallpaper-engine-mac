@@ -78,11 +78,14 @@ enum EditorPreviewHelper {
 
     /// Renders `items` in one helper run, reporting each as it is done.
     static func render(_ items: [EditorPreviewRenderItem], finished: @escaping @Sendable (EditorPreviewSubject) -> Void) async {
-        guard !items.isEmpty, let executable = AppRelauncher.helperExecutable else { return }
+        guard !items.isEmpty else { return }
+        let jobFile = FileManager.default.temporaryDirectory.appending(path: "owe-editor-previews-\(UUID().uuidString).json")
+        // The user is looking at the browser, but the editor stays responsive.
+        guard let process = HelperProcess.make([HelperRunCommand.editorPreviewArgument, jobFile.path(percentEncoded: false)],
+                                               qos: .utility) else { return }
         let job = EditorPreviewJob(items: items.map {
             EditorPreviewJob.Item(subject: $0.subject, outputBase: $0.outputBase.path(percentEncoded: false))
         })
-        let jobFile = FileManager.default.temporaryDirectory.appending(path: "owe-editor-previews-\(UUID().uuidString).json")
         do {
             try JSONEncoder().encode(job).write(to: jobFile)
         } catch {
@@ -91,38 +94,19 @@ enum EditorPreviewHelper {
         }
         defer { try? FileManager.default.removeItem(at: jobFile) } // Optional: the job is read at start.
 
-        let process = Process()
-        process.executableURL = executable
-        process.arguments = [HelperRunCommand.editorPreviewArgument, jobFile.path(percentEncoded: false)]
-        var environment = ProcessInfo.processInfo.environment
-        if let tag = AppStorageLocation.current.isolationTag { environment[AppStorageLocation.environmentKey] = tag }
-        process.environment = environment
-        // The user is looking at the browser, but the editor stays responsive.
-        process.qualityOfService = .utility
         let pipe = Pipe()
         process.standardOutput = pipe
-        process.standardError = FileHandle.nullDevice
         let lines = EditorPreviewDoneLines { index in
             guard items.indices.contains(index) else { return }
             finished(items[index].subject)
         }
         pipe.fileHandleForReading.readabilityHandler = { handle in lines.append(handle.availableData) }
-        let status: Int32? = await withTaskCancellationHandler {
-            await withCheckedContinuation { (continuation: CheckedContinuation<Int32?, Never>) in
-                process.terminationHandler = { finished in
-                    pipe.fileHandleForReading.readabilityHandler = nil
-                    continuation.resume(returning: finished.terminationStatus)
-                }
-                do {
-                    try process.run()
-                } catch {
-                    process.terminationHandler = nil
-                    OWELog.error(.ui, "Editor previews: can't start the render helper: \(error)")
-                    continuation.resume(returning: nil)
-                }
-            }
-        } onCancel: {
-            if process.isRunning { process.terminate() }
+        let status: Int32?
+        do {
+            status = try await HelperProcess.run(process) { pipe.fileHandleForReading.readabilityHandler = nil }
+        } catch {
+            OWELog.error(.ui, "Editor previews: can't start the render helper: \(error)")
+            status = nil
         }
         if let status, status != 0 {
             OWELog.error(.ui, "Editor previews: the render helper finished with status \(status) for \(items.count) previews")
