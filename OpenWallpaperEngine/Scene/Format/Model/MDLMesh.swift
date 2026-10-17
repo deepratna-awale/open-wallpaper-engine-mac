@@ -4,11 +4,13 @@ import Foundation
 /// a triangle list. The bytes are kept as the file has them, ready for a vertex and index buffer;
 /// the accessors decode single attributes.
 struct MDLMesh: Equatable {
-    /// A group record of `MDLV` 23 [?]: its lists index the mesh's `vector4Block`.
+    /// A group record of `MDLV` 23: a Puppet Warp clipping mask (`MDLClippingMask`, which reads
+    /// it). Its lists index the mesh's `vector4Block`.
     struct Group: Equatable {
         var id: UInt64
+        /// The mask's texture.
         var name: String
-        /// Bit 0 makes WE store 2 instead of 1 at rec+0x40 [?].
+        /// `MDLClippingMask.Flags`.
         var flags: UInt32
         var listA: [UInt32]
         var listB: [UInt32]

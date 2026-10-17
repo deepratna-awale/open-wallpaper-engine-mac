@@ -84,6 +84,14 @@ public struct ModelSource: Sendable, Equatable {
         /// importer keeps it rather than computing one, and joins corners on it.
         public var tangents: [SIMD3<Float>]?
         public var bitangents: [SIMD3<Float>]?
+        /// The node the mesh hangs from (its positions are already in model space). In a skinned
+        /// model a mesh without a skin moves with it: WE's importer keeps that node as a bone
+        /// and binds the mesh to it (capture 546's static "Plinth").
+        public var node: Int?
+        /// Per corner, the polygon corner it is (any number, the same for the corners a polygon's
+        /// triangles share; ascending in the file's polygon order): Assimp's vertices. Nil makes
+        /// every triangle corner a vertex of its own.
+        public var vertices: [Int]?
 
         public init(name: String, material: Int?, positions: [SIMD3<Float>], normals: [SIMD3<Float>]? = nil,
                     uvs: [SIMD2<Float>]? = nil, secondUVs: [SIMD2<Float>]? = nil, influences: [Influences]? = nil) {

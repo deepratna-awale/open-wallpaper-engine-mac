@@ -17,7 +17,8 @@ public enum EditorModelImporter {
         let title = url.deletingPathExtension().lastPathComponent
         let folder = EditorAssetStore.modelFolder(title: title, source: bytes)
         let output = try ModelCompiler.compile(source, config: config, folder: folder)
-        return try store.storeModel(output, sourceURL: url, companions: companions(of: url), config: config, folder: folder, title: title)
+        return try store.storeModel(output, sourceURL: url, companions: companions(of: url), config: config.completed(with: output),
+                                    folder: folder, title: title)
     }
 
     /// Compiles a model the store holds again with `config` (the Model Editor's edits), with the
@@ -30,10 +31,13 @@ public enum EditorModelImporter {
         let directory = sourceURL.deletingLastPathComponent()
         let additional = try config.additionalFiles.map { try ModelFileLoader.load(contentsOf: directory.appending(path: $0)) }
         let output = try ModelCompiler.compile(source, config: config, folder: folder, additional: additional)
-        let revision = EditorAssetStore.contentHash(try config.jsonData(), bytes: 4)
+        // Saved as the importer saves it (`skinning`, every animation's id), so the import's own
+        // configuration compiles to the import's own model.
+        let saved = config.completed(with: output)
+        let revision = EditorAssetStore.contentHash(try saved.jsonData(), bytes: 4)
         let title = sourceURL.deletingPathExtension().lastPathComponent
-        return try store.storeModel(output, sourceURL: sourceURL, config: config, folder: folder, title: title,
-                                    revision: config == ModelImportConfig() ? nil : revision)
+        return try store.storeModel(output, sourceURL: sourceURL, config: saved, folder: folder, title: title,
+                                    revision: saved == ModelImportConfig().completed(with: output) ? nil : revision)
     }
 
     /// Adds an animation file to a stored model (Model Editor › Add FBX File): it is copied

@@ -91,6 +91,16 @@ public enum PuppetMDLReader {
         var indices: ArraySlice<UInt8>
         /// The 16-byte records after the vertices (`MDLV` 21 and later), as u32s.
         var boneRanges: [SIMD4<UInt32>]?
+        /// `MDLV` 23's groups: the clipping masks.
+        var groups: [Group] = []
+    }
+
+    struct Group {
+        var id: UInt64
+        var texture: String
+        var flags: UInt32
+        var clipped: [UInt32]
+        var masking: [UInt32]
     }
 
     private static func readMesh(_ r: inout PuppetMDLInput, version: Int, legacyFormat: UInt32, materials: Int) throws -> RawMesh {
@@ -119,17 +129,19 @@ public enum PuppetMDLReader {
                 ranges = stride(from: 0, to: values.count, by: 16).map { SIMD4(u32($0), u32($0 + 4), u32($0 + 8), u32($0 + 12)) }
             }
         }
+        var groups: [Group] = []
         if version >= 23 {
             for _ in 0..<(try r.u32()) {
-                _ = try r.u64()
-                _ = try r.cstring()
-                _ = try r.u32()
-                _ = try r.u32s(Int(try r.u32()))
-                _ = try r.u32s(Int(try r.u32()))
+                let id = try r.u64()
+                let texture = try r.cstring()
+                let flags = try r.u32()
+                let clipped = try r.u32s(Int(try r.u32()))
+                let masking = try r.u32s(Int(try r.u32()))
+                groups.append(Group(id: id, texture: texture, flags: flags, clipped: clipped, masking: masking))
             }
         }
         return RawMesh(material: names.first ?? "", flags: flags, flagsExtra: extra, format: format, vertices: vertices,
-                       indices: indices, boneRanges: ranges)
+                       indices: indices, boneRanges: ranges, groups: groups)
     }
 
     /// The channels a texture-channel mesh's quads name: the largest `a_BlendIndices.x` + 1.
@@ -200,7 +212,46 @@ public enum PuppetMDLReader {
         if !morphs.isEmpty { document.preserved.morphIndices = morphs }
         if let ranges = mesh.boneRanges, !ranges.isEmpty, ranges.allSatisfy({ UInt64($0.z) + UInt64($0.w) <= UInt64(3 * triangles.count) }) {
             document.preserved.boneRanges = ranges
+            document.clipping = clipping(mesh.groups, ranges: ranges, mesh: document.mesh)
         }
+    }
+
+    /// The first mesh's groups as the file has them (tests, diagnostics).
+    static func rawGroups(_ data: Data) throws -> [Group] {
+        var r = PuppetMDLInput([UInt8](data))
+        let tag = try r.cstring()
+        guard tag.hasPrefix("MDLV") else { throw PuppetMDLError.notAModel }
+        let version = Int(tag.dropFirst(4).prefix { $0.isNumber }) ?? 0
+        let legacyFormat = try r.u32()
+        let materials = Int(try r.u32())
+        guard try r.u32() > 0 else { return [] }
+        return try readMesh(&r, version: version, legacyFormat: legacyFormat, materials: materials).groups
+    }
+
+    /// The groups as clipping masks over the mesh's limbs: each range lies in one island (WE's
+    /// editor splits them so), the island of its first triangle. nil without groups, or with one
+    /// that names a range the mesh doesn't have.
+    static func clipping(_ groups: [Group], ranges: [SIMD4<UInt32>], mesh: PuppetMesh) -> PuppetClipping? {
+        guard !groups.isEmpty else { return nil }
+        let islands = mesh.islands
+        func limb(_ range: UInt32) -> Int? {
+            guard Int(range) < ranges.count, ranges[Int(range)].w > 0 else { return nil }
+            let triangle = Int(ranges[Int(range)].z) / 3
+            return triangle < islands.count ? islands[triangle] : nil
+        }
+        guard groups.allSatisfy({ ($0.clipped + $0.masking).allSatisfy { Int($0) < ranges.count } }) else { return nil }
+        var clipping = PuppetClipping(masks: [], limbs: Array(repeating: nil, count: Set(islands).count))
+        for group in groups {
+            clipping.masks.append(PuppetClipping.Mask(
+                id: group.id, name: "", texture: group.texture,
+                invert: group.flags & PuppetMDLWriter.ClipFlags.invert != 0,
+                hidesMaskGeometry: group.flags & PuppetMDLWriter.ClipFlags.hidesMaskGeometry != 0,
+                maskingLimbs: Array(Set(group.masking.compactMap(limb))).sorted()))
+            for island in Set(group.clipped.compactMap(limb)) {
+                clipping.limbs[island] = PuppetClipping.Limb(mask: group.id, additive: group.flags & PuppetMDLWriter.ClipFlags.additive != 0)
+            }
+        }
+        return clipping
     }
 
     // MARK: MDLS

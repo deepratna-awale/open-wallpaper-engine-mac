@@ -10,6 +10,7 @@ extension PuppetWorkspace.Tool {
         case .weights: return PL("Weights")
         case .animate: return PL("Animate")
         case .physics: return PL("Physics")
+        case .clipping: return PL("Clipping Masks")
         }
     }
 
@@ -20,6 +21,7 @@ extension PuppetWorkspace.Tool {
         case .weights: return "paintbrush.pointed"
         case .animate: return "film.stack"
         case .physics: return "wind"
+        case .clipping: return "scissors"
         }
     }
 
@@ -30,6 +32,7 @@ extension PuppetWorkspace.Tool {
         case .weights: return PL("Click a joint to pick its bone, then paint. Option paints the other way.")
         case .animate: return PL("Pose bones at the current frame: each change sets a key.")
         case .physics: return PL("Drag the canvas to shake the puppet and watch its physics bones.")
+        case .clipping: return PL("Click a limb to select it. A limb with a clipping mask shows only over the limbs its mask is painted on.")
         }
     }
 }
@@ -46,7 +49,7 @@ struct PuppetWorkspaceView: View {
 
     init(session: SceneEditSession, layer: SceneLayer, assets: PuppetEditorAssets) {
         _workspace = StateObject(wrappedValue: PuppetWorkspace(session: session, layerID: layer.id,
-                                                               source: PuppetSource.load(layer: layer, assets: assets)))
+                                                               source: PuppetSource.load(layer: layer, assets: assets), assets: assets))
         self.session = session
         title = layer.title
     }

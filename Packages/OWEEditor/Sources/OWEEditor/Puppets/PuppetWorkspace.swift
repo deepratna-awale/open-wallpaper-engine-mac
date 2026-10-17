@@ -11,7 +11,7 @@ import simd
 @MainActor
 final class PuppetWorkspace: ObservableObject {
     enum Tool: String, CaseIterable, Identifiable {
-        case mesh, skeleton, weights, animate, physics
+        case mesh, skeleton, weights, animate, physics, clipping
         var id: String { rawValue }
     }
 
@@ -33,6 +33,16 @@ final class PuppetWorkspace: ObservableObject {
     @Published var weightMethod: PuppetAutoWeights.Method = .heat
     @Published var brush = PuppetWeightBrush()
     @Published var showsHeatMap = true
+
+    // Clipping masks
+    /// The limb (mesh island) the Clipping Masks tool works on.
+    @Published var selectedLimb: Int?
+    /// A clipping mask being painted over the image.
+    @Published var clippingPainting: MaskPainting?
+    /// Why the last clipping mask painting couldn't be kept.
+    @Published var clippingProblem: String?
+    /// Saves a painted mask and reads one back (`PuppetEditorAssets`); nil paints nothing.
+    let assets: PuppetEditorAssets?
 
     // Animation
     @Published var clipIndex: Int?
@@ -76,10 +86,11 @@ final class PuppetWorkspace: ObservableObject {
     private var lastTick: Date?
     private var observers: Set<AnyCancellable> = []
 
-    init(session: SceneEditSession, layerID: Int, source: PuppetSource?) {
+    init(session: SceneEditSession, layerID: Int, source: PuppetSource?, assets: PuppetEditorAssets? = nil) {
         self.session = session
         self.layerID = layerID
         self.source = source
+        self.assets = assets
         document = session.puppet(of: layerID) ?? source?.document
         clipIndex = (document?.clips.isEmpty ?? true) ? nil : 0
         rebuild()
@@ -159,6 +170,7 @@ final class PuppetWorkspace: ObservableObject {
             return
         }
         if let bone = selectedBone, !document.bones.indices.contains(bone) { selectedBone = nil }
+        if let limb = selectedLimb, limb >= document.mesh.islandCount { selectedLimb = nil }
         selectedVertices = selectedVertices.filter { document.mesh.vertices.indices.contains($0) }
         if let clip = clipIndex, !document.clips.indices.contains(clip) { clipIndex = document.clips.isEmpty ? nil : 0 }
         if clipIndex == nil, !document.clips.isEmpty { clipIndex = 0 }

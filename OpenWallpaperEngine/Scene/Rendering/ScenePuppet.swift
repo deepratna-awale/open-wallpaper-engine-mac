@@ -57,6 +57,8 @@ final class ScenePuppetPlan {
     let drawOrder: ScenePuppetDrawOrder?
     /// The rig's texture channels, drawn over the image the mesh samples; nil without.
     let channels: ScenePuppetChannelPlan?
+    /// The rig's clipping masks (`ScenePuppetClipPlan`); nil without.
+    let clipping: ScenePuppetClipPlan?
     /// The rig's box (`MDLModel.bounds`), which a particle `collisionmodel` collides with when the
     /// rig has no per-bone boxes (0x1401d50ac reads the puppet's `.mdl` as a model's); nil unknown.
     let bounds: MDLBounds?
@@ -66,8 +68,9 @@ final class ScenePuppetPlan {
     init(rigPath: String, material: ImageMaterialPlan, combos: ImagePuppetCombos, mesh: MDLMesh, vertexData: Data,
          imageSize: SIMD2<Float>, contentPixels: SIMD2<Int>, skeleton: MDLSkeleton, clips: [MDLAnimation] = [],
          animationLayers: [WEAnimationLayer] = [], attachments: [MDLAttachment] = [], morphs: MDLMorphTargets? = nil,
-         channels: ScenePuppetChannelPlan? = nil, bounds: MDLBounds? = nil) {
+         channels: ScenePuppetChannelPlan? = nil, bounds: MDLBounds? = nil, clipping: ScenePuppetClipPlan? = nil) {
         self.rigPath = rigPath
+        self.clipping = clipping
         self.bounds = bounds
         self.material = material
         self.combos = combos
@@ -75,7 +78,7 @@ final class ScenePuppetPlan {
         self.vertexData = vertexData
         let drawOrder = ScenePuppetDrawOrder(mesh: mesh, skeleton: skeleton, clips: clips)
         self.drawOrder = drawOrder
-        if drawOrder != nil, !mesh.usesUInt32Indices {
+        if drawOrder != nil || clipping != nil, !mesh.usesUInt32Indices {
             // Ranges draw from their own offsets, which Metal wants 4-byte aligned: u32 indices.
             indexData = mesh.indices.withUnsafeBytes { Data($0) }
             usesUInt32Indices = true
@@ -264,12 +267,21 @@ final class ScenePuppetPlan {
         } catch {
             OWELog.error(.scene, "Puppet rig \(rigPath) draws without its texture channels: \(error)")
         }
+        // Masks that can't draw leave their parts unclipped; the rig still draws.
+        var clipping: ScenePuppetClipPlan?
+        do {
+            clipping = try ScenePuppetClipPlan.make(mesh: mesh, boneCount: skeleton.bones.count, materialPath: materialPath,
+                                                    combos: combos, layerBlending: material.pass.blending,
+                                                    builder: builder, rigPath: rigPath)
+        } catch {
+            OWELog.error(.scene, "Puppet rig \(rigPath) draws without its clipping masks: \(error)")
+        }
         return ScenePuppetPlan(rigPath: rigPath, material: material, combos: combos, mesh: mesh,
                                vertexData: scaledTexCoords(mesh, by: fraction), imageSize: imageSize,
                                contentPixels: content, skeleton: skeleton, clips: model.animations ?? [],
                                animationLayers: animationLayers, attachments: model.attachments ?? [],
                                morphs: model.morphTargets?.first { $0.mesh == 0 }, channels: channels,
-                               bounds: model.bounds)
+                               bounds: model.bounds, clipping: clipping)
     }
 
     /// The vertices with the first texture coordinate's u and v multiplied by `scale`, as WE's copy
@@ -396,8 +408,11 @@ final class ScenePuppetRenderer {
     private let clampSampler: MTLSamplerState
     private let repeatSampler: MTLSamplerState
     private let zeroAttributes: MTLBuffer
-    /// WE's "morph_<n>" texture stand-in for a `MORPHING` mesh without targets.
+    /// WE's "morph_<n>" texture stand-in for a `MORPHING` mesh without targets, and the painted
+    /// texture of a clipping mask whose texture is missing (nothing painted).
     private let emptyMorphTexture: MTLTexture
+    /// A nested mask's coverage multiplied into its parents' (`ScenePuppetClipping`).
+    private let coverageCompose: MTLRenderPipelineState
     private let uniformArena: SceneUniformArena
     /// The rigs' texture channels, drawn over the image the mesh samples.
     let channels: ScenePuppetChannelRenderer
@@ -417,6 +432,8 @@ final class ScenePuppetRenderer {
 
     /// The premultiplied draw every puppet shares, grown to the largest image drawn. Render thread only.
     private var scratch: MTLTexture?
+    /// WE's `_rt_FullAlphaMask` and `_rt_FullAlphaMaskIntermediate`, the size of the drawing.
+    private var coverage: [MTLTexture?] = [nil, nil]
     /// Per layer instance. Render thread only.
     private var layers: [String: LayerState] = [:]
     /// Warped textures by layer id and texture key. Render thread only.
@@ -450,6 +467,11 @@ final class ScenePuppetRenderer {
         var canvas: ScenePuppetCanvas?
         /// Which drawing `target` holds (`albedoVersion`).
         var version: UInt64 = 0
+        /// The clipped parts' and the masks' materials' uniforms (`ScenePuppetClipPlan`).
+        let targetUniforms: ImageMaterialUniforms?
+        let maskUniforms: ImageMaterialUniforms?
+        /// The mask passes of the last drawing (`clippingMaskPasses`).
+        var clipPasses = 0
 
         init?(plan: ScenePuppetPlan, device: MTLDevice) {
             self.plan = plan
@@ -457,6 +479,12 @@ final class ScenePuppetRenderer {
             // brightness (and a legacy material's factors for them) to the target once.
             uniforms = ImageMaterialUniforms(layout: plan.material.pass.variant?.uniforms, constants: plan.material.pass.constants,
                                              liveFactors: [:])
+            targetUniforms = plan.clipping.map {
+                ImageMaterialUniforms(layout: $0.target.pass.variant?.uniforms, constants: $0.target.pass.constants, liveFactors: [:])
+            }
+            maskUniforms = plan.clipping?.mask.map {
+                ImageMaterialUniforms(layout: $0.pass.variant?.uniforms, constants: $0.pass.constants, liveFactors: [:])
+            }
             guard let vertices = plan.vertexData.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) }),
                   let indices = plan.indexData.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) })
             else { return nil }
@@ -476,7 +504,7 @@ final class ScenePuppetRenderer {
     private var lastVersion: UInt64 = 0
     /// Bytes of the albedo targets and the scratch (diagnostics).
     var allocatedBytes: Int {
-        layers.values.reduce(scratch?.allocatedSize ?? 0) { $0 + ($1.target?.allocatedSize ?? 0) } + channels.allocatedBytes
+        layers.values.reduce((scratch?.allocatedSize ?? 0) + coverage.reduce(0) { $0 + ($1?.allocatedSize ?? 0) }) { $0 + ($1.target?.allocatedSize ?? 0) } + channels.allocatedBytes
             + warps.values.reduce(0) { $0 + $1.values.reduce(0) { $0 + $1.target.allocatedSize } }
     }
 
@@ -511,6 +539,20 @@ final class ScenePuppetRenderer {
             attachment.destinationRGBBlendFactor = .oneMinusSourceAlpha
             attachment.destinationAlphaBlendFactor = .oneMinusSourceAlpha
             blendedWarpPipeline = try device.makeRenderPipelineState(descriptor: warp)
+            guard let composeVertex = library.makeFunction(name: "scenePuppetCoverageVertex"),
+                  let composeFragment = library.makeFunction(name: "scenePuppetCoverageFragment") else { return nil }
+            let compose = MTLRenderPipelineDescriptor()
+            compose.vertexFunction = composeVertex
+            compose.fragmentFunction = composeFragment
+            compose.colorAttachments[0].pixelFormat = Self.coverageFormat
+            // The intersection of nested masks: the coverage so far times this mask's [I: WE's
+            // compose blend state, 0x14020da40].
+            compose.colorAttachments[0].isBlendingEnabled = true
+            compose.colorAttachments[0].sourceRGBBlendFactor = .zero
+            compose.colorAttachments[0].destinationRGBBlendFactor = .sourceColor
+            compose.colorAttachments[0].sourceAlphaBlendFactor = .zero
+            compose.colorAttachments[0].destinationAlphaBlendFactor = .one
+            coverageCompose = try device.makeRenderPipelineState(descriptor: compose)
         } catch {
             OWELog.error(.scene, "The puppet albedo pipeline failed: \(error)")
             return nil
@@ -551,6 +593,7 @@ final class ScenePuppetRenderer {
         layers.removeAll()
         warps.removeAll()
         scratch = nil
+        coverage = [nil, nil]
         channels.releaseAll()
     }
 
@@ -564,6 +607,7 @@ final class ScenePuppetRenderer {
     /// Memory pressure: the scratch is remade by the next draw that needs it.
     func trimMemory() {
         scratch = nil
+        coverage = [nil, nil]
         uniformArena.trim()
         channels.trimMemory()
     }
@@ -782,7 +826,7 @@ final class ScenePuppetRenderer {
         encoder.setVertexBuffer(alphaBuffer.buffer, offset: alphaBuffer.offset, index: 3)
         encoder.setFragmentTexture(texture, index: 0)
         encoder.setFragmentSamplerState(clampSampler, index: 0)
-        Self.drawMesh(plan, ranges: pose.drawRanges, indices: state.indices, encoder: encoder)
+        Self.drawMesh(plan, ranges: Self.visibleRanges(plan, pose: pose), indices: state.indices, encoder: encoder)
         encoder.endEncoding()
         if let scratch {
             guard let compute = commandBuffer.makeComputeCommandEncoder() else { return nil }
@@ -803,33 +847,116 @@ final class ScenePuppetRenderer {
     }
 
     /// The mesh into `scratch`'s top-left `content` texels, premultiplied, cleared to 0 first.
-    /// False while the pipeline compiles or failed, or an input is missing.
+    /// False while a pipeline compiles or failed, or an input is missing.
     /// `image`: what the mesh samples as the layer image, `draw.source` or it with the texture
-    /// channels drawn on it.
+    /// channels drawn on it. A rig with clipping masks draws in their steps (`ScenePuppetClipping`).
     private func encodeMesh(_ plan: ScenePuppetPlan, state: LayerState, _ draw: Draw, image: MTLTexture,
                             into scratch: MTLTexture, content: SIMD2<Int>, commandBuffer: MTLCommandBuffer) -> Bool {
-        let pass = plan.material.pass
-        let pipeline = self.pipeline(for: plan)
-        let bound = pipeline == nil ? nil : textures(of: plan, draw, image: image, morph: state.morphTexture)
-        let renderPass = MTLRenderPassDescriptor()
-        renderPass.colorAttachments[0].texture = scratch
-        renderPass.colorAttachments[0].loadAction = .clear
-        renderPass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
-        renderPass.colorAttachments[0].storeAction = .store
-        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPass) else { return false }
-        defer { encoder.endEncoding() }
-        guard let pipeline, let bound else { return false }
+        let pipeline = self.pipeline(plan.material, format: plan.format, blend: .material(plan.material.pass.blending),
+                                     pixelFormat: Self.scratchFormat)
+        let bound = pipeline == nil ? nil : textures(of: plan.material, plan: plan, draw, image: image, morph: state.morphTexture)
+        let steps = plan.clipping.map { $0.layout.steps(order: $0.layout.order(draw.pose.drawRanges)) }
+        let clipped = Self.clippedDraws(plan, steps: steps, pipeline: { self.pipeline($0, format: plan.format, blend: $1, pixelFormat: $2) })
+        guard var encoder = Self.scratchEncoder(scratch, clear: true, commandBuffer: commandBuffer) else { return false }
+        guard let pipeline, let bound, let clipped else {
+            encoder.endEncoding()
+            return false
+        }
 
         // Identity model and view; orthographic over the image's pixels (WE's z range ±1000), the
         // image's top on the target's first row like every layer image.
         let projection = (draw.canvas ?? .image(plan.imageSize)).projection
-        if state.uniforms.size > 0 {
+        let bytes = uniformBytes(state.uniforms, material: plan.material, bound: bound, draw, projection: projection, content: content)
+        bindMesh(encoder, plan: plan, state: state, draw, pipeline: pipeline, bound: bound, bytes: bytes, content: content,
+                 commandBuffer: commandBuffer)
+        guard let clip = plan.clipping, let steps else {
+            Self.drawMesh(plan, ranges: draw.pose.drawRanges, indices: state.indices, encoder: encoder)
+            encoder.endEncoding()
+            drawsEncoded += 1
+            return true
+        }
+
+        let targetBound = textures(of: clip.target, plan: plan, draw, image: image, morph: state.morphTexture)
+        guard let targetBound, let targetUniforms = state.targetUniforms else {
+            encoder.endEncoding()
+            return false
+        }
+        let targetBytes = uniformBytes(targetUniforms, material: clip.target, bound: targetBound, draw, projection: projection,
+                                       content: content)
+        var boundMain = true
+        state.clipPasses = 0
+        for step in steps {
+            switch step {
+            case .draw(let ranges):
+                if !boundMain {
+                    bindMesh(encoder, plan: plan, state: state, draw, pipeline: pipeline, bound: bound, bytes: bytes,
+                             content: content, commandBuffer: commandBuffer)
+                    boundMain = true
+                }
+                Self.drawMesh(plan, ranges: clip.layout.drawRanges(ranges), indices: state.indices, encoder: encoder)
+            case let .clip(layers, parts, additive):
+                state.clipPasses += 1
+                var partBound = targetBound
+                if clip.mask != nil {
+                    // The coverage is drawn into its own targets, between the scratch's passes.
+                    encoder.endEncoding()
+                    guard let coverage = encodeCoverage(plan, clip: clip, layers: layers, state: state, draw, image: image,
+                                                        projection: projection, content: content, commandBuffer: commandBuffer),
+                          let next = Self.scratchEncoder(scratch, clear: false, commandBuffer: commandBuffer) else { return false }
+                    encoder = next
+                    partBound.append((ImagePuppetCombos.clippingMaskSlot, coverage, clampSampler, nil))
+                }
+                guard let partPipeline = clipped[additive] else { continue }
+                bindMesh(encoder, plan: plan, state: state, draw, pipeline: partPipeline, bound: partBound, bytes: targetBytes,
+                         content: content, commandBuffer: commandBuffer)
+                boundMain = false
+                Self.drawMesh(plan, ranges: clip.layout.drawRanges(parts), indices: state.indices, encoder: encoder)
+            }
+        }
+        encoder.endEncoding()
+        drawsEncoded += 1
+        return true
+    }
+
+    /// The pipelines `steps` draws its clipped parts with, by whether they're additive, and the
+    /// mask pipeline when the plan draws the coverage; nil while one compiles or failed.
+    private static func clippedDraws(_ plan: ScenePuppetPlan, steps: [ScenePuppetClipping.Step]?,
+                                     pipeline: (ImageMaterialPlan, MeshBlend, MTLPixelFormat) -> MTLRenderPipelineState?)
+        -> [Bool: MTLRenderPipelineState]? {
+        guard let clip = plan.clipping, let steps else { return [:] }
+        var out: [Bool: MTLRenderPipelineState] = [:]
+        var drawsCoverage = false
+        for case let .clip(_, _, additive) in steps {
+            drawsCoverage = true
+            guard out[additive] == nil else { continue }
+            // The record's +0x40 replaces the material's blending for the clipped draw (0x140208b8f).
+            guard let made = pipeline(clip.target, additive ? .additive : .material("translucent"), scratchFormat) else { return nil }
+            out[additive] = made
+        }
+        if drawsCoverage, let mask = clip.mask, pipeline(mask, .coverage, coverageFormat) == nil { return nil }
+        return out
+    }
+
+    /// A render pass into `scratch`, cleared to 0 or keeping what it holds.
+    private static func scratchEncoder(_ scratch: MTLTexture, clear: Bool, commandBuffer: MTLCommandBuffer) -> MTLRenderCommandEncoder? {
+        let renderPass = MTLRenderPassDescriptor()
+        renderPass.colorAttachments[0].texture = scratch
+        renderPass.colorAttachments[0].loadAction = clear ? .clear : .load
+        renderPass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
+        renderPass.colorAttachments[0].storeAction = .store
+        return commandBuffer.makeRenderCommandEncoder(descriptor: renderPass)
+    }
+
+    /// `material`'s uniforms for this drawing, the pose's palette written in.
+    private func uniformBytes(_ uniforms: ImageMaterialUniforms, material: ImageMaterialPlan, bound: [BoundTexture], _ draw: Draw,
+                              projection: simd_float4x4, content: SIMD2<Int>) -> [UInt8] {
+        if uniforms.size > 0 {
             let key = ImageMaterialUniforms.PassKey(
                 model: matrix_identity_float4x4, viewProjection: projection, color: SIMD3(repeating: 1), alpha: 1,
                 brightness: 1, spriteRotation: SIMD4(1, 0, 0, 1), spriteTranslation: .zero, screen: draw.frame.screenSize,
                 textures: bound.map { SIMD4(Float($0.texture.width), Float($0.texture.height),
                                             $0.contentSize?.x ?? 0, $0.contentSize?.y ?? 0) })
-            state.uniforms.update(key: key, frame: draw.frame, values: draw.values) {
+            uniforms.update(key: key, frame: draw.frame, values: draw.values) {
                 var context = BuiltinPassContext(targetSize: SIMD2(Float(content.x), Float(content.y)))
                 context.viewProjection = projection
                 context.modelViewProjection = projection
@@ -839,11 +966,17 @@ final class ScenePuppetRenderer {
                 return context
             }
         }
-        var bytes = state.uniforms.bytes
-        if let layout = pass.variant?.uniforms {
+        var bytes = uniforms.bytes
+        if let layout = material.pass.variant?.uniforms {
             Self.writePose(draw.pose, layout: layout, into: &bytes)
         }
+        return bytes
+    }
 
+    /// Sets up `encoder` to draw the mesh through `pipeline` into `content` texels.
+    private func bindMesh(_ encoder: MTLRenderCommandEncoder, plan: ScenePuppetPlan, state: LayerState, _ draw: Draw,
+                          pipeline: MTLRenderPipelineState, bound: [BoundTexture], bytes: [UInt8], content: SIMD2<Int>,
+                          commandBuffer: MTLCommandBuffer) {
         encoder.setRenderPipelineState(pipeline)
         encoder.setViewport(MTLViewport(originX: 0, originY: 0, width: Double(content.x), height: Double(content.y),
                                         znear: 0, zfar: 1))
@@ -863,9 +996,80 @@ final class ScenePuppetRenderer {
         if !bytes.isEmpty {
             bytes.withUnsafeBytes { raw in uniformArena.bind(raw, index: 0, to: encoder, commandBuffer: commandBuffer) }
         }
-        Self.drawMesh(plan, ranges: draw.pose.drawRanges, indices: state.indices, encoder: encoder)
-        drawsEncoded += 1
-        return true
+    }
+
+    /// WE's `_rt_FullAlphaMask` for a clipped draw (0x14020d6a0): each layer's mask drawn through
+    /// its ranges with `clippingmaskimage4` into a target cleared to 0, or to 1 and with
+    /// `g_RenderVar0.x` = 1 for an inverted mask; a nested mask's layers after the first drawn into
+    /// the intermediate target and multiplied in. nil when a target can't be made.
+    private func encodeCoverage(_ plan: ScenePuppetPlan, clip: ScenePuppetClipPlan, layers: [ScenePuppetClipping.Layer],
+                                state: LayerState, _ draw: Draw, image: MTLTexture, projection: simd_float4x4,
+                                content: SIMD2<Int>, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+        guard let material = clip.mask, let uniforms = state.maskUniforms,
+              let pipeline = pipeline(material, format: plan.format, blend: .coverage, pixelFormat: Self.coverageFormat),
+              let base = textures(of: material, plan: plan, draw, image: image, morph: state.morphTexture),
+              let first = coverageTexture(0, content: content) else { return nil }
+        for (index, layer) in layers.enumerated() {
+            guard let target = index == 0 ? first : coverageTexture(1, content: content) else { return nil }
+            let mask = clip.layout.masks[layer.mask]
+            let inverted: Float = mask.flags.contains(.invert) ? 1 : 0
+            let painted = layer.mask < clip.maskTextures.count ? clip.maskTextures[layer.mask].flatMap { draw.assetTexture($0.key, $0.source) } : nil
+            var bound = base
+            bound.append((ImagePuppetCombos.clippingMaskTextureSlot, painted ?? emptyMorphTexture, clampSampler, nil))
+            var bytes = uniformBytes(uniforms, material: material, bound: bound, draw, projection: projection, content: content)
+            if let member = material.pass.variant?.uniforms?.members["g_RenderVar0"] {
+                UniformWriter.write([inverted, 0, 0, 0], member: member, into: &bytes)
+            }
+            let pass = MTLRenderPassDescriptor()
+            pass.colorAttachments[0].texture = target
+            pass.colorAttachments[0].loadAction = .clear
+            pass.colorAttachments[0].clearColor = MTLClearColor(red: Double(inverted), green: Double(inverted),
+                                                               blue: Double(inverted), alpha: Double(inverted))
+            pass.colorAttachments[0].storeAction = .store
+            guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return nil }
+            bindMesh(encoder, plan: plan, state: state, draw, pipeline: pipeline, bound: bound, bytes: bytes, content: content,
+                     commandBuffer: commandBuffer)
+            Self.drawMesh(plan, ranges: clip.layout.drawRanges(layer.ranges), indices: state.indices, encoder: encoder)
+            encoder.endEncoding()
+            guard index > 0 else { continue }
+            let compose = MTLRenderPassDescriptor()
+            compose.colorAttachments[0].texture = first
+            compose.colorAttachments[0].loadAction = .load
+            compose.colorAttachments[0].storeAction = .store
+            guard let composer = commandBuffer.makeRenderCommandEncoder(descriptor: compose) else { return nil }
+            composer.setRenderPipelineState(coverageCompose)
+            composer.setViewport(MTLViewport(originX: 0, originY: 0, width: Double(content.x), height: Double(content.y),
+                                             znear: 0, zfar: 1))
+            composer.setFragmentTexture(target, index: 0)
+            composer.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
+            composer.endEncoding()
+        }
+        return first
+    }
+
+    /// The coverage's format: its red channel is all the clipped draw reads.
+    static let coverageFormat: MTLPixelFormat = .r8Unorm
+
+    /// Coverage target `index` (0 the mask, 1 the intermediate), exactly `content` texels: the
+    /// clipped draw samples it over its viewport (`CLIPPINGUVS`).
+    private func coverageTexture(_ index: Int, content: SIMD2<Int>) -> MTLTexture? {
+        if let existing = coverage[index], existing.width == content.x, existing.height == content.y { return existing }
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: Self.coverageFormat, width: content.x,
+                                                                  height: content.y, mipmapped: false)
+        descriptor.usage = [.renderTarget, .shaderRead]
+        descriptor.storageMode = .private
+        coverage[index] = device.makeTexture(descriptor: descriptor)
+        return coverage[index]
+    }
+
+    /// The mask passes the layer's last drawing made (the editor's "Clipping mask passes").
+    func clippingMaskPasses(_ layerID: String) -> Int { layers[layerID]?.clipPasses ?? 0 }
+
+    /// The ranges the pose draws in the layer's image: its `drawRanges`, or with clipping masks
+    /// every part their steps draw (without "Hide mask geometry"'s), clipped ones unclipped.
+    static func visibleRanges(_ plan: ScenePuppetPlan, pose: ScenePuppetPose) -> [ScenePuppetDrawOrder.Range]? {
+        guard let clip = plan.clipping else { return pose.drawRanges }
+        return clip.layout.visibleRanges(order: clip.layout.order(pose.drawRanges))
     }
 
     /// The mesh's triangles: the index buffer as it is, or its `ranges` in their order
@@ -898,12 +1102,14 @@ final class ScenePuppetRenderer {
 
     private typealias BoundTexture = (slot: Int, texture: MTLTexture, sampler: MTLSamplerState, contentSize: SIMD2<Float>?)
 
-    /// The textures the mesh pass reads; nil when one isn't there this frame.
-    private func textures(of plan: ScenePuppetPlan, _ draw: Draw, image: MTLTexture, morph: MTLTexture?) -> [BoundTexture]? {
+    /// The textures `material`'s mesh pass reads; nil when one isn't there this frame. The slots
+    /// the engine fills (the coverage, a mask's texture) are left to the caller.
+    private func textures(of material: ImageMaterialPlan, plan: ScenePuppetPlan, _ draw: Draw, image: MTLTexture,
+                          morph: MTLTexture?) -> [BoundTexture]? {
         var bound: [BoundTexture] = []
-        let pass = plan.material.pass
+        let pass = material.pass
         for slot in pass.variant?.textureSlots ?? [] {
-            let sampler = plan.material.clampedSlots.contains(slot) ? clampSampler : repeatSampler
+            let sampler = material.clampedSlots.contains(slot) ? clampSampler : repeatSampler
             guard let input = pass.textures[slot] else {
                 if plan.combos.morphing, slot == ImagePuppetCombos.morphSlot {
                     bound.append((slot, morph ?? emptyMorphTexture, clampSampler, nil))
@@ -942,40 +1148,71 @@ final class ScenePuppetRenderer {
     /// The mesh's interleaved vertices.
     static let meshBuffer = EffectGraphRenderer.positionBuffer
 
-    static func pipelineKey(_ plan: ScenePuppetPlan) -> String {
-        "puppet|\(plan.material.pass.variantKey)|\(plan.format.rawValue)|\(plan.material.pass.blending.lowercased())"
+    /// How a mesh pipeline blends.
+    enum MeshBlend: Hashable {
+        /// The material's blending (`applyBlending`).
+        case material(String)
+        /// Added over the parts before (a clipping mask's "Additive blending").
+        case additive
+        /// A clipping mask's coverage: `clippingmaskimage4`'s translucent, straight alpha.
+        case coverage
+
+        var key: String {
+            switch self {
+            case .material(let blending): blending.lowercased()
+            case .additive: "clip-additive"
+            case .coverage: "clip-coverage"
+            }
+        }
     }
 
-    /// Blocks until the plan's pipeline compiled or failed (tests, prewarming). True when it is ready.
+    static func pipelineKey(_ plan: ScenePuppetPlan) -> String {
+        pipelineKey(plan.material, format: plan.format, blend: .material(plan.material.pass.blending), pixelFormat: scratchFormat)
+    }
+
+    static func pipelineKey(_ material: ImageMaterialPlan, format: MDLVertexFormat, blend: MeshBlend,
+                            pixelFormat: MTLPixelFormat) -> String {
+        let base = "puppet|\(material.pass.variantKey)|\(format.rawValue)|\(blend.key)"
+        return pixelFormat == scratchFormat ? base : "\(base)|\(pixelFormat.rawValue)"
+    }
+
+    /// Blocks until the plan's pipelines compiled or failed (tests, prewarming): its mesh's and,
+    /// with clipping masks, the clipped parts' and the masks'. True when they are ready.
     func waitUntilReady(_ plan: ScenePuppetPlan, timeout: TimeInterval = 60) -> Bool {
+        var wanted: [(ImageMaterialPlan, MeshBlend, MTLPixelFormat)] = [(plan.material, .material(plan.material.pass.blending), Self.scratchFormat)]
+        if let clip = plan.clipping {
+            wanted += [(clip.target, .material("translucent"), Self.scratchFormat), (clip.target, .additive, Self.scratchFormat)]
+            if let mask = clip.mask { wanted.append((mask, .coverage, Self.coverageFormat)) }
+        }
         let deadline = Date().addingTimeInterval(timeout)
-        let key = Self.pipelineKey(plan)
-        while pipeline(for: plan) == nil {
-            if pipelineLock.withLock({ failed.contains(key) }) || Date() > deadline { return false }
-            Thread.sleep(forTimeInterval: 0.005)
+        for (material, blend, pixelFormat) in wanted {
+            let key = Self.pipelineKey(material, format: plan.format, blend: blend, pixelFormat: pixelFormat)
+            while pipeline(material, format: plan.format, blend: blend, pixelFormat: pixelFormat) == nil {
+                if pipelineLock.withLock({ failed.contains(key) }) || Date() > deadline { return false }
+                Thread.sleep(forTimeInterval: 0.005)
+            }
         }
         return true
     }
 
-    private func pipeline(for plan: ScenePuppetPlan) -> MTLRenderPipelineState? {
-        let key = Self.pipelineKey(plan)
+    private func pipeline(_ material: ImageMaterialPlan, format: MDLVertexFormat, blend: MeshBlend,
+                          pixelFormat: MTLPixelFormat) -> MTLRenderPipelineState? {
+        let key = Self.pipelineKey(material, format: format, blend: blend, pixelFormat: pixelFormat)
         let state: (pipeline: MTLRenderPipelineState?, busy: Bool) = pipelineLock.withLock {
             (pipelines[key], pending.contains(key) || failed.contains(key))
         }
         if let pipeline = state.pipeline { return pipeline }
-        if !state.busy, let variant = plan.material.pass.variant {
-            compile(variant, plan: plan, key: key)
+        if !state.busy, let variant = material.pass.variant {
+            compile(variant, key: key, format: format, blend: blend, pixelFormat: pixelFormat, materialPath: material.materialPath)
         }
         return nil
     }
 
-    private func compile(_ variant: TranslatedShaderVariant, plan: ScenePuppetPlan, key: String) {
+    private func compile(_ variant: TranslatedShaderVariant, key: String, format: MDLVertexFormat, blend: MeshBlend,
+                         pixelFormat: MTLPixelFormat, materialPath material: String) {
         pipelineLock.withLock { _ = pending.insert(key) }
         let device = self.device
         let archive = self.archive
-        let format = plan.format
-        let blending = plan.material.pass.blending
-        let material = plan.material.materialPath
         compileQueue.async { [weak self] in
             let result: MTLRenderPipelineState?
             do {
@@ -987,8 +1224,8 @@ final class ScenePuppetRenderer {
                 let descriptor = MTLRenderPipelineDescriptor()
                 descriptor.vertexFunction = vertex
                 descriptor.fragmentFunction = fragment
-                descriptor.colorAttachments[0].pixelFormat = Self.scratchFormat
-                Self.applyBlending(blending, to: descriptor.colorAttachments[0])
+                descriptor.colorAttachments[0].pixelFormat = pixelFormat
+                Self.applyBlending(blend, to: descriptor.colorAttachments[0])
                 descriptor.vertexDescriptor = Self.vertexDescriptor(for: vertex, attributes: variant.attributes, format: format)
                 result = try EffectGraphRenderer.makePipeline(descriptor, device: device, archive: archive, key: key)
             } catch {
@@ -1013,6 +1250,28 @@ final class ScenePuppetRenderer {
         attachment.destinationRGBBlendFactor = .oneMinusSourceAlpha
         attachment.sourceAlphaBlendFactor = .one
         attachment.destinationAlphaBlendFactor = .oneMinusSourceAlpha
+    }
+
+    /// `blend` on `attachment`. A clipping mask's additive parts add their premultiplied colour
+    /// to the parts before them and cover them as "over" does [I: the alpha]; its coverage blends
+    /// translucent as `clippingmaskimage4.json` says, straight alpha into a target of its own.
+    static func applyBlending(_ blend: MeshBlend, to attachment: MTLRenderPipelineColorAttachmentDescriptor) {
+        switch blend {
+        case .material(let blending):
+            applyBlending(blending, to: attachment)
+        case .additive:
+            attachment.isBlendingEnabled = true
+            attachment.sourceRGBBlendFactor = .sourceAlpha
+            attachment.destinationRGBBlendFactor = .one
+            attachment.sourceAlphaBlendFactor = .one
+            attachment.destinationAlphaBlendFactor = .oneMinusSourceAlpha
+        case .coverage:
+            attachment.isBlendingEnabled = true
+            attachment.sourceRGBBlendFactor = .sourceAlpha
+            attachment.destinationRGBBlendFactor = .oneMinusSourceAlpha
+            attachment.sourceAlphaBlendFactor = .sourceAlpha
+            attachment.destinationAlphaBlendFactor = .oneMinusSourceAlpha
+        }
     }
 
     /// The mesh's interleaved attributes at the locations the translated stage reads them from

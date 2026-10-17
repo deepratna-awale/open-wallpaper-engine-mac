@@ -61,8 +61,8 @@ final class ModelImportTests: XCTestCase {
         }
         let wall = model.meshes[0].vertices.withUnsafeBytes { Array($0.bindMemory(to: Float.self)) }
         // The first corner: (-1, 0, 0), normal +z, tangent +x (w the sign of (N × T) · B, B along
-        // +y by Assimp's formula on the flipped coordinates), uv (0, 1 - 0).
-        XCTAssertEqual(Array(wall[0..<12]), [-1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1])
+        // −y by Assimp's formula on the file's coordinates, as WE 2.8 computes it), uv (0, 1 - 0).
+        XCTAssertEqual(Array(wall[0..<12]), [-1, 0, 0, 0, 0, 1, 1, 0, 0, -1, 0, 1])
         let indices = model.meshes[0].indices.withUnsafeBytes { Array($0.bindMemory(to: UInt16.self)) }
         XCTAssertEqual(indices, [0, 1, 2, 0, 2, 3])
     }
@@ -149,10 +149,12 @@ final class ModelImportTests: XCTestCase {
         XCTAssertEqual(wave.fps, 30)
         XCTAssertEqual(wave.frames, 30)
         XCTAssertEqual(wave.tracks.count, 3)
-        // Tip's last sample: position (0, 1, 0), z turned by 90°.
-        let last = Array(wave.tracks[2].suffix(9))
-        XCTAssertEqual(last[1], 1, accuracy: 1e-5)
-        XCTAssertEqual(last[5], .pi / 2, accuracy: 1e-4)
+        // Tip's keys (0° at 0 s, 90° at 1 s) read linearly at each frame: frame 29 at 87°,
+        // position (0, 1, 0); the last frame samples the first, as WE's tracks loop.
+        let frame29 = Array(wave.tracks[2][(29 * 9)..<(30 * 9)])
+        XCTAssertEqual(frame29[1], 1, accuracy: 1e-5)
+        XCTAssertEqual(frame29[5], .pi / 2 * 29 / 30, accuracy: 1e-4)
+        XCTAssertEqual(Array(wave.tracks[2].suffix(9)), Array(wave.tracks[2].prefix(9)))
         // The box over the clip: Tip's quarter turn swings the top corners, √2 from it, past
         // x = -√2 and y = 1 + √2 halfway.
         XCTAssertEqual(wave.bounds[0], -Float(2).squareRoot(), accuracy: 1e-4)
@@ -201,10 +203,15 @@ final class ModelImportTests: XCTestCase {
         XCTAssertTrue(config.normals)
         XCTAssertFalse(config.tangentSpace)
         XCTAssertEqual(config.clips, [ModelImportConfig.Clip(id: 7, name: "Walk", animation: 1, start: 2, end: 9, frameOffset: 1, matchLoop: false,
-                                                             rootMotion: "Hips", motionFlags: 136, fps: 24, mode: "single")])
+                                                             rootMotion: "Hips", motionFlags: 0x8800, fps: 24, mode: "single")])
         XCTAssertEqual(config.attachments.first?.angles.z ?? 0, 1.5708, accuracy: 1e-4)
         XCTAssertNotNil(config.other["skins"])
-        XCTAssertEqual(try ModelImportConfig(json: try config.jsonData()), config)
+        // Written in WE's shape (`editor`, the attachment as a transform) and read back.
+        var again = try ModelImportConfig(json: try config.jsonData())
+        XCTAssertEqual(again.attachments.first?.angles.z ?? 0, 1.5708, accuracy: 1e-4)
+        XCTAssertEqual(again.attachments.first?.origin, SIMD3(0, 1, 0))
+        again.attachments = config.attachments
+        XCTAssertEqual(again, config)
         XCTAssertEqual(config.nextID(after: 3), 1001)
     }
 
