@@ -80,10 +80,12 @@ final class LocalizationLintTests: XCTestCase {
         })
     }
 
-    /// Split out of the scanned files above: `AppDelegate`'s extensions and the window types it had.
+    /// Split out of the scanned files: `AppDelegate`'s extensions and the window types it had, and
+    /// the Workshop views whose names don't end in "View".
     static let scannedSplitFiles = ["App/AppDelegate+Lifecycle.swift", "App/AppDelegate+Actions.swift",
                                     "App/AppDelegate+SettingsWindow.swift", "App/AppDelegate+WallpaperWindows.swift",
-                                    "App/WorkshopPreviewWindow.swift"]
+                                    "App/WorkshopPreviewWindow.swift",
+                                    "Workshop/WorkshopItemCard.swift", "Workshop/WorkshopItemMenu.swift"]
 
     private func scannedSources() throws -> [String] {
         let root = Self.repository.appending(path: "OpenWallpaperEngine")
