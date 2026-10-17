@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Wallpaper Editor: importing an image with Crop transparent area** keeps the picture where it was in the full frame, as Wallpaper Engine does: the layer is placed by the crop's offset and the model records it as `cropoffset`, which Align with Background then uses.
+- **Wallpaper Editor: Character Sheet Creation** puts the new sheet layer at the scene's centre, as Wallpaper Engine does, instead of where the old layer was.
 - **Text with an opaque background at partial opacity** now fades as in Wallpaper Engine: the box shows through the faded glyphs instead of being covered by them, and `backgroundbrightness` is read (it scales the box where Wallpaper Engine applies brightness). Letter spacing, the box's size and padding and its bloom were checked against Wallpaper Engine 2.8 and already matched.
 - **Clicking a 3D model** hits the whole model again: the hit box is the mesh's bounds, so a model around its origin is clicked in every quarter, not only above and right of its origin (Wallpaper Engine 2.8's own behaviour, checked against it). `localPosition` is where the click meets the box, from its centre in model units.
 ### Changed

@@ -28,6 +28,43 @@ final class CharacterSheetTests: XCTestCase {
         return image
     }
 
+    /// A 512 × 512 picture cut into a piece at (x, y) of `width` × `height` in tag `tag`.
+    private func limb(_ tag: UInt8, x: Int, y: Int, width: Int, height: Int) -> RGBAImage {
+        var image = RGBAImage(width: 512, height: 512)
+        for row in y..<(y + height) {
+            for column in x..<(x + width) {
+                image.pixels[(row * 512 + column) * 4] = tag
+                image.pixels[(row * 512 + column) * 4 + 3] = 255
+            }
+        }
+        return image
+    }
+
+    /// WE 2.8.0.42 capture 545, run 2: a 512 × 512 figure (Body, then Head and Arm under it). WE's
+    /// sheet, 492 × 509, put the body (224 × 216) at (64, 64), the arm's piece (78 wide, its
+    /// leftovers) at (350, 64) beside it and the head (100 × 102) at (64, 343) below: a 64 px
+    /// margin and gaps of an eighth of the 512 px picture, in the squarest rows, tallest first.
+    func testTheCaptureSheetsLayout() {
+        let pieces = [limb(1, x: 216, y: 180, width: 224, height: 216), limb(2, x: 300, y: 100, width: 78, height: 212),
+                      limb(3, x: 206, y: 80, width: 100, height: 102)]
+        XCTAssertEqual(CharacterSheet.spacing(for: pieces), 64)
+        let sheet = CharacterSheet.sheet(pieces)
+        XCTAssertEqual(Double(sheet.width), 492, accuracy: 2)
+        XCTAssertEqual(Double(sheet.height), 509, accuracy: 2)
+        func origin(of tag: UInt8) -> SIMD2<Int>? {
+            for y in 0..<sheet.height {
+                for x in 0..<sheet.width where sheet.pixels[(y * sheet.width + x) * 4] == tag { return SIMD2(x, y) }
+            }
+            return nil
+        }
+        XCTAssertEqual(origin(of: 1), SIMD2(64, 64))
+        let arm = origin(of: 2), head = origin(of: 3)
+        XCTAssertEqual(Double(arm?.x ?? 0), 350, accuracy: 2)
+        XCTAssertEqual(arm?.y, 64)
+        XCTAssertEqual(head?.x, 64)
+        XCTAssertEqual(Double(head?.y ?? 0), 343, accuracy: 1)
+    }
+
     func testTheSheetHoldsWhatIsLeftOfEachParentAndEveryLeaf() {
         let limbs = [
             CharacterSheet.Limb(depth: 0),
@@ -100,7 +137,7 @@ final class CharacterSheetTests: XCTestCase {
         let layer = try XCTUnwrap(session.outline.layer(id))
         XCTAssertEqual(layer.name, "logo_sheet")
         XCTAssertEqual(layer.fields["size"]?.stringValue, "64 32")
-        XCTAssertEqual(layer.fields["origin"]?.stringValue, "1700 900 0")
+        XCTAssertEqual(layer.fields["origin"]?.stringValue, "960 540 0", "WE puts the sheet at the scene's centre")
         let material = try XCTUnwrap(ImageLayerMaterial(layer: layer, readFile: readFile))
         XCTAssertTrue(try XCTUnwrap(material.texture).hasPrefix("editor/logo_sheet-"))
         XCTAssertEqual(session.selection, id)

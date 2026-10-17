@@ -18,9 +18,13 @@ extension SceneEditSession {
         let name = String(sheetTexture.dropFirst("editor/".count))
         let size = SIMD2(Double(sheet.width), Double(sheet.height))
         let imported = try store.writeImageMaterial(name: name, texture: sheetTexture, normalMap: nil, size: size, title: title)
+        // WE puts the sheet's layer at the scene's centre, without the old image's `cropoffset`
+        // (WE 2.8.0.42, capture 545: origin 960 540 in a 1920 × 1080 scene).
         let transform = storedTransform(of: layerID)
-        var object = SceneLayerFactory.image(name: title, model: imported.model, size: size,
-                                             origin: SIMD2(transform.origin.x, transform.origin.y))
+        let parented = layer.parentID.flatMap(outline.layer) != nil
+        let centre: SIMD2<Double>? = parented ? nil : outline.size.map { SIMD2($0.x / 2, $0.y / 2) }
+        let origin: SIMD2<Double> = centre ?? SIMD2(transform.origin.x, transform.origin.y)
+        var object = SceneLayerFactory.image(name: title, model: imported.model, size: size, origin: origin)
         if let parent = layer.parentID, outline.layer(parent) != nil { object["parent"] = .number(Double(parent)) }
         let id = nextObjectID
         var order = outline.layers.map(\.id)
