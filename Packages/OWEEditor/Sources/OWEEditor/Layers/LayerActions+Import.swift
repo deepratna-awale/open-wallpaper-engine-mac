@@ -19,8 +19,10 @@ extension LayerActions {
         for url in urls {
             do {
                 let image = try store.importImage(from: url, options: options)
+                // A cropped picture's content stays where it was in the full picture (WE's `cropoffset`).
+                let origin = (point ?? sceneCentre) + (image.cropOffset ?? .zero)
                 session.addLayer(SceneLayerFactory.image(name: image.title, model: image.model, size: image.size,
-                                                         origin: point ?? sceneCentre), actionName: L("Add Image Layer"))
+                                                         origin: origin), actionName: L("Add Image Layer"))
             } catch {
                 tools.problem = L("“\(url.lastPathComponent)” couldn’t be added: \(error.localizedDescription)")
             }

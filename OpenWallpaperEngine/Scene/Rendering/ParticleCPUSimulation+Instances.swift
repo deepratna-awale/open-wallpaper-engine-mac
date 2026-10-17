@@ -93,6 +93,7 @@ extension ParticleCPUSimulation {
                                        burst: step.bursts ? settings.instantaneous : 0, rateLimit: limit)
                 state.clock.state.w += Float(emitted.rate)
                 state.spawnCount = emitted.burst + emitted.rate
+                if state.spawnCount > 0 { state.spawns(layerWorld: settings.layerWorld) }
                 state.startsPeriod = step.startsPeriod
                 live += state.spawnCount
                 instance.emitterStates[emitter] = state

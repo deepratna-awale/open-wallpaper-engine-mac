@@ -44,16 +44,20 @@ struct EmitterParameters {
     float4 sign;             // sign xyz
     float4 timing;           // `ParticleEmitterTiming`: delay, duration, periodic duration min, max
     float4 period;           // periodic delay min, max, periodic
-    uint4 flags;             // kind (0 sphere, 1 box, 2 layer image), applies sign, instantaneous
+    uint4 flags;             // kind (0 sphere, 1 box, 2 layer image), applies sign, instantaneous, inherits layer motion
     uint4 image;             // layer image: first point, points, takes the image's colour, offsets randomly
 };
 
 /// One emitter's part of the step (`ParticleGPUEmitterStep`).
 struct EmitterStep {
-    float4 rate;             // rate
+    float4 rate;             // rate, engine frame time
     uint4 control;           // burst, period limit (~0: none), starts a period, one per frame
     float4 imageLinear;      // layer image in the system's space: linear columns
     float4 imageTranslation; // translation
+    float4 layerLinear;      // the layer's world: linear columns
+    float4 toSpaceLinear;    // the system's space from the scene: linear columns
+    float4 translations;     // the layer's world's translation xy, the system's space's
+    uint4 bones;             // a rigged layer's bones this step (`ImageBone`): first, count
 };
 
 /// One emitter's running state (`ParticleGPUEmitterState`), per slot.
@@ -61,7 +65,26 @@ struct EmitterState {
     float4 clock;            // `ParticleEmitterClock.state` (instances)
     float4 carry;            // carried fraction
     uint4 counts;            // period emitted (systems), first spawn, spawns, sequence restart
+    float4 lastWorldLinear;  // the layer's world at the last step that spawned: linear columns
+    float4 lastWorldTranslation;  // translation xy, set (z)
+    float4 spawnWorldLinear; // the one before, which this step's spawns read
+    float4 spawnWorldTranslation;
 };
+
+/// One bone of a rigged layer's step (`ParticleGPUImageBone`, `ParticleImageBone`).
+struct ImageBone {
+    float4 currentLinear;    // now, in the system's space: linear columns
+    float4 translations;     // now xy, last frame xy
+    float4 previousLinear;   // last frame: linear columns
+};
+
+/// `ParticleEmitterState.spawns`: a step that spawns keeps the layer's world.
+static void spawnsLayerWorld(thread EmitterState &state, EmitterStep step) {
+    state.spawnWorldLinear = state.lastWorldLinear;
+    state.spawnWorldTranslation = state.lastWorldTranslation;
+    state.lastWorldLinear = step.layerLinear;
+    state.lastWorldTranslation = float4(step.translations.xy, 1, 0);
+}
 
 /// A collision shape in scene space (`ParticleCollisionPlacement`).
 struct CollisionPlacement {

@@ -174,6 +174,9 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.texture = { resources.texture($0) }
         services.fonts = { resources.fonts() }
         services.userPropertyChoices = { resources.userPropertyChoices() }
+        // A texture variant's Preview sets the canvas's (the Details panel's) values.
+        services.userPropertyValues = EditorUserPropertyValues(value: { [weak userPropertyUndo] in userPropertyUndo?.value($0) },
+                                                               set: { [weak userPropertyUndo] in userPropertyUndo?.set($0, to: $1) })
         services.models = { resources.modelChoices() }
         services.layerPresets = { resources.layerPresets(labels: labels) }
         services.timeline = timeline
@@ -193,6 +196,15 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
             guard let preview, let scene = preview.sceneInstances.instance(for: preview.instanceKey(for: preview.selectedScreenId)),
                   let camera = scene.renderLoop.renderer?.lastPerspectiveCamera else { return nil }
             return EditorSceneCamera(camera)
+        }
+        // Show Hitboxes: the puppets' hit boxes as the canvas's renderer posed them (its own lock).
+        services.puppetHitBoxes = { [weak preview] in
+            guard let preview, let scene = preview.sceneInstances.instance(for: preview.instanceKey(for: preview.selectedScreenId)),
+                  let renderer = scene.renderLoop.renderer else { return [] }
+            return renderer.puppetHitBoxes.read().map {
+                EditorHitBox(layerID: $0.layerID, bone: $0.bone, name: $0.name,
+                             corners: $0.corners.map { SIMD2<Double>(Double($0.x), Double($0.y)) })
+            }
         }
         services.renderStats = SceneRenderStatsSampler(instance: { [weak preview] in
             preview.flatMap { $0.sceneInstances.instance(for: $0.instanceKey(for: $0.selectedScreenId)) }
