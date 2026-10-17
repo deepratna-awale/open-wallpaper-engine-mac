@@ -203,7 +203,7 @@ enum WallpaperPackageConverter {
 
         let manifest = Manifest(converterVersion: converterVersion,
                                 sourcePackage: packageName,
-                                sourceHash: SHA256.hash(data: packageData).map { String(format: "%02x", $0) }.joined(),
+                                sourceHash: Digest.hex(SHA256.hash(data: packageData)),
                                 sourceRetained: sourceRetained,
                                 extractedFiles: extracted,
                                 warnings: warnings,

@@ -50,7 +50,7 @@ struct RepairedVideoCache {
         }
         let size = (attributes[.size] as? NSNumber)?.int64Value ?? 0
         let modified = (attributes[.modificationDate] as? Date)?.timeIntervalSince1970 ?? 0
-        let key = SHA256.hash(data: Data(path.utf8)).prefix(12).map { String(format: "%02x", $0) }.joined()
+        let key = Digest.hex(SHA256.hash(data: Data(path.utf8)).prefix(12))
         let name = "\(size)-\(Int64(modified * 1_000_000)).\(source.pathExtension.lowercased())"
         return directory.appending(path: key, directoryHint: .isDirectory).appending(path: name)
     }

@@ -46,6 +46,7 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
 - The **WE assets location**.
 - **The app's process:** its host context and relaunch (`AppHostContext`, `AppRelauncher`), the helper runs of the app itself (`Core/HelperRun`: `HelperRunCommand`, and `HelperProcess`, which starts one in this process's isolated state), the shared wallpaper services (`Core/Services`, `WallpaperServices`: audio capture and user properties), folder watching (`Core/Files`, `DirectoryChangeWatcher`) and the video memory watch (`Core/Playback/VideoMemoryWatch`).
 - The **Objective-C exception catcher**.
+- **Digests as text** (`Digest.hex`): the lower-case hex every cache key, cache file name and stamp is spelled in (the OWEEditor package, which can't link the framework, keeps its own until `WEFormat`).
 - **Caches** (`Core/Caches`): last use of a cache entry (`CacheEntryUse`, its modification date), what is in use now (`CacheLeases`), the sweeper that expires entries unused for 60 days and clears them (`CacheSweeper`), and macOS's Metal shader cache of the app (`MetalShaderCache`, reset at launch; `DarwinUserDirectories` gives an isolated copy its own). The app's list of caches and their schedule are in `App/Caches` (`CacheFolder+OWE`, `CacheMaintenance`, `MetalShaderCacheLaunch`).
 - It must not reference UI, view models or `AppDelegate`.
 

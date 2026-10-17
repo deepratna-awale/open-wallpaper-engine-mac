@@ -118,5 +118,5 @@ struct SceneCacheKey: Equatable, Sendable {
     }
 
     /// The digest as the file name (hex).
-    var name: String { digest.map { String(format: "%02x", $0) }.joined() }
+    var name: String { Digest.hex(digest) }
 }

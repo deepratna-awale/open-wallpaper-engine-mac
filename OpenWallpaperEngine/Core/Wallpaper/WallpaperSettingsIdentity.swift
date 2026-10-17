@@ -29,7 +29,7 @@ struct WallpaperSettingsIdentity: Hashable {
         if let id = Self.workshopID(projectData: projectData, folder: folder) {
             rawValue = "workshop-\(id)"
         } else if let projectData {
-            let digest = SHA256.hash(data: projectData).prefix(8).map { String(format: "%02x", $0) }.joined()
+            let digest = Digest.hex(SHA256.hash(data: projectData).prefix(8))
             rawValue = "local-\(digest)-\(folder)"
         } else {
             rawValue = "local-\(folder)"
