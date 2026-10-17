@@ -60,10 +60,10 @@ final class UserPropertyAuthoringTests: XCTestCase {
         }
         let added = authoring.properties.suffix(UserPropertyDraft.Kind.authorable.count)
         XCTAssertEqual(added.map(\.kind), UserPropertyDraft.Kind.authorable)
-        XCTAssertEqual(added.first?.key, "new_bool")
-        XCTAssertEqual(authoring.property("new_slider")?.value, .number(0.5))
-        XCTAssertEqual(authoring.property("new_combo")?.options.count, 2)
-        XCTAssertNil(authoring.property("new_text")?.value, "a label has no value")
+        XCTAssertEqual(added.first?.key, "newbool")
+        XCTAssertEqual(authoring.property("newslider")?.value, .number(0.5))
+        XCTAssertEqual(authoring.property("newcombo")?.options.count, 2)
+        XCTAssertNil(authoring.property("newtext")?.value, "a label has no value")
         XCTAssertTrue(authoring.isEdited)
         XCTAssertEqual(session.overlay.authoring?.properties?.count, 7 + UserPropertyDraft.Kind.authorable.count)
 
@@ -71,14 +71,17 @@ final class UserPropertyAuthoringTests: XCTestCase {
         XCTAssertFalse(authoring.isEdited, "undone back to project.json's own list")
         XCTAssertNil(session.overlay.authoring, "nothing left in the overlay")
         session.redo()
-        XCTAssertEqual(authoring.properties.last?.key, "new_bool")
+        XCTAssertEqual(authoring.properties.last?.key, "newbool")
     }
 
     func testUniqueKeysFromLabels() {
-        XCTAssertEqual(UserPropertyDraft.key(from: "Show Clock!", taken: []), "show_clock")
+        // WE's dialog: lower case, every non-word character dropped.
+        XCTAssertEqual(UserPropertyDraft.key(from: "Show Clock!", taken: []), "showclock")
         XCTAssertEqual(UserPropertyDraft.key(from: "Speed", taken: ["speed", "speed2"]), "speed3")
-        XCTAssertEqual(UserPropertyDraft.key(from: "2 suns", taken: []), "property_2_suns")
-        XCTAssertEqual(UserPropertyDraft.key(from: "Opacité du logo", taken: []), "opacite_du_logo")
+        XCTAssertEqual(UserPropertyDraft.key(from: "2 suns", taken: []), "_2suns")
+        XCTAssertEqual(UserPropertyDraft.key(from: "Opacité du logo", taken: []), "opacitdulogo")
+        XCTAssertEqual(UserPropertyDraft.key(from: "My_value", taken: []), "my_value")
+        XCTAssertEqual(UserPropertyDraft.key(from: "!!!", taken: []), "newproperty")
         XCTAssertTrue(UserPropertyDraft.isValidKey("blur_2"))
         XCTAssertFalse(UserPropertyDraft.isValidKey("2blur"))
         XCTAssertFalse(UserPropertyDraft.isValidKey("blur strength"))
@@ -206,7 +209,11 @@ final class UserPropertyAuthoringTests: XCTestCase {
         XCTAssertEqual(entries["mode"]?["type"] as? String, "combo")
         XCTAssertEqual(entries["mode"]?["value"] as? String, "night")
         XCTAssertEqual(entries["mode"]?["condition"] as? String, "showlogo.value == true")
-        XCTAssertEqual((entries["mode"]?["order"] as? NSNumber)?.intValue, 6)
+        // WE's numbering: `index` the place without the scheme colour, `order` 100 + `index`.
+        XCTAssertEqual((entries["mode"]?["order"] as? NSNumber)?.intValue, 105)
+        XCTAssertEqual((entries["mode"]?["index"] as? NSNumber)?.intValue, 5)
+        XCTAssertEqual((entries["schemecolor"]?["order"] as? NSNumber)?.intValue, 0)
+        XCTAssertNil(entries["schemecolor"]?["index"])
         XCTAssertEqual((entries["speed"]?["precision"] as? NSNumber)?.intValue, 3)
         XCTAssertEqual(entries["speed"]?["fraction"] as? Bool, false)
         XCTAssertEqual(entries["speed"]?["editable"] as? Bool, true)
@@ -232,14 +239,14 @@ final class UserPropertyAuthoringTests: XCTestCase {
             editProject: { overlay.authoring?.applyProperties(to: &$0) })
         let project = try Data(contentsOf: folder.appending(path: "project.json"))
         let properties = UserPropertyAuthoring.read(projectJSON: project)
-        XCTAssertEqual(properties.last?.key, "logo_opacity")
+        XCTAssertEqual(properties.last?.key, "logoopacity")
         XCTAssertEqual(properties.last?.value, .number(0.6))
         let root2 = try XCTUnwrap(JSONSerialization.jsonObject(with: project) as? [String: Any])
         XCTAssertEqual(root2["title"] as? String, "Rain (Edited)")
         XCTAssertNil(root2["workshopid"])
         let scene = try Data(contentsOf: folder.appending(path: "scene.json"))
         let alpha = try XCTUnwrap(try Fixtures.object(13, in: scene)["alpha"] as? [String: Any])
-        XCTAssertEqual(alpha["user"] as? String, "logo_opacity")
+        XCTAssertEqual(alpha["user"] as? String, "logoopacity")
     }
 
     func testUneditedPropertiesLeaveProjectJSONAsItIs() throws {
@@ -265,7 +272,7 @@ final class UserPropertyAuthoringTests: XCTestCase {
     func testAddAndBindIsOneStep() throws {
         let key = authoring.addAndBind(.slider, label: "Logo opacity", path: "alpha", of: 13,
                                        defaultValue: .number(0.8), actionName: "Bind")
-        XCTAssertEqual(key, "logo_opacity")
+        XCTAssertEqual(key, "logoopacity")
         XCTAssertEqual(authoring.property(key)?.value, .number(0.8))
         XCTAssertEqual(session.drivers("alpha", of: 13).user?.name, key)
         XCTAssertEqual(session.binding("alpha", of: 13), .userProperty(key))
