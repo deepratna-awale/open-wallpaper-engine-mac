@@ -81,6 +81,22 @@ final class EditorUserPropertyUndo: ObservableObject {
         onChange?()
     }
 
+    /// A property's value in the store; nil when it has none (its default applies).
+    func value(_ key: String) -> String? { targets.storedValues[key] }
+
+    /// Sets a value as the Details panel does (a texture variant's Preview): saved, sent to the
+    /// running wallpaper, one undo step.
+    func set(_ key: String, to value: String) {
+        var stored = targets.storedValues
+        guard stored[key] != value else { return }
+        stored[key] = value
+        targets.save(stored)
+        for runtimeKey in targets.runtimeKeys { WallpaperPropertyTargets.publishReplacing(runtimeKey, stored) }
+        lastChange = nil
+        changed(key, to: value)
+        revision += 1
+    }
+
     /// Revert to Saved: the user properties back to `saved` (the store's other values, layer edits,
     /// kept), one undo step named `actionName` (grouped with the layer edits' revert of the same event).
     func revert(to saved: [String: String], actionName: String) {

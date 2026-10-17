@@ -174,6 +174,9 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         services.texture = { resources.texture($0) }
         services.fonts = { resources.fonts() }
         services.userPropertyChoices = { resources.userPropertyChoices() }
+        // A texture variant's Preview sets the canvas's (the Details panel's) values.
+        services.userPropertyValues = EditorUserPropertyValues(value: { [weak userPropertyUndo] in userPropertyUndo?.value($0) },
+                                                               set: { [weak userPropertyUndo] in userPropertyUndo?.set($0, to: $1) })
         services.models = { resources.modelChoices() }
         services.layerPresets = { resources.layerPresets(labels: labels) }
         services.timeline = timeline

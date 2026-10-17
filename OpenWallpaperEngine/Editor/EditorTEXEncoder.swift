@@ -153,7 +153,7 @@ struct EditorTEXEncoder: EditorTextureEncoding {
     }
 
     /// The level's bytes in the format: RGBA as it is, R 8 or RG 88 their channels, DXT its blocks.
-    private static func stored(_ pixels: [UInt8], width: Int, height: Int, format: TextureImportOptions.Format) -> [UInt8] {
+    static func stored(_ pixels: [UInt8], width: Int, height: Int, format: TextureImportOptions.Format) -> [UInt8] {
         switch format {
         case .rgba8888: return pixels
         case .r8: return stride(from: 0, to: width * height * 4, by: 4).map { pixels[$0] }
@@ -216,7 +216,7 @@ struct EditorTEXEncoder: EditorTextureEncoding {
         return pixels
     }
 
-    private static func padded(_ pixels: [UInt8], width: Int, height: Int, to newWidth: Int, _ newHeight: Int) -> [UInt8] {
+    static func padded(_ pixels: [UInt8], width: Int, height: Int, to newWidth: Int, _ newHeight: Int) -> [UInt8] {
         guard newWidth != width || newHeight != height else { return pixels }
         var result = [UInt8](repeating: 0, count: newWidth * newHeight * 4)
         for y in 0..<newHeight {

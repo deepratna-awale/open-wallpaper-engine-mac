@@ -152,6 +152,17 @@ public final class UserPropertyAuthoring: ObservableObject {
         return key
     }
 
+    /// Adds `draft` (whose key is free, `UserPropertyDraft.key(from:taken:)` with `keys`) and
+    /// changes the overlay with it, one undo step (a texture variant's condition on a new property).
+    public func add(_ draft: UserPropertyDraft, actionName: String, with change: (inout SceneEditOverlay) -> Void) {
+        guard !keys.contains(draft.key) else { return }
+        let list = normalizedList(properties + [draft])
+        session.editOverlay(actionName: actionName) { overlay in
+            change(&overlay)
+            setProperties(list, in: &overlay)
+        }
+    }
+
     /// Back to project.json's properties (bindings stay).
     public func revertToAuthored(actionName: String) {
         commit(authored, actionName: actionName)
