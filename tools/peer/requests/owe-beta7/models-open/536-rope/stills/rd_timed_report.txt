@@ -1,0 +1,25 @@
+connected ident 38920
+p536_base still 0.1 triggered at 0.103 s frame 611
+p536_base still 0.25 triggered at 0.292 s frame 616
+p536_base still 0.5 triggered at 0.505 s frame 623
+p536_base still 1.0 triggered at 1.002 s frame 634
+p536_base still 2.0 triggered at 2.001 s frame 658
+p536_base still 4.0 triggered at 4.004 s frame 708
+p536_nostretch still 0.1 triggered at 0.101 s frame 802
+p536_nostretch still 0.25 triggered at 0.289 s frame 806
+p536_nostretch still 0.5 triggered at 0.503 s frame 811
+p536_nostretch still 1.0 triggered at 1.003 s frame 824
+p536_nostretch still 2.0 triggered at 2.000 s frame 849
+p536_nostretch still 4.0 triggered at 4.000 s frame 899
+p536_nostretch_free still 0.1 triggered at 0.117 s frame 996
+p536_nostretch_free still 0.25 triggered at 0.376 s frame 1000
+p536_nostretch_free still 0.5 triggered at 0.547 s frame 1004
+p536_nostretch_free still 1.0 triggered at 1.003 s frame 1019
+p536_nostretch_free still 2.0 triggered at 2.001 s frame 1043
+p536_nostretch_free still 4.0 triggered at 4.001 s frame 1091
+p536_base_wind still 0.1 triggered at 0.104 s frame 1183
+p536_base_wind still 0.25 triggered at 0.327 s frame 1188
+p536_base_wind still 0.5 triggered at 0.521 s frame 1195
+p536_base_wind still 1.0 triggered at 1.005 s frame 1206
+p536_base_wind still 2.0 triggered at 2.002 s frame 1232
+p536_base_wind still 4.0 triggered at 4.002 s frame 1282

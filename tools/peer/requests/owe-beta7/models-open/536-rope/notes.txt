@@ -1,0 +1,40 @@
+536 (A3): Puppet Warp "Rope with 4 elements" (WE 2.8.0.42)
+
+## Setup (project p536_rope; image arm.png from 534, made with ../534-ik/make_534.py p536_rope)
+- **Chain:** a 5-bone chain from 5 clicks at image x 30/143/256/369/~460: root 23, 24, 25, 26, tip 27 ("Bone 5").
+- **Constraint on the tip:** Edit Constraints › Simple › **"Rope with 4 elements"**. Advanced shows:
+  - Simulation mode "Kinematic chain" (other options: Not simulated, Spring physics, Rigid physics)
+  - **Limb depth 4**
+  - **Behavior "Rope"** (other option: Inverse kinematics)
+  - **Gravity enabled** (on), **Stretch enabled** (on), **Free endpoint** (off)
+  - **Mass 600**, **Friction 5**
+- **"Free endpoint" is greyed out and can't be clicked while Stretch is on.** It only becomes active with Stretch off. So the requested "Free endpoint on" variant is necessarily Stretch off + Free on.
+- **Json** (tip bone constraints): `preset:"ikrope4", ik:true, ikm:"rope", ikd:4, ge:true` (gravity), **`ikse`** (Stretch enabled), **`ikfe`** (Free endpoint), `m:600` (mass), `ikg:false, ikr:false, layout:"advanced", presetresponsiveness:67, s:0, se:false`.
+  - Friction 5 has no obvious key; it may be one of the unchanged defaults (diff the files).
+- **Physics only runs while a clip plays.** With no animation layer, all 4 variants stayed perfectly straight for 4 s, the first capture run.
+  - So an empty clip ("Animation 1", **id 22**, Loop 2 s, no keys) was added, and the runtime projects play it (make_536_runtime.py).
+  - The editor preview also only simulates while playing (editor_preview_free_hanging.png: free endpoint, the rope hangs from the root).
+- **Files** (all with clip 22):
+  - **rope_base.mdl/.json:** ikse true, ikfe false
+  - **rope_nostretch.mdl/.json:** ikse false, ikfe false
+  - **rope_nostretch_free.mdl/.json:** ikse false, ikfe true
+  - scene_wind.json is the runtime scene of p536_base_wind (general.windenabled true, winddirection "0.707 0.707 0", windstrength 1).
+
+## Runtime (RenderDoc stills 0.1/0.25/0.5/1/2/4 s; stills/, sheet_536.png)
+The rope's bbox on the 1920×1080 frame; its rest y is 520-560:
+
+| t | base | nostretch | nostretch_free | base_wind |
+|---|---|---|---|---|
+| 0.1 | y≤562 (straight) | 561 | 562 | **623** |
+| 0.25 | 610 | 594 | 635 | 613 |
+| 0.5 | 600 | **627** | x 720-1148, y≤732 | 579 |
+| 1.0 | 603 | 569 | **x 674-762, y≤1025: hanging straight down** | 611 |
+| 2.0 | 602 | 586 | x 297-744: swung left past the root | 614 |
+| 4.0 | 604 | 603 | x 715-904, y≤964 | 602 |
+
+- **base (stretch, fixed endpoint):** **both ends stay pinned**: the root at x 728 and the tip end at x 1186, both at y 520-540. The middle sags about 40-45 px into a shallow V/catenary by 0.25 s and settles at about 602 with almost no oscillation.
+- **nostretch (fixed endpoint):** also pinned at both ends, but it **oscillates**: 594 › 627 › 569 › 586 › 603. It is bouncier and slower to settle than with stretch.
+- **nostretch_free:** the root stays pinned and **the far end is released**. The rope falls and swings like a pendulum chain: hanging vertically at 1 s, swinging left past the root at 2 s, back under the root at 4 s. Segment lengths are kept.
+- **base_wind** (windenabled, strength 1, direction (0.707, 0.707)): ends pinned, but the sag **keeps changing**: 623 (deeper already at 0.1 s) › 613 › 579 (nearly flat) › 611 › 614 › 602, compared with base's steady 602.
+  - So wind pushes on the rope as a fluctuating force, mostly visible as a changing sag. There is no clear sideways drift with the ends pinned.
+- **"Done."** is WE's switch toast.

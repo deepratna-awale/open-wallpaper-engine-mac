@@ -2,28 +2,54 @@
  "we": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\wallpaper_engine",
  "ident": 38920,
  "monitor": 0,
- "out": "K:\\DeepWorkspace\\wem-images2\\tools\\peer\\requests\\owe-beta7\\models-open\\534-ik\\stills",
+ "out": "K:\\DeepWorkspace\\wem-images2\\tools\\peer\\requests\\owe-beta7\\models-open\\536-rope\\stills",
  "shots": [
   {
-   "project": "p534_ik_arm",
-   "tag": "mo2_534_ik_arm",
+   "project": "p536_base",
+   "tag": "mo2_536_base",
    "stills": [
+    0.1,
     0.25,
     0.5,
-    0.75,
     1.0,
-    1.5
+    2.0,
+    4.0
    ]
   },
   {
-   "project": "p534_ik_norot",
-   "tag": "mo2_534_ik_norot",
+   "project": "p536_nostretch",
+   "tag": "mo2_536_nostretch",
    "stills": [
+    0.1,
     0.25,
     0.5,
-    0.75,
     1.0,
-    1.5
+    2.0,
+    4.0
+   ]
+  },
+  {
+   "project": "p536_nostretch_free",
+   "tag": "mo2_536_nostretch_free",
+   "stills": [
+    0.1,
+    0.25,
+    0.5,
+    1.0,
+    2.0,
+    4.0
+   ]
+  },
+  {
+   "project": "p536_base_wind",
+   "tag": "mo2_536_base_wind",
+   "stills": [
+    0.1,
+    0.25,
+    0.5,
+    1.0,
+    2.0,
+    4.0
    ]
   }
  ]
