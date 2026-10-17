@@ -133,6 +133,7 @@ static uint instanceEmission(thread ParticleInstanceState &instance, uint slot, 
         state.counts.y = spawnedHere;
         state.counts.z = spawned.x + spawned.y;
         state.counts.w = restart;
+        if (state.counts.z > 0) spawnsLayerWorld(state, step);
         emitters[e] = state;
         spawnedHere += state.counts.z;
         live += state.counts.z;
