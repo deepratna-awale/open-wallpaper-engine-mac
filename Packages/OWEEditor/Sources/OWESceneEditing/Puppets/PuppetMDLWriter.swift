@@ -164,7 +164,18 @@ public enum PuppetMDLWriter {
         if hasRest {
             for bone in document.bones { out.matrix((bone.rest ?? bone.local).matrix) }
         }
-        out.u32(0) // constraints
+        // Blend rules (docs/models-plan.md §2.15): bone, weight index, target, flags, floats.
+        let order = document.blendRuleOrder
+        out.u32(UInt32(order.count))
+        for (index, place) in order.enumerated() {
+            let rule = document.bones[place.bone].blendRules![place.rule]
+            out.u32(UInt32(place.bone))
+            out.u32(UInt32(index))
+            out.u32(UInt32(rule.target))
+            let floats = rule.flags & 2 != 0 ? rule.floats : nil
+            out.u32(floats == nil ? rule.flags & ~2 : rule.flags)
+            if let floats { out.f32s([floats.x, floats.y]) }
+        }
         out.u16(0) // maps
         out.u16(0) // IK sets
         let count = document.bones.count
@@ -221,6 +232,15 @@ public enum PuppetMDLWriter {
                 var blob = PuppetMDLOutput()
                 for frame in 0...frames {
                     blob.f32s((samples.map { $0[min(frame, $0.count - 1)] } ?? rest[bone]).samples)
+                }
+                out.blob(blob.bytes)
+            }
+            // A2: no link tracks; one constraint track per blend rule, its weight a sample a frame.
+            for place in document.blendRuleOrder {
+                out.u32(0)
+                var blob = PuppetMDLOutput()
+                for value in document.bones[place.bone].blendRules![place.rule].samples(clip: clip.id, frames: frames) {
+                    blob.f32(value)
                 }
                 out.blob(blob.bytes)
             }
@@ -283,7 +303,7 @@ public enum PuppetMDLWriter {
         var points: [SIMD2<Float>] = []
         let frames = max(document.clips[clip].frames, 1)
         for frame in 0...frames {
-            let palette = rig.palette(worlds: rig.worlds(rig.pose(clip: clip, frame: Float(frame))))
+            let palette = rig.palette(worlds: rig.worlds(clip: clip, frame: Float(frame)))
             let skinned = PuppetRig.skin(document, palette: palette)
             let box = boundsOf(skinned)
             points += [box.min, box.max]

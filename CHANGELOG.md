@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Wallpaper Editor: View › Show Debug › Show Hitboxes**, as Wallpaper Engine's editor has it: every visible Puppet Warp image's hit boxes, one per bone in the bone's colour, posed as the scene plays. A cursor event's `hitBox` names the bone whose box is under it; a bone that moves no vertex has a 1-unit box, which shows as a dot. The setting is kept between windows.
+- **Puppet Warp blend rules**, as Wallpaper Engine plays them. A bone with a blend rule (Edit Constraints › Blend Rules) is pulled toward its target bone by the weight its clip keys: its position, rotation and scale move toward the target's, its children follow, and bone physics then acts on the result. A rig whose rule was deleted keeps still, as in Wallpaper Engine.
+- **Wallpaper Editor › Puppet Warp: blend rules**, as Wallpaper Engine's Edit Constraints › Blend Rules. In the Skeleton tool the selected bone's **Blend Rules** section adds a rule toward another bone or deletes one; in the Animate tool each rule's weight (0 to 1) is keyed at the current frame of the animation, and Add Key and Delete Key include it. The preview pulls the bone as the wallpaper will, and rules made in Wallpaper Engine open and save back.
 
 ## [1.0.0-beta.7] - 2026-10-16
 
