@@ -123,13 +123,16 @@ final class MCPPluginLocationTests: XCTestCase {
         let manifest = MCPPluginLayout.Manifest(app: "/Applications/Dev.app", isolationTag: "x", version: "1.0")
         try JSONEncoder().encode(manifest).write(to: MCPPluginLayout.manifestURL(supportDirectory: support))
         XCTAssertEqual(MCPPluginLayout.manifest(supportDirectory: support), manifest)
+        // With its manifest, an isolated copy's plugin finds the copy's socket by its tag.
+        XCTAssertEqual(OWEMCPCommand.socketURL(option: nil, executable: executable, environment: [:]),
+                       ControlSocketLocation.isolatedSocketURL(tag: "x"))
         let launcher = OWEAppLauncher.forCurrentProcess(executable: executable, environment: [:])
         XCTAssertEqual(launcher.openArguments, ["-g", "-n", "-a", "/Applications/Dev.app", "--args", "-OWEIsolatedState", "x"])
 
         // `--socket` and `OWE_ISOLATED_STATE` come first.
         XCTAssertEqual(OWEMCPCommand.socketURL(option: URL(fileURLWithPath: "/tmp/s"), executable: executable, environment: [:]).path, "/tmp/s")
         XCTAssertEqual(OWEMCPCommand.socketURL(option: nil, executable: executable, environment: ["OWE_ISOLATED_STATE": "y"]),
-                       ControlSocketLocation.socketURL(supportDirectory: ControlSocketLocation.supportDirectory(isolationTag: "y")))
+                       ControlSocketLocation.isolatedSocketURL(tag: "y"))
         XCTAssertNil(MCPPluginLayout.supportDirectory(ofInstalledExecutable: URL(fileURLWithPath: "/usr/local/bin/owe-mcp")))
     }
 }

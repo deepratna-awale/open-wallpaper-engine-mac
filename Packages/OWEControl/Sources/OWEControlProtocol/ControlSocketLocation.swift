@@ -4,13 +4,19 @@ import Foundation
 /// in the app's own support folder (it isn't sandboxed), inside a folder only its user can enter.
 ///
 /// An isolated copy of the app (`OWE_ISOLATED_STATE=<tag>` or `-OWEIsolatedState <tag>`, the app's
-/// `AppStorageLocation`) keeps its state in `Open Wallpaper Engine (isolated <tag>)`, so its socket
-/// is there too: the `owe-mcp` that copy installed, or one run with the same `OWE_ISOLATED_STATE`,
-/// talks to that copy, never to the user's own app.
+/// `AppStorageLocation`) keeps its state in `Open Wallpaper Engine (isolated <tag>)` and has a
+/// socket of its own: the `owe-mcp` that copy installed, or one run with the same
+/// `OWE_ISOLATED_STATE`, talks to that copy, never to the user's own app.
 ///
-/// A socket's path can't be longer than `maxPathBytes`. When the support folder's is (a long user
-/// name, a long isolation tag), the socket goes in the user's own temporary folder instead
-/// (`confstr(_CS_DARWIN_USER_TEMP_DIR)`, `0700`, the same for every process of the user), in
+/// That socket is `/private/tmp/owe-<uid>/isolated-<hash of the tag>.sock`
+/// (`isolatedSocketURL`): short whatever the tag and the user name, and the same for the copy and for
+/// any `owe-mcp` of the user that knows the tag, whatever temporary folder each process was given.
+/// The folder is the user's own (`0700`, checked to be a real folder owned by the user before the
+/// app listens in it or `owe-mcp` connects there, `isOwnFolder`).
+///
+/// A socket's path can't be longer than `maxPathBytes`. When the user's own app's support folder is
+/// too long (a long user name), its socket goes in the user's own temporary folder instead
+/// (`confstr(_CS_DARWIN_USER_TEMP_DIR)`, `0700`), in
 /// `owe-<hash of the support folder's path>/control.sock`: the app and `owe-mcp` work it out alike.
 public enum ControlSocketLocation {
     public static let isolationEnvironmentKey = "OWE_ISOLATED_STATE"
@@ -19,14 +25,39 @@ public enum ControlSocketLocation {
     /// `sun_path`'s size less its terminator: a longer path can't be bound or connected.
     public static let maxPathBytes = 103
 
-    /// The socket of the app whose support folder is `supportDirectory`.
-    public static func socketURL(supportDirectory: URL, temporaryDirectory: URL? = nil) -> URL {
+    /// Where isolated copies' sockets are (`isolatedSocketURL`).
+    public static let isolatedRoot = URL(fileURLWithPath: "/private/tmp", isDirectory: true)
+
+    /// The socket of the app whose support folder is `supportDirectory`, isolated under
+    /// `isolationTag` (nil: the user's own app).
+    public static func socketURL(supportDirectory: URL, isolationTag: String? = nil, temporaryDirectory: URL? = nil) -> URL {
+        if let tag = isolationTag.flatMap(sanitizedTag) { return isolatedSocketURL(tag: tag) }
         let preferred = supportDirectory.appending(path: folderName, directoryHint: .isDirectory)
             .appending(path: socketName, directoryHint: .notDirectory)
         guard preferred.path.utf8.count > maxPathBytes else { return preferred }
         let folder = "owe-" + hash(supportDirectory.standardizedFileURL.path)
         return (temporaryDirectory ?? userTemporaryDirectory).appending(path: folder, directoryHint: .isDirectory)
             .appending(path: socketName, directoryHint: .notDirectory)
+    }
+
+    /// An isolated copy's socket: `<root>/owe-<uid>/isolated-<hash of the cleaned tag>.sock`.
+    public static func isolatedSocketURL(tag: String, root: URL = isolatedRoot, userID: uid_t = getuid()) -> URL {
+        root.appending(path: "owe-\(userID)", directoryHint: .isDirectory)
+            .appending(path: "isolated-" + hash(sanitizedTag(tag) ?? tag) + ".sock", directoryHint: .notDirectory)
+    }
+
+    /// Whether `socket` is in a folder of `isolatedRoot`, where any user can make folders.
+    public static func isInSharedRoot(_ socket: URL, root: URL = isolatedRoot) -> Bool {
+        socket.deletingLastPathComponent().deletingLastPathComponent().standardizedFileURL.path
+            == root.standardizedFileURL.path
+    }
+
+    /// Whether `folder` is a folder (not a link to one) that belongs to this process's user: a
+    /// socket in a shared place such as `/private/tmp` is used only in a folder its user owns.
+    public static func isOwnFolder(_ folder: URL, userID: uid_t = getuid()) -> Bool {
+        var info = stat()
+        guard lstat(folder.path(percentEncoded: false), &info) == 0 else { return false }
+        return (info.st_mode & S_IFMT) == S_IFDIR && info.st_uid == userID
     }
 
     /// The user's own temporary folder, as the system gives it to every process of the user

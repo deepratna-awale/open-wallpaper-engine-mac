@@ -133,17 +133,11 @@ final class LitLayerLibraryTests: XCTestCase {
         let scene = try Scene(content: content, services: services(), settings: SceneRenderSettings.headless)
         defer { scene.close() }
         let renderer = scene.renderer
-        // The native draw and the unlit image stand in until the pipelines are ready.
-        let deadline = Date().addingTimeInterval(60)
-        var drawsBefore = 0, prelitBefore = 0
-        repeat {
-            drawsBefore = renderer.imageMaterialDraws
-            prelitBefore = renderer.imageMaterialPrelitDraws
-            scene.draw()
-        } while (renderer.imageMaterialDraws - drawsBefore < item.litLayers.count
-                    || renderer.imageMaterialPrelitDraws - prelitBefore < prelit) && Date() < deadline
-        drawsBefore = renderer.imageMaterialDraws
-        prelitBefore = renderer.imageMaterialPrelitDraws
+        let litIDs = item.litLayers.map(\.id)
+        scene.settle(litLayers: litIDs, prelitDraws: prelit)
+        let drawsBefore = renderer.imageMaterialDraws
+        let prelitBefore = renderer.imageMaterialPrelitDraws
+        let fallbacksBefore = scene.fallbacks(of: litIDs)
         var gpuTimes: [Double] = []
         for _ in 0..<Self.frames {
             scene.draw()
@@ -151,8 +145,11 @@ final class LitLayerLibraryTests: XCTestCase {
         }
         let draws = Double(renderer.imageMaterialDraws - drawsBefore) / Double(Self.frames)
         let prelitDraws = Double(renderer.imageMaterialPrelitDraws - prelitBefore) / Double(Self.frames)
-        // Scripts may hide or clone layers; every lit layer shown must draw through its material.
+        // Scripts may hide or clone layers; every lit layer shown must draw through its material,
+        // each one in every frame.
         XCTAssertGreaterThanOrEqual(draws, Double(item.litLayers.count), "\(item.id): lit layers drew natively")
+        let fallbacks = scene.fallbacks(of: litIDs).filter { $0.value > (fallbacksBefore[$0.key] ?? 0) }
+        XCTAssertTrue(fallbacks.isEmpty, "\(item.id): lit layers \(fallbacks.keys.sorted()) drew natively")
         XCTAssertGreaterThanOrEqual(prelitDraws, Double(prelit), "\(item.id): a prelighting pass didn't run")
         let median = gpuTimes.isEmpty ? "-" : String(format: "%.2f", gpuTimes.sorted()[gpuTimes.count / 2])
         return [item.id, String(item.litLayers.count), String(prelit), String(draws), String(prelitDraws), median]
@@ -168,12 +165,7 @@ final class LitLayerLibraryTests: XCTestCase {
         if !lights { content.lighting.settings.lightConfig = nil }
         let scene = try Scene(content: content, services: services(), settings: SceneRenderSettings.headless)
         defer { scene.close() }
-        let deadline = Date().addingTimeInterval(60)
-        var before = 0
-        repeat {
-            before = scene.renderer.imageMaterialDraws
-            scene.draw()
-        } while scene.renderer.imageMaterialDraws - before < item.litLayers.count && Date() < deadline
+        scene.settle(litLayers: item.litLayers.map(\.id), prelitDraws: 0)
         scene.draw()
         return try scene.pixels()
     }
@@ -275,6 +267,35 @@ final class LitLayerLibraryTests: XCTestCase {
             while !renderer.hasContent, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
             XCTAssertTrue(renderer.hasContent)
         }
+
+        /// Draws until the frames are settled: `settledFrames` in a row in which none of `litLayers`
+        /// fell back to the native draw, at least as many layers as `litLayers` drew through their
+        /// material and `prelitDraws` prelighting passes ran, and no pipeline was compiling. While
+        /// a pipeline compiles the native draw stands in, and one landing can make the next frame
+        /// need another. A frame whose total of material draws is right isn't enough either: in The
+        /// Knight (2515150033) the unlit layer draws through its material while its effects compile,
+        /// so the total can read right while the lit layer still draws natively, and once those
+        /// effects land the unlit layer's base pass compiles in turn.
+        func settle(litLayers: [String], prelitDraws: Int, timeout: TimeInterval = 120) {
+            let deadline = Date().addingTimeInterval(timeout)
+            var settled = 0
+            while settled < Self.settledFrames, Date() < deadline {
+                let draws = renderer.imageMaterialDraws, prelit = renderer.imageMaterialPrelitDraws
+                let fallbacks = self.fallbacks(of: litLayers)
+                draw()
+                let drewAll = renderer.imageMaterialDraws - draws >= litLayers.count
+                    && renderer.imageMaterialPrelitDraws - prelit >= prelitDraws
+                    && self.fallbacks(of: litLayers) == fallbacks
+                settled = drewAll && !renderer.pipelinesCompiling ? settled + 1 : 0
+            }
+        }
+
+        /// How often each of `layers` fell back to the native draw so far.
+        func fallbacks(of layers: [String]) -> [String: Int] {
+            Dictionary(uniqueKeysWithValues: layers.map { ($0, renderer.imageMaterialFallbacks[$0] ?? 0) })
+        }
+
+        static let settledFrames = 3
 
         func draw(step: CFTimeInterval = 1.0 / 60) {
             now += step

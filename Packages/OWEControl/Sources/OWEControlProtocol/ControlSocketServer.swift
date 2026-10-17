@@ -116,6 +116,11 @@ public final class ControlSocketServer: @unchecked Sendable { // Mutable state i
         } catch {
             throw StartError.folder(error.localizedDescription)
         }
+        // In a shared place (an isolated copy's, under /private/tmp), a folder another user made
+        // first, or a link, is never listened in.
+        if ControlSocketLocation.isInSharedRoot(url), !ControlSocketLocation.isOwnFolder(folder) {
+            throw StartError.folder("\(folder.path(percentEncoded: false)) isn't a folder of your own")
+        }
     }
 
     /// Removes a socket file no process answers on; fails when one does.

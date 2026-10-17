@@ -11,14 +11,15 @@ final class MCPServerPluginTests: XCTestCase {
 
     override func setUp() async throws {
         // Short, so the socket's path fits a socket address.
-        scratch = URL(fileURLWithPath: "/tmp/owe-plugin-\(UUID().uuidString.prefix(8))", isDirectory: true)
+        let id = UUID().uuidString.prefix(8)
+        scratch = URL(fileURLWithPath: "/tmp/owe-plugin-\(id)", isDirectory: true)
         let bundled = scratch.appending(path: "App.app/Contents/Helpers/owe-mcp")
         try FileManager.default.createDirectory(at: bundled.deletingLastPathComponent(), withIntermediateDirectories: true)
         try Data("#!/bin/sh\necho owe-mcp\n".utf8).write(to: bundled)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: bundled.path)
         layout = MCPServerPlugin.Layout(
             supportDirectory: scratch.appending(path: "Support", directoryHint: .isDirectory), bundledExecutable: bundled,
-            manifest: MCPPluginLayout.Manifest(app: scratch.appending(path: "App.app").path, isolationTag: "tests", version: "9.9"))
+            manifest: MCPPluginLayout.Manifest(app: scratch.appending(path: "App.app").path, isolationTag: "plugin-tests-\(id)", version: "9.9"))
     }
 
     override func tearDown() async throws {
