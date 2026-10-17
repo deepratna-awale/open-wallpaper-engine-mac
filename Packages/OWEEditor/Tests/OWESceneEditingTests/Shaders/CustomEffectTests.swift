@@ -124,14 +124,14 @@ final class CustomEffectTests: XCTestCase {
     }
 
     func testStyledJSONWritesShortArraysOnOneLine() {
-        XCTAssertEqual(WEStyledJSON.string(.object(["a": .array([.number(1), .number(2)]), "b": .object([:]), "c": .string("x/\"y\"")])), """
+        XCTAssertEqual(SceneJSONValue.object(["a": .array([.number(1), .number(2)]), "b": .object([:]), "c": .string("x/\"y\"")]).editorJSON, """
         {
         \t"a" : [ 1, 2 ],
         \t"b" : {},
         \t"c" : "x/\\"y\\""
         }
         """)
-        XCTAssertEqual(WEStyledJSON.string(.number(0.5)), "0.5")
+        XCTAssertEqual(SceneJSONValue.number(0.5).editorJSON, "0.5")
     }
 
     // MARK: In the overlay

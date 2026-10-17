@@ -10,7 +10,7 @@ import WEFormat
 /// What WE writes, from the effects its editor made in Workshop wallpapers: the name `Pulse+`
 /// gives `pulse_`, `Test Shader` `test_shader`; a one-material effect's material and shader are
 /// renamed after it (`materials/effects/pulse_.json` drawing `effects/pulse_`); its JSON is
-/// JsonCpp's styled output (`WEStyledJSON`); `name` is the author's, `description` and
+/// JsonCpp's styled output (`WEJSONWriter`'s `editor` style); `name` is the author's, `description` and
 /// `preview` are dropped and `dependencies` lists the copied files.
 public struct CustomEffect: Hashable, Sendable {
     /// `effects/<id>/effect.json`, an added effect's `file`.
@@ -121,7 +121,7 @@ public struct CustomEffect: Hashable, Sendable {
                 return .object(members)
             })
             let path = materialPath(material)
-            files["\(directory)/\(path)"] = WEStyledJSON.string(.object(document))
+            files["\(directory)/\(path)"] = SceneJSONValue.object(document).editorJSON
             dependencies.append(path)
         }
         for shader in shaders {
@@ -151,7 +151,7 @@ public struct CustomEffect: Hashable, Sendable {
         effect["dependencies"] = .array(Array(Set(dependencies)).sorted().map(SceneJSONValue.string))
         if effect["version"] == nil { effect["version"] = .number(1) }
         let file = "\(directory)/effect.json"
-        files[file] = WEStyledJSON.string(.object(effect))
+        files[file] = SceneJSONValue.object(effect).editorJSON
         return CustomEffect(file: file, name: trimmed, files: files)
     }
 }

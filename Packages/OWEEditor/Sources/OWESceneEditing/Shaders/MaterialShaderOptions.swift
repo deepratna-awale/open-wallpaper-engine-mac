@@ -63,7 +63,7 @@ public struct MaterialShaderOptions: Hashable, Sendable {
             members["depthwrite"] = .string(depthWrite ? "enabled" : "disabled")
             return .object(members)
         })
-        return WEStyledJSON.string(.object(material))
+        return SceneJSONValue.object(material).editorJSON
     }
 }
 
