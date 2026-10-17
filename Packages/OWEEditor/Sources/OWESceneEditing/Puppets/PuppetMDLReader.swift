@@ -5,7 +5,8 @@ import simd
 /// 4–23, `MDLS` 1–4, `MDLA` 1–6; docs/models-plan.md §1), the same layout as the app's
 /// `MDLReader`. The puppet is the first mesh (the only one WE draws, 0x14020aeb9) with its
 /// skeleton, weights and clips; what the editor doesn't edit is kept (`PuppetPreservedData`) or,
-/// for data no library rig has (links, constraints, IK sets, morph-weight tracks), left out.
+/// for data no library rig has (links, IK sets, morph-weight tracks), left out. Constraints are
+/// Puppet Warp's blend rules (`PuppetBlendRule`).
 public enum PuppetMDLReader {
     /// `imageSize`: the image's pixels (the mesh's space has no size of its own).
     public static func read(_ data: Data, imageSize: SIMD2<Float>, sourcePath: String? = nil) throws -> PuppetDocument {
@@ -35,7 +36,8 @@ public enum PuppetMDLReader {
         if !channels.isEmpty { document.preserved.textureChannels = channels }
         guard version >= 13 else { throw PuppetMDLError.unsupported("no skeleton") }
         var boneCount = 0
-        var links = 0, constraints = 0
+        var links = 0
+        var constraints: [(bone: Int, rule: Int)?] = []
         while true {
             let tagBytes = try r.cstring()
             if tagBytes.isEmpty { break }
@@ -254,7 +256,7 @@ public enum PuppetMDLReader {
     // MARK: MDLS
 
     private static func readSkeleton(_ r: inout PuppetMDLInput, version: Int,
-                                     into document: inout PuppetDocument) throws -> (links: Int, constraints: Int) {
+                                     into document: inout PuppetDocument) throws -> (links: Int, constraints: [(bone: Int, rule: Int)?]) {
         let count = Int(try r.u32())
         guard count <= PuppetMDLWriter.maximumBones else { throw PuppetMDLError.malformed("\(count) bones") }
         var bones: [PuppetBone] = []
@@ -275,7 +277,7 @@ public enum PuppetMDLReader {
             bones.append(bone)
         }
         document.bones = bones
-        guard version >= 2 else { return (0, 0) }
+        guard version >= 2 else { return (0, []) }
         let links = Int(try r.u16())
         for _ in 0..<links {
             _ = try r.cstring()
@@ -289,11 +291,23 @@ public enum PuppetMDLReader {
             }
             for _ in 0..<links { _ = try r.matrix() }
         }
-        let constraints = Int(try r.u32())
-        for _ in 0..<constraints {
-            _ = try r.u32s(3)
+        // Constraints: blend rules (docs/models-plan.md §2.15), each placed on its bone; one on a
+        // flag-0x2 bone hangs on a link (IK), which the editor leaves out, as one out of range.
+        let constraintCount = Int(try r.u32())
+        var constraints: [(bone: Int, rule: Int)?] = []
+        for _ in 0..<constraintCount {
+            let values = try r.u32s(3)
             let flags = version >= 4 ? try r.u32() : 0
-            if flags & 2 != 0 { _ = try r.f32s(2) }
+            let floats = flags & 2 != 0 ? try r.f32s(2) : nil
+            let bone = Int(values[0]), target = Int(values[2])
+            guard bone < count, target < count, bone != target, document.bones[bone].flags & 2 == 0 else {
+                constraints.append(nil)
+                continue
+            }
+            var rules = document.bones[bone].blendRules ?? []
+            rules.append(PuppetBlendRule(target: target, flags: flags, floats: floats.map { SIMD2($0[0], $0[1]) }))
+            document.bones[bone].blendRules = rules
+            constraints.append((bone, rules.count - 1))
         }
         let maps = Int(try r.u16())
         _ = try r.u32s(maps)
@@ -344,7 +358,8 @@ public enum PuppetMDLReader {
         }
     }
 
-    private static func readAnimations(_ r: inout PuppetMDLInput, version: Int, links: Int, constraints: Int, meshes: Int,
+    private static func readAnimations(_ r: inout PuppetMDLInput, version: Int, links: Int,
+                                       constraints: [(bone: Int, rule: Int)?], meshes: Int,
                                        into document: inout PuppetDocument) throws {
         let count = Int(try r.i32())
         let rest = document.restLocals
@@ -377,9 +392,11 @@ public enum PuppetMDLReader {
                     _ = try r.u32()
                     _ = try r.blob("link track")
                 }
-                for _ in 0..<constraints {
-                    _ = try r.u32()
-                    _ = try r.blob("constraint track")
+                for placement in constraints {
+                    let tag = try r.u32()
+                    let samples = PuppetMDLInput.floats(try r.blob("constraint track"))
+                    guard let placement, tag & 1 == 0, !samples.isEmpty else { continue }
+                    document.bones[placement.bone].blendRules?[placement.rule].weights[id] = PuppetBlendRule.keys(from: samples)
                 }
             }
             var channelTracks: [PuppetChannelTrack] = []

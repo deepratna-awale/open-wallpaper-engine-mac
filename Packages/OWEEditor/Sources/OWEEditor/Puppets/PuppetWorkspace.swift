@@ -295,14 +295,50 @@ final class PuppetWorkspace: ObservableObject {
         return clip.transform(of: bone, at: frame.rounded(), rest: document.restLocals[bone])
     }
 
-    /// Keys the selected bone (every bone without a selection) at the current frame.
+    /// Keys the selected bone (every bone without a selection) at the current frame, with its
+    /// blend rules' weights.
     func addKey() {
         guard let document, let clipIndex else { return }
         let key = Int(frame.rounded())
         let bones = selectedBone.map { [$0] } ?? Array(document.bones.indices)
         let transforms = bones.map { keyTransform(of: $0)! }
+        let clipID = document.clips[clipIndex].id
         edit(PL("Add Key")) { document in
             for (bone, transform) in zip(bones, transforms) { document.clips[clipIndex].tracks[bone].keys[key] = transform }
+            for bone in bones {
+                for (index, rule) in (document.bones[bone].blendRules ?? []).enumerated() {
+                    document.setBlendRuleWeight(bone: bone, rule: index, clip: clipID, frame: key,
+                                                to: rule.weight(clip: clipID, at: Float(key)))
+                }
+            }
+        }
+    }
+
+    // MARK: Blend rules
+
+    func addBlendRule(target: Int) {
+        guard let bone = selectedBone else { return }
+        edit(PL("Add Blend Rule")) { $0.addBlendRule(bone: bone, target: target) }
+    }
+
+    func removeBlendRule(_ index: Int) {
+        guard let bone = selectedBone else { return }
+        edit(PL("Delete Blend Rule")) { $0.removeBlendRule(bone: bone, at: index) }
+    }
+
+    /// The selected bone's rule `index` weight at the current frame of the animation.
+    func blendRuleWeight(_ index: Int) -> Float {
+        guard let document, let bone = selectedBone, let clip, let rules = document.bones[bone].blendRules,
+              rules.indices.contains(index) else { return 0 }
+        return rules[index].weight(clip: clip.id, at: frame.rounded())
+    }
+
+    /// Keys the selected bone's rule `index` weight at the current frame.
+    func setBlendRuleWeight(_ index: Int, to value: Float) {
+        guard let bone = selectedBone, let clip else { return }
+        let key = Int(frame.rounded()), id = clip.id
+        edit(PL("Change Blend Rule Weight"), coalescing: true) {
+            $0.setBlendRuleWeight(bone: bone, rule: index, clip: id, frame: key, to: value)
         }
     }
 
@@ -313,6 +349,10 @@ final class PuppetWorkspace: ObservableObject {
         edit(PL("Delete Key")) { document in
             for bone in bones where document.clips[clipIndex].tracks.indices.contains(bone) {
                 document.clips[clipIndex].tracks[bone].keys[key] = nil
+                let id = document.clips[clipIndex].id
+                for index in (document.bones[bone].blendRules ?? []).indices {
+                    document.setBlendRuleWeight(bone: bone, rule: index, clip: id, frame: key, to: nil)
+                }
             }
         }
     }
@@ -320,7 +360,10 @@ final class PuppetWorkspace: ObservableObject {
     /// Frames with a key: the selected bone's, else any bone's.
     var keyFrames: Set<Int> {
         guard let clip else { return [] }
-        if let bone = selectedBone, clip.tracks.indices.contains(bone) { return Set(clip.tracks[bone].keys.keys) }
+        if let bone = selectedBone, clip.tracks.indices.contains(bone) {
+            let rules = document?.bones.indices.contains(bone) == true ? document?.bones[bone].blendRules ?? [] : []
+            return Set(clip.tracks[bone].keys.keys).union(rules.flatMap { ($0.weights[clip.id] ?? [:]).keys })
+        }
         return Set(clip.tracks.flatMap { $0.keys.keys })
     }
 
@@ -462,23 +505,30 @@ final class PuppetWorkspace: ObservableObject {
     func refreshPose(delta: Float = 0) {
         guard let document, let rig else { return }
         var pose = rig.restPose
+        var blendWeights: [Float] = []
         if showsPose {
             if previewsLayers || clip == nil {
                 if isPlaying || tool == .physics, var player {
                     pose = player.evaluate(delta: isPlaying ? delta : 0)
+                    blendWeights = player.blendWeights
                     self.player = player
                 }
             } else if let clipIndex {
                 pose = rig.pose(clip: clipIndex, frame: frame)
+                blendWeights = rig.blendWeights(clip: clipIndex, frame: frame)
             }
         }
         var models: [simd_float4x4]
         if showsPose, tool == .physics || isPlaying, var simulation {
             let world = PuppetMath.matrix(translation: SIMD3(objectOffset.x, objectOffset.y, 0), euler: .zero, scale: SIMD3(repeating: 1))
-            models = simulation.step(locals: pose.map(\.matrix), parents: rig.parents, delta: delta, objectWorld: world)
+            let locals = pose.map(\.matrix)
+            let adjust = rig.blendRules.contains(where: { !$0.isEmpty })
+                ? PuppetBlendMath.adjust(rules: rig.blendRules, weights: blendWeights,
+                                         fallback: PuppetMath.worlds(locals: locals, parents: rig.parents)) : nil
+            models = simulation.step(locals: locals, parents: rig.parents, delta: delta, objectWorld: world, adjust: adjust)
             self.simulation = simulation
         } else {
-            models = showsPose ? rig.worlds(pose) : rig.bindWorld
+            models = showsPose ? rig.worlds(pose, blendWeights: blendWeights) : rig.bindWorld
         }
         worlds = models
         let palette = showsPose ? rig.palette(worlds: models) : models.map { _ in matrix_identity_float4x4 }
@@ -535,8 +585,7 @@ final class PuppetWorkspace: ObservableObject {
     /// The posed mesh at another frame of the clip (onion skin).
     func positions(atFrame other: Float) -> [SIMD2<Float>]? {
         guard let document, let rig, let clipIndex, document.clips.indices.contains(clipIndex) else { return nil }
-        let pose = rig.pose(clip: clipIndex, frame: other)
-        return PuppetRig.skin(document, palette: rig.palette(worlds: rig.worlds(pose)))
+        return PuppetRig.skin(document, palette: rig.palette(worlds: rig.worlds(clip: clipIndex, frame: other)))
     }
 
     /// The bones' segments in the shown pose.

@@ -173,6 +173,7 @@ private struct PuppetSkeletonPanel: View {
         }
         if let document = workspace.document, let bone = workspace.selectedBone, document.bones.indices.contains(bone) {
             PuppetSelectedBoneSection(workspace: workspace, document: document, bone: bone, name: $name)
+            PuppetBlendRulesSection(workspace: workspace, document: document, bone: bone)
         }
     }
 }
@@ -312,6 +313,9 @@ private struct PuppetAnimationPanel: View {
                 Button(PL("Delete Animation"), role: .destructive) { workspace.deleteClip() }
             }
             rootMotion(clip, clipIndex: clipIndex, document: document)
+            if let bone = workspace.selectedBone, document.bones.indices.contains(bone) {
+                PuppetBlendRulesSection(workspace: workspace, document: document, bone: bone, keysWeights: true)
+            }
         } else {
             Section(PL("Animation")) {
                 Text(PL("No animation yet.")).foregroundStyle(.secondary)

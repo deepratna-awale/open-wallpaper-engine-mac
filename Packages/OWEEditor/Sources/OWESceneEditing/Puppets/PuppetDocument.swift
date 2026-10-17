@@ -251,6 +251,7 @@ public struct PuppetDocument: Codable, Hashable, Sendable {
             }
         }
         preserved.remapBones(map, order: order)
+        remapBlendRules(map)
     }
 
     // MARK: Mesh
@@ -339,6 +340,9 @@ public struct PuppetDocument: Codable, Hashable, Sendable {
         let id = clips[index].id
         clips.remove(at: index)
         layers.removeAll { $0.clipID == id }
+        for bone in bones.indices where bones[bone].blendRules != nil {
+            for rule in bones[bone].blendRules!.indices { bones[bone].blendRules![rule].weights[id] = nil }
+        }
         for clip in clips.indices {
             guard let source = clips[clip].rootMotion?.sourceClip else { continue }
             if source == index { clips[clip].rootMotion?.sourceClip = nil } else if source > index { clips[clip].rootMotion?.sourceClip = source - 1 }
@@ -565,10 +569,14 @@ public struct PuppetBone: Codable, Hashable, Sendable {
     /// How long the editor draws a bone without children (WE's bones are joints; the length
     /// only shows the bone and shapes its automatic weights). nil: half its parent's.
     public var length: Float?
+    /// The bone's blend rules (`PuppetBlendRule`), nil without one.
+    public var blendRules: [PuppetBlendRule]?
 
     public init(name: String, parent: Int?, local: PuppetTransform, rest: PuppetTransform? = nil, flags: UInt32 = 1,
-                physics: PuppetBonePhysics? = nil, otherProperties: [String: SceneJSONValue] = [:], length: Float? = nil) {
+                physics: PuppetBonePhysics? = nil, otherProperties: [String: SceneJSONValue] = [:], length: Float? = nil,
+                blendRules: [PuppetBlendRule]? = nil) {
         self.length = length
+        self.blendRules = blendRules
         self.name = name
         self.parent = parent
         self.local = local
