@@ -4067,6 +4067,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// With `clearenabled` off (WE skips its scene pass's clear, 0x140183588), the pass loads the
     /// last frame's colour and depth instead of clearing them, while it draws into the same targets.
+    /// New targets start black, not `clearcolor`: nothing ever clears them to it (WE 2.8.0.42,
+    /// capture 542: the background of a 0.15 grey clear colour shows black), and at the far depth.
     private func keepScene(_ pass: MTLRenderPassDescriptor, scene: MTLTexture, multisampled: MTLTexture?) {
         guard keepsScene else {
             keptSceneTargets = []
@@ -4077,6 +4079,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                        frameDepth == nil ? nil : depthBuffer.multisampled.map(ObjectIdentifier.init)]
         guard targets == keptSceneTargets else {
             keptSceneTargets = targets
+            pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
             return
         }
         pass.colorAttachments[0].loadAction = .load
