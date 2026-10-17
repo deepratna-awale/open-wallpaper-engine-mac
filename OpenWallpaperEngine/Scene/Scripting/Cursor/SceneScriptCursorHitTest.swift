@@ -54,12 +54,14 @@ enum SceneScriptCursorHitTest {
     }
 
     /// A model (wallpaper64.exe 0x140185520): the ray into the model's space through the inverse of
-    /// its world matrix (the direction not normalized), then the slab test of a box with the half
-    /// extents `h = (max − min) / 2` around `h` itself. WE centres the box there, not on
-    /// `(min + max) / 2`, so the box it tests spans `0…max − min` on each axis of the model's space,
-    /// whatever `min` is; a model without mesh boxes is `MDLBounds.unbounded`, which makes that
-    /// `0…262144`. A box with `max.x ≤ min.x` is never hit. The local position is where the ray
-    /// enters, in that box's frame: `o′ − h + t·d′`, with `t` the entering parameter.
+    /// the object's matrix (vt+0x80; the direction not normalized), then the slab test of the box of
+    /// its mesh bounds, `min…max` with half extents `h = (max − min) / 2`. WE subtracts `h` from the
+    /// ray's origin in the space vt+0x80 gives, which starts at the box's `min`: WE 2.8.0.42 (capture
+    /// 539, a unit cube around its origin at scale 0.01) hits the lower-left quarter of the cube's
+    /// front face as well as the upper-right, at local (−21.5, −21.2, 50) and (30.8, 11.4, 50). A
+    /// model without mesh boxes is `MDLBounds.unbounded` (±131072). A box with `max.x ≤ min.x` is
+    /// never hit. The local position is where the ray enters, from the box's centre in model units:
+    /// `o′ − c + t·d′`, with `c = (min + max) / 2` and `t` the entering parameter.
     static func box(_ bounds: MDLBounds, world: simd_float4x4, ray: SceneScriptCursorRay) -> Result {
         let miss = Result(isInside: false, localPosition: .zero)
         guard bounds.max.x > bounds.min.x else { return miss }
@@ -67,7 +69,8 @@ enum SceneScriptCursorHitTest {
         let origin4: SIMD4<Float> = inverse * SIMD4<Float>(ray.origin, 1)
         let direction4: SIMD4<Float> = inverse * SIMD4<Float>(ray.direction, 0)
         let half: SIMD3<Float> = (bounds.max - bounds.min) * 0.5
-        let start: SIMD3<Float> = SIMD3(origin4.x, origin4.y, origin4.z) - half
+        let centre: SIMD3<Float> = (bounds.min + bounds.max) * 0.5
+        let start: SIMD3<Float> = SIMD3(origin4.x, origin4.y, origin4.z) - centre
         let direction = SIMD3<Float>(direction4.x, direction4.y, direction4.z)
         guard let enter = slab(origin: start, direction: direction, half: half) else { return miss }
         return Result(isInside: true, localPosition: start + enter * direction)
