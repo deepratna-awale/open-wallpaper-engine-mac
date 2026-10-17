@@ -1,5 +1,6 @@
 import Foundation
 import OWESceneEditing
+import WEFormat
 
 /// Add Effect's New, Duplicate and Delete (WE's `ui_editor_effect_list_modal_create_*`, shown in
 /// WE once Asset Creation is on): an effect made from WE's blank effect or copied from the chosen
@@ -26,7 +27,7 @@ struct CustomEffectActions {
     /// The catalog entry of an effect made here.
     static func entry(_ effect: CustomEffect) -> EffectCatalogEntry {
         let passes = effect.files[effect.file].flatMap { text in
-            (try? WETolerantJSON.object(from: Data(text.utf8)) as? [String: Any])?["passes"] as? [Any]
+            (try? TolerantJSON.object(from: Data(text.utf8)) as? [String: Any])?["passes"] as? [Any]
         }?.count ?? 1
         var entry = EffectCatalogEntry(file: effect.file, title: effect.name, group: CustomEffect.group,
                                        groupTitle: CustomEffect.group, passCount: max(passes, 1))

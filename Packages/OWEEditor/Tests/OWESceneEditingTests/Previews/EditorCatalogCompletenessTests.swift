@@ -90,12 +90,4 @@ final class EditorCatalogCompletenessTests: XCTestCase {
         XCTAssertTrue(catalog.items.isEmpty)
         XCTAssertFalse(catalog.hasPresets)
     }
-
-    func testWEsTolerantJSONIsRead() throws {
-        let text = "\u{FEFF}{ // a comment\n \"a\": [1, 2, ], /* another */ \"b\": \"x, ]\", }"
-        let object = try XCTUnwrap(try WETolerantJSON.object(from: Data(text.utf8)) as? [String: Any])
-        XCTAssertEqual(object["a"] as? [Int], [1, 2])
-        XCTAssertEqual(object["b"] as? String, "x, ]", "a string is kept as it is")
-        XCTAssertThrowsError(try WETolerantJSON.object(from: Data("{\"a\": }".utf8)))
-    }
 }

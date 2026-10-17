@@ -1,7 +1,7 @@
 import XCTest
-@testable import OpenWallpaperEngine
+@testable import WEFormat
 
-/// The app's one byte order mark skip (`TolerantJSON`) and the tolerant decoder on top of it.
+/// The one byte order mark skip (`TolerantJSON`) and the tolerant decoder on top of it.
 final class TolerantJSONTests: XCTestCase {
     private struct Value: Decodable, Equatable { let a: Int }
 
@@ -27,5 +27,13 @@ final class TolerantJSONTests: XCTestCase {
     func testDecodeTolerantTakesMarkCommentsAndTrailingCommas() throws {
         let data = Data(TolerantJSON.byteOrderMark) + Data("{ // note\n\"a\": 3, }".utf8)
         XCTAssertEqual(try decodeTolerant(Value.self, from: data), Value(a: 3))
+    }
+
+    func testWEsTolerantJSONIsRead() throws {
+        let text = "\u{FEFF}{ // a comment\n \"a\": [1, 2, ], /* another */ \"b\": \"x, ]\", }"
+        let object = try XCTUnwrap(try TolerantJSON.object(from: Data(text.utf8)) as? [String: Any])
+        XCTAssertEqual(object["a"] as? [Int], [1, 2])
+        XCTAssertEqual(object["b"] as? String, "x, ]", "a string is kept as it is")
+        XCTAssertThrowsError(try TolerantJSON.object(from: Data("{\"a\": }".utf8)))
     }
 }

@@ -45,6 +45,7 @@ all:
   - "**/Package.swift"
   - "**/Package.resolved"
   - "Vendor/**"
+  # Every package, WEFormat too (the file formats the framework and the editor package both link).
   - "Packages/**"
   - "OpenWallpaperEngine-Info.plist"
   - "Scripts/ci-*"

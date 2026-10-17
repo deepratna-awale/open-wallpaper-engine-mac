@@ -1,4 +1,5 @@
 import Foundation
+import WEFormat
 
 /// A material's rendering options as WE's inspector edits them (`ui_editor_properties_blending`,
 /// `_culling`, `_depth_test`, `_depth_write`, wallpaperui.exe's material properties): the
@@ -26,7 +27,7 @@ public struct MaterialShaderOptions: Hashable, Sendable {
     /// writes it (normal, no cull, depth test and write disabled). Nil for text that isn't a
     /// material.
     public init?(material text: String) {
-        guard let object = try? WETolerantJSON.object(from: Data(text.utf8)) as? [String: Any],
+        guard let object = try? TolerantJSON.object(from: Data(text.utf8)) as? [String: Any],
               let pass = (object["passes"] as? [[String: Any]])?.first else { return nil }
         blending = (pass["blending"] as? String).flatMap { Blending(rawValue: $0.lowercased()) } ?? .normal
         culling = ((pass["cullmode"] ?? pass["culling"]) as? String).flatMap { Culling(rawValue: $0.lowercased()) } ?? .nocull
@@ -50,7 +51,7 @@ public struct MaterialShaderOptions: Hashable, Sendable {
     /// `text` (a material) with these options in every pass, as WE's styled JSON; nil when it
     /// isn't a material.
     public func applied(to text: String) -> String? {
-        guard let object = try? WETolerantJSON.object(from: Data(text.utf8)),
+        guard let object = try? TolerantJSON.object(from: Data(text.utf8)),
               case .object(var material)? = SceneJSONValue(any: object),
               case .array(let passes)? = material["passes"] else { return nil }
         material["passes"] = .array(passes.map { pass in

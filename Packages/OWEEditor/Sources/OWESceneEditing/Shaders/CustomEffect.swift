@@ -1,4 +1,5 @@
 import Foundation
+import WEFormat
 
 /// An effect made in the editor, as WE's Add Effect dialog makes one ("New", "Duplicate";
 /// `duplicateEffectForEditing`): `effects/<id>/effect.json` with its materials and shaders in the
@@ -83,7 +84,7 @@ public struct CustomEffect: Hashable, Sendable {
         func readScoped(_ path: String) -> Data? { read("\(sourceDirectory)/\(path)") ?? read(path) }
         func json(_ path: String, scoped: Bool) throws -> [String: SceneJSONValue] {
             guard let data = scoped ? readScoped(path) : read(path),
-                  let object = try? WETolerantJSON.object(from: data),
+                  let object = try? TolerantJSON.object(from: data),
                   case .object(let members)? = SceneJSONValue(any: object) else { throw MakeError.unreadable(path) }
             return members
         }

@@ -1,6 +1,6 @@
 import CryptoKit
 import XCTest
-@testable import OpenWallpaperEngine
+@testable import WEFormat
 
 /// `Digest.hex` spells every byte as `String(format: "%02x")` did, so cache keys stay the same.
 final class DigestTests: XCTestCase {

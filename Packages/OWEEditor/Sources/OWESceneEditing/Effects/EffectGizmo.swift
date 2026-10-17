@@ -1,4 +1,5 @@
 import Foundation
+import WEFormat
 
 /// One of an effect's canvas gizmos, as its `effect.json` lists them under `gizmos`: a type, the
 /// constants (`constantshadervalues` keys) each of its handles sets (`vars`), and the combo values
@@ -64,7 +65,7 @@ public struct EffectGizmo: Hashable, Sendable {
     /// The gizmos of an `effect.json` (WE's tolerant JSON: comments, trailing commas). An entry of
     /// an unknown type is left out, so one the editor can't draw doesn't drop its siblings.
     public static func gizmos(effectJSON data: Data) throws -> [EffectGizmo] {
-        guard let root = try WETolerantJSON.object(from: data) as? [String: Any] else { return [] }
+        guard let root = try TolerantJSON.object(from: data) as? [String: Any] else { return [] }
         return gizmos(root["gizmos"])
     }
 

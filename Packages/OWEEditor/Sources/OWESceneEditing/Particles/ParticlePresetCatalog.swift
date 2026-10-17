@@ -1,4 +1,5 @@
 import Foundation
+import WEFormat
 
 /// One of WE's built-in particle presets (`assets/presets/<name>/preset.json`): rain, snow, fire,
 /// fireworks, … each with variants that add one or more particle systems, and the files the
@@ -85,7 +86,7 @@ public enum ParticlePresetCatalog {
         // Optional: a folder without a readable preset file isn't a preset. WE's reader allows
         // trailing commas, which its `water` preset has.
         guard let data = try? Data(contentsOf: directory.appending(path: "preset.json")),
-              let root = try? WETolerantJSON.object(from: data) as? [String: Any],
+              let root = try? TolerantJSON.object(from: data) as? [String: Any],
               let variants = root["variants"] as? [[String: Any]] else { return nil }
         let id = directory.lastPathComponent
         let nameKey = root["name"] as? String

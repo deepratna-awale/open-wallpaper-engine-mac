@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import WEFormat
 
 /// The particle editor's model over one editor session: the scene's particle systems and their
 /// definitions as the editor shows them (the overlay's documents, else the wallpaper's or WE's
@@ -242,7 +243,7 @@ public final class ParticleEditingModel: ObservableObject {
             let url = preset.directory.appending(path: dependency)
             // A preset may list a file it doesn't ship; a system that needs one isn't added (below).
             guard let data = try? Data(contentsOf: url),
-                  let object = try? WETolerantJSON.object(from: data),
+                  let object = try? TolerantJSON.object(from: data),
                   let json = SceneJSONValue(any: object) else { continue }
             let path = uniquePath(dependency, besides: Set(documents.keys))
             renamed[dependency] = path

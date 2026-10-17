@@ -1,4 +1,5 @@
 import Foundation
+import WEFormat
 
 /// WE's Clean Project for the files the editor keeps (`EditorAssetStore`): the ones nothing
 /// uses, which it offers to move to the Trash ("The following assets appear to be unused by your
@@ -82,7 +83,7 @@ public enum ProjectCleaner {
     /// Every string of a JSON document, keys included, lowercased; nothing when it isn't JSON.
     static func collectStrings(in data: Data, into names: inout Set<String>) {
         // Optional: a root that isn't JSON (WE's tolerant files are read leniently) names nothing.
-        guard let root = try? WETolerantJSON.object(from: data) else { return }
+        guard let root = try? TolerantJSON.object(from: data) else { return }
         var stack: [Any] = [root]
         while let next = stack.popLast() {
             switch next {

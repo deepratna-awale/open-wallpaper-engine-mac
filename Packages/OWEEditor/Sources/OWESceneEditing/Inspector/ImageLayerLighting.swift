@@ -1,4 +1,5 @@
 import Foundation
+import WEFormat
 
 /// An image layer's material as WE's Lighting & Reflections section edits it: its first pass's
 /// `LIGHTING` and `REFLECTION` combos, the normal map (`textures[1]`, `g_Texture1`) and the
@@ -163,7 +164,7 @@ extension SceneEditSession {
     /// A WE JSON document as the editor holds it; nil for no file or one that isn't JSON (the
     /// scene's build logs it when it reads it).
     static func documentJSON(_ data: Data?) -> SceneJSONValue? {
-        guard let data, let object = try? WETolerantJSON.object(from: data) else { return nil }
+        guard let data, let object = try? TolerantJSON.object(from: data) else { return nil }
         return SceneJSONValue(any: object)
     }
 }

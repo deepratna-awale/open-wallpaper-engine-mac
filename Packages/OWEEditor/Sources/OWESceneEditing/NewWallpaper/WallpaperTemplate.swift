@@ -1,4 +1,5 @@
 import Foundation
+import WEFormat
 
 /// A Wallpaper Engine project template (`projects/templates/<name>` of the user's WE copy, or the
 /// assets cache's `templates`): `template.json` names it (`name`, `preview`, `type`), and
@@ -42,8 +43,8 @@ public struct WallpaperTemplate: Hashable, Sendable, Identifiable {
     public static func read(_ folder: URL, fileManager: FileManager = .default) -> WallpaperTemplate? {
         guard let templateData = fileManager.contents(atPath: folder.appending(path: "template.json").path),
               let projectData = fileManager.contents(atPath: folder.appending(path: "project.json").path),
-              let template = (try? WETolerantJSON.object(from: templateData)) as? [String: Any],
-              let project = (try? WETolerantJSON.object(from: projectData)) as? [String: Any],
+              let template = (try? TolerantJSON.object(from: templateData)) as? [String: Any],
+              let project = (try? TolerantJSON.object(from: projectData)) as? [String: Any],
               (template["type"] as? String)?.lowercased() == "scene2d",
               let sceneFile = project["file"] as? String,
               fileManager.fileExists(atPath: folder.appending(path: sceneFile).path) else { return nil }

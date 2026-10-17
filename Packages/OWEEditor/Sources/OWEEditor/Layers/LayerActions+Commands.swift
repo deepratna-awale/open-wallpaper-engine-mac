@@ -1,5 +1,6 @@
 import Foundation
 import OWESceneEditing
+import WEFormat
 
 /// The context menus' commands that take the selection: a right-clicked layer that is selected
 /// stands for every selected layer, another one for itself.
@@ -39,7 +40,7 @@ extension LayerActions {
     /// back where it was on the full image.
     func cropOffset(_ layerID: Int) -> SIMD2<Double>? {
         guard let model = session.outline.layer(layerID)?.fields["image"]?.stringValue, let data = services.readFile(model),
-              let json = try? WETolerantJSON.object(from: data) as? [String: Any], // no crop offset when the model can't be read
+              let json = try? TolerantJSON.object(from: data) as? [String: Any], // no crop offset when the model can't be read
               let text = json["cropoffset"] as? String else { return nil }
         let components = SceneVector.components(.string(text))
         return components.count >= 2 ? SIMD2(components[0], components[1]) : nil

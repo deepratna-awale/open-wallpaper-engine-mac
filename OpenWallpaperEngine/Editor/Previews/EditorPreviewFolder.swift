@@ -1,6 +1,7 @@
 import Foundation
 import OWEEditor
 import OWESceneEditing
+import WEFormat
 
 /// Writes the small wallpaper an editor preview is rendered from (`EditorPreviewScene`) into a
 /// scratch folder, with the files it needs that WE's assets don't hold at their root: a built-in
@@ -64,7 +65,7 @@ enum EditorPreviewFolder {
         let paths: [String] = objects.compactMap { $0["particle"] as? String }
         let definition: (String) -> ParticleDefinition? = { path in
             // Optional: a system that can't be read plays nothing (the load reports it).
-            guard let data = read(path), let object = try? WETolerantJSON.object(from: data) else { return nil }
+            guard let data = read(path), let object = try? TolerantJSON.object(from: data) else { return nil }
             return SceneJSONValue(any: object).flatMap { ParticleDefinition(json: $0) }
         }
         let cycles: [Double] = paths.map { EditorPreviewScene.cycleSeconds(ofSystem: $0, read: definition) }

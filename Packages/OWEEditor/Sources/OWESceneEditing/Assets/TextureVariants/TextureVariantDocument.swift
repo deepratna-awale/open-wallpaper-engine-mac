@@ -1,4 +1,5 @@
 import Foundation
+import WEFormat
 
 /// A texture's variants as WE's editor authors them (WE 2.6, Texture Properties › Variants; the
 /// texture-variant page of WE's docs): groups, each showing at most one of its options, every
@@ -145,7 +146,7 @@ public struct TextureVariantDocument: Hashable, Sendable {
     /// `texture`, the texture it sits beside.
     public init?(json data: Data, texture: String) {
         // Optional: a `.tex-json` that isn't JSON has no variants the editor can show.
-        guard let root = (try? WETolerantJSON.object(from: data)) as? [String: Any],
+        guard let root = (try? TolerantJSON.object(from: data)) as? [String: Any],
               let variants = root["variants"] as? [[String: Any]] else { return nil }
         source = root["source"] as? String ?? texture
         groups = variants.enumerated().map { index, entry in
