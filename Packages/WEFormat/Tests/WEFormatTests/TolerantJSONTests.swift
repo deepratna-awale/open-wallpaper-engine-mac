@@ -1,7 +1,7 @@
 import XCTest
-@testable import OpenWallpaperEngine
+@testable import WEFormat
 
-/// The app's one byte order mark skip (`TolerantJSON`) and the tolerant decoder on top of it.
+/// The one byte order mark skip (`TolerantJSON`) and the tolerant decoder on top of it.
 final class TolerantJSONTests: XCTestCase {
     private struct Value: Decodable, Equatable { let a: Int }
 
