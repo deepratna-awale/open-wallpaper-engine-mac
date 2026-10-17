@@ -95,9 +95,10 @@ public enum PuppetMDLWriter {
         }
         out.blob(indices.bytes)
         out.u8(0) // no second position set
-        // The parts' index ranges as they were, while the triangles are the ones they split.
-        if let ranges = document.preserved.boneRanges,
-           ranges.allSatisfy({ UInt64($0.z) + UInt64($0.w) <= UInt64(3 * document.mesh.triangles.count) && Int($0.x) < document.bones.count }) {
+        // The parts' index ranges as they were, while the triangles are the ones they split, split
+        // again by limb for the clipping masks, which are groups over them.
+        let (ranges, groups) = clippingRanges(document)
+        if let ranges {
             out.u8(1)
             var block = PuppetMDLOutput()
             for range in ranges { for value in [range.x, range.y, range.z, range.w] { block.u32(value) } }
@@ -105,9 +106,102 @@ public enum PuppetMDLWriter {
         } else {
             out.u8(0)
         }
-        out.u32(0) // no groups
+        out.u32(UInt32(groups.count))
+        for group in groups {
+            out.u64(group.id)
+            out.cstring(group.texture)
+            out.u32(group.flags)
+            out.u32(UInt32(group.clipped.count))
+            for range in group.clipped { out.u32(range) }
+            out.u32(UInt32(group.masking.count))
+            for range in group.masking { out.u32(range) }
+        }
         // The texture channels' meshes as they were: their quads are in the image's pixels, not the puppet's mesh.
         for channel in channels { out.raw([UInt8](channel.bytes)) }
+    }
+
+    /// The flags of a clipping mask's group (`MDLClippingMask.Flags` in the app).
+    public enum ClipFlags {
+        public static let additive: UInt32 = 0x1
+        public static let invert: UInt32 = 0x2
+        public static let hidesMaskGeometry: UInt32 = 0x4
+        /// The clipped limbs draw in their own place; WE 2.8.0.42's editor writes it with Invert
+        /// mask (capture 532 g_mask_invert: 0xa) [I: whether anything else sets it].
+        public static let drawsInPlace: UInt32 = 0x8
+    }
+
+    struct ClipGroup: Equatable {
+        var id: UInt64
+        var texture: String
+        var flags: UInt32
+        var clipped: [UInt32]
+        var masking: [UInt32]
+    }
+
+    /// The ranges the mesh is written with and its clipping masks' groups (docs/models-plan.md
+    /// §2.13a). Without a clipped limb: the loaded ranges while they fit, and no groups. With one,
+    /// the ranges (the loaded ones, else one per run of triangles of the same bone, each triangle
+    /// the bone weighing most on its corners) split where the limb changes, as WE's editor splits
+    /// them, without reordering a triangle; a mask clips the ranges of its limbs and is drawn
+    /// through those of the limbs it's painted over. Additive when one of its limbs is [I: WE
+    /// keeps the blending per limb in its JSON and per mask in the `.mdl`].
+    static func clippingRanges(_ document: PuppetDocument) -> (ranges: [SIMD4<UInt32>]?, groups: [ClipGroup]) {
+        let triangles = document.mesh.triangles
+        let loaded = document.preserved.boneRanges.flatMap { ranges in
+            ranges.allSatisfy({ UInt64($0.z) + UInt64($0.w) <= UInt64(3 * triangles.count) && Int($0.x) < document.bones.count })
+                ? ranges : nil
+        }
+        let islands = document.mesh.islands
+        guard let clipping = document.clipping, clipping.isActive, clipping.limbs.count == Set(islands).count,
+              !triangles.isEmpty else { return (loaded, []) }
+        var base = loaded ?? []
+        if base.isEmpty || base.reduce(0, { $0 + Int($1.w) }) != 3 * triangles.count {
+            base = []
+            for (index, triangle) in triangles.enumerated() {
+                let bone = UInt32(heaviestBone(document, triangle))
+                if let last = base.last, last.x == bone, Int(last.z + last.w) == 3 * index {
+                    base[base.count - 1].w += 3
+                } else {
+                    base.append(SIMD4(bone, 0, UInt32(3 * index), 3))
+                }
+            }
+        }
+        var ranges: [SIMD4<UInt32>] = []
+        var limbs: [Int] = []
+        for range in base {
+            var start = Int(range.z) / 3
+            let end = start + Int(range.w) / 3
+            while start < end {
+                var next = start + 1
+                while next < end, islands[next] == islands[start] { next += 1 }
+                ranges.append(SIMD4(range.x, 0, UInt32(3 * start), UInt32(3 * (next - start))))
+                limbs.append(islands[start])
+                start = next
+            }
+        }
+        var groups: [ClipGroup] = []
+        for mask in clipping.masks {
+            let clippedLimbs = Set(clipping.clippedLimbs(of: mask.id))
+            guard !clippedLimbs.isEmpty else { continue }
+            let masking = Set(mask.maskingLimbs)
+            var flags: UInt32 = 0
+            if clippedLimbs.contains(where: { clipping.limbs[$0]?.additive == true }) { flags |= ClipFlags.additive }
+            if mask.invert { flags |= ClipFlags.invert | ClipFlags.drawsInPlace }
+            if mask.hidesMaskGeometry { flags |= ClipFlags.hidesMaskGeometry }
+            groups.append(ClipGroup(id: mask.id, texture: mask.texture, flags: flags,
+                                    clipped: limbs.indices.filter { clippedLimbs.contains(limbs[$0]) }.map(UInt32.init),
+                                    masking: limbs.indices.filter { masking.contains(limbs[$0]) }.map(UInt32.init)))
+        }
+        return (ranges, groups)
+    }
+
+    /// The bone weighing most on the triangle's corners (the lowest on a tie; 0 without weights).
+    private static func heaviestBone(_ document: PuppetDocument, _ triangle: SIMD3<UInt32>) -> Int {
+        var totals: [Int: Float] = [:]
+        for corner in [triangle.x, triangle.y, triangle.z] where Int(corner) < document.weights.count {
+            for entry in document.weights[Int(corner)] where entry.bone < document.bones.count { totals[entry.bone, default: 0] += entry.weight }
+        }
+        return totals.max { $0.value != $1.value ? $0.value < $1.value : $0.key > $1.key }?.key ?? 0
     }
 
     static func boundsOf(_ points: [SIMD2<Float>]) -> (min: SIMD2<Float>, max: SIMD2<Float>) {

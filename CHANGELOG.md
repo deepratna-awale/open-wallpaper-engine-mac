@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Puppet Warp clipping masks**, Wallpaper Engine's Puppet Warp › Clipping Masks. A limb assigned to a mask is drawn only where the mask, painted over other limbs, covers it; **Invert mask** shows it only away from them; nested masks intersect; **Additive blending** adds the limb to what's under it; **Hide mask geometry** hides the painted-over limbs, which still mask. As in Wallpaper Engine, the clipping shows with materials drawn by `genericimage4`; the editor's default puppet material (`genericimage2`) draws the limb whole, keeping the masks' draw order and hidden limbs. The editor's stats count the clipping mask passes.
+- **Wallpaper Editor › Puppet Warp › Clipping Masks**, Wallpaper Engine's panel. Pick a limb (an island of the mesh) on the canvas or in the list and **Assign Clipping Mask** (a new mask, named, or one another limb has), then **Paint Clipping Mask** over the limbs it may show over (Draw or Erase, size, hardness, opacity); **Remove Clipping Mask**, **Additive blending**, the mask's **Name**, **Invert mask** and **Hide mask geometry** as in Wallpaper Engine. The masks are saved in the puppet's `.mdl` as Wallpaper Engine's editor writes them, and a puppet made in Wallpaper Engine keeps its masks (and their names, from its editor file) when it's edited and saved, where they used to be dropped.
 
 ## [1.0.0-beta.7] - 2026-10-16
 

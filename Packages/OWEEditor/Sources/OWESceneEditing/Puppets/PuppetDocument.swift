@@ -30,10 +30,13 @@ public struct PuppetDocument: Codable, Hashable, Sendable {
     /// What the editor doesn't edit but keeps while it stays valid (attachments, the reference
     /// pose, blend shapes, per-bone blocks).
     public var preserved: PuppetPreservedData
+    /// The clipping masks (`PuppetClipping`); nil without.
+    public var clipping: PuppetClipping?
 
     public init(imageSize: SIMD2<Float>, material: String, sourcePath: String? = nil, mesh: PuppetMesh = PuppetMesh(),
                 bones: [PuppetBone] = [], weights: [[PuppetWeight]] = [], clips: [PuppetClip] = [],
-                layers: [PuppetAnimationLayer] = [], preserved: PuppetPreservedData = PuppetPreservedData()) {
+                layers: [PuppetAnimationLayer] = [], preserved: PuppetPreservedData = PuppetPreservedData(),
+                clipping: PuppetClipping? = nil) {
         self.imageSize = imageSize
         self.material = material
         self.sourcePath = sourcePath
@@ -43,6 +46,7 @@ public struct PuppetDocument: Codable, Hashable, Sendable {
         self.clips = clips
         self.layers = layers
         self.preserved = preserved
+        self.clipping = clipping
     }
 
     /// A new rig over an image: no mesh and one root bone at the image's centre.
@@ -256,6 +260,7 @@ public struct PuppetDocument: Codable, Hashable, Sendable {
         self.mesh = mesh
         weights = Array(repeating: [], count: mesh.vertices.count)
         preserved.meshChanged()
+        clippingTopologyChanged()
     }
 
     /// Adds a vertex at `position`, inside the triangle it falls in (split in three) or joined to
@@ -276,6 +281,7 @@ public struct PuppetDocument: Codable, Hashable, Sendable {
             weights[index] = PuppetWeight.average([weights[Int(edge.0)], weights[Int(edge.1)]])
         }
         preserved.meshChanged()
+        clippingTopologyChanged()
         return index
     }
 
@@ -308,6 +314,7 @@ public struct PuppetDocument: Codable, Hashable, Sendable {
             return SIMD3(UInt32(a), UInt32(b), UInt32(c))
         }
         preserved.meshChanged()
+        clippingTopologyChanged()
     }
 
     // MARK: Clips

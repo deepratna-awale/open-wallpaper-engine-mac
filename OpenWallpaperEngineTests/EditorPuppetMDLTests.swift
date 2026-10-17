@@ -214,4 +214,21 @@ final class EditorPuppetMDLTests: XCTestCase {
             }
         }
     }
+
+    /// WE's clipping masks (capture 532) saved by the editor give the player the same masks and
+    /// the same draws.
+    func testClippingMasksSaveBackAsThePlayerReadsThem() throws {
+        for name in ["g_mask", "g_mask_hide", "g_mask_invert", "c_mask_noclip"] {
+            let data = try Fixtures.data("Models/PuppetGroundTruth532/\(name).mdl")
+            let original = try MDLReader.read(data)
+            let document = try PuppetMDLReader.read(data, imageSize: SIMD2(512, 256))
+            let saved = try MDLReader.read(try PuppetMDLWriter.write(document))
+            let a = try XCTUnwrap(original.meshes.first), b = try XCTUnwrap(saved.meshes.first)
+            XCTAssertEqual(MDLClippingMask.masks(of: b), MDLClippingMask.masks(of: a), name)
+            let bones = original.skeleton?.bones.count ?? 0
+            let before = try XCTUnwrap(ScenePuppetClipping(mesh: a, boneCount: bones), name)
+            let after = try XCTUnwrap(ScenePuppetClipping(mesh: b, boneCount: bones), name)
+            XCTAssertEqual(after.steps(order: after.order(nil)), before.steps(order: before.order(nil)), name)
+        }
+    }
 }
