@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Normal Map Generation** is checked against Wallpaper Engine 2.8's own output for the same picture and settings, pixel by pixel (a permanent test); the map was already Wallpaper Engine's to well under a step on average.
 ### Fixed
 
 - **A scene with "clear" turned off** (`general.clearenabled` false) starts on black, as in Wallpaper Engine, instead of its clear colour, which nothing then clears it to.
