@@ -10,7 +10,7 @@ enum WallpaperProjectFileEdit {
         // A local wallpaper's settings identity is registered before its bytes change, so the edit
         // keeps its settings even when it was never resolved before.
         _ = WallpaperSettingsIdentity.resolve(directory: directory, defaults: defaults)
-        let url = directory.appending(path: "project.json")
+        let url = WEProject.url(in: directory)
         let data = try Data(contentsOf: url)
         guard var project = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw CocoaError(.fileReadCorruptFile, userInfo: [NSFilePathErrorKey: url.path])

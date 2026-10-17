@@ -307,8 +307,7 @@ enum WallpaperPackageConverter {
     }
 
     private static func primarySceneFile(in wallpaperDirectory: URL) -> String? {
-        guard let data = try? Data(contentsOf: wallpaperDirectory.appending(path: "project.json")),
-              let project = try? JSONDecoder().decode(WEProject.self, from: data) else { return nil }
+        guard let project = try? WEProject.read(in: wallpaperDirectory) else { return nil }
         return project.file.lowercased().hasSuffix(".json") ? project.file : nil
     }
 

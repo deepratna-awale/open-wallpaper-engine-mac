@@ -138,8 +138,7 @@ final class SceneUserPropertiesModel: ObservableObject {
     }
 
     private func load(_ wallpaper: WEWallpaper) {
-          guard let data = try? Data(contentsOf: wallpaper.wallpaperDirectory.appending(path: "project.json")),
-              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        guard let root = try? WEProject.json(in: wallpaper.wallpaperDirectory) else { return }
         let definitions = UserPropertyDefinition.all(projectJSON: root)
         // A Workshop preset item's values are its defaults (what Reset returns to).
         let presetDefaults = WorkshopPresetItem.defaultValues(for: wallpaper)
