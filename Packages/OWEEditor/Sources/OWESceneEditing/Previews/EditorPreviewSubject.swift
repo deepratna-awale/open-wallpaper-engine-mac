@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import WEFormat
 
 /// What an editor preview shows (`EditorPreviewCache`): an effect applied to the test card, or a
 /// particle system on a dark background.
@@ -42,7 +43,7 @@ public enum EditorPreviewSubject: Codable, Hashable, Sendable {
             readable = "preset-\((directory as NSString).lastPathComponent)-\(variant)"
             identity = "preset|\((directory as NSString).lastPathComponent.lowercased())|\(variant)|\(is3D)"
         }
-        let digest = SHA256.hash(data: Data(identity.utf8)).prefix(6).map { String(format: "%02x", $0) }.joined()
+        let digest = Digest.hex(SHA256.hash(data: Data(identity.utf8)).prefix(6))
         return Self.fileSafe(readable) + "-" + digest
     }
 

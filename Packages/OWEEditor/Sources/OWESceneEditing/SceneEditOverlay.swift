@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import WEFormat
 
 /// The Wallpaper Editor's edits of one wallpaper: object fields and effect changes kept beside the
 /// wallpaper, never written into its files (editor-plan notes §3). The scene loader applies them
@@ -269,7 +270,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
             if !edit.hasSceneEdits { sceneEdits.objects[key] = nil }
         }
         guard let data = try? sceneEdits.encoded() else { return "" }
-        return SHA256.hash(data: data).prefix(12).map { String(format: "%02x", $0) }.joined()
+        return Digest.hex(SHA256.hash(data: data).prefix(12))
     }
 }
 

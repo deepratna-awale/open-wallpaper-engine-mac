@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import WEFormat
 
 /// What a preview is rendered from, as a fingerprint: a digest of the contents of the WE asset
 /// files its scene can read, and of its kind's revision (`EditorPreviewCache.revision(of:)`). Two
@@ -27,7 +28,7 @@ public enum EditorPreviewInputs {
             if let digest = shared[key] { return digest }
             var hasher = SHA256()
             for folder in folders { hash(assets.appending(path: folder, directoryHint: .isDirectory), named: folder, into: &hasher, fileManager) }
-            let digest = hex(hasher.finalize())
+            let digest = Digest.hex(hasher.finalize())
             shared[key] = digest
             return digest
         }
@@ -48,7 +49,7 @@ public enum EditorPreviewInputs {
                 hasher.update(data: Data(sharedDigest(particleShared).utf8))
             }
             hash(assets.appending(path: own), named: own, into: &hasher, fileManager)
-            result[subject] = "r\(EditorPreviewCache.revision(of: subject))-" + String(hex(hasher.finalize()).prefix(24))
+            result[subject] = "r\(EditorPreviewCache.revision(of: subject))-" + String(Digest.hex(hasher.finalize()).prefix(24))
         }
         return result
     }
@@ -87,9 +88,5 @@ public enum EditorPreviewInputs {
             return
         }
         hasher.update(data: data)
-    }
-
-    private static func hex<D: Sequence>(_ digest: D) -> String where D.Element == UInt8 {
-        digest.map { String(format: "%02x", $0) }.joined()
     }
 }

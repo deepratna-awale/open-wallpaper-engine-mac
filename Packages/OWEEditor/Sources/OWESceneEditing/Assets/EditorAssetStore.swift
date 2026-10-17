@@ -2,6 +2,7 @@ import CryptoKit
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
+import WEFormat
 
 /// The files the editor adds to a wallpaper (imported images, sounds and fonts, painted masks),
 /// kept in the overlay's own folder beside its edits, never in the wallpaper (editor-plan notes
@@ -205,7 +206,7 @@ public struct EditorAssetStore: Sendable {
     /// The first `bytes` bytes of the content's SHA-256, in hex: the part of a file's name that
     /// names its content.
     public static func contentHash(_ data: Data, bytes: Int) -> String {
-        SHA256.hash(data: data).prefix(bytes).map { String(format: "%02x", $0) }.joined()
+        Digest.hex(SHA256.hash(data: data).prefix(bytes))
     }
 
     /// `<title>-<hash>`: the title kept readable (letters, digits, `-`, `_`), the hash naming the content.

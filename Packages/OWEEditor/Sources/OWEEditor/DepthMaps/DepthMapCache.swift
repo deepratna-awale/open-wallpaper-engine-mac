@@ -1,6 +1,7 @@
 import CryptoKit
 import Foundation
 import ImageIO
+import WEFormat
 
 /// Generated depth maps by the layer texture they came from: `<key>.png`, the depth map at the
 /// source's resolution before smoothing. The key hashes the source's pixels (whatever layer or
@@ -24,7 +25,7 @@ public struct DepthMapCache: Sendable {
         var hasher = SHA256()
         hasher.update(data: Data("\(width)x\(height)|\(modelVersion)|\(DepthMapProcessing.revision)|".utf8))
         pixels.withUnsafeBytes { hasher.update(bufferPointer: $0) }
-        return hasher.finalize().prefix(16).map { String(format: "%02x", $0) }.joined()
+        return Digest.hex(hasher.finalize().prefix(16))
     }
 
     public func url(for key: String) -> URL {
