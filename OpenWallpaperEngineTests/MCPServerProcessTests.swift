@@ -77,6 +77,80 @@ final class MCPServerProcessTests: XCTestCase {
     }
 }
 
+/// An isolated copy (`OWE_ISOLATED_STATE`, here a plugin installed under a tag of its own) and an
+/// `owe-mcp` run with the same tag meet at one short socket, `/private/tmp/owe-<uid>/isolated-<hash>.sock`,
+/// whatever temporary folder either process has.
+@MainActor
+final class MCPIsolatedCopySocketTests: XCTestCase {
+    func testOweMCPWithTheTagReachesTheIsolatedCopy() throws {
+        let tag = "socket-tests-\(UUID().uuidString.prefix(8))"
+        let scratch = URL(fileURLWithPath: NSTemporaryDirectory()).appending(path: "owe-isolated-\(tag)", directoryHint: .isDirectory)
+        defer { try? FileManager.default.removeItem(at: scratch) } // Test scratch; may be gone.
+        let bundled = AppBundleLayout.mcpServerURL(inApp: Bundle.main.bundleURL)
+        let layout = MCPServerPlugin.Layout(
+            supportDirectory: ControlSocketLocation.supportDirectory(
+                isolationTag: tag, applicationSupport: scratch.appending(path: String(repeating: "deep/", count: 12))),
+            bundledExecutable: bundled,
+            manifest: MCPPluginLayout.Manifest(app: Bundle.main.bundleURL.path, isolationTag: tag, version: "9.9"))
+        XCTAssertGreaterThan(layout.supportDirectory.path.utf8.count, ControlSocketLocation.maxPathBytes,
+                             "a support folder too deep for a socket address")
+        XCTAssertEqual(layout.socket.deletingLastPathComponent().path, "/private/tmp/owe-\(getuid())")
+        XCTAssertEqual(layout.socket, ControlSocketLocation.socketURL(
+            supportDirectory: ControlSocketLocation.supportDirectory(isolationTag: tag), isolationTag: tag),
+                       "the same for every support folder of the tag")
+        XCTAssertLessThanOrEqual(layout.socket.path.utf8.count, ControlSocketLocation.maxPathBytes)
+
+        let received = ReceivedMethods()
+        let plugin = MCPServerPlugin(layout: layout) { request in
+            received.append(request.method)
+            return ControlResponse(id: request.id, result: ["playing": true, "volume": 0])
+        }
+        try plugin.install()
+        defer { try? plugin.remove() } // Removes the socket and the plugin folder.
+        func mode(_ url: URL) throws -> Int {
+            try (FileManager.default.attributesOfItem(atPath: url.path)[.posixPermissions] as? NSNumber)?.intValue ?? -1
+        }
+        XCTAssertEqual(try mode(layout.socket) & 0o777, 0o600)
+        XCTAssertEqual(try mode(layout.socket.deletingLastPathComponent()) & 0o777, 0o700)
+
+        // The app's own owe-mcp, told only the tag, with a temporary folder of its own.
+        let lines = LineCollector()
+        let stdin = Pipe(), stdout = Pipe()
+        let process = Process()
+        process.executableURL = bundled
+        process.arguments = ["--no-launch"]
+        var environment = ProcessInfo.processInfo.environment
+        environment["OWE_ISOLATED_STATE"] = tag
+        environment["TMPDIR"] = scratch.path + "/"
+        process.environment = environment
+        process.standardInput = stdin
+        process.standardOutput = stdout
+        process.standardError = FileHandle.nullDevice
+        try process.run()
+        stdout.fileHandleForReading.readabilityHandler = { [lines] handle in lines.append(handle.availableData) }
+        defer { if process.isRunning { process.terminate() } }
+        let input = stdin.fileHandleForWriting
+        let call: JSONValue = ["jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": ["name": "get_status", "arguments": [:]]]
+        try input.write(contentsOf: call.encodedLine() + Data([0x0A]))
+        let line = try XCTUnwrap(lines.next(timeout: 10), "owe-mcp didn't answer")
+        let answer = try JSONValue.decode(line)
+        XCTAssertNotEqual(answer["result"]?["isError"], true, "\(answer)")
+        XCTAssertEqual(received.methods, ["get_status"], "the isolated copy answered")
+        input.closeFile()
+        process.waitUntilExit()
+        XCTAssertEqual(process.terminationStatus, 0)
+    }
+}
+
+/// The control methods a handler received, from its connection's thread.
+private final class ReceivedMethods: @unchecked Sendable { // `list` is guarded by `lock`.
+    private let lock = NSLock()
+    private var list: [String] = []
+
+    func append(_ method: String) { lock.withLock { list.append(method) } }
+    var methods: [String] { lock.withLock { list } }
+}
+
 /// Lines read from a pipe on its own queue, waited for with a timeout.
 private final class LineCollector: @unchecked Sendable { // `buffer` is guarded by `lock`.
     private let lock = NSLock()

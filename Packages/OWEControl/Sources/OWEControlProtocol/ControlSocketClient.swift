@@ -7,6 +7,9 @@ public enum ControlConnectionError: Error, Equatable, CustomStringConvertible {
     case noSocket(String)
     /// The file is there but nothing answers (the app quit without removing it).
     case refused(String)
+    /// The socket is in a shared place, in a folder that isn't this user's own
+    /// (`ControlSocketLocation.isOwnFolder`).
+    case untrustedFolder(String)
     /// The app closed the connection.
     case closed
     case timedOut
@@ -18,6 +21,7 @@ public enum ControlConnectionError: Error, Equatable, CustomStringConvertible {
         switch self {
         case .noSocket(let path): "No control socket at \(path)"
         case .refused(let path): "Nothing answers on the control socket at \(path)"
+        case .untrustedFolder(let path): "The control socket's folder \(path) isn't yours; not connecting"
         case .closed: "The app closed the control connection"
         case .timedOut: "The app didn't answer in time"
         case .malformedResponse(let reason): "The app's answer couldn't be read: \(reason)"
@@ -46,6 +50,12 @@ public final class ControlSocketClient {
     public func connect() throws {
         guard fd < 0 else { return }
         let path = url.path(percentEncoded: false)
+        // Under /private/tmp anyone can make a folder first: only the user's own is trusted.
+        let folder = url.deletingLastPathComponent()
+        if ControlSocketLocation.isInSharedRoot(url), FileManager.default.fileExists(atPath: folder.path(percentEncoded: false)),
+           !ControlSocketLocation.isOwnFolder(folder) {
+            throw ControlConnectionError.untrustedFolder(folder.path(percentEncoded: false))
+        }
         do {
             fd = try UnixSocket.connect(path: path)
         } catch let error as SocketError {
