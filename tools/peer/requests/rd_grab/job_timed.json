@@ -2,54 +2,55 @@
  "we": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\wallpaper_engine",
  "ident": 38920,
  "monitor": 0,
- "out": "K:\\DeepWorkspace\\wem-images2\\tools\\peer\\requests\\owe-beta7\\models-open\\536-rope\\stills",
+ "out": "K:\\DeepWorkspace\\wem-images2\\tools\\peer\\requests\\owe-beta7\\models-open\\537-text\\stills",
  "shots": [
   {
-   "project": "p536_base",
-   "tag": "mo2_536_base",
+   "project": "p537_sp0",
+   "tag": "mo2_537_sp0",
    "stills": [
-    0.1,
-    0.25,
-    0.5,
-    1.0,
-    2.0,
-    4.0
+    2.0
    ]
   },
   {
-   "project": "p536_nostretch",
-   "tag": "mo2_536_nostretch",
+   "project": "p537_sp5",
+   "tag": "mo2_537_sp5",
    "stills": [
-    0.1,
-    0.25,
-    0.5,
-    1.0,
-    2.0,
-    4.0
+    2.0
    ]
   },
   {
-   "project": "p536_nostretch_free",
-   "tag": "mo2_536_nostretch_free",
+   "project": "p537_sp20",
+   "tag": "mo2_537_sp20",
    "stills": [
-    0.1,
-    0.25,
-    0.5,
-    1.0,
-    2.0,
-    4.0
+    2.0
    ]
   },
   {
-   "project": "p536_base_wind",
-   "tag": "mo2_536_base_wind",
+   "project": "p537_bg_pad0_a10",
+   "tag": "mo2_537_bg_pad0_a10",
    "stills": [
-    0.1,
-    0.25,
-    0.5,
-    1.0,
-    2.0,
-    4.0
+    2.0
+   ]
+  },
+  {
+   "project": "p537_bg_pad0_a05",
+   "tag": "mo2_537_bg_pad0_a05",
+   "stills": [
+    2.0
+   ]
+  },
+  {
+   "project": "p537_bg_pad20_a10",
+   "tag": "mo2_537_bg_pad20_a10",
+   "stills": [
+    2.0
+   ]
+  },
+  {
+   "project": "p537_bg_pad20_a05",
+   "tag": "mo2_537_bg_pad20_a05",
+   "stills": [
+    2.0
    ]
   }
  ]

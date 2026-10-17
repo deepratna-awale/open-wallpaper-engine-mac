@@ -1,0 +1,33 @@
+537 (B4): text letter spacing and opaque background (WE 2.8.0.42)
+
+## Editor (project p537_text; editor_scene.json is the editor's save)
+- **Adding the layer:** Add Asset › search "text" › Renderables › **Text Layer**.
+- **Properties:** Name, Origin/Angles/Scale, Blend mode, Text, Color, Opacity, Font (Arial plus Import), **Opaque background** (checkbox), **Background color** (shown only when on), Point size, Effects, **Effect padding X/Y** (linked, default 32).
+  - Font Effects: **Smooth Font Scaling (MSDF)**, Outline, Blur, Drop shadow.
+  - Alignment H/V; **Spacing X/Y** (linked, default 0); Limit width/rows; Screen anchor.
+- **Json saved** with Opaque background on, MSDF on, spacing 5:
+
+  `{"text":"Text Layer","font":"systemfont_arial","pointsize":32.0,"msdf":true,"opaquebackground":true,"backgroundcolor":"0 0 0","backgroundbrightness":1.0,"padding":"32 32","spacing":"5 5","horizontalalign":"center","verticalalign":"center","limitrows":false,"limituseellipsis":false,"limitwidth":false,"maxrows":1,"maxwidth":500.0,"size":"724 222",…}`
+
+  - The editor's "Effect padding" **is** `padding`; there is no separate background padding.
+  - Spacing is a **vec2 `"x y"`**. The editor links X and Y; I set X = 5 and both became 5.
+  - There is **no `alpha` key** by default. Opacity 1 isn't written, so `"alpha"` on the object was added by hand for the a05 variants.
+
+## Runtime variants (make_537.py; scene_<v>.json; RenderDoc stills at 2.0 s; stills/, sheet_537.png)
+- **Setup:** text only (the bars layer dropped), MSDF on, centred at (960,540), 1920×1080.
+- **Measured edges** are of the glyph ink (white > 200 for the opaque variants) and of the blue box (from the alpha-0.5 variants, which have no bloom halo).
+
+| variant | glyph ink x-range (w) | box |
+|---|---|---|
+| sp0 | 656-1264 (609) | — |
+| sp5 | 633-1287 (655) | — |
+| sp20 | 566-1354 (789) | — |
+| bg pad0, alpha .5 | same as sp0 | x 652-1266, y 479-631 (**615×153**) |
+| bg pad20, alpha .5 | same | x 632-1286, y 459-651 (**655×193**) |
+
+- **Spacing** adds a fixed px gap per character gap, **centred**. "Text Layer" has 10 characters and 9 gaps: +46 px for 5 (9 × 5 = 45) and +180 for 20 (9 × 20 = 180). Line height is unchanged: Y spacing does nothing for 1 row.
+- **Opaque background box:**
+  - At padding 0 it is the text's layout box: 615 wide (the glyph run plus about 3 px a side) and 153 high (line height, greater than the 120 px ink height).
+  - **Padding 20 grows it by exactly 20 px on every side** (+40 w, +40 h).
+  - Colour: 0.2 0.4 0.8 shows as about (62,136,255) at alpha 1. That is brighter than (51,102,204) because scene bloom is on (default) and the box glows; the a10 stills also have a bloom halo. At alpha 0.5 the box reads (46,71,123), about half over the (38,38,38) clear colour.
+- **Layer alpha 0.5** fades **text and box together**. Text max is 201, about (255+38)/2 plus a little bloom. The text is not punched out of the box.

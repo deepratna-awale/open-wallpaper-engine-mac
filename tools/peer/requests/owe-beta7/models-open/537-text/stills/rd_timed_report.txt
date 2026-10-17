@@ -1,0 +1,8 @@
+connected ident 38920
+p537_sp0 still 2.0 triggered at 2.000 s frame 639
+p537_sp5 still 2.0 triggered at 2.005 s frame 818
+p537_sp20 still 2.0 triggered at 2.003 s frame 960
+p537_bg_pad0_a10 still 2.0 triggered at 2.003 s frame 1101
+p537_bg_pad0_a05 still 2.0 triggered at 2.000 s frame 1243
+p537_bg_pad20_a10 still 2.0 triggered at 2.004 s frame 1385
+p537_bg_pad20_a05 still 2.0 triggered at 2.004 s frame 1527
