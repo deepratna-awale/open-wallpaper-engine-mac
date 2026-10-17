@@ -144,3 +144,25 @@ kernel void scenePuppetChannelBase(texture2d<float> image [[texture(0)]],
     float2 uv = (float2(gid) + 0.5) / float2(target.get_width(), target.get_height());
     target.write(image.sample(nearest, uv, level(0)), gid);
 }
+
+// A nested clipping mask's coverage (`ScenePuppetRenderer.encodeCoverage`): the intermediate
+// target over the whole mask target, multiplied in by the pipeline's blending.
+struct ScenePuppetCoverageOut {
+    float4 position [[position]];
+    float2 uv;
+};
+
+vertex ScenePuppetCoverageOut scenePuppetCoverageVertex(uint vid [[vertex_id]]) {
+    // One triangle over the target; uv (0, 0) on its first row.
+    float2 uv = float2((vid << 1) & 2, vid & 2);
+    ScenePuppetCoverageOut out;
+    out.position = float4(uv.x * 2.0 - 1.0, 1.0 - uv.y * 2.0, 0.0, 1.0);
+    out.uv = uv;
+    return out;
+}
+
+fragment float4 scenePuppetCoverageFragment(ScenePuppetCoverageOut in [[stage_in]],
+                                            texture2d<float> layer [[texture(0)]]) {
+    constexpr sampler nearest(filter::nearest, address::clamp_to_edge);
+    return float4(layer.sample(nearest, in.uv).r);
+}
