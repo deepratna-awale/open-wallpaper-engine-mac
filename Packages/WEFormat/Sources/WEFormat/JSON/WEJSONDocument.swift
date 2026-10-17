@@ -3,7 +3,7 @@ import Foundation
 /// A JSON document as WE reads and writes it (JsonCpp): integers and reals stay apart, as the
 /// text had them (`8` is an integer, `2.0` a real), so writing it back (`WEJSONWriter`) keeps
 /// each number's kind. Objects keep their members; WE writes them sorted by name.
-indirect enum WEJSONDocument: Equatable {
+public indirect enum WEJSONDocument: Equatable {
     case null
     case bool(Bool)
     case integer(Int64)
@@ -13,10 +13,10 @@ indirect enum WEJSONDocument: Equatable {
     case array([WEJSONDocument])
     case object([String: WEJSONDocument])
 
-    enum ParseError: Error, LocalizedError, Equatable {
+    public enum ParseError: Error, LocalizedError, Equatable {
         case unexpected(String, offset: Int)
 
-        var errorDescription: String? {
+        public var errorDescription: String? {
             switch self {
             case .unexpected(let what, let offset): return "Invalid JSON: \(what) at byte \(offset)"
             }
@@ -24,7 +24,7 @@ indirect enum WEJSONDocument: Equatable {
     }
 
     /// Parses `data` (UTF-8, an optional byte-order mark, `//` and `/* */` comments as JsonCpp allows).
-    init(parsing data: Data) throws {
+    public init(parsing data: Data) throws {
         var parser = Parser(bytes: [UInt8](data))
         parser.skipBOM()
         self = try parser.value()
@@ -32,7 +32,7 @@ indirect enum WEJSONDocument: Equatable {
         guard parser.index == parser.bytes.count else { throw ParseError.unexpected("trailing content", offset: parser.index) }
     }
 
-    subscript(key: String) -> WEJSONDocument? {
+    public subscript(key: String) -> WEJSONDocument? {
         get {
             guard case .object(let members) = self else { return nil }
             return members[key]
@@ -44,7 +44,7 @@ indirect enum WEJSONDocument: Equatable {
         }
     }
 
-    var stringValue: String? {
+    public var stringValue: String? {
         guard case .string(let value) = self else { return nil }
         return value
     }
