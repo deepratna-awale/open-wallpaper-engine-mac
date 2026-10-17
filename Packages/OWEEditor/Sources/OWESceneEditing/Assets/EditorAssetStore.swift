@@ -49,6 +49,11 @@ public struct EditorAssetStore: Sendable {
         public var size: SIMD2<Double>
         /// The file's name without its extension, for the layer's name.
         public var title: String
+        /// How far the picture's centre moved when the importer cropped it (Crop transparent area):
+        /// the cropped rectangle's centre from the full picture's, x right and y up. WE writes it
+        /// as the model's `cropoffset` and places the layer by it, so the content stays where it
+        /// was in the full frame (WE 2.8.0.42, capture 545). Nil without a crop.
+        public var cropOffset: SIMD2<Double>? = nil
     }
 
     // MARK: Images
@@ -67,7 +72,7 @@ public struct EditorAssetStore: Sendable {
 
     /// Writes the material and model of an image layer drawing `texture` (and its normal map).
     func writeImageMaterial(name: String, texture: String, normalMap: String?, size: SIMD2<Double>,
-                            title: String) throws -> ImportedImage {
+                            title: String, cropOffset: SIMD2<Double>? = nil) throws -> ImportedImage {
         let material = "materials/editor/\(name).json"
         let materialJSON: [String: Any] = [
             "passes": [[
@@ -77,9 +82,11 @@ public struct EditorAssetStore: Sendable {
         ]
         try write(try JSONSerialization.data(withJSONObject: materialJSON, options: [.prettyPrinted, .sortedKeys]), to: material)
         let model = "models/editor/\(name).json"
-        let modelJSON: [String: Any] = ["autosize": true, "material": material]
+        var modelJSON: [String: Any] = ["autosize": true, "material": material]
+        if let cropOffset { modelJSON["cropoffset"] = String(format: "%.5f %.5f", cropOffset.x, cropOffset.y) }
         try write(try JSONSerialization.data(withJSONObject: modelJSON, options: [.prettyPrinted, .sortedKeys]), to: model)
-        return ImportedImage(model: model, material: material, texture: texture, size: size, title: title)
+        return ImportedImage(model: model, material: material, texture: texture, size: size, title: title,
+                             cropOffset: cropOffset)
     }
 
     /// The image's bytes as the renderer reads them, their extension and the image's size.

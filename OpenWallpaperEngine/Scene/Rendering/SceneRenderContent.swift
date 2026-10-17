@@ -216,13 +216,21 @@ struct SceneMetalText {
     /// `opaquebackground` and `backgroundcolor` (WE 2.x): the block (the lines' bounds plus
     /// `padding`) filled with the colour behind the glyphs. WE's text object keeps the switch as
     /// flag 0x2 at +0x594 and the colour at +0x4d0 (default black, constructor 0x140256baf); with
-    /// it on, the text's buffer is sized with its padding (0x140258966) and cleared to the colour,
-    /// times `brightness` under engine flag 0x2000, before the glyphs are drawn (0x140257c30).
+    /// it on, the text's buffer is sized with its padding (0x140258966) and cleared to the colour
+    /// with the object's alpha (+0x33c), times `backgroundbrightness` (+0x4dc) under engine flag
+    /// 0x2000, before the glyphs are drawn into it with that alpha too (0x140257c30, 0x140258015).
+    /// So at an alpha below 1 the box shows through the glyphs: WE 2.8.0.42 (capture 537) draws
+    /// white text at alpha 0.5 over a (0.2, 0.4, 0.8) box as (156, 170, 197), not a flat grey.
     var opaqueBackground = false
     var backgroundColor = SIMD3<Float>(repeating: 0)
+    /// `backgroundbrightness` (default 1).
+    var backgroundBrightness: Float = 1
+    /// The box is drawn as its own quad under the glyphs (`SceneMetalRenderer`) rather than into
+    /// the raster: set for a layer without effects, whose raster then holds the glyphs alone.
+    var drawsBackgroundSeparately = false
 
-    /// The box's colour, or nil without one.
-    var background: SIMD3<Float>? { opaqueBackground ? backgroundColor : nil }
+    /// The box's colour in the raster, or nil without one (or when it is drawn separately).
+    var background: SIMD3<Float>? { opaqueBackground && !drawsBackgroundSeparately ? backgroundColor : nil }
 
     /// Whether the raster holds the text's colours (font effects, or a background box) instead of
     /// white coverage the draw tints: such text draws natively, in its raster's colours.
@@ -235,7 +243,7 @@ struct SceneMetalText {
     var layoutKey: String {
         "\(font ?? "")|\(horizontalAlignment ?? "")|\(verticalAlignment ?? "")|\(padding.x),\(padding.y)"
             + "|\(maxWidth.map { "\($0)" } ?? "")|\(maxRows.map { "\($0)" } ?? "")|\(useEllipsis)|\(blockAlign)|\(spacing.x),\(spacing.y)"
-            + (background.map { "|bg\($0.x),\($0.y),\($0.z)" } ?? "")
+            + (background.map { "|bg\($0.x),\($0.y),\($0.z)" } ?? "") + (drawsBackgroundSeparately ? "|bgquad" : "")
     }
 }
 

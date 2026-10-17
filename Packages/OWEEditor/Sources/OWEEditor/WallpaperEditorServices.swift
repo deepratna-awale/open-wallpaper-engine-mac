@@ -54,6 +54,9 @@ public struct WallpaperEditorServices {
     public var externalEditing: ExternalImageEditing?
     /// The wallpaper's user properties a value can be bound to (key, title), with their type.
     public var userPropertyChoices: () -> [EditorUserPropertyChoice] = { [] }
+    /// The canvas's user property values (the Details panel's), which a texture variant's
+    /// Preview switches; nil leaves Preview out.
+    public var userPropertyValues: EditorUserPropertyValues?
 
     /// The wallpaper's project.json as it ships, whose `general.properties` the user-property
     /// editor starts from; nil hides the editor.
@@ -86,6 +89,8 @@ public struct WallpaperEditorServices {
     /// in a 2D scene or before the scene has drawn.
     public var sceneCamera: () -> EditorSceneCamera? = { nil }
     /// Caps the canvas's frame rate (Low FPS Simulation), nil for none.
+    /// The puppets' hit boxes as the canvas's renderer posed them last frame (Show Hitboxes).
+    public var puppetHitBoxes: () -> [EditorHitBox] = { [] }
     public var setCanvasFrameRateCap: (Int?) -> Void = { _ in }
     /// The canvas renderer's frame statistics for the stats overlay; nil leaves the overlay out.
     public var renderStats: RenderStatsFeed?
@@ -190,6 +195,19 @@ extension WallpaperEditorServices {
         if let choice = userPropertyChoices().first(where: { $0.key == key }) { return choice.title }
         if let draft = properties?.first(where: { $0.key == key }) { return PropertyTitle.title(draft) }
         return key
+    }
+}
+
+/// The values the canvas runs the wallpaper's user properties with (the editor's draft).
+public struct EditorUserPropertyValues {
+    /// A property's value; nil when it has none set (its default applies).
+    public var value: (String) -> String?
+    /// Sets a property's value, as the Details panel does (undoable there).
+    public var set: (String, String) -> Void
+
+    public init(value: @escaping (String) -> String?, set: @escaping (String, String) -> Void) {
+        self.value = value
+        self.set = set
     }
 }
 
