@@ -44,14 +44,18 @@ struct SceneBonePhysics {
     }
 
     /// Model-space matrices from local ones, parents first, each physics bone stepped with
-    /// `frame` (without one, it keeps its last transform).
-    mutating func worlds(locals: [simd_float4x4], skeleton: SceneSkeleton, frame: Frame?) -> [simd_float4x4] {
+    /// `frame` (without one, it keeps its last transform). `adjust` changes a bone's matrix
+    /// before its step, as `SceneSkeleton.worlds` does (WE blends a bone by its rules, then
+    /// steps it: 0x140200df2, 0x14020136e).
+    mutating func worlds(locals: [simd_float4x4], skeleton: SceneSkeleton, frame: Frame?,
+                         adjust: ((Int, simd_float4x4, [simd_float4x4]) -> simd_float4x4)? = nil) -> [simd_float4x4] {
         let scale = frame.map { Self.meanScale($0.objectWorld) } ?? 1
         var worlds: [simd_float4x4] = []
         worlds.reserveCapacity(locals.count)
         for index in locals.indices {
             let parent = index < skeleton.parents.count ? skeleton.parents[index] : nil
             var model = parent.map { worlds[$0] * locals[index] } ?? locals[index]
+            if let adjust { model = adjust(index, model, worlds) }
             if index < constraints.count, let constraint = constraints[index] {
                 if let frame, index < frame.previousWorlds.count {
                     transforms[index] = Self.step(constraint, state: &states[index], world: frame.objectWorld * model,
