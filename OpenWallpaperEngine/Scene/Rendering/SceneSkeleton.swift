@@ -126,15 +126,23 @@ struct SceneSkeleton: Equatable {
 
     /// Model-space matrices from local ones, parents first. `adjust`, when given, changes each
     /// bone's matrix after it is chained from its parent and before its children are (the
-    /// blend rules, `SceneBlendRules`), with the bones posed so far.
+    /// blend rules, `SceneBlendRules`), with the bones posed so far. With `ik`, the bones an IK
+    /// chain holds keep its result (no chaining, no rules) and a chain's root runs its solver
+    /// once posed (`ScenePuppetIK`).
     func worlds(locals: [simd_float4x4],
-                adjust: ((Int, simd_float4x4, [simd_float4x4]) -> simd_float4x4)? = nil) -> [simd_float4x4] {
+                adjust: ((Int, simd_float4x4, [simd_float4x4]) -> simd_float4x4)? = nil,
+                ik: ScenePuppetIK? = nil) -> [simd_float4x4] {
         var world: [simd_float4x4] = []
         world.reserveCapacity(locals.count)
         for index in locals.indices {
+            if let held = ik?.heldModel(index) {
+                world.append(held)
+                continue
+            }
             let parent = index < parents.count ? parents[index] : nil
             let model = parent.map { world[$0] * locals[index] } ?? locals[index]
             world.append(adjust.map { $0(index, model, world) } ?? model)
+            ik?.posed(bone: index, worlds: &world)
         }
         return world
     }

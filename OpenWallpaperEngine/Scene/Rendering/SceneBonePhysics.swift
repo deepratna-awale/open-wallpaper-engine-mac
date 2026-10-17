@@ -46,13 +46,19 @@ struct SceneBonePhysics {
     /// Model-space matrices from local ones, parents first, each physics bone stepped with
     /// `frame` (without one, it keeps its last transform). `adjust` changes a bone's matrix
     /// before its step, as `SceneSkeleton.worlds` does (WE blends a bone by its rules, then
-    /// steps it: 0x140200df2, 0x14020136e).
+    /// steps it: 0x140200df2, 0x14020136e). `ik` as `SceneSkeleton.worlds`: a held bone skips
+    /// its rules and step (0x1402006ef jumps past them), a chain's root solves after its step.
     mutating func worlds(locals: [simd_float4x4], skeleton: SceneSkeleton, frame: Frame?,
-                         adjust: ((Int, simd_float4x4, [simd_float4x4]) -> simd_float4x4)? = nil) -> [simd_float4x4] {
+                         adjust: ((Int, simd_float4x4, [simd_float4x4]) -> simd_float4x4)? = nil,
+                         ik: ScenePuppetIK? = nil) -> [simd_float4x4] {
         let scale = frame.map { Self.meanScale($0.objectWorld) } ?? 1
         var worlds: [simd_float4x4] = []
         worlds.reserveCapacity(locals.count)
         for index in locals.indices {
+            if let held = ik?.heldModel(index) {
+                worlds.append(held)
+                continue
+            }
             let parent = index < skeleton.parents.count ? skeleton.parents[index] : nil
             var model = parent.map { worlds[$0] * locals[index] } ?? locals[index]
             if let adjust { model = adjust(index, model, worlds) }
@@ -64,6 +70,7 @@ struct SceneBonePhysics {
                 if let transform = transforms[index] { model = model * transform }
             }
             worlds.append(model)
+            ik?.posed(bone: index, worlds: &worlds)
         }
         return worlds
     }
