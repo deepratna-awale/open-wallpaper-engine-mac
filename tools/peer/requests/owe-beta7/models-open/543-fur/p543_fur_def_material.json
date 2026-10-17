@@ -1,0 +1,26 @@
+{
+ "passes": [
+  {
+   "shader": "fur4",
+   "textures": [
+    "util/white",
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    "util/fur"
+   ],
+   "combos": {
+    "LIGHTING": 1
+   },
+   "constantshadervalues": {
+    "furdistance": 0.3,
+    "furdetail": 10.0,
+    "furocclusion": 0.2
+   }
+  }
+ ]
+}

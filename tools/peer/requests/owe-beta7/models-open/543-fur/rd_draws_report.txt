@@ -1,0 +1,12 @@
+== p543_fur_def capture K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame663.rdc draws 5
+  eid 25 ID3D11DeviceContext::DrawIndexedInstanced() idx=36 inst=5
+  eid 41 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 54 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 67 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 81 ID3D11DeviceContext::Draw() idx=3 inst=0
+== p543_fur_21 capture K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame823.rdc draws 5
+  eid 25 ID3D11DeviceContext::DrawIndexedInstanced() idx=36 inst=21
+  eid 41 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 54 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 67 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 81 ID3D11DeviceContext::Draw() idx=3 inst=0

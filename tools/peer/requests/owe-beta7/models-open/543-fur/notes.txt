@@ -1,0 +1,15 @@
+543 (B10): fur4 instance count (WE 2.8.0.42)
+
+- **No installed wallpaper uses fur4**; I searched all workshop scene.pkg files and myprojects.
+- **Test models:** 539's centred cube (p539_click copies, camera 0 0 3, cube angles 0.5 0.7 0) with a hand-written fur4 material (`<name>_material.json`):
+  - `shader "fur4"`, textures [util/white, …, slot 8 "util/fur"], combos {LIGHTING:1} plus optionally INSTANCECOUNT, and `constantshadervalues {furdistance 0.3, furdetail 10, furocclusion 0.2}`.
+- **Shader facts** (assets/shaders/fur4.*):
+  - `// [COMBO] {"combo":"INSTANCECOUNT","default":5,"options":{low:5, medium:9, high:13, ultra:21}}`
+  - The vertex shader computes the shell index as `gl_InstanceID / (INSTANCECOUNT - 1.0)` into v_WorldNormal.w.
+  - `g_FurDistance` (material "furdistance", default 0.1) is the shell extrusion; the fur texture is g_Texture8 (material "fur", default util/fur).
+- **RenderDoc draw list** (rd_draws_report.txt, one frame each):
+  - p543_fur_def (INSTANCECOUNT not set): **`DrawIndexedInstanced idx=36 inst=5`**.
+  - p543_fur_21 (INSTANCECOUNT 21): **`DrawIndexedInstanced idx=36 inst=21`**.
+  - The rest of each frame is 4 fullscreen Draw(3) passes (bloom/composite).
+  - So the fur model is **one instanced draw with instances = INSTANCECOUNT** (the shader-default 5 when the combo is not set). There are no separate per-shell draws and no extra base pass.
+- **Stills** (sheet_543.png): 5 shells show as distinct stepped layers; 21 shells form a near-continuous fuzzy volume.

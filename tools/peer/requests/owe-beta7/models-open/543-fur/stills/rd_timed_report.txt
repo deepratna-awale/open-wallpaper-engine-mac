@@ -1,0 +1,3 @@
+connected ident 38920
+p543_fur_def still 2.0 triggered at 2.004 s frame 643
+p543_fur_21 still 2.0 triggered at 2.005 s frame 788

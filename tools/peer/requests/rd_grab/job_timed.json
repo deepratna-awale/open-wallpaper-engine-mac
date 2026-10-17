@@ -2,35 +2,19 @@
  "we": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\wallpaper_engine",
  "ident": 38920,
  "monitor": 0,
- "out": "K:\\DeepWorkspace\\wem-images2\\tools\\peer\\requests\\owe-beta7\\models-open\\542-persp-model-clear\\stills",
+ "out": "K:\\DeepWorkspace\\wem-images2\\tools\\peer\\requests\\owe-beta7\\models-open\\543-fur\\stills",
  "shots": [
   {
-   "project": "p542_off",
-   "tag": "mo2_542_off",
+   "project": "p543_fur_def",
+   "tag": "mo2_543_fur_def",
    "stills": [
     2.0
    ]
   },
   {
-   "project": "p542_on",
-   "tag": "mo2_542_on",
+   "project": "p543_fur_21",
+   "tag": "mo2_543_fur_21",
    "stills": [
-    2.0
-   ]
-  },
-  {
-   "project": "p542_clear_spin",
-   "tag": "mo2_542_clear_spin",
-   "stills": [
-    1.0,
-    2.0
-   ]
-  },
-  {
-   "project": "p542_noclear",
-   "tag": "mo2_542_noclear",
-   "stills": [
-    1.0,
     2.0
    ]
   }
