@@ -621,7 +621,7 @@ struct SceneUserPropertiesView: View {
     }
 
     private func colorValue(_ value: String) -> Color {
-        let components = value.split(whereSeparator: { $0 == " " || $0 == "," }).compactMap { Double($0) }
+        let components = SceneVector.numbers(value)
         let scale = components.max() ?? 1 > 1 ? 255.0 : 1.0
         return Color(red: (components.indices.contains(0) ? components[0] : 1) / scale,
                  green: (components.indices.contains(1) ? components[1] : 1) / scale,

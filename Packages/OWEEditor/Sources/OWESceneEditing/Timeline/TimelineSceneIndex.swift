@@ -90,7 +90,7 @@ public struct TimelineSceneIndex: Sendable {
         case .number?: return 1
         case .string(let text)?:
             let components = SceneVector.components(.string(text))
-            let tokens = text.split(whereSeparator: { $0 == " " || $0 == "," })
+            let tokens = SceneVector.tokens(text)
             guard !components.isEmpty, components.count == tokens.count else { return nil }
             return min(components.count, 4)
         default: return nil

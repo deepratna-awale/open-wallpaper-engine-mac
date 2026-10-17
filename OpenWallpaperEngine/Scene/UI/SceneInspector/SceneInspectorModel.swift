@@ -250,8 +250,7 @@ final class SceneInspectorModel: ObservableObject {
                 let baseValues = authoredValue ?? parameter.defaultValue
                 let overrideKey = sceneAuthoredEffectOverrideKey(objectID: objectID, effectIndex: effectIndex,
                                                                   parameter: parameter.materialKey)
-                let overrideValues = storedValues[overrideKey]?
-                    .split(whereSeparator: { $0 == " " || $0 == "," }).compactMap { Double($0) }
+                let overrideValues = storedValues[overrideKey].map(SceneVector.numbers)
                 let values = overrideValues?.isEmpty == false ? overrideValues! : baseValues
                 let title = labels.translation(parameter.label) ?? parameter.title
                 let count = parameter.defaultValue.count
@@ -573,7 +572,7 @@ final class SceneInspectorModel: ObservableObject {
 
     private static func parseOrigin(_ value: Any?) -> SIMD3<Double>? {
         if let string = value as? String {
-            let parts = string.split(whereSeparator: { $0 == " " || $0 == "," }).compactMap { Double($0) }
+            let parts = SceneVector.numbers(string)
             guard parts.count >= 2 else { return nil }
             return SIMD3<Double>(parts[0], parts[1], parts.indices.contains(2) ? parts[2] : 0)
         }
@@ -593,7 +592,7 @@ final class SceneInspectorModel: ObservableObject {
 
     private static func parseSize(_ value: Any?) -> SIMD2<Double>? {
         if let string = value as? String {
-            let parts = string.split(whereSeparator: { $0 == " " || $0 == "," }).compactMap { Double($0) }
+            let parts = SceneVector.numbers(string)
             guard parts.count >= 2 else { return nil }
             return SIMD2<Double>(parts[0], parts[1])
         }
