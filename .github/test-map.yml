@@ -51,6 +51,8 @@ all:
   - "Scripts/test-build-settings.txt"
   - "Tests/**"
   - "OpenWallpaperEngineTests/Support/**"
+  # Moved here from Core/ (unmapped): every feature reads the settings view model.
+  - "OpenWallpaperEngine/Settings/GlobalSettingsViewModel.swift"
 
 ignore:
   - "**/*.md"
@@ -151,6 +153,8 @@ map:
   "OpenWallpaperEngine/Scene/Shaders/**": ["@scene"]
   "OpenWallpaperEngine/Scene/Format/**": ["@scene", "@script", "WallpaperAuthorLocalization*", "MobilePackage*", "MobileFormat*", "DepthMask*", "EditorTEXEncoder*"]
   "OpenWallpaperEngine/Scene/Loading/**": ["@scene", "@script", "@audio"]
+  "OpenWallpaperEngine/Scene/Plans/**": ["@scene", "@script", "@audio"]
+  "OpenWallpaperEngine/Scene/Textures/**": ["@scene", "@script", "@audio"]
   "OpenWallpaperEngine/Scene/Values/**": ["@scene", "@script"]
   "OpenWallpaperEngine/Scene/Prewarm/**": ["Shader*", "UpdateShaderPrewarmer*"]
   "OpenWallpaperEngine/Scene/UI/**": ["Scene*", "UserProperty*", "WallpaperProperty*", "WallpaperAuthorLocalization*", "WallpaperEngineLabels*", "NumericSlider*", "LivePhoto*", "ScreenSaver*"]

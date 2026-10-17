@@ -7,7 +7,7 @@ import simd
 /// (`SceneContentLoader`) and drawn offscreen by the real renderer (`SceneMetalRenderer`)
 /// until its pipelines have compiled, so the caches get exactly the entries a launch creates.
 ///
-/// Run by `ShaderPrewarmCommand` in a new build before it replaces the running one. It writes
+/// Run by `HelperRunCommand` in a new build before it replaces the running one. It writes
 /// nothing but the caches: it reads the user's settings and wallpapers from `defaults` and never
 /// sets them (the scene loader's own writes go to `UserDefaults.app`, which a helper run makes a
 /// read-only view, `AppStorageLocation`).
