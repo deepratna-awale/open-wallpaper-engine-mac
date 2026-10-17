@@ -1,6 +1,7 @@
 #!/bin/bash
 # Downloads the Wallpaper Engine files the app and the asset-dependent tests use (`assets/`, the UI
-# strings `locale/ui_*.json` and `projects/defaultprojects/`) from Steam with DepotDownloader,
+# strings `locale/ui_*.json`, `projects/defaultprojects/`, New Wallpaper's `projects/templates/` and
+# the script editor's snippets `ui/dist/monaco/snippets/*.js`) from Steam with DepotDownloader,
 # logged in as the CI Steam account that owns Wallpaper Engine (app 431960). The one entry point
 # for CI and local test runs; see docs/ci-assets.md.
 #
@@ -9,8 +10,8 @@
 #
 # The destination (argument, else $OWE_WE_ASSETS_DIR, else ~/Library/Caches/owe-we-assets) is laid out like a WE install, so
 # OWE_ASSETS / TEST_RUNNER_OWE_ASSETS accept it. Nothing is downloaded when its `.build` matches
-# the current build. Credentials: OWE_CI_STEAM_USER, OWE_CI_STEAM_PASSWORD and
-# OWE_CI_STEAM_SHARED_SECRET, else (macOS) the login Keychain items of service `owe-ci-steam`,
+# the current build and its `.filelist` the files this script asks for. Credentials:
+# OWE_CI_STEAM_USER, OWE_CI_STEAM_PASSWORD and OWE_CI_STEAM_SHARED_SECRET, else (macOS) the login Keychain items of service `owe-ci-steam`,
 # accounts `user`, `password` and `shared-secret`. Secrets and Steam Guard codes are never printed.
 #
 # Exit codes: 0 done or up to date, 2 usage, 3 missing credentials, 4 login failed (password or
@@ -77,10 +78,15 @@ if ((BUILD_ID_ONLY)); then
     echo "$BUILD"; exit 0
 fi
 
+# What DepotDownloader downloads (`-filelist`).
+FILELIST=$'regex:^assets/\nregex:^locale/ui_.*\\.json$\nregex:^projects/defaultprojects/\nregex:^projects/templates/\nregex:^ui/dist/monaco/snippets/[^/]*\\.js$'
+
 HAVE=""; [[ -f "$DEST/.build" ]] && HAVE="$(cat "$DEST/.build")"
+# A folder fetched with another file list (an older copy of this script) is downloaded again.
+HAVE_FILES=""; [[ -f "$DEST/.filelist" ]] && HAVE_FILES="$(cat "$DEST/.filelist")"
 echo "destination: $DEST"
 echo "current build: ${BUILD:-unknown}; cached build: ${HAVE:-none}"
-if ((!FORCE)) && [[ -n "$BUILD" && "$BUILD" == "$HAVE" && -d "$DEST/assets/shaders" ]]; then
+if ((!FORCE)) && [[ -n "$BUILD" && "$BUILD" == "$HAVE" && "$HAVE_FILES" == "$FILELIST" && -d "$DEST/assets/shaders" ]]; then
     echo "up to date"; exit 0
 fi
 
@@ -94,8 +100,6 @@ DD_DIR="$TOOLS/depotdownloader/$DD_VERSION-$PLATFORM"
 DD="$DD_DIR/DepotDownloader"
 DD_URL="https://github.com/SteamRE/DepotDownloader/releases/download/$DD_TAG/DepotDownloader-$PLATFORM.zip"
 
-FILELIST=$'regex:^assets/\nregex:^locale/ui_.*\\.json$\nregex:^projects/defaultprojects/'
-
 if ((DRY_RUN)); then
     echo "dry run; would:"
     [[ -x "$DD" ]] && echo "  use DepotDownloader $DD_VERSION at $DD" \
@@ -103,7 +107,7 @@ if ((DRY_RUN)); then
     echo "  read credentials from ${OWE_CI_STEAM_USER:+the environment}${OWE_CI_STEAM_USER:-the login Keychain (service $KEYCHAIN_SERVICE)}"
     echo "  run DepotDownloader -app $APP_ID -os windows -osarch 64 -no-mobile -dir $DEST -filelist <file> with:"
     sed 's/^/    /' <<<"$FILELIST"
-    echo "  write $DEST/.build and $DEST/.owe-assets-info.json"
+    echo "  write $DEST/.build, $DEST/.filelist and $DEST/.owe-assets-info.json"
     exit 0
 fi
 
@@ -192,4 +196,5 @@ with open(path, "w") as f:
     f.write(json.dumps(info, indent=2, sort_keys=True).replace('": ', '" : ') + "\n")
 PY
 printf '%s\n' "$BUILD" > "$DEST/.build"
-echo "done: build ${BUILD:-unknown}, $(find "$DEST/assets" "$DEST/locale" "$DEST/projects" -type f 2>/dev/null | wc -l | tr -d ' ') files in $DEST"
+printf '%s\n' "$FILELIST" > "$DEST/.filelist"
+echo "done: build ${BUILD:-unknown}, $(find "$DEST/assets" "$DEST/locale" "$DEST/projects" "$DEST/ui" -type f 2>/dev/null | wc -l | tr -d ' ') files in $DEST"

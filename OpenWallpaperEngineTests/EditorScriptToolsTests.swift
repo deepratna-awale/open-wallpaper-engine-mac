@@ -42,6 +42,16 @@ final class EditorScriptToolsTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: cache.appending(path: "snippets/script_vec3_color_rainbow.js").path))
     }
 
+    /// WE's own snippets (`ui/dist/monaco/snippets`, beside the assets of `OWE_ASSETS`, or the
+    /// cache's copy) are what the script and shader editors insert.
+    func testWEsSnippetsComeWithTheAssets() throws {
+        let assets = try Fixtures.assets()
+        let rainbow = try XCTUnwrap(EditorShaderSnippets.snippet(named: "script_vec3_color_rainbow", assets: assets),
+                                    "WE's snippets for \(assets.path)")
+        XCTAssertTrue(rainbow.contains("createScriptProperties"), rainbow)
+        XCTAssertNotNil(EditorShaderSnippets.snippet(named: "shader_vert_passthrough", assets: assets), "a shader snippet")
+    }
+
     func testCustomModulesAreWEsOtherJSModules() throws {
         let assets = scratch.appending(path: "assets")
         for name in ["wemath.js", "WEColor.js", "wevector.js", "easing.js", "notes.txt"] {

@@ -4,8 +4,9 @@ The asset-gated tests need Wallpaper Engine's built-in files. The repository shi
 `Scripts/fetch-we-assets.sh` downloads them from Steam, logged in as a dedicated **CI Steam
 account** that owns Wallpaper Engine (app 431960). CI and local test runs both use it.
 
-It downloads only `assets/`, `locale/ui_*.json` and `projects/defaultprojects/` of the Windows
-depot, with [DepotDownloader](https://github.com/SteamRE/DepotDownloader) (MIT). The script pins
+It downloads only `assets/`, `locale/ui_*.json`, `projects/defaultprojects/`, the New Wallpaper
+templates `projects/templates/` and the script editor's snippets `ui/dist/monaco/snippets/*.js` of
+the Windows depot, with [DepotDownloader](https://github.com/SteamRE/DepotDownloader) (MIT). The script pins
 the release (3.4.0), verifies its SHA-256 and caches it in the tool folder (`OWE_TOOLS_DIR`).
 .NET isn't needed. The output folder is laid out like a WE install, with `.build` (the Steam
 build id) and `.owe-assets-info.json` (the format `WallpaperEngineAssetsCache` writes). Point
@@ -17,7 +18,9 @@ Scripts/fetch-we-assets.sh --build-id    # the current public build id; no login
 ```
 
 The script first reads the current build id, without a key, from `api.steamcmd.net` (a mirror of
-Steam's app info). It skips the download when the destination's `.build` matches. If that
+Steam's app info). It skips the download when the destination's `.build` matches and its
+`.filelist` holds the script's current file list (a folder fetched by an older copy of the script
+is downloaded again). If that
 lookup fails, it downloads anyway. DepotDownloader keeps `.DepotDownloader/depot.config` in the
 destination, so a later build downloads only the files that changed. `--dry-run` shows the plan
 without logging in, and `--force` downloads even when the build matches.
@@ -79,8 +82,8 @@ and the log are uploaded for 7 days (`test-results-*`).
 
 ### Encrypted asset cache
 
-The `steam-ci` jobs cache the assets only as ciphertext, keyed `we-assets-enc-<buildid>` (the
-Steam build id, digits only):
+The `steam-ci` jobs cache the assets only as ciphertext, keyed `we-assets-enc-r<revision>-<buildid>`
+(the Steam build id, digits only, and `ASSET_CACHE_REVISION` in `.github/actions/we-assets`):
 
 - **Hit:** `actions/cache/restore` fetches the one encrypted file, and the job decrypts it with
   `openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000` and untars it into the assets folder. If
@@ -91,6 +94,12 @@ Steam build id, digits only):
   pushes and manual runs on `main` save the encrypted file with `actions/cache/save`. The cache
   paths are made absolute first: `actions/cache` refuses a path with `..` in it, and then only
   warns and saves nothing.
+- **New files:** when `Scripts/fetch-we-assets.sh` downloads more (its `FILELIST`), bump
+  `ASSET_CACHE_REVISION` in the same change. The next push to `main` then misses, downloads and
+  saves the new set; without the bump the cache keeps serving the old one until Steam publishes a
+  new build. Revision 2 added `projects/templates/` and `ui/dist/monaco/snippets/`, which
+  `NewWallpaperWizardTests.testWEsTemplatesComeWithTheAssets` and
+  `EditorScriptToolsTests.testWEsSnippetsComeWithTheAssets` read.
 - **No key:** when `OWE_ASSET_CACHE_KEY` is empty, or the build id couldn't be read, the nightly
   skips the cache and downloads the assets; `asset-cache` and the asset shards fail.
 
