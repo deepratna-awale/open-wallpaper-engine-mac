@@ -1,4 +1,5 @@
 import AVFoundation
+import AudioToolbox
 import CoreAudio
 
 /// Plays an `AVAudioEngine` in realtime manual rendering mode on an `OutputOnlyAudioDevice`: an IO
@@ -112,8 +113,9 @@ final class ManualRenderingOutput {
 
     // MARK: - IO
 
-    /// Fills the device's buffers from the engine; IO thread only once made. Its buffers are made
-    /// up front, so a callback allocates nothing.
+    /// Fills the device's buffers from the engine; IO thread only once made. Its buffers and
+    /// converter are made up front and driven through C calls, so a callback allocates nothing
+    /// (realtime safe), resampling included.
     final class Renderer: @unchecked Sendable {
         let deviceRate: Float64
         private let render: AVAudioEngineManualRenderingBlock
@@ -121,11 +123,13 @@ final class ManualRenderingOutput {
         private let engineBuffer: AVAudioPCMBuffer
         /// At the device's rate, when it differs from the engine's (the device moved to another
         /// output device after the engine was made).
-        private let converter: AVAudioConverter?
+        private let converter: AudioConverterRef?
         private let deviceBuffer: AVAudioPCMBuffer?
         /// `deviceBuffer`'s memory, framed to one callback's frames (the converter fills a buffer
-        /// to its capacity).
+        /// to its size).
         private let deviceList: UnsafeMutableAudioBufferListPointer?
+        /// The engine failed to render during the current conversion.
+        private var inputFailed = false
 
         init?(render: @escaping AVAudioEngineManualRenderingBlock, format: AVAudioFormat, deviceRate: Float64) {
             guard format.channelCount == 2, format.commonFormat == .pcmFormatFloat32, !format.isInterleaved,
@@ -140,17 +144,46 @@ final class ManualRenderingOutput {
                 deviceList = nil
             } else {
                 guard let deviceFormat = AVAudioFormat(standardFormatWithSampleRate: deviceRate, channels: 2),
-                      let converter = AVAudioConverter(from: format, to: deviceFormat),
-                      let deviceBuffer = AVAudioPCMBuffer(pcmFormat: deviceFormat, frameCapacity: ManualRenderingOutput.maximumFrameCount)
+                      let converter = Self.makeConverter(from: format, to: deviceFormat),
+                      let deviceBuffer = AVAudioPCMBuffer(pcmFormat: deviceFormat, frameCapacity: ManualRenderingOutput.maximumFrameCount),
+                      let channels = deviceBuffer.floatChannelData
                 else { return nil }
                 self.converter = converter
                 self.deviceBuffer = deviceBuffer
-                deviceList = AudioBufferList.allocate(maximumBuffers: 2)
+                let list = AudioBufferList.allocate(maximumBuffers: 2)
+                for index in 0..<2 { list[index] = AudioBuffer(mNumberChannels: 1, mDataByteSize: 0, mData: channels[index]) }
+                deviceList = list
             }
         }
 
         deinit {
+            if let converter { AudioConverterDispose(converter) }
             if let deviceList { free(deviceList.unsafeMutablePointer) }
+        }
+
+        /// An `AudioConverter` set up as `AVAudioConverter` sets one up by default (its quality,
+        /// algorithm and priming), driven through the C API so a conversion allocates nothing.
+        private static func makeConverter(from source: AVAudioFormat, to destination: AVAudioFormat) -> AudioConverterRef? {
+            guard let defaults = AVAudioConverter(from: source, to: destination) else { return nil }
+            var converter: AudioConverterRef?
+            guard AudioConverterNew(source.streamDescription, destination.streamDescription, &converter) == noErr,
+                  let converter else { return nil }
+            var quality = UInt32(defaults.sampleRateConverterQuality)
+            var prime = UInt32(defaults.primeMethod.rawValue)
+            var complexity: UInt32 = switch defaults.sampleRateConverterAlgorithm {
+            case AVSampleRateConverterAlgorithm_Mastering: kAudioConverterSampleRateConverterComplexity_Mastering
+            case AVSampleRateConverterAlgorithm_MinimumPhase: kAudioConverterSampleRateConverterComplexity_MinimumPhase
+            default: kAudioConverterSampleRateConverterComplexity_Normal
+            }
+            let size = UInt32(MemoryLayout<UInt32>.size)
+            guard AudioConverterSetProperty(converter, kAudioConverterSampleRateConverterComplexity, size, &complexity) == noErr,
+                  AudioConverterSetProperty(converter, kAudioConverterSampleRateConverterQuality, size, &quality) == noErr,
+                  AudioConverterSetProperty(converter, kAudioConverterPrimeMethod, size, &prime) == noErr
+            else {
+                AudioConverterDispose(converter)
+                return nil
+            }
+            return converter
         }
 
         func fill(_ output: UnsafeMutablePointer<AudioBufferList>) {
@@ -166,26 +199,43 @@ final class ManualRenderingOutput {
             }
         }
 
+        /// The converter's input: the engine's next frames, at most `packets`.
+        private static let supplyEngineFrames: AudioConverterComplexInputDataProc = { _, packets, data, _, context in
+            guard let context else { return kAudioConverterErr_UnspecifiedError }
+            return Unmanaged<Renderer>.fromOpaque(context).takeUnretainedValue().supply(packets, into: data)
+        }
+
+        private func supply(_ packets: UnsafeMutablePointer<UInt32>, into data: UnsafeMutablePointer<AudioBufferList>) -> OSStatus {
+            let frames = min(packets.pointee, ManualRenderingOutput.maximumFrameCount)
+            guard renderEngine(frames) else {
+                inputFailed = true
+                packets.pointee = 0
+                return Self.noDataNow
+            }
+            let source = UnsafeMutableAudioBufferListPointer(engineBuffer.mutableAudioBufferList)
+            let destination = UnsafeMutableAudioBufferListPointer(data)
+            for index in 0..<min(source.count, destination.count) { destination[index] = source[index] }
+            packets.pointee = frames
+            return noErr
+        }
+
+        /// What `supply` returns when the engine has nothing: stops this conversion, keeps the converter's state.
+        private static let noDataNow: OSStatus = 0x6E6F_6461 // 'noda'
+
         /// `frames` frames at the device's rate, silence where the engine renders nothing (paused).
         private func produce(_ frames: AVAudioFrameCount) -> AVAudioPCMBuffer? {
-            guard let converter, let deviceBuffer, let deviceList, let channels = deviceBuffer.floatChannelData else {
+            guard let converter, let deviceBuffer, let deviceList else {
                 return renderEngine(frames) ? engineBuffer : nil
             }
-            let bytes = UInt32(Int(frames) * MemoryLayout<Float>.size)
-            for index in 0..<2 { deviceList[index] = AudioBuffer(mNumberChannels: 1, mDataByteSize: bytes, mData: channels[index]) }
-            guard let framed = AVAudioPCMBuffer(pcmFormat: deviceBuffer.format, bufferListNoCopy: deviceList.unsafePointer,
-                                                deallocator: nil) else { return nil }
-            var failed = false
-            let status = converter.convert(to: framed, error: nil) { [self] packets, inputStatus in
-                guard renderEngine(min(packets, ManualRenderingOutput.maximumFrameCount)) else {
-                    failed = true
-                    inputStatus.pointee = .noDataNow
-                    return nil
-                }
-                inputStatus.pointee = .haveData
-                return engineBuffer
-            }
-            return failed || status == .error ? nil : framed
+            let bytes = frames * UInt32(MemoryLayout<Float>.size)
+            for index in 0..<2 { deviceList[index].mDataByteSize = bytes }
+            inputFailed = false
+            var produced = frames
+            let status = AudioConverterFillComplexBuffer(converter, Self.supplyEngineFrames, Unmanaged.passUnretained(self).toOpaque(),
+                                                         &produced, deviceList.unsafeMutablePointer, nil)
+            guard !inputFailed, status == noErr else { return nil }
+            deviceBuffer.frameLength = produced
+            return deviceBuffer
         }
 
         private func renderEngine(_ frames: AVAudioFrameCount) -> Bool {
