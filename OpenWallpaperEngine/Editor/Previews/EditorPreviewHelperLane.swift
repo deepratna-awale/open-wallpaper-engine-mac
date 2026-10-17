@@ -20,23 +20,18 @@ protocol EditorPreviewLane: AnyObject {
 /// when its input closes, or with the app (`HelperRunCommand.exitWithParent`).
 @MainActor
 final class EditorPreviewHelperLane: EditorPreviewLane {
-    private let process = Process()
+    private let process: Process
     private let input = Pipe()
     private let output = Pipe()
     private var pending: CheckedContinuation<Bool, Never>?
     private var exited = false
 
     init?() {
-        guard let executable = AppRelauncher.helperExecutable else { return nil }
-        process.executableURL = executable
-        process.arguments = [HelperRunCommand.editorPreviewArgument, EditorPreviewJob.streamArgument]
-        var environment = ProcessInfo.processInfo.environment
-        if let tag = AppStorageLocation.current.isolationTag { environment[AppStorageLocation.environmentKey] = tag }
-        process.environment = environment
-        process.qualityOfService = .utility
+        guard let process = HelperProcess.make([HelperRunCommand.editorPreviewArgument, EditorPreviewJob.streamArgument],
+                                               qos: .utility) else { return nil }
+        self.process = process
         process.standardInput = input
         process.standardOutput = output
-        process.standardError = FileHandle.nullDevice
         // A helper that exited makes a write fail instead of raising SIGPIPE here.
         _ = fcntl(input.fileHandleForWriting.fileDescriptor, F_SETNOSIGPIPE, 1)
         let lines = EditorPreviewDoneLines { [weak self] _ in
