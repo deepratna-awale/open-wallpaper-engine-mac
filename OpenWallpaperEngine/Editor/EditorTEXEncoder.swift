@@ -173,25 +173,11 @@ struct EditorTEXEncoder: EditorTextureEncoding {
     }
 
     static func videoTexture(_ movie: Data, width: Int, height: Int) -> Data {
-        var data = Data()
-        func word(_ value: UInt32) { withUnsafeBytes(of: value.littleEndian) { data.append(contentsOf: $0) } }
-        func tag(_ text: String) { data.append(contentsOf: Array(text.utf8) + [0]) }
-        tag("TEXV0005")
-        tag("TEXI0001")
-        let flags: TEXFlags = [.clampUVs, .video]
-        for value in [0, flags.rawValue, UInt32(width), UInt32(height), UInt32(width), UInt32(height), 0] {
-            word(value)
-        }
-        tag("TEXB0004")
-        word(1)       // one image
-        word(UInt32(bitPattern: -1)) // no FreeImage format
-        word(0)       // no variants
-        word(1)       // one mipmap
-        word(UInt32(width)); word(UInt32(height))
-        word(0); word(0) // stored as is, no uncompressed size
-        word(UInt32(movie.count))
-        data.append(movie)
-        return data
+        // The movie is the one mipmap, stored as is with no uncompressed size.
+        TEXWriter.data(TEXWriter.Texture(format: 0, flags: TEXFlags([.clampUVs, .video]).rawValue, textureWidth: width,
+                                         textureHeight: height, imageWidth: width, imageHeight: height, colorWord: 0,
+                                         mipmaps: [TEXWriter.Mipmap(width: width, height: height, compression: 0,
+                                                                    uncompressedSize: 0, stored: movie)]))
     }
 
     // MARK: Pixels

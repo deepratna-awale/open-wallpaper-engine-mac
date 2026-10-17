@@ -74,11 +74,11 @@ final class TEXVariantCaptureTests: XCTestCase {
     /// container, the option records, and per mipmap its words, group and patch counts and each
     /// patch's words but its size.
     private func structure(_ data: Data) throws -> [String] {
-        var reader = try XCTUnwrap(TEXVariantReader(data))
-        let header = try XCTUnwrap(reader.header())
-        var lines = ["format \(header.format) flags \(header.flags) TEXB000\(header.version) images \(header.imageCount)"
-                     + " freeimage \(header.freeImageFormat) options \(header.optionCount)"]
-        for option in try XCTUnwrap(reader.options(count: header.optionCount)) {
+        var reader = try XCTUnwrap(TEXReader(data))
+        let header = reader.header
+        var lines = ["format \(header.format) flags \(header.flags) TEXB000\(header.containerVersion) images \(header.imageCount)"
+                     + " freeimage \(header.freeImageFormat) options \(header.variantCount)"]
+        for option in try XCTUnwrap(reader.options(count: header.variantCount)) {
             let condition: String
             switch option.condition {
             case .flag(let property)?: condition = property
@@ -171,9 +171,9 @@ final class TEXVariantCaptureTests: XCTestCase {
         XCTAssertEqual(try structure(ours), try structure(theirs))
         // From the container's tag through the option records, byte for byte.
         func records(_ data: Data) throws -> Data {
-            var reader = try XCTUnwrap(TEXVariantReader(data))
-            let header = try XCTUnwrap(reader.header())
-            _ = try XCTUnwrap(reader.options(count: header.optionCount))
+            var reader = try XCTUnwrap(TEXReader(data))
+            let header = reader.header
+            _ = try XCTUnwrap(reader.options(count: header.variantCount))
             return data.subdata(in: header.containerOffset..<reader.cursor)
         }
         XCTAssertEqual(try records(ours), try records(theirs))

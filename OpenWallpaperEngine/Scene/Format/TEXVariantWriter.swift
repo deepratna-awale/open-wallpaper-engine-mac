@@ -53,31 +53,30 @@ enum TEXVariantWriter {
 
     static func write(base: Data, options: [Option]) throws -> Data {
         var layout = try Layout(base)
-        if layout.header.optionCount > 0 {
+        if layout.header.variantCount > 0 {
             // Variants already there are replaced: the base without them.
             guard let plain = TEXVariantResolver.resolve(base, enabled: [:]) else { throw Failure.unsupportedBase }
             layout = try Layout(plain)
         }
         var optionLayouts: [Layout] = []
         for option in options {
-            guard let other = try? Layout(option.texture), other.header.optionCount == 0, layout.isCompatible(with: other) else {
+            guard let other = try? Layout(option.texture), other.header.variantCount == 0, layout.isCompatible(with: other) else {
                 throw Failure.incompatible(option: option.id)
             }
             if option.alphaBlend && !layout.allowsAlphaBlend { throw Failure.alphaBlendUnsupported(option: option.id) }
             optionLayouts.append(other)
         }
 
-        var data = Data(layout.prefix)
-        func word(_ value: UInt32) { withUnsafeBytes(of: value.littleEndian) { data.append(contentsOf: $0) } }
-        data.append(contentsOf: Array("TEXB0004".utf8) + [0])
-        word(UInt32(layout.header.imageCount))
-        word(UInt32(bitPattern: layout.header.freeImageFormat))
-        word(UInt32(options.count))
+        var header = layout.header
+        header.containerVersion = 4
+        header.variantCount = options.count
+        var writer = TEXContainerWriter(header: header)
+        func word(_ value: UInt32) { writer.word(value) }
         for option in options {
             word(option.group)
             word(option.id)
             word(blend(alphaBlend: option.alphaBlend, layout: layout).rawValue)
-            data.append(contentsOf: Array(option.condition.utf8) + [0])
+            writer.string(option.condition)
         }
         // Groups in the order their first option comes.
         var groups: [UInt32] = []
@@ -85,12 +84,8 @@ enum TEXVariantWriter {
         for (imageIndex, levels) in layout.images.enumerated() {
             word(UInt32(levels.count))
             for (levelIndex, level) in levels.enumerated() {
-                word(UInt32(level.width))
-                word(UInt32(level.height))
-                word(level.compression)
-                word(UInt32(level.uncompressedSize))
-                word(UInt32(level.stored.count))
-                data.append(contentsOf: level.stored)
+                writer.mipmap(width: level.width, height: level.height, compression: level.compression,
+                              uncompressedSize: level.uncompressedSize, stored: level.stored)
                 guard !options.isEmpty else { continue }
                 var patchesByGroup: [UInt32: [Patch]] = [:]
                 for (index, option) in options.enumerated() {
@@ -109,13 +104,13 @@ enum TEXVariantWriter {
                                       UInt32(patch.height), UInt32(bitPattern: patch.freeImageFormat), UInt32(patch.bytes.count)] {
                             word(value)
                         }
-                        data.append(contentsOf: patch.bytes)
+                        writer.append(patch.bytes)
                     }
                 }
             }
         }
-        data.append(contentsOf: layout.trailing)
-        return data
+        writer.append(layout.trailing)
+        return writer.data
     }
 
     // MARK: Patches
@@ -167,10 +162,11 @@ enum TEXVariantWriter {
 
     /// A variant-free `.tex` read into its parts.
     struct Layout {
-        let header: TEXVariantReader.Header
-        /// The `TEXV`/`TEXI` header, up to the container.
-        let prefix: [UInt8]
-        let textureWidth: Int, textureHeight: Int, imageWidth: Int, imageHeight: Int
+        let header: TEXHeader
+        var textureWidth: Int { header.textureWidth }
+        var textureHeight: Int { header.textureHeight }
+        var imageWidth: Int { header.imageWidth }
+        var imageHeight: Int { header.imageHeight }
         var images: [[Level]]
         let trailing: [UInt8]
 
@@ -183,18 +179,10 @@ enum TEXVariantWriter {
         var allowsAlphaBlend: Bool { !isVideo && header.format == 0 }
 
         init(_ data: Data) throws {
-            guard var reader = TEXVariantReader(data), let header = reader.header(),
-                  header.flags & TEXVariantReader.volumeFlag == 0 else { throw Failure.unsupportedBase }
+            guard var reader = TEXReader(data), !reader.header.isVolume else { throw Failure.unsupportedBase }
+            let header = reader.header
             self.header = header
-            prefix = Array(reader.bytes[0..<header.containerOffset])
-            func texi(_ index: Int) -> Int {
-                // The TEXI words after "TEXV0005\0TEXI0001\0": format, flags, sizes.
-                let offset = 18 + index * 4
-                return Int(UInt32(reader.bytes[offset]) | UInt32(reader.bytes[offset + 1]) << 8
-                           | UInt32(reader.bytes[offset + 2]) << 16 | UInt32(reader.bytes[offset + 3]) << 24)
-            }
-            textureWidth = texi(2); textureHeight = texi(3); imageWidth = texi(4); imageHeight = texi(5)
-            if header.optionCount > 0 {
+            if header.variantCount > 0 {
                 // Read no further: the writer strips them first.
                 images = []
                 trailing = []
@@ -205,17 +193,11 @@ enum TEXVariantWriter {
                 guard let count = reader.word(), count < 64 else { throw Failure.unsupportedBase }
                 var levels: [Level] = []
                 for _ in 0..<count {
-                    guard let width = reader.word(), let height = reader.word() else { throw Failure.unsupportedBase }
-                    var compression: UInt32 = 0, uncompressed = 0
-                    if header.version >= 2 {
-                        guard let value = reader.word(), let size = reader.word() else { throw Failure.unsupportedBase }
-                        compression = value
-                        uncompressed = Int(size)
-                    }
-                    guard let size = reader.word(), let range = reader.range(Int(size)) else { throw Failure.unsupportedBase }
-                    if header.version < 2 { uncompressed = Int(size) }
-                    levels.append(Level(width: Int(width), height: Int(height), compression: compression,
-                                        uncompressedSize: uncompressed, stored: Array(reader.bytes[range])))
+                    guard let mipmap = reader.mipmap() else { throw Failure.unsupportedBase }
+                    // Before `TEXB0002` a mipmap is stored as is: its uncompressed size is its size.
+                    let uncompressed = header.mipmapsHaveCompression ? mipmap.uncompressedSize : mipmap.stored.count
+                    levels.append(Level(width: mipmap.width, height: mipmap.height, compression: mipmap.compression,
+                                        uncompressedSize: uncompressed, stored: Array(reader.bytes[mipmap.stored])))
                 }
                 images.append(levels)
             }
@@ -226,22 +208,21 @@ enum TEXVariantWriter {
         /// A variant-free `TEXB0004` `.tex` of this layout with `images`' bytes in place of its own
         /// (an option's texture); `freeImageFormat` for a picture's.
         func data(with images: [[Level]], freeImageFormat: Int32? = nil) -> Data {
-            var data = Data(prefix)
-            func word(_ value: UInt32) { withUnsafeBytes(of: value.littleEndian) { data.append(contentsOf: $0) } }
-            data.append(contentsOf: Array("TEXB0004".utf8) + [0])
-            word(UInt32(images.count))
-            word(UInt32(bitPattern: freeImageFormat ?? header.freeImageFormat))
-            word(0)
+            var written = header
+            written.containerVersion = 4
+            written.imageCount = images.count
+            written.freeImageFormat = freeImageFormat ?? header.freeImageFormat
+            written.variantCount = 0
+            var writer = TEXContainerWriter(header: written)
             for levels in images {
-                word(UInt32(levels.count))
+                writer.word(UInt32(levels.count))
                 for level in levels {
-                    for value in [UInt32(level.width), UInt32(level.height), level.compression, UInt32(level.uncompressedSize),
-                                  UInt32(level.stored.count)] { word(value) }
-                    data.append(contentsOf: level.stored)
+                    writer.mipmap(width: level.width, height: level.height, compression: level.compression,
+                                  uncompressedSize: level.uncompressedSize, stored: level.stored)
                 }
             }
-            data.append(contentsOf: trailing)
-            return data
+            writer.append(trailing)
+            return writer.data
         }
 
         /// Same kind (raw format, picture or video), size and mipmaps.

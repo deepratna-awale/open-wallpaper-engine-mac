@@ -254,7 +254,7 @@ struct ImageMaterialPlanBuilder {
             sceneEngineCombos.applied(to: ShaderVariantTranslator.resolveCombos(
                 vertex: vertex, fragment: fragment, overrides: [materialPass.combos, coverage, extraCombos] + overrides + [formats],
                 boundTextureSlots: Set(listed.keys).union([0]).union(engineSlots),
-                textureFlags: headers.compactMapValues { TEXImageFormat.texiWord(1, in: $0) }))
+                textureFlags: headers.compactMapValues { TEXHeader.texiWord(1, in: $0) }))
         }
 
         let uniforms = (vertex.uniforms + fragment.uniforms).filter { !$0.isSampler }
@@ -338,7 +338,7 @@ struct ImageMaterialPlanBuilder {
     /// The `.tex` ClampUVs flag (TEXI flags bit 2) of texture `name`, looked up like the texture
     /// loader does. A texture that isn't a `.tex` (or can't be read) clamps.
     func textureClamps(_ name: String, materialPath: String) -> Bool {
-        guard let data = textureHeader(name, materialPath: materialPath), let flags = Self.texFlags(data) else { return true }
+        guard let data = textureHeader(name, materialPath: materialPath), let flags = TEXHeader.texiWord(1, in: data) else { return true }
         return flags & Self.texClampUVsFlag != 0
     }
 
@@ -382,17 +382,6 @@ struct ImageMaterialPlanBuilder {
     }
 
     static let texClampUVsFlag: UInt32 = 2
-
-    /// The flags word of a `.tex` header: `TEXV…\0TEXI…\0` then format, flags.
-    static func texFlags(_ data: Data) -> UInt32? {
-        let bytes = [UInt8](data.prefix(64))
-        guard let texi = bytes.indices.first(where: { index in
-            index + 4 <= bytes.count && bytes[index..<index + 4].elementsEqual("TEXI".utf8)
-        }), let end = bytes[texi...].firstIndex(of: 0) else { return nil }
-        let offset = end + 1 + 4
-        guard offset + 4 <= bytes.count else { return nil }
-        return bytes[offset..<offset + 4].reversed().reduce(0) { $0 << 8 | UInt32($1) }
-    }
 
     /// nil (logged) for a texture that isn't there: the slot stays unbound, and so does its combo.
     private func textureInput(named name: String, materialPath: String) throws -> SceneEffectTextureInput? {

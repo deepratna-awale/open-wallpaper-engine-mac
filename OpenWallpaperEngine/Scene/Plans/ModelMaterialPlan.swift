@@ -162,7 +162,7 @@ struct ModelMaterialPlanBuilder {
         let combos = sceneEngineCombos.applied(to: ShaderVariantTranslator.resolveCombos(
             vertex: vertex, fragment: fragment, overrides: [materialPass.combos, coverage, mesh.combos, formats],
             boundTextureSlots: Set(listed.keys),
-            textureFlags: headers.compactMapValues { TEXImageFormat.texiWord(1, in: $0) }))
+            textureFlags: headers.compactMapValues { TEXHeader.texiWord(1, in: $0) }))
 
         let uniforms = (vertex.uniforms + fragment.uniforms).filter { !$0.isSampler }
             .reduce(into: [ShaderUniformDeclaration]()) { result, uniform in

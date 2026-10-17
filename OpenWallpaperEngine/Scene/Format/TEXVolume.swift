@@ -16,7 +16,7 @@ struct TEXVolume: Equatable {
     let rgba: [UInt8]
 
     /// The TEXI flag that marks a volume texture.
-    static let volumeFlag: UInt32 = 0x40
+    static let volumeFlag = TEXHeader.volumeFlag
 
     enum ParseError: Error, CustomStringConvertible, Equatable {
         case notVolume
@@ -46,31 +46,16 @@ struct TEXVolume: Equatable {
 
     init(texData data: Data) throws {
         guard Self.isVolume(data) else { throw ParseError.notVolume }
-        var reader = Reader(bytes: [UInt8](data))
-        guard reader.string() == "TEXV0005", reader.string() == "TEXI0001" else { throw ParseError.malformed("header") }
-        guard let format = reader.word() else { throw ParseError.malformed("TEXI") }
-        // flags, texture width/height, image width/height, depth, then the word 2D textures end with.
-        for _ in 0..<7 { guard reader.word() != nil else { throw ParseError.malformed("TEXI") } }
-        guard let container = reader.string(), let imageCount = reader.word(), imageCount > 0 else {
-            throw ParseError.malformed("TEXB")
-        }
-        var freeImageFormat: Int32 = -1
-        switch container {
-        case "TEXB0003":
-            guard let value = reader.word() else { throw ParseError.malformed("TEXB0003") }
-            freeImageFormat = Int32(bitPattern: value)
-        case "TEXB0004":
-            guard let value = reader.word(), reader.word() != nil else { throw ParseError.malformed("TEXB0004") }
-            freeImageFormat = Int32(bitPattern: value)
-        default:
-            throw ParseError.unsupported("container \(container)")
-        }
-        guard let mipmaps = reader.word(), mipmaps > 0,
-              let width = reader.word(), let height = reader.word(), let depth = reader.word(),
-              let compression = reader.word(), reader.word() != nil,
-              let stored = reader.word(), let payload = reader.bytes(Int(stored)) else {
+        guard var reader = TEXReader(data) else { throw ParseError.malformed("header") }
+        let header = reader.header
+        guard header.imageCount > 0 else { throw ParseError.malformed("TEXB") }
+        guard header.containerVersion >= 3 else { throw ParseError.unsupported("container TEXB000\(header.containerVersion)") }
+        let format = header.format, freeImageFormat = header.freeImageFormat
+        guard let mipmaps = reader.word(), mipmaps > 0, let mipmap = reader.mipmap(), let depth = mipmap.depth else {
             throw ParseError.malformed("mipmap")
         }
+        let width = UInt32(mipmap.width), height = UInt32(mipmap.height), compression = mipmap.compression
+        let payload = reader.bytes[mipmap.stored]
         guard (1...256).contains(width), (1...256).contains(height), (1...256).contains(depth) else {
             throw ParseError.malformed("size \(width)×\(height)×\(depth)")
         }
@@ -101,30 +86,6 @@ struct TEXVolume: Equatable {
             return try SceneTextureUpload.straightRGBA(image)
         } catch {
             throw ParseError.unsupported("image payload: \(error)")
-        }
-    }
-
-    private struct Reader {
-        let bytes: [UInt8]
-        var cursor = 0
-
-        mutating func word() -> UInt32? {
-            guard cursor + 4 <= bytes.count else { return nil }
-            defer { cursor += 4 }
-            return UInt32(bytes[cursor]) | UInt32(bytes[cursor + 1]) << 8 | UInt32(bytes[cursor + 2]) << 16
-                | UInt32(bytes[cursor + 3]) << 24
-        }
-
-        mutating func string() -> String? {
-            guard let end = bytes[cursor...].firstIndex(of: 0) else { return nil }
-            defer { cursor = end + 1 }
-            return String(decoding: bytes[cursor..<end], as: UTF8.self)
-        }
-
-        mutating func bytes(_ count: Int) -> ArraySlice<UInt8>? {
-            guard count >= 0, cursor + count <= bytes.count else { return nil }
-            defer { cursor += count }
-            return bytes[cursor..<(cursor + count)]
         }
     }
 }

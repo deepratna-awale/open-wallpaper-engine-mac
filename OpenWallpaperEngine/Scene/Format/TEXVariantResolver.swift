@@ -22,8 +22,9 @@ enum TEXVariantResolver {
     /// `data` in a `TEXB0004` container with no variants, the options in `enabled` (by option
     /// id, `TEXVariants.enabled`) composed in; nil when `data` declares none or can't be read.
     static func resolve(_ data: Data, enabled: [UInt32: TEXVariants.Blend]) -> Data? {
-        guard var reader = TEXVariantReader(data), let header = reader.header(), header.optionCount > 0,
-              reader.options(count: header.optionCount) != nil else { return nil }
+        guard var reader = TEXReader(data), reader.header.variantCount > 0,
+              reader.options(count: reader.header.variantCount) != nil else { return nil }
+        let header = reader.header
         var images: [[Mipmap]] = []
         for _ in 0..<header.imageCount {
             guard let count = reader.word(), count < 64 else { return malformed(data) }
@@ -74,21 +75,8 @@ enum TEXVariantResolver {
         var bytes: [UInt8]? = nil
     }
 
-    private static func readMipmap(_ reader: inout TEXVariantReader, header: TEXVariantReader.Header) -> Mipmap? {
-        guard let width = reader.word(), let height = reader.word() else { return nil }
-        var depth: UInt32?
-        if header.flags & TEXVariantReader.volumeFlag != 0 {
-            guard let value = reader.word() else { return nil }
-            depth = value
-        }
-        var compression: UInt32 = 0, uncompressedSize = 0
-        if header.version >= 2 {
-            guard let value = reader.word(), let size = reader.word() else { return nil }
-            compression = value
-            uncompressedSize = Int(size)
-        }
-        guard let size = reader.word(), let stored = reader.range(Int(size)),
-              let groups = reader.word(), groups <= 4096 else { return nil }
+    private static func readMipmap(_ reader: inout TEXReader, header: TEXHeader) -> Mipmap? {
+        guard let record = reader.mipmap(), let groups = reader.word(), groups <= 4096 else { return nil }
         var patches: [Patch] = []
         for _ in 0..<groups {
             guard let count = reader.word(), count <= 4096 else { return nil }
@@ -100,8 +88,8 @@ enum TEXVariantResolver {
                                      height: Int(patchHeight), stored: patchBytes))
             }
         }
-        return Mipmap(width: Int(width), height: Int(height), depth: depth, compression: compression,
-                      uncompressedSize: uncompressedSize, stored: stored, patches: patches)
+        return Mipmap(width: record.width, height: record.height, depth: record.depth, compression: record.compression,
+                      uncompressedSize: record.uncompressedSize, stored: record.stored, patches: patches)
     }
 
     private static func malformed(_ data: Data) -> Data? {
@@ -111,7 +99,7 @@ enum TEXVariantResolver {
 
     // MARK: Composing
 
-    private static func compose(_ mipmap: Mipmap, bytes: [UInt8], header: TEXVariantReader.Header,
+    private static func compose(_ mipmap: Mipmap, bytes: [UInt8], header: TEXHeader,
                                 enabled: [UInt32: TEXVariants.Blend], decodesPictures: Bool) -> Mipmap? {
         var mipmap = mipmap
         var patches = mipmap.patches.filter { enabled[$0.option] != nil }
@@ -260,34 +248,30 @@ enum TEXVariantResolver {
 
     // MARK: Writing
 
-    private static func write(_ images: [[Mipmap]], bytes: [UInt8], header: TEXVariantReader.Header,
+    private static func write(_ images: [[Mipmap]], bytes: [UInt8], header: TEXHeader,
                               decodesPictures: Bool, trailing: Range<Int>) -> Data {
-        var data = Data(bytes[0..<header.containerOffset])
-        func word(_ value: UInt32) { withUnsafeBytes(of: value.littleEndian) { data.append(contentsOf: $0) } }
+        var written = header
         // A decoded picture is raw RGBA8888 (`FORMAT_RGBA8888`).
-        if decodesPictures { data.replaceSubrange(18..<22, with: [0, 0, 0, 0]) }
-        data.append(contentsOf: Array("TEXB0004".utf8) + [0])
-        word(UInt32(header.imageCount))
-        word(UInt32(bitPattern: decodesPictures ? -1 : header.freeImageFormat))
-        word(0)
+        if decodesPictures {
+            written.format = 0
+            written.freeImageFormat = -1
+        }
+        written.containerVersion = 4
+        written.variantCount = 0
+        var writer = TEXContainerWriter(header: written)
         for mipmaps in images {
-            word(UInt32(mipmaps.count))
+            writer.word(UInt32(mipmaps.count))
             for mipmap in mipmaps {
-                word(UInt32(mipmap.width))
-                word(UInt32(mipmap.height))
-                if let depth = mipmap.depth { word(depth) }
-                word(mipmap.compression)
-                word(UInt32(mipmap.uncompressedSize))
                 if let composed = mipmap.bytes {
-                    word(UInt32(composed.count))
-                    data.append(contentsOf: composed)
+                    writer.mipmap(width: mipmap.width, height: mipmap.height, depth: mipmap.depth, compression: mipmap.compression,
+                                  uncompressedSize: mipmap.uncompressedSize, stored: composed)
                 } else {
-                    word(UInt32(mipmap.stored.count))
-                    data.append(contentsOf: bytes[mipmap.stored])
+                    writer.mipmap(width: mipmap.width, height: mipmap.height, depth: mipmap.depth, compression: mipmap.compression,
+                                  uncompressedSize: mipmap.uncompressedSize, stored: bytes[mipmap.stored])
                 }
             }
         }
-        data.append(contentsOf: bytes[trailing])
-        return data
+        writer.append(bytes[trailing])
+        return writer.data
     }
 }

@@ -211,7 +211,7 @@ final class ShaderComparisonSuiteTests: XCTestCase {
             let resolved = SceneEngineCombos().applied(to: ShaderVariantTranslator.resolveCombos(
                 vertex: vertex, fragment: fragment, overrides: request.overrides + [formats],
                 boundTextureSlots: Set(request.textures.keys).union([0]),
-                textureFlags: headers.compactMapValues { TEXImageFormat.texiWord(1, in: $0) }))
+                textureFlags: headers.compactMapValues { TEXHeader.texiWord(1, in: $0) }))
             let combos = Self.engineShaped(resolved, vertex: vertex, fragment: fragment)
             guard translated.insert(ShaderVariantTranslator.cacheKey(vertex: vertex, fragment: fragment, combos: combos)).inserted
             else { continue }

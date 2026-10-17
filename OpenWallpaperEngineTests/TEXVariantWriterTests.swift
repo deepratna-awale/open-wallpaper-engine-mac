@@ -44,7 +44,7 @@ final class TEXVariantWriterTests: XCTestCase {
     /// Every mipmap's texels of a variant-free `.tex`.
     private func levels(_ data: Data) throws -> [[UInt8]] {
         let layout = try TEXVariantWriter.Layout(data)
-        XCTAssertEqual(layout.header.optionCount, 0)
+        XCTAssertEqual(layout.header.variantCount, 0)
         return try layout.images[0].map { try XCTUnwrap(TEXVariantWriter.texels($0)) }
     }
 
@@ -69,9 +69,8 @@ final class TEXVariantWriterTests: XCTestCase {
         return try EditorTEXEncoder.rgba(try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil)))
     }
 
-    private func texHeader(_ data: Data) -> TEXVariantReader.Header? {
-        var reader = TEXVariantReader(data)
-        return reader?.header()
+    private func texHeader(_ data: Data) -> TEXHeader? {
+        TEXHeader([UInt8](data))
     }
 
     private func option(_ id: UInt32, group: UInt32 = 0, alphaBlend: Bool = false, condition: TextureVariantDocument.Condition,
@@ -244,7 +243,7 @@ final class TEXVariantWriterTests: XCTestCase {
         XCTAssertEqual(cursor, bytes.count)
         // Writing again over a base with variants replaces them.
         let again = try EditorTEXEncoder().texture(data, withVariants: [])
-        XCTAssertEqual(texHeader(again)?.optionCount, 0)
+        XCTAssertEqual(texHeader(again)?.variantCount, 0)
         XCTAssertEqual(EditorTEXEncoder().variantBase(data)?.hasCompiledVariants, true)
     }
 
