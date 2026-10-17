@@ -23,7 +23,9 @@ extension EditorAssetStore {
         }
         guard var image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { throw ImportError.unsupported(name) }
         let normal = try options.normalMap.map { try normalMapTexture(from: $0) }
-        let cropped = options.cropTransparency ? Self.croppedToContent(image, padding: options.cropPadding) : nil
+        let crop = options.cropTransparency ? Self.contentCrop(image, padding: options.cropPadding) : nil
+        let cropped = crop?.image
+        let cropOffset = crop.map { Self.cropOffset($0.rect, width: image.width, height: image.height) }
         if let cropped { image = cropped }
         let size = SIMD2(Double(image.width), Double(image.height))
         if options.keepsPicture {
@@ -41,14 +43,14 @@ extension EditorAssetStore {
             let assetName = Self.assetName(title, data: data)
             try write(data, to: "materials/editor/\(assetName).\(fileExtension)")
             return try writeImageMaterial(name: assetName, texture: "editor/\(assetName)", normalMap: try normal?(assetName),
-                                          size: size, title: title)
+                                          size: size, title: title, cropOffset: cropOffset)
         }
         guard let encoder else { throw ImportError.needsEncoder(name) }
         let data = try encoder.texture(image, options: options)
         let assetName = Self.assetName(title, data: data)
         try write(data, to: "materials/editor/\(assetName).tex")
         return try writeImageMaterial(name: assetName, texture: "editor/\(assetName)", normalMap: try normal?(assetName),
-                                      size: size, title: title)
+                                      size: size, title: title, cropOffset: cropOffset)
     }
 
     /// Imports images as one animated texture, in their names' order (Finder's), each shown for
@@ -121,6 +123,18 @@ extension EditorAssetStore {
     /// The image cut to the rectangle of its pixels with any alpha, grown by `padding` (within the
     /// image); nil when nothing would be cut, or when it is fully transparent.
     public static func croppedToContent(_ image: CGImage, padding: Int) -> CGImage? {
+        contentCrop(image, padding: padding)?.image
+    }
+
+    /// `cropoffset` of a crop `rect` (top-left origin, rows down) of a `width` × `height` picture:
+    /// the rectangle's centre from the picture's, x right and y up. WE 2.8.0.42 (capture 545):
+    /// content 206…440 × 80…400 of 512 × 512, padding 50, gives "67.5 15.5".
+    static func cropOffset(_ rect: CGRect, width: Int, height: Int) -> SIMD2<Double> {
+        SIMD2(Double(rect.midX) - Double(width) / 2, Double(height) / 2 - Double(rect.midY))
+    }
+
+    /// `croppedToContent` with the rectangle it cut.
+    static func contentCrop(_ image: CGImage, padding: Int) -> (image: CGImage, rect: CGRect)? {
         let width = image.width, height = image.height
         guard width > 0, height > 0,
               let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
@@ -141,7 +155,8 @@ extension EditorAssetStore {
         let rect = CGRect(x: max(minX - pad, 0), y: max(minY - pad, 0),
                           width: min(maxX + pad, width - 1) - max(minX - pad, 0) + 1,
                           height: min(maxY + pad, height - 1) - max(minY - pad, 0) + 1)
-        guard rect.width < CGFloat(width) || rect.height < CGFloat(height) else { return nil }
-        return image.cropping(to: rect)
+        guard rect.width < CGFloat(width) || rect.height < CGFloat(height),
+              let cropped = image.cropping(to: rect) else { return nil }
+        return (cropped, rect)
     }
 }

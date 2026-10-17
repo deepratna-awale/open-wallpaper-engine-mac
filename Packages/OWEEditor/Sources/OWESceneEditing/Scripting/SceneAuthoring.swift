@@ -66,13 +66,26 @@ public struct SceneAuthoring: Codable, Hashable, Sendable {
     // MARK: Properties
 
     /// Writes the edited properties into a decoded project.json (`general.properties`); keeps it
-    /// as it was when they weren't edited.
+    /// as it was when they weren't edited. WE numbers them as its editor's property list does
+    /// (`editorUserProperties` sets `index` to each one's place, scheme colour left out, and the
+    /// editor writes `order` 100 + `index`; WE 2.8.0.42, capture 541): the scheme colour keeps
+    /// `order` 0 and no `index`.
     public func applyProperties(to project: inout [String: Any]) {
         guard let properties else { return }
         var general = project["general"] as? [String: Any] ?? [:]
         var entries: [String: Any] = [:]
-        for (order, property) in properties.enumerated() {
-            entries[property.key] = SceneJSONValue.object(property.json(order: order)).any
+        var index = 0
+        for property in properties {
+            var entry: [String: SceneJSONValue]
+            if property.key == "schemecolor" {
+                entry = property.json(order: 0)
+                entry["index"] = nil
+            } else {
+                entry = property.json(order: 100 + index)
+                entry["index"] = .number(Double(index))
+                index += 1
+            }
+            entries[property.key] = SceneJSONValue.object(entry).any
         }
         general["properties"] = entries
         project["general"] = general

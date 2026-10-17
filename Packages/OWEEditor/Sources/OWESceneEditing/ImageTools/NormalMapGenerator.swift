@@ -3,7 +3,8 @@ import Foundation
 /// WE's Normal Map Generation (the editor's material panel, Normal map › Generate): a normal map
 /// made from an image layer's picture, its **shape** from the outline of its opaque pixels and
 /// its **details** from its brightness, written as `<texture>_normal` and imported as a normal
-/// map (`rg88n`).
+/// map: RG88, as WE 2.8.0.42 writes a generated one (capture 544: `"format": "rg88"`, clamped,
+/// mipmapped; blue is rebuilt in the shader).
 ///
 /// The steps are those of `wallpaperui.exe` (`performGenerateNormalMap`, OpenCV 4.4):
 /// - Shape, at most 512 pixels on the long side: the alpha above 250, bordered with transparency

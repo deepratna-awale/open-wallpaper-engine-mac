@@ -2,7 +2,7 @@ import CoreGraphics
 import Foundation
 
 /// Normal Map Generation's result applied to an image layer, as WE's editor imports it: the map
-/// written as the picture's `<texture>_normal` (`rg88n`), set as the material's normal map
+/// written as the picture's `<texture>_normal` (RG88, WE's `rg88`), set as the material's normal map
 /// (`g_Texture1`). The material and model are copies in the edits' files and the layer's `image`
 /// names the copy, so the wallpaper's own files never change and Undo puts the old `image` back.
 extension SceneEditSession {

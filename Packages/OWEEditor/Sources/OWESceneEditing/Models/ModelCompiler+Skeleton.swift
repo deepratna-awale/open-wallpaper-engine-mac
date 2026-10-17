@@ -21,18 +21,38 @@ extension ModelCompiler {
         let rest: [simd_float4x4]
 
         init(_ source: ModelSource) {
-            var needed = Set<Int>()
-            let used = Set(source.meshes.flatMap { mesh in
+            // The nodes the skins deform with, and the node of each mesh without a skin, which
+            // moves with the model (capture 546: the static "Plinth" is a bone, flag 1, and its
+            // mesh is bound to it).
+            let skinBones = Set(source.meshes.flatMap { mesh -> [Int] in
                 (mesh.influences ?? []).flatMap { i in (0..<4).compactMap { i.weights[$0] > 0 ? Int(i.nodes[$0]) : nil } }
             })
-            for node in source.nodes.indices where source.nodes[node].isBone || used.contains(node) {
+            let meshNodes = Set(source.meshes.compactMap { $0.influences == nil && !$0.positions.isEmpty ? $0.node : nil })
+            let used = skinBones.union(meshNodes)
+            func chain(_ node: Int, into set: inout Set<Int>) {
                 var current: Int? = node
-                while let index = current, needed.insert(index).inserted { current = source.nodes[index].parent }
+                while let index = current, set.insert(index).inserted { current = source.nodes[index].parent }
             }
-            if !source.nodes.isEmpty { needed.insert(0) }
+            var skeleton = Set<Int>()
+            for node in source.nodes.indices where source.nodes[node].isBone || skinBones.contains(node) { chain(node, into: &skeleton) }
+            if !source.nodes.isEmpty { skeleton.insert(0) }
+            var needed = skeleton
+            for node in meshNodes { chain(node, into: &needed) }
+            // Parents first by depth; at a depth the skeleton's nodes (the skins' bones and
+            // their ancestors) before the other meshes' nodes, each in the file's order
+            // (capture 546 keeps RootNode, Rig, Plinth, root, arm: the armature Rig before
+            // the static Plinth, which the file lists first).
+            var depth = Array(repeating: 0, count: source.nodes.count)
+            for (index, node) in source.nodes.enumerated() {
+                if let parent = node.parent, parent < index { depth[index] = depth[parent] + 1 }
+            }
+            let order = source.nodes.indices.filter { needed.contains($0) }.sorted {
+                (depth[$0], skeleton.contains($0) ? 0 : 1, $0) < (depth[$1], skeleton.contains($1) ? 0 : 1, $1)
+            }
             var bones: [Bone] = []
             var map: [Int: Int] = [:]
-            for (index, node) in source.nodes.enumerated() where needed.contains(index) {
+            for index in order {
+                let node = source.nodes[index]
                 map[index] = bones.count
                 let name = node.parent == nil && node.name.isEmpty ? "RootNode" : node.name
                 bones.append(Bone(name: name, parent: node.parent.flatMap { map[$0] }, local: node.local,
@@ -52,15 +72,15 @@ extension ModelCompiler {
             return out
         }
 
-        /// A mesh without a skin in a skinned model moves with the root.
-        var rootInfluence: ModelSource.Influences {
-            ModelSource.Influences(nodes: .zero, weights: SIMD4(1, 0, 0, 0))
+        /// A mesh without a skin in a skinned model moves with its node (else the root).
+        func influence(of mesh: ModelSource.Mesh) -> ModelSource.Influences {
+            ModelSource.Influences(nodes: SIMD4(UInt32(mesh.node.flatMap { map[$0] } ?? 0), 0, 0, 0), weights: SIMD4(1, 0, 0, 0))
         }
 
         func children(of bone: Int) -> [Int] { nodes.indices.filter { nodes[$0].parent == bone } }
 
-        /// The `MDLS0004` body: bones with their properties JSON (the configuration's physics,
-        /// compiled as Puppet Warp's are), no links, constraints, maps or IK sets, and the bone
+        /// The `MDLS0004` body: bones with their properties JSON (the configuration's
+        /// constraint, `ModelCompiler.compiledConstraint`), no links, constraints, maps or IK sets, and the bone
         /// boxes; no draw-order arrays.
         func section(meshes: [CompiledMesh], config: ModelImportConfig) -> [UInt8] {
             var out = PuppetMDLOutput()
@@ -72,10 +92,11 @@ extension ModelCompiler {
                 out.u32(64)
                 out.matrix(bone.local)
                 var properties = ""
-                if let physics = config.constraints[bone.name] {
+                if config.constraints[bone.name] != nil || config.constraintSettings[bone.name] != nil {
                     let child = children(of: index).first
                     let distance = child.map { simd_distance(origin(rest[$0]), origin(rest[index])) }
-                    properties = PuppetMDLWriter.propertiesJSON(physics.properties(childDistance: distance))
+                    properties = PuppetMDLWriter.propertiesJSON(ModelCompiler.compiledConstraint(config, bone: bone.name,
+                                                                                                 childDistance: distance))
                 }
                 out.cstring(properties)
             }
@@ -166,10 +187,11 @@ extension ModelCompiler {
             var events: [(Float, String)]
         }
 
-        /// The animations (ids 1, 2, …) and then the configuration's clips cut from them.
+        /// The animations (`animationmapping`'s ids, else 1, 2, …) and then the configuration's
+        /// clips cut from them.
         func records(_ tracks: [Track], config: ModelImportConfig) -> [Record] {
-            var records: [Record] = tracks.enumerated().map { index, track in
-                let id = ModelCompiler.animationID(index)
+            let ids = config.animationIDs(tracks.map(\.name))
+            var records: [Record] = zip(ids, tracks).map { id, track in
                 return Record(id: id, name: track.name, mode: "loop", fps: track.fps, frames: max(track.frames, 1), flags: 0,
                               samples: track.samples, reference: nil, events: events(config, id))
             }
@@ -182,7 +204,9 @@ extension ModelCompiler {
                 let samples = source.samples.map { bone in
                     (0...frames).map { frame in bone[min(start + frame, bone.count - 1)] }
                 }
-                var flags: UInt32 = 0x1 | UInt32(clip.motionFlags) << 8
+                // The clip record (0x1), Match loop (0x400) and the configuration's `motionflags`
+                // as they are (capture 546: 43008 with Match loop is 0xAC01).
+                var flags: UInt32 = 0x1 | clip.motionFlags & ~0x4FF
                 if clip.matchLoop { flags |= 0x400 }
                 let rootBone = clip.rootMotion.isEmpty ? -1 : Int32(index(of: clip.rootMotion) ?? -1)
                 records.append(Record(id: clip.id, name: clip.name, mode: clip.mode, fps: clip.fps ?? source.fps, frames: frames,
@@ -266,5 +290,42 @@ extension ModelCompiler {
             }
             return low.x > high.x ? (.zero, .zero) : (low, high)
         }
+    }
+}
+
+extension ModelCompiler {
+    /// A bone's properties JSON as WE's compiler writes it from the configuration's constraint
+    /// (`resourcecompiler64.exe` 0x1400b0270; capture 546): every setting the Model Editor saves
+    /// (`ModelImportConfig.constraintConfig`) passed through, with
+    /// - `tp`, the tip: the forward direction `a` times the tip size `s` (0: the distance to the
+    ///   first child, else 100), as `"%.5f %.5f %.5f"`;
+    /// - `lamin`/`lamax`, when both are strings, `rax`/`ray`/`raz` are bools and both limits'
+    ///   z angles are non-zero: the z angle on each simulated axis, 0 on the others (WE's 3D
+    ///   editor limits one angle; "0 0 ±π/2" with every axis on compiles to "±1.57080" thrice);
+    /// - `tm` 10 when it isn't above 0.
+    public static func compiledConstraint(_ config: ModelImportConfig, bone: String, childDistance: Float?) -> [String: SceneJSONValue] {
+        var settings = config.constraintConfig(bone)
+        let physics = config.constraints[bone]
+        if let physics {
+            settings.merge(physics.properties(childDistance: childDistance)) { old, new in ModelImportConfig.sameSetting(old, new) ? old : new }
+        }
+        if physics == nil {
+            var tip = PuppetBonePhysics()
+            tip.tipSize = Float(settings["s"]?.numberValue ?? 0)
+            if case .string(let a)? = settings["a"] { tip.forward = PuppetPhysicsConstraint.vector(a) }
+            settings["tp"] = .string(PuppetBonePhysics.tipString(tip.tip(childDistance: childDistance)))
+        }
+        func axis(_ key: String) -> Bool? { if case .bool(let on)? = settings[key] { return on } else { return nil } }
+        if case .string(let low)? = settings["lamin"], case .string(let high)? = settings["lamax"],
+           let x = axis("rax"), let y = axis("ray"), let z = axis("raz") {
+            let lowZ = PuppetPhysicsConstraint.vector(low).z, highZ = PuppetPhysicsConstraint.vector(high).z
+            if lowZ != 0, highZ != 0 {
+                func limit(_ angle: Float) -> SIMD3<Float> { SIMD3(x ? angle : 0, y ? angle : 0, z ? angle : 0) }
+                settings["lamin"] = .string(PuppetBonePhysics.tipString(limit(lowZ)))
+                settings["lamax"] = .string(PuppetBonePhysics.tipString(limit(highZ)))
+            }
+        }
+        if (settings["tm"]?.numberValue ?? 0) <= 0 { settings["tm"] = .number(10) }
+        return settings
     }
 }
