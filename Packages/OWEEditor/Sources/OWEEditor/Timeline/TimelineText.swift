@@ -1,11 +1,10 @@
 import Foundation
+import OWEInspectorKit
 import OWESceneEditing
 
 /// The timeline's text, from its own catalog (`Resources/Timeline.xcstrings`), in every language
 /// the app ships. Whole numbers in it are interpolated as `number`.
-func T(_ key: String.LocalizationValue) -> String {
-    String(localized: key, table: "Timeline", bundle: .module)
-}
+let T = EditorText(table: "Timeline")
 
 extension TimelineEase {
     var title: String {

@@ -1,4 +1,5 @@
 import Foundation
+import OWESceneEditing
 
 /// A resolved shader constant: one to four (or more, for arrays) float components.
 ///
@@ -14,7 +15,7 @@ struct ShaderValue: Equatable {
     /// Parses a WE value string. Accepts "1", "1 0.5 0.25", extra/leading/trailing whitespace,
     /// and "true"/"false". Returns nil if any token is not a number.
     init?(string: String) {
-        let tokens = string.split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" || $0 == "," })
+        let tokens = SceneVector.tokens(string, separatedBy: .whitespaceAndCommas)
         guard !tokens.isEmpty else { return nil }
         if tokens.count == 1 {
             switch tokens[0].lowercased() {

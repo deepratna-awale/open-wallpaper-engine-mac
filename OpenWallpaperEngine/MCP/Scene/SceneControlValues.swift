@@ -56,7 +56,7 @@ enum SceneControlValues {
 
     /// A vector of `count` numbers given as `"x y z"` (or fewer: the rest from `fallback`).
     static func vector(_ text: String, count: Int, fallback: [Double], name: String) throws -> [Double] {
-        let parts = text.split(whereSeparator: { $0 == " " || $0 == "," }).map(String.init)
+        let parts = SceneVector.tokens(text).map(String.init)
         let numbers = parts.compactMap(Double.init)
         guard !parts.isEmpty, numbers.count == parts.count, numbers.count <= count else {
             throw ControlError(.invalidParams, "\(name) must be up to \(count) numbers separated by spaces, such as \"\(Array(repeating: "0", count: count).joined(separator: " "))\".")

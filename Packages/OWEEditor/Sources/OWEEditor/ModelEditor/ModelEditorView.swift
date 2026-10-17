@@ -4,9 +4,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 /// The Model Editor's text, from its own catalog (`Resources/ModelEditor.xcstrings`).
-func ML(_ key: String.LocalizationValue) -> String {
-    String(localized: key, table: "ModelEditor", bundle: .module)
-}
+let ML = EditorText(table: "ModelEditor")
 
 /// WE's Model Editor (Configure Model; `editormodeleditormodal.html` in WE 2.8): the tabs
 /// Animation, Attachments, Events and Constraints, and Materials for what WE puts in Advanced

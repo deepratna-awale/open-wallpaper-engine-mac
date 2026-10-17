@@ -1,12 +1,11 @@
 import CoreGraphics
 import Foundation
+import OWEInspectorKit
 import OWESceneEditing
 
 /// The puppet editor's text, from its own table (`Resources/Puppets.xcstrings`), in every
 /// language the app ships.
-func PL(_ key: String.LocalizationValue) -> String {
-    String(localized: key, table: "Puppets", bundle: .module)
-}
+let PL = EditorText(table: "Puppets")
 
 /// What the puppet editor reads of the wallpaper, from the app: its files (from its package or
 /// folder) and an image layer's picture, decoded as the renderer decodes it.

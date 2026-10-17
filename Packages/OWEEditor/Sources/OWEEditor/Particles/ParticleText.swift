@@ -1,11 +1,10 @@
 import Foundation
+import OWEInspectorKit
 import OWESceneEditing
 
 /// The particle editor's text, from its own catalog (`Particles/Resources/Particles.xcstrings`),
 /// which holds every language the app ships.
-func PartL(_ key: String.LocalizationValue) -> String {
-    String(localized: key, table: "Particles", bundle: .module)
-}
+let PartL = EditorText(table: "Particles")
 
 /// A text the schema names (a field's label, a component's name, an option): WE's English
 /// wording, translated by the same catalog.

@@ -1,13 +1,12 @@
 import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
+import OWEInspectorKit
 import OWESceneEditing
 
 /// The texture variants' text, from their own table (`Resources/TextureVariants.xcstrings`), in
 /// every language the app ships; WE's own wording (`ui_editor_properties_*variant*`) where it has one.
-func TVL(_ key: String.LocalizationValue) -> String {
-    String(localized: key, table: "TextureVariants", bundle: .module)
-}
+let TVL = EditorText(table: "TextureVariants")
 
 /// WE's Texture Properties › Variants for an image layer's texture (WE 2.6; `scripts.js`
 /// `textureAddVariant`, the `texturevariant` row): Add Variant Group, and per group its options,

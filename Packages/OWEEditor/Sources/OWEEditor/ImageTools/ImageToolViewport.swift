@@ -1,11 +1,10 @@
 import AppKit
 import SwiftUI
+import OWEInspectorKit
 
 /// The image tools' text, from their own table (`Resources/ImageTools.xcstrings`), in every
 /// language the app ships; WE's own wording (`ui_editor_character_separation_*`) where it has one.
-func IL(_ key: String.LocalizationValue) -> String {
-    String(localized: key, table: "ImageTools", bundle: .module)
-}
+let IL = EditorText(table: "ImageTools")
 
 /// Where an image tool's picture (its pixels, y down) lands in its canvas: fitted, zoomed about
 /// the pointer, panned (WE's tools: the wheel zooms, a drag with the other button pans).
