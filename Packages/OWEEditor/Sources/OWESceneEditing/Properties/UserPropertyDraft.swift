@@ -121,8 +121,9 @@ public struct UserPropertyDraft: Codable, Hashable, Sendable, Identifiable {
     }
 
     /// The keys this type reads; everything else lands in `extra`.
+    /// `index` is WE's numbering, written again from the list's order (`SceneAuthoring.applyProperties`).
     static let modelledKeys: Set<String> = ["type", "text", "value", "min", "max", "step", "precision", "fraction",
-                                            "options", "condition", "order"]
+                                            "options", "condition", "order", "index"]
 
     /// Read from a project.json entry.
     public init(key: String, raw: [String: SceneJSONValue]) {
@@ -260,16 +261,15 @@ public struct UserPropertyDraft: Codable, Hashable, Sendable, Identifiable {
         return draft
     }
 
-    /// A key from `label`: lower-case letters, digits and underscores, starting with a letter,
-    /// not one of `taken` (a number is appended).
+    /// A key from `label` as WE's Add Property dialog makes one (`EditorUserPropertyDetailsModalCtrl`:
+    /// `key.toLowerCase().replace(/\W+/g, "")`, a leading digit prefixed with `_`, nothing left
+    /// giving `newproperty`; WE 2.8.0.42, capture 541: "Custom texture" is `customtexture`), not one
+    /// of `taken` (a number is appended).
     public static func key(from label: String, taken: Set<String>) -> String {
-        let folded = label.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: nil).lowercased()
-        var base = String(folded.unicodeScalars.map { scalar -> Character in
-            CharacterSet.alphanumerics.contains(scalar) && scalar.isASCII ? Character(scalar) : "_"
-        })
-        while base.contains("__") { base = base.replacingOccurrences(of: "__", with: "_") }
-        base = base.trimmingCharacters(in: CharacterSet(charactersIn: "_"))
-        if base.isEmpty || base.first!.isNumber { base = "property" + (base.isEmpty ? "" : "_" + base) }
+        var base = String(label.lowercased().unicodeScalars.filter { scalar in
+            scalar.isASCII && (CharacterSet.alphanumerics.contains(scalar) || scalar == "_")
+        }.map(Character.init))
+        if base.isEmpty { base = "newproperty" } else if base.first!.isNumber { base = "_" + base }
         guard taken.contains(base) else { return base }
         var number = 2
         while taken.contains("\(base)\(number)") { number += 1 }

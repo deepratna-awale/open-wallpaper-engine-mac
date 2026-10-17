@@ -153,4 +153,55 @@ final class PuppetEditorTests: XCTestCase {
         workspace.updateClip("Change Frame Rate") { $0.fps = 24 }
         XCTAssertEqual(workspace.clip?.fps, 24)
     }
+
+    /// Clipping Masks: a limb assigned a new mask paints it, and the painting names the limbs it
+    /// covers; every step is one undo.
+    @MainActor
+    func testAClippingMaskIsAssignedAndPainted() throws {
+        let session = try session()
+        var saved: [Data] = []
+        let assets = PuppetEditorAssets(readFile: { _ in nil }, image: { _ in nil },
+                                        saveMask: { saved.append($0); return "masks/editor_clipping_mask_test" })
+        let workspace = PuppetWorkspace(session: session, layerID: 1, source: Self.source(), assets: assets)
+        defer { workspace.stop() }
+        workspace.createPuppet()
+        // Two separate limbs: the left and right halves of the picture.
+        workspace.edit("Two Limbs") { document in
+            func quad(_ x0: Float, _ x1: Float) -> [PuppetVertex] {
+                [SIMD2(x0, -64), SIMD2(x1, -64), SIMD2(x1, 64), SIMD2(x0, 64)].map {
+                    PuppetVertex(position: $0, uv: document.textureCoordinate(of: $0))
+                }
+            }
+            document.replaceMesh(PuppetMesh(vertices: quad(-32, 0) + quad(0, 32),
+                                            triangles: [SIMD3(0, 1, 2), SIMD3(0, 2, 3), SIMD3(4, 5, 6), SIMD3(4, 6, 7)]))
+            document.weights = document.mesh.vertices.map { _ in [PuppetWeight(bone: 0, weight: 1)] }
+        }
+        workspace.tool = .clipping
+        workspace.selectedLimb = workspace.document?.limb(at: SIMD2(16, 0))
+        XCTAssertEqual(workspace.selectedLimb, 1)
+        workspace.assignNewClippingMask(named: "maskA")
+        let mask = try XCTUnwrap(workspace.selectedLimbMask)
+        XCTAssertEqual(mask.name, "maskA")
+        let painting = try XCTUnwrap(workspace.clippingPainting, "a new mask opens for painting")
+        painting.brushSize = 20
+        painting.begin(at: SIMD2(-16, 0))
+        painting.end()
+        workspace.finishPaintingClippingMask()
+        XCTAssertNil(workspace.clippingPainting)
+        XCTAssertEqual(saved.count, 1)
+        let painted = try XCTUnwrap(workspace.document?.clipping?.mask(mask.id))
+        XCTAssertEqual(painted.texture, "masks/editor_clipping_mask_test")
+        XCTAssertEqual(painted.maskingLimbs, [0])
+
+        workspace.updateClippingMask(mask.id) { $0.invert = true }
+        workspace.setClippingAdditive(true)
+        XCTAssertEqual(workspace.document?.clipping?.mask(mask.id)?.invert, true)
+        XCTAssertEqual(workspace.document?.clipping?.limbs[1]?.additive, true)
+        session.undo() // additive
+        session.undo() // invert
+        session.undo() // the painting
+        XCTAssertEqual(workspace.document?.clipping?.mask(mask.id)?.maskingLimbs, [])
+        workspace.removeClippingMask()
+        XCTAssertNil(workspace.document?.clipping)
+    }
 }

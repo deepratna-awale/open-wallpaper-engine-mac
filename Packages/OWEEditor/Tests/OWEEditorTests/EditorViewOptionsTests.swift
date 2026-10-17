@@ -21,7 +21,7 @@ final class EditorViewOptionsTests: XCTestCase {
             case .separator: return "—"
             }
         }
-        XCTAssertEqual(titles, ["Reset Camera", "Preview Aspect Ratio (4)", "—", "Show Grid", "Show Selection Box", "Show Debug (2)",
+        XCTAssertEqual(titles, ["Reset Camera", "Preview Aspect Ratio (4)", "—", "Show Grid", "Show Selection Box", "Show Debug (3)",
                                 "—", "Show Desktop Preview", "Show Phone Preview", "Low FPS Simulation"])
         XCTAssertEqual(EditorViewOptions.PreviewRatio.allCases.map(\.title), ["4 : 3", "16 : 10", "16 : 9", "21 : 9"])
         XCTAssertEqual(EditorViewOptions.lowFrameRate, 22)
@@ -37,12 +37,14 @@ final class EditorViewOptionsTests: XCTestCase {
         options.showsSelectionBox = false
         options.previewRatio = .twentyOneNine
         options.simulatesLowFrameRate = true
+        options.showsHitboxes = true
         options.toggle(.desktop)
         let again = EditorViewOptions(defaults: store)
         XCTAssertTrue(again.showsGrid)
         XCTAssertFalse(again.showsSelectionBox)
         XCTAssertEqual(again.previewRatio, .twentyOneNine)
         XCTAssertTrue(again.simulatesLowFrameRate)
+        XCTAssertTrue(again.showsHitboxes)
         XCTAssertNil(again.preview, "a preview lasts while its window is open")
     }
 

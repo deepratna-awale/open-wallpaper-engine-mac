@@ -25,6 +25,7 @@ struct LayerPropertiesSections: View {
                 LayerToggleRow(session: session, services: services, layerID: layer.id, field: "clampuvs", title: L("Clamp UVs"))
             }
             LayerLightingSection(session: session, services: services, layer: layer)
+            TextureVariantsSection(session: session, services: services, layer: layer)
         }
     }
 

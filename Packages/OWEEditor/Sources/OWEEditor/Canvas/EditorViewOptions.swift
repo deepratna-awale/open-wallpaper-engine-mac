@@ -48,6 +48,7 @@ public final class EditorViewOptions: ObservableObject {
     @Published public var showsGrid: Bool { didSet { store(showsGrid, Keys.grid) } }
     @Published public var showsSelectionBox: Bool { didSet { store(showsSelectionBox, Keys.selectionBox) } }
     @Published public var showsParticleCollision: Bool { didSet { store(showsParticleCollision, Keys.particleCollision) } }
+    @Published public var showsHitboxes: Bool { didSet { store(showsHitboxes, Keys.hitboxes) } }
     @Published public var previewRatio: PreviewRatio { didSet { defaults?.set(previewRatio.rawValue, forKey: Keys.previewRatio) } }
     @Published public var simulatesLowFrameRate: Bool { didSet { store(simulatesLowFrameRate, Keys.lowFrameRate) } }
     /// Desktop or Phone Preview, while one is on.
@@ -61,6 +62,7 @@ public final class EditorViewOptions: ObservableObject {
         static let grid = "WallpaperEditorShowGrid"
         static let selectionBox = "WallpaperEditorShowSelectionBox"
         static let particleCollision = "WallpaperEditorShowParticleCollision"
+        static let hitboxes = "WallpaperEditorShowHitboxes"
         static let previewRatio = "WallpaperEditorPreviewRatio"
         static let lowFrameRate = "WallpaperEditorLowFPSSimulation"
     }
@@ -72,6 +74,7 @@ public final class EditorViewOptions: ObservableObject {
         showsGrid = defaults?.object(forKey: Keys.grid) as? Bool ?? false
         showsSelectionBox = defaults?.object(forKey: Keys.selectionBox) as? Bool ?? true
         showsParticleCollision = defaults?.object(forKey: Keys.particleCollision) as? Bool ?? false
+        showsHitboxes = defaults?.object(forKey: Keys.hitboxes) as? Bool ?? false
         previewRatio = (defaults?.string(forKey: Keys.previewRatio)).flatMap(PreviewRatio.init(rawValue:)) ?? .sixteenNine
         simulatesLowFrameRate = defaults?.object(forKey: Keys.lowFrameRate) as? Bool ?? false
     }

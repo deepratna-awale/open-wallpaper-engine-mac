@@ -7,8 +7,9 @@ import simd
 /// resource compiler reads one with Assimp: the file's own axes and units (no conversion: WE
 /// keeps the FBX's node transforms, such as Blender's 100× scale and −90° turn, in the nodes),
 /// each mesh node's parts split per material, polygons as fans from their first corner (a
-/// concave quad from its reflex corner; larger polygons by ufbx's triangulation), and the
-/// animation stacks sampled at the file's frame rate (docs/model-import.md).
+/// concave quad from its reflex corner; larger polygons by ufbx's triangulation) sharing their
+/// corners, the skin's bind pose as the rest pose, and the animation stacks turned into tracks
+/// as WE turns Assimp's keys into them (docs/model-import.md).
 public enum ModelFileLoader {
     /// The source formats WE's importer offers that ufbx reads. WE's Assimp also reads .blend,
     /// .dae, .3ds, .lxo and .gltf (`resourcecompiler64.exe`'s list); this importer doesn't.
@@ -143,13 +144,42 @@ private struct Reader {
         }
         // Depth-first order keeps parents first.
         let skinned = skinBones()
+        // The rest pose is the skin's bind pose (capture 546: WE's bones and skinned vertices
+        // are where the skin was bound, not where the file's current frame left the bones): a
+        // bone a skin binds is at its bind matrix, every other node where its parent's rest
+        // and its own transform put it.
+        let binds = bindPoses()
+        var rest: [simd_double4x4] = []
         for node in nodes {
             let n = node.pointee
-            source.nodes.append(ModelSource.Node(name: ModelFileLoader.string(n.name),
-                                                 parent: n.parent.flatMap { nodeIndex[$0.pointee.typed_id] },
-                                                 local: Self.matrix(n.node_to_parent),
+            let parent = n.parent.flatMap { nodeIndex[$0.pointee.typed_id] }
+            let parentRest = parent.map { rest[$0] } ?? matrix_identity_double4x4
+            let world = binds[n.typed_id] ?? parentRest * Self.doubleMatrix(n.node_to_parent)
+            rest.append(world)
+            let local = binds[n.typed_id] == nil ? Self.doubleMatrix(n.node_to_parent) : parentRest.inverse * world
+            source.nodes.append(ModelSource.Node(name: ModelFileLoader.string(n.name), parent: parent,
+                                                 local: Self.floatMatrix(local),
                                                  isBone: n.bone != nil || skinned.contains(n.typed_id)))
         }
+    }
+
+    /// Each skinned bone's bind matrix (its first cluster's), by typed id.
+    func bindPoses() -> [UInt32: simd_double4x4] {
+        var binds: [UInt32: simd_double4x4] = [:]
+        for index in 0..<scene.skin_clusters.count {
+            guard let cluster = scene.skin_clusters.data[index]?.pointee, let bone = cluster.bone_node else { continue }
+            if binds[bone.pointee.typed_id] == nil { binds[bone.pointee.typed_id] = Self.doubleMatrix(cluster.bind_to_world) }
+        }
+        return binds
+    }
+
+    static func floatMatrix(_ m: simd_double4x4) -> simd_float4x4 {
+        simd_float4x4(columns: (SIMD4<Float>(m.columns.0), SIMD4<Float>(m.columns.1), SIMD4<Float>(m.columns.2), SIMD4<Float>(m.columns.3)))
+    }
+
+    static func doubleMatrix(_ m: ufbx_matrix) -> simd_double4x4 {
+        simd_double4x4(columns: (SIMD4(m.m00, m.m10, m.m20, 0), SIMD4(m.m01, m.m11, m.m21, 0),
+                                 SIMD4(m.m02, m.m12, m.m22, 0), SIMD4(m.m03, m.m13, m.m23, 1)))
     }
 
     /// Nodes a skin cluster deforms with, by typed id.
@@ -209,14 +239,14 @@ private struct Reader {
         let skin: ufbx_skin_deformer? = mesh.skin_deformers.count > 0 ? mesh.skin_deformers.data[0]?.pointee : nil
         let geometryToWorld = node.geometry_to_world
         let normalMatrix = ufbx_matrix_for_normals([geometryToWorld])
-        // Per cluster: the bone's rest world times the geometry's inverse bind (geometry → model space).
+        // Per cluster: the bone's bind matrix times the geometry's inverse bind (geometry → model space).
         var clusterMatrices: [ufbx_matrix] = []
         var clusterNodes: [Int] = []
         if let skin {
             for index in 0..<skin.clusters.count {
                 guard let cluster = skin.clusters.data[index]?.pointee else { continue }
                 if let bone = cluster.bone_node {
-                    clusterMatrices.append(ufbx_matrix_mul([bone.pointee.node_to_world], [cluster.geometry_to_bone]))
+                    clusterMatrices.append(ufbx_matrix_mul([cluster.bind_to_world], [cluster.geometry_to_bone]))
                     clusterNodes.append(nodeIndex[bone.pointee.typed_id] ?? 0)
                 } else {
                     clusterMatrices.append(geometryToWorld)
@@ -238,11 +268,13 @@ private struct Reader {
             var material: Int?
             if part < materials.count, let pointer = materials.data[part] { material = Int(pointer.pointee.typed_id) }
             var out = ModelSource.Mesh(name: name, material: material, positions: [])
+            out.node = nodeIndex[node.typed_id]
             var normals: [SIMD3<Float>] = []
             var uvs: [SIMD2<Float>] = []
             var secondUVs: [SIMD2<Float>] = []
             var influences: [ModelSource.Influences] = []
             var tangents: [SIMD3<Float>] = []
+            var vertices: [Int] = []
             var bitangents: [SIMD3<Float>] = []
             let hasTangents = mesh.vertex_tangent.exists && mesh.vertex_bitangent.exists
             let hasSecondUV = mesh.uv_sets.count > 1
@@ -252,6 +284,7 @@ private struct Reader {
                 let corners = Self.triangulate(face, mesh: mesh, scratch: &triangle)
                 for corner in corners {
                     let index = Int(corner)
+                    vertices.append(index)
                     let p = ufbx_get_vertex_vec3([mesh.vertex_position], index)
                     let n = mesh.vertex_normal.exists ? ufbx_get_vertex_vec3([mesh.vertex_normal], index) : nil
                     let t = hasTangents ? ufbx_get_vertex_vec3([mesh.vertex_tangent], index) : nil
@@ -342,6 +375,7 @@ private struct Reader {
                 out.bitangents = bitangents
             }
             if skin != nil { out.influences = influences }
+            out.vertices = vertices
             source.meshes.append(out)
         }
     }
@@ -379,27 +413,146 @@ private struct Reader {
 
     // MARK: Animations
 
+    /// Each animation stack as WE's compiler turns Assimp's animation into `MDLA` tracks
+    /// (`resourcecompiler64.exe` 0x14009fa53…, capture 546):
+    /// - Assimp's keys: per node, the times of its translation, rotation and scaling curves
+    ///   (each property's x, y and z curves together), every curve read linearly at them (Assimp
+    ///   doesn't read the curves' tangents), the rotation's Euler angles turned into a
+    ///   quaternion in the node's rotation order; times in frames, `seconds · fps`.
+    /// - WE's tracks: every key at its frame truncated to a whole one (a key a hair before its
+    ///   frame lands on the frame before, over the key there), the quaternion back into Euler
+    ///   angles, and per value a linear curve through those frames sampled at every frame; the
+    ///   last frame (the animation's length) samples the first, as the clip loops.
+    /// - A node no curve animates keeps its rest pose. A node with a pivot, offset or pre/post
+    ///   rotation (which Assimp splits into helper nodes this importer doesn't make) is
+    ///   evaluated whole at each frame instead.
     mutating func readAnimations() {
         var fps = Float(scene.settings.frames_per_second)
         if !(fps > 0) || !fps.isFinite { fps = 30 }
         for index in 0..<scene.anim_stacks.count {
             guard let stack = scene.anim_stacks.data[index]?.pointee, let anim = stack.anim else { continue }
             let duration = max(stack.time_end - stack.time_begin, 0)
-            let frames = max(Int((duration * Double(fps)).rounded()), 1)
+            let frames = max(Int(duration * Double(fps)), 1)
+            let layer: UnsafeMutablePointer<ufbx_anim_layer>? = stack.layers.count > 0 ? stack.layers.data[0] : nil
             var samples: [[PuppetTransform]] = []
             samples.reserveCapacity(nodes.count)
-            for node in nodes {
-                var track: [PuppetTransform] = []
-                track.reserveCapacity(frames + 1)
-                for frame in 0...frames {
-                    var transform = ufbx_evaluate_transform(anim, node, stack.time_begin + Double(frame) / Double(fps))
-                    let matrix = Self.matrix(ufbx_transform_to_matrix(&transform))
-                    track.append(PuppetTransform(matrix: matrix))
+            for (nodeIndex, node) in nodes.enumerated() {
+                if Self.hasComplexTransform(node.pointee) {
+                    samples.append((0...frames).map { frame in
+                        var transform = ufbx_evaluate_transform(anim, node, stack.time_begin + Double(frame) / Double(fps))
+                        return PuppetTransform(matrix: Self.matrix(ufbx_transform_to_matrix(&transform)))
+                    })
+                    continue
+                }
+                guard let layer, let track = Self.track(of: node, layer: layer, begin: stack.time_begin, fps: Double(fps),
+                                                        frames: frames) else {
+                    samples.append([PuppetTransform(matrix: source.nodes[nodeIndex].local)])
+                    continue
                 }
                 samples.append(track)
             }
             source.animations.append(ModelSource.Animation(name: ModelFileLoader.string(stack.name), fps: fps, frames: frames,
                                                            samples: samples))
+        }
+    }
+
+    static func hasComplexTransform(_ node: ufbx_node) -> Bool {
+        var props = node.props
+        for name in ["PreRotation", "PostRotation", "RotationOffset", "RotationPivot", "ScalingOffset", "ScalingPivot"] {
+            let value = name.withCString { ufbx_find_vec3_len(&props, $0, name.utf8.count, ufbx_vec3()) }
+            if value.x != 0 || value.y != 0 || value.z != 0 { return true }
+        }
+        return false
+    }
+
+    /// One property's x, y and z curves (nil: the property isn't animated) and its value
+    /// without them.
+    static func curves(_ node: UnsafeMutablePointer<ufbx_node>, _ name: String,
+                       layer: UnsafeMutablePointer<ufbx_anim_layer>) -> [UnsafeMutablePointer<ufbx_anim_curve>?]? {
+        // The node's element is its first member: the props are found by its address.
+        let element = UnsafeRawPointer(node).assumingMemoryBound(to: ufbx_element.self)
+        guard let prop = name.withCString({ ufbx_find_anim_prop_len(layer, element, $0, name.utf8.count) }),
+              let value = prop.pointee.anim_value else { return nil }
+        let curves = withUnsafeBytes(of: value.pointee.curves) { Array($0.bindMemory(to: UnsafeMutablePointer<ufbx_anim_curve>?.self)) }
+        return curves.contains { $0 != nil } ? curves : nil
+    }
+
+    /// A curve read linearly between its keys at `time` (Assimp's InterpolateKeys), its
+    /// first or last key outside them; `fallback` without keys.
+    static func linear(_ curve: UnsafeMutablePointer<ufbx_anim_curve>?, at time: Double, fallback: Double) -> Double {
+        guard let keys = curve?.pointee.keyframes, keys.count > 0 else { return fallback }
+        let first = keys.data[0], last = keys.data[keys.count - 1]
+        if time <= first.time { return Double(first.value) }
+        if time >= last.time { return Double(last.value) }
+        var upper = 1
+        while upper < keys.count - 1, keys.data[upper].time < time { upper += 1 }
+        let a = keys.data[upper - 1], b = keys.data[upper]
+        let t = b.time > a.time ? (time - a.time) / (b.time - a.time) : 0
+        return Double(a.value) + (Double(b.value) - Double(a.value)) * t
+    }
+
+    /// The node's track: Assimp's keys per property, WE's per-frame curves through them.
+    static func track(of pointer: UnsafeMutablePointer<ufbx_node>, layer: UnsafeMutablePointer<ufbx_anim_layer>, begin: Double,
+                      fps: Double, frames: Int) -> [PuppetTransform]? {
+        let translation = curves(pointer, "Lcl Translation", layer: layer)
+        let rotation = curves(pointer, "Lcl Rotation", layer: layer)
+        let scaling = curves(pointer, "Lcl Scaling", layer: layer)
+        let node = pointer.pointee
+        guard translation != nil || rotation != nil || scaling != nil else { return nil }
+        let local = node.local_transform
+        let rest = PuppetTransform(matrix: Self.matrix(node.node_to_parent))
+        var props = node.props
+        func defaults(_ name: String, _ fallback: ufbx_vec3) -> SIMD3<Double> {
+            let v = name.withCString { ufbx_find_vec3_len(&props, $0, name.utf8.count, fallback) }
+            return SIMD3(Double(v.x), Double(v.y), Double(v.z))
+        }
+        let defaultT = defaults("Lcl Translation", local.translation)
+        let defaultR = defaults("Lcl Rotation", ufbx_vec3())
+        let defaultS = defaults("Lcl Scaling", local.scale)
+        /// Assimp's keys of one property: the frames (truncated) and values, in time order.
+        func keys(_ curves: [UnsafeMutablePointer<ufbx_anim_curve>?]?, _ fallback: SIMD3<Double>) -> [(Int, SIMD3<Double>)]? {
+            guard let curves else { return nil }
+            var times = Set<Double>()
+            for curve in curves {
+                guard let keys = curve?.pointee.keyframes else { continue }
+                for k in 0..<keys.count { times.insert(keys.data[k].time) }
+            }
+            return times.sorted().map { time in
+                let value = SIMD3((0..<3).map { linear(curves[$0], at: time, fallback: fallback[$0]) })
+                return (Int((time - begin) * fps), value)
+            }
+        }
+        /// WE's curve through keyed frames, sampled at `frame` (the last key at a frame wins).
+        func sample(_ keyed: [(Int, SIMD3<Float>)], _ frame: Int) -> SIMD3<Float> {
+            var byFrame: [Int: SIMD3<Float>] = [:]
+            for (f, v) in keyed { byFrame[f] = v }
+            let frameList = byFrame.keys.sorted()
+            let f = frame >= frames ? 0 : frame
+            guard let firstFrame = frameList.first, let lastFrame = frameList.last else { return .zero }
+            if f <= firstFrame { return byFrame[firstFrame]! }
+            if f >= lastFrame { return byFrame[lastFrame]! }
+            let upper = frameList.first { $0 >= f }!
+            if upper == f { return byFrame[f]! }
+            let lower = frameList.last { $0 < f }!
+            let t = Float(f - lower) / Float(upper - lower)
+            return byFrame[lower]! + (byFrame[upper]! - byFrame[lower]!) * t
+        }
+        let order = node.rotation_order
+        let positions = keys(translation, defaultT)?.map { ($0.0, SIMD3<Float>($0.1)) }
+        let scales = keys(scaling, defaultS)?.map { ($0.0, SIMD3<Float>($0.1)) }
+        let angles = keys(rotation, defaultR)?.map { key -> (Int, SIMD3<Float>) in
+            var euler = ufbx_vec3()
+            euler.x = key.1.x
+            euler.y = key.1.y
+            euler.z = key.1.z
+            let q = ufbx_euler_to_quat(euler, order)
+            let m = simd_float3x3(simd_quatf(ix: Float(q.x), iy: Float(q.y), iz: Float(q.z), r: Float(q.w)))
+            return (key.0, PuppetMath.angles(m))
+        }
+        return (0...frames).map { frame in
+            PuppetTransform(translation: positions.map { sample($0, frame) } ?? rest.translation,
+                            euler: angles.map { sample($0, frame) } ?? rest.euler,
+                            scale: scales.map { sample($0, frame) } ?? rest.scale)
         }
     }
 

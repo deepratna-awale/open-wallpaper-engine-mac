@@ -54,7 +54,7 @@ final class EditorAuthoringModel: ObservableObject {
     init(session: SceneEditSession, projectJSON: Data?, console: SceneScriptConsoleFeed?,
          services: WallpaperEditorServices? = nil) {
         self.session = session
-        properties = UserPropertyAuthoring(session: session, projectJSON: projectJSON)
+        properties = UserPropertyAuthoring(session: session, projectJSON: projectJSON, readAsset: services?.readAsset ?? { _ in nil })
         self.console = console
         self.services = services
         let preferences = services?.preferences ?? .standard

@@ -92,6 +92,10 @@ struct ImagePuppetCombos: Equatable {
     /// `g_Texture5`, WE's "morph_<n>" texture of position deltas: the engine binds it, the
     /// material doesn't list it.
     static let morphSlot = 5
+    /// `g_Texture8` of `CLIPPINGTARGET`: the clipping mask's coverage.
+    static let clippingMaskSlot = 8
+    /// `g_Texture1` of `clippingmaskimage4`: the mask's painted texture.
+    static let clippingMaskTextureSlot = 1
 }
 
 enum ImageMaterialPlanError: Error, CustomStringConvertible {
@@ -143,6 +147,29 @@ struct ImageMaterialPlanBuilder {
                   puppet: puppet)
     }
 
+    /// The draw of a Puppet Warp rig's clipped parts (0x14020a978…0x14020aa5d): the mesh pass with
+    /// `CLIPPINGUVS` and `CLIPPINGTARGET` = 1, whose `g_Texture8` is the mask's coverage
+    /// (`_rt_FullAlphaMask`, bound by the renderer) sampled at the fragment's place in the target.
+    /// Only `genericimage4` reads them; any other shader draws the parts unclipped, as WE does
+    /// (the default `genericimage2` puppet of WE 2.8's captures 532 and 532c shows no clipping).
+    func buildPuppetClipTarget(materialPath: String, puppet: ImagePuppetCombos) throws -> ImageMaterialPlan? {
+        try build(materialPath: materialPath, colorBlendMode: nil, clampUVs: nil, listsItsImage: true, prelit: false,
+                  puppet: puppet, extraCombos: ["CLIPPINGUVS": 1, "CLIPPINGTARGET": 1],
+                  engineSlots: [ImagePuppetCombos.clippingMaskSlot])
+    }
+
+    /// The material a Puppet Warp rig's clipping masks are drawn with (0x14020ab12…0x14020ad8f):
+    /// `materials/util/clippingmaskimage4.json` with the puppet combos, and `ALPHATOCOVERAGE`
+    /// when the layer's material blends that way. `g_Texture0` is the layer image; the renderer
+    /// binds the mask's texture to `g_Texture1`.
+    func buildPuppetClippingMask(puppet: ImagePuppetCombos, alphaToCoverage: Bool) throws -> ImageMaterialPlan? {
+        try build(materialPath: Self.clippingMaskMaterial, colorBlendMode: nil, clampUVs: nil, listsItsImage: false,
+                  prelit: false, puppet: puppet, extraCombos: alphaToCoverage ? ["ALPHATOCOVERAGE": 1] : [:],
+                  engineSlots: [ImagePuppetCombos.clippingMaskTextureSlot])
+    }
+
+    static let clippingMaskMaterial = "materials/util/clippingmaskimage4.json"
+
     /// A puppet's texture-channel material (`puppettexturechannels`, the mesh with flag 0x2;
     /// 0x140209f28): the material as authored, every texture its own (`g_Texture0` the channel
     /// atlas, `g_Texture1` the base image), with `BLENDROWCOUNT` = the mesh's row count. WE
@@ -186,7 +213,8 @@ struct ImageMaterialPlanBuilder {
 
     private func build(materialPath: String, colorBlendMode: Int?, clampUVs: Bool?,
                        listsItsImage: Bool, prelit: Bool, puppet: ImagePuppetCombos? = nil,
-                       extraCombos: [String: Int] = [:], imageIsAsset: Bool = false) throws -> ImageMaterialPlan? {
+                       extraCombos: [String: Int] = [:], imageIsAsset: Bool = false,
+                       engineSlots: Set<Int> = []) throws -> ImageMaterialPlan? {
         guard let data = readFile(materialPath) else { throw ImageMaterialPlanError.missing(materialPath) }
         let material: MaterialDocument
         do {
@@ -225,7 +253,7 @@ struct ImageMaterialPlanBuilder {
         let combos = { (overrides: [[String: Int]]) in
             sceneEngineCombos.applied(to: ShaderVariantTranslator.resolveCombos(
                 vertex: vertex, fragment: fragment, overrides: [materialPass.combos, coverage, extraCombos] + overrides + [formats],
-                boundTextureSlots: Set(listed.keys).union([0]),
+                boundTextureSlots: Set(listed.keys).union([0]).union(engineSlots),
                 textureFlags: headers.compactMapValues { TEXImageFormat.texiWord(1, in: $0) }))
         }
 
@@ -263,7 +291,7 @@ struct ImageMaterialPlanBuilder {
             }
             if !imageIsAsset { inputs[0] = .current }
             // The puppet renderer binds the morph texture itself.
-            let engineBound: Set<Int> = puppet?.morphing == true ? [ImagePuppetCombos.morphSlot] : []
+            let engineBound: Set<Int> = (puppet?.morphing == true ? Set([ImagePuppetCombos.morphSlot]) : Set<Int>()).union(engineSlots)
             if let unbound = sampled.subtracting(inputs.keys).subtracting(engineBound).min() {
                 throw ImageMaterialPlanError.unsupported("g_Texture\(unbound) has no texture")
             }

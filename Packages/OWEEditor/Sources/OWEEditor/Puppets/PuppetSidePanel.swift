@@ -15,6 +15,7 @@ struct PuppetSidePanel: View {
             case .weights: PuppetWeightsPanel(workspace: workspace)
             case .animate: PuppetAnimationPanel(workspace: workspace)
             case .physics: PuppetPhysicsPanel(workspace: workspace)
+            case .clipping: PuppetClippingPanel(workspace: workspace)
             }
             if let document = workspace.document, !document.problems.isEmpty {
                 Section {

@@ -33,6 +33,7 @@ public final class WallpaperEditorCommands {
         case .showSelectionBox: return options.showsSelectionBox
         case .showParticleCollision: return options.showsParticleCollision
         case .showParticleControlPoints: return showsParticleControlPoints()
+        case .showHitboxes: return options.showsHitboxes
         case .desktopPreview: return options.preview == .desktop
         case .phonePreview: return options.preview == .phone
         case .lowFrameRate: return options.simulatesLowFrameRate

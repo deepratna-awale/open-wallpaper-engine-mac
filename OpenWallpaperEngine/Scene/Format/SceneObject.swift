@@ -33,6 +33,9 @@ struct WESceneObject: Decodable {
     /// `opaquebackground` and `backgroundcolor` ("r g b"): a box behind the text.
     var opaquebackground: Bool?
     var backgroundcolor: String?
+    /// `backgroundbrightness`: the box's colour is `backgroundcolor` times it (WE 2.8's editor
+    /// writes 1 beside `opaquebackground`).
+    var backgroundbrightness: Double?
     /// `spacing` (WE 2.8's letter spacing), "x y" or one number for both.
     var spacing: String?
     /// `outline`, `blur`, `dropshadow` and their values (`msdf` too).
@@ -100,7 +103,7 @@ struct WESceneObject: Decodable {
     enum CodingKeys: String, CodingKey {
         case id, parent, name, origin, scale, angles, visible, effects, text, font, pointsize, horizontalalign, verticalalign
         case padding, maxwidth, maxrows, limitwidth, limitrows, limituseellipsis, anchor, blockalign, spacing
-        case opaquebackground, backgroundcolor
+        case opaquebackground, backgroundcolor, backgroundbrightness
         case image, alpha, brightness, color, colorBlendMode, clampuvs, size, alignment, shape
         case solid, disablepropagation, copybackground, parallaxDepth, perspective
         case particle, instanceoverride, instance, sound, light
@@ -181,6 +184,7 @@ struct WESceneObject: Decodable {
         spacing = literal(.spacing)?.literalString
         opaquebackground = literal(.opaquebackground)?.literalBool
         backgroundcolor = literal(.backgroundcolor)?.literalString
+        backgroundbrightness = literal(.backgroundbrightness)?.literalDouble
         // Optional: each field is read on its own, and an object without them has none.
         textEffects = (try? WETextEffectFields(from: decoder)) ?? WETextEffectFields()
 

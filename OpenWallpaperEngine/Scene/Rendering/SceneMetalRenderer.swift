@@ -267,7 +267,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var particleInstances: [LayerUniform] = []
     private var particleInstanceStorage: MTLBuffer?
 
-    private var particleSystems: [ParticleSystemRuntime] = []
+    private var particleSystems: [ParticleSystemRuntime] = [] {
+        didSet { emitterImages.noteSystems(particleSystems) }
+    }
+    /// `layerimage` emitters' rigged layers and resampling (`SceneEmitterImages`).
+    private lazy var emitterImages = SceneEmitterImages(device: device, queue: commandQueue) { [weak self] block in
+        self?.performOnRenderThread(block)
+    }
     /// Steps particle systems on the GPU; nil runs them on the CPU (`ParticleCPUSimulation`).
     private let particleSimulator: ParticleGPUSimulator?
     /// This frame's GPU steps, reused across frames.
@@ -422,6 +428,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private let perspectiveCameraLock = NSLock()
     private var perspectiveCamera: SceneFrameCamera?
     var lastPerspectiveCamera: SceneFrameCamera? { perspectiveCameraLock.withLock { perspectiveCamera } }
+    /// The puppets' posed hit boxes, for the Wallpaper Editor's Show Hitboxes (its own lock).
+    let puppetHitBoxes = ScenePuppetHitBoxFeed()
     private var placement: WallpaperPlacement = .fill
     /// Drawable pixels per view point (the backing scale), refreshed every frame.
     private var drawablePixelsPerPoint: Float = 1
@@ -783,6 +791,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         spriteFrameInputs.releaseAll()
         puppetAlbedos.removeAll()
         puppetAnimators.removeAll()
+        emitterImages.reset()
         puppetWarps.removeAll()
         puppetCanvases.removeAll()
         contentGenerationLock.lock()
@@ -849,11 +858,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 guard let frames, !frames.isEmpty else { return nil }
                 return PreparedLayer(frames: frames, layer: Self.droppingPixels(layer))
             }
+            let imageLayers = Set(content.particleSystems.flatMap { $0.emitterImages.map(\.layerID) })
             let imageSources = Dictionary(preparedLayers.compactMap { entry -> (String, ParticleEmitterImagePoints.Source)? in
-                guard let frame = entry.frames.first else { return nil }
+                guard imageLayers.contains(entry.layer.id), let frame = entry.frames.first else { return nil }
                 let size = entry.layer.source.pixelSize
-                return (entry.layer.id, .init(texture: frame.texture, uvExtent: SIMD2(frame.uvAxisX.x, frame.uvAxisY.y),
-                                              imageSize: SIMD2(Int(size.x), Int(size.y))))
+                let sampling = ParticleEmitterImagePoints.Sampling(texture: frame.texture, uvOrigin: frame.uvOrigin,
+                                                                   uvAxisX: frame.uvAxisX, uvAxisY: frame.uvAxisY)
+                return (entry.layer.id, .init(sampling: sampling, imageSize: SIMD2(Int(size.x), Int(size.y)),
+                                              rig: ParticleEmitterImageBones.Rig(entry.layer.puppet)))
             }, uniquingKeysWith: { first, _ in first })
             var imagePoints: [String: [SIMD4<Int32>]] = [:]
             let runtimes: [ParticleSystemRuntime?] = content.particleSystems.enumerated().map { index, system in
@@ -1824,13 +1836,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 // WE's engine frame time and frame-rate limit steer drag and the operators' half steps
                 // (`ParticleFrameInputs.dragDeltaTime`, `substeps`); the pre-simulation runs in this frame.
                 let layerWorld = { [self] (id: String) in emitterImageLayerWorld(id, motion: motion) }
+                let layerBones = { [self] (id: String) in emitterImageBones(id) }
                 let modelCapsules = { [self] (id: String) in particleCapsules(id, for: system) }
                 prewarm = ParticlePrewarm.steps(system).map {
                     ParticleFrameInputs.advance(system, deltaTime: $0, cursor: cursor, emitter: emitter, values: timelines.values,
                                                 scripted: scripted,
                                                 audio: effectFrame.audio, frameTime: Float(clock.delta),
                                                 frameRateLimit: destination.frameRateLimit, layerWorld: layerWorld,
-                                                modelCapsules: modelCapsules)
+                                                layerBones: layerBones, modelCapsules: modelCapsules)
                 }
                 // A script's `pause()` holds the system as it is; `stop()` clears it until `play()`.
                 let paused = script?.playback == .pause
@@ -1838,10 +1851,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                                      emitter: emitter, values: timelines.values, scripted: scripted,
                                                      audio: effectFrame.audio,
                                                      frameTime: Float(clock.delta), frameRateLimit: destination.frameRateLimit,
-                                                     layerWorld: layerWorld, modelCapsules: modelCapsules)
+                                                     layerWorld: layerWorld, layerBones: layerBones, modelCapsules: modelCapsules)
                 Self.applyScriptPlayback(script?.playback, emitting: objectID.flatMap { pendingEmits.removeValue(forKey: $0) },
                                          to: &inputs)
                 steppedInputs[ObjectIdentifier(system)] = inputs
+                if !system.imageResamplesDue.isEmpty { resampleEmitterImages(system) }
             }
             if particleSimulator != nil {
                 // The GPU steps the system and writes whichever records it is drawn from.
@@ -2223,6 +2237,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         stats.lightCount = lastLightCount
         for entry in layers where scripts.isVisible(entry.layer.id) {
             if case .video = entry.layer.source { stats.videoTextureCount += 1 }
+            if puppetsMade, let puppets { stats.clippingMaskPasses += puppets.clippingMaskPasses(entry.layer.id) }
             for effect in entry.layer.weEffects where effect.visible {
                 switch effect.performance {
                 case .expensive?: stats.expensiveEffects += 1
@@ -2401,12 +2416,45 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         } else if additive {
             encoder.setRenderPipelineState(target.pipelines.additive)
         }
+        if effectOutput == nil { encodeTextBackground(entry, uniform: uniform, encoder: encoder) }
         encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
         encoder.setFragmentBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
         encoder.setFragmentTexture(effectOutput ?? textureFrame.texture, index: 0)
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
         if draw.placement != nil || additive { encoder.setRenderPipelineState(target.pipelines.normal) }
     }
+
+    /// A text layer's `opaquebackground` box, when it is drawn as its own quad (no effects): the
+    /// layer's quad in `backgroundcolor` (times `backgroundbrightness` where WE applies
+    /// brightness), with the layer's opacity, before its glyphs, which then draw over it with that
+    /// opacity too. That is WE's buffer, cleared to the colour with the object's alpha and the
+    /// glyphs drawn into it with that alpha (0x140257c30), then composited.
+    private func encodeTextBackground(_ entry: PreparedLayer, uniform: LayerUniform, encoder: MTLRenderCommandEncoder) {
+        guard let authored = entry.layer.text, entry.layer.weEffects.isEmpty else { return }
+        let text = scripts.text(authored, of: entry.layer.id).text
+        guard text.opaqueBackground, let white = solidWhiteTexture else { return }
+        var box = uniform
+        let brightness = renderSettings.appliesBrightness ? max(text.backgroundBrightness, 0) : 1
+        box.color = SIMD4(text.backgroundColor * brightness, uniform.color.w)
+        box.effects.x = 1
+        box.uvOrigin = .zero
+        box.uvAxisX = SIMD2(1, 0)
+        box.uvAxisY = SIMD2(0, 1)
+        encoder.setVertexBytes(&box, length: MemoryLayout<LayerUniform>.stride, index: 0)
+        encoder.setFragmentBytes(&box, length: MemoryLayout<LayerUniform>.stride, index: 0)
+        encoder.setFragmentTexture(white, index: 0)
+        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+    }
+
+    /// A 1 × 1 opaque white texture, for quads drawn in a flat colour.
+    private lazy var solidWhiteTexture: MTLTexture? = {
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)
+        descriptor.usage = [.shaderRead]
+        guard let texture = device.makeTexture(descriptor: descriptor) else { return nil }
+        var white: [UInt8] = [255, 255, 255, 255]
+        texture.replace(region: MTLRegionMake2D(0, 0, 1, 1), mipmapLevel: 0, withBytes: &white, bytesPerRow: 4)
+        return texture
+    }()
 
     // MARK: - Detail layers at the output's backing pixels (`SceneNativeDetailLayers`)
 
@@ -3084,7 +3132,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                 pixelsPerUnit: Float) -> (frame: RenderTextureFrame, baseSize: SIMD2<Float>) {
         guard let authored = entry.layer.text else { return (textureFrame(for: entry), boxSize) }
         let scripted = scripts.text(authored, of: entry.layer.id)
-        return makeTextFrame(scripted.text, value: scripted.value, pointSize: scripted.pointSize, boxSize: boxSize,
+        var text = scripted.text
+        // Without effects the box is its own quad under the glyphs (`encodeTextBackground`).
+        if text.opaqueBackground, entry.layer.weEffects.isEmpty { text.drawsBackgroundSeparately = true }
+        return makeTextFrame(text, value: scripted.value, pointSize: scripted.pointSize, boxSize: boxSize,
                              pixelsPerUnit: pixelsPerUnit, layerID: entry.layer.id,
                              fill: !scripted.text.rastersInColor && entry.layer.weEffects.isEmpty ? nil : textFill(entry))
             ?? (textureFrame(for: entry), boxSize)
@@ -3506,6 +3557,21 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// A `layerimage` emitter's layer this frame (`ParticleFrameInputs.placeImages`), moved by
     /// camera parallax and shake as an emitter is (`emitterWorld`); nil when no such object exists.
+    /// A Puppet Warp layer's bones for the `layerimage` emitters on it (`SceneEmitterImages`).
+    private func emitterImageBones(_ id: String) -> ParticleLayerBones? {
+        guard let index = layerIndexByStateId[id], let puppet = layers[index].layer.puppet else { return nil }
+        return emitterImages.bones(of: id, puppet: puppet, animator: puppetAnimators[id])
+    }
+
+    /// Samples again `system`'s images that are due (flag 0x20000, `SceneEmitterImages.resample`).
+    private func resampleEmitterImages(_ system: ParticleSystemRuntime) {
+        emitterImages.resample(system) { [self] id in
+            guard let index = layerIndexByStateId[id] else { return nil }
+            let entry = layers[index]
+            return (entry.frames, entry.layer.puppet, entry.layer.source.pixelSize)
+        }
+    }
+
     private func emitterImageLayerWorld(_ id: String, motion: CameraMotion) -> SceneAffineTransform? {
         guard transforms.nodes[id] != nil else { return nil }
         var world = transforms.world(of: id, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine)
@@ -3980,17 +4046,28 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// the events and ends, so they are dropped.
     private func advanceRigs() {
         let delta = Float(clock.delta)
+        let outlinesHitBoxes = puppetHitBoxes.isWanted
+        var hitBoxes: [ScenePuppetHitBoxOutline] = []
         for entry in layers {
             guard let puppet = entry.layer.puppet else { continue }
+            // Last frame's bones, for the `layerimage` emitters on it; none before its first update.
+            if let existing = puppetAnimators[entry.layer.id] {
+                emitterImages.willAdvance(puppet: entry.layer.id, worlds: existing.worlds)
+            }
             let animator = puppetAnimator(entry.layer.id, puppet)
             // Physics bones move in the scene: the image's world this frame, before the scripts'.
-            animator.advance(delta: delta, values: timelines.values,
-                             objectWorld: ScenePuppetAttachments.matrix(worldTransform(entry)))
+            let world = ScenePuppetAttachments.matrix(worldTransform(entry))
+            animator.advance(delta: delta, values: timelines.values, objectWorld: world)
             if !scripts.isRunning {
                 _ = animator.takeEnded()
                 _ = animator.takeEvents()
             }
+            if outlinesHitBoxes, scripts.isVisible(entry.layer.id) {
+                hitBoxes += ScenePuppetHitBoxOutline.outlines(layerID: entry.layer.id, skeleton: puppet.skeleton,
+                                                              boneWorlds: animator.worlds, world: world)
+            }
         }
+        if outlinesHitBoxes { puppetHitBoxes.publish(hitBoxes) }
         guard let models else { return }
         var frame = BuiltinFrameContext()
         frame.time = clock.time
@@ -4036,6 +4113,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// With `clearenabled` off (WE skips its scene pass's clear, 0x140183588), the pass loads the
     /// last frame's colour and depth instead of clearing them, while it draws into the same targets.
+    /// New targets start black, not `clearcolor`: nothing ever clears them to it (WE 2.8.0.42,
+    /// capture 542: the background of a 0.15 grey clear colour shows black), and at the far depth.
     private func keepScene(_ pass: MTLRenderPassDescriptor, scene: MTLTexture, multisampled: MTLTexture?) {
         guard keepsScene else {
             keptSceneTargets = []
@@ -4046,6 +4125,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                        frameDepth == nil ? nil : depthBuffer.multisampled.map(ObjectIdentifier.init)]
         guard targets == keptSceneTargets else {
             keptSceneTargets = targets
+            pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
             return
         }
         pass.colorAttachments[0].loadAction = .load
@@ -4618,6 +4698,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// animated texture from the instance's texture clocks (docs/timeline-plan.md §2.7, §3.2),
     /// taken once per frame (a script's override advances each time it is asked).
     private func textureFrame(for entry: PreparedLayer) -> RenderTextureFrame {
+        let frame = currentTextureFrame(for: entry)
+        // What a `layerimage` emitter sampling the layer again reads.
+        emitterImages.record(frame, layer: entry.layer.id)
+        return frame
+    }
+
+    private func currentTextureFrame(for entry: PreparedLayer) -> RenderTextureFrame {
         // A puppet's image is its mesh's drawing, laid out like its source texture.
         if entry.layer.puppet != nil, let albedo = puppetAlbedos[entry.layer.id] {
             let source = entry.frames[0]
