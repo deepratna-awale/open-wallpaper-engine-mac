@@ -40,6 +40,8 @@ final class ScenePuppetAnimator {
     /// The rig's IK sets (docs/models-plan.md §2.16, `ScenePuppetIK`); nil without one, and for a
     /// model, whose update has no solver.
     let ik: ScenePuppetIK?
+    /// Its rope chains' points (`ScenePuppetRope`); nil without a rope.
+    let rope: ScenePuppetRope?
     /// The object's world matrix at the last `advance`, which with `worlds` gives the physics
     /// last frame's bones.
     private var lastObjectWorld: simd_float4x4?
@@ -86,7 +88,11 @@ final class ScenePuppetAnimator {
         if let blendRules { scalars.blendRules = Array(repeating: 0, count: blendRules.weightCount) }
         boneScalars = scalars
         physics = SceneBonePhysics(skeleton)
-        ik = model ? nil : ScenePuppetIK(skeleton)
+        let solver = model ? nil : ScenePuppetIK(skeleton)
+        let ropes = solver.flatMap { $0.sets.contains(where: \.hasRope) ? ScenePuppetRope(boneCount: skeleton.bones.count) : nil }
+        solver?.rope = ropes
+        ik = solver
+        rope = ropes
         let skeleton = SceneSkeleton(skeleton)
         self.skeleton = skeleton
         self.morphRig = morphRig
@@ -314,6 +320,7 @@ final class ScenePuppetAnimator {
             physics?.applyImpulse(bone: bone, linear: linear, angularDegrees: angularDegrees)
         case .resetPhysics(let bone):
             physics?.reset(bone: bone)
+            rope?.reset(bone: bone)
         }
     }
 

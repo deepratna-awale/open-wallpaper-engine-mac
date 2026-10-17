@@ -3978,11 +3978,28 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// tests only that it has a rig and layers, through 0x1402076e0); a model only while it and
     /// its parents are visible (0x14021c4d8), as its draw asks too. Without scripts nobody reads
     /// the events and ends, so they are dropped.
+    /// What a rope chain's step reads from the scene (`ScenePuppetRope.Environment`): `general`'s
+    /// gravity and wind, the running time WE's wind noise reads (wrapped past 432000 s,
+    /// 0x14017fcca) and the scene's width as the orthographic width [I: a perspective scene's
+    /// is 0 in WE].
+    private func currentRopeEnvironment() -> ScenePuppetRope.Environment {
+        let physics = cameraGeneral.map { ScenePhysicsSettings($0, in: LiveSceneValueContext(wallpaper: wallpaperKey)) }
+        return ScenePuppetRope.Environment(physics: physics ?? ScenePhysicsSettings(),
+                                           time: Float(clock.time.truncatingRemainder(dividingBy: 432_000)),
+                                           projectionWidth: sceneSize.x)
+    }
+
     private func advanceRigs() {
         let delta = Float(clock.delta)
+        var ropeEnvironment: ScenePuppetRope.Environment?
         for entry in layers {
             guard let puppet = entry.layer.puppet else { continue }
             let animator = puppetAnimator(entry.layer.id, puppet)
+            if let rope = animator.rope {
+                // The scene's gravity and wind, resolved once a frame for the rope chains.
+                if ropeEnvironment == nil { ropeEnvironment = currentRopeEnvironment() }
+                rope.environment = ropeEnvironment ?? ScenePuppetRope.Environment()
+            }
             // Physics bones move in the scene: the image's world this frame, before the scripts'.
             animator.advance(delta: delta, values: timelines.values,
                              objectWorld: ScenePuppetAttachments.matrix(worldTransform(entry)))
