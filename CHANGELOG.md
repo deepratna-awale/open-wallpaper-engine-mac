@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Puppet Warp blend rules**, as Wallpaper Engine plays them. A bone with a blend rule (Edit Constraints › Blend Rules) is pulled toward its target bone by the weight its clip keys: its position, rotation and scale move toward the target's, its children follow, and bone physics then acts on the result. A rig whose rule was deleted keeps still, as in Wallpaper Engine.
+
 ## [1.0.0-beta.7] - 2026-10-16
 
 ### Added
