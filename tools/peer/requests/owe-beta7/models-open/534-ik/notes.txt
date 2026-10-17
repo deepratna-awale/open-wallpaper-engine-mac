@@ -1,0 +1,37 @@
+534: Puppet Warp IK (WE 2.8.0.42)
+
+## Setup (make_534.py, project p534_ik)
+- **Image:** arm.png, 512×256, transparent: one orange bar 30-482 × 108-148 with dark ticks at x 143/256/369.
+- **Geometry:** Create at defaults; not locked.
+- **Skeleton:** 4 clicks along the bar make a chain:
+  - Root bone (id 23) at x 30
+  - Bone 2 (24) at 143
+  - Bone 3 (25) at 256
+  - **hand** (26) at 369
+  - Each new click becomes a child of the selected bone.
+- **Weights:** WE's automatic weights.
+- **Constraint on hand** (Edit Constraints › Physics):
+  - Simple › Simulation preset › **"Inverse kinematics arm/leg"**. The full preset list is: Not simulated, Bouncy rotation/position, Gravity rotation/position, Drag rotation/position, Inverse kinematics arm/leg, Rope with 4 elements.
+  - Advanced shows: Simulation mode "Kinematic chain", **Limb depth 2**, Behavior "Inverse kinematics", **Use orientation controller** (on), **Rotate when overstretched** (on, with help text), and "Full rotation distance" 25.
+  - I tried to set depth 3 through UI Automation, but the field didn't take it, so depth stayed 2.
+  - Json: `constraints = {ik:true, ikd:2, ikg:true, ikr:true, ikrd:25, ikrmin:0, ikrmax:π, ikse:true, ikce/ikcp/ikfe:false, ikcpn:1, ikm:"", layout:"advanced", preset:"ik2limbs", …}`.
+  - From the variants: **ikr = Rotate when overstretched**. ikg follows "Use orientation controller" (on); its off state wasn't saved separately.
+- **Clip id 28** "Animation 1", Loop, 2 s, 30 fps:
+  - In animation mode, hand shows as **"Controller hand"**. The viewport has a target diamond at the hand head and a yellow orientation controller dot above Bone 3.
+  - Keyed the target's Origin y: 0 › +150 (f30) › 0 (f59).
+  - Json: `animations[i].controllers = [{id:26, type:0 (IK target), enabled, origin:{c1: (0,0)(30,150)(59,0)}, angles…}, {id:26, type:1 (orientation controller), origin/angles at 0}]`.
+  - The hand bone itself has no entry in `animations[i].bones`. Bones 23/24 have rest keys; 25 has null tracks.
+- **Files:**
+  - **ik_static.mdl/.json:** the IK constraint, no clip.
+  - **ik_arm.mdl/.json:** the IK constraint plus the clip.
+  - **ik_norot.mdl/.json:** the same with Rotate when overstretched off (ikr false).
+  - make_534_runtime.py builds p534_ik_arm and p534_ik_norot with an animation layer on clip 28.
+
+## Runtime (RenderDoc stills at 0.25/0.5/0.75/1.0/1.5 s; stills/, sheet_534.png)
+- **Both variants:** the root segment stays horizontal. Bone 2 and Bone 3 (the 2-limb chain above hand, depth 2) rotate up toward the target.
+  - At t ≈ 0.75-1.0 the target is out of reach, so Bone 2 and Bone 3 are **fully stretched in a straight line** pointing at it.
+- **ik_arm (ikr on):** while overstretched, **the hand segment rotates to continue the straight line toward the target** (t 0.75/1.0/1.5).
+- **ik_norot (ikr off):** the hand **stays horizontal**, keeping the orientation controller's orientation, at the end of the stretched chain.
+- **t 0.25:** almost straight; the target is near rest because of the easing.
+- The bend's sign: +150 origin y moves the target **up** on screen, so y is up.
+- **"Done."** is WE's switch toast.

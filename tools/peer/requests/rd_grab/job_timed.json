@@ -2,11 +2,11 @@
  "we": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\wallpaper_engine",
  "ident": 38920,
  "monitor": 0,
- "out": "K:\\DeepWorkspace\\wem-images2\\tools\\peer\\requests\\owe-beta7\\models-open\\533-blend-rules\\stills",
+ "out": "K:\\DeepWorkspace\\wem-images2\\tools\\peer\\requests\\owe-beta7\\models-open\\534-ik\\stills",
  "shots": [
   {
-   "project": "p533_br_none",
-   "tag": "mo2_533_br_none",
+   "project": "p534_ik_arm",
+   "tag": "mo2_534_ik_arm",
    "stills": [
     0.25,
     0.5,
@@ -16,8 +16,8 @@
    ]
   },
   {
-   "project": "p533_br_rule",
-   "tag": "mo2_533_br_rule",
+   "project": "p534_ik_norot",
+   "tag": "mo2_534_ik_norot",
    "stills": [
     0.25,
     0.5,

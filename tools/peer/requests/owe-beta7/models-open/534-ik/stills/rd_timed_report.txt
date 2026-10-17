@@ -1,0 +1,11 @@
+connected ident 38920
+p534_ik_arm still 0.25 triggered at 0.253 s frame 619
+p534_ik_arm still 0.5 triggered at 0.505 s frame 627
+p534_ik_arm still 0.75 triggered at 0.752 s frame 632
+p534_ik_arm still 1.0 triggered at 1.001 s frame 638
+p534_ik_arm still 1.5 triggered at 1.500 s frame 652
+p534_ik_norot still 0.25 triggered at 0.251 s frame 754
+p534_ik_norot still 0.5 triggered at 0.502 s frame 760
+p534_ik_norot still 0.75 triggered at 0.753 s frame 765
+p534_ik_norot still 1.0 triggered at 1.006 s frame 771
+p534_ik_norot still 1.5 triggered at 1.500 s frame 782

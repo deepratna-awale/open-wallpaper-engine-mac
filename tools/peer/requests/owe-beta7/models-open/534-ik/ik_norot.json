@@ -1,0 +1,2112 @@
+{
+	"animations" : 
+	[
+		{
+			"bones" : 
+			[
+				{
+					"alpha" : 
+					[
+						{
+							"back" : 
+							{
+								"enabled" : true,
+								"x" : -1,
+								"y" : 0
+							},
+							"frame" : 0,
+							"front" : 
+							{
+								"enabled" : true,
+								"x" : 1,
+								"y" : 0
+							},
+							"lockangle" : true,
+							"locklength" : true,
+							"value" : 1.0
+						}
+					],
+					"angles" : 
+					{
+						"c0" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						],
+						"c1" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						],
+						"c2" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						]
+					},
+					"enabled" : true,
+					"id" : 23,
+					"origin" : 
+					{
+						"c0" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						],
+						"c1" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						],
+						"c2" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						]
+					},
+					"priorityoffset" : 
+					[
+						{
+							"back" : 
+							{
+								"enabled" : true,
+								"x" : -1,
+								"y" : 0
+							},
+							"frame" : 0,
+							"front" : 
+							{
+								"enabled" : true,
+								"x" : 1,
+								"y" : 0
+							},
+							"lockangle" : true,
+							"locklength" : true,
+							"value" : 0.0
+						}
+					],
+					"scale" : 
+					{
+						"c0" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 1.0
+							}
+						],
+						"c1" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 1.0
+							}
+						],
+						"c2" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 1.0
+							}
+						]
+					}
+				},
+				{
+					"alpha" : 
+					[
+						{
+							"back" : 
+							{
+								"enabled" : true,
+								"x" : -1,
+								"y" : 0
+							},
+							"frame" : 0,
+							"front" : 
+							{
+								"enabled" : true,
+								"x" : 1,
+								"y" : 0
+							},
+							"lockangle" : true,
+							"locklength" : true,
+							"value" : 1.0
+						}
+					],
+					"angles" : 
+					{
+						"c0" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						],
+						"c1" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						],
+						"c2" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						]
+					},
+					"enabled" : true,
+					"id" : 24,
+					"origin" : 
+					{
+						"c0" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						],
+						"c1" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						],
+						"c2" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						]
+					},
+					"priorityoffset" : 
+					[
+						{
+							"back" : 
+							{
+								"enabled" : true,
+								"x" : -1,
+								"y" : 0
+							},
+							"frame" : 0,
+							"front" : 
+							{
+								"enabled" : true,
+								"x" : 1,
+								"y" : 0
+							},
+							"lockangle" : true,
+							"locklength" : true,
+							"value" : 0.0
+						}
+					],
+					"scale" : 
+					{
+						"c0" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 1.0
+							}
+						],
+						"c1" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 1.0
+							}
+						],
+						"c2" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 1.0
+							}
+						]
+					}
+				},
+				{
+					"alpha" : null,
+					"angles" : null,
+					"enabled" : true,
+					"id" : 25,
+					"origin" : null,
+					"priorityoffset" : null,
+					"scale" : null
+				}
+			],
+			"controllers" : 
+			[
+				{
+					"angles" : 
+					{
+						"c0" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						],
+						"c1" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						],
+						"c2" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						]
+					},
+					"enabled" : true,
+					"id" : 26,
+					"origin" : 
+					{
+						"c0" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						],
+						"c1" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						],
+						"c2" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						]
+					},
+					"type" : 1
+				},
+				{
+					"angles" : 
+					{
+						"c0" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							},
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : -0.98333333,
+									"y" : -0.0
+								},
+								"frame" : 30,
+								"front" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							},
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : -0.51724138,
+									"y" : -0.0
+								},
+								"frame" : 59,
+								"front" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						],
+						"c1" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							},
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : -0.98333333,
+									"y" : -0.0
+								},
+								"frame" : 30,
+								"front" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							},
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : -0.51724138,
+									"y" : -0.0
+								},
+								"frame" : 59,
+								"front" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						],
+						"c2" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							},
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : -0.98333333,
+									"y" : -0.0
+								},
+								"frame" : 30,
+								"front" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							},
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : -0.51724138,
+									"y" : -0.0
+								},
+								"frame" : 59,
+								"front" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						]
+					},
+					"enabled" : true,
+					"id" : 26,
+					"origin" : 
+					{
+						"c0" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							},
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : -0.98333333,
+									"y" : 1e-06
+								},
+								"frame" : 30,
+								"front" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : 1,
+									"y" : -9.6666667e-07
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							},
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : -0.51724138,
+									"y" : -0.0
+								},
+								"frame" : 59,
+								"front" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : -1.5258789e-05
+							}
+						],
+						"c1" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							},
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : -0.98333333,
+									"y" : 2e-13
+								},
+								"frame" : 30,
+								"front" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : 1,
+									"y" : -1.9333333e-13
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 150.0
+							},
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : -0.51724138,
+									"y" : 15.0
+								},
+								"frame" : 59,
+								"front" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : 1,
+									"y" : -0.51724138
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						],
+						"c2" : 
+						[
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"x" : -1,
+									"y" : 0
+								},
+								"frame" : 0,
+								"front" : 
+								{
+									"enabled" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							},
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : -0.98333333,
+									"y" : -0.0
+								},
+								"frame" : 30,
+								"front" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							},
+							{
+								"back" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : -0.51724138,
+									"y" : -0.0
+								},
+								"frame" : 59,
+								"front" : 
+								{
+									"enabled" : true,
+									"magic" : true,
+									"x" : 1,
+									"y" : 0
+								},
+								"lockangle" : true,
+								"locklength" : true,
+								"value" : 0.0
+							}
+						]
+					},
+					"type" : 0
+				}
+			],
+			"fps" : 30.0,
+			"id" : 28,
+			"length" : 60,
+			"mode" : "loop",
+			"name" : "Animation 1",
+			"smoothing" : 0.30000001,
+			"stiffness" : 1.0,
+			"wraploop" : true
+		}
+	],
+	"editor" : 
+	{
+		"height" : 256,
+		"referenceheight" : 256,
+		"referencewidth" : 512,
+		"width" : 512
+	},
+	"materialbasedirectory" : "",
+	"puppet" : 
+	{
+		"blendshapes" : null,
+		"bones" : 
+		[
+			{
+				"angles" : "0.00000 -0.00000 0.00000",
+				"constraints" : {},
+				"id" : 23,
+				"name" : "",
+				"origin" : "-224.57947 -0.00006 0.00000",
+				"priorityoffset" : 0
+			},
+			{
+				"angles" : "0.00000 -0.00000 0.00000",
+				"constraints" : {},
+				"id" : 24,
+				"name" : "",
+				"origin" : "-112.28973 -0.00006 0.00000",
+				"parent" : 0,
+				"priorityoffset" : 0
+			},
+			{
+				"angles" : "0.00000 -0.00000 0.00000",
+				"constraints" : {},
+				"id" : 25,
+				"name" : "",
+				"origin" : "0.00000 -0.00006 0.00000",
+				"parent" : 1,
+				"priorityoffset" : 0
+			},
+			{
+				"angles" : "0.00000 -0.00000 0.00000",
+				"constraints" : 
+				{
+					"a" : "1 0 0",
+					"gd" : "6.123233995736766e-17 -1 0",
+					"ge" : false,
+					"ik" : true,
+					"ikce" : false,
+					"ikcp" : false,
+					"ikcpn" : 1,
+					"ikd" : 2,
+					"ikfe" : false,
+					"ikg" : true,
+					"ikm" : "",
+					"ikr" : false,
+					"ikrd" : 25,
+					"ikrmax" : 3.1415927,
+					"ikrmin" : 0,
+					"ikse" : true,
+					"la" : false,
+					"lamax" : "0 0 3.141592653589793",
+					"lamin" : "0 0 -3.141592653589793",
+					"layout" : "advanced",
+					"lt" : false,
+					"ltmax" : 100,
+					"m" : 20,
+					"preset" : "ik2limbs",
+					"presetresponsiveness" : 67,
+					"r" : true,
+					"rax" : false,
+					"ray" : false,
+					"raz" : true,
+					"re" : false,
+					"rf" : 20,
+					"ri" : 30,
+					"rs" : 200,
+					"s" : 0,
+					"se" : false,
+					"t" : false,
+					"tax" : true,
+					"tay" : true,
+					"taz" : true,
+					"tf" : 20,
+					"ti" : 30,
+					"tm" : 200,
+					"ts" : 200
+				},
+				"id" : 26,
+				"name" : "hand",
+				"origin" : "113.55139 -0.00006 0.00000",
+				"parent" : 2,
+				"priorityoffset" : 0
+			}
+		],
+		"clippingmasks" : null,
+		"contours" : [],
+		"controllers" : 
+		[
+			{
+				"angles" : "0.00000 -0.00000 0.00000",
+				"id" : 26,
+				"name" : "hand",
+				"origin" : "0.63083 112.92050 0.00000",
+				"type" : 1
+			},
+			{
+				"angles" : "0.00000 -0.00000 0.00000",
+				"id" : 26,
+				"name" : "",
+				"origin" : "113.55139 -0.00006 0.00000",
+				"type" : 0
+			}
+		],
+		"expressions" : null,
+		"extrusion" : false,
+		"extrusionscale" : 1.0,
+		"extrusionsmoothing" : 5,
+		"holes" : true,
+		"iksets" : 
+		[
+			{
+				"bone" : 1,
+				"subbases" : 
+				[
+					{
+						"bone" : 1,
+						"chains" : 
+						[
+							{
+								"endbone" : 3,
+								"joints" : [ 1, 2, 3 ]
+							}
+						]
+					}
+				]
+			}
+		],
+		"material" : "materials/arm.json",
+		"padding" : 7,
+		"referencepose" : null,
+		"subdivision" : 2,
+		"texture" : "materials/arm",
+		"vertexislands" : null,
+		"vertexuniqueid" : null,
+		"weights" : 
+		[
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "164.95816 3.17491 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "181.46152 1.34125 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "169.86197 12.24699 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "172.54184 -5.92491 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-211.69650 13.61226 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-230.00000 20.00000 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-224.72549 1.92342 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-223.00000 24.00000 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-231.00000 -18.00000 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-198.91299 13.06650 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-192.03317 -0.97075 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-186.83334 7.58333 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-202.60483 1.39977 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 24 23 23",
+				"localpos" : "-125.21150 -3.46625 0.00000",
+				"weights" : "0.92208 0.07792 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 24 23 23",
+				"localpos" : "-116.29182 3.79991 0.00000",
+				"weights" : "0.63929 0.36071 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-130.58333 7.45833 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-108.70818 -5.29991 0.00000",
+				"weights" : "0.63929 0.36071 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-166.75000 23.87500 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-196.22101 20.31383 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 25 23 23",
+				"localpos" : "-12.71150 -3.71625 0.00000",
+				"weights" : "0.92208 0.07792 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-22.98718 -1.86375 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-13.59950 -14.59425 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-18.08333 7.20833 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-110.50000 23.75000 0.00000",
+				"weights" : "0.86964 0.13036 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-139.97101 20.18883 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "60.04184 -5.67491 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "43.53848 -3.84125 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "55.13800 -14.74700 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "52.45816 3.42491 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-54.25000 23.62500 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-83.72099 20.06383 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "138.58701 12.31650 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "145.76282 -2.23875 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "150.66666 6.83333 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "135.48718 -0.38625 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 24 23 23",
+				"localpos" : "2.00000 23.50000 0.00000",
+				"weights" : "0.86964 0.13036 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-27.47099 19.93883 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "211.69650 -15.61224 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "230.00000 -22.00000 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "224.72549 -3.92342 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "223.00000 -26.00000 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "58.25000 23.37500 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "28.77902 19.81383 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "217.47729 17.32202 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "207.05228 13.20119 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "215.84851 8.25775 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "209.58334 20.70833 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 25 23 23",
+				"localpos" : "114.50000 23.25000 0.00000",
+				"weights" : "0.86964 0.13036 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "85.02902 19.68883 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "198.91299 -15.06650 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "192.03317 -1.02925 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "186.83334 -9.58334 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "202.60483 -3.39977 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "170.75000 23.12500 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "141.27902 19.56383 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "227.00000 23.00000 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "231.00000 16.00000 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 25 23 23",
+				"localpos" : "108.70816 3.29991 0.00000",
+				"weights" : "0.63159 0.36841 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "125.21152 1.46625 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 25 23 23",
+				"localpos" : "113.61197 12.37199 0.00000",
+				"weights" : "0.77579 0.22421 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 25 23 23",
+				"localpos" : "116.29184 -5.79991 0.00000",
+				"weights" : "0.77206 0.22794 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 26 23 23",
+				"localpos" : "94.41666 6.95833 0.00000",
+				"weights" : "0.91569 0.08431 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "82.33701 12.44150 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 26 23 23",
+				"localpos" : "99.32053 16.03041 0.00000",
+				"weights" : "0.81063 0.18937 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "166.75000 -25.87500 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "196.22098 -22.31384 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "26.08701 12.56650 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "33.26282 -1.98875 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "38.16666 7.08333 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "22.98718 -0.13625 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 26 23 23",
+				"localpos" : "110.50000 -25.75000 0.00000",
+				"weights" : "0.86964 0.13036 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "139.97098 -22.18884 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 24 23 23",
+				"localpos" : "11.37552 -14.64975 0.00000",
+				"weights" : "0.86422 0.13578 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 25 23 23",
+				"localpos" : "-1.11200 -14.62200 0.00000",
+				"weights" : "0.62513 0.37487 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 24 23 23",
+				"localpos" : "13.17947 -18.28042 0.00000",
+				"weights" : "0.81063 0.18937 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 24 23 23",
+				"localpos" : "3.79184 -5.54991 0.00000",
+				"weights" : "0.63929 0.36071 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "54.25000 -25.62500 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "83.72098 -22.06384 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-68.96150 -3.59125 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-60.04182 3.67491 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-74.33333 7.33333 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-52.45818 -5.42491 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 25 23 23",
+				"localpos" : "-2.00000 -25.50000 0.00000",
+				"weights" : "0.86964 0.13036 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "27.47098 -21.93884 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-69.42950 16.40541 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-86.41299 12.81650 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-58.25000 -25.37500 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-28.77901 -21.81384 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-138.58701 -14.31650 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-145.76285 0.23875 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-150.66666 -8.83334 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-135.48717 -1.61375 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 24 23 23",
+				"localpos" : "-114.50000 -25.25000 0.00000",
+				"weights" : "0.86964 0.13036 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-85.02901 -21.68884 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-164.95816 -5.17491 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-157.37450 -14.27475 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-169.86200 -14.24700 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-170.75000 -25.12500 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-141.27899 -21.56384 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-220.00833 -8.16250 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-217.47728 -19.32203 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-215.84850 -10.25775 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-227.00000 -25.00000 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-209.58333 -22.70834 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "130.58334 -9.45834 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "156.03848 -4.09125 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "167.63797 -14.99700 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "155.15048 -14.96925 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "157.37448 12.27475 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "155.57053 15.90541 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "126.09952 12.34425 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "182.64551 11.70125 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "180.12552 -15.02475 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "181.92947 -18.65542 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "220.00833 6.16249 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-181.46150 -3.34125 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-172.54184 3.92491 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-213.17650 3.77025 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-207.05228 -15.20119 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-208.25000 -6.37500 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-182.64551 -13.70126 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-192.01944 -20.15694 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-195.72501 -12.63750 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-181.92950 16.65541 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-180.12550 13.02475 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-155.15048 12.96925 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-156.03850 2.09125 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-167.63800 12.99699 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 24 23 23",
+				"localpos" : "-113.61200 -14.37200 0.00000",
+				"weights" : "0.62513 0.37487 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-126.09950 -14.34425 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-111.38800 12.87199 0.00000",
+				"weights" : "0.62513 0.37487 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 24 23 23",
+				"localpos" : "-123.87550 12.89975 0.00000",
+				"weights" : "0.86421 0.13579 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 24 23 23",
+				"localpos" : "-125.67950 16.53041 0.00000",
+				"weights" : "0.81063 0.18937 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-142.66299 12.94150 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-99.78850 1.96625 0.00000",
+				"weights" : "0.92208 0.07792 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-98.90050 12.84425 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-89.51282 0.11375 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-101.12450 -14.39975 0.00000",
+				"weights" : "0.86421 0.13579 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-99.32051 -18.03042 0.00000",
+				"weights" : "0.81063 0.18937 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-55.13800 12.74699 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-67.62550 12.77475 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-94.41667 -8.95834 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-82.33701 -14.44150 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-69.84950 -14.46925 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-33.26283 -0.01125 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-26.08701 -14.56650 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-38.16667 -9.08334 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-43.07050 -18.15542 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-43.53850 1.84125 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-42.65051 12.71925 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-44.87450 -14.52475 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-57.36200 -14.49700 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-30.16299 12.69150 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 25 23 23",
+				"localpos" : "-13.17950 16.28041 0.00000",
+				"weights" : "0.81064 0.18936 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 25 23 23",
+				"localpos" : "-11.37550 12.64975 0.00000",
+				"weights" : "0.86422 0.13578 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "13.59952 12.59425 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 24 23 23",
+				"localpos" : "12.71152 1.71625 0.00000",
+				"weights" : "0.92208 0.07792 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 24 23 23",
+				"localpos" : "1.11203 12.62199 0.00000",
+				"weights" : "0.62513 0.37487 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 25 23 23",
+				"localpos" : "-3.79184 3.54991 0.00000",
+				"weights" : "0.63929 0.36071 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "68.96152 1.59125 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "57.36203 12.49699 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "69.84952 12.46925 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "67.62552 -14.77475 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "69.42947 -18.40542 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 26 23 23",
+				"localpos" : "101.12448 12.39975 0.00000",
+				"weights" : "0.72032 0.27968 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "74.33334 -9.33334 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "79.23718 -0.26125 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "86.41299 -14.81650 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "98.90048 -14.84425 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "42.65048 -14.71925 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "44.87448 12.52475 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "43.07053 16.15541 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "24 23 23 23",
+				"localpos" : "-79.23718 -1.73875 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "142.66299 -14.94150 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 25 23 23",
+				"localpos" : "125.67947 -18.53042 0.00000",
+				"weights" : "0.81063 0.18937 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 25 23 23",
+				"localpos" : "123.87552 -14.89975 0.00000",
+				"weights" : "0.86421 0.13579 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 26 23 23",
+				"localpos" : "111.38803 -14.87200 0.00000",
+				"weights" : "0.62513 0.37487 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "213.17651 -5.77025 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "208.25000 4.37500 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "195.72501 10.63750 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "26 23 23 23",
+				"localpos" : "192.01944 18.15694 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 26 23 23",
+				"localpos" : "99.78848 -3.96625 0.00000",
+				"weights" : "0.78421 0.21579 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "89.51282 -2.11375 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "30.16299 -14.69150 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "25 23 23 23",
+				"localpos" : "18.08334 -9.20834 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			},
+			{
+				"indices" : "23 23 23 23",
+				"localpos" : "-155.57050 -17.90542 0.00000",
+				"weights" : "1.00000 0.00000 0.00000 0.00000"
+			}
+		]
+	},
+	"skinning" : true,
+	"version" : "PUED0002"
+}
