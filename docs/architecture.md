@@ -56,6 +56,7 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
 - The framework re-exports it (`Core/WEFormatExport.swift`, `@_exported import WEFormat`), so the framework's files and tests use its types as their own; the editor's files `import WEFormat`.
 - **Tolerant JSON** (`TolerantJSON`): `decodeTolerant` (JSON5, so WE's comments and trailing commas), the one UTF-8 byte order mark skip (`TolerantJSON.withoutBOM`, `hasBOM`), and `TolerantJSON.object(from:)`, WE's own reader's tolerance (the mark, comments and trailing commas) for `JSONSerialization` values, which the editor reads its files with. `DecodeFailureLog` collects what element-wise decoding skipped.
 - **Digests as text** (`Digest.hex`): the lower-case hex every cache key, cache file name and stamp is spelled in, in the app and the editor.
+- **Models** (`Model/`, [`models-plan.md`](models-plan.md) §1): the `.mdl` types (`MDLModel`, `MDLMesh`, `MDLSkeleton`, `MDLAnimation` and the rest) and the one reader, `MDLReader` over `MDLByteReader`, which the player loads models and puppets with and the editor opens a puppet with (`PuppetMDLReader` maps its model onto a `PuppetDocument`; `readWithMeshRanges` gives the byte range of each mesh it keeps byte for byte). Strict, as WE's runtime is. What needs the app stays in the framework: `MDLModel+Load` (the wallpaper's package) and `MDLBonePhysics` (a bone's properties as `SceneJSON`).
 
 ### `Scene/`: the WE scene engine
 
