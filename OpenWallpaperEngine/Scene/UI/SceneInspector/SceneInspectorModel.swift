@@ -49,6 +49,9 @@ final class SceneInspectorModel: ObservableObject {
     /// at once, and a second edit inside the debounce doesn't drop the first.
     @Published private var editBuffer = SceneInspectorEditBuffer()
     private var storedValues: [String: String] { editBuffer.values(stored: targets.storedValues) }
+    /// Each item's `rawObject` parsed, for the getters every SwiftUI pass calls; an entry serves
+    /// only the text it was parsed from, so an edit in the JSON editor is parsed again.
+    private var parsedObjects: [String: (raw: String, object: [String: Any]?)] = [:]
 
     init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope]) {
         directory = wallpaper.wallpaperDirectory
@@ -85,6 +88,9 @@ final class SceneInspectorModel: ObservableObject {
         let storedValues: [String: String] = targets.storedValues
         let definitions = WallpaperEngineShareJSON.definitions(in: directory)
         let labels = WallpaperEngineLabels.load(wallpaperDirectory: directory)
+        // Read once per open: scenes repeat the same effects on many layers.
+        let effectLabels = WallpaperEngineLabels.load()
+        let shaders = SceneInspectorEffectShaders(wallpaperDirectory: directory)
         items = scene.objects.enumerated().map { index, object in
             let objectID = object.id ?? index
             var rawObject = rawObjects.indices.contains(index) ? prettyJSON(rawObjects[index]) : "{}"
@@ -95,7 +101,8 @@ final class SceneInspectorModel: ObservableObject {
                                                          authored: object.visible ?? true)
             let visible = visibility.isShown(storedValues)
             let switchedOn = visibility.isOn(storedValues)
-            let effects = makeEffects(object.effects ?? [], objectID: objectID, storedValues: storedValues)
+            let effects = makeEffects(object.effects ?? [], objectID: objectID, storedValues: storedValues,
+                                      labels: effectLabels, shaders: shaders)
             let version = SceneLayerVersion(object: object, definitions: definitions).map { (choice: $0, title: $0.title(labels: labels)) }
             // An empty or blank name is no name ("name": "" in WE's GIF template), as the Wallpaper
             // Editor's list treats it.
@@ -217,15 +224,8 @@ final class SceneInspectorModel: ObservableObject {
         }
     }
 
-    private func makeEffects(_ effects: [WEObjectEffect], objectID: Int,
-                             storedValues: [String: String]) -> [SceneInspectorEffect] {
-        let wallpaperDirectory = directory
-        let assets = WallpaperEngineAssets.directory
-        let labels = WallpaperEngineLabels.load()
-        let readFile: (String) -> Data? = { path in
-            FileManager.default.contents(atPath: wallpaperDirectory.appending(path: path).path)
-                ?? assets.flatMap { FileManager.default.contents(atPath: $0.appending(path: path).path) }
-        }
+    private func makeEffects(_ effects: [WEObjectEffect], objectID: Int, storedValues: [String: String],
+                             labels: WallpaperEngineLabels, shaders: SceneInspectorEffectShaders) -> [SceneInspectorEffect] {
         return effects.enumerated().map { effectIndex, effect in
             let name = ((effect.file as NSString).deletingLastPathComponent as NSString).lastPathComponent.lowercased()
             let effectID = "\(objectID):\(effectIndex)"
@@ -234,7 +234,7 @@ final class SceneInspectorModel: ObservableObject {
                 ?? effect.visible.map { $0 != false } ?? true
             // Parameters come from the effect's own shaders, as in WE's editor: its ranges,
             // defaults and labels, nothing widened or renamed.
-            let parameters = SceneEffectParameters.parameters(for: effect.file, readFile: readFile)
+            let parameters = shaders.parameters(for: effect.file)
             let authored = effect.passes?.first?.constants ?? [:]
             var controls: [SceneInspectorEffectControl] = []
             for parameter in parameters {
@@ -274,7 +274,7 @@ final class SceneInspectorModel: ObservableObject {
             }
             let authoredCombos = effect.passes?.first?.combos ?? [:]
             var combos: [SceneInspectorEffectCombo] = []
-            for combo in SceneEffectParameters.combos(for: effect.file, readFile: readFile) where combo.isEditable {
+            for combo in shaders.combos(for: effect.file) where combo.isEditable {
                 let comboID = "\(effectID):combo:\(combo.combo)"
                 let key = sceneAuthoredEffectOverrideKey(objectID: objectID, effectIndex: effectIndex, parameter: SceneEffectParameters.comboOverrideKey(combo.combo))
                 let authoredValue = authoredCombos.first { $0.key.caseInsensitiveCompare(combo.combo) == .orderedSame }?.value
@@ -460,8 +460,7 @@ final class SceneInspectorModel: ObservableObject {
 
     func origin(for item: SceneInspectorItem) -> SIMD3<Double> {
         guard let index = items.firstIndex(where: { $0.id == item.id }),
-              let data = items[index].rawObject.data(using: .utf8),
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+              let object = parsedObject(items[index]) else {
             return SIMD3<Double>(0, 0, 0)
         }
         return Self.parseOrigin(object["origin"]) ?? SIMD3<Double>(0, 0, 0)
@@ -469,8 +468,7 @@ final class SceneInspectorModel: ObservableObject {
 
     func moveObject(_ item: SceneInspectorItem, deltaX: Double, deltaY: Double) {
         guard let index = items.firstIndex(where: { $0.id == item.id }),
-              let data = items[index].rawObject.data(using: .utf8),
-              var object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+              var object = parsedObject(items[index]) else { return }
         let current = Self.parseOrigin(object["origin"]) ?? SIMD3<Double>(0, 0, 0)
         let updated = SIMD3<Double>(current.x + deltaX, current.y + deltaY, current.z)
         setObjectOrigin(item, index: index, object: &object, origin: updated)
@@ -478,8 +476,7 @@ final class SceneInspectorModel: ObservableObject {
 
     func alignObject(_ item: SceneInspectorItem, horizontal: SceneHorizontalSnap) {
         guard let index = items.firstIndex(where: { $0.id == item.id }),
-              let data = items[index].rawObject.data(using: .utf8),
-              var object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+              var object = parsedObject(items[index]) else { return }
         let current = Self.parseOrigin(object["origin"]) ?? SIMD3<Double>(0, 0, 0)
         let size = Self.parseSize(object["size"]) ?? SIMD2<Double>(300, 120)
         let x: Double
@@ -496,8 +493,7 @@ final class SceneInspectorModel: ObservableObject {
 
     func alignObject(_ item: SceneInspectorItem, vertical: SceneVerticalSnap) {
         guard let index = items.firstIndex(where: { $0.id == item.id }),
-              let data = items[index].rawObject.data(using: .utf8),
-              var object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+              var object = parsedObject(items[index]) else { return }
         let current = Self.parseOrigin(object["origin"]) ?? SIMD3<Double>(0, 0, 0)
         let size = Self.parseSize(object["size"]) ?? SIMD2<Double>(300, 120)
         let y: Double
@@ -523,8 +519,7 @@ final class SceneInspectorModel: ObservableObject {
 
     func scale(for item: SceneInspectorItem) -> Double {
         guard let index = items.firstIndex(where: { $0.id == item.id }),
-              let data = items[index].rawObject.data(using: .utf8),
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let object = parsedObject(items[index]),
               let parsed = Self.parseOrigin(object["scale"]) else {
             return 1
         }
@@ -533,8 +528,7 @@ final class SceneInspectorModel: ObservableObject {
 
     func setObjectScale(_ item: SceneInspectorItem, scale value: Double) {
         guard let index = items.firstIndex(where: { $0.id == item.id }),
-              let data = items[index].rawObject.data(using: .utf8),
-              var object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+              var object = parsedObject(items[index]) else { return }
         let current = Self.parseOrigin(object["scale"]) ?? SIMD3<Double>(1, 1, 1)
         // Scaling uniformly keeps the object's aspect, and the renderer scales each effect's mask
         // with the layer it belongs to, so masks follow along.
@@ -620,8 +614,7 @@ final class SceneInspectorModel: ObservableObject {
     /// An image layer's `alpha` (WE's default 1); nil while something else sets it (a user
     /// property, a script or an animation), which WE's editor shows no value for either.
     func alpha(for item: SceneInspectorItem) -> Double? {
-        guard let data = item.rawObject.data(using: .utf8),
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return 1 } // not an object: WE's default
+        guard let object = parsedObject(item) else { return 1 } // not an object: WE's default
         switch object["alpha"] {
         case nil: return 1
         case let number as NSNumber: return number.doubleValue
@@ -633,16 +626,14 @@ final class SceneInspectorModel: ObservableObject {
     /// Sets an image layer's `alpha`, saved with the object's edited JSON.
     func setAlpha(_ value: Double, for item: SceneInspectorItem) {
         guard let index = items.firstIndex(where: { $0.id == item.id }),
-              let data = items[index].rawObject.data(using: .utf8),
-              var object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+              var object = parsedObject(items[index]) else { return }
         object["alpha"] = min(max(value, 0), 1)
         saveObjectJSON(prettyJSON(object), item: items[index])
     }
 
     /// An image layer's `color` (WE's default white); nil while something else sets it.
     func color(for item: SceneInspectorItem) -> SIMD3<Double>? {
-        guard let data = item.rawObject.data(using: .utf8),
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return SIMD3(1, 1, 1) } // WE's default
+        guard let object = parsedObject(item) else { return SIMD3(1, 1, 1) } // WE's default
         guard let value = object["color"] else { return SIMD3(1, 1, 1) }
         guard !(value is [String: Any]), let parsed = Self.parseOrigin(value) else { return nil }
         return parsed
@@ -651,8 +642,7 @@ final class SceneInspectorModel: ObservableObject {
     /// Sets an image layer's `color`, saved with the object's edited JSON.
     func setColor(_ color: Color, for item: SceneInspectorItem) {
         guard let index = items.firstIndex(where: { $0.id == item.id }),
-              let data = items[index].rawObject.data(using: .utf8),
-              var object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+              var object = parsedObject(items[index]) else { return }
         let rgb = NSColor(color).usingColorSpace(.deviceRGB) ?? .white
         let components: [Double] = [rgb.redComponent, rgb.greenComponent, rgb.blueComponent].map { Double($0) }
         object["color"] = components.map { String(format: "%.5g", $0) }.joined(separator: " ")
@@ -661,16 +651,14 @@ final class SceneInspectorModel: ObservableObject {
 
     /// An image layer's `colorBlendMode` (WE's default 0, Normal).
     func blendMode(for item: SceneInspectorItem) -> Int {
-        guard let data = item.rawObject.data(using: .utf8),
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return 0 } // not an object: Normal
+        guard let object = parsedObject(item) else { return 0 } // not an object: Normal
         return (object["colorBlendMode"] as? NSNumber)?.intValue ?? 0
     }
 
     /// Sets an image layer's `colorBlendMode`, saved with the object's edited JSON.
     func setBlendMode(_ value: Int, for item: SceneInspectorItem) {
         guard let index = items.firstIndex(where: { $0.id == item.id }),
-              let data = items[index].rawObject.data(using: .utf8),
-              var object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+              var object = parsedObject(items[index]) else { return }
         object["colorBlendMode"] = value
         saveObjectJSON(prettyJSON(object), item: items[index])
     }
@@ -847,6 +835,15 @@ final class SceneInspectorModel: ObservableObject {
             if let image { return SceneInspectorTexture(id: "\(itemID):\(path)", path: path, image: image) }
         }
         return nil
+    }
+
+    /// `item.rawObject` as an object, parsed once per text (`parsedObjects`); nil when it isn't one.
+    private func parsedObject(_ item: SceneInspectorItem) -> [String: Any]? {
+        if let cached = parsedObjects[item.id], cached.raw == item.rawObject { return cached.object }
+        // Optional: text that isn't a JSON object has no fields to show (the JSON editor shows it).
+        let object = item.rawObject.data(using: .utf8).flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+        parsedObjects[item.id] = (item.rawObject, object)
+        return object
     }
 
     private func data(_ path: String) -> Data? {
