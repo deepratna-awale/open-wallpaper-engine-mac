@@ -68,6 +68,34 @@ final class AppStorageIsolationTests: XCTestCase {
         XCTAssertEqual(callers, ["KeychainStore.swift"])
     }
 
+    /// An `@AppStorage` without a store uses `UserDefaults.standard`, the user's real domain even in
+    /// the test host and isolated copies. The app passes `store: .app`; the editor package, which
+    /// can't see `.app`, passes the store the app hands it (`WallpaperEditorServices.preferences`).
+    func testEveryAppStorageNamesItsStore() throws {
+        let repository = AppIdentityLintTests.repository
+        let roots = ["OpenWallpaperEngine", "OpenWallpaperEngineApp", "OpenWallpaperEngineSaver",
+                     "OpenWallpaperEngineSaverExtension", "OWESaverBroker", "OWEChromiumHelper", "EditorHelper",
+                     "MCPServer", "Packages"]
+        // `@AppStorage("key")` or `AppStorage(wrappedValue: …, "key")` with no `store:` on the line.
+        let declaration = try NSRegularExpression(pattern: #"@AppStorage\(|\bAppStorage\(wrappedValue:"#)
+        var leaks: [String] = []
+        for root in roots {
+            let url = repository.appending(path: root, directoryHint: .isDirectory)
+            guard let files = FileManager.default.enumerator(at: url, includingPropertiesForKeys: nil) else { continue }
+            for case let file as URL in files where file.pathExtension == "swift" {
+                guard !file.pathComponents.contains(where: AppIdentityLintTests.skippedFolders.contains) else { continue }
+                let text = try String(contentsOf: file, encoding: .utf8)
+                for (number, line) in text.components(separatedBy: "\n").enumerated() {
+                    guard !line.trimmingCharacters(in: .whitespaces).hasPrefix("//"),
+                          declaration.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)) != nil,
+                          !line.contains("store:") else { continue }
+                    leaks.append("\(file.lastPathComponent):\(number + 1)")
+                }
+            }
+        }
+        XCTAssertEqual(leaks, [], "an @AppStorage without store: writes UserDefaults.standard")
+    }
+
     /// Metal keeps its shader cache in `<Darwin user cache>/<bundle id>/com.apple.metal`, which
     /// every copy with the app's bundle id would share; the test host moved its Darwin folders into
     /// a subfolder of its own at launch (`DarwinUserDirectories`), so it never fills the user's.
