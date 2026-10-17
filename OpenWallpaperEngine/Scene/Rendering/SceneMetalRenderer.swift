@@ -304,6 +304,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Layers drawn through their material, and prelighting passes run (tests, diagnostics).
     var imageMaterialDraws: Int { imageMaterials?.drawsEncoded ?? 0 }
     var imageMaterialPrelitDraws: Int { imageMaterials?.prelitDraws ?? 0 }
+    /// Per layer id, the draws of a layer with a material plan that fell back to the native draw
+    /// (its pipeline compiling or failed, or an input missing) (tests, diagnostics).
+    private(set) var imageMaterialFallbacks: [String: Int] = [:]
     /// Puppet meshes drawn into their images (tests, diagnostics).
     var puppetMeshDraws: Int { puppets?.drawsEncoded ?? 0 }
     /// A puppet layer's image once its mesh has been drawn, and the texture the mesh samples (tests,
@@ -787,6 +790,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         effectGraph?.releaseTargets()
         particleMaterials?.releaseAll()
         imageMaterials?.releaseAll()
+        imageMaterialFallbacks.removeAll()
         puppets?.releaseAll()
         spriteFrameInputs.releaseAll()
         puppetAlbedos.removeAll()
@@ -2407,6 +2411,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             encoder.setRenderPipelineState(target.pipelines.normal)
             return
         }
+        if entry.layer.imageMaterial != nil { imageMaterialFallbacks[entry.layer.id, default: 0] += 1 }
         target.depth?.apply(layerRaster(entry), to: encoder)
         let additive = entry.layer.additive
         if var placed = draw.placement?.native,
