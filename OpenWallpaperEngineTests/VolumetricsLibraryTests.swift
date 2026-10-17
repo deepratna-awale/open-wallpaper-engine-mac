@@ -420,9 +420,7 @@ final class VolumetricsLibraryTests: XCTestCase {
         }
 
         private func waitForContent() {
-            let deadline = Date().addingTimeInterval(60)
-            while !renderer.hasContent, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
-            XCTAssertTrue(renderer.hasContent)
+            waitUntil("the scene's content", timeout: 60) { renderer.hasContent }
         }
 
         func draw() {

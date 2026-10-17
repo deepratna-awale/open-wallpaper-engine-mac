@@ -18,11 +18,14 @@ extension EnvironmentValues {
 /// from the bar between them and remembered.
 struct TimelineDock<Content: View>: View {
     let timeline: SceneTimelineEditor?
+    /// Where the height is kept: the app's defaults (`WallpaperEditorServices.preferences`), so a
+    /// test or an isolated copy never writes the user's real domain.
+    let preferences: UserDefaults
     @ViewBuilder var content: () -> Content
 
     var body: some View {
         if let timeline {
-            TimelineDockContent(timeline: timeline, content: content())
+            TimelineDockContent(timeline: timeline, content: content(), preferences: preferences)
         } else {
             content()
         }
@@ -32,10 +35,16 @@ struct TimelineDock<Content: View>: View {
 private struct TimelineDockContent<Content: View>: View {
     @ObservedObject var timeline: SceneTimelineEditor
     let content: Content
-    @AppStorage("WallpaperEditorTimelineHeight") private var height: Double = 250
+    @AppStorage private var height: Double
     @State private var dragStartHeight: Double?
 
     private static var heights: ClosedRange<Double> { 150...640 }
+
+    init(timeline: SceneTimelineEditor, content: Content, preferences: UserDefaults) {
+        self.timeline = timeline
+        self.content = content
+        _height = AppStorage(wrappedValue: 250, "WallpaperEditorTimelineHeight", store: preferences)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
