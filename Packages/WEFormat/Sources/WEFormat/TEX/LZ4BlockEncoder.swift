@@ -4,14 +4,14 @@ import Foundation
 /// decodes them). A greedy matcher over a hash of 4-byte sequences, within LZ4's 64 KiB window,
 /// keeping the block format's end rules (the last 5 bytes are literals, and no match starts in
 /// the last 12), so any LZ4 decoder, the strict ones included, accepts the block.
-enum LZ4BlockEncoder {
-    static let minimumMatch = 4
-    static let lastLiterals = 5
-    static let matchSafeDistance = 12
-    static let window = 65_535
+public enum LZ4BlockEncoder {
+    public static let minimumMatch = 4
+    public static let lastLiterals = 5
+    public static let matchSafeDistance = 12
+    public static let window = 65_535
     private static let hashBits = 16
 
-    static func compress(_ input: [UInt8]) -> [UInt8] {
+    public static func compress(_ input: [UInt8]) -> [UInt8] {
         var output: [UInt8] = []
         output.reserveCapacity(input.count / 2 + 16)
         let count = input.count

@@ -10,41 +10,49 @@ import Foundation
 /// TEXB0003: i32 FreeImage format   TEXB0004: i32 FreeImage format, u32 variant count (`TEXVariants`)
 /// per image: u32 mipmap count, per mipmap: u32 width, height, [u32 compression, uncompressed size,] stored size, bytes
 /// ```
-struct TEXFileHeader: Equatable {
-    struct Mipmap: Equatable {
-        var width: Int
-        var height: Int
+public struct TEXFileHeader: Equatable {
+    public struct Mipmap: Equatable {
+        public var width: Int
+        public var height: Int
         /// 0 stored as is, 1 LZ4.
-        var compression: UInt32
-        var uncompressedSize: Int
+        public var compression: UInt32
+        public var uncompressedSize: Int
         /// The stored bytes' range in the file.
-        var stored: Range<Int>
+        public var stored: Range<Int>
+
+        public init(width: Int, height: Int, compression: UInt32, uncompressedSize: Int, stored: Range<Int>) {
+            self.width = width
+            self.height = height
+            self.compression = compression
+            self.uncompressedSize = uncompressedSize
+            self.stored = stored
+        }
     }
 
-    var format: UInt32
-    var flags: UInt32
-    var textureWidth: Int
-    var textureHeight: Int
-    var imageWidth: Int
-    var imageHeight: Int
+    public var format: UInt32
+    public var flags: UInt32
+    public var textureWidth: Int
+    public var textureHeight: Int
+    public var imageWidth: Int
+    public var imageHeight: Int
     /// The `TEXI` header's last word, kept as it is (WE writes the texture's colour there).
-    var colorWord: UInt32
+    public var colorWord: UInt32
     /// 1…4, from `TEXB000n`.
-    var containerVersion: Int
-    var imageCount: Int
+    public var containerVersion: Int
+    public var imageCount: Int
     /// The FreeImage format of an embedded picture (PNG, JPEG…); -1 for raw pixels.
-    var freeImageFormat: Int32
-    var isVideo: Bool
+    public var freeImageFormat: Int32
+    public var isVideo: Bool
     /// The texture variants `TEXB0004` declares (`TEXVariants`); with any, the mipmaps aren't
     /// listed, as variant patches follow each one.
-    var variantCount: Int
-    var mipmaps: [Mipmap]
+    public var variantCount: Int
+    public var mipmaps: [Mipmap]
     /// Bytes after the first image's mipmaps (more images, a sprite sheet's frames).
-    var trailingByteCount: Int
+    public var trailingByteCount: Int
 
     /// The header of `data`; nil when it isn't a `.tex` this reads (video textures and multi-image
     /// files still give their header, without mipmaps past the first image).
-    init?(_ data: Data) {
+    public init?(_ data: Data) {
         let bytes = [UInt8](data)
         var cursor = 0
         func word() -> UInt32? {

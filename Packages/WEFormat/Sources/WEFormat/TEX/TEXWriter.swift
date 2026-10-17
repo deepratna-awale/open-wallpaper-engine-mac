@@ -3,33 +3,52 @@ import Foundation
 /// Writes a single-image `.tex` (`TEXFileHeader` has the layout) with no FreeImage picture: in
 /// WE's newest container, `TEXB0004` with no video, as WE's mobile export writes the textures it
 /// converts, or in `TEXB0003`, as WE's editor writes a painted effect mask (`effectMask`).
-enum TEXWriter {
+public enum TEXWriter {
     /// The `TEXB` container: `TEXB0004` has a video word after the FreeImage format.
-    enum Container: Equatable {
+    public enum Container: Equatable {
         case b0003, b0004
     }
 
-    struct Mipmap: Equatable {
-        var width: Int
-        var height: Int
+    public struct Mipmap: Equatable {
+        public var width: Int
+        public var height: Int
         /// 0 stored as is, 1 LZ4.
-        var compression: UInt32
-        var uncompressedSize: Int
-        var stored: Data
+        public var compression: UInt32
+        public var uncompressedSize: Int
+        public var stored: Data
+
+        public init(width: Int, height: Int, compression: UInt32, uncompressedSize: Int, stored: Data) {
+            self.width = width
+            self.height = height
+            self.compression = compression
+            self.uncompressedSize = uncompressedSize
+            self.stored = stored
+        }
     }
 
-    struct Texture: Equatable {
-        var format: UInt32
-        var flags: UInt32
-        var textureWidth: Int
-        var textureHeight: Int
-        var imageWidth: Int
-        var imageHeight: Int
-        var colorWord: UInt32
-        var mipmaps: [Mipmap]
+    public struct Texture: Equatable {
+        public var format: UInt32
+        public var flags: UInt32
+        public var textureWidth: Int
+        public var textureHeight: Int
+        public var imageWidth: Int
+        public var imageHeight: Int
+        public var colorWord: UInt32
+        public var mipmaps: [Mipmap]
+
+        public init(format: UInt32, flags: UInt32, textureWidth: Int, textureHeight: Int, imageWidth: Int, imageHeight: Int, colorWord: UInt32, mipmaps: [Mipmap]) {
+            self.format = format
+            self.flags = flags
+            self.textureWidth = textureWidth
+            self.textureHeight = textureHeight
+            self.imageWidth = imageWidth
+            self.imageHeight = imageHeight
+            self.colorWord = colorWord
+            self.mipmaps = mipmaps
+        }
     }
 
-    static func data(_ texture: Texture, container: Container = .b0004) -> Data {
+    public static func data(_ texture: Texture, container: Container = .b0004) -> Data {
         var data = Data()
         func word(_ value: UInt32) { withUnsafeBytes(of: value.littleEndian) { data.append(contentsOf: $0) } }
         func tag(_ text: String) { data.append(contentsOf: Array(text.utf8) + [0]) }
@@ -56,7 +75,7 @@ enum TEXWriter {
     /// Workshop scenes): one 8-bit channel (`FORMAT_R8`, format 9), clamped UVs, the texture the
     /// image's own size (no power-of-two padding), one LZ4 mipmap in a `TEXB0003` container.
     /// `pixels`: `width` × `height` grey values, rows top to bottom.
-    static func effectMask(_ pixels: [UInt8], width: Int, height: Int) -> Data {
+    public static func effectMask(_ pixels: [UInt8], width: Int, height: Int) -> Data {
         precondition(pixels.count == width * height, "a mask has one byte per pixel")
         return data(Texture(format: UInt32(TEXImageFormat.r8.rawValue), flags: TEXFlags.clampUVs.rawValue,
                             textureWidth: width, textureHeight: height, imageWidth: width, imageHeight: height,
