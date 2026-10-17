@@ -29,8 +29,8 @@ final class UserPropertyTypesTests: XCTestCase {
         XCTAssertEqual(entries["clock"]?["value"] as? String, "", "a group has an empty value")
         XCTAssertEqual(entries["background"]?["type"] as? String, "scenetexture")
         XCTAssertEqual(entries["background"]?["value"] as? String, "")
-        XCTAssertEqual(entries["shortcut_1"]?["type"] as? String, "usershortcut")
-        XCTAssertEqual(entries["shortcut_1"]?["value"] as? String, "")
+        XCTAssertEqual(entries["shortcut1"]?["type"] as? String, "usershortcut")
+        XCTAssertEqual(entries["shortcut1"]?["value"] as? String, "")
         XCTAssertEqual(entries["slides"]?["mode"] as? String, "ondemand", "WE's first fetch mode")
         XCTAssertEqual(UserPropertyAuthoring.read(projectJSON: written).map(\.kind).suffix(4),
                        [.group, .sceneTexture, .userShortcut, .directory])

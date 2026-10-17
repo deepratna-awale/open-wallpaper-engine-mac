@@ -48,7 +48,8 @@ final class SceneEditOperationContext {
     /// The wallpaper's user properties as the editor authors them.
     var properties: UserPropertyAuthoring {
         if let propertyAuthoring { return propertyAuthoring }
-        let authoring = UserPropertyAuthoring(session: session, projectJSON: resources.projectJSON)
+        let authoring = UserPropertyAuthoring(session: session, projectJSON: resources.projectJSON,
+                                             readAsset: { [resources] in resources.readAsset($0) })
         propertyAuthoring = authoring
         return authoring
     }
