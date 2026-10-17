@@ -43,6 +43,38 @@ final class NewWallpaperWizardTests: XCTestCase {
         XCTAssertEqual(NewWallpaperTemplates.templates(assets: nil), [])
     }
 
+    /// WE's own templates (`projects/templates`, beside the assets of `OWE_ASSETS`, or the cache's
+    /// copy): New Wallpaper lists Flag and Animated GIF, and builds a scene from Flag and a picture.
+    func testWEsTemplatesComeWithTheAssets() throws {
+        let assets = try Fixtures.assets()
+        let templates = NewWallpaperTemplates.templates(assets: assets)
+        XCTAssertEqual(Set(templates.map(\.name)), ["Flag", "Animated GIF"], "WE's templates for \(assets.path)")
+        let flag = try XCTUnwrap(templates.first { $0.name == "Flag" })
+        XCTAssertEqual(flag.options.map(\.destination), ["materials/flag.png"])
+        XCTAssertEqual(templates.first { $0.name == "Animated GIF" }?.options.map(\.animatedOnly), [true])
+
+        let context = try XCTUnwrap(CGContext(data: nil, width: 40, height: 20, bitsPerComponent: 8, bytesPerRow: 0,
+                                              space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                              bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        context.setFillColor(red: 1, green: 0, blue: 0, alpha: 1)
+        context.fill(CGRect(x: 0, y: 0, width: 40, height: 20))
+        let url = scratch.appending(path: "mine.png")
+        let destination = try XCTUnwrap(CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, try XCTUnwrap(context.makeImage()), nil)
+        XCTAssertTrue(CGImageDestinationFinalize(destination))
+        let library = scratch.appending(path: "Library", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: library, withIntermediateDirectories: true)
+        let folder = try NewWallpaperBuilder().scene(from: flag, title: "My Flag",
+                                                     pictures: ["materials/flag.png": try NewWallpaperBuilder.Picture(url: url)],
+                                                     in: library)
+        let project = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: folder.appending(path: "project.json")))
+            as? [String: Any])
+        XCTAssertEqual(project["type"] as? String, "scene")
+        XCTAssertEqual(project["title"] as? String, "My Flag")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: folder.appending(path: "scene.json").path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: folder.appending(path: "materials/flag.png").path))
+    }
+
     func testASceneFromAPictureDraws() throws {
         let context = try XCTUnwrap(CGContext(data: nil, width: 64, height: 32, bitsPerComponent: 8, bytesPerRow: 0,
                                               space: CGColorSpace(name: CGColorSpace.sRGB)!,

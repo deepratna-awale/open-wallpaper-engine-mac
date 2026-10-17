@@ -14,8 +14,10 @@
 # Kept: effect manifests (without editor preview projects), GLSL shaders and shared headers
 # (without Direct3D or editor shaders), materials, models, particles, the editor's particle presets
 # (without their preview projects), the SceneScript runtime, the compatibility patches, the
-# built-in fonts with their licence files, and the UI strings (`<install>/locale/ui_*.json`,
-# beside `assets`) that translate label keys.
+# built-in fonts with their licence files, the UI strings (`<install>/locale/ui_*.json`, beside
+# `assets`) that translate label keys, WE's project templates for New Wallpaper
+# (`<install>/projects/templates`, into `templates`) and the script editor's snippets
+# (`<install>/ui/dist/monaco/snippets/*.js`, into `snippets`).
 
 set -euo pipefail
 
@@ -54,6 +56,19 @@ LOCALE="$(dirname "$ASSETS")/locale"
 if [[ -d "$LOCALE" ]]; then
     mkdir -p "$STAGING/locale"
     rsync -a --include 'ui_*.json' --exclude '*' "$LOCALE/" "$STAGING/locale/"
+fi
+
+# Only an install has these; an assets folder alone doesn't.
+TEMPLATES="$(dirname "$ASSETS")/projects/templates"
+if [[ -d "$TEMPLATES" ]]; then
+    rsync -a --exclude '.DS_Store' "$TEMPLATES/" "$STAGING/templates/"
+fi
+
+SNIPPETS="$(dirname "$ASSETS")/ui/dist/monaco/snippets"
+if [[ -d "$SNIPPETS" ]]; then
+    mkdir -p "$STAGING/snippets"
+    rsync -a --include '*.js' --exclude '*' "$SNIPPETS/" "$STAGING/snippets/"
+    rmdir "$STAGING/snippets" 2>/dev/null || true
 fi
 
 # What the app shows in Settings › Assets for a cache it didn't download itself.

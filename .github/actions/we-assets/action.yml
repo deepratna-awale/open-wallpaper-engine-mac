@@ -53,16 +53,22 @@ runs:
           echo "$name=$(python3 -c 'import os, sys; print(os.path.abspath(sys.argv[1]))' "${!name}")" >> "$GITHUB_ENV"
         done
 
+    # The cache key is the build and the revision of what Scripts/fetch-we-assets.sh downloads:
+    # bump ASSET_CACHE_REVISION whenever its file list changes, so the next run on main downloads
+    # and saves the assets again instead of restoring an entry without the new files.
     - name: Read the Wallpaper Engine build
       id: build
       shell: bash
       env:
         BUILD_ID: ${{ inputs.build-id }}
+        # 2: New Wallpaper's projects/templates and the script editor's ui/dist/monaco/snippets.
+        ASSET_CACHE_REVISION: '2'
       run: |
         id=$BUILD_ID
         [[ -n "$id" ]] || id=$(Scripts/fetch-we-assets.sh --build-id || true)
         [[ "$id" =~ ^[0-9]+$ ]] || id=unknown
         echo "id=$id" >> "$GITHUB_OUTPUT"
+        echo "key=we-assets-enc-r$ASSET_CACHE_REVISION-$id" >> "$GITHUB_OUTPUT"
         echo "Wallpaper Engine build: $id" >> "$GITHUB_STEP_SUMMARY"
 
     # The assets are cached only as an AES-256 archive. The key lives in the steam-ci
@@ -93,7 +99,7 @@ runs:
       uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ env.WE_ASSETS_ENC }}
-        key: we-assets-enc-${{ steps.build.outputs.id }}
+        key: ${{ steps.build.outputs.key }}
         lookup-only: ${{ inputs.prime }}
         fail-on-cache-miss: ${{ inputs.download != 'true' && inputs.prime != 'true' }}
 
@@ -169,7 +175,7 @@ runs:
       uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ env.WE_ASSETS_ENC }}
-        key: we-assets-enc-${{ steps.build.outputs.id }}
+        key: ${{ steps.build.outputs.key }}
 
     # actions/cache/save only warns when it can't save; the shards depend on this entry.
     - name: Check that the cache holds the assets
@@ -177,6 +183,6 @@ runs:
       uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ env.WE_ASSETS_ENC }}
-        key: we-assets-enc-${{ steps.build.outputs.id }}
+        key: ${{ steps.build.outputs.key }}
         lookup-only: 'true'
         fail-on-cache-miss: 'true'
