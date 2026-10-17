@@ -56,7 +56,7 @@ indirect enum WEJSONDocument: Equatable {
         var index = 0
 
         mutating func skipBOM() {
-            if bytes.starts(with: [0xEF, 0xBB, 0xBF]) { index = 3 }
+            if TolerantJSON.hasBOM(bytes) { index = TolerantJSON.byteOrderMark.count }
         }
 
         mutating func skipSpace() {

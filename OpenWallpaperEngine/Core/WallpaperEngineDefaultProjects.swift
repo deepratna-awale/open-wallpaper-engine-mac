@@ -25,8 +25,7 @@ enum WallpaperEngineDefaultProjects {
 
     /// The project's wallpaper type, lower-cased: its `type`, else the one its `file` implies.
     static func type(ofProjectAt folder: URL) throws -> String {
-        var data = try Data(contentsOf: folder.appending(path: "project.json"))
-        if data.starts(with: [0xEF, 0xBB, 0xBF]) { data.removeFirst(3) }
+        let data = TolerantJSON.withoutBOM(try WEProject.data(in: folder))
         let root = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
         if let type = root["type"] as? String, !type.isEmpty { return type.lowercased() }
         return WEProject.impliedType(file: root["file"] as? String ?? "")
