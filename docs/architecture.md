@@ -42,6 +42,7 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
 
 - **Logging and diagnostics:** `OWELog`, signposts and frame metrics.
 - **Settings:** the global settings model and store.
+- **Wallpaper model** (`Core/Wallpaper`): `WEWallpaper`, `WEProject`, `WallpaperPlacement`, `WallpaperInstanceKey`, `WallpaperPropertyScope`, `WallpaperSettingsIdentity`, `DisplayCanvas` and the storage folder (`WallpaperStorage`).
 - The **WE assets location**.
 - The **Objective-C exception catcher**.
 - **Caches** (`Core/Caches`): last use of a cache entry (`CacheEntryUse`, its modification date), what is in use now (`CacheLeases`), the sweeper that expires entries unused for 60 days and clears them (`CacheSweeper`), and macOS's Metal shader cache of the app (`MetalShaderCache`, reset at launch; `DarwinUserDirectories` gives an isolated copy its own). The app's list of caches and their schedule are in `App/Caches` (`CacheFolder+OWE`, `CacheMaintenance`, `MetalShaderCacheLaunch`).
@@ -78,7 +79,7 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
 
 ### `Library/`, `Workshop/`, `Settings/`, `UI/`, `App/`
 
-- **`Library/`:** app-shell features. It holds the wallpaper library model and the import paths (`WEProject`, `WallpaperDirectory`, zip/pkg import).
+- **`Library/`:** app-shell features. It holds the wallpaper library and the import paths (`WallpaperDirectory`, zip/pkg import); the wallpaper model itself is in `Core/Wallpaper`.
   - Installed lists what WE lists (`InstalledLibrary`): items whose project.json `type` is scene, video, web or application. Asset items (`"category": "Asset"`, no `type`) and items downloaded only as another wallpaper's dependency (`WorkshopDependencyIndex`, a hidden file in the library folder) stay on disk, where `WorkshopAssetResolver` finds them, but aren't listed. Downloading such an item yourself makes it yours and lists it.
   - Library folders (Settings › Assets › Library Folders, `LibraryFolders`) are more folders of wallpaper folders the Installed tab lists after the storage folder's: only folders with a project.json, and a Workshop item already listed from an earlier folder isn't listed again. They are read only: nothing is downloaded or moved into them. `LibraryFolderWatcher` lists their changes as they happen.
   - A library entry may be a symbolic link to a wallpaper folder elsewhere, and a library folder may be a link too. A linked wallpaper runs from the folder the link points to (`WEWallpaper`, `ContainedPath.followingFolderLink`), because Foundation's URL listings (`contentsOfDirectory(at:)`, `enumerator(at:)`) don't follow a link they start from. A linked Workshop dependency is resolved the same way (`WorkshopAssetResolver.itemDirectory`). Deleting a linked wallpaper removes the link, never the folder it points to (`WallpaperDeletion`).
