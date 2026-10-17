@@ -30,11 +30,6 @@ final class UpdateShaderPrewarmerTests: XCTestCase {
                                      verifyBundle: verify, environment: ["OWE_ISOLATED_STATE": "tag"], timeout: timeout)
     }
 
-    private func spin(until condition: () -> Bool, seconds: TimeInterval = 5) {
-        let deadline = Date().addingTimeInterval(seconds)
-        while !condition(), Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
-    }
-
     private func settle() { RunLoop.main.run(until: Date().addingTimeInterval(0.1)) }
 
     func testSameKeyInstallsWithoutPrewarm() throws {
@@ -44,7 +39,7 @@ final class UpdateShaderPrewarmerTests: XCTestCase {
         spin { installs > 0 }
         settle()
         XCTAssertEqual(installs, 1)
-        XCTAssertEqual(runner.outputArguments, [[ShaderPrewarmCommand.printKeyArgument]])
+        XCTAssertEqual(runner.outputArguments, [[HelperRunCommand.printKeyArgument]])
         XCTAssertTrue(runner.startedArguments.isEmpty)
     }
 
@@ -53,7 +48,7 @@ final class UpdateShaderPrewarmerTests: XCTestCase {
         let prewarmer = prewarmer()
         prewarmer.prewarmThenInstall(version: "42") { self.installs += 1 }
         spin { runner.exited != nil }
-        XCTAssertEqual(runner.startedArguments, [[ShaderPrewarmCommand.prewarmArgument]])
+        XCTAssertEqual(runner.startedArguments, [[HelperRunCommand.prewarmArgument]])
         XCTAssertEqual(runner.startedEnvironment?["OWE_ISOLATED_STATE"], "tag", "the helper uses the app's isolated state")
         XCTAssertEqual(installs, 0, "the install waits for the prewarm")
         runner.exited?(0, .exit)

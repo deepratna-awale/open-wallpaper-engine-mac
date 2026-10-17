@@ -77,8 +77,6 @@ final class SteamCmdSession: SteamCmdSessionRunning, @unchecked Sendable {
     /// not the item, is the problem.
     private static let sessionLostReasons = ["No Connection", "Not Logged On", "NoConnection", "NotLoggedOn",
                                              "Service Unavailable", "ServiceUnavailable"]
-    private static let sessionLostLines = ["Not logged on", "NOT LOGGED ON", "No connection",
-                                           "Connection to Steam servers lost"]
 
     private let launcher: SteamCmdProcessLaunching
     private let timer: SteamCmdSessionTimer

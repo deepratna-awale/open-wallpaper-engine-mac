@@ -116,7 +116,7 @@ final class BatteryQualityTests: XCTestCase {
         defer { cancellable.cancel() }
 
         source.send(Self.battery)
-        try await waitUntil { model.powerState == Self.battery }
+        try await sleepUntil("the battery state", timeout: 2) { model.powerState == Self.battery }
         XCTAssertTrue(model.isBatteryQualityActive)
         XCTAssertEqual(model.effectiveSettings, BatteryQuality.lowered(model.settings))
         XCTAssertEqual(model.settings, ultra(), "the stored settings are untouched")
@@ -131,7 +131,7 @@ final class BatteryQualityTests: XCTestCase {
         XCTAssertEqual(model.effectiveSettings.fps, GSQuality.low.fps)
 
         source.send(Self.ac)
-        try await waitUntil { model.powerState == Self.ac }
+        try await sleepUntil("the AC state", timeout: 2) { model.powerState == Self.ac }
         XCTAssertEqual(model.effectiveSettings, model.settings, "the user's settings come back on AC")
         XCTAssertFalse(model.isBatteryQualityActive)
     }
@@ -160,11 +160,6 @@ final class BatteryQualityTests: XCTestCase {
             let localizations = try XCTUnwrap(strings[key]?["localizations"] as? [String: Any], key)
             XCTAssertEqual(localizations.count, 15, key)
         }
-    }
-
-    private func waitUntil(_ condition: () -> Bool) async throws {
-        for _ in 0..<200 where !condition() { try await Task.sleep(for: .milliseconds(10)) }
-        XCTAssertTrue(condition())
     }
 }
 

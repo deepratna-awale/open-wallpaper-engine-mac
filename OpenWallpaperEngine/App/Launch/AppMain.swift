@@ -31,18 +31,14 @@ public enum AppMain {
         MetalShaderCacheLaunch.run()
 
         MainActor.assumeIsolated {
-            // A helper run (`ShaderPrewarmCommand`) does its work and exits before the app's
+            // A helper run (`HelperRunCommand`) does its work and exits before the app's
             // lifecycle starts: no delegate, no windows, no playback.
-            if let status = ShaderPrewarmCommand.run(arguments: ProcessInfo.processInfo.arguments) {
+            if let status = HelperRunCommand.run(arguments: ProcessInfo.processInfo.arguments) {
                 exit(status)
             }
 #if DEBUG
             // Debug harness for the Chromium engine's frame sharing (docs/chromium-engine.md).
             if let status = ChromiumFrameCaptureCommand.run(arguments: ProcessInfo.processInfo.arguments) {
-                exit(status)
-            }
-            // Spike harness for the live screen saver's frame sources.
-            if let status = ScreenSaverLiveSpikeCommand.run(arguments: ProcessInfo.processInfo.arguments) {
                 exit(status)
             }
 #endif

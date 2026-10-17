@@ -17,7 +17,7 @@ import Foundation
 /// the usual folders, unchanged. Launch arguments (`-Key value`) still override any default in an
 /// isolated copy, e.g. `-CustomWallpapersDirectory <path>`.
 ///
-/// A helper run of the app (`ShaderPrewarmCommand`: `--prewarm-shaders`, `--print-shader-cache-key`)
+/// A helper run of the app (`HelperRunCommand`: `--prewarm-shaders`, `--print-shader-cache-key`)
 /// uses the same folders but only **reads** the defaults: `defaults` then is a scratch suite that
 /// falls back to a copy of the real domain (`readOnlyView`), so nothing it or the code it runs
 /// sets reaches the user's defaults; `discardReadOnlyScratch` deletes the scratch suite.
@@ -33,7 +33,7 @@ struct AppStorageLocation: @unchecked Sendable { // UserDefaults is thread-safe;
             environment: ProcessInfo.processInfo.environment,
             arguments: ProcessInfo.processInfo.arguments,
             isRunningTests: NSClassFromString("XCTestCase") != nil),
-        readOnlyDefaults: ShaderPrewarmCommand.isHelperRun(arguments: ProcessInfo.processInfo.arguments))
+        readOnlyDefaults: HelperRunCommand.isHelperRun(arguments: ProcessInfo.processInfo.arguments))
 
     /// `nil` for the user's real state.
     let isolationTag: String?

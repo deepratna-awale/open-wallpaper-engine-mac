@@ -88,11 +88,11 @@ final class ScreenSaverStorageTests: XCTestCase {
     }
 
     func testHelperRunArgumentsAreReadOnlyHelperRuns() {
-        XCTAssertTrue(ShaderPrewarmCommand.isHelperRun(arguments: ["app", ShaderPrewarmCommand.prepareArgument]))
-        XCTAssertFalse(ShaderPrewarmCommand.isHelperRun(arguments: ["app", "--render-screensaver-loop"]), "the loop render is gone")
-        XCTAssertEqual(ShaderPrewarmCommand.size("3840x2160"), SIMD2(3840, 2160))
-        XCTAssertNil(ShaderPrewarmCommand.size("3840"))
-        XCTAssertNil(ShaderPrewarmCommand.size("0x10"))
+        XCTAssertTrue(HelperRunCommand.isHelperRun(arguments: ["app", HelperRunCommand.prepareArgument]))
+        XCTAssertFalse(HelperRunCommand.isHelperRun(arguments: ["app", "--render-screensaver-loop"]), "the loop render is gone")
+        XCTAssertEqual(HelperRunCommand.size("3840x2160"), SIMD2(3840, 2160))
+        XCTAssertNil(HelperRunCommand.size("3840"))
+        XCTAssertNil(HelperRunCommand.size("0x10"))
     }
 
     // MARK: Earlier versions' recordings

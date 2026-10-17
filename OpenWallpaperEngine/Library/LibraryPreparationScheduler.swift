@@ -2,7 +2,7 @@ import Foundation
 
 /// Prepares a wallpaper that just arrived in the library (a Workshop download or an import) so
 /// its first show is warm: the shader variant cache, the pipeline archive and the "Optimise
-/// textures" blobs. The work is the app's own helper run (`ShaderPrewarmCommand`,
+/// textures" blobs. The work is the app's own helper run (`HelperRunCommand`,
 /// `--prepare-wallpapers`), which loads and draws the scene offscreen the way showing it would,
 /// in its own process at background priority.
 ///
@@ -64,7 +64,7 @@ final class LibraryPreparationScheduler: @unchecked Sendable {
         guard let executable = AppRelauncher.helperExecutable else { return }
         let process = Process()
         process.executableURL = executable
-        process.arguments = [ShaderPrewarmCommand.prepareArgument] + folders.map { $0.path(percentEncoded: false) }
+        process.arguments = [HelperRunCommand.prepareArgument] + folders.map { $0.path(percentEncoded: false) }
         var environment = ProcessInfo.processInfo.environment
         if let tag = AppStorageLocation.current.isolationTag { environment[AppStorageLocation.environmentKey] = tag }
         process.environment = environment
