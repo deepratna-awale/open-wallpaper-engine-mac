@@ -694,13 +694,18 @@ with what to do once in the app instead.
   port for the channel itself. `android_send_wifi` is the one tool that opens one: a listener on the
   Mac's local network that serves only the packages it names, behind a random token, for 15
   minutes (see [architecture](architecture.md#android-export-androidexport)).
-  A socket's path is limited to 103 bytes; when that path is longer (a long user name, or an
-  isolated copy's folder), the socket goes in your own temporary folder instead
-  (`/var/folders/…/T/owe-<hash>/control.sock`, which only you can enter), and `owe-mcp` finds it
-  the same way.
+  A socket's path is limited to 103 bytes; when that path is longer (a long user name), the socket
+  goes in your own temporary folder instead (`/var/folders/…/T/owe-<hash>/control.sock`, which
+  only you can enter), and `owe-mcp` finds it the same way. An isolated copy
+  (`OWE_ISOLATED_STATE=<tag>`) always has its socket at
+  `/private/tmp/owe-<your uid>/isolated-<hash of the tag>.sock`: short whatever the tag, and the
+  same for the copy and every `owe-mcp` given the tag, whatever temporary folder each was started
+  with.
 - **Owner-only.** The socket's folder is `0700` and the socket `0600`, and the app checks that each
   connection comes from your own user account (`getpeereid`) before reading from it. Other users
-  on the Mac can't connect.
+  on the Mac can't connect. Under `/private/tmp`, where anyone can make a folder, the app listens
+  and `owe-mcp` connects only in a real folder that belongs to you (not a link), so another user
+  can't put a socket of theirs in an isolated copy's place.
 - **No more than the app's own controls.** Every request goes through what the app's buttons and
   menus do, on the app's main thread: a web wallpaper still needs your trust in the app before a
   client can set it, safe restart still holds back a wallpaper that stopped the app, an import
@@ -738,7 +743,8 @@ version, so an `owe-mcp` from a different release says so instead of misbehaving
   `/usr/bin/log show --last 10m --predicate 'process == "Open Wallpaper Engine"' | grep MCP`.
 - **A development copy.** A copy launched isolated (`OWE_ISOLATED_STATE=<tag>`) keeps its own
   support folder, so the plugin it installs talks only to it. To point any `owe-mcp` at an isolated
-  copy, run it with the same `OWE_ISOLATED_STATE`, or with `--socket <path>`.
+  copy, run it with the same `OWE_ISOLATED_STATE` (it then uses the copy's socket under
+  `/private/tmp/owe-<uid>/`), or with `--socket <path>`.
 
 ## For developers
 

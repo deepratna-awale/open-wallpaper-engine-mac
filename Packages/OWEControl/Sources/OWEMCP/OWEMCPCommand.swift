@@ -62,10 +62,13 @@ public enum OWEMCPCommand {
     static func socketURL(option: URL?, executable: URL, environment: [String: String]) -> URL {
         if let option { return option }
         if let tag = environment[ControlSocketLocation.isolationEnvironmentKey].flatMap(ControlSocketLocation.sanitizedTag) {
-            return ControlSocketLocation.socketURL(supportDirectory: ControlSocketLocation.supportDirectory(isolationTag: tag))
+            return ControlSocketLocation.socketURL(supportDirectory: ControlSocketLocation.supportDirectory(isolationTag: tag),
+                                                   isolationTag: tag)
         }
         if let support = MCPPluginLayout.supportDirectory(ofInstalledExecutable: executable) {
-            return ControlSocketLocation.socketURL(supportDirectory: support)
+            // An isolated copy's plugin: its manifest names the copy's tag.
+            return ControlSocketLocation.socketURL(supportDirectory: support,
+                                                   isolationTag: MCPPluginLayout.manifest(supportDirectory: support)?.isolationTag)
         }
         return ControlSocketLocation.socketURL(supportDirectory: ControlSocketLocation.supportDirectory(isolationTag: nil))
     }

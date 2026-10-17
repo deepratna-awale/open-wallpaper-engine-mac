@@ -8,7 +8,8 @@ import OWEControlProtocol
 ///
 /// - **Install** copies the signed `owe-mcp` the app ships (`<app>/Contents/Helpers/owe-mcp`) into
 ///   `<support>/Plugins/MCP` (`MCPPluginLayout`), with `install.json` naming the app, and opens the
-///   control socket (`<support>/Control/control.sock`, owner-only, `ControlSocketServer`). Nothing
+///   control socket (`<support>/Control/control.sock`, an isolated copy's under `/private/tmp`, owner-only,
+///   `ControlSocketLocation`, `ControlSocketServer`). Nothing
 ///   is downloaded: the binary is the one signed and notarized with the app.
 /// - While installed, the socket exists whenever the app runs; requests go to `ControlRequestRouter`
 ///   on the main actor. An app update refreshes the installed copy at launch.
@@ -25,7 +26,7 @@ final class MCPServerPlugin: ObservableObject {
 
         var root: URL { MCPPluginLayout.root(supportDirectory: supportDirectory) }
         var executable: URL { MCPPluginLayout.executableURL(supportDirectory: supportDirectory) }
-        var socket: URL { ControlSocketLocation.socketURL(supportDirectory: supportDirectory) }
+        var socket: URL { ControlSocketLocation.socketURL(supportDirectory: supportDirectory, isolationTag: manifest.isolationTag) }
 
         /// This app's layout.
         static var current: Layout {
