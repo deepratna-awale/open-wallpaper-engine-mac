@@ -44,11 +44,11 @@ enum WorkshopDependencyResolver {
 
     /// project.json's `dependency`: a single id (string or number) or a list of them.
     static func projectDependencies(inItemAt directory: URL) -> Set<String> {
-        let url = directory.appending(path: "project.json")
+        let url = WEProject.url(in: directory)
         guard FileManager.default.fileExists(atPath: url.path) else { return [] }
         let object: Any
         do {
-            object = try JSONSerialization.jsonObject(with: Data(contentsOf: url))
+            object = try WEProject.object(in: directory)
         } catch {
             OWELog.error(.workshop, "Can't read \(url.path) for its dependency: \(error)")
             return []

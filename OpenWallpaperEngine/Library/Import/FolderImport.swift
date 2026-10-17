@@ -38,7 +38,7 @@ enum FolderImport {
         for url in urls {
             if url.pathExtension.lowercased() == "zip" {
                 sources.zips.append(url)
-            } else if fileManager.fileExists(atPath: url.appending(path: "project.json").path) {
+            } else if fileManager.fileExists(atPath: WEProject.url(in: url).path) {
                 sources.folders.append(url)
             } else {
                 // A folder that can't be listed has no wallpapers to offer; the empty result says so.
@@ -47,7 +47,7 @@ enum FolderImport {
                 for child in children {
                     var isDirectory: ObjCBool = false
                     if fileManager.fileExists(atPath: child.path, isDirectory: &isDirectory), isDirectory.boolValue,
-                       fileManager.fileExists(atPath: child.appending(path: "project.json").path) {
+                       fileManager.fileExists(atPath: WEProject.url(in: child).path) {
                         sources.folders.append(child)
                     }
                 }

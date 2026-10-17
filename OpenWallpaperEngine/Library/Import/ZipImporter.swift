@@ -62,7 +62,7 @@ enum ZipImporter {
         var isDir: ObjCBool = false
         return !ContainedPath.isSymbolicLink(url)
             && fm.fileExists(atPath: url.path, isDirectory: &isDir) && isDir.boolValue
-            && fm.fileExists(atPath: url.appending(path: "project.json").path)
+            && fm.fileExists(atPath: WEProject.url(in: url).path)
     }
 
     /// Searches for wallpaper folders: `directory` itself, its children, or its grandchildren

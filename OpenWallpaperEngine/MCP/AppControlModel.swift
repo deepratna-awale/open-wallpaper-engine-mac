@@ -234,9 +234,8 @@ final class AppControlModel: ControlAppModel {
 
     /// Each authored property's `condition` as written in project.json.
     private static func conditions(of wallpaper: WEWallpaper) -> [String: String] {
-        let url = wallpaper.wallpaperDirectory.appending(path: "project.json")
-        guard let data = try? Data(contentsOf: url), // The panel's model read it a moment ago; no conditions without it.
-              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [:] }
+        // The panel's model read it a moment ago; no conditions without it.
+        guard let root = try? WEProject.json(in: wallpaper.wallpaperDirectory) else { return [:] }
         var conditions: [String: String] = [:]
         for definition in UserPropertyDefinition.all(projectJSON: root) {
             if let condition = definition.condition { conditions[definition.key] = condition }

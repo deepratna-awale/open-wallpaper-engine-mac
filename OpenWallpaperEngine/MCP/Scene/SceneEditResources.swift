@@ -54,7 +54,7 @@ final class WallpaperSceneEditResources: SceneEditResources {
         identity = WallpaperSettingsIdentity.resolve(directory: wallpaper.wallpaperDirectory)
         let source = try WallpaperEditorSource.read(wallpaper)
         sceneData = source.scene
-        let projectURL = wallpaper.wallpaperDirectory.appending(path: "project.json")
+        let projectURL = WEProject.url(in: wallpaper.wallpaperDirectory)
         do {
             projectJSON = try Data(contentsOf: projectURL)
         } catch {
