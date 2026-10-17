@@ -164,7 +164,7 @@ enum SteamLibraryImport {
         }
         return ordered.compactMap { id -> Item? in
             let folder = content.appending(path: id, directoryHint: .isDirectory)
-            guard fileManager.fileExists(atPath: folder.appending(path: "project.json").path) else { return nil }
+            guard fileManager.fileExists(atPath: WEProject.url(in: folder).path) else { return nil }
             do {
                 return try item(id: id, folder: folder, isSubscribed: subscribed.contains(id))
             } catch {

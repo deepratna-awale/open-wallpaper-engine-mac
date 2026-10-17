@@ -278,7 +278,7 @@ extension WallpaperViewModel {
                     try fileManager.createDirectory(at: destination, withIntermediateDirectories: true)
                     try fileManager.copyItem(at: url, to: destination.appending(path: fileName))
                     if let previewData { try previewData.write(to: destination.appending(path: "preview.jpg"), options: .atomic) }
-                    try JSONEncoder().encode(project).write(to: destination.appending(path: "project.json"), options: .atomic)
+                    try JSONEncoder().encode(project).write(to: WEProject.url(in: destination), options: .atomic)
                     DispatchQueue.global(qos: .utility).async {
                         WallpaperPreparation.prepareVideo(wallpaperDirectory: destination)
                     }
@@ -320,7 +320,7 @@ extension WallpaperViewModel {
         do {
             try fileManager.createDirectory(at: finalDestination, withIntermediateDirectories: true)
             try JSONEncoder().encode(project)
-                .write(to: finalDestination.appending(path: "project.json"), options: .atomic)
+                .write(to: WEProject.url(in: finalDestination), options: .atomic)
         } catch {
             OWELog.error(.importer, "Failed to add remote video: \(error.localizedDescription)")
             return
@@ -404,7 +404,7 @@ extension WallpaperViewModel {
                 }
                 let project = WEProject(file: "scene.json", preview: "preview.jpg", title: title, type: "scene")
                 try JSONEncoder().encode(project)
-                    .write(to: finalDestination.appending(path: "project.json"), options: .atomic)
+                    .write(to: WEProject.url(in: finalDestination), options: .atomic)
 
                 guard let self else { return }
                 let wallpaper = WEWallpaper(using: project, where: finalDestination)

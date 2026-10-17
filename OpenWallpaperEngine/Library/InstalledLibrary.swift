@@ -35,7 +35,7 @@ enum InstalledLibrary {
         guard FileManager.default.fileExists(atPath: folder.path(percentEncoded: false), isDirectory: &isDirectory),
               isDirectory.boolValue else { return nil }
         // A folder without project.json is shown as invalid below, so a failed read is expected.
-        guard let data = try? Data(contentsOf: folder.appending(path: "project.json")) else {
+        guard let data = try? WEProject.data(in: folder) else {
             return WEWallpaper(using: .invalid, where: folder)
         }
         if let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any], WorkshopPresetItem.isPreset(root) {

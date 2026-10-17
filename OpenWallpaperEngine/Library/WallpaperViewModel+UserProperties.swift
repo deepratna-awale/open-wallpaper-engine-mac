@@ -63,7 +63,7 @@ extension WallpaperViewModel {
     private func settingsIdentity(directory: String) -> WallpaperSettingsIdentity? {
         if let identity = settingsIdentities[directory] { return identity }
         let url = URL(fileURLWithPath: directory, isDirectory: true)
-        guard FileManager.default.fileExists(atPath: url.appending(path: "project.json").path) else { return nil }
+        guard WEProject.exists(in: url) else { return nil }
         let identity = WallpaperSettingsIdentity.resolve(directory: url)
         settingsIdentities[directory] = identity
         return identity
