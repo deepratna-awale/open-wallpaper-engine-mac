@@ -228,6 +228,9 @@ public enum PuppetMDLWriter {
                 let distance = child.map { simd_distance(PuppetMath.origin(of: worlds[$0]), PuppetMath.origin(of: worlds[index])) }
                 for (key, value) in physics.properties(childDistance: distance) { properties[key] = value }
             }
+            if let ik = bone.ik {
+                for (key, value) in ik.properties { properties[key] = value }
+            }
             return properties
         }
     }
@@ -243,20 +246,30 @@ public enum PuppetMDLWriter {
     private static func skeleton(_ document: PuppetDocument) -> [UInt8] {
         var out = PuppetMDLOutput()
         let properties = boneProperties(document)
+        // The kinematic chains as WE's compiler lays them out (`PuppetKinematicsLayout`): flag
+        // 0x2 on every chain bone, the controllers as links, the lengths, maps and IK sets.
+        let layout = PuppetKinematicsLayout(document)
         out.u32(UInt32(document.bones.count))
         for (index, bone) in document.bones.enumerated() {
             out.cstring(bone.name)
-            out.u32(bone.flags)
+            out.u32(bone.flags & ~2 | (layout.chainBones.contains(index) ? 2 : 0))
             out.u32(bone.parent.map { UInt32($0) } ?? 0xFFFF_FFFF)
             out.u32(64)
             out.matrix(bone.local.matrix)
             out.cstring(propertiesJSON(properties[index]))
         }
-        out.u16(0) // links
+        out.u16(UInt16(layout.links.count))
+        for link in layout.links {
+            out.cstring("")
+            out.u32(UInt32(link.bone))
+            out.u32(link.type)
+            out.matrix(Self.linkMatrix(link.rest))
+        }
         let hasRest = document.bones.contains { $0.rest != nil }
         out.u8(hasRest ? 1 : 0)
         if hasRest {
             for bone in document.bones { out.matrix((bone.rest ?? bone.local).matrix) }
+            for link in layout.links { out.matrix(Self.linkMatrix(link.rest)) }
         }
         // Blend rules (docs/models-plan.md §2.15): bone, weight index, target, flags, floats.
         let order = document.blendRuleOrder
@@ -270,8 +283,38 @@ public enum PuppetMDLWriter {
             out.u32(floats == nil ? rule.flags & ~2 : rule.flags)
             if let floats { out.f32s([floats.x, floats.y]) }
         }
-        out.u16(0) // maps
-        out.u16(0) // IK sets
+        if layout.isEmpty {
+            out.u16(0) // maps
+            out.u16(0) // IK sets
+        } else {
+            // Each bone's length to its parent as the map's u32 id, and its children's directions.
+            out.u16(UInt16(document.bones.count))
+            for length in layout.lengths { out.u32(length.bitPattern) }
+            for axes in layout.restAxes {
+                out.u16(UInt16(axes.count))
+                for entry in axes {
+                    out.u32(UInt32(entry.child))
+                    out.f32s([entry.axis.x, entry.axis.y, entry.axis.z])
+                }
+            }
+            out.u16(UInt16(layout.sets.count))
+            for set in layout.sets {
+                out.u32(UInt32(set.bone))
+                out.u32(UInt32(set.links.count))
+                for link in set.links { out.u32(UInt32(link)) }
+                out.u16(1) // one element, on the set's own bone
+                out.u32(UInt32(set.bone))
+                out.u16(UInt16(set.joints.count))
+                for joint in set.joints {
+                    out.u32(UInt32(joint.bone))
+                    out.u32(joint.flags)
+                    out.f32(joint.length)
+                    out.f32(0)
+                    out.u16(UInt16(joint.bones.count))
+                    for bone in joint.bones { out.u32(UInt32(bone)) }
+                }
+            }
+        }
         let count = document.bones.count
         if let boxes = document.preserved.boneBoxes, boxes.count == count {
             out.u8(1)
@@ -297,12 +340,20 @@ public enum PuppetMDLWriter {
         return out.bytes
     }
 
+    /// A controller's rest matrix: a translation.
+    static func linkMatrix(_ place: SIMD2<Float>) -> simd_float4x4 {
+        var m = matrix_identity_float4x4
+        m.columns.3 = SIMD4(place.x, place.y, 0, 1)
+        return m
+    }
+
     // MARK: MDLA
 
     private static func animations(_ document: PuppetDocument) -> [UInt8] {
         var out = PuppetMDLOutput()
         let rest = document.restLocals
         let rig = PuppetRig(document)
+        let layout = PuppetKinematicsLayout(document)
         out.i32(Int32(document.clips.count))
         for (index, clip) in document.clips.enumerated() {
             let frames = max(clip.frames, 1)
@@ -329,7 +380,17 @@ public enum PuppetMDLWriter {
                 }
                 out.blob(blob.bytes)
             }
-            // A2: no link tracks; one constraint track per blend rule, its weight a sample a frame.
+            // A2: each controller's place a frame (rest plus its keyed offset, its keyed angle);
+            // one constraint track per blend rule, its weight a sample a frame.
+            for index in layout.links.indices {
+                out.u32(0)
+                var blob = PuppetMDLOutput()
+                for frame in 0...frames {
+                    let key = layout.linkPose(index, document: document, clip: clip.id, frame: Float(frame))
+                    blob.f32s([key.offset.x, key.offset.y, 0, 0, 0, key.angle, 1, 1, 1])
+                }
+                out.blob(blob.bytes)
+            }
             for place in document.blendRuleOrder {
                 out.u32(0)
                 var blob = PuppetMDLOutput()

@@ -4041,6 +4041,17 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         }
     }
 
+    /// What a rope chain's step reads from the scene (`ScenePuppetRope.Environment`): `general`'s
+    /// gravity and wind, the running time WE's wind noise reads (wrapped past 432000 s,
+    /// 0x14017fcca) and the scene's width as the orthographic width [I: a perspective scene's
+    /// is 0 in WE].
+    private func currentRopeEnvironment() -> ScenePuppetRope.Environment {
+        let physics = cameraGeneral.map { ScenePhysicsSettings($0, in: LiveSceneValueContext(wallpaper: wallpaperKey)) }
+        return ScenePuppetRope.Environment(physics: physics ?? ScenePhysicsSettings(),
+                                           time: Float(clock.time.truncatingRemainder(dividingBy: 432_000)),
+                                           projectionWidth: sceneSize.x)
+    }
+
     /// The layer's animator, made on first use.
     /// WE's object loop (0x1401891a0, at 0x14017fd26 in the frame): every object's update before
     /// the scripts' frame (0x1401802e5), so scripts read this frame's pose and get the layers'
@@ -4051,6 +4062,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// the events and ends, so they are dropped.
     private func advanceRigs() {
         let delta = Float(clock.delta)
+        var ropeEnvironment: ScenePuppetRope.Environment?
         let outlinesHitBoxes = puppetHitBoxes.isWanted
         var hitBoxes: [ScenePuppetHitBoxOutline] = []
         for entry in layers {
@@ -4060,6 +4072,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 emitterImages.willAdvance(puppet: entry.layer.id, worlds: existing.worlds)
             }
             let animator = puppetAnimator(entry.layer.id, puppet)
+            if let rope = animator.rope {
+                // The scene's gravity and wind, resolved once a frame for the rope chains.
+                if ropeEnvironment == nil { ropeEnvironment = currentRopeEnvironment() }
+                rope.environment = ropeEnvironment ?? ScenePuppetRope.Environment()
+            }
             // Physics bones move in the scene: the image's world this frame, before the scripts'.
             let world = ScenePuppetAttachments.matrix(worldTransform(entry))
             animator.advance(delta: delta, values: timelines.values, objectWorld: world)
