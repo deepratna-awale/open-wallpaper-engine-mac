@@ -343,6 +343,10 @@ public struct PuppetDocument: Codable, Hashable, Sendable {
         for bone in bones.indices where bones[bone].blendRules != nil {
             for rule in bones[bone].blendRules!.indices { bones[bone].blendRules![rule].weights[id] = nil }
         }
+        for bone in bones.indices where bones[bone].ik != nil {
+            bones[bone].ik!.targetKeys[id] = nil
+            bones[bone].ik!.orientationKeys[id] = nil
+        }
         for clip in clips.indices {
             guard let source = clips[clip].rootMotion?.sourceClip else { continue }
             if source == index { clips[clip].rootMotion?.sourceClip = nil } else if source > index { clips[clip].rootMotion?.sourceClip = source - 1 }
@@ -571,10 +575,14 @@ public struct PuppetBone: Codable, Hashable, Sendable {
     public var length: Float?
     /// The bone's blend rules (`PuppetBlendRule`), nil without one.
     public var blendRules: [PuppetBlendRule]?
+    /// The kinematic chain that ends at the bone (`PuppetBoneIK`), nil without one; a bone has
+    /// physics or a chain, not both.
+    public var ik: PuppetBoneIK?
 
     public init(name: String, parent: Int?, local: PuppetTransform, rest: PuppetTransform? = nil, flags: UInt32 = 1,
                 physics: PuppetBonePhysics? = nil, otherProperties: [String: SceneJSONValue] = [:], length: Float? = nil,
-                blendRules: [PuppetBlendRule]? = nil) {
+                blendRules: [PuppetBlendRule]? = nil, ik: PuppetBoneIK? = nil) {
+        self.ik = ik
         self.length = length
         self.blendRules = blendRules
         self.name = name
