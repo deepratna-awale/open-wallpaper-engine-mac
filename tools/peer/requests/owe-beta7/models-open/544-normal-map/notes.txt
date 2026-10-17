@@ -1,0 +1,33 @@
+544 (B11): generated normal map at default settings (WE 2.8.0.42)
+
+## Source picture
+- **source_bars.png:** 509's bars.png, 512×256 RGBA. It has a red bar (x 40-219) and a blue bar (x 292-471), both at y 98-157, each with a black outer tick. The rest is transparent.
+- It was imported with the editor's Edit › Import Image as layer "variant_a" in p540_var (genericimage4).
+
+## Steps
+- Layer › Material › Options **Lighting** on (adds `"combos": {"LIGHTING": 1}`). The texture list then shows Normal map / Metallic / Roughness … slots.
+- Normal map › **Generate** › "Normal Map Generation" dialog, accepted with **OK at defaults** (editor_generator_defaults.png):
+  - **Shape:** Blur 63, Depth 1, Exponent 4, Threshold 1
+  - **Details:** Blur 21, Depth 1, Invert (off)
+- Save.
+
+## Files written (copied here)
+- **variant_a_normal.png** (512×256 RGBA, 46753 bytes): WE's generated normal map.
+- **variant_a_normal.tex** (157415 bytes) and **variant_a_normal.tex-json:**
+  `{"format":"rg88", "cropandresize":true, "cropresizewidth":null, "cropresizeheight":null, "bleedtransparentcolors":true, "clampuvs":true, "halfmip":true, "nonpoweroftwo":true}`
+  - It is compiled as **RG88**, two channels; B is reconstructed in the shader.
+- **variant_a.json** (material): `"textures": ["variant_a", "variant_a_normal"]`, with the normal map in slot 1.
+
+## PNG samples (x, y in image px): RGBA
+| point | value | meaning |
+|---|---|---|
+| red bar centre (130,128) | (127,126,254,255) | flat (0,0,1) |
+| red bar left edge (42,128) | (1,127,140,255) | normal tilts fully −x |
+| red bar right edge (218,128) | (229,127,203,255) | +x |
+| red bar top edge (130,99) | (127,229,204,255) | +y, i.e. the top edge faces up, so **green = up (OpenGL-style)** |
+| red bar bottom edge (130,156) | (127,26,204,255) | −y |
+| blue bar centre (380,128) | (127,126,254,255) | flat |
+| transparent areas (10,10) and (256,128) | about (120,151,252) / (124,128,254), alpha 0 | — |
+
+- So the generator builds a height field from the shape (the alpha mask) and blurs it (Shape Blur 63). The bars read as pillows with bevelled rims; the interiors are flat.
+- **Alpha is copied from the source.**
