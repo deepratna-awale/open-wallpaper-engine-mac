@@ -157,6 +157,7 @@ struct ParticleFrameInputs {
                         scripted: SceneScriptInstanceOverrides? = nil, audio: AudioSpectrumSnapshot = .silent, frameTime: Float? = nil,
                         frameRateLimit: Int = 0,
                         layerWorld: (String) -> SceneAffineTransform? = { _ in nil },
+                        layerBones: (String) -> ParticleLayerBones? = { _ in nil },
                         modelCapsules: (String) -> [ParticleCapsule] = { _ in [] }) -> ParticleFrameInputs {
         let configuration = system.configuration
         restartWithParent(system)
@@ -216,7 +217,7 @@ struct ParticleFrameInputs {
         system.startedPeriod = !configuration.isInstanced
             && zip(emitters, inputs.emitters).contains { $0.timing.periodic && $1.startsPeriod }
         inputs.space = configuration.worldSpace ? .identity : world
-        inputs.placeImages(configuration, layerWorld: layerWorld)
+        inputs.placeImages(system, layerWorld: layerWorld, layerBones: layerBones)
         inputs.layerOrigin = world.translation
         if configuration.worldSpace {
             let linear = world.linear
@@ -420,15 +421,20 @@ struct ParticleFrameInputs {
 
     /// Each `layerimage` emitter's image in the system's space this step: its layer's world
     /// transform, which WE multiplies by the inverse of the system's model matrix (0x140238cc8,
-    /// 0x140238db9) unless the system is `worldspace`.
-    private mutating func placeImages(_ configuration: SceneMetalParticleSystem,
-                                      layerWorld: (String) -> SceneAffineTransform?) {
+    /// 0x140238db9) unless the system is `worldspace`. On a Puppet Warp layer each bone's place
+    /// too, now and last frame (`ParticleLayerBones`, 0x1401d4360, 0x1401d4400), which every
+    /// point on it follows. An emitter that resamples its image (flag 0x20000) counts the seconds
+    /// it emits, and once past one second its image is due to be sampled again (0x140238d4f:
+    /// `fmod` by 1) [I: WE counts the steps that spawn; this counts those that may].
+    private mutating func placeImages(_ system: ParticleSystemRuntime, layerWorld: (String) -> SceneAffineTransform?,
+                                      layerBones: (String) -> ParticleLayerBones?) {
+        let configuration = system.configuration
         let toSpace = space.inverse ?? .identity
         for (index, emitter) in configuration.emitters.enumerated() where emitter.shape.kind == .image {
             let slot = emitter.shape.imageIndex
-            guard index < emitters.count, slot < configuration.emitterImages.count,
-                  !configuration.emitterImages[slot].points.isEmpty,
-                  let world = layerWorld(configuration.emitterImages[slot].layerID) else {
+            guard index < emitters.count, slot < system.emitterImages.count,
+                  !system.emitterImages[slot].points.isEmpty,
+                  let world = layerWorld(system.emitterImages[slot].layerID) else {
                 // Without its layer's points WE's emitter spawns nothing (0x140238dca).
                 if index < emitters.count {
                     emitters[index].rate = 0
@@ -437,6 +443,30 @@ struct ParticleFrameInputs {
                 continue
             }
             emitters[index].image = toSpace * world
+            emitters[index].layerWorld = world
+            emitters[index].toSpace = toSpace
+            emitters[index].frameTime = frameTime
+            let last = index < system.lastImageWorlds.count ? system.lastImageWorlds[index] : nil
+            if index < system.lastImageWorlds.count { system.lastImageWorlds[index] = world }
+            if let bones = layerBones(system.emitterImages[slot].layerID) {
+                let image = emitters[index].image
+                emitters[index].bones = bones.motion.indices.map { bone in
+                    // Last frame's bones through the layer's world then; before there were any, WE
+                    // takes the identity for them.
+                    let previous = bones.previous.flatMap { $0.indices.contains(bone) ? $0[bone] : nil }
+                        .map { toSpace * (last ?? world) * $0 }
+                        ?? toSpace * (bones.inverseRest.indices.contains(bone) ? bones.inverseRest[bone] : .identity)
+                    return ParticleImageBone(current: image * bones.motion[bone], previous: previous)
+                }
+            }
+            if emitter.shape.resamplesImage, index < system.imageResampleTimers.count,
+               emitters[index].rate > 0 || emitters[index].burst > 0 {
+                system.imageResampleTimers[index] += deltaTime
+                if system.imageResampleTimers[index] > 1 {
+                    system.imageResampleTimers[index] = fmod(system.imageResampleTimers[index], 1)
+                    system.imageResamplesDue.insert(slot)
+                }
+            }
         }
     }
 
@@ -517,4 +547,13 @@ struct ParticleEmitterStep: Equatable {
     var onePerFrame = false
     /// A `layerimage` emitter's image (its points' space, the layer's) in the system's space.
     var image = SceneAffineTransform.identity
+    /// The layer's world (`image` before the system's space) and the system's space from the scene,
+    /// which a spawn inheriting the layer's motion places last time's world through.
+    var layerWorld = SceneAffineTransform.identity
+    var toSpace = SceneAffineTransform.identity
+    /// A Puppet Warp layer's bones this step, by bone index (`ParticleImageBone`); empty for any
+    /// other layer.
+    var bones: [ParticleImageBone] = []
+    /// The engine's frame time, over which the inherited motion is a velocity.
+    var frameTime: Float = 0
 }

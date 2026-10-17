@@ -58,11 +58,16 @@ extension ParticleProgramCPU {
 
     /// A `layerimage` emitter's placement for spawn `serial` (0x140238c45): one of `points`
     /// (`ParticleEmitterImagePoints`) at random, moved by a random offset between `offsetmin`
-    /// and `offsetmax` with flag 0x80000, through `image` into the system's space. It launches at
-    /// rest; with flag 0x10000 its colour multiplies the base colour (0x140239765). Nil without
-    /// points: WE spawns nothing then.
-    static func emit(image points: [SIMD4<Int32>], shape: ParticleEmitterShape, image: SceneAffineTransform,
-                     context: ParticleProgramContext) -> (position: SIMD2<Float>, color: SIMD3<Float>)? {
+    /// and `offsetmax` with flag 0x80000, through the step's image into the system's space; on a
+    /// rigged layer through its point's bone (`ParticleEmitterImageBones`). With flag 0x10000 its
+    /// colour multiplies the base colour (0x140239765). It launches at rest, or with flag 0x40000
+    /// with the point's motion since last time (0x1402397d3): where it is now less where the same
+    /// point was, through its bone last frame or the layer's world at the emitter's last step that
+    /// spawned (`lastLayerWorld`, nil the identity), over the engine's frame time, times a random
+    /// share between `speedmin` and `speedmax`. Nil without points: WE spawns nothing then.
+    static func emit(image points: [SIMD4<Int32>], shape: ParticleEmitterShape, step: ParticleEmitterStep,
+                     lastLayerWorld: SceneAffineTransform? = nil, context: ParticleProgramContext)
+        -> (position: SIMD2<Float>, color: SIMD3<Float>, velocity: SIMD2<Float>)? {
         guard !points.isEmpty else { return nil }
         func random(_ stream: ParticleRandom.Stream) -> Float {
             ParticleRandom.unit(seed: context.seed, serial: context.serial, stream: stream.rawValue)
@@ -78,7 +83,16 @@ extension ParticleProgramCPU {
         let color = shape.takesImageColor
             ? SIMD3(Float(packed >> 16 & 0xff), Float(packed >> 8 & 0xff), Float(packed & 0xff)) / 255
             : SIMD3<Float>(repeating: 1)
-        return (image.apply(local), color)
+        let bone = step.bones.indices.contains(Int(point.w)) ? step.bones[Int(point.w)] : nil
+        let position = (bone?.current ?? step.image).apply(local)
+        var velocity = SIMD2<Float>.zero
+        // [I: WE divides by the frame time unguarded; a held clock launches at rest here.]
+        if shape.inheritsLayerMotion, step.frameTime > 0 {
+            let previous = bone?.previous ?? step.toSpace * (lastLayerWorld ?? .identity)
+            let share = (shape.speed.x + random(.emitterSpeed) * (shape.speed.y - shape.speed.x)) * context.spawnScale.w
+            velocity = (position - previous.apply(local)) / step.frameTime * share
+        }
+        return (position, color, velocity)
     }
 
     /// `sign`: forces each axis with a non-zero sign to that sign.
