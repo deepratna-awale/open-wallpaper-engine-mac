@@ -48,9 +48,9 @@ enum ParticleBudget {
     static func sustained(by system: SceneMetalParticleSystem, overrides: SceneParticleOverrides) -> Double? {
         let program = system.program
         let remapsLifetime = program.initializers.contains {
-            $0.kind == .remapInitialValue && ParticleProgramCPU.RemapCode.output($0.record.header.w) == 1
+            $0.kind == .remapInitialValue && ParticleProgramEncoding.RemapCode.output($0.record.header.w) == 1
         } || program.operators.contains {
-            $0.kind == .remapValue && ParticleProgramCPU.RemapCode.output($0.record.header.w) == 1
+            $0.kind == .remapValue && ParticleProgramEncoding.RemapCode.output($0.record.header.w) == 1
         }
         guard !remapsLifetime else { return nil }
         // The last `lifetimerandom` is the one a particle keeps (they run in order).

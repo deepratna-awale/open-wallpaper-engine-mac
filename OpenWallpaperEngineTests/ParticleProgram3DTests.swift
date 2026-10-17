@@ -13,7 +13,7 @@ final class ParticleProgram3DTests: XCTestCase {
     /// R(x, y, z) of 0x14022bf53…0x14022c069: x first, then y, then z; an axis a becomes a·R.
     func testTheControlPointRotationIsWEs() {
         let angles = SIMD3<Float>(0.3, -1.1, 2.0)
-        let axes = ParticleProgramCPU.controlPointRotation(angles)
+        let axes = ParticleProgramEncoding.controlPointRotation(angles)
         let rx = simd_float3x3(simd_quatf(angle: angles.x, axis: SIMD3(1, 0, 0)))
         let ry = simd_float3x3(simd_quatf(angle: angles.y, axis: SIMD3(0, 1, 0)))
         let rz = simd_float3x3(simd_quatf(angle: angles.z, axis: SIMD3(0, 0, 1)))

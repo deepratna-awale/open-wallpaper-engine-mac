@@ -60,7 +60,7 @@ final class ParticleSystemRuntime {
 
     func timeOfDay(now: CFTimeInterval = CACurrentMediaTime()) -> Float {
         if let dayFraction, now - dayFraction.at < 1 { return dayFraction.value }
-        let value = ParticleProgramCPU.fractionOfDay()
+        let value = ParticleProgramEncoding.fractionOfDay()
         dayFraction = (value, now)
         return value
     }

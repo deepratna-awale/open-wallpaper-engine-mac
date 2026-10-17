@@ -98,7 +98,7 @@ struct ParticleFrameInputs {
     var controlPoints = [SIMD3<Float>](repeating: .zero, count: ParticleControlPoint.count)
     var previousControlPoints = [SIMD3<Float>](repeating: .zero, count: ParticleControlPoint.count)
     /// Each control point's orientation in the system's space: rows 0…2 of WE's control point
-    /// matrix as columns (`ParticleProgramCPU.controlPointRotation`), from its `controlpointangle<n>`
+    /// matrix as columns (`ParticleProgramEncoding.controlPointRotation`), from its `controlpointangle<n>`
     /// override and, in a `worldspace` system, the emitter's scale and rotation. An emitter's spawn
     /// offsets and the velocity initializers turn with its point's (0x140237c14, 0x14023b364).
     var controlPointAxes = [simd_float3x3](repeating: matrix_identity_float3x3, count: ParticleControlPoint.count)
@@ -352,7 +352,7 @@ struct ParticleFrameInputs {
         let configuration = system.configuration
         let toSpace = self.space.inverse ?? .identity
         let emitterToSpace = toSpace * world
-        let model = ParticleProgramCPU.embed(world.linear)
+        let model = ParticleProgramEncoding.embed(world.linear)
         let unmodel = abs(model.determinant) > 1e-12 ? model.inverse : matrix_identity_float3x3
         func inSpace(_ scene: SIMD3<Float>) -> SIMD3<Float> { SIMD3(toSpace.apply(SIMD2(scene.x, scene.y)), scene.z) }
         for index in 0..<ParticleControlPoint.count {
@@ -361,7 +361,7 @@ struct ParticleFrameInputs {
             overridePoints[index] = driven
             if let driven, system.lastOverridePoints[index] == driven { keptPoints |= 1 << UInt32(index) }
             system.lastOverridePoints[index] = driven
-            let turn = overrides.controlPointAngles[index].map(ParticleProgramCPU.controlPointRotation) ?? matrix_identity_float3x3
+            let turn = overrides.controlPointAngles[index].map(ParticleProgramEncoding.controlPointRotation) ?? matrix_identity_float3x3
             let offset = driven ?? point.offset
             if point.followsCursor {
                 controlPoints[index] = inSpace(SIMD3(cursor, 0))
@@ -486,7 +486,7 @@ struct ParticleFrameInputs {
             var record = element.record
             if let response = element.audio { record.e.w = response.response(audio) }
             if let count = element.sequenceCount {
-                let scaled = (record.header.y & ParticleProgramCPU.sequenceFollowsCountFlag(element.kind)) != 0
+                let scaled = (record.header.y & ParticleProgramEncoding.sequenceFollowsCountFlag(element.kind)) != 0
                     ? count * countScale : count
                 let between = element.kind == .mapSequenceBetweenControlPoints
                 record.a.x = 1 / max(between ? scaled - 1 : scaled, 0.0001)

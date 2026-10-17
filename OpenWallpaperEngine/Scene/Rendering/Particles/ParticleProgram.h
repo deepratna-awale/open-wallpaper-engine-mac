@@ -245,7 +245,7 @@ static float3 remapApplyVector(uint operation, uint component, float3 old, float
 
 /// `remapvalue` (operator, `wallpaper64.exe` 0x140244874) and `remapinitialvalue` (initializer,
 /// 0x14023ce53): reads an input, maps it from the input range through a transform to the output
-/// range, and sets, multiplies, adds to or subtracts from an output (`ParticleProgramCPU.RemapCode`).
+/// range, and sets, multiplies, adds to or subtracts from an output (`ParticleProgramEncoding.RemapCode`).
 static void remap(ProgramOp record, thread ProgramState &p, thread ProgramContext &c, bool initializer, float blend) {
     const uint code = record.header.w;
     const uint flags = record.header.y;

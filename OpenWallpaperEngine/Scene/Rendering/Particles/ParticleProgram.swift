@@ -17,7 +17,7 @@ struct ParticleProgram: Equatable {
     /// A `remapvalue` writes a control point (its `controlpoint` output): the operators run record by
     /// record over every particle (`particleSimulateSerial`).
     var operatorsWriteControlPoints: Bool {
-        operators.contains { $0.kind == .remapValue && ParticleProgramCPU.RemapCode.output($0.record.header.w) == 16 }
+        operators.contains { $0.kind == .remapValue && ParticleProgramEncoding.RemapCode.output($0.record.header.w) == 16 }
     }
 
     /// A `remapinitialvalue` writes a control point: the `controlpoint` output, or an input that
@@ -26,7 +26,7 @@ struct ParticleProgram: Equatable {
         initializers.contains { element in
             let code = element.record.header.w
             return element.kind == .remapInitialValue
-                && (ParticleProgramCPU.RemapCode.output(code) == 16 || (16...18).contains(ParticleProgramCPU.RemapCode.input(code)))
+                && (ParticleProgramEncoding.RemapCode.output(code) == 16 || (16...18).contains(ParticleProgramEncoding.RemapCode.input(code)))
         }
     }
 

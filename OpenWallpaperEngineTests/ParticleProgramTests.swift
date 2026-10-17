@@ -82,9 +82,9 @@ final class ParticleProgramTests: XCTestCase {
         XCTAssertEqual(between.b, SIMD4(0.3, 0.9, 0, 0), "arcamount, sizereductionamount")
         XCTAssertEqual(between.controlPoint1, 1)
         let remap = try initializer(#"{"name":"remapinitialvalue"}"#)
-        XCTAssertEqual(ParticleProgramCPU.RemapCode.operation(remap.header.w), 1, "multiply")
-        XCTAssertEqual(ParticleProgramCPU.RemapCode.input(remap.header.w), 1, "maxlifetime")
-        XCTAssertEqual(ParticleProgramCPU.RemapCode.output(remap.header.w), 2, "size")
+        XCTAssertEqual(ParticleProgramEncoding.RemapCode.operation(remap.header.w), 1, "multiply")
+        XCTAssertEqual(ParticleProgramEncoding.RemapCode.input(remap.header.w), 1, "maxlifetime")
+        XCTAssertEqual(ParticleProgramEncoding.RemapCode.output(remap.header.w), 2, "size")
     }
 
     func testOperatorDefaultsAreWEs() throws {
@@ -105,8 +105,8 @@ final class ParticleProgramTests: XCTestCase {
         XCTAssertEqual(try `operator`(#"{"name":"oscillatealpha"}"#).blend, ParticleProgramOp.noBlend)
         XCTAssertNotEqual(try `operator`(#"{"name":"oscillatealpha","blendinend":0.5}"#).blend, ParticleProgramOp.noBlend)
         let remap = try `operator`(#"{"name":"remapvalue"}"#)
-        XCTAssertEqual(ParticleProgramCPU.RemapCode.input(remap.header.w), 0, "lifetimefraction")
-        XCTAssertEqual(ParticleProgramCPU.RemapCode.output(remap.header.w), 2, "size")
+        XCTAssertEqual(ParticleProgramEncoding.RemapCode.input(remap.header.w), 0, "lifetimefraction")
+        XCTAssertEqual(ParticleProgramEncoding.RemapCode.output(remap.header.w), 2, "size")
     }
 
     func testEmitterAndRendererDefaultsAreWEs() throws {

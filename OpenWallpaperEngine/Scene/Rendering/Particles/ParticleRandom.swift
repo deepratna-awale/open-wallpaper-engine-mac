@@ -21,7 +21,7 @@ enum ParticleRandom {
         /// The particle's one random value every operator reads (WE's [system+0x338]).
         case `operator`
     }
-    // Initializers draw from their own streams (`ParticleProgramCPU.initializerStream`), from 64 on.
+    // Initializers draw from their own streams (`ParticleProgramEncoding.initializerStream`), from 64 on.
 
     /// PCG hash (Jarzynski and Olano, "Hash Functions for GPU Rendering", 2020).
     static func pcg(_ value: UInt32) -> UInt32 {

@@ -3,7 +3,7 @@ import simd
 
 /// Compiles an `initializer` json element into its record (`ParticleInitializer`), with WE's
 /// defaults: each one's filler function in `wallpaper64.exe` is cited. Record layouts are
-/// documented on `ParticleProgramCPU.runInitializers`.
+/// documented on `ParticleProgramEncoding.runInitializers`.
 enum ParticleInitializerBuilder {
     static func make(_ element: WEParticleInitializer, defaults d: ParticleDefaults, path: String) -> ParticleInitializer? {
         let flags = UInt32(truncatingIfNeeded: max(element.flags ?? 0, 0))

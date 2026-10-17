@@ -2,7 +2,7 @@ import simd
 
 /// The encoding constants and helpers the loader, the frame inputs and `ParticleProgram.h` share:
 /// the program itself runs on the GPU (`ParticleSimulation.metal`).
-enum ParticleProgramCPU {
+enum ParticleProgramEncoding {
     /// The flag that makes a sequence initializer follow the `count` override (0x1401ca184,
     /// 0x1401ca637).
     static func sequenceFollowsCountFlag(_ kind: ParticleInitializerKind) -> UInt32 {

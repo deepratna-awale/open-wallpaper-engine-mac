@@ -8,7 +8,7 @@ import simd
 /// Record: `header.y` flags (1 clamps the normalised input, 2 the output), `header.z` control
 /// points (input 0, output 0, input 1, output 1, a byte each), `header.w` the enums (`Code`);
 /// `a`/`b` the input range, `c`/`d` the output range, `e.x` `transforminputscale`.
-extension ParticleProgramCPU {
+extension ParticleProgramEncoding {
     /// The packed enums of a remap record.
     enum RemapCode {
         static func pack(operation: UInt32, input: UInt32, output: UInt32, inputComponent: UInt32,

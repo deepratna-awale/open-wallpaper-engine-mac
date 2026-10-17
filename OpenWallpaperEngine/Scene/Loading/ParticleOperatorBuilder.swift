@@ -2,7 +2,7 @@ import simd
 
 /// Compiles an `operator` json element into its record (`ParticleOperator`), with WE's defaults:
 /// each one's filler function in `wallpaper64.exe` is cited. Record layouts are documented on
-/// `ParticleProgramCPU`'s handlers.
+/// `ParticleProgramEncoding`'s handlers.
 enum ParticleOperatorBuilder {
     /// `modelIndex` is how many `collisionmodel` operators came before this one.
     static func make(_ element: WEParticleOperator, defaults d: ParticleDefaults, sceneSize: SIMD2<Float>,
@@ -153,7 +153,7 @@ enum ParticleOperatorBuilder {
               Float(element.phasemin ?? 0), Float(element.phasemax ?? 2 * Double.pi))
     }
 
-    /// `remapvalue`'s record (`ParticleProgramCPU.remap`).
+    /// `remapvalue`'s record (`ParticleProgramEncoding.remap`).
     static func remap(_ element: WEParticleOperator, defaultInput: String, path: String) -> ParticleOperator? {
         guard let code = ParticleRemapBuilder.code(operation: element.operation, input: element.input, defaultInput: defaultInput,
                                                    output: element.output, inputComponent: element.inputcomponent,
@@ -173,7 +173,7 @@ enum ParticleOperatorBuilder {
     }
 }
 
-/// The enums of `remapvalue` and `remapinitialvalue` (`ParticleProgramCPU.RemapCode`).
+/// The enums of `remapvalue` and `remapinitialvalue` (`ParticleProgramEncoding.RemapCode`).
 enum ParticleRemapBuilder {
     static func code(operation: String?, input: String?, defaultInput: String, output: String?, inputComponent: String?,
                      outputComponent: String?, transform: String?, octaves: Int?, path: String) -> UInt32? {
@@ -185,14 +185,14 @@ enum ParticleRemapBuilder {
             }
             return UInt32(found)
         }
-        guard let operation = index(operation, in: ParticleProgramCPU.remapOperations, fallback: "multiply", what: "operation"),
-              let input = index(input, in: ParticleProgramCPU.remapValues, fallback: defaultInput, what: "input"),
-              let output = index(output, in: ParticleProgramCPU.remapValues, fallback: "size", what: "output"),
-              let inputComponent = index(inputComponent, in: ParticleProgramCPU.remapComponents, fallback: "all", what: "component"),
-              let outputComponent = index(outputComponent, in: ParticleProgramCPU.remapComponents, fallback: "all", what: "component"),
-              let transform = index(transform, in: ParticleProgramCPU.remapTransforms, fallback: "none", what: "transform")
+        guard let operation = index(operation, in: ParticleProgramEncoding.remapOperations, fallback: "multiply", what: "operation"),
+              let input = index(input, in: ParticleProgramEncoding.remapValues, fallback: defaultInput, what: "input"),
+              let output = index(output, in: ParticleProgramEncoding.remapValues, fallback: "size", what: "output"),
+              let inputComponent = index(inputComponent, in: ParticleProgramEncoding.remapComponents, fallback: "all", what: "component"),
+              let outputComponent = index(outputComponent, in: ParticleProgramEncoding.remapComponents, fallback: "all", what: "component"),
+              let transform = index(transform, in: ParticleProgramEncoding.remapTransforms, fallback: "none", what: "transform")
         else { return nil }
-        return ParticleProgramCPU.RemapCode.pack(operation: operation, input: input, output: output,
+        return ParticleProgramEncoding.RemapCode.pack(operation: operation, input: input, output: output,
                                                  inputComponent: inputComponent, outputComponent: outputComponent,
                                                  transform: transform, octaves: UInt32(min(max(octaves ?? 3, 1), 15)))
     }
