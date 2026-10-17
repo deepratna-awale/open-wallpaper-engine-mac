@@ -1,0 +1,35 @@
+540 (B7): texture variants, Replace and Alpha blended (WE 2.8.0.42)
+
+## Editor
+- **Where:** select the image layer › Material (Advanced Texture Settings) › Albedo gear › **Texture Properties** › **Variants › + Add Variant Group** (named "shapes") › **+ Add Option** (pick an image).
+  - Each option has up/down order arrows, a mode dropdown (**Replace** / **Alpha blended**) and a **Condition** button.
+- **Restrictions:**
+  - The option image must have the base texture's resolution and type.
+  - It also had to be an **editor-imported** texture. My script-made bars.tex rejected a 512×256 PNG as "Incompatible Variant Option"; the same PNG was accepted once the base came from the editor's Edit › Import Image (variant_a).
+- **Condition:**
+  - Opens "User Properties – choose a property with a compatible type (Checkbox, Combo)".
+  - Link the property, then pick **"Selected combo value for this link"**.
+  - Combo 'shapesel' (0 base, 1 b replace, 2 c alpha) was added in project.json by hand, then linked in the editor.
+
+## Files (project/)
+- **materials/variant_a.tex-json:**
+```
+"variants":[{"name":"shapes","options":[
+  {"blend":"replace","file":"materials/variant_b.png","name":"variant_b","variantcondition":{"condition":"1","name":"shapesel"}},
+  {"blend":"alphablend","file":"materials/variant_c.png","name":"variant_c","variantcondition":{"condition":"2","name":"shapesel"}}]}]
+```
+  - Before a condition is set, `"variantcondition": null`.
+  - The option PNGs are copied into materials/.
+- **materials/variant_a.tex** (175384 bytes; the base alone was about 67 KB):
+  - TEXV0005 / TEXI0001 / **TEXB0004**.
+  - After the TEXB0004 tag: `u32 1, u32 13, u32 2, u32 1, u32 1, u32 0`, then **one JSON string per option**: `{"condition":{"condition":"1","name":"shapesel"}}` and `{"condition":{"condition":"2","name":"shapesel"}}`.
+  - Then image data that contains PNG `IDAT` chunks: the variant images are compiled into the same .tex.
+  - The exact layout is not parsed here.
+- **project.json** (the combo), **scene.json**, **models/variant_a.json**.
+
+## Runtime (make_540.py: only the variant_a layer, shapesel default 0/1/2; RenderDoc stills at 2 s; sheet_540.png)
+- **shapesel=0:** the base bars image.
+- **shapesel=1 (variant_b, Replace):** **only variant_b** is shown (green circle and half-alpha yellow strip). The red/blue bars are gone, so the option texture replaces the base entirely.
+- **shapesel=2 (variant_c, Alpha blended):** **variant_c is composited over the base by its alpha.**
+  - The bars are still visible; the 55%-alpha white square lightens them where they overlap (centre (126,106,124)); the opaque magenta block is full (255,0,255).
+- Bloom (default on) adds glow.

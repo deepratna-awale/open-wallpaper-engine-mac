@@ -1,0 +1,4 @@
+connected ident 38920
+p540_v0 still 2.0 triggered at 2.002 s frame 652
+p540_v1 still 2.0 triggered at 2.004 s frame 794
+p540_v2 still 2.0 triggered at 2.000 s frame 935
