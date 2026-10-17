@@ -36,7 +36,7 @@ extension AppDelegate {
         DispatchQueue.global(qos: .utility).async { WallpaperPreparation.prepare(wallpaperDirectory: folder) }
         guard isScene else { return }
         do {
-            let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: folder.appending(path: "project.json")))
+            let project = try WEProject.read(in: folder)
             showWallpaperEditor(for: WEWallpaper(using: project, where: folder))
         } catch {
             OWELog.error(.library, "Can't open the new wallpaper \(folder.path) in the Wallpaper Editor: \(error)")

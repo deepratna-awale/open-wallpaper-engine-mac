@@ -88,7 +88,7 @@ final class WorkshopItemsImportModel: ObservableObject {
     }
 
     nonisolated static func isInLibrary(_ id: String, storage: URL) -> Bool {
-        FileManager.default.fileExists(atPath: storage.appending(path: "\(id)/project.json").path)
+        WEProject.exists(in: storage.appending(path: id))
     }
 
     /// Queues the checked items; with `createsPlaylist`, a playlist named after the collection
@@ -121,8 +121,7 @@ final class WorkshopItemsImportModel: ObservableObject {
 
     nonisolated static func wallpaper(at folder: URL) -> WEWallpaper? {
         do {
-            let data = try Data(contentsOf: folder.appending(path: "project.json"))
-            return WEWallpaper(using: try JSONDecoder().decode(WEProject.self, from: data), where: folder)
+            return WEWallpaper(using: try WEProject.read(in: folder), where: folder)
         } catch {
             OWELog.error(.importer, "Can't read the project of \(folder.lastPathComponent) for the playlist: \(error)")
             return nil

@@ -114,7 +114,7 @@ struct CommandLineControlPerformer {
         case .applyProperties: try applyProperties(request)
         case .getWallpaper:
             let wallpaper = try shownWallpaper(request)
-            return wallpaper.settingsDirectory.appending(path: "project.json").path(percentEncoded: false)
+            return WEProject.url(in: wallpaper.settingsDirectory).path(percentEncoded: false)
         }
         return ""
     }
@@ -167,9 +167,8 @@ struct CommandLineControlPerformer {
         if !isDirectory.boolValue { url.deleteLastPathComponent() }
         let folder = url.standardizedFileURL.path
         if let found = library.first(where: { $0.settingsDirectory.standardizedFileURL.path == folder }) { return found }
-        let project = url.appending(path: "project.json")
         do {
-            let decoded = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: project))
+            let decoded = try WEProject.read(in: url)
             return WEWallpaper(using: decoded, where: url)
         } catch {
             throw Failure("\(url.path) isn't a wallpaper: its project.json can't be read (\(error.localizedDescription)).")

@@ -247,7 +247,7 @@ extension SceneContentLoader {
 
     /// project.json as JSON; nil (logged) when it can't be read.
     private static func project(in directory: URL) -> SceneJSON? {
-        let url = directory.appending(path: "project.json")
+        let url = WEProject.url(in: directory)
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
         do {
             return try decodeTolerant(SceneJSON.self, from: Data(contentsOf: url))
@@ -346,9 +346,9 @@ extension SceneContentLoader {
 
     /// `general.properties` of project.json; empty when the wallpaper declares none.
     private static func declaredUserProperties(in directory: URL) -> [String: [String: Any]] {
-        let url = directory.appending(path: "project.json")
+        let url = WEProject.url(in: directory)
         do {
-            let root = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
+            let root = try WEProject.json(in: directory)
             let general = root?["general"] as? [String: Any]
             return general?["properties"] as? [String: [String: Any]] ?? [:]
         } catch {

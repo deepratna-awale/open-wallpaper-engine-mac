@@ -35,8 +35,7 @@ enum StaleBundleScanner {
             WallpaperPackageConverter.stampCurrent(in: directory)
             return nil
         }
-        let project = (try? Data(contentsOf: directory.appending(path: "project.json")))
-            .flatMap { try? JSONDecoder().decode(WEProject.self, from: $0) }
+        let project = try? WEProject.read(in: directory)
         // The folder is named for the item Steam installed; project.json's id can be empty or point
         // at the author's earlier upload, so it's only the fallback.
         let isWorkshopId = { (id: String) in !id.isEmpty && id.allSatisfy { $0.isASCII && $0.isNumber } }
