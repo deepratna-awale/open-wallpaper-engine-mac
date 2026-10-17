@@ -1,0 +1,10 @@
+547 (C14): existence checks (WE 2.8.0.42). Answered from WE's own UI strings (locale/ui_en-us.json) and config.json keys, not screenshots. I didn't want to open the user's WE settings UI or change anything.
+
+1. **Keyboard input to web wallpapers: NO evidence it exists.**
+   - The UI strings have no setting or label mentioning keyboard input; the only "key" UI is hotkeys (e.g. "Start screensaver").
+   - Web wallpapers get mouse interaction only; the settings have mouse-input options, and nothing for keyboard.
+2. **Separate screensaver playlists: a separate screensaver CONFIG exists; no dedicated "screensaver playlist" string.**
+   - Strings: "Configure Screensaver", "Change Screensaver", "Remove Screensaver", "Screensaver is:" (mode label), "Screensaver per display" / "Stretch single screensaver" / "Clone single screensaver".
+   - config.json has its own `wallpaperconfigscreensaver` block, separate from the desktop wallpaper config.
+   - The install hint text recommends "a wallpaper playlist also works well" for burn-in, so a playlist can be chosen as the screensaver content. It is stored in that separate screensaver config.
+   - There is no separate playlist manager just for screensavers.
