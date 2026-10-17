@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Puppet Warp inverse kinematics**, as Wallpaper Engine plays it. A bone with the "Inverse kinematics arm/leg" constraint now reaches for its IK target while an animation plays: the limbs above it bend toward the target, on the side of the orientation controller, and lie straight toward it when it is out of reach; with **Rotate when overstretched** the end bone turns to point at the target over the **Full rotation distance**, otherwise it keeps the target's orientation. Bone constraints that limit an IK limb's angle and the target's bend rules apply too. Puppets without IK draw exactly as before.
+
 ## [1.0.0-beta.7] - 2026-10-16
 
 ### Added

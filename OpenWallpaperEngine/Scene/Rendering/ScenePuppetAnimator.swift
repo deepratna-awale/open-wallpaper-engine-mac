@@ -34,6 +34,9 @@ final class ScenePuppetAnimator {
     let drawOrder: ScenePuppetDrawOrder?
     /// The rig's physics bones (docs/models-plan.md §2.14); nil without one.
     private(set) var physics: SceneBonePhysics?
+    /// The rig's IK sets (docs/models-plan.md §2.16, `ScenePuppetIK`); nil without one, and for a
+    /// model, whose update has no solver.
+    let ik: ScenePuppetIK?
     /// The object's world matrix at the last `advance`, which with `worlds` gives the physics
     /// last frame's bones.
     private var lastObjectWorld: simd_float4x4?
@@ -77,6 +80,7 @@ final class ScenePuppetAnimator {
         // Models have no `g_BonesAlpha` or part order; their clips' per-bone lists stay unread.
         boneScalars = model ? SceneBoneScalars() : SceneBoneScalars.rest(boneCount: skeleton.bones.count, clips: clips)
         physics = SceneBonePhysics(skeleton)
+        ik = model ? nil : ScenePuppetIK(skeleton)
         let skeleton = SceneSkeleton(skeleton)
         self.skeleton = skeleton
         self.morphRig = morphRig
@@ -150,7 +154,10 @@ final class ScenePuppetAnimator {
         lastObjectWorld = objectWorld
         let layered = !stack.layers.isEmpty
         guard layered || physics != nil || poseMayChange else { return }
-        recompute(physics: frame)
+        // WE solves only on the update's path with animation layers (0x1402037a6).
+        let solver = layered ? ik : nil
+        solver?.beginFrame(links: stack.linkPose(bind: solver?.linkBind ?? []), delta: delta, objectWorld: objectWorld)
+        recompute(physics: frame, ik: solver)
         poseMayChange = layered
     }
 
@@ -202,8 +209,10 @@ final class ScenePuppetAnimator {
 
     /// Worlds from the locals (and the physics bones), then `setBoneTransform`'s overrides, then
     /// the palette.
-    private func recompute(physics frame: SceneBonePhysics.Frame? = nil) {
-        var worlds = physics?.worlds(locals: locals, skeleton: skeleton, frame: frame) ?? skeleton.worlds(locals: locals)
+    private func recompute(physics frame: SceneBonePhysics.Frame? = nil, ik: ScenePuppetIK? = nil) {
+        var worlds = physics?.worlds(locals: locals, skeleton: skeleton, frame: frame, ik: ik)
+            ?? skeleton.worlds(locals: locals, ik: ik)
+        if let ik { heldLocals(ik, worlds: worlds) }
         var palette = skeleton.palette(worlds: worlds)
         for (bone, matrix) in worldOverrides where bone < worlds.count {
             worlds[bone] = matrix
@@ -216,6 +225,13 @@ final class ScenePuppetAnimator {
                                    blendMap: channelWeights,
                                    drawRanges: drawOrder?.ranges(offsets: boneScalars.depth))
         if next != pose { pose = next }
+    }
+
+    /// A held bone's local matrix from its solved one, as WE derives it (0x14020086f…).
+    private func heldLocals(_ ik: ScenePuppetIK, worlds: [simd_float4x4]) {
+        for bone in worlds.indices where bone < locals.count && ik.heldModel(bone) != nil {
+            locals[bone] = skeleton.parents[bone].map { worlds[$0].inverse * worlds[bone] } ?? worlds[bone]
+        }
     }
 
     // MARK: - Scripts

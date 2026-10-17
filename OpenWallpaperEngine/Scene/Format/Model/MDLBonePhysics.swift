@@ -22,9 +22,13 @@ struct MDLBonePhysics: Equatable {
         static let limitAngles = Flags(rawValue: 0x8)
         /// `lt`: limit the angular velocity to `maxTorque` degrees about each axis.
         static let limitTorque = Flags(rawValue: 0x10)
+        /// `ikg`: Puppet Warp's "Use orientation controller" (the solver reads the controller
+        /// link whenever the compiler wrote one, not this flag).
         static let ikGravityController = Flags(rawValue: 0x20)
+        /// `ikr`: "Rotate when overstretched" (`ScenePuppetIK`).
         static let ikEndRotation = Flags(rawValue: 0x40)
         static let ikStretch = Flags(rawValue: 0x80)
+        /// `ikfe`: a free endpoint, which keeps its parent's orientation.
         static let ikFreeEndpoint = Flags(rawValue: 0x100)
         /// `r`: the rotation is simulated.
         static let rotation = Flags(rawValue: 0x1000)
@@ -70,6 +74,14 @@ struct MDLBonePhysics: Equatable {
     var maxAngles: SIMD3<Float> = .zero
     /// `ltmax`, degrees.
     var maxTorque: Float = 0
+    /// `ikd` (+0x5c, at least 1): the limb depth, which the compiler turns into the IK sets.
+    var ikDepth = 2
+    /// `ikrd` (+0x60, at least 1): "Full rotation distance", how far past its reach the target
+    /// is when `ikr` has turned the effector all the way to it.
+    var ikRotationDistance: Float = 50
+    /// `ikrminl`, `ikrmaxl` (+0x64, +0x68, radians): an `ikce` chain bone's turn from its parent.
+    var ikMinimumAngle: Float = 0
+    var ikMaximumAngle: Float = 0
 
     /// Simulated: rotation or translation, with spring or rigid physics (the loader's test at
     /// 0x140265f0d; the update's is `flags & (r | t)`, 0x14020136e, and neither spring nor rigid
@@ -110,7 +122,13 @@ struct MDLBonePhysics: Equatable {
         set(.rigid, "re")
         let simulated = isSimulated
         guard simulated || flags.contains(.ik) else {
-            if !flags.contains(.ikConstrained) { flags = [] }
+            if flags.contains(.ikConstrained) {
+                // 0x140266475: an IK-constrained bone's angle limits.
+                if let value = number("ikrminl") { ikMinimumAngle = value }
+                if let value = number("ikrmaxl") { ikMaximumAngle = value }
+            } else {
+                flags = []
+            }
             return
         }
         set(.gravity, "ge")
@@ -120,8 +138,11 @@ struct MDLBonePhysics: Equatable {
         guard simulated else {
             // The IK path keeps the friction as (tf / 100)², clamped to 0…1 (0x140266195).
             translationFriction = min(max((translationFriction / 100) * (translationFriction / 100), 0), 1)
-            for (flag, key) in [(Flags.ikGravityController, "ikg"), (.ikEndRotation, "ikr"), (.ikStretch, "ikse"),
-                                (.ikFreeEndpoint, "ikfe")] { set(flag, key) }
+            // 0x1402661cf…: `ikd` (an integer), `ikg`, `ikr`, `ikrd`, `ikse`, `ikfe`.
+            if let value = number("ikd") { ikDepth = max(Int(value), 1) }
+            for (flag, key) in [(Flags.ikGravityController, "ikg"), (.ikEndRotation, "ikr")] { set(flag, key) }
+            if let value = number("ikrd") { ikRotationDistance = value > 1 ? value : 1 }
+            for (flag, key) in [(Flags.ikStretch, "ikse"), (.ikFreeEndpoint, "ikfe")] { set(flag, key) }
             return
         }
         if let value = number("rs") { rotationStiffness = value }

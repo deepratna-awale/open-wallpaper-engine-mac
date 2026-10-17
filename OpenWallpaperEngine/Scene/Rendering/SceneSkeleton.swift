@@ -124,13 +124,19 @@ struct SceneSkeleton: Equatable {
     /// The first bone named `name` (`getBoneIndex`); nil when none is.
     func index(named name: String) -> Int? { names.firstIndex(of: name) }
 
-    /// Model-space matrices from local ones, parents first.
-    func worlds(locals: [simd_float4x4]) -> [simd_float4x4] {
+    /// Model-space matrices from local ones, parents first; with `ik`, the bones an IK chain
+    /// holds keep its result and a chain's root runs its solver once posed (`ScenePuppetIK`).
+    func worlds(locals: [simd_float4x4], ik: ScenePuppetIK? = nil) -> [simd_float4x4] {
         var world: [simd_float4x4] = []
         world.reserveCapacity(locals.count)
         for index in locals.indices {
+            if let held = ik?.heldModel(index) {
+                world.append(held)
+                continue
+            }
             let parent = index < parents.count ? parents[index] : nil
             world.append(parent.map { world[$0] * locals[index] } ?? locals[index])
+            ik?.posed(bone: index, worlds: &world)
         }
         return world
     }
