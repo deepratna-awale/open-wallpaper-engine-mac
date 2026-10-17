@@ -122,6 +122,9 @@ struct EditorCanvasView: View {
                     ParticleCollisionOverlay(model: particles.model, viewport: viewport)
                 }
             }
+            if viewOptions.showsHitboxes {
+                PuppetHitBoxOverlay(hitBoxes: services.puppetHitBoxes, viewport: viewport)
+            }
             EffectGizmoOverlay(session: session, tools: tools, services: services, viewport: viewport)
                 .allowsHitTesting(false)
             CanvasEventView(handlers: handlers)

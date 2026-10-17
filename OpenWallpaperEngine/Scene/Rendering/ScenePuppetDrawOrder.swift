@@ -8,6 +8,9 @@ struct SceneBoneScalars: Equatable {
     var alpha: [Float] = []
     /// Added to each bone's depth: 0 at rest.
     var depth: [Float] = []
+    /// The blend rules' weights (`SceneBlendRules`), one per constraint track: 0 until a layer
+    /// sets them, then kept from frame to frame as WE keeps rig+0x250.
+    var blendRules: [Float] = []
 
     /// The rest values for a rig of `boneCount` bones, with a list only where a clip keys it.
     static func rest(boneCount: Int, clips: [MDLAnimation]) -> SceneBoneScalars {

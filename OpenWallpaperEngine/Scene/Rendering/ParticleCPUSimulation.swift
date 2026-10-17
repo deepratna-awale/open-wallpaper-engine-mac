@@ -123,6 +123,19 @@ final class ParticleSystemRuntime {
     /// children.
     var spawnedThisStep: [Particle] = []
     var diedThisStep: [Particle] = []
+    /// Its `layerimage` emitters' images (`SceneMetalParticleSystem.emitterImages`) as last
+    /// sampled: the load's until a resampling (flag 0x20000) replaces their points.
+    var emitterImages: [ParticleEmitterImage]
+    /// Bumped whenever `emitterImages` change, so the GPU state takes the new points.
+    private(set) var emitterImagesRevision = 0
+    /// Each emitter's seconds of emitting since its image was last sampled (flag 0x20000; WE's
+    /// per-emitter timer, 0x140238d4f).
+    var imageResampleTimers: [Float]
+    /// The `emitterImages` slots whose layer is due to be sampled again after this step.
+    var imageResamplesDue: Set<Int> = []
+    /// Each emitter's layer image world (the layer's world, before the system's space) at its last
+    /// step, where a rigged layer's bones were last frame (`ParticleFrameInputs.placeImages`).
+    var lastImageWorlds: [SceneAffineTransform?]
 
     /// For a renderer after a system's first (`SceneMetalParticleSystem.additionalRenderers`): the
     /// system whose particles it draws. It has no simulation of its own; each frame it draws what
@@ -137,9 +150,19 @@ final class ParticleSystemRuntime {
         self.configuration = configuration
         self.seed = seed
         emitterStates = Array(repeating: ParticleEmitterState(), count: configuration.emitters.count)
+        emitterImages = configuration.emitterImages
+        imageResampleTimers = Array(repeating: 0, count: configuration.emitters.count)
+        lastImageWorlds = Array(repeating: nil, count: configuration.emitters.count)
         if configuration.isInstanced {
             instances = Array(repeating: ParticleInstance(), count: max(configuration.link?.maximumInstances ?? 0, 0))
         }
+    }
+
+    /// Replaces the points of image `slot` (a resampling's, `ParticleEmitterImageResampler`).
+    func replaceImagePoints(_ points: [SIMD4<Int32>], slot: Int) {
+        guard emitterImages.indices.contains(slot), emitterImages[slot].points != points else { return }
+        emitterImages[slot].points = points
+        emitterImagesRevision &+= 1
     }
 
     /// Points each child at its parent (`SceneMetalParticleSystem.link`), in a scene's list of
@@ -262,6 +285,7 @@ enum ParticleCPUSimulation {
                                        remainder: &system.emitterStates[index].remainder, burst: emitter.burst,
                                        rateLimit: limit)
                 system.emitterStates[index].periodEmitted += emitted.rate
+                if emitted.burst + emitted.rate > 0 { system.emitterStates[index].spawns(layerWorld: emitter.layerWorld) }
                 for _ in 0..<(emitted.burst + emitted.rate) {
                     let serial = system.nextSerial
                     system.particles.append(spawn(serial: serial, system: system, inputs: &inputs, emitter: index,
@@ -365,10 +389,14 @@ enum ParticleCPUSimulation {
         let shape = emitter == 0 ? configuration.emitter : configuration.extraEmitters[emitter - 1].shape
         context.emitterAxes = ParticleProgramCPU.point(inputs.controlPointAxes, shape.controlPoint)
         if shape.kind == .image {
-            let points = shape.imageIndex < configuration.emitterImages.count ? configuration.emitterImages[shape.imageIndex].points : []
-            let image = emitter < inputs.emitters.count ? inputs.emitters[emitter].image : .identity
-            if let emitted = ParticleProgramCPU.emit(image: points, shape: shape, image: image, context: context) {
+            let points = shape.imageIndex < system.emitterImages.count ? system.emitterImages[shape.imageIndex].points : []
+            let step = emitter < inputs.emitters.count ? inputs.emitters[emitter] : ParticleEmitterStep()
+            let emitterState = instance < system.instances.count && configuration.isInstanced
+                ? system.instances[instance].emitterStates[safe: emitter] : system.emitterStates[safe: emitter]
+            if let emitted = ParticleProgramCPU.emit(image: points, shape: shape, step: step,
+                                                     lastLayerWorld: emitterState?.spawnLayerWorld, context: context) {
                 state.position = ParticleProgramCPU.lift(emitted.position)
+                state.velocity = ParticleProgramCPU.lift(emitted.velocity)
                 state.baseColor *= emitted.color
             }
         } else {

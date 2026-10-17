@@ -124,13 +124,17 @@ struct SceneSkeleton: Equatable {
     /// The first bone named `name` (`getBoneIndex`); nil when none is.
     func index(named name: String) -> Int? { names.firstIndex(of: name) }
 
-    /// Model-space matrices from local ones, parents first.
-    func worlds(locals: [simd_float4x4]) -> [simd_float4x4] {
+    /// Model-space matrices from local ones, parents first. `adjust`, when given, changes each
+    /// bone's matrix after it is chained from its parent and before its children are (the
+    /// blend rules, `SceneBlendRules`), with the bones posed so far.
+    func worlds(locals: [simd_float4x4],
+                adjust: ((Int, simd_float4x4, [simd_float4x4]) -> simd_float4x4)? = nil) -> [simd_float4x4] {
         var world: [simd_float4x4] = []
         world.reserveCapacity(locals.count)
         for index in locals.indices {
             let parent = index < parents.count ? parents[index] : nil
-            world.append(parent.map { world[$0] * locals[index] } ?? locals[index])
+            let model = parent.map { world[$0] * locals[index] } ?? locals[index]
+            world.append(adjust.map { $0(index, model, world) } ?? model)
         }
         return world
     }

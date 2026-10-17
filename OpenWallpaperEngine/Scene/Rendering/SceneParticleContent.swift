@@ -177,7 +177,8 @@ struct ParticleEmitterShape: Equatable {
     /// `distancemin` and `distancemax`: a sphere's radii (x), a box's half extents.
     var distanceMinimum = SIMD3<Float>.zero
     var distanceMaximum = SIMD3<Float>(256, 256, 0)
-    /// `speedmin`, `speedmax`: speed away from the emitter's centre.
+    /// `speedmin`, `speedmax`: speed away from the emitter's centre; a `layerimage` emitter's
+    /// share of its layer's motion with `inheritsLayerMotion`.
     var speed = SIMD2<Float>.zero
     /// `sign`, when `flags` bit 0 applies it: forces an axis of the offset positive (> 0) or
     /// negative (< 0).
@@ -196,6 +197,13 @@ struct ParticleEmitterShape: Equatable {
     /// A `layerimage` emitter's `flags` 0x80000: the spawn moves by a random offset between
     /// `offsetmin` and `offsetmax` (`distanceMinimum`, `distanceMaximum`; 0x140238fad).
     var offsetsRandomly = false
+    /// A `layerimage` emitter's `flags` 0x20000, "update emission bitmap periodically": once a
+    /// second of emitting, its points are made again from the layer's texture as it is then
+    /// (0x140238d4f; `ParticleEmitterImageResampler`).
+    var resamplesImage = false
+    /// A `layerimage` emitter's `flags` 0x40000, "inherit layer motion": a spawn launches with its
+    /// point's motion since the last step, scaled by `speed` (0x1402397d3).
+    var inheritsLayerMotion = false
 }
 
 /// The layer a `layerimage` emitter emits from and the points it picks among
@@ -205,7 +213,8 @@ struct ParticleEmitterImage: Equatable {
     var layerID: String
     /// Filled by the renderer when it has the layer's texture: one point per texel of the image
     /// reduced to a quarter (x, y in the layer's pixels from its centre, y up; the texel's
-    /// colour packed as 0xRRGGBB).
+    /// colour packed as 0xRRGGBB; on a Puppet Warp layer the bone it follows, −1 for none,
+    /// `ParticleEmitterImageBones`).
     var points: [SIMD4<Int32>] = []
 }
 

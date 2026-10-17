@@ -257,7 +257,8 @@ struct ParticleGPUEmitter {
     /// and maximum; periodic delay minimum and maximum, periodic, -.
     var timing: SIMD4<Float>
     var period: SIMD4<Float>
-    /// Kind (`ParticleEmitterShape.Kind`), applies its sign (1), `instantaneous`, -.
+    /// Kind (`ParticleEmitterShape.Kind`), applies its sign (1), `instantaneous`, inherits the
+    /// layer's motion (1).
     var flags: SIMD4<UInt32>
     /// A `layerimage` emitter's points in the system's point buffer: first, count, takes the
     /// image's colour (1), offsets randomly (1).
@@ -275,7 +276,8 @@ struct ParticleGPUEmitter {
         let timing = emitter.timing
         self.timing = SIMD4(timing.delay, timing.duration, timing.periodDuration.lowerBound, timing.periodDuration.upperBound)
         period = SIMD4(timing.periodDelay.lowerBound, timing.periodDelay.upperBound, timing.periodic ? 1 : 0, 0)
-        flags = SIMD4(shape.kind.rawValue, shape.appliesSign ? 1 : 0, UInt32(clamping: max(emitter.instantaneous, 0)), 0)
+        flags = SIMD4(shape.kind.rawValue, shape.appliesSign ? 1 : 0, UInt32(clamping: max(emitter.instantaneous, 0)),
+                      shape.kind == .image && shape.inheritsLayerMotion ? 1 : 0)
         image = SIMD4(UInt32(clamping: imagePoints.first), UInt32(clamping: imagePoints.count),
                       shape.takesImageColor ? 1 : 0, shape.offsetsRandomly ? 1 : 0)
     }
@@ -283,7 +285,7 @@ struct ParticleGPUEmitter {
 
 /// One emitter's part of a GPU step (`ParticleEmitterStep`).
 struct ParticleGPUEmitterStep {
-    /// Rate, -, -, -.
+    /// Rate, the engine's frame time, -, -.
     var rate: SIMD4<Float>
     /// Burst, period limit (`ParticleGPUFrame.noLimit`: none), starts a period, one per frame.
     var control: SIMD4<UInt32>
@@ -291,14 +293,49 @@ struct ParticleGPUEmitterStep {
     /// linear part's columns, then the translation.
     var imageLinear: SIMD4<Float>
     var imageTranslation: SIMD4<Float>
+    /// The layer's world and the system's space from the scene (`ParticleEmitterStep.layerWorld`,
+    /// `toSpace`): their linear parts' columns, then both translations.
+    var layerLinear: SIMD4<Float>
+    var toSpaceLinear: SIMD4<Float>
+    var translations: SIMD4<Float>
+    /// A rigged layer's bones this step in the step's bone list (`ParticleGPUImageBone`): first,
+    /// count, -, -.
+    var bones: SIMD4<UInt32>
 
-    init(_ step: ParticleEmitterStep) {
-        rate = SIMD4(step.rate, 0, 0, 0)
-        let linear = step.image.linear
-        imageLinear = SIMD4(linear.columns.0.x, linear.columns.0.y, linear.columns.1.x, linear.columns.1.y)
+    /// `firstBone`: where the step's bones start in the list of the system's.
+    init(_ step: ParticleEmitterStep, firstBone: Int = 0) {
+        rate = SIMD4(step.rate, step.frameTime, 0, 0)
+        imageLinear = Self.columns(step.image.linear)
         imageTranslation = SIMD4(step.image.translation.x, step.image.translation.y, 0, 0)
+        layerLinear = Self.columns(step.layerWorld.linear)
+        toSpaceLinear = Self.columns(step.toSpace.linear)
+        translations = SIMD4(step.layerWorld.translation.x, step.layerWorld.translation.y,
+                             step.toSpace.translation.x, step.toSpace.translation.y)
+        bones = SIMD4(UInt32(clamping: firstBone), UInt32(clamping: step.bones.count), 0, 0)
         control = SIMD4(UInt32(clamping: max(step.burst, 0)), step.periodLimit.map { UInt32(clamping: $0) } ?? ParticleGPUFrame.noLimit,
                         step.startsPeriod ? 1 : 0, step.onePerFrame ? 1 : 0)
+    }
+
+    /// A 2 × 2 matrix's columns, one after the other.
+    static func columns(_ linear: simd_float2x2) -> SIMD4<Float> {
+        SIMD4(linear.columns.0.x, linear.columns.0.y, linear.columns.1.x, linear.columns.1.y)
+    }
+}
+
+/// One bone of a rigged layer's step on the GPU (`ParticleImageBone`, `ImageBone`).
+struct ParticleGPUImageBone {
+    /// Now, in the system's space: the linear part's columns.
+    var currentLinear: SIMD4<Float>
+    /// Now's translation, last frame's.
+    var translations: SIMD4<Float>
+    /// Last frame: the linear part's columns.
+    var previousLinear: SIMD4<Float>
+
+    init(_ bone: ParticleImageBone) {
+        currentLinear = ParticleGPUEmitterStep.columns(bone.current.linear)
+        translations = SIMD4(bone.current.translation.x, bone.current.translation.y,
+                             bone.previous.translation.x, bone.previous.translation.y)
+        previousLinear = ParticleGPUEmitterStep.columns(bone.previous.linear)
     }
 }
 
@@ -312,4 +349,11 @@ struct ParticleGPUEmitterState {
     /// What the rate emitted this period (a system's), this step's first spawn and spawns (among the
     /// system's or the instance's), the spawn index its sequence restarts from.
     var counts: SIMD4<UInt32>
+    /// A `layerimage` emitter's layer world at its last step that spawned and the one before
+    /// (`ParticleEmitterState.lastLayerWorld`, `spawnLayerWorld`): the linear part's columns, then
+    /// the translation and whether it is set (z, unset the identity).
+    var lastWorldLinear: SIMD4<Float>
+    var lastWorldTranslation: SIMD4<Float>
+    var spawnWorldLinear: SIMD4<Float>
+    var spawnWorldTranslation: SIMD4<Float>
 }

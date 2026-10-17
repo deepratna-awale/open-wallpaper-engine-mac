@@ -240,6 +240,7 @@ struct SceneAnimationLayerStack: Equatable {
             if !channels.isEmpty { applyChannels(layers[index], weight: weight, to: &channels) }
             if !bones.alpha.isEmpty { applyScalars(layers[index], \.boneAlphaTracks, weight: weight, to: &bones.alpha) }
             if !bones.depth.isEmpty { applyScalars(layers[index], \.boneDepthTracks, weight: weight, to: &bones.depth) }
+            if !bones.blendRules.isEmpty { applyBlendRuleWeights(layers[index], weight: weight, to: &bones.blendRules) }
             turn += applyRootMotion(at: index, weight: weight, to: &pose)
             if layers[index].removesWhenFinished, after.flags.contains(.finished) {
                 layers.remove(at: index)
