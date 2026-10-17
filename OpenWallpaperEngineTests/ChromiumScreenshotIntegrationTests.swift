@@ -21,14 +21,6 @@ final class ChromiumScreenshotIntegrationTests: XCTestCase {
         if let folder { try? FileManager.default.removeItem(at: folder) }
     }
 
-    private func waitUntil(_ what: String, timeout: TimeInterval, _ condition: () -> Bool) {
-        let deadline = Date().addingTimeInterval(timeout)
-        while !condition() && Date() < deadline {
-            RunLoop.main.run(until: Date().addingTimeInterval(0.02))
-        }
-        XCTAssertTrue(condition(), "Timed out waiting for \(what)")
-    }
-
     func testASolidPageIsSavedAtItsOwnSizeAndAtTwiceItsWidth() async throws {
         let page = ChromiumBrowserPage(startScripts: [], frameRate: 30)
         defer { page.close() }

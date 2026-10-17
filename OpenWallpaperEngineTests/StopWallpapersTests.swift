@@ -95,21 +95,15 @@ final class StopWallpapersTests: XCTestCase {
         window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(rootView: DisplayWallpaperView(viewModel: model, screenId: "1"))
         window.orderFront(nil)
-        wait(until: { running() == 1 }, "the display's view runs its wallpaper")
+        waitUntil("the display's view to run its wallpaper") { running() == 1 }
 
         model.stopWallpapers()
-        wait(until: { running() == 0 }, "nothing runs once stopped")
+        waitUntil("nothing to run once stopped") { running() == 0 }
         AppDelegate.closeWallpaperWindows(["1": window])
         XCTAssertNil(window.contentView)
         XCTAssertFalse(window.isVisible)
 
         model.resumeWallpapers()
         XCTAssertEqual(running(), 0, "a closed window loads nothing; the app delegate makes new ones on resume")
-    }
-
-    private func wait(until condition: () -> Bool, _ message: String) {
-        let deadline = Date().addingTimeInterval(5)
-        while !condition(), Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.02)) }
-        XCTAssertTrue(condition(), message)
     }
 }

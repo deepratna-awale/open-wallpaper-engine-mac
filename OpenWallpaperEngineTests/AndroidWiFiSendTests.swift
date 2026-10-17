@@ -235,7 +235,7 @@ final class AndroidWiFiSendTests: XCTestCase {
         // Another device claims the name later: the next free one replaces it.
         registrar.taken.insert("owe-fileshare-3.pyxis")
         registrar.loseName()
-        try await waitUntil { session.hostName == "owe-fileshare-4.pyxis.local" }
+        try await sleepUntil("the fourth name") { session.hostName == "owe-fileshare-4.pyxis.local" }
         XCTAssertEqual(registrar.active, "owe-fileshare-4.pyxis")
 
         session.stop()
@@ -255,7 +255,7 @@ final class AndroidWiFiSendTests: XCTestCase {
         XCTAssertEqual(session.state, .serving)
         XCTAssertNil(session.hostName, "the IP address meanwhile")
         XCTAssertEqual(session.url, session.ipURL)
-        try await waitUntil { session.hostName == "owe-fileshare.pyxis.local" }
+        try await sleepUntil("the plain name") { session.hostName == "owe-fileshare.pyxis.local" }
         XCTAssertEqual(registrar.attempts, ["owe-fileshare.pyxis", "owe-fileshare.pyxis"])
     }
 
@@ -370,7 +370,7 @@ final class AndroidWiFiSendTests: XCTestCase {
         XCTAssertEqual(posted.statusCode, 405)
 
         // The sheet's progress comes from the server's reports on the main actor.
-        try await waitUntil { session.progress[1]?.completedBy == ["127.0.0.1"] }
+        try await sleepUntil("the completed download") { session.progress[1]?.completedBy == ["127.0.0.1"] }
         XCTAssertEqual(session.progress[1]?.position, 300_000)
         XCTAssertEqual(session.devices, ["127.0.0.1"])
         XCTAssertNil(session.progress[0]?.completedBy.first, "a range short of the end isn't a completed download")
@@ -396,7 +396,7 @@ final class AndroidWiFiSendTests: XCTestCase {
         let base = try XCTUnwrap(session.ipURL)
         let (_, before) = try await Self.get(base)
         XCTAssertEqual(before.statusCode, 200)
-        try await waitUntil { session.state == .stopped(.expired) }
+        try await sleepUntil("the expiry") { session.state == .stopped(.expired) }
         XCTAssertNil(session.url)
         do {
             let (_, after) = try await Self.get(base)
@@ -498,7 +498,7 @@ final class AndroidWiFiSendTests: XCTestCase {
         XCTAssertEqual(String(decoding: before, as: UTF8.self), #"{"version":0,"downloaded":[\#(rain)]}"#, "marks what this device downloaded")
 
         session.update(files: outbox.wifiFiles([rain, city]))
-        try await waitUntil { (try? await Self.get(base.appending(path: "file/\(city)")).1.statusCode) == 200 }
+        try await sleepUntil("the file to be served") { (try? await Self.get(base.appending(path: "file/\(city)")).1.statusCode) == 200 }
         let (after, _) = try await Self.get(base.appending(path: "list"))
         XCTAssertTrue(String(decoding: after, as: UTF8.self).hasPrefix(#"{"version":1,"#), "the page reloads")
         let (newPage, _) = try await Self.get(base)
@@ -524,20 +524,12 @@ final class AndroidWiFiSendTests: XCTestCase {
         try await Task.sleep(for: .milliseconds(1000))
         let status6 = try await Self.get(base).1.statusCode
         XCTAssertEqual(status6, 200)
-        try await waitUntil { session.expiry > first.addingTimeInterval(0.5) }
+        try await sleepUntil("the extended expiry") { session.expiry > first.addingTimeInterval(0.5) }
         try await Task.sleep(for: .milliseconds(1000))
         XCTAssertEqual(session.state, .serving, "past the first expiry, still serving")
         let status7 = try await Self.get(base.appending(path: "list")).1.statusCode
         XCTAssertEqual(status7, 200)
-        try await waitUntil(timeout: 4) { session.state == .stopped(.expired) }
-    }
-
-    private func waitUntil(timeout: TimeInterval = 5, _ condition: @MainActor () async -> Bool) async throws {
-        let deadline = Date().addingTimeInterval(timeout)
-        while !(await condition()) {
-            guard Date() < deadline else { return XCTFail("timed out") }
-            try await Task.sleep(for: .milliseconds(20))
-        }
+        try await sleepUntil("the expiry", timeout: 4) { session.state == .stopped(.expired) }
     }
 }
 
