@@ -168,6 +168,6 @@ final class TEXSpriteFramesTests: XCTestCase {
     }
 
     private static func digest(_ data: Data) -> String {
-        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        Digest.hex(SHA256.hash(data: data))
     }
 }
