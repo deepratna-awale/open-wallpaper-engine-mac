@@ -93,6 +93,4 @@ public struct RenderStats: Equatable, Sendable {
 }
 
 /// The stats overlay's text, from this module's catalog (`Resources/Stats.xcstrings`).
-func S(_ key: String.LocalizationValue) -> String {
-    String(localized: key, table: "Stats", bundle: .module)
-}
+let S = EditorText(table: "Stats", bundle: .module)

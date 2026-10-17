@@ -1,10 +1,14 @@
 import Foundation
+import OWEInspectorKit
 import OWESceneEditing
 
 /// The editor's text, from this module's catalog (`Resources/Localizable.xcstrings`), which
 /// holds every language the app ships.
-func L(_ key: String.LocalizationValue) -> String {
-    String(localized: key, bundle: .module)
+let L = EditorText(table: nil)
+
+extension EditorText {
+    /// One of this module's catalogs (`Resources/<table>.xcstrings`; nil is `Localizable`).
+    init(table: String?) { self.init(table: table, bundle: .module) }
 }
 
 extension SceneLayer.Kind {
