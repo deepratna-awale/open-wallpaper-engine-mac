@@ -29,3 +29,18 @@
   - **Padding: the content starts at 64,64** (64 px transparent margin on the left/top; right/bottom margins are also about 64).
 - **So in this run** the sheet removed the head limb and did not lay out separate limbs. My masks were probably not "recalculated" (Auto Recalculate not checked), or the Head › Arm nesting confused it.
 - **Not settled:** where the head and arm limbs would land in the sheet. This needs a second run with each limb added under Body and Recalculate pressed. Files saved: figure3*.png/.tex/.tex-json/.json, scene.json, editor_limbs_view.png.
+
+## Run 2 (Head and Arm as siblings under Body, Recalculate pressed before OK)
+- **Files:** figure3b*.png/.tex/.tex-json/.json, scene_b.json, editor_siblings_view.png. The limb tree is Body ├ Head └ Arm.
+- **Layer:** `figure3b_sheet`, **size 492×509**, origin reset to 960 540. No cropoffset; plain rgba8888 tex-json (no crop keys).
+- **figure3b_sheet.png components** (alpha > 8):
+  - **Body (+ arm still attached):** bbox 64-287 × 64-279 (224×216), at the top-left with a **64 px margin**.
+  - **Head:** a separate piece, bbox 64-163 × 343-444 (100×102), **placed below the body** in the same column, 64 px further down (279 → 343).
+  - A stray 19×20 blue speck at 409-427 × 256-275: leftover body edge from the mask, in the right part of the sheet.
+- **The arm was NOT separated** in this run either. It stays attached to the body at its original place (64+80 … 287), and no arm piece appears elsewhere.
+  - In the editor's Foreground & Original view after Recalculate, the arm limb's area showed a light overlay but kept the body attached. My brush strokes may not have been accepted as the arm's foreground; the dialog doesn't make this clear.
+- **Layout rule seen:**
+  - Pieces start at (64,64) and are stacked **vertically**, with a **64 px gap** between them.
+  - The sheet size = content + margins: 492 = 64 + 224 + … (the right margin is wider here, because of the stray speck at x 427 plus 64).
+  - Removed limbs leave an in-painted cap on the parent (the blue cap at the body top in run 1).
+- **Variant with Arm nested under Head:** that was run 1. It produced one component (body+arm) and lost the head entirely. So **siblings under Body is the layout that gives separate pieces.**
