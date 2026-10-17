@@ -1,0 +1,31 @@
+545 (B12): character sheet (WE 2.8.0.42). PARTIAL: the head limb was lost.
+
+## Source and import
+- **figure3.png:** 512×512, transparent, with a 3-limb figure:
+  - head: ellipse 206-306 × 80-180, (240,200,150)
+  - body: rect 216-296 × 180-400, (60,160,230)
+  - arm: rect 296-440 × 200-236, (230,90,60)
+- **Edit › Import Image.** In this project the dialog defaulted to **"Crop transparent area" ON with Padding 50** (the bars import earlier showed it off).
+  - figure3.tex-json: `croptransparent:true, croppadding:50, cropx0:206, cropx1:441, cropy0:80, cropy1:401`
+  - models/figure3.json: `"cropoffset": "67.50000 15.50000"`
+  - The layer was placed at origin **(1027.5, 555.5)**, i.e. 960 + 67.5 and 540 + 15.5. The crop offset moves the layer so the content stays where it was in the 512×512 frame.
+
+## Character sheet
+- **Layer right-click › Image Editing › Character Sheet Creation** opens the "Puppet Sheet Creation" dialog.
+  - Limb list (starts with **Body**; **+** asks for a limb name).
+  - Editing: polygon / brush tools, Mark Foreground / Mark Background / Erase, Brush size 20%, Reset Mask.
+  - Fine-tuning: Fill gaps 15, Mask tolerance −1, Smoothing 1, Quality level 1.
+  - View buttons: Original / limbs / …; Recalculate, **Auto Recalculate**, Help.
+- **What I did:** + "Head" (brush-marked the head), + "Arm" (brush-marked the arm).
+  - **The new limb nests under the selected limb**, so Arm became a child of Head: Body › Head › Arm (editor_limbs_view.png).
+  - Then OK › "Confirm Puppet Sheet Creation: the existing layer will be removed … cannot be undone" › OK.
+- **Result:** the layer was replaced by **figure3_sheet**:
+  - scene object `size "352 372"`, **origin reset to 960 540** (the crop offset is gone)
+  - models/figure3_sheet.json `{autosize, material}` with no cropoffset
+  - figure3_sheet.tex-json: plain rgba8888, no crop keys
+- **figure3_sheet.png (352×372):**
+  - **One opaque component only**, at bbox 64-287 × 64-307: the **body with the arm still attached**.
+  - **The head is missing.** A soft blue in-painted cap sits where the head overlapped the body.
+  - **Padding: the content starts at 64,64** (64 px transparent margin on the left/top; right/bottom margins are also about 64).
+- **So in this run** the sheet removed the head limb and did not lay out separate limbs. My masks were probably not "recalculated" (Auto Recalculate not checked), or the Head › Arm nesting confused it.
+- **Not settled:** where the head and arm limbs would land in the sheet. This needs a second run with each limb added under Body and Recalculate pressed. Files saved: figure3*.png/.tex/.tex-json/.json, scene.json, editor_limbs_view.png.
