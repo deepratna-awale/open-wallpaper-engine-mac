@@ -233,7 +233,7 @@ public indirect enum ParticleFieldCondition: Hashable, Sendable {
     }
 
     /// The remap values that are scalars: the particle's own numbers and the clocks
-    /// (`ParticleProgramEncoding+Remap`, WE's `remapValues` 0…12); the rest are vectors.
+    /// (`ParticleProgramEncoding.remapValues`, WE's `remapValues` 0…12); the rest are vectors.
     public static let scalarRemapValues: Set<String> = [
         "lifetimefraction", "maxlifetime", "size", "opacity", "speed", "rotation", "angularspeed",
         "distancetocontrolpoint", "positionbetweentwocontrolpoints", "runtime", "timeofday",

@@ -2,7 +2,7 @@ import simd
 
 /// Compiles an `operator` json element into its record (`ParticleOperator`), with WE's defaults:
 /// each one's filler function in `wallpaper64.exe` is cited. Record layouts are documented on
-/// `ParticleProgramEncoding`'s handlers.
+/// `runOperator` in `ParticleProgram.h`.
 enum ParticleOperatorBuilder {
     /// `modelIndex` is how many `collisionmodel` operators came before this one.
     static func make(_ element: WEParticleOperator, defaults d: ParticleDefaults, sceneSize: SIMD2<Float>,
@@ -153,7 +153,7 @@ enum ParticleOperatorBuilder {
               Float(element.phasemin ?? 0), Float(element.phasemax ?? 2 * Double.pi))
     }
 
-    /// `remapvalue`'s record (`ParticleProgramEncoding.remap`).
+    /// `remapvalue`'s record (`remap` in `ParticleProgram.h`).
     static func remap(_ element: WEParticleOperator, defaultInput: String, path: String) -> ParticleOperator? {
         guard let code = ParticleRemapBuilder.code(operation: element.operation, input: element.input, defaultInput: defaultInput,
                                                    output: element.output, inputComponent: element.inputcomponent,
