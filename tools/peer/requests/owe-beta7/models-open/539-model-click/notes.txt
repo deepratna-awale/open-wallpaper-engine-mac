@@ -1,0 +1,19 @@
+539 (B6): model click box, mesh centred on its origin (WE 2.8.0.42)
+
+## Setup
+- **Model:** centered_cube.fbx, a 1×1×1 Blender cube centred on its origin (make_centered_cube_fbx.py). Imported with the editor's Edit › Import Model into a copy of MG4's model project.
+  - Files: centered_cube.mdl/.json, 1344 bytes, static.
+  - WE imported it at scale 0.027 (the FBX is in cm). Set to **scale 0.01**, origin 0 0 0, angles 0, so it is a unit cube around the origin.
+- **Scene** (make_539.py, scene.json): only that model, `camera eye 0 0 3 → centre 0 0 0`, and a SceneScript on the model's origin logging cursorEnter/Leave/Down/Click with `localPosition` / `worldPosition` / `hitBox`.
+- **Run in the editor** (Run Preview + Log window). The cube's front face covered about x 746-1112, y 398-765 of the 1920×1080 editor screen, centre ≈ (929,582).
+
+## Result (editor_log.txt)
+- **Lower-left quarter** (screen 790,680): `enter`, `down`, `click` fire.
+  - local = (−21.5, −21.2, **50.0**), i.e. the front face (z = +50 in mesh units, the 100-unit cube before the 0.01 scale), on the lower-left side.
+- **Upper-right quarter** (screen 1060,450): `down` and `click` fire, with local = (+30.8, +11.4, 50.0).
+- **So cursorClick fires on both quarters.** The hit test covers the whole mesh around its origin, not only the positive quadrant. localPosition is the **hit point on the mesh surface in model space** (pre-scale, y up).
+- **Click on empty space** (1300,300): only `leave`, with local (0,0,0) and world (0,0,−9997).
+- **Other fields:**
+  - `worldPosition` for model hits looks like an unprojected screen-space value with z = −9997, about the far plane; it is not a scene-unit hit point.
+  - **No `hitBox` key** for a model without bones.
+- **Editor-preview quirk:** after that `leave`, no further cursor events arrived for the rest of the session, even when hovering back and clicking the cube centre and other corners. So the centre click was not tested; this may be an editor-preview focus issue.

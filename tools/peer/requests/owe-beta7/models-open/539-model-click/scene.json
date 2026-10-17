@@ -1,0 +1,61 @@
+{
+ "camera": {
+  "center": "0 0 0",
+  "eye": "0 0 3",
+  "up": "0 1 0"
+ },
+ "general": {
+  "ambientcolor": "0.30000 0.30000 0.30000",
+  "bloom": true,
+  "bloomhdrfeather": 0.1,
+  "bloomhdriterations": 8,
+  "bloomhdrscatter": 1.619,
+  "bloomhdrstrength": 2.0,
+  "bloomhdrthreshold": 1.0,
+  "bloomstrength": 2.0,
+  "bloomthreshold": 0.64999998,
+  "bloomtint": "1.00000 1.00000 1.00000",
+  "camerafade": true,
+  "cameraparallax": false,
+  "cameraparallaxamount": 0.5,
+  "cameraparallaxdelay": 0.1,
+  "cameraparallaxmouseinfluence": 0.5,
+  "camerapreview": true,
+  "camerashake": false,
+  "camerashakeamplitude": 0.5,
+  "camerashakeroughness": 1.0,
+  "camerashakespeed": 3.0,
+  "clearcolor": "0.70000 0.70000 0.70000",
+  "clearenabled": true,
+  "farz": 10000.0,
+  "fov": 50.0,
+  "gravitydirection": "0.00000 -1.00000 0.00000",
+  "gravitystrength": 1.0,
+  "hdr": false,
+  "nearz": 0.1,
+  "orthogonalprojection": null,
+  "skylightcolor": "0.30000 0.30000 0.30000",
+  "transparentsorting": true,
+  "winddirection": "0.70700 0.70700 0.00000",
+  "windenabled": false,
+  "windstrength": 1.0,
+  "zoom": 1.0
+ },
+ "objects": [
+  {
+   "disablepropagation": false,
+   "id": 22,
+   "model": "models/centered_cube/centered_cube.mdl",
+   "name": "centered_cube",
+   "scale": "0.01 0.01 0.01",
+   "solid": true,
+   "origin": {
+    "script": "'use strict';\nfunction show(e) { return JSON.stringify({hitBox: e.hitBox, local: e.localPosition, world: e.worldPosition}); }\nexport function cursorClick(e) { console.log('click ' + show(e)); }\nexport function cursorDown(e) { console.log('down ' + show(e)); }\nexport function cursorEnter(e) { console.log('enter ' + show(e)); }\nexport function cursorLeave(e) { console.log('leave ' + show(e)); }\nexport function update(value) { return value; }\n",
+    "scriptproperties": {},
+    "value": "0 0 0"
+   },
+   "angles": "0 0 0"
+  }
+ ],
+ "version": 5
+}
