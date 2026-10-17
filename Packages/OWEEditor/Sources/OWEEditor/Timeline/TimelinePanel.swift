@@ -66,11 +66,7 @@ struct TimelinePanel: View {
         .focused($isFocused)
         .onKeyPress(phases: .down) { press in handleKey(press) }
         .onCopyCommand { copy() }
-        .onCutCommand {
-            let items = copy()
-            timeline.deleteSelection(actionName: T("Cut Keyframes"))
-            return items
-        }
+        .onCutCommand { cut() }
         .onPasteCommand(of: [.plainText]) { _ in timeline.paste(actionName: T("Paste Keyframes")) }
         .onDeleteCommand { timeline.deleteSelection(actionName: T("Delete Keyframes")) }
         .contextMenu { editMenu }
@@ -305,10 +301,7 @@ struct TimelinePanel: View {
 
     @ViewBuilder private var editMenu: some View {
         Button(T("Copy")) { _ = copy() }.disabled(timeline.selection.isEmpty)
-        Button(T("Cut")) {
-            _ = copy()
-            timeline.deleteSelection(actionName: T("Cut Keyframes"))
-        }
+        Button(T("Cut")) { _ = cut() }
         .disabled(timeline.selection.isEmpty)
         Button(T("Paste")) { timeline.paste(actionName: T("Paste Keyframes")) }.disabled(!timeline.canPaste)
         Button(T("Delete")) { timeline.deleteSelection(actionName: T("Delete Keyframes")) }.disabled(timeline.selection.isEmpty)
@@ -352,6 +345,17 @@ struct TimelinePanel: View {
     /// JSON (the `c0`… lists of the copied keyframes), so Paste is offered.
     private func copy() -> [NSItemProvider] {
         timeline.copySelection()
+        return pasteboardItems()
+    }
+
+    /// Copies the selection as `copy()` does, then deletes it as one undo step.
+    private func cut() -> [NSItemProvider] {
+        timeline.cutSelection(actionName: T("Cut Keyframes"))
+        return pasteboardItems()
+    }
+
+    /// The timeline's clipboard as WE's keyframe JSON for the pasteboard.
+    private func pasteboardItems() -> [NSItemProvider] {
         guard !timeline.clipboard.isEmpty else { return [] }
         var channels: [String: SceneJSONValue] = [:]
         for item in timeline.clipboard {
