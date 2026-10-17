@@ -5,8 +5,9 @@ import simd
 /// 4–23, `MDLS` 1–4, `MDLA` 1–6; docs/models-plan.md §1), the same layout as the app's
 /// `MDLReader`. The puppet is the first mesh (the only one WE draws, 0x14020aeb9) with its
 /// skeleton, weights and clips; what the editor doesn't edit is kept (`PuppetPreservedData`) or,
-/// for data no library rig has (links, IK sets, morph-weight tracks), left out. Constraints are
-/// Puppet Warp's blend rules (`PuppetBlendRule`).
+/// for data no library rig has (morph-weight tracks), left out. Constraints are Puppet Warp's
+/// blend rules (`PuppetBlendRule`); IK sets with their links and link tracks are its kinematic
+/// chains and their controllers (`PuppetBoneIK`).
 public enum PuppetMDLReader {
     /// `imageSize`: the image's pixels (the mesh's space has no size of its own).
     public static func read(_ data: Data, imageSize: SIMD2<Float>, sourcePath: String? = nil) throws -> PuppetDocument {
@@ -36,7 +37,7 @@ public enum PuppetMDLReader {
         if !channels.isEmpty { document.preserved.textureChannels = channels }
         guard version >= 13 else { throw PuppetMDLError.unsupported("no skeleton") }
         var boneCount = 0
-        var links = 0
+        var links: [LinkRecord] = []
         var constraints: [(bone: Int, rule: Int)?] = []
         while true {
             let tagBytes = try r.cstring()
@@ -256,10 +257,11 @@ public enum PuppetMDLReader {
     // MARK: MDLS
 
     private static func readSkeleton(_ r: inout PuppetMDLInput, version: Int,
-                                     into document: inout PuppetDocument) throws -> (links: Int, constraints: [(bone: Int, rule: Int)?]) {
+                                     into document: inout PuppetDocument) throws -> (links: [LinkRecord], constraints: [(bone: Int, rule: Int)?]) {
         let count = Int(try r.u32())
         guard count <= PuppetMDLWriter.maximumBones else { throw PuppetMDLError.malformed("\(count) bones") }
         var bones: [PuppetBone] = []
+        var propertiesText: [String] = []
         for index in 0..<count {
             let name = try r.cstring()
             let flags = try r.u32()
@@ -268,6 +270,7 @@ public enum PuppetMDLReader {
             guard length == 64 else { throw PuppetMDLError.malformed("bone matrix of \(length) bytes") }
             let matrix = try r.matrix()
             let properties = try r.cstring()
+            propertiesText.append(properties)
             var bone = PuppetBone(name: name, parent: parent == 0xFFFF_FFFF || Int(parent) >= index ? nil : Int(parent),
                                   local: PuppetTransform(matrix: matrix), flags: flags)
             if let object = Self.properties(properties) {
@@ -277,13 +280,16 @@ public enum PuppetMDLReader {
             bones.append(bone)
         }
         document.bones = bones
-        guard version >= 2 else { return (0, []) }
-        let links = Int(try r.u16())
-        for _ in 0..<links {
+        guard version >= 2 else { return ([], []) }
+        var linkRecords: [LinkRecord] = []
+        for _ in 0..<Int(try r.u16()) {
             _ = try r.cstring()
-            _ = try r.u32s(2)
-            _ = try r.matrix()
+            let values = try r.u32s(2)
+            let matrix = try r.matrix()
+            linkRecords.append(LinkRecord(bone: Int(values[0]), type: values[1],
+                                          rest: SIMD2(matrix.columns.3.x, matrix.columns.3.y)))
         }
+        let links = linkRecords.count
         if try r.u8() != 0 {
             for index in 0..<count {
                 let rest = PuppetTransform(matrix: try r.matrix())
@@ -317,15 +323,28 @@ public enum PuppetMDLReader {
                 _ = try r.f32s(3)
             }
         }
+        // IK sets: each joint's end bone with `ik` in its properties is a kinematic chain (a rope
+        // with joint flag 0x4); the links on that bone are its controllers.
         for _ in 0..<(try r.u16()) {
             _ = try r.u32()
             _ = try r.u32s(Int(try r.u32()))
             for _ in 0..<(try r.u16()) {
                 _ = try r.u32()
                 for _ in 0..<(try r.u16()) {
-                    _ = try r.u32s(2)
+                    let values = try r.u32s(2)
                     _ = try r.f32s(2)
                     _ = try r.u32s(Int(try r.u16()))
+                    let bone = Int(values[0])
+                    guard bone < count, document.bones[bone].ik == nil,
+                          let ik = PuppetBoneIK(properties: Self.properties(propertiesText[bone]) ?? [:],
+                                                rope: values[1] & 0x4 != 0) else { continue }
+                    document.bones[bone].ik = ik
+                    document.bones[bone].otherProperties = document.bones[bone].otherProperties
+                        .filter { !PuppetBoneIK.keys.contains($0.key) }
+                    for index in linkRecords.indices where linkRecords[index].bone == bone {
+                        linkRecords[index].chainEnd = bone
+                        if linkRecords[index].type == 1 { document.bones[bone].ik!.orientationRest = linkRecords[index].rest }
+                    }
                 }
             }
         }
@@ -337,7 +356,16 @@ public enum PuppetMDLReader {
         }
         if try r.u8() != 0 { document.preserved.boneIndices = try r.u32s(count) }
         if version >= 3, try r.u8() != 0 { document.preserved.bonePriorities = try r.u32s(count) }
-        return (links, constraints)
+        return (linkRecords, constraints)
+    }
+
+    /// A link as `MDLS` has it: its bone, type (0 the IK target, 1 the orientation controller)
+    /// and rest place; `chainEnd` is the chain it controls once the IK sets are read.
+    struct LinkRecord {
+        var bone: Int
+        var type: UInt32
+        var rest: SIMD2<Float>
+        var chainEnd: Int?
     }
 
     /// A bone's properties JSON as an object; nil when empty or not an object.
@@ -358,7 +386,7 @@ public enum PuppetMDLReader {
         }
     }
 
-    private static func readAnimations(_ r: inout PuppetMDLInput, version: Int, links: Int,
+    private static func readAnimations(_ r: inout PuppetMDLInput, version: Int, links: [LinkRecord],
                                        constraints: [(bone: Int, rule: Int)?], meshes: Int,
                                        into document: inout PuppetDocument) throws {
         let count = Int(try r.i32())
@@ -388,9 +416,24 @@ public enum PuppetMDLReader {
             }
             while tracks.count < document.bones.count { tracks.append(PuppetTrack()) }
             if version >= 2 {
-                for _ in 0..<links {
-                    _ = try r.u32()
-                    _ = try r.blob("link track")
+                for link in links {
+                    let tag = try r.u32()
+                    let values = PuppetMDLInput.floats(try r.blob("link track"))
+                    guard tag & 1 == 0, values.count == 9 * samples, let bone = link.chainEnd,
+                          document.bones[bone].ik != nil else { continue }
+                    // The controller's keys: its place each frame less its rest place.
+                    let keys = (0..<samples).map { frame in
+                        PuppetBoneIK.Key(offset: SIMD2(values[9 * frame], values[9 * frame + 1]) - link.rest,
+                                         angle: values[9 * frame + 5])
+                    }
+                    guard keys.contains(where: { simd_length($0.offset) > 1e-4 || abs($0.angle) > 1e-6 }) else { continue }
+                    let kept = Set(PuppetBlendRule.keys(from: keys.map(\.offset.x)).keys)
+                        .union(PuppetBlendRule.keys(from: keys.map(\.offset.y)).keys)
+                        .union(PuppetBlendRule.keys(from: keys.map(\.angle)).keys)
+                    for frame in kept {
+                        document.bones[bone].ik!.setKey(link.type == 1 ? .orientation : .target, clip: id, frame: frame,
+                                                        to: keys[frame])
+                    }
                 }
                 for placement in constraints {
                     let tag = try r.u32()
