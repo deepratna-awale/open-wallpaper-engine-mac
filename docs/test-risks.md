@@ -419,7 +419,7 @@ Our particles are 2D with a separate alpha: `Particle.position/velocity: SIMD2`,
 ## I10. Combos from bound textures, combo case, `TEXnFORMAT` (High, E/F)
 **Scenario.** `resolveCombos` (`Scene/Shaders/ShaderVariant.swift:75-89`) turns a sampler's `combo` on when its slot is bound and upper-cases overrides, but declaration defaults are keyed by their declared name. Risks:
 - **Material slots.** A material `textures` array with `""`/`null` slots; `require`/`requireany` annotations not honoured.
-- **Hidden defaults.** `_rt_MipMappedFrameBuffer` (REFLECTION, 4 library materials), `_rt_shadowAtlas` (`sampler2DComparison`), `_alias_lightCookie` and `util/white` go through `textureInput`, which rejects `_rt_*` with an error (`Scene/Loading/SceneEffectPlan.swift` `textureInput`).
+- **Hidden defaults.** `_rt_MipMappedFrameBuffer` (REFLECTION, 4 library materials), `_rt_shadowAtlas` (`sampler2DComparison`), `_alias_lightCookie` and `util/white` go through `textureInput`, which rejects `_rt_*` with an error (`Scene/Plans/SceneEffectPlan.swift` `textureInput`).
 - **`TEXnFORMAT`.** TEXParser already expands R8 to `(1,1,1,r)` and RG88 to `(l,l,l,a)` (`Scene/Format/TEXParser.swift:434-455`). So `ConvertTexture0Format` must see `TEX0FORMAT=0`; setting `TEX0FORMAT=9` yields `vec4(1,1,1,1)` (opaque squares). RG88 **normal maps** lose G from RGB, so `DecompressNormal`/`WithMask` (`Vendor/we-assets/shaders/common_fragment.h:19-48`) read swapped or duplicated channels. That affects `REFRACT` particles (13 in library) and `LIGHTING`.
 **Test.**
 - Table test: (material, bound slots, object combos) → expected combo dictionary for all 133 image and 79 particle passes in the library; lowercase keys normalise.
@@ -598,7 +598,7 @@ Line numbers are at `c955481`.
 1. **Material `Brightness` is applied twice (I20). Medium.**
    - The legacy heuristic reads `constantshadervalues` `"Brightness"` into `materialEffects.brightness` (`Scene/Loading/SceneContentLoader.swift:1033`, via `Scene/Format/SceneMaterial.swift:40-41`).
    - The renderer folds it into `uniform.effects.x` (`Scene/Rendering/SceneMetalRenderer.swift:557`) and passes that as the draw's brightness (`:576`).
-   - `ImageMaterialPlanBuilder` also takes the same constant as the live factor for `g_Brightness` (`Scene/Loading/ImageMaterialPlan.swift:121-124`), which `ImageMaterialUniforms.live` multiplies in again (`Scene/Rendering/ImageMaterialUniforms.swift:89-90`).
+   - `ImageMaterialPlanBuilder` also takes the same constant as the live factor for `g_Brightness` (`Scene/Plans/ImageMaterialPlan.swift:121-124`), which `ImageMaterialUniforms.live` multiplies in again (`Scene/Rendering/ImageMaterialUniforms.swift:89-90`).
    - A legacy genericimage2 material with `"Brightness": 1.5` draws at 2.25× (≈1.5² once clamped). The heuristic's other aliases (`intensity`, `overbright`, `gain`) also leak into `g_Brightness` and into `g_Color4` for `VERSION` shaders (`ImageMaterialUniforms.swift:86-88`).
    - The fixture tests only use a material factor of 1 (`testLegacyAlphaConstantScalesTheLiveAlpha` asserts `g_Brightness == 1`), so they miss it.
    - **Test:** a legacy material with `Brightness` 1.5 over black, texel 0.4 → expect 0.6, not 0.9.
@@ -642,7 +642,7 @@ Line numbers are at `61a34d7`. `GeometryShaderEmulationTests` (9) and `ImageMate
 
 **What the commits already cover.**
 - I4: each point draws `3·(N−2)` list vertices. Triangles past the emitted count, or spanning a `RestartStrip`, collapse to `vec4(0)`, and odd strip triangles swap corners to keep their winding (`Scene/Shaders/GeometryShaderEmulation.swift:137-150`, `:231-255`). `maxvertexcount` is evaluated after combos (`:45-51`).
-- I14: rope renderers swap in `genericropeparticle` (`Scene/Loading/ParticleMaterialPlanBuilder.swift`). The loop-variable redeclaration is rewritten (`Scene/Shaders/HLSLStageRewrites.swift:102-128`), and `TRAILSUBDIVISION` compiles.
+- I14: rope renderers swap in `genericropeparticle` (`Scene/Plans/ParticleMaterialPlanBuilder.swift`). The loop-variable redeclaration is rewritten (`Scene/Shaders/HLSLStageRewrites.swift:102-128`), and `TRAILSUBDIVISION` compiles.
 - I3: the vertex descriptor comes from reflection, with a per-instance step and a constant-zero buffer for missing attributes (`Scene/Rendering/ParticleMaterialRenderer.swift:272-304`). Records are 16-byte slots (no `float3` packing hazard). `SPRITESHEET` and trails force `THICKFORMAT`.
 - I15: loops and runtime-bound emission work, because the whole geometry body runs per output vertex. Non-point input and `IN[1+]` are reported.
 - I16: failures fall back to the built-in draw and are logged once. REFRACT is refused.
@@ -874,7 +874,7 @@ Status: 2026-09-25, branch `deepratna/feature-work`, base `94a9e6e` (WP1 and WP2
 **Test.** A scene with a `while(true)` in `update` of a script on display A: the main run loop stays responsive enough to open Settings (or document that it does not, and pick a shorter per-frame limit than WE's), display B keeps rendering after A's stop, one "dead lock" line names the script, and the wallpaper shows the halted state. Termination inside `load`, `frame` and `tearDown` each leave the runtime `halted` and the next wallpaper loadable.
 
 ## S20. Inbox overflow (Medium, WP2, WP6, WP10)
-**Scenario.** `SceneScriptInbox.post` drops the **oldest** events past 1024 (`Runtime/SceneScriptInbox.swift:14-16`). When frames stop (`metalView.isPaused` when `playRate == 0`, `Scene/Loading/SceneWallpaperView.swift:144`; occluded windows; a sleeping display), cursor moves (WP10) and media timeline events (WP6) keep arriving. A user-property change made in the sidebar while paused is then pushed out by mouse movement, and scripts never receive that `applyUserProperties`, a permanent desync. Confirmed by reading, Findings SF4.
+**Scenario.** `SceneScriptInbox.post` drops the **oldest** events past 1024 (`Runtime/SceneScriptInbox.swift:14-16`). When frames stop (`metalView.isPaused` when `playRate == 0`, `Scene/UI/SceneWallpaperView.swift:144`; occluded windows; a sleeping display), cursor moves (WP10) and media timeline events (WP6) keep arriving. A user-property change made in the sidebar while paused is then pushed out by mouse movement, and scripts never receive that `applyUserProperties`, a permanent desync. Confirmed by reading, Findings SF4.
 **Status.** Fixed with SF4/SF15; WP10 posts clicks as `.keep`.
 **Test.** Pause, change a user property, post 2000 cursor moves, resume → the script receives the property change. Cursor moves should be coalesced (keep the latest), and state events (properties, settings, media status, playback) never dropped.
 

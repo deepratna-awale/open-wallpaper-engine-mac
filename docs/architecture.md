@@ -58,6 +58,8 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
 | `Scene/Scripting/` | The SceneScript runtime (JavaScriptCore), one per wallpaper instance on its own thread, and the WE JS API surface as extensions; `Host/` ties a runtime to the renderer (docs/scenescript-plan.md). | `SceneScriptRuntime`, `SceneScriptWallpaper`, `SceneScriptSceneMirror` |
 | `Scene/Loading/` | Turns a wallpaper into render content: loads, resolves and builds. | `SceneContentLoader` (to be split) |
 | `Scene/UI/` | Scene-specific SwiftUI: Scene Edit / Export and user properties, and the isolated sessions its export modes edit. These are the **only** scene files allowed to import SwiftUI views. | `SceneInspectorView`, `SceneUserPropertiesView`, `SceneHelp`, `IsolatedSceneEditSession` |
+| `Scene/Plans/` | What the loader plans and the renderer draws from: a material's or effect's passes through the translator, a model's meshes. | `ImageMaterialPlan`, `ModelMaterialPlan`, `ParticleMaterialPlan`, `SceneEffectPlan`, `SceneModelPlan` |
+| `Scene/Textures/` | "Optimise textures": colour textures prepared as BC7 and cached on disk. | `TexturePreparation`, `TextureCompressor` |
 
 ### `Audio/`
 
