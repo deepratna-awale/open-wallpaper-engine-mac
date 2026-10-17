@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Wallpaper Editor: imported models are compiled as Wallpaper Engine 2.8 compiles them**, checked against WE 2.8.0.42's own import of a rigged FBX (capture 546) and its recompiles of three default-project models. An imported model's `models/<name>.json` now has WE's shape: `skinning`, and under `editor` the animations' ids (`animationmapping`), clips naming their animation, `motionflags` as WE stores them, attachments as a transform and each bone's constraint with WE's whole key set; configurations the editor wrote before are still read. Animations get the ids the configuration gives them, a clip's record carries WE's flags and empty mode, a static mesh in a rigged model is bound to its own node, bones are in WE's order and their bind pose, and bone constraints are compiled as WE compiles them (one angle limit on every simulated axis, the tip, the largest offset). Animations are turned into tracks as WE turns them (its keys, linear in between, on whole frames, the last frame looping to the first), meshes share a polygon's corners, every texture coordinate set takes part in joining vertices, and tangents have WE 2.8's handedness. Add Clip names the clip and sets root motion as WE's does. WE's recompiled `bars.obj` and `flow.obj` now come out the same, and `pistols.fbx` with the same vertices, its triangles in another order (docs/model-import.md).
+
 ## [1.0.0-beta.7] - 2026-10-16
 
 ### Added

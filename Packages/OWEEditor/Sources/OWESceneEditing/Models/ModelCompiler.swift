@@ -4,18 +4,19 @@ import simd
 /// Compiles an imported model into WE's `.mdl` as WE's resource compiler does
 /// (`resourcecompiler64.exe -mdl`, Assimp underneath; docs/model-import.md):
 ///
-/// - Every mesh part (one per material) becomes an `MDLV` mesh. Its vertices are the corners
-///   with identical ones joined, in the order they first appear (Assimp's
-///   JoinIdenticalVertices); polygons are fans from their first corner. Texture coordinates are
-///   flipped (v → 1 − v). Normals (`normals`), tangents with their handedness in w
-///   (`tangentspace`, Assimp's CalcTangentSpace) and a second UV set packed with the first into
-///   `a_TexCoordVec4` (`seconduvchannel`) follow the configuration; the default projects' pairs of
-///   source and `.mdl` match this to the byte.
-/// - A skinned model keeps the nodes the skin needs (the root, "RootNode", every bone and its
-///   ancestors) as `MDLS` bones with their local matrices, bone flag 1 on armature bones, and
-///   per bone the box of the vertices it moves in its bind space; every animation becomes an
-///   `MDLA` record with one track per bone, and each clip a record cut from its animation with
-///   the clip record after it.
+/// - Every mesh part (one per material) becomes an `MDLV` mesh. Its vertices are the polygons'
+///   corners (a polygon's triangles share them; polygons are fans from their first corner) with
+///   identical ones joined, in polygon order (Assimp's JoinIdenticalVertices). Texture
+///   coordinates are flipped (v → 1 − v). Normals (`normals`), tangents with their handedness in
+///   w (`tangentspace`, Assimp's CalcTangentSpace on the unflipped coordinates) and a second UV set packed with
+///   the first into `a_TexCoordVec4` (`seconduvchannel`) follow the configuration; WE 2.8.0.42's
+///   own recompiles of the default projects' sources (capture 546) are the reference.
+/// - A skinned model (`skinning`) keeps the nodes the skin needs (the root, "RootNode", every
+///   bone and its ancestors, and the node of each mesh without a skin, which it is bound to) as
+///   `MDLS` bones with their bind-pose local matrices, bone flag 1 on bones and those meshes'
+///   nodes, and per bone the box of the vertices it moves in its bind space; every animation
+///   becomes an `MDLA` record (its `animationmapping` id) with one track per bone, and each clip
+///   a record cut from its animation with the clip record after it.
 /// - Materials are `materials/models/<folder>/<material>.json` (`generic4`, WE's importer's
 ///   pass), one per skin when the configuration has `skins`.
 public enum ModelCompiler {
@@ -77,16 +78,14 @@ public enum ModelCompiler {
         public var triangleCount: Int
     }
 
-    /// The id of the source's animation `index` (its animations, then each additional file's).
-    public static func animationID(_ index: Int) -> UInt64 { UInt64(index + 1) }
-
     /// Compiles `source` (and the animations of `additional`, matched to its bones by name) with
     /// `config`; `folder` names the model's folder in the material paths
     /// (`materials/models/<folder>/…`).
     public static func compile(_ source: ModelSource, config: ModelImportConfig, folder: String,
                                additional: [ModelSource] = [], skins: [[String: String]] = []) throws -> Output {
         guard source.meshes.contains(where: { !$0.positions.isEmpty }) else { throw CompileError.noMeshes }
-        let skeleton = source.isSkinned ? Skeleton(source) : nil
+        // `skinning` false compiles a skinned source without its skeleton, as WE's compiler does.
+        let skeleton = source.isSkinned && config.skinning != false ? Skeleton(source) : nil
         if let skeleton, skeleton.nodes.count > maximumBones { throw CompileError.tooManyBones(skeleton.nodes.count) }
         var materials = materialFiles(source, folder: folder, skins: skins)
         for index in materials.indices {
@@ -163,6 +162,13 @@ public enum ModelCompiler {
             if hasNormals { merged.normals = group.flatMap { $0.normals ?? [] } }
             if hasUVs { merged.uvs = group.flatMap { joined($0.uvs, count: $0.positions.count, fill: .zero) } }
             if hasSecond { merged.secondUVs = group.flatMap { joined($0.secondUVs, count: $0.positions.count, fill: .zero) } }
+            // Each part's vertices after the ones before (PreTransformVertices appends them).
+            var offset = 0
+            merged.vertices = group.flatMap { part -> [Int] in
+                let ids = part.vertices ?? Array(part.positions.indices)
+                defer { offset += (ids.max() ?? -1) + 1 }
+                return ids.map { $0 + offset }
+            }
             if group.allSatisfy({ $0.tangents != nil && $0.bitangents != nil }) {
                 merged.tangents = group.flatMap { $0.tangents ?? [] }
                 merged.bitangents = group.flatMap { $0.bitangents ?? [] }
@@ -261,29 +267,50 @@ struct CompiledMesh {
     static let blendWeights: UInt32 = 0x1000000
 
     init(_ mesh: ModelSource.Mesh, config: ModelImportConfig, skeleton: ModelCompiler.Skeleton?) {
-        let count = mesh.positions.count
-        // Assimp gives a mesh without normals smooth ones (GenSmoothNormals); the corners are
+        // Assimp's vertices are a mesh's polygon corners: a polygon's triangles share them
+        // (`mesh.vertices`; without it every triangle corner is a vertex of its own), in the
+        // order the polygons list them. Normals and tangents are computed on these vertices,
+        // each face writing its own over the vertices it shares with the face before (Assimp's
+        // GenSmoothNormals and CalcTangentSpace), and identical ones are joined after.
+        let ids = mesh.vertices ?? Array(mesh.positions.indices)
+        var slot: [Int: Int] = [:]
+        var firstCorner: [Int] = []
+        let order = ids.indices.sorted { (ids[$0], $0) < (ids[$1], $1) }
+        for corner in order where slot[ids[corner]] == nil {
+            slot[ids[corner]] = firstCorner.count
+            firstCorner.append(corner)
+        }
+        let triangles = ids.map { slot[$0] ?? 0 }
+        let count = firstCorner.count
+        func pick<T>(_ values: [T]) -> [T] { firstCorner.map { values[$0] } }
+        let positions = pick(mesh.positions)
+        // Assimp gives a mesh without normals smooth ones (GenSmoothNormals); the vertices are
         // joined on them whether or not the configuration writes them.
-        let allNormals = mesh.normals ?? Self.smoothNormals(mesh.positions)
+        let allNormals = mesh.normals.map(pick) ?? Self.smoothNormals(positions, triangles: triangles)
         let normals: [SIMD3<Float>]? = config.normals ? allNormals : nil
-        let uvs = (mesh.uvs ?? Array(repeating: .zero, count: count)).map { SIMD2($0.x, 1 - $0.y) }
+        let uvs = (mesh.uvs.map(pick) ?? Array(repeating: .zero, count: count)).map { SIMD2($0.x, 1 - $0.y) }
+        let sourceSecondUVs = mesh.secondUVs.map(pick)
         let secondUVs = config.secondUVChannel
-            ? (mesh.secondUVs ?? mesh.uvs ?? Array(repeating: .zero, count: count)).map { SIMD2($0.x, 1 - $0.y) } : nil
+            ? ((mesh.secondUVs ?? mesh.uvs).map(pick) ?? Array(repeating: .zero, count: count)).map { SIMD2($0.x, 1 - $0.y) } : nil
         // The file's own tangent space when it has one (Assimp's CalcTangentSpace leaves such a
-        // mesh alone), else a computed one; corners are joined on it whether or not it is written.
+        // mesh alone), else a computed one; vertices are joined on it whether or not it is written.
+        // WE 2.8 computes it on the file's texture coordinates, before v is flipped (capture 546:
+        // its recompiles of the default projects' models have the opposite handedness to the
+        // `MDLV0004`…`0014` files they ship, except on faces whose coordinates don't span an
+        // area, which take Assimp's default direction either way).
         let tangentSpace: (tangents: [SIMD4<Float>], bitangents: [SIMD3<Float>])?
-        if let fileTangents = mesh.tangents, let fileBitangents = mesh.bitangents {
+        if let fileTangents = mesh.tangents.map(pick), let fileBitangents = mesh.bitangents.map(pick) {
             tangentSpace = (zip(fileTangents, zip(allNormals, fileBitangents)).map { t, nb in
-                SIMD4(t, simd_dot(simd_cross(nb.0, t), nb.1) > 0 ? 1 : -1)
+                SIMD4(t, Self.handedness(normal: nb.0, tangent: t, bitangent: nb.1))
             }, fileBitangents)
         } else if mesh.uvs != nil {
-            tangentSpace = Self.tangentSpace(positions: mesh.positions, normals: allNormals, uvs: uvs)
+            tangentSpace = Self.tangentSpace(positions: positions, normals: allNormals, uvs: pick(mesh.uvs ?? []), triangles: triangles)
         } else {
             tangentSpace = nil
         }
         let tangents = config.tangentSpace && normals != nil ? tangentSpace?.tangents : nil
         let influences = skeleton.map { skeleton in
-            mesh.influences.map { $0.map { skeleton.remap($0) } } ?? Array(repeating: skeleton.rootInfluence, count: count)
+            mesh.influences.map { pick($0).map { skeleton.remap($0) } } ?? Array(repeating: skeleton.influence(of: mesh), count: count)
         }
 
         var format = Self.position
@@ -293,19 +320,19 @@ struct CompiledMesh {
         if influences != nil { format |= Self.blendIndices | Self.blendWeights }
         self.format = format
 
-        // Corners are joined as Assimp's JoinIdenticalVertices joins them: at the same position
+        // Vertices are joined as Assimp's JoinIdenticalVertices joins them: at the same position
         // with the same influences, and every other attribute (the tangent space too, written or
-        // not) within 1e-5; the first corner of a vertex gives its values.
+        // not) within 1e-5; the first vertex of a group gives its values.
         struct Candidate {
             var index: UInt32
-            var corner: Int
+            var vertex: Int
         }
         var groups: [[UInt8]: [Candidate]] = [:]
         var bytes: [UInt8] = []
-        var indices: [UInt32] = []
-        var positions: [SIMD3<Float>] = []
+        var joined: [UInt32] = []
+        var kept: [SIMD3<Float>] = []
         var vertexInfluences: [ModelSource.Influences] = []
-        indices.reserveCapacity(count)
+        joined.reserveCapacity(count)
         let epsilon: Float = 1e-5 * 1e-5
         func close<V: SIMD>(_ a: V, _ b: V) -> Bool where V.Scalar == Float {
             var sum: Float = 0
@@ -321,50 +348,52 @@ struct CompiledMesh {
                 }
             }
             if !close(uvs[a], uvs[b]) { return false }
-            if let secondUVs, !close(secondUVs[a], secondUVs[b]) { return false }
+            // Every texture coordinate set the source has, written or not (JoinIdenticalVertices
+            // compares all of Assimp's channels).
+            if let sourceSecondUVs, !close(sourceSecondUVs[a], sourceSecondUVs[b]) { return false }
             return true
         }
-        for corner in 0..<count {
-            let p = mesh.positions[corner]
+        for vertex in 0..<count {
+            let p = positions[vertex]
             var key = PuppetMDLOutput()
             key.f32s([p.x, p.y, p.z])
             if let influences {
-                let i = influences[corner]
-                for slot in 0..<4 { key.u32(i.nodes[slot]) }
-                for slot in 0..<4 { key.f32(i.weights[slot]) }
+                let i = influences[vertex]
+                for lane in 0..<4 { key.u32(i.nodes[lane]) }
+                for lane in 0..<4 { key.f32(i.weights[lane]) }
             }
-            if let match = groups[key.bytes]?.first(where: { same($0.corner, corner) }) {
-                indices.append(match.index)
+            if let match = groups[key.bytes]?.first(where: { same($0.vertex, vertex) }) {
+                joined.append(match.index)
                 continue
             }
-            let index = UInt32(positions.count)
-            groups[key.bytes, default: []].append(Candidate(index: index, corner: corner))
-            var vertex = PuppetMDLOutput()
-            vertex.f32s([p.x, p.y, p.z])
-            if let normals { vertex.f32s([normals[corner].x, normals[corner].y, normals[corner].z]) }
-            if let tangents { vertex.f32s([tangents[corner].x, tangents[corner].y, tangents[corner].z, tangents[corner].w]) }
+            let index = UInt32(kept.count)
+            groups[key.bytes, default: []].append(Candidate(index: index, vertex: vertex))
+            var out = PuppetMDLOutput()
+            out.f32s([p.x, p.y, p.z])
+            if let normals { out.f32s([normals[vertex].x, normals[vertex].y, normals[vertex].z]) }
+            if let tangents { out.f32s([tangents[vertex].x, tangents[vertex].y, tangents[vertex].z, tangents[vertex].w]) }
             if let influences {
-                let i = influences[corner]
-                for slot in 0..<4 { vertex.u32(i.nodes[slot]) }
-                for slot in 0..<4 { vertex.f32(i.weights[slot]) }
+                let i = influences[vertex]
+                for lane in 0..<4 { out.u32(i.nodes[lane]) }
+                for lane in 0..<4 { out.f32(i.weights[lane]) }
             }
             if let secondUVs {
-                vertex.f32s([uvs[corner].x, uvs[corner].y, secondUVs[corner].x, secondUVs[corner].y])
+                out.f32s([uvs[vertex].x, uvs[vertex].y, secondUVs[vertex].x, secondUVs[vertex].y])
             } else {
-                vertex.f32s([uvs[corner].x, uvs[corner].y])
+                out.f32s([uvs[vertex].x, uvs[vertex].y])
             }
-            bytes += vertex.bytes
-            positions.append(p)
-            if let influences { vertexInfluences.append(influences[corner]) }
-            indices.append(index)
+            bytes += out.bytes
+            kept.append(p)
+            if let influences { vertexInfluences.append(influences[vertex]) }
+            joined.append(index)
         }
-        vertexCount = positions.count
+        vertexCount = kept.count
         vertexBytes = bytes
-        self.indices = indices
-        self.positions = positions
+        indices = triangles.map { joined[$0] }
+        self.positions = kept
         self.influences = vertexInfluences
-        var low = positions.first ?? .zero, high = low
-        for p in positions {
+        var low = kept.first ?? .zero, high = low
+        for p in kept {
             low = simd_min(low, p)
             high = simd_max(high, p)
         }
@@ -389,26 +418,33 @@ struct CompiledMesh {
         out.u32(0) // no groups (MDLV 23)
     }
 
-    /// Each triangle's own normal on its three corners (a source without normals).
-    static func faceNormals(_ positions: [SIMD3<Float>]) -> [SIMD3<Float>] {
-        var normals: [SIMD3<Float>] = []
-        normals.reserveCapacity(positions.count)
-        for first in stride(from: 0, to: positions.count - 2, by: 3) {
-            let normal = AssimpMath.normalizedSafe(AssimpMath.cross(positions[first + 1] - positions[first],
-                                                                    positions[first + 2] - positions[first]))
-            normals += [normal, normal, normal]
+    /// The tangent's handedness in w: the sign of (N × T) · B.
+    static func handedness(normal: SIMD3<Float>, tangent: SIMD3<Float>, bitangent: SIMD3<Float>) -> Float {
+        simd_dot(simd_cross(normal, tangent), bitangent) > 0 ? 1 : -1
+    }
+
+    /// Each triangle's own normal written on its three vertices, a later triangle's over an
+    /// earlier one's (a source without normals).
+    static func faceNormals(_ positions: [SIMD3<Float>], triangles: [Int]) -> [SIMD3<Float>] {
+        var normals = Array(repeating: SIMD3<Float>.zero, count: positions.count)
+        for first in stride(from: 0, to: triangles.count - 2, by: 3) {
+            let a = triangles[first], b = triangles[first + 1], c = triangles[first + 2]
+            let normal = AssimpMath.normalizedSafe(AssimpMath.cross(positions[b] - positions[a], positions[c] - positions[a]))
+            normals[a] = normal
+            normals[b] = normal
+            normals[c] = normal
         }
         return normals
     }
 
-    /// Assimp's GenSmoothNormals at its default 175° limit: each corner gets the normalised sum
-    /// of the face normals of every corner within 1e-4 of the mesh's box diagonal.
-    static func smoothNormals(_ positions: [SIMD3<Float>]) -> [SIMD3<Float>] {
-        let faces = faceNormals(positions)
+    /// Assimp's GenSmoothNormals at its default 175° limit: each vertex gets the normalised sum
+    /// of the face normals of every vertex within 1e-4 of the mesh's box diagonal.
+    static func smoothNormals(_ positions: [SIMD3<Float>], triangles: [Int]) -> [SIMD3<Float>] {
+        let faces = faceNormals(positions, triangles: triangles)
         var normals = faces
         let radius = positionEpsilon(positions)
         var grid: [SIMD3<Int32>: [Int]] = [:]
-        for corner in positions.indices { grid[cell(positions[corner], radius), default: []].append(corner) }
+        for vertex in positions.indices { grid[cell(positions[vertex], radius), default: []].append(vertex) }
         var done = Array(repeating: false, count: positions.count)
         for a in positions.indices where !done[a] {
             let found = near(a, positions, grid: grid, radius: radius)
@@ -454,34 +490,36 @@ struct CompiledMesh {
         return found.sorted()
     }
 
-    /// Assimp's CalcTangentSpace on the flipped coordinates: per triangle, the tangent and
+    /// Assimp's CalcTangentSpace on the file's coordinates (v not flipped): per triangle, the tangent and
     /// bitangent of its UV mapping, made orthogonal to each corner's normal; then each corner
     /// averages those of the corners at the same position whose normal, tangent and bitangent
     /// lie within 45° of its own. w is the handedness, the sign of (N × T) · B.
-    static func tangentSpace(positions: [SIMD3<Float>], normals: [SIMD3<Float>], uvs: [SIMD2<Float>])
+    static func tangentSpace(positions: [SIMD3<Float>], normals: [SIMD3<Float>], uvs: [SIMD2<Float>], triangles: [Int])
         -> (tangents: [SIMD4<Float>], bitangents: [SIMD3<Float>]) {
         let count = positions.count
         var tangents = Array(repeating: SIMD3<Float>.zero, count: count)
         var bitangents = Array(repeating: SIMD3<Float>.zero, count: count)
-        for first in stride(from: 0, to: count - 2, by: 3) {
-            let p0 = positions[first], p1 = positions[first + 1], p2 = positions[first + 2]
+        for first in stride(from: 0, to: triangles.count - 2, by: 3) {
+            let i0 = triangles[first], i1 = triangles[first + 1], i2 = triangles[first + 2]
+            let p0 = positions[i0], p1 = positions[i1], p2 = positions[i2]
             let v = p1 - p0, w = p2 - p0
-            var sx = uvs[first + 1].x - uvs[first].x, sy = uvs[first + 1].y - uvs[first].y
-            var tx = uvs[first + 2].x - uvs[first].x, ty = uvs[first + 2].y - uvs[first].y
+            var sx = uvs[i1].x - uvs[i0].x, sy = uvs[i1].y - uvs[i0].y
+            var tx = uvs[i2].x - uvs[i0].x, ty = uvs[i2].y - uvs[i0].y
             let direction: Float = tx * sy - ty * sx < 0 ? -1 : 1
             if sx * ty == sy * tx {
                 sx = 0; sy = 1; tx = 1; ty = 0
             }
             let tangent = (w * sy - v * ty) * direction
             let bitangent = (w * sx - v * tx) * direction
-            for corner in first..<(first + 3) {
-                let n = normals[corner]
-                tangents[corner] = AssimpMath.normalizedSafe(tangent - n * AssimpMath.dot(tangent, n))
-                bitangents[corner] = AssimpMath.normalizedSafe(bitangent - n * AssimpMath.dot(bitangent, n))
+            // Written on the triangle's vertices, over what an earlier triangle wrote there.
+            for vertex in [i0, i1, i2] {
+                let n = normals[vertex]
+                tangents[vertex] = AssimpMath.normalizedSafe(tangent - n * AssimpMath.dot(tangent, n))
+                bitangents[vertex] = AssimpMath.normalizedSafe(bitangent - n * AssimpMath.dot(bitangent, n))
             }
         }
-        // Smoothing as Assimp's CalcTangentsProcess: in corner order, a corner not yet smoothed
-        // gathers the unsmoothed corners within 1e-4 of the mesh's box diagonal whose normal is
+        // Smoothing as Assimp's CalcTangentsProcess: in vertex order, a vertex not yet smoothed
+        // gathers the unsmoothed vertices within 1e-4 of the mesh's box diagonal whose normal is
         // within 0.9999 and tangent and bitangent within 45° of its own (itself counted twice,
         // as Assimp's loop adds it again), and all of them get the normalised sums.
         let radius = positionEpsilon(positions)
@@ -512,8 +550,7 @@ struct CompiledMesh {
         }
         let smoothedT = tangents, smoothedB = bitangents
         let oriented = (0..<count).map { corner in
-            let handedness: Float = simd_dot(simd_cross(normals[corner], smoothedT[corner]), smoothedB[corner]) > 0 ? 1 : -1
-            return SIMD4(smoothedT[corner], handedness)
+            SIMD4(smoothedT[corner], handedness(normal: normals[corner], tangent: smoothedT[corner], bitangent: smoothedB[corner]))
         }
         return (oriented, smoothedB)
     }
