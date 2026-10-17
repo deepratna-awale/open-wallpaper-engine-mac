@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **Clicking a 3D model** hits the whole model again: the hit box is the mesh's bounds, so a model around its origin is clicked in every quarter, not only above and right of its origin (Wallpaper Engine 2.8's own behaviour, checked against it). `localPosition` is where the click meets the box, from its centre in model units.
+
 ## [1.0.0-beta.7] - 2026-10-16
 
 ### Added
