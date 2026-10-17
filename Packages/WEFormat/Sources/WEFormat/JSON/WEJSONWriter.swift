@@ -9,26 +9,26 @@ import Foundation
 ///
 /// Checked byte for byte against WE 2.8.42's mobile export of a Workshop scene
 /// (`MobilePackageTests`).
-enum WEJSONWriter {
+public enum WEJSONWriter {
     /// JsonCpp's `rightMargin_`.
-    static let rightMargin = 74
-    static let precision = 8
+    public static let rightMargin = 74
+    public static let precision = 8
 
-    static func data(_ document: WEJSONDocument) -> Data {
+    public static func data(_ document: WEJSONDocument) -> Data {
         var writer = Writer()
         writer.write(document)
         return Data(writer.output.replacingOccurrences(of: "\n", with: "\r\n").utf8)
     }
 
     /// A real as JsonCpp writes it at `precision` significant digits.
-    static func real(_ value: Double) -> String {
+    public static func real(_ value: Double) -> String {
         guard value.isFinite else { return "null" }
         var text = String(format: "%.\(precision)g", value)
         if !text.contains("."), !text.contains("e") { text += ".0" }
         return text
     }
 
-    static func quoted(_ string: String) -> String {
+    public static func quoted(_ string: String) -> String {
         var result = "\""
         for scalar in string.unicodeScalars {
             switch scalar {
@@ -54,7 +54,7 @@ enum WEJSONWriter {
         return result + "\""
     }
 
-    static func scalar(_ document: WEJSONDocument) -> String? {
+    public static func scalar(_ document: WEJSONDocument) -> String? {
         switch document {
         case .null: return "null"
         case .bool(let value): return value ? "true" : "false"
