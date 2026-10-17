@@ -60,6 +60,8 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
 | `Scene/Prewarm/` | Shader prewarm: a new build compiles the shader variants and effect pipelines of the scenes the user shows into the caches, through the real loader and renderer offscreen, before it replaces the running one. It reads the user's settings and never writes them. | `ShaderPrewarm`, `ShaderPrewarmTargets` (run by `ShaderPrewarmCommand`) |
 | `Scene/Loading/` | Turns a wallpaper into render content: loads, resolves and builds. `SceneContentLoader` holds the loaded state; its extensions follow the build: `+Loading` (read the scene, `metalContent`), `+LayerBuilders` (image, puppet, solid, text and shape layers; objects scripts create), `+EffectPlans` (materials and effects through WE's shaders), `+Models`, `+Particles`, `+Assets` (JSON, textures, shared assets), `+VideoAsScene`, `+ObjectRebuild` (some objects rebuilt alone) and `+ParticleDocuments` (the Wallpaper Editor's particle documents). | `SceneContentLoader`, `ScenePreparation`, `ParticleSystemBuilder` |
 | `Scene/UI/` | Scene-specific SwiftUI: Scene Edit / Export and user properties, and the isolated sessions its export modes edit. These are the **only** scene files allowed to import SwiftUI views. | `SceneInspectorView`, `SceneUserPropertiesView`, `SceneHelp`, `IsolatedSceneEditSession` |
+| `Scene/Plans/` | What the loader plans and the renderer draws from: a material's or effect's passes through the translator, a model's meshes. | `ImageMaterialPlan`, `ModelMaterialPlan`, `ParticleMaterialPlan`, `SceneEffectPlan`, `SceneModelPlan` |
+| `Scene/Textures/` | "Optimise textures": colour textures prepared as BC7 and cached on disk. | `TexturePreparation`, `TextureCompressor` |
 
 ### `Audio/`
 
