@@ -80,7 +80,7 @@ final class WEMaterialBlendingTests: XCTestCase {
         let directory = Fixtures.url("Scenes/ordering")
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/ordering/project.json"))
         addTeardownBlock { Fixtures.removeStoredSettings(for: directory) }
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         let store = model.propertyStoreKey
         addTeardownBlock { WallpaperServices.shared.setUserProperties([:], wallpaper: store, replacing: true) }
 

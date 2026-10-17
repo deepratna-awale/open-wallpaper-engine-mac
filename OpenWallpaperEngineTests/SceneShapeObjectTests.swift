@@ -22,8 +22,8 @@ final class SceneShapeObjectTests: XCTestCase {
     }
 
     func testAShapeIsASquareOfTheSceneHeight() {
-        XCTAssertEqual(SceneWallpaperViewModel.shapeSize(sceneSize: SIMD2<Float>(1920, 1080)), SIMD2<Float>(1080, 1080))
-        XCTAssertEqual(SceneWallpaperViewModel.shapeEffectCombos, ["DIRECTDRAW": 1])
+        XCTAssertEqual(SceneContentLoader.shapeSize(sceneSize: SIMD2<Float>(1920, 1080)), SIMD2<Float>(1080, 1080))
+        XCTAssertEqual(SceneContentLoader.shapeEffectCombos, ["DIRECTDRAW": 1])
     }
 
     /// The object's combos go over the authored ones of every pass.
@@ -37,7 +37,7 @@ final class SceneShapeObjectTests: XCTestCase {
         let json = #"{"file":"effects/lightshafts/effect.json","passes":[{"combos":{"RENDERING":1,"DIRECTDRAW":0}}]}"#
         let effect = try JSONDecoder().decode(WEObjectEffect.self, from: Data(json.utf8))
         XCTAssertEqual(try builder.build(effect).passes.first?.variant?.combos["DIRECTDRAW"], 0)
-        builder.objectCombos = SceneWallpaperViewModel.shapeEffectCombos
+        builder.objectCombos = SceneContentLoader.shapeEffectCombos
         let plan = try builder.build(effect)
         XCTAssertEqual(plan.passes.first?.variant?.combos["DIRECTDRAW"], 1)
         XCTAssertEqual(plan.passes.first?.variant?.combos["RENDERING"], 1)

@@ -3,7 +3,7 @@ import Foundation
 /// The size an image layer gets when its scene object has no `size`: its model's `width` and
 /// `height`, else its material's first texture's image size (a sprite sheet's frame), as the
 /// renderer sizes it. WE's GIF template (`assets/scenes/gifs/gifscene.json`) writes no `size`, so
-/// an `{"auto": true}` scene takes this size (`SceneWallpaperViewModel.sceneSize(of:imageSize:)`).
+/// an `{"auto": true}` scene takes this size (`SceneContentLoader.sceneSize(of:imageSize:)`).
 enum SceneImageSize {
     /// nil when neither the model nor its texture can be read.
     static func of(model: String, readAsset: (String) -> Data?) -> SIMD2<Double>? {

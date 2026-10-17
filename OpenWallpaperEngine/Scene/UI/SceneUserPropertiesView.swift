@@ -327,7 +327,7 @@ struct SceneUserPropertiesView: View {
         _model = StateObject(wrappedValue: SceneUserPropertiesModel(wallpaper: wallpaper, scopes: scopes))
     }
 
-    private var isVideo: Bool { SceneWallpaperViewModel.isVideoType(wallpaper.project.type) }
+    private var isVideo: Bool { SceneContentLoader.isVideoType(wallpaper.project.type) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {

@@ -138,7 +138,7 @@ final class SceneSnapshotTrackerTests: XCTestCase {
 
     private func layer(_ id: String, color: [Double], center: SIMD2<Float>, size: SIMD2<Float>, order: Int) -> SceneMetalLayer {
         var layer = SceneMetalLayer(
-            id: id, name: id, source: .image(SceneWallpaperViewModel.pixelImage(color)), position: center, size: size,
+            id: id, name: id, source: .image(SceneContentLoader.pixelImage(color)), position: center, size: size,
             scale: SIMD2(1, 1), opacity: 1,
             brightness: 1, color: SIMD4(repeating: 1), text: nil,
             parallaxDepth: .zero, perspective: false, rotation: 0)

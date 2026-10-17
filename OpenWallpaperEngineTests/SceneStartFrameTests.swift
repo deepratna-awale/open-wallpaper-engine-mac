@@ -43,7 +43,7 @@ final class SceneStartFrameTests: XCTestCase {
     private func draw(_ directory: URL, count: Int) throws -> [Drawn] {
         defer { Fixtures.removeStoredSettings(for: directory) }
         let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         let content = try XCTUnwrap(model.metalContent())
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let size = SIMD2<Float>(256, 128)

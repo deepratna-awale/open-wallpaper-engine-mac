@@ -31,7 +31,7 @@ final class SceneWallpaperInstance {
     }
 
     let key: WallpaperInstanceKey
-    let viewModel: SceneWallpaperViewModel
+    let viewModel: SceneContentLoader
     /// The render-thread half: it owns the renderer and draws the displays.
     let renderLoop: SceneRenderLoop
     /// Nil when Metal can't make one; the displays then stay black. Render thread only (tests reach
@@ -110,7 +110,7 @@ final class SceneWallpaperInstance {
          properties: WallpaperPropertyScope = .shared, followsLiveResize: Bool = false) {
         key = WallpaperInstanceKey(wallpaper, properties: properties)
         // Loaded on the preparation pool: the displays show the preview until the scene is ready.
-        viewModel = SceneWallpaperViewModel(wallpaper: wallpaper, propertyScope: properties, loadsInBackground: true)
+        viewModel = SceneContentLoader(wallpaper: wallpaper, propertyScope: properties, loadsInBackground: true)
         self.environment = environment
         let renderer = SceneMetalRenderer(pixelFormat: .bgra8Unorm, scriptServices: environment.scriptServices,
                                           screenID: screenID)
@@ -297,7 +297,7 @@ final class SceneWallpaperInstance {
     /// `videoStream` is only built inside `contentAsync`, so the first playback update after a
     /// video wallpaper starts finds none; called again once the content lands, so playback starts.
     private func updateVideoPlayback() {
-        guard SceneWallpaperViewModel.isVideoType(viewModel.currentWallpaper.project.type),
+        guard SceneContentLoader.isVideoType(viewModel.currentWallpaper.project.type),
               let wallpapers = environment.wallpapers else { return }
         // The wallpaper's own playback rate (WE's per-wallpaper option) scales the app's.
         let displayRate = wallpapers.displayPlaybackRate(of: viewModel.currentWallpaper)

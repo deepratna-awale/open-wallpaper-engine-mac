@@ -22,7 +22,7 @@ final class ModelDeclaredSizeTests: XCTestCase {
 
     func testAnUnsizedObjectTakesItsModelsSize() throws {
         let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         let content = try XCTUnwrap(model.metalContent())
         XCTAssertEqual(content.layers.first { $0.id == "1" }?.size, SIMD2(64, 32), "the model's width and height")
         XCTAssertEqual(content.layers.first { $0.id == "2" }?.size, SIMD2(8, 4), "an autosize model: its texture's size")
@@ -37,7 +37,7 @@ final class ModelDeclaredSizeTests: XCTestCase {
             .first { FileManager.default.fileExists(atPath: $0.appending(path: "project.json").path) }
         guard let library = found else { throw XCTSkip("OWE_LIBRARY holds no deep_space") }
         let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: library.appending(path: "project.json")))
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: library))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: library))
         defer { Fixtures.removeStoredSettings(for: library) }
         let content = try XCTUnwrap(model.metalContent())
         XCTAssertEqual(content.layers.first { $0.name == "Background" }?.size, SIMD2(1920, 1080))

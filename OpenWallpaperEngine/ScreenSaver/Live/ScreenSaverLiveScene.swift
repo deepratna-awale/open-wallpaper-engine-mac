@@ -4,7 +4,7 @@ import Metal
 import QuartzCore
 
 /// One loop of the screen saver's layout drawn live while the screen saver runs: the scene
-/// wallpaper loaded by the real loader (`SceneWallpaperViewModel`, in the background) and drawn by
+/// wallpaper loaded by the real loader (`SceneContentLoader`, in the background) and drawn by
 /// the real renderer (`SceneMetalRenderer`) on its own render thread (`SceneRenderThread`), as the
 /// screen saver (`engine.isScreensaver()` true, silent, the pointer held at the centre, its clock
 /// layers drawn; its stills leave out its text and clock hands, `captureStill`), at the loop's
@@ -24,7 +24,7 @@ final class ScreenSaverLiveScene {
     }
 
     let target: Target
-    private let viewModel: SceneWallpaperViewModel
+    private let viewModel: SceneContentLoader
     private let thread: SceneRenderThread
     /// Render thread only, once made.
     private let renderer: SceneMetalRenderer?
@@ -49,7 +49,7 @@ final class ScreenSaverLiveScene {
         }
         self.target = target
         self.renderer = renderer
-        viewModel = SceneWallpaperViewModel(wallpaper: wallpaper, propertyScope: propertyScope, loadsInBackground: true)
+        viewModel = SceneContentLoader(wallpaper: wallpaper, propertyScope: propertyScope, loadsInBackground: true)
         thread = SceneRenderThread(name: "OWE screen saver \(name)")
         let pixels = SIMD2(Float(target.pixels.x), Float(target.pixels.y))
         let renderSettings = SceneRenderSettings(settings, outputPixels: pixels, sceneSize: viewModel.textureReductionSceneSize)

@@ -82,10 +82,10 @@ final class SceneReviewFixTests: XCTestCase {
     func testEffectBoundToMissingPropertyKeepsAuthoredVisibility() throws {
         let shown = try effect(#"{"file":"e.json","visible":{"user":"toggle","value":true}}"#)
         let hidden = try effect(#"{"file":"e.json","visible":{"user":"toggle","value":false}}"#)
-        XCTAssertTrue(SceneWallpaperViewModel.isEffectVisible(shown, userProperty: { _ in nil }))
-        XCTAssertFalse(SceneWallpaperViewModel.isEffectVisible(hidden, userProperty: { _ in nil }))
-        XCTAssertFalse(SceneWallpaperViewModel.isEffectVisible(shown, userProperty: { _ in "false" }))
-        XCTAssertTrue(SceneWallpaperViewModel.isEffectVisible(hidden, userProperty: { _ in "true" }))
+        XCTAssertTrue(SceneContentLoader.isEffectVisible(shown, userProperty: { _ in nil }))
+        XCTAssertFalse(SceneContentLoader.isEffectVisible(hidden, userProperty: { _ in nil }))
+        XCTAssertFalse(SceneContentLoader.isEffectVisible(shown, userProperty: { _ in "false" }))
+        XCTAssertTrue(SceneContentLoader.isEffectVisible(hidden, userProperty: { _ in "true" }))
     }
 
     // MARK: Object ids

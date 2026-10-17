@@ -32,7 +32,7 @@ final class SceneIDLessObjectTests: XCTestCase {
     }
 
     func testTextKeysAreDistinct() throws {
-        let values = SceneWallpaperViewModel.userPropertyValues(stored: [:], declared: [:], scene: try scene())
+        let values = SceneContentLoader.userPropertyValues(stored: [:], declared: [:], scene: try scene())
         XCTAssertEqual(values["_owe_text_2_font"], "a.ttf")
         XCTAssertEqual(values["_owe_text_3_font"], "b.ttf")
         XCTAssertEqual(values["_owe_text_2_size"], "20.0")
@@ -72,7 +72,7 @@ final class SceneIDLessObjectTests: XCTestCase {
         try FileManager.default.createDirectory(at: directory.appending(path: "materials/util"), withIntermediateDirectories: true)
         for (path, text) in files { try Data(text.utf8).write(to: directory.appending(path: path)) }
         let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         let content = try XCTUnwrap(model.metalContent())
         XCTAssertEqual(content.layers.map(\.id), ["0", "1"])
         XCTAssertEqual(content.layers.map(\.name), ["red", "green"])

@@ -317,7 +317,7 @@ final class SceneMipMappedFrameBufferTests: XCTestCase {
 
     static func layer(_ id: String, image: NSImage? = nil, size: SIMD2<Float> = sceneSize) -> SceneMetalLayer {
         SceneMetalLayer(
-            id: id, name: id, source: .image(image ?? SceneWallpaperViewModel.pixelImage([0.5, 0.5, 0.5, 1])),
+            id: id, name: id, source: .image(image ?? SceneContentLoader.pixelImage([0.5, 0.5, 0.5, 1])),
             position: size / 2, size: size, scale: SIMD2(1, 1), opacity: 1, brightness: 1, color: SIMD4(repeating: 1),
             text: nil, parallaxDepth: .zero, perspective: false, rotation: 0)
     }

@@ -103,7 +103,7 @@ final class TextureUploadTests: XCTestCase {
     /// Solid layers bake their colour into a 1x1 image: the texel must be the authored value, not
     /// that colour converted into the display's colour space.
     func testSolidLayerImageHoldsTheAuthoredColour() throws {
-        let solid = SceneWallpaperViewModel.solidImage(red: 0.2, green: 0.4, blue: 0.6)
+        let solid = SceneContentLoader.solidImage(red: 0.2, green: 0.4, blue: 0.6)
         let cgImage = try XCTUnwrap(solid.cgImage(forProposedRect: nil, context: nil, hints: nil))
         let bytes = try texels(cgImage)
         assertBytes(bytes[0..<4], [51, 102, 153, 255], tolerance: 0)

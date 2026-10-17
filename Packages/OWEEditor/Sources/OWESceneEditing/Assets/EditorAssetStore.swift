@@ -58,7 +58,7 @@ public struct EditorAssetStore: Sendable {
 
     // MARK: Images
 
-    /// Image types the renderer reads as they are (`SceneWallpaperViewModel.loadTexture`); any
+    /// Image types the renderer reads as they are (`SceneContentLoader.loadTexture`); any
     /// other image is converted to PNG.
     static let keptImageTypes: Set<String> = ["png", "jpg", "jpeg"]
 

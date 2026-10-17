@@ -25,7 +25,7 @@ final class SceneUserTextureTests: XCTestCase {
         Fixtures.removeStoredSettings(for: directory)
         defer { Fixtures.removeStoredSettings(for: directory) }
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/user-texture/project.json"))
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         let content = try XCTUnwrap(model.metalContent())
         let authored = try XCTUnwrap(content.layers.first { $0.id == "1" })
         XCTAssertEqual(authored.source.pixelSize, SIMD2<Float>(2, 2), "nothing picked: the authored image")

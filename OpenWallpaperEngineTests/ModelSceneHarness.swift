@@ -12,7 +12,7 @@ import simd
 /// as a failure instead of a stuck run.
 final class ModelSceneHarness {
     let directory: URL
-    let model: SceneWallpaperViewModel
+    let model: SceneContentLoader
     let renderer: SceneMetalRenderer
     let view: MTKView
     let device: MTLDevice
@@ -44,7 +44,7 @@ final class ModelSceneHarness {
         self.size = size
         let project = try Self.project(in: directory)
         Fixtures.removeStoredSettings(for: directory)
-        model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         model.setRenderSettings(settings)
         content = try XCTUnwrap(model.metalContent(), "\(directory.lastPathComponent): no content", file: file, line: line)
         device = try XCTUnwrap(MTLCreateSystemDefaultDevice())

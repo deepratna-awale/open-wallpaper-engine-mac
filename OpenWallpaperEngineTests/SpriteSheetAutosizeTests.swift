@@ -30,7 +30,7 @@ final class SpriteSheetAutosizeTests: XCTestCase {
 
     func testAnUnsizedObjectAndACreatedLayerAreOneFrameBig() throws {
         let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         let content = try XCTUnwrap(model.metalContent())
         let authored = try XCTUnwrap(content.layers.first { $0.id == "1" }, "the unsized object is built")
         XCTAssertEqual(authored.size, SIMD2(16, 16))
@@ -50,7 +50,7 @@ final class SpriteSheetAutosizeTests: XCTestCase {
         guard let library = found else { throw XCTSkip("OWE_LIBRARY holds no dino_run") }
         _ = try Fixtures.assets()
         let project = try ModelSceneHarness.project(in: library)
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: library))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: library))
         defer { Fixtures.removeStoredSettings(for: library) }
         let content = try XCTUnwrap(model.metalContent())
         let makeLayer = try XCTUnwrap(content.scripts?.makeLayer)

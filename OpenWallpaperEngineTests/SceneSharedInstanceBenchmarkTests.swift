@@ -47,7 +47,7 @@ final class SceneSharedInstanceBenchmarkTests: XCTestCase {
                 lines.append("\(id): not a scene; skipped")
                 continue
             }
-            let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+            let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
             defer { Fixtures.removeStoredSettings(for: directory) }
             let content = try XCTUnwrap(model.metalContent(), "\(id): no content")
             let before = try perDisplay(content, sizes: sizes, device: device, services: services)

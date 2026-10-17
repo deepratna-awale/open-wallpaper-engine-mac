@@ -101,7 +101,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
                                                   coalescingInterval: session.coalescingInterval)
         let preview = WallpaperViewModel(persistsWallpapers: false)
         preview.sceneHost = host
-        // The canvas runs the draft: its properties' store, and its overlay (`SceneWallpaperViewModel`).
+        // The canvas runs the draft: its properties' store, and its overlay (`SceneContentLoader`).
         preview.previewPropertyScope = .editorDraft
         preview.setWallpaper(wallpaper, for: preview.selectedScreenId)
         preview.playVolume = 0
@@ -218,7 +218,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
         }
         services.preferences = .app
         services.readFile = { resources.data($0) }
-        if let translator = SceneWallpaperViewModel.defaultEffectTranslator {
+        if let translator = SceneContentLoader.defaultEffectTranslator {
             services.shaders = ShaderEditorServices(checker: EditorShaderChecker(translator: translator, read: { resources.data($0) }),
                                                     snippet: { EditorShaderSnippets.snippet(named: $0) })
         }

@@ -13,9 +13,9 @@ final class SceneUserPropertyDefaultsTests: XCTestCase {
     func testNoVariantIsForcedVisible() throws {
         let scene = try JSONDecoder().decode(WEScene.self, from: Data(variants.utf8))
         let declared: [String: [String: Any]] = ["variant": ["type": "combo", "value": "none"]]
-        XCTAssertEqual(SceneWallpaperViewModel.userPropertyValues(stored: [:], declared: declared, scene: scene),
+        XCTAssertEqual(SceneContentLoader.userPropertyValues(stored: [:], declared: declared, scene: scene),
                        ["variant": "none"])
-        XCTAssertEqual(SceneWallpaperViewModel.userPropertyValues(stored: [:], declared: [:], scene: scene), [:])
+        XCTAssertEqual(SceneContentLoader.userPropertyValues(stored: [:], declared: [:], scene: scene), [:])
     }
 
     func testStoredValuesWinAndComboFallsBackToFirstOption() throws {
@@ -24,7 +24,7 @@ final class SceneUserPropertyDefaultsTests: XCTestCase {
             "variant": ["type": "combo", "options": [["value": "b"], ["value": "a"]]],
             "speed": ["type": "slider", "value": 0.5]
         ]
-        XCTAssertEqual(SceneWallpaperViewModel.userPropertyValues(stored: ["speed": "2"], declared: declared, scene: scene),
+        XCTAssertEqual(SceneContentLoader.userPropertyValues(stored: ["speed": "2"], declared: declared, scene: scene),
                        ["variant": "b", "speed": "2"])
     }
 }

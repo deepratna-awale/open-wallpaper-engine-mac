@@ -37,7 +37,7 @@ struct FixtureSceneRenderer {
             with: Data(contentsOf: directory.appending(path: "project.json"))) as? [String: Any])
         projectJSON["file"] = sceneFile
         let project = try JSONDecoder().decode(WEProject.self, from: JSONSerialization.data(withJSONObject: projectJSON))
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         model.setRenderSettings(settings)
         let content = try XCTUnwrap(model.metalContent(), "\(sceneFile): no content")
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())

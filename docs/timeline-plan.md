@@ -418,7 +418,7 @@ Each package lists the files it owns. Packages in the same phase share no files.
   - `animationEvent` fires once per crossing, forward and backward, including a loop wrap;
   - two displays keep separate clocks.
 
-**T3 — The renderer** (owns `Scene/Format/SceneObject.swift`, the animation fields; `Scene/Rendering/SceneObjectMotion.swift`; `Scene/Rendering/SceneMetalRenderer.swift`; `Scene/Rendering/SceneRenderContent.swift`; `Scene/Loading/SceneWallpaperViewModel.swift`; `Scene/Values/SceneValueSource.swift` and `SceneValueResolver.swift`; `Scene/Values/ShaderConstantResolver.swift`; `Scene/Rendering/EffectGraphRenderer.swift`, `ImageMaterialUniforms.swift`; and it deletes `Scene/Rendering/SceneTimeline.swift`).
+**T3 — The renderer** (owns `Scene/Format/SceneObject.swift`, the animation fields; `Scene/Rendering/SceneObjectMotion.swift`; `Scene/Rendering/SceneMetalRenderer.swift`; `Scene/Rendering/SceneRenderContent.swift`; `Scene/Loading/SceneContentLoader.swift`; `Scene/Values/SceneValueSource.swift` and `SceneValueResolver.swift`; `Scene/Values/ShaderConstantResolver.swift`; `Scene/Rendering/EffectGraphRenderer.swift`, `ImageMaterialUniforms.swift`; and it deletes `Scene/Rendering/SceneTimeline.swift`).
 
 - **Decoding.** Object fields keep the raw `animation` JSON and build T1 models. The `WEKeyframeAnimation` types and the invented fixture format go: `particle-animated-parent` is rewritten in WE's format.
 - **Precedence (§2.6).** Script-owned beats animated, animated beats user or static. `SceneValueSource` nests the animation *outside* `user`. `relative` bakes on the authored value.

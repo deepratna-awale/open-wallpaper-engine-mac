@@ -96,7 +96,7 @@ final class ImageMaterialReflectionTests: XCTestCase {
         view.isPaused = true
         renderer.setPlacement(.stretch)
         let scene = SIMD2<Float>(Float(size), Float(size))
-        var background = Stage.layer("white", image: SceneWallpaperViewModel.pixelImage([1, 1, 1, 1]), size: scene)
+        var background = Stage.layer("white", image: SceneContentLoader.pixelImage([1, 1, 1, 1]), size: scene)
         background.order = 0
         // Half-transparent, smooth metal (the left half of the mask) over white.
         var reflective = Stage.layer("reflective", image: try Self.image(width: 1, height: 1, pixels: [25, 25, 25, 128]),

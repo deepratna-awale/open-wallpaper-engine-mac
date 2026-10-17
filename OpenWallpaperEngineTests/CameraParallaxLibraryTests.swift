@@ -63,7 +63,7 @@ final class CameraParallaxLibraryTests: XCTestCase {
     private func frames(_ project: WEProject, directory: URL, drawable: SIMD2<Int>, points: SIMD2<Float>,
                         cursorX: [Float], authoredDelay: Bool) throws -> [[UInt8]] {
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         var content = try XCTUnwrap(model.metalContent())
         XCTAssertEqual(content.size, SIMD2(1920, 1080))
         XCTAssertTrue(content.camera.parallax)

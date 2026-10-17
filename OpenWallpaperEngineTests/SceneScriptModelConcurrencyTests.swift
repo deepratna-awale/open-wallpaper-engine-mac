@@ -66,7 +66,7 @@ final class SceneScriptModelConcurrencyTests: XCTestCase {
 
     func testReplaceApplyAndFramesRunTogether() throws {
         let shown = try wallpaper(), other = try wallpaper("other")
-        let model = SceneWallpaperViewModel(wallpaper: shown)
+        let model = SceneContentLoader(wallpaper: shown)
         defer {
             Fixtures.removeStoredSettings(for: shown.wallpaperDirectory)
             Fixtures.removeStoredSettings(for: other.wallpaperDirectory)

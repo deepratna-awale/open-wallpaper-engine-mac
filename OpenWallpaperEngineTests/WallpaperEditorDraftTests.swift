@@ -207,9 +207,9 @@ final class WallpaperEditorDraftTests: XCTestCase {
     func testOnlyAnInstanceOfTheDraftReadsTheDraft() throws {
         try store.saved.save(overlay(alpha: 0.5), for: identity.rawValue)
         try store.saveDraft(overlay(alpha: 0.25), for: identity.rawValue)
-        let canvas = SceneWallpaperViewModel(wallpaper: wallpaper, propertyScope: .editorDraft, effectTranslator: nil)
+        let canvas = SceneContentLoader(wallpaper: wallpaper, propertyScope: .editorDraft, effectTranslator: nil)
         XCTAssertEqual(canvas.loadedEditOverlay?.field("alpha", of: 4), .number(0.25), "the editor's canvas runs the draft")
-        let display = SceneWallpaperViewModel(wallpaper: wallpaper, effectTranslator: nil)
+        let display = SceneContentLoader(wallpaper: wallpaper, effectTranslator: nil)
         XCTAssertEqual(display.loadedEditOverlay?.field("alpha", of: 4), .number(0.5), "a display runs the saved overlay")
 
         let preview = WallpaperViewModel(persistsWallpapers: false)

@@ -140,7 +140,7 @@ final class HDRLibrarySweepTests: XCTestCase {
         let data = try Data(contentsOf: directory.appending(path: "project.json"))
         let project = try decodeTolerant(WEProject.self, from: Data(String(decoding: data, as: UTF8.self)
             .trimmingCharacters(in: CharacterSet(charactersIn: "\u{FEFF}")).utf8))
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         var settings = SceneRenderSettings()
         settings.postProcessing = quality
         model.setRenderSettings(settings)

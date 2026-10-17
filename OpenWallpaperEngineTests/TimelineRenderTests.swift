@@ -216,7 +216,7 @@ final class TimelineRenderTests: XCTestCase {
         init(services: SceneScriptServices?) throws {
             directory = Fixtures.url("Scenes/timeline")
             let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/timeline/project.json"))
-            let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+            let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
             let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
             view = MTKView(frame: CGRect(x: 0, y: 0, width: size.x, height: size.y), device: device)
             view.colorPixelFormat = .bgra8Unorm

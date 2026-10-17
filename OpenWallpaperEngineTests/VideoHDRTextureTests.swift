@@ -95,7 +95,7 @@ final class VideoHDRTextureTests: XCTestCase {
                                                 in: directory)
         let wallpaper = WEWallpaper(using: WEProject(file: clip.lastPathComponent, preview: "p.jpg", title: "hdr", type: "video"),
                                     where: directory)
-        let model = SceneWallpaperViewModel(wallpaper: wallpaper)
+        let model = SceneContentLoader(wallpaper: wallpaper)
         XCTAssertFalse(try Self.content(model, .ultra).videoHDR, "SDR output keeps the 8-bit path")
         let content = try Self.content(model, .displayhdr)
         XCTAssertTrue(content.videoHDR)
@@ -144,7 +144,7 @@ final class VideoHDRTextureTests: XCTestCase {
     // MARK: - Helpers
 
     /// `model`'s content under `postProcessing`, built off the main thread as the app builds it.
-    private static func content(_ model: SceneWallpaperViewModel, _ postProcessing: GSPostProcessingQuality) throws -> SceneMetalContent {
+    private static func content(_ model: SceneContentLoader, _ postProcessing: GSPostProcessingQuality) throws -> SceneMetalContent {
         var settings = SceneRenderSettings()
         settings.postProcessing = postProcessing
         model.setRenderSettings(settings)

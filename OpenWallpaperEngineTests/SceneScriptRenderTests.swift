@@ -289,7 +289,7 @@ final class SceneScriptRenderTests: XCTestCase {
 
     /// One scene fixture on one display: its loader, renderer and offscreen view.
     private final class Scene {
-        let model: SceneWallpaperViewModel
+        let model: SceneContentLoader
         let renderer: SceneMetalRenderer
         let view: MTKView
         let directory: URL
@@ -299,7 +299,7 @@ final class SceneScriptRenderTests: XCTestCase {
             directory = Fixtures.url("Scenes/\(fixture)")
             self.size = size
             let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/\(fixture)/project.json"))
-            model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+            model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
             let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
             view = MTKView(frame: CGRect(x: 0, y: 0, width: size.x, height: size.y), device: device)
             view.colorPixelFormat = .bgra8Unorm

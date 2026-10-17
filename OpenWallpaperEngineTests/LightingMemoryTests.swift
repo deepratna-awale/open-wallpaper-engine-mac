@@ -14,7 +14,7 @@ final class LightingMemoryTests: XCTestCase {
         let directory = Fixtures.url("Scenes/\(fixture)")
         addTeardownBlock { Fixtures.removeStoredSettings(for: directory) }
         let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         var settings = SceneRenderSettings()
         settings.postProcessing = postProcessing
         model.setRenderSettings(settings)

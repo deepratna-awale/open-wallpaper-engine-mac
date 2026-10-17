@@ -85,9 +85,9 @@ final class WallpaperPropertyScopeTests: XCTestCase {
     func testASceneRunsTheStoreOfItsScope() {
         let wallpaper = WEWallpaper(using: WEProject(file: "scene.json", preview: "preview.jpg", title: "x", type: "scene"),
                                     where: root)
-        let viewModel = SceneWallpaperViewModel(wallpaper: wallpaper, propertyScope: .display("3"))
+        let viewModel = SceneContentLoader(wallpaper: wallpaper, propertyScope: .display("3"))
         XCTAssertEqual(viewModel.propertyStoreKey, WallpaperPropertyScope.display("3").runtimeKey(directory: root))
-        XCTAssertEqual(SceneWallpaperViewModel(wallpaper: wallpaper).propertyStoreKey, root.path)
+        XCTAssertEqual(SceneContentLoader(wallpaper: wallpaper).propertyStoreKey, root.path)
     }
 
     // MARK: - Instances

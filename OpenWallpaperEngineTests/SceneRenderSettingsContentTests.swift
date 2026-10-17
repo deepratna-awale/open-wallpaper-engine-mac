@@ -10,7 +10,7 @@ final class SceneRenderSettingsContentTests: XCTestCase {
         let directory = Fixtures.url("Scenes/hdr")
         defer { Fixtures.removeStoredSettings(for: directory) }
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/hdr/project.json"))
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         var settings = SceneRenderSettings()
         model.setRenderSettings(settings)
         let start = model.metalRevision

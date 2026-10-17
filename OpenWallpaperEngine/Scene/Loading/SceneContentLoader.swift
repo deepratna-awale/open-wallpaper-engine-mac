@@ -1,5 +1,5 @@
 //
-//  SceneWallpaperViewModel.swift
+//  SceneContentLoader.swift
 //  Open Wallpaper Engine
 //
 //  Loads Wallpaper Engine scene wallpapers and builds the content the Metal renderer draws.
@@ -11,7 +11,7 @@ import CoreText
 import CryptoKit
 import OWESceneEditing
 
-class SceneWallpaperViewModel: ObservableObject {
+class SceneContentLoader: ObservableObject {
     static func log(_ msg: String) {
         OWELog.info(.scene, msg)
     }
@@ -221,7 +221,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// `loadsInBackground` starts the load on the preparation pool and returns at once
     /// (`startLoad`); otherwise the scene is loaded when init returns.
     init(wallpaper: WEWallpaper, propertyScope: WallpaperPropertyScope = .shared,
-         effectTranslator: ShaderVariantTranslator? = SceneWallpaperViewModel.defaultEffectTranslator,
+         effectTranslator: ShaderVariantTranslator? = SceneContentLoader.defaultEffectTranslator,
          loadsInBackground: Bool = false, overlay: SceneEditOverlay? = nil) {
         self.currentWallpaper = wallpaper
         overlayOverride = overlay
@@ -653,7 +653,7 @@ class SceneWallpaperViewModel: ObservableObject {
         if cachedContentRevision == revision, let cachedContent {
             return cachedContent
         }
-        if SceneWallpaperViewModel.isVideoType(currentWallpaper.project.type) {
+        if SceneContentLoader.isVideoType(currentWallpaper.project.type) {
             let content = videoContent()
             cachedContent = content
             cachedContentRevision = revision

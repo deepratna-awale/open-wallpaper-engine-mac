@@ -55,7 +55,7 @@ final class SceneScriptLibraryCostTests: XCTestCase {
             guard let data = FileManager.default.contents(atPath: directory.appending(path: "project.json").path),
                   let project = try? JSONDecoder().decode(WEProject.self, from: data), // optional: not every folder is a wallpaper
                   project.type.lowercased() == "scene" else { continue }
-            let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+            let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
             guard let content = model.metalContent(), content.scripts != nil else { continue }
             let view = MTKView(frame: CGRect(x: 0, y: 0, width: 480, height: 270), device: device)
             view.colorPixelFormat = .bgra8Unorm

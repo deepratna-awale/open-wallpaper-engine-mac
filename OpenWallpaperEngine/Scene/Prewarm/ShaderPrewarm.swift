@@ -4,7 +4,7 @@ import simd
 
 /// Compiles the shader variants and effect pipelines of some scene wallpapers into the shader
 /// caches, the way showing them would: each scene is loaded by the real loader
-/// (`SceneWallpaperViewModel`) and drawn offscreen by the real renderer (`SceneMetalRenderer`)
+/// (`SceneContentLoader`) and drawn offscreen by the real renderer (`SceneMetalRenderer`)
 /// until its pipelines have compiled, so the caches get exactly the entries a launch creates.
 ///
 /// Run by `ShaderPrewarmCommand` in a new build before it replaces the running one. It writes
@@ -84,7 +84,7 @@ struct ShaderPrewarm {
     private func prewarm(_ target: ShaderPrewarmTargets.Target, translator: ShaderVariantTranslator,
                          settings: GlobalSettings) -> Bool {
         let name: String = target.wallpaper.wallpaperDirectory.lastPathComponent
-        let model = SceneWallpaperViewModel(wallpaper: target.wallpaper, effectTranslator: translator)
+        let model = SceneContentLoader(wallpaper: target.wallpaper, effectTranslator: translator)
         let renderSettings = SceneRenderSettings(settings, outputPixels: target.display.drawableSize,
                                                  sceneSize: model.textureReductionSceneSize)
         model.setRenderSettings(renderSettings)

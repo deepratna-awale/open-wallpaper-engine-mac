@@ -67,7 +67,7 @@ final class SceneBloomRenderTests: XCTestCase {
     /// drawable and bloom.
     private func render(_ postProcessing: GSPostProcessingQuality) throws -> (Pixels, ScenePostProcess.BloomRecord?) {
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/bloom/project.json"))
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         let content = try XCTUnwrap(model.metalContent())
         XCTAssertNotNil(content.bloomChain)
         XCTAssertTrue(content.bloom.enabled)

@@ -49,7 +49,7 @@ private struct WorkshopPreviewContent: View {
             // One small glass group over the live wallpaper.
             GlassGroup(spacing: 10) {
                 HStack(spacing: 10) {
-                    if SceneWallpaperViewModel.isVideoType(wallpaperViewModel.currentWallpaper.project.type) {
+                    if SceneContentLoader.isVideoType(wallpaperViewModel.currentWallpaper.project.type) {
                         let isPaused = wallpaperViewModel.playRate == 0
                         HStack(spacing: 8) {
                             Button {

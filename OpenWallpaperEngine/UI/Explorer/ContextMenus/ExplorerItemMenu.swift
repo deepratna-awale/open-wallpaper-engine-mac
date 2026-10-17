@@ -23,7 +23,7 @@ struct ExplorerItemMenu: SubviewOfContentView {
     
     /// The wallpaper's Workshop id; nil for a local wallpaper.
     private var workshopId: String? {
-        SceneWallpaperViewModel.workshopId(of: hoveredWallpaper)
+        SceneContentLoader.workshopId(of: hoveredWallpaper)
     }
 
     var body: some View {

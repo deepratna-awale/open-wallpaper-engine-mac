@@ -207,7 +207,7 @@ final class SceneRendererParticleTests: XCTestCase {
     }
 
     /// Exact texels, not AppKit drawing (which colour-matches `NSColor.red` to about (237, 47, 25)).
-    private func image(_ rgba: [Double]) -> NSImage { SceneWallpaperViewModel.pixelImage(rgba) }
+    private func image(_ rgba: [Double]) -> NSImage { SceneContentLoader.pixelImage(rgba) }
 
     private func layer(_ id: String, color: [Double], center: SIMD2<Float>, size: SIMD2<Float>, order: Int) -> SceneMetalLayer {
         var layer = SceneMetalLayer(

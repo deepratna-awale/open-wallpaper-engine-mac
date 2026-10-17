@@ -39,7 +39,7 @@ final class FramePacingLibraryTests: XCTestCase {
                   let project = try? JSONDecoder().decode(WEProject.self, from: data), // optional: not every folder is a wallpaper
                   project.type.lowercased() == "scene" else { continue }
             defer { Fixtures.removeStoredSettings(for: directory) }
-            let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+            let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
             guard let content = model.metalContent() else { lines.append("\(name): no content"); continue }
             let fixed = try run(content, device: device, services: services, fps: fps, stop: stop, paced: false)
             let paced = try run(content, device: device, services: services, fps: fps, stop: stop, paced: true)

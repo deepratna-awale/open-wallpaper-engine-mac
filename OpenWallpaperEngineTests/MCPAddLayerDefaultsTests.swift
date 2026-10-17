@@ -3,7 +3,7 @@ import OWEControlProtocol
 import OWESceneEditing
 @testable import OpenWallpaperEngine
 
-/// `add_layer`'s defaults: the scene as the renderer draws it (`SceneWallpaperViewModel.sceneSize(of:)`),
+/// `add_layer`'s defaults: the scene as the renderer draws it (`SceneContentLoader.sceneSize(of:)`),
 /// an image model's own size, and WE's new text layer at 32 points.
 @MainActor
 final class MCPAddLayerDefaultsTests: XCTestCase {

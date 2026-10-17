@@ -108,7 +108,7 @@ final class SceneRendererParticleFamilyTests: XCTestCase {
         system.minimumColor = SIMD4(repeating: 1)
         system.maximumColor = SIMD4(repeating: 1)
         system.maximum = 1
-        system.source = .image(SceneWallpaperViewModel.pixelImage([1, 1, 1, 1]))
+        system.source = .image(SceneContentLoader.pixelImage([1, 1, 1, 1]))
         return system
     }
 
@@ -152,7 +152,7 @@ final class SceneRendererParticleFamilyTests: XCTestCase {
 
     private func background(_ scene: Float) -> SceneMetalLayer {
         var layer = SceneMetalLayer(
-            id: "A", name: "A", source: .image(SceneWallpaperViewModel.pixelImage([1, 0, 0, 1])),
+            id: "A", name: "A", source: .image(SceneContentLoader.pixelImage([1, 0, 0, 1])),
             position: SIMD2(scene / 2, scene / 2), size: SIMD2(scene, scene), scale: SIMD2(1, 1), opacity: 1,
             brightness: 1, color: SIMD4(repeating: 1), text: nil,
             parallaxDepth: .zero, perspective: false, rotation: 0)

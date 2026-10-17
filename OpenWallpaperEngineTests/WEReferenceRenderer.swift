@@ -40,7 +40,7 @@ struct WEReferenceRenderer {
         defer { restore() }
         let restoreTime = localTime.map(WEReferenceLocalTime.set) ?? {}
         defer { restoreTime() }
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         var settings = settings
         settings.textureReduction = TextureReduction.factor(textureResolution, outputPixels: SIMD2<Float>(outputSize),
                                                              sceneSize: model.textureReductionSceneSize)

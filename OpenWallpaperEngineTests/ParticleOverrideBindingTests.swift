@@ -164,11 +164,11 @@ final class ParticleOverrideBindingTests: XCTestCase {
 
     // MARK: - Scene
 
-    private func model() throws -> SceneWallpaperViewModel {
+    private func model() throws -> SceneContentLoader {
         let directory = Fixtures.url("Scenes/particle-override-bindings")
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/particle-override-bindings/project.json"))
         addTeardownBlock { Fixtures.removeStoredSettings(for: directory) }
-        return SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        return SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
     }
 
     private func built(sharing: Bool, edits: [String: String] = [:]) throws -> [SceneMetalParticleSystem] {

@@ -81,7 +81,7 @@ final class SceneLivePropertyTests: XCTestCase {
         defer { Fixtures.removeStoredSettings(for: directory) }
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/live-properties/project.json"))
         let wallpaper = WEWallpaper(using: project, where: directory)
-        let model = SceneWallpaperViewModel(wallpaper: wallpaper)
+        let model = SceneContentLoader(wallpaper: wallpaper)
         let key = model.propertyStoreKey
         let running = WallpaperServices.shared.userProperties(wallpaper: key)
         XCTAssertEqual(running["showeffect"], "true")
@@ -159,7 +159,7 @@ final class SceneLivePropertyTests: XCTestCase {
         static let size = SIMD2(128, 64)
         let directory = Fixtures.url("Scenes/live-properties")
         let wallpaper: WEWallpaper
-        let model: SceneWallpaperViewModel
+        let model: SceneContentLoader
         let renderer: SceneMetalRenderer
         let view: MTKView
         var key: String { model.propertyStoreKey }
@@ -168,7 +168,7 @@ final class SceneLivePropertyTests: XCTestCase {
             if !keepingSettings { Fixtures.removeStoredSettings(for: directory) }
             let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/live-properties/project.json"))
             wallpaper = WEWallpaper(using: project, where: directory)
-            model = SceneWallpaperViewModel(wallpaper: wallpaper)
+            model = SceneContentLoader(wallpaper: wallpaper)
             let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
             view = MTKView(frame: CGRect(x: 0, y: 0, width: Self.size.x, height: Self.size.y), device: device)
             view.colorPixelFormat = .bgra8Unorm

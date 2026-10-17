@@ -2,16 +2,16 @@ import MetalKit
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// Setting a scene wallpaper loads it on the preparation pool (`SceneWallpaperViewModel.startLoad`):
+/// Setting a scene wallpaper loads it on the preparation pool (`SceneContentLoader.startLoad`):
 /// the main thread never waits on the key, the cache read, the parse or the content build, a newer
 /// load cancels an older one, and the display shows the preview until the live scene draws.
 final class SceneBackgroundLoadTests: XCTestCase {
     private var restorePool: PreparationPool?
 
     override func tearDown() {
-        if let restorePool { SceneWallpaperViewModel.loadPool = restorePool }
+        if let restorePool { SceneContentLoader.loadPool = restorePool }
         restorePool = nil
-        SceneWallpaperViewModel.dropSharedParses()
+        SceneContentLoader.dropSharedParses()
         super.tearDown()
     }
 
@@ -49,11 +49,11 @@ final class SceneBackgroundLoadTests: XCTestCase {
         let directory = try heavyWallpaper()
         defer { Fixtures.removeStoredSettings(for: directory) }
         let wallpaper = try wallpaper(directory)
-        SceneWallpaperViewModel.dropSharedParses()
+        SceneContentLoader.dropSharedParses()
         let watchdog = HangWatchdog(pingInterval: 0.005, mainThreshold: 0.1)
         watchdog.start()
 
-        let model = SceneWallpaperViewModel(wallpaper: wallpaper, loadsInBackground: true)
+        let model = SceneContentLoader(wallpaper: wallpaper, loadsInBackground: true)
         spin(until: { model.metalRevision > 0 && !model.isLoading })
         var built: SceneMetalContent??
         model.contentAsync { built = .some($0) }
@@ -78,13 +78,13 @@ final class SceneBackgroundLoadTests: XCTestCase {
             Fixtures.removeStoredSettings(for: second)
         }
         let pool = PreparationPool(maxWorkers: 1)
-        restorePool = SceneWallpaperViewModel.loadPool
-        SceneWallpaperViewModel.loadPool = pool
+        restorePool = SceneContentLoader.loadPool
+        SceneContentLoader.loadPool = pool
         // Holds the only worker, so both loads queue behind it.
         let gate = DispatchSemaphore(value: 0)
         pool.submit(priority: .settingWallpaper) { _ in gate.wait() }
 
-        let model = SceneWallpaperViewModel(wallpaper: try wallpaper(first), loadsInBackground: true)
+        let model = SceneContentLoader(wallpaper: try wallpaper(first), loadsInBackground: true)
         model.currentWallpaper = try wallpaper(second)
         XCTAssertTrue(model.isLoading)
         gate.signal()
@@ -94,7 +94,7 @@ final class SceneBackgroundLoadTests: XCTestCase {
         let revision: Int = model.metalRevision
         XCTAssertEqual(revision, 1, "the superseded load committed too")
         let content = try XCTUnwrap(model.metalContent())
-        let solid = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: try wallpaper(second)).metalContent())
+        let solid = try XCTUnwrap(SceneContentLoader(wallpaper: try wallpaper(second)).metalContent())
         XCTAssertEqual(content.layers.map(\.id), solid.layers.map(\.id))
     }
 
@@ -102,7 +102,7 @@ final class SceneBackgroundLoadTests: XCTestCase {
     func testRunningLoadSupersededByReloadCommitsOnce() throws {
         let directory = Fixtures.url("Scenes/layers")
         defer { Fixtures.removeStoredSettings(for: directory) }
-        let model = SceneWallpaperViewModel(wallpaper: try wallpaper(directory), loadsInBackground: true)
+        let model = SceneContentLoader(wallpaper: try wallpaper(directory), loadsInBackground: true)
         model.reloadCurrentScene()
         model.reloadCurrentScene()
         spin(until: { !model.isLoading && model.metalRevision > 0 })
@@ -119,7 +119,7 @@ final class SceneBackgroundLoadTests: XCTestCase {
         let directory = FileManager.default.temporaryDirectory.appending(path: "owe-placeholder-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) } // scratch cleanup
-        let image = SceneWallpaperViewModel.solidImage(red: 1, green: 0, blue: 0)
+        let image = SceneContentLoader.solidImage(red: 1, green: 0, blue: 0)
         let tiff = try XCTUnwrap(image.tiffRepresentation)
         let png = try XCTUnwrap(NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]))
         try png.write(to: directory.appending(path: "preview.png"))
@@ -183,20 +183,20 @@ final class SceneLoadBlockingBenchmarkTests: XCTestCase {
                   project.type.lowercased() == "scene" else { continue }
             let wallpaper = WEWallpaper(using: project, where: directory)
 
-            SceneWallpaperViewModel.dropSharedParses()
+            SceneContentLoader.dropSharedParses()
             let syncStart = CACurrentMediaTime()
-            let syncModel = SceneWallpaperViewModel(wallpaper: wallpaper)
+            let syncModel = SceneContentLoader(wallpaper: wallpaper)
             let syncMs: Double = (CACurrentMediaTime() - syncStart) * 1000
             let syncGaps = GapMeter()
             syncGaps.start()
             Self.build(syncModel)
             let syncWorst: Double = max(syncGaps.stop() * 1000, syncMs)
 
-            SceneWallpaperViewModel.dropSharedParses()
+            SceneContentLoader.dropSharedParses()
             let gaps = GapMeter()
             gaps.start()
             let start = CACurrentMediaTime()
-            let model = SceneWallpaperViewModel(wallpaper: wallpaper, loadsInBackground: true)
+            let model = SceneContentLoader(wallpaper: wallpaper, loadsInBackground: true)
             let initMs: Double = (CACurrentMediaTime() - start) * 1000
             Self.pump(model, until: { !model.isLoading && model.metalRevision > 0 })
             Self.build(model)
@@ -208,14 +208,14 @@ final class SceneLoadBlockingBenchmarkTests: XCTestCase {
         print(lines.joined(separator: "\n"))
     }
 
-    private static func build(_ model: SceneWallpaperViewModel) {
+    private static func build(_ model: SceneContentLoader) {
         var built = false
         model.contentAsync { _ in built = true }
         pump(model, until: { built })
     }
 
     /// Spins the main run loop, reading what `SceneWallpaperInstance.update()` reads every 16 ms.
-    private static func pump(_ model: SceneWallpaperViewModel, until done: () -> Bool) {
+    private static func pump(_ model: SceneContentLoader, until done: () -> Bool) {
         let deadline = Date().addingTimeInterval(120)
         while !done(), Date() < deadline {
             _ = model.textureReductionSceneSize

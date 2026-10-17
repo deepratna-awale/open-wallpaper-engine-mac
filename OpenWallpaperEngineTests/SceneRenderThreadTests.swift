@@ -99,7 +99,7 @@ final class SceneRenderThreadTests: XCTestCase {
         let directory = Fixtures.url("Scenes/msaa")
         defer { Fixtures.removeStoredSettings(for: directory) }
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/msaa/project.json"))
-        let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
+        let content = try XCTUnwrap(SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
         let frames = Frames()
         _ = try startLoop(frames) { renderer in
             renderer.renderSettings.antiAliasing = .msaa_x2
