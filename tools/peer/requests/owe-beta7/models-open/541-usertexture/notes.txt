@@ -1,0 +1,20 @@
+541 (B8): texture user property (scenetexture) (WE 2.8.0.42)
+
+## Editor steps (project p540_var, layer variant_a, an editor-imported image)
+- Layer › Advanced Texture Settings (Material) › Albedo gear › **Bind User Property**.
+- The dialog reads "Choose a property with a compatible type (Texture, User shortcut)" › **+ Add Property**.
+- Add Property dialog: Type **Texture**, Title "Custom texture", Key auto "customtexture", Display Condition (empty) › OK.
+- Then link the radio button › OK › Save.
+
+## Files written
+- **project.json** (general.properties):
+```
+"customtexture": {"index": 1, "order": 101, "text": "Custom texture", "type": "scenetexture", "value": ""}
+```
+- **materials/variant_a.json** (variant_a_material.json here). **The binding lives in the material pass, not in scene.json:**
+```
+{"passes":[{"shader":"genericimage4","textures":["variant_a"],"usertextures":["customtexture"], "blending":"translucent", ...}]}
+```
+  - `usertextures` is an array parallel to `textures`, holding the property key per texture slot (slot 0 = albedo).
+- **scene.json:** the layer object is unchanged (`"image": "models/variant_a.json"`). There is no usertextures key on the object.
+- The editor also switched this material to **genericimage4** when the layer was imported with Import Image. The bars layer, made by my script, is genericimage2.
