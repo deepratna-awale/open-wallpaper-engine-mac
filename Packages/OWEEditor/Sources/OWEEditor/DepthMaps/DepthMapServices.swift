@@ -1,11 +1,10 @@
 import CoreGraphics
 import Foundation
+import OWEInspectorKit
 import OWESceneEditing
 
 /// The depth map section's text, from its own catalog (`Resources/DepthMaps.xcstrings`).
-func DL(_ key: String.LocalizationValue) -> String {
-    String(localized: key, table: "DepthMaps", bundle: .module)
-}
+let DL = EditorText(table: "DepthMaps")
 
 /// What a depth map is generated from: the picture of a layer or of the scene so far.
 public struct DepthMapSourceRequest: Sendable {
