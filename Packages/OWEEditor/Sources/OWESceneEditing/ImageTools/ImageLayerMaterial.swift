@@ -13,7 +13,7 @@ public struct ImageLayerMaterial {
 
     /// The first pass's textures (`g_Texture0`, `g_Texture1` …); a missing slot is `NSNull`.
     public var textures: [Any] {
-        ((material["passes"] as? [[String: Any]])?.first?["textures"] as? [Any]) ?? []
+        (MaterialPassDocument.firstPass(of: material)?["textures"] as? [Any]) ?? []
     }
 
     /// The picture (`g_Texture0`).
@@ -30,7 +30,7 @@ public struct ImageLayerMaterial {
 
     /// The first pass's `combos`.
     public var combos: [String: Int] {
-        let raw = (material["passes"] as? [[String: Any]])?.first?["combos"] as? [String: Any] ?? [:]
+        let raw = MaterialPassDocument.firstPass(of: material)?["combos"] as? [String: Any] ?? [:]
         return raw.compactMapValues { ($0 as? NSNumber)?.intValue }
     }
 
@@ -56,12 +56,7 @@ public struct ImageLayerMaterial {
 
     /// The material with the first pass changed by `change`.
     func changingFirstPass(_ change: (inout [String: Any]) -> Void) -> [String: Any] {
-        var copy = material
-        var passes = copy["passes"] as? [[String: Any]] ?? []
-        guard !passes.isEmpty else { return copy }
-        change(&passes[0])
-        copy["passes"] = passes
-        return copy
+        MaterialPassDocument.changingFirstPass(of: material, change)
     }
 
     /// The material drawing `normalMap` as its normal map (nil removes it), with lighting on when

@@ -122,7 +122,7 @@ public struct SceneOutline: Sendable {
         result.passCount = passes.count
         result.passTextures = passes.map { pass in (pass["textures"] as? [Any] ?? []).map { SceneJSONValue(any: $0) ?? .null } }
         if let pass = passes.first {
-            let constants = pass["constantshadervalues"] as? [String: Any] ?? pass["constants"] as? [String: Any] ?? [:]
+            let constants = MaterialPassDocument.constants(of: pass) ?? [:]
             for (key, value) in constants { result.constants[key] = SceneJSONValue(any: value) }
             for (key, value) in pass["combos"] as? [String: Any] ?? [:] {
                 if let number = value as? NSNumber { result.combos[key] = number.intValue }

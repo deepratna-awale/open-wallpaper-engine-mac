@@ -1,17 +1,26 @@
 import Foundation
 
-/// A model material's first pass as Advanced Texture Settings edits it: the shader, its combos,
-/// textures by slot and constants, every other key kept as it was.
-public struct MaterialPassDocument: Equatable, Sendable {
+/// A material file's first pass (`passes[0]`), as the editors change it: the shader, its combos,
+/// textures by slot and constants, every other key kept as it was. The Model Editor's Advanced
+/// Texture Settings, particle materials, an image layer's Lighting & Reflections and its image
+/// tools all edit a material through it; each writes the result with its own writer.
+public struct MaterialPassDocument: Hashable, Sendable {
     public var root: [String: SceneJSONValue]
 
     public init(root: [String: SceneJSONValue]) { self.root = root }
+
+    /// Nil when `document` isn't an object.
+    public init?(_ document: SceneJSONValue) {
+        guard case .object(let root) = document else { return nil }
+        self.root = root
+    }
 
     public init?(json data: Data) {
         guard case .object(let root)? = SceneJSONValue(any: try? JSONSerialization.jsonObject(with: data)) else { return nil }
         self.root = root
     }
 
+    /// The first pass; empty when there is none. Setting it makes one when there is none.
     var pass: [String: SceneJSONValue] {
         get {
             if case .array(let passes)? = root["passes"], case .object(let pass)? = passes.first { return pass }
@@ -23,6 +32,14 @@ public struct MaterialPassDocument: Equatable, Sendable {
             if passes.isEmpty { passes = [.object(newValue)] } else { passes[0] = .object(newValue) }
             root["passes"] = .array(passes)
         }
+    }
+
+    /// Changes the first pass when there is one; a material without one is left as it is.
+    mutating func changeExistingPass(_ change: (inout [String: SceneJSONValue]) -> Void) {
+        guard case .array(var passes)? = root["passes"], case .object(var pass)? = passes.first else { return }
+        change(&pass)
+        passes[0] = .object(pass)
+        root["passes"] = .array(passes)
     }
 
     public var shader: String {
@@ -79,5 +96,37 @@ public struct MaterialPassDocument: Equatable, Sendable {
 
     public func jsonData() throws -> Data {
         try JSONSerialization.data(withJSONObject: SceneJSONValue.object(root).any, options: [.prettyPrinted, .sortedKeys])
+    }
+}
+
+// MARK: Foundation objects
+
+extension MaterialPassDocument {
+    /// The first pass of a material read as Foundation objects; nil when `passes` isn't a list
+    /// of objects or is empty.
+    static func firstPass(of material: [String: Any]) -> [String: Any]? {
+        (material["passes"] as? [[String: Any]])?.first
+    }
+
+    /// `material` with its first pass changed by `change`; as it is when `passes` isn't a list of
+    /// objects or is empty.
+    static func changingFirstPass(of material: [String: Any], _ change: (inout [String: Any]) -> Void) -> [String: Any] {
+        var copy = material
+        var passes = copy["passes"] as? [[String: Any]] ?? []
+        guard !passes.isEmpty else { return copy }
+        change(&passes[0])
+        copy["passes"] = passes
+        return copy
+    }
+
+    /// The key of a scene effect pass's constants: `constantshadervalues`, or the older
+    /// `constants` a pass has without it.
+    static func constantsKey(of pass: [String: Any]) -> String {
+        pass["constantshadervalues"] != nil || pass["constants"] == nil ? "constantshadervalues" : "constants"
+    }
+
+    /// A scene effect pass's constants (under `constantsKey(of:)`); nil when they aren't an object.
+    static func constants(of pass: [String: Any]) -> [String: Any]? {
+        pass[constantsKey(of: pass)] as? [String: Any]
     }
 }

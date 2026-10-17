@@ -57,8 +57,7 @@ public struct ImageLayerLighting: Hashable, Sendable {
     }
 
     var firstPass: [String: SceneJSONValue] {
-        guard case .array(let passes)? = document["passes"], case .object(let pass)? = passes.first else { return [:] }
-        return pass
+        MaterialPassDocument(document)?.pass ?? [:]
     }
 
     public var shader: String { firstPass["shader"]?.stringValue?.lowercased() ?? "" }
@@ -67,7 +66,7 @@ public struct ImageLayerLighting: Hashable, Sendable {
     public var isLightable: Bool { Self.lightableShaders.contains(shader) }
 
     public func combo(_ name: String) -> Int {
-        firstPass["combos"]?[name]?.doubleValue.map { Int($0) } ?? 0
+        MaterialPassDocument(document)?.combo(name, default: 0) ?? 0
     }
 
     public var lighting: Bool { combo("LIGHTING") != 0 }
@@ -89,12 +88,9 @@ public struct ImageLayerLighting: Hashable, Sendable {
 
     /// The document with its first pass changed by `change`.
     func changingFirstPass(_ change: (inout [String: SceneJSONValue]) -> Void) -> SceneJSONValue {
-        guard case .object(var root) = document, case .array(var passes)? = root["passes"],
-              case .object(var pass)? = passes.first else { return document }
-        change(&pass)
-        passes[0] = .object(pass)
-        root["passes"] = .array(passes)
-        return .object(root)
+        guard var material = MaterialPassDocument(document) else { return document }
+        material.changeExistingPass(change)
+        return .object(material.root)
     }
 
     /// With combo `name` at `value`; 0 drops it (every combo's default here).
