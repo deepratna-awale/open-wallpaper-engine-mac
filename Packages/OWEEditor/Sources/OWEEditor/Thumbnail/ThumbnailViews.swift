@@ -1,11 +1,10 @@
 import AppKit
 import SwiftUI
+import OWEInspectorKit
 import OWESceneEditing
 
 /// The thumbnail's text, from its own catalog (`Resources/Thumbnail.xcstrings`).
-func TH(_ key: String.LocalizationValue) -> String {
-    String(localized: key, table: "Thumbnail", bundle: .module)
-}
+let TH = EditorText(table: "Thumbnail")
 
 extension GIFRecordingFormat {
     /// As WE's snapshot tool lists a format: "256×256, 25 FPS, 2 seconds, dithering enabled".
