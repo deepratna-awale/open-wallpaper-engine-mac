@@ -1,4 +1,5 @@
 import Foundation
+import WEFormat
 
 /// Save as New Wallpaper: a new wallpaper folder in the library with the edits baked into its
 /// scene.json. The source wallpaper (a Workshop item, usually) is only read.
@@ -124,7 +125,7 @@ public struct LocalWallpaperWriter {
     /// project.json with the new title and without the Workshop item it came from, so the copy is
     /// a local wallpaper with its own identity (its own properties and edits).
     private func writeProject(in folder: URL, title: String, edit: ((inout [String: Any]) -> Void)?) throws {
-        let url = folder.appending(path: "project.json")
+        let url = WEProjectFile.url(in: folder)
         guard let data = fileManager.contents(atPath: url.path),
               var project = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw WriteError.noProject }
         edit?(&project)
@@ -139,7 +140,7 @@ public struct LocalWallpaperWriter {
     /// project named it, so the folder keeps one preview. File › Save writes a local wallpaper's
     /// this way; Save as New Wallpaper its copy's.
     public func writeThumbnail(_ thumbnail: WallpaperThumbnail, into folder: URL) throws {
-        let url = folder.appending(path: "project.json")
+        let url = WEProjectFile.url(in: folder)
         guard let data = fileManager.contents(atPath: url.path),
               var project = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw WriteError.noProject }
         try thumbnail.data.write(to: folder.appending(path: thumbnail.fileName), options: .atomic)
@@ -157,7 +158,7 @@ public struct LocalWallpaperWriter {
     /// `folder`'s project.json. File › Save writes a local wallpaper's this way.
     public func writeProjectEdits(_ edits: SceneProjectEdits, into folder: URL) throws {
         guard !edits.isEmpty else { return }
-        let url = folder.appending(path: "project.json")
+        let url = WEProjectFile.url(in: folder)
         guard let data = fileManager.contents(atPath: url.path),
               var project = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw WriteError.noProject }
         edits.apply(to: &project)

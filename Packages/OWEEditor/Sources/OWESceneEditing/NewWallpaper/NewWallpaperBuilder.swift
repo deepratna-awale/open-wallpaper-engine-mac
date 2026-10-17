@@ -78,7 +78,7 @@ public struct NewWallpaperBuilder {
         try writeJSON(Self.scene(width: size.width, height: size.height, objects: [object]), "scene.json", in: folder)
         try writeJSON(Self.project(title: title, type: "scene", file: "scene.json",
                                    schemeColor: schemeColor ?? Self.dominantColor(of: picture.image)),
-                      "project.json", in: folder)
+                      WEProjectFile.fileName, in: folder)
         try writePreview(picture.image, in: folder)
         return folder
     }
@@ -91,7 +91,7 @@ public struct NewWallpaperBuilder {
         let folder = try newFolder(title, in: library)
         try writeJSON(Self.scene(width: max(1, width), height: max(1, height), objects: []), "scene.json", in: folder)
         try writeJSON(Self.project(title: title, type: "scene", file: "scene.json", schemeColor: schemeColor),
-                      "project.json", in: folder)
+                      WEProjectFile.fileName, in: folder)
         return folder
     }
 
@@ -129,7 +129,7 @@ public struct NewWallpaperBuilder {
             try JSONSerialization.data(withJSONObject: scene, options: [.prettyPrinted, .sortedKeys])
                 .write(to: sceneURL, options: .atomic)
         }
-        let projectURL = folder.appending(path: "project.json")
+        let projectURL = WEProjectFile.url(in: folder)
         var project = try TolerantJSON.object(from: Data(contentsOf: projectURL)) as? [String: Any] ?? [:]
         project.removeValue(forKey: "templateoptions")
         for key in LocalWallpaperWriter.workshopKeys { project.removeValue(forKey: key) }
@@ -163,7 +163,7 @@ public struct NewWallpaperBuilder {
         try fileManager.removeItem(at: folder)
         try copy(source, folder)
         try writeJSON(Self.project(title: title, type: "web", file: "index.html", schemeColor: "0 0 0"),
-                      "project.json", in: folder)
+                      WEProjectFile.fileName, in: folder)
         return folder
     }
 

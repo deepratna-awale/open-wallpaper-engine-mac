@@ -42,7 +42,7 @@ public struct WallpaperTemplate: Hashable, Sendable, Identifiable {
     /// no template: the list just leaves it out).
     public static func read(_ folder: URL, fileManager: FileManager = .default) -> WallpaperTemplate? {
         guard let templateData = fileManager.contents(atPath: folder.appending(path: "template.json").path),
-              let projectData = fileManager.contents(atPath: folder.appending(path: "project.json").path),
+              let projectData = fileManager.contents(atPath: WEProjectFile.url(in: folder).path),
               let template = (try? TolerantJSON.object(from: templateData)) as? [String: Any],
               let project = (try? TolerantJSON.object(from: projectData)) as? [String: Any],
               (template["type"] as? String)?.lowercased() == "scene2d",
