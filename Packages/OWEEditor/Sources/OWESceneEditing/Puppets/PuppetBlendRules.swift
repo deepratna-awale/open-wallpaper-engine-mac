@@ -118,11 +118,6 @@ extension PuppetDocument {
             bones[bone].blendRules = kept.isEmpty ? nil : kept
         }
     }
-
-    /// The rules' weights at `frame` of clip `clip`, in `blendRuleOrder`.
-    public func blendRuleWeights(clip: UInt64, frame: Float) -> [Float] {
-        blendRuleOrder.map { bones[$0.bone].blendRules![$0.rule].weight(clip: clip, at: frame) }
-    }
 }
 
 /// The player's blend (`SceneBlendRules.blend`, WE's 0x140200e20…0x1402011b1): both matrices

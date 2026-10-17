@@ -556,11 +556,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     var layerAnalysis: SceneLayerAnalysis?
     /// Keeps system audio capture on while the content reacts to audio (`needsAudio`).
     var audioCaptureLease: AudioCaptureLease?
-    /// Whether the loaded content reacts to audio (`needsAudio`); false before it is analysed.
-    var contentReadsAudio: Bool {
-        guard let layerAnalysis else { return false }
-        return Self.needsAudio(layerAnalysis, particles: particleSystems.map(\.configuration))
-    }
     /// Adaptive rate and idle skipping (`FramePacing`, WP2-C): the instance sets its limits and
     /// ticks the displays at its rate; an idle frame returns before anything is encoded.
     var framePacing = FramePacing()
