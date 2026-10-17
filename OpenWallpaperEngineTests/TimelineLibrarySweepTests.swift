@@ -134,7 +134,7 @@ final class TimelineLibrarySweepTests: XCTestCase {
         if body.starts(with: [0xEF, 0xBB, 0xBF]) { body = body.dropFirst(3) }
         // A file that isn't JSON isn't a scene document: the script skips it too.
         guard let document = try? JSONDecoder().decode(SceneJSON.self, from: body) else { return [] }
-        let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        let digest = Digest.hex(SHA256.hash(data: data))
         var found: [Found] = []
         func walk(_ node: SceneJSON, _ path: [String]) {
             switch node {

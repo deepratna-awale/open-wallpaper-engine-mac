@@ -12,8 +12,8 @@ import Foundation
 enum WallpaperEngineShareJSON {
     /// The wallpaper's property definitions from its project.json; none when it can't be read.
     static func definitions(in directory: URL) -> [String: UserPropertyDefinition] {
-        guard let data = try? Data(contentsOf: directory.appending(path: "project.json")), // no project: no properties
-              let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { return [:] }
+        // No project: no properties.
+        guard let root = (try? WEProject.object(in: directory)) as? [String: Any] else { return [:] }
         return Dictionary(UserPropertyDefinition.all(projectJSON: root).map { ($0.key, $0) },
                           uniquingKeysWith: { first, _ in first })
     }

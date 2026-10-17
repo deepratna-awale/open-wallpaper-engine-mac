@@ -98,7 +98,7 @@ final class ShaderVariantTranslator {
     /// can never be read again (their keys include both), so a change starts a new directory and
     /// the old one is deleted (`pruneStaleGenerations`) instead of growing the cache forever.
     static func generation(toolchain: String) -> String {
-        let digest = SHA256.hash(data: Data(toolchain.utf8)).prefix(6).map { String(format: "%02x", $0) }.joined()
+        let digest = Digest.hex(SHA256.hash(data: Data(toolchain.utf8)).prefix(6))
         return "r\(revision)-\(digest)"
     }
 
@@ -235,7 +235,7 @@ final class ShaderVariantTranslator {
         for (name, value) in combos.sorted(by: { $0.key < $1.key }) {
             hasher.update(data: Data("\u{0}\(name)=\(value)".utf8))
         }
-        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+        return Digest.hex(hasher.finalize())
     }
 
     private func translate(vertex: ShaderSource, fragment: ShaderSource,

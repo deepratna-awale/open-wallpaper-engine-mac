@@ -80,7 +80,7 @@ struct SceneLoadingSnapshotStore: Sendable {
     }
 
     private static func hex(_ data: Data, bytes: Int) -> String {
-        SHA256.hash(data: data).prefix(bytes).map { String(format: "%02x", $0) }.joined()
+        Digest.hex(SHA256.hash(data: data).prefix(bytes))
     }
 
     // MARK: Reading

@@ -163,7 +163,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
                 guard let self else { return title }
                 return try self.saveAsNewWallpaper(title: title)
             },
-            projectJSON: try? Data(contentsOf: wallpaper.wallpaperDirectory.appending(path: "project.json")),
+            projectJSON: try? WEProject.data(in: wallpaper.wallpaperDirectory),
             scriptConsole: scriptConsole)
         services.effectCatalog = { resources.effectCatalog(outline: session.authored) }
         services.effectSchema = { resources.effectSchema($0) }

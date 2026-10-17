@@ -317,7 +317,7 @@ enum EmbeddedVideoFiles {
     }
 
     static func url(for data: Data, cachesDirectory: URL = AppStorageLocation.current.cachesDirectory) -> URL? {
-        let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        let digest = Digest.hex(SHA256.hash(data: data))
         let folder = folder(in: cachesDirectory)
         let url = folder.appendingPathComponent(digest).appendingPathExtension("mp4")
         if FileManager.default.fileExists(atPath: url.path) {

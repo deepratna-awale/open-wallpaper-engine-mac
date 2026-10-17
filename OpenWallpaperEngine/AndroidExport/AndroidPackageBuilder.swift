@@ -226,14 +226,14 @@ enum AndroidPackageBuilder {
     /// project.json's bytes.
     static func projectData(_ wallpaper: WEWallpaper) throws -> Data {
         do {
-            return try Data(contentsOf: wallpaper.settingsDirectory.appending(path: "project.json"))
+            return try WEProject.data(in: wallpaper.settingsDirectory)
         } catch {
             throw Failure.unreadable("project.json", error)
         }
     }
 
     private static func projectDocument(_ wallpaper: WEWallpaper) throws -> WEJSONDocument {
-        let url = wallpaper.settingsDirectory.appending(path: "project.json")
+        let url = WEProject.url(in: wallpaper.settingsDirectory)
         do {
             return try WEJSONDocument(parsing: Data(contentsOf: url))
         } catch {
