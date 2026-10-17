@@ -2,7 +2,7 @@ import Foundation
 import Darwin
 
 /// The shader compile helper: a copy of the app's executable run with `--shader-compile-helper`
-/// (`ShaderPrewarmCommand`), which translates shaders for the app that started it
+/// (`HelperRunCommand`), which translates shaders for the app that started it
 /// (`HelperShaderCompiler`), so a crash or hang in glslang or SPIRV-Cross takes down the helper
 /// instead of the app.
 ///

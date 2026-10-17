@@ -36,11 +36,6 @@ struct PowerPolicy: Equatable, Sendable {
         return state.userIdleSeconds >= Self.libraryIdleSeconds && level > Self.libraryMinimumBattery
     }
 
-    /// Preparation for the wallpaper that is being set always runs.
-    func allowsPreparation(_ priority: PreparationPool.Priority) -> Bool {
-        priority == .library ? allowsLibraryPreparation : true
-    }
-
     /// Steps the Quality↔Efficiency slider's effective position moves towards efficiency:
     /// one for Low Power Mode or `.serious`, two at `.critical`.
     var efficiencySteps: Int {

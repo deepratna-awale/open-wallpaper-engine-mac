@@ -9,7 +9,7 @@ import OWESceneEditing
 /// app's executable with `--render-editor-previews` in this process's isolated state
 /// (`EditorPreviewRenderer` renders there), reports each preview as the helper finishes it, and
 /// terminates it when the task is cancelled. The helper exits with the app
-/// (`ShaderPrewarmCommand.exitWithParent`).
+/// (`HelperRunCommand.exitWithParent`).
 enum EditorPreviewHelper {
     /// The folder holding every build's previews' folder (`EditorPreviewCache.root`'s parent).
     static var cachesDirectory: URL {
@@ -93,7 +93,7 @@ enum EditorPreviewHelper {
 
         let process = Process()
         process.executableURL = executable
-        process.arguments = [ShaderPrewarmCommand.editorPreviewArgument, jobFile.path(percentEncoded: false)]
+        process.arguments = [HelperRunCommand.editorPreviewArgument, jobFile.path(percentEncoded: false)]
         var environment = ProcessInfo.processInfo.environment
         if let tag = AppStorageLocation.current.isolationTag { environment[AppStorageLocation.environmentKey] = tag }
         process.environment = environment

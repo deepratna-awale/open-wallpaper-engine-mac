@@ -24,7 +24,7 @@ enum ChromiumFrameCaptureCommand {
             return 1
         }
         let output = URL(fileURLWithPath: rest[2])
-        let size = rest.count > 3 ? ShaderPrewarmCommand.size(rest[3]) : nil
+        let size = rest.count > 3 ? HelperRunCommand.size(rest[3]) : nil
         do {
             try capture(url: url, frames: count, size: size ?? SIMD2(1280, 720), to: output)
             print("Wrote \(output.path)")

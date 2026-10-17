@@ -5,7 +5,7 @@ import Foundation
 /// (`EffectPipelineArchive.environmentKey`). Two builds with equal keys read each other's caches;
 /// device and OS are the same for both, since they run on the same machine.
 ///
-/// A new build prints its own with `--print-shader-cache-key` (`ShaderPrewarmCommand`), so the
+/// A new build prints its own with `--print-shader-cache-key` (`HelperRunCommand`), so the
 /// running app can tell before an update installs whether its caches will have to be rebuilt.
 struct ShaderCacheKey: Codable, Equatable, Sendable {
     var translatorRevision: Int

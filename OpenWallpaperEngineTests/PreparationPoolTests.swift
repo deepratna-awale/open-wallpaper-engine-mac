@@ -141,8 +141,6 @@ final class PowerPolicyTests: XCTestCase {
         XCTAssertTrue(ac.allowsLibraryPreparation)
         let busy = PowerPolicy(PowerState(onBattery: true, batteryLevel: 0.9, userIdleSeconds: 10))
         XCTAssertFalse(busy.allowsLibraryPreparation)
-        XCTAssertTrue(busy.allowsPreparation(.settingWallpaper))
-        XCTAssertTrue(busy.allowsPreparation(.currentWallpaper))
         let idleHigh = PowerPolicy(PowerState(onBattery: true, batteryLevel: 0.6, userIdleSeconds: 130))
         XCTAssertTrue(idleHigh.allowsLibraryPreparation)
         let idleLow = PowerPolicy(PowerState(onBattery: true, batteryLevel: 0.5, userIdleSeconds: 130))

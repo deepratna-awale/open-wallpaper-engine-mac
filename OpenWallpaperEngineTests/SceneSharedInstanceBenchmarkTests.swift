@@ -77,10 +77,7 @@ final class SceneSharedInstanceBenchmarkTests: XCTestCase {
     }
 
     private func settle(_ renderers: [SceneMetalRenderer]) {
-        let deadline = Date().addingTimeInterval(60)
-        while renderers.contains(where: { !$0.hasContent }), Date() < deadline {
-            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
-        }
+        spin(until: { renderers.allSatisfy(\.hasContent) }, timeout: 60)
     }
 
     /// Before: a renderer per display, each drawing the whole scene.

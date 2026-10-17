@@ -25,14 +25,6 @@ final class WebDirectoryPropertyTests: XCTestCase {
         try Data(text.utf8).write(to: pictures.appending(path: name))
     }
 
-    private func waitUntil(_ what: String, timeout: TimeInterval = 5, _ condition: () -> Bool) {
-        let deadline = Date().addingTimeInterval(timeout)
-        while !condition() && Date() < deadline {
-            RunLoop.main.run(until: Date().addingTimeInterval(0.02))
-        }
-        XCTAssertTrue(condition(), "Timed out waiting for \(what)")
-    }
-
     // MARK: Declaration and listing
 
     func testDeclaredModesAndFileTypes() {

@@ -88,14 +88,23 @@ final class PerceptualCompareTests: XCTestCase {
         }
     }
 
+    /// A 1080p compare, which every perceptual render check runs at least once, stays within its
+    /// budget: about 0.9 s unoptimised on an M-series Mac, so 5 s leaves room for a busy CI runner
+    /// without hiding a regression to a much slower compare. An identical pair passes with SSIM 1
+    /// and no colour difference.
     func testFullHDCompareCost() throws {
         let width = 1920, height = 1080
         var bytes = [UInt8](repeating: 0, count: width * height * 4)
         for i in stride(from: 0, to: bytes.count, by: 4) { bytes[i] = UInt8(truncatingIfNeeded: i &* 31 >> 7) }
         let a = PerceptualImage(width: width, height: height, rgba: bytes)
         let start = CFAbsoluteTimeGetCurrent()
-        _ = PerceptualCompare.evaluate(reference: a, candidate: a, kind: .lossy)
+        let verdict = PerceptualCompare.evaluate(reference: a, candidate: a, kind: .lossy)
         let seconds: Double = CFAbsoluteTimeGetCurrent() - start
-        print("PerceptualCompare 1080p evaluate: \(seconds) s")
+        XCTAssertTrue(verdict.passed, verdict.description)
+        XCTAssertEqual(verdict.ssim, 1, accuracy: 1e-9)
+        XCTAssertEqual(verdict.deltaE99, 0, accuracy: 1e-9)
+        XCTAssertLessThan(seconds, Self.fullHDCompareBudget, "a 1080p compare took \(seconds) s")
     }
+
+    static let fullHDCompareBudget: Double = 5
 }

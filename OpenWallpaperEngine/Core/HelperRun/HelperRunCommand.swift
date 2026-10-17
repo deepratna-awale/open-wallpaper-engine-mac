@@ -13,7 +13,7 @@ import Darwin
 ///
 /// Both run in the isolated state the caller passes (`OWE_ISOLATED_STATE`), with read-only
 /// defaults (`AppStorageLocation`), and exit when done.
-enum ShaderPrewarmCommand {
+enum HelperRunCommand {
     static let printKeyArgument = "--print-shader-cache-key"
     static let prewarmArgument = "--prewarm-shaders"
     static let prepareArgument = "--prepare-wallpapers"

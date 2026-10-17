@@ -47,7 +47,7 @@ final class AndroidExporter: AndroidExportWorking {
             let job = Self.videoJob(item, framing: framing, output: video)
             let jobFile = directory.appending(path: "job.json")
             try JSONEncoder().encode(job).write(to: jobFile)
-            try await LivePhotoHelper.runHelper(argument: ShaderPrewarmCommand.androidVideoArgument, jobFile: jobFile) { progress($0 * 0.9) }
+            try await LivePhotoHelper.runHelper(argument: HelperRunCommand.androidVideoArgument, jobFile: jobFile) { progress($0 * 0.9) }
             try await Self.package(to: url, progress: { progress(0.9 + $0 * 0.1) }) { _ in
                 try AndroidPackageBuilder.preRenderedEntries(wallpaper, video: video, options: options)
             }

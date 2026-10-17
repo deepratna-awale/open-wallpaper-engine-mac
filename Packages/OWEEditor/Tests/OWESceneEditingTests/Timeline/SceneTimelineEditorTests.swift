@@ -121,6 +121,32 @@ final class SceneTimelineEditorTests: XCTestCase {
         XCTAssertEqual(frames(TimelineFixtures.alpha), [0, 30])
     }
 
+    /// Escape during a drag: the preview goes, the rest of the drag does nothing, and its end
+    /// commits nothing; the next drag works again.
+    func testCancellingADragIgnoresTheRestOfIt() throws {
+        let key30 = TimelineKeyframeRef(target: TimelineFixtures.alpha, channel: 0, frame: 30)
+        editor.select([key30])
+        editor.previewMove(byFrames: 10)
+        XCTAssertTrue(editor.isPreviewing)
+        editor.cancelPreview()
+        XCTAssertFalse(editor.isPreviewing)
+        XCTAssertEqual(frames(TimelineFixtures.alpha), [0, 30])
+        editor.previewMove(byFrames: 20)
+        XCTAssertFalse(editor.isPreviewing, "the cancelled drag keeps going under the pointer, drawing nothing")
+        editor.commitPreview(actionName: "Move Keyframes")
+        XCTAssertNil(session.overlay.timelines, "its end commits nothing")
+        XCTAssertEqual(editor.selection, [key30], "the selection stays")
+
+        editor.previewMove(byFrames: 5)
+        editor.commitPreview(actionName: "Move Keyframes")
+        XCTAssertEqual(frames(TimelineFixtures.alpha), [0, 35], "the next drag moves")
+
+        editor.cancelPreview()
+        editor.select([TimelineKeyframeRef(target: TimelineFixtures.alpha, channel: 0, frame: 35)])
+        editor.previewMove(byFrames: 1)
+        XCTAssertTrue(editor.isPreviewing, "Escape without a drag doesn't block the next one")
+    }
+
     func testSelectAllCopyAndPasteAtThePlayhead() throws {
         editor.selectAll()
         XCTAssertEqual(editor.selection.count, 2)

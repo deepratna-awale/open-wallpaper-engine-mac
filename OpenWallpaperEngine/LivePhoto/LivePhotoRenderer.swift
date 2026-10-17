@@ -5,7 +5,7 @@ import Metal
 /// Renders a scene wallpaper's clip (or a video wallpaper's, its frames read from the video by
 /// `LivePhotoVideoFrames` in place of the scene renderer) as a Live Photo (a HEIC still and an HEVC movie paired by one
 /// content identifier), or as the clip's movie alone for its preview, in the app's helper run
-/// (`ShaderPrewarmCommand`, `--render-live-photo`): in its own process, never on the app's main
+/// (`HelperRunCommand`, `--render-live-photo`): in its own process, never on the app's main
 /// or render thread. The app shows the progress the helper reports and shares the files
 /// (`LivePhotoHelper`).
 ///
