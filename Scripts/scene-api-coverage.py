@@ -45,8 +45,10 @@ def collect_scripts(library):
 
 def implemented():
     """APIs the runtime provides, parsed from the sources so this can't drift."""
-    renderer = open(os.path.join(REPO, "OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift"),
-                    encoding="utf-8").read()
+    rendering = os.path.join(REPO, "OpenWallpaperEngine/Scene/Rendering")
+    renderer = "\n".join(open(os.path.join(rendering, name), encoding="utf-8").read()
+                         for name in sorted(os.listdir(rendering))
+                         if name.startswith("SceneMetalRenderer") and name.endswith(".swift"))
     engine = open(os.path.join(REPO, "OpenWallpaperEngine/Scene/Scripting/AudioReactiveScriptEngine.swift"),
                   encoding="utf-8").read()
 
