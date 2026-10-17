@@ -72,7 +72,7 @@ private struct LayerForm: View {
                 DepthMapSection(session: session, layerID: layer.id, services: depthMaps)
             }
             if layer.kind == .model { ModelInspectorSection(session: session, layer: layer, services: services) }
-            if layer.kind == .image, let assets = services.puppetAssets {
+            if layer.kind == .image, let assets = services.puppetEditorAssets {
                 PuppetInspectorSection(session: session, layer: layer, assets: assets)
             }
             if layer.kind == .image { NormalMapSection(session: session, tools: tools, services: services, layer: layer) }

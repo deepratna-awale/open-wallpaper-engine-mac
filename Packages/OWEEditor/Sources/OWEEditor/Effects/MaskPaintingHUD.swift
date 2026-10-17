@@ -11,7 +11,7 @@ struct MaskPaintingHUD: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Label(L("Painting the mask of “\(painting.effectTitle)”"), systemImage: "paintbrush.pointed")
+            Label(L("Painting the mask of “\(painting.title)”"), systemImage: "paintbrush.pointed")
                 .lineLimit(1)
                 .font(.callout.weight(.medium))
             Picker(selection: $painting.mode) {
@@ -61,11 +61,11 @@ struct MaskPaintingHUD: View {
 
     private func finish() {
         defer { tools.maskPainting = nil }
-        guard let store = services.assetStore, let png = painting.pngData else { return }
+        guard case let .effect(key, title, slot) = painting.target, let store = services.assetStore, let png = painting.pngData else { return }
         do {
-            let path = try store.saveMask(png, title: painting.effectTitle)
-            session.setEffectTexture(path, slot: painting.slot.slot, pass: painting.slot.pass, effect: painting.effectKey, of: painting.layer,
-                                     combo: painting.slot.combo, actionName: L("Paint Mask"))
+            let path = try store.saveMask(png, title: title)
+            session.setEffectTexture(path, slot: slot.slot, pass: slot.pass, effect: key, of: painting.layer,
+                                     combo: slot.combo, actionName: L("Paint Mask"))
         } catch {
             tools.problem = L("The mask couldn’t be saved: \(error.localizedDescription)")
         }

@@ -63,6 +63,7 @@ struct PuppetCanvasView: View {
         case poseMove(bone: Int, base: PuppetTransform, grab: SIMD2<Float>, moved: Bool)
         case poseRotate(bone: Int, base: PuppetTransform, startAngle: Float, moved: Bool)
         case shake(startOffset: SIMD2<Float>, start: SIMD2<Float>)
+        case maskPaint
     }
 
     /// Hit radius, canvas points.
@@ -73,6 +74,10 @@ struct PuppetCanvasView: View {
             ZStack {
                 Color(nsColor: .underPageBackgroundColor)
                 Canvas { context, _ in draw(&context) }
+                if let painting = workspace.clippingPainting {
+                    PuppetClippingPaintOverlay(painting: painting, mapping: mapping, imageSize: workspace.imageSize, hover: hover)
+                        .allowsHitTesting(false)
+                }
                 CanvasEventView(handlers: handlers)
             }
             .onAppear {
@@ -143,7 +148,11 @@ struct PuppetCanvasView: View {
                 context.stroke(dot, with: .color(.black.opacity(0.6)), lineWidth: 0.75)
             }
         }
-        if workspace.tool != .mesh { drawBones(&context, document) }
+        if workspace.tool == .clipping {
+            drawLimbs(&context, document, positions)
+        } else if workspace.tool != .mesh {
+            drawBones(&context, document)
+        }
         switch drag {
         case let .marquee(start, current, _):
             let rect = CGRect(x: min(start.x, current.x), y: min(start.y, current.y), width: abs(current.x - start.x),
@@ -165,6 +174,34 @@ struct PuppetCanvasView: View {
             context.stroke(circle, with: .color(.white), lineWidth: 1.5)
             context.stroke(circle, with: .color(.black.opacity(0.5)), style: StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
         }
+    }
+
+    /// The Clipping Masks tool: the selected limb, the limbs its mask is painted over, and the
+    /// other clipped limbs.
+    private func drawLimbs(_ context: inout GraphicsContext, _ document: PuppetDocument, _ positions: [SIMD2<Float>]) {
+        guard positions.count == document.mesh.vertices.count else { return }
+        let islands = document.mesh.islands
+        let clipping = workspace.clipping
+        let masking = Set(workspace.selectedLimbMask?.maskingLimbs ?? [])
+        var selected = Path(), painted = Path(), clipped = Path()
+        for (index, t) in document.mesh.triangles.enumerated() where index < islands.count {
+            let limb = islands[index]
+            var triangle = Path()
+            triangle.move(to: mapping.view(positions[Int(t.x)]))
+            triangle.addLine(to: mapping.view(positions[Int(t.y)]))
+            triangle.addLine(to: mapping.view(positions[Int(t.z)]))
+            triangle.closeSubpath()
+            if limb == workspace.selectedLimb {
+                selected.addPath(triangle)
+            } else if masking.contains(limb) {
+                painted.addPath(triangle)
+            } else if clipping.limbs.indices.contains(limb), clipping.limbs[limb] != nil {
+                clipped.addPath(triangle)
+            }
+        }
+        context.fill(clipped, with: .color(.orange.opacity(0.15)))
+        context.fill(painted, with: .color(.green.opacity(0.2)))
+        context.fill(selected, with: .color(accentColor.opacity(0.3)))
     }
 
     private func wireframe(_ document: PuppetDocument, _ positions: [SIMD2<Float>]) -> Path {
@@ -278,6 +315,7 @@ struct PuppetCanvasView: View {
             case .skeleton: return workspace.skeletonTool == .add ? .crosshair : .arrow
             case .weights: return .crosshair
             case .animate, .physics: return .arrow
+            case .clipping: return workspace.clippingPainting != nil ? .crosshair : .arrow
             }
         }
         return handlers
@@ -354,6 +392,13 @@ struct PuppetCanvasView: View {
             } else {
                 drag = .shake(startOffset: workspace.objectOffset, start: p)
             }
+        case .clipping:
+            if let painting = workspace.clippingPainting {
+                painting.begin(at: SIMD2<Double>(p))
+                drag = .maskPaint
+            } else {
+                workspace.selectedLimb = workspace.document?.limb(at: p)
+            }
         }
     }
 
@@ -411,6 +456,8 @@ struct PuppetCanvasView: View {
             drag = .poseRotate(bone: bone, base: base, startAngle: startAngle, moved: true)
         case let .shake(startOffset, start):
             workspace.objectOffset = startOffset + (p - start)
+        case .maskPaint:
+            workspace.clippingPainting?.dab(to: SIMD2<Double>(p))
         case nil:
             break
         }
@@ -444,6 +491,8 @@ struct PuppetCanvasView: View {
             workspace.endDraft(PL("Paint Weights"))
         case let .poseMove(_, _, _, moved), let .poseRotate(_, _, _, moved):
             if moved { workspace.endDraft(PL("Set Key")) }
+        case .maskPaint:
+            workspace.clippingPainting?.end()
         default:
             break
         }
@@ -470,6 +519,34 @@ struct PuppetCanvasView: View {
             return true
         default:
             return false
+        }
+    }
+}
+
+/// A clipping mask being painted, over the image (texture space: the bind pose's image rect), and
+/// the brush under the pointer.
+private struct PuppetClippingPaintOverlay: View {
+    @ObservedObject var painting: MaskPainting
+    let mapping: PuppetCanvasMapping
+    let imageSize: SIMD2<Float>
+    let hover: SIMD2<Float>?
+
+    var body: some View {
+        Canvas { context, _ in
+            _ = painting.revision
+            let half = imageSize / 2
+            if let image = painting.image {
+                context.opacity = 0.45
+                context.draw(Image(decorative: image, scale: 1), in: mapping.rect((-half, half)))
+                context.opacity = 1
+            }
+            if let hover {
+                let centre = mapping.view(hover)
+                let radius = painting.brushSize / 2 * mapping.zoom
+                let circle = Path(ellipseIn: CGRect(x: centre.x - radius, y: centre.y - radius, width: 2 * radius, height: 2 * radius))
+                context.stroke(circle, with: .color(.white), lineWidth: 1.5)
+                context.stroke(circle, with: .color(.black.opacity(0.5)), style: StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
+            }
         }
     }
 }
