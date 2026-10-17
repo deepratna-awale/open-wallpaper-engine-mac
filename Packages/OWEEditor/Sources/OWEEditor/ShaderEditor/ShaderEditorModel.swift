@@ -151,12 +151,6 @@ final class ShaderEditorModel: ObservableObject {
         return result.diagnostics.filter { $0.stage == document.stage }.map { SceneScriptDiagnostic(line: $0.line, message: $0.message) }
     }
 
-    /// Problems elsewhere: the other stage's, a header's, the prelude's.
-    var otherDiagnostics: [ShaderDiagnostic] {
-        guard let document, let result else { return [] }
-        return result.diagnostics.filter { $0.stage != document.stage || $0.line == nil }
-    }
-
     /// Translates the applied pair in the background, as the canvas's reload will.
     private func runCheck() {
         guard let document, let checker = services?.checker else { return }

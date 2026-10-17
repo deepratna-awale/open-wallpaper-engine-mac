@@ -105,9 +105,6 @@ public struct TextureVariantDocument: Hashable, Sendable {
         self.groups = groups
     }
 
-    /// Whether any option is left to compile.
-    public var hasOptions: Bool { groups.contains { !$0.options.isEmpty } }
-
     // MARK: Compiling
 
     /// The options as the `.tex` numbers them, from 1 as WE's compiler does (capture 540: group 1,

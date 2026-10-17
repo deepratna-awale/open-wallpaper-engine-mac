@@ -61,14 +61,6 @@ final class WorkshopStorageTests: XCTestCase {
     }
 
     @MainActor
-    private func waitUntil(_ what: String, timeout: TimeInterval = 10, _ condition: () -> Bool) async throws {
-        let deadline = Date().addingTimeInterval(timeout)
-        while !condition() {
-            guard Date() < deadline else { return XCTFail("Timed out waiting until \(what)") }
-            try await Task.sleep(nanoseconds: 20_000_000)
-        }
-    }
-
     private func children(of directory: URL) throws -> Set<String> {
         Set(try FileManager.default.contentsOfDirectory(atPath: directory.path))
     }
@@ -124,7 +116,7 @@ final class WorkshopStorageTests: XCTestCase {
         let dependencies = makeDependencyService()
 
         dependencies.ensureDependencies(ofItemAt: wallpaper)
-        try await waitUntil("the dependency is installed") { dependencies.states["2000000002"] == .installed }
+        try await sleepUntil("the dependency is installed", timeout: 10) { dependencies.states["2000000002"] == .installed }
 
         XCTAssertTrue(FileManager.default.fileExists(atPath: storage.url.appending(path: "2000000002/project.json").path))
         XCTAssertEqual(try children(of: storage.url), ["1000000001", "2000000002", WorkshopDependencyIndex.fileName])
@@ -146,7 +138,7 @@ final class WorkshopStorageTests: XCTestCase {
         let dependencies = makeDependencyService(availability: { _ in ["9000000009": .unavailable(.removedOrPrivate)] })
 
         dependencies.ensureDependencies(ofItemAt: wallpaper)
-        try await waitUntil("the dependency is unavailable") {
+        try await sleepUntil("the dependency is unavailable", timeout: 10) {
             dependencies.states["9000000009"] == .itemUnavailable(.removedOrPrivate)
         }
 
@@ -166,7 +158,7 @@ final class WorkshopStorageTests: XCTestCase {
             return [:]
         })
         later.ensureDependencies(ofItemAt: wallpaper)
-        try await waitUntil("the skipped dependency is reported") {
+        try await sleepUntil("the skipped dependency is reported", timeout: 10) {
             later.states["9000000009"] == .itemUnavailable(.removedOrPrivate)
         }
         XCTAssertTrue(steamCmd.installDirectories.isEmpty)
@@ -179,7 +171,7 @@ final class WorkshopStorageTests: XCTestCase {
         let dependencies = makeDependencyService()
 
         dependencies.ensureDependencies(ofItemAt: wallpaper)
-        try await waitUntil("the dependency is unavailable") {
+        try await sleepUntil("the dependency is unavailable", timeout: 10) {
             dependencies.states["9000000009"] == .itemUnavailable(.removedOrPrivate)
         }
 
@@ -196,7 +188,7 @@ final class WorkshopStorageTests: XCTestCase {
         let dependencies = makeDependencyService(availability: { _ in throw WorkshopAPIError.requestFailed })
 
         dependencies.ensureDependencies(ofItemAt: wallpaper)
-        try await waitUntil("the dependency is installed") { dependencies.states["2000000002"] == .installed }
+        try await sleepUntil("the dependency is installed", timeout: 10) { dependencies.states["2000000002"] == .installed }
     }
 
     /// Retry forgets the item and checks it again; an item back on Steam downloads.
@@ -208,13 +200,13 @@ final class WorkshopStorageTests: XCTestCase {
             removed ? ["2000000002": .unavailable(.otherApp)] : ["2000000002": .available]
         })
         dependencies.ensureDependencies(ofItemAt: wallpaper)
-        try await waitUntil("the dependency is unavailable") {
+        try await sleepUntil("the dependency is unavailable", timeout: 10) {
             dependencies.states["2000000002"] == .itemUnavailable(.otherApp)
         }
 
         removed = false
         dependencies.retry(["2000000002"], forItemAt: wallpaper)
-        try await waitUntil("the dependency is installed") { dependencies.states["2000000002"] == .installed }
+        try await sleepUntil("the dependency is installed", timeout: 10) { dependencies.states["2000000002"] == .installed }
         XCTAssertNil(dependencies.unavailableReason(for: "2000000002"))
     }
 
@@ -280,7 +272,7 @@ final class WorkshopStorageTests: XCTestCase {
     func testKeptPreviewMovesIntoStorage() async throws {
         dependencyIndex.recordDependencyDownload("1000000001", copiedIntoLibrary: true)
         service.previewWorkshopItem(workshopId: "1000000001")
-        try await waitUntil("the preview is presented") { !presented.isEmpty }
+        try await sleepUntil("the preview is presented", timeout: 10) { !presented.isEmpty }
         let preview = try XCTUnwrap(presented.first)
         XCTAssertTrue(WorkshopItemInstaller.isPreview(preview.wallpaperDirectory, cacheRoot: previewCache))
         XCTAssertEqual(try children(of: storage.url), [WorkshopDependencyIndex.fileName], "a preview isn't in the library")

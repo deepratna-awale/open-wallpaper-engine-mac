@@ -13,7 +13,8 @@ public struct WallpaperEditorView: View {
     @StateObject private var tools = EditorTools()
     @StateObject private var viewOptions: EditorViewOptions
     @State private var isInspectorPresented = true
-    @AppStorage("WallpaperEditorScriptHeight") private var scriptHeight: Double = 340
+    /// Kept in the app's defaults (`services.preferences`), so a test or an isolated copy never writes the user's.
+    @AppStorage private var scriptHeight: Double
     @State private var isConfirmingRevert = false
     @State private var isSaving = false
     @State private var notice: Notice?
@@ -32,13 +33,14 @@ public struct WallpaperEditorView: View {
         self.session = session
         self.services = services
         document = services.document ?? WallpaperEditorDocument()
+        _scriptHeight = AppStorage(wrappedValue: 340, "WallpaperEditorScriptHeight", store: services.preferences)
         _viewOptions = StateObject(wrappedValue: EditorViewOptions(defaults: services.preferences))
         _shaderEditor = StateObject(wrappedValue: ShaderEditorModel(session: session, read: services.readFile,
                                                                     services: services.shaders))
         _authoring = StateObject(wrappedValue: EditorAuthoringModel(session: session, projectJSON: services.projectJSON,
                                                                     console: services.scriptConsole,
                                                                     services: services))
-        _statsSettings = StateObject(wrappedValue: EditorStatsSettings(preferences: services.renderStats?.defaults ?? .standard))
+        _statsSettings = StateObject(wrappedValue: EditorStatsSettings(preferences: services.renderStats?.defaults ?? services.preferences))
     }
 
     public var body: some View {
@@ -46,7 +48,7 @@ public struct WallpaperEditorView: View {
             LayerListView(session: session, tools: tools, services: services)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 380)
         } detail: {
-            TimelineDock(timeline: services.timeline) {
+            TimelineDock(timeline: services.timeline, preferences: services.preferences) {
                 // A plain stack with its own divider, like the timeline dock: an AppKit split view
                 // nested in the split view's detail and the inspector reported changing minimum
                 // sizes back and forth until AppKit stopped the layout ("more Update Constraints

@@ -48,13 +48,6 @@ final class DisplayPlaybackMonitorTests: XCTestCase {
     }
 
     /// Runs the main run loop until `condition` holds or `timeout` passes.
-    private func spin(until condition: () -> Bool, timeout: TimeInterval = 3) {
-        let deadline = Date().addingTimeInterval(timeout)
-        while !condition(), Date() < deadline {
-            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
-        }
-    }
-
     override func tearDown() {
         monitor.stop()
         monitor = nil
@@ -242,7 +235,7 @@ final class DisplayPlaybackMonitorTests: XCTestCase {
         let evaluations: Int = desktop.evaluations
         let reads: Int = desktop.windowReads
         // Several poll intervals: the scan queue keeps reading, the main thread evaluates nothing.
-        spin(until: { false }, timeout: DisplayPlaybackMonitor.pollInterval * 4)
+        spin(for: DisplayPlaybackMonitor.pollInterval * 4)
         XCTAssertEqual(desktop.evaluations, evaluations)
         XCTAssertGreaterThan(desktop.windowReads, reads)
         XCTAssertEqual(applied.count, 1)
@@ -259,7 +252,7 @@ final class DisplayPlaybackMonitorTests: XCTestCase {
         monitor.setRules(PlaybackRules(onBattery: .pause))
         gate.signal()
         spin { !applied.isEmpty }
-        spin(until: { false }, timeout: 0.2)
+        spin(for: 0.2)
         XCTAssertEqual(applied, [["1": .run, "2": .run]], "only the latest rules' answer is applied")
     }
 

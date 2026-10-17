@@ -36,13 +36,6 @@ final class SceneBackgroundLoadTests: XCTestCase {
         return Fixtures.url("Scenes/layers")
     }
 
-    private func spin(until condition: () -> Bool, timeout: TimeInterval = 60) {
-        let deadline = Date().addingTimeInterval(timeout)
-        while !condition(), Date() < deadline {
-            RunLoop.main.run(until: Date().addingTimeInterval(0.005))
-        }
-    }
-
     /// Setting a wallpaper, up to its built content: the main thread answers throughout, and no
     /// heavy work reports a thread guard hit on it.
     func testBackgroundLoadNeverBlocksTheMainThread() throws {
@@ -54,10 +47,10 @@ final class SceneBackgroundLoadTests: XCTestCase {
         watchdog.start()
 
         let model = SceneContentLoader(wallpaper: wallpaper, loadsInBackground: true)
-        spin(until: { model.metalRevision > 0 && !model.isLoading })
+        spin(until: { model.metalRevision > 0 && !model.isLoading }, timeout: 60)
         var built: SceneMetalContent??
         model.contentAsync { built = .some($0) }
-        spin(until: { built != nil })
+        spin(until: { built != nil }, timeout: 60)
 
         let hangs = watchdog.stop()
         XCTAssertEqual(hangs, [], "\(directory.lastPathComponent)")
@@ -88,8 +81,8 @@ final class SceneBackgroundLoadTests: XCTestCase {
         model.currentWallpaper = try wallpaper(second)
         XCTAssertTrue(model.isLoading)
         gate.signal()
-        spin(until: { !model.isLoading && model.metalRevision > 0 })
-        spin(until: { false }, timeout: 0.2)
+        spin(until: { !model.isLoading && model.metalRevision > 0 }, timeout: 60)
+        spin(for: 0.2)
 
         let revision: Int = model.metalRevision
         XCTAssertEqual(revision, 1, "the superseded load committed too")
@@ -105,8 +98,8 @@ final class SceneBackgroundLoadTests: XCTestCase {
         let model = SceneContentLoader(wallpaper: try wallpaper(directory), loadsInBackground: true)
         model.reloadCurrentScene()
         model.reloadCurrentScene()
-        spin(until: { !model.isLoading && model.metalRevision > 0 })
-        spin(until: { false }, timeout: 0.2)
+        spin(until: { !model.isLoading && model.metalRevision > 0 }, timeout: 60)
+        spin(for: 0.2)
         let revision: Int = model.metalRevision
         XCTAssertGreaterThanOrEqual(revision, 1)
         XCTAssertLessThanOrEqual(revision, 3)
