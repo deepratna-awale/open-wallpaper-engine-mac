@@ -62,18 +62,20 @@ final class ParticleEmitterImageTests: XCTestCase {
         let points: [SIMD4<Int32>] = [SIMD4(-10, 20, 0x8040FF, 0), SIMD4(30, -40, 0xFFFFFF, 0)]
         var shape = ParticleEmitterShape()
         shape.kind = .image
-        let layer = SceneAffineTransform(linear: simd_float2x2(diagonal: SIMD2(2, 2)), translation: SIMD2(100, 50))
+        var step = ParticleEmitterStep()
+        step.image = SceneAffineTransform(linear: simd_float2x2(diagonal: SIMD2(2, 2)), translation: SIMD2(100, 50))
         for serial in UInt32(0)..<16 {
             var context = ParticleProgramContext()
             context.serial = serial
-            guard let emitted = ParticleProgramCPU.emit(image: points, shape: shape, image: layer, context: context) else {
+            guard let emitted = ParticleProgramCPU.emit(image: points, shape: shape, step: step, context: context) else {
                 return XCTFail("a spawn with points")
             }
             let first = emitted.position == SIMD2(80, 90)
             XCTAssertTrue(first || emitted.position == SIMD2(160, -30), "\(emitted.position)")
             XCTAssertEqual(emitted.color, first ? SIMD3(128, 64, 255) / 255 : SIMD3(repeating: 1))
+            XCTAssertEqual(emitted.velocity, .zero, "at rest without flag 0x40000")
         }
-        XCTAssertNil(ParticleProgramCPU.emit(image: [], shape: shape, image: layer, context: ParticleProgramContext()),
+        XCTAssertNil(ParticleProgramCPU.emit(image: [], shape: shape, step: step, context: ParticleProgramContext()),
                      "no points, no spawn")
     }
 
@@ -86,7 +88,7 @@ final class ParticleEmitterImageTests: XCTestCase {
         let texels = [UInt8](repeating: 0, count: 16 * 8 * 4).enumerated().map { index, _ in [UInt8(200), 100, 50, 128][index % 4] }
         texels.withUnsafeBytes { texture.replace(region: MTLRegionMake2D(0, 0, 16, 8), mipmapLevel: 0, withBytes: $0.baseAddress!, bytesPerRow: 64) }
         let target = ParticleEmitterImagePoints.targetSize(imageSize: SIMD2(16, 8))
-        let reduced = try XCTUnwrap(ParticleEmitterImagePoints.reduce(texture, uvExtent: SIMD2(1, 1), target: target,
+        let reduced = try XCTUnwrap(ParticleEmitterImagePoints.reduce(.init(texture: texture), target: target,
                                                                       device: device, queue: queue))
         XCTAssertEqual(target, SIMD2(4, 2))
         XCTAssertEqual(reduced, [UInt8]((0..<8).flatMap { _ in [UInt8(200), 100, 50, 128] }))

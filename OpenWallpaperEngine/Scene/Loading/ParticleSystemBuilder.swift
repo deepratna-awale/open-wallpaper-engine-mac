@@ -17,12 +17,6 @@ enum ParticleSystemBuilder {
         let emitters = Self.registeredEmitters(particleSystem.emitter ?? [], path: particlePath)
         let emitter = emitters.first
         let defaults = ParticleDefaults(pixelUnits: pixelUnits)
-        for flags in emitters.filter({ $0.name?.lowercased() == "layerimage" }).compactMap(\.flags)
-        where flags & 0x60000 != 0 {
-            // 0x20000 samples the layer again every second (0x140238d4f); 0x40000 moves the points
-            // with a puppet-warped layer's bones (0x1402397d3).
-            OWELog.error(.scene, "Particle system \(particlePath): layerimage flags \(String(flags, radix: 16)) (resampling, puppet bones) aren't supported")
-        }
         // Emitter rate: 10 a second (0x1401b8e59). Without an emitter nothing spawns.
         let rate = emitter.map { Float($0.rate ?? 10) } ?? 0
         let draw = rendererDraw(renderer, particleSystem: particleSystem)
@@ -157,11 +151,14 @@ enum ParticleSystemBuilder {
         switch shape.kind {
         case .image:
             // Defaults 0x1401b9930: flags 0x10000 (the image's colour), `offsetmin` "-5 -5 0" and
-            // `offsetmax` "5 5 0" in 2D, "0 0 0" in 3D. Its `speedmin` / `speedmax` (0.1, 0.2) only
-            // drive a puppet-warped layer's points, which aren't supported.
+            // `offsetmax` "5 5 0" in 2D, "0 0 0" in 3D, `speedmin` 0.1 and `speedmax` 0.2: the share
+            // of the layer's motion a spawn inherits with flag 0x40000.
             let flags = emitter.flags ?? 0x10000
             shape.takesImageColor = flags & 0x10000 != 0
+            shape.resamplesImage = flags & 0x20000 != 0
+            shape.inheritsLayerMotion = flags & 0x40000 != 0
             shape.offsetsRandomly = flags & 0x80000 != 0
+            shape.speed = SIMD2(Float(emitter.speedmin ?? 0.1), Float(emitter.speedmax ?? 0.2))
             shape.distanceMinimum = ParticleDefaults.vector(emitter.offsetmin, defaults.pick(SIMD3(-5, -5, 0), .zero))
             shape.distanceMaximum = ParticleDefaults.vector(emitter.offsetmax, defaults.pick(SIMD3(5, 5, 0), .zero))
             shape.directions = .zero
