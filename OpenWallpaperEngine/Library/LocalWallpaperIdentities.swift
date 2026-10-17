@@ -78,7 +78,7 @@ enum LocalWallpaperIdentities {
         for library in libraries {
             let folders = (try? FileManager.default.contentsOfDirectory(at: library, includingPropertiesForKeys: nil,
                                                                          options: [.skipsHiddenFiles])) ?? [] // missing library: none
-            for folder in folders where FileManager.default.fileExists(atPath: folder.appending(path: "project.json").path) {
+            for folder in folders where WEProject.exists(in: folder) {
                 _ = WallpaperSettingsIdentity.resolve(directory: folder, defaults: defaults, index: index)
             }
         }

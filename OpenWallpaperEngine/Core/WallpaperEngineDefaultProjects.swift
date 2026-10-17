@@ -41,7 +41,7 @@ enum WallpaperEngineDefaultProjects {
         let folders = try fileManager.contentsOfDirectory(at: source, includingPropertiesForKeys: [.isDirectoryKey],
                                                           options: [.skipsHiddenFiles])
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
-        for folder in folders where fileManager.fileExists(atPath: folder.appending(path: "project.json").path) {
+        for folder in folders where fileManager.fileExists(atPath: WEProject.url(in: folder).path) {
             let name = folder.lastPathComponent
             let type: String
             do {

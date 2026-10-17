@@ -15,10 +15,10 @@ extension WallpaperEngineLabels {
     /// can't be read (logged).
     static func load(wallpaperDirectory: URL, assets: URL? = WallpaperEngineAssets.directory,
                      languages: [String] = Locale.preferredLanguages) -> WallpaperEngineLabels {
-        let url = wallpaperDirectory.appending(path: "project.json")
+        let url = WEProject.url(in: wallpaperDirectory)
         var root: [String: Any]?
         do {
-            root = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
+            root = try WEProject.json(in: wallpaperDirectory)
         } catch {
             OWELog.error(.library, "\(url.path) can't be read, so its translations aren't used: \(error)")
         }

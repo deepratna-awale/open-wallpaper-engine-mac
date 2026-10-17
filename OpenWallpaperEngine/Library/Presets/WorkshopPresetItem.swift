@@ -99,7 +99,6 @@ enum WorkshopPresetItem {
     private static let valueTypes: Set<String> = ["bool", "slider", "combo", "color", "text", "textinput"]
 
     static func projectJSON(in folder: URL) -> [String: Any]? {
-        guard let data = try? Data(contentsOf: folder.appending(path: "project.json")) else { return nil }
-        return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        (try? WEProject.object(in: folder)) as? [String: Any]
     }
 }

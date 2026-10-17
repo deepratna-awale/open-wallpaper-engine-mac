@@ -47,7 +47,7 @@ struct WallpaperSettingsIdentity: Hashable {
 
     /// `resolve`, with the stored-settings names already read when many wallpapers are resolved.
     static func resolve(directory: URL, defaults: UserDefaults, index: LegacySettingsIndex?) -> WallpaperSettingsIdentity {
-        let projectURL = directory.appending(path: "project.json")
+        let projectURL = WEProject.url(in: directory)
         let projectData: Data?
         do {
             projectData = try Data(contentsOf: projectURL)

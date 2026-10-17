@@ -51,7 +51,7 @@ final class InstalledLibraryCache {
                 seen.insert(folder)
                 let id = listed.lastPathComponent
                 guard !(WorkshopCollection.isID(id) && listedIds.contains(id)),
-                      FileManager.default.fileExists(atPath: folder.appending(path: "project.json").path(percentEncoded: false))
+                      FileManager.default.fileExists(atPath: WEProject.url(in: folder).path(percentEncoded: false))
                 else { continue }
                 append(folder, id: id, to: &result, listedIds: &listedIds)
             }
@@ -99,7 +99,7 @@ final class InstalledLibraryCache {
     }
 
     private func entry(for folder: URL) -> Entry {
-        let projectModified = Self.modificationDate(of: folder.appending(path: "project.json"))
+        let projectModified = Self.modificationDate(of: WEProject.url(in: folder))
         let folderModified = Self.modificationDate(of: folder)
         // A preset whose base isn't installed yet is re-resolved each pass, so it plays once the base arrives.
         if let cached = entries[folder], cached.projectModified == projectModified,

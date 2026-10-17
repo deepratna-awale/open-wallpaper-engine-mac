@@ -653,8 +653,7 @@ class SteamCmdService: ObservableObject {
                 }
                 try self.trimPreviewCache(at: cacheRoot, keeping: workshopId)
 
-                let projectURL = sourcePath.appending(path: "project.json")
-                let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: projectURL))
+                let project = try WEProject.read(in: sourcePath)
                 self.finishPreview(workshopId, with: .success(WEWallpaper(using: project, where: sourcePath)), presentWhenReady: presentWhenReady)
             } catch {
                 self.finishPreview(workshopId, with: .failure(error), presentWhenReady: presentWhenReady)
