@@ -117,7 +117,7 @@ final class ShaderVariantCacheTests: XCTestCase {
             }
         }
         XCTAssertGreaterThan(count, 50)
-        let hash = hasher.finalize().map { String(format: "%02x", $0) }.joined()
+        let hash = Digest.hex(hasher.finalize())
         XCTAssertEqual(hash, Self.goldenCorpusHashes[ShaderVariantTranslator.revision],
                        "translated output changed: bump ShaderVariantTranslator.revision and record \(hash) for it")
     }

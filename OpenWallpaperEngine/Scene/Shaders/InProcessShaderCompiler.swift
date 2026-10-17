@@ -37,7 +37,7 @@ struct InProcessShaderCompiler: ShaderCompiler {
         var hasher = SHA256()
         hasher.update(data: Data("\(step)\u{0}\(stage.rawValue)\u{0}".utf8))
         hasher.update(data: Data(source.utf8))
-        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+        return Digest.hex(hasher.finalize())
     }
 
     func preprocess(_ source: String, stage: ShaderStage) throws -> String {
