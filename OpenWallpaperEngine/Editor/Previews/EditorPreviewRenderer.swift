@@ -7,7 +7,7 @@ import OWESceneEditing
 import UniformTypeIdentifiers
 
 /// Renders the Wallpaper Editor's previews of effects and particle systems
-/// (`EditorPreviewCache`), in the app's helper run (`ShaderPrewarmCommand`,
+/// (`EditorPreviewCache`), in the app's helper run (`HelperRunCommand`,
 /// `--render-editor-previews`): in its own process, never on the app's main or render thread.
 ///
 /// Each preview's small wallpaper (`EditorPreviewFolder`) is loaded by the real loader and drawn

@@ -14,7 +14,7 @@ enum MetalShaderCacheLaunch {
         guard let cache = MetalShaderCache.current else { return }
         let isolated = AppStorageLocation.current.isIsolated
         // A helper run starts while its app runs, which holds the cache: it only takes the lock.
-        let mayReset = !ShaderPrewarmCommand.isHelperRun(arguments: ProcessInfo.processInfo.arguments)
+        let mayReset = !HelperRunCommand.isHelperRun(arguments: ProcessInfo.processInfo.arguments)
         let outcome = cache.prepareForLaunch(lock: .process, stamp: stamp, mayReset: mayReset) {
             // An isolated copy's cache is its own, and only builds that take the lock use one.
             !isolated && otherProcessesRunning()

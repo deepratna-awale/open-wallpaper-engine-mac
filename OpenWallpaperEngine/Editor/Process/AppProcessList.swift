@@ -3,7 +3,7 @@ import Darwin
 
 /// The other processes running the app's executable, told apart by their bundle and launch
 /// arguments: Open Wallpaper Engine, the Wallpaper Editor (its own app, `AppBundleLayout`, or
-/// `--wallpaper-editor`), or a helper run (`ShaderPrewarmCommand`, `CrashWatcher`). Only processes
+/// `--wallpaper-editor`), or a helper run (`HelperRunCommand`, `CrashWatcher`). Only processes
 /// isolated as this one is count (`AppStorageLocation`): every isolated copy shares the bundle ids.
 enum AppProcessList {
     enum Kind: Equatable {
@@ -23,7 +23,7 @@ enum AppProcessList {
     static func classify(arguments: [String], environment: [String: String],
                          bundleIdentifier: String?) -> (kind: Kind, isolationTag: String?) {
         let tag = AppStorageLocation.isolationTag(environment: environment, arguments: arguments, isRunningTests: false)
-        if ShaderPrewarmCommand.isHelperRun(arguments: arguments) || arguments.contains(CrashWatcher.argument) {
+        if HelperRunCommand.isHelperRun(arguments: arguments) || arguments.contains(CrashWatcher.argument) {
             return (.helper, tag)
         }
         if AppLaunchMode.parse(arguments, bundleIdentifier: bundleIdentifier).isWallpaperEditor { return (.wallpaperEditor, tag) }
