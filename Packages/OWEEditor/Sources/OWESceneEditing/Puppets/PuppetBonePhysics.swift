@@ -296,12 +296,19 @@ public struct PuppetPhysicsSimulation: Sendable {
     /// by `delta` with the object at `objectWorld`. Nothing moves on the first frame. `adjust`
     /// changes a bone's matrix before its step (the blend rules, `PuppetBlendMath.adjust`).
     public mutating func step(locals: [simd_float4x4], parents: [Int?], delta: Float, objectWorld: simd_float4x4,
-                              adjust: ((Int, simd_float4x4, [simd_float4x4]) -> simd_float4x4)? = nil) -> [simd_float4x4] {
+                              adjust: ((Int, simd_float4x4, [simd_float4x4]) -> simd_float4x4)? = nil,
+                              ik: PuppetIKSolver? = nil) -> [simd_float4x4] {
         let scale = Self.meanScale(objectWorld)
         var models: [simd_float4x4] = []
         models.reserveCapacity(locals.count)
         var worlds: [simd_float4x4] = []
         for index in locals.indices {
+            // A chain bone keeps what its solver wrote; a chain's root solves once stepped.
+            if let held = ik?.heldModel(index) {
+                models.append(held)
+                worlds.append(objectWorld * held)
+                continue
+            }
             let parent = index < parents.count ? parents[index].flatMap { $0 < index ? $0 : nil } : nil
             var model = parent.map { models[$0] * locals[index] } ?? locals[index]
             if let adjust { model = adjust(index, model, models) }
@@ -314,6 +321,10 @@ public struct PuppetPhysicsSimulation: Sendable {
             }
             models.append(model)
             worlds.append(objectWorld * model)
+            if let ik {
+                ik.posed(bone: index, worlds: &models)
+                worlds = models.map { objectWorld * $0 }
+            }
         }
         previousWorlds = worlds
         return models
