@@ -150,7 +150,7 @@ struct VersionedInstallStore: Sendable {
         while let chunk = try handle.read(upToCount: 1 << 20), !chunk.isEmpty {
             hasher.update(data: chunk)
         }
-        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+        return Digest.hex(hasher.finalize())
     }
 
     /// Throws `ChecksumMismatch` unless `file`'s SHA-256 is `expected`.
