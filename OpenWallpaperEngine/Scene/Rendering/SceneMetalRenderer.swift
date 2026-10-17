@@ -2401,12 +2401,45 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         } else if additive {
             encoder.setRenderPipelineState(target.pipelines.additive)
         }
+        if effectOutput == nil { encodeTextBackground(entry, uniform: uniform, encoder: encoder) }
         encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
         encoder.setFragmentBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
         encoder.setFragmentTexture(effectOutput ?? textureFrame.texture, index: 0)
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
         if draw.placement != nil || additive { encoder.setRenderPipelineState(target.pipelines.normal) }
     }
+
+    /// A text layer's `opaquebackground` box, when it is drawn as its own quad (no effects): the
+    /// layer's quad in `backgroundcolor` (times `backgroundbrightness` where WE applies
+    /// brightness), with the layer's opacity, before its glyphs, which then draw over it with that
+    /// opacity too. That is WE's buffer, cleared to the colour with the object's alpha and the
+    /// glyphs drawn into it with that alpha (0x140257c30), then composited.
+    private func encodeTextBackground(_ entry: PreparedLayer, uniform: LayerUniform, encoder: MTLRenderCommandEncoder) {
+        guard let authored = entry.layer.text, entry.layer.weEffects.isEmpty else { return }
+        let text = scripts.text(authored, of: entry.layer.id).text
+        guard text.opaqueBackground, let white = solidWhiteTexture else { return }
+        var box = uniform
+        let brightness = renderSettings.appliesBrightness ? max(text.backgroundBrightness, 0) : 1
+        box.color = SIMD4(text.backgroundColor * brightness, uniform.color.w)
+        box.effects.x = 1
+        box.uvOrigin = .zero
+        box.uvAxisX = SIMD2(1, 0)
+        box.uvAxisY = SIMD2(0, 1)
+        encoder.setVertexBytes(&box, length: MemoryLayout<LayerUniform>.stride, index: 0)
+        encoder.setFragmentBytes(&box, length: MemoryLayout<LayerUniform>.stride, index: 0)
+        encoder.setFragmentTexture(white, index: 0)
+        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+    }
+
+    /// A 1 × 1 opaque white texture, for quads drawn in a flat colour.
+    private lazy var solidWhiteTexture: MTLTexture? = {
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)
+        descriptor.usage = [.shaderRead]
+        guard let texture = device.makeTexture(descriptor: descriptor) else { return nil }
+        var white: [UInt8] = [255, 255, 255, 255]
+        texture.replace(region: MTLRegionMake2D(0, 0, 1, 1), mipmapLevel: 0, withBytes: &white, bytesPerRow: 4)
+        return texture
+    }()
 
     // MARK: - Detail layers at the output's backing pixels (`SceneNativeDetailLayers`)
 
@@ -3084,7 +3117,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                 pixelsPerUnit: Float) -> (frame: RenderTextureFrame, baseSize: SIMD2<Float>) {
         guard let authored = entry.layer.text else { return (textureFrame(for: entry), boxSize) }
         let scripted = scripts.text(authored, of: entry.layer.id)
-        return makeTextFrame(scripted.text, value: scripted.value, pointSize: scripted.pointSize, boxSize: boxSize,
+        var text = scripted.text
+        // Without effects the box is its own quad under the glyphs (`encodeTextBackground`).
+        if text.opaqueBackground, entry.layer.weEffects.isEmpty { text.drawsBackgroundSeparately = true }
+        return makeTextFrame(text, value: scripted.value, pointSize: scripted.pointSize, boxSize: boxSize,
                              pixelsPerUnit: pixelsPerUnit, layerID: entry.layer.id,
                              fill: !scripted.text.rastersInColor && entry.layer.weEffects.isEmpty ? nil : textFill(entry))
             ?? (textureFrame(for: entry), boxSize)
