@@ -8,7 +8,7 @@ import OWESceneEditing
 /// animated properties of the selected layer (every layer's with none selected) on the left, their
 /// keyframes on a time ruler or, in Curves, the focused track's curves. Space plays and pauses,
 /// ←/→ step a frame, Delete removes keyframes, ⌘C/⌘X/⌘V copy, cut and paste at the playhead,
-/// ⌘A selects every keyframe.
+/// ⌘A selects every keyframe, Escape cancels a drag or clears the selection.
 struct TimelinePanel: View {
     @Environment(\.appAccentColor) private var accentColor
     @ObservedObject var timeline: SceneTimelineEditor
@@ -340,7 +340,8 @@ struct TimelinePanel: View {
         case .delete, .deleteForward:
             timeline.deleteSelection(actionName: T("Delete Keyframes"))
         case .escape:
-            timeline.selection = []
+            // Cancels a drag in progress, else clears the selection.
+            if timeline.isPreviewing { timeline.cancelPreview() } else { timeline.selection = [] }
         default:
             return .ignored
         }
