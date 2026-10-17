@@ -1,0 +1,39 @@
+546 (B13): FBX import into WE's editor (WE 2.8.0.42)
+
+## Source
+- **skinned2.fbx** (make_skinned2_fbx.py, Blender 5.2.2):
+  - Armature "Rig" (root › arm); a box skinned to root (lower half) / arm (upper half); a static, unskinned mesh "Plinth".
+  - Two actions exported as takes: **wave** (arm rotates 0 › 60° › 0 over 30 frames) and **walk** (root moves +2 in X over 30 frames).
+
+## Editor steps (project p540_var; editor_import_dialog.png)
+- **Edit › Import Model.** The import dialog only offers material/texture settings.
+- **Configure Model (Model Editor):**
+  - **Animation:** "Animations" lists **Rig|walk** and **Rig|wave** (one per FBX take). Select Rig|walk › **Add Clip**; Clip options: Name, Start 0, End 30, Frame offset 0, Match loop on, **Motion root bone = root**.
+  - **Attachments:** Add Attachment, name "hand_tip", Bone = **arm**.
+  - **Events:** Add Event. **Event options stayed empty: nothing was created.** The event needs a different flow, probably a clip selected first, so it is not done.
+  - **Constraints:** the bone list has arm / Plinth / Rig / root / RootNode. arm › Simulation preset **Gravity rotation**.
+  - OK › Save.
+
+## models/skinned2.json (copied here)
+```
+editor.animationmapping: {"Rig|walk": 41, "Rig|wave": 42}
+editor.attachments: [{"bone":"arm","id":27,"name":"hand_tip","transform":"1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"}]
+editor.clips: [{"animation":"Rig|walk","start":0,"end":30,"frameoffset":0,"id":26,"matchloop":true,
+                "motionflags":43008,"name":"Rig|walk (Clip 0)","rootmotion":"root"}]
+editor.constraints: [{"bone":"arm","config":{...full puppet-style constraint block, preset "gravityrotation", ge:true, la:true, lamin/lamax ±π/2 on z, r:true, re:true, ...}}]
+normals:true, skinning:true, tangentspace:true
+```
+- **Animation ids:** imported animations get ids **41/42** (animationmapping), and the added clip gets id **26**.
+- **Constraint block:** the same key set as puppet bone constraints (533/534), stored per bone under `editor.constraints`.
+- **Files:** skinned2.mdl (22802 bytes, MDLV0023) and skinned2.fbx (the source).
+
+## Default-project sources recompiled by the editor (recompiled/ and shipped/ for comparison)
+The sources are in defaultprojects: audiophile/models/audiophile/{bars,flow,glow}.obj, grid.obj, arsenal/models/pistols/pistols.fbx, and demon_core / dna_fragment .fbx. **There is no dome.obj.**
+
+| model | shipped .mdl | recompiled by WE 2.8 |
+|---|---|---|
+| bars.obj | MDLV0004, 13504 B | **MDLV0023, 19684 B** |
+| flow.obj | MDLV0004, 4524 B | **MDLV0023, 9124 B** |
+| pistols.fbx | MDLV0014, 570179 B | **MDLV0023, 495729 B** |
+
+- The model json for the recompiled files: bars/flow `{normals, tangentspace}`-style, 48 B; pistols 100 B.
