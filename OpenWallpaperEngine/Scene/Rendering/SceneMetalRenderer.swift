@@ -559,11 +559,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Adaptive rate and idle skipping (`FramePacing`, WP2-C): the instance sets its limits and
     /// ticks the displays at its rate; an idle frame returns before anything is encoded.
     var framePacing = FramePacing()
-    /// Off with `OWE_IDLE_SKIP=0` (comparisons): every frame is drawn, the rate still adapts.
     /// Bumped when a video layer has a new frame (`SceneLayerFrameInputs.videoRevision`).
     var videoRevision: UInt64 = 0
     var analysedTime: Double = 0
+    /// Off with `OWE_IDLE_SKIP=0` (comparisons, Debug builds): every frame is drawn, the rate still adapts.
+    #if DEBUG
     var skipsIdleFrames = ProcessInfo.processInfo.environment["OWE_IDLE_SKIP"] != "0"
+    #else
+    var skipsIdleFrames = true
+    #endif
     /// Frames encoded so far: a shared scene's displays present only a new one.
     var encodedFrames: UInt64 = 0
     var pacedParallax = SIMD2<Float>(0.5, 0.5)
@@ -575,8 +579,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     var analysedLanded = 0
     /// `scripts.userVisibilityRevision` the analysis last saw.
     var analysedUserVisibility = 0
-    /// The blur-like buffer divisor (1, 2, 4) over the slider's (`OWE_BLUR_DIVISOR` for comparisons).
+    /// The blur-like buffer divisor (1, 2, 4) over the slider's (`OWE_BLUR_DIVISOR` for comparisons, Debug
+    /// builds).
+    #if DEBUG
     var blurDivisorOverride = ProcessInfo.processInfo.environment["OWE_BLUR_DIVISOR"].flatMap(Int.init)
+    #else
+    var blurDivisorOverride: Int? = nil
+    #endif
     func effectResolution(of layerID: String) -> EffectResolutionPolicy {
         let divisor = blurDivisorOverride ?? framePacing.limits.policy.blurResolutionDivisor
         guard divisor > 1 else { return .full }
@@ -754,12 +763,20 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             || (hidesStillLayers && (layer.text != nil || stillLayerIDs.contains(layer.id)))
     }
 
-    /// Off with `OWE_COMPOSITE_SKIP=0` (comparisons): the composite always runs.
+    /// Off with `OWE_COMPOSITE_SKIP=0` (comparisons, Debug builds): the composite always runs.
+    #if DEBUG
     var skipsIdentityComposite = ProcessInfo.processInfo.environment["OWE_COMPOSITE_SKIP"] != "0"
+    #else
+    var skipsIdentityComposite = true
+    #endif
     /// Frames drawn straight into their output, the composite skipped (tests, diagnostics).
     var compositesSkipped = 0
-    /// Off with `OWE_NATIVE_DETAIL=0` (comparisons): every layer draws in the scene pass.
+    /// Off with `OWE_NATIVE_DETAIL=0` (comparisons, Debug builds): every layer draws in the scene pass.
+    #if DEBUG
     var promotesDetailLayers = ProcessInfo.processInfo.environment["OWE_NATIVE_DETAIL"] != "0"
+    #else
+    var promotesDetailLayers = true
+    #endif
     /// Layers the last frame drew at the output's backing pixels (`SceneNativeDetailLayers`).
     var promotedDetailLayers = 0
 
