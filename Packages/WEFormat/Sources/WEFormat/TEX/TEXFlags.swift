@@ -18,7 +18,7 @@ public struct TEXFlags: OptionSet, Equatable {
     /// data isn't a `.tex`.
     public init?(texData data: Data) {
         // The format word comes first, then the flags.
-        guard let word = TEXImageFormat.texiWord(1, in: data) else { return nil }
+        guard let word = TEXHeader.texiWord(1, in: data) else { return nil }
         rawValue = word
     }
 

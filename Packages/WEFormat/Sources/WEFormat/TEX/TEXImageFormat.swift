@@ -11,7 +11,7 @@ public struct TEXImageFormat: RawRepresentable, Equatable {
 
     /// Reads the format from a `.tex` file. Nil when the data isn't a `.tex`.
     public init?(texData data: Data) {
-        guard let word = Self.texiWord(0, in: data) else { return nil }
+        guard let word = TEXHeader.texiWord(0, in: data) else { return nil }
         rawValue = word
     }
 
@@ -37,16 +37,4 @@ public struct TEXImageFormat: RawRepresentable, Equatable {
     /// texture loads as stored (`isChannelReduced`, `isBlockCompressed`), else `FORMAT_RGBA8888`
     /// (0), the RGBA it is expanded to.
     public var formatComboValue: Int { isChannelReduced || isBlockCompressed ? Int(rawValue) : 0 }
-
-    /// The `index`th 32-bit word after the `TEXI0001` tag of a `.tex` file (`TEXV0005\0TEXI0001\0`,
-    /// format, flags…); nil when the data isn't a `.tex`.
-    public static func texiWord(_ index: Int, in data: Data) -> UInt32? {
-        let bytes = [UInt8](data.prefix(64))
-        guard let texi = (0..<max(bytes.count - 4, 0)).first(where: { bytes[$0..<$0 + 4] == [0x54, 0x45, 0x58, 0x49] }),
-              let end = bytes[texi...].firstIndex(of: 0) else { return nil }
-        let offset = end + 1 + 4 * index
-        guard offset + 4 <= bytes.count else { return nil }
-        return UInt32(bytes[offset]) | UInt32(bytes[offset + 1]) << 8
-            | UInt32(bytes[offset + 2]) << 16 | UInt32(bytes[offset + 3]) << 24
-    }
 }

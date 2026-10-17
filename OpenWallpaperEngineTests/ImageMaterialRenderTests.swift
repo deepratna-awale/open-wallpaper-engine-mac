@@ -285,8 +285,8 @@ final class ImageMaterialRenderTests: XCTestCase {
     func testTexFlagsAreReadFromTheHeader() {
         var bytes = Array("TEXV0005\0TEXI0001\0".utf8)
         bytes += [7, 0, 0, 0, 2, 0, 0, 0, 16, 0, 0, 0]
-        XCTAssertEqual(ImageMaterialPlanBuilder.texFlags(Data(bytes)), 2)
-        XCTAssertNil(ImageMaterialPlanBuilder.texFlags(Data("PNG".utf8)))
+        XCTAssertEqual(TEXHeader.texiWord(1, in: Data(bytes)), 2)
+        XCTAssertNil(TEXHeader.texiWord(1, in: Data("PNG".utf8)))
     }
 
     /// A solid layer's `flat` material has no image and no scene blend; a blend mode on it is

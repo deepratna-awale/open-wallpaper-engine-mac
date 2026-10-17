@@ -1,6 +1,6 @@
 import Foundation
 
-/// Writes a single-image `.tex` (`TEXFileHeader` has the layout) with no FreeImage picture: in
+/// Writes a single-image `.tex` (`TEXHeader` has the layout), raw texels unless `freeImageFormat` says the mipmaps are pictures: in
 /// WE's newest container, `TEXB0004` with no video, as WE's mobile export writes the textures it
 /// converts, or in `TEXB0003`, as WE's editor writes a painted effect mask (`effectMask`).
 public enum TEXWriter {
@@ -34,9 +34,11 @@ public enum TEXWriter {
         public var imageWidth: Int
         public var imageHeight: Int
         public var colorWord: UInt32
+        /// -1 for raw texels, else the FreeImage format of the pictures the mipmaps are (13, PNG).
+        public var freeImageFormat: Int32
         public var mipmaps: [Mipmap]
 
-        public init(format: UInt32, flags: UInt32, textureWidth: Int, textureHeight: Int, imageWidth: Int, imageHeight: Int, colorWord: UInt32, mipmaps: [Mipmap]) {
+        public init(format: UInt32, flags: UInt32, textureWidth: Int, textureHeight: Int, imageWidth: Int, imageHeight: Int, colorWord: UInt32, freeImageFormat: Int32 = -1, mipmaps: [Mipmap]) {
             self.format = format
             self.flags = flags
             self.textureWidth = textureWidth
@@ -44,31 +46,23 @@ public enum TEXWriter {
             self.imageWidth = imageWidth
             self.imageHeight = imageHeight
             self.colorWord = colorWord
+            self.freeImageFormat = freeImageFormat
             self.mipmaps = mipmaps
         }
     }
 
     public static func data(_ texture: Texture, container: Container = .b0004) -> Data {
-        var data = Data()
-        func word(_ value: UInt32) { withUnsafeBytes(of: value.littleEndian) { data.append(contentsOf: $0) } }
-        func tag(_ text: String) { data.append(contentsOf: Array(text.utf8) + [0]) }
-        tag("TEXV0005")
-        tag("TEXI0001")
-        for value in [texture.format, texture.flags, UInt32(texture.textureWidth), UInt32(texture.textureHeight),
-                      UInt32(texture.imageWidth), UInt32(texture.imageHeight), texture.colorWord] { word(value) }
-        tag(container == .b0004 ? "TEXB0004" : "TEXB0003")
-        word(1)
-        word(UInt32(bitPattern: -1))
-        if container == .b0004 { word(0) }
-        word(UInt32(texture.mipmaps.count))
+        var writer = TEXContainerWriter(header: TEXHeader(
+            format: texture.format, flags: texture.flags, textureWidth: texture.textureWidth,
+            textureHeight: texture.textureHeight, imageWidth: texture.imageWidth, imageHeight: texture.imageHeight,
+            colorWord: texture.colorWord, containerVersion: container == .b0004 ? 4 : 3,
+            freeImageFormat: texture.freeImageFormat))
+        writer.word(UInt32(texture.mipmaps.count))
         for mipmap in texture.mipmaps {
-            for value in [mipmap.width, mipmap.height] { word(UInt32(value)) }
-            word(mipmap.compression)
-            word(UInt32(mipmap.uncompressedSize))
-            word(UInt32(mipmap.stored.count))
-            data.append(mipmap.stored)
+            writer.mipmap(width: mipmap.width, height: mipmap.height, compression: mipmap.compression,
+                          uncompressedSize: mipmap.uncompressedSize, stored: mipmap.stored)
         }
-        return data
+        return writer.data
     }
 
     /// An effect mask as WE's editor writes one (`materials/masks/<effect>_mask_<hash>.tex` in

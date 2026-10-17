@@ -11,7 +11,7 @@ extension EditorTEXEncoder {
     func texture(_ base: Data, withVariants options: [TextureVariantInput]) throws -> Data {
         let baseTexture = try Self.variantBaseTexture(base)
         var layout = try Self.layout(baseTexture)
-        if layout.header.optionCount > 0 {
+        if layout.header.variantCount > 0 {
             // Variants already compiled in are replaced: the base without them.
             guard let plain = TEXVariantResolver.resolve(baseTexture, enabled: [:]) else { throw TextureVariantError.unsupportedTexture }
             layout = try Self.layout(plain)
@@ -39,12 +39,9 @@ extension EditorTEXEncoder {
                                       hasCompiledVariants: false)
         }
         // The header alone, in the first bytes; the mipmaps aren't read.
-        guard var reader = TEXVariantReader(data.prefix(256)), let header = reader.header() else { return nil }
-        reader.cursor = 18 + 4 * 4
-        guard let width = reader.word(), let height = reader.word() else { return nil }
-        let isVideo = header.flags & TEXFlags.video.rawValue != 0
-        return TextureVariantBase(width: Int(width), height: Int(height), isVideo: isVideo,
-                                  allowsAlphaBlend: !isVideo && header.format == 0, hasCompiledVariants: header.optionCount > 0)
+        guard let header = TEXHeader([UInt8](data.prefix(256))) else { return nil }
+        return TextureVariantBase(width: header.imageWidth, height: header.imageHeight, isVideo: header.isVideo,
+                                  allowsAlphaBlend: !header.isVideo && header.format == 0, hasCompiledVariants: header.variantCount > 0)
     }
 
     // MARK: Pieces
@@ -83,17 +80,11 @@ extension EditorTEXEncoder {
             width /= 2
             height /= 2
         }
-        let raw = TEXWriter.data(TEXWriter.Texture(format: 0, flags: TextureImportOptions().texFlags(), textureWidth: image.width,
-                                                   textureHeight: image.height, imageWidth: image.width, imageHeight: image.height,
-                                                   colorWord: 0xFF00_0000, mipmaps: mipmaps))
-        // TEXWriter writes FreeImage format -1; the container holds PNGs.
-        var container = raw
-        guard var reader = TEXVariantReader(raw), let offset = reader.header()?.containerOffset else {
-            throw TextureVariantError.unsupportedTexture
-        }
-        let word = offset + "TEXB0004".utf8.count + 1 + 4
-        container.replaceSubrange(word..<(word + 4), with: withUnsafeBytes(of: TEXVariantWriter.pngFreeImageFormat.littleEndian) { Array($0) })
-        return container
+        // The container holds PNGs.
+        return TEXWriter.data(TEXWriter.Texture(format: 0, flags: TextureImportOptions().texFlags(), textureWidth: image.width,
+                                                textureHeight: image.height, imageWidth: image.width, imageHeight: image.height,
+                                                colorWord: 0xFF00_0000, freeImageFormat: TEXVariantWriter.pngFreeImageFormat,
+                                                mipmaps: mipmaps))
     }
 
     /// An option's file as a variant-free texture of `layout`; incompatible when it isn't of the
