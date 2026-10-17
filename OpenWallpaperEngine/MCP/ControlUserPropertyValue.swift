@@ -1,5 +1,6 @@
 import Foundation
 import OWEControlProtocol
+import OWESceneEditing
 
 /// A user property's new value from the control channel, checked against the property as WE's
 /// Details panel would accept it, and written the way the panel stores it (a WE value string).
@@ -72,7 +73,7 @@ enum ControlUserPropertyValue {
             if trimmed.hasPrefix("#"), trimmed.count == 7, let rgb = Int(trimmed.dropFirst(), radix: 16) {
                 components = [Double((rgb >> 16) & 0xFF) / 255, Double((rgb >> 8) & 0xFF) / 255, Double(rgb & 0xFF) / 255]
             } else {
-                let parts = trimmed.split(whereSeparator: { $0 == " " || $0 == "," }).map { Double($0) }
+                let parts = SceneVector.tokens(trimmed).map { Double($0) }
                 if parts.count == 3, parts.allSatisfy({ $0 != nil }) { components = parts.compactMap { $0 } }
             }
         case .array(let items):

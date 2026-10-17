@@ -144,4 +144,13 @@ final class SceneEditOverlayTests: XCTestCase {
         XCTAssertEqual(SceneVector.components(.string("1.00000 2.5 3")), [1, 2.5, 3])
         XCTAssertEqual(SceneVector.components(.object(["x": .number(1), "y": .number(2)])), [1, 2])
     }
+
+    /// WE's vector text splits at spaces and commas (tabs and newlines too where asked); a token
+    /// that isn't a number is skipped by `numbers`.
+    func testVectorTextTokensAndNumbers() {
+        XCTAssertEqual(SceneVector.tokens(" 1, 2  x\t3"), ["1", "2", "x\t3"])
+        XCTAssertEqual(SceneVector.tokens("1\t2\n3,4", separatedBy: .whitespaceAndCommas), ["1", "2", "3", "4"])
+        XCTAssertEqual(SceneVector.numbers("1 x 2,3"), [1, 2, 3])
+        XCTAssertEqual(SceneVector.floats("0.1 y"), [Float(0.1)])
+    }
 }

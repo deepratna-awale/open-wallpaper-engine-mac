@@ -1,4 +1,5 @@
 import Foundation
+import OWESceneEditing
 
 /// A text object's font-effect fields as scene.json authors them: the `outline`, `blur` and
 /// `dropshadow` switches with their sizes and colours (and `msdf`, which only chooses WE's
@@ -61,7 +62,7 @@ struct WETextEffectFields: Decodable, Equatable {
 
     private static func numbers(_ text: String?) -> [Float]? {
         guard let text else { return nil }
-        let values = text.split(whereSeparator: { $0 == " " || $0 == "," }).compactMap { Float($0) }
+        let values = SceneVector.floats(text)
         return values.isEmpty ? nil : values
     }
 

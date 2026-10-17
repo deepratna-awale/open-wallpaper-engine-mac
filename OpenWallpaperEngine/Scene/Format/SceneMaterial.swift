@@ -1,4 +1,5 @@
 import Foundation
+import OWESceneEditing
 
 struct WEModel: Codable {
     var autosize: Bool?
@@ -88,8 +89,7 @@ struct WEMaterialPass: Decodable {
     }
 
     private static func firstNumber(_ text: String) -> Double? {
-        text.split(whereSeparator: { $0 == " " || $0 == "," || $0 == "\t" || $0 == "\n" })
-            .first.flatMap { Double($0) }
+        SceneVector.tokens(text, separatedBy: .whitespaceAndCommas).first.flatMap { Double($0) }
     }
 }
 

@@ -1,4 +1,5 @@
 import Foundation
+import OWESceneEditing
 
 /// Authored scene.json values in WE's forms (a number, a flag, `"1 0.5 0"` for vectors and
 /// colours, text) as the values a bound property holds for scripts. `sceneScriptBinding.js` reads
@@ -6,7 +7,7 @@ import Foundation
 enum SceneScriptSceneValue {
     /// The numbers of WE's vector text, or nil when a part is not a number (or there is none).
     static func numbers(in text: String) -> [Double]? {
-        let parts = text.split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" || $0 == "," })
+        let parts = SceneVector.tokens(text, separatedBy: .whitespaceAndCommas)
         guard !parts.isEmpty else { return nil }
         var numbers: [Double] = []
         numbers.reserveCapacity(parts.count)

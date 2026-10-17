@@ -8,7 +8,7 @@ public enum SceneVector {
         guard let value else { return [] }
         switch value {
         case .string(let text):
-            return text.split(whereSeparator: { $0 == " " || $0 == "," }).compactMap { Double($0) }
+            return numbers(text)
         case .number(let number):
             return [number]
         case .array(let values):
@@ -18,6 +18,32 @@ public enum SceneVector {
         default:
             return []
         }
+    }
+
+    /// Where WE's vector text splits: spaces and commas, or also tabs and newlines.
+    public enum Separators: Sendable {
+        case spacesAndCommas
+        case whitespaceAndCommas
+    }
+
+    /// The tokens of WE's `"x y z"` text, the empty ones between separators dropped.
+    public static func tokens(_ text: String, separatedBy separators: Separators = .spacesAndCommas) -> [Substring] {
+        switch separators {
+        case .spacesAndCommas:
+            return text.split(whereSeparator: { $0 == " " || $0 == "," })
+        case .whitespaceAndCommas:
+            return text.split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" || $0 == "," })
+        }
+    }
+
+    /// The numbers of WE's `"x y z"` text; a token that isn't a number is skipped.
+    public static func numbers(_ text: String) -> [Double] {
+        tokens(text).compactMap { Double($0) }
+    }
+
+    /// `numbers` read as `Float`s (each token parsed as a Float, not rounded from a Double).
+    public static func floats(_ text: String) -> [Float] {
+        tokens(text).compactMap { Float($0) }
     }
 
     /// `components` padded with `fallback`'s to its length.

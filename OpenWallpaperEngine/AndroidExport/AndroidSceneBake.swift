@@ -94,7 +94,7 @@ enum AndroidSceneBake {
     /// A WE value string as scene.json writes it: one number as a number, a vector as its
     /// components' text, space-separated; nil when it isn't numbers.
     static func literal(_ value: String) -> Any? {
-        let tokens = value.split(whereSeparator: { $0 == " " || $0 == "," }).map(String.init)
+        let tokens = SceneVector.tokens(value).map(String.init)
         let components = tokens.compactMap { Double($0) }
         guard !components.isEmpty, components.count == tokens.count else { return nil }
         if components.count == 1 { return components[0] }
