@@ -152,6 +152,8 @@ map:
   "OpenWallpaperEngine/Scene/Shaders/**": ["@scene"]
   "OpenWallpaperEngine/Scene/Format/**": ["@scene", "@script", "WallpaperAuthorLocalization*", "MobilePackage*", "MobileFormat*", "DepthMask*", "EditorTEXEncoder*"]
   "OpenWallpaperEngine/Scene/Loading/**": ["@scene", "@script", "@audio"]
+  "OpenWallpaperEngine/Scene/Plans/**": ["@scene", "@script", "@audio"]
+  "OpenWallpaperEngine/Scene/Textures/**": ["@scene", "@script", "@audio"]
   "OpenWallpaperEngine/Scene/Values/**": ["@scene", "@script"]
   "OpenWallpaperEngine/Scene/Prewarm/**": ["Shader*", "UpdateShaderPrewarmer*"]
   "OpenWallpaperEngine/Scene/UI/**": ["Scene*", "UserProperty*", "WallpaperProperty*", "WallpaperAuthorLocalization*", "WallpaperEngineLabels*", "NumericSlider*", "LivePhoto*", "ScreenSaver*"]
