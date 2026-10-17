@@ -38,28 +38,9 @@ struct MP4Box {
 
     /// Parses the box at `offset`; returns it with its size in bytes.
     static func parse(_ data: Data, at offset: Int) throws -> (MP4Box, Int) {
-        let remaining = data.count - offset
-        guard remaining >= 8 else { throw VideoRepairError.malformed("truncated box header at \(offset)") }
-        let type = data.mp4FourCC(at: offset + 4)
-        let size32 = data.mp4UInt32(at: offset)
-        var header = 8
-        var size: Int
-        switch size32 {
-        case 0:
-            size = remaining
-        case 1:
-            guard remaining >= 16 else { throw VideoRepairError.malformed("truncated large box header of \(type)") }
-            let size64 = data.mp4UInt64(at: offset + 8)
-            guard size64 <= UInt64(Int.max) else { throw VideoRepairError.malformed("box \(type) too large") }
-            size = Int(size64)
-            header = 16
-        default:
-            size = Int(size32)
-        }
-        guard size >= header, size <= remaining else {
-            throw VideoRepairError.malformed("box \(type) at \(offset) claims \(size) bytes, \(remaining) remain")
-        }
-        let payload = data.mp4Bytes((offset + header)..<(offset + size))
+        let place = try Header.read(data, at: offset, end: data.count)
+        let type = place.type, size = place.box.count
+        let payload = data.mp4Bytes(place.payload)
         guard let fixed = childOffset(of: type) else {
             return (MP4Box(type: type, body: payload, children: nil), size)
         }
@@ -103,6 +84,65 @@ struct MP4Box {
         guard children != nil else { return }
         for index in children!.indices where children![index].type == first {
             try children![index].updateDescendants(Array(path.dropFirst()), update)
+        }
+    }
+}
+
+extension MP4Box {
+    /// Where a box is in its data, read from its header alone, so finding one box copies nothing
+    /// (a movie's `mdat` is most of the file). Offsets are relative to the data's start.
+    struct Header {
+        var type: String
+        /// The whole box, header included.
+        var box: Range<Int>
+        /// Its contents after the header.
+        var payload: Range<Int>
+
+        /// The header of the box at `offset`, which must end by `end` (a size of 0 runs to `end`).
+        static func read(_ data: Data, at offset: Int, end: Int) throws -> Header {
+            let remaining = end - offset
+            guard remaining >= 8 else { throw VideoRepairError.malformed("truncated box header at \(offset)") }
+            let type = data.mp4FourCC(at: offset + 4)
+            let size32 = data.mp4UInt32(at: offset)
+            var header = 8
+            var size: Int
+            switch size32 {
+            case 0:
+                size = remaining
+            case 1:
+                guard remaining >= 16 else { throw VideoRepairError.malformed("truncated large box header of \(type)") }
+                let size64 = data.mp4UInt64(at: offset + 8)
+                guard size64 <= UInt64(Int.max) else { throw VideoRepairError.malformed("box \(type) too large") }
+                size = Int(size64)
+                header = 16
+            default:
+                size = Int(size32)
+            }
+            guard size >= header, size <= remaining else {
+                throw VideoRepairError.malformed("box \(type) at \(offset) claims \(size) bytes, \(remaining) remain")
+            }
+            return Header(type: type, box: offset..<(offset + size), payload: (offset + header)..<(offset + size))
+        }
+
+        /// The consecutive boxes filling `range` of `data`, up to the first malformed one.
+        static func sequence(_ data: Data, in range: Range<Int>) -> [Header] {
+            var headers: [Header] = []
+            var offset = range.lowerBound
+            while offset + 8 <= range.upperBound, let header = try? read(data, at: offset, end: range.upperBound) {
+                headers.append(header)
+                offset = header.box.upperBound
+            }
+            return headers
+        }
+
+        /// The first box of `type` among the boxes filling `range` of `data`, before any malformed one.
+        static func first(_ type: String, in data: Data, range: Range<Int>) -> Header? {
+            var offset = range.lowerBound
+            while offset + 8 <= range.upperBound, let header = try? read(data, at: offset, end: range.upperBound) {
+                if header.type == type { return header }
+                offset = header.box.upperBound
+            }
+            return nil
         }
     }
 }
