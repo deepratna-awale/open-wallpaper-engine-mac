@@ -81,4 +81,79 @@ public protocol EditorTextureEncoding: Sendable {
     func spriteSheet(_ frames: [TextureImportFrame], options: TextureImportOptions) throws -> (data: Data, size: SIMD2<Double>)
     /// An MP4 as a video texture (WE 2.2's video image layer); returns the video's size.
     func video(_ url: URL) throws -> (data: Data, size: SIMD2<Double>)
+    /// `base` (a `.tex`, or a PNG or JPEG) with texture variants compiled in (`TextureVariantDocument`).
+    func texture(_ base: Data, withVariants options: [TextureVariantInput]) throws -> Data
+    /// What the texture `data` lets its variants be.
+    func variantBase(_ data: Data) -> TextureVariantBase?
+}
+
+/// One option of a texture's variants as the `.tex` writer takes it (`TextureVariantDocument.compiledOptions`).
+public struct TextureVariantInput: Sendable {
+    public var group: UInt32
+    public var id: UInt32
+    public var alphaBlend: Bool
+    /// The option record's condition JSON (`TextureVariantDocument.Condition.compiledJSON`); `{}`
+    /// for an option without one, which is never on.
+    public var condition: String
+    /// The option's image or video file.
+    public var file: Data
+
+    public init(group: UInt32, id: UInt32, alphaBlend: Bool, condition: String, file: Data) {
+        self.group = group
+        self.id = id
+        self.alphaBlend = alphaBlend
+        self.condition = condition
+        self.file = file
+    }
+}
+
+/// What a texture lets its variants be: its picture's size, whether it is a video, whether an
+/// option can be alpha-blended (WE's `variantallowcomplexblend`: RGBA8888), whether the `.tex`
+/// already has variants compiled in.
+public struct TextureVariantBase: Hashable, Sendable {
+    public var width: Int
+    public var height: Int
+    public var isVideo: Bool
+    public var allowsAlphaBlend: Bool
+    public var hasCompiledVariants: Bool
+
+    public init(width: Int, height: Int, isVideo: Bool, allowsAlphaBlend: Bool, hasCompiledVariants: Bool) {
+        self.width = width
+        self.height = height
+        self.isVideo = isVideo
+        self.allowsAlphaBlend = allowsAlphaBlend
+        self.hasCompiledVariants = hasCompiledVariants
+    }
+}
+
+/// Why a texture's variants can't be written.
+public enum TextureVariantError: Error, Equatable, LocalizedError {
+    /// An option's file isn't of the texture's size and kind (WE's "Incompatible Variant Option").
+    case incompatible(optionID: UInt32)
+    /// Alpha blending in a texture that isn't RGBA8888.
+    case alphaBlendUnsupported(optionID: UInt32)
+    /// The texture's format or kind can't take variants written here.
+    case unsupportedTexture
+    /// An option's file or the base texture can't be read.
+    case unreadable(String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .incompatible:
+            return "The image or video you selected is not compatible with this texture. It must have the same resolution and needs to be the same type, you cannot mix images and videos in a texture."
+        case .alphaBlendUnsupported: return "Only uncompressed RGBA 8888 textures can be alpha blended."
+        case .unsupportedTexture: return "This texture’s format can’t have variants."
+        case .unreadable(let name): return "“\(name)” can’t be read."
+        }
+    }
+}
+
+extension EditorTextureEncoding {
+    /// `base` (a `.tex`, or a PNG or JPEG) with the options compiled in as WE's loader reads them.
+    public func texture(_ base: Data, withVariants options: [TextureVariantInput]) throws -> Data {
+        throw TextureVariantError.unsupportedTexture
+    }
+
+    /// What the texture `data` lets its variants be; nil when it can't be read.
+    public func variantBase(_ data: Data) -> TextureVariantBase? { nil }
 }
