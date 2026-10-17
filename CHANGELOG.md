@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Clicking a 3D model** hits the whole model again: the hit box is the mesh's bounds, so a model around its origin is clicked in every quarter, not only above and right of its origin (Wallpaper Engine 2.8's own behaviour, checked against it). `localPosition` is where the click meets the box, from its centre in model units.
 ### Changed
 
 - **Normal Map Generation** is checked against Wallpaper Engine 2.8's own output for the same picture and settings, pixel by pixel (a permanent test); the map was already Wallpaper Engine's to well under a step on average.
