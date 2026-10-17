@@ -11,8 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Wallpaper Editor: importing an image with Crop transparent area** keeps the picture where it was in the full frame, as Wallpaper Engine does: the layer is placed by the crop's offset and the model records it as `cropoffset`, which Align with Background then uses.
 - **Wallpaper Editor: Character Sheet Creation** puts the new sheet layer at the scene's centre, as Wallpaper Engine does, instead of where the old layer was.
+- **Text with an opaque background at partial opacity** now fades as in Wallpaper Engine: the box shows through the faded glyphs instead of being covered by them, and `backgroundbrightness` is read (it scales the box where Wallpaper Engine applies brightness). Letter spacing, the box's size and padding and its bloom were checked against Wallpaper Engine 2.8 and already matched.
+- **Clicking a 3D model** hits the whole model again: the hit box is the mesh's bounds, so a model around its origin is clicked in every quarter, not only above and right of its origin (Wallpaper Engine 2.8's own behaviour, checked against it). `localPosition` is where the click meets the box, from its centre in model units.
+### Changed
+
+- **Normal Map Generation** is checked against Wallpaper Engine 2.8's own output for the same picture and settings, pixel by pixel (a permanent test); the map was already Wallpaper Engine's to well under a step on average.
+### Fixed
+
+- **A scene with "clear" turned off** (`general.clearenabled` false) starts on black, as in Wallpaper Engine, instead of its clear colour, which nothing then clears it to.
 ### Added
 
+- **Wallpaper Editor: View › Show Debug › Show Hitboxes**, as Wallpaper Engine's editor has it: every visible Puppet Warp image's hit boxes, one per bone in the bone's colour, posed as the scene plays. A cursor event's `hitBox` names the bone whose box is under it; a bone that moves no vertex has a 1-unit box, which shows as a dot. The setting is kept between windows.
+- **Particles: a layer image emitter's "update emission bitmap periodically" and "inherit layer motion"** (`layerimage` flags 0x20000 and 0x40000), as Wallpaper Engine 2.8 runs them. With the first, the emitter samples its layer again once a second while it emits, from the picture the layer shows then (a video's frame, a texture animation's frame, a texture a script set), on the GPU without holding up the frame, and keeps emitting from the old points until the new ones are in. With the second, a particle launches with its point's motion since the last time it emitted, times a share between the emitter's `speedmin` and `speedmax` (0.1 and 0.2 by default). On a Puppet Warp layer the points now follow the rig: each takes the bone whose hit box holds it, as Wallpaper Engine assigns them, and particles spawn where that bone has moved its part of the picture.
 - **Puppet Warp blend rules**, as Wallpaper Engine plays them. A bone with a blend rule (Edit Constraints › Blend Rules) is pulled toward its target bone by the weight its clip keys: its position, rotation and scale move toward the target's, its children follow, and bone physics then acts on the result. A rig whose rule was deleted keeps still, as in Wallpaper Engine.
 - **Wallpaper Editor › Puppet Warp: blend rules**, as Wallpaper Engine's Edit Constraints › Blend Rules. In the Skeleton tool the selected bone's **Blend Rules** section adds a rule toward another bone or deletes one; in the Animate tool each rule's weight (0 to 1) is keyed at the current frame of the animation, and Add Key and Delete Key include it. The preview pulls the bone as the wallpaper will, and rules made in Wallpaper Engine open and save back.
 

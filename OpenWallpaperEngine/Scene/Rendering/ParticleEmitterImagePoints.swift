@@ -15,6 +15,9 @@ import simd
 ///
 /// The spawn picks one of the points at random (0x140238f2f) and places the particle there in the
 /// layer's space (`ParticleFrameInputs`' image transform).
+///
+/// On a Puppet Warp layer each point also takes a bone (`ParticleEmitterImageBones`). With flag
+/// 0x20000 the layer is sampled again once a second of emitting (`ParticleEmitterImageResampler`).
 enum ParticleEmitterImagePoints {
     /// The smallest alpha a texel of the reduced image needs to become a point (0x1401d411d).
     static let minimumAlpha: UInt8 = 0x7f
@@ -55,50 +58,96 @@ enum ParticleEmitterImagePoints {
         return points
     }
 
-    /// The reduced image of `texture`, whose content fills `uvExtent` of it from its origin, as
-    /// RGBA8 rows from the top: the downsample drawn on the GPU and read back once. Nil (logged) when
-    /// the GPU can't run it.
-    static func reduce(_ texture: MTLTexture, uvExtent: SIMD2<Float>, target: SIMD2<Int>, device: MTLDevice,
-                       queue: MTLCommandQueue) -> [UInt8]? {
+    /// Where the reduction reads a layer's image: its texture, the content's UV origin in it and
+    /// the content's UV axes (a frame of a sprite sheet, a padded texture's share).
+    struct Sampling {
+        var texture: MTLTexture
+        var uvOrigin = SIMD2<Float>.zero
+        var uvAxisX = SIMD2<Float>(1, 0)
+        var uvAxisY = SIMD2<Float>(0, 1)
+
+        /// The content filling `uvExtent` of `texture` from its origin.
+        init(texture: MTLTexture, uvExtent: SIMD2<Float> = SIMD2(1, 1)) {
+            self.texture = texture
+            uvAxisX = SIMD2(uvExtent.x, 0)
+            uvAxisY = SIMD2(0, uvExtent.y)
+        }
+
+        init(texture: MTLTexture, uvOrigin: SIMD2<Float>, uvAxisX: SIMD2<Float>, uvAxisY: SIMD2<Float>) {
+            self.texture = texture
+            self.uvOrigin = uvOrigin
+            self.uvAxisX = uvAxisX
+            self.uvAxisY = uvAxisY
+        }
+    }
+
+    /// The reduction's pipeline on `device`.
+    static func reducePipeline(device: MTLDevice) throws -> MTLComputePipelineState {
+        let library = try device.makeDefaultLibrary(bundle: Bundle(for: ParticleGPUSimulator.self))
+        guard let function = library.makeFunction(name: "particleEmitterImageReduce") else { throw ReduceError.noFunction }
+        return try device.makeComputePipelineState(function: function)
+    }
+
+    /// Encodes the reduction of `sampling` into `commands`, written as RGBA8 rows from the top into
+    /// the returned buffer once they complete.
+    static func encodeReduce(_ sampling: Sampling, target: SIMD2<Int>, pipeline: MTLComputePipelineState,
+                             into commands: MTLCommandBuffer) throws -> MTLBuffer {
+        let texture = sampling.texture
+        guard let output = commands.device.makeBuffer(length: target.x * target.y * 4, options: .storageModeShared),
+              let encoder = commands.makeComputeCommandEncoder() else { throw ReduceError.allocation }
+        output.label = "Particle layer image reduction"
+        var parameters = (SIMD4<Float>(sampling.uvOrigin.x, sampling.uvOrigin.y, 1 / Float(texture.width), 1 / Float(texture.height)),
+                          SIMD4<Float>(sampling.uvAxisX.x, sampling.uvAxisX.y, sampling.uvAxisY.x, sampling.uvAxisY.y))
+        var size = SIMD2<UInt32>(UInt32(target.x), UInt32(target.y))
+        encoder.setComputePipelineState(pipeline)
+        encoder.setTexture(texture, index: 0)
+        encoder.setBuffer(output, offset: 0, index: 0)
+        encoder.setBytes(&parameters, length: 2 * MemoryLayout<SIMD4<Float>>.stride, index: 1)
+        encoder.setBytes(&size, length: MemoryLayout<SIMD2<UInt32>>.stride, index: 2)
+        encoder.dispatchThreadgroups(MTLSize(width: (target.x + 7) / 8, height: (target.y + 7) / 8, depth: 1),
+                                     threadsPerThreadgroup: MTLSize(width: 8, height: 8, depth: 1))
+        encoder.endEncoding()
+        return output
+    }
+
+    /// The bytes of a completed reduction (`encodeReduce`).
+    static func bytes(of output: MTLBuffer) -> [UInt8] {
+        Array(UnsafeBufferPointer(start: output.contents().assumingMemoryBound(to: UInt8.self), count: output.length))
+    }
+
+    /// The reduced image of `sampling` as RGBA8 rows from the top: the downsample drawn on the GPU
+    /// and read back once, waiting for it (the load, off the render thread). Nil (logged) when the
+    /// GPU can't run it.
+    static func reduce(_ sampling: Sampling, target: SIMD2<Int>, device: MTLDevice, queue: MTLCommandQueue) -> [UInt8]? {
+        ThreadGuards.assertNotRenderThread("ParticleEmitterImagePoints.reduce")
         do {
-            let library = try device.makeDefaultLibrary(bundle: Bundle(for: ParticleGPUSimulator.self))
-            guard let function = library.makeFunction(name: "particleEmitterImageReduce") else {
-                throw ReduceError.noFunction
-            }
-            let pipeline = try device.makeComputePipelineState(function: function)
-            let length = target.x * target.y * 4
-            guard let output = device.makeBuffer(length: length, options: .storageModeShared),
-                  let commands = queue.makeCommandBuffer(), let encoder = commands.makeComputeCommandEncoder() else {
-                throw ReduceError.allocation
-            }
-            var parameters = SIMD4<Float>(uvExtent.x, uvExtent.y, 1 / Float(texture.width), 1 / Float(texture.height))
-            var size = SIMD2<UInt32>(UInt32(target.x), UInt32(target.y))
-            encoder.setComputePipelineState(pipeline)
-            encoder.setTexture(texture, index: 0)
-            encoder.setBuffer(output, offset: 0, index: 0)
-            encoder.setBytes(&parameters, length: MemoryLayout<SIMD4<Float>>.stride, index: 1)
-            encoder.setBytes(&size, length: MemoryLayout<SIMD2<UInt32>>.stride, index: 2)
-            let group = MTLSize(width: 8, height: 8, depth: 1)
-            encoder.dispatchThreadgroups(MTLSize(width: (target.x + 7) / 8, height: (target.y + 7) / 8, depth: 1),
-                                         threadsPerThreadgroup: group)
-            encoder.endEncoding()
+            let pipeline = try reducePipeline(device: device)
+            guard let commands = queue.makeCommandBuffer() else { throw ReduceError.allocation }
+            let output = try encodeReduce(sampling, target: target, pipeline: pipeline, into: commands)
             commands.commit()
             commands.waitUntilCompleted()
             if let error = commands.error { throw error }
-            let bytes = output.contents().assumingMemoryBound(to: UInt8.self)
-            return Array(UnsafeBufferPointer(start: bytes, count: length))
+            return bytes(of: output)
         } catch {
             OWELog.error(.scene, "A layerimage emitter's layer image can't be reduced on the GPU: \(error)")
             return nil
         }
     }
 
-    /// A layer's image as `fill` reads it: its first texture, the content's UV extent in it and
-    /// the image's own size in pixels.
+    /// A layer's image as the points are made from it: where its picture is in its texture, the
+    /// image's own size in pixels, and a Puppet Warp layer's rig.
     struct Source {
-        var texture: MTLTexture
-        var uvExtent: SIMD2<Float>
+        var sampling: Sampling
         var imageSize: SIMD2<Int>
+        var rig: ParticleEmitterImageBones.Rig?
+    }
+
+    /// The points of `rgba` (`points(rgba:…)`), each with its bone on a rigged layer.
+    static func points(rgba: [UInt8], target: SIMD2<Int>, imageSize: SIMD2<Int>,
+                       rig: ParticleEmitterImageBones.Rig?) -> [SIMD4<Int32>] {
+        var points = points(rgba: rgba, target: target, imageSize: imageSize)
+        if let rig { ParticleEmitterImageBones.assign(&points, rig: rig) }
+        return points
     }
 
     /// Samples each of `images`' layers (`sources`, by object id) into its points; a layer
@@ -117,8 +166,8 @@ enum ParticleEmitterImagePoints {
                 continue
             }
             let target = targetSize(imageSize: source.imageSize)
-            let rgba = reduce(source.texture, uvExtent: source.uvExtent, target: target, device: device, queue: queue) ?? []
-            let points = points(rgba: rgba, target: target, imageSize: source.imageSize)
+            let rgba = reduce(source.sampling, target: target, device: device, queue: queue) ?? []
+            let points = points(rgba: rgba, target: target, imageSize: source.imageSize, rig: source.rig)
             cache[id] = points
             images[index].points = points
         }

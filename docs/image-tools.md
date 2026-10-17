@@ -43,8 +43,12 @@ How the map is made (`NormalMapGenerator`, WE's `performGenerateNormalMap`):
 - The details are turned onto the shape (the rotation taking straight up onto the shape's normal),
   kept facing forward and written as `n × 0.5 + 0.5` in red, green and blue (x right, y up), with
   the picture's alpha.
+- Checked against WE 2.8.0.42 (capture 544, the bars picture at the defaults): red and green, what
+  the texture keeps, agree to 0.2 and 0.65 of a step on average over the opaque pixels, flat at
+  (127, 126, 254) as WE's; what differs is a 2–3 px line where a colour meets black (the details'
+  edge, up to 19 in red and 43 in green) [?: WE's details there are smoother; not found].
 
-OK writes the map as WE imports one (`rg88n`, the image importer's `EditorTEXEncoder.normalMap`)
+OK writes the map as WE writes a generated one (RG88, its `.tex-json` `"format": "rg88"`, clamped, three mipmaps down to 64 px; the image importer's `EditorTEXEncoder.normalMap`)
 named after the picture's texture with `_normal`, as WE does (`<texture>_normal`, plus the
 content hash the editor's files carry), and makes it the layer's normal map in one undo step. The
 layer's material and model are copied into the edits' files with the map as `g_Texture1`, and the

@@ -18,14 +18,17 @@ final class ParticleGPUSystem {
     }
 
     let parameters: MTLBuffer
-    /// The system's emitters (`ParticleGPUEmitter`), in order.
-    let emitterParameters: MTLBuffer
+    /// The system's emitters (`ParticleGPUEmitter`), in order; replaced with `imagePoints` when a
+    /// resampling changes their points (`updateImagePoints`).
+    private(set) var emitterParameters: MTLBuffer
     /// Each emitter's running state (`ParticleGPUEmitterState`), `slots` × emitters of them.
     let emitterStates: MTLBuffer
     let emitterCount: Int
-    /// Every `layerimage` emitter's points (`ParticleEmitterImage.points`), one after another;
-    /// nil without any.
-    let imagePoints: MTLBuffer?
+    /// Every `layerimage` emitter's points (`ParticleSystemRuntime.emitterImages`), one after
+    /// another; nil without any.
+    private(set) var imagePoints: MTLBuffer?
+    /// The runtime's `emitterImagesRevision` the points are from.
+    private(set) var imagePointsRevision = 0
     /// A program that writes control points (`ParticleProgram.writesControlPoints`) steps in one
     /// thread (`particleEmitSerial`, `particleSimulateSerial`): each slot's points (`PointState`), and
     /// the particles' program state between records (`SerialState`, sized with the particles).
@@ -87,17 +90,43 @@ final class ParticleGPUSystem {
     /// the first step); once that frame has completed with no particle alive the system is empty.
     var lastLiveSerial: UInt64?
 
-    init?(device: MTLDevice, configuration: SceneMetalParticleSystem, seed: UInt32) {
-        var values = ParticleGPUParameters(configuration, seed: seed)
+    /// The emitters' records and their points, one image's after another.
+    private static func emitterRecords(_ configuration: SceneMetalParticleSystem, images: [ParticleEmitterImage])
+        -> (emitters: [ParticleGPUEmitter], points: [SIMD4<Int32>]) {
         var pointList: [SIMD4<Int32>] = []
         let emitters = configuration.emitters.map { emitter -> ParticleGPUEmitter in
-            guard emitter.shape.kind == .image, emitter.shape.imageIndex < configuration.emitterImages.count else {
+            guard emitter.shape.kind == .image, emitter.shape.imageIndex < images.count else {
                 return ParticleGPUEmitter(emitter)
             }
-            let points = configuration.emitterImages[emitter.shape.imageIndex].points
+            let points = images[emitter.shape.imageIndex].points
             defer { pointList += points }
             return ParticleGPUEmitter(emitter, imagePoints: (pointList.count, points.count))
         }
+        return (emitters, pointList)
+    }
+
+    /// Takes a runtime's resampled points (`ParticleSystemRuntime.replaceImagePoints`) when they
+    /// changed since the last: new buffers, so a frame still on the GPU keeps reading the old ones.
+    func updateImagePoints(_ runtime: ParticleSystemRuntime) {
+        guard runtime.emitterImagesRevision != imagePointsRevision else { return }
+        let (emitters, pointList) = Self.emitterRecords(runtime.configuration, images: runtime.emitterImages)
+        guard let parameters = device.makeBuffer(bytes: emitters, length: emitters.count * MemoryLayout<ParticleGPUEmitter>.stride,
+                                                 options: .storageModeShared) else { return }
+        let points = pointList.isEmpty ? nil
+            : device.makeBuffer(bytes: pointList, length: pointList.count * MemoryLayout<SIMD4<Int32>>.stride,
+                                options: .storageModeShared)
+        guard pointList.isEmpty || points != nil else { return }
+        parameters.label = "Particle emitters"
+        points?.label = "Particle layer image points"
+        emitterParameters = parameters
+        imagePoints = points
+        imagePointsRevision = runtime.emitterImagesRevision
+    }
+
+    init?(device: MTLDevice, configuration: SceneMetalParticleSystem, seed: UInt32,
+          images: [ParticleEmitterImage]? = nil) {
+        var values = ParticleGPUParameters(configuration, seed: seed)
+        let (emitters, pointList) = Self.emitterRecords(configuration, images: images ?? configuration.emitterImages)
         let slotCount = configuration.isInstanced ? max(configuration.link?.maximumInstances ?? 0, 1) : 1
         guard let parameters = device.makeBuffer(bytes: &values, length: MemoryLayout<ParticleGPUParameters>.stride,
                                                  options: .storageModeShared),

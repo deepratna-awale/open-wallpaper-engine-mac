@@ -48,7 +48,7 @@ final class SceneScriptCursorHitBoxTests: XCTestCase {
 
     func testTheShapeComesFromTheSkeletonsPerBoneBlock() throws {
         var model = try MDLModel(contentsOf: Fixtures.url("Models/v13-puppet.mdl"))
-        XCTAssertNil(SceneScriptCursorShape.puppet(model), "no library rig has hit boxes")
+        XCTAssertNil(SceneScriptCursorShape.puppet(model), "no library rig has hit boxes (WE's editor compiles them into new rigs)")
         var skeleton = try XCTUnwrap(model.skeleton)
         skeleton.boneVectors = skeleton.bones.map { _ in .init(vector: SIMD3(1, 2, 3), matrix: matrix_identity_float4x4) }
         skeleton.bones[0].name = ""

@@ -114,6 +114,43 @@ final class ParticleSimulationParityTests: XCTestCase {
         }, layerWorld: { $0 == "7" ? layer : nil })
     }
 
+    /// A `layerimage` emitter inheriting its layer's motion (flag 0x40000): a layer moving and
+    /// turning, a rate low enough that not every step spawns (the motion is measured from the last
+    /// step that did), and on a rigged layer points following two bones that move apart.
+    func testLayerImageEmitterInheritsLayerMotion() throws {
+        var system = ParticleTestSystem()
+        system.emissionRate = 45
+        system.minimumVelocity = .zero
+        system.maximumVelocity = .zero
+        let points: [SIMD4<Int32>] = (Int32(0)..<40).map { index -> SIMD4<Int32> in
+            SIMD4<Int32>((index % 8) * 12 - 40, (index / 8) * 10 - 20, 0xFFFFFF, index % 3 == 2 ? -1 : index % 2)
+        }
+        func layer(_ frame: Int) -> SceneAffineTransform {
+            let angle = Float(frame) * 0.02
+            return SceneAffineTransform(linear: simd_float2x2(SIMD2(cos(angle), sin(angle)), SIMD2(-sin(angle), cos(angle))),
+                                        translation: SIMD2(600 + 3 * Float(frame), 380 - Float(frame)))
+        }
+        let configure = { (configuration: inout SceneMetalParticleSystem) in
+            configuration.emitter.kind = .image
+            configuration.emitter.inheritsLayerMotion = true
+            configuration.emitter.speed = SIMD2(0.1, 0.4)
+            configuration.emitterImages = [ParticleEmitterImage(layerID: "7", points: points)]
+        }
+        try assertParity(system, "layerimage motion", configure: configure, movingLayer: { frame, id in id == "7" ? layer(frame) : nil })
+        func bones(_ frame: Int) -> [SceneAffineTransform] {
+            [SceneAffineTransform(linear: matrix_identity_float2x2, translation: SIMD2(-Float(frame), 0)),
+             SceneAffineTransform(linear: simd_float2x2(diagonal: SIMD2(repeating: 1 + Float(frame) * 0.01)),
+                                  translation: SIMD2(Float(frame), 2 * Float(frame)))]
+        }
+        try assertParity(system, "layerimage bones", configure: configure,
+                         movingLayer: { frame, id in id == "7" ? layer(frame) : nil },
+                         layerBones: { frame, id in
+                             guard id == "7" else { return nil }
+                             return ParticleLayerBones(motion: bones(frame), previous: frame == 0 ? nil : bones(frame - 1),
+                                                       inverseRest: [.identity, .identity])
+                         })
+    }
+
     /// Depth: a sphere spread along z, `velocityrandom`'s z, and `movement`'s gravity and drag on it.
     func testDepth() throws {
         var system = ParticleTestSystem()
@@ -524,7 +561,8 @@ final class ParticleSimulationParityTests: XCTestCase {
                          cursor: ((Int) -> SIMD2<Float>)? = nil, frameTime: Float? = nil,
                          frameRateLimit: Int = 0,
                          configure: (inout SceneMetalParticleSystem) -> Void = { _ in },
-                         layerWorld: @escaping (String) -> SceneAffineTransform? = { _ in nil }) throws -> (ParticleSystemRuntime, GPURun) {
+                         layerWorld: @escaping (Int, String) -> SceneAffineTransform? = { _, _ in nil },
+                         layerBones: @escaping (Int, String) -> ParticleLayerBones? = { _, _ in nil }) throws -> (ParticleSystemRuntime, GPURun) {
         var configuration = system.configuration
         configure(&configuration)
         let cpu = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: seed)
@@ -534,13 +572,15 @@ final class ParticleSimulationParityTests: XCTestCase {
         for frame in 0..<frames {
             let world = emitter?(frame)
             let point = cursor?(frame) ?? Self.cursor
+            let frameWorld = { (id: String) in layerWorld(frame, id) }
+            let frameBones = { (id: String) in layerBones(frame, id) }
             ParticleCPUSimulation.step(cpu, inputs: ParticleFrameInputs.advance(cpu, deltaTime: 1 / 60, cursor: point,
                                                                                 emitter: world, frameTime: frameTime,
                                                                                 frameRateLimit: frameRateLimit,
-                                                                                layerWorld: layerWorld))
+                                                                                layerWorld: frameWorld, layerBones: frameBones))
             let inputs = ParticleFrameInputs.advance(gpu, deltaTime: 1 / 60, cursor: point, emitter: world,
                                                      frameTime: frameTime, frameRateLimit: frameRateLimit,
-                                                     layerWorld: layerWorld)
+                                                     layerWorld: frameWorld, layerBones: frameBones)
             let commandBuffer = try XCTUnwrap(queue.makeCommandBuffer())
             simulator.encode([.init(system: gpu, inputs: inputs, kind: kind, materialVertexCount: 6)],
                              sceneSize: SIMD2(1280, 720), targetSize: SIMD2(1280, 720), commandBuffer: commandBuffer)
@@ -596,9 +636,12 @@ final class ParticleSimulationParityTests: XCTestCase {
                               frameTime: Float? = nil, frameRateLimit: Int = 0,
                               configure: (inout SceneMetalParticleSystem) -> Void = { _ in },
                               layerWorld: @escaping (String) -> SceneAffineTransform? = { _ in nil },
+                              movingLayer: ((Int, String) -> SceneAffineTransform?)? = nil,
+                              layerBones: @escaping (Int, String) -> ParticleLayerBones? = { _, _ in nil },
                               file: StaticString = #filePath, line: UInt = #line) throws {
         let (cpu, gpu) = try runBoth(system, emitter: emitter, cursor: cursor, frameTime: frameTime,
-                                     frameRateLimit: frameRateLimit, configure: configure, layerWorld: layerWorld)
+                                     frameRateLimit: frameRateLimit, configure: configure,
+                                     layerWorld: movingLayer ?? { _, id in layerWorld(id) }, layerBones: layerBones)
         let states = simulator.snapshot(gpu.runtime, queue: queue)
         let expected = statistics(cpu.particles), actual = statistics(states)
         XCTAssertGreaterThan(expected.count, 50, label, file: file, line: line)

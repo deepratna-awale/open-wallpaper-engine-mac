@@ -1538,6 +1538,7 @@ class SceneWallpaperViewModel: ObservableObject {
         if let color = object.backgroundcolor?.parseVector3() {
             textConfig.backgroundColor = SIMD3(Float(color.0), Float(color.1), Float(color.2))
         }
+        textConfig.backgroundBrightness = Float(object.backgroundbrightness ?? 1)
         let spacingParts = (object.spacing ?? "").split(separator: " ").compactMap { Float($0) }
         if let first = spacingParts.first {
             textConfig.spacing = SIMD2(first, spacingParts.count > 1 ? spacingParts[1] : first)

@@ -76,6 +76,7 @@ kernel void particleBegin(device uint *control [[buffer(0)]],
             state.counts.y = emitted;
             state.counts.z = spawned.x + spawned.y;
             state.counts.w = control[cPeriodSerial];
+            if (state.counts.z > 0) spawnsLayerWorld(state, step);
             emitters[e] = state;
             emitted += state.counts.z;
         }
@@ -150,10 +151,17 @@ static ProgramContext programContext(constant ParticleParameters &p, constant Pa
     return c;
 }
 
+/// An affine transform of the plane: linear columns, translation.
+static float2 placed(float4 linear, float2 translation, float2 point) {
+    return float2x2(linear.xy, linear.zw) * point + translation;
+}
+
 /// `ParticleProgramCPU.emit(image:…)`: a `layerimage` emitter's spawn, at one of its points at
-/// random; false without points.
-static bool emitFromImage(EmitterParameters e, EmitterStep step, device const int4 *imagePoints,
-                          thread const ProgramContext &c, thread float3 &position, thread float3 &color) {
+/// random, through its bone on a rigged layer; with flag 0x40000 launched with the point's motion.
+/// False without points.
+static bool emitFromImage(EmitterParameters e, EmitterStep step, EmitterState emitterState, device const int4 *imagePoints,
+                          constant ImageBone *bones, thread const ProgramContext &c, thread float3 &position,
+                          thread float3 &velocity, thread float3 &color) {
     const uint count = e.image.y;
     if (count == 0) return false;
     const uint pick = min(uint(unitRandom(c.seed, c.serial, sSpawnAngle) * float(count)), count - 1);
@@ -164,7 +172,26 @@ static bool emitFromImage(EmitterParameters e, EmitterStep step, device const in
         local += float2(e.minimum.x + unitRandom(c.seed, c.serial, sSpawnHeight) * span.x,
                         e.minimum.y + unitRandom(c.seed, c.serial, sSpawnRadius) * span.y);
     }
-    position = float3(float2x2(step.imageLinear.xy, step.imageLinear.zw) * local + step.imageTranslation.xy, 0);
+    const bool boned = point.w >= 0 && uint(point.w) < step.bones.y;
+    const ImageBone bone = boned ? bones[step.bones.x + uint(point.w)] : ImageBone{};
+    const float2 now = boned ? placed(bone.currentLinear, bone.translations.xy, local)
+                             : placed(step.imageLinear, step.imageTranslation.xy, local);
+    position = float3(now, 0);
+    velocity = float3(0);
+    const float frameTime = step.rate.y;
+    if (e.flags.w != 0 && frameTime > 0) {
+        float2 before;
+        if (boned) {
+            before = placed(bone.previousLinear, bone.translations.zw, local);
+        } else {
+            // The layer's world at the emitter's last step that spawned, the identity before one.
+            const bool set = emitterState.spawnWorldTranslation.z != 0;
+            const float2 world = set ? placed(emitterState.spawnWorldLinear, emitterState.spawnWorldTranslation.xy, local) : local;
+            before = placed(step.toSpaceLinear, step.translations.zw, world);
+        }
+        const float share = (e.minimum.w + unitRandom(c.seed, c.serial, sEmitterSpeed) * (e.maximum.w - e.minimum.w)) * c.spawnScale.w;
+        velocity = float3((now - before) / frameTime * share, 0);
+    }
     color = e.image.z != 0 ? float3((point.z >> 16) & 0xff, (point.z >> 8) & 0xff, point.z & 0xff) / 255.0f : float3(1);
     return true;
 }
@@ -172,7 +199,8 @@ static bool emitFromImage(EmitterParameters e, EmitterStep step, device const in
 /// `ParticleCPUSimulation.spawn`.
 static ParticleState spawn(uint serial, constant ParticleParameters &p, constant ParticleFrame &f,
                            constant ProgramOp *program, thread ProgramContext &c, EmitterParameters emitter,
-                           EmitterStep step, device const int4 *imagePoints) {
+                           EmitterStep step, EmitterState emitterState, device const int4 *imagePoints,
+                           constant ImageBone *bones) {
     ProgramState state;
     state.age = 0;
     state.lifetime = 1;
@@ -192,7 +220,9 @@ static ParticleState spawn(uint serial, constant ParticleParameters &p, constant
         state.position = float3(0);
         state.velocity = float3(0);
         float3 color;
-        if (emitFromImage(emitter, step, imagePoints, c, state.position, color)) state.baseColor *= color;
+        if (emitFromImage(emitter, step, emitterState, imagePoints, bones, c, state.position, state.velocity, color)) {
+            state.baseColor *= color;
+        }
     } else {
         emitParticle(emitter, c, state.position, state.velocity);
     }
@@ -236,6 +266,7 @@ kernel void particleEmit(device ParticleState *particles [[buffer(0)]],
                          device const EmitterState *emitters [[buffer(8)]],
                          constant EmitterStep *steps [[buffer(10)]],
                          device const int4 *imagePoints [[buffer(11)]],
+                         constant ImageBone *bones [[buffer(12)]],
                          uint gid [[thread_position_in_grid]]) {
     if (gid >= control[cEmit]) return;
     const uint serial = control[cSerialBase] + gid;
@@ -254,14 +285,14 @@ kernel void particleEmit(device ParticleState *particles [[buffer(0)]],
         const uint index = source.spawn.y + local;
         c.sequenceIndex = index;
         c.sequenceRestartIndex = index - own[e].counts.w;
-        particle = spawn(serial, p, f, program, c, emitterParameters[e], steps[e], imagePoints);
+        particle = spawn(serial, p, f, program, c, emitterParameters[e], steps[e], own[e], imagePoints, bones);
         particle.trail.z = float(instance);
     } else {
         placeProgramPoints(c, p, f, float2(0), float2(0), true, p.linking.x != 0 ? linked[0] : LinkedPoints{});
         const uint e = spawningEmitter(emitters, emitterCount, gid);
         c.sequenceIndex = serial;
         c.sequenceRestartIndex = serial - emitters[e].counts.w;
-        particle = spawn(serial, p, f, program, c, emitterParameters[e], steps[e], imagePoints);
+        particle = spawn(serial, p, f, program, c, emitterParameters[e], steps[e], emitters[e], imagePoints, bones);
     }
     particles[control[cCount] + gid] = particle;
 }
@@ -601,7 +632,8 @@ kernel void particleEmitSerial(device ParticleState *particles [[buffer(0)]],
                                device const EmitterState *emitters [[buffer(8)]],
                                device PointState *points [[buffer(9)]],
                                constant EmitterStep *steps [[buffer(10)]],
-                               device const int4 *imagePoints [[buffer(11)]]) {
+                               device const int4 *imagePoints [[buffer(11)]],
+                               constant ImageBone *bones [[buffer(12)]]) {
     const bool instanced = (p.counts.y & kInstanced) != 0;
     const uint slots = instanced ? max(p.instancing.y, 1u) : 1u;
     for (uint slot = 0; slot < slots; ++slot) {
@@ -632,7 +664,7 @@ kernel void particleEmitSerial(device ParticleState *particles [[buffer(0)]],
             const uint index = source.spawn.y + local;
             c.sequenceIndex = index;
             c.sequenceRestartIndex = index - own[e].counts.w;
-            particle = spawn(serial, p, f, program, c, emitterParameters[e], steps[e], imagePoints);
+            particle = spawn(serial, p, f, program, c, emitterParameters[e], steps[e], own[e], imagePoints, bones);
             particle.trail.z = float(slot);
         } else {
             placeProgramPoints(c, p, f, float2(0), float2(0), true, p.linking.x != 0 ? linked[0] : LinkedPoints{});
@@ -641,7 +673,7 @@ kernel void particleEmitSerial(device ParticleState *particles [[buffer(0)]],
             const uint e = spawningEmitter(emitters, emitterCount, gid);
             c.sequenceIndex = serial;
             c.sequenceRestartIndex = serial - emitters[e].counts.w;
-            particle = spawn(serial, p, f, program, c, emitterParameters[e], steps[e], imagePoints);
+            particle = spawn(serial, p, f, program, c, emitterParameters[e], steps[e], emitters[e], imagePoints, bones);
         }
         storePoints(points[slot].points, c);
         particles[control[cCount] + gid] = particle;
