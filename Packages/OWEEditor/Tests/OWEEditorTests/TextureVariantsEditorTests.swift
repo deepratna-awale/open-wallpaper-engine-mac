@@ -2,50 +2,9 @@ import XCTest
 @testable import OWEEditor
 @testable import OWESceneEditing
 
-/// The texture variants' inspector: its own catalog (`TextureVariants.xcstrings`) complete in
-/// every language the app ships, and the property a new condition makes.
+/// The texture variants' inspector: the property a new condition makes, and the option files
+/// (its catalog is checked by `CatalogCoverageTests`).
 final class TextureVariantsEditorTests: XCTestCase {
-    private static var sources: URL {
-        URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-            .deletingLastPathComponent().appending(path: "Sources/OWEEditor")
-    }
-
-    func testEveryKeyUsedIsTranslated() throws {
-        let data = try Data(contentsOf: Self.sources.appending(path: "Resources/TextureVariants.xcstrings"))
-        let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [String: Any])
-        let catalog = try XCTUnwrap(json["strings"] as? [String: [String: Any]])
-        let regex = try NSRegularExpression(pattern: #"(?<![A-Za-z])TVL\("((?:[^"\\]|\\\([^)]*\))*)"\)"#)
-        var used = Set<String>()
-        let enumerator = try XCTUnwrap(FileManager.default.enumerator(at: Self.sources, includingPropertiesForKeys: nil))
-        for case let file as URL in enumerator where file.pathExtension == "swift" {
-            let text = try String(contentsOf: file, encoding: .utf8)
-            for match in regex.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
-                let key = String(text[Range(match.range(at: 1), in: text)!])
-                used.insert(key.replacingOccurrences(of: #"\\\([^)]*\)"#, with: "%@", options: .regularExpression))
-            }
-        }
-        XCTAssertGreaterThan(used.count, 20)
-        XCTAssertEqual(used.filter { catalog[$0] == nil }.sorted(), [], "not in TextureVariants.xcstrings")
-        let specifier = try NSRegularExpression(pattern: #"%(?:\d+\$)?(?:lld|@)"#)
-        func arguments(_ text: String) -> [String] {
-            specifier.matches(in: text, range: NSRange(text.startIndex..., in: text)).map { String(text[Range($0.range, in: text)!]) }
-        }
-        var problems: [String] = []
-        for (key, entry) in catalog {
-            let localizations = entry["localizations"] as? [String: [String: Any]] ?? [:]
-            for language in EditorLocalizationTests.languages {
-                let unit = localizations[language]?["stringUnit"] as? [String: Any]
-                guard let value = unit?["value"] as? String, !value.isEmpty, unit?["state"] as? String == "translated" else {
-                    problems.append("\(language): \(key)")
-                    continue
-                }
-                if arguments(value) != arguments(key) { problems.append("\(language): \(key) has \(arguments(value))") }
-            }
-        }
-        XCTAssertEqual(problems.sorted(), [])
-        XCTAssertEqual(TVL("Add Variant Group"), "Add Variant Group")
-    }
-
     func testANewConditionMakesACheckboxOrAComboForTheGroup() {
         let hat = TextureVariantDocument.Option(name: "Hat", file: "a.png")
         let coat = TextureVariantDocument.Option(name: "Coat", file: "b.png", condition: .flag("other"))

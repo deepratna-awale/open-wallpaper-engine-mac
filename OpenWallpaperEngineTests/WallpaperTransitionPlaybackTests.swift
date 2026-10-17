@@ -127,9 +127,7 @@ final class WallpaperTransitionPlaybackTests: XCTestCase {
         let barrier = queue.makeCommandBuffer()
         barrier?.commit()
         barrier?.waitUntilCompleted()
-        let deadline = Date().addingTimeInterval(2)
-        while !freed(), Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
-        XCTAssertTrue(freed(), message)
+        XCTAssertTrue(spin(until: freed, timeout: 2), message)
     }
 
     func testAPlayerFreesItsFramesAndPictureWhenItEnds() throws {

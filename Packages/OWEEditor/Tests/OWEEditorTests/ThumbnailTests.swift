@@ -3,8 +3,8 @@ import XCTest
 @testable import OWEEditor
 @testable import OWESceneEditing
 
-/// Take Snapshot and Record GIF: what the renderer is asked to draw, Use and Discard, and the
-/// thumbnail's catalog (`Resources/Thumbnail.xcstrings`).
+/// Take Snapshot and Record GIF: what the renderer is asked to draw, and Use and Discard (the
+/// thumbnail's catalog is checked by `CatalogCoverageTests`).
 @MainActor
 final class ThumbnailTests: XCTestCase {
     private static func canvas(_ size: SIMD2<Int>) -> CGImage? {
@@ -71,45 +71,5 @@ final class ThumbnailTests: XCTestCase {
     func testFormatsReadAsWallpaperEngineListsThem() {
         XCTAssertEqual(GIFRecordingFormat.all[0].title, "256×256, 25 FPS, 2 seconds, dithering enabled")
         XCTAssertEqual(GIFRecordingFormat.all[5].title, "128×128, 25 FPS, 8 seconds, dithering disabled")
-    }
-
-    // MARK: Catalog
-
-    private static var sources: URL {
-        URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-            .deletingLastPathComponent().appending(path: "Sources/OWEEditor")
-    }
-
-    func testEveryKeyUsedIsInTheCatalogTranslatedIntoEveryLanguage() throws {
-        let data = try Data(contentsOf: Self.sources.appending(path: "Resources/Thumbnail.xcstrings"))
-        let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [String: Any])
-        let catalog = try XCTUnwrap(json["strings"] as? [String: [String: Any]])
-        var used = Set<String>()
-        let regex = try NSRegularExpression(pattern: #"\bTH\("((?:[^"\\]|\\\([^)]*\))*)"\)"#)
-        let enumerator = try XCTUnwrap(FileManager.default.enumerator(at: Self.sources, includingPropertiesForKeys: nil))
-        for case let file as URL in enumerator where file.pathExtension == "swift" {
-            let text = try String(contentsOf: file, encoding: .utf8)
-            for match in regex.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
-                let key = String(text[Range(match.range(at: 1), in: text)!])
-                used.insert(key.replacingOccurrences(of: #"\\\([^)]*\)"#, with: "%@", options: .regularExpression))
-            }
-        }
-        XCTAssertEqual(used.subtracting(catalog.keys).sorted(), [], "not in the catalog")
-        XCTAssertEqual(Set(catalog.keys).subtracting(used).sorted(), [], "in the catalog but unused")
-        var problems: [String] = []
-        for (key, entry) in catalog {
-            let localizations = entry["localizations"] as? [String: [String: Any]] ?? [:]
-            for language in EditorLocalizationTests.languages {
-                let unit = localizations[language]?["stringUnit"] as? [String: Any]
-                guard let value = unit?["value"] as? String, !value.isEmpty, unit?["state"] as? String == "translated" else {
-                    problems.append("\(language): “\(key)”")
-                    continue
-                }
-                if value.components(separatedBy: "%@").count != key.components(separatedBy: "%@").count {
-                    problems.append("\(language): “\(key)” has other arguments")
-                }
-            }
-        }
-        XCTAssertTrue(problems.isEmpty, problems.sorted().joined(separator: "\n"))
     }
 }

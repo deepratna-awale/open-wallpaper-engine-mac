@@ -107,16 +107,8 @@ final class CharacterSheetModel: ObservableObject {
 
     // MARK: Finishing
 
-    /// The pieces as WE collects them, laid out.
-    func makeSheet() -> RGBAImage? {
-        guard let picture else { return nil }
-        let limbs = limbs.map { (limb: Limb) -> CharacterSheet.Limb in
-            CharacterSheet.Limb(depth: limb.depth, foreground: limb.editor?.result?.foreground, background: limb.editor?.result?.background)
-        }
-        return CharacterSheet.sheet(CharacterSheet.pieces(limbs, body: picture))
-    }
-
-    /// OK: the sheet replaces the layer; returns the new layer's id.
+    /// OK: the pieces as WE collects them, laid out in a sheet that replaces the layer; returns
+    /// the new layer's id.
     func finish() async -> Int? {
         guard let store = services.assetStore else { return nil }
         isGenerating = true
