@@ -90,7 +90,7 @@ struct DisplayPictureLoader: Sendable {
     static func videoKey(_ video: URL) -> String { hex(video.standardizedFileURL.path(percentEncoded: false)) }
 
     private static func hex(_ text: String) -> String {
-        SHA256.hash(data: Data(text.utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
+        Digest.hex(SHA256.hash(data: Data(text.utf8)).prefix(8))
     }
 
     /// The video's stored frame, grabbed and stored first when there is none for its current file.

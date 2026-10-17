@@ -131,38 +131,17 @@ enum LivePhotoHelper {
     /// video, `AndroidVideoJob`) runs through it too.
     @MainActor
     static func runHelper(argument: String, jobFile: URL, progress: @escaping @MainActor (Double) -> Void) async throws {
-        guard let executable = AppRelauncher.helperExecutable else { throw Failure.noExecutable }
-        let process = Process()
-        process.executableURL = executable
-        process.arguments = [argument, jobFile.path(percentEncoded: false)]
-        var environment = ProcessInfo.processInfo.environment
-        if let tag = AppStorageLocation.current.isolationTag { environment[AppStorageLocation.environmentKey] = tag }
-        process.environment = environment
-        process.qualityOfService = .userInitiated
+        guard let process = HelperProcess.make([argument, jobFile.path(percentEncoded: false)], qos: .userInitiated) else {
+            throw Failure.noExecutable
+        }
         let pipe = Pipe()
         process.standardOutput = pipe
-        process.standardError = FileHandle.nullDevice
         let lines = ProgressLines { value in
             DispatchQueue.main.async { MainActor.assumeIsolated { progress(value) } }
         }
         pipe.fileHandleForReading.readabilityHandler = { handle in lines.append(handle.availableData) }
 
-        let status: Int32 = try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Int32, Error>) in
-                process.terminationHandler = { finished in
-                    pipe.fileHandleForReading.readabilityHandler = nil
-                    continuation.resume(returning: finished.terminationStatus)
-                }
-                do {
-                    try process.run()
-                } catch {
-                    process.terminationHandler = nil
-                    continuation.resume(throwing: error)
-                }
-            }
-        } onCancel: {
-            if process.isRunning { process.terminate() }
-        }
+        let status: Int32 = try await HelperProcess.run(process) { pipe.fileHandleForReading.readabilityHandler = nil }
         try Task.checkCancellation()
         guard status == 0 else {
             OWELog.error(.app, "\(argument): the render helper failed (\(status))")

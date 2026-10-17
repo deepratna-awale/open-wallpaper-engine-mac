@@ -14,7 +14,7 @@ extension SteamCmdService {
         do {
             let storage = try WallpaperStorage.availableDirectory()
             folders = try FileManager.default.contentsOfDirectory(at: storage, includingPropertiesForKeys: nil)
-                .filter { FileManager.default.fileExists(atPath: $0.appending(path: "project.json").path) }
+                .filter { WEProject.exists(in: $0) }
                 .sorted { $0.lastPathComponent < $1.lastPathComponent }
         } catch {
             OWELog.error(.workshop, "Downloads screenshot fixture: no Wallpaper Storage folder: \(error.localizedDescription)")
@@ -23,7 +23,7 @@ extension SteamCmdService {
         let now = Date()
         for (index, folder) in folders.prefix(6).enumerated() {
             let id = String(3_000_000_000 + index * 7_919)
-            let project = (try? JSONSerialization.jsonObject(with: Data(contentsOf: folder.appending(path: "project.json"))))
+            let project = (try? WEProject.object(in: folder))
                 as? [String: Any] ?? [:] // Optional: a fixture row without a title still shows its id.
             let title = project["title"] as? String ?? folder.lastPathComponent
             let preview = (project["preview"] as? String).map { folder.appending(path: $0) }

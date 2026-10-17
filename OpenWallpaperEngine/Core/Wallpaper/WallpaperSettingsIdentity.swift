@@ -29,7 +29,7 @@ struct WallpaperSettingsIdentity: Hashable {
         if let id = Self.workshopID(projectData: projectData, folder: folder) {
             rawValue = "workshop-\(id)"
         } else if let projectData {
-            let digest = SHA256.hash(data: projectData).prefix(8).map { String(format: "%02x", $0) }.joined()
+            let digest = Digest.hex(SHA256.hash(data: projectData).prefix(8))
             rawValue = "local-\(digest)-\(folder)"
         } else {
             rawValue = "local-\(folder)"
@@ -47,7 +47,7 @@ struct WallpaperSettingsIdentity: Hashable {
 
     /// `resolve`, with the stored-settings names already read when many wallpapers are resolved.
     static func resolve(directory: URL, defaults: UserDefaults, index: LegacySettingsIndex?) -> WallpaperSettingsIdentity {
-        let projectURL = directory.appending(path: "project.json")
+        let projectURL = WEProject.url(in: directory)
         let projectData: Data?
         do {
             projectData = try Data(contentsOf: projectURL)
