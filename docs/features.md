@@ -71,7 +71,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - Scene gravity and wind (Physics options) and `clearenabled` (frames drawn over the last one), as in Wallpaper Engine.
 - **Timelines** — keyframe and texture animations follow Wallpaper Engine's single, loop and mirror rules.
 - Colour lookup tables, Wallpaper Engine's colour correction, and the image filter and colour options in a wallpaper's properties.
-- **Puppet Warp** images posed by their animations, with bone physics (springs, gravity, limits), clipping masks and objects attached to their bones.
+- **Puppet Warp** images posed by their animations, with blend rules (a bone pulled toward another by a keyed weight), bone physics (springs, gravity, limits), clipping masks and objects attached to their bones.
 
 ### 3D & lighting
 - **3D models** with skinning, animation layers, morph targets and root motion; every pass of a model's material, and every fur shell of Wallpaper Engine's fur shader.
@@ -82,7 +82,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 
 ### Particles
 - **GPU particles** — every particle system is simulated on the GPU, in 3D, with 3D control points (on the emitter, the cursor, a scene position or the parent system's point, raw or carried into the child's space).
-- Child systems, placed by their links in 3D, including ones triggered by their parent's particles; emitter bursts, delays and periodic emission; emitting from a layer's image.
+- Child systems, placed by their links in 3D, including ones triggered by their parent's particles; emitter bursts, delays and periodic emission; emitting from a layer's image, sampled again every second while it changes (a video, a texture animation, a script's texture), its points following a Puppet Warp layer's bones and, as an option, launched with the layer's motion.
 - Collision, including with a model's bones and a Puppet Warp image's rig, audio response, and rotation about every axis.
 - Particle settings bound to a wallpaper's user properties.
 - Every Wallpaper Engine initializer and operator, with its defaults; colour lists of any length.
