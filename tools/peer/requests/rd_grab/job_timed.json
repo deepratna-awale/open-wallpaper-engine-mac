@@ -2,26 +2,35 @@
  "we": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\wallpaper_engine",
  "ident": 38920,
  "monitor": 0,
- "out": "K:\\DeepWorkspace\\wem-images2\\tools\\peer\\requests\\owe-beta7\\models-open\\540-texture-variants\\stills",
+ "out": "K:\\DeepWorkspace\\wem-images2\\tools\\peer\\requests\\owe-beta7\\models-open\\542-persp-model-clear\\stills",
  "shots": [
   {
-   "project": "p540_v0",
-   "tag": "mo2_540_v0",
+   "project": "p542_off",
+   "tag": "mo2_542_off",
    "stills": [
     2.0
    ]
   },
   {
-   "project": "p540_v1",
-   "tag": "mo2_540_v1",
+   "project": "p542_on",
+   "tag": "mo2_542_on",
    "stills": [
     2.0
    ]
   },
   {
-   "project": "p540_v2",
-   "tag": "mo2_540_v2",
+   "project": "p542_clear_spin",
+   "tag": "mo2_542_clear_spin",
    "stills": [
+    1.0,
+    2.0
+   ]
+  },
+  {
+   "project": "p542_noclear",
+   "tag": "mo2_542_noclear",
+   "stills": [
+    1.0,
     2.0
    ]
   }

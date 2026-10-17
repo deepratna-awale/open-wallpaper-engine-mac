@@ -1,0 +1,7 @@
+connected ident 38920
+p542_off still 2.0 triggered at 2.002 s frame 48
+p542_on still 2.0 triggered at 2.005 s frame 47
+p542_clear_spin still 1.0 triggered at 1.004 s frame 25
+p542_clear_spin still 2.0 triggered at 2.004 s frame 49
+p542_noclear still 1.0 triggered at 1.001 s frame 25
+p542_noclear still 2.0 triggered at 2.002 s frame 49

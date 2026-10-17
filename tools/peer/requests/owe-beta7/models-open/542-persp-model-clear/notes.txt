@@ -1,0 +1,18 @@
+542 (B9): perspective model in a 2D scene, and clearenabled false (WE 2.8.0.42)
+
+## Perspective model
+- **Setup:** in the 2D 1920×1080 scene p540_var, the editor's Import Model of the centred cube (539) placed it at origin 960 540 0, **scale 2.16** (auto).
+  - Angles were set to 30° / 40° / 0, saved as radians "0.52360 0.69813 0".
+- **Model properties in a 2D scene** (Miscellaneous): **Perspective rendering**, Cast shadow (on), Enable click events (on), Disable click propagation.
+- **Json:** Perspective rendering adds **`"perspective": true`** to the model object; off means no key (scene_persp_off.json / scene_persp_on.json).
+- **Runtime** (stills/mo2_542_off/on_t2.0, sheet_542.png):
+  - **Off:** the cube is drawn with the **orthographic** 2D camera: parallel edges stay parallel (a symmetric hexagon-like outline).
+  - **On:** a **perspective** projection. The outline is skewed, with the near corner larger, and the face edges no longer parallel. It stays at the same screen position and about the same size.
+
+## clearenabled false
+- **Setup:** p542_noclear is scene_persp_on.json with `general.clearenabled: false` (scene_noclear.json), plus a SceneScript on the cube angles (`value.y = engine.runtime*1.5`).
+  - The control p542_clear_spin is the same with clear on.
+- **Results:**
+  - **The background is black** where the scene clear colour (0.15) normally shows: nothing clears the frame to the clearcolor.
+  - There is **no visible smearing** (I checked at 1 s and 2 s), but the spin script didn't visibly change the cube between 1 s and 2 s in either run either. So the "trail" question is not settled by these stills.
+  - **Odd:** with clear off, **the blue bar draws in front of the cube**, while the red bar is still covered. With clear on, the cube covers both bars. This looks like a depth/ordering side effect of clearenabled false (depth not cleared either?). It is reported as seen, not explained.
