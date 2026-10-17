@@ -3,7 +3,7 @@ import MetalKit
 import CryptoKit
 import OWESceneEditing
 
-private struct PreparedLayer {
+struct PreparedLayer {
     let frames: [RenderTextureFrame]
     let layer: SceneMetalLayer
     /// Where the layer's own transform comes from each frame.
@@ -22,7 +22,7 @@ private struct PreparedLayer {
 
 /// What a visible layer is drawn with this frame: its scripted/animated opacity and colour and
 /// its placed quad. Computed once, before effects run, so effects see the same values.
-private struct LayerDraw {
+struct LayerDraw {
     let opacity: Float
     let color: SIMD4<Float>
     let brightness: Float
@@ -37,7 +37,7 @@ private struct LayerDraw {
 }
 
 /// Frame-wide camera motion applied to every layer.
-private struct CameraMotion {
+struct CameraMotion {
     /// This frame's parallax and `cameraparallaxamount` (times the app's amount), when objects
     /// are displaced: parallax on in an orthographic scene.
     let parallax: (state: SceneCameraParallax, amount: Float)?
@@ -68,116 +68,116 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     let pixelFormat: MTLPixelFormat
     let commandQueue: MTLCommandQueue
     /// The scene pass's own pipelines, in the scene target's format (`SceneLayerPipelines`).
-    private let layerPipelines: SceneLayerPipelines
-    private var renderPipeline: MTLRenderPipelineState { scenePassPipelines.normal }
-    private var additiveRenderPipeline: MTLRenderPipelineState { scenePassPipelines.additive }
+    let layerPipelines: SceneLayerPipelines
+    var renderPipeline: MTLRenderPipelineState { scenePassPipelines.normal }
+    var additiveRenderPipeline: MTLRenderPipelineState { scenePassPipelines.additive }
     /// The layer pipelines for the scene target's format, this frame's sample count and depth.
-    private var scenePassPipelines: SceneLayerPipelines.Pipelines {
+    var scenePassPipelines: SceneLayerPipelines.Pipelines {
         // The drawable's when the scene draws straight into it (S2).
         guard let format = (sceneRenderTarget ?? lastDrawableScene)?.pixelFormat else { return layerPipelines.pipelines(for: nil) }
         return layerPipelines.pipelines(for: format, sampleCount: sceneSampleCount, depthFormat: sceneDepthFormat)
             ?? layerPipelines.pipelines(for: format)
     }
     /// An unblended copy in the drawables' format: a shared frame onto a display (`present(in:)`).
-    private let copyPipeline: MTLRenderPipelineState
+    let copyPipeline: MTLRenderPipelineState
     /// Everything after the scene pass, up to the drawable (bloom and the composite).
     let postProcess: ScenePostProcess
     /// WE's work on the finished frame before its bloom (`SceneFrameStages`).
-    private let frameStages: [SceneFrameStage]
+    let frameStages: [SceneFrameStage]
     /// The stage that keeps `_rt_MipMappedFrameBuffer` (internal for tests and diagnostics), and
     /// its target for this frame's draws.
     let mipMappedFrameBuffer: SceneMipMappedFrameBuffer?
-    private var mipMappedTarget: MTLTexture?
+    var mipMappedTarget: MTLTexture?
     /// The volumetrics stage (tests and diagnostics).
     var volumetrics: SceneVolumetrics? { frameStages.lazy.compactMap { $0 as? SceneVolumetrics }.first }
-    private let dxtDecodePipeline: MTLComputePipelineState
-    private let textureLoader: MTKTextureLoader
-    private let renderTargetPool: SceneRenderTargetPool
+    let dxtDecodePipeline: MTLComputePipelineState
+    let textureLoader: MTKTextureLoader
+    let renderTargetPool: SceneRenderTargetPool
     /// This frame's scene snapshot target (`sceneSnapshot`), leased on first use, and which part
     /// of it matches the scene drawn so far.
-    private var sceneCopy: MTLTexture?
+    var sceneCopy: MTLTexture?
     /// This frame's scene snapshot goes into `_rt_MipMappedFrameBuffer`'s level 0
     /// (`SceneMipMappedFrameBuffer.snapshotCanShare`).
-    private var snapshotSharesMipMappedTarget = false
-    private(set) var snapshotTracker = SceneSnapshotTracker()
+    var snapshotSharesMipMappedTarget = false
+    var snapshotTracker = SceneSnapshotTracker()
     /// Trims rebuildable memory when the system asks (`trimMemory`).
     private var memoryPressure: SceneMemoryPressure?
     /// Runs authored effects through Wallpaper Engine's own shaders.
-    private lazy var effectGraph = EffectGraphRenderer(device: device, pipelineArchiveDirectory: pipelineArchiveDirectory)
+    lazy var effectGraph = EffectGraphRenderer(device: device, pipelineArchiveDirectory: pipelineArchiveDirectory)
     /// Where the effect pipeline archive lives (`EffectGraphRenderer`); nil keeps none.
     private let pipelineArchiveDirectory: URL?
     /// How much larger full detail (at least the authored size) would draw this frame's scene
     /// target: 1 unless Render Resolution draws the scene smaller than authored or Upscaling draws
     /// it at the render scale. The size effects on scene regions, and the bloom, stand for.
-    private var fullDetailScale: Float = 1
+    var fullDetailScale: Float = 1
     /// This frame is drawn below its target size (`GSUpscaling`) and the final composite scales
     /// it up, so it can't be drawn straight into the output.
-    private var drawsAtRenderScale = false
+    var drawsAtRenderScale = false
     /// Bumped for every prelit image an effect chain starts from (`runEffects`).
-    private var prelitVersion: UInt64 = 0
+    var prelitVersion: UInt64 = 0
     /// Times the effect passes when set (profiling; `EffectPassTimer`).
     var effectPassTimer: EffectPassTimer? {
         get { effectGraph?.passTimer }
         set { effectGraph?.passTimer = newValue }
     }
     /// Draws particle systems through their WE material.
-    private lazy var particleMaterials = ParticleMaterialRenderer(device: device)
+    lazy var particleMaterials = ParticleMaterialRenderer(device: device)
     /// Draws image layers through their own WE material.
-    private lazy var imageMaterials = ImageMaterialRenderer(device: device, archive: effectGraph?.pipelineArchive)
+    lazy var imageMaterials = ImageMaterialRenderer(device: device, archive: effectGraph?.pipelineArchive)
     /// Draws Puppet Warp layers' meshes into their images (`ScenePuppetRenderer`).
-    private lazy var puppets: ScenePuppetRenderer? = {
+    lazy var puppets: ScenePuppetRenderer? = {
         self.puppetsMade = true
         return ScenePuppetRenderer(device: self.device, archive: self.effectGraph?.pipelineArchive)
     }()
     /// Whether `puppets` was made: the pipeline checks ask it only then, so a scene without a
     /// puppet never makes it.
-    private var puppetsMade = false
+    var puppetsMade = false
     /// Puppet layers' images this frame, by layer id: what `textureFrame(for:)` hands out for them.
-    private var puppetAlbedos: [String: MTLTexture] = [:]
+    var puppetAlbedos: [String: MTLTexture] = [:]
     /// Puppet layers' skeletons in motion, by layer id (`ScenePuppetAnimator`).
-    private var puppetAnimators: [String: ScenePuppetAnimator] = [:]
+    var puppetAnimators: [String: ScenePuppetAnimator] = [:]
     /// A puppet without effects: its material's other textures laid out like its posed mesh, by
     /// layer id and texture key (`ScenePuppetRenderer.warp`).
-    private var puppetWarps: [String: [String: MTLTexture]] = [:]
+    var puppetWarps: [String: [String: MTLTexture]] = [:]
     /// A puppet without effects: what of its mesh's space its image covers, which its quad grows
     /// to (`ScenePuppetCanvas`), by layer id.
-    private var puppetCanvases: [String: ScenePuppetCanvas] = [:]
+    var puppetCanvases: [String: ScenePuppetCanvas] = [:]
     /// Asset textures used by effect passes, materialised once per content.
-    private var effectAssetTextures: [String: MTLTexture] = [:]
+    var effectAssetTextures: [String: MTLTexture] = [:]
     /// Each decoded image's upload, by the image: layers, clones, particle systems and effect
     /// assets that load the same image (the loader hands them one `NSImage`) share one texture.
     /// Keyed weakly by the image itself, so an entry goes with the last copy of the image and the
     /// renderer never keeps the pixels alive; cleared with the content.
-    private let uploadedImages = NSMapTable<NSImage, UploadedFrames>(
+    let uploadedImages = NSMapTable<NSImage, UploadedFrames>(
         keyOptions: [.weakMemory, .objectPointerPersonality], valueOptions: .strongMemory)
-    private final class UploadedFrames {
+    final class UploadedFrames {
         let frames: [RenderTextureFrame]
         init(_ frames: [RenderTextureFrame]) { self.frames = frames }
     }
-    private let uploadedImagesLock = NSLock()
+    let uploadedImagesLock = NSLock()
     /// Particle textures with their mip chains (`ParticleTextureMipmaps`), by the uploaded texture
     /// they were made from, which each entry holds so its identifier isn't reused. Under
     /// `uploadedImagesLock`; cleared with the content.
-    private var particleMipmaps: [ObjectIdentifier: (source: MTLTexture, chained: MTLTexture)] = [:]
+    var particleMipmaps: [ObjectIdentifier: (source: MTLTexture, chained: MTLTexture)] = [:]
     /// Animated asset textures' sprite frames, by the same key.
-    private var effectAssetFrames: [String: [RenderTextureFrame]] = [:]
+    var effectAssetFrames: [String: [RenderTextureFrame]] = [:]
     /// Textureless layers' effect inputs (`solidEffectInput`), by layer id; once per content.
-    private var solidEffectInputs: [String: MTLTexture] = [:]
+    var solidEffectInputs: [String: MTLTexture] = [:]
     /// Solid layers' base passes for a last pass drawn into the scene (`solidSceneBase`), by layer
     /// id: the fill with the alpha it was made with, and its fill's count for `inputVersion`.
-    private var solidSceneBases: [String: (texture: MTLTexture, alpha: Float, version: UInt64)] = [:]
-    private var solidSceneBaseFills: UInt64 = 0
+    var solidSceneBases: [String: (texture: MTLTexture, alpha: Float, version: UInt64)] = [:]
+    var solidSceneBaseFills: UInt64 = 0
     /// The media system textures, while the content has a layer that shows one.
-    private var mediaTextures: SceneMediaTextures?
+    var mediaTextures: SceneMediaTextures?
     /// Scene-input layers drawn through a 3D camera get the scene under them through this.
-    private lazy var regionProjection = SceneRegionProjection(device: device)
+    lazy var regionProjection = SceneRegionProjection(device: device)
     /// Scene time since the content loaded, speed applied; drives animations, `g_Time`,
     /// particles and scripts alike.
-    private var clock = SceneClock()
+    var clock = SceneClock()
     /// Test harnesses: while true the scene clock stands still (`SceneClock.hold`). The app never sets it.
     var holdsClock = false
     /// The frame being rendered only redraws the scene as it stands (`redrawShared`).
-    private var redrawing = false
+    var redrawing = false
     /// The renderer draws the live screen saver (`ScreenSaverLiveScene`): scripts see
     /// `engine.isScreensaver()` true. Set before the first frame.
     var rendersScreenSaver = false
@@ -199,14 +199,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     var fixedPointer: SIMD2<Float>?
     /// The fixed pointer the camera parallax last reached: a new one is reached at once, not over
     /// `cameraparallaxdelay`, so a render starts where its preview has settled.
-    private var parallaxSettledPointer: SIMD2<Float>?
+    var parallaxSettledPointer: SIMD2<Float>?
     /// The current content's clock text layers.
-    private(set) var clockLayerIDs: Set<String> = []
+    var clockLayerIDs: Set<String> = []
     /// The current content's layers a still leaves out (`hidesStillLayers`): its text layers and
     /// clock hands. Layers scripts make later are left out by kind (`hiddenFromFrame`).
-    private(set) var stillLayerIDs: Set<String> = []
+    var stillLayerIDs: Set<String> = []
     /// The frames drawn (`BuiltinFrameContext.serial`).
-    private var frameSerial: UInt64 = 0
+    var frameSerial: UInt64 = 0
     /// The wall clock `clock` follows (tests step it).
     var wallTime: () -> CFTimeInterval = { CACurrentMediaTime() }
     /// The playback rate `clock` runs at, when set (tests); otherwise the Animation Speed of this
@@ -239,7 +239,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// The paused clock has eased to a stop.
     var hasStoppedPlayback: Bool { clock.hasStopped }
     /// A script's fog on/off switch was reported (`frameLighting`).
-    private var loggedFogToggle = false
+    var loggedFogToggle = false
 
     /// Scene seconds since the content loaded, rate applied (`g_Time`).
     var sceneTime: Double { clock.time }
@@ -254,51 +254,51 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     var animations: SceneAnimationSet? { timelines.set }
     /// Records what each frame draws while set (tests and diagnostics, `SceneDrawProbe`).
     var drawProbe: SceneDrawProbe?
-    private let contentQueue = DispatchQueue(label: "SceneMetalRenderer.content", qos: .userInitiated)
-    private let contentGenerationLock = NSLock()
-    private var contentGeneration = 0
-    private var sceneSize = SIMD2<Float>(1920, 1080)
-    private var layers: [PreparedLayer] = [] {
+    let contentQueue = DispatchQueue(label: "SceneMetalRenderer.content", qos: .userInitiated)
+    let contentGenerationLock = NSLock()
+    var contentGeneration = 0
+    var sceneSize = SIMD2<Float>(1920, 1080)
+    var layers: [PreparedLayer] = [] {
         didSet { layerCompositeOrder = nil }
     }
     /// Which layers other layers' effects sample, and the order that prepares them first; made
     /// again whenever `layers` changes.
-    private var layerCompositeOrder: SceneLayerCompositeOrder?
-    private var particleInstances: [LayerUniform] = []
+    var layerCompositeOrder: SceneLayerCompositeOrder?
+    var particleInstances: [LayerUniform] = []
     private var particleInstanceStorage: MTLBuffer?
 
-    private var particleSystems: [ParticleSystemRuntime] = [] {
+    var particleSystems: [ParticleSystemRuntime] = [] {
         didSet { emitterImages.noteSystems(particleSystems) }
     }
     /// `layerimage` emitters' rigged layers and resampling (`SceneEmitterImages`).
-    private lazy var emitterImages = SceneEmitterImages(device: device, queue: commandQueue) { [weak self] block in
+    lazy var emitterImages = SceneEmitterImages(device: device, queue: commandQueue) { [weak self] block in
         self?.performOnRenderThread(block)
     }
     /// Steps particle systems on the GPU; nil runs them on the CPU (`ParticleCPUSimulation`).
-    private let particleSimulator: ParticleGPUSimulator?
+    let particleSimulator: ParticleGPUSimulator?
     /// This frame's GPU steps, reused across frames.
-    private var particleRequests: [ParticleGPUSimulator.Request] = []
+    var particleRequests: [ParticleGPUSimulator.Request] = []
     /// The wallpaper instance's scripts and what their last frame left.
     let scripts: SceneRendererScripts
     /// The scene's sound layers; the view sets their gain (`sounds.setTargetGain`).
     let sounds: SceneSoundLayers
     /// Particle systems and sounds scripts created, by object id, kept across content rebuilds
     /// like `scriptLayers`.
-    private var scriptParticles: [String: (systems: [ParticleSystemRuntime], motion: SceneObjectMotion)] = [:]
-    private var scriptSounds: [Int: SceneSoundContent] = [:]
+    var scriptParticles: [String: (systems: [ParticleSystemRuntime], motion: SceneObjectMotion)] = [:]
+    var scriptSounds: [Int: SceneSoundContent] = [:]
     /// Layers scripts created (`thisScene.createLayer`), kept across content rebuilds, by id, with
     /// their base `visible`.
-    private var scriptLayers: [String: (entry: PreparedLayer, visible: Bool)] = [:]
+    var scriptLayers: [String: (entry: PreparedLayer, visible: Bool)] = [:]
     /// Model objects scripts created, by id: the model, its 3D node and its motion.
-    private var scriptModels: [String: ScriptModel] = [:]
-    private typealias ScriptModel = (model: SceneModelObject, node: SceneTransformHierarchy3D.Node, motion: SceneObjectMotion)
+    var scriptModels: [String: ScriptModel] = [:]
+    typealias ScriptModel = (model: SceneModelObject, node: SceneTransformHierarchy3D.Node, motion: SceneObjectMotion)
     /// Layers scripts destroyed while they were still being built.
-    private var destroyedScriptLayers = Set<String>()
+    var destroyedScriptLayers = Set<String>()
     /// Parents scripts set (`ILayer.setParent`), by object id, kept across content rebuilds like
     /// `scriptLayers`: the parent's id (nil: a root) and the attachment it hangs from.
-    private var scriptParents: [String: (parent: String?, attachment: String?)] = [:]
+    var scriptParents: [String: (parent: String?, attachment: String?)] = [:]
     /// `emitParticles` counts waiting for their system's next step, by object id.
-    private var pendingEmits: [String: Int] = [:]
+    var pendingEmits: [String: Int] = [:]
     /// How many particle systems are drawn (tests, diagnostics).
     var particleSystemCount: Int { particleSystems.lazy.filter { $0.simulation == nil }.count }
     /// Layers drawn through their material, and prelighting passes run (tests, diagnostics).
@@ -306,7 +306,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     var imageMaterialPrelitDraws: Int { imageMaterials?.prelitDraws ?? 0 }
     /// Per layer id, the draws of a layer with a material plan that fell back to the native draw
     /// (its pipeline compiling or failed, or an input missing) (tests, diagnostics).
-    private(set) var imageMaterialFallbacks: [String: Int] = [:]
+    var imageMaterialFallbacks: [String: Int] = [:]
     /// Puppet meshes drawn into their images (tests, diagnostics).
     var puppetMeshDraws: Int { puppets?.drawsEncoded ?? 0 }
     /// A puppet layer's image once its mesh has been drawn, and the texture the mesh samples (tests,
@@ -367,7 +367,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// The last frame's scene target, before the post-process (tests, diagnostics).
     var lastSceneTarget: MTLTexture? { sceneRenderTarget ?? lastDrawableScene }
     /// The drawable the last frame drew its scene straight into (S2), not held.
-    private weak var lastDrawableScene: MTLTexture?
+    weak var lastDrawableScene: MTLTexture?
     /// The bytes of the frame's own targets, by holder (diagnostics, test-risks LR10); the effect
     /// graph's layer and bloom buffers aren't among them.
     var frameTargetBytes: [String: Int] {
@@ -385,183 +385,183 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         layers.first { $0.layer.id == id }?.layer.weEffects ?? []
     }
     /// Script-created layers still being built (tests wait for them).
-    private(set) var pendingScriptLayers = 0
+    var pendingScriptLayers = 0
     /// Rebuilt objects (`replaceObjects`) being prepared.
-    private(set) var pendingReplacements = 0
+    var pendingReplacements = 0
     /// The last `setContent` has been applied (its layers and scripts are in place).
-    private(set) var hasContent = false
+    var hasContent = false
     /// A frame of the content has been drawn with every pass in it: none waited on a pipeline
     /// still compiling, a script layer being built or text being rasterised. The first frames
     /// after `hasContent` draw what is ready and skip the rest, so they can show a darker or
     /// partial scene; a loading picture stays over the scene until this is set.
-    private(set) var hasCompleteFrame = false
+    var hasCompleteFrame = false
     /// Which object each authored scene index is, for the draw order scripts set.
-    private var objectIDs: [Int] = []
-    private var camera = SceneCameraEffects()
+    var objectIDs: [Int] = []
+    var camera = SceneCameraEffects()
     /// The content's `general`, to resolve `camera` again when a user property bound to it
     /// changes (`refreshCamera()`); nil keeps the content's.
-    private var cameraGeneral: WESceneGeneral?
+    var cameraGeneral: WESceneGeneral?
     /// `general.clearcolor` (`SceneMetalContent.clearColor`); a script's `thisScene.clearcolor` wins.
-    private var clearColor = SceneGeneralDefaults.clearColor
+    var clearColor = SceneGeneralDefaults.clearColor
     /// `general.clearenabled` (`SceneMetalContent.clearEnabled`); a script's `thisScene.clearenabled` wins.
-    private var clearEnabled = true
+    var clearEnabled = true
     /// This frame keeps the last frame's scene (`clearenabled` off): its own scene target, loaded
     /// instead of cleared, and the pass's samples and depth stored.
-    private var keepsScene = false
+    var keepsScene = false
     /// The scene targets (colour, samples, depth) the last frame that kept its scene drew into:
     /// a frame loads them only while they are the same textures; new ones start cleared.
-    private var keptSceneTargets: [ObjectIdentifier?] = []
+    var keptSceneTargets: [ObjectIdentifier?] = []
     /// WE's parallax camera position, eased across frames (`SceneCameraParallax`).
-    private var cameraParallax = SceneCameraParallax(sceneSize: SIMD2<Float>(1920, 1080))
+    var cameraParallax = SceneCameraParallax(sceneSize: SIMD2<Float>(1920, 1080))
     /// Whose user properties this renderer's frames read (see `SceneMetalContent.wallpaperKey`).
-    private var wallpaperKey = ""
+    var wallpaperKey = ""
     /// What the objects' and effects' visibility follows (`SceneMetalContent.userVisibility`).
-    private var userVisibility = SceneUserVisibility()
+    var userVisibility = SceneUserVisibility()
     /// Each object's binding revision (`SceneBindingRevisions`), bumped by property changes.
-    private(set) var bindingRevisions = SceneBindingRevisions()
+    var bindingRevisions = SceneBindingRevisions()
     /// Layers' base values (`baseValues`) by layer id, per binding revision.
-    private var baseValueCaches: [String: SceneBindingCache<SceneLayerBaseValues>] = [:]
+    var baseValueCaches: [String: SceneBindingCache<SceneLayerBaseValues>] = [:]
     /// The Wallpaper Editor's live edits over the built content (`SceneEditorLive`).
-    private var editorLive = SceneEditorLive()
+    var editorLive = SceneEditorLive()
     /// `editorLive`'s revision the frame analysis last saw: a live edit redraws an idle scene.
-    private var analysedEditorRevision = 0
+    var analysedEditorRevision = 0
     /// A perspective scene's camera as the last frame drew it, for the Wallpaper Editor's 3D gizmo.
     /// Its lock owns it alone, so the main thread reads it (`lastPerspectiveCamera`) while the
     /// render thread draws.
-    private let perspectiveCameraLock = NSLock()
-    private var perspectiveCamera: SceneFrameCamera?
+    let perspectiveCameraLock = NSLock()
+    var perspectiveCamera: SceneFrameCamera?
     var lastPerspectiveCamera: SceneFrameCamera? { perspectiveCameraLock.withLock { perspectiveCamera } }
     /// The puppets' posed hit boxes, for the Wallpaper Editor's Show Hitboxes (its own lock).
     let puppetHitBoxes = ScenePuppetHitBoxFeed()
-    private var placement: WallpaperPlacement = .fill
+    var placement: WallpaperPlacement = .fill
     /// Drawable pixels per view point (the backing scale), refreshed every frame.
-    private var drawablePixelsPerPoint: Float = 1
+    var drawablePixelsPerPoint: Float = 1
     /// Last frame's normalised pointer, for `g_PointerPositionLast`; nil until the first frame.
-    private var lastPointer: SIMD2<Float>?
+    var lastPointer: SIMD2<Float>?
     /// Where the cursor was last seen on this renderer's display.
-    private var cursorTracker = SceneCursorTracker()
-    private var bloom = SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7, tint: SIMD3<Float>(repeating: 1))
+    var cursorTracker = SceneCursorTracker()
+    var bloom = SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7, tint: SIMD3<Float>(repeating: 1))
     /// The scene's lighting settings and light objects (`SceneMetalContent.lighting`).
-    private var lighting = SceneLightingContent()
+    var lighting = SceneLightingContent()
     /// Where each frame's camera comes from (`SceneCameraRigs.make(for:)`).
-    private var cameraRig: any SceneCameraRig = SceneOrthographicCameraRig()
+    var cameraRig: any SceneCameraRig = SceneOrthographicCameraRig()
     /// Every object's authored 3D transform (`SceneSpatialContent.transforms`), for the rig's live values.
-    private var cameraTransforms = SceneTransformHierarchy3D.empty
+    var cameraTransforms = SceneTransformHierarchy3D.empty
     /// The content's 3D side (`SceneSpatialContent`): projection, draw order, the 3D hierarchies,
     /// model objects and the objects' `sortorder`/`depthtest`.
-    private var spatial = SceneSpatialContent()
+    var spatial = SceneSpatialContent()
     /// Draws model objects at their place in the object loop (docs/models-plan.md M5); nil draws none.
     var modelDrawing: (any SceneModelDrawing)?
     /// Draws the frame's shadow maps into `_rt_shadowAtlas` (docs/models-plan.md §2.10).
     private(set) var shadowPass: SceneShadowPass?
     /// This frame's `_rt_shadowAtlas` (`drawShadows`).
-    private var frameShadowAtlas: MTLTexture?
+    var frameShadowAtlas: MTLTexture?
     /// Draws `_rt_Reflection` (docs/models-plan.md §2.11), and this frame's (`drawReflection`).
     private(set) var planarReflection: ScenePlanarReflection?
-    private var frameReflection: MTLTexture?
+    var frameReflection: MTLTexture?
     /// WE's depth-stencil states and this frame's depth buffer (docs/models-plan.md §2.4): a
     /// perspective scene's pass has one.
-    private lazy var depthStates = SceneDepthStates(device: device)
-    private lazy var depthBuffer = SceneDepthBuffer(device: device)
+    lazy var depthStates = SceneDepthStates(device: device)
+    lazy var depthBuffer = SceneDepthBuffer(device: device)
     /// The content is a perspective scene (`SceneCameraEffects.orthographic`, from `general`'s
     /// projection): its objects draw through the frame camera. A content made without a scene
     /// document (a preview, tests) is orthographic.
-    private var isPerspective: Bool { !camera.orthographic }
+    var isPerspective: Bool { !camera.orthographic }
     /// This frame's depth attachment format (`.invalid`: the pass has none).
-    private var sceneDepthFormat = MTLPixelFormat.invalid
+    var sceneDepthFormat = MTLPixelFormat.invalid
     /// The depth states for this frame's draws; nil when the pass has no depth.
-    private var frameDepth: SceneDepthStates? { sceneDepthFormat == .invalid ? nil : depthStates }
+    var frameDepth: SceneDepthStates? { sceneDepthFormat == .invalid ? nil : depthStates }
     /// Each object's own 3D transform this frame (`live3D`), evaluated once.
-    private var frameLocals3D: [String: SceneLocalTransform3D] = [:]
+    var frameLocals3D: [String: SceneLocalTransform3D] = [:]
     /// This frame's orthographic zoom (`orthographicZoom()`), taken with the transforms.
-    private var frameZoom = SceneOrthographicZoom.none
+    var frameZoom = SceneOrthographicZoom.none
     /// `collisionmodel` targets already reported as not collidable (`particleCapsules`).
-    private var reportedCollisionTargets = Set<String>()
+    var reportedCollisionTargets = Set<String>()
     /// The user's quality settings (post-processing, reflection, shadows, volumetrics); the view sets them.
     var renderSettings = SceneRenderSettings()
     /// The target follows a live-resizing window (the editors' previews): its pixels per unit are
     /// quantised so a resize doesn't reallocate it every frame (`SceneRenderResolution`). Off, the
     /// target is exactly the size Render Resolution asks for. Set before the first frame.
     var followsLiveResize = false
-    private var sceneRenderTarget: MTLTexture?
+    var sceneRenderTarget: MTLTexture?
     /// The scene pass's multisampled target with WE's MSAA setting, resolved into `sceneRenderTarget`
     /// at the end of every stretch of the pass (WE's `_rt_FullFrameBufferMultiSampled`).
-    private var sceneMultisampleTarget: MTLTexture?
+    var sceneMultisampleTarget: MTLTexture?
     /// This frame's scene-pass samples per pixel (1 without MSAA).
-    private var sceneSampleCount = 1
+    var sceneSampleCount = 1
     /// This frame's prelit images (`prelit`), by layer id.
-    private var prelitImages: [String: MTLTexture] = [:]
+    var prelitImages: [String: MTLTexture] = [:]
     /// Animated layers' current frames, cut out of their atlases for their effects (`effectInput`).
-    private lazy var spriteFrameInputs = SceneSpriteFrameInputs(device: device)
+    lazy var spriteFrameInputs = SceneSpriteFrameInputs(device: device)
     /// This frame's cut-out frame versions (`SceneSpriteFrameInputs.Input.version`), by layer id.
-    private var spriteFrameVersions: [String: UInt64] = [:]
+    var spriteFrameVersions: [String: UInt64] = [:]
     /// A shared scene's finished frame, the scene target's size (`sharedFrame`).
-    private var sharedFrameTarget: MTLTexture?
-    private var sceneRenderTargetSize = SIMD2<Int>.zero
+    var sharedFrameTarget: MTLTexture?
+    var sceneRenderTargetSize = SIMD2<Int>.zero
     /// Whether the drawable's size has settled, for an exactly sized scene target (S1).
     /// Render-target pixels per scene unit this frame (see `SceneRenderResolution`).
-    private var renderPixelsPerUnit: Float = 1
+    var renderPixelsPerUnit: Float = 1
     /// Rendered text, by string and style. Capped at 128 entries and 32 MB of rasters not drawn this
     /// frame: a clock with seconds never reuses its old strings, and at 128 entries of ~1.5 MB (a
     /// 1000x300 px raster plus its coverage) it held ~190 MB, 300 MB or more on Retina/5K. 32 MB
     /// still keeps 20 such rasters (and the full 128 small labels) for scripts that cycle or toggle
     /// strings; every string a frame draws stays regardless (`beginGeneration`).
-    private var textFrameCache = SceneLRUCache<String, SceneTextRasterResult>(
+    var textFrameCache = SceneLRUCache<String, SceneTextRasterResult>(
         capacity: 128, costLimit: SceneMetalRenderer.textCacheByteBudget)
     static let textCacheByteBudget = 32 << 20
     /// Rasterises changed strings off the render thread (`SceneTextRasterQueue`).
-    private let textRaster: SceneTextRasterQueue
+    let textRaster: SceneTextRasterQueue
     /// Changed strings still rasterising or waiting for a frame to take them (for tests).
     var pendingTextRasters: Int { textRaster.inFlight }
     /// Each text layer's raster scale: quantised and retained while it animates, exact once it
     /// settles (`SceneTextRasterScale.Tracker`).
-    private var textRasterScales: [String: SceneTextRasterScale.Tracker] = [:]
+    var textRasterScales: [String: SceneTextRasterScale.Tracker] = [:]
     /// Parent graph of the current content; layer origins are relative to their parents.
-    private var transforms = SceneTransformHierarchy.empty
+    var transforms = SceneTransformHierarchy.empty
     /// Each layer's local transform, evaluated once per frame so a parent's scripts run once
     /// however many children read it.
-    private var frameLocals: [String: SceneLocalTransform] = [:]
-    private var layerIndexByStateId: [String: Int] = [:]
+    var frameLocals: [String: SceneLocalTransform] = [:]
+    var layerIndexByStateId: [String: Int] = [:]
     /// Objects that aren't drawn layers (groups, particle systems), by id: their live transform.
-    private var objectMotions: [String: SceneObjectMotion] = [:]
+    var objectMotions: [String: SceneObjectMotion] = [:]
     /// The most recently committed frame, so state a removal frees can wait for it.
-    private(set) var lastCommandBuffer: MTLCommandBuffer?
+    var lastCommandBuffer: MTLCommandBuffer?
     /// A shared scene's latest finished frame (`renderShared`), which its displays present.
-    private(set) var sharedFrame: MTLTexture?
+    var sharedFrame: MTLTexture?
     /// The last `present(in:)`'s command buffer (tests and benchmarks).
-    private(set) var lastPresentCommandBuffer: MTLCommandBuffer?
+    var lastPresentCommandBuffer: MTLCommandBuffer?
     /// Counts this renderer's frames while the Wallpaper Editor's stats overlay shows them; nil,
     /// counting nothing, the rest of the time (`SceneFrameStatsRecorder`).
     var frameStats: SceneFrameStatsRecorder?
     /// The CPU time of the frame's particle step and its light objects, for `frameStats`.
-    private var particleStepMilliseconds = 0.0
-    private var lastLightCount = 0
+    var particleStepMilliseconds = 0.0
+    var lastLightCount = 0
     /// A screen's EDR headroom (tests set their own); a view without a window has none.
     var displayHeadroom: (NSScreen?) -> SceneDisplayHeadroom = { SceneDisplayHeadroom(screen: $0) }
 
     /// `view`'s screen's headroom: from its main-thread snapshot when a render thread draws it.
-    private func viewHeadroom(_ view: MTKView) -> SceneDisplayHeadroom {
+    func viewHeadroom(_ view: MTKView) -> SceneDisplayHeadroom {
         SceneViewSnapshots.snapshot(of: view)?.headroom ?? displayHeadroom(view.window?.screen)
     }
     /// How the last frame reached the display (`SceneDisplayOutput`).
-    private(set) var displayOutput = SceneDisplayOutput.standard
+    var displayOutput = SceneDisplayOutput.standard
     /// The headroom of each view a shared frame was presented on since the last one was drawn.
-    private var sharedHeadrooms: [ObjectIdentifier: SceneDisplayHeadroom] = [:]
+    var sharedHeadrooms: [ObjectIdentifier: SceneDisplayHeadroom] = [:]
     /// Destroyed script layers' ids, freed once the frame that last drew them completes.
-    private var deferredReleases = SceneDeferredReleases()
+    var deferredReleases = SceneDeferredReleases()
     /// Where the cursor was last seen on this display, in display pixels from the top-left.
-    private var lastCursorScreenPixels = SIMD2<Double>(repeating: 0)
+    var lastCursorScreenPixels = SIMD2<Double>(repeating: 0)
     /// This renderer's view of the desktop's left clicks.
-    private var clickReader = DesktopClickReader()
+    var clickReader = DesktopClickReader()
     /// The last drawn frame's camera motion and text sizes (by layer id), for the next script frame.
-    private var lastCameraMotion: CameraMotion?
+    var lastCameraMotion: CameraMotion?
     /// The last drawn frame's camera, for the next script frame's cursor ray.
-    private var lastFrameCamera: SceneFrameCamera?
+    var lastFrameCamera: SceneFrameCamera?
     /// Per-layer dependencies, coverage, class and this frame's dirty state
     /// (efficiency-plan-2d notes WP1-A); built with the content, off the main thread.
-    private(set) var layerAnalysis: SceneLayerAnalysis?
+    var layerAnalysis: SceneLayerAnalysis?
     /// Keeps system audio capture on while the content reacts to audio (`needsAudio`).
-    private var audioCaptureLease: AudioCaptureLease?
+    var audioCaptureLease: AudioCaptureLease?
     /// Whether the loaded content reacts to audio (`needsAudio`); false before it is analysed.
     var contentReadsAudio: Bool {
         guard let layerAnalysis else { return false }
@@ -572,30 +572,30 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     var framePacing = FramePacing()
     /// Off with `OWE_IDLE_SKIP=0` (comparisons): every frame is drawn, the rate still adapts.
     /// Bumped when a video layer has a new frame (`SceneLayerFrameInputs.videoRevision`).
-    private var videoRevision: UInt64 = 0
-    private var analysedTime: Double = 0
+    var videoRevision: UInt64 = 0
+    var analysedTime: Double = 0
     var skipsIdleFrames = ProcessInfo.processInfo.environment["OWE_IDLE_SKIP"] != "0"
     /// Frames encoded so far: a shared scene's displays present only a new one.
-    private(set) var encodedFrames: UInt64 = 0
-    private var pacedParallax = SIMD2<Float>(0.5, 0.5)
+    var encodedFrames: UInt64 = 0
+    var pacedParallax = SIMD2<Float>(0.5, 0.5)
     /// What the analysis last saw of the frame's shape: a change marks every layer dirty.
-    private var analysedShape: (layers: Int, target: SIMD2<Float>) = (0, .zero)
+    var analysedShape: (layers: Int, target: SIMD2<Float>) = (0, .zero)
     /// A pipeline was compiling last frame: the frame after one lands changes too.
-    private var analysedWarmUp = true
+    var analysedWarmUp = true
     /// `pipelinesLanded` as the last analysed frame saw it.
-    private var analysedLanded = 0
+    var analysedLanded = 0
     /// `scripts.userVisibilityRevision` the analysis last saw.
-    private var analysedUserVisibility = 0
+    var analysedUserVisibility = 0
     /// The blur-like buffer divisor (1, 2, 4) over the slider's (`OWE_BLUR_DIVISOR` for comparisons).
     var blurDivisorOverride = ProcessInfo.processInfo.environment["OWE_BLUR_DIVISOR"].flatMap(Int.init)
-    private func effectResolution(of layerID: String) -> EffectResolutionPolicy {
+    func effectResolution(of layerID: String) -> EffectResolutionPolicy {
         let divisor = blurDivisorOverride ?? framePacing.limits.policy.blurResolutionDivisor
         guard divisor > 1 else { return .full }
         let layer = layerAnalysis.flatMap { analysis in analysis.index(of: layerID).map { analysis.layers[$0] } }
         let sharp = layer.map { $0.contentClass == .text || ($0.contentClass == .lineArt && $0.classifiedFromPixels) } ?? false
         return EffectResolutionPolicy(divisor: divisor, sharpContent: sharp)
     }
-    private var lastTextSizes: [String: SIMD2<Float>] = [:]
+    var lastTextSizes: [String: SIMD2<Float>] = [:]
     /// Told how long each frame took on the CPU, including the wait for a drawable.
     var frameTimeObserver: ((CFTimeInterval) -> Void)?
 
@@ -747,7 +747,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     /// Resolves the content's visibility against the current user properties (`SceneUserVisibility`).
-    private func applyUserVisibility() {
+    func applyUserVisibility() {
         guard !userVisibility.sites.isEmpty else { return }
         let key = wallpaperKey
         let resolved = userVisibility.resolve { WallpaperServices.shared.userPropertyString($0, wallpaper: key) }
@@ -771,1688 +771,22 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// Whether this frame leaves `layer` out: a clock layer while `hidesClockLayers`, a text layer
     /// or clock hand while `hidesStillLayers`.
-    private func hiddenFromFrame(_ layer: SceneMetalLayer) -> Bool {
+    func hiddenFromFrame(_ layer: SceneMetalLayer) -> Bool {
         (hidesClockLayers && clockLayerIDs.contains(layer.id))
             || (hidesStillLayers && (layer.text != nil || stillLayerIDs.contains(layer.id)))
-    }
-
-    func setContent(_ content: SceneMetalContent?) {
-        clockLayerIDs = content?.scripts.map { SceneClockLayers.ids(in: $0.document) } ?? []
-        stillLayerIDs = Set(content?.layers.filter { $0.text != nil }.map(\.id) ?? [])
-            .union(content?.scripts.map { SceneClockLayers.stillIDs(in: $0.document) } ?? [])
-        baseValueCaches.removeAll()
-        effectAssetTextures.removeAll()
-        clearUploadedImages()
-        effectAssetFrames.removeAll()
-        solidEffectInputs.removeAll()
-        solidSceneBases.removeAll()
-        mediaTextures = nil
-        effectGraph?.releaseTargets()
-        particleMaterials?.releaseAll()
-        imageMaterials?.releaseAll()
-        imageMaterialFallbacks.removeAll()
-        puppets?.releaseAll()
-        spriteFrameInputs.releaseAll()
-        puppetAlbedos.removeAll()
-        puppetAnimators.removeAll()
-        emitterImages.reset()
-        puppetWarps.removeAll()
-        puppetCanvases.removeAll()
-        contentGenerationLock.lock()
-        contentGeneration &+= 1
-        let generation = contentGeneration
-        contentGenerationLock.unlock()
-
-        guard let content else {
-            layerAnalysis = nil
-            audioCaptureLease = nil
-            layers = []
-            particleSystems = []
-            objectMotions = [:]
-            scripts.stop()
-            timelines.clear()
-            sounds.stopAll()
-            scriptParticles.removeAll()
-            scriptSounds.removeAll()
-            scriptLayers.removeAll()
-            scriptModels.removeAll()
-            destroyedScriptLayers.removeAll()
-            pendingEmits.removeAll()
-            objectIDs = []
-            hasContent = false
-            hasCompleteFrame = false
-            textFrameCache.removeAll()
-            textRaster.reset()
-            textRasterScales.removeAll()
-            clock = SceneClock()
-            transforms = .empty
-            spatial = SceneSpatialContent()
-            depthBuffer.releaseAll()
-            planarReflection?.release()
-            lastPointer = nil
-            lastCameraMotion = nil
-            lastFrameCamera = nil
-            lastTextSizes.removeAll()
-            cameraParallax = SceneCameraParallax(sceneSize: sceneSize)
-            parallaxSettledPointer = nil
-            cursorTracker = SceneCursorTracker()
-            deferredReleases.removeAll()
-            lastCommandBuffer = nil
-            return
-        }
-        // Subscribed before the scripts start, so the artwork the session already has is there.
-        let bindsSystemTexture = content.layers.contains { layer in
-            layer.systemImage != nil
-                || layer.weEffects.contains { $0.passes.contains { !$0.systemTextures.isEmpty } }
-        }
-        if bindsSystemTexture, let media = scripts.services?.media {
-            mediaTextures = SceneMediaTextures(source: media, device: device)
-        }
-        contentQueue.async { [weak self] in
-            guard let self, self.isCurrentContentGeneration(generation) else { return }
-            // Each layer's upload is independent; built side by side, kept in layer order.
-            var built = [[RenderTextureFrame]?](repeating: nil, count: content.layers.count)
-            built.withUnsafeMutableBufferPointer { slots in
-                let slots = slots
-                DispatchQueue.concurrentPerform(iterations: content.layers.count) { index in
-                    slots[index] = self.makeTextureFrames(from: content.layers[index].source)
-                }
-            }
-            let preparedLayers: [PreparedLayer] = zip(built, content.layers).compactMap { frames, layer in
-                guard let frames, !frames.isEmpty else { return nil }
-                return PreparedLayer(frames: frames, layer: Self.droppingPixels(layer))
-            }
-            let imageLayers = Set(content.particleSystems.flatMap { $0.emitterImages.map(\.layerID) })
-            let imageSources = Dictionary(preparedLayers.compactMap { entry -> (String, ParticleEmitterImagePoints.Source)? in
-                guard imageLayers.contains(entry.layer.id), let frame = entry.frames.first else { return nil }
-                let size = entry.layer.source.pixelSize
-                let sampling = ParticleEmitterImagePoints.Sampling(texture: frame.texture, uvOrigin: frame.uvOrigin,
-                                                                   uvAxisX: frame.uvAxisX, uvAxisY: frame.uvAxisY)
-                return (entry.layer.id, .init(sampling: sampling, imageSize: SIMD2(Int(size.x), Int(size.y)),
-                                              rig: ParticleEmitterImageBones.Rig(entry.layer.puppet)))
-            }, uniquingKeysWith: { first, _ in first })
-            var imagePoints: [String: [SIMD4<Int32>]] = [:]
-            let runtimes: [ParticleSystemRuntime?] = content.particleSystems.enumerated().map { index, system in
-                var system = system
-                ParticleEmitterImagePoints.fill(&system.emitterImages, sources: imageSources, device: self.device,
-                                                queue: self.commandQueue, cache: &imagePoints)
-                guard let texture = self.particleTexture(from: system.source, spriteSheet: system.spriteSheet != nil) else { return nil }
-                let fallback = system.fallbackSource.flatMap { self.makeTextureFrames(from: $0)?.first?.texture }
-                Self.dropPixels(&system)
-                // Seeded by position in the scene, so a wallpaper's particles replay the same way.
-                let seed = UInt32(index) &+ self.particleSeed &* 0x9E37_79B9
-                return ParticleSystemRuntime(texture: texture, configuration: system, seed: ParticleRandom.pcg(seed),
-                                             fallbackTexture: fallback)
-            }
-            ParticleSystemRuntime.linkFamilies(runtimes)
-            let preparedParticleSystems = ParticleSystemRuntime.addingRendererDraws(runtimes.compactMap { $0 })
-            guard self.isCurrentContentGeneration(generation) else { return }
-            // The models' meshes go to the GPU here, off the render thread, so the first frame
-            // drawing them has nothing to upload.
-            for model in content.spatial.models { _ = model.plan?.upload(device: self.device) }
-            let analysis = SceneLayerAnalysis.make(content: content)
-            // Thread boundary: content queue → render thread.
-            self.performOnRenderThread { [weak self] in
-                guard let self, self.isCurrentContentGeneration(generation) else { return }
-                self.sceneSize = content.size
-                self.sharedFrame = nil
-                self.bloom = content.bloom
-                self.lighting = content.lighting
-                self.cameraRig = SceneCameraRigs.make(for: content)
-                self.cameraTransforms = content.spatial.transforms
-                self.spatial = content.spatial
-                self.modelDrawing?.setContent(content.spatial.models, content: content)
-                self.shadowPass?.setContent()
-                self.planarReflection?.setContent()
-                for stage in self.frameStages { stage.setContent(content) }
-                self.postProcess.setContent(content)
-                self.particleSystems = preparedParticleSystems
-                self.layerAnalysis = analysis
-                let needsAudio = Self.needsAudio(analysis, particles: preparedParticleSystems.map(\.configuration))
-                if needsAudio != (self.audioCaptureLease != nil) {
-                    self.audioCaptureLease = needsAudio ? WallpaperServices.shared.acquireAudioCapture() : nil
-                }
-                self.framePacing.changesOnItsOwn = FramePacing.changesOnItsOwn(
-                    analysis, particles: !preparedParticleSystems.isEmpty, cameraShake: content.camera.shake)
-                self.framePacing.wake(.interactive, at: self.wallTime())
-                self.transforms = content.transforms
-                self.objectMotions = content.motions
-                self.objectIDs = content.objectIDs
-                self.wallpaperKey = content.wallpaperKey
-                self.camera = content.camera
-                self.cameraGeneral = content.general
-                self.clearColor = content.clearColor
-                self.clearEnabled = content.clearEnabled
-                self.keptSceneTargets = []
-                self.cameraParallax = SceneCameraParallax(sceneSize: content.size, enabled: Self.parallaxEnabled(content.camera))
-                self.parallaxSettledPointer = nil
-                self.lastCameraMotion = nil
-                self.lastFrameCamera = nil
-                self.lastTextSizes.removeAll()
-                self.textFrameCache.removeAll()
-                self.textRaster.reset()
-                self.textRasterScales.removeAll()
-                let running = self.scripts.wallpaper
-                self.scripts.setContent(content.scripts, visibility: content.visibility,
-                                        parents: content.transforms.nodes.compactMapValues(\.parentID))
-                self.userVisibility = content.userVisibility
-                // A property changed while the content was being built shows in it at once.
-                self.applyUserVisibility()
-                self.timelines.setTimelines(content.timelines,
-                                            restart: self.scripts.wallpaper != nil && self.scripts.wallpaper !== running)
-                if self.scripts.wallpaper == nil || self.scripts.wallpaper !== running {
-                    // New scripts: the old ones' layers are gone with them.
-                    self.scriptLayers.removeAll()
-                    self.destroyedScriptLayers.removeAll()
-                    self.pendingEmits.removeAll()
-                    self.scriptParticles.removeAll()
-                    self.scriptSounds.removeAll()
-                    self.scriptModels.removeAll()
-                    self.scriptParents.removeAll()
-                }
-                for (id, created) in self.scriptModels { self.addScriptModel(id, created) }
-                for (id, parent) in self.scriptParents { self.reparent(id, to: parent.parent, attachment: parent.attachment) }
-                for (id, created) in self.scriptParticles {
-                    self.particleSystems += created.systems
-                    self.objectMotions[id] = created.motion
-                }
-                self.sounds.setContent(content.sounds + self.scriptSounds.keys.sorted().compactMap { self.scriptSounds[$0] })
-                for (id, created) in self.scriptLayers { self.scripts.setBaseVisibility(created.visible, for: id) }
-                self.layers = preparedLayers + self.scriptLayers.values.map(\.entry)
-                self.timelines.registerTextures(self.layers.compactMap(Self.textureAnimation))
-                self.orderLayers()
-                self.hasContent = true
-                self.hasCompleteFrame = false
-                self.clock = SceneClock()
-            }
-        }
-    }
-
-    private var currentContentGeneration: Int {
-        contentGenerationLock.lock()
-        defer { contentGenerationLock.unlock() }
-        return contentGeneration
-    }
-
-    private func isCurrentContentGeneration(_ generation: Int) -> Bool {
-        contentGenerationLock.lock()
-        defer { contentGenerationLock.unlock() }
-        return contentGeneration == generation
-    }
-
-    func setPlacement(_ placement: WallpaperPlacement) {
-        self.placement = placement
-    }
-
-    /// Applies what scripts changed in the scene's structure: builds the layers `createLayer` made
-    /// (off the main thread, through the loader; drawn once ready), drops destroyed ones (their GPU
-    /// state freed after the in-flight frame) and queues `emitParticles` counts.
-    private func applyScriptEvents(_ events: [SceneScriptRenderEvent]) {
-        var removed: [String] = []
-        for event in events {
-            switch event {
-            case .create(let id, let object):
-                timelines.addObject(object, id: id)
-                buildScriptLayer(String(id), object: object)
-            case let .setParent(id, parentID, attachment):
-                let key = String(id)
-                scriptParents[key] = (parentID.map(String.init), attachment)
-                reparent(key, to: parentID.map(String.init), attachment: attachment)
-            case .destroy(let id):
-                let key = String(id)
-                scriptParents.removeValue(forKey: key)
-                let createdParticles = scriptParticles.removeValue(forKey: key)
-                let createdSound = scriptSounds.removeValue(forKey: id)
-                let createdModel = scriptModels.removeValue(forKey: key)
-                _ = scripts.wallpaper?.takePrepared(id)
-                if scriptLayers.removeValue(forKey: key) == nil, createdParticles == nil, createdSound == nil, createdModel == nil {
-                    destroyedScriptLayers.insert(key)
-                }
-                if createdModel != nil {
-                    spatial.models.removeAll { $0.id == key }
-                    spatial.transforms.remove(key)
-                    objectMotions.removeValue(forKey: key)
-                    models?.remove(key)
-                    shadowPass?.remove(key)
-                }
-                layers.removeAll { $0.layer.id == key }
-                textRasterScales.removeValue(forKey: key)
-                if createdParticles != nil {
-                    particleSystems.removeAll { particleObjectID($0) == key }
-                    objectMotions.removeValue(forKey: key)
-                }
-                sounds.remove(id)
-                timelines.removeObject(id)
-                removed.append(key)
-            case .emit(let id, let count):
-                pendingEmits[String(id), default: 0] += count ?? 1
-            case let .materialFunction(id, effect, name):
-                let key = String(id)
-                for entry in layers where entry.layer.id == key {
-                    effectGraph?.executeFunction(named: name, effectIndex: effect, of: entry.layer.weEffects, layer: key)
-                }
-            case .sound(let id, let playback):
-                sounds.perform(playback, on: id)
-            case .video(let id, let command):
-                let key = String(id)
-                for entry in layers where entry.layer.id == key {
-                    if case let .video(stream) = entry.layer.source { stream.perform(command) }
-                }
-            case let .animation(site, time, flags, rate, frame):
-                timelines.restore(site, time: time, flags: flags, rate: rate, seenAt: frame)
-            case let .textureAnimation(id, control, frame):
-                timelines.restoreTexture(control, object: id, seenAt: frame)
-            case let .rig(id, command):
-                performRigCommand(command, on: String(id))
-            }
-        }
-        if !removed.isEmpty {
-            // The last frame that drew these may still be on the GPU; free their effect targets
-            // once it has finished (`releaseFinishedEffectState`).
-            deferredReleases.enqueue(removed, after: lastCommandBuffer)
-        }
-    }
-
-    /// Swaps in objects rebuilt after a structural user-property change (`SceneObjectReplacement`):
-    /// their textures are uploaded and their particle systems made off the render thread, then
-    /// their layers and systems replace the old ones between two frames. The old ones' effect,
-    /// material and puppet state is released (targets go to the spare list, which later passes on
-    /// the queue are ordered after), and the rest of the scene keeps running. Dropped when the
-    /// content changed meanwhile: that content was built with the change.
-    func replaceObjects(_ replacement: SceneObjectReplacement) {
-        let generation = currentContentGeneration
-        let content = replacement.content
-        pendingReplacements += 1
-        contentQueue.async { [weak self] in
-            guard let self else { return }
-            var prepared: [PreparedLayer] = []
-            var systems: [ParticleSystemRuntime] = []
-            var analysis: SceneLayerAnalysis?
-            if self.isCurrentContentGeneration(generation) {
-                prepared = content.layers.compactMap { layer in
-                    guard let frames = self.makeTextureFrames(from: layer.source), !frames.isEmpty else { return nil }
-                    return PreparedLayer(frames: frames, layer: Self.droppingPixels(layer))
-                }
-                let runtimes: [ParticleSystemRuntime?] = content.particleSystems.map { system in
-                    var system = system
-                    guard let texture = self.particleTexture(from: system.source, spriteSheet: system.spriteSheet != nil) else { return nil }
-                    let fallback = system.fallbackSource.flatMap { self.makeTextureFrames(from: $0)?.first?.texture }
-                    Self.dropPixels(&system)
-                    // Seeded by position in the scene, as the whole content's systems are.
-                    let seed = UInt32(truncatingIfNeeded: system.order) &+ self.particleSeed &* 0x9E37_79B9
-                    return ParticleSystemRuntime(texture: texture, configuration: system, seed: ParticleRandom.pcg(seed),
-                                                 fallbackTexture: fallback)
-                }
-                ParticleSystemRuntime.linkFamilies(runtimes)
-                systems = ParticleSystemRuntime.addingRendererDraws(runtimes.compactMap { $0 })
-                analysis = SceneLayerAnalysis.make(content: content)
-            }
-            // Thread boundary: content queue → render thread.
-            self.performOnRenderThread { [weak self] in
-                guard let self else { return }
-                self.pendingReplacements -= 1
-                guard self.isCurrentContentGeneration(generation), let analysis else { return }
-                self.install(replacement.objectIDs, layers: prepared, systems: systems, motions: content.motions,
-                             analysis: analysis)
-            }
-        }
-    }
-
-    private func install(_ ids: Set<String>, layers prepared: [PreparedLayer], systems: [ParticleSystemRuntime],
-                         motions: [String: SceneObjectMotion], analysis: SceneLayerAnalysis) {
-        layers.removeAll { ids.contains($0.layer.id) }
-        particleSystems.removeAll { particleObjectID($0).map(ids.contains) ?? false }
-        for id in ids {
-            effectGraph?.releaseLayer(id)
-            imageMaterials?.releaseLayer(id)
-            puppets?.releaseLayer(id)
-            spriteFrameInputs.releaseLayer(id)
-            puppetAlbedos.removeValue(forKey: id)
-            puppetAnimators.removeValue(forKey: id)
-            puppetWarps.removeValue(forKey: id)
-            puppetCanvases.removeValue(forKey: id)
-            textRasterScales.removeValue(forKey: id)
-            lastTextSizes.removeValue(forKey: id)
-            baseValueCaches.removeValue(forKey: id)
-            if let motion = motions[id] { objectMotions[id] = motion }
-        }
-        textFrameCache.removeAll()
-        particleSystems += systems
-        layers += prepared
-        for entry in prepared { registerTextureAnimation(entry) }
-        layerAnalysis = layerAnalysis?.replacing(ids, with: analysis) ?? analysis
-        bindingRevisions.bump(Set(ids.compactMap { Int($0).map(UserPropertyBindingOwner.object) }))
-        refreshParticleRevisions()
-        orderLayers()
-        framePacing.wake(.interactive, at: wallTime())
-    }
-
-    // MARK: - Timelines
-
-    /// An animated texture's layer shares its texture's clock (§2.7), frame times in sheet order.
-    private func registerTextureAnimation(_ entry: PreparedLayer) {
-        guard let animation = Self.textureAnimation(entry) else { return }
-        timelines.registerTexture(object: animation.id, texture: animation.texture, frameTimes: animation.frameTimes)
-    }
-
-    private static func textureAnimation(_ entry: PreparedLayer) -> (id: Int, texture: String, frameTimes: [Float])? {
-        guard let key = entry.layer.textureKey, let id = Int(entry.layer.id) else { return nil }
-        return (id, key, entry.frames.map(\.duration))
-    }
-
-    /// Builds an object a script created through the loader, off the main thread: a layer, a
-    /// particle system (with its children) or a sound.
-    private func buildScriptLayer(_ id: String, object: [String: SceneJSON]) {
-        var visible = true
-        if case .bool(let flag)? = object["visible"] { visible = flag }
-        // Built on the script thread already: drawn in this frame, as WE's createLayer is.
-        if let key = Int(id), let built = scripts.wallpaper?.takePrepared(key) as? PreparedScriptObject {
-            destroyedScriptLayers.remove(id)
-            installScriptObject(built, id: id, visible: visible)
-            return
-        }
-        guard let makeLayer = scripts.makeLayer else { return }
-        let generation = currentContentGeneration
-        let wallpaper = scripts.wallpaper
-        pendingScriptLayers += 1
-        contentQueue.async { [weak self] in
-            guard let self else { return }
-            let built: PreparedScriptObject? = {
-                guard self.isCurrentContentGeneration(generation) else { return nil }
-                guard let created = makeLayer(object) else {
-                    OWELog.error(.script, "createLayer: object \(id) can't be built")
-                    return nil
-                }
-                return self.prepare(created, id: id)
-            }()
-            // Thread boundary: content queue → render thread.
-            self.performOnRenderThread { [weak self] in
-                guard let self else { return }
-                self.pendingScriptLayers -= 1
-                guard let built, self.isCurrentContentGeneration(generation), self.scripts.wallpaper === wallpaper else { return }
-                guard self.destroyedScriptLayers.remove(id) == nil else { return }
-                self.installScriptObject(built, id: id, visible: visible)
-            }
-        }
-    }
-
-    /// Starts drawing a created object, in the scripts' order.
-    private func installScriptObject(_ built: PreparedScriptObject, id: String, visible: Bool) {
-        scripts.setBaseVisibility(visible, for: id)
-        switch built {
-        case .layer(let entry):
-            scriptLayers[id] = (entry, visible)
-            layers.append(entry)
-            registerTextureAnimation(entry)
-        case .particles(let systems, let motion):
-            scriptParticles[id] = (systems, motion)
-            objectMotions[id] = motion
-            particleSystems.append(contentsOf: systems)
-        case .sound(let content):
-            scriptSounds[content.id] = content
-            sounds.add(content)
-        case let .model(model, node, motion):
-            scriptModels[id] = (model, node, motion)
-            addScriptModel(id, (model, node, motion))
-        }
-        orderLayers()
-    }
-
-    /// A created object with its textures loaded (off the main thread).
-    private enum PreparedScriptObject {
-        case layer(PreparedLayer)
-        case particles([ParticleSystemRuntime], motion: SceneObjectMotion)
-        case sound(SceneSoundContent)
-        case model(SceneModelObject, node: SceneTransformHierarchy3D.Node, motion: SceneObjectMotion)
-    }
-
-    private func prepare(_ created: SceneScriptCreatedObject, id: String) -> PreparedScriptObject? {
-        switch created {
-        case .layer(var layer):
-            layer.order = Int.max
-            guard let frames = makeTextureFrames(from: layer.source), !frames.isEmpty else { return nil }
-            return .layer(PreparedLayer(frames: frames, layer: Self.droppingPixels(layer)))
-        case .particles(let systems, let motion):
-            // Above every authored object, like WE's createLayer; the scripts' order places it.
-            let runtimes: [ParticleSystemRuntime?] = systems.enumerated().map { index, system in
-                var system = system
-                system.order = Int(Int32.max)
-                guard let texture = particleTexture(from: system.source, spriteSheet: system.spriteSheet != nil) else { return nil }
-                let fallback = system.fallbackSource.flatMap { makeTextureFrames(from: $0)?.first?.texture }
-                Self.dropPixels(&system)
-                let seed = UInt32(truncatingIfNeeded: (Int(id) ?? 0) &* 31 &+ index)
-                return ParticleSystemRuntime(texture: texture, configuration: system, seed: ParticleRandom.pcg(seed),
-                                             fallbackTexture: fallback)
-            }
-            ParticleSystemRuntime.linkFamilies(runtimes)
-            let prepared = ParticleSystemRuntime.addingRendererDraws(runtimes.compactMap { $0 })
-            return prepared.isEmpty ? nil : .particles(prepared, motion: motion)
-        case .sound(let content):
-            return .sound(content)
-        case let .model(model, node, motion):
-            var model = model
-            model.id = id
-            _ = model.plan?.upload(device: device)
-            return .model(model, node: node, motion: motion)
-        }
-    }
-
-    /// A model a script created, drawn from now on like the scene's own (after them, as WE's
-    /// createLayer appends).
-    private func addScriptModel(_ id: String, _ created: ScriptModel) {
-        spatial.models.removeAll { $0.id == id }
-        spatial.models.append(created.model)
-        spatial.transforms.insert(id, node: created.node)
-        if let parent = scriptParents[id] { spatial.transforms.setParent(id, to: parent.parent, attachment: parent.attachment) }
-        objectMotions[id] = created.motion
-        models?.add(created.model)
-    }
-
-    /// `ILayer.setParent` in every parent graph the renderer composes worlds with, and in the
-    /// visibility chain (a hidden parent hides its children).
-    private func reparent(_ id: String, to parent: String?, attachment: String?) {
-        transforms.setParent(id, to: parent, attachment: attachment)
-        spatial.transforms.setParent(id, to: parent, attachment: attachment)
-        cameraTransforms.setParent(id, to: parent, attachment: attachment)
-        cameraRig.setParent(id, to: parent, attachment: attachment)
-        scripts.setParent(parent, for: id)
-        // The analysis worked out lineages and bounds under the old parents; without this, idle
-        // skipping could keep the old pose on screen.
-        if let analysis = layerAnalysis?.reparented(nodes: transforms.nodes, motions: objectMotions) {
-            layerAnalysis = analysis
-            if audioCaptureLease == nil, Self.needsAudio(analysis, particles: particleSystems.map(\.configuration)) {
-                audioCaptureLease = WallpaperServices.shared.acquireAudioCapture()
-            }
-        }
-    }
-
-    /// Puts `layers` in draw order (the scene's, or the one scripts set) with each layer's
-    /// particle barrier.
-    private func orderLayers() {
-        // A renderer after a system's first sits where the system does.
-        let systems = particleSystems.filter { $0.simulation == nil }.map { system -> (id: String?, order: Int) in
-            let order = system.configuration.order
-            if order >= 0 && order < objectIDs.count { return (String(objectIDs[order]), order) }
-            return (particleObjectID(system), order)
-        }
-        let order = SceneRendererScripts.drawOrder(layers: layers.map { ($0.layer.id, $0.layer.order) },
-                                                   systems: systems, scriptOrder: scripts.state.order)
-        var ordered: [PreparedLayer] = []
-        ordered.reserveCapacity(layers.count)
-        for (index, position) in order.sequence.enumerated() {
-            var entry = layers[position]
-            entry.particleBarrier = order.barriers[index]
-            ordered.append(entry)
-        }
-        layers = ordered
-    }
-
-    /// Frees the effect state of destroyed script layers whose last frame the GPU has finished.
-    private func releaseFinishedEffectState() {
-        guard deferredReleases.count > 0 else { return }
-        deferredReleases.drain(live: Set(layers.map(\.layer.id))) { id in
-            effectGraph?.releaseLayer(id)
-            imageMaterials?.releaseLayer(id)
-            puppets?.releaseLayer(id)
-            spriteFrameInputs.releaseLayer(id)
-            puppetAlbedos.removeValue(forKey: id)
-            puppetAnimators.removeValue(forKey: id)
-            puppetWarps.removeValue(forKey: id)
-            puppetCanvases.removeValue(forKey: id)
-        }
-    }
-
-    func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
-
-    /// Renders a frame for `view` alone and presents it there.
-    func draw(in view: MTKView) {
-        if drawsOnRenderThreadOnly { ThreadGuards.assertRenderThread("A scene frame") }
-        ThreadGuards.renderFrame { renderFrame(.view(view)) }
-    }
-
-    /// Renders one frame for all the displays of a shared scene, at the largest scene target any
-    /// of them needs; the cursor comes from the display it is on. Each display then shows the
-    /// frame at its own size (`present(in:)`). The first viewport is the driving display, whose
-    /// resolution scripts see.
-    func renderShared(_ viewports: [SceneViewport]) {
-        guard !viewports.isEmpty else { return }
-        if drawsOnRenderThreadOnly { ThreadGuards.assertRenderThread("A shared scene frame") }
-        ThreadGuards.renderFrame { renderFrame(.shared(viewports)) }
-    }
-
-    /// Draws the shared frame again (a loading snapshot, the lock screen's frame without the clock)
-    /// without stepping the scene: no script frame, no clock, timeline or particle step. WE never
-    /// steps a scene to take a picture of it.
-    func redrawShared(_ viewports: [SceneViewport]) {
-        redrawing = true
-        defer { redrawing = false }
-        renderShared(viewports)
-    }
-
-    /// Shows the latest shared frame (`renderShared`) on `view`, at its size and the user's
-    /// placement: one pass per display. A stretched display shows its rect of the frame placed on
-    /// the whole canvas.
-    func present(in view: MTKView) {
-        let headroom = viewHeadroom(view)
-        sharedHeadrooms[ObjectIdentifier(view)] = headroom
-        guard let frame = sharedFrame else { return }
-        // The view shows the frame in its own format: EDR when the frame was drawn for it.
-        let extended = frame.pixelFormat == SceneDisplayOutput.extendedPixelFormat && pixelFormat != frame.pixelFormat
-        (extended ? SceneDisplayOutput.extendedRange(headroom: headroom.current) : .standard).apply(to: view, standard: pixelFormat)
-        guard let descriptor = view.currentRenderPassDescriptor,
-              let drawable = view.currentDrawable, let commandBuffer = commandQueue.makeCommandBuffer(),
-              let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else { return }
-        let size = SIMD2<Float>(Float(drawable.texture.width), Float(drawable.texture.height))
-        let snapshot = SceneViewSnapshots.snapshot(of: view)
-        let pointWidth = snapshot.map { CGFloat($0.pointSize.x) } ?? view.bounds.width
-        let pixelsPerPoint = pointWidth > 0 ? size.x / Float(pointWidth) : 1
-        encodePlaced(frame, onto: encoder, size: size, pixelsPerPoint: pixelsPerPoint,
-                     pipeline: extended ? layerPipelines.pipelines(for: frame.pixelFormat).copy : copyPipeline,
-                     span: snapshot.flatMap { SceneCanvasSpan(snapshot: $0, pixelsPerPoint: pixelsPerPoint) })
-        encoder.endEncoding()
-        commandBuffer.present(drawable)
-        commandBuffer.commit()
-        lastPresentCommandBuffer = commandBuffer
-    }
-
-    /// Draws `frame` onto a `size`-pixel target at the user's placement, as a display shows it; on
-    /// a stretch, placed on the canvas and seen through the display's rect of it (`span`).
-    private func encodePlaced(_ frame: MTLTexture, onto encoder: MTLRenderCommandEncoder, size: SIMD2<Float>,
-                              pixelsPerPoint: Float, pipeline: MTLRenderPipelineState, span: SceneCanvasSpan? = nil) {
-        var uniform = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1,
-                                   drawableSize: span?.canvasPixels ?? size,
-                                   placement: placement, pixelsPerPoint: pixelsPerPoint)
-        if let span { span.apply(to: &uniform, drawableSize: size) }
-        encoder.setRenderPipelineState(pipeline)
-        encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
-        encoder.setFragmentTexture(frame, index: 0)
-        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
-    }
-
-    /// Draws the latest shared frame (`renderShared`) into `target`, in the drawables' format, as
-    /// `present(in:)` shows it on a display of that size (a loading snapshot). False without one.
-    func encodeSharedFrame(into target: MTLTexture, pixelsPerPoint: Float, commandBuffer: MTLCommandBuffer) -> Bool {
-        guard let frame = sharedFrame, target.pixelFormat == pixelFormat else { return false }
-        let pass = MTLRenderPassDescriptor()
-        pass.colorAttachments[0].texture = target
-        pass.colorAttachments[0].loadAction = .clear
-        pass.colorAttachments[0].clearColor = SceneFrameDestination.clearColor
-        pass.colorAttachments[0].storeAction = .store
-        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return false }
-        encodePlaced(frame, onto: encoder, size: SIMD2(Float(target.width), Float(target.height)),
-                     pixelsPerPoint: pixelsPerPoint, pipeline: copyPipeline)
-        encoder.endEncoding()
-        return true
-    }
-
-    /// Frees the shared frame: a scene on one display draws straight onto its drawable and only
-    /// rendered one for a loading snapshot. The GPU keeps what in-flight work still reads.
-    func releaseSharedFrame() {
-        sharedFrame = nil
-        sharedFrameTarget = nil
-    }
-
-    /// Where a frame goes: one view's drawable, or a shared scene's finished frame.
-    private enum FrameOutput {
-        case view(MTKView)
-        case shared([SceneViewport])
-    }
-
-    /// The frame's pass onto `output` (nil for a shared frame until its size is known), its
-    /// viewports and the placement the post-process composites with.
-    private func frameDestination(_ output: FrameOutput) -> SceneFrameDestination? {
-        switch output {
-        case .view(let view):
-            // The drawable is taken late (`lateOutput`, F1): its size and format are the view's,
-            // which `selectDisplayOutput` set up.
-            let size = SIMD2<Float>(Float(view.drawableSize.width), Float(view.drawableSize.height))
-            guard size.x >= 1, size.y >= 1 else { return nil }
-            let format = SceneViewSnapshots.snapshot(of: view)?.layer?.pixelFormat ?? view.colorPixelFormat
-            return SceneFrameDestination(descriptor: nil, drawable: nil, pixelFormat: format,
-                                         placement: placement, viewports: [SceneViewport(view, drawableSize: size)])
-        case .shared(let viewports):
-            // The finished frame keeps the scene's aspect; each display places it when presenting.
-            return SceneFrameDestination(descriptor: nil, drawable: nil, pixelFormat: pixelFormat, placement: .stretch,
-                                         viewports: viewports)
-        }
-    }
-
-    /// How this frame reaches the display (`SceneDisplayOutput`): EDR while the content draws in
-    /// HDR under "displayhdr" and the screen has headroom, the view set up for it; a shared frame
-    /// takes the least headroom of the views it was shown on since the last one.
-    private func selectDisplayOutput(_ output: FrameOutput) {
-        let headroom: SceneDisplayHeadroom
-        switch output {
-        case .view(let view):
-            headroom = viewHeadroom(view)
-        case .shared:
-            let shown = Array(sharedHeadrooms.values)
-            sharedHeadrooms.removeAll(keepingCapacity: true)
-            headroom = shown.isEmpty ? SceneDisplayHeadroom()
-                : SceneDisplayHeadroom(potential: shown.map(\.potential).min() ?? 1, current: shown.map(\.current).min() ?? 1)
-        }
-        displayOutput = SceneDisplayOutput.select(postProcessing: renderSettings.postProcessing, drawsHDR: postProcess.drawsHDR,
-                                                  headroom: headroom)
-        if case .view(let view) = output { displayOutput.apply(to: view, standard: pixelFormat) }
-    }
-
-    /// The pass onto a shared scene's finished frame, `width` × `height` (the scene's size, or the
-    /// backing pixels its detail layers draw at), in this frame's output format (`displayOutput`).
-    private func sharedFramePass(width: Int, height: Int) -> MTLRenderPassDescriptor? {
-        let format = displayOutput.pixelFormat(standard: pixelFormat)
-        if sharedFrameTarget?.width != width || sharedFrameTarget?.height != height
-            || sharedFrameTarget?.pixelFormat != format {
-            let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: format, width: width,
-                                                                      height: height, mipmapped: false)
-            descriptor.usage = [.renderTarget, .shaderRead]
-            descriptor.storageMode = .private
-            sharedFrameTarget = device.makeTexture(descriptor: descriptor)
-            if sharedFrameTarget == nil {
-                OWELog.error(.scene, "Could not allocate the \(width)×\(height) shared frame")
-            }
-        }
-        guard let target = sharedFrameTarget else { return nil }
-        let pass = MTLRenderPassDescriptor()
-        pass.colorAttachments[0].texture = target
-        pass.colorAttachments[0].loadAction = .clear
-        pass.colorAttachments[0].clearColor = SceneFrameDestination.clearColor
-        pass.colorAttachments[0].storeAction = .store
-        return pass
-    }
-
-    /// This frame's scene target and, when the scene draws straight into its output, that output.
-    private struct FrameTargets {
-        var scene: MTLTexture
-        /// Set when `scene` is the output (S2): the drawable's pass (or nil for a shared frame's,
-        /// which is `scene` itself) and the drawable.
-        var output: (descriptor: MTLRenderPassDescriptor?, drawable: CAMetalDrawable?)?
-        var sceneIsOutput: Bool { output != nil }
-        /// A shared frame that would draw straight into its scene target (S2) but keeps its own
-        /// frame while its detail layers may be promoted (`sharedFrameGainsDetail`): when none is,
-        /// the scene target is the frame after all, as it would have been.
-        var deferredPassThrough = false
     }
 
     /// Off with `OWE_COMPOSITE_SKIP=0` (comparisons): the composite always runs.
     var skipsIdentityComposite = ProcessInfo.processInfo.environment["OWE_COMPOSITE_SKIP"] != "0"
     /// Frames drawn straight into their output, the composite skipped (tests, diagnostics).
-    private(set) var compositesSkipped = 0
+    var compositesSkipped = 0
     /// Off with `OWE_NATIVE_DETAIL=0` (comparisons): every layer draws in the scene pass.
     var promotesDetailLayers = ProcessInfo.processInfo.environment["OWE_NATIVE_DETAIL"] != "0"
     /// Layers the last frame drew at the output's backing pixels (`SceneNativeDetailLayers`).
-    private(set) var promotedDetailLayers = 0
-
-    /// The scene target for this frame. When the post-process would change nothing and the
-    /// composite would be a 1:1 copy (`ScenePostProcess.passesThrough`), the scene is drawn straight
-    /// into its output instead (S2): the view's drawable, taken now, or for a shared frame the
-    /// scene target is the frame its displays present. Else the scene's own target.
-    private func frameTargets(_ output: FrameOutput, destination: SceneFrameDestination, format: MTLPixelFormat,
-                              size: SIMD2<Int>, frame: BuiltinFrameContext) -> FrameTargets? {
-        let outputSize = SIMD2<Float>(Float(size.x), Float(size.y))
-        // A scene that keeps its last frame draws into its own target, never the drawable.
-        let passesThrough = skipsIdentityComposite && !keepsScene && !drawsAtRenderScale && !postProcess.drawsHDR && format == destination.pixelFormat
-            && postProcess.passesThrough(
-                bloom: liveBloom(), extras: appExtras(), settings: renderSettings, colorCorrection: colorCorrection(),
-                display: displayOutput, sceneSize: size, outputSize: size,
-                placement: layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: outputSize,
-                                        placement: destination.placement))
-        if passesThrough, sharedFrameGainsDetail(output, sceneTargetSize: size) {
-            return sceneRenderTarget(pixelFormat: format, size: size).map {
-                FrameTargets(scene: $0, output: nil, deferredPassThrough: true)
-            }
-        }
-        if passesThrough {
-            switch output {
-            case .view(let view):
-                if let descriptor = view.currentRenderPassDescriptor, let drawable = view.currentDrawable,
-                   drawable.texture.width == size.x, drawable.texture.height == size.y,
-                   drawable.texture.pixelFormat == format {
-                    // The scene's own target isn't needed while it draws into the drawable.
-                    sceneRenderTarget = nil
-                    sceneRenderTargetSize = .zero
-                    lastDrawableScene = drawable.texture
-                    return FrameTargets(scene: drawable.texture, output: (descriptor, drawable))
-                }
-            case .shared:
-                if let scene = sceneRenderTarget(pixelFormat: format, size: size) {
-                    sharedFrameTarget = nil
-                    return FrameTargets(scene: scene, output: (Self.outputPass(onto: scene), nil))
-                }
-            }
-        }
-        return sceneRenderTarget(pixelFormat: format, size: size).map { FrameTargets(scene: $0, output: nil) }
-    }
-
-    /// Whether a shared frame of a content with detail layers would have more pixels per unit than
-    /// its `sceneTargetSize` scene target: it then keeps its own frame, which its detail layers may
-    /// draw onto at the displays' backing pixels (`nativeDetailPlan`), rather than being the scene.
-    private func sharedFrameGainsDetail(_ output: FrameOutput, sceneTargetSize: SIMD2<Int>) -> Bool {
-        guard promotesDetailLayers, case .shared(let viewports) = output,
-              layers.contains(where: { $0.layer.text != nil || $0.layer.systemImage != nil }) else { return false }
-        let pixelsPerUnit = SceneRenderResolution.pixelsPerUnit(
-            sceneSize: sceneSize, drawableSize: SceneViewport.largestDrawable(viewports),
-            floorsAtAuthoredSize: renderSettings.floorsAtAuthoredSize, quantised: followsLiveResize)
-        return SceneNativeDetailLayers.gainsDetail(scenePixelsPerUnit: Float(sceneTargetSize.x) / max(sceneSize.x, 1),
-                                                   outputPixelsPerUnit: pixelsPerUnit)
-    }
-
-    /// The pass the post-process composites onto, taken once the frame's work is encoded (F1): the
-    /// view's drawable, or the shared frame. Nil (the frame isn't shown) without a drawable.
-    private func lateOutput(_ output: FrameOutput, matching scene: MTLTexture, size: SIMD2<Int>? = nil)
-        -> (descriptor: MTLRenderPassDescriptor?, drawable: CAMetalDrawable?) {
-        switch output {
-        case .view(let view):
-            guard let descriptor = view.currentRenderPassDescriptor, let drawable = view.currentDrawable else { return (nil, nil) }
-            return (descriptor, drawable)
-        case .shared:
-            return (sharedFramePass(width: size?.x ?? scene.width, height: size?.y ?? scene.height), nil)
-        }
-    }
-
-    /// A pass whose attachment is `texture` as it stands: what the post-process's steps read when
-    /// the scene is its own output (nothing composites onto it).
-    private static func outputPass(onto texture: MTLTexture) -> MTLRenderPassDescriptor {
-        let pass = MTLRenderPassDescriptor()
-        pass.colorAttachments[0].texture = texture
-        pass.colorAttachments[0].loadAction = .load
-        pass.colorAttachments[0].storeAction = .store
-        return pass
-    }
-
-    /// A shared frame's output when its scene target is the frame (`outputPass`), as `lateOutput` returns one.
-    private static func passThroughOutput(onto scene: MTLTexture)
-        -> (descriptor: MTLRenderPassDescriptor?, drawable: CAMetalDrawable?) {
-        (outputPass(onto: scene), nil)
-    }
-
-    private func renderFrame(_ output: FrameOutput) {
-        let frameStart = CACurrentMediaTime()
-        let frameSignpost = OWESignpost.begin(OWESignpost.render, "frame")
-        WallpaperServices.shared.beginFrame(wallpaper: wallpaperKey)
-        renderTargetPool.endFrame()
-        textFrameCache.beginGeneration()
-        defer {
-            // Compiles this frame started: the next frame draws differently once they land.
-            if layerAnalysis != nil, pipelinesCompiling { analysedWarmUp = true }
-            WallpaperServices.shared.endFrame()
-            frameSignpost.end()
-            frameTimeObserver?(CACurrentMediaTime() - frameStart)
-            if OWEFrameMetrics.isReportingEnabled {
-                OWEFrameMetrics.recordFrame(seconds: CACurrentMediaTime() - frameStart,
-                                            layers: layers.count,
-                                            particles: particleSystems.reduce(0) {
-                                                $1.simulation != nil ? $0 : $0 + ($1.gpu?.completedCount ?? $1.particles.count)
-                                            })
-            }
-        }
-
-        selectDisplayOutput(output)
-        guard let destination = frameDestination(output) else { return }
-        let viewports = destination.viewports
-        drawablePixelsPerPoint = viewports[0].pixelsPerPoint
-        // The largest target any display needs, so each shows the scene at its own density.
-        let renderDrawable = SceneRenderResolution.drawableSize(viewports, resolution: renderSettings.renderResolution,
-                                                                sceneSize: sceneSize)
-        renderPixelsPerUnit = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable,
-                                                                  floorsAtAuthoredSize: renderSettings.floorsAtAuthoredSize, quantised: followsLiveResize)
-        // Drawn at the render scale (`GSUpscaling`): the composite scales the frame up bilinearly.
-        drawsAtRenderScale = false
-        // A scene that is one plain video draws it at exactly the display's density, so a target the
-        // size of the drawable lets the video draw straight into it in one pass (S2), not into a
-        // larger target resampled again by the composite.
-        if let exact = videoOnlyPixelsPerUnit(renderDrawable) {
-            renderPixelsPerUnit = exact
-        } else if renderSettings.drawnScale < 1 {
-            drawsAtRenderScale = true
-            renderPixelsPerUnit = SceneRenderResolution.drawnPixelsPerUnit(renderPixelsPerUnit, scale: renderSettings.drawnScale)
-        }
-        // A scene drawn smaller than its authored size, or at the render scale, is below full
-        // detail: what its buffers stand for.
-        fullDetailScale = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable,
-                                                              floorsAtAuthoredSize: true, quantised: followsLiveResize) / renderPixelsPerUnit
-        // A content drawn in HDR draws into RGBA16F (docs/lighting-plan.md §2.6).
-        let scenePixelFormat: MTLPixelFormat = postProcess.drawsHDR ? .rgba16Float : destination.pixelFormat
-        let sceneTargetSize = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: renderPixelsPerUnit)
-
-        // Layers and particles are drawn in scene units onto a target at the output's pixel
-        // density; placement scaling happens once, in the final composite pass.
-        let drawableSize = SIMD2<Float>(Float(sceneTargetSize.x), Float(sceneTargetSize.y))
-        clock.paused = pausesPlayback
-        let rate = playbackRate?() ?? ScenePlaybackSpeed.speed(ofStore: wallpaperKey)
-        if redrawing { clock.standStill() } else if holdsClock { clock.hold(at: wallTime()) } else { clock.advance(to: wallTime(), speed: rate) }
-        let sceneTime = clock.time
-        if clock.hasStopped { onPlaybackStopped?() }
-        let time = Float(sceneTime)
-        // What a script frame that overran the last draw's wait left (they run on their own thread, §4.5).
-        let orderBefore = scripts.state.order
-        if !redrawing { applyScriptEvents(scripts.beginFrame()) }
-        // WE writes every timeline before the scripts run; a script's calls act on the next advance.
-        let animationEvents = redrawing ? [] : timelines.advance(by: Float(clock.delta))
-        drawProbe?.beginFrame()
-        let cursorSample = fixedPointer.map { (position: $0 * sceneSize, onDisplay: false) }
-            ?? cursorTracker.update(sceneCursor(viewports), sceneSize: sceneSize)
-        let cursor = cursorSample.position
-        // WE's scripts and `g_PointerState` see only clicks that land on the wallpaper.
-        let leftDown = cursorSample.onDisplay
-            && clickReader.isDown(scripts.services?.clicks?.state ?? DesktopClickMonitor.State())
-        releaseFinishedEffectState()
-        prelitImages.removeAll(keepingCapacity: true)
-        spriteFrameVersions.removeAll(keepingCapacity: true)
-        beginTransformFrame()
-        advanceRigs()
-        if scripts.isRunning && !redrawing {
-
-            // Like WE, the scripts run before the frame that shows what they did (§4.4): this
-            // frame's clock, cursor and animated values go in, and their results are drawn now
-            // unless they overrun the wait (then they show from the next draw on).
-            let start = clock_gettime_nsec_np(CLOCK_THREAD_CPUTIME_ID)
-            submitScriptFrame(viewports: viewports, cursor: cursorSample, leftDown: leftDown,
-                              animationEvents: animationEvents)
-            scripts.record(since: start, newFrame: false)
-            applyScriptEvents(scripts.finishFrame(waitingUpTo: scripts.frameWait))
-            beginTransformFrame()
-        }
-        if scripts.state.order != orderBefore {
-            orderLayers()
-            beginTransformFrame()
-        }
-        updateSounds()
-        var dynamicTextures: [Int: MTLTexture] = [:]
-        // Layers whose effects' last pass draws into the scene (`runEffectsDrawingLastPass`).
-        var drawnLastPasses: [Int: EffectGraphRenderer.DrawnLastPass] = [:]
-        // Advanced once per frame: every advance smooths the spectrum one step further.
-        var effectFrame = BuiltinFrameContext()
-        frameSerial &+= 1
-        effectFrame.serial = frameSerial
-        effectFrame.time = sceneTime
-        effectFrame.frameTime = clock.delta
-        effectFrame.daytime = BuiltinFrameContext.daytime(at: Date())
-        let pointer = simd_clamp(cursor / max(sceneSize, SIMD2(1, 1)), SIMD2(0, 0), SIMD2(1, 1))
-        effectFrame.pointer = pointer
-        effectFrame.pointerLast = lastPointer ?? pointer
-        lastPointer = pointer
-        effectFrame.pointerState = BuiltinFrameContext.pointerState(primaryDown: leftDown)
-        effectFrame.screenSize = drawableSize
-        effectFrame.textureReductionScale = Float(renderSettings.textureReduction)
-        effectFrame.audio = audioSpectrumFrame(SceneClock.rate(rate))
-        let motion = cameraMotion(pointer: pointer, time: time, deltaTime: Float(clock.delta))
-        effectFrame.parallax = cameraParallax.isActive ? cameraParallax.shaderPosition(sceneSize: sceneSize) : SIMD2(0.5, 0.5)
-        // WE's camera eye and forward (ctx+0x68, ctx+0x160). An orthographic scene's camera stays
-        // still and the objects move by the shake instead (`SceneFrameLightingInput.cameraShake`).
-        effectFrame.camera = cameraRig.frameCamera(cameraRigInput(time: sceneTime, motion: motion))
-        if isPerspective { perspectiveCameraLock.withLock { perspectiveCamera = effectFrame.camera } }
-        // An orthographic scene is drawn in its camera's drawn space: the zoom and the view a
-        // camera layer or path gives it this frame (docs/models-plan.md §5.19).
-        if !isPerspective { frameZoom = effectFrame.camera.drawnSpace }
-        effectFrame.eyePosition = effectFrame.camera.eye
-        effectFrame.viewForward = effectFrame.camera.forward
-        // Spatialized sounds are placed against it from the next update on.
-        sounds.listener = SceneSoundSpatialization.Listener(camera: effectFrame.camera,
-                                                            orthographicSize: isPerspective ? nil : sceneSize)
-        effectFrame.lighting = frameLighting(eye: effectFrame.eyePosition, forward: effectFrame.viewForward,
-                                             shake: motion.shake)
-        if frameStats != nil { lastLightCount = effectFrame.lighting.objects.count }
-        analyseLayers(effectFrame: effectFrame, motion: motion, drawableSize: drawableSize)
-        // While the stats overlay counts, every frame is drawn, so it shows what a frame costs.
-        guard redrawing || paceFrame(effectFrame, at: wallTime()) || frameStats != nil else { return }
-        keepsScene = !(scripts.state.scene.flag(.clearenabled) ?? clearEnabled)
-        // Only a frame that is drawn takes its targets, and the drawable only once its work is
-        // encoded (F1), unless the scene draws straight into it (`FrameTargets`, S2).
-        let madeCommandBuffer = commandQueue.makeCommandBuffer()
-        guard let commandBuffer = frameStats?.wrap(madeCommandBuffer) ?? madeCommandBuffer,
-              let targets = frameTargets(output, destination: destination, format: scenePixelFormat, size: sceneTargetSize,
-                                         frame: effectFrame) else { return }
-        let sceneTexture = targets.scene
-        if targets.sceneIsOutput { compositesSkipped += 1 }
-        // Until the first complete frame: whether this one can be, and the compiles landed before it.
-        let landedBefore = hasCompleteFrame || !hasContent || pipelinesCompiling ? nil : pipelinesLanded
-        // The frames before it drew only what was ready: effect history starts with this one.
-        if landedBefore != nil { effectGraph?.restartHistory() }
-        let multisampledScene = sceneMultisample(for: sceneTexture)
-        // Draws sample the last frame's copy; this frame's is made after the scene pass.
-        mipMappedTarget = mipMappedFrameBuffer?.target(matching: sceneTexture, commandBuffer: commandBuffer)
-        encodedFrames &+= 1
-        // A HDR video converts its new frame before anything samples it (`VideoTextureStream`).
-        for entry in layers { if case let .video(stream) = entry.layer.source { stream.prepareFrame(on: commandBuffer) } }
-        drawProbe?.record(lighting: effectFrame.lighting)
-        frameShadowAtlas = drawShadows(frame: effectFrame, commandBuffer: commandBuffer)
-        // Text is rasterised first so its effects run on the finished text, like an image layer's.
-        var textFrames: [Int: (frame: RenderTextureFrame, baseSize: SIMD2<Float>)] = [:]
-        // Only visible layers get an entry; the draw loop skips the rest.
-        var draws: [Int: LayerDraw] = [:]
-        layerComposites.removeAll(keepingCapacity: true)
-        let compositeOrder = self.compositeOrder()
-        for layerIndex in compositeOrder.sequence {
-            let entry = layers[layerIndex]
-            // Hidden layers keep their transforms (scripts and hit tests read them) but draw nothing,
-            // except into the image a model or another layer samples (`_rt_imageLayerComposite_<id>_a`).
-            let visible = scripts.isVisible(entry.layer.id) && !hiddenFromFrame(entry.layer)
-            let isCompositeSource = compositeOrder.sources.contains(entry.layer.id)
-                || models?.compositeLayerIDs.contains(entry.layer.id) == true
-            guard visible || isCompositeSource else { continue }
-            if entry.layer.text != nil {
-                // Drawn through a camera, text is as dense on screen as its projection makes it.
-                let onScreen = layerPlacement(entry, size: layerBaseSize(entry), musicSyncLevel: 0, motion: motion,
-                                              camera: effectFrame.camera)?.pixelsPerUnit(targetSize: drawableSize)
-                    ?? { let world = frameZoom.plane * worldTransform(entry); return max(world.axisScale.x, world.axisScale.y) * renderPixelsPerUnit }()
-                let pixelsPerUnit = SceneTextRasterScale.layer(onScreen: onScreen,
-                                                               hasEffects: !entry.layer.weEffects.isEmpty)
-                textFrames[layerIndex] = layerTextFrame(entry, boxSize: layerBaseSize(entry),
-                                                        pixelsPerUnit: pixelsPerUnit)
-            }
-            // A puppet's mesh draws its image before anything reads it: its effects, its own draw.
-            if let puppet = entry.layer.puppet {
-                drawPuppet(puppet, entry, frame: effectFrame, compositeSource: isCompositeSource, commandBuffer: commandBuffer)
-            }
-            // Text's block is centred on its lines, not on the origin (`SceneTextLayout.boxCenter`);
-            // a puppet's quad covers its canvas (`ScenePuppetCanvas`).
-            var baseSize = textFrames[layerIndex]?.baseSize ?? layerBaseSize(entry)
-            var contentOffset = textFrames[layerIndex]?.frame.textCenter ?? .zero
-            if let canvas = puppetCanvases[entry.layer.id], let puppet = entry.layer.puppet {
-                let scale = baseSize / puppet.imageSize
-                baseSize = canvas.size * scale
-                contentOffset = canvas.center * scale
-            }
-            var draw = layerDraw(entry, baseSize: baseSize, motion: motion, contentOffset: contentOffset)
-            draw.placement = layerPlacement(entry, size: baseSize,
-                                            musicSyncLevel: draw.musicSyncLevel, motion: motion, camera: effectFrame.camera)
-            draw.placement?.offset += contentOffset
-            // A hidden layer that runs in the scene pass still makes the image its readers sample.
-            let runsInScene = entry.layer.readsScene || compositeOrder.inScene.contains(entry.layer.id)
-            if visible || runsInScene { draws[layerIndex] = draw }
-            // Layers that read the scene run inside the scene pass, once what's beneath them is drawn,
-            // and so do the layers that sample them (`SceneLayerCompositeOrder.inScene`).
-            if runsInScene { continue }
-            if !entry.layer.weEffects.isEmpty {
-                let input = solidEffectInput(entry.layer, commandBuffer: commandBuffer)
-                    ?? effectInput(entry, image: textFrames[layerIndex]?.frame ?? textureFrame(for: entry), commandBuffer: commandBuffer)
-                drawnLastPasses[layerIndex] = visible ? runEffectsDrawingLastPass(
-                    entry, draw: draw, input: input, compositeSource: isCompositeSource, sceneFormat: sceneTexture.pixelFormat,
-                    frame: effectFrame, commandBuffer: commandBuffer) : nil
-                if drawnLastPasses[layerIndex] == nil {
-                    dynamicTextures[layerIndex] = posedEffectOutput(
-                        runEffects(entry, draw: draw, input: input, snapshot: nil, frame: effectFrame, commandBuffer: commandBuffer),
-                        of: entry, camera: effectFrame.camera, commandBuffer: commandBuffer)
-                }
-            }
-            if isCompositeSource {
-                layerComposites[entry.layer.id] = dynamicTextures[layerIndex]
-                    ?? solidEffectInput(entry.layer, commandBuffer: commandBuffer)
-                    ?? compositeText(entry) ?? textureFrame(for: entry).texture
-            }
-        }
-        // The next script frame reads this frame's text sizes and camera (WE's cursor pass and
-        // `size` see the last drawn frame).
-        lastTextSizes.removeAll(keepingCapacity: true)
-        for (index, frame) in textFrames { lastTextSizes[layers[index].layer.id] = frame.baseSize }
-        lastCameraMotion = motion
-        lastFrameCamera = effectFrame.camera
-
-        // WE clears the scene to `general.clearcolor` (the composite's letterbox stays black).
-        let clear = scripts.state.scene.vector3(.clearcolor) ?? clearColor
-        let sceneRenderPass = MTLRenderPassDescriptor()
-        Self.attachScene(sceneTexture, multisampled: multisampledScene, to: sceneRenderPass)
-        sceneRenderPass.colorAttachments[0].loadAction = .clear
-        sceneRenderPass.colorAttachments[0].clearColor = MTLClearColor(red: Double(clear.x), green: Double(clear.y),
-                                                                       blue: Double(clear.z), alpha: 1)
-        attachSceneDepth(to: sceneRenderPass, scene: sceneTexture)
-        keepScene(sceneRenderPass, scene: sceneTexture, multisampled: multisampledScene)
-        // One instanced draw per system rather than one per particle (or per rope segment, which
-        // multiplies out to thousands on trail renderers).
-        particleInstances.removeAll(keepingCapacity: true)
-        particleRequests.removeAll(keepingCapacity: true)
-        var particleBatches: [(system: ParticleSystemRuntime, base: Int, count: Int, material: Bool, simulated: Bool)] = []
-        // Systems are drawn in scene.json order, between the layers around them.
-        let orderedSystems = particleSystems.enumerated()
-            .sorted { ($0.element.configuration.order, $0.offset) < ($1.element.configuration.order, $1.offset) }
-            .map(\.element)
-        let particleSignpost = OWESignpost.begin(OWESignpost.render, "updateParticles")
-        let particleStepStart = frameStats == nil ? 0 : CACurrentMediaTime()
-        // Each visible system's step this frame, for the renderers after its first.
-        var steppedInputs: [ObjectIdentifier: ParticleFrameInputs] = [:]
-        for system in orderedSystems {
-            let base = particleInstances.count
-            let prewarm: [ParticleFrameInputs]
-            var inputs: ParticleFrameInputs
-            if let simulation = system.simulation {
-                // A renderer after a system's first draws the particles that system's step (just
-                // before, in the same order) left, with its own orientation; a hidden system's none.
-                guard let stepped = steppedInputs[ObjectIdentifier(simulation)] else { continue }
-                system.followSimulation()
-                prewarm = []
-                inputs = stepped
-                inputs.drawSizeScale = system.drawSizeScale
-                inputs.spriteLinear = system.spriteLinear
-            } else {
-                // A hidden system (its own `visible` or a parent's) draws nothing; WE clears it once and
-                // keeps its time running with emission off (`ParticleFrameInputs.hidden`).
-                let objectID = particleObjectID(system)
-                if let objectID, !scripts.isVisible(objectID) {
-                    // Its emission is off: a script's `emitParticles` while hidden adds nothing later.
-                    pendingEmits.removeValue(forKey: objectID)
-                    stepHiddenParticles(system, deltaTime: Float(clock.delta), pixelFormat: sceneTexture.pixelFormat)
-                    continue
-                }
-                let script = objectID.flatMap(scripts.object)
-                let scripted = script.flatMap(SceneScriptInstanceOverrides.init)
-                let emitter = emitterWorld(system.configuration, motion: motion)
-                // `starttime`: the system's first frame comes after WE's pre-simulation.
-                // WE's engine frame time and frame-rate limit steer drag and the operators' half steps
-                // (`ParticleFrameInputs.dragDeltaTime`, `substeps`); the pre-simulation runs in this frame.
-                let layerWorld = { [self] (id: String) in emitterImageLayerWorld(id, motion: motion) }
-                let layerBones = { [self] (id: String) in emitterImageBones(id) }
-                let modelCapsules = { [self] (id: String) in particleCapsules(id, for: system) }
-                prewarm = ParticlePrewarm.steps(system).map {
-                    ParticleFrameInputs.advance(system, deltaTime: $0, cursor: cursor, emitter: emitter, values: timelines.values,
-                                                scripted: scripted,
-                                                audio: effectFrame.audio, frameTime: Float(clock.delta),
-                                                frameRateLimit: destination.frameRateLimit, layerWorld: layerWorld,
-                                                layerBones: layerBones, modelCapsules: modelCapsules)
-                }
-                // A script's `pause()` holds the system as it is; `stop()` clears it until `play()`.
-                let paused = script?.playback == .pause
-                inputs = ParticleFrameInputs.advance(system, deltaTime: paused ? 0 : Float(clock.delta), cursor: cursor,
-                                                     emitter: emitter, values: timelines.values, scripted: scripted,
-                                                     audio: effectFrame.audio,
-                                                     frameTime: Float(clock.delta), frameRateLimit: destination.frameRateLimit,
-                                                     layerWorld: layerWorld, layerBones: layerBones, modelCapsules: modelCapsules)
-                Self.applyScriptPlayback(script?.playback, emitting: objectID.flatMap { pendingEmits.removeValue(forKey: $0) },
-                                         to: &inputs)
-                steppedInputs[ObjectIdentifier(system)] = inputs
-                if !system.imageResamplesDue.isEmpty { resampleEmitterImages(system) }
-            }
-            if particleSimulator != nil {
-                // The GPU steps the system and writes whichever records it is drawn from.
-                let rendererName = system.configuration.rendererName
-                if let simulated = particleMaterials?.prepareSimulated(system, pixelFormat: sceneTexture.pixelFormat,
-                                                                       sampleCount: sceneSampleCount,
-                                                                       depthFormat: sceneDepthFormat) {
-                    let kind = ParticleGPUDrawKind.material(simulated.format, rendererName: rendererName)
-                    for step in prewarm {
-                        particleRequests.append(.init(system: system, inputs: step, kind: kind, materialVertexCount: simulated.vertexCount,
-                                                      writesRecords: false))
-                    }
-                    particleRequests.append(.init(system: system, inputs: inputs, kind: kind,
-                                                  materialVertexCount: simulated.vertexCount, renderVar: simulated.renderVar))
-                    particleBatches.append((system, base, 0, true, true))
-                } else {
-                    let kind = ParticleGPUDrawKind.fallback(rendererName: rendererName)
-                    for step in prewarm { particleRequests.append(.init(system: system, inputs: step, kind: kind, writesRecords: false)) }
-                    particleRequests.append(.init(system: system, inputs: inputs, kind: kind))
-                    particleBatches.append((system, base, 0, false, true))
-                }
-                continue
-            }
-            if system.simulation == nil {
-                for step in prewarm { ParticleCPUSimulation.step(system, inputs: step) }
-                ParticleCPUSimulation.step(system, inputs: inputs)
-            }
-            if particleMaterials?.prepare(system, pixelFormat: sceneTexture.pixelFormat, sampleCount: sceneSampleCount,
-                                          depthFormat: sceneDepthFormat,
-                                          opacity: { [unowned self] in self.particleOpacity($0, in: system) }) == true {
-                particleBatches.append((system, base, 0, true, false))
-                continue
-            }
-            if system.configuration.rendererName == "rope" {
-                appendRope(system, drawableSize: drawableSize)
-            } else {
-                for particle in system.particles {
-                    if system.configuration.rendererName == "ropetrail" {
-                        appendRopeTrail(particle, system: system, drawableSize: drawableSize)
-                    } else if system.configuration.rendererName.contains("trail") {
-                        appendParticleTrail(particle, system: system, drawableSize: drawableSize)
-                    } else {
-                        var uniform = layerUniform(position: particle.position,
-                                                   size: SIMD2<Float>(repeating: particle.size),
-                                                   opacity: particleOpacity(particle, in: system),
-                                                   drawableSize: drawableSize, placement: .stretch)
-                        uniform.particleShape = 1
-                        uniform.rotation = particle.rotation
-                        let axes = system.spriteAxes(size: particle.size, rotation: particle.rotation,
-                                                     scale: drawableSize / sceneSize)
-                        uniform.quadAxisX = axes.x
-                        uniform.quadAxisY = axes.y
-                        uniform.color = particle.color
-                        let uv = spriteSheetUV(for: particle, configuration: system.configuration)
-                        uniform.uvOrigin = uv.origin
-                        uniform.uvAxisX = SIMD2<Float>(uv.size.x, 0)
-                        uniform.uvAxisY = SIMD2<Float>(0, uv.size.y)
-                        particleInstances.append(uniform)
-                    }
-                }
-            }
-            particleBatches.append((system, base, particleInstances.count - base, false, false))
-        }
-        particleSignpost.end()
-        if frameStats != nil { particleStepMilliseconds = (CACurrentMediaTime() - particleStepStart) * 1000 }
-        particleSimulator?.encode(particleRequests, sceneSize: sceneSize, targetSize: drawableSize,
-                                  commandBuffer: commandBuffer)
-        frameReflection = drawReflection(frame: effectFrame, scene: sceneTexture, draws: draws,
-                                         image: { [unowned self] in textFrames[$0]?.frame ?? self.textureFrame(for: self.layers[$0]) },
-                                         effectOutputs: dynamicTextures,
-                                         batches: particleBatches.map { ($0.system, $0.material) }, commandBuffer: commandBuffer)
-        guard var encoder = commandBuffer.makeRenderCommandEncoder(descriptor: sceneRenderPass) else { return }
-        encoder.setRenderPipelineState(renderPipeline)
-        let particleBuffer = particleInstanceBuffer(for: particleInstances.count)
-        if let particleBuffer {
-            particleInstances.withUnsafeBytes { source in
-                particleBuffer.contents().copyMemory(from: source.baseAddress!, byteCount: source.count)
-            }
-        }
-        // WE's object loop (docs/models-plan.md §2.4): the layers and models in draw order, each
-        // after the particle systems whose key is below its barrier.
-        let sequence = drawSequence(batches: particleBatches.map(\.system), forward: effectFrame.camera.forward)
-        // A loop, not `map`: the optimised build's specialisation of `map` for this tuple (typed
-        // throws, `Never`) checks the error register after a closure that never sets it, and traps
-        // ("Never can't be initialized") when the register holds a stale value.
-        let unordered = particleBatches
-        particleBatches.removeAll(keepingCapacity: true)
-        for index in sequence.batchOrder { particleBatches.append(unordered[index]) }
-        // Text and the media artwork drawn at the output's backing pixels, after the composite.
-        let native = nativeDetailPlan(output, destination: destination, sequence: sequence,
-                                      particleBatchCount: particleBatches.count, draws: draws,
-                                      compositeOrder: compositeOrder, frame: effectFrame, scene: sceneTexture,
-                                      sceneIsOutput: targets.sceneIsOutput)
-        let nativeLayers = Set(native.layers)
-        for index in native.layers where layers[index].layer.text != nil {
-            let entry = layers[index]
-            let onScreen = max(worldTransform(entry).axisScale.x, worldTransform(entry).axisScale.y) * native.pixelsPerUnit
-            textFrames[index] = layerTextFrame(entry, boxSize: layerBaseSize(entry),
-                                               pixelsPerUnit: SceneTextRasterScale.layer(onScreen: onScreen, hasEffects: false))
-        }
-        var nextParticleBatch = 0
-        /// One instanced draw per system, for every system whose key is below `order`. False when the
-        /// scene pass couldn't resume after a snapshot.
-        func drawParticleBatches(before order: Int) -> Bool {
-            var drew = false
-            while nextParticleBatch < particleBatches.count, sequence.batchKeys[nextParticleBatch] < order {
-                let batch = particleBatches[nextParticleBatch]
-                nextParticleBatch += 1
-                if batch.material, drawsReducedResolution(batch.system) {
-                    // A run of large additive systems draws at half resolution and is added back
-                    // in its place (`SceneRenderSettings.reducedResolutionParticles`); addition
-                    // commutes, so a system whose half-resolution pipeline still compiles draws
-                    // at full resolution right after.
-                    var group = [batch.system]
-                    while nextParticleBatch < particleBatches.count, sequence.batchKeys[nextParticleBatch] < order,
-                          particleBatches[nextParticleBatch].material,
-                          drawsReducedResolution(particleBatches[nextParticleBatch].system) {
-                        group.append(particleBatches[nextParticleBatch].system)
-                        nextParticleBatch += 1
-                    }
-                    func context(_ system: ParticleSystemRuntime) -> ParticleMaterialRenderer.DrawContext {
-                        .init(sceneSize: sceneSize, frame: effectFrame, values: timelines.values,
-                              assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-                              mipMappedFrameBuffer: mipMappedTarget, shadowAtlas: frameShadowAtlas,
-                              placement: particlePlacement(system, camera: effectFrame.camera))
-                    }
-                    endScenePass(encoder, resumes: true)
-                    let reduced = drawReducedResolution(group, scene: sceneTexture, commandBuffer: commandBuffer, context: context)
-                    guard let resumed = resumeScenePass(on: sceneTexture, commandBuffer: commandBuffer) else { return false }
-                    encoder = resumed
-                    if let half = reduced.target {
-                        var uniform = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1,
-                                                   drawableSize: SIMD2(Float(sceneTexture.width), Float(sceneTexture.height)),
-                                                   placement: .stretch)
-                        encoder.setRenderPipelineState(scenePassPipelines.addCopy)
-                        encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
-                        encoder.setFragmentTexture(half, index: 0)
-                        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
-                    }
-                    for system in reduced.left {
-                        particleMaterials?.draw(system, encoder: encoder, commandBuffer: commandBuffer, context: context(system))
-                    }
-                    drew = true
-                    continue
-                }
-                if batch.material {
-                    var snapshot: MTLTexture?
-                    let placement = particlePlacement(batch.system, camera: effectFrame.camera)
-                    if particleMaterials?.readsSceneSnapshot(batch.system) == true {
-                        // Refraction reads the scene drawn up to this system (`_rt_FullFrameBuffer`):
-                        // only around its particles when that is known, else all of it.
-                        endScenePass(encoder, resumes: true)
-                        let pixels = SIMD2(sceneTexture.width, sceneTexture.height)
-                        let needed = placement != nil ? nil
-                            : particleMaterials?.sceneSnapshotRect(batch.system, sceneSize: sceneSize, targetSize: pixels)
-                        snapshot = sceneSnapshot(of: sceneTexture, commandBuffer: commandBuffer, needing: needed)
-                        guard let resumed = resumeScenePass(on: sceneTexture, commandBuffer: commandBuffer) else { return false }
-                        encoder = resumed
-                    }
-                    particleMaterials?.draw(batch.system, encoder: encoder, commandBuffer: commandBuffer, context: .init(
-                        sceneSize: sceneSize, frame: effectFrame,
-                        values: timelines.values,
-                        assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-                        sceneSnapshot: snapshot, mipMappedFrameBuffer: mipMappedTarget, shadowAtlas: frameShadowAtlas,
-                        depth: frameDepth, placement: placement))
-                    drew = true
-                    continue
-                }
-                let pipeline = batch.system.configuration.blending == "additive" ? additiveRenderPipeline : renderPipeline
-                // The built-in draw has no material: nothing to test against [I].
-                frameDepth?.apply(.disabled, to: encoder)
-                if batch.simulated {
-                    // The built-in quads the GPU step wrote, counted by its indirect arguments.
-                    guard let gpu = batch.system.gpu, gpu.isReady, let records = gpu.records,
-                          gpu.recordKind?.isFallback == true else { continue }
-                    encoder.setVertexBuffer(records, offset: 0, index: 0)
-                    encoder.setFragmentBuffer(records, offset: 0, index: 0)
-                    encoder.setRenderPipelineState(pipeline)
-                    encoder.setFragmentTexture(batch.system.fallbackTexture, index: 0)
-                    encoder.drawPrimitives(type: .triangleStrip, indirectBuffer: gpu.control,
-                                           indirectBufferOffset: ParticleGPUSystem.Control.fallbackDrawOffset)
-                    drew = true
-                    continue
-                }
-                guard batch.count > 0, let particleBuffer else { continue }
-                // Layer draws rebind index 0 with setVertexBytes, so bind the instances per draw.
-                encoder.setVertexBuffer(particleBuffer, offset: 0, index: 0)
-                encoder.setFragmentBuffer(particleBuffer, offset: 0, index: 0)
-                encoder.setRenderPipelineState(pipeline)
-                encoder.setFragmentTexture(batch.system.fallbackTexture, index: 0)
-                encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4,
-                                       instanceCount: batch.count, baseInstance: batch.base)
-                drew = true
-            }
-            if drew { encoder.setRenderPipelineState(renderPipeline) }
-            return true
-        }
-        sceneCopy = nil
-        snapshotSharesMipMappedTarget = mipMappedTarget != nil && SceneMipMappedFrameBuffer.snapshotCanShare(
-            layers: layers.lazy.map(\.layer), particleSystems: particleSystems.map(\.configuration),
-            reflection: renderSettings.reflection)
-        snapshotTracker.reset()
-        let targetSize = SIMD2(sceneTexture.width, sceneTexture.height)
-        for (item, barrier) in sequence.items {
-            let batchesBefore = nextParticleBatch
-            guard drawParticleBatches(before: barrier) else { return }
-            // Particles cover no rect we track: the snapshot no longer matches anywhere.
-            if nextParticleBatch != batchesBefore { snapshotTracker.sceneDrawn(in: nil) }
-            guard case .layer(let layerIndex) = item else {
-                if case .model(let index) = item {
-                    drawModel(index, frame: effectFrame, pixelFormat: sceneTexture.pixelFormat, encoder: encoder,
-                              commandBuffer: commandBuffer)
-                    snapshotTracker.sceneDrawn(in: nil)
-                }
-                continue
-            }
-            let entry = layers[layerIndex]
-            // Hidden layers (script `visible = false`) draw nothing, their raw texture included.
-            guard let draw = draws[layerIndex] else { continue }
-            // Drawn over the output after the composite instead (`drawNativeDetailLayers`).
-            if nativeLayers.contains(layerIndex) { continue }
-            var layerSnapshot: MTLTexture?
-            if entry.layer.readsScene || compositeOrder.inScene.contains(entry.layer.id) {
-                // Metal can't sample the attachment it's drawing into: pause the scene pass, run
-                // this layer's effects on what's drawn so far (`_rt_FullFrameBuffer`), resume. The
-                // effects read the target itself while the pass is paused; only a material that
-                // reads the scene from inside the resumed pass needs a copy of it.
-                endScenePass(encoder, resumes: true)
-                var snapshot: MTLTexture? = sceneTexture
-                if entry.layer.imageMaterial?.readsSceneSnapshot == true {
-                    // A material or scene input reads the scene under its own quad; an effect anywhere.
-                    let needed = entry.layer.effectsReadScene || draw.placement != nil ? nil
-                        : SceneSnapshotTracker.pixelRect(of: draw.quad, sceneSize: sceneSize, targetSize: targetSize)
-                            ?? SceneSnapshotTracker.Rect.empty
-                    snapshot = sceneSnapshot(of: sceneTexture, commandBuffer: commandBuffer, needing: needed)
-                    layerSnapshot = snapshot
-                }
-                let input = entry.layer.sceneInput
-                    ? snapshot.flatMap { sceneRegion(of: $0, under: draw.quad, placement: draw.placement, reducedFor: entry.layer,
-                                                     commandBuffer: commandBuffer) }
-                    : solidEffectInput(entry.layer, commandBuffer: commandBuffer)
-                        ?? effectInput(entry, image: textFrames[layerIndex]?.frame ?? textureFrame(for: entry),
-                                       commandBuffer: commandBuffer)
-                dynamicTextures[layerIndex] = posedEffectOutput(input.flatMap {
-                    runEffects(entry, draw: draw, input: $0, snapshot: snapshot, frame: effectFrame, commandBuffer: commandBuffer)
-                }, of: entry, camera: effectFrame.camera, commandBuffer: commandBuffer)
-                guard let resumed = resumeScenePass(on: sceneTexture, commandBuffer: commandBuffer) else { return }
-                encoder = resumed
-                // Its composite is what readers drawn after it sample (`_rt_imageLayerComposite_<id>_a`).
-                if compositeOrder.sources.contains(entry.layer.id) || models?.compositeLayerIDs.contains(entry.layer.id) == true {
-                    layerComposites[entry.layer.id] = dynamicTextures[layerIndex] ?? input
-                }
-                if !scripts.isVisible(entry.layer.id) { continue }
-                // Until its effects are ready the layer has nothing of its own to draw.
-                if entry.layer.sceneInput, dynamicTextures[layerIndex] == nil { continue }
-            }
-            // Drawn below, natively or through its material; through a camera, anywhere.
-            if draw.placement != nil {
-                snapshotTracker.sceneDrawn(in: nil)
-            } else if let drawn = SceneSnapshotTracker.pixelRect(of: draw.quad, sceneSize: sceneSize, targetSize: targetSize) {
-                snapshotTracker.sceneDrawn(in: drawn)
-            }
-            encodeLayer(entry, draw, image: textFrames[layerIndex]?.frame ?? textureFrame(for: entry),
-                        effectOutput: dynamicTextures[layerIndex], drawnLastPass: drawnLastPasses[layerIndex],
-                        snapshot: layerSnapshot, frame: effectFrame,
-                        target: LayerTarget(size: drawableSize, pixelFormat: sceneTexture.pixelFormat,
-                                            sampleCount: sceneSampleCount, depth: frameDepth, pipelines: scenePassPipelines),
-                        encoder: encoder, commandBuffer: commandBuffer)
-        }
-        guard drawParticleBatches(before: .max) else { return }
-        let nativeImage = { [unowned self] (index: Int) in textFrames[index]?.frame ?? self.textureFrame(for: self.layers[index]) }
-        // What reads the finished scene (the bloom, the reflection copy) sees the promoted layers as
-        // before: drawn last, where nothing kept in the pass after them reaches. The patch's base is
-        // the scene as it was without them.
-        var detailBase: MTLTexture?
-        if native.feedsScene, !native.layers.isEmpty {
-            let fed = feedDetailLayers(native.layers, baseTexels: native.baseTexels, draws: draws, image: nativeImage,
-                                       scene: sceneTexture, frame: effectFrame, encoder: &encoder, commandBuffer: commandBuffer)
-            guard fed.resumed else { return }
-            detailBase = fed.base
-        }
-        endScenePass(encoder, resumes: keepsScene)
-
-        var stageContext = SceneFrameStageContext(scene: sceneTexture, commandBuffer: commandBuffer, sceneSize: sceneSize,
-                                                  frame: effectFrame, settings: renderSettings)
-        stageContext.assetTexture = { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) }
-        stageContext.sceneDepth = frameDepth == nil ? nil : depthBuffer.texture
-        stageContext.shadowAtlas = frameShadowAtlas
-        for stage in frameStages { stage.encode(stageContext) }
-        // The drawable (F1: taken now, after the frame's work is encoded) or the shared frame.
-        // A shared frame that kept its own target for detail layers none of which was promoted is
-        // the scene after all, as it would have been (`FrameTargets.deferredPassThrough`).
-        let passesThroughNow = targets.deferredPassThrough && native.layers.isEmpty
-        if passesThroughNow {
-            sharedFrameTarget = nil
-            compositesSkipped += 1
-        }
-        let (descriptor, drawable) = targets.output
-            ?? (passesThroughNow ? Self.passThroughOutput(onto: sceneTexture)
-                : lateOutput(output, matching: sceneTexture, size: native.sharedSize))
-        if let descriptor {
-            // What the post-process composites onto: the drawable, or the shared frame.
-            let outputTexture = descriptor.colorAttachments[0].texture
-            let realDrawableSize = SIMD2<Float>(Float(outputTexture?.width ?? sceneTexture.width),
-                                                Float(outputTexture?.height ?? sceneTexture.height))
-            // The scene-resolution target goes onto the real drawable, placement applied exactly once.
-            let placement = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: realDrawableSize,
-                                         placement: destination.placement)
-            let postFrame = ScenePostProcess.Frame(
-                scene: sceneTexture, output: descriptor, commandBuffer: commandBuffer,
-                placement: placement,
-                bloom: liveBloom(), extras: appExtras(), settings: renderSettings,
-                colorCorrection: colorCorrection(),
-                effects: effectGraph, builtins: effectFrame, values: timelines.values, fullDetailScale: fullDetailScale,
-                display: displayOutput, sceneIsOutput: targets.sceneIsOutput || passesThroughNow)
-            // The promoted layers' patch, over the scene as the composite upscales it without them,
-            // made before the post-process (the camera fade may draw onto the scene target).
-            var patch: (texture: MTLTexture, rect: SceneSnapshotTracker.Rect)?
-            if native.mode == .patch, !native.layers.isEmpty, let rect = native.patch, let outputTexture,
-               outputTexture.width == native.outputSize.x, outputTexture.height == native.outputSize.y,
-               let base = native.feedsScene ? detailBase : Optional(sceneTexture),
-               let texture = detailPatch(native, rect: rect, base: base, baseTexels: native.feedsScene ? native.baseTexels : nil,
-                                         sceneTexels: SIMD2(sceneTexture.width, sceneTexture.height), composite: placement,
-                                         draws: draws, image: nativeImage, frame: effectFrame, commandBuffer: commandBuffer) {
-                patch = (texture, rect)
-            }
-            postProcess.encode(postFrame)
-            if let patch {
-                // `combine_ldr`'s sum, then the steps after it, per pixel.
-                if let bloom = postProcess.lastBloom?.bloom {
-                    addBloom(bloom, to: patch.texture, rect: patch.rect, composite: placement,
-                             outputHeight: native.outputSize.y, commandBuffer: commandBuffer)
-                }
-                postProcess.finishDetailPatch(patch.texture, at: patch.rect, postFrame)
-            } else if let outputTexture, !native.layers.isEmpty, !native.feedsScene {
-                // Straight over the composite; or, should the patch fail, so they still show.
-                drawNativeDetailLayers(native.layers, draws: draws, image: nativeImage, onto: outputTexture,
-                                       placement: native.placement, frame: effectFrame, commandBuffer: commandBuffer)
-            }
-            if let drawable {
-                commandBuffer.present(drawable)
-            } else {
-                sharedFrame = descriptor.colorAttachments[0].texture
-            }
-        }
-        // A video frame's pixel buffer returns to the decoder's pool once released; hold each one
-        // this frame sampled until the GPU is done reading it.
-        for entry in layers { if case let .video(stream) = entry.layer.source { stream.holdCurrentFrame(until: commandBuffer) } }
-        // "Pause when VRAM is exhausted" (`VideoMemoryWatch`): a frame that ran out of memory.
-        commandBuffer.addCompletedHandler { buffer in
-            guard buffer.status == .error, VideoMemoryWatch.isOutOfMemory(buffer.error) else { return }
-            NotificationCenter.default.post(name: .videoMemoryCommandBufferFailed, object: nil)
-        }
-        commandBuffer.commit()
-        lastCommandBuffer = commandBuffer
-        if let frameStats { frameStats.finishFrame(sceneStats) }
-        // Nothing was compiling when the frame started, nor started or landed while it was
-        // encoded: every pass drew.
-        if let landedBefore, !pipelinesCompiling, pipelinesLanded == landedBefore, pendingScriptLayers == 0,
-           pendingReplacements == 0, textRaster.inFlight == 0 {
-            hasCompleteFrame = true
-        }
-    }
-
-    /// The scene's own numbers for the stats overlay, at the end of a counted frame (WE's
-    /// `renderStats`): particles, lights, video textures, the scripts' time and expensive effects.
-    private func sceneStats(_ stats: inout SceneFrameStats) {
-        for system in particleSystems where system.simulation == nil {
-            if let gpu = system.gpu {
-                stats.particleCount += gpu.completedCount
-                stats.particleBytes += gpu.particles?.length ?? 0
-            } else {
-                stats.particleCount += system.particles.count
-                stats.particleBytes += system.particles.count * MemoryLayout<Particle>.stride
-            }
-        }
-        stats.particleMilliseconds = particleStepMilliseconds
-        stats.scriptMilliseconds = scripts.wallpaper?.frameTiming.lastMilliseconds ?? 0
-        stats.lightCount = lastLightCount
-        for entry in layers where scripts.isVisible(entry.layer.id) {
-            if case .video = entry.layer.source { stats.videoTextureCount += 1 }
-            if puppetsMade, let puppets { stats.clippingMaskPasses += puppets.clippingMaskPasses(entry.layer.id) }
-            for effect in entry.layer.weEffects where effect.visible {
-                switch effect.performance {
-                case .expensive?: stats.expensiveEffects += 1
-                case .veryExpensive?: stats.veryExpensiveEffects += 1
-                case nil: break
-                }
-            }
-        }
-    }
-
-    /// The scene's bloom this frame: `thisScene.bloom`, `bloomstrength` and `bloomthreshold` once a
-    /// script set them, else their timelines, else the content's.
-    private func liveBloom() -> ScenePostProcess.Bloom {
-        let scene = scripts.state.scene
-        return ScenePostProcess.Bloom(
-            enabled: scene.flag(.bloom) ?? bloom.enabled,
-            strength: scene.scalar(.bloomstrength) ?? timelines.sceneScalar(.bloomstrength) ?? bloom.strength,
-            threshold: scene.scalar(.bloomthreshold) ?? timelines.sceneScalar(.bloomthreshold) ?? bloom.threshold,
-            tint: bloom.tint, hdr: liveHDRBloom())
-    }
-
-    /// The HDR bloom's `bloomhdr*` this frame: a bound script's, else its timeline's, else the
-    /// content's. Whether the scene draws in HDR stays the content's (WE decides it at load).
-    private func liveHDRBloom() -> SceneHDRBloomSettings {
-        var hdr = bloom.hdr
-        hdr.strength = sceneSetting(.bloomhdrstrength) ?? hdr.strength
-        hdr.threshold = sceneSetting(.bloomhdrthreshold) ?? hdr.threshold
-        hdr.feather = sceneSetting(.bloomhdrfeather) ?? hdr.feather
-        hdr.scatter = sceneSetting(.bloomhdrscatter) ?? hdr.scatter
-        // An int property: WE's converter truncates (`ToInt32`).
-        if let iterations = sceneSetting(.bloomhdriterations), iterations.isFinite, abs(iterations) < 1e9 {
-            hdr.iterations = Int(iterations)
-        }
-        return hdr
-    }
-
-    /// The app's own whole-scene adjustments, from this wallpaper's user properties.
-    private func appExtras() -> ScenePostProcess.AppExtras {
-        let services = WallpaperServices.shared
-        return ScenePostProcess.AppExtras(bloom: services.userPropertyValue("_owe_bloom", fallback: 1),
-                                          saturation: services.userPropertyValue("_owe_saturation", fallback: 1),
-                                          hue: services.userPropertyValue("_owe_hue", fallback: 0),
-                                          blur: services.userPropertyValue("_owe_blur", fallback: 1))
-    }
-
-    /// WE's image filter and colour options, from this wallpaper's user properties.
-    private func colorCorrection() -> SceneColorCorrectionSettings {
-        let services = WallpaperServices.shared
-        return SceneColorCorrectionSettings { services.userPropertyString($0.rawValue) }
-    }
-
-    /// This frame's lighting (`SceneFrameLighting`), from the objects' live transforms and
-    /// visibility, the scripts' scene colours and the user's shadows setting.
-    private func frameLighting(eye: SIMD3<Float>, forward: SIMD3<Float>, shake: SIMD2<Float>) -> SceneFrameLighting {
-        let scene = scripts.state.scene
-        var frame = SceneFrameLighting.frame(lighting, input: SceneFrameLightingInput(
-
-            local: { [unowned self] id in self.liveLocal(id) ?? self.transforms.nodes[id]?.local },
-            parentWorld: { [unowned self] id in self.transforms.parentWorld(of: id) { self.liveLocal($0) } },
-            isVisible: { [unowned self] id in self.scripts.isVisible(id) },
-            world3D: isPerspective ? { [unowned self] id in self.world3D(id, in: self.spatial.transforms) } : nil,
-            sceneColor: { scene.vector3($0) },
-            live: { [unowned self] object in
-                object.live(script: self.scripts.object(object.id), animation: self.timelines.object(object.id),
-                            timeline: { self.timelines.objectField(object.id, $0) })
-            },
-            shadows: renderSettings.shadows != .disabled, shadowQuality: renderSettings.shadows.level,
-            reducedShadowMaps: renderSettings.cheaperShadows,
-            orthographic: !isPerspective, shadowAtlasExtent: shadowPass?.atlas.extent ?? .zero, cameraShake: shake,
-            eyePosition: eye, viewForward: forward, zoom: frameZoom))
-        frame.fog = frame.fog.live(number: { [unowned self] in self.sceneSetting($0) }, color: { scene.vector3($0) })
-        if !loggedFogToggle, frame.fog.distance != lighting.settings.fog.distance || frame.fog.height != lighting.settings.fog.height {
-            loggedFogToggle = true
-            OWELog.error(.scene, "A script turned the scene's fog on or off: the materials keep the fog combos they were built with, so only its colours, ranges and densities follow the script")
-        }
-        return frame
-
-    }
-
-
-    /// This frame's `_rt_shadowAtlas` (docs/models-plan.md §2.10): the lighting's shadow maps
-    /// drawn with the visible model objects that cast, before the scene pass reads them, or the
-    /// cleared stand-in without maps.
-    private func drawShadows(frame: BuiltinFrameContext, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
-        guard let shadowPass, let models else { return nil }
-        let casters = spatial.models.filter { scripts.isVisible($0.id) && SceneShadowPass.castsShadow($0) }
-            .map { SceneShadowPass.Caster(model: $0, world: drawnWorld3D($0.id)) }
-        return shadowPass.encode(frame.lighting.shadows, casters: casters, models: models, frame: frame, values: timelines.values,
-                                 assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-                                 commandBuffer: commandBuffer)
-    }
-
-    /// The pass a layer's quad draws into: its target's format and samples, its depth states (nil
-    /// without depth) and the native layer pipelines for it.
-    private struct LayerTarget {
-        /// The target's size in pixels.
-        var size: SIMD2<Float>
-        var pixelFormat: MTLPixelFormat
-        var sampleCount: Int
-        var depth: SceneDepthStates?
-        var pipelines: SceneLayerPipelines.Pipelines
-    }
-
-    /// Draws a layer's quad into `encoder`'s pass: through its material, or natively when it has
-    /// none or its material can't draw this frame. `image` is its texture frame (its text raster
-    /// for a text layer), `effectOutput` what its effects made this frame, `snapshot` the scene
-    /// under it for a material that reads it. Leaves `target.pipelines.normal` set.
-    private func encodeLayer(_ entry: PreparedLayer, _ draw: LayerDraw, image: RenderTextureFrame,
-                             effectOutput: MTLTexture?, drawnLastPass: EffectGraphRenderer.DrawnLastPass? = nil,
-                             snapshot layerSnapshot: MTLTexture?, frame: BuiltinFrameContext,
-                             target: LayerTarget, encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer) {
-        // Effects that started from the frame cut out of the atlas or the padded texture
-        // (`effectInput`) made one image: the layer draws their output, or their last pass samples
-        // their buffers, whole.
-        let wholeFrame = spriteFrameVersions[entry.layer.id] == nil ? image
-            : RenderTextureFrame(texture: image.texture, duration: image.duration, uvOrigin: .zero,
-                                 uvAxisX: SIMD2(1, 0), uvAxisY: SIMD2(0, 1))
-        let textureFrame = effectOutput != nil ? wholeFrame : image
-        // The effects' last pass draws the layer: through its quad, with its material's blending and
-        // depth state (`runEffectsDrawingLastPass`).
-        if let drawnLastPass, let effectGraph, let blending = entry.layer.imageMaterial?.pass.blending ?? entry.layer.solidBlending {
-            target.depth?.apply(layerRaster(entry), to: encoder)
-            let placement = lastPassPlacement(blending: blending, draw: draw, image: wholeFrame, sceneFormat: target.pixelFormat)
-            let context = effectContext(entry, draw: draw, input: drawnLastPass.input, snapshot: nil, frame: frame)
-            let drew = effectGraph.encode(drawnLastPass, into: encoder, scene: placement, context: context,
-                                          commandBuffer: commandBuffer)
-            encoder.setRenderPipelineState(target.pipelines.normal)
-            if drew { return }
-        }
-        var uniform = layerUniform(position: draw.quad.center, size: draw.quad.extent,
-                                   opacity: draw.opacity, drawableSize: target.size, placement: .stretch)
-        setQuadAxes(&uniform, quad: draw.quad)
-        // Text is rasterised white; its user colour tints it when drawn, like its authored one.
-        // Text with font effects or layer effects has its colours in its raster (`textFill`).
-        let textTint = entry.layer.text == nil ? SIMD3<Float>(repeating: 1) : self.textTint(layerID: entry.layer.id)
-        uniform.color = !textRastersInColor(entry) && entry.layer.weEffects.isEmpty ? draw.color * SIMD4(textTint, 1)
-            : SIMD4(1, 1, 1, draw.color.w)
-        // The layer's brightness and a video's music-synced saturation; the other adjustments
-        // stay at their identity (`layerUniform`).
-        uniform.effects.x = draw.brightness
-        uniform.effects.z = 1 + (entry.layer.musicSync?.saturationAmount ?? 0) * Float(draw.musicSyncLevel)
-        uniform.uvOrigin = textureFrame.uvOrigin
-        uniform.uvAxisX = textureFrame.uvAxisX
-        uniform.uvAxisY = textureFrame.uvAxisY
-        // A text layer's `font` material reads the glyphs' coverage; colour glyphs have none.
-        // A prelit layer whose chain rendered nothing (every effect hidden, or compiling) draws
-        // its prelit image: its own draw has the lighting off, so the raw image would be unlit.
-        let materialTexture = entry.layer.text == nil
-            ? effectOutput ?? prelitImages[entry.layer.id] ?? textureFrame.texture
-            : textureFrame.coverage
-        if let plan = entry.layer.imageMaterial, let imageMaterials, let materialTexture, imageMaterials.draw(plan, ImageMaterialRenderer.Draw(
-               layerID: entry.layer.id, quad: draw.quad, sceneSize: sceneSize,
-               color: SIMD3(draw.color.x, draw.color.y, draw.color.z) * textTint, alpha: draw.opacity, brightness: draw.brightness,
-               texture: materialTexture, contentSize: entry.layer.source.contentSize,
-               uvOrigin: textureFrame.uvOrigin, uvAxisX: textureFrame.uvAxisX, uvAxisY: textureFrame.uvAxisY,
-               sceneSnapshot: layerSnapshot, mipMappedFrameBuffer: mipMappedTarget, shadowAtlas: frameShadowAtlas,
-               frame: frame,
-               values: timelines.values,
-               assetTexture: { [unowned self] key, source in
-                   self.puppetWarps[entry.layer.id]?[key] ?? self.effectAssetTexture(key: key, source: source)
-               },
-               assetSprite: { [unowned self] key, source in self.effectAssetSprite(key: key, source: source) },
-               ignoredAdjustments: !ImageMaterialRenderer.nativeAdjustmentsAreIdentity(uniform, brightness: draw.brightness),
-               placement: draw.placement, raster: layerRaster(entry)),
-               pixelFormat: target.pixelFormat, sampleCount: target.sampleCount, depth: target.depth, encoder: encoder,
-               commandBuffer: commandBuffer) {
-            encoder.setRenderPipelineState(target.pipelines.normal)
-            return
-        }
-        if entry.layer.imageMaterial != nil { imageMaterialFallbacks[entry.layer.id, default: 0] += 1 }
-        target.depth?.apply(layerRaster(entry), to: encoder)
-        let additive = entry.layer.additive
-        if var placed = draw.placement?.native,
-           let pipeline = additive ? target.pipelines.placedAdditive : target.pipelines.placedNormal {
-            encoder.setRenderPipelineState(pipeline)
-            encoder.setVertexBytes(&placed, length: MemoryLayout<LayerPlacement3D>.stride, index: 1)
-        } else if additive {
-            encoder.setRenderPipelineState(target.pipelines.additive)
-        }
-        if effectOutput == nil { encodeTextBackground(entry, uniform: uniform, encoder: encoder) }
-        encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
-        encoder.setFragmentBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
-        encoder.setFragmentTexture(effectOutput ?? textureFrame.texture, index: 0)
-        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
-        if draw.placement != nil || additive { encoder.setRenderPipelineState(target.pipelines.normal) }
-    }
-
-    /// A text layer's `opaquebackground` box, when it is drawn as its own quad (no effects): the
-    /// layer's quad in `backgroundcolor` (times `backgroundbrightness` where WE applies
-    /// brightness), with the layer's opacity, before its glyphs, which then draw over it with that
-    /// opacity too. That is WE's buffer, cleared to the colour with the object's alpha and the
-    /// glyphs drawn into it with that alpha (0x140257c30), then composited.
-    private func encodeTextBackground(_ entry: PreparedLayer, uniform: LayerUniform, encoder: MTLRenderCommandEncoder) {
-        guard let authored = entry.layer.text, entry.layer.weEffects.isEmpty else { return }
-        let text = scripts.text(authored, of: entry.layer.id).text
-        guard text.opaqueBackground, let white = solidWhiteTexture else { return }
-        var box = uniform
-        let brightness = renderSettings.appliesBrightness ? max(text.backgroundBrightness, 0) : 1
-        box.color = SIMD4(text.backgroundColor * brightness, uniform.color.w)
-        box.effects.x = 1
-        box.uvOrigin = .zero
-        box.uvAxisX = SIMD2(1, 0)
-        box.uvAxisY = SIMD2(0, 1)
-        encoder.setVertexBytes(&box, length: MemoryLayout<LayerUniform>.stride, index: 0)
-        encoder.setFragmentBytes(&box, length: MemoryLayout<LayerUniform>.stride, index: 0)
-        encoder.setFragmentTexture(white, index: 0)
-        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
-    }
+    var promotedDetailLayers = 0
 
     /// A 1 × 1 opaque white texture, for quads drawn in a flat colour.
-    private lazy var solidWhiteTexture: MTLTexture? = {
+    lazy var solidWhiteTexture: MTLTexture? = {
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)
         descriptor.usage = [.shaderRead]
         guard let texture = device.makeTexture(descriptor: descriptor) else { return nil }
@@ -2460,2304 +794,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         texture.replace(region: MTLRegionMake2D(0, 0, 1, 1), mipmapLevel: 0, withBytes: &white, bytesPerRow: 4)
         return texture
     }()
-
-    // MARK: - Detail layers at the output's backing pixels (`SceneNativeDetailLayers`)
-
-    /// This frame's detail layers drawn at the output's pixels: their indices in draw order, the
-    /// output's pixels per scene unit, the placement they are drawn with, for a shared frame the
-    /// backing size it is made at so they keep their pixels (nil: the scene's size), and how they
-    /// reach the output.
-    private struct NativeDetailPlan {
-        var layers: [Int] = []
-        var pixelsPerUnit: Float = 0
-        var placement: WallpaperPlacement = .stretch
-        var sharedSize: SIMD2<Int>?
-        var mode = SceneNativeDetailLayers.Mode.direct
-        /// The output's size in pixels the plan was made for.
-        var outputSize = SIMD2<Int>(0, 0)
-        /// `.patch`: the output pixels it covers (origin at the top left).
-        var patch: SceneSnapshotTracker.Rect?
-        /// The layers also go into the scene target, after everything else, for what reads the
-        /// finished scene (WE's bloom, `_rt_MipMappedFrameBuffer`). The patch's base is then a copy
-        /// of the target's `baseTexels` made before they are drawn.
-        var feedsScene = false
-        var baseTexels: SceneSnapshotTracker.Rect?
-    }
-
-    /// Which layers leave the scene pass this frame: none unless the output has more pixels per unit
-    /// than the scene target and the post-process works per pixel (`ScenePostProcess.detailMode`);
-    /// then the candidates nothing kept in the scene pass after them reads or covers
-    /// (`SceneNativeDetailLayers.promoted`).
-    private func nativeDetailPlan(_ output: FrameOutput, destination: SceneFrameDestination, sequence: DrawSequence,
-                                  particleBatchCount: Int, draws: [Int: LayerDraw], compositeOrder: SceneLayerCompositeOrder,
-                                  frame: BuiltinFrameContext, scene: MTLTexture, sceneIsOutput: Bool) -> NativeDetailPlan {
-        var plan = NativeDetailPlan()
-        defer {
-            if plan.layers.count != promotedDetailLayers {
-                OWELog.info(.scene, "Detail layers drawn at the output's pixels: \(plan.layers.count)")
-            }
-            promotedDetailLayers = plan.layers.count
-        }
-        // WE's volumetrics add light over the finished scene from its depth, which a patch can't take.
-        let frameBloom = liveBloom()
-        guard promotesDetailLayers, !sceneIsOutput, !SceneVolumetrics.runs(volumetrics?.plan, settings: renderSettings),
-              var mode = postProcess.detailMode(bloom: frameBloom, extras: appExtras(), settings: renderSettings,
-                                                colorCorrection: colorCorrection(), display: displayOutput,
-                                                fade: frame.camera.fade)
-        else { return plan }
-        let feedsScene = mipMappedTarget != nil || ScenePostProcess.runsBloom(frameBloom, settings: renderSettings)
-        if feedsScene {
-            mode = .patch
-        }
-        let outputSize: SIMD2<Float>
-        switch output {
-        case .view:
-            outputSize = destination.viewports[0].drawableSize
-            plan.placement = destination.placement
-        case .shared(let viewports):
-            let pixelsPerUnit = SceneRenderResolution.pixelsPerUnit(
-                sceneSize: sceneSize, drawableSize: SceneViewport.largestDrawable(viewports),
-                floorsAtAuthoredSize: renderSettings.floorsAtAuthoredSize, quantised: followsLiveResize)
-            let size = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: pixelsPerUnit)
-            plan.sharedSize = size
-            outputSize = SIMD2(Float(size.x), Float(size.y))
-        }
-        plan.outputSize = SIMD2(Int(outputSize.x.rounded()), Int(outputSize.y.rounded()))
-        let placed = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: outputSize,
-                                  placement: plan.placement)
-        plan.pixelsPerUnit = placed.size.x / max(sceneSize.x, 1)
-        guard SceneNativeDetailLayers.gainsDetail(scenePixelsPerUnit: Float(scene.width) / max(sceneSize.x, 1),
-                                                  outputPixelsPerUnit: plan.pixelsPerUnit) else {
-            plan.sharedSize = nil
-            return plan
-        }
-        let targetSize = SIMD2(scene.width, scene.height)
-        var items: [SceneNativeDetailLayers.Item] = []
-        var nextBatch = 0
-        func batches(before barrier: Int) {
-            while nextBatch < particleBatchCount, sequence.batchKeys[nextBatch] < barrier {
-                items.append(.unbounded)
-                nextBatch += 1
-            }
-        }
-        for (item, barrier) in sequence.items {
-            batches(before: barrier)
-            switch item {
-            case .layer(let index):
-                guard let draw = draws[index] else { continue }
-                let entry = layers[index]
-                let id = entry.layer.id
-                let readsScene = entry.layer.readsScene || compositeOrder.inScene.contains(id)
-                    || entry.layer.imageMaterial?.readsSceneSnapshot == true
-                let visible = scripts.isVisible(id) && !hiddenFromFrame(entry.layer)
-                let candidate = SceneNativeDetailLayers.isCandidate(
-                    isText: entry.layer.text != nil, isMediaImage: entry.layer.systemImage != nil, visible: visible,
-                    compositeSource: compositeOrder.sources.contains(id) || models?.compositeLayerIDs.contains(id) == true,
-                    hasLayerEffects: !entry.layer.weEffects.isEmpty, readsScene: readsScene,
-                    isPuppet: entry.layer.puppet != nil, placed3D: draw.placement != nil)
-                // A layer through a 3D camera covers what its projection does: anywhere.
-                let bounds: SceneSnapshotTracker.Rect? = draw.placement != nil ? nil
-                    : SceneSnapshotTracker.pixelRect(of: draw.quad, sceneSize: sceneSize, targetSize: targetSize) ?? .empty
-                items.append(.layer(index: index, bounds: bounds, readsScene: readsScene, candidate: candidate))
-            case .model, .particles:
-                items.append(.unbounded)
-            }
-        }
-        batches(before: .max)
-        let promoted = SceneNativeDetailLayers.promoted(items)
-        var promotedTexels: [SceneSnapshotTracker.Rect] = []
-        plan.layers = items.compactMap { item -> Int? in
-            guard case let .layer(index, bounds, _, _) = item, promoted.contains(index) else { return nil }
-            if let bounds { promotedTexels.append(bounds) }
-            return index
-        }
-        plan.mode = mode
-        plan.feedsScene = feedsScene
-        if mode == .patch {
-            // The output pixels the layers' texels (padded for the filters) land on.
-            let placedRect = SceneNativeDetailLayers.placedViewport(center: placed.position, size: placed.size,
-                                                                    outputSize: outputSize)
-            guard let texels = SceneNativeDetailLayers.union(promotedTexels),
-                  let patch = SceneNativeDetailLayers.outputRect(ofTexels: texels, sceneTexels: targetSize,
-                                                                 placed: placedRect, outputSize: plan.outputSize)
-            else {
-                // Nothing of them is on the output: they stay in the scene pass.
-                plan.layers = []
-                plan.sharedSize = nil
-                return plan
-            }
-            plan.patch = patch
-            if feedsScene {
-                plan.baseTexels = SceneNativeDetailLayers.texels(under: patch, sceneTexels: targetSize, placed: placedRect)
-            }
-        }
-        if plan.layers.isEmpty { plan.sharedSize = nil }
-        return plan
-    }
-
-    /// Draws the promoted layers `indices` (in draw order) after the scene pass, at the scene
-    /// target's pixels, into the resumed scene pass: what reads the finished scene sees them as
-    /// before (`NativeDetailPlan.feedsScene`). First copies the target's `baseTexels`, the scene
-    /// without them that the patch is drawn over (`base`, nil when the copy can't be made).
-    /// `resumed` false: the scene pass couldn't resume, and `encoder` is ended.
-    private func feedDetailLayers(_ indices: [Int], baseTexels: SceneSnapshotTracker.Rect?, draws: [Int: LayerDraw],
-                                  image: (Int) -> RenderTextureFrame, scene: MTLTexture, frame: BuiltinFrameContext,
-                                  encoder: inout MTLRenderCommandEncoder,
-                                  commandBuffer: MTLCommandBuffer) -> (resumed: Bool, base: MTLTexture?) {
-        endScenePass(encoder, resumes: true)
-        var base: MTLTexture?
-        if let region = baseTexels, region.width > 0, region.height > 0,
-           let copy = renderTargetPool.texture(width: region.width, height: region.height, pixelFormat: scene.pixelFormat,
-                                               avoiding: scene),
-           let blit = commandBuffer.makeBlitCommandEncoder() {
-            blit.copy(from: scene, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(x: region.x, y: region.y, z: 0),
-                      sourceSize: MTLSize(width: region.width, height: region.height, depth: 1),
-                      to: copy, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
-            blit.endEncoding()
-            base = copy
-        }
-        guard let resumed = resumeScenePass(on: scene, commandBuffer: commandBuffer) else { return (false, nil) }
-        encoder = resumed
-        let target = LayerTarget(size: SIMD2(Float(scene.width), Float(scene.height)), pixelFormat: scene.pixelFormat,
-                                 sampleCount: sceneSampleCount, depth: frameDepth, pipelines: scenePassPipelines)
-        for index in indices {
-            guard let draw = draws[index] else { continue }
-            encodeLayer(layers[index], draw, image: image(index), effectOutput: nil, snapshot: nil, frame: frame,
-                        target: target, encoder: encoder, commandBuffer: commandBuffer)
-        }
-        return (true, base)
-    }
-
-    /// The detail patch (`SceneNativeDetailLayers.Mode.patch`): the output pixels `rect` of the
-    /// scene as the composite upscales it, from `base` (a copy of the scene target's `baseTexels`,
-    /// or with nil the whole texture the composite reads), with the promoted layers drawn over it at
-    /// those pixels. `composite` is the composite's quad on the output, before its adjustments. Nil
-    /// when its target can't be had.
-    private func detailPatch(_ plan: NativeDetailPlan, rect: SceneSnapshotTracker.Rect, base: MTLTexture,
-                             baseTexels: SceneSnapshotTracker.Rect?, sceneTexels: SIMD2<Int>, composite: LayerUniform,
-                             draws: [Int: LayerDraw], image: (Int) -> RenderTextureFrame, frame: BuiltinFrameContext,
-                             commandBuffer: MTLCommandBuffer) -> MTLTexture? {
-        guard let patch = renderTargetPool.texture(width: rect.width, height: rect.height, pixelFormat: base.pixelFormat,
-                                                   avoiding: base) else { return nil }
-        let pass = MTLRenderPassDescriptor()
-        pass.colorAttachments[0].texture = patch
-        pass.colorAttachments[0].loadAction = .clear
-        pass.colorAttachments[0].clearColor = SceneFrameDestination.clearColor
-        pass.colorAttachments[0].storeAction = .store
-        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return nil }
-        defer { encoder.endEncoding() }
-        encoder.label = "detail patch"
-        let pipelines = layerPipelines.pipelines(for: patch.pixelFormat)
-        // The scene's quad as the composite draws it, moved into the patch and read with the same
-        // linear filter, alpha included (the layers blend over it as over the scene target).
-        var uniform = composite
-        uniform.sceneSize = SIMD2(Float(rect.width), Float(rect.height))
-        uniform.position = SceneNativeDetailLayers.patchPosition(composite.position, rect: rect, outputHeight: plan.outputSize.y)
-        if let baseTexels {
-            let uv = SceneNativeDetailLayers.copyUV(of: baseTexels, sceneTexels: sceneTexels)
-            uniform.uvOrigin = uv.origin
-            uniform.uvAxisX = uv.axisX
-            uniform.uvAxisY = uv.axisY
-        }
-        encoder.setRenderPipelineState(pipelines.copy)
-        encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
-        encoder.setFragmentBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
-        encoder.setFragmentTexture(base, index: 0)
-        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
-        encodeNativeDetailLayers(plan.layers, draws: draws, image: image, into: encoder, target: patch,
-                                 origin: SIMD2(Float(rect.x), Float(rect.y)),
-                                 outputSize: SIMD2(Float(plan.outputSize.x), Float(plan.outputSize.y)),
-                                 placement: plan.placement, frame: frame, commandBuffer: commandBuffer)
-        return patch
-    }
-
-    /// Adds `bloom` (`_rt_Bloom`) to the detail patch `rect` as WE's `combine_ldr` adds it to the
-    /// frame: read at each pixel's place in the scene with the linear filter, the sum stored in the
-    /// patch's format. `composite` is the composite's quad on the output.
-    private func addBloom(_ bloom: MTLTexture, to patch: MTLTexture, rect: SceneSnapshotTracker.Rect,
-                          composite: LayerUniform, outputHeight: Int, commandBuffer: MTLCommandBuffer) {
-        let pass = MTLRenderPassDescriptor()
-        pass.colorAttachments[0].texture = patch
-        pass.colorAttachments[0].loadAction = .load
-        pass.colorAttachments[0].storeAction = .store
-        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return }
-        encoder.label = "detail patch bloom"
-        var uniform = composite
-        uniform.sceneSize = SIMD2(Float(rect.width), Float(rect.height))
-        uniform.position = SceneNativeDetailLayers.patchPosition(composite.position, rect: rect, outputHeight: outputHeight)
-        encoder.setRenderPipelineState(layerPipelines.pipelines(for: patch.pixelFormat).addCopy)
-        encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
-        encoder.setFragmentBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
-        encoder.setFragmentTexture(bloom, index: 0)
-        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
-        encoder.endEncoding()
-    }
-
-    /// Draws `indices` (in draw order) over `texture` once the composite has put the scene on it
-    /// (`SceneNativeDetailLayers.Mode.direct`).
-    private func drawNativeDetailLayers(_ indices: [Int], draws: [Int: LayerDraw], image: (Int) -> RenderTextureFrame,
-                                        onto texture: MTLTexture, placement: WallpaperPlacement, frame: BuiltinFrameContext,
-                                        commandBuffer: MTLCommandBuffer) {
-        let pass = MTLRenderPassDescriptor()
-        pass.colorAttachments[0].texture = texture
-        pass.colorAttachments[0].loadAction = .load
-        pass.colorAttachments[0].storeAction = .store
-        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return }
-        defer { encoder.endEncoding() }
-        let outputSize = SIMD2<Float>(Float(texture.width), Float(texture.height))
-        encodeNativeDetailLayers(indices, draws: draws, image: image, into: encoder, target: texture, origin: .zero,
-                                 outputSize: outputSize, placement: placement, frame: frame, commandBuffer: commandBuffer)
-    }
-
-    /// Encodes `indices` into `encoder`, whose `target` is the output's pixels from `origin` (top
-    /// left) on: each layer as the scene pass draws it, through a viewport on the scene's placed
-    /// rect, so its quad, opacity, colour, blend and parallax land on the same pixels at the
-    /// output's density.
-    private func encodeNativeDetailLayers(_ indices: [Int], draws: [Int: LayerDraw], image: (Int) -> RenderTextureFrame,
-                                          into encoder: MTLRenderCommandEncoder, target texture: MTLTexture,
-                                          origin: SIMD2<Float>, outputSize: SIMD2<Float>, placement: WallpaperPlacement,
-                                          frame: BuiltinFrameContext, commandBuffer: MTLCommandBuffer) {
-        let placed = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: outputSize,
-                                  placement: placement)
-        var viewport = SceneNativeDetailLayers.placedViewport(center: placed.position, size: placed.size, outputSize: outputSize)
-        viewport.origin -= origin
-        // Only the placed scene within the target: a cropping placement's viewport reaches past it.
-        let size = SIMD2<Float>(Float(texture.width), Float(texture.height))
-        let low = simd_clamp(viewport.origin.rounded(.down), SIMD2<Float>(0, 0), size)
-        let high = simd_clamp((viewport.origin + viewport.size).rounded(.up), SIMD2<Float>(0, 0), size)
-        guard high.x > low.x, high.y > low.y else { return }
-        encoder.setViewport(MTLViewport(originX: Double(viewport.origin.x), originY: Double(viewport.origin.y),
-                                        width: Double(viewport.size.x), height: Double(viewport.size.y), znear: 0, zfar: 1))
-        encoder.setScissorRect(MTLScissorRect(x: Int(low.x), y: Int(low.y),
-                                              width: Int(high.x - low.x), height: Int(high.y - low.y)))
-        let pipelines = layerPipelines.pipelines(for: texture.pixelFormat)
-        encoder.setRenderPipelineState(pipelines.normal)
-        let target = LayerTarget(size: viewport.size, pixelFormat: texture.pixelFormat, sampleCount: 1, depth: nil,
-                                 pipelines: pipelines)
-        for index in indices {
-            guard let draw = draws[index] else { continue }
-            encodeLayer(layers[index], draw, image: image(index), effectOutput: nil, snapshot: nil, frame: frame,
-                        target: target, encoder: encoder, commandBuffer: commandBuffer)
-        }
-    }
-
-    /// This frame's `_rt_Reflection` (docs/models-plan.md §2.11): while a model is reflective, the
-    /// visible reflected objects drawn through the mirrored camera in the object loop's order (its
-    /// sort keyed on the mirrored forward, as WE sorts inside the mirrored pass), or the clear
-    /// colour with the reflection setting off; nil while no model is reflective. It is drawn once
-    /// the layers' effects and the particle systems' steps of this frame are encoded, before the
-    /// scene pass that samples it: the layers draw this frame's images, as WE's object draws do.
-    /// `draws`, `image` (a layer's texture frame, or text raster) and `effectOutputs` are the scene
-    /// pass's, by layer index; `batches` its particle systems, and which of them draw through their
-    /// material.
-    private func drawReflection(frame: BuiltinFrameContext, scene: MTLTexture, draws: [Int: LayerDraw],
-                                image: (Int) -> RenderTextureFrame, effectOutputs: [Int: MTLTexture],
-                                batches: [(system: ParticleSystemRuntime, material: Bool)],
-                                commandBuffer: MTLCommandBuffer) -> MTLTexture? {
-        guard let planarReflection, let modelDrawing, let depthStates, planarReflection.isNeeded(spatial.models) else {
-            if planarReflection?.texture != nil { planarReflection?.release() }
-            return nil
-        }
-        let reflectedModels = Set(planarReflection.reflectedList(spatial.models))
-        let sequence = drawSequence(batches: batches.map(\.system), forward: ScenePlanarReflection.mirrored(frame.camera).forward)
-        var objects: [ScenePlanarReflection.Object] = []
-        var next = 0
-        func systems(before barrier: Int) {
-            while next < sequence.batchOrder.count, sequence.batchKeys[next] < barrier {
-                let batch = batches[sequence.batchOrder[next]]
-                next += 1
-                if batch.material, let object = reflectedSystem(batch.system) { objects.append(object) }
-            }
-        }
-        for (item, barrier) in sequence.items {
-            systems(before: barrier)
-            switch item {
-            case .model(let index):
-                let model = spatial.models[index]
-                guard reflectedModels.contains(index), scripts.isVisible(model.id) else { continue }
-                objects.append(.model(model, world: drawnWorld3D(model.id)))
-            case .layer(let index):
-                guard let draw = draws[index] else { continue }
-                if let object = reflectedLayer(index, draw, image: image(index), effectOutput: effectOutputs[index]) {
-                    objects.append(object)
-                }
-            case .particles:
-                continue
-            }
-        }
-        systems(before: .max)
-        let pass = ScenePlanarReflection.Pass(
-            width: scene.width, height: scene.height, pixelFormat: scene.pixelFormat,
-            clearColor: scripts.state.scene.vector3(.clearcolor) ?? clearColor, enabled: renderSettings.reflection,
-            objects: objects,
-            frame: frame, values: timelines.values, mipMappedFrameBuffer: mipMappedTarget, shadowAtlas: frameShadowAtlas,
-            assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-            layerComposite: { [unowned self] id in self.layerComposites[id] })
-        return planarReflection.encode(pass, drawing: modelDrawing, depthStates: depthStates, commandBuffer: commandBuffer)
-    }
-
-    /// A layer's draw into the planar reflection, or nil when it isn't in the reflected list (its
-    /// `reflected`, or a shape) or hidden. Drawn as in the scene pass with the mirrored camera:
-    /// through it where the scene pass draws through the frame camera (a perspective scene's
-    /// layers; an orthographic scene's, whose view the mirror makes a camera placement), and
-    /// unchanged where WE's view doesn't reach the layer (a fullscreen layer in screen space, a
-    /// `perspective` layer through its own temporary camera, 0x1401e5b60). A layer whose image
-    /// is made inside the scene pass (it reads the scene, or samples a layer that does) isn't
-    /// drawn: its image doesn't exist yet (docs/models-plan.md §4.3 M9).
-    private func reflectedLayer(_ index: Int, _ draw: LayerDraw, image: RenderTextureFrame,
-                                effectOutput: MTLTexture?) -> ScenePlanarReflection.Object? {
-        let entry = layers[index]
-        let id = entry.layer.id
-        guard scripts.isVisible(id), spatial.isReflected(id), !entry.layer.readsScene,
-              !compositeOrder().inScene.contains(id) else { return nil }
-        return .other(id: id) { [unowned self] mirrored in
-            var reflected = draw
-            if self.isPerspective, var placement = draw.placement {
-                placement.camera = mirrored.frame.camera
-                reflected.placement = placement
-            } else if !self.isPerspective, draw.placement == nil, !entry.layer.fillsScene {
-                reflected.placement = SceneLayerPlacement(world: ImageMaterialRenderer.modelMatrix(draw.quad),
-                                                          size: draw.quad.extent, camera: mirrored.frame.camera)
-            }
-            guard let pipelines = self.layerPipelines.pipelines(for: mirrored.pixelFormat, sampleCount: 1,
-                                                                depthFormat: SceneDepthStates.format) else { return }
-            mirrored.encoder.setRenderPipelineState(pipelines.normal)
-            let size = SIMD2<Float>(Float(self.sceneRenderTargetSize.x), Float(self.sceneRenderTargetSize.y))
-            self.encodeLayer(entry, reflected, image: image, effectOutput: effectOutput, snapshot: nil, frame: mirrored.frame,
-                             target: LayerTarget(size: size, pixelFormat: mirrored.pixelFormat, sampleCount: 1,
-                                                 depth: mirrored.depth, pipelines: pipelines),
-                             encoder: mirrored.encoder, commandBuffer: mirrored.commandBuffer)
-        }
-    }
-
-    /// A particle system's draw into the planar reflection through its material, or nil when it
-    /// isn't in the reflected list or reads the scene drawn so far (refraction; that scene isn't
-    /// the reflection's). Its camera is the mirrored one, except a `perspective` system's
-    /// temporary camera in an orthographic scene, which WE's view doesn't reach.
-    private func reflectedSystem(_ system: ParticleSystemRuntime) -> ScenePlanarReflection.Object? {
-        guard let particleMaterials, !particleMaterials.readsSceneSnapshot(system) else { return nil }
-        let id = particleObjectID(system)
-        if let id, !spatial.isReflected(id) { return nil }
-        return .other(id: id ?? "particles") { [unowned self] mirrored in
-            // `particlePlacement` keeps a `perspective` system's temporary camera; an orthographic
-            // scene's other systems take the mirrored orthographic view.
-            let placement = self.particlePlacement(system, camera: mirrored.frame.camera)
-                ?? ParticleMaterialUniforms.Placement(camera: mirrored.frame.camera)
-            particleMaterials.draw(system, alsoInto: mirrored.pixelFormat, sampleCount: 1, depthFormat: SceneDepthStates.format,
-                                   encoder: mirrored.encoder, commandBuffer: mirrored.commandBuffer, context: .init(
-                                       sceneSize: self.sceneSize, frame: mirrored.frame, values: self.timelines.values,
-                                       assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-                                       sceneSnapshot: nil, mipMappedFrameBuffer: self.mipMappedTarget, shadowAtlas: self.frameShadowAtlas,
-                                       depth: mirrored.depth, placement: placement))
-        }
-    }
-
-    /// WE's sound layers each frame, on the scene clock: the wallpaper gain's fade takes the
-    /// frame's wall step, as WE's main loop fades the wallpaper volume (0x1401113f8…0x140111444);
-    /// then the volumes scripts set, and the layers' timers, which take the objects' update step
-    /// (0x1401891a0: the scene's step, rate and pause ease applied; the sound's update divides it
-    /// by a render-context value its constructor sets to 1, 0x1401f4f93, 0x14017c81e [I: nothing
-    /// else was seen to change it]).
-    private func updateSounds() {
-        sounds.advanceFade(frameSeconds: clock.frame)
-        guard !sounds.isEmpty else { return }
-        for id in sounds.ids {
-            if let volume = scripts.object(String(id))?.scalar(.volume) ?? timelines.object(String(id))?.volume {
-                sounds.setVolume(volume, of: id)
-            }
-        }
-        sounds.update(deltaTime: clock.delta)
-    }
-
-    /// A sound object's world position this frame (its world matrix's translation, parents,
-    /// timelines and scripts included), where a `spatialization` sound plays from.
-    private func soundWorldPosition(_ id: Int) -> SIMD3<Float> {
-        let translation = world3D(String(id), in: spatial.transforms).columns.3
-        return SIMD3(translation.x, translation.y, translation.z)
-    }
-
-    /// Hands the scripts this frame: the clock, the display and cursor, and every object at this
-    /// frame's time with the last drawn frame's transforms, text sizes and camera
-    /// (docs/scenescript-plan.md §4.4). They run on their own thread; `finishFrame` waits for them.
-    private func submitScriptFrame(viewports: [SceneViewport],
-                                   cursor: (position: SIMD2<Float>, onDisplay: Bool), leftDown: Bool,
-                                   animationEvents: [SceneAnimationEvent]) {
-        let drawableSize = viewports[0].drawableSize
-        var input = SceneScriptFrameInput()
-        input.deltaTime = clock.delta
-        timelines.describe(into: &input, events: animationEvents)
-        input.environment = SceneScriptEngineEnvironment(
-            screenResolution: SIMD2(Double(drawableSize.x), Double(drawableSize.y)),
-            canvasSize: SIMD2(Double(sceneSize.x), Double(sceneSize.y)), placement: placement,
-            pixelsPerPoint: Double(drawablePixelsPerPoint), isScreensaver: rendersScreenSaver)
-        input.environment.zoom = frameZoom
-        input.environment.isRunningInEditor = runsInEditor
-        input.input = SceneScriptInput(cursorScreenPosition: cursorScreenPixels(viewports),
-                                       cursorLeftDown: leftDown)
-        // The cursor tracks the drawn plane; scripts and their hit tests see WE's world under it.
-        input.cursorScenePosition = frameZoom.worldPoint(drawn: cursor.position)
-        input.shakeOffset = lastCameraMotion?.shake ?? .zero
-        if let parallax = lastCameraMotion?.parallax {
-            input.parallax = SceneScriptCursorFrame.Parallax(state: parallax.state, amount: parallax.amount)
-        }
-        describeCursorTargets(into: &input, cursor: cursor.position)
-        for entry in layers {
-            guard let id = Int(entry.layer.id) else { continue }
-            let script = scripts.object(entry.layer.id)
-            let base = baseValues(entry)
-            let animation = timelines.object(entry.layer.id)
-            let own = entry.motion.local(animation: animation, script: script, scriptValues: false)
-            input.objects[id] = SceneScriptObjectFeedback(
-                origin: own.origin, scale: own.scale, angle: own.angle,
-                alpha: baseOpacity(entry, base: base),
-                color: animation?.color ?? SIMD3(base.color.x, base.color.y, base.color.z),
-                brightness: animation?.brightness ?? base.brightness,
-                visible: scripts.baseVisible(entry.layer.id),
-                size: lastTextSizes[entry.layer.id] ?? layerBaseSize(entry),
-                world: worldTransform(entry), animated: animation?.fields ?? SceneScriptOwnedFields())
-            if case let .video(stream) = entry.layer.source {
-                input.objects[id]?.playing = stream.isPlaying
-                input.objects[id]?.videoTime = stream.currentSeconds
-            }
-        }
-        for (key, objectMotion) in objectMotions {
-            guard let id = Int(key) else { continue }
-            let animation = timelines.object(key)
-            let own = objectMotion.local(animation: animation, script: scripts.object(key), scriptValues: false)
-            input.objects[id] = SceneScriptObjectFeedback(
-                origin: own.origin, scale: own.scale, angle: own.angle, alpha: nil, color: nil, brightness: nil,
-                visible: scripts.baseVisible(key), size: nil,
-                world: transforms.world(of: key, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine),
-                animated: animation?.fields ?? SceneScriptOwnedFields(), playing: sounds.isPlaying(id))
-        }
-        for entry in layers where entry.layer.puppet != nil {
-            guard let id = Int(entry.layer.id), let animator = puppetAnimators[entry.layer.id] else { continue }
-            let world = ScenePuppetAttachments.matrix(worldTransform(entry))
-            input.rigs[id] = SceneScriptRigFeedback(layers: animator.layerStates, locals: animator.locals,
-                                                    worlds: animator.worlds.map { world * $0 }, ended: animator.takeEnded(),
-                                                    blendShapeWeights: animator.blendShapeWeights, events: animator.takeEvents())
-        }
-        for key in models?.riggedObjectIDs ?? [] {
-            guard let id = Int(key), let animator = models?.animator(for: key) else { continue }
-            let world = world3D(key, in: spatial.transforms)
-            input.rigs[id] = SceneScriptRigFeedback(layers: animator.layerStates, locals: animator.locals,
-                                                    worlds: animator.worlds.map { world * $0 }, ended: animator.takeEnded(),
-                                                    events: animator.takeEvents())
-        }
-
-        scripts.submit(input)
-    }
-
-    /// What the cursor pass tests beyond the object table (docs/scenescript-plan.md §4.8): every
-    /// model's 3D world (WE's, unzoomed), and in a perspective scene the ray from the last drawn
-    /// frame's eye through the cursor, its view direction and every layer's 3D world.
-    private func describeCursorTargets(into input: inout SceneScriptFrameInput, cursor: SIMD2<Float>) {
-        for model in spatial.models {
-            guard let id = Int(model.id) else { continue }
-            input.cursorWorlds[id] = world3D(model.id, in: spatial.transforms)
-        }
-        guard isPerspective, let camera = lastFrameCamera, sceneSize.x > 0, sceneSize.y > 0 else { return }
-        input.cursorRay = SceneScriptCursorRay.perspective(eye: camera.eye, viewProjection: camera.viewProjection,
-                                                            normalized: cursor / sceneSize)
-        input.cursorViewForward = camera.forward
-        for entry in layers {
-            guard let id = Int(entry.layer.id) else { continue }
-            input.cursorWorlds[id] = world3D(entry.layer.id, in: spatial.transforms)
-        }
-    }
-
-    /// The cursor in display pixels from the top-left of the wallpaper's view on the display it is
-    /// on (`input.cursorScreenPosition`); where it was last seen while it is on none of them.
-    private func cursorScreenPixels(_ viewports: [SceneViewport]) -> SIMD2<Double> {
-        if let fixedPointer, let drawable = viewports.first?.drawableSize {
-            // The fixed pointer on the drawn scene, from the drawable's top-left.
-            let point = ScenePlacementScale.drawablePoint(scenePoint: fixedPointer * sceneSize, placement: placement,
-                                                          sceneSize: sceneSize, drawableSize: drawable,
-                                                          pixelsPerPoint: viewports[0].pixelsPerPoint)
-            return SIMD2(Double(point.x), Double(drawable.y - point.y))
-        }
-        guard let pixels = viewports.lazy.compactMap(\.cursorScreenPixels).first else { return lastCursorScreenPixels }
-        lastCursorScreenPixels = pixels
-        return pixels
-    }
-
-    /// The scene's own `general.cameraparallax` (possibly user-bound, or set by a script) or the
-    /// app's parallax toggle.
-    private var parallaxEnabled: Bool {
-        if let scripted = scripts.state.scene.flag(.cameraparallax) { return scripted }
-        return Self.parallaxEnabled(camera)
-    }
-
-    /// The scene's `general.cameraparallax` (as resolved) or the app's parallax toggle, before scripts.
-    static func parallaxEnabled(_ camera: SceneCameraEffects) -> Bool {
-        camera.parallax || WallpaperServices.shared.userPropertyString("_owe_effect_enabled_parallax") == "true"
-    }
-
-    /// WE's camera shake, then its parallax (`SceneCameraShake`, `SceneCameraParallax`), in the
-    /// order its scene update runs them: the parallax target includes the shaken eye. Scripts'
-    /// `thisScene.camerashake…`/`cameraparallax…` settings override the scene's.
-    private func cameraMotion(pointer: SIMD2<Float>, time: Float, deltaTime: Float) -> CameraMotion {
-        let scene = scripts.state.scene
-        let shaking = scene.flag(.camerashake) ?? camera.shake
-        let shake: SIMD3<Float> = shaking
-            ? SceneCameraShake.cameraOffset(time: time, speed: sceneSetting(.camerashakespeed) ?? camera.shakeSpeed,
-                                            amplitude: sceneSetting(.camerashakeamplitude) ?? camera.shakeAmplitude,
-                                            roughness: sceneSetting(.camerashakeroughness) ?? camera.shakeRoughness,
-                                            orthographicHeight: camera.orthographic ? sceneSize.y : nil)
-            : .zero
-        var parallax: (state: SceneCameraParallax, amount: Float)?
-        // Read every frame: turning parallax on or off eases in or out (`SceneCameraParallax.weight`).
-        cameraParallax.ease(enabled: parallaxEnabled, deltaTime: deltaTime)
-        if cameraParallax.isActive {
-            let settles = fixedPointer != nil && fixedPointer != parallaxSettledPointer
-            cameraParallax.update(cursor: pointer, eye: SIMD2(shake.x, shake.y), sceneSize: sceneSize,
-                                  influence: sceneSetting(.cameraparallaxmouseinfluence) ?? camera.parallaxMouseInfluence,
-                                  delay: settles ? 0 : sceneSetting(.cameraparallaxdelay) ?? camera.parallaxDelay,
-                                  deltaTime: deltaTime)
-            parallaxSettledPointer = fixedPointer
-            // `_owe_effect_parallax_amount` is an app extra, 1 (WE's amount) by default.
-            let amount = (sceneSetting(.cameraparallaxamount) ?? camera.parallaxAmount)
-                * WallpaperServices.shared.userPropertyValue("_owe_effect_parallax_amount", fallback: 1)
-            if camera.orthographic { parallax = (cameraParallax, amount) }
-        }
-        // WE moves the camera by the shake (0x140199580). A perspective scene's camera carries it;
-        // an orthographic scene's layers are drawn without the camera, so they move the other way.
-        guard camera.orthographic else {
-            return CameraMotion(parallax: parallax, shake: .zero, cameraShake: shake,
-                                audioLevel: WallpaperServices.shared.audioLevel)
-        }
-        return CameraMotion(parallax: parallax, shake: SIMD2(shake.x, shake.y),
-                            audioLevel: WallpaperServices.shared.audioLevel)
-    }
-
-    /// A number of the scene's settings this frame: a script's, else its timeline's; nil leaves
-    /// the authored (or user-bound) one.
-    private func sceneSetting(_ field: SceneScriptSceneField) -> Float? {
-        scripts.state.scene.scalar(field) ?? timelines.sceneScalar(field)
-    }
-
-    /// What the camera rig needs this frame (`SceneCameraRigInput`): the camera layers' live
-    /// visibility and transforms, the shake and the settings scripts and timelines set, and the
-    /// default camera `thisScene.setCameraTransforms` set.
-    private func cameraRigInput(time: Double, motion: CameraMotion) -> SceneCameraRigInput {
-        var input = SceneCameraRigInput(sceneSize: sceneSize, aspect: sceneSize.x / max(sceneSize.y, 1), time: time,
-                                        deltaTime: Float(clock.delta))
-        input.shake = motion.cameraShake
-        input.isVisible = { [unowned self] id in scripts.object(id)?.flag(.visible) ?? scripts.baseVisible(id) }
-        input.live = { [unowned self] id in
-            // Only what scripts or timelines move differs from the authored transform the rig holds.
-            let script = scripts.object(id), animation = timelines.object(id)
-            guard script != nil || animation != nil, let authored = cameraTransforms.nodes[id]?.local,
-                  let motion = objectMotions[id] ?? layers.first(where: { $0.layer.id == id })?.motion else { return nil }
-            return motion.local3D(authored: authored, animation: animation, script: script)
-        }
-        input.layerFov = { [unowned self] id in scripts.object(id)?.scalar(.fov) }
-        input.layerZoom = { [unowned self] id in scripts.object(id)?.scalar(.zoom) }
-        input.fov = sceneSetting(.fov)
-        input.nearZ = sceneSetting(.nearz)
-        input.farZ = sceneSetting(.farz)
-        input.cameraFade = scripts.state.scene.flag(.camerafade)
-        input.scriptCamera = scripts.state.scene.scriptCamera
-        return input
-    }
-
-    /// The parallax offset of a layer: its root object's live origin and `parallaxDepth`.
-    private func parallaxOffset(_ entry: PreparedLayer, local: SceneLocalTransform,
-                                motion: CameraMotion) -> SIMD2<Float> {
-        guard let parallax = motion.parallax else { return .zero }
-        let rootID = transforms.root(of: entry.layer.id)
-        if rootID == entry.layer.id {
-            let depth = entry.layer.parallaxDepth
-            let scripted = scripts.object(rootID)?.vector2(.parallaxDepth) ?? timelines.object(rootID)?.parallaxDepth
-            return parallax.state.offset(rootOrigin: local.origin, rootDepth: scripted ?? SIMD2(depth.x, depth.y),
-                                         amount: parallax.amount)
-        }
-        guard let node = transforms.nodes[rootID] else { return .zero }
-        let rootLocal = liveLocal(rootID) ?? node.local
-        return parallax.state.offset(rootOrigin: rootLocal.origin, rootDepth: parallaxDepth(of: rootID, node: node),
-                                     amount: parallax.amount)
-    }
-
-    /// A root object's `parallaxDepth`: a script's, else its timeline's, else authored.
-    private func parallaxDepth(of id: String, node: SceneTransformHierarchy.Node) -> SIMD2<Float> {
-        scripts.object(id)?.vector2(.parallaxDepth) ?? timelines.object(id)?.parallaxDepth ?? node.parallaxDepth
-    }
-
-    /// A visible layer's opacity, colour and placed quad this frame: what scripts wrote, then the
-    /// timeline, then authored (moved by user bindings).
-    private func layerDraw(_ entry: PreparedLayer, baseSize: SIMD2<Float>,
-                           motion: CameraMotion, contentOffset: SIMD2<Float> = .zero) -> LayerDraw {
-        let base = baseValues(entry)
-        let script = scripts.object(entry.layer.id)
-        var opacity = script?.scalar(.alpha) ?? baseOpacity(entry, base: base)
-        if entry.layer.text != nil {
-            opacity *= WallpaperServices.shared.userPropertyValue("_owe_text_\(entry.layer.id)_opacity", fallback: 1)
-        }
-        var local = evaluatedLocal(entry)
-        let own = local
-        let parallaxOffset = parallaxOffset(entry, local: local, motion: motion)
-        let musicSyncLevel = entry.layer.musicSync?.levelSource.map { $0() } ?? motion.audioLevel
-        local.scale *= 1 + (entry.layer.musicSync?.zoomAmount ?? 0) * Float(musicSyncLevel)
-        local.angle += entry.layer.musicSync.map { $0.tiltAmount * Float(musicSyncLevel) * .pi / 180 } ?? 0
-        // A fullscreen layer is drawn in screen space (`passthrough` without `TRANSFORM`), which
-        // the orthographic zoom doesn't scale.
-        let view = entry.layer.fillsScene ? SceneAffineTransform.identity : frameZoom.plane
-        let world = worldTransform(entry, local: local)
-        let quad = SceneQuadGeometry(world: view * world, size: baseSize, alignment: alignment(entry))
-        // WE draws a layer where its transform and the camera put it; an oversized layer (sized
-        // to hide its edges while it moves) isn't pinned inside the scene.
-        let center = quad.center + view.linear * (parallaxOffset - motion.shake)
-            + quad.axisX * (contentOffset.x / max(baseSize.x, .leastNormalMagnitude))
-            + quad.axisY * (contentOffset.y / max(baseSize.y, .leastNormalMagnitude))
-        let animation = timelines.object(entry.layer.id)
-        let rgb = script?.vector3(.color) ?? animation?.color
-        let color = rgb.map { SIMD4<Float>($0.x, $0.y, $0.z, base.color.w) } ?? base.color
-        let brightness = renderSettings.appliesBrightness
-            ? script?.scalar(.brightness) ?? animation?.brightness ?? base.brightness : 1
-        drawProbe?.record(layer: entry.layer.id, .init(opacity: opacity, color: color, brightness: brightness, local: own))
-        return LayerDraw(opacity: opacity, color: color, brightness: brightness,
-                         quad: SceneQuadGeometry(center: center, axisX: quad.axisX, axisY: quad.axisY),
-                         musicSyncLevel: musicSyncLevel, world: world)
-    }
-
-    /// A layer's opacity before scripts: its timeline's value this frame, else authored or user-bound.
-    private func baseOpacity(_ entry: PreparedLayer, base: SceneLayerBaseValues) -> Float {
-        timelines.object(entry.layer.id)?.alpha ?? base.opacity
-    }
-
-    /// The layer's unscaled size this frame: a script bound to `size` (WE's image property is
-    /// writable and drawn every frame, wallpaper64.exe 0x1401e8bb0), else its timeline, else authored.
-    private func layerBaseSize(_ entry: PreparedLayer) -> SIMD2<Float> {
-        scripts.object(entry.layer.id)?.vector2(.size) ?? timelines.object(entry.layer.id)?.size ?? entry.layer.size
-    }
-
-    /// A text layer's current string (a script's, else authored), laid out and rasterised (through
-    /// the text cache) at `pixelsPerUnit`, with the block size the layout settled on.
-    private func layerTextFrame(_ entry: PreparedLayer, boxSize: SIMD2<Float>,
-                                pixelsPerUnit: Float) -> (frame: RenderTextureFrame, baseSize: SIMD2<Float>) {
-        guard let authored = entry.layer.text else { return (textureFrame(for: entry), boxSize) }
-        let scripted = scripts.text(authored, of: entry.layer.id)
-        var text = scripted.text
-        // Without effects the box is its own quad under the glyphs (`encodeTextBackground`).
-        if text.opaqueBackground, entry.layer.weEffects.isEmpty { text.drawsBackgroundSeparately = true }
-        return makeTextFrame(text, value: scripted.value, pointSize: scripted.pointSize, boxSize: boxSize,
-                             pixelsPerUnit: pixelsPerUnit, layerID: entry.layer.id,
-                             fill: !scripted.text.rastersInColor && entry.layer.weEffects.isEmpty ? nil : textFill(entry))
-            ?? (textureFrame(for: entry), boxSize)
-    }
-
-    /// Whether a text layer's raster this frame holds its colours (font effects or a background
-    /// box, authored or scripted: `SceneMetalText.rastersInColor`); false for other layers.
-    private func textRastersInColor(_ entry: PreparedLayer) -> Bool {
-        guard let authored = entry.layer.text else { return false }
-        return scripts.text(authored, of: entry.layer.id).text.rastersInColor
-    }
-
-    /// A text layer's colour this frame (a script's, else its timeline's, else authored, with the
-    /// user's text colour), which text with font effects rasterises with (`SceneTextEffects`).
-    private func textFill(_ entry: PreparedLayer) -> SIMD3<Float> {
-        let base = baseValues(entry).color
-        let color = scripts.object(entry.layer.id)?.vector3(.color) ?? timelines.object(entry.layer.id)?.color
-            ?? SIMD3(base.x, base.y, base.z)
-        return color * textTint(layerID: entry.layer.id)
-    }
-
-    // MARK: - Depth, draw order and 3D placement (docs/models-plan.md §2.4)
-
-    /// Gives the pass WE's depth buffer (`SceneDepthBuffer`), cleared to the far depth, and sets
-    /// `sceneDepthFormat` for this frame's pipelines: a perspective scene's, and an orthographic
-    /// one's with model objects, whose models, and whatever tests depth, then test as in WE (MG6).
-    /// WE's frame buffer always has depth (0x14017f59c); an orthographic scene without models
-    /// keeps none here, which draws the same while every object lies at z = 0 [I].
-    private func attachSceneDepth(to pass: MTLRenderPassDescriptor, scene: MTLTexture) {
-        sceneDepthFormat = .invalid
-        guard isPerspective || !spatial.models.isEmpty, depthStates != nil,
-              layerPipelines.pipelines(for: scene.pixelFormat, sampleCount: sceneSampleCount,
-                                       depthFormat: SceneDepthStates.format) != nil,
-              depthBuffer.prepare(width: scene.width, height: scene.height, sampleCount: sceneSampleCount) else {
-            if depthBuffer.texture != nil { depthBuffer.releaseAll() }
-            return
-        }
-        sceneDepthFormat = SceneDepthStates.format
-        depthBuffer.attach(to: pass, clear: true)
-    }
-
-    /// Where a layer's quad lands through a 3D camera this frame: every layer of a perspective
-    /// scene but a fullscreen one (WE draws those in screen space: `passthrough` without
-    /// `TRANSFORM`), and a `perspective` layer of an orthographic scene through its temporary
-    /// camera (0x1401e5b60), moved by the parallax and shake the 2D path moves it by (the camera
-    /// keeps the view's offset). Nil for the rest, which draw in the scene's plane.
-    private func layerPlacement(_ entry: PreparedLayer, size: SIMD2<Float>, musicSyncLevel: Double, motion: CameraMotion,
-                                camera: SceneFrameCamera) -> SceneLayerPlacement? {
-        guard !entry.layer.fillsScene else { return nil }
-        let offset = SceneAlignment.centerOffset(alignment(entry), size: size)
-        if isPerspective {
-            let world = layerWorld3D(entry, in: spatial.transforms, musicSyncLevel: musicSyncLevel)
-            return SceneLayerPlacement(world: world, size: size, offset: offset, camera: camera)
-        }
-        guard perspective(entry.layer.id, authored: entry.layer.perspective) else { return nil }
-        var world = layerWorld3D(entry, in: spatial.transforms, musicSyncLevel: musicSyncLevel)
-        let shift = parallaxOffset(entry, local: evaluatedLocal(entry), motion: motion) - motion.shake
-        world.columns.3 += SIMD4(shift.x, shift.y, 0, 0)
-        var temporary = SceneLayerPlacement.perspectiveLayerCamera(sceneSize: sceneSize, fov: Float(spatial.camera.sceneFov))
-        temporary.projection = frameZoom.projection(temporary.projection)
-        return SceneLayerPlacement(world: world, size: size, offset: offset, camera: temporary)
-    }
-
-    /// A layer's `alignment` this frame: as a script set it (`IImageLayer.alignment`), else as
-    /// authored. A fullscreen layer has none.
-    private func alignment(_ entry: PreparedLayer) -> String? {
-        guard !entry.layer.fillsScene else { return entry.layer.alignment }
-        return scripts.object(entry.layer.id)?.strings[.alignment] ?? entry.layer.alignment
-    }
-
-    /// An object's `perspective` this frame (`IEffectLayer.perspective`, `IModelLayer.perspective`):
-    /// as a script set it, else `authored`.
-    private func perspective(_ id: String, authored: Bool) -> Bool {
-        scripts.object(id)?.flag(.perspective) ?? authored
-    }
-
-    /// A layer's world matrix with its music sync (a video's zoom and tilt, applied to its own
-    /// scale and `angles.z` as the 2D path applies them).
-    private func layerWorld3D(_ entry: PreparedLayer, in hierarchy: SceneTransformHierarchy3D,
-                              musicSyncLevel: Double) -> simd_float4x4 {
-        let id = entry.layer.id
-        guard let sync = entry.layer.musicSync else { return world3D(id, in: hierarchy) }
-        var own = live3D(id, in: hierarchy) ?? hierarchy.nodes[id]?.local ?? .identity
-        let zoom = 1 + sync.zoomAmount * Float(musicSyncLevel)
-        own.scale *= SIMD3(zoom, zoom, 1)
-        own.angles.z += sync.tiltAmount * Float(musicSyncLevel) * .pi / 180
-        return hierarchy.world(of: id, local: own, live: { [unowned self] in self.live3D($0, in: hierarchy) })
-    }
-
-    /// An object's world matrix this frame (M3's hierarchy): its own and its ancestors' live
-    /// transforms, parents first.
-    private func world3D(_ id: String, in hierarchy: SceneTransformHierarchy3D) -> simd_float4x4 {
-        hierarchy.world(of: id, local: live3D(id, in: hierarchy), live: { [unowned self] in self.live3D($0, in: hierarchy) },
-                        attachments: SceneAttachmentProviders(providers: [models?.attachments as SceneAttachmentProviding?, puppetAttachments].compactMap { $0 }))
-    }
-
-    /// An object's world matrix where it is drawn: in an orthographic scene, in the zoom's drawn
-    /// space (`SceneOrthographicZoom.space`), where the lights it is lit by are packed too;
-    /// `world3D` (WE's world, what scripts see) elsewhere.
-    private func drawnWorld3D(_ id: String) -> simd_float4x4 {
-        frameZoom.space * world3D(id, in: spatial.transforms)
-    }
-
-    /// The model renderer (`SceneModelRenderer`), when that is what draws the models.
-    private var models: SceneModelRenderer? { modelDrawing as? SceneModelRenderer }
     /// This frame's images of the layers models and other layers sample, by layer id.
-    private var layerComposites: [String: MTLTexture] = [:]
+    var layerComposites: [String: MTLTexture] = [:]
 
-    /// `layerCompositeOrder`, made from the layers' effects when `layers` changed.
-    private func compositeOrder() -> SceneLayerCompositeOrder {
-        if let layerCompositeOrder { return layerCompositeOrder }
-        let order = SceneLayerCompositeOrder(layers: layers.map { entry in
-            (entry.layer.id, entry.layer.weEffects.reduce(into: Set<String>()) { $0.formUnion($1.compositeLayerIDs) })
-        }, readingScene: Set(layers.filter(\.layer.readsScene).map(\.layer.id)))
-        layerCompositeOrder = order
-        return order
-    }
-
-    /// A text layer's composite without effects: its text in its colour, one pixel a scene unit,
-    /// as WE draws it into a buffer of its size (effects would run there, `SceneTextRasterScale`).
-    private func compositeText(_ entry: PreparedLayer) -> MTLTexture? {
-        guard let authored = entry.layer.text else { return nil }
-        let scripted = scripts.text(authored, of: entry.layer.id)
-        return makeTextFrame(scripted.text, value: scripted.value, pointSize: scripted.pointSize, boxSize: layerBaseSize(entry),
-                             pixelsPerUnit: 1, layerID: entry.layer.id, fill: textFill(entry))?.frame.texture
-    }
-
-    /// An object's own 3D transform this frame (`SceneObjectMotion.local3D`: scripts, then
-    /// timelines, then authored moved by the user bindings), evaluated once per frame; nil for an
-    /// object without a motion, whose authored node stands. An object a script created has no
-    /// authored node: its 2D transform stands in.
-    private func live3D(_ id: String, in hierarchy: SceneTransformHierarchy3D) -> SceneLocalTransform3D? {
-        if let cached = frameLocals3D[id] { return cached }
-        guard let motion = layerIndexByStateId[id].map({ layers[$0].motion }) ?? objectMotions[id] else { return nil }
-        let authored = hierarchy.nodes[id]?.local ?? SceneLocalTransform3D(objectLocal(motion, id: id))
-        let local = motion.local3D(authored: authored, animation: timelines.object(id), script: scripts.object(id))
-        frameLocals3D[id] = local
-        return local
-    }
-
-    /// The depth and cull state a layer draws with where the pass has depth: a text object's (its
-    /// `depthtest`, `SceneRasterState.text`), else its material's first pass; a layer without a
-    /// material (composition and shape layers) neither tests nor writes.
-    private func layerRaster(_ entry: PreparedLayer) -> SceneRasterState {
-        if entry.layer.text != nil { return .text(depthTest: spatial.depthTest(of: entry.layer.id) ?? false) }
-        return entry.layer.imageMaterial?.raster ?? .disabled
-    }
-
-    /// A particle system drawn through a perspective scene's camera (docs/models-plan.md §2.12):
-    /// the camera, and the matrix from the scene plane the system is simulated in (its object's 2D
-    /// transform) to where its 3D world matrix puts it. Nil in an orthographic scene.
-    private func particlePlacement(_ system: ParticleSystemRuntime,
-                                   camera: SceneFrameCamera) -> ParticleMaterialUniforms.Placement? {
-        guard isPerspective else {
-            // A `perspective` system (flag 4) of an orthographic scene: WE pushes the temporary
-            // camera a perspective layer gets (0x140236761 → 0x1401e5b60) and keeps g_EyePosition.
-            guard system.configuration.perspective else { return nil }
-            // Its emitter is already in the zoom's drawn plane (`emitterWorld`), so the camera
-            // isn't zoomed again.
-            var temporary = SceneLayerPlacement.perspectiveLayerCamera(sceneSize: sceneSize, fov: Float(spatial.camera.sceneFov))
-            temporary.eye = SIMD3(sceneSize.x / 2, sceneSize.y / 2, ParticleMaterialUniforms.eyeDistance)
-            return ParticleMaterialUniforms.Placement(camera: temporary)
-        }
-        return ParticleMaterialUniforms.Placement(camera: camera, model: particleSpaceModel(system))
-    }
-
-    /// The matrix from the space a system's particles are simulated in (the scene plane its
-    /// object's 2D transform places them in, and their depth) to where its 3D world matrix puts
-    /// them, through a child's links in depth (`ParticleLinkSpace`): identity in an orthographic
-    /// scene, or when the two agree.
-    private func particleSpaceModel(_ system: ParticleSystemRuntime) -> simd_float4x4 {
-        guard isPerspective, let id = particleObjectID(system) else { return matrix_identity_float4x4 }
-        let planar = transforms.world(of: id, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine)
-        let x = planar.linear.columns.0, y = planar.linear.columns.1, t = planar.translation
-        let embedded = simd_float4x4(columns: (SIMD4<Float>(x.x, x.y, 0, 0), SIMD4<Float>(y.x, y.y, 0, 0),
-                                               SIMD4<Float>(0, 0, 1, 0), SIMD4<Float>(t.x, t.y, 0, 1)))
-        guard abs(simd_determinant(planar.linear)) > 1e-12 else { return matrix_identity_float4x4 }
-        return world3D(id, in: spatial.transforms) * system.configuration.linkSpace * embedded.inverse
-    }
-
-    /// The capsules a `collisionmodel` operator of `system` collides with (docs/models-plan.md
-    /// §2.12): model object `id`'s bones as last posed (its bind pose before its first frame) or
-    /// its box, through its world matrix, in the space the system's particles are simulated in.
-    /// A Puppet Warp image is one too: WE reads its rig's `.mdl` and its posed bones (puppet+0x2c8,
-    /// 0x1401d4a69) as a model's, in the image's model space (its pixels, centred, y up).
-    private func particleCapsules(_ id: String, for system: ParticleSystemRuntime) -> [ParticleCapsule] {
-        let space = particleSpaceModel(system)
-        let toParticles = abs(space.determinant) > 1e-12 ? space.inverse : matrix_identity_float4x4
-        if let plan = spatial.models.first(where: { $0.id == id })?.plan {
-            return ParticleCapsule.capsules(boneVectors: plan.skeleton?.boneVectors,
-                                            boneWorlds: models?.animator(for: id)?.worlds ?? [], bounds: plan.bounds,
-                                            world: toParticles * drawnWorld3D(id))
-        }
-        if let index = layerIndexByStateId[id], let puppet = layers[index].layer.puppet {
-            return ParticleCapsule.capsules(boneVectors: puppet.skeleton.boneVectors,
-                                            boneWorlds: puppetAnimators[id]?.worlds ?? [],
-                                            bounds: puppet.bounds ?? MDLBounds(min: .zero, max: .zero),
-                                            world: toParticles * drawnWorld3D(id))
-        }
-        if reportedCollisionTargets.insert(id).inserted {
-            OWELog.error(.scene, "Particle collisionmodel: object \(id) is neither a drawable model nor a Puppet Warp image; its particles don't collide with it")
-        }
-        return []
-    }
-
-    /// Draws model object `index` (`SceneSpatialContent.models`) through `modelDrawing` at its
-    /// place in the object loop, unless it is hidden.
-    private func drawModel(_ index: Int, frame: BuiltinFrameContext, pixelFormat: MTLPixelFormat,
-                           encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer) {
-        guard let modelDrawing, spatial.models.indices.contains(index) else { return }
-        let model = spatial.models[index]
-        guard scripts.isVisible(model.id) else { return }
-        modelDrawing.draw(model, SceneModelDraw(
-            world: drawnWorld3D(model.id), camera: modelCamera(model, frame: frame), frame: frame,
-            values: timelines.values, pixelFormat: pixelFormat, sampleCount: sceneSampleCount, depth: frameDepth,
-            mipMappedFrameBuffer: mipMappedTarget,
-            assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-            layerComposite: { [unowned self] id in self.layerComposites[id] }, shadowAtlas: frameShadowAtlas,
-            planarReflection: frameReflection),
-            encoder: encoder, commandBuffer: commandBuffer)
-        encoder.setRenderPipelineState(renderPipeline)
-    }
-
-    /// The camera model object `model` draws through: the frame's, or in an orthographic scene a
-    /// `perspective` model's temporary camera, a perspective layer's (WE's model draw tests the
-    /// object's flag 0x80 and pushes it, 0x140222770 → 0x1401e5b60).
-    private func modelCamera(_ model: SceneModelObject, frame: BuiltinFrameContext) -> SceneFrameCamera {
-        guard !isPerspective, perspective(model.id, authored: model.perspective) else { return frame.camera }
-        var temporary = SceneLayerPlacement.perspectiveLayerCamera(sceneSize: sceneSize, fov: Float(spatial.camera.sceneFov))
-        temporary.projection = frameZoom.projection(temporary.projection)
-        return temporary
-    }
-
-    /// This frame's object loop: the layers and models in draw order, each with the barrier below
-    /// which the particle systems are drawn before it, and the order and keys of the systems.
-    private struct DrawSequence {
-        var items: [(item: SceneDrawItem, barrier: Int)] = []
-        /// `batches`' indices in draw order, and each one's key.
-        var batchOrder: [Int] = []
-        var batchKeys: [Int] = []
-    }
-
-    /// WE's object loop (0x14018aac0): scene order (or the order scripts set) keeps each layer's
-    /// particle barrier and each system's scene index; a model goes before the first layer
-    /// authored after it. `customsortorder` and `transparentsorting` then sort the whole list
-    /// (`SceneDrawOrderMode.ordered`), and each object's position becomes its key.
-    private func drawSequence(batches: [ParticleSystemRuntime], forward: SIMD3<Float>) -> DrawSequence {
-        // Each model goes before the first layer authored after it, models before one layer in scene order.
-        let layerOrders = layers.map(\.layer.order)
-        var modelsBefore = [[Int]](repeating: [], count: layers.count + 1)
-        if modelDrawing != nil {
-            for (index, model) in spatial.models.enumerated() {
-                modelsBefore[layerOrders.firstIndex { $0 > model.order } ?? layers.count].append(index)
-            }
-        }
-        var items: [(item: SceneDrawItem, barrier: Int)] = []
-        for position in 0...layers.count {
-            items += modelsBefore[position].map { (item: SceneDrawItem.model($0), barrier: spatial.models[$0].order) }
-            if position < layers.count { items.append((.layer(position), layers[position].particleBarrier)) }
-        }
-        let keys = batches.map(\.configuration.order)
-        guard spatial.drawOrder.reorders else {
-            return DrawSequence(items: items, batchOrder: Array(batches.indices), batchKeys: keys)
-        }
-        var list: [SceneDrawItem] = []
-        var next = 0
-        for (item, barrier) in items {
-            while next < batches.count, keys[next] < barrier {
-                list.append(.particles(next))
-                next += 1
-            }
-            list.append(item)
-        }
-        list += (next..<batches.count).map { SceneDrawItem.particles($0) }
-        let ordered = spatial.drawOrder.ordered(list.map { drawEntry($0, batches: batches) }, forward: forward)
-        var sequence = DrawSequence()
-        for (position, item) in ordered.enumerated() {
-            if case .particles(let batch) = item {
-                sequence.batchOrder.append(batch)
-                sequence.batchKeys.append(position)
-            } else {
-                sequence.items.append((item, position))
-            }
-        }
-        return sequence
-    }
-
-    /// An object as the draw-order modes see it (`SceneDrawEntry`).
-    private func drawEntry(_ item: SceneDrawItem, batches: [ParticleSystemRuntime]) -> SceneDrawEntry {
-        var entry = SceneDrawEntry(item: item)
-        let id: String?
-        switch item {
-        case .layer(let index):
-            let layer = layers[index].layer
-            id = layer.id
-            entry.translucent = layer.text != nil || SceneDrawEntry.imageIsTranslucent(
-                blending: layer.imageMaterial?.pass.blending, passthrough: layer.sceneInput, solidLayer: layer.solidFill != nil)
-            entry.drawsLast = layer.fillsScene
-        case .particles(let index):
-            id = particleObjectID(batches[index])
-            entry.translucent = true
-        case .model(let index):
-            let model = spatial.models[index]
-            id = model.id
-            entry.translucent = modelDrawing?.isTranslucent(model) ?? false
-        }
-        guard let id else { return entry }
-        entry.sortOrder = spatial.sortOrder(of: id)
-        // Only a perspective scene sorts by origin; its objects live in `spatial.transforms`.
-        if spatial.drawOrder.splitsTranslucent {
-            entry.origin = live3D(id, in: spatial.transforms)?.origin ?? spatial.transforms.nodes[id]?.local.origin ?? .zero
-        }
-        return entry
-    }
-
-    // MARK: - Transforms
-
-    private func beginTransformFrame() {
-        frameLocals.removeAll(keepingCapacity: true)
-        frameLocals3D.removeAll(keepingCapacity: true)
-        layerIndexByStateId.removeAll(keepingCapacity: true)
-        for (index, entry) in layers.enumerated() { layerIndexByStateId[entry.layer.id] = index }
-        frameZoom = orthographicZoom()
-        // Nested tilts compose in depth from this frame's angles, scripts' and timelines' included
-        // (docs/models-plan.md §5.16); a perspective scene draws through its 3D hierarchy anyway.
-        if !isPerspective { transforms.updateComposition { [unowned self] id in self.liveLocal(id) } }
-    }
-
-    /// A layer's authored values moved by its user bindings: the base that animations and scripts
-    /// start from. Kept per binding revision (`SceneBindingRevisions`) unless a bound property
-    /// follows the music.
-    private func baseValues(_ entry: PreparedLayer) -> SceneLayerBaseValues {
-        let values = boundBaseValues(entry)
-        return editorLive.isEmpty ? values : editorLive.base(values, id: entry.layer.id)
-    }
-
-    private func boundBaseValues(_ entry: PreparedLayer) -> SceneLayerBaseValues {
-        let bindings = entry.layer.bindings
-        guard !bindings.isEmpty else { return SceneLayerBaseValues(entry.layer) }
-        let context = LiveSceneValueContext()
-        if bindings.properties.contains(where: context.isMusicSynced) {
-            return bindings.baseValues(for: entry.layer, in: context)
-        }
-        let id = entry.layer.id
-        let revision = bindingRevisions.revision(of: id)
-        var cache = baseValueCaches[id] ?? SceneBindingCache()
-        let reused = cache.revision == revision
-        let values = cache.value(at: revision) { bindings.baseValues(for: entry.layer, in: context) }
-        if reused { bindingRevisions.noteReuse(of: id, cachedAt: cache.revision ?? revision) } else { baseValueCaches[id] = cache }
-        return values
-    }
-
-    /// Hands every particle system its object's binding revision, which its kept overrides key on.
-    private func refreshParticleRevisions() {
-        for system in particleSystems {
-            system.bindingRevision = particleObjectID(system).map(bindingRevisions.revision(of:)) ?? 0
-        }
-    }
-
-    /// The value context of object `id`'s draw this frame: the timelines' values at its binding revision.
-    private func values(of id: String) -> LiveSceneValueContext {
-        var values = timelines.values
-        values.bindingRevision = bindingRevisions.revision(of: id)
-        return values
-    }
-
-    private func evaluatedLocal(_ entry: PreparedLayer) -> SceneLocalTransform {
-        objectLocal(entry.motion, id: entry.layer.id)
-    }
-
-    /// An object's own transform this frame (`SceneObjectMotion.local`, scripts' values
-    /// included), evaluated once per frame.
-    private func objectLocal(_ motion: SceneObjectMotion, id: String) -> SceneLocalTransform {
-        if let cached = frameLocals[id] { return cached }
-        var local = motion.local(animation: timelines.object(id), script: scripts.object(id))
-        if !editorLive.isEmpty { local = editorLive.local(local, id: id) }
-        frameLocals[id] = local
-        return local
-    }
-
-    /// This frame's own transform of any object: a drawn layer's, or another object's (groups,
-    /// particle systems) from its motion. Nil for an object without either.
-    private func liveLocal(_ id: String) -> SceneLocalTransform? {
-        if let index = layerIndexByStateId[id] { return evaluatedLocal(layers[index]) }
-        return objectMotions[id].map { objectLocal($0, id: id) }
-    }
-
-    /// A layer's world this frame: its own transform (`local`, else its evaluated one) in its
-    /// parents' space, then its attachment on its parent's rig (the witcher's sword, 3803167460,
-    /// hangs from the hand, not the parent's origin). Every ancestor uses its live (scripted,
-    /// animated) transform, so moving a parent moves its children. WE's world, without the
-    /// orthographic zoom (`frameZoom`), which only the draw applies.
-    private func worldTransform(_ entry: PreparedLayer, local: SceneLocalTransform? = nil) -> SceneAffineTransform {
-        transforms.world(of: entry.layer.id, local: local ?? evaluatedLocal(entry), live: { [self] id in liveLocal(id) },
-                         attachments: puppetAttachments.affine)
-    }
-
-    /// This frame's orthographic zoom (`SceneOrthographicZoom`) until the camera rig gives the
-    /// frame's own: `general.zoom` × the camera's zoom a script set, and the last frame's camera
-    /// view. None in a perspective scene, where the zoom isn't read.
-    private func orthographicZoom() -> SceneOrthographicZoom {
-        guard !isPerspective else { return .none }
-        let general = Float(spatial.camera.zoom)
-        return SceneOrthographicZoom(factor: general * (scripts.state.scene.scriptCamera?.zoom ?? 1), sceneSize: sceneSize,
-                                     view: frameZoom.view)
-    }
-
-    /// A particle system's emitter transform this frame: its object's, parents included, moved by
-    /// camera parallax and shake as WE moves every object's model matrix (0x14018a0b3): the
-    /// system's particles follow it unless it is `worldspace`; its children follow it through
-    /// their links. The orthographic zoom (`frameZoom`) scales the plane they're drawn in.
-    private func emitterWorld(_ configuration: SceneMetalParticleSystem,
-                              motion: CameraMotion) -> SceneAffineTransform? {
-        guard let id = configuration.objectID else { return nil }
-        var world = transforms.world(of: id, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine)
-        world.translation += particleParallaxOffset(id, motion: motion) - motion.shake
-        return frameZoom.plane * world
-    }
-
-    /// A `layerimage` emitter's layer this frame (`ParticleFrameInputs.placeImages`), moved by
-    /// camera parallax and shake as an emitter is (`emitterWorld`); nil when no such object exists.
-    /// A Puppet Warp layer's bones for the `layerimage` emitters on it (`SceneEmitterImages`).
-    private func emitterImageBones(_ id: String) -> ParticleLayerBones? {
-        guard let index = layerIndexByStateId[id], let puppet = layers[index].layer.puppet else { return nil }
-        return emitterImages.bones(of: id, puppet: puppet, animator: puppetAnimators[id])
-    }
-
-    /// Samples again `system`'s images that are due (flag 0x20000, `SceneEmitterImages.resample`).
-    private func resampleEmitterImages(_ system: ParticleSystemRuntime) {
-        emitterImages.resample(system) { [self] id in
-            guard let index = layerIndexByStateId[id] else { return nil }
-            let entry = layers[index]
-            return (entry.frames, entry.layer.puppet, entry.layer.source.pixelSize)
-        }
-    }
-
-    private func emitterImageLayerWorld(_ id: String, motion: CameraMotion) -> SceneAffineTransform? {
-        guard transforms.nodes[id] != nil else { return nil }
-        var world = transforms.world(of: id, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine)
-        world.translation += particleParallaxOffset(id, motion: motion) - motion.shake
-        return frameZoom.plane * world
-    }
-
-    /// The scene object a particle system belongs to: its own, or its family root's for a child.
-    private func particleObjectID(_ system: ParticleSystemRuntime) -> String? {
-        var current: ParticleSystemRuntime? = system.simulation ?? system
-        var steps = 0
-        while let candidate = current, steps < 64 {
-            if let id = candidate.configuration.objectID { return id }
-            current = candidate.parent
-            steps += 1
-        }
-        return nil
-    }
-
-    /// Systems below this many live particles keep drawing at full resolution: the pass split of a
-    /// reduced-resolution draw costs more than it saves on a few sprites.
-    static let reducedResolutionParticleMinimum = 256
-
-    /// Whether `system` draws at half resolution this frame (`SceneRenderSettings.reducedResolutionParticles`):
-    /// a large additive material system of a scene without depth, not reading the scene.
-    private func drawsReducedResolution(_ system: ParticleSystemRuntime) -> Bool {
-        guard renderSettings.reducedResolutionParticles, frameDepth == nil,
-              system.configuration.material?.blending.lowercased() == "additive",
-              particleMaterials?.readsSceneSnapshot(system) == false else { return false }
-        return (system.gpu?.completedCount ?? system.particles.count) >= Self.reducedResolutionParticleMinimum
-    }
-
-    /// Draws `systems` additively into a cleared half-resolution target, returned to be added onto
-    /// the scene; `left` are the systems whose pipeline for it isn't ready (or all, without a target).
-    private func drawReducedResolution(_ systems: [ParticleSystemRuntime], scene: MTLTexture, commandBuffer: MTLCommandBuffer,
-                                       context: (ParticleSystemRuntime) -> ParticleMaterialRenderer.DrawContext)
-        -> (target: MTLTexture?, left: [ParticleSystemRuntime]) {
-        var avoiding = [scene]
-        if let sceneCopy { avoiding.append(sceneCopy) }
-        guard let particleMaterials,
-              let target = renderTargetPool.texture(width: max(scene.width / 2, 1), height: max(scene.height / 2, 1),
-                                                    pixelFormat: scene.pixelFormat, avoiding: avoiding) else { return (nil, systems) }
-        let pass = MTLRenderPassDescriptor()
-        pass.colorAttachments[0].texture = target
-        pass.colorAttachments[0].loadAction = .clear
-        pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
-        pass.colorAttachments[0].storeAction = .store
-        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return (nil, systems) }
-        encoder.label = "Reduced-resolution particles"
-        var left: [ParticleSystemRuntime] = []
-        for system in systems where !particleMaterials.draw(system, alsoInto: target.pixelFormat, sampleCount: 1,
-                                                            depthFormat: .invalid, encoder: encoder,
-                                                            commandBuffer: commandBuffer, context: context(system)) {
-            left.append(system)
-        }
-        encoder.endEncoding()
-        return (left.count < systems.count ? target : nil, left)
-    }
-
-    /// Steps a system whose object is hidden (`ParticleFrameInputs.hidden`): the one step that
-    /// clears it runs on whichever simulation holds it; nothing is drawn.
-    private func stepHiddenParticles(_ system: ParticleSystemRuntime, deltaTime: Float, pixelFormat: MTLPixelFormat) {
-        // The GPU's count is its last finished step's.
-        let holdsParticles = system.gpu.map { $0.completedCount > 0 } ?? !system.particles.isEmpty
-        guard let inputs = ParticleFrameInputs.hidden(system, deltaTime: deltaTime, holdsParticles: holdsParticles) else { return }
-        guard particleSimulator != nil else {
-            ParticleCPUSimulation.step(system, inputs: inputs)
-            return
-        }
-        let rendererName = system.configuration.rendererName
-        if let simulated = particleMaterials?.prepareSimulated(system, pixelFormat: pixelFormat, sampleCount: sceneSampleCount,
-                                                               depthFormat: sceneDepthFormat) {
-            particleRequests.append(.init(system: system, inputs: inputs,
-                                          kind: .material(simulated.format, rendererName: rendererName),
-                                          materialVertexCount: simulated.vertexCount))
-        } else {
-            particleRequests.append(.init(system: system, inputs: inputs, kind: .fallback(rendererName: rendererName)))
-        }
-    }
-
-    /// A step as scripts' playback leaves it: paused emits nothing (its clock stands still),
-    /// stopped clears the system; `emitParticles(count)` adds a burst of `count`.
-    static func applyScriptPlayback(_ playback: SceneScriptObjectCommand.Playback?, emitting count: Int?,
-                                    to inputs: inout ParticleFrameInputs) {
-        switch playback {
-        case .pause?:
-            for index in inputs.emitters.indices {
-                inputs.emitters[index].rate = 0
-                inputs.emitters[index].burst = 0
-            }
-        case .stop?:
-            inputs.clears = true
-        case .play?, nil:
-            break
-        }
-        if let count, !inputs.emitters.isEmpty { inputs.emitters[0].burst += count }
-    }
-
-    /// The parallax offset of a particle object: its root object's live origin and `parallaxDepth`.
-    private func particleParallaxOffset(_ id: String, motion: CameraMotion) -> SIMD2<Float> {
-        guard let parallax = motion.parallax else { return .zero }
-        let rootID = transforms.root(of: id)
-        guard let node = transforms.nodes[rootID] else { return .zero }
-        let rootLocal = liveLocal(rootID) ?? node.local
-        return parallax.state.offset(rootOrigin: rootLocal.origin, rootDepth: parallaxDepth(of: rootID, node: node),
-                                     amount: parallax.amount)
-    }
-
-    /// Hands the vertex stage the quad's full axes (parent rotation and non-uniform scale), in
-    /// the same placement space `layerUniform` put its centre in.
-    private func setQuadAxes(_ uniform: inout LayerUniform, quad: SceneQuadGeometry) {
-        let extent = quad.extent
-        let placementScale = SIMD2<Float>(extent.x > 0 ? uniform.size.x / extent.x : 1,
-                                          extent.y > 0 ? uniform.size.y / extent.y : 1)
-        uniform.quadAxisX = quad.axisX * placementScale
-        uniform.quadAxisY = quad.axisY * placementScale
-        uniform.rotation = 0
-    }
-
-    private func runEffects(_ entry: PreparedLayer, draw: LayerDraw, input: MTLTexture, snapshot: MTLTexture?,
-                            frame: BuiltinFrameContext, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
-        guard let effectGraph, !entry.layer.weEffects.isEmpty else { return nil }
-        var context = effectContext(entry, draw: draw, input: input, snapshot: snapshot, frame: frame)
-        let lit = prelit(entry, draw: draw, input: input, snapshot: snapshot, frame: frame, commandBuffer: commandBuffer)
-        if lit != nil {
-            // The prelit image is redrawn into the same texture every frame (its lights, the
-            // reflection it samples): a new version, so no kept chain output outlives it.
-            prelitVersion &+= 1
-            context.inputVersion = prelitVersion
-        }
-        return effectGraph.apply(entry.layer.weEffects, to: lit ?? input,
-                                 layerID: entry.layer.id, context: context, commandBuffer: commandBuffer)
-    }
-
-    /// Runs a layer's effects up to their last pass, which `encodeLayer` then draws into the scene
-    /// through the layer's quad and material blending, as WE draws a layer's last effect pass
-    /// (`EffectGraphRenderer.lastScenePass`): the shader runs once per pixel of the screen, not of
-    /// the layer's buffer (docs/test-risks.md FX2). The chain starts from WE's base pass, the layer's
-    /// material drawn into its buffer with the layer's colour, alpha and brightness
-    /// (`ImageMaterialRenderer.base`), which the last pass then carries into the scene; a solid
-    /// layer's base is its `flat` fill with the layer's alpha (`solidSceneBase`). nil where the
-    /// effects composite through a buffer (`lastPassDrawsIntoScene`), or while a pipeline compiles.
-    private func runEffectsDrawingLastPass(_ entry: PreparedLayer, draw: LayerDraw, input: MTLTexture, compositeSource: Bool,
-                                           sceneFormat: MTLPixelFormat, frame: BuiltinFrameContext,
-                                           commandBuffer: MTLCommandBuffer) -> EffectGraphRenderer.DrawnLastPass? {
-        guard let effectGraph, let base = lastPassDrawsIntoScene(entry, compositeSource: compositeSource) else { return nil }
-        var context = effectContext(entry, draw: draw, input: input, snapshot: nil, frame: frame)
-        let format = context.frameBufferFormat
-        let target = lastPassPlacement(blending: base.blending, draw: draw, image: nil, sceneFormat: sceneFormat)
-        guard effectGraph.scenePassIsReady(entry.layer.weEffects, hidden: context.hiddenEffects, scene: target) else { return nil }
-        let baseTexture: MTLTexture
-        switch base {
-        case .material(let plan):
-            guard let imageMaterials, imageMaterials.baseIsReady(plan, layerID: entry.layer.id, format: format),
-                  let drawn = imageMaterials.base(plan, materialDraw(entry, draw, texture: input, frame: frame),
-                                                  inputVersion: context.inputVersion, format: format,
-                                                  commandBuffer: commandBuffer) else { return nil }
-            baseTexture = drawn.texture
-            context.inputVersion = drawn.version
-        case .solid:
-            guard let fill = solidSceneBase(entry.layer, alpha: draw.opacity, commandBuffer: commandBuffer) else { return nil }
-            baseTexture = fill.texture
-            context.inputVersion = fill.version
-        }
-        return effectGraph.applyDrawingLastPass(entry.layer.weEffects, to: baseTexture, layerID: entry.layer.id,
-                                                context: context, commandBuffer: commandBuffer)
-    }
-
-    /// What a layer's last effect pass draws over in the layer's buffer before it goes into the
-    /// scene (WE's base pass), and the blending it draws into the scene with (the layer material's).
-    private enum LastPassBase {
-        /// The layer's material drawn into its buffer (`ImageMaterialRenderer.base`).
-        case material(ImageMaterialPlan)
-        /// A solid layer's `flat` fill (`SceneMetalLayer.solidBlending`).
-        case solid(blending: String)
-
-        var blending: String {
-            switch self {
-            case .material(let plan): plan.pass.blending
-            case .solid(let blending): blending
-            }
-        }
-    }
-
-    /// The layer's base when its effects' last pass draws into the scene (WE's rule for the
-    /// last pass, below); nil when they composite through a buffer. WE sets an object's flag 0x10,
-    /// which runs every pass into its buffers and draws them with a composite material
-    /// (0x1401e9513, 0x1401ea06d…0x1401ea0c9), when:
-    /// - its `colorBlendMode` is other than 0 and 31 (0x1401e6f74…0x1401e6fa2);
-    /// - the scene has distance or height fog (scene flags 0x800000/0x1000000 from `general`'s
-    ///   `fogdistance`/`fogheight`, 0x140186561…0x1401865ad; tested at 0x1401e6f96);
-    /// - another object samples its image (`_rt_imageLayerComposite_<id>`: 0x1401881b0, 0x1401d3c1e);
-    /// - it is lit with effects: its prelighting pass fills the buffer (0x140209b70…0x140209b79);
-    /// - it is text (0x14020b1fa…0x14020b20d).
-    /// Ours also composites through a buffer where it draws the layer another way: without the
-    /// layer's material pass (text, scene regions, shapes, a material that draws no image),
-    /// with a `BLENDMODE` (31, which WE adds with), for effects that read the scene (WE copies the
-    /// scene before the last pass, 0x1401ea0dd…0x1401ea114) and while a planar reflection draws
-    /// the layers' images.
-    /// A solid layer (`solidBlending`, WE's `flat` material) draws its last pass into the scene
-    /// like an image: the pass's `a_Position` is the layer's quad in layer units, centred on it,
-    /// not the buffer's −1…1 (3141421197's ray-marcher takes its view rays from it).
-    private func lastPassDrawsIntoScene(_ entry: PreparedLayer, compositeSource: Bool) -> LastPassBase? {
-        let layer = entry.layer
-        // A puppet's last pass would draw its bind layout; its output is laid out by the posed mesh first.
-        guard layer.text == nil, !layer.sceneInput, layer.puppet == nil, !layer.readsScene, !compositeSource,
-              !lighting.settings.fog.distance, !lighting.settings.fog.height,
-              planarReflection?.isNeeded(spatial.models) != true else { return nil }
-        guard let plan = layer.imageMaterial else {
-            guard let blending = layer.solidBlending, layer.solidFill != nil,
-                  blending.lowercased() != "alphatocoverage" else { return nil }
-            return .solid(blending: blending)
-        }
-        guard plan.prelighting == nil, layer.solidFill == nil,
-              (plan.pass.variant?.combos["BLENDMODE"] ?? 0) == 0,
-              !plan.pass.readsSceneSnapshot, !plan.pass.readsMipMappedFrameBuffer,
-              plan.pass.blending.lowercased() != "alphatocoverage" else { return nil }
-        return .material(plan)
-    }
-
-    /// Where a layer's last effect pass draws: its quad, as its material draws it (`encodeLayer`),
-    /// sampling the chain's buffers where `image` shows its picture (its sprite frame, or the
-    /// content of a padded texture); nil `image` gives the pass only its target (`scenePassIsReady`).
-    private func lastPassPlacement(blending: String, draw: LayerDraw, image: RenderTextureFrame?,
-                                   sceneFormat: MTLPixelFormat) -> EffectGraphRenderer.ScenePlacement {
-        let extent = draw.placement?.size ?? draw.quad.extent
-        let positions = draw.placement?.quadPositions ?? ImageMaterialRenderer.quadPositions(extent: extent)
-        let texCoords = ImageMaterialRenderer.corners.map { corner -> SIMD2<Float> in
-            guard let image else { return corner }
-            return image.uvOrigin + corner.x * image.uvAxisX + corner.y * image.uvAxisY
-        }
-        let viewProjection: simd_float4x4
-        if let placement = draw.placement {
-            viewProjection = placement.shaderViewProjection
-        } else if frameDepth != nil, !isPerspective {
-            viewProjection = PassMatrices.shaderViewProjection(SceneCamera.orthographic(size: sceneSize))
-        } else {
-            viewProjection = ImageMaterialRenderer.viewProjection(sceneSize: sceneSize)
-        }
-        return EffectGraphRenderer.ScenePlacement(
-            positions: positions, texCoords: texCoords,
-            model: draw.placement?.world ?? ImageMaterialRenderer.modelMatrix(draw.quad),
-            view: draw.placement?.camera.view ?? matrix_identity_float4x4, viewProjection: viewProjection,
-            blending: blending, pixelFormat: sceneFormat, sampleCount: sceneSampleCount,
-            depthFormat: frameDepth == nil ? .invalid : SceneDepthStates.format)
-    }
-
-    /// What a layer's effects start from: its image, or for a sprite sheet its current frame cut out
-    /// of the atlas (for an image in a padded .tex, the image cut out of its allocation), as WE's
-    /// base pass draws it into the layer's buffer (`SceneSpriteFrameInputs`).
-    private func effectInput(_ entry: PreparedLayer, image: RenderTextureFrame, commandBuffer: MTLCommandBuffer) -> MTLTexture {
-        guard entry.layer.puppet == nil, let cut = spriteFrameInputs.input(image, layerID: entry.layer.id, commandBuffer: commandBuffer)
-        else { return image.texture }
-        spriteFrameVersions[entry.layer.id] = cut.version
-        return cut.texture
-    }
-
-    /// A layer's material draw of `texture` this frame (`ImageMaterialRenderer.Draw`), as `encodeLayer` makes it.
-    private func materialDraw(_ entry: PreparedLayer, _ draw: LayerDraw, texture: MTLTexture,
-                              frame: BuiltinFrameContext) -> ImageMaterialRenderer.Draw {
-        ImageMaterialRenderer.Draw(
-            layerID: entry.layer.id, quad: draw.quad, sceneSize: sceneSize,
-            color: SIMD3(draw.color.x, draw.color.y, draw.color.z), alpha: draw.opacity, brightness: draw.brightness,
-            texture: texture, contentSize: entry.layer.source.contentSize, uvOrigin: .zero,
-            uvAxisX: SIMD2(1, 0), uvAxisY: SIMD2(0, 1), sceneSnapshot: nil, mipMappedFrameBuffer: mipMappedTarget,
-            shadowAtlas: frameShadowAtlas, frame: frame, values: values(of: entry.layer.id),
-            assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-            assetSprite: { [unowned self] key, source in self.effectAssetSprite(key: key, source: source) },
-            placement: draw.placement)
-    }
-
-    /// What a layer's effect chain reads this frame besides its input.
-    private func effectContext(_ entry: PreparedLayer, draw: LayerDraw, input: MTLTexture, snapshot: MTLTexture?,
-                               frame: BuiltinFrameContext) -> EffectGraphRenderer.Context {
-        var context = EffectGraphRenderer.Context(
-            frame: frame,
-            values: values(of: entry.layer.id),
-            assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-            sceneSnapshot: snapshot,
-            // The scripted/animated values the layer is drawn with this frame, not the authored ones
-            // (in the raster already for text with font effects).
-            layerColor: !textRastersInColor(entry) ? SIMD3(draw.color.x, draw.color.y, draw.color.z) : SIMD3(repeating: 1),
-            layerAlpha: draw.opacity)
-        context.mipMappedFrameBuffer = mipMappedTarget
-        context.layerComposite = { [unowned self] id in self.layerComposites[id] }
-        context.planarReflection = frameReflection
-        context.systemTexture = { [unowned self] kind in self.systemTexture(kind) }
-        context.effectTextureProjection = EffectGraphRenderer.effectTextureProjection(quad: draw.quad, sceneSize: sceneSize)
-        context.layerModelMatrix = draw.placement?.world ?? BuiltinPassContext.layerModelMatrix(draw.world)
-        // WE's layer buffers are frame-buffer class: RGBA16F in HDR.
-        context.frameBufferFormat = postProcess.drawsHDR ? .rgba16Float : .rgba8Unorm
-        context.assetContentSize = { _, source in source.contentSize }
-        context.assetSprite = { [unowned self] key, source in self.effectAssetSprite(key: key, source: source) }
-        if let probe = drawProbe { context.recordAnimated = { probe.record(constant: $0, value: $1) } }
-        // Hidden effects (authored, user-bound or a script's `visible`) are built but skipped;
-        // constants scripts set go over the material's.
-        var scripted = scripts.effects(entry.layer.weEffects, of: entry.layer.id)
-        if !editorLive.isEmpty { scripted = editorLive.effects(entry.layer.weEffects, of: entry.layer.id, scripted: scripted) }
-        context.hiddenEffects = scripted.hidden
-        context.constantWrites = scripted.writes
-        context.scriptRevision = scripted.revision
-        context.resolution = effectResolution(of: entry.layer.id)
-        // A puppet's mesh redraws its image into the same texture as it moves: without the
-        // drawing's version, the chain's kept output and base pass would hold the first pose.
-        if entry.layer.puppet != nil { context.inputVersion = puppets?.albedoVersion(entry.layer.id) ?? 0 }
-        // A sprite sheet's frames are cut into the same texture as it plays.
-        if let version = spriteFrameVersions[entry.layer.id] { context.inputVersion = version }
-        // Effect Detail: Match Display runs a layer's effects at most at its size on screen.
-        if renderSettings.sceneDetail == .matchDisplay {
-            context.footprint = effectFootprint(entry, draw: draw, input: input)
-        }
-        // Scene regions are drawn at the scene target's density, below full detail when the target
-        // is smaller than the scene's authored size; solid fills and text with effects are at WE's
-        // own buffer size.
-        if context.footprint == nil, fullDetailScale > 1, entry.layer.solidFill == nil, entry.layer.text == nil {
-            let standIn = (SIMD2(Float(input.width), Float(input.height)) * fullDetailScale).rounded(.toNearestOrAwayFromZero)
-            context.inputStandInSize = SIMD2(Int(standIn.x), Int(standIn.y))
-        }
-        return context
-    }
-
-    /// The on-screen size, in scene-target pixels, of the whole image a layer's effects run on
-    /// (`SceneEffectDetail`): its quad at the target's density, over the part of the image the quad
-    /// shows (a padded `.tex` or a sprite frame shows part of it). Nil where the effects already run
-    /// at the display's density or their input isn't the layer's image: scene-input layers (the
-    /// scene under them, resampled at the target's density), text (rasterised at it), videos and
-    /// perspective layers.
-    private func effectFootprint(_ entry: PreparedLayer, draw: LayerDraw, input: MTLTexture) -> SIMD2<Float>? {
-        let layer = entry.layer
-        guard !layer.sceneInput, layer.text == nil, !perspective(layer.id, authored: layer.perspective), let frame = entry.frames.first,
-              frame.texture.width == input.width, frame.texture.height == input.height else { return nil }
-        if case .video = layer.source { return nil }
-        let shown = SIMD2(simd_length(frame.uvAxisX), simd_length(frame.uvAxisY))
-        guard shown.x > 0, shown.y > 0 else { return nil }
-        // Through a camera, the quad is as large as its projection.
-        if let placement = draw.placement {
-            guard let density = placement.pixelsPerUnit(targetSize: SIMD2<Float>(sceneRenderTargetSize)) else { return nil }
-            return placement.size * imageShareOfQuad(entry) * density / shown
-        }
-        return draw.quad.extent * imageShareOfQuad(entry) * renderPixelsPerUnit / shown
-    }
-
-    /// The share of a layer's quad its image covers: less than 1 where a puppet's quad grew to its
-    /// posed bounds (`ScenePuppetCanvas`), so its effects keep running at the image's density.
-    private func imageShareOfQuad(_ entry: PreparedLayer) -> SIMD2<Float> {
-        guard let puppet = entry.layer.puppet, let canvas = puppetCanvases[entry.layer.id] else { return SIMD2(1, 1) }
-        return ScenePuppetCanvas.imageShare(imageSize: puppet.imageSize, canvas: canvas)
-    }
-
-    /// Draws a puppet layer's mesh into its image (`puppetAlbedos`), posed by its animation layers
-    /// this frame (docs/models-plan.md §4.3 M6, P2). Called only while the layer is visible, which
-    /// is when WE evaluates its layers.
-    private func drawPuppet(_ puppet: ScenePuppetPlan, _ entry: PreparedLayer, frame: BuiltinFrameContext,
-                            compositeSource: Bool, commandBuffer: MTLCommandBuffer) {
-        guard let puppets, let source = entry.frames.first?.texture else { return }
-        // Posed this frame by `advanceRigs`, before the scripts ran.
-        let animator = puppetAnimator(entry.layer.id, puppet)
-        // WE draws the posed mesh in the scene (docs/models-plan.md §2.13), with effects or without:
-        // nothing clips it at the image's rect, so what the posed mesh draws into covers its posed
-        // bounds and the quad grows with it. Without effects that is the image itself; with them,
-        // the posed layout of their output (`posedEffectOutput`). As the image another layer
-        // samples, the mesh stays in the image.
-        let direct = entry.layer.weEffects.isEmpty && !compositeSource
-        let canvas = compositeSource ? nil : puppets.canvas(puppet, layerID: entry.layer.id, pose: animator.pose)
-        puppetCanvases[entry.layer.id] = canvas
-        // With effects the mesh draws its bind pose, the image as its texture lays it out: that is
-        // where the effects' masks are painted, and the posed mesh then lays their output out
-        // (`posedEffectOutput`), as WE draws the layer's geometry last.
-        var pose = animator.pose
-        if !entry.layer.weEffects.isEmpty {
-            // The texture channels are the image's: its effects see them. So are the parts'
-            // opacities, which WE's mesh draw into the effects' buffer applies (`SKINNING_ALPHA`);
-            // the parts' order matters where the posed mesh overlaps them (`posedEffectOutput`).
-            pose = ScenePuppetPose.bind(boneCount: animator.pose.bones.count)
-            pose.blendMap = animator.pose.blendMap
-            pose.bonesAlpha = animator.pose.bonesAlpha
-        }
-        // A rig that rearranges an atlas: the editor paints the effects' masks over its texture as
-        // stored, where its parts don't overlap, so the effects read the texture itself and the
-        // posed mesh lays their output out by its texture coordinates.
-        if !entry.layer.weEffects.isEmpty, !puppet.bindPoseIsTextureLayout {
-            puppets.prepareLayer(puppet, layerID: entry.layer.id)
-            puppetAlbedos[entry.layer.id] = nil
-            return
-        }
-
-        // The mesh drawn in the scene culls by its winding there, which a mirroring world flips
-        // (§5.17); drawn into the image for effects or for another layer, it isn't in the scene yet.
-        let mirrored = direct && puppetIsMirrored(entry, camera: frame.camera)
-        puppetAlbedos[entry.layer.id] = puppets.albedo(puppet, ScenePuppetRenderer.Draw(
-            layerID: entry.layer.id, source: source, pose: pose, frame: frame,
-            values: timelines.values,
-            assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-            canvas: direct ? canvas : nil, mirrored: mirrored),
-            commandBuffer: commandBuffer)
-        // Without effects WE draws the mesh in the scene through the layer's material, sampling
-        // every texture at the mesh's coordinates: the quad draws with them laid out likewise.
-        guard entry.layer.weEffects.isEmpty, let pass = entry.layer.imageMaterial?.pass else { return }
-        var warped: [String: MTLTexture] = [:]
-        for case let .asset(key, assetSource) in pass.textures.values {
-            guard let texture = effectAssetTexture(key: key, source: assetSource) else { continue }
-            warped[key] = puppets.warp(puppet, layerID: entry.layer.id, key: key, texture: texture,
-                                       contentSize: assetSource.contentSize, pose: animator.pose, canvas: canvas,
-                                       mirrored: mirrored, commandBuffer: commandBuffer)
-        }
-        puppetWarps[entry.layer.id] = warped
-    }
-
-    /// Whether a puppet layer shows its image mirrored on screen this frame: its world through the
-    /// camera in a perspective scene, else its 2D world (`ScenePuppetRenderer.isMirrored`).
-    private func puppetIsMirrored(_ entry: PreparedLayer, camera: SceneFrameCamera) -> Bool {
-        if isPerspective {
-            return ScenePuppetRenderer.isMirrored(world: world3D(entry.layer.id, in: spatial.transforms),
-                                                  viewProjection: camera.viewProjection)
-        }
-        let linear = worldTransform(entry).linear
-        return ScenePuppetRenderer.isMirrored(axisX: linear.columns.0, axisY: linear.columns.1)
-    }
-
-    /// A puppet's effect output (in its image's bind layout, `drawPuppet`) laid out by the posed
-    /// mesh, which the layer then draws: WE draws a layer with effects through its geometry, the
-    /// skinned mesh for a puppet, its triangles blended over each other by the layer's material,
-    /// culled by their winding through `camera` (`puppetIsMirrored`). Anything else, or while the
-    /// mesh can't be drawn, as it is.
-    private func posedEffectOutput(_ output: MTLTexture?, of entry: PreparedLayer, camera: SceneFrameCamera,
-                                   commandBuffer: MTLCommandBuffer) -> MTLTexture? {
-        guard let output, let puppet = entry.layer.puppet, let puppets, let animator = puppetAnimators[entry.layer.id],
-              let source = entry.frames.first?.texture, source.width > 0, source.height > 0 else { return output }
-        // The output keeps the source's layout, the image in the same share of its texels.
-        let share = SIMD2(Float(puppet.contentPixels.x) / Float(source.width), Float(puppet.contentPixels.y) / Float(source.height))
-        let content = SIMD2(Float(output.width), Float(output.height)) * simd_min(share, SIMD2(repeating: 1))
-        // A rig whose effects ran on its texture (`drawPuppet`) has its parts faded here; any other
-        // had them faded when its mesh drew the effects' input.
-        return puppets.warp(puppet, layerID: entry.layer.id, key: "_effects", texture: output, contentSize: content,
-                            pose: animator.pose, canvas: puppetCanvases[entry.layer.id], redraw: true, blended: true,
-                            mirrored: puppetIsMirrored(entry, camera: camera), fades: !puppet.bindPoseIsTextureLayout,
-                            commandBuffer: commandBuffer) ?? output
-    }
-
-    /// A script's call on a puppet's layers or bones. `setBoneTransform`'s matrix is in the scene;
-    /// the rig keeps it in its model space (0x14020f350 multiplies by the object's inverse world).
-    private func performRigCommand(_ command: SceneScriptRigCommand, on id: String) {
-        guard let index = layers.firstIndex(where: { $0.layer.id == id }),
-              let puppet = layers[index].layer.puppet else {
-            models?.perform(command, on: id)
-            return
-        }
-        let animator = puppetAnimator(id, puppet)
-        if case let .setWorld(bone, matrix) = command {
-            animator.perform(.setWorld(bone: bone, matrix: ScenePuppetAttachments.matrix(worldTransform(layers[index])).inverse * matrix))
-        } else {
-            animator.perform(command)
-        }
-    }
-
-    /// Bone attachments on puppets, as their animators last posed them.
-    private var puppetAttachments: ScenePuppetAttachments {
-        ScenePuppetAttachments { [unowned self] id in
-            guard let animator = self.puppetAnimators[id], let index = self.layerIndexByStateId[id],
-                  let plan = self.layers[index].layer.puppet else { return nil }
-            return (plan, animator)
-        }
-    }
-
-    /// What a rope chain's step reads from the scene (`ScenePuppetRope.Environment`): `general`'s
-    /// gravity and wind, the running time WE's wind noise reads (wrapped past 432000 s,
-    /// 0x14017fcca) and the scene's width as the orthographic width [I: a perspective scene's
-    /// is 0 in WE].
-    private func currentRopeEnvironment() -> ScenePuppetRope.Environment {
-        let physics = cameraGeneral.map { ScenePhysicsSettings($0, in: LiveSceneValueContext(wallpaper: wallpaperKey)) }
-        return ScenePuppetRope.Environment(physics: physics ?? ScenePhysicsSettings(),
-                                           time: Float(clock.time.truncatingRemainder(dividingBy: 432_000)),
-                                           projectionWidth: sceneSize.x)
-    }
-
-    /// The layer's animator, made on first use.
-    /// WE's object loop (0x1401891a0, at 0x14017fd26 in the frame): every object's update before
-    /// the scripts' frame (0x1401802e5), so scripts read this frame's pose and get the layers'
-    /// clip events (`animationEvent`) and ends (`addEndedCallback`) before their `update`, and
-    /// their bone writes land on this frame's pose. A puppet updates hidden or not (0x1401fdf90
-    /// tests only that it has a rig and layers, through 0x1402076e0); a model only while it and
-    /// its parents are visible (0x14021c4d8), as its draw asks too. Without scripts nobody reads
-    /// the events and ends, so they are dropped.
-    private func advanceRigs() {
-        let delta = Float(clock.delta)
-        var ropeEnvironment: ScenePuppetRope.Environment?
-        let outlinesHitBoxes = puppetHitBoxes.isWanted
-        var hitBoxes: [ScenePuppetHitBoxOutline] = []
-        for entry in layers {
-            guard let puppet = entry.layer.puppet else { continue }
-            // Last frame's bones, for the `layerimage` emitters on it; none before its first update.
-            if let existing = puppetAnimators[entry.layer.id] {
-                emitterImages.willAdvance(puppet: entry.layer.id, worlds: existing.worlds)
-            }
-            let animator = puppetAnimator(entry.layer.id, puppet)
-            if let rope = animator.rope {
-                // The scene's gravity and wind, resolved once a frame for the rope chains.
-                if ropeEnvironment == nil { ropeEnvironment = currentRopeEnvironment() }
-                rope.environment = ropeEnvironment ?? ScenePuppetRope.Environment()
-            }
-            // Physics bones move in the scene: the image's world this frame, before the scripts'.
-            let world = ScenePuppetAttachments.matrix(worldTransform(entry))
-            animator.advance(delta: delta, values: timelines.values, objectWorld: world)
-            if !scripts.isRunning {
-                _ = animator.takeEnded()
-                _ = animator.takeEvents()
-            }
-            if outlinesHitBoxes, scripts.isVisible(entry.layer.id) {
-                hitBoxes += ScenePuppetHitBoxOutline.outlines(layerID: entry.layer.id, skeleton: puppet.skeleton,
-                                                              boneWorlds: animator.worlds, world: world)
-            }
-        }
-        if outlinesHitBoxes { puppetHitBoxes.publish(hitBoxes) }
-        guard let models else { return }
-        var frame = BuiltinFrameContext()
-        frame.time = clock.time
-        frame.frameTime = clock.delta
-        for model in spatial.models where scripts.isVisible(model.id) {
-            // `IModelLayer.rootmotion` as a script set it, else as authored.
-            if let rootMotion = scripts.object(model.id)?.flag(.rootmotion) {
-                models.animator(for: model.id)?.rootMotion = rootMotion
-            }
-            guard let plan = model.plan,
-                  models.advance(model, plan: plan, frame: frame, values: timelines.values) != nil,
-                  !scripts.isRunning, let animator = models.animator(for: model.id) else { continue }
-            _ = animator.takeEnded()
-            _ = animator.takeEvents()
-        }
-    }
-
-    private func puppetAnimator(_ id: String, _ puppet: ScenePuppetPlan) -> ScenePuppetAnimator {
-
-        if let animator = puppetAnimators[id] { return animator }
-        let animator = puppet.makeAnimator(objectID: Int(id))
-        puppetAnimators[id] = animator
-        return animator
-    }
-
-    /// A lit or reflective layer's image as its effects start from it: lit by its material's
-    /// prelighting pass (`ImageMaterialRenderer.prelight`); nil for any other layer.
-    private func prelit(_ entry: PreparedLayer, draw: LayerDraw, input: MTLTexture, snapshot: MTLTexture?,
-                        frame: BuiltinFrameContext, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
-        guard let plan = entry.layer.imageMaterial, plan.prelighting != nil, let imageMaterials else { return nil }
-        let lit = imageMaterials.prelight(plan, ImageMaterialRenderer.Draw(
-            layerID: entry.layer.id, quad: draw.quad, sceneSize: sceneSize, color: SIMD3(repeating: 1), alpha: 1,
-            brightness: 1, texture: input, contentSize: entry.layer.source.contentSize, uvOrigin: .zero,
-            uvAxisX: SIMD2(1, 0), uvAxisY: SIMD2(0, 1), sceneSnapshot: snapshot, mipMappedFrameBuffer: mipMappedTarget,
-            shadowAtlas: frameShadowAtlas, frame: frame, values: values(of: entry.layer.id),
-            assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-            assetSprite: { [unowned self] key, source in self.effectAssetSprite(key: key, source: source) }),
-            // The layer's effect buffers' format: RGBA16F in HDR (docs/lighting-plan.md §2.3, §2.6).
-            format: postProcess.drawsHDR ? .rgba16Float : .rgba8Unorm, commandBuffer: commandBuffer)
-        prelitImages[entry.layer.id] = lit
-        return lit
-    }
-
-    /// With `clearenabled` off (WE skips its scene pass's clear, 0x140183588), the pass loads the
-    /// last frame's colour and depth instead of clearing them, while it draws into the same targets.
-    /// New targets start black, not `clearcolor`: nothing ever clears them to it (WE 2.8.0.42,
-    /// capture 542: the background of a 0.15 grey clear colour shows black), and at the far depth.
-    private func keepScene(_ pass: MTLRenderPassDescriptor, scene: MTLTexture, multisampled: MTLTexture?) {
-        guard keepsScene else {
-            keptSceneTargets = []
-            return
-        }
-        let targets: [ObjectIdentifier?] = [ObjectIdentifier(scene), multisampled.map(ObjectIdentifier.init),
-                       frameDepth == nil ? nil : depthBuffer.texture.map(ObjectIdentifier.init),
-                       frameDepth == nil ? nil : depthBuffer.multisampled.map(ObjectIdentifier.init)]
-        guard targets == keptSceneTargets else {
-            keptSceneTargets = targets
-            pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
-            return
-        }
-        pass.colorAttachments[0].loadAction = .load
-        if frameDepth != nil { pass.depthAttachment.loadAction = .load }
-    }
-
-    /// Ends an encoder of the scene pass, storing only what is read afterwards: the samples and
-    /// depth when the pass `resumes` onto them; else the resolved colour, and the depth only when
-    /// a frame stage reads it (`SceneFrameStage.readsSceneDepth`). Every scene-pass encoder ends
-    /// here, as their attachments' store actions are left `.unknown` until then.
-    private func endScenePass(_ encoder: MTLRenderCommandEncoder, resumes: Bool) {
-        if sceneMultisampleTarget != nil {
-            encoder.setColorStoreAction(resumes ? .storeAndMultisampleResolve : .multisampleResolve, index: 0)
-        }
-        if frameDepth != nil {
-            let read = !resumes && frameStages.contains { $0.readsSceneDepth(settings: renderSettings) }
-            encoder.setDepthStoreAction(depthBuffer.storeAction(resumes: resumes, read: read))
-        }
-        encoder.endEncoding()
-    }
-
-    /// Continues the scene pass after a pause (a snapshot of it, or effects run in between).
-    private func resumeScenePass(on scene: MTLTexture, commandBuffer: MTLCommandBuffer) -> MTLRenderCommandEncoder? {
-        let resume = MTLRenderPassDescriptor()
-        Self.attachScene(scene, multisampled: sceneMultisampleTarget, to: resume)
-        resume.colorAttachments[0].loadAction = .load
-        if frameDepth != nil { depthBuffer.attach(to: resume, clear: false) }
-        let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: resume)
-        encoder?.setRenderPipelineState(renderPipeline)
-        return encoder
-    }
-
-    /// The scene drawn so far (`_rt_FullFrameBuffer`), current within `rect` (all of it when nil).
-    /// Every scene-reading draw of a frame shares one full-size target, and only what changed is
-    /// copied (`SceneSnapshotTracker`): the GPU runs the command buffer in order, so each draw
-    /// reads its snapshot before the next copy overwrites any of it.
-    private func sceneSnapshot(of scene: MTLTexture, commandBuffer: MTLCommandBuffer,
-                               needing rect: SceneSnapshotTracker.Rect? = nil) -> MTLTexture? {
-        if sceneCopy == nil {
-            // The reflection copy's level 0 when this frame allows (`snapshotCanShare`): one
-            // full-size target fewer.
-            let shared = snapshotSharesMipMappedTarget ? mipMappedTarget.flatMap {
-                $0.width == scene.width && $0.height == scene.height && $0.pixelFormat == scene.pixelFormat ? $0 : nil
-            } : nil
-            sceneCopy = shared ?? renderTargetPool.texture(width: scene.width, height: scene.height,
-                                                           pixelFormat: scene.pixelFormat, avoiding: scene)
-            snapshotTracker.reset()
-        }
-        guard let copy = sceneCopy else { return nil }
-        let whole = SceneSnapshotTracker.Rect(x: 0, y: 0, width: scene.width, height: scene.height)
-        guard let region = snapshotTracker.copy(for: rect ?? whole) else { return copy }
-        guard let blit = commandBuffer.makeBlitCommandEncoder() else {
-            snapshotTracker.reset()
-            return nil
-        }
-        let origin = MTLOrigin(x: region.x, y: region.y, z: 0)
-        blit.copy(from: scene, sourceSlice: 0, sourceLevel: 0, sourceOrigin: origin,
-                  sourceSize: MTLSize(width: region.width, height: region.height, depth: 1),
-                  to: copy, destinationSlice: 0, destinationLevel: 0, destinationOrigin: origin)
-        blit.endEncoding()
-        return copy
-    }
-
-    /// The scene under a scene-input layer, as that layer's base image (`SceneRegionResample`).
-    /// A quad that is exactly the scene (composition and fullscreen layers) uses the snapshot as is.
-    /// Under WE's texture reduction a composition layer's buffers are its size over the reduction;
-    /// a fullscreen layer's aren't (`TextureReduction`). Drawn through a 3D camera (`placement`), it
-    /// is the scene under the projected quad (`SceneRegionProjection`).
-    private func sceneRegion(of snapshot: MTLTexture, under quad: SceneQuadGeometry, placement: SceneLayerPlacement?,
-                             reducedFor layer: SceneMetalLayer, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
-        let reduction = layer.fillsScene ? 1 : Float(renderSettings.textureReduction)
-        if let placement {
-            guard let projection = regionProjection,
-                  let size = SceneRegionResample.targetSize(extent: placement.size, layerSize: layer.size,
-                                                            pixelsPerUnit: renderPixelsPerUnit / reduction),
-                  let region = renderTargetPool.texture(width: size.x, height: size.y, pixelFormat: snapshot.pixelFormat,
-                                                        avoiding: snapshot),
-                  projection.draw(snapshot, under: placement, into: region, commandBuffer: commandBuffer) else { return nil }
-            return region
-        }
-        if reduction == 1, !layer.clearsSceneAlpha, SceneRegionResample.coversWholeScene(quad, sceneSize: sceneSize) { return snapshot }
-        guard let size = SceneRegionResample.targetSize(quad, layerSize: layer.size, pixelsPerUnit: renderPixelsPerUnit / reduction),
-              let region = renderTargetPool.texture(width: size.x, height: size.y,
-                                                    pixelFormat: snapshot.pixelFormat, avoiding: snapshot) else { return nil }
-        let pass = MTLRenderPassDescriptor()
-        pass.colorAttachments[0].texture = region
-        pass.colorAttachments[0].loadAction = .clear
-        pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
-        pass.colorAttachments[0].storeAction = .store
-        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return nil }
-        var uniform = SceneRegionResample.uniform(quad, sceneSize: sceneSize, targetSize: size)
-        let pipelines = layerPipelines.pipelines(for: region.pixelFormat)
-        // Copied over the cleared target without its alpha, the layer's base keeps alpha 0.
-        encoder.setRenderPipelineState(layer.clearsSceneAlpha ? pipelines.colourCopy : pipelines.copy)
-        encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
-        encoder.setFragmentBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
-        encoder.setFragmentTexture(snapshot, index: 0)
-        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
-        encoder.endEncoding()
-        return region
-    }
-
-    /// A textureless layer's image as its effects start from it: its fill at WE's buffer size, the
-    /// layer's `size` rounded (`SceneMetalLayer.solidFill`), filled once per content; nil for a
-    /// layer with a texture (or when the target can't be made, and the 1×1 source stands in).
-    private func solidEffectInput(_ layer: SceneMetalLayer, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
-        guard let fill = layer.solidFill else { return nil }
-        let size = SolidEffectInput.size(layer.size)
-        if let cached = solidEffectInputs[layer.id], cached.width == size.x, cached.height == size.y { return cached }
-        guard let texture = solidFillTexture(layer, fill: fill, reusing: nil, commandBuffer: commandBuffer) else { return nil }
-        solidEffectInputs[layer.id] = texture
-        return texture
-    }
-
-    /// A solid layer's base pass when its last effect pass draws into the scene: its fill at the
-    /// effect input's size with the layer's `alpha` in its alpha, as WE's `flat` writes `g_Alpha`
-    /// into the layer's buffer and the last pass carries it into the scene. Refilled when the
-    /// alpha changes, with a new `version` for the chain's `inputVersion`.
-    private func solidSceneBase(_ layer: SceneMetalLayer, alpha: Float,
-                                commandBuffer: MTLCommandBuffer) -> (texture: MTLTexture, version: UInt64)? {
-        guard var fill = layer.solidFill else { return nil }
-        fill.w *= alpha
-        let size = SolidEffectInput.size(layer.size)
-        let cached = solidSceneBases[layer.id].flatMap { $0.texture.width == size.x && $0.texture.height == size.y ? $0 : nil }
-        if let cached, cached.alpha == fill.w { return (cached.texture, cached.version) }
-        guard let texture = solidFillTexture(layer, fill: fill, reusing: cached?.texture, commandBuffer: commandBuffer)
-        else { return nil }
-        solidSceneBaseFills &+= 1
-        solidSceneBases[layer.id] = (texture, fill.w, solidSceneBaseFills)
-        return (texture, solidSceneBaseFills)
-    }
-
-    /// `fill` (straight RGBA) over a texture of `layer`'s effect input size (`SolidEffectInput`):
-    /// `reusing`, or a new one.
-    private func solidFillTexture(_ layer: SceneMetalLayer, fill: SIMD4<Float>, reusing: MTLTexture?,
-                                  commandBuffer: MTLCommandBuffer) -> MTLTexture? {
-        let size = SolidEffectInput.size(layer.size)
-        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: size.x,
-                                                                  height: size.y, mipmapped: false)
-        descriptor.usage = [.renderTarget, .shaderRead]
-        descriptor.storageMode = .private
-        guard let texture = reusing ?? device.makeTexture(descriptor: descriptor) else {
-            OWELog.error(.scene, "Layer \(layer.id): could not allocate its \(size.x)×\(size.y) effect input")
-            return nil
-        }
-        let pass = MTLRenderPassDescriptor()
-        pass.colorAttachments[0].texture = texture
-        pass.colorAttachments[0].loadAction = .clear
-        pass.colorAttachments[0].clearColor = MTLClearColor(red: Double(fill.x), green: Double(fill.y),
-                                                            blue: Double(fill.z), alpha: Double(fill.w))
-        pass.colorAttachments[0].storeAction = .store
-        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return nil }
-        encoder.endEncoding()
-        return texture
-    }
-
-    private func effectAssetTexture(key: String, source: SceneMetalTextureSource) -> MTLTexture? {
-        if case .animated = source { return animatedAssetFrame(key: key, source: source)?.texture }
-        if let cached = effectAssetTextures[key] { return cached }
-        guard let texture = makeTextureFrames(from: source)?.first?.texture else { return nil }
-        effectAssetTextures[key] = texture
-        return texture
-    }
-
-    /// An animated asset texture's sprite frame this frame, for `g_TextureNRotation/Translation`;
-    /// nil for a still one.
-    private func effectAssetSprite(key: String, source: SceneMetalTextureSource) -> BuiltinSpriteFrame? {
-        guard case .animated = source, let frame = animatedAssetFrame(key: key, source: source) else { return nil }
-        return BuiltinSpriteFrame(rotation: SIMD4(frame.uvAxisX.x, frame.uvAxisX.y, frame.uvAxisY.x, frame.uvAxisY.y),
-                                  translation: frame.uvOrigin)
-    }
-
-    /// The frame an effect or material shows of an animated asset texture (T7): the texture's
-    /// shared clock (§2.7), which every binding of the frame and every image layer of the texture
-    /// share. The key is `materialPath|name`; the clock is the texture name's.
-    private func animatedAssetFrame(key: String, source: SceneMetalTextureSource) -> RenderTextureFrame? {
-        let frames: [RenderTextureFrame]
-        if let cached = effectAssetFrames[key] {
-            frames = cached
-        } else {
-            guard let made = makeTextureFrames(from: source), !made.isEmpty else { return nil }
-            effectAssetFrames[key] = made
-            frames = made
-        }
-        guard frames.count > 1 else { return frames[0] }
-        let texture = key.split(separator: "|", omittingEmptySubsequences: false).last.map(String.init) ?? key
-        let frame = timelines.materialTextureFrame(texture: texture, frameTimes: { frames.map(\.duration) },
-                                                   delta: Float(clock.delta))
-        // `setFrame(n)` can't reach a material's clock; a frame outside the sheet can't happen, but draws the first.
-        return frame >= 0 && Int(frame) < frames.count ? frames[Int(frame)] : frames[0]
-    }
-
-
-
-
-
-
-
-    /// The scene target, at `renderPixelsPerUnit` pixels per scene unit.
-    /// Draws into `multisampled` when there is one, resolving into `scene` whenever the pass
-    /// ends (so a pause for a scene-reading layer resolves what's drawn so far, as WE resolves its
-    /// multisampled target before reading `_rt_FullFrameBuffer`, 0x1400d3310); else into `scene`.
-    /// The samples are kept only while the pass resumes: `endScenePass` sets the store action.
-    static func attachScene(_ scene: MTLTexture, multisampled: MTLTexture?, to pass: MTLRenderPassDescriptor) {
-        let attachment = pass.colorAttachments[0]!
-        if let multisampled {
-            attachment.texture = multisampled
-            attachment.resolveTexture = scene
-            attachment.storeAction = .unknown
-        } else {
-            attachment.texture = scene
-            attachment.storeAction = .store
-        }
-    }
-
-    /// This frame's multisampled scene target for WE's MSAA setting, made or remade to match
-    /// `scene`; nil without MSAA (or when it can't be made, logged, when the pass draws without).
-    /// Sets `sceneSampleCount`.
-    private func sceneMultisample(for scene: MTLTexture) -> MTLTexture? {
-        var samples = renderSettings.sceneSampleCount(on: device)
-        if samples > 1, layerPipelines.pipelines(for: scene.pixelFormat, sampleCount: samples) == nil { samples = 1 }
-        guard samples > 1 else {
-            sceneMultisampleTarget = nil
-            sceneSampleCount = 1
-            return nil
-        }
-        if let target = sceneMultisampleTarget, target.width == scene.width, target.height == scene.height,
-           target.pixelFormat == scene.pixelFormat, target.sampleCount == samples {
-            sceneSampleCount = samples
-            return target
-        }
-        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: scene.pixelFormat, width: scene.width,
-                                                                  height: scene.height, mipmapped: false)
-        descriptor.textureType = .type2DMultisample
-        descriptor.sampleCount = samples
-        descriptor.usage = [.renderTarget]
-        descriptor.storageMode = .private
-        guard let target = device.makeTexture(descriptor: descriptor) else {
-            OWELog.error(.scene, "Could not allocate the \(scene.width)×\(scene.height) \(samples)× MSAA scene target; drawing without MSAA")
-            sceneMultisampleTarget = nil
-            sceneSampleCount = 1
-            return nil
-        }
-        sceneMultisampleTarget = target
-        sceneSampleCount = samples
-        return target
-    }
-
-    private func sceneRenderTarget(pixelFormat: MTLPixelFormat, size pixelSize: SIMD2<Int>) -> MTLTexture? {
-        if let sceneRenderTarget, sceneRenderTargetSize == pixelSize, sceneRenderTarget.pixelFormat == pixelFormat {
-            return sceneRenderTarget
-        }
-
-        // Owned outright, not pooled: the scene is drawn into for the whole frame, so a pooled
-        // scratch request of the same size (a scene-input region) must never be handed it.
-        let textureDescriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: pixelFormat, width: pixelSize.x,
-                                                                         height: pixelSize.y, mipmapped: false)
-        textureDescriptor.usage = [.renderTarget, .shaderRead]
-        textureDescriptor.storageMode = .private
-        guard let texture = device.makeTexture(descriptor: textureDescriptor) else {
-            OWELog.error(.scene, "Could not allocate the \(pixelSize.x)×\(pixelSize.y) scene target")
-            return nil
-        }
-        sceneRenderTarget = texture
-        sceneRenderTargetSize = pixelSize
-        return texture
-    }
-
-    /// The user's colour for a text layer (`_owe_text_<id>_color`), white when unset.
-    private func textTint(layerID: String) -> SIMD3<Float> {
-        guard let value = WallpaperServices.shared.userPropertyString("_owe_text_\(layerID)_color") else {
-            return SIMD3(repeating: 1)
-        }
-        let rgb = value.parseVector3()
-        return SIMD3(Float(rgb.0), Float(rgb.1), Float(rgb.2))
-    }
-
-    /// `layerID` keys the user's text settings and the text cache. `pointSize` is a script's
-    /// `pointsize`, which wins over the app's size setting. `fill` nil rasterises white coverage,
-    /// coloured when drawn; a colour rasterises the text in it, as WE's `font` pass draws it into
-    /// the buffer its effects run on and other layers sample (3378346807's cyan clock).
-    private func makeTextFrame(_ text: SceneMetalText, value: String, pointSize: Float?, boxSize: SIMD2<Float>,
-                               pixelsPerUnit: Float, layerID: String,
-                               fill: SIMD3<Float>?) -> (frame: RenderTextureFrame, baseSize: SIMD2<Float>)? {
-        let stateKey = layerID
-        let fontName = WallpaperServices.shared.userPropertyString("_owe_text_\(layerID)_font") ?? ""
-        let sizeValue = pointSize
-            ?? WallpaperServices.shared.userPropertyValue("_owe_text_\(layerID)_size", fallback: Float(text.pointSize))
-        let bold = WallpaperServices.shared.userPropertyString("_owe_text_\(layerID)_bold") == "true"
-        let italic = WallpaperServices.shared.userPropertyString("_owe_text_\(layerID)_italic") == "true"
-        let rasterScale = textRasterScales[stateKey, default: SceneTextRasterScale.Tracker()].scale(for: pixelsPerUnit)
-        let cacheKey = "\(stateKey)|\(value)|\(boxSize.x)|\(boxSize.y)|\(fontName)|\(sizeValue)|\(bold)|\(italic)|\(rasterScale)"
-            + "|\(text.layoutKey)"
-            + (fill.map { "|\($0)" } ?? "")
-        let slot = "\(stateKey)|\(fill != nil)|\(pixelsPerUnit == 1)"
-        for done in textRaster.takeFinished() {
-            if let result = done.result { textFrameCache.insert(result, for: done.key, cost: result.cost) }
-        }
-        if let cached = textFrameCache.value(for: cacheKey) {
-            textRaster.show(cached, slot: slot)
-            return (cached.frame, cached.baseSize)
-        }
-        // A changed string is rasterised on a pool job while the previous raster keeps drawing.
-        let request = SceneTextRasterRequest(text: text, value: value,
-                                             fontName: fontName.isEmpty ? (text.font ?? "") : fontName,
-                                             pointSize: sizeValue, bold: bold, italic: italic,
-                                             rasterScale: rasterScale, fill: fill)
-        guard let (result, isNew) = textRaster.raster(key: cacheKey, slot: slot, request: request) else {
-            OWELog.error(.scene, "Text layer \(layerID): could not rasterise")
-            return nil
-        }
-        if isNew { textFrameCache.insert(result, for: cacheKey, cost: result.cost) }
-        return (result.frame, result.baseSize)
-    }
-
-    /// Maps a scene-unit position and size onto `drawableSize` pixels. Scene draws use
-    /// `.stretch` (the target has the scene's aspect); the composite uses the user's placement, at
-    /// `pixelsPerPoint` (the frame's display by default).
-    private func layerUniform(position: SIMD2<Float>, size: SIMD2<Float>, opacity: Float,
-                              drawableSize: SIMD2<Float>, placement: WallpaperPlacement,
-                              pixelsPerPoint: Float? = nil) -> LayerUniform {
-        let scale: Float
-        switch placement {
-        case .stretch:
-            return LayerUniform(position: SIMD2<Float>(position.x * drawableSize.x / sceneSize.x,
-                                                        position.y * drawableSize.y / sceneSize.y),
-                                size: SIMD2<Float>(size.x * drawableSize.x / sceneSize.x,
-                                                   size.y * drawableSize.y / sceneSize.y),
-                                sceneSize: drawableSize, opacity: opacity, particleShape: 0, rotation: 0, color: SIMD4<Float>(repeating: 1),
-                                uvOrigin: .zero, uvAxisX: SIMD2<Float>(1, 0), uvAxisY: SIMD2<Float>(0, 1),
-                                effects: SIMD4<Float>(1, 1, 1, 0), blur: 0,
-                                colorEffects: SIMD4<Float>(0, 1, 0, 0.7), transform: SIMD4<Float>(0, 0, 0, 1),
-                                transformScaleY: 1)
-        case .fill, .zoom, .fit, .center:
-            scale = ScenePlacementScale.scale(for: placement, sceneSize: sceneSize, drawableSize: drawableSize,
-                                              pixelsPerPoint: pixelsPerPoint ?? drawablePixelsPerPoint)
-        }
-        let offset = (drawableSize - sceneSize * scale) / 2
-        return LayerUniform(position: SIMD2<Float>(position.x * scale + offset.x,
-                                                   position.y * scale + (drawableSize.y - sceneSize.y * scale - offset.y)),
-                            size: size * scale, sceneSize: drawableSize, opacity: opacity,
-                            particleShape: 0, rotation: 0, color: SIMD4<Float>(repeating: 1),
-                            uvOrigin: .zero, uvAxisX: SIMD2<Float>(1, 0), uvAxisY: SIMD2<Float>(0, 1),
-                            effects: SIMD4<Float>(1, 1, 1, 0), blur: 0,
-                            colorEffects: SIMD4<Float>(0, 1, 0, 0.7), transform: SIMD4<Float>(0, 0, 0, 1),
-                            transformScaleY: 1)
-    }
-
-    /// Compiles landed so far in the layer, effect, particle and puppet mesh renderers.
-    private var pipelinesLanded: Int {
-        (effectGraph?.pipelinesLanded ?? 0) &+ (imageMaterials?.pipelinesLanded ?? 0) &+ (particleMaterials?.pipelinesLanded ?? 0)
-            &+ (puppetsMade ? puppets?.pipelinesLanded ?? 0 : 0)
-    }
-
-    /// Whether any pipeline is still compiling off the render thread. A puppet's mesh pipeline
-    /// counts too: until it lands the puppet's image stays transparent (`ScenePuppetRenderer`).
-    var pipelinesCompiling: Bool {
-        hasPendingEffectPipelines || imageMaterials?.hasPendingPipelines == true
-            || particleMaterials?.hasPendingPipelines == true || modelDrawing?.hasPendingPipelines == true
-            || (puppetsMade && puppets?.hasPendingPipelines == true)
-    }
-
-    /// The unquantised pixels per unit that sizes the scene target to `drawable` when the scene is
-    /// a single effect-less video filling it at the same aspect; nil otherwise.
-    private func videoOnlyPixelsPerUnit(_ drawable: SIMD2<Float>) -> Float? {
-        guard layers.count == 1, case .video = layers[0].layer.source, layers[0].layer.weEffects.isEmpty,
-              particleSystems.isEmpty, spatial.models.isEmpty, !scripts.isRunning,
-              sceneSize.x > 0, sceneSize.y > 0, drawable.x > 0, drawable.y > 0 else { return nil }
-        let exact = drawable.x / sceneSize.x
-        guard abs(sceneSize.y * exact - drawable.y) < 0.5,
-              max(drawable.x, drawable.y) <= SceneRenderResolution.maximumTextureDimension else { return nil }
-        return exact
-    }
-
-    /// Hands this frame's inputs to the layer analysis, which marks the layers they change dirty.
-    private func analyseLayers(effectFrame: BuiltinFrameContext, motion: CameraMotion, drawableSize: SIMD2<Float>) {
-        guard let layerAnalysis else { return }
-        var inputs = SceneLayerFrameInputs()
-        inputs.time = effectFrame.time
-        inputs.pointer = effectFrame.pointer
-        inputs.parallax = effectFrame.parallax
-        inputs.parallaxActive = motion.parallax != nil
-        inputs.shake = motion.shake
-        inputs.cameraShake = motion.cameraShake
-        inputs.audio = effectFrame.audio
-        inputs.audioLevel = motion.audioLevel
-        // System textures (now-playing artwork) keep following the clock; a video only its frames.
-        if mediaTextures != nil && effectFrame.time != analysedTime
-            || layers.contains(where: { if case let .video(stream) = $0.layer.source { stream.hasNewFrame } else { false } }) {
-            videoRevision &+= 1
-        }
-        analysedTime = effectFrame.time
-        inputs.videoRevision = videoRevision
-        inputs.userPropertiesRevision = WallpaperServices.shared.propertyService.revision
-        inputs.scripts = scripts.state
-        inputs.animatedSites = animations?.sites ?? []
-        let shape = (layers: layers.count, target: drawableSize)
-        // A layer, effect or post-process whose pipeline is still compiling draws another way until
-        // it lands; nothing the analysis tracks says when.
-        // A compile can also start and land between two frames, unseen by `warming`.
-        let warming = pipelinesCompiling
-        let landed = pipelinesLanded
-        inputs.sceneChanged = shape.layers != analysedShape.layers || shape.target != analysedShape.target
-            || warming || analysedWarmUp || landed != analysedLanded || textRaster.hasFinished
-            || scripts.userVisibilityRevision != analysedUserVisibility
-            || editorLive.revision != analysedEditorRevision
-        analysedUserVisibility = scripts.userVisibilityRevision
-        analysedEditorRevision = editorLive.revision
-        analysedLanded = landed
-        analysedShape = shape
-        analysedWarmUp = warming
-        layerAnalysis.update(inputs)
-    }
-
-    /// Whether this frame is drawn (`FramePacing`); called once the analysis has seen its inputs.
-    private func paceFrame(_ frame: BuiltinFrameContext, at now: CFTimeInterval) -> Bool {
-        let parallaxMoved = frame.parallax != pacedParallax
-        pacedParallax = frame.parallax
-        guard let analysis = layerAnalysis else { return framePacing.record(.smooth, at: now) }
-        // Models pose every frame (the analysis counts the scene's own as animated stages); one a
-        // script created after the load counts the same.
-        if !spatial.models.isEmpty { return framePacing.record(.smooth, at: now) || !skipsIdleFrames }
-        var particlesLive = false, particlesFollowCursor = false
-        for system in particleSystems where particleObjectID(system).map({ scripts.isVisible($0) }) ?? true {
-            particlesLive = true
-            if system.configuration.controlPoints.contains(where: \.followsCursor) { particlesFollowCursor = true; break }
-        }
-        let inputs = FrameDemandInputs(analysis: analysis, pointerMoved: frame.pointer != frame.pointerLast,
-                                       parallaxMoved: parallaxMoved, particlesLive: particlesLive,
-                                       particlesFollowCursor: particlesFollowCursor)
-        return framePacing.record(framePacing.classify(inputs), at: now) || !skipsIdleFrames
-    }
-
-    /// The cursor in scene units, mapped through the placement of the display it is on, or nil
-    /// while it is on none of this scene's displays.
-    private func sceneCursor(_ viewports: [SceneViewport]) -> SIMD2<Float>? {
-        for viewport in viewports {
-            guard let drawablePoint = viewport.cursorPixels else { continue }
-            return ScenePlacementScale.scenePoint(drawablePoint: drawablePoint, placement: placement, sceneSize: sceneSize,
-                                                  drawableSize: viewport.drawableSize, pixelsPerPoint: viewport.pixelsPerPoint)
-        }
-        return nil
-    }
-
-    private func clearUploadedImages() {
-        uploadedImagesLock.lock()
-        uploadedImages.removeAllObjects()
-        particleMipmaps.removeAll()
-        uploadedImagesLock.unlock()
-    }
-
-    /// A particle system's texture 0 with its mip chain; systems that share a texture share it.
-    /// A sprite sheet keeps the levels its file stores: a generated chain would bleed its cells
-    /// into each other at the small levels.
-    private func particleTexture(from source: SceneMetalTextureSource, spriteSheet: Bool) -> MTLTexture? {
-        guard let texture = makeTextureFrames(from: source)?.first?.texture else { return nil }
-        guard !spriteSheet, ParticleTextureMipmaps.needsChain(texture) else { return texture }
-        let key = ObjectIdentifier(texture)
-        uploadedImagesLock.lock()
-        let cached = particleMipmaps[key]?.chained
-        uploadedImagesLock.unlock()
-        if let cached { return cached }
-        let chained = ParticleTextureMipmaps.mipmapped(texture, device: device, queue: commandQueue)
-        uploadedImagesLock.lock()
-        defer { uploadedImagesLock.unlock() }
-        if let raced = particleMipmaps[key]?.chained { return raced }
-        particleMipmaps[key] = (texture, chained)
-        return chained
-    }
-
-    private func makeTextureFrames(from source: SceneMetalTextureSource) -> [RenderTextureFrame]? {
-        guard case let .image(image) = source else { return uploadTextureFrames(from: source) }
-        uploadedImagesLock.lock()
-        let cached = uploadedImages.object(forKey: image)?.frames
-        uploadedImagesLock.unlock()
-        if let cached { return cached }
-        guard let frames = uploadTextureFrames(from: source) else { return nil }
-        uploadedImagesLock.lock()
-        defer { uploadedImagesLock.unlock() }
-        if let raced = uploadedImages.object(forKey: image)?.frames { return raced }
-        uploadedImages.setObject(UploadedFrames(frames), forKey: image)
-        return frames
-    }
-
-    private func uploadTextureFrames(from source: SceneMetalTextureSource) -> [RenderTextureFrame]? {
-        switch source {
-        case let .image(image):
-            if let raw = TEXRawImageRep.of(image) {
-                // Its allocation, padding and all, as a block-compressed .tex (`contentUVExtent`).
-                guard let texture = raw.makeAllocationTexture(device: device) else {
-                    OWELog.error(.scene, "Could not upload a \(raw.pixelsWide)×\(raw.pixelsHigh) .tex image")
-                    return nil
-                }
-                let crop = raw.isPadded ? raw.contentUVExtent : SIMD2<Float>(1, 1)
-                return [RenderTextureFrame(texture: texture, duration: .greatestFiniteMagnitude,
-                                           uvOrigin: .zero, uvAxisX: SIMD2<Float>(crop.x, 0), uvAxisY: SIMD2<Float>(0, crop.y))]
-            }
-            guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
-            let texture: MTLTexture
-            do {
-                texture = try SceneTextureUpload.texture(from: cgImage, loader: textureLoader, device: device)
-            } catch {
-                OWELog.error(.scene, "Could not upload a \(cgImage.width)×\(cgImage.height) image: \(error)")
-                return nil
-            }
-            return [RenderTextureFrame(texture: texture, duration: .greatestFiniteMagnitude,
-                                       uvOrigin: .zero, uvAxisX: SIMD2<Float>(1, 0), uvAxisY: SIMD2<Float>(0, 1))]
-        case let .dxt(source):
-            guard let texture = makeDXTTexture(source) else { return nil }
-            let crop = Self.contentUVExtent(source)
-            return [RenderTextureFrame(texture: texture, duration: .greatestFiniteMagnitude,
-                                       uvOrigin: .zero, uvAxisX: SIMD2<Float>(crop.x, 0), uvAxisY: SIMD2<Float>(0, crop.y))]
-        case let .video(stream):
-            // Stand-in until the first frame decodes; draw() swaps in the live texture.
-            guard let texture = stream.currentTexture() ?? makePlaceholderTexture() else { return nil }
-            return [RenderTextureFrame(texture: texture, duration: .greatestFiniteMagnitude,
-                                       uvOrigin: .zero, uvAxisX: SIMD2<Float>(1, 0), uvAxisY: SIMD2<Float>(0, 1))]
-        case let .animated(animation):
-            let textures = animation.images.compactMap { image -> MTLTexture? in
-                if let raw = TEXRawImageRep.of(image) { return raw.makeTexture(device: device) }
-                guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
-                do {
-                    return try SceneTextureUpload.texture(from: cgImage, loader: textureLoader, device: device)
-                } catch {
-                    OWELog.error(.scene, "Could not upload a \(cgImage.width)×\(cgImage.height) animation frame: \(error)")
-                    return nil
-                }
-            }
-            guard textures.count == animation.images.count else { return nil }
-            return animation.frames.compactMap { frame in
-                guard frame.imageIndex < textures.count else { return nil }
-                // Frame rects are in the atlas's pixels; the texture was made from those pixels,
-                // whatever size in points the image reports. WidthY/HeightX shear or turn the rect.
-                let atlas = textures[frame.imageIndex]
-                let atlasSize = SIMD2<Float>(Float(atlas.width), Float(atlas.height))
-                guard atlasSize.x > 0, atlasSize.y > 0 else { return nil }
-                return RenderTextureFrame(texture: textures[frame.imageIndex], duration: frame.duration,
-                                          uvOrigin: SIMD2<Float>(frame.x, frame.y) / atlasSize,
-                                          uvAxisX: SIMD2<Float>(frame.width, frame.widthY) / atlasSize,
-                                          uvAxisY: SIMD2<Float>(frame.heightX, frame.height) / atlasSize)
-            }
-        case .uploaded:
-            // Its pixels were dropped after its first upload; a new upload loads the file again.
-            OWELog.error(.scene, "An uploaded image was handed back for upload without its pixels")
-            return nil
-        }
-    }
-
-    /// The part of a padded .tex allocation the image covers, in UV units: the quad samples only
-    /// the image, never the padding around it.
-    static func contentUVExtent(_ texture: TEXCompressedTexture) -> SIMD2<Float> {
-        guard texture.width > 0, texture.height > 0, texture.contentWidth > 0, texture.contentHeight > 0 else {
-            return SIMD2(1, 1)
-        }
-        return simd_min(SIMD2(Float(texture.contentWidth) / Float(texture.width),
-                              Float(texture.contentHeight) / Float(texture.height)), SIMD2(1, 1))
-    }
-
-    private func makePlaceholderTexture() -> MTLTexture? {
-        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: 1, height: 1,
-                                                                  mipmapped: false)
-        descriptor.usage = [.shaderRead]
-        guard let texture = device.makeTexture(descriptor: descriptor) else { return nil }
-        var pixel: UInt32 = 0
-        texture.replace(region: MTLRegionMake2D(0, 0, 1, 1), mipmapLevel: 0, withBytes: &pixel, bytesPerRow: 4)
-        return texture
-    }
-
-    /// The layer's texture this frame: a video's current picture, or the sprite frame of an
-    /// animated texture from the instance's texture clocks (docs/timeline-plan.md §2.7, §3.2),
-    /// taken once per frame (a script's override advances each time it is asked).
-    private func textureFrame(for entry: PreparedLayer) -> RenderTextureFrame {
-        let frame = currentTextureFrame(for: entry)
-        // What a `layerimage` emitter sampling the layer again reads.
-        emitterImages.record(frame, layer: entry.layer.id)
-        return frame
-    }
-
-    private func currentTextureFrame(for entry: PreparedLayer) -> RenderTextureFrame {
-        // A puppet's image is its mesh's drawing, laid out like its source texture.
-        if entry.layer.puppet != nil, let albedo = puppetAlbedos[entry.layer.id] {
-            let source = entry.frames[0]
-            return RenderTextureFrame(texture: albedo, duration: source.duration, uvOrigin: source.uvOrigin,
-                                      uvAxisX: source.uvAxisX, uvAxisY: source.uvAxisY)
-        }
-        // A video layer's texture is replaced every frame, so the decoded frame list is only a seed.
-        if case let .video(stream) = entry.layer.source, let texture = stream.currentTexture() {
-            return RenderTextureFrame(texture: texture, duration: .greatestFiniteMagnitude,
-                                      uvOrigin: .zero, uvAxisX: SIMD2<Float>(1, 0), uvAxisY: SIMD2<Float>(0, 1))
-        }
-        // A system texture (the now-playing artwork) replaces the image while there is one.
-        if let kind = entry.layer.systemImage, let texture = systemTexture(kind) {
-            return RenderTextureFrame(texture: texture, duration: .greatestFiniteMagnitude,
-                                      uvOrigin: .zero, uvAxisX: SIMD2<Float>(1, 0), uvAxisY: SIMD2<Float>(0, 1))
-        }
-        guard entry.frames.count > 1, let id = Int(entry.layer.id) else { return entry.frames[0] }
-        let frame = timelines.spriteFrame(object: id, delta: Float(clock.delta))
-        drawProbe?.record(spriteFrame: frame, object: id)
-        // `setFrame(n)` isn't range-checked; a frame outside the sheet draws the first.
-        return frame >= 0 && Int(frame) < entry.frames.count ? entry.frames[Int(frame)] : entry.frames[0]
-    }
-
-
-    /// A system texture's image now; nil without one (or without script services).
-    private func systemTexture(_ kind: SceneSystemTexture) -> MTLTexture? {
-        mediaTextures?.texture(kind)
-    }
-
-    private func spriteSheetUV(for particle: Particle,
-                               configuration: SceneMetalParticleSystem) -> (origin: SIMD2<Float>, size: SIMD2<Float>) {
+    func spriteSheetUV(for particle: Particle,
+                       configuration: SceneMetalParticleSystem) -> (origin: SIMD2<Float>, size: SIMD2<Float>) {
         guard let sheet = configuration.spriteSheet, sheet.frames > 0 else {
             return (.zero, SIMD2<Float>(repeating: 1))
         }
@@ -4779,43 +820,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         return (SIMD2<Float>(Float(column) * size.x, Float(row) * size.y), size)
     }
 
-    private func makeDXTTexture(_ source: TEXCompressedTexture) -> MTLTexture? {
-        // DXT1/3/5 are BC1/BC2/BC3. Apple Silicon Macs consume those natively, so upload the
-        // blocks as-is, with every stored mipmap, instead of expanding them to rgba8Unorm through
-        // the decode kernel.
-        if SceneTextureUpload.blockFormat(for: source.format) != nil, device.supportsBCTextureCompression {
-            return SceneTextureUpload.blockCompressedTexture(source, device: device)
-        }
-        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm,
-                                                                    width: source.width, height: source.height,
-                                                                    mipmapped: false)
-        descriptor.usage = [.shaderRead, .shaderWrite]
-        descriptor.storageMode = .shared
-        guard let texture = device.makeTexture(descriptor: descriptor),
-              let input = device.makeBuffer(bytes: source.data, length: source.data.count, options: .storageModeShared),
-              let commandBuffer = commandQueue.makeCommandBuffer(),
-              let encoder = commandBuffer.makeComputeCommandEncoder() else {
-            return nil
-        }
-
-        var uniform = DXTDecodeUniform(width: UInt32(source.width), height: UInt32(source.height),
-                                       blockColumns: UInt32((source.width + 3) / 4), format: source.format)
-        encoder.setComputePipelineState(dxtDecodePipeline)
-        encoder.setBuffer(input, offset: 0, index: 0)
-        encoder.setTexture(texture, index: 0)
-        encoder.setBytes(&uniform, length: MemoryLayout<DXTDecodeUniform>.stride, index: 1)
-        let threads = MTLSize(width: 8, height: 8, depth: 1)
-        encoder.dispatchThreads(MTLSize(width: source.width, height: source.height, depth: 1), threadsPerThreadgroup: threads)
-        encoder.endEncoding()
-        commandBuffer.commit()
-        // Keep the decode asynchronous. Metal command buffers on the same queue
-        // preserve ordering, so later scene draws wait on this texture on-GPU
-        // without blocking the render/content thread here.
-        return texture
-    }
-
-    private func appendParticleTrail(_ particle: Particle, system: ParticleSystemRuntime,
-                                     drawableSize: SIMD2<Float>) {
+    func appendParticleTrail(_ particle: Particle, system: ParticleSystemRuntime,
+                             drawableSize: SIMD2<Float>) {
         let speed = simd_length(particle.velocity)
         // `ComputeParticleTrailTangents` (common_particles.h): the size times the speed's stretch,
         // clamped to `minlength`…`maxlength`.
@@ -4837,7 +843,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     /// Grows geometrically so a system that ramps up to its particle cap stops reallocating.
-    private func particleInstanceBuffer(for count: Int) -> MTLBuffer? {
+    func particleInstanceBuffer(for count: Int) -> MTLBuffer? {
         guard count > 0 else { return nil }
         let needed = MemoryLayout<LayerUniform>.stride * count
         if let buffer = particleInstanceStorage, buffer.length >= needed { return buffer }
@@ -4848,8 +854,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// Draws one rope per particle through its own position history, rather than one rope through
     /// the whole system as `rope` does.
-    private func appendRopeTrail(_ particle: Particle, system: ParticleSystemRuntime,
-                                 drawableSize: SIMD2<Float>) {
+    func appendRopeTrail(_ particle: Particle, system: ParticleSystemRuntime,
+                         drawableSize: SIMD2<Float>) {
         let configuration = system.configuration
         var trail = particle.orderedHistory
         // The newest sample lags by up to one interval, so close the gap to the particle itself.
@@ -4896,13 +902,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     /// One rope through the system's particles; one per instance of an instanced system.
-    private func appendRope(_ system: ParticleSystemRuntime, drawableSize: SIMD2<Float>) {
+    func appendRope(_ system: ParticleSystemRuntime, drawableSize: SIMD2<Float>) {
         for strand in ParticleRopeStrands.strands(system.particles) {
             appendRope(strand, system: system, drawableSize: drawableSize)
         }
     }
 
-    private func appendRope(_ particles: [Particle], system: ParticleSystemRuntime, drawableSize: SIMD2<Float>) {
+    func appendRope(_ particles: [Particle], system: ParticleSystemRuntime, drawableSize: SIMD2<Float>) {
         guard particles.count > 1 else { return }
         var spline: [(position: SIMD2<Float>, size: Float, color: SIMD4<Float>, opacity: Float)] = []
         let subdivision = max(system.configuration.ropeSubdivision, 1)
@@ -4955,7 +961,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     /// The particle's alpha (`alphafade` is one of its operators) with the material's multiplier.
-    private func particleOpacity(_ particle: Particle, in system: ParticleSystemRuntime) -> Float {
+    func particleOpacity(_ particle: Particle, in system: ParticleSystemRuntime) -> Float {
         particle.alpha * system.configuration.opacityMultiplier
     }
 }
