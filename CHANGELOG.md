@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Wallpaper Editor: importing an image with Crop transparent area** keeps the picture where it was in the full frame, as Wallpaper Engine does: the layer is placed by the crop's offset and the model records it as `cropoffset`, which Align with Background then uses.
 - **Wallpaper Editor: Character Sheet Creation** puts the new sheet layer at the scene's centre, as Wallpaper Engine does, instead of where the old layer was.
+### Added
+
+- **Puppet Warp blend rules**, as Wallpaper Engine plays them. A bone with a blend rule (Edit Constraints › Blend Rules) is pulled toward its target bone by the weight its clip keys: its position, rotation and scale move toward the target's, its children follow, and bone physics then acts on the result. A rig whose rule was deleted keeps still, as in Wallpaper Engine.
+- **Wallpaper Editor › Puppet Warp: blend rules**, as Wallpaper Engine's Edit Constraints › Blend Rules. In the Skeleton tool the selected bone's **Blend Rules** section adds a rule toward another bone or deletes one; in the Animate tool each rule's weight (0 to 1) is keyed at the current frame of the animation, and Add Key and Delete Key include it. The preview pulls the bone as the wallpaper will, and rules made in Wallpaper Engine open and save back.
 
 ## [1.0.0-beta.7] - 2026-10-16
 
