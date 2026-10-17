@@ -104,7 +104,7 @@ final class OrthographicAutoSceneTests: XCTestCase {
         ]
         for (path, text) in files { try Data(text.utf8).write(to: directory.appending(path: path)) }
         let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         return try XCTUnwrap(model.metalContent())
     }
 }

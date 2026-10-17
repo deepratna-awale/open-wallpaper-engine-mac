@@ -246,7 +246,7 @@ final class SceneSpatialDecodeTests: XCTestCase {
                                     (#"{"orthogonalprojection": {"auto": true}}"#, false)] {
             let scene = try decodeTolerant(WEScene.self, from: Data(#"{"camera": {}, "general": \#(json), "objects": []}"#.utf8))
             XCTAssertEqual(SceneCameraEffects(scene.general, in: SpatialProperties()).orthographic, !perspective, json)
-            XCTAssertEqual(SceneWallpaperViewModel.particlesUsePixelUnits(scene), !perspective, json)
+            XCTAssertEqual(SceneContentLoader.particlesUsePixelUnits(scene), !perspective, json)
             var content = SceneMetalContent(size: SIMD2(1920, 1080), layers: [], particleSystems: [],
                                             bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0,
                                                                       tint: SIMD3(repeating: 1)))

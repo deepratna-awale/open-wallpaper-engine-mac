@@ -82,7 +82,7 @@ final class LitLayerLibraryTests: XCTestCase {
         let roots = LightingLibraryDecodeTests.roots.filter { FileManager.default.fileExists(atPath: $0.path) }
         try XCTSkipIf(roots.count < LightingLibraryDecodeTests.roots.count, "wallpaper library not present")
         let item = try XCTUnwrap(try Self.litScenes(in: roots).first { $0.id == "2515150033" })
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: item.project, where: item.directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: item.project, where: item.directory))
         let content = try XCTUnwrap(model.metalContent())
         defer { Fixtures.removeStoredSettings(for: item.directory) }
         let scene = try Scene(content: content, services: services(), settings: SceneRenderSettings.headless)
@@ -110,7 +110,7 @@ final class LitLayerLibraryTests: XCTestCase {
     // MARK: - One scene
 
     private func sweep(_ item: Item) throws -> String {
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: item.project, where: item.directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: item.project, where: item.directory))
         guard let content = model.metalContent() else {
             XCTFail("\(item.id): no content")
             return "\(item.id)\tno content"
@@ -159,7 +159,7 @@ final class LitLayerLibraryTests: XCTestCase {
     /// One frame of `item` once its lit layers draw through their material; with `lights` off the
     /// content has no `lightconfig`, so only the ambient colour lights them.
     private func frame(of item: Item, lights: Bool) throws -> [UInt8] {
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: item.project, where: item.directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: item.project, where: item.directory))
         var content = try XCTUnwrap(model.metalContent())
         defer { Fixtures.removeStoredSettings(for: item.directory) }
         if !lights { content.lighting.settings.lightConfig = nil }

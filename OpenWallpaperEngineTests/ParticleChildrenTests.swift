@@ -63,7 +63,7 @@ final class ParticleChildrenTests: XCTestCase {
         addTeardownBlock {
             Fixtures.removeStoredSettings(for: directory)
         }
-        return try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
+        return try XCTUnwrap(SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
     }
 
     func testTheLoaderFlattensAFamilyDepthFirst() throws {

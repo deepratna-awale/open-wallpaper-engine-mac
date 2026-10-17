@@ -10,7 +10,7 @@ final class SceneSolidLayerBlendTests: XCTestCase {
         let directory = Fixtures.url("Scenes/solid-blend")
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/solid-blend/project.json"))
         addTeardownBlock { Fixtures.removeStoredSettings(for: directory) }
-        let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
+        let content = try XCTUnwrap(SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
         let layers = Dictionary(uniqueKeysWithValues: content.layers.map { ($0.id, $0) })
         let plain = try XCTUnwrap(layers["1"])
         XCTAssertNil(plain.imageMaterial, "a solid layer without a blend mode keeps its own draw")

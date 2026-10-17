@@ -83,7 +83,7 @@ final class SceneLightingSeamTests: XCTestCase {
         let directory = Fixtures.url("Scenes/lights")
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/lights/project.json"))
         addTeardownBlock { Fixtures.removeStoredSettings(for: directory) }
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         let content = try XCTUnwrap(model.metalContent())
         XCTAssertEqual(content.lighting.lights.map(\.id), ["116", "516", "39", "285", "2", "5", "900", "901"])
         XCTAssertEqual(content.lighting.lights.map(\.light.kind),

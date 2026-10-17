@@ -33,7 +33,7 @@ final class SceneTextEffectsTests: XCTestCase {
         let directory = Fixtures.url("Scenes/text-defaults")
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/text-defaults/project.json"))
         addTeardownBlock { Fixtures.removeStoredSettings(for: directory) }
-        let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
+        let content = try XCTUnwrap(SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
         let layers = Dictionary(uniqueKeysWithValues: content.layers.map { ($0.id, $0) })
         let effects = try XCTUnwrap(layers["3"]?.text?.effects)
         XCTAssertEqual(effects.outline?.thickness, 1.33)

@@ -34,7 +34,7 @@ final class ParticleSimulationSweepTests: XCTestCase {
             defer {
                 if !hadSettings { keys.forEach(UserDefaults.app.removeObject(forKey:)) }
             }
-            guard let content = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent()
+            guard let content = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory)).metalContent()
             else { continue }
             let extent = max(content.size.x, content.size.y)
             // Families step together, parents first, as the renderer steps them.

@@ -42,9 +42,9 @@ enum TimelineLibraryScenes {
         return items
     }
 
-    /// The item's content as the app builds it (`SceneWallpaperViewModel`, the real loader).
+    /// The item's content as the app builds it (`SceneContentLoader`, the real loader).
     static func content(of item: Item) throws -> SceneMetalContent {
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: item.project, where: item.directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: item.project, where: item.directory))
         return try XCTUnwrap(model.metalContent(), "\(item.id): no content")
     }
 }

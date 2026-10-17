@@ -365,11 +365,11 @@ final class TexturePreparationLibraryTests: XCTestCase {
     }
 
     private func load(_ wallpaper: WEWallpaper, optimise: Bool) throws -> (content: SceneMetalContent, seconds: Double) {
-        SceneWallpaperViewModel.dropSharedParses()
+        SceneContentLoader.dropSharedParses()
         var settings = SceneRenderSettings()
         settings.particleBudget = .unlimited
         settings.optimiseTextures = optimise
-        let model = SceneWallpaperViewModel(wallpaper: wallpaper)
+        let model = SceneContentLoader(wallpaper: wallpaper)
         model.setRenderSettings(settings)
         let start = CACurrentMediaTime()
         let content = try XCTUnwrap(model.metalContent(), "\(wallpaper.project.title): no content")

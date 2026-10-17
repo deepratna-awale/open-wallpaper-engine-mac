@@ -71,7 +71,7 @@ enum ScreenSaverLiveSpikeCommand {
                   let project = try? JSONDecoder().decode(WEProject.self, from: data),
                   let renderer = SceneMetalRenderer(pixelFormat: .bgra8Unorm, scriptServices: nil, screenID: "spike-shared")
             else { return 1 }
-            let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: folder))
+            let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: folder))
             let pixels = SIMD2(Float(size.x), Float(size.y))
             let settings = SceneRenderSettings(GlobalSettings(), outputPixels: pixels, sceneSize: model.textureReductionSceneSize)
             model.setRenderSettings(settings)

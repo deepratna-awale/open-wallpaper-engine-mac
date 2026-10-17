@@ -60,7 +60,7 @@ final class WorkshopPresetItemTests: XCTestCase {
             as? [String: [String: Any]] ?? [:]
         let scene = try JSONDecoder().decode(WEScene.self, from: Data(
             #"{"camera":{},"general":{"orthogonalprojection":{"width":100,"height":100}},"objects":[]}"#.utf8))
-        let values = SceneWallpaperViewModel.userPropertyValues(stored: stored, declared: declared, scene: scene)
+        let values = SceneContentLoader.userPropertyValues(stored: stored, declared: declared, scene: scene)
         XCTAssertEqual(values["hidenumberswindow"], "false")
         XCTAssertEqual(values["leftimagewindowheader"], "CALM")
         XCTAssertEqual(values["city1"], "TYO")

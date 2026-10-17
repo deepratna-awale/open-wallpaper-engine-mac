@@ -3,7 +3,7 @@ import OWEControlProtocol
 import OWESceneEditing
 
 /// What `add_layer` sizes and places a new layer by when the request leaves it out: the scene as
-/// the renderer draws it (`SceneWallpaperViewModel.sceneSize(of:)`, WE's canvas, 0x14018b2c0) and
+/// the renderer draws it (`SceneContentLoader.sceneSize(of:)`, WE's canvas, 0x14018b2c0) and
 /// an image model's own size.
 enum SceneAddLayerDefaults {
     /// The edited scene's drawn size, and where a new layer goes: its centre, a 3D scene's origin
@@ -21,7 +21,7 @@ enum SceneAddLayerDefaults {
             OWELog.error(.app, "MCP: add_layer can't read the scene's size: \(error)")
             throw ControlError(.failed, "The scene's size can't be read: \(error.localizedDescription)")
         }
-        let size = SIMD2<Double>(SceneWallpaperViewModel.sceneSize(of: scene))
+        let size = SIMD2<Double>(SceneContentLoader.sceneSize(of: scene))
         return (size, scene.general.projection == .perspective ? .zero : size / 2)
     }
 

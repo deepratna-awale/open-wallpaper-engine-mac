@@ -144,7 +144,7 @@ private final class SceneInspectorModel: ObservableObject {
     private var propertyDefaults: [String: String] = [:]
     /// The size the renderer draws the scene at (`SceneDrawnSize`): the iPhone & iPad and Android
     /// Exports' crops frame the drawn scene, in their previews and their renders alike.
-    private(set) var sceneSize = SIMD2<Double>(SceneWallpaperViewModel.defaultCanvas)
+    private(set) var sceneSize = SIMD2<Double>(SceneContentLoader.defaultCanvas)
 
     private let directory: URL
     private let package: PKGParser?
@@ -179,7 +179,7 @@ private final class SceneInspectorModel: ObservableObject {
               let scene = try? JSONDecoder().decode(WEScene.self, from: sceneData),
               let sceneJSON = try? JSONSerialization.jsonObject(with: sceneData) as? [String: Any],
               let rawObjects = sceneJSON["objects"] as? [[String: Any]] else {
-            if SceneWallpaperViewModel.isVideoType(wallpaper.project.type) {
+            if SceneContentLoader.isVideoType(wallpaper.project.type) {
                 buildVideoLayers(for: wallpaper)
             } else {
                 errorMessage = String(localized: "Unable to read the scene definition.")
@@ -667,7 +667,7 @@ private final class SceneInspectorModel: ObservableObject {
         } catch {
             OWELog.error(.ui, "Scene Edit / Export: no drawn size for \(wallpaper.wallpaperDirectory.lastPathComponent), framing the authored scene: \(error)")
             let read = SceneImageSize.reader(for: wallpaper)
-            return SIMD2<Double>(SceneWallpaperViewModel.sceneSize(of: scene) { SceneImageSize.of(model: $0, readAsset: read) })
+            return SIMD2<Double>(SceneContentLoader.sceneSize(of: scene) { SceneImageSize.of(model: $0, readAsset: read) })
         }
     }
 
@@ -1084,7 +1084,7 @@ struct SceneInspectorView: View {
                     // A file AVFoundation can't read (WebM, a remote video) has no export to frame.
                     var size: SIMD2<Double>?
                     if ScreenSaverVideoSource.isEligible(wallpaper) { size = await SceneEditorModes.videoSize(of: wallpaper.mediaURL) }
-                    videoSize = size ?? SIMD2<Double>(SceneWallpaperViewModel.defaultCanvas)
+                    videoSize = size ?? SIMD2<Double>(SceneContentLoader.defaultCanvas)
                 }
         } else if let exportModel {
             SceneInspectorContent(wallpaper: wallpaper, scopes: [exportModel.session.scope], isolated: exportModel.session,

@@ -14,7 +14,7 @@ import Foundation
 /// QoS, so the visible scene's (user-initiated) ahead of prewarming (background) (`PriorityGate`).
 /// `lock` owns `channel`, `lastUsed`, `nextID` and `statistics`.
 ///
-/// One per app process: the app's single translator (`SceneWallpaperViewModel.defaultEffectTranslator`)
+/// One per app process: the app's single translator (`SceneContentLoader.defaultEffectTranslator`)
 /// owns it, so every wallpaper instance and display shares one helper; an isolated copy is its
 /// own process with its own.
 final class HelperShaderCompiler: ShaderCompiler {

@@ -123,7 +123,7 @@ final class ParticleBudgetTests: XCTestCase {
         let directory = Fixtures.url("Scenes/particle-budget")
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/particle-budget/project.json"))
         addTeardownBlock { Fixtures.removeStoredSettings(for: directory) }
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         var settings = SceneRenderSettings()
         settings.particleBudget = .unlimited
         model.setRenderSettings(settings)

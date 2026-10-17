@@ -54,10 +54,10 @@ final class SceneShaderCompatTests: XCTestCase {
     func testWorkshopIdComesFromProjectThenFolder() {
         var project = WEProject(file: "scene.json", preview: "p.jpg", title: "t", type: "scene")
         let folder = URL(fileURLWithPath: "/tmp/owe/2084198056")
-        XCTAssertEqual(SceneWallpaperViewModel.workshopId(of: WEWallpaper(using: project, where: folder)), "2084198056")
+        XCTAssertEqual(SceneContentLoader.workshopId(of: WEWallpaper(using: project, where: folder)), "2084198056")
         project.workshopid = .int(42)
-        XCTAssertEqual(SceneWallpaperViewModel.workshopId(of: WEWallpaper(using: project, where: folder)), "42")
+        XCTAssertEqual(SceneContentLoader.workshopId(of: WEWallpaper(using: project, where: folder)), "42")
         project.workshopid = nil
-        XCTAssertNil(SceneWallpaperViewModel.workshopId(of: WEWallpaper(using: project, where: URL(fileURLWithPath: "/tmp/owe/mine"))))
+        XCTAssertNil(SceneContentLoader.workshopId(of: WEWallpaper(using: project, where: URL(fileURLWithPath: "/tmp/owe/mine"))))
     }
 }

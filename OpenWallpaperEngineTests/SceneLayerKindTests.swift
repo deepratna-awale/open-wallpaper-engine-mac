@@ -11,7 +11,7 @@ final class SceneLayerKindTests: XCTestCase {
         addTeardownBlock {
             Fixtures.removeStoredSettings(for: directory)
         }
-        return try XCTUnwrap(SceneWallpaperViewModel(wallpaper: wallpaper).metalContent())
+        return try XCTUnwrap(SceneContentLoader(wallpaper: wallpaper).metalContent())
     }
 
     /// The colour of the generated solid texture, read back through a known RGBA8 context.

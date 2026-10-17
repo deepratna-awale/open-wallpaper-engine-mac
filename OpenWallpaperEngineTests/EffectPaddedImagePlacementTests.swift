@@ -101,7 +101,7 @@ final class EffectPaddedImagePlacementTests: XCTestCase {
             try? FileManager.default.removeItem(at: directory) // scratch cleanup
         }
         let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
-        let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
+        let content = try XCTUnwrap(SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
         let layer = try XCTUnwrap(content.layers.first)
         XCTAssertEqual(layer.weEffects.isEmpty, !effect, "effects built")
         let size = Self.display

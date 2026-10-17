@@ -10,7 +10,7 @@ final class WETextDefaultsTests: XCTestCase {
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/text-defaults/project.json"))
         let wallpaper = WEWallpaper(using: project, where: directory)
         addTeardownBlock { Fixtures.removeStoredSettings(for: directory) }
-        let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: wallpaper).metalContent())
+        let content = try XCTUnwrap(SceneContentLoader(wallpaper: wallpaper).metalContent())
         return Dictionary(uniqueKeysWithValues: content.layers.compactMap { layer in layer.text.map { (layer.id, $0) } })
     }
 

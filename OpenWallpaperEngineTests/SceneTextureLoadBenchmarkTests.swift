@@ -83,7 +83,7 @@ final class SceneTextureLoadBenchmarkTests: XCTestCase {
     private func measure(_ project: WEProject, directory: URL, drawable: SIMD2<Int>, particles: Bool) throws -> Run {
         var run = Run()
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         let buildStart = CACurrentMediaTime()
         let built = try XCTUnwrap(model.metalContent())
         run.buildMilliseconds = (CACurrentMediaTime() - buildStart) * 1000

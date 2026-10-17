@@ -165,7 +165,7 @@ final class SceneFrameBenchmarkTests: XCTestCase {
             }
             let restore = Self.keepStoredSettings(directory: directory, projectData: data)
             defer { restore() }
-            let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+            let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
             var unlimited = SceneRenderSettings()
             unlimited.particleBudget = .unlimited
             model.setRenderSettings(unlimited)

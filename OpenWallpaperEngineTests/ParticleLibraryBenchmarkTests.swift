@@ -50,7 +50,7 @@ final class ParticleLibraryBenchmarkTests: XCTestCase {
             defer {
                 if !hadSettings { keys.forEach(UserDefaults.app.removeObject(forKey:)) }
             }
-            guard let content = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent(),
+            guard let content = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory)).metalContent(),
                   !content.particleSystems.isEmpty else { continue }
             var row = Row(id: id, systems: content.particleSystems.count)
             try simulationCost(content, device: device, queue: queue, texture: texture, into: &row)

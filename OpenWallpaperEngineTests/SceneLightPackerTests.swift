@@ -347,7 +347,7 @@ final class SceneLightPackerTests: XCTestCase {
     private func frameLighting(objects: [WESceneObject], general: WESceneGeneral) -> SceneFrameLighting {
         let context = NoPropertiesContext()
         let content = SceneLightingContent(settings: SceneLightingSettings(general, in: context),
-                                           lights: SceneWallpaperViewModel.lights(in: objects, context: context))
+                                           lights: SceneContentLoader.lights(in: objects, context: context))
         let locals = Dictionary(uniqueKeysWithValues: objects.compactMap { object in
             object.id.map { (String($0), SceneLocalTransform(object: object)) }
         })

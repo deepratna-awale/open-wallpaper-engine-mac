@@ -60,7 +60,7 @@ final class LightingFrameBenchmarkTests: XCTestCase {
             defer { Fixtures.removeStoredSettings(for: directory) }
             for size in sizes {
                 for mode in Self.modes {
-                    let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+                    let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
                     model.setRenderSettings(mode.settings)
                     guard let content = model.metalContent() else { continue }
                     let services = SceneScriptServices(prelude: SceneScriptPrelude.load(),

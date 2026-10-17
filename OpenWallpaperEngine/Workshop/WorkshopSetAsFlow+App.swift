@@ -11,7 +11,7 @@ extension WorkshopSetAsFlow.Environment {
                 DownloadedWallpaperIndex.shared.contains(id) && !steamCmd.dependencyIndex.contains(id)
             },
             installedWallpaper: { id in
-                library.allWallpapers.first { SceneWallpaperViewModel.workshopId(of: $0) == id }
+                library.allWallpapers.first { SceneContentLoader.workshopId(of: $0) == id }
             },
             canDownload: { steamCmd.isLoggedIn && steamCmd.steamCmdPath != nil },
             download: { item, completion in

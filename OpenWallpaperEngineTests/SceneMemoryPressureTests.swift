@@ -78,7 +78,7 @@ final class SceneMemoryPressureTests: XCTestCase {
 
     private func layer(_ id: String, color: [Double], size: Float, order: Int) -> SceneMetalLayer {
         var layer = SceneMetalLayer(
-            id: id, name: id, source: .image(SceneWallpaperViewModel.pixelImage(color)), position: SIMD2(size / 2, size / 2),
+            id: id, name: id, source: .image(SceneContentLoader.pixelImage(color)), position: SIMD2(size / 2, size / 2),
             size: SIMD2(size, size), scale: SIMD2(1, 1), opacity: 1, brightness: 1, color: SIMD4(repeating: 1), text: nil,
             parallaxDepth: .zero, perspective: false, rotation: 0)
         layer.order = order

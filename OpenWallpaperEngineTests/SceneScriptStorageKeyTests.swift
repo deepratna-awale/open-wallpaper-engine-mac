@@ -42,7 +42,7 @@ final class SceneScriptStorageKeyTests: XCTestCase {
         XCTAssertNotEqual(key, SceneScriptStorageKey.key(forWallpaperDirectory: try folder("Other")))
         // Non-ASCII digits are not a Steam id.
         XCTAssertTrue(SceneScriptStorageKey.key(forWallpaperDirectory: try folder("١٢٣")).hasPrefix("local-"))
-        XCTAssertEqual(SceneWallpaperViewModel.localWallpaperID(named), key)
+        XCTAssertEqual(SceneContentLoader.localWallpaperID(named), key)
     }
 
     // MARK: - Which legacy store to adopt

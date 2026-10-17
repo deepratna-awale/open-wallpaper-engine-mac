@@ -125,7 +125,7 @@ final class SceneDetailEquivalenceTests: XCTestCase {
     private func frames(_ project: WEProject, directory: URL, drawable: SIMD2<Int>,
                         settings: SceneRenderSettings) throws -> [Frame] {
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         model.setRenderSettings(settings)
         let built = try XCTUnwrap(model.metalContent())
         // Without particles: two renderers' GPU simulations don't draw the same particles.

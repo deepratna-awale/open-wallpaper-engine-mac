@@ -63,8 +63,8 @@ enum DepthMapSceneCapture {
         let edits = Self.overlay(request.overlay, drawing: request.drawnLayers, of: request.allLayers)
         let settings = LivePhotoRenderer.renderSettings(from: OffscreenRendering.globalSettings(from: .app))
         // The scene is read and its content built off the main thread, as the app's instances do.
-        let (model, content) = try await Task.detached(priority: .userInitiated) { () throws -> (SceneWallpaperViewModel, SceneMetalContent) in
-            let model = SceneWallpaperViewModel(wallpaper: wallpaper, overlay: edits)
+        let (model, content) = try await Task.detached(priority: .userInitiated) { () throws -> (SceneContentLoader, SceneMetalContent) in
+            let model = SceneContentLoader(wallpaper: wallpaper, overlay: edits)
             model.setRenderSettings(settings)
             guard let content = model.metalContent() else { throw Failure.noScene }
             return (model, content)

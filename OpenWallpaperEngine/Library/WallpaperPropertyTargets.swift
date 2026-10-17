@@ -100,7 +100,7 @@ struct WallpaperPropertyTargets {
 
     /// Hands a store's whole set of values to its running wallpaper: keys missing from them are
     /// dropped there too, and the wallpaper applies the change live or rebuilds what it needs
-    /// (`SceneWallpaperViewModel.impact(of:)`).
+    /// (`SceneContentLoader.impact(of:)`).
     static func publishReplacing(_ runtimeKey: String, _ values: [String: String]) {
         WallpaperServices.shared.setUserProperties(values, wallpaper: runtimeKey, replacing: true)
     }

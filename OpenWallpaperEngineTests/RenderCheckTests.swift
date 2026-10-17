@@ -14,7 +14,7 @@ final class RenderCheckTests: XCTestCase {
         defer {
             Fixtures.removeStoredSettings(for: directory)
         }
-        let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: wallpaper).metalContent())
+        let content = try XCTUnwrap(SceneContentLoader(wallpaper: wallpaper).metalContent())
         let ids = Set(content.layers.map(\.id))
         XCTAssertTrue(ids.contains("1"), "text layer missing; layers: \(ids)")
         // Kept, but it samples _rt_FullFrameBuffer, which is still a transparent placeholder (B1);
@@ -38,7 +38,7 @@ final class RenderCheckTests: XCTestCase {
         let directory = Fixtures.url("Scenes/zero-size-solid")
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/zero-size-solid/project.json"))
         defer { Fixtures.removeStoredSettings(for: directory) }
-        let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
+        let content = try XCTUnwrap(SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let view = MTKView(frame: CGRect(x: 0, y: 0, width: size.x, height: size.y), device: device)
         view.colorPixelFormat = .bgra8Unorm
@@ -82,7 +82,7 @@ final class RenderCheckTests: XCTestCase {
         let directory = Fixtures.url("Scenes/solid-effect")
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/solid-effect/project.json"))
         defer { Fixtures.removeStoredSettings(for: directory) }
-        let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
+        let content = try XCTUnwrap(SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
         let layer = try XCTUnwrap(content.layers.first)
         XCTAssertEqual(layer.solidFill, SIMD4(0, 0, 1, 1))
         try XCTSkipIf(layer.weEffects.isEmpty, "no shader toolchain for the fixture's effect")
@@ -128,7 +128,7 @@ final class RenderCheckTests: XCTestCase {
         let directory = Fixtures.url("Scenes/solid-position-effect")
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/solid-position-effect/project.json"))
         defer { Fixtures.removeStoredSettings(for: directory) }
-        let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
+        let content = try XCTUnwrap(SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
         let layer = try XCTUnwrap(content.layers.first)
         XCTAssertEqual(layer.solidBlending, "translucent", "WE's solidlayer material's blending")
         try XCTSkipIf(layer.weEffects.isEmpty, "no shader toolchain for the fixture's effect")
@@ -179,7 +179,7 @@ final class RenderCheckTests: XCTestCase {
         let directory = Fixtures.url("Scenes/brightness")
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/brightness/project.json"))
         defer { Fixtures.removeStoredSettings(for: directory) }
-        let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
+        let content = try XCTUnwrap(SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
         func centre(_ postProcessing: GSPostProcessingQuality) throws -> UInt8 {
             let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
             let view = MTKView(frame: CGRect(x: 0, y: 0, width: size.x, height: size.y), device: device)
@@ -223,13 +223,13 @@ final class RenderCheckTests: XCTestCase {
         let projectData = try Fixtures.data("Scenes/audio-bars/project.json")
         let project = try JSONDecoder().decode(WEProject.self, from: projectData)
         defer { Fixtures.removeStoredSettings(for: directory) }
-        let hidden = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
+        let hidden = try XCTUnwrap(SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
         XCTAssertEqual(hidden.visibility["2"], false, "the property's default hides the bars")
 
         let identity = WallpaperSettingsIdentity.resolve(directory: directory)
         UserDefaults.app.set(["bars": "true"], forKey: identity.key(.userProperties))
         UserDefaults.app.set(true, forKey: identity.key(.explicitUserProperties))
-        let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
+        let content = try XCTUnwrap(SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
         XCTAssertEqual(content.visibility["2"], true, "the property shows the bars")
         let bars = try XCTUnwrap(content.layers.first { $0.id == "2" })
         XCTAssertTrue(bars.sceneInput, "a passthrough composition layer draws over the scene under it")

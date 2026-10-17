@@ -41,7 +41,7 @@ final class VolumetricsLibraryTests: XCTestCase {
     func testHinatasCookieSpotDrawsItsVolume() throws {
         _ = try Fixtures.assets()
         let (directory, project) = try wallpaper("3352730400")
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         defer { Fixtures.removeStoredSettings(for: directory) }
         let content = try XCTUnwrap(model.metalContent())
         let plan = try XCTUnwrap(content.volumetrics, "Hinata's volumetrics weren't planned")
@@ -98,7 +98,7 @@ final class VolumetricsLibraryTests: XCTestCase {
     func testHinatasVolumeFollowsTheCameraShake() throws {
         _ = try Fixtures.assets()
         let (directory, project) = try wallpaper("3352730400")
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         defer { Fixtures.removeStoredSettings(for: directory) }
         var content = try XCTUnwrap(model.metalContent())
         content.camera.shake = true
@@ -155,7 +155,7 @@ final class VolumetricsLibraryTests: XCTestCase {
     func testSnowflakesVolumesCompileWithTheScenesFog() throws {
         _ = try Fixtures.assets()
         let (directory, project) = try wallpaper("3378346807")
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         defer { Fixtures.removeStoredSettings(for: directory) }
         var settings = SceneRenderSettings()
         settings.volumetrics = .high
@@ -246,7 +246,7 @@ final class VolumetricsLibraryTests: XCTestCase {
         var report = "scene\tshadows\tplanned\tskipped\n"
         for (id, expected) in Self.testSet.sorted(by: { $0.key < $1.key }) {
             let (scene, directory) = try decodedScene(id)
-            let lights = SceneWallpaperViewModel.lights(in: scene.objects, context: StaticContext())
+            let lights = SceneContentLoader.lights(in: scene.objects, context: StaticContext())
             XCTAssertTrue(scene.general.projection.isPerspective, "\(id) is 3D")
             for (shadows, want) in [(GSLightingQuality.medium, expected.planned), (.disabled, expected.withoutShadows)] {
                 var settings = SceneRenderSettings()
@@ -278,7 +278,7 @@ final class VolumetricsLibraryTests: XCTestCase {
         var report = "scene\tlight\tshape\tcamera inside\tlit texels\n"
         for (id, lightID) in [("3233200129", "24"), ("3453730450", "39")] {
             let (scene, directory) = try decodedScene(id)
-            let lights = SceneWallpaperViewModel.lights(in: scene.objects, context: StaticContext())
+            let lights = SceneContentLoader.lights(in: scene.objects, context: StaticContext())
             let spatial = SceneSpatialContentBuilder(
                 readFile: { FileManager.default.contents(atPath: directory.appending(path: $0).path) },
                 wallpaperName: id).build(scene, context: StaticContext())

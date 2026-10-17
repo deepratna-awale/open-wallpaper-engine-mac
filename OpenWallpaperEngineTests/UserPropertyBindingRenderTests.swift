@@ -75,7 +75,7 @@ final class UserPropertyBindingRenderTests: XCTestCase {
         static let size = SIMD2(256, 64)
         let directory = Fixtures.url("Scenes/binding-kinds")
         let wallpaper: WEWallpaper
-        let model: SceneWallpaperViewModel
+        let model: SceneContentLoader
         let renderer: SceneMetalRenderer
         let view: MTKView
         var key: String { model.propertyStoreKey }
@@ -84,7 +84,7 @@ final class UserPropertyBindingRenderTests: XCTestCase {
             if !keepingSettings { Fixtures.removeStoredSettings(for: directory) }
             let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/binding-kinds/project.json"))
             wallpaper = WEWallpaper(using: project, where: directory)
-            model = SceneWallpaperViewModel(wallpaper: wallpaper)
+            model = SceneContentLoader(wallpaper: wallpaper)
             let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
             view = MTKView(frame: CGRect(x: 0, y: 0, width: Self.size.x, height: Self.size.y), device: device)
             view.colorPixelFormat = .bgra8Unorm

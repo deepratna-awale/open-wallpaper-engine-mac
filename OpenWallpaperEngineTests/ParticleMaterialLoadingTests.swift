@@ -10,7 +10,7 @@ final class ParticleMaterialLoadingTests: XCTestCase {
         addTeardownBlock {
             Fixtures.removeStoredSettings(for: directory)
         }
-        return try XCTUnwrap(SceneWallpaperViewModel(wallpaper: wallpaper).metalContent())
+        return try XCTUnwrap(SceneContentLoader(wallpaper: wallpaper).metalContent())
     }
 
     /// The built-in draw's refraction look-alike (sprites faded to the refract amount, drawn

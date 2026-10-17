@@ -10,7 +10,7 @@ final class SceneFrameHarness {
     let renderer: SceneMetalRenderer
     let view: MTKView
     let directory: URL
-    let model: SceneWallpaperViewModel
+    let model: SceneContentLoader
     let size: SIMD2<Int>
     /// The wall clock the renderer reads.
     var now: CFTimeInterval = 1000
@@ -24,7 +24,7 @@ final class SceneFrameHarness {
         self.size = size
         model = try OWEPhaseTiming.measure(.sceneLoad) {
             let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
-            return SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory), propertyScope: scope)
+            return SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory), propertyScope: scope)
         }
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         view = MTKView(frame: CGRect(x: 0, y: 0, width: size.x, height: size.y), device: device)

@@ -23,7 +23,7 @@ struct ExportLibraryPicker: View {
             switch self {
             case .all: return true
             case .scene: return type == "scene"
-            case .video: return SceneWallpaperViewModel.isVideoType(type)
+            case .video: return SceneContentLoader.isVideoType(type)
             case .web: return type == "web"
             }
         }

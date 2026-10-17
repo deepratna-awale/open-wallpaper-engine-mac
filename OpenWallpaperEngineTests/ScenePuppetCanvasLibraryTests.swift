@@ -52,7 +52,7 @@ final class ScenePuppetCanvasLibraryTests: XCTestCase {
     /// Frames at 1, 2, … 6 s of `directory`'s scene (with only object `only` shown), RGBA.
     private func sceneFrames(_ directory: URL, only: String?) throws -> [[UInt8]] {
         let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         var content = try XCTUnwrap(model.metalContent())
         defer { Fixtures.removeStoredSettings(for: directory) }
         XCTAssertNotNil(content.layers.first { $0.id == Self.puppet }?.puppet, "layer 21 is a puppet")

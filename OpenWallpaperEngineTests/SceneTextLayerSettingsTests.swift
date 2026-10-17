@@ -24,7 +24,7 @@ final class SceneTextLayerSettingsTests: XCTestCase {
         let kept = SceneTextLayerSettings.removingLayerValues(from: stored, matching: [edited, authored])
         XCTAssertEqual(kept, ["_owe_text_7_bold": "true", "speed": "2"])
         // With them gone, the running values follow the edited layer.
-        let values = SceneWallpaperViewModel.userPropertyValues(stored: kept, declared: [:], scene: try scene(font: "b.ttf", size: 40))
+        let values = SceneContentLoader.userPropertyValues(stored: kept, declared: [:], scene: try scene(font: "b.ttf", size: 40))
         XCTAssertEqual(values["_owe_text_7_font"], "b.ttf")
         XCTAssertEqual(values["_owe_text_7_size"], "40.0")
     }

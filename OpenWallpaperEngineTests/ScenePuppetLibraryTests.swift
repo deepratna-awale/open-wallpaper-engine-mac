@@ -79,7 +79,7 @@ final class ScenePuppetLibraryTests: XCTestCase {
         Fixtures.removeStoredSettings(for: directory)
         defer { Fixtures.removeStoredSettings(for: directory) }
         let project = try decodeTolerant(WEProject.self, from: Data(contentsOf: projectURL))
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         let content = try XCTUnwrap(model.metalContent())
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let size = SIMD2<Float>(1920, 1080)
@@ -146,7 +146,7 @@ final class ScenePuppetLibraryTests: XCTestCase {
     // MARK: - One scene
 
     private func sweep(_ item: Item, output: URL?) throws -> String {
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: item.project, where: item.directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: item.project, where: item.directory))
         var content = try XCTUnwrap(model.metalContent(), "\(item.id): no content")
         defer { Fixtures.removeStoredSettings(for: item.directory) }
         var plans: [String: ScenePuppetPlan] = [:]

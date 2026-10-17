@@ -38,7 +38,7 @@ final class WallpaperScreenshotTests: XCTestCase {
         let directory = Fixtures.url("Scenes/text-retina")
         defer { Fixtures.removeStoredSettings(for: directory) }
         let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         let content = try XCTUnwrap(model.metalContent())
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let points = SIMD2<Float>(480, 272)

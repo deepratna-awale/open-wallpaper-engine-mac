@@ -55,7 +55,7 @@ final class BloomLibrarySweepTests: XCTestCase {
     // MARK: - One scene
 
     private func sweep(_ item: Item) throws -> String {
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: item.project, where: item.directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: item.project, where: item.directory))
         guard let content = model.metalContent() else {
             XCTFail("\(item.id): no content")
             return "\(item.id)\tno content"

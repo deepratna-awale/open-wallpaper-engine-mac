@@ -5,7 +5,7 @@ import OWESceneEditing
 /// The Wallpaper Editor's image layer fields reach the player: the fields the session writes
 /// into the overlay are what the scene's object decodes, and the material Lighting & Reflections
 /// writes is a document the scene's build reads in place of the file (`editorFileData`,
-/// `SceneWallpaperViewModel.setEditorAssets`), as the player's material type.
+/// `SceneContentLoader.setEditorAssets`), as the player's material type.
 @MainActor
 final class WallpaperEditorLayerFieldsTests: XCTestCase {
     private static let sceneJSON = """

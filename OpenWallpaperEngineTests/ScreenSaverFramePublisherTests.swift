@@ -196,7 +196,7 @@ final class ScreenSaverFramePublisherTests: XCTestCase {
         _ = try Fixtures.assets()
         let directory = Fixtures.url("Scenes/still-layers")
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/still-layers/project.json"))
-        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         let renderer = try XCTUnwrap(SceneMetalRenderer(pixelFormat: .bgra8Unorm, scriptServices: nil, screenID: "test-lend"))
         let loop = SceneRenderLoop(renderer: renderer, name: "test lend")
         defer {

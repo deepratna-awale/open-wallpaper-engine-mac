@@ -106,7 +106,7 @@ All findings are confirmed from the code unless marked *suspected*.
 
 ### L2. `createLayer` asset paths are not confined to the wallpaper
 
-- **Where:** `OpenWallpaperEngine/Scene/Loading/SceneScriptSceneDescriber.swift:87-111`, `SceneWallpaperViewModel.swift:814-834`.
+- **Where:** `OpenWallpaperEngine/Scene/Loading/SceneScriptSceneDescriber.swift:87-111`, `SceneContentLoader.swift:814-834`.
 - **Scenario:** a script asks for a layer whose asset path points outside the wallpaper and assets folders. JSON files there are read and parsed.
 - **Fix:** resolve paths with the same confined resolver as the loader (see M4) and reject anything outside the allowed roots.
 

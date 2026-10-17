@@ -28,7 +28,7 @@ enum SceneEditorModes {
     }
 
     static func isVideo(_ wallpaper: WEWallpaper) -> Bool {
-        SceneWallpaperViewModel.isVideoType(wallpaper.project.type)
+        SceneContentLoader.isVideoType(wallpaper.project.type)
     }
 
     /// The modes `wallpaper` shows, in the toolbar's order.

@@ -255,7 +255,7 @@ final class LivePhotoRenderer {
         let services = SceneScriptServices(prelude: SceneScriptPrelude.load(),
                                            storage: SceneScriptStorage(directory: scratch),
                                            media: SilentMediaSession(), spectrum: { .silent })
-        let model = SceneWallpaperViewModel(wallpaper: wallpaper)
+        let model = SceneContentLoader(wallpaper: wallpaper)
         let settings = Self.renderSettings(from: OffscreenRendering.globalSettings(from: defaults))
         model.setRenderSettings(settings)
         guard let content = model.metalContent(),
