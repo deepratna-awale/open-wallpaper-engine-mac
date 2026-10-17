@@ -7,7 +7,8 @@ import simd
 ///   meshes' boxes, ±131072 without one: model data +0x1b8 / +0x1c4).
 /// - Its **hit boxes** are the skeleton's optional per-bone `{vec3, mat4}` block
 ///   (`MDLSkeleton.boneVectors`, model data +0x1a0, 0x4c bytes a bone): half extents and the box's
-///   frame in its bone's space. They don't decide the hit; they name it (`CursorEvent.hitBox`),
+///   frame in its bone's space. WE's editor compiles one per bone into a Puppet Warp rig: the
+///   bounds of the vertices the bone moves (capture 538). They don't decide the hit; they name it (`CursorEvent.hitBox`),
 ///   and on a model also give the local position.
 /// - A puppet tries its hit boxes in its bones' draw-depth order (`MDLSkeleton.boneIndices`, model
 ///   data +0x1d0), from the end: without that order it has none to try.

@@ -422,6 +422,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private let perspectiveCameraLock = NSLock()
     private var perspectiveCamera: SceneFrameCamera?
     var lastPerspectiveCamera: SceneFrameCamera? { perspectiveCameraLock.withLock { perspectiveCamera } }
+    /// The puppets' posed hit boxes, for the Wallpaper Editor's Show Hitboxes (its own lock).
+    let puppetHitBoxes = ScenePuppetHitBoxFeed()
     private var placement: WallpaperPlacement = .fill
     /// Drawable pixels per view point (the backing scale), refreshed every frame.
     private var drawablePixelsPerPoint: Float = 1
@@ -3980,17 +3982,24 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// the events and ends, so they are dropped.
     private func advanceRigs() {
         let delta = Float(clock.delta)
+        let outlinesHitBoxes = puppetHitBoxes.isWanted
+        var hitBoxes: [ScenePuppetHitBoxOutline] = []
         for entry in layers {
             guard let puppet = entry.layer.puppet else { continue }
             let animator = puppetAnimator(entry.layer.id, puppet)
             // Physics bones move in the scene: the image's world this frame, before the scripts'.
-            animator.advance(delta: delta, values: timelines.values,
-                             objectWorld: ScenePuppetAttachments.matrix(worldTransform(entry)))
+            let world = ScenePuppetAttachments.matrix(worldTransform(entry))
+            animator.advance(delta: delta, values: timelines.values, objectWorld: world)
             if !scripts.isRunning {
                 _ = animator.takeEnded()
                 _ = animator.takeEvents()
             }
+            if outlinesHitBoxes, scripts.isVisible(entry.layer.id) {
+                hitBoxes += ScenePuppetHitBoxOutline.outlines(layerID: entry.layer.id, skeleton: puppet.skeleton,
+                                                              boneWorlds: animator.worlds, world: world)
+            }
         }
+        if outlinesHitBoxes { puppetHitBoxes.publish(hitBoxes) }
         guard let models else { return }
         var frame = BuiltinFrameContext()
         frame.time = clock.time

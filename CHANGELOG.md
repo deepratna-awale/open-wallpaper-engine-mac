@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Wallpaper Editor: View › Show Debug › Show Hitboxes**, as Wallpaper Engine's editor has it: every visible Puppet Warp image's hit boxes, one per bone in the bone's colour, posed as the scene plays. A cursor event's `hitBox` names the bone whose box is under it; a bone that moves no vertex has a 1-unit box, which shows as a dot. The setting is kept between windows.
+
 ## [1.0.0-beta.7] - 2026-10-16
 
 ### Added

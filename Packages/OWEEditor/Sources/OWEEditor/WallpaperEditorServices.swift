@@ -86,6 +86,8 @@ public struct WallpaperEditorServices {
     /// in a 2D scene or before the scene has drawn.
     public var sceneCamera: () -> EditorSceneCamera? = { nil }
     /// Caps the canvas's frame rate (Low FPS Simulation), nil for none.
+    /// The puppets' hit boxes as the canvas's renderer posed them last frame (Show Hitboxes).
+    public var puppetHitBoxes: () -> [EditorHitBox] = { [] }
     public var setCanvasFrameRateCap: (Int?) -> Void = { _ in }
     /// The canvas renderer's frame statistics for the stats overlay; nil leaves the overlay out.
     public var renderStats: RenderStatsFeed?
