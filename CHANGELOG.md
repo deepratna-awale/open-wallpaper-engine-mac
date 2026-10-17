@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Puppet Warp clipping masks**, Wallpaper Engine's Puppet Warp › Clipping Masks. A limb assigned to a mask is drawn only where the mask, painted over other limbs, covers it; **Invert mask** shows it only away from them; nested masks intersect; **Additive blending** adds the limb to what's under it; **Hide mask geometry** hides the painted-over limbs, which still mask. As in Wallpaper Engine, the clipping shows with materials drawn by `genericimage4`; the editor's default puppet material (`genericimage2`) draws the limb whole, keeping the masks' draw order and hidden limbs. The editor's stats count the clipping mask passes.
+
 ## [1.0.0-beta.7] - 2026-10-16
 
 ### Added

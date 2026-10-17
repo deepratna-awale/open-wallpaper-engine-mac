@@ -2223,6 +2223,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         stats.lightCount = lastLightCount
         for entry in layers where scripts.isVisible(entry.layer.id) {
             if case .video = entry.layer.source { stats.videoTextureCount += 1 }
+            if puppetsMade, let puppets { stats.clippingMaskPasses += puppets.clippingMaskPasses(entry.layer.id) }
             for effect in entry.layer.weEffects where effect.visible {
                 switch effect.performance {
                 case .expensive?: stats.expensiveEffects += 1
