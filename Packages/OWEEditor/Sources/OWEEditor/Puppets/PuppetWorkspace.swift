@@ -70,6 +70,8 @@ final class PuppetWorkspace: ObservableObject {
     private var player: PuppetLayerPlayer?
     private var clock: PuppetClipClock?
     private var simulation: PuppetPhysicsSimulation?
+    /// The kinematic chains' solver (`PuppetIKSolver`), nil without a chain.
+    private var solver: PuppetIKSolver?
     private var timer: Timer?
     private var lastTick: Date?
     private var observers: Set<AnyCancellable> = []
@@ -298,8 +300,46 @@ final class PuppetWorkspace: ObservableObject {
                     document.setBlendRuleWeight(bone: bone, rule: index, clip: clipID, frame: key,
                                                 to: rule.weight(clip: clipID, at: Float(key)))
                 }
+                if let ik = document.bones[bone].ik {
+                    for controller in PuppetBoneIK.Controller.allCases {
+                        document.bones[bone].ik!.setKey(controller, clip: clipID, frame: key,
+                                                        to: ik.key(controller, clip: clipID, at: Float(key)))
+                    }
+                }
             }
         }
+    }
+
+    // MARK: Kinematic chains
+
+    func updateIK(of bone: Int, _ actionName: String, coalescing: Bool = true, _ change: (inout PuppetBoneIK?) -> Void) {
+        edit(actionName, coalescing: coalescing) { document in
+            guard document.bones.indices.contains(bone) else { return }
+            change(&document.bones[bone].ik)
+            if document.bones[bone].ik != nil { document.bones[bone].physics = nil }
+        }
+    }
+
+    /// The chains' controllers: each one's bone and kind with its place at the current frame.
+    var controllers: [(bone: Int, controller: PuppetBoneIK.Controller, place: SIMD2<Float>)] {
+        guard let document else { return [] }
+        let layout = PuppetKinematicsLayout(document)
+        return layout.links.indices.map { index in
+            let link = layout.links[index]
+            return (link.bone, link.controller, layout.linkPose(index, document: document, clip: clip?.id, frame: frame.rounded()).offset)
+        }
+    }
+
+    /// Keys a controller at `place` (mesh space) at the current frame of the animation.
+    func setController(bone: Int, _ controller: PuppetBoneIK.Controller, to place: SIMD2<Float>, draft isDraft: Bool) {
+        guard let document, let clip, let ik = document.bones[bone].ik else { return }
+        let layout = PuppetKinematicsLayout(document)
+        guard let rest = layout.links.first(where: { $0.bone == bone && $0.controller == controller })?.rest else { return }
+        let key = Int(frame.rounded()), id = clip.id
+        var value = ik.key(controller, clip: id, at: Float(key))
+        value.offset = place - rest
+        let change: (inout PuppetDocument) -> Void = { $0.bones[bone].ik?.setKey(controller, clip: id, frame: key, to: value) }
+        if isDraft { draft(change) } else { edit(controller == .target ? PL("Move IK Target") : PL("Move Orientation Controller"), change) }
     }
 
     // MARK: Blend rules
@@ -341,6 +381,9 @@ final class PuppetWorkspace: ObservableObject {
                 for index in (document.bones[bone].blendRules ?? []).indices {
                     document.setBlendRuleWeight(bone: bone, rule: index, clip: id, frame: key, to: nil)
                 }
+                for controller in PuppetBoneIK.Controller.allCases {
+                    document.bones[bone].ik?.setKey(controller, clip: id, frame: key, to: nil)
+                }
             }
         }
     }
@@ -349,8 +392,10 @@ final class PuppetWorkspace: ObservableObject {
     var keyFrames: Set<Int> {
         guard let clip else { return [] }
         if let bone = selectedBone, clip.tracks.indices.contains(bone) {
-            let rules = document?.bones.indices.contains(bone) == true ? document?.bones[bone].blendRules ?? [] : []
-            return Set(clip.tracks[bone].keys.keys).union(rules.flatMap { ($0.weights[clip.id] ?? [:]).keys })
+            let item = document?.bones.indices.contains(bone) == true ? document?.bones[bone] : nil
+            let rules = item?.blendRules ?? []
+            let controllers = PuppetBoneIK.Controller.allCases.flatMap { (item?.ik?.keys($0)[clip.id] ?? [:]).keys }
+            return Set(clip.tracks[bone].keys.keys).union(rules.flatMap { ($0.weights[clip.id] ?? [:]).keys }).union(controllers)
         }
         return Set(clip.tracks.flatMap { $0.keys.keys })
     }
@@ -436,6 +481,7 @@ final class PuppetWorkspace: ObservableObject {
             clock = clip.map(PuppetClipClock.init)
             clock?.time = frame / max(clip?.fps ?? 30, 1)
             simulation = simulatesPhysics ? PuppetPhysicsSimulation(document) : nil
+            solver?.reset(document)
         }
         lastTick = nil
         if runsClock {
@@ -482,6 +528,7 @@ final class PuppetWorkspace: ObservableObject {
             return
         }
         rig = PuppetRig(document)
+        solver = PuppetIKSolver(document)
         if player != nil || simulation != nil || clock != nil { restartPlayback() } else { refreshPose() }
     }
 
@@ -506,6 +553,17 @@ final class PuppetWorkspace: ObservableObject {
                 blendWeights = rig.blendWeights(clip: clipIndex, frame: frame)
             }
         }
+        // The chains reach for their controllers where the clip (or the top layer) has them.
+        let solver = showsPose ? self.solver : nil
+        if let solver {
+            var clipID = clip?.id, at = frame.rounded()
+            if previewsLayers || clip == nil, let layer = player?.layers.first(where: { $0.settings.visible }) {
+                clipID = rig.clips[layer.clip].id
+                at = Float(layer.clock.samplePosition.frame0) + layer.clock.samplePosition.fraction
+            }
+            solver.begin(links: solver.layout.links.indices.map { solver.layout.linkPose($0, document: document, clip: clipID, frame: at) },
+                         delta: delta)
+        }
         var models: [simd_float4x4]
         if showsPose, tool == .physics || isPlaying, var simulation {
             let world = PuppetMath.matrix(translation: SIMD3(objectOffset.x, objectOffset.y, 0), euler: .zero, scale: SIMD3(repeating: 1))
@@ -513,8 +571,15 @@ final class PuppetWorkspace: ObservableObject {
             let adjust = rig.blendRules.contains(where: { !$0.isEmpty })
                 ? PuppetBlendMath.adjust(rules: rig.blendRules, weights: blendWeights,
                                          fallback: PuppetMath.worlds(locals: locals, parents: rig.parents)) : nil
-            models = simulation.step(locals: locals, parents: rig.parents, delta: delta, objectWorld: world, adjust: adjust)
+            models = simulation.step(locals: locals, parents: rig.parents, delta: delta, objectWorld: world, adjust: adjust,
+                                     ik: solver)
             self.simulation = simulation
+        } else if let solver {
+            let locals = pose.map(\.matrix)
+            let adjust = rig.blendRules.contains(where: { !$0.isEmpty })
+                ? PuppetBlendMath.adjust(rules: rig.blendRules, weights: blendWeights,
+                                         fallback: PuppetMath.worlds(locals: locals, parents: rig.parents)) : nil
+            models = solver.worlds(locals: locals, adjust: adjust)
         } else {
             models = showsPose ? rig.worlds(pose, blendWeights: blendWeights) : rig.bindWorld
         }

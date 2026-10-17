@@ -63,6 +63,7 @@ struct PuppetCanvasView: View {
         case poseMove(bone: Int, base: PuppetTransform, grab: SIMD2<Float>, moved: Bool)
         case poseRotate(bone: Int, base: PuppetTransform, startAngle: Float, moved: Bool)
         case shake(startOffset: SIMD2<Float>, start: SIMD2<Float>)
+        case controller(bone: Int, controller: PuppetBoneIK.Controller, grab: SIMD2<Float>, moved: Bool)
     }
 
     /// Hit radius, canvas points.
@@ -144,6 +145,7 @@ struct PuppetCanvasView: View {
             }
         }
         if workspace.tool != .mesh { drawBones(&context, document) }
+        if workspace.tool == .animate || workspace.tool == .physics { drawControllers(&context) }
         switch drag {
         case let .marquee(start, current, _):
             let rect = CGRect(x: min(start.x, current.x), y: min(start.y, current.y), width: abs(current.x - start.x),
@@ -221,7 +223,44 @@ struct PuppetCanvasView: View {
         }
     }
 
+    /// The kinematic chains' controllers, as WE's viewport shows them in animation mode: the IK
+    /// target as a diamond, the orientation controller as a dot, each tied to its chain's end.
+    private func drawControllers(_ context: inout GraphicsContext) {
+        let segments = workspace.segments
+        for item in workspace.controllers {
+            let point = mapping.view(item.place)
+            if segments.indices.contains(item.bone) {
+                var tie = Path()
+                tie.move(to: mapping.view(segments[item.bone].0))
+                tie.addLine(to: point)
+                context.stroke(tie, with: .color(.yellow.opacity(0.6)), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+            }
+            let size: Double = 7
+            var shape = Path()
+            switch item.controller {
+            case .target:
+                shape.move(to: CGPoint(x: point.x, y: point.y - size))
+                shape.addLine(to: CGPoint(x: point.x + size, y: point.y))
+                shape.addLine(to: CGPoint(x: point.x, y: point.y + size))
+                shape.addLine(to: CGPoint(x: point.x - size, y: point.y))
+                shape.closeSubpath()
+            case .orientation:
+                shape = Path(ellipseIn: CGRect(x: point.x - size / 2, y: point.y - size / 2, width: size, height: size))
+            }
+            let selected = workspace.selectedBone == item.bone
+            context.fill(shape, with: .color(item.controller == .target ? .orange : .yellow))
+            context.stroke(shape, with: .color(selected ? accentColor : .black.opacity(0.7)), lineWidth: selected ? 2 : 1)
+        }
+    }
+
     // MARK: Hit testing
+
+    private func controller(at point: SIMD2<Double>) -> (bone: Int, controller: PuppetBoneIK.Controller, place: SIMD2<Float>)? {
+        workspace.controllers.reversed().first { item in
+            let view = mapping.view(item.place)
+            return hypot(view.x - point.x, view.y - point.y) <= Self.reach
+        }
+    }
 
     private func bone(atJoint point: SIMD2<Double>) -> Int? {
         let segments = workspace.segments
@@ -337,7 +376,10 @@ struct PuppetCanvasView: View {
             drag = .paint(last: p, bone: bone, brush: brush)
         case .animate:
             guard workspace.clip != nil else { return }
-            if isOnTailHandle(point), let bone = workspace.selectedBone, let base = workspace.keyTransform(of: bone) {
+            if let hit = controller(at: point) {
+                workspace.selectedBone = hit.bone
+                drag = .controller(bone: hit.bone, controller: hit.controller, grab: p - hit.place, moved: false)
+            } else if isOnTailHandle(point), let bone = workspace.selectedBone, let base = workspace.keyTransform(of: bone) {
                 let head = PuppetMath.origin(of: workspace.worlds[bone])
                 drag = .poseRotate(bone: bone, base: base, startAngle: atan2(p.y - head.y, p.x - head.x), moved: false)
             } else if let bone = bone(atJoint: point) ?? bone(onSegment: point) {
@@ -411,6 +453,9 @@ struct PuppetCanvasView: View {
             drag = .poseRotate(bone: bone, base: base, startAngle: startAngle, moved: true)
         case let .shake(startOffset, start):
             workspace.objectOffset = startOffset + (p - start)
+        case let .controller(bone, controller, grab, _):
+            workspace.setController(bone: bone, controller, to: p - grab, draft: true)
+            drag = .controller(bone: bone, controller: controller, grab: grab, moved: true)
         case nil:
             break
         }
@@ -444,6 +489,8 @@ struct PuppetCanvasView: View {
             workspace.endDraft(PL("Paint Weights"))
         case let .poseMove(_, _, _, moved), let .poseRotate(_, _, _, moved):
             if moved { workspace.endDraft(PL("Set Key")) }
+        case let .controller(_, controller, _, moved):
+            if moved { workspace.endDraft(controller == .target ? PL("Move IK Target") : PL("Move Orientation Controller")) }
         default:
             break
         }

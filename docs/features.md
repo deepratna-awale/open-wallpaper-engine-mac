@@ -71,7 +71,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - Scene gravity and wind (Physics options) and `clearenabled` (frames drawn over the last one), as in Wallpaper Engine.
 - **Timelines** — keyframe and texture animations follow Wallpaper Engine's single, loop and mirror rules.
 - Colour lookup tables, Wallpaper Engine's colour correction, and the image filter and colour options in a wallpaper's properties.
-- **Puppet Warp** images posed by their animations, with blend rules (a bone pulled toward another by a keyed weight), bone physics (springs, gravity, limits) and objects attached to their bones.
+- **Puppet Warp** images posed by their animations, with blend rules (a bone pulled toward another by a keyed weight), bone physics (springs, gravity, limits), kinematic chains (limbs reaching for an IK target, ropes hanging and swinging in the scene's gravity and wind) and objects attached to their bones.
 
 ### 3D & lighting
 - **3D models** with skinning, animation layers, morph targets and root motion; every pass of a model's material, and every fur shell of Wallpaper Engine's fur shader.

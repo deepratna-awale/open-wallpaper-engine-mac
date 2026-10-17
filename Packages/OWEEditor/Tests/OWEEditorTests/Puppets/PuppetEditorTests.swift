@@ -18,13 +18,15 @@ final class PuppetEditorTests: XCTestCase {
         return try XCTUnwrap(json["strings"] as? [String: [String: Any]])
     }
 
-    /// `PL("…")` keys in the puppet editor's sources (`\(number)` is an integer, anything else a string).
+    /// `PL("…")` keys in the puppet editor's sources and the model editor's, which shares the
+    /// table for its bone physics (`\(number)` is an integer, anything else a string).
     private func usedKeys() throws -> Set<String> {
         var keys = Set<String>()
         let regex = try NSRegularExpression(pattern: #"PL\("((?:[^"\\]|\\\([^)]*\))*)"\)"#)
-        let folder = Self.sources.appending(path: "Puppets")
-        let files = try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)
-            .filter { (url: URL) -> Bool in url.pathExtension == "swift" }
+        let files = try ["Puppets", "ModelEditor"].flatMap { (name: String) -> [URL] in
+            try FileManager.default.contentsOfDirectory(at: Self.sources.appending(path: name), includingPropertiesForKeys: nil)
+        }
+        .filter { (url: URL) -> Bool in url.pathExtension == "swift" }
         XCTAssertFalse(files.isEmpty)
         for file in files {
             let text = try String(contentsOf: file, encoding: .utf8)

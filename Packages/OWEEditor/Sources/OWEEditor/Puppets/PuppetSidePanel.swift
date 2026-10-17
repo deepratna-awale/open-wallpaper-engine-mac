@@ -130,8 +130,8 @@ private struct PuppetBoneList: View {
                     workspace.refreshPose()
                 } label: {
                     HStack(spacing: 6) {
-                        Image(systemName: bone.physics != nil ? "wind" : "line.diagonal")
-                            .foregroundStyle(bone.physics != nil ? .orange : .secondary)
+                        Image(systemName: bone.ik != nil ? "link" : bone.physics != nil ? "wind" : "line.diagonal")
+                            .foregroundStyle(bone.ik != nil ? .yellow : bone.physics != nil ? .orange : .secondary)
                         Text(bone.name)
                         Spacer()
                     }
@@ -477,7 +477,12 @@ private struct PuppetPhysicsPanel: View {
             }
         }
         if let document = workspace.document, let bone = workspace.selectedBone, document.bones.indices.contains(bone) {
-            settings(document.bones[bone].physics, bone: bone)
+            if let ik = document.bones[bone].ik {
+                modeSection(physics: nil, ik: ik, bone: bone)
+                PuppetKinematicChainSections(workspace: workspace, ik: ik, bone: bone)
+            } else {
+                settings(document.bones[bone].physics, bone: bone)
+            }
         } else {
             Section {
                 Text(PL("Pick a bone to give it physics.")).foregroundStyle(.secondary)
@@ -507,6 +512,7 @@ private struct PuppetPhysicsPanel: View {
 
     @ViewBuilder
     private func settings(_ physics: PuppetBonePhysics?, bone: Int) -> some View {
+        modeSection(physics: physics, ik: nil, bone: bone)
         headerSection(physics, bone: bone)
         if let physics {
             rotationSection(physics, bone: bone)
@@ -538,18 +544,47 @@ private struct PuppetPhysicsPanel: View {
         }
     }
 
-    private func headerSection(_ physics: PuppetBonePhysics?, bone: Int) -> some View {
-        let simulates = Binding<Bool>(get: { physics != nil }, set: { (on: Bool) in
-            let actionName: String = on ? PL("Add Bone Physics") : PL("Remove Bone Physics")
-            workspace.updatePhysics(of: bone, actionName, coalescing: false) { $0 = on ? PuppetBonePhysics() : nil }
+    /// WE's Simulation mode: Not simulated, Spring physics, Rigid physics or Kinematic chain.
+    private enum Mode: Hashable { case none, spring, rigid, chain }
+
+    private func modeSection(physics: PuppetBonePhysics?, ik: PuppetBoneIK?, bone: Int) -> some View {
+        let mode = Binding<Mode>(get: {
+            ik != nil ? .chain : physics.map { $0.kind == .rigid ? Mode.rigid : .spring } ?? .none
+        }, set: { (mode: Mode) in
+            workspace.edit(mode == .none ? PL("Remove Bone Physics") : mode == .chain ? PL("Add Kinematic Chain")
+                           : PL("Add Bone Physics")) { document in
+                guard document.bones.indices.contains(bone) else { return }
+                switch mode {
+                case .none:
+                    document.bones[bone].physics = nil
+                    document.bones[bone].ik = nil
+                case .spring, .rigid:
+                    var value = document.bones[bone].physics ?? PuppetBonePhysics()
+                    value.kind = mode == .rigid ? .rigid : .spring
+                    document.bones[bone].physics = value
+                    document.bones[bone].ik = nil
+                case .chain:
+                    document.bones[bone].ik = document.bones[bone].ik ?? PuppetBoneIK()
+                    document.bones[bone].physics = nil
+                }
+            }
         })
-        let kind = Binding<PuppetBonePhysics.Kind>(get: { physics?.kind ?? .spring },
-                                                   set: { (kind: PuppetBonePhysics.Kind) in
-                                                       update(bone, coalescing: false) { $0.kind = kind }
-                                                   })
         return Section {
-            Toggle(PL("Simulate This Bone"), isOn: simulates)
-            if physics != nil {
+            Picker(PL("Simulation mode"), selection: mode) {
+                Text(PL("Not simulated")).tag(Mode.none)
+                Text(PL("Spring physics")).tag(Mode.spring)
+                Text(PL("Rigid physics")).tag(Mode.rigid)
+                Text(PL("Kinematic chain")).tag(Mode.chain)
+            }
+        } header: {
+            Text(workspace.document?.bones[bone].name ?? "")
+        }
+    }
+
+    @ViewBuilder
+    private func headerSection(_ physics: PuppetBonePhysics?, bone: Int) -> some View {
+        if physics != nil {
+            Section {
                 Menu(PL("Preset")) {
                     ForEach(PuppetBonePhysics.Preset.allCases, id: \.self) { (preset: PuppetBonePhysics.Preset) in
                         Button(preset.title) {
@@ -557,14 +592,7 @@ private struct PuppetPhysicsPanel: View {
                         }
                     }
                 }
-                Picker(PL("Kind"), selection: kind) {
-                    Text(PL("Spring")).tag(PuppetBonePhysics.Kind.spring)
-                    Text(PL("Rigid")).tag(PuppetBonePhysics.Kind.rigid)
-                }
-                .pickerStyle(.segmented)
             }
-        } header: {
-            Text(workspace.document?.bones[bone].name ?? "")
         }
     }
 
