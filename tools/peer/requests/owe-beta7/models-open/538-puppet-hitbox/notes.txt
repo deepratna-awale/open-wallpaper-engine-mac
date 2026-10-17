@@ -1,0 +1,23 @@
+538 (B5): puppet hit boxes and cursor events (WE 2.8.0.42)
+
+## Can named hit boxes be created? No, they are automatic, one per bone
+- **No editor control creates them.** I checked every Puppet Warp page: Geometry, Skeleton, Weights, Animation, and Optional › Reference Pose / Texture Channels / Attachments / Clipping Masks.
+  - The bone properties are Name, Edit Constraints, Origin and Angles. Attachments are bone-attached points ("First select a bone, then click anywhere to create an attachment point").
+- **Only debug display exists:** **View › Show Debug › Show Hitboxes** (next to Show Particle Collision, Show Particle Control Points, Show Collision Capsules).
+- **In the UI files**, the only locale string is `ui_editor_filemenu_show_hitboxes`. The changelog mentions "Added hitbox debug draw to puppets" and "Fixed model hitbox transforms".
+- **Show Hitboxes on the bars puppet** (editor_show_hitboxes.png): **one axis-aligned box per weighted bone**, in the bone's colour.
+  - **red:** red box around the red bar, reaching right into the gap up to the blue bar.
+  - **blue:** green box around the blue bar.
+  - **anchor:** the unweighted bone shows only a dot, no box.
+  - So a hit box is the bounds of the vertices a bone influences. Its name is the **bone name**. There is no separate hit-box list in the puppet json or the .mdl beyond the bones (bars_puppet.mdl/.json are the files of this rig: p533_br_none).
+
+## event.hitBox (project p538_hit, make_538.py: p533_br_none plus a SceneScript on the layer's origin; scene.json)
+Run in the editor (**Run Preview**, View › Windows › Log); editor_log.txt has the full log. Results:
+- **cursorDown / cursorUp / cursorClick** carry **`hitBox` = the bone name**:
+  - Click on the red bar (local 131,125): `"hitBox":"red"`.
+  - Click on the blue bar (local 383,125): `"hitBox":"blue"`.
+  - Click in the **gap between the bars** (local 257,128; image x 257 is outside both bars' pixels) still gives **`"hitBox":"red"`**, because red's box extends over the gap.
+- **cursorEnter / cursorMove / cursorLeave** carry **no `hitBox` key at all** (undefined), even when entering over a bar. They still fire per layer, with local/world positions.
+  - The move handler logs only when hitBox changes, so it logged once.
+- **Other fields:** `localPosition` is in layer-texture pixels with y down from the top (125 is about the bars' centre row, image y 128). `worldPosition` is in scene pixels.
+- **No event fired** for a click outside the layer bounds.
