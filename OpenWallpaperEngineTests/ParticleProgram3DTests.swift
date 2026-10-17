@@ -5,8 +5,8 @@ import simd
 @testable import OpenWallpaperEngine
 
 /// The particle program in 3D (test-risks PG1; `wallpaper64.exe`'s VM keeps position and velocity
-/// as x, y, z, system+0x2b0…0x2d8): each operator and initializer against WE's 3D formula, control
-/// point orientation from `controlpointangle<n>`, and the GPU against the CPU.
+/// as x, y, z, system+0x2b0…0x2d8): control point orientation from `controlpointangle<n>`, and
+/// the 3D operators and initializers on the GPU.
 final class ParticleProgram3DTests: XCTestCase {
     // MARK: - Control points
 
@@ -58,124 +58,12 @@ final class ParticleProgram3DTests: XCTestCase {
         XCTAssertLessThan(simd_distance(x, SIMD3(0, 1, 0)), 1e-5, "x turns with the emitter")
     }
 
-    // MARK: - Operators and initializers against WE's 3D formulas
+    // MARK: - Simulation in depth
 
-    private func state(_ position: SIMD3<Float>, velocity: SIMD3<Float> = .zero) -> ParticleProgramState {
-        var p = ParticleProgramState()
-        p.position = position
-        p.velocity = velocity
-        p.lifetime = 10
-        p.age = 1
-        return p
-    }
-
-    private func context(dt: Float = 0.5) -> ParticleProgramContext {
-        var c = ParticleProgramContext()
-        c.deltaTime = dt
-        c.dragDeltaTime = dt
-        return c
-    }
-
-    private func run(_ op: ParticleOperator, _ p: inout ParticleProgramState, _ c: ParticleProgramContext) {
-        _ = ParticleProgramCPU.runOperators([op.record], on: &p, context: c, index: 0, neighbors: .init())
-    }
-
-    func testTheVortexSpinsInDepthAboutAnAxisInThePlane() {
-        // DNA's vortex about y: a particle on +x is pushed along +z (cross(n, a) = x × y).
-        // Flag 1 takes the offset's part along the axis out: (10, 3, 0) − 3y, so n = x.
-        let vortex = ParticleOperator(.vortex, flags: 1, a: SIMD4(0, 0, 5, 0), b: SIMD4(0, 1, 0, 0), c: SIMD4(0, 100, 40, 40))
-        var p = state(SIMD3(10, 3, 5))
-        run(vortex, &p, context())
-        XCTAssertLessThan(simd_distance(p.velocity, SIMD3(0, 0, 40 * 0.5)), 1e-4, "the offset's z counts (the offset has z 5)")
-    }
-
-    func testVortexV2TurnsItsAxisWithTheControlPoint() {
-        // Axis "0 0 1" through a point turned a quarter about x: the axis becomes −y (row 2 of R(π/2, 0, 0)).
-        let v2 = ParticleOperator(.vortexV2, controlPoints: 1, a: SIMD4(0, 0, 1, 0), b: SIMD4(0, 100, 10, 10))
-        var c = context()
-        c.controlPointAxes[1] = ParticleProgramCPU.controlPointRotation(SIMD3(.pi / 2, 0, 0))
-        var p = state(SIMD3(20, 0, 0))
-        run(v2, &p, c)
-        // n = x, axis = (0, −1, 0): cross = (0, 0, −1) · 10 · 0.5.
-        XCTAssertLessThan(simd_distance(p.velocity, SIMD3(0, 0, -5)), 1e-4)
-    }
-
-    func testTurbulenceOscillationAndFieldsMoveTheDepth() {
-        let turbulence = ParticleOperator(.turbulence, a: SIMD4(0, 0, 1, 0), b: SIMD4(0.01, 100, 100, 1),
-                                          c: SIMD4(0, 0, 0, 0))
-        var p = state(SIMD3(30, -20, 70))
-        run(turbulence, &p, context())
-        let point = SIMD3<Float>(30, -20, 70) * 0.01
-        XCTAssertEqual(p.velocity.z, ParticleNoise.simplex3(point.y, point.z, point.x) * 100 * 0.5, accuracy: 1e-4,
-                       "z samples (Y, Z, X) at the position's own z")
-        XCTAssertEqual(SIMD2(p.velocity.x, p.velocity.y), .zero, "the mask's x and y are 0")
-
-        let oscillate = ParticleOperator(.oscillatePosition, a: SIMD4(1, 0, 2, 0), b: SIMD4(2, 2, 0, 0),
-                                         c: SIMD4(3, 3, 0, 0))
-        var q = state(.zero)
-        run(oscillate, &q, context())
-        XCTAssertEqual(q.position.z, 2 * q.position.x, accuracy: 1e-5, "z follows x's phase, by its mask")
-
-        let attract = ParticleOperator(.controlPointAttract, controlPoints: 1, b: SIMD4(10, 100, 0, 0))
-        var c = context()
-        c.controlPoints[1] = SIMD3(0, 0, 50)
-        var r = state(.zero)
-        run(attract, &r, c)
-        XCTAssertLessThan(simd_distance(r.velocity, SIMD3(0, 0, 0.5 * 10 * 0.5)), 1e-5, "pulled along z")
-
-        let keep = ParticleOperator(.maintainDistanceToControlPoint, controlPoints: 1, a: SIMD4(100, 0, 0, 0))
-        var k = state(SIMD3(0, 0, 25))
-        c.controlPoints[1] = .zero
-        c.previousControlPoints[1] = .zero
-        run(keep, &k, c)
-        XCTAssertLessThan(simd_distance(k.position, SIMD3(0, 0, 100)), 1e-4, "the distance is 3D")
-
-        // Distance 10 of 0…100 (in 3D): reduction 1 − 0.1, damping 1 − 0.9·0.5; z is damped too.
-        let reduce = ParticleOperator(.reduceMovementNearControlPoint, controlPoints: 1, a: SIMD4(0, 100, 1, 0))
-        var m = state(SIMD3(0, 0, 10), velocity: SIMD3(0, 0, 8))
-        run(reduce, &m, c)
-        XCTAssertEqual(m.velocity.z, 8 * 0.55, accuracy: 1e-5)
-
-        let cap = ParticleOperator(.capVelocity, a: SIMD4(5, 0, 0, 0))
-        var n = state(.zero, velocity: SIMD3(3, 0, 8))
-        run(cap, &n, c)
-        XCTAssertEqual(simd_length(n.velocity), 5, accuracy: 1e-4, "the 3D speed is capped")
-    }
-
-    func testInitializersWorkInDepthThroughTheEmittersPoint() {
-        // `mapsequencearoundcontrolpoint` about y: the radius is measured in 3D and the placement
-        // is in the xz plane.
-        let sequence = ParticleInitializer(.mapSequenceAroundControlPoint, a: SIMD4(0.25, 0, 1, 0),
-                                           d: SIMD4(0, 1, 0, 0))
-        var p = state(SIMD3(0, 7, 32))
-        var c = context()
-        c.sequenceIndex = 1
-        ParticleProgramCPU.runInitializers([sequence.record], on: &p, context: c)
-        XCTAssertEqual(p.position.y, 7, accuracy: 1e-4, "the height along the axis is kept")
-        XCTAssertEqual(simd_length(SIMD2(p.position.x, p.position.z)), 32, accuracy: 1e-3, "the radius is the 3D one")
-
-        // `velocityrandom` through the emitter's point's orientation.
-        let velocity = ParticleInitializer(.velocityRandom, a: SIMD4(0, 10, 0, 1), b: SIMD4(0, 10, 0, 0))
-        var v = state(.zero)
-        var turned = context()
-        turned.emitterAxes = ParticleProgramCPU.controlPointRotation(SIMD3(.pi / 2, 0, 0))
-        ParticleProgramCPU.runInitializers([velocity.record], on: &v, context: turned)
-        XCTAssertLessThan(simd_distance(v.velocity, SIMD3(0, 0, 10)), 1e-4, "y turned to z")
-
-        // `positionoffsetrandom` moves z by fBm of (z·scale, −time).
-        let offset = ParticleInitializer(.positionOffsetRandom, a: SIMD4(0, 0, 1, 0), c: SIMD4(0.01, 50, 1, 1))
-        var o = state(SIMD3(0, 0, 40))
-        var timed = context()
-        timed.engineTime = 3
-        ParticleProgramCPU.runInitializers([offset.record], on: &o, context: timed)
-        XCTAssertEqual(o.position.z, 40 + ParticleNoise.simplex2(40 * 0.01, -3) * 50, accuracy: 1e-4)
-    }
-
-    // MARK: - GPU against CPU
-
-    func testTheGPURunsThe3DProgramAsTheCPUDoes() throws {
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice()), queue = try XCTUnwrap(device.makeCommandQueue())
-        let simulator = try ParticleGPUSimulator(device: device)
+    /// Vortices, turbulence, oscillation, control point fields and 3D spawns through a turned
+    /// emitter point all give the particles depth.
+    func testThe3DProgramGivesTheParticlesDepth() throws {
+        let stepper = try ParticleGPUStepper()
         var cases: [(String, ParticleTestSystem, (inout SceneMetalParticleSystem) -> Void)] = []
         var vortices = ParticleTestSystem()
         vortices.operators = [ParticleOperator(.vortex, a: SIMD4(0, 0, 10, 0), b: SIMD4(0, 1, 0, 0), c: SIMD4(0, 300, 200, 50)),
@@ -213,38 +101,15 @@ final class ParticleProgram3DTests: XCTestCase {
         for (label, system, configure) in cases {
             var configuration = system.configuration
             configure(&configuration)
-            let cpu = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 11)
-            let gpu = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 11)
-            var last: MTLCommandBuffer?
+            let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 11)
             for _ in 0..<90 {
-                ParticleCPUSimulation.step(cpu, inputs: ParticleFrameInputs.advance(cpu, deltaTime: 1 / 60, cursor: .zero))
-                let inputs = ParticleFrameInputs.advance(gpu, deltaTime: 1 / 60, cursor: .zero)
-                let buffer = try XCTUnwrap(queue.makeCommandBuffer())
-                simulator.encode([.init(system: gpu, inputs: inputs, kind: .sprite, materialVertexCount: 6)],
-                                 sceneSize: SIMD2(1280, 720), targetSize: SIMD2(1280, 720), commandBuffer: buffer)
-                buffer.commit()
-                last = buffer
+                stepper.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero))
             }
-            last?.waitUntilCompleted()
-            XCTAssertNil(last?.error)
-            let states = simulator.snapshot(gpu, queue: queue)
-            XCTAssertGreaterThan(cpu.particles.count, 50, label)
-            let cpuCount = Double(cpu.particles.count)
-            let allowed: Double = max(2, cpuCount * 0.01)
-            XCTAssertEqual(Double(states.count), cpuCount, accuracy: allowed, label)
-            func mean(_ values: [SIMD4<Float>]) -> SIMD4<Float> {
-                let total: SIMD4<Float> = values.reduce(SIMD4<Float>.zero, +)
-                return total / Float(max(values.count, 1))
-            }
-            let expected = mean(cpu.particles.map { (p: Particle) -> SIMD4<Float> in
-                SIMD4<Float>(p.position.x, p.position.y, p.z, p.zVelocity)
-            })
-            let actual = mean(states.map { (s: ParticleGPUState) -> SIMD4<Float> in
-                SIMD4<Float>(s.positionVelocity.x, s.positionVelocity.y, s.depth.x, s.depth.y)
-            })
-            XCTAssertLessThan(simd_distance(actual, expected), 1, "\(label): \(actual) vs \(expected)")
-            let spread: Float = cpu.particles.map { abs($0.z) }.reduce(0, +) / Float(max(cpu.particles.count, 1))
+            let states = stepper.particles(runtime)
+            XCTAssertGreaterThan(states.count, 50, label)
+            let spread: Float = states.map { abs($0.z) }.reduce(0, +) / Float(max(states.count, 1))
             XCTAssertGreaterThan(spread, 1, "\(label): the particles have depth")
+            XCTAssertTrue(states.allSatisfy { $0.position.x.isFinite && $0.position.y.isFinite && $0.z.isFinite }, label)
         }
     }
 

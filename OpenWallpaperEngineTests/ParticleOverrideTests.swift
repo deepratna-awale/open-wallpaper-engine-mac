@@ -12,12 +12,12 @@ private struct Properties: SceneValueContext {
 /// A particle object's `instanceoverride` scales the authored values every frame, so a user
 /// property it's bound to takes effect without rebuilding the scene.
 final class ParticleOverrideTests: XCTestCase {
+    private var gpu: ParticleGPUStepper!
     private var texture: MTLTexture!
 
     override func setUpWithError() throws {
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        texture = try XCTUnwrap(device.makeTexture(descriptor: .texture2DDescriptor(
-            pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)))
+        gpu = try ParticleGPUStepper()
+        texture = try gpu.texture()
     }
 
     private func boundOverride() throws -> WEInstanceOverride {
@@ -165,48 +165,31 @@ final class ParticleOverrideTests: XCTestCase {
             var configuration = system.configuration
             configuration.overrides.speed = speed
             let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 2)
-            ParticleCPUSimulation.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero,
-                                                                                    values: Properties()))
-            return runtime.particles.map { simd_length($0.velocity) }
+            gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero, values: Properties()))
+            return gpu.particles(runtime).map { simd_length($0.velocity) }
         }
-        XCTAssertEqual(launchSpeeds(1), [100])
+        let speeds = launchSpeeds(1)
+        XCTAssertEqual(speeds.count, 1)
+        XCTAssertEqual(try XCTUnwrap(speeds.first), 100, accuracy: 1e-3)
         let fast = try XCTUnwrap(launchSpeeds(2.9).first)
         XCTAssertEqual(fast, 290, accuracy: 1e-3)
     }
 
-    func testOverriddenSpawnsMatchOnTheGPU() throws {
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        let queue = try XCTUnwrap(device.makeCommandQueue())
-        let simulator = try ParticleGPUSimulator(device: device)
+    /// The bound overrides shape what spawns: `count` halves the maximum, `size` doubles the sizes.
+    func testOverriddenSpawns() throws {
+        gpu.sceneSize = SIMD2(1280, 720)
         var system = ParticleTestSystem()
         system.emissionRate = 3000
         system.emitterSpeed = SIMD2(20, 80)
         var configuration = system.configuration
         configuration.overrides = SceneParticleOverrides(try boundOverride(), in: Properties())
-        let cpu = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 5)
-        let gpu = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 5)
-        var last: MTLCommandBuffer?
+        let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 5)
         for _ in 0..<60 {
-            ParticleCPUSimulation.step(cpu, inputs: ParticleFrameInputs.advance(cpu, deltaTime: 1 / 60, cursor: .zero,
-                                                                                values: Properties()))
-            let inputs = ParticleFrameInputs.advance(gpu, deltaTime: 1 / 60, cursor: .zero, values: Properties())
-            let commandBuffer = try XCTUnwrap(queue.makeCommandBuffer())
-            simulator.encode([.init(system: gpu, inputs: inputs, kind: .sprite, materialVertexCount: 6)],
-                             sceneSize: SIMD2(1280, 720), targetSize: SIMD2(1280, 720), commandBuffer: commandBuffer)
-            commandBuffer.commit()
-            last = commandBuffer
+            gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero, values: Properties()))
         }
-        last?.waitUntilCompleted()
-        let states = simulator.snapshot(gpu, queue: queue)
-        XCTAssertEqual(states.count, cpu.particles.count)
-        XCTAssertEqual(cpu.particles.count, 500, "the count override halves the maximum")
-        for (state, particle) in zip(states, cpu.particles) {
-            XCTAssertEqual(state.life.z, particle.size, accuracy: 1e-3)
-            XCTAssertEqual(state.life.y, particle.lifetime, accuracy: 1e-4)
-            XCTAssertLessThan(simd_distance(state.color, particle.color), 1e-4)
-            XCTAssertLessThan(simd_distance(SIMD2(state.positionVelocity.z, state.positionVelocity.w), particle.velocity), 1e-2)
-        }
-        let sizes = cpu.particles.map(\.size)
+        let particles = gpu.particles(runtime)
+        XCTAssertEqual(particles.count, 500, "the count override halves the maximum")
+        let sizes = particles.map(\.size)
         // WE's base size is 0.5, which `sizerandom` multiplies (wallpaper64.exe 0x14023b340).
         XCTAssertGreaterThanOrEqual(sizes.min() ?? 0, 10, "authored 10…20 on the base 0.5, doubled")
     }

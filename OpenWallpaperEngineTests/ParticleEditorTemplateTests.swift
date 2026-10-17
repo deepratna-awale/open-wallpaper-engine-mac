@@ -41,11 +41,13 @@ final class ParticleEditorTemplateTests: XCTestCase {
         let texture = try XCTUnwrap(device.makeTexture(descriptor: .texture2DDescriptor(
             pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)))
         let runtime = ParticleSystemRuntime(texture: texture, configuration: system, seed: 7)
+        let gpu = try ParticleGPUStepper()
         for _ in 0..<120 {
-            ParticleCPUSimulation.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero))
+            gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero))
         }
-        XCTAssertEqual(runtime.particles.count, 40, "rate 20 for 2 s")
-        for particle in runtime.particles {
+        let simulated = gpu.particles(runtime)
+        XCTAssertEqual(simulated.count, 40, "rate 20 for 2 s")
+        for particle in simulated {
             XCTAssertTrue((3...5).contains(particle.lifetime), "lifetime random 3…5: \(particle.lifetime)")
             XCTAssertEqual(particle.baseColor.x, 1, accuracy: 1e-5, "colour random 255…255 is white")
             XCTAssertEqual(particle.baseColor.y, 1, accuracy: 1e-5)

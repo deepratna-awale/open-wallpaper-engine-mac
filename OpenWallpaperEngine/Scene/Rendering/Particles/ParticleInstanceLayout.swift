@@ -42,7 +42,7 @@ enum ParticleVertexFormat: Equatable {
 }
 
 /// One particle, as `genericparticle.vert` reads it. Positions and vectors are in the system's
-/// model space (the scene, y up); sizes are `ParticleRecordWriter.shaderSize`.
+/// model space (the scene, y up); sizes are the particles' (`ParticleRecords.metal`).
 struct ParticleSpriteInstance {
     /// `a_Position`: xyz; w unused.
     var position: SIMD4<Float>

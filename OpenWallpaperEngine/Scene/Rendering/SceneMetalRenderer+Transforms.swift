@@ -335,7 +335,7 @@ extension SceneMetalRenderer {
         guard renderSettings.reducedResolutionParticles, frameDepth == nil,
               system.configuration.material?.blending.lowercased() == "additive",
               particleMaterials?.readsSceneSnapshot(system) == false else { return false }
-        return (system.gpu?.completedCount ?? system.particles.count) >= Self.reducedResolutionParticleMinimum
+        return (system.gpu?.completedCount ?? 0) >= Self.reducedResolutionParticleMinimum
     }
 
     /// Draws `systems` additively into a cleared half-resolution target, returned to be added onto
@@ -366,15 +366,11 @@ extension SceneMetalRenderer {
     }
 
     /// Steps a system whose object is hidden (`ParticleFrameInputs.hidden`): the one step that
-    /// clears it runs on whichever simulation holds it; nothing is drawn.
+    /// clears it runs on the GPU; nothing is drawn.
     func stepHiddenParticles(_ system: ParticleSystemRuntime, deltaTime: Float, pixelFormat: MTLPixelFormat) {
         // The GPU's count is its last finished step's.
-        let holdsParticles = system.gpu.map { $0.completedCount > 0 } ?? !system.particles.isEmpty
+        let holdsParticles = system.gpu.map { $0.completedCount > 0 } ?? false
         guard let inputs = ParticleFrameInputs.hidden(system, deltaTime: deltaTime, holdsParticles: holdsParticles) else { return }
-        guard particleSimulator != nil else {
-            ParticleCPUSimulation.step(system, inputs: inputs)
-            return
-        }
         let rendererName = system.configuration.rendererName
         if let simulated = particleMaterials?.prepareSimulated(system, pixelFormat: pixelFormat, sampleCount: sceneSampleCount,
                                                                depthFormat: sceneDepthFormat) {

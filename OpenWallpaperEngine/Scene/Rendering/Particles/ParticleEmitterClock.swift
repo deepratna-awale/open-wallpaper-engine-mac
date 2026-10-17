@@ -56,7 +56,7 @@ struct ParticleEmitterTiming: Equatable {
 }
 
 /// One emitter's place in its `ParticleEmitterTiming`: a system's own, or each instance's
-/// (`ParticleInstance`). `ParticleInstances.metal` steps the same state (`emitterClock`).
+/// (`ParticleGPUInstance`). `ParticleInstances.metal` steps the same state (`emitterClock`).
 struct ParticleEmitterClock: Equatable {
     /// Seconds since the emitter was made, seconds left in the current periodic phase, the phase
     /// plus one (0: not started; odd: emitting, even: paused), and what the rate emitted this
@@ -107,15 +107,6 @@ struct ParticleEmitterClock: Equatable {
         let stream: ParticleRandom.Stream = phase % 2 == 0 ? .periodDuration : .periodDelay
         return ParticleRandom.value(in: range, seed: seed &+ key &* 0x9E37_79B9, serial: phase, stream)
     }
-
-    /// The most the rate may emit this step: one with `onePerFrame`, what is left of `periodLimit`
-    /// after `emitted`.
-    static func rateLimit(periodLimit: Int?, emitted: Int, onePerFrame: Bool) -> Int {
-        var limit = Int.max
-        if let periodLimit { limit = max(periodLimit - emitted, 0) }
-        if onePerFrame { limit = min(limit, 1) }
-        return limit
-    }
 }
 
 /// One emitter's running state: its clock, the fraction of a particle its rate carries into the next
@@ -126,7 +117,7 @@ struct ParticleEmitterState: Equatable {
     var clock = ParticleEmitterClock()
     var remainder: Float = 0
     var periodEmitted = 0
-    /// Spawned this step and whether a period started (an instance's, `ParticleInstance`).
+    /// Spawned this step and whether a period started (an instance's, `ParticleGPUInstance`).
     var spawnCount = 0
     var startsPeriod = false
     /// A `layerimage` emitter's layer world (`ParticleEmitterStep.layerWorld`) at its last step that

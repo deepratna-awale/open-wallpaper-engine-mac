@@ -1,6 +1,6 @@
 import simd
 
-/// Deterministic particle randomness, shared by the CPU and GPU simulations.
+/// Deterministic particle randomness, as the GPU simulation draws it (`ParticleShared.h`).
 ///
 /// Every draw is a pure function of the system's seed, the particle's serial number (its spawn
 /// order) and a stream naming what the draw is for, so a particle gets the same values whichever

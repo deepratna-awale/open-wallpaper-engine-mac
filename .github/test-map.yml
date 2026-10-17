@@ -25,7 +25,6 @@ serial:
   - SceneScriptRenderTests
   - ParticleEmitterTimingTests
   - ParticleSimulationPerformanceTests
-  - ParticleSimulationParityTests
   - SceneFrameBenchmarkTests
   - SceneDisplayOutputTests
   - SceneHDRRenderTests

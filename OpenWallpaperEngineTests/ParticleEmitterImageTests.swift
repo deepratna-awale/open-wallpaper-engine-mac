@@ -3,7 +3,7 @@ import Metal
 import simd
 @testable import OpenWallpaperEngine
 
-/// The `layerimage` emitter (`ParticleEmitterImagePoints`, `ParticleProgramCPU.emit(image:…)`), from
+/// The `layerimage` emitter (`ParticleEmitterImagePoints`, the GPU step's `emitFromImage`), from
 /// `wallpaper64.exe`: defaults 0x1401b9930, points 0x1401d3ae0, spawn 0x140238c45. WE's element
 /// preview (`scenes/particleelementpreviews/layerimage`) against WE's capture is in
 /// `WEParticleGalleryTests`.
@@ -58,25 +58,47 @@ final class ParticleEmitterImageTests: XCTestCase {
 
     /// A spawn lands on one of the points, through the layer's transform into the system's space, and
     /// takes the point's colour; without flag 0x80000 it doesn't move off it.
-    func testASpawnLandsOnAPointInTheLayersSpace() {
+    func testASpawnLandsOnAPointInTheLayersSpace() throws {
         let points: [SIMD4<Int32>] = [SIMD4(-10, 20, 0x8040FF, 0), SIMD4(30, -40, 0xFFFFFF, 0)]
-        var shape = ParticleEmitterShape()
-        shape.kind = .image
-        var step = ParticleEmitterStep()
-        step.image = SceneAffineTransform(linear: simd_float2x2(diagonal: SIMD2(2, 2)), translation: SIMD2(100, 50))
-        for serial in UInt32(0)..<16 {
-            var context = ParticleProgramContext()
-            context.serial = serial
-            guard let emitted = ParticleProgramCPU.emit(image: points, shape: shape, step: step, context: context) else {
-                return XCTFail("a spawn with points")
+        let layer = SceneAffineTransform(linear: simd_float2x2(diagonal: SIMD2<Float>(2, 2)), translation: SIMD2(100, 50))
+        let gpu = try ParticleGPUStepper()
+        let runtime = try imageSystem(points: points, burst: 16, gpu: gpu)
+        gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero,
+                                                              layerWorld: { $0 == "4" ? layer : nil }))
+        let spawned = gpu.particles(runtime)
+        XCTAssertEqual(spawned.count, 16)
+        for particle in spawned {
+            let first = simd_distance(particle.position, SIMD2<Float>(80, 90)) < 1e-3
+            XCTAssertTrue(first || simd_distance(particle.position, SIMD2<Float>(160, -30)) < 1e-3, "\(particle.position)")
+            let color: SIMD3<Float> = first ? SIMD3<Float>(128, 64, 255) / 255 : SIMD3<Float>(repeating: 1)
+            for channel in 0..<3 {
+                XCTAssertEqual(particle.color[channel], color[channel], accuracy: 1e-5, "\(particle.position)")
             }
-            let first = emitted.position == SIMD2(80, 90)
-            XCTAssertTrue(first || emitted.position == SIMD2(160, -30), "\(emitted.position)")
-            XCTAssertEqual(emitted.color, first ? SIMD3(128, 64, 255) / 255 : SIMD3(repeating: 1))
-            XCTAssertEqual(emitted.velocity, .zero, "at rest without flag 0x40000")
+            XCTAssertEqual(particle.velocity, .zero, "at rest without flag 0x40000")
         }
-        XCTAssertNil(ParticleProgramCPU.emit(image: [], shape: shape, step: step, context: ParticleProgramContext()),
-                     "no points, no spawn")
+        let empty = try imageSystem(points: [], burst: 16, gpu: gpu)
+        gpu.step(empty, inputs: ParticleFrameInputs.advance(empty, deltaTime: 1 / 60, cursor: .zero,
+                                                            layerWorld: { $0 == "4" ? layer : nil }))
+        XCTAssertEqual(gpu.particles(empty).count, 0, "no points, no spawn")
+    }
+
+    /// A system at the scene's origin bursting `burst` particles from one `layerimage` emitter on
+    /// layer "4"'s `points`, which they keep at rest, white, unless the emitter colours or launches them.
+    private func imageSystem(points: [SIMD4<Int32>], burst: Int, gpu: ParticleGPUStepper) throws -> ParticleSystemRuntime {
+        var test = ParticleTestSystem()
+        test.origin = .zero
+        test.emissionRate = 0
+        test.instantaneous = burst
+        test.lifetime = 10...10
+        test.minimumVelocity = .zero
+        test.maximumVelocity = .zero
+        test.minimumColor = SIMD4(repeating: 1)
+        test.maximumColor = SIMD4(repeating: 1)
+        var configuration = test.configuration
+        configuration.program.operators = []
+        configuration.emitter.kind = .image
+        configuration.emitterImages = [ParticleEmitterImage(layerID: "4", points: points)]
+        return ParticleSystemRuntime(texture: try gpu.texture(), configuration: configuration)
     }
 
     /// WE's downsample (`downsample_quarter`, `WRITEALPHA`) on the GPU: a uniform image reduces to itself.

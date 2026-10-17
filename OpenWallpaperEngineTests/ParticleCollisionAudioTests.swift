@@ -4,7 +4,7 @@ import simd
 @testable import OpenWallpaperEngine
 
 /// Collision operators and audio response: decoding with WE's defaults, how a hit resolves, and
-/// the same results on the GPU.
+/// how they run in a simulated system.
 final class ParticleCollisionAudioTests: XCTestCase {
     private func element(_ json: String) throws -> WEParticleOperator {
         try JSONDecoder().decode(WEParticleOperator.self, from: Data(json.utf8))
@@ -32,49 +32,11 @@ final class ParticleCollisionAudioTests: XCTestCase {
         XCTAssertEqual(ParticleCollision.Behavior("bounce"), .bounce)
     }
 
-    func testAPlaneSnapsAndReflects() throws {
-        let plane = ParticleCollision(shape: .plane(normal: SIMD3(0, 1, 0), distance: -100), bounceFactor: 0.5)
-        let placed = try XCTUnwrap(plane.placed(in: space) { _ in .zero }.first)
-        var position = SIMD2<Float>(510, 390), velocity = SIMD2<Float>(10, -100), spin: Float = 3, dies = false
-        placed.resolve(position: &position, velocity: &velocity, angularVelocity: &spin, dies: &dies, previous: SIMD2(510, 410))
-        XCTAssertEqual(position, SIMD2(510, 400), "back onto the plane 100 below the emitter")
-        XCTAssertEqual(velocity, SIMD2(10, 50), "reflected with half the speed")
-        XCTAssertEqual(spin, 3)
-    }
-
-    func testSphereQuadAndBounds() throws {
-        let sphere = ParticleCollision(shape: .sphere(origin: SIMD3(0, 0, 0), radius: 50), behavior: .stop, stopsRotation: true)
-        let placedSphere = try XCTUnwrap(sphere.placed(in: space) { _ in .zero }.first)
-        var position = SIMD2<Float>(530, 500), velocity = SIMD2<Float>(-5, 0), spin: Float = 1, dies = false
-        placedSphere.resolve(position: &position, velocity: &velocity, angularVelocity: &spin, dies: &dies, previous: position)
-        XCTAssertEqual(position, SIMD2(550, 500))
-        XCTAssertEqual(velocity, .zero)
-        XCTAssertEqual(spin, 0)
-
-        let quad = ParticleCollision(shape: .quad(origin: SIMD3(0, -100, 0), normal: SIMD3(0, 1, 0), forward: SIMD3(0, 0, 1),
-                                                  size: SIMD2(200, 200)), behavior: .delete)
-        let placedQuad = try XCTUnwrap(quad.placed(in: space) { _ in .zero }.first)
-        position = SIMD2(550, 398)
-        placedQuad.resolve(position: &position, velocity: &velocity, angularVelocity: &spin, dies: &dies, previous: SIMD2(550, 402))
-        XCTAssertTrue(dies, "crossed from above within the quad")
-        dies = false
-        position = SIMD2(650, 398)
-        placedQuad.resolve(position: &position, velocity: &velocity, angularVelocity: &spin, dies: &dies, previous: SIMD2(650, 402))
-        XCTAssertFalse(dies, "beside it")
-        position = SIMD2(550, 398)
-        placedQuad.resolve(position: &position, velocity: &velocity, angularVelocity: &spin, dies: &dies, previous: SIMD2(550, 396))
-        XCTAssertFalse(dies, "one-sided: from below")
-
+    /// `bounds` is four planes fixed in the scene: an instance's position doesn't carry them.
+    func testBoundsAreFourPlanesFixedInTheScene() throws {
         let bounds = ParticleCollision(shape: .bounds(size: SIMD2(1000, 800)), behavior: .slide)
         let planes = bounds.placed(in: space) { _ in .zero }
         XCTAssertEqual(planes.count, 4)
-        position = SIMD2(1010, -5)
-        velocity = SIMD2(10, -10)
-        for plane in planes {
-            plane.resolve(position: &position, velocity: &velocity, angularVelocity: &spin, dies: &dies, previous: position)
-        }
-        XCTAssertEqual(position, SIMD2(1000, 0))
-        XCTAssertEqual(velocity, .zero)
         XCTAssertEqual(planes[0].moved(by: SIMD2(100, 100)), planes[0], "bounds stay with the scene")
     }
 
@@ -102,36 +64,32 @@ final class ParticleCollisionAudioTests: XCTestCase {
     }
 
     func testSilenceStopsAnAudioEmitterWithoutClearingIt() throws {
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        let texture = try XCTUnwrap(device.makeTexture(descriptor: .texture2DDescriptor(
-            pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)))
+        let gpu = try ParticleGPUStepper()
         var configuration = ParticleTestSystem().configuration
         configuration.rateAudio = ParticleAudioResponse(mode: 3, exponent: 1, bounds: SIMD2(0, 1), frequencyStart: 0, frequencyEnd: 15)
-        let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration)
+        let runtime = ParticleSystemRuntime(texture: try gpu.texture(), configuration: configuration)
         var loud = AudioSpectrumSnapshot.silent
         loud.left16 = [Float](repeating: 1, count: 16)
         loud.right16 = loud.left16
         for _ in 0..<10 {
-            ParticleCPUSimulation.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero,
-                                                                                    audio: loud))
+            gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero, audio: loud))
         }
-        let count = runtime.particles.count
+        let count = gpu.particles(runtime).count
         XCTAssertGreaterThan(count, 50)
         let quiet = ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero, audio: .silent)
         XCTAssertEqual(quiet.emissionRate, 0)
         XCTAssertFalse(quiet.clears)
-        ParticleCPUSimulation.step(runtime, inputs: quiet)
-        XCTAssertEqual(runtime.particles.count, count)
+        gpu.step(runtime, inputs: quiet)
+        XCTAssertEqual(gpu.particles(runtime).count, count)
     }
 
-    // MARK: - GPU
+    // MARK: - Simulation
 
-    func testCollisionsAndAudioRunTheSameOnTheGPU() throws {
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        let queue = try XCTUnwrap(device.makeCommandQueue())
-        let simulator = try ParticleGPUSimulator(device: device)
-        let texture = try XCTUnwrap(device.makeTexture(descriptor: .texture2DDescriptor(
-            pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)))
+    /// Audio-driven turbulence, vortex and turbulent velocity under every collision shape: the
+    /// particles stay inside the stopping bounds.
+    func testCollisionsAndAudioRunTogether() throws {
+        let gpu = try ParticleGPUStepper()
+        gpu.sceneSize = SIMD2(1280, 720)
         var system = ParticleTestSystem()
         system.gravity = SIMD2(0, -600)
         system.lifetime = 2...3
@@ -158,33 +116,19 @@ final class ParticleCollisionAudioTests: XCTestCase {
         ]
         var configuration = system.configuration
         configuration.rateAudio = response
-        let cpu = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 11)
-        let gpu = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 11)
-        var last: MTLCommandBuffer?
+        let runtime = ParticleSystemRuntime(texture: try gpu.texture(), configuration: configuration, seed: 11)
         for frame in 0..<150 {
             var audio = AudioSpectrumSnapshot.silent
             let level = 0.5 + 0.5 * sin(Float(frame) * 0.1)
             audio.left16 = [Float](repeating: level, count: 16)
             audio.right16 = audio.left16
             let emitter = SceneAffineTransform(SceneLocalTransform(origin: SIMD2(500, 500), scale: SIMD2(1, 1), angle: Float(frame) * 0.005))
-            ParticleCPUSimulation.step(cpu, inputs: ParticleFrameInputs.advance(cpu, deltaTime: 1 / 60, cursor: .zero,
-                                                                                emitter: emitter, audio: audio))
-            let inputs = ParticleFrameInputs.advance(gpu, deltaTime: 1 / 60, cursor: .zero, emitter: emitter, audio: audio)
-            let commandBuffer = try XCTUnwrap(queue.makeCommandBuffer())
-            simulator.encode([.init(system: gpu, inputs: inputs, kind: .sprite, materialVertexCount: 6)],
-                             sceneSize: SIMD2(1280, 720), targetSize: SIMD2(1280, 720), commandBuffer: commandBuffer)
-            commandBuffer.commit()
-            last = commandBuffer
+            gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero,
+                                                                  emitter: emitter, audio: audio))
         }
-        last?.waitUntilCompleted()
-        let states = simulator.snapshot(gpu, queue: queue)
-        XCTAssertGreaterThan(cpu.particles.count, 100)
-        XCTAssertEqual(states.map(\.identity.x), cpu.particles.map(\.serial))
-        var far = 0
-        for (state, particle) in zip(states, cpu.particles)
-        where simd_distance(SIMD2(state.positionVelocity.x, state.positionVelocity.y), particle.position) > 0.5 { far += 1 }
-        XCTAssertLessThanOrEqual(far, cpu.particles.count / 100, "positions agree (float rounding may flip a rare hit)")
-        for particle in cpu.particles {
+        let particles = gpu.particles(runtime)
+        XCTAssertGreaterThan(particles.count, 100)
+        for particle in particles {
             XCTAssertGreaterThanOrEqual(particle.position.x, -1e-3)
             XCTAssertLessThanOrEqual(particle.position.x, 700 + 1e-3)
         }

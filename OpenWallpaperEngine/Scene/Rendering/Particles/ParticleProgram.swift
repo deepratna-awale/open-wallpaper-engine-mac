@@ -6,8 +6,7 @@ import simd
 /// operators (opcodes 1…26, run once a frame over every particle by the operator VM 0x14023fbc0).
 /// Two elements of the same kind are two records, each applied in turn.
 ///
-/// The CPU (`ParticleProgramCPU`) and the GPU (`ParticleProgram.h`) interpret the same encoded
-/// records (`ParticleProgramOp`), so the two simulations stay in step.
+/// The GPU (`ParticleProgram.h`) interprets the encoded records (`ParticleProgramOp`).
 struct ParticleProgram: Equatable {
     var operators: [ParticleOperator] = []
     var initializers: [ParticleInitializer] = []
@@ -16,7 +15,7 @@ struct ParticleProgram: Equatable {
     static let capacity = 32
 
     /// A `remapvalue` writes a control point (its `controlpoint` output): the operators run record by
-    /// record over every particle (`ParticleCPUSimulation.advanceOperatorMajor`).
+    /// record over every particle (`particleSimulateSerial`).
     var operatorsWriteControlPoints: Bool {
         operators.contains { $0.kind == .remapValue && ParticleProgramCPU.RemapCode.output($0.record.header.w) == 16 }
     }
@@ -182,28 +181,3 @@ extension ParticleInitializer {
     }
 }
 
-extension ParticleProgramOp {
-    /// Colour `index` (HSV) of the `colorlist` record `self` in `records`: four in the record, the
-    /// rest in its colour records (`ParticleInitializer.encoded`).
-    func listColor(_ index: Int, in records: [ParticleProgramOp]) -> SIMD4<Float> {
-        switch index {
-        case 0: return b
-        case 1: return c
-        case 2: return d
-        case 3: return e
-        default:
-            let more = index - 4, perRecord = ParticleInitializer.colorsPerRecord
-            let slot = Int(header.w) + more / perRecord
-            guard records.indices.contains(slot) else { return b }
-            let record = records[slot]
-            switch more % perRecord {
-            case 0: return record.a
-            case 1: return record.b
-            case 2: return record.c
-            case 3: return record.d
-            case 4: return record.e
-            default: return record.blend
-            }
-        }
-    }
-}

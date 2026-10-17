@@ -6,11 +6,18 @@ import simd
 /// The emitter's `instantaneous` burst and its shape: speed out from the centre, inner radius and
 /// sign.
 final class ParticleEmitterShapeTests: XCTestCase {
+    private var gpu: ParticleGPUStepper!
+
+    override func setUpWithError() throws {
+        gpu = try ParticleGPUStepper()
+    }
+
     private func runtime(_ system: ParticleTestSystem) throws -> ParticleSystemRuntime {
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        let texture = try XCTUnwrap(device.makeTexture(descriptor: .texture2DDescriptor(
-            pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)))
-        return ParticleSystemRuntime(texture: texture, configuration: system.configuration, seed: 9)
+        try runtime(system.configuration)
+    }
+
+    private func runtime(_ configuration: SceneMetalParticleSystem) throws -> ParticleSystemRuntime {
+        ParticleSystemRuntime(texture: try gpu.texture(), configuration: configuration, seed: 9)
     }
 
     func testABurstSpawnsOnceWhenTheSystemStarts() throws {
@@ -19,10 +26,10 @@ final class ParticleEmitterShapeTests: XCTestCase {
         system.instantaneous = 40
         system.lifetime = 10...10
         let runtime = try runtime(system)
-        ParticleCPUSimulation.update([runtime], deltaTime: 1 / 60, cursor: .zero)
-        XCTAssertEqual(runtime.particles.count, 40, "a rate of 0 with a burst is not an idle system")
-        for _ in 0..<30 { ParticleCPUSimulation.update([runtime], deltaTime: 1 / 60, cursor: .zero) }
-        XCTAssertEqual(runtime.particles.count, 40, "no second burst")
+        gpu.update([runtime], deltaTime: 1 / 60, cursor: .zero)
+        XCTAssertEqual(gpu.particles(runtime).count, 40, "a rate of 0 with a burst is not an idle system")
+        for _ in 0..<30 { gpu.update([runtime], deltaTime: 1 / 60, cursor: .zero) }
+        XCTAssertEqual(gpu.particles(runtime).count, 40, "no second burst")
     }
 
     /// 3159348391's button symbols: a system with no rate and no burst, which only scripts'
@@ -33,19 +40,19 @@ final class ParticleEmitterShapeTests: XCTestCase {
         system.emissionRate = 0
         system.lifetime = 0.5...0.5
         let runtime = try runtime(system)
-        for _ in 0..<10 { ParticleCPUSimulation.update([runtime], deltaTime: 1 / 60, cursor: .zero) }
-        XCTAssertTrue(runtime.particles.isEmpty, "nothing emits on its own")
+        for _ in 0..<10 { gpu.update([runtime], deltaTime: 1 / 60, cursor: .zero) }
+        XCTAssertTrue(gpu.particles(runtime).isEmpty, "nothing emits on its own")
 
         var inputs = ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero)
         SceneMetalRenderer.applyScriptPlayback(nil, emitting: 3, to: &inputs)
         XCTAssertFalse(inputs.clears)
-        ParticleCPUSimulation.step(runtime, inputs: inputs)
-        XCTAssertEqual(runtime.particles.count, 3, "emitParticles(3)")
+        gpu.step(runtime, inputs: inputs)
+        XCTAssertEqual(gpu.particles(runtime).count, 3, "emitParticles(3)")
         // 0.4 s later the burst is still alive; past its 0.5 s lifetime it is gone.
-        for _ in 0..<24 { ParticleCPUSimulation.update([runtime], deltaTime: 1 / 60, cursor: .zero) }
-        XCTAssertEqual(runtime.particles.count, 3, "the burst lives out its lifetime")
-        for _ in 0..<12 { ParticleCPUSimulation.update([runtime], deltaTime: 1 / 60, cursor: .zero) }
-        XCTAssertTrue(runtime.particles.isEmpty, "and then dies")
+        for _ in 0..<24 { gpu.update([runtime], deltaTime: 1 / 60, cursor: .zero) }
+        XCTAssertEqual(gpu.particles(runtime).count, 3, "the burst lives out its lifetime")
+        for _ in 0..<12 { gpu.update([runtime], deltaTime: 1 / 60, cursor: .zero) }
+        XCTAssertTrue(gpu.particles(runtime).isEmpty, "and then dies")
     }
 
     func testABurstRespectsTheMaximum() throws {
@@ -53,8 +60,8 @@ final class ParticleEmitterShapeTests: XCTestCase {
         system.instantaneous = 40
         system.maximum = 25
         let runtime = try runtime(system)
-        ParticleCPUSimulation.update([runtime], deltaTime: 1 / 60, cursor: .zero)
-        XCTAssertEqual(runtime.particles.count, 25)
+        gpu.update([runtime], deltaTime: 1 / 60, cursor: .zero)
+        XCTAssertEqual(gpu.particles(runtime).count, 25)
     }
 
     /// `sphererandom` (wallpaper64.exe 0x140237c14): a radius between `distancemin` and
@@ -72,14 +79,12 @@ final class ParticleEmitterShapeTests: XCTestCase {
         configuration.emitter.distanceMaximum = SIMD3(repeating: 40)
         configuration.emitter.sign = SIMD3(0, 1, 0)
         configuration.emitter.appliesSign = true
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        let texture = try XCTUnwrap(device.makeTexture(descriptor: .texture2DDescriptor(
-            pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)))
-        let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 9)
+        let runtime = try runtime(configuration)
         let inputs = ParticleFrameInputs.advance(runtime, deltaTime: 0, cursor: .zero)
-        ParticleCPUSimulation.step(runtime, inputs: inputs)
-        XCTAssertEqual(runtime.particles.count, 200)
-        for particle in runtime.particles {
+        gpu.step(runtime, inputs: inputs)
+        let particles = gpu.particles(runtime)
+        XCTAssertEqual(particles.count, 200)
+        for particle in particles {
             let offset = particle.position - system.origin
             XCTAssertGreaterThanOrEqual(simd_length(offset), 20 - 1e-3, "inside distancemin")
             XCTAssertLessThanOrEqual(simd_length(offset), 40 + 1e-3)
@@ -104,14 +109,12 @@ final class ParticleEmitterShapeTests: XCTestCase {
         configuration.emitter.distanceMaximum = SIMD3(60, 30, 0)
         configuration.emitter.sign = SIMD3(-1, 0, 0)
         configuration.emitter.appliesSign = true
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        let texture = try XCTUnwrap(device.makeTexture(descriptor: .texture2DDescriptor(
-            pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)))
-        let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 9)
-        ParticleCPUSimulation.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 0, cursor: .zero))
-        XCTAssertEqual(runtime.particles.count, 300)
+        let runtime = try runtime(configuration)
+        gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 0, cursor: .zero))
+        let particles = gpu.particles(runtime)
+        XCTAssertEqual(particles.count, 300)
         var sides = Set<Bool>()
-        for particle in runtime.particles {
+        for particle in particles {
             let offset = particle.position - system.origin
             XCTAssertLessThanOrEqual(offset.x, -10 + 1e-3, "sign forces x negative, beyond distancemin")
             XCTAssertGreaterThanOrEqual(offset.x, -60 - 1e-3)

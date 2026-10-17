@@ -32,7 +32,7 @@ struct ParticleRendererDraw {
 /// ([system+0x250]) and every particle shifts its history by one and records its position
 /// (0x140232cad…0x140232db8). A spawned particle starts with one sample, where it spawned
 /// (0x14023f9e3). The trail's texture then slides with the countdown, so it stays on the
-/// samples between them (`ParticleRecordWriter.ropeRenderVar`).
+/// samples between them (`ParticleMaterialUniforms.ropeRenderVar`).
 struct ParticleTrailHistory: Equatable {
     /// A renderer of the system is a `ropetrail`.
     var kept: Bool

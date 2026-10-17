@@ -33,7 +33,7 @@ struct ParticleChildLink {
     /// Whether the child runs as instances.
     let instanced: Bool
     /// Link flag 1: the child's control points from this index on are the parent's particles
-    /// (`ParticleControlPointLink`); nil without it.
+    /// (`particleLinkPoints`); nil without it.
     var controlPointStart: Int? = nil
     /// Link flag 2 (the editor's "Restart with periodic emission"): each time a periodic emitter of
     /// the parent starts a period, the child starts over (`wallpaper64.exe` 0x14022f790 →

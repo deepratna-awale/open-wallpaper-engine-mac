@@ -104,16 +104,17 @@ final class ParticleBudgetTests: XCTestCase {
         XCTAssertEqual(ParticleBudget.capacity(of: remapped), 3_000)
     }
 
-    /// Thinned systems hold fewer particles on the CPU, as many as the scaled maximum allows.
-    func testTheCPUSimulationHoldsTheScaledMaximum() {
+    /// Thinned systems hold fewer particles, as many as the scaled maximum allows.
+    func testTheSimulationHoldsTheScaledMaximum() throws {
         var systems = [system(maximum: 400, rate: 2_000)]
         XCTAssertEqual(ParticleBudget.capacity(of: systems[0]), 400)
         ParticleBudget.apply(100, to: &systems)
         let runtime = ParticleSystemRuntime(texture: texture, configuration: systems[0], seed: 3)
+        let gpu = try ParticleGPUStepper()
         for _ in 0..<60 {
-            ParticleCPUSimulation.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero))
+            gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero))
         }
-        XCTAssertEqual(runtime.particles.count, 100)
+        XCTAssertEqual(gpu.particles(runtime).count, 100)
     }
 
     /// The loader counts every system of the scene, children, instances and the `count` override

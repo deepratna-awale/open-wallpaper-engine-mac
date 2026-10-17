@@ -5,7 +5,7 @@ import simd
 @testable import OpenWallpaperEngine
 
 /// `collisionmodel` (docs/models-plan.md §2.12, §4.3 M10): WE's capsule fit and placement, the
-/// four responses against a capsule, CPU and GPU agreeing, and the operator's link to its model.
+/// four responses against a capsule, a simulated system colliding, and the operator's link to its model.
 final class ParticleCollisionModelTests: XCTestCase {
     // MARK: - Capsule fitting (0x1401d5880)
 
@@ -79,126 +79,61 @@ final class ParticleCollisionModelTests: XCTestCase {
                                                world: world).isEmpty, "an empty box gives none")
     }
 
-    // MARK: - The responses (0x1402508c0, 0x140250e00, 0x140251320, 0x1402517d0)
+    // MARK: - Simulation
 
-    /// A capsule along x from the origin, 10 long, radius 2; the particle 1 above its middle,
-    /// falling.
-    private func resolve(_ behavior: ParticleCollision.Behavior, position: SIMD3<Float> = SIMD3(5, 1, 0),
-                         capsules: [ParticleCapsule] = [ParticleCapsule(start: .zero, direction: SIMD3(1, 0, 0), length: 10, radius: 2)])
-        -> (position: SIMD3<Float>, velocity: SIMD3<Float>, dies: Bool) {
-        let placements = ParticleCollision(shape: .model(index: 0), behavior: behavior, bounceFactor: 0.5).placed(capsules: capsules)
-        var point = position, velocity = SIMD3<Float>(1, -4, 0.5), dies = false
-        ParticleCollisionPlacement.resolveCapsules(placements[...], position: &point, velocity: &velocity, dies: &dies)
-        return (point, velocity, dies)
-    }
-
-    func testEachBehaviourAgainstACapsule() {
-        let bounce = resolve(.bounce)
-        XCTAssertEqual(bounce.position, SIMD3(5, 2, 0), "pushed out to the surface")
-        XCTAssertEqual(bounce.velocity, SIMD3(1, 2, 0.5), "v += n·(n·v)·−(1 + 0.5)")
-        XCTAssertFalse(bounce.dies)
-        let slide = resolve(.slide)
-        XCTAssertEqual(slide.position, SIMD3(5, 2, 0))
-        XCTAssertEqual(slide.velocity, SIMD3(1, 0, 0.5), "the normal part removed")
-        let stop = resolve(.stop)
-        XCTAssertEqual(stop.position, SIMD3(5, 2, 0))
-        XCTAssertEqual(stop.velocity, .zero)
-        let delete = resolve(.delete)
-        XCTAssertTrue(delete.dies)
-        XCTAssertEqual(delete.position, SIMD3(5, 1, 0), "a deleted particle isn't moved")
-        XCTAssertEqual(delete.velocity, SIMD3(1, -4, 0.5))
-    }
-
-    func testTheSegmentEndsAreRoundAndTheLastCapsuleHitWins() {
-        // Past the end the distance is to the end point, in 3D.
-        let past = resolve(.stop, position: SIMD3(11, 0, 1))
-        XCTAssertLessThan(simd_distance(past.position, SIMD3(10, 0, 0) + simd_normalize(SIMD3(1, 0, 1)) * 2), 1e-5)
-        let clear = resolve(.stop, position: SIMD3(12, 0, 1))
-        XCTAssertEqual(clear.velocity, SIMD3(1, -4, 0.5), "√5 from the end: outside the radius")
-        // Two capsules hit: the second one's normal and depth.
-        let crossing = [ParticleCapsule(start: .zero, direction: SIMD3(1, 0, 0), length: 10, radius: 2),
-                        ParticleCapsule(start: SIMD3(5, -5, -1), direction: SIMD3(0, 1, 0), length: 10, radius: 3)]
-        let both = resolve(.slide, position: SIMD3(5, 1, 0), capsules: crossing)
-        XCTAssertEqual(both.position, SIMD3(5, 1, 2), "out along +z, the second capsule's normal")
-        XCTAssertEqual(both.velocity, SIMD3(1, -4, 0))
-    }
-
-    // MARK: - CPU and GPU
-
-    private var device: MTLDevice!
-    private var queue: MTLCommandQueue!
+    private var gpu: ParticleGPUStepper!
 
     override func setUpWithError() throws {
-        device = MTLCreateSystemDefaultDevice()
-        queue = device?.makeCommandQueue()
+        gpu = try ParticleGPUStepper()
+        gpu.sceneSize = SIMD2(1280, 720)
     }
 
-    func testTheGPUCollidesWithCapsulesAsTheCPUDoes() throws {
-        let device = try XCTUnwrap(device), queue = try XCTUnwrap(queue)
-        let simulator = try ParticleGPUSimulator(device: device)
-        let texture = try XCTUnwrap(device.makeTexture(descriptor: .texture2DDescriptor(
-            pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)))
+    func testASystemCollidesWithItsModelsCapsules() throws {
+        let texture = try gpu.texture()
         // Particles fall from (500, 500) onto a capsule across their path, tilted in depth so the
         // hits push them along z too, next to a second one they fall past.
         let capsules = [ParticleCapsule(start: SIMD3(380, 430, -20), direction: simd_normalize(SIMD3(240, 0, 40)),
                                         length: simd_length(SIMD3<Float>(240, 0, 40)), radius: 25),
                         ParticleCapsule(start: SIMD3(700, 300, 0), direction: SIMD3(0, 1, 0), length: 50, radius: 10)]
+        func mean(_ values: [ParticleGPUState]) -> SIMD4<Float> {
+            let total: SIMD4<Float> = values.reduce(SIMD4<Float>.zero) { (sum: SIMD4<Float>, p: ParticleGPUState) -> SIMD4<Float> in
+                sum + SIMD4<Float>(p.position.x, p.position.y, p.z, p.zVelocity)
+            }
+            return total / Float(max(values.count, 1))
+        }
+        var plain = ParticleTestSystem()
+        plain.gravity = SIMD2(0, -400)
+        // The same system without the capsules.
+        let free = ParticleSystemRuntime(texture: texture, configuration: plain.configuration, seed: 7)
+        for _ in 0..<120 {
+            gpu.step(free, inputs: ParticleFrameInputs.advance(free, deltaTime: 1 / 60, cursor: .zero))
+        }
+        let freeParticles = gpu.particles(free)
+        let unhindered = mean(freeParticles)
         for behavior in [ParticleCollision.Behavior.bounce, .slide, .stop, .delete] {
-            var system = ParticleTestSystem()
-            system.gravity = SIMD2(0, -400)
+            var system = plain
             var model = ParticleOperator(.collision)
             model.collision = ParticleCollision(shape: .model(index: 1), behavior: behavior, bounceFactor: 0.7)
             system.operators = [model]
             var configuration = system.configuration
             configuration.collisionModels = [1: "model"]
-            let cpu = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 7)
-            let gpu = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 7)
+            let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 7)
             let provider = { (id: String) -> [ParticleCapsule] in id == "model" ? capsules : [] }
-            var last: MTLCommandBuffer?
             for _ in 0..<120 {
-                let cpuInputs = ParticleFrameInputs.advance(cpu, deltaTime: 1 / 60, cursor: .zero, modelCapsules: provider)
-                XCTAssertEqual(cpuInputs.collisions.count, 2)
-                XCTAssertEqual(cpuInputs.operators.last?.header.z, 0 | 2 << 16, "the operator's capsules")
-                ParticleCPUSimulation.step(cpu, inputs: cpuInputs)
-                let inputs = ParticleFrameInputs.advance(gpu, deltaTime: 1 / 60, cursor: .zero, modelCapsules: provider)
-                let commandBuffer = try XCTUnwrap(queue.makeCommandBuffer())
-                simulator.encode([.init(system: gpu, inputs: inputs, kind: .sprite, materialVertexCount: 6)],
-                                 sceneSize: SIMD2(1280, 720), targetSize: SIMD2(1280, 720), commandBuffer: commandBuffer)
-                commandBuffer.commit()
-                last = commandBuffer
+                let inputs = ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero, modelCapsules: provider)
+                XCTAssertEqual(inputs.collisions.count, 2)
+                XCTAssertEqual(inputs.operators.last?.header.z, 0 | 2 << 16, "the operator's capsules")
+                gpu.step(runtime, inputs: inputs)
             }
-            last?.waitUntilCompleted()
-            XCTAssertNil(last?.error)
-            let states = simulator.snapshot(gpu, queue: queue)
-            XCTAssertGreaterThan(cpu.particles.count, 50, "\(behavior)")
-            let cpuCount = Double(cpu.particles.count)
-            let onePercent: Double = cpuCount * 0.01
-            let allowed: Double = onePercent > 2 ? onePercent : 2
-            XCTAssertEqual(Double(states.count), cpuCount, accuracy: allowed, "\(behavior): count")
-            func mean(_ values: [SIMD4<Float>]) -> SIMD4<Float> {
-                let total: SIMD4<Float> = values.reduce(SIMD4<Float>.zero, +)
-                return total / Float(max(values.count, 1))
-            }
-            let expected = mean(cpu.particles.map { (p: Particle) -> SIMD4<Float> in
-                SIMD4<Float>(p.position.x, p.position.y, p.z, p.zVelocity)
-            })
-            let actual = mean(states.map { (s: ParticleGPUState) -> SIMD4<Float> in
-                SIMD4<Float>(s.positionVelocity.x, s.positionVelocity.y, s.depth.x, s.depth.y)
-            })
-            XCTAssertLessThan(simd_distance(actual, expected), 1, "\(behavior): mean position, depth and z velocity \(actual) vs \(expected)")
+            let particles = gpu.particles(runtime)
+            XCTAssertGreaterThan(particles.count, 50, "\(behavior)")
             // The capsules changed the particles, against the same system without them.
-            let free = ParticleSystemRuntime(texture: texture, configuration: system.configuration, seed: 7)
-            for _ in 0..<120 {
-                ParticleCPUSimulation.step(free, inputs: ParticleFrameInputs.advance(free, deltaTime: 1 / 60, cursor: .zero))
-            }
             if behavior == .delete {
-                XCTAssertLessThan(cpu.particles.count, free.particles.count - 20, "delete: particles hitting the capsule die")
+                XCTAssertLessThan(particles.count, freeParticles.count - 20, "delete: particles hitting the capsule die")
             } else {
-                let unhindered = mean(free.particles.map { (p: Particle) -> SIMD4<Float> in
-                    SIMD4<Float>(p.position.x, p.position.y, p.z, p.zVelocity)
-                })
-                XCTAssertGreaterThan(expected.y - unhindered.y, 5, "\(behavior): held up by the capsule")
-                let depth: Float = abs(expected.z) + abs(expected.w)
+                let held = mean(particles)
+                XCTAssertGreaterThan(held.y - unhindered.y, 5, "\(behavior): held up by the capsule")
+                let depth: Float = abs(held.z) + abs(held.w)
                 XCTAssertGreaterThan(depth, 0.01, "\(behavior): the tilted capsule pushed them in depth")
             }
         }
@@ -233,8 +168,7 @@ final class ParticleCollisionModelTests: XCTestCase {
     }
 
     func testAnUnlinkedOperatorCollidesWithNothingAndLeavesTheOthersInPlace() throws {
-        let texture = try XCTUnwrap(device?.makeTexture(descriptor: .texture2DDescriptor(
-            pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)))
+        let texture = try gpu.texture()
         var system = ParticleTestSystem()
         var model = ParticleOperator(.collision)
         model.collision = ParticleCollision(shape: .model(index: 0))

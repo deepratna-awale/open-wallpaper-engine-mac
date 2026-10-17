@@ -55,18 +55,18 @@ final class ParticleShadowAtlasTests: XCTestCase {
             descriptor.usage = [.renderTarget]
             return descriptor
         }()))
+        let simulator = try ParticleGPUSimulator(device: device)
         var draws: [Int] = []
         for bound in [nil, atlas] as [MTLTexture?] {
-            let system = ParticleSystemRuntime(texture: white, configuration: ParticleMaterialRenderTests.configuration(plan: plan))
-            system.particles = [Particle(position: SIMD2(32, 32), velocity: .zero, age: 0, lifetime: 10, size: 20, baseSize: 20,
-                                         alpha: 1, baseAlpha: 1, rotation: 0, angularVelocity: 0, color: SIMD4(repeating: 1),
-                                         baseColor: SIMD4(repeating: 1), spriteFrame: 0, history: [], historyStart: 0)]
-            XCTAssertTrue(renderer.prepare(system, pixelFormat: .rgba8Unorm, opacity: { _ in 1 }))
+            let system = ParticleSystemRuntime(texture: white, configuration: ParticleMaterialRenderTests.configuration(
+                plan: plan, placing: [ParticleMaterialRenderTests.Placed(position: SIMD2(32, 32), size: 20)]))
             let pass = MTLRenderPassDescriptor()
             pass.colorAttachments[0].texture = target
             pass.colorAttachments[0].loadAction = .clear
             pass.colorAttachments[0].storeAction = .dontCare
             let buffer = try XCTUnwrap(queue.makeCommandBuffer())
+            XCTAssertTrue(ParticleMaterialRenderTests.step(system, renderer: renderer, simulator: simulator,
+                                                           pixelFormat: .rgba8Unorm, sceneSize: SIMD2(64, 64), commandBuffer: buffer))
             let encoder = try XCTUnwrap(buffer.makeRenderCommandEncoder(descriptor: pass))
             let before = renderer.drawsEncoded
             renderer.draw(system, encoder: encoder, commandBuffer: buffer, context: .init(

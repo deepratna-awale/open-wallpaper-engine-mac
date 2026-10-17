@@ -104,14 +104,30 @@ final class ParticleRendererDrawTests: XCTestCase {
         let draws = ParticleSystemRuntime.addingRendererDraws([simulation])
         let trail = draws[1]
         XCTAssertEqual(trail.configuration.trailHistory, system.trailHistory)
+        let gpu = try ParticleGPUStepper()
         for _ in 0..<60 {
-            ParticleCPUSimulation.step(simulation, inputs: ParticleFrameInputs.advance(simulation, deltaTime: 1 / 60, cursor: .zero))
+            let inputs = ParticleFrameInputs.advance(simulation, deltaTime: 1 / 60, cursor: .zero)
             trail.followSimulation()
+            var drawn = inputs
+            drawn.drawSizeScale = trail.drawSizeScale
+            drawn.spriteLinear = trail.spriteLinear
+            gpu.step([(simulation, inputs), (trail, drawn)])
         }
-        XCTAssertGreaterThan(simulation.particles.count, 0)
-        XCTAssertEqual(trail.particles.map(\.position), simulation.particles.map(\.position))
-        XCTAssertTrue(trail.particles.contains { !$0.history.isEmpty }, "the simulation samples the trail's history")
-        XCTAssertTrue(trail.particles.allSatisfy { $0.history.count <= 6 })
+        let particles = gpu.particles(simulation)
+        XCTAssertGreaterThan(particles.count, 0)
+        let histories = particles.enumerated().map { index, particle in
+            gpu.simulator.history(simulation, particle: particle, index: index, queue: gpu.queue)
+        }
+        XCTAssertTrue(histories.contains { !$0.isEmpty }, "the simulation samples the trail's history")
+        XCTAssertTrue(histories.allSatisfy { $0.count <= 6 })
+        // The trail draws the sprites' particles: each strand starts at a particle with history.
+        let records = gpu.simulator.records(trail, as: ParticleRopeSegmentInstance.self, queue: gpu.queue).records
+        let heads: [SIMD2<Float>] = records.filter { $0.previous.w == 0 }.map { SIMD2<Float>($0.start.x, $0.start.y) }
+        let sampled = zip(particles, histories).filter { !$0.1.isEmpty }.map { $0.0 }
+        XCTAssertEqual(heads.count, sampled.count)
+        for particle in sampled {
+            XCTAssertTrue(heads.contains { simd_distance($0, particle.position) < 1e-4 })
+        }
         XCTAssertEqual(trail.elapsedTime, simulation.elapsedTime)
     }
 
@@ -120,7 +136,7 @@ final class ParticleRendererDrawTests: XCTestCase {
     /// A star moving at a steady speed, drawn as a `ropetrail` (3 s, 4 segments: a sample every
     /// 0.75 s) and stepped at an even 60 fps: where its texture ends must move on steadily with
     /// the star. Mapping the texture by segment index instead of by the samples'
-    /// age (WE's segment time offset, `ParticleRecordWriter.ropeRenderVar`) leaves the end on the
+    /// age (WE's segment time offset, `ParticleMaterialUniforms.ropeRenderVar`) leaves the end on the
     /// oldest sample until the next one is taken, then jumps it a quarter of the trail.
     func testARopeTrailsTextureEndMovesEvenly() throws {
         var test = ParticleTestSystem()
@@ -135,15 +151,17 @@ final class ParticleRendererDrawTests: XCTestCase {
         test.minimumVelocity = SIMD2(300, 0)
         test.maximumVelocity = SIMD2(300, 0)
         let system = ParticleSystemRuntime(texture: texture, configuration: test.configuration, seed: 1)
+        let gpu = try ParticleGPUStepper()
         let step: Float = 1 / 60
         var heads: [Float] = [], ends: [Float] = []
         for frame in 0..<270 {
-            ParticleCPUSimulation.step(system, inputs: ParticleFrameInputs.advance(system, deltaTime: step, cursor: .zero))
+            gpu.step(system, inputs: ParticleFrameInputs.advance(system, deltaTime: step, cursor: .zero))
             // From 3.5 s on the trail is full.
             guard frame >= 210 else { continue }
-            XCTAssertEqual(system.particles.count, 1)
-            heads.append(system.particles[0].position.x)
-            ends.append(try XCTUnwrap(Self.textureEnd(system)).x)
+            let particles = gpu.particles(system)
+            XCTAssertEqual(particles.count, 1)
+            heads.append(try XCTUnwrap(particles.first).position.x)
+            ends.append(try XCTUnwrap(Self.textureEnd(system, gpu: gpu)).x)
         }
         let expected = 300 * step
         for (index, pair) in zip(heads, heads.dropFirst()).enumerated() {
@@ -165,15 +183,10 @@ final class ParticleRendererDrawTests: XCTestCase {
     }
 
     /// Where `system`'s first strand reaches texture coordinate 1, as `genericropeparticle.vert`'s
-    /// `TRAILRENDERER` branch maps its records with `g_RenderVar0`.
-    private static func textureEnd(_ system: ParticleSystemRuntime) -> SIMD2<Float>? {
-        let count = ParticleRecordWriter.recordCount(system, format: .rope)
-        var records = [ParticleRopeSegmentInstance](repeating: ParticleRopeSegmentInstance(
-            start: .zero, end: .zero, previous: .zero, next: .zero, endColor: .zero, color: .zero), count: count)
-        records.withUnsafeMutableBytes { bytes in
-            ParticleRecordWriter.write(system, format: .rope, count: count, into: bytes.baseAddress!, opacity: { _ in 1 })
-        }
-        let renderVar = ParticleRecordWriter.ropeRenderVar(system)
+    /// `TRAILRENDERER` branch maps the last GPU step's records with `g_RenderVar0`.
+    private static func textureEnd(_ system: ParticleSystemRuntime, gpu: ParticleGPUStepper) -> SIMD2<Float>? {
+        let records = gpu.simulator.records(system, as: ParticleRopeSegmentInstance.self, queue: gpu.queue).records
+        let renderVar = ParticleMaterialUniforms.ropeRenderVar(system)
         let offset = renderVar.z, maximum = renderVar.w
         var oldest: SIMD2<Float>?
         for record in records {

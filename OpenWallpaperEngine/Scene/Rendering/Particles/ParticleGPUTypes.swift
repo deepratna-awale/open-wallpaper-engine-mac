@@ -3,7 +3,7 @@ import simd
 // The GPU simulation's shared structures; `ParticleSimulation.metal` declares the same layouts
 // (`particleLayoutSizes` checks the sizes). Every field is a 16-byte vector so both sides agree.
 
-/// One particle on the GPU (`Particle` on the CPU).
+/// One particle on the GPU.
 struct ParticleGPUState {
     /// Position xy, velocity zw.
     var positionVelocity: SIMD4<Float>
@@ -25,7 +25,7 @@ struct ParticleGPUState {
 }
 
 
-/// One instance of an instanced child system on the GPU (`ParticleInstance` on the CPU).
+/// One instance of an instanced child system on the GPU (`ParticleChildLink`).
 struct ParticleGPUInstance {
     struct Flag: OptionSet {
         let rawValue: UInt32
@@ -49,7 +49,7 @@ struct ParticleGPUInstance {
     var flags: Flag { Flag(rawValue: state.x) }
 }
 
-/// The parent particles a linked child's control points take (`ParticleControlPointLink`), for one
+/// The parent particles a linked child's control points take (link flag 1), for one
 /// instance: up to eight positions, oldest first, and how many.
 struct ParticleGPULinkedPoints {
     /// Scene xy and depth of each parent particle.

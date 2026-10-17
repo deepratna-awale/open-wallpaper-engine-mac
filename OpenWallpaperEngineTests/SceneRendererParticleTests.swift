@@ -3,37 +3,22 @@ import MetalKit
 import AppKit
 @testable import OpenWallpaperEngine
 
-/// Whole frames of `SceneMetalRenderer` with a particle system between two layers, simulated on
-/// the GPU and on the CPU: particles cover the layer below and are covered by the layer above.
+/// Whole frames of `SceneMetalRenderer` with a particle system between two layers: particles cover the layer below and are covered by the layer above.
 final class SceneRendererParticleTests: XCTestCase {
     private static let size = 128
 
     func testGPUSimulatedParticlesDrawBetweenTheirLayers() throws {
-        try assertDrawOrder(simulation: .gpu, material: false)
-    }
-
-    func testCPUSimulatedParticlesDrawBetweenTheirLayers() throws {
-        try assertDrawOrder(simulation: .cpu, material: false)
+        try assertDrawOrder(material: false)
     }
 
     func testGPUSimulatedParticlesDrawThroughTheirMaterialBetweenTheirLayers() throws {
         _ = try Fixtures.assets()
-        try assertDrawOrder(simulation: .gpu, material: true)
-    }
-
-    func testCPUSimulatedParticlesDrawThroughTheirMaterialBetweenTheirLayers() throws {
-        _ = try Fixtures.assets()
-        try assertDrawOrder(simulation: .cpu, material: true)
+        try assertDrawOrder(material: true)
     }
 
     func testGPUSimulatedRefractionReadsTheSceneUpToItsSystem() throws {
         _ = try Fixtures.assets()
-        try assertRefractionSnapshot(simulation: .gpu)
-    }
-
-    func testCPUSimulatedRefractionReadsTheSceneUpToItsSystem() throws {
-        _ = try Fixtures.assets()
-        try assertRefractionSnapshot(simulation: .cpu)
+        try assertRefractionSnapshot()
     }
 
     // MARK: - Helpers
@@ -41,14 +26,13 @@ final class SceneRendererParticleTests: XCTestCase {
     /// A: red under everything. C: green over the left half, below the particles. B: blue over
     /// the right half, above them. A refracting sprite on the left samples half a screen to its
     /// right (`refract_normal.json`): the snapshot there holds A, and not yet B.
-    private func assertRefractionSnapshot(simulation: SceneMetalRenderer.ParticleSimulation,
-                                          file: StaticString = #filePath, line: UInt = #line) throws {
+    private func assertRefractionSnapshot(file: StaticString = #filePath, line: UInt = #line) throws {
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let view = MTKView(frame: CGRect(x: 0, y: 0, width: Self.size, height: Self.size), device: device)
         view.colorPixelFormat = .bgra8Unorm
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: Self.size, height: Self.size)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, particleSimulation: simulation))
+        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view))
         view.isPaused = true
         renderer.setPlacement(.stretch)
 
@@ -110,14 +94,14 @@ final class SceneRendererParticleTests: XCTestCase {
         return p.count == 4 && p[0] < 5 && p[1] > 250 && p[2] < 5
     }
 
-    private func assertDrawOrder(simulation: SceneMetalRenderer.ParticleSimulation, material: Bool,
+    private func assertDrawOrder(material: Bool,
                                  file: StaticString = #filePath, line: UInt = #line) throws {
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let view = MTKView(frame: CGRect(x: 0, y: 0, width: Self.size, height: Self.size), device: device)
         view.colorPixelFormat = .bgra8Unorm
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: Self.size, height: Self.size)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, particleSimulation: simulation))
+        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view))
         view.isPaused = true
         renderer.setPlacement(.stretch)
 

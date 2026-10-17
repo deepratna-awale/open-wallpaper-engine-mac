@@ -2,14 +2,13 @@ import simd
 
 /// What a particle system's simulation step reads from outside the particles: the time step,
 /// script-evaluated values, the system's space this frame, control points and the encoded
-/// program. Both simulations (CPU and GPU) step from the same inputs, evaluated once per frame on
-/// the CPU.
+/// program, evaluated once per frame on the CPU for the GPU's step (`ParticleGPUSimulator`).
 ///
 /// WE simulates a system in its object's space unless the system is `worldspace` (flag 1), and
 /// draws it through the object's model matrix (`wallpaper64.exe` 0x14023761b…0x14023767a; the
 /// particle vertex shaders expand in that space). The particles here are kept in the scene;
 /// `space` takes the system's space to the scene, and every initializer and operator runs in the
-/// system's space (`ParticleProgramCPU`, `ParticleProgram.h`), so velocities, gravity and every
+/// system's space (`ParticleProgram.h`), so velocities, gravity and every
 /// distance scale and turn with the object as they do in WE.
 struct ParticleFrameInputs {
     var deltaTime: Float = 0
@@ -104,7 +103,7 @@ struct ParticleFrameInputs {
     /// offsets and the velocity initializers turn with its point's (0x140237c14, 0x14023b364).
     var controlPointAxes = [simd_float3x3](repeating: matrix_identity_float3x3, count: ParticleControlPoint.count)
     /// The offsets the object's `controlpoint<n>` overrides give, by index; nil for a point they
-    /// don't drive (`ParticleCPUSimulation.keepWrittenControlPoints`).
+    /// don't drive.
     var overridePoints = [SIMD3<Float>?](repeating: nil, count: ParticleControlPoint.count)
     /// The points an override drives that didn't change since the last step: the GPU keeps what the
     /// last step wrote there (`particleEmitSerial`). Bit n is control point n.
@@ -202,7 +201,7 @@ struct ParticleFrameInputs {
             system.emitterStates += Array(repeating: ParticleEmitterState(), count: emitters.count - system.emitterStates.count)
         }
         for (index, emitter) in emitters.enumerated() {
-            // An instanced system times each instance instead (`ParticleCPUSimulation.updateInstances`).
+            // An instanced system times each instance instead (`ParticleInstances.metal`).
             if !configuration.isInstanced {
                 let key = ParticleEmitterState.clockKey(0, emitter: index)
                 let step = system.emitterStates[index].clock.advance(deltaTime, timing: emitter.timing, seed: system.seed, key: key)
@@ -363,15 +362,6 @@ struct ParticleFrameInputs {
             if let driven, system.lastOverridePoints[index] == driven { keptPoints |= 1 << UInt32(index) }
             system.lastOverridePoints[index] = driven
             let turn = overrides.controlPointAngles[index].map(ParticleProgramCPU.controlPointRotation) ?? matrix_identity_float3x3
-            // A point the override drives keeps what a remap wrote until the override changes.
-            if let driven, let written = system.writtenOverridePoints[index], written.override == driven {
-                controlPoints[index] = written.point
-                controlPointAxes[index] = turn
-                system.lastControlPoints[index] = sceneControlPoint(index)
-                system.lastControlPointAxes[index] = turn
-                continue
-            }
-            system.writtenOverridePoints[index] = nil
             let offset = driven ?? point.offset
             if point.followsCursor {
                 controlPoints[index] = inSpace(SIMD3(cursor, 0))

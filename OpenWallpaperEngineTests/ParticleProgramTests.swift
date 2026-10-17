@@ -6,12 +6,12 @@ import simd
 /// WE's particle defaults and semantics, from `wallpaper64.exe` (its particle parser 0x1401c1c70,
 /// initializer switch 0x14023b5c0, operator VM 0x14023fbc0).
 final class ParticleProgramTests: XCTestCase {
+    private var gpu: ParticleGPUStepper!
     private var texture: MTLTexture!
 
     override func setUpWithError() throws {
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        texture = try XCTUnwrap(device.makeTexture(descriptor: .texture2DDescriptor(
-            pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)))
+        gpu = try ParticleGPUStepper()
+        texture = try gpu.texture()
     }
 
     private func decode<T: Decodable>(_ json: String) throws -> T {
@@ -128,66 +128,83 @@ final class ParticleProgramTests: XCTestCase {
 
     // MARK: - Semantics
 
-    private func state(age: Float, lifetime: Float = 1) -> ParticleProgramState {
-        var state = ParticleProgramState()
-        state.age = age
-        state.lifetime = lifetime
-        state.baseSize = 10
-        state.baseAlpha = 1
-        return state
+    /// `count` particles of one burst at rest (base size 10, alpha 1, white, no spin) with
+    /// `configure`'s changes (and `adjust`'s to the built system), after a step of `age` seconds
+    /// past the spawn, by serial.
+    private func burst(count: Int = 1, age: Float, lifetime: Float = 1, seed: UInt32 = 1,
+                       adjust: (inout SceneMetalParticleSystem) -> Void = { _ in },
+                       _ configure: (inout ParticleTestSystem) -> Void = { _ in }) -> [ParticleGPUState] {
+        var system = ParticleTestSystem()
+        system.emissionRate = 0
+        system.instantaneous = count
+        system.maximum = count
+        system.spawnExtent = .zero
+        system.minimumVelocity = .zero
+        system.maximumVelocity = .zero
+        system.lifetime = lifetime...lifetime
+        system.size = 10...10
+        system.alpha = 1...1
+        system.minimumColor = SIMD4(repeating: 1)
+        system.maximumColor = SIMD4(repeating: 1)
+        system.rotation = 0...0
+        system.angularVelocity = 0...0
+        system.spins = false
+        configure(&system)
+        var configuration = system.configuration
+        adjust(&configuration)
+        let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: seed)
+        gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 0, cursor: .zero))
+        // A frame time of 25 ms or less leaves the drag undamped (`ParticleFrameInputs.dragDeltaTime`).
+        if age > 0 { gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: age, cursor: .zero,
+                                                                           frameTime: 0.025)) }
+        return gpu.particles(runtime).sorted { $0.serial < $1.serial }
     }
 
-    func testTwoOperatorsOfAKindBothApplyInOrder() {
-        let grow = ParticleOperator(.sizeChange, a: SIMD4(1, 3, 0, 1)).record
-        let shrink = ParticleOperator(.sizeChange, a: SIMD4(1, 0.5, 0, 1)).record
-        var particle = state(age: 0.5)
-        _ = ParticleProgramCPU.runOperators([grow, shrink], on: &particle, context: ParticleProgramContext(), index: 0,
-                                            neighbors: .init())
-        XCTAssertEqual(particle.size, 10 * 2 * 0.75, accuracy: 1e-5, "both multiply the base size")
+    func testTwoOperatorsOfAKindBothApplyInOrder() throws {
+        let plain = try XCTUnwrap(burst(age: 0.5).first)
+        let both = try XCTUnwrap(burst(age: 0.5) {
+            $0.operators = [ParticleOperator(.sizeChange, a: SIMD4(1, 3, 0, 1)), ParticleOperator(.sizeChange, a: SIMD4(1, 0.5, 0, 1))]
+        }.first)
+        XCTAssertEqual(both.size, plain.baseSize * 2 * 0.75, accuracy: 1e-4, "both multiply the base size")
     }
 
-    func testAlphaFadeUsesFractionsOfTheLife() {
-        let fade = ParticleOperator(.alphaFade, a: SIMD4(0.5, 0.5, 0, 0)).record
+    func testAlphaFadeUsesFractionsOfTheLife() throws {
         for (age, expected) in [(0.25, 0.5), (0.5, 1), (0.75, 0.5)] as [(Float, Float)] {
-            var particle = state(age: age)
-            _ = ParticleProgramCPU.runOperators([fade], on: &particle, context: ParticleProgramContext(), index: 0,
-                                                neighbors: .init())
-            XCTAssertEqual(particle.alpha, expected, accuracy: 1e-5)
+            let particle = try XCTUnwrap(burst(age: age) {
+                $0.operators = [ParticleOperator(.alphaFade, a: SIMD4(0.5, 0.5, 0, 0))]
+            }.first)
+            XCTAssertEqual(particle.alpha, expected, accuracy: 1e-4, "age \(age)")
         }
     }
 
     func testOscillationsDrawEachParticlesOwnRandom() {
-        let oscillate = ParticleOperator(.oscillateAlpha, b: SIMD4(1, 10, 0, 6.28), c: SIMD4(0, 1, 0, 0)).record
-        var values: Set<Float> = []
-        for random in [0.1, 0.5, 0.9] as [Float] {
-            var context = ParticleProgramContext()
-            context.random = random
-            var particle = state(age: 0.3)
-            _ = ParticleProgramCPU.runOperators([oscillate], on: &particle, context: context, index: 0, neighbors: .init())
-            XCTAssertLessThanOrEqual(particle.alpha, random + 1e-5, "the random also scales the swing")
-            values.insert(particle.alpha)
+        let particles = burst(count: 3, age: 0.3) {
+            $0.operators = [ParticleOperator(.oscillateAlpha, b: SIMD4(1, 10, 0, 6.28), c: SIMD4(0, 1, 0, 0))]
         }
-        XCTAssertEqual(values.count, 3, "not the middle of the range for all")
+        XCTAssertEqual(particles.count, 3)
+        XCTAssertTrue(particles.allSatisfy { $0.alpha <= 1 + 1e-5 }, "the random scales the swing")
+        XCTAssertEqual(Set(particles.map(\.alpha)).count, 3, "not the middle of the range for all")
     }
 
     /// `colorrandom` keeps `min` and `max − min` as they are (parser 0x1401c74bb…0x1401c7778, the
     /// span from 0x14005f0a0), so a minimum above the maximum (the snowstorm fog's "220 250 255" …
     /// "149 180 255") draws between the two, from the minimum down; nothing sorts or clamps it.
     func testColorRandomWithItsMinimumAboveItsMaximumDrawsBetweenThem() throws {
-        let record = try initializer(#"{"name":"colorrandom","min":"220 250 255","max":"149 180 255"}"#)
+        let element: WEParticleInitializer = try decode(#"{"name":"colorrandom","min":"220 250 255","max":"149 180 255"}"#)
+        let colorRandom = try XCTUnwrap(ParticleInitializerBuilder.make(element, defaults: ParticleDefaults(pixelUnits: true), path: "t"))
+        let record = colorRandom.record
         let minimum = SIMD3<Float>(220, 250, 255) / 255
         let maximum = SIMD3<Float>(149, 180, 255) / 255
         XCTAssertEqual(record.a.x, minimum.x, accuracy: 1e-5)
         XCTAssertEqual(record.b.x, maximum.x, accuracy: 1e-5)
-        var sum = SIMD3<Float>.zero
         let count: Int = 400
-        for serial in 0..<count {
-            var particle = state(age: 0)
-            particle.baseColor = SIMD3(repeating: 1)
-            var context = ParticleProgramContext()
-            context.serial = UInt32(serial)
-            ParticleProgramCPU.runInitializers([record], on: &particle, context: context)
-            let color: SIMD3<Float> = particle.baseColor
+        let particles = burst(count: count, age: 0) {
+            $0.initializers = [colorRandom]
+        }
+        XCTAssertEqual(particles.count, count)
+        var sum = SIMD3<Float>.zero
+        for particle in particles {
+            let color = SIMD3<Float>(particle.baseColor.x, particle.baseColor.y, particle.baseColor.z)
             let red: Float = color.x, green: Float = color.y
             XCTAssertLessThanOrEqual(red, minimum.x + 1e-5)
             XCTAssertGreaterThanOrEqual(red, maximum.x - 1e-5)
@@ -202,15 +219,13 @@ final class ParticleProgramTests: XCTestCase {
     }
 
     func testHSVColorRandomPicksHueSteps() {
-        let record = ParticleInitializer(.hsvColorRandom, a: SIMD4(0, 1.0 / 6.0, 6, 0), b: SIMD4(1, 1, 1, 1)).record
+        let particles = burst(count: 200, age: 0) {
+            $0.initializers = [ParticleInitializer(.hsvColorRandom, a: SIMD4(0, 1.0 / 6.0, 6, 0), b: SIMD4(1, 1, 1, 1))]
+        }
+        XCTAssertEqual(particles.count, 200)
         var hues: Set<[Float]> = []
-        for serial in UInt32(0)..<200 {
-            var particle = state(age: 0)
-            particle.baseColor = SIMD3(repeating: 1)
-            var context = ParticleProgramContext()
-            context.serial = serial
-            ParticleProgramCPU.runInitializers([record], on: &particle, context: context)
-            let c = particle.baseColor
+        for particle in particles {
+            let c = SIMD3<Float>(particle.baseColor.x, particle.baseColor.y, particle.baseColor.z)
             XCTAssertEqual(max(c.x, c.y, c.z), 1, accuracy: 1e-5, "full value")
             XCTAssertEqual(min(c.x, c.y, c.z), 0, accuracy: 1e-5, "full saturation")
             hues.insert([c.x, c.y, c.z].map { ($0 * 100).rounded() })
@@ -218,13 +233,26 @@ final class ParticleProgramTests: XCTestCase {
         XCTAssertEqual(hues.count, 6, "six hues, 60° apart")
     }
 
+    /// A pure hue at full saturation and value.
+    private func rgb(hue: Float) -> SIMD3<Float> {
+        let h = hue * 6, f = h - floor(h)
+        switch Int(floor(h)) % 6 {
+        case 0: return SIMD3(1, f, 0)
+        case 1: return SIMD3(1 - f, 1, 0)
+        case 2: return SIMD3(0, 1, f)
+        case 3: return SIMD3(0, 1 - f, 1)
+        case 4: return SIMD3(f, 0, 1)
+        default: return SIMD3(1, 0, 1 - f)
+        }
+    }
+
     /// `colorlist` keeps every colour (WE's list is a vector, 0x1401ba740; its editor offers 1…10):
     /// ten pure hues each turn up, through the colour records past the fourth.
     func testColorListPicksFromAllTenColors() throws {
         let hues = (0..<10).map { Float($0) / 10 }
         let colors = hues.map { hue -> String in
-            let rgb = ParticleProgramCPU.hsvToRGB(hue, 1, 1)
-            return "\"\(rgb.x) \(rgb.y) \(rgb.z)\""
+            let color = rgb(hue: hue)
+            return "\"\(color.x) \(color.y) \(color.z)\""
         }
         let element: WEParticleInitializer = try decode(#"{"name":"colorlist","colors":[\#(colors.joined(separator: ","))]}"#)
         let initializer = try XCTUnwrap(ParticleInitializerBuilder.make(element, defaults: ParticleDefaults(pixelUnits: true), path: "t"))
@@ -233,14 +261,12 @@ final class ParticleProgramTests: XCTestCase {
         let records = ParticleInitializer.encoded([initializer], records: [initializer.record])
         XCTAssertEqual(records.count, 2, "one colour record holds the six past the fourth")
         XCTAssertEqual(records[0].header.w, 1)
+        let particles = burst(count: 400, age: 0) { $0.initializers = [initializer] }
+        XCTAssertEqual(particles.count, 400)
         var seen: Set<Int> = []
-        for serial in UInt32(0)..<400 {
-            var particle = state(age: 0)
-            particle.baseColor = SIMD3(repeating: 1)
-            var context = ParticleProgramContext()
-            context.serial = serial
-            ParticleProgramCPU.runInitializers(records, on: &particle, context: context)
-            let picked = try XCTUnwrap(hues.indices.first { simd_distance(ParticleProgramCPU.hsvToRGB(hues[$0], 1, 1), particle.baseColor) < 1e-3 })
+        for particle in particles {
+            let color = SIMD3<Float>(particle.baseColor.x, particle.baseColor.y, particle.baseColor.z)
+            let picked = try XCTUnwrap(hues.indices.first { simd_distance(rgb(hue: hues[$0]), color) < 1e-3 })
             seen.insert(picked)
         }
         XCTAssertEqual(seen, Set(0..<10))
@@ -253,49 +279,56 @@ final class ParticleProgramTests: XCTestCase {
     /// 0.65 of the same particles without the remap), flags 0 keeps growing to twice it (1.33).
     func testRemapValueFlagsClampTheInputAndTheOutput() throws {
         for (flags, factor) in [("", 1.5), (#", "flags": 0"#, 1.5), (#", "flags": 1"#, 1), (#", "flags": 2"#, 1)] as [(String, Float)] {
-            let remap = try `operator`(#"{"name": "remapvalue", "input": "lifetimefraction", "output": "size", "#
-                                       + #""operation": "multiply", "inputrangemin": 0, "inputrangemax": 0.5, "#
-                                       + #""outputrangemin": 0, "outputrangemax": 1"# + flags + "}")
-            var particle = state(age: 0.75)
-            _ = ParticleProgramCPU.runOperators([remap], on: &particle, context: ParticleProgramContext(), index: 0,
-                                                neighbors: .init())
-            XCTAssertEqual(particle.size, 10 * factor, accuracy: 1e-4, "flags\(flags)")
+            let element: WEParticleOperator = try decode(#"{"name": "remapvalue", "input": "lifetimefraction", "output": "size", "#
+                                                         + #""operation": "multiply", "inputrangemin": 0, "inputrangemax": 0.5, "#
+                                                         + #""outputrangemin": 0, "outputrangemax": 1"# + flags + "}")
+            let remap = try XCTUnwrap(ParticleOperatorBuilder.make(element, defaults: ParticleDefaults(pixelUnits: true),
+                                                                   sceneSize: SIMD2(100, 100), path: "t"))
+            let particle = try XCTUnwrap(burst(age: 0.75) { $0.operators = [remap] }.first)
+            XCTAssertEqual(particle.size, particle.baseSize * factor, accuracy: 1e-3, "flags\(flags)")
         }
     }
 
-    /// WE simulates particles in 3D: `movement` moves them along z by their z velocity, with the
-    /// gravity's z and the drag (0x14023fc08), and an emitter spreading along z launches them
-    /// radially in depth too (0x140237c14). A `perspective` system's camera shows it.
+    /// WE simulates particles in 3D: an emitter spreading along z launches them radially in depth
+    /// (0x140237c14), and `movement` moves them along z by their z velocity, with the gravity's z
+    /// and the drag (0x14023fc08). A `perspective` system's camera shows it.
     func testMovementAndTheEmitterWorkInDepth() throws {
-        let movement = try `operator`(#"{"name": "movement", "gravity": "0 0 -10", "drag": 0.5}"#)
-        var particle = state(age: 0)
-        particle.velocity.z = 20
-        var context = ParticleProgramContext()
-        context.deltaTime = 0.5
-        context.dragDeltaTime = 0.5
-        _ = ParticleProgramCPU.runOperators([movement], on: &particle, context: context, index: 0, neighbors: .init())
-        XCTAssertEqual(particle.position.z, 7.5, accuracy: 1e-5, "(20 − 10·0.5)·0.5")
-        XCTAssertEqual(particle.velocity.z, 11.25, accuracy: 1e-5, "15·(1 − 0.5·0.5)")
-        var shape = ParticleEmitterShape()
-        shape.directions = SIMD3(0, 0, 1)
-        shape.distanceMinimum = SIMD3(repeating: 100)
-        shape.distanceMaximum = SIMD3(repeating: 100)
-        shape.speed = SIMD2(10, 10)
-        for serial in UInt32(0)..<8 {
-            var spawn = ParticleProgramContext()
-            spawn.serial = serial
-            let emitted = ParticleProgramCPU.emit(shape, context: spawn)
-            XCTAssertEqual(SIMD2(emitted.position.x, emitted.position.y), .zero)
-            XCTAssertEqual(abs(emitted.position.z), 100, accuracy: 1e-3)
-            XCTAssertEqual(emitted.velocity.z, emitted.position.z > 0 ? 10 : -10, accuracy: 1e-3, "radial, along z")
+        let element: WEParticleOperator = try decode(#"{"name": "movement", "gravity": "0 0 -10", "drag": 0.5}"#)
+        let movement = try XCTUnwrap(ParticleOperatorBuilder.make(element, defaults: ParticleDefaults(pixelUnits: true),
+                                                                  sceneSize: SIMD2(100, 100), path: "t"))
+        func particles(age: Float) -> [ParticleGPUState] {
+            burst(count: 8, age: age, lifetime: 10, adjust: { configuration in
+                configuration.emitter.directions = SIMD3(0, 0, 1)
+                configuration.emitter.distanceMinimum = SIMD3(repeating: 100)
+                configuration.emitter.distanceMaximum = SIMD3(repeating: 100)
+                configuration.program.operators = [movement]
+            }) { system in
+                system.emitterSpeed = SIMD2(10, 10)
+            }
+        }
+        let origin = ParticleTestSystem().origin
+        let spawned = particles(age: 0)
+        XCTAssertEqual(spawned.count, 8)
+        for particle in spawned {
+            XCTAssertEqual(particle.position.x, origin.x, accuracy: 1e-3)
+            XCTAssertEqual(particle.position.y, origin.y, accuracy: 1e-3)
+            XCTAssertEqual(abs(particle.z), 100, accuracy: 1e-3)
+            XCTAssertEqual(particle.zVelocity, particle.z > 0 ? 10 : -10, accuracy: 1e-3, "radial, along z")
+        }
+        for particle in particles(age: 0.5) {
+            // (v − 10·0.5)·0.5 along z, then the velocity damped by 1 − 0.5·0.5.
+            let launched: Float = particle.z > 0 ? 10 : -10
+            XCTAssertEqual(particle.z, (launched > 0 ? 100 : -100) + (launched - 5) * 0.5, accuracy: 1e-3)
+            XCTAssertEqual(particle.zVelocity, (launched - 5) * 0.75, accuracy: 1e-3)
         }
     }
 
     func testRemapInitialValueDefaultMultipliesSizeByLifetime() throws {
-        let remap = try initializer(#"{"name":"remapinitialvalue"}"#)
-        var particle = state(age: 0, lifetime: 0.25)
-        ParticleProgramCPU.runInitializers([remap], on: &particle, context: ParticleProgramContext())
-        XCTAssertEqual(particle.baseSize, 2.5, accuracy: 1e-5)
+        let element: WEParticleInitializer = try decode(#"{"name":"remapinitialvalue"}"#)
+        let remap = try XCTUnwrap(ParticleInitializerBuilder.make(element, defaults: ParticleDefaults(pixelUnits: true), path: "t"))
+        let plain = try XCTUnwrap(burst(age: 0, lifetime: 0.25).first)
+        let remapped = try XCTUnwrap(burst(age: 0, lifetime: 0.25) { $0.initializers = [remap] }.first)
+        XCTAssertEqual(remapped.baseSize, plain.baseSize * 0.25, accuracy: 1e-4)
     }
 
     /// Without `movement` WE doesn't move particles by their velocity; with it, velocities and
@@ -315,9 +348,9 @@ final class ParticleProgramTests: XCTestCase {
             configuration.emitterLinear = simd_float2x2(diagonal: SIMD2(repeating: scale))
             let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 1)
             for _ in 0..<60 {
-                ParticleCPUSimulation.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero))
+                gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero))
             }
-            return runtime.particles[0].position.x - system.origin.x
+            return (gpu.particles(runtime).first?.position.x ?? .nan) - system.origin.x
         }
         XCTAssertEqual(travel(scale: 1, movement: false), 0, accuracy: 1e-4)
         XCTAssertEqual(travel(scale: 1, movement: true), 10, accuracy: 0.05)
@@ -345,9 +378,9 @@ final class ParticleProgramTests: XCTestCase {
             system.initializers = [between]
             let runtime = ParticleSystemRuntime(texture: texture, configuration: system.configuration, seed: 1)
             for _ in 0..<20 {
-                ParticleCPUSimulation.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero))
+                gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero))
             }
-            return runtime.particles.map { ($0.position.x - system.origin.x).rounded() }
+            return gpu.particles(runtime).sorted { $0.serial < $1.serial }.map { ($0.position.x - system.origin.x).rounded() }
         }
         XCTAssertEqual(positions(flags: 32), [0, 25, 50, 0, 25, 50])
         XCTAssertEqual(positions(flags: 0), [0, 25, 50, 75, 100, 0])
@@ -385,14 +418,15 @@ final class ParticleProgramTests: XCTestCase {
         XCTAssertEqual(configuration.extraEmitters[0].shape.controlPoint, 1)
         let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 3)
         for _ in 0..<60 {
-            ParticleCPUSimulation.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero))
+            gpu.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero))
         }
-        let atOrigin = runtime.particles.filter { simd_length($0.position) < 1 }.count
-        let atPoint = runtime.particles.filter { simd_distance($0.position, SIMD2(300, 0)) < 1 }.count
+        let simulated = gpu.particles(runtime)
+        let atOrigin = simulated.filter { simd_length($0.position) < 1 }.count
+        let atPoint = simulated.filter { simd_distance($0.position, SIMD2(300, 0)) < 1 }.count
         XCTAssertEqual(atOrigin, 30, "the first emitter's rate")
         // The burst comes out of the emitter's own carry (0x140237a06): 5 at once, then 45 by its rate.
         XCTAssertEqual(atPoint, 50, "the second's rate and burst, on its control point")
-        XCTAssertEqual(runtime.particles.count, 80)
+        XCTAssertEqual(simulated.count, 80)
     }
 
     /// WE's parser knows only `sphererandom`, `boxrandom` and `layerimage`, by name ignoring case;
@@ -447,9 +481,9 @@ final class ParticleProgramTests: XCTestCase {
         system.drag = 2
         func velocity(frameTime: Float, limit: Int) -> Float {
             let runtime = ParticleSystemRuntime(texture: texture, configuration: system.configuration, seed: 1)
-            ParticleCPUSimulation.step(runtime, inputs: ParticleFrameInputs.advance(
+            gpu.step(runtime, inputs: ParticleFrameInputs.advance(
                 runtime, deltaTime: 0.1, cursor: .zero, frameTime: frameTime, frameRateLimit: limit))
-            return runtime.particles[0].velocity.x
+            return gpu.particles(runtime).first?.velocity.x ?? .nan
         }
         let damped: Float = 100 * (1 - 2 * 0.1 * pow(Float(0.25), 0.7))
         XCTAssertEqual(velocity(frameTime: 0.1, limit: 60), damped, accuracy: 1e-3)

@@ -8,7 +8,6 @@ final class ParticleSystemRuntime {
     /// when it samples that as it is.
     let fallbackTexture: MTLTexture
     let configuration: SceneMetalParticleSystem
-    var particles: [Particle] = []
     var elapsedTime: Float = 0
     /// Steps taken (`ParticleFrameInputs.frameIndex`).
     var frameIndex: UInt32 = 0
@@ -52,14 +51,9 @@ final class ParticleSystemRuntime {
     /// The last step's rope inputs (`ParticleRopeUV.layout`): rate and lifetime overrides and the
     /// frame-rate limit.
     var ropeFrame = SIMD3<Float>(1, 1, 0)
-    /// Particles that died of age since the system started (a scrolling rope's shift), on the CPU.
-    var died: UInt32 = 0
     /// Seconds until the particles next record their trail history (`ParticleTrailHistory`): WE's
     /// countdown, one per system.
     var trailTimer: Float = 0
-    /// Control points a remap wrote over a point the instance override drives: the override then,
-    /// and the point in the system's space (`keepWrittenControlPoints`).
-    var writtenOverridePoints: [Int: (override: SIMD3<Float>, point: SIMD3<Float>)] = [:]
     /// The fraction of the day (`remapvalue`'s `timeofday`), and when it was read: the calendar is
     /// asked again once a second at most.
     private var dayFraction: (value: Float, at: CFTimeInterval)?
@@ -74,17 +68,10 @@ final class ParticleSystemRuntime {
     /// The offsets the instance override gave the control points last step (`keptPoints`).
     var lastOverridePoints = [SIMD3<Float>?](repeating: nil, count: ParticleControlPoint.count)
     /// Each emitter's clock (`ParticleEmitterTiming`), carried fraction and what its rate emitted this
-    /// period (`ParticleFrameInputs.periodLimit`) for a system that isn't instanced; the CPU
-    /// simulation's counts.
+    /// period (`ParticleFrameInputs.periodLimit`) for a system that isn't instanced.
     var emitterStates: [ParticleEmitterState]
     /// The system this one is a child of (`SceneMetalParticleSystem.link`).
     weak var parent: ParticleSystemRuntime?
-    /// An instanced system's instances (`ParticleChildLink`), on the CPU.
-    var instances: [ParticleInstance] = []
-    /// A parent's particles spawned and died in its last CPU step, in array order, for its event
-    /// children.
-    var spawnedThisStep: [Particle] = []
-    var diedThisStep: [Particle] = []
     /// Its `layerimage` emitters' images (`SceneMetalParticleSystem.emitterImages`) as last
     /// sampled: the load's until a resampling (flag 0x20000) replaces their points.
     var emitterImages: [ParticleEmitterImage]
@@ -115,9 +102,6 @@ final class ParticleSystemRuntime {
         emitterImages = configuration.emitterImages
         imageResampleTimers = Array(repeating: 0, count: configuration.emitters.count)
         lastImageWorlds = Array(repeating: nil, count: configuration.emitters.count)
-        if configuration.isInstanced {
-            instances = Array(repeating: ParticleInstance(), count: max(configuration.link?.maximumInstances ?? 0, 0))
-        }
     }
 
     /// Replaces the points of image `slot` (a resampling's, `ParticleEmitterImageResampler`).
@@ -154,14 +138,11 @@ extension ParticleSystemRuntime {
         }
     }
 
-    /// Takes the particles and draw state `simulation`'s step left this frame, with this
-    /// renderer's orientation.
+    /// Takes the draw state `simulation`'s step left this frame, with this renderer's orientation.
     func followSimulation() {
         guard let simulation else { return }
-        particles = simulation.particles
         elapsedTime = simulation.elapsedTime
         frameIndex = simulation.frameIndex
-        died = simulation.died
         trailTimer = simulation.trailTimer
         ropeFrame = simulation.ropeFrame
         drawLinear = simulation.drawLinear
@@ -175,17 +156,5 @@ extension ParticleSystemRuntime {
         let name = configuration.rendererName
         guard name.contains("trail") || name.hasPrefix("rope") else { return 1 }
         return sqrt(abs(simd_determinant(drawLinear)))
-    }
-
-    /// A built-in sprite's quad axes (`LayerUniform.quadAxisX`, y up) for a particle of `size` and
-    /// `rotation` drawn along `spriteLinear` (its orientation through `drawLinear`), as WE's model
-    /// matrix draws it. `scale` takes scene
-    /// units to the target's pixels. `spriteAxes` in `ParticleShared.h` is the GPU's.
-    func spriteAxes(size: Float, rotation: Float, scale: SIMD2<Float>) -> (x: SIMD2<Float>, y: SIMD2<Float>) {
-        let c = cos(rotation), s = sin(rotation)
-        // Rotated in the shader's y-down corner space, then flipped to y up.
-        let x: SIMD2<Float> = spriteLinear * (SIMD2(c, -s) * size)
-        let y: SIMD2<Float> = spriteLinear * (SIMD2(-s, -c) * size)
-        return (x * scale, -y * scale)
     }
 }

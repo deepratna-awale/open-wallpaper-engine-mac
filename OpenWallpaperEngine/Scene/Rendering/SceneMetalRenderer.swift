@@ -264,8 +264,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Which layers other layers' effects sample, and the order that prepares them first; made
     /// again whenever `layers` changes.
     var layerCompositeOrder: SceneLayerCompositeOrder?
-    var particleInstances: [LayerUniform] = []
-    private var particleInstanceStorage: MTLBuffer?
 
     var particleSystems: [ParticleSystemRuntime] = [] {
         didSet { emitterImages.noteSystems(particleSystems) }
@@ -274,7 +272,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     lazy var emitterImages = SceneEmitterImages(device: device, queue: commandQueue) { [weak self] block in
         self?.performOnRenderThread(block)
     }
-    /// Steps particle systems on the GPU; nil runs them on the CPU (`ParticleCPUSimulation`).
+    /// Steps particle systems on the GPU; nil when it couldn't be made (logged), and then no
+    /// particle system draws.
     let particleSimulator: ParticleGPUSimulator?
     /// This frame's GPU steps, reused across frames.
     var particleRequests: [ParticleGPUSimulator.Request] = []
@@ -349,18 +348,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     /// Every particle system's particles by scene object (a child under its family root's id),
-    /// read back from the GPU state, else the CPU simulation's. Blocks until the GPU is done.
+    /// read back from the GPU state (none before a system's first step). Blocks until the GPU is done.
     func particleSamples() -> [(objectID: String?, particles: [ParticleSample])] {
         particleSystems.map { system in
-            if let simulator = particleSimulator, system.gpu != nil {
-                let states = simulator.snapshot(system, queue: commandQueue)
-                return (particleObjectID(system), states.map {
-                    ParticleSample(age: $0.life.x, lifetime: $0.life.y, size: $0.life.z, alpha: $0.alphaRotation.x,
-                                   color: $0.color)
-                })
-            }
-            return (particleObjectID(system), system.particles.map {
-                ParticleSample(age: $0.age, lifetime: $0.lifetime, size: $0.size, alpha: $0.alpha, color: $0.color)
+            let states = particleSimulator?.snapshot(system, queue: commandQueue) ?? []
+            return (particleObjectID(system), states.map {
+                ParticleSample(age: $0.life.x, lifetime: $0.life.y, size: $0.life.z, alpha: $0.alphaRotation.x,
+                               color: $0.color)
             })
         }
     }
@@ -599,17 +593,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Told how long each frame took on the CPU, including the wait for a drawable.
     var frameTimeObserver: ((CFTimeInterval) -> Void)?
 
-    /// Where particle systems are simulated. The CPU simulation is the reference the GPU one is
-    /// tested against (`ParticleSimulationParityTests`), and the fallback when compute is unavailable.
-    enum ParticleSimulation {
-        case gpu, cpu
-    }
-
     /// A renderer that draws into `view` itself (`draw(in:)`). `scriptServices` runs the scenes'
     /// SceneScripts (nil runs none); `screenID` names the display whose script storage they use.
-    convenience init?(view: MTKView, particleSimulation: ParticleSimulation = .gpu, scriptServices: SceneScriptServices? = nil,
+    convenience init?(view: MTKView, scriptServices: SceneScriptServices? = nil,
                       screenID: String = "", pipelineArchiveDirectory: URL? = EffectPipelineArchive.defaultDirectory) {
-        self.init(pixelFormat: view.colorPixelFormat, particleSimulation: particleSimulation,
+        self.init(pixelFormat: view.colorPixelFormat,
                   scriptServices: scriptServices, screenID: screenID, pipelineArchiveDirectory: pipelineArchiveDirectory)
         configure(view)
         // Drawn by the view's own timer, on the main thread.
@@ -619,7 +607,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// A renderer for drawables of `pixelFormat`. A shared scene's displays each show its frames
     /// through their own view (`configure`, `renderShared`, `present(in:)`).
-    init?(pixelFormat: MTLPixelFormat, particleSimulation: ParticleSimulation = .gpu,
+    init?(pixelFormat: MTLPixelFormat,
           scriptServices: SceneScriptServices? = nil, screenID: String = "",
           pipelineArchiveDirectory: URL? = EffectPipelineArchive.defaultDirectory) {
         guard let device = MTLCreateSystemDefaultDevice(),
@@ -650,15 +638,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             return nil
         }
 
-        switch particleSimulation {
-        case .gpu:
-            do {
-                particleSimulator = try ParticleGPUSimulator(device: device)
-            } catch {
-                OWELog.error(.scene, "GPU particle simulation unavailable, simulating on the CPU: \(error)")
-                particleSimulator = nil
-            }
-        case .cpu:
+        do {
+            particleSimulator = try ParticleGPUSimulator(device: device)
+        } catch {
+            OWELog.error(.scene, "The GPU particle simulation can't be made, so no particle system draws: \(error)")
             particleSimulator = nil
         }
         self.device = device
@@ -796,172 +779,4 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }()
     /// This frame's images of the layers models and other layers sample, by layer id.
     var layerComposites: [String: MTLTexture] = [:]
-
-    func spriteSheetUV(for particle: Particle,
-                       configuration: SceneMetalParticleSystem) -> (origin: SIMD2<Float>, size: SIMD2<Float>) {
-        guard let sheet = configuration.spriteSheet, sheet.frames > 0 else {
-            return (.zero, SIMD2<Float>(repeating: 1))
-        }
-        let frame: Int
-        switch configuration.animationMode {
-        case "randomframe":
-            frame = particle.spriteFrame % sheet.frames
-        case "once":
-            frame = min(Int(saturating: (particle.age / particle.lifetime) * Float(sheet.frames) * configuration.sequenceMultiplier),
-                        sheet.frames - 1)
-        default:
-            // Over the particle's life, times `sequencemultiplier` (`ParticleRecordWriter.spritePhase`).
-            let cycle = particle.age / max(particle.lifetime, 0.0001) * configuration.sequenceMultiplier
-            frame = Int(saturating: (cycle - cycle.rounded(.down)) * Float(sheet.frames), in: 0...(sheet.frames - 1))
-        }
-        let column = frame % sheet.columns
-        let row = frame / sheet.columns
-        let size = SIMD2<Float>(1 / Float(sheet.columns), 1 / Float(sheet.rows))
-        return (SIMD2<Float>(Float(column) * size.x, Float(row) * size.y), size)
-    }
-
-    func appendParticleTrail(_ particle: Particle, system: ParticleSystemRuntime,
-                             drawableSize: SIMD2<Float>) {
-        let speed = simd_length(particle.velocity)
-        // `ComputeParticleTrailTangents` (common_particles.h): the size times the speed's stretch,
-        // clamped to `minlength`…`maxlength`.
-        let limits = system.configuration.trailLengthLimits
-        let stretch = max(limits.y, min(speed * system.configuration.trailLength, limits.x))
-        let size = particle.size * system.drawSizeScale
-        let length = size * stretch
-        let width = system.configuration.refractive ? max(2, size * 0.08) : size
-        var uniform = layerUniform(position: particle.position,
-                                   size: SIMD2<Float>(width, length),
-                                   opacity: particleOpacity(particle, in: system), drawableSize: drawableSize, placement: .stretch)
-        uniform.rotation = speed > 0.01 ? atan2(particle.velocity.y, particle.velocity.x) - .pi / 2 : particle.rotation
-        uniform.color = particle.color
-        let uv = spriteSheetUV(for: particle, configuration: system.configuration)
-        uniform.uvOrigin = uv.origin
-        uniform.uvAxisX = SIMD2<Float>(uv.size.x, 0)
-        uniform.uvAxisY = SIMD2<Float>(0, uv.size.y)
-        particleInstances.append(uniform)
-    }
-
-    /// Grows geometrically so a system that ramps up to its particle cap stops reallocating.
-    func particleInstanceBuffer(for count: Int) -> MTLBuffer? {
-        guard count > 0 else { return nil }
-        let needed = MemoryLayout<LayerUniform>.stride * count
-        if let buffer = particleInstanceStorage, buffer.length >= needed { return buffer }
-        particleInstanceStorage = device.makeBuffer(length: max(needed * 2, 64 * MemoryLayout<LayerUniform>.stride),
-                                                    options: .storageModeShared)
-        return particleInstanceStorage
-    }
-
-    /// Draws one rope per particle through its own position history, rather than one rope through
-    /// the whole system as `rope` does.
-    func appendRopeTrail(_ particle: Particle, system: ParticleSystemRuntime,
-                         drawableSize: SIMD2<Float>) {
-        let configuration = system.configuration
-        var trail = particle.orderedHistory
-        // The newest sample lags by up to one interval, so close the gap to the particle itself.
-        trail.append(particle.position)
-        guard trail.count > 1 else { return }
-
-        let opacity = particleOpacity(particle, in: system)
-        let subdivision = max(configuration.ropeSubdivision, 1)
-        var spline: [SIMD2<Float>] = []
-        for index in 0..<(trail.count - 1) {
-            let previous = trail[index > 0 ? index - 1 : index]
-            let start = trail[index]
-            let end = trail[index + 1]
-            let following = trail[index + 2 < trail.count ? index + 2 : index + 1]
-            for step in 0..<subdivision {
-                spline.append(catmullRom(previous, start, end, following, Float(step) / Float(subdivision)))
-            }
-        }
-        spline.append(trail[trail.count - 1])
-
-        let uv = spriteSheetUV(for: particle, configuration: configuration)
-        for index in 0..<(spline.count - 1) {
-            let start = spline[index]
-            let end = spline[index + 1]
-            let delta = end - start
-            let length = simd_length(delta)
-            guard length > 0.01 else { continue }
-            // 0 at the oldest sample, 1 at the particle itself.
-            let progress = Float(index + 1) / Float(spline.count - 1)
-            // A rope ribbon is twice the particle's size wide.
-            let size = 2 * particle.size * system.drawSizeScale
-            let width = configuration.fadeTrailSize ? size * progress : size
-            var uniform = layerUniform(position: (start + end) / 2,
-                                       size: SIMD2<Float>(length, max(width, 0.01)),
-                                       opacity: configuration.fadeTrailAlpha ? opacity * progress : opacity,
-                                       drawableSize: drawableSize, placement: .stretch)
-            uniform.rotation = atan2(delta.y, delta.x)
-            uniform.color = particle.color
-            uniform.uvOrigin = uv.origin
-            uniform.uvAxisX = SIMD2<Float>(uv.size.x, 0)
-            uniform.uvAxisY = SIMD2<Float>(0, uv.size.y)
-            particleInstances.append(uniform)
-        }
-    }
-
-    /// One rope through the system's particles; one per instance of an instanced system.
-    func appendRope(_ system: ParticleSystemRuntime, drawableSize: SIMD2<Float>) {
-        for strand in ParticleRopeStrands.strands(system.particles) {
-            appendRope(strand, system: system, drawableSize: drawableSize)
-        }
-    }
-
-    func appendRope(_ particles: [Particle], system: ParticleSystemRuntime, drawableSize: SIMD2<Float>) {
-        guard particles.count > 1 else { return }
-        var spline: [(position: SIMD2<Float>, size: Float, color: SIMD4<Float>, opacity: Float)] = []
-        let subdivision = max(system.configuration.ropeSubdivision, 1)
-        for index in 0..<(particles.count - 1) {
-            let previous = particles[index > 0 ? index - 1 : index]
-            let start = particles[index]
-            let end = particles[index + 1]
-            let following = particles[index + 2 < particles.count ? index + 2 : index + 1]
-            for step in 0..<subdivision {
-                let t = Float(step) / Float(subdivision)
-                spline.append((catmullRom(previous.position, start.position, end.position, following.position, t),
-                               start.size + (end.size - start.size) * t,
-                               simd_mix(start.color, end.color, SIMD4<Float>(repeating: t)),
-                               particleOpacity(start, in: system)
-                                   + (particleOpacity(end, in: system) - particleOpacity(start, in: system)) * t))
-            }
-        }
-        if let last = particles.last {
-            spline.append((last.position, last.size, last.color, particleOpacity(last, in: system)))
-        }
-        for index in 0..<(spline.count - 1) {
-            let start = spline[index]
-            let end = spline[index + 1]
-            let delta = end.position - start.position
-            let length = simd_length(delta)
-            guard length > 0.01 else { continue }
-            // A rope ribbon is twice the particle's size wide.
-            let averageSize = (start.size + end.size) * system.drawSizeScale
-            var uniform = layerUniform(position: (start.position + end.position) / 2,
-                                       size: SIMD2<Float>(length, averageSize),
-                                       opacity: (start.opacity + end.opacity) / 2,
-                                       drawableSize: drawableSize, placement: .stretch)
-            uniform.rotation = atan2(delta.y, delta.x)
-            uniform.color = (start.color + end.color) / 2
-            particleInstances.append(uniform)
-        }
-    }
-
-    private func catmullRom(_ previous: SIMD2<Float>, _ start: SIMD2<Float>, _ end: SIMD2<Float>,
-                            _ following: SIMD2<Float>, _ t: Float) -> SIMD2<Float> {        let t2 = t * t
-        let t3 = t2 * t
-        // Split into terms so older compilers type-check it in reasonable time.
-        let a: SIMD2<Float> = 2 * start
-        let b: SIMD2<Float> = (end - previous) * t
-        let c1: SIMD2<Float> = 2 * previous - 5 * start
-        let c: SIMD2<Float> = (c1 + 4 * end - following) * t2
-        let d1: SIMD2<Float> = 3 * start - previous
-        let d: SIMD2<Float> = (d1 - 3 * end + following) * t3
-        return 0.5 * (a + b + c + d)
-    }
-
-    /// The particle's alpha (`alphafade` is one of its operators) with the material's multiplier.
-    func particleOpacity(_ particle: Particle, in system: ParticleSystemRuntime) -> Float {
-        particle.alpha * system.configuration.opacityMultiplier
-    }
 }

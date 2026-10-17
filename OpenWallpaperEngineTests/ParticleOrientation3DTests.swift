@@ -167,11 +167,10 @@ final class ParticleOrientation3DTests: XCTestCase {
                                                  from: Data(#"{"name": "sprite", "orientation": "fixed", "axis": "0 0 1"}"#.utf8))
             configuration.orientation = ParticleOrientation(fixed)
         }
+        configuration = ParticleMaterialRenderTests.placing([ParticleMaterialRenderTests.Placed(position: .zero, size: size)],
+                                                            in: configuration)
         let system = ParticleSystemRuntime(texture: try whiteTexture(), configuration: configuration)
-        system.particles = [Particle(position: .zero, velocity: .zero, age: 0, lifetime: 10, size: size, baseSize: size,
-                                     alpha: 1, baseAlpha: 1, rotation: 0, angularVelocity: 0, color: SIMD4(repeating: 1),
-                                     baseColor: SIMD4(repeating: 1), spriteFrame: 0, history: [], historyStart: 0)]
-        XCTAssertTrue(renderer.prepare(system, pixelFormat: .rgba8Unorm, opacity: { _ in 1 }))
+        let simulator = try ParticleGPUSimulator(device: device)
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: Self.size, height: Self.size,
                                                                   mipmapped: false)
         descriptor.usage = [.renderTarget, .shaderRead]
@@ -183,6 +182,8 @@ final class ParticleOrientation3DTests: XCTestCase {
         pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 1)
         pass.colorAttachments[0].storeAction = .store
         let buffer = try XCTUnwrap(queue.makeCommandBuffer())
+        XCTAssertTrue(ParticleMaterialRenderTests.step(system, renderer: renderer, simulator: simulator, pixelFormat: .rgba8Unorm,
+                                                       sceneSize: SIMD2(Float(Self.size), Float(Self.size)), commandBuffer: buffer))
         let encoder = try XCTUnwrap(buffer.makeRenderCommandEncoder(descriptor: pass))
         renderer.draw(system, encoder: encoder, commandBuffer: buffer, context: .init(
             sceneSize: SIMD2(Float(Self.size), Float(Self.size)), frame: BuiltinFrameContext(), values: NoValues(),

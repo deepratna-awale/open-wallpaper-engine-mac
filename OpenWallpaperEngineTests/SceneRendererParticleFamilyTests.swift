@@ -3,24 +3,19 @@ import MetalKit
 import AppKit
 @testable import OpenWallpaperEngine
 
-/// Whole renderer frames with particle children and animated parents, simulated on the GPU and on
-/// the CPU: a static child draws where its link puts it, and a system under an animated group
+/// Whole renderer frames with particle children and animated parents: a static child draws where its link puts it, and a system under an animated group
 /// moves with the group, particles and all.
 final class SceneRendererParticleFamilyTests: XCTestCase {
     private static let size = 128
 
-    func testGPUStaticChildDrawsAtItsLink() throws { try assertStaticChild(simulation: .gpu) }
-    func testCPUStaticChildDrawsAtItsLink() throws { try assertStaticChild(simulation: .cpu) }
-    func testGPUParticlesFollowTheirAnimatedParent() throws { try assertAnimatedParent(simulation: .gpu) }
-    func testCPUParticlesFollowTheirAnimatedParent() throws { try assertAnimatedParent(simulation: .cpu) }
-    func testGPUParticlesFollowCameraParallax() throws { try assertCameraParallax(simulation: .gpu) }
-    func testCPUParticlesFollowCameraParallax() throws { try assertCameraParallax(simulation: .cpu) }
+    func testGPUStaticChildDrawsAtItsLink() throws { try assertStaticChild() }
+    func testGPUParticlesFollowTheirAnimatedParent() throws { try assertAnimatedParent() }
+    func testGPUParticlesFollowCameraParallax() throws { try assertCameraParallax() }
 
     // MARK: - Scenarios
 
     /// A dot at (32, 64) and its static child 64 units to the right.
-    private func assertStaticChild(simulation: SceneMetalRenderer.ParticleSimulation,
-                                   file: StaticString = #filePath, line: UInt = #line) throws {
+    private func assertStaticChild(file: StaticString = #filePath, line: UInt = #line) throws {
         var parent = dot().configuration
         parent.order = 1
         var child = dot()
@@ -30,7 +25,7 @@ final class SceneRendererParticleFamilyTests: XCTestCase {
         childConfiguration.link = ParticleChildLink(parentIndex: 0, kind: .static,
                                                     local: SceneLocalTransform(origin: SIMD2(64, 0), scale: SIMD2(1, 1), angle: 0),
                                                     probability: 1, maximumInstances: 1, instanced: false)
-        let pixels = try render(simulation: simulation, systems: [parent, childConfiguration]) {
+        let pixels = try render(systems: [parent, childConfiguration]) {
             Self.isWhite($0, x: 32, y: 64) && Self.isWhite($0, x: 96, y: 64)
         }
         XCTAssertTrue(Self.isWhite(pixels, x: 32, y: 64), "the parent's dot", file: file, line: line)
@@ -41,8 +36,7 @@ final class SceneRendererParticleFamilyTests: XCTestCase {
 
     /// Group 1 slides from x 32 to 96 in 0.5 s; its particle system's one long-lived dot goes with
     /// it.
-    private func assertAnimatedParent(simulation: SceneMetalRenderer.ParticleSimulation,
-                                      file: StaticString = #filePath, line: UInt = #line) throws {
+    private func assertAnimatedParent(file: StaticString = #filePath, line: UInt = #line) throws {
         let text = #"""
         [{"id": 1, "origin": {"value": "32 64 0", "animation": {"options": {"mode": "single", "fps": 60, "length": 30},
             "c0": [{"frame": 0, "value": 32}, {"frame": 30, "value": 96}],
@@ -58,7 +52,7 @@ final class SceneRendererParticleFamilyTests: XCTestCase {
         for object in objects {
             motions[String(object.id!)] = SceneObjectMotion(object: object, bindings: SceneLayerBindings())
         }
-        let pixels = try render(simulation: simulation, systems: [system],
+        let pixels = try render(systems: [system],
                                 transforms: SceneTransformHierarchy(objects: objects), motions: motions,
                                 timelines: SceneTimelineSource(wallpaperID: "family", document: document, signature: "1")) {
             Self.isWhite($0, x: 96, y: 64) && Self.isRed($0, x: 32, y: 64)
@@ -72,8 +66,7 @@ final class SceneRendererParticleFamilyTests: XCTestCase {
     /// WE moves every object's model matrix by camera parallax, particle systems too: the object
     /// at x 40 of a 128-wide scene, with the cursor at the centre and amount 0.5, sits at
     /// 40 + 0.5 · (40 − 64) = 28.
-    private func assertCameraParallax(simulation: SceneMetalRenderer.ParticleSimulation,
-                                      file: StaticString = #filePath, line: UInt = #line) throws {
+    private func assertCameraParallax(file: StaticString = #filePath, line: UInt = #line) throws {
         let objects = try JSONDecoder().decode([WESceneObject].self, from: Data(#"""
         [{"id": 2, "origin": "40 64 0", "particle": "p.json"}]
         """#.utf8))
@@ -83,7 +76,7 @@ final class SceneRendererParticleFamilyTests: XCTestCase {
         system.order = 1
         system.objectID = "2"
         for parallax in [false, true] {
-            let pixels = try render(simulation: simulation, systems: [system],
+            let pixels = try render(systems: [system],
                                     transforms: SceneTransformHierarchy(objects: objects),
                                     parallax: parallax) {
                 parallax ? Self.isWhite($0, x: 17, y: 64) : Self.isWhite($0, x: 50, y: 64)
@@ -113,7 +106,7 @@ final class SceneRendererParticleFamilyTests: XCTestCase {
     }
 
     /// Frames over a red background until `done` holds for the drawn pixels (or 10 s pass).
-    private func render(simulation: SceneMetalRenderer.ParticleSimulation, systems: [SceneMetalParticleSystem],
+    private func render(systems: [SceneMetalParticleSystem],
                         transforms: SceneTransformHierarchy = .empty, motions: [String: SceneObjectMotion] = [:],
                         timelines: SceneTimelineSource? = nil, parallax: Bool = false, until done: ([UInt8]) -> Bool) throws -> [UInt8] {
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
@@ -121,7 +114,7 @@ final class SceneRendererParticleFamilyTests: XCTestCase {
         view.colorPixelFormat = .bgra8Unorm
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: Self.size, height: Self.size)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, particleSimulation: simulation))
+        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view))
         view.isPaused = true
         renderer.setPlacement(.stretch)
         let scene = Float(Self.size)
