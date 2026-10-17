@@ -1,6 +1,6 @@
 import Foundation
 
-/// One pre-rendered Android video, handed to the helper run (`ShaderPrewarmCommand`,
+/// One pre-rendered Android video, handed to the helper run (`HelperRunCommand`,
 /// `--render-android-video <job.json>`, `AndroidVideoRenderer`) as a JSON file: the wallpaper,
 /// the user-property snapshot it renders with, the crop (with its zoom), the pointer, the frame rate, the loop's length, the
 /// bit rate and where the `.mp4` goes.

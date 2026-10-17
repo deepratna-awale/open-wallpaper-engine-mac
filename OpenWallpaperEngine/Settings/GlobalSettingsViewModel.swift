@@ -1,5 +1,5 @@
 //
-//  GlobalSettingsService.swift
+//  GlobalSettingsViewModel.swift
 //  Open Wallpaper Engine
 //
 //  Created by Haren on 2023/9/2.

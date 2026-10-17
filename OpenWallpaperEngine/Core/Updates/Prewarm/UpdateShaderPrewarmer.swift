@@ -9,7 +9,7 @@ import Foundation
 ///   executable) equals this one's, or when the bundle, its signature or its key can't be
 ///   checked (logged);
 /// - otherwise once the new executable, run headless with `--prewarm-shaders`
-///   (`ShaderPrewarmCommand`), has compiled the shown and recent wallpapers into the shared
+///   (`HelperRunCommand`), has compiled the shown and recent wallpapers into the shared
 ///   caches under its key and exited, crashed, or run over `timeout` (then terminated).
 ///
 /// `install` runs exactly once per call.
@@ -77,7 +77,7 @@ final class UpdateShaderPrewarmer {
             return finish("the update at \(bundle.path) has no executable", failed: true)
         }
         let current: ShaderCacheKey = currentKey()
-        runner.output(of: executable, arguments: [ShaderPrewarmCommand.printKeyArgument], environment: environment,
+        runner.output(of: executable, arguments: [HelperRunCommand.printKeyArgument], environment: environment,
                       timeout: keyTimeout) { [weak self] result in
             self?.decided(ShaderPrewarmDecision.decide(current: current, newBuildOutput: result), executable: executable)
         }
@@ -99,7 +99,7 @@ final class UpdateShaderPrewarmer {
     private func start(_ executable: URL) {
         let started = Date()
         do {
-            child = try runner.start(executable, arguments: [ShaderPrewarmCommand.prewarmArgument], environment: environment) { [weak self] status, reason in
+            child = try runner.start(executable, arguments: [HelperRunCommand.prewarmArgument], environment: environment) { [weak self] status, reason in
                 guard let self, self.child != nil else { return }
                 let seconds: String = String(format: "%.1f", Date().timeIntervalSince(started))
                 if reason == .exit, status == 0 {

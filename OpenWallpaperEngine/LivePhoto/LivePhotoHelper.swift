@@ -5,7 +5,7 @@ import Foundation
 /// The app's side of a Live Photo render: it writes the job, runs this app's executable with
 /// `--render-live-photo` in this process's isolated state (`LivePhotoRenderer` renders and encodes
 /// there), reads its progress from the pipe, and terminates it on cancel. The helper exits with
-/// the app (`ShaderPrewarmCommand.exitWithParent`).
+/// the app (`HelperRunCommand.exitWithParent`).
 enum LivePhotoHelper {
     struct Files {
         let directory: URL
@@ -122,7 +122,7 @@ enum LivePhotoHelper {
         let jobFile = directory.appending(path: "job.json")
         try JSONEncoder().encode(job).write(to: jobFile)
         defer { try? FileManager.default.removeItem(at: jobFile) } // Optional: the job is read at start.
-        try await runHelper(argument: ShaderPrewarmCommand.livePhotoArgument, jobFile: jobFile, progress: progress)
+        try await runHelper(argument: HelperRunCommand.livePhotoArgument, jobFile: jobFile, progress: progress)
     }
 
     /// Runs this app's executable with `argument` and `jobFile` in this process's isolated state,

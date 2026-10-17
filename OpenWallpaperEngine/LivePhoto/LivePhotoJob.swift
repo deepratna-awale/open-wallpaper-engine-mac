@@ -1,6 +1,6 @@
 import Foundation
 
-/// One Live Photo render, handed to the helper run (`ShaderPrewarmCommand`, `--render-live-photo
+/// One Live Photo render, handed to the helper run (`HelperRunCommand`, `--render-live-photo
 /// <job.json>`) as a JSON file: the wallpaper, the isolated store's values (its user properties and
 /// layer edits, `IsolatedSceneEditSession.values`), the crop, the device's pixels, the clip, the
 /// movie's quality, where the pointer rests and where the files go. With `analysisPath` it renders no movie: it measures the
