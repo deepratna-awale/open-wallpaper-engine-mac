@@ -109,7 +109,9 @@ struct ModelAnimationTab: View {
                           format: .number.precision(.fractionLength(0...2)))
                     .labelsHidden().frame(width: 80)
             }
-            Picker(ML("Playback"), selection: Binding(get: { options.mode }, set: { mode in editor.updateClip(id) { $0.mode = mode } })) {
+            // WE's clips have no mode (""), which plays as a loop.
+            Picker(ML("Playback"), selection: Binding(get: { options.mode.isEmpty ? "loop" : options.mode },
+                                                      set: { mode in editor.updateClip(id) { $0.mode = mode == "loop" ? "" : mode } })) {
                 Text(ML("Loop")).tag("loop")
                 Text(ML("Mirror")).tag("mirror")
                 Text(ML("Single")).tag("single")
@@ -132,7 +134,7 @@ struct ModelAnimationTab: View {
         }
     }
 
-    private func flag(_ title: String, _ bit: UInt8, _ options: ModelImportConfig.Clip) -> some View {
+    private func flag(_ title: String, _ bit: UInt32, _ options: ModelImportConfig.Clip) -> some View {
         Toggle(title, isOn: Binding(get: { options.motionFlags & bit != 0 }, set: { on in
             editor.updateClip(options.id) { $0.motionFlags = on ? $0.motionFlags | bit : $0.motionFlags & ~bit }
         }))
