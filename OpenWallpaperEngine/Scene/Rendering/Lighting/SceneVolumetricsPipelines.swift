@@ -30,6 +30,7 @@ final class SceneVolumetricsPipelines {
     private var ready: [Key: MTLRenderPipelineState] = [:] // guarded by lock
     private var pending: Set<Key> = [] // guarded by lock
     private var failed: Set<Key> = [] // guarded by lock
+    private var landed = 0 // guarded by lock
     private let compileQueue = DispatchQueue(label: "owe.volumetrics.pipelines", qos: .userInitiated)
     private let clipDepth: MTLComputePipelineState
     let farDepth: MTLDepthStencilState
@@ -118,6 +119,10 @@ final class SceneVolumetricsPipelines {
     }
 
     var failedCount: Int { lock.withLock { failed.count } }
+    /// Whether a pipeline is still compiling: a frame drawn now lacks the volumes.
+    var hasPendingPipelines: Bool { lock.withLock { !pending.isEmpty } }
+    /// Compiles finished so far, however they ended.
+    var pipelinesLanded: Int { lock.withLock { landed } }
 
     /// WE's light buffers are the frame buffer's class: RGBA8, or RGBA16F in HDR (0x140196e49).
     static func lightBufferFormat(scene: MTLPixelFormat) -> MTLPixelFormat {
@@ -139,6 +144,7 @@ final class SceneVolumetricsPipelines {
                 guard let self else { return }
                 self.lock.withLock {
                     self.pending.remove(key)
+                    self.landed += 1
                     if let made { self.ready[key] = made } else { self.failed.insert(key) }
                 }
             }
