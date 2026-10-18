@@ -124,6 +124,6 @@ enum SceneEditOverlayFiles {
     static func assetData(_ path: String, for identity: WallpaperSettingsIdentity,
                           store: SceneEditOverlayStore = defaultStore) -> Data? {
         guard let url = assets(for: identity, store: store).url(for: path) else { return nil }
-        return try? AssetPathResolver.readRegularFile(at: url)
+        return OWELog.attempt(.scene, "Scene edit overlay: \(path)") { try AssetPathResolver.readRegularFile(at: url) }
     }
 }

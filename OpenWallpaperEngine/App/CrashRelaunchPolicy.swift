@@ -61,7 +61,7 @@ struct CrashRelaunchHistory {
 
     func load() -> [Date] {
         guard let data = try? Data(contentsOf: url) else { return [] } // Optional: none yet.
-        return (try? JSONDecoder().decode([Date].self, from: data)) ?? []
+        return OWELog.attempt(.app, "Crash relaunch record", { try JSONDecoder().decode([Date].self, from: data) }) ?? []
     }
 
     func save(_ dates: [Date]) {

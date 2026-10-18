@@ -48,7 +48,8 @@ extension EditorAssetStore {
         let source = "models/\(folder)/\(base).\(fileExtension)"
         try write(sourceData, to: source)
         for companion in companions {
-            guard let data = try? Data(contentsOf: companion) else { continue }
+            // A companion that can't be read is left out (the model may still compile without it).
+            guard let data = EditorLog.attempt("Model import: \(companion.lastPathComponent)", { try Data(contentsOf: companion) }) else { continue }
             try write(data, to: "models/\(folder)/\(ModelCompiler.fileName(companion.lastPathComponent))")
         }
         let stem = revision.map { "\(base)-\($0)" } ?? base
@@ -124,8 +125,9 @@ extension EditorAssetStore {
     /// The configuration beside a model the store holds (`<model>.json`), when there is one.
     public func modelConfig(for model: String) -> ModelImportConfig? {
         let path = (model as NSString).deletingPathExtension + ".json"
-        guard let url = url(for: path), let data = try? Data(contentsOf: url) else { return nil }
-        return try? ModelImportConfig(json: data)
+        guard let url = url(for: path) else { return nil }
+        // One that is there but can't be read or decoded logs, and the model has no configuration.
+        return EditorLog.attempt("Model configuration \(path)") { try ModelImportConfig(json: Data(contentsOf: url)) }
     }
 
     /// The source a model the store holds was compiled from: the FBX or OBJ in its folder whose

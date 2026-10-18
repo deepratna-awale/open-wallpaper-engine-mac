@@ -88,6 +88,7 @@ struct WEWallpaper: Codable, RawRepresentable, Identifiable {
     }
     
     init?(rawValue: String) {
+        // Optional: a raw value that isn't a stored wallpaper is none (RawRepresentable's contract).
         if let rawValueData = rawValue.data(using: .utf8),
            let wallpaper = try? JSONDecoder().decode(WEWallpaper.self, from: rawValueData) {
             self = wallpaper
