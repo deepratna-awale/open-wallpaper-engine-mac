@@ -58,27 +58,18 @@ enum EditorPreviewFolder {
     /// (`EditorPreviewScene.cycleSeconds`), children included: the longest of its objects'.
     static func particleCycleSeconds(in folder: URL) -> Double {
         let read = folderReader(folder)
-        let cycles: [Double] = systemPaths(in: folder, read: read).map {
-            EditorPreviewScene.cycleSeconds(ofSystem: $0, read: definitionReader(read))
-        }
-        return cycles.max() ?? 0
-    }
-
-    /// The particle files the objects of the preview's scene show.
-    private static func systemPaths(in folder: URL, read: (String) -> Data?) -> [String] {
         // Optional: a scene that can't be read has no systems (the load reports it).
         guard let data = read("scene.json"),
-              let scene = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [] }
+              let scene = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return 0 }
         let objects = scene["objects"] as? [[String: Any]] ?? []
-        return objects.compactMap { $0["particle"] as? String }
-    }
-
-    private static func definitionReader(_ read: @escaping (String) -> Data?) -> (String) -> ParticleDefinition? {
-        { path in
+        let paths: [String] = objects.compactMap { $0["particle"] as? String }
+        let definition: (String) -> ParticleDefinition? = { path in
             // Optional: a system that can't be read plays nothing (the load reports it).
             guard let data = read(path), let object = try? TolerantJSON.object(from: data) else { return nil }
             return SceneJSONValue(any: object).flatMap { ParticleDefinition(json: $0) }
         }
+        let cycles: [Double] = paths.map { EditorPreviewScene.cycleSeconds(ofSystem: $0, read: definition) }
+        return cycles.max() ?? 0
     }
 
     // MARK: Effects

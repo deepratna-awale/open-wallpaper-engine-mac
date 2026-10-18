@@ -15,8 +15,8 @@ import UniformTypeIdentifiers
 /// silent spectrum, on a fixed frame step from load. A built-in effect is set as WE's own preview
 /// of it sets it (`EditorPreviewScene.authoredPasses`). An effect is drawn for `effectFrames`; when
 /// no frame of its first two seconds differs from its first it is a still (HEIC), else a loop. A
-/// particle system is always a loop, as long as its systems' cycle, from when it draws the most
-/// within `particleSecondsCap`; a 2D one is framed on where it draws then.
+/// particle system is always a loop, after a lead-in, both as long as its systems' cycle; a 2D
+/// one is framed on where it draws.
 /// A loop is HEVC, its last frames crossfaded into its first so it wraps without a jump.
 @MainActor
 final class EditorPreviewRenderer {
@@ -177,39 +177,31 @@ final class EditorPreviewRenderer {
                                    head: head, to: outputBase)
     }
 
-    /// A particle system's loop, as long as a whole cycle of its systems
-    /// (`EditorPreviewScene.particleTiming`). A probe first runs it for `particleSecondsCap`
-    /// seconds, a 2D one zoomed out (`probeFraming`), and the loop is the run of that length
-    /// holding the most content (`busiestWindow`): a firework's burst rather than its launch. A 2D
-    /// one is framed on where that run draws at its fullest (`fullestBounds`, `fittedFraming`).
+    /// A particle system's loop. Its lead-in and loop each hold a whole cycle of its systems
+    /// (`EditorPreviewScene.particleTiming`), so a burst after a launch is seen. A 2D one is first
+    /// run zoomed out (`probeFraming`) to find where it draws, then framed on that.
     private func renderParticles(_ subject: EditorPreviewSubject, folder: URL, to outputBase: URL) async throws -> URL {
         let probeFraming = subject.is3D ? EditorPreviewScene.particleFraming : EditorPreviewScene.probeFraming
         var session = try await start(subject, framing: probeFraming, folder: folder)
         let timing = EditorPreviewScene.particleTiming(cycle: EditorPreviewFolder.particleCycleSeconds(in: folder))
+        let leadIn = Int((timing.leadIn * Double(Self.particleFrameRate)).rounded())
         let frames = Int((timing.loop * Double(Self.particleFrameRate)).rounded())
-        let probeFrames = Int((EditorPreviewScene.particleSecondsCap * Double(Self.particleFrameRate)).rounded())
-        var probe = EditorPreviewScene.ContentProbe(pixelWidth: session.pixelSize.x, pixelHeight: session.pixelSize.y)
-        for index in 1...probeFrames {
-            let capture = index % Self.probeStride == 0
-            session.advance(by: Self.particleFrameRate, capture: capture)
-            guard capture else { continue }
-            guard let image = await session.capture() else {
-                session.end()
-                throw Failure.readBack
+        if !subject.is3D {
+            var bounds = EditorPreviewScene.ContentBounds(pixelWidth: session.pixelSize.x, pixelHeight: session.pixelSize.y)
+            for index in 1...(leadIn + frames) {
+                let capture = index % Self.probeStride == 0
+                session.advance(by: Self.particleFrameRate, capture: capture)
+                guard capture else { continue }
+                guard let image = await session.capture() else {
+                    session.end()
+                    throw Failure.readBack
+                }
+                bounds.add(image)
             }
-            probe.add(image)
+            session.end()
+            let framing = bounds.rect().map { EditorPreviewScene.fittedFraming(content: $0, probe: probeFraming) }
+            session = try await start(subject, framing: framing ?? EditorPreviewScene.particleFraming, folder: folder)
         }
-        session.end()
-        // Sample `n` is frame `(n + 1) × probeStride`; without content, a cycle's lead-in.
-        let window = max(frames / Self.probeStride, 1)
-        let busiest = EditorPreviewScene.busiestWindow(coverage: probe.coverage, length: window)
-        let leadIn = busiest.map { ($0 + 1) * Self.probeStride }
-            ?? Int((timing.leadIn * Double(Self.particleFrameRate)).rounded())
-        var framing = EditorPreviewScene.particleFraming
-        if !subject.is3D, let content = probe.fullestBounds(of: (busiest ?? 0)..<((busiest ?? 0) + window)).rect() {
-            framing = EditorPreviewScene.fittedFraming(content: content, probe: probeFraming)
-        }
-        session = try await start(subject, framing: framing, folder: folder)
         defer { session.end() }
         for _ in 0..<leadIn { session.advance(by: Self.particleFrameRate, capture: false) }
         return try await writeLoop(session, frames: frames, frameRate: Self.particleFrameRate,

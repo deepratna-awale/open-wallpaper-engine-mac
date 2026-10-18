@@ -127,6 +127,21 @@ final class EditorPreviewRenderTests: XCTestCase {
         for frame in frames { try assertCentred([frame], within: 0.15) }
     }
 
+    func testALightningLoopIsFramedOnTheStrikesItShows() async throws {
+        for prefix in ["preset:lightning/0", "preset:lightning/1"] {
+            let frames = try await presetFrames(prefix: prefix)
+            // Every strike of the loop, together: centred, and in frame (not cut at an edge).
+            try assertCentred(frames, within: 0.2)
+            for (index, frame) in frames.enumerated() {
+                var bounds = EditorPreviewScene.ContentBounds(pixelWidth: frame.width, pixelHeight: frame.height)
+                bounds.add(frame)
+                guard let drawn = bounds.rect(trim: 0.002) else { continue }
+                let inner = CGRect(x: 1, y: 1, width: frame.width - 2, height: frame.height - 2)
+                XCTAssertTrue(inner.contains(drawn), "\(prefix) frame \(index): the strike stays inside the frame, \(drawn)")
+            }
+        }
+    }
+
     // MARK: Preview content
 
     /// The share of the shake's frame differing from the plain card (a channel 48 of 255 apart).
@@ -139,13 +154,14 @@ final class EditorPreviewRenderTests: XCTestCase {
     private func presetFrames(prefix: String) async throws -> [CGImage] {
         let assets = try Fixtures.assets()
         let catalog = ParticleCatalog.load(assetsDirectory: assets, translate: { _ in nil })
-        guard let item = catalog.items.first(where: { $0.id.hasPrefix(prefix) }) else {
+        guard let item = catalog.items.first(where: { $0.id == prefix || $0.id.hasPrefix(prefix.hasSuffix("/") ? prefix : prefix + "/") })
+                ?? catalog.items.first(where: { $0.id.hasPrefix(prefix) }) else {
             throw XCTSkip("the assets have no \(prefix) preset")
         }
         return try await renderedFrames(of: item.previewSubject, assets: assets)
     }
 
-    /// Eight frames spread over the subject's rendered loop (its still alone), written to
+    /// Every frame of the subject's rendered loop (its still alone), every sixth written to
     /// `OWE_PREVIEW_OUT` as PNGs when it is set, to look at.
     private func renderedFrames(of subject: EditorPreviewSubject, assets: URL) async throws -> [CGImage] {
         let cache = EditorPreviewCache(cachesDirectory: scratch, build: EditorPreviewCache.assetsBuild(of: assets))
@@ -160,15 +176,16 @@ final class EditorPreviewRenderTests: XCTestCase {
             let generator = AVAssetImageGenerator(asset: asset)
             generator.requestedTimeToleranceBefore = .zero
             generator.requestedTimeToleranceAfter = .zero
-            for index in 0..<8 {
-                let time = CMTime(seconds: duration * Double(index) / 8, preferredTimescale: 600)
+            let count = Int((duration * Double(EditorPreviewRenderer.particleFrameRate)).rounded())
+            for index in 0..<count {
+                let time = CMTime(seconds: duration * Double(index) / Double(count), preferredTimescale: 600)
                 frames.append(try await generator.image(at: time).image)
             }
         }
         if let out = ProcessInfo.processInfo.environment["OWE_PREVIEW_OUT"] {
             let folder = URL(filePath: out, directoryHint: .isDirectory)
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-            for (index, frame) in frames.enumerated() {
+            for (index, frame) in frames.enumerated() where index % 6 == 0 {
                 let png = folder.appending(path: "\(subject.cacheName)-\(index).png")
                 let destination = try XCTUnwrap(CGImageDestinationCreateWithURL(png as CFURL, UTType.png.identifier as CFString, 1, nil))
                 CGImageDestinationAddImage(destination, frame, nil)
@@ -178,10 +195,18 @@ final class EditorPreviewRenderTests: XCTestCase {
         return frames
     }
 
-    /// The share of the frame's pixels that differ from its background (`ContentBounds`).
+    /// The share of the frame's pixels that differ from the particle background
+    /// (`EditorPreviewScene.particleBackground`, 13 13 18 of 255) by more than 6.
     private func contentShare(_ frame: CGImage) -> Double {
-        var bounds = EditorPreviewScene.ContentBounds(pixelWidth: frame.width, pixelHeight: frame.height)
-        return bounds.add(frame)
+        guard let pixels = rgba(frame, width: frame.width, height: frame.height) else { return 0 }
+        var drawn = 0
+        for index in stride(from: 0, to: pixels.count, by: 4) {
+            let red: Int = abs(Int(pixels[index]) - 13)
+            let green: Int = abs(Int(pixels[index + 1]) - 13)
+            let blue: Int = abs(Int(pixels[index + 2]) - 18)
+            if max(red, green, blue) > 6 { drawn += 1 }
+        }
+        return Double(drawn) / Double(frame.width * frame.height)
     }
 
     /// The content of `frames` together is centred in them, to `accuracy` of their size.

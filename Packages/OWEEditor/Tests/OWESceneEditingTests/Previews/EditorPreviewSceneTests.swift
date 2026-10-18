@@ -171,7 +171,7 @@ final class EditorPreviewSceneTests: XCTestCase {
         let x: Double = (1560 * pixelsPerUnit).rounded()
         let y: Double = (Double(probe.frame.pixelHeight) - 2040 * pixelsPerUnit).rounded()
         let image = try XCTUnwrap(canvas(width: probe.frame.pixelWidth, height: probe.frame.pixelHeight,
-                                         square: CGRect(x: x - 60, y: y - 40, width: 120, height: 80)))
+                                         square: CGRect(x: x - 15, y: y - 10, width: 30, height: 20)))
         var bounds = EditorPreviewScene.ContentBounds(pixelWidth: probe.frame.pixelWidth, pixelHeight: probe.frame.pixelHeight)
         bounds.add(image)
         let content = try XCTUnwrap(bounds.rect())
@@ -250,36 +250,6 @@ final class EditorPreviewSceneTests: XCTestCase {
         XCTAssertEqual(values["color"] as? String, "1 0 0", "no range: kept")
         XCTAssertEqual(values["flag"] as? Bool, true, "not a number")
         XCTAssertNotNil(values["multiply"] as? [String: Any], "an animated value is kept")
-    }
-
-    func testTheLoopIsTheRunWithTheMostContent() {
-        // A launch (a little), a burst (a lot), then nothing.
-        let coverage: [Double] = [0, 0.01, 0.01, 0.2, 0.3, 0.25, 0.02, 0, 0, 0]
-        XCTAssertEqual(EditorPreviewScene.busiestWindow(coverage: coverage, length: 3), 3)
-        XCTAssertEqual(EditorPreviewScene.busiestWindow(coverage: coverage, length: 1), 4)
-        XCTAssertEqual(EditorPreviewScene.busiestWindow(coverage: [0.1, 0.1, 0.1, 0.1], length: 2), 0, "a tie: the earliest")
-        XCTAssertEqual(EditorPreviewScene.busiestWindow(coverage: [0.1, 0.2], length: 5), 0, "a probe no longer than the loop")
-        XCTAssertNil(EditorPreviewScene.busiestWindow(coverage: [0, 0, 0], length: 2), "nothing drawn: nothing to choose by")
-    }
-
-    func testAProbeMeasuresEachFrameAndFramesARunOfThem() throws {
-        let width = 64, height = 40
-        var probe = EditorPreviewScene.ContentProbe(pixelWidth: width, pixelHeight: height)
-        let left = try XCTUnwrap(canvas(width: width, height: height, square: CGRect(x: 0, y: 0, width: 8, height: 8)))
-        let right = try XCTUnwrap(canvas(width: width, height: height, square: CGRect(x: 48, y: 20, width: 16, height: 10)))
-        probe.add(left)
-        probe.add(right)
-        XCTAssertEqual(probe.coverage.count, 2)
-        XCTAssertEqual(probe.coverage[0], 64.0 / Double(width * height), accuracy: 1e-9)
-        XCTAssertEqual(probe.coverage[1], 160.0 / Double(width * height), accuracy: 1e-9)
-        let later = try XCTUnwrap(probe.bounds(of: 1..<2).rect(trim: 0))
-        XCTAssertEqual(later, CGRect(x: 48, y: 20, width: 16, height: 10), "only the frames of the run")
-        let both = try XCTUnwrap(probe.bounds(of: 0..<2).rect(trim: 0))
-        XCTAssertEqual(both, CGRect(x: 0, y: 0, width: 64, height: 30))
-        XCTAssertNotNil(probe.bounds(of: 1..<9).rect(), "a run past the probe's end is cut to it")
-        let fullest = try XCTUnwrap(probe.fullestBounds(of: 0..<2).rect(trim: 0))
-        XCTAssertEqual(fullest, CGRect(x: 48, y: 20, width: 16, height: 10),
-                       "a sample drawing under half of the run's fullest isn't framed on")
     }
 
     func testContentRunningPastTheProbeIsNotFittedOnThatAxis() {
