@@ -686,7 +686,7 @@ final class SceneInspectorModel: ObservableObject {
     /// material's own edit (`saveAssetJSON`) when it has one.
     func authoredBlending(for item: SceneInspectorItem) -> WEMaterialBlending {
         let particle = item.kind == "Particle"
-        let raw = item.materialPath.flatMap { storedValues["_owe_scene_asset_\($0)_json"] } ?? item.rawMaterial
+        let raw = item.materialPath.flatMap { storedValues[sceneAssetOverrideKey(path: $0)] } ?? item.rawMaterial
         guard let data = raw?.data(using: .utf8),
               let material = try? JSONSerialization.jsonObject(with: data) as? [String: Any], // no material: its default
               let pass = (material["passes"] as? [[String: Any]])?.first else {
@@ -755,7 +755,7 @@ final class SceneInspectorModel: ObservableObject {
     func saveAssetJSON(_ text: String, path: String) throws {
         let object = try Self.jsonObject(text)
         var values = storedValues
-        values["_owe_scene_asset_\(path)_json"] = prettyJSON(object)
+        values[sceneAssetOverrideKey(path: path)] = prettyJSON(object)
         persist(values)
     }
 

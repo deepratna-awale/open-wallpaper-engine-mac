@@ -101,7 +101,7 @@ extension SceneContentLoader {
     func loadJSON<T: Decodable>(path: String, wallpaperDir: URL) -> T? {
         guard let original = assetData(named: path, wallpaperDir: wallpaperDir) else { return nil }
         let storageKey = settingsIdentity(for: wallpaperDir).key(.userProperties, scope: propertyScope)
-        let overrideKey = "_owe_scene_asset_\(path)_json"
+        let overrideKey = sceneAssetOverrideKey(path: path)
         let data: Data
         if let values = UserDefaults.app.dictionary(forKey: storageKey) as? [String: String],
            let override = values[overrideKey], let overrideData = override.data(using: .utf8) {
