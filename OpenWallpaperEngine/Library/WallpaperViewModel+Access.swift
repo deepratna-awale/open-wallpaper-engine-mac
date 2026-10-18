@@ -57,6 +57,7 @@ extension WallpaperViewModel {
         inFlightWorkshopId = workshopId
         Task { [weak self] in
             defer { self?.inFlightWorkshopId = nil }
+            // Optional: offline or a failed request falls back to the stored item (the service logs).
             let fetched = try? await WorkshopAPIService().getItemDetails(workshopIds: [workshopId]).first
             guard let self else { return }
             guard let item = fetched ?? WorkshopMetadataStore.shared.item(for: workshopId) else { return }
@@ -334,7 +335,9 @@ extension WallpaperViewModel {
         generator.generateCGImagesAsynchronously(forTimes: [NSValue(time: CMTime(seconds: 0, preferredTimescale: 600))]) { _, cgImage, _, _, _ in
             guard let cgImage,
                   let previewData = NSBitmapImageRep(cgImage: cgImage).representation(using: .jpeg, properties: [:]) else { return }
-            try? previewData.write(to: finalDestination.appending(path: "preview.jpg"), options: .atomic)
+            OWELog.attempt(.importer, "Remote video: preview of \(finalDestination.lastPathComponent)") {
+                try previewData.write(to: finalDestination.appending(path: "preview.jpg"), options: .atomic)
+            }
         }
     }
 
@@ -542,7 +545,7 @@ extension WallpaperViewModel {
     }
 
     func savePlaylists() {
-        guard let data = try? JSONEncoder().encode(playlists) else { return }
+        guard let data = OWELog.attempt(.library, "Saving playlists", { try JSONEncoder().encode(playlists) }) else { return }
         UserDefaults.app.set(data, forKey: "WallpaperPlaylists")
     }
 

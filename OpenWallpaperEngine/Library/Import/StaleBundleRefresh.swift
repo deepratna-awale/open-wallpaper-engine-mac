@@ -14,9 +14,10 @@ enum StaleBundleScanner {
     /// Bundles in `storage` older than the current converter with no package to re-convert from
     /// and changed by a newer version, in folder-name order; unaffected ones are stamped current. Reads only each folder's manifest and project; call off the main thread.
     static func scan(storage: URL, fileManager: FileManager = .default) -> [StaleBundle] {
-        guard let entries = try? fileManager.contentsOfDirectory(at: storage,
-                                                                 includingPropertiesForKeys: [.isDirectoryKey],
-                                                                 options: [.skipsHiddenFiles]) else { return [] }
+        guard let entries = OWELog.attempt(.importer, "Stale bundles: listing \(storage.path(percentEncoded: false))", quietIfMissing: true, {
+            try fileManager.contentsOfDirectory(at: storage, includingPropertiesForKeys: [.isDirectoryKey],
+                                                options: [.skipsHiddenFiles])
+        }) else { return [] }
         return entries
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
             .compactMap { staleBundle(at: $0, fileManager: fileManager) }
