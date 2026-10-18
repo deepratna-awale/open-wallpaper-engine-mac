@@ -32,6 +32,27 @@ final class WorkshopThumbnailLoaderTests: XCTestCase {
         XCTAssertNotNil(again, "the second load comes from memory")
     }
 
+    func testDropsTheLeastRecentlyUsedOverTheLimit() async throws {
+        let copies = try (0..<3).map { index -> URL in
+            let copy = file.deletingPathExtension().appendingPathExtension("\(index).png")
+            try FileManager.default.copyItem(at: file, to: copy)
+            return copy
+        }
+        defer { copies.forEach { try? FileManager.default.removeItem(at: $0) } }
+        // 256 × 128 RGBA is 128 KiB (a row may be padded): room for two thumbnails, not three.
+        let loader = WorkshopThumbnailLoader(maxPixelSize: 256, memoryLimit: 300 * 1024)
+        _ = await loader.image(for: copies[0])
+        _ = await loader.image(for: copies[1])
+        XCTAssertNotNil(loader.cachedImage(for: copies[0]), "used again, so copies[1] is now the oldest")
+        _ = await loader.image(for: copies[2])
+        XCTAssertNotNil(loader.cachedImage(for: copies[0]))
+        XCTAssertNil(loader.cachedImage(for: copies[1]))
+        XCTAssertNotNil(loader.cachedImage(for: copies[2]))
+
+        loader.removeAll()
+        XCTAssertNil(loader.cachedImage(for: copies[0]))
+    }
+
     func testNonImageDataIsNil() {
         XCTAssertNil(WorkshopThumbnailLoader.downsample(Data("not an image".utf8), maxPixelSize: 64))
     }
