@@ -372,7 +372,7 @@ class WallpaperViewModel: ObservableObject {
         }
 
         if let data = UserDefaults.app.data(forKey: "WallpaperPlaylists"),
-           let saved = try? JSONDecoder().decode([WallpaperPlaylist].self, from: data) {
+           let saved = OWELog.attempt(.library, "Saved playlists", { try JSONDecoder().decode([WallpaperPlaylist].self, from: data) }) {
             self.playlists = saved
         }
         // Into the storage, not through the setters: their observers save all four, which would
@@ -388,12 +388,12 @@ class WallpaperViewModel: ObservableObject {
         // Load per-screen wallpapers. They stay as they are: without a saved display layout every
         // display shows its own.
         if let data = UserDefaults.app.data(forKey: "ScreenWallpapers"),
-           let saved = try? JSONDecoder().decode([String: WEWallpaper].self, from: data) {
+           let saved = OWELog.attempt(.library, "Saved display wallpapers", { try JSONDecoder().decode([String: WEWallpaper].self, from: data) }) {
             self.wallpapers = saved
         }
         // Migrate legacy single wallpaper
         else if let json = UserDefaults.app.data(forKey: "CurrentWallpaper"),
-                let wallpaper = try? JSONDecoder().decode(WEWallpaper.self, from: json) {
+                let wallpaper = OWELog.attempt(.library, "Saved wallpaper", { try JSONDecoder().decode(WEWallpaper.self, from: json) }) {
             let mainId = Self.mainScreenId()
             self.wallpapers = [mainId: wallpaper]
         }

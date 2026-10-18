@@ -16,12 +16,12 @@ extension WallpaperViewModel {
 
     func loadRecents() {
         guard let data = UserDefaults.app.data(forKey: Self.recentsKey),
-              let saved = try? JSONDecoder().decode([WEWallpaper].self, from: data) else { return }
+              let saved = OWELog.attempt(.library, "Saved recent wallpapers", { try JSONDecoder().decode([WEWallpaper].self, from: data) }) else { return }
         recentWallpapers = saved.filter { $0.project != .invalid }
     }
 
     func saveRecents() {
-        if let data = try? JSONEncoder().encode(recentWallpapers) {
+        if let data = OWELog.attempt(.library, "Saving recent wallpapers", { try JSONEncoder().encode(recentWallpapers) }) {
             UserDefaults.app.set(data, forKey: Self.recentsKey)
         }
     }
