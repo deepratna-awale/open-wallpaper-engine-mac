@@ -138,7 +138,9 @@ final class SceneUserPropertiesModel: ObservableObject {
     }
 
     private func load(_ wallpaper: WEWallpaper) {
-        guard let root = try? WEProject.json(in: wallpaper.wallpaperDirectory) else { return }
+        guard let root = OWELog.attempt(.ui, "Properties: project.json of \(wallpaper.wallpaperDirectory.lastPathComponent)", {
+            try WEProject.json(in: wallpaper.wallpaperDirectory)
+        }) ?? nil else { return }
         let definitions = UserPropertyDefinition.all(projectJSON: root)
         // A Workshop preset item's values are its defaults (what Reset returns to).
         let presetDefaults = WorkshopPresetItem.defaultValues(for: wallpaper)
@@ -173,7 +175,7 @@ final class SceneUserPropertiesModel: ObservableObject {
         } else if wallpaperType == "video" || wallpaperType == "remote-video" {
             // Read the persisted blob rather than the main-actor view model: this loader is nonisolated.
             let stored = UserDefaults.app.data(forKey: "GlobalSettings")
-                .flatMap { try? JSONDecoder().decode(GlobalSettings.self, from: $0) }
+                .flatMap { data in OWELog.attempt(.settings, "Stored GlobalSettings") { try JSONDecoder().decode(GlobalSettings.self, from: data) } }
             usesSceneRenderer = (stored ?? GlobalSettings()).videoFramework == .metal
         } else {
             usesSceneRenderer = false
@@ -278,8 +280,7 @@ final class SceneUserPropertiesModel: ObservableObject {
                                              excluding declaredIds: Set<String>) -> [SceneUserProperty] {
         let sceneFile = wallpaper.project.file
         let packageURL = wallpaper.wallpaperDirectory.appending(path: (sceneFile as NSString).deletingPathExtension + ".pkg")
-        guard let package = try? PKGParser(url: packageURL),
-              let scene = try? package.extractJSON(named: sceneFile, as: WEScene.self) else { return [] }
+        guard let scene = Self.packagedScene(sceneFile, in: packageURL) else { return [] }
 
         var defaults: [String: String] = [:]
         func record(property: String?, value: Bool?, condition: String?) {
@@ -298,11 +299,18 @@ final class SceneUserPropertiesModel: ObservableObject {
         }
     }
 
+    /// The scene `sceneFile` in the package at `packageURL`; nil without a package (a folder
+    /// wallpaper) or that scene, and, after one log line, when either can't be read.
+    private static func packagedScene(_ sceneFile: String, in packageURL: URL) -> WEScene? {
+        OWELog.attempt(.ui, "Properties: \(sceneFile) in \(packageURL.lastPathComponent)", quietIfMissing: true) {
+            try PKGParser(url: packageURL).extractJSON(named: sceneFile, as: WEScene.self)
+        } ?? nil
+    }
+
     private func textObjectsInScene(for wallpaper: WEWallpaper) -> [SceneTextControl] {
         let sceneFile = wallpaper.project.file
         let packageURL = wallpaper.wallpaperDirectory.appending(path: (sceneFile as NSString).deletingPathExtension + ".pkg")
-        guard let package = try? PKGParser(url: packageURL),
-              let scene = try? package.extractJSON(named: sceneFile, as: WEScene.self) else { return [] }
+        guard let scene = Self.packagedScene(sceneFile, in: packageURL) else { return [] }
         return scene.objects.enumerated().compactMap { index, object in
             guard object.textValue != nil else { return nil }
             return SceneTextControl(id: String(object.id ?? index), title: object.name?.isEmpty == false ? object.name!

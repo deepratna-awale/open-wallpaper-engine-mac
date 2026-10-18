@@ -622,7 +622,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
               let placedVertex = library.makeFunction(name: "sceneVertex3D"),
               let copyFragment = library.makeFunction(name: "sceneCopyFragment"),
               let decode = library.makeFunction(name: "decodeDXT"),
-              let decodePipeline = try? device.makeComputePipelineState(function: decode) else {
+              let decodePipeline = OWELog.attempt(.scene, "The DXT decode pipeline can't be made", {
+                  try device.makeComputePipelineState(function: decode)
+              }) else {
             return nil
         }
 

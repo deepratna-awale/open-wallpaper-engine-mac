@@ -30,7 +30,8 @@ enum SceneImageSize {
         let package = try? PKGParser(url: packageURL) // Optional: most wallpapers have no package.
         return { path in
             if let data = package?.extractFile(named: path) { return Data(data) }
-            return try? AssetPathResolver.data(path, in: directory) // Optional: a missing file sizes nothing.
+            // A missing file is nil (it sizes nothing); one that is there but can't be read logs.
+            return OWELog.attempt(.scene, "Sizing \(path)") { try AssetPathResolver.data(path, in: directory) } ?? nil
         }
     }
 }
