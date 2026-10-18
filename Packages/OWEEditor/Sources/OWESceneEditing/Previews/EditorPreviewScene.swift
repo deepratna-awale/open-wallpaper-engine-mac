@@ -107,13 +107,17 @@ public enum EditorPreviewScene {
 
     /// The files of an effect's preview besides the test card's picture (`testCardFile`) and the
     /// effect's own files: project.json, scene.json, and the card's model and material.
-    /// `passInputs` holds, per pass of the effect, the generated inputs by texture slot.
-    public static func effectFiles(effectFile: String, passInputs: [[Int: Input]]) throws -> [String: Data] {
+    /// `passInputs` holds, per pass of the effect, the generated inputs by texture slot;
+    /// `authored`, per pass, the settings WE's own preview of the effect gives it
+    /// (`authoredPasses`, its values already in range, `clampedConstants`), which win over the
+    /// effect's defaults.
+    public static func effectFiles(effectFile: String, passInputs: [[Int: Input]],
+                                   authored: [[String: Any]] = []) throws -> [String: Data] {
         let frame = effectFrame
-        let passes: [Any] = passInputs.map { inputs -> [String: Any] in
-            guard let last = inputs.keys.max() else { return [:] }
-            let textures: [Any] = (0...last).map { slot in inputs[slot].map { $0.texture as Any } ?? NSNull() }
-            return ["textures": textures]
+        let count = max(passInputs.count, authored.count)
+        let passes: [Any] = (0..<count).map { index -> [String: Any] in
+            effectPass(inputs: index < passInputs.count ? passInputs[index] : [:],
+                       authored: index < authored.count ? authored[index] : [:])
         }
         let object: [String: Any] = [
             "id": 1, "name": "Test card", "image": testCardModel, "visible": true,
@@ -122,14 +126,108 @@ public enum EditorPreviewScene {
             "effects": [["id": 2, "file": effectFile, "name": "", "visible": true, "passes": passes]],
         ]
         var files = try sceneFiles(scene(frame: frame, clearColor: "0 0 0", camera: nil, objects: [object]))
-        files[testCardMaterial] = try json([
-            "passes": [[
-                "blending": "translucent", "cullmode": "nocull", "depthtest": "disabled", "depthwrite": "disabled",
-                "shader": "genericimage2", "textures": [testCardTexture],
-            ]],
-        ])
-        files[testCardModel] = try json(["autosize": true, "material": testCardMaterial])
+        try files.merge(testCardFiles()) { $1 }
         return files
+    }
+
+    /// The test card's model and material.
+    static func testCardFiles() throws -> [String: Data] {
+        [
+            testCardMaterial: try json([
+                "passes": [[
+                    "blending": "translucent", "cullmode": "nocull", "depthtest": "disabled", "depthwrite": "disabled",
+                    "shader": "genericimage2", "textures": [testCardTexture],
+                ]],
+            ]),
+            testCardModel: try json(["autosize": true, "material": testCardMaterial]),
+        ]
+    }
+
+    /// One pass of the previewed effect: WE's preview's values and combos, its textures in the
+    /// slots it fills (its masks and maps: shake's is a sideways direction map over most of the
+    /// picture), but a render target of its own scene (`_rt_…`), and the generated inputs in the
+    /// others.
+    static func effectPass(inputs: [Int: Input], authored: [String: Any]) -> [String: Any] {
+        var pass: [String: Any] = [:]
+        for key in ["combos", "constantshadervalues"] { if let value = authored[key] { pass[key] = value } }
+        let named: [Int: String] = authoredTextures(authored)
+        let last: Int? = (Array(inputs.keys) + Array(named.keys)).max()
+        guard let last else { return pass }
+        pass["textures"] = (0...last).map { slot -> Any in named[slot] ?? inputs[slot]?.texture ?? NSNull() }
+        return pass
+    }
+
+    /// An authored pass's `constantshadervalues` with each plain number or vector held to the
+    /// range its shader declares for that key (`ranges`, by material key, any case), as the
+    /// editor's sliders hold them: a value from outside it is one an older version of the effect
+    /// took (WE's preview of foliage sway still has a strength of 93 for a 0.01…1 slider).
+    /// Animated values and keys without a range are kept.
+    public static func clampedConstants(_ pass: [String: Any], ranges: [String: ClosedRange<Double>]) -> [String: Any] {
+        guard let constants = pass["constantshadervalues"] as? [String: Any], !ranges.isEmpty else { return pass }
+        var lowered: [String: ClosedRange<Double>] = [:]
+        for (key, range) in ranges { lowered[key.lowercased()] = range }
+        var clamped = constants
+        for (key, value) in constants {
+            guard let range = lowered[key.lowercased()] else { continue }
+            func hold(_ number: Double) -> Double { min(max(number, range.lowerBound), range.upperBound) }
+            if let number = value as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID() {
+                clamped[key] = hold(number.doubleValue)
+            } else if let text = value as? String {
+                let numbers = text.split(separator: " ").compactMap { Double($0) }
+                guard !numbers.isEmpty else { continue }
+                clamped[key] = numbers.map { hold($0) }.map { String($0) }.joined(separator: " ")
+            }
+        }
+        var result = pass
+        result["constantshadervalues"] = clamped
+        return result
+    }
+
+    /// The textures an authored pass names by slot, without slot 0 (the layer's own image) and
+    /// its scene's render targets.
+    static func authoredTextures(_ pass: [String: Any]) -> [Int: String] {
+        var named: [Int: String] = [:]
+        for (slot, texture) in (pass["textures"] as? [Any] ?? []).enumerated() {
+            guard slot > 0, let name = texture as? String, !name.isEmpty, !name.hasPrefix("_rt_") else { continue }
+            named[slot] = name
+        }
+        return named
+    }
+
+    // MARK: WE's own effect previews
+
+    /// The project of WE's own preview of a built-in effect (`effect.json`'s `preview`), relative
+    /// to the effect's folder; nil without one.
+    public static func previewProject(effectJSON: Data) -> String? {
+        // Optional: an effect file that can't be read has no preview (the load logs it).
+        guard let root = try? TolerantJSON.object(from: effectJSON) as? [String: Any],
+              let preview = root["preview"] as? String, !preview.isEmpty else { return nil }
+        return preview
+    }
+
+    /// The passes WE's own preview scene (`scene`, its scene.json) gives `effectFile`: those of its
+    /// first visible instance on a visible layer, as WE's editor shows the effect in its browser.
+    /// Empty when the scene doesn't use the effect.
+    public static func authoredPasses(effectFile: String, scene: Data) -> [[String: Any]] {
+        // Optional: a preview scene that can't be read leaves the effect at its defaults.
+        guard let root = try? TolerantJSON.object(from: scene) as? [String: Any] else { return [] }
+        let wanted = effectFile.lowercased()
+        for object in root["objects"] as? [[String: Any]] ?? [] where object["visible"] as? Bool ?? true {
+            for effect in object["effects"] as? [[String: Any]] ?? [] where effect["visible"] as? Bool ?? true {
+                guard (effect["file"] as? String)?.lowercased() == wanted else { continue }
+                return effect["passes"] as? [[String: Any]] ?? []
+            }
+        }
+        return []
+    }
+
+    /// The files of the textures `passes` name that a preview's folder may hold: each name's
+    /// `.tex`, `.tex-json`, `.png` and `.jpg` under `materials/`.
+    public static func authoredTextureFiles(_ passes: [[String: Any]]) -> [String] {
+        let names = Set(passes.flatMap { authoredTextures($0).values })
+        return names.sorted().flatMap { name in
+            ["tex", "tex-json", "png", "jpg"].map { "materials/\(name).\($0)" }
+        }
     }
 
     /// A built-in effect's files (`effect.json`'s `dependencies`): its materials, shaders and
@@ -230,7 +328,8 @@ public enum EditorPreviewScene {
     public static let particleSecondsCap = 8.0
     /// A particle loop's shortest and longest length, in seconds.
     public static let particleLoopSeconds: ClosedRange<Double> = 2...5
-    /// A particle preview's shortest lead-in, in seconds.
+    /// A particle preview's shortest lead-in, in seconds, when the probe saw nothing to choose by
+    /// (`busiestWindow`).
     public static let particleMinimumLeadIn = 1.5
 
     /// How long a particle preview runs before its loop, and its loop, in seconds.
@@ -246,6 +345,29 @@ public enum EditorPreviewScene {
         let loop: Double = min(max(cycle, particleLoopSeconds.lowerBound), particleLoopSeconds.upperBound)
         let leadIn: Double = min(max(cycle, particleMinimumLeadIn), particleSecondsCap - loop)
         return ParticleTiming(leadIn: leadIn, loop: loop)
+    }
+
+    /// Where the loop starts: the first of `length` consecutive probe samples holding the most
+    /// content (`coverage`, each sample's share of pixels drawn), so the loop shows a system at
+    /// its fullest (a burst after its launch, a stream once it has filled the frame). The earliest
+    /// such window wins a tie. Nil when no sample drew anything; 0 when the probe is no longer
+    /// than the window.
+    public static func busiestWindow(coverage: [Double], length: Int) -> Int? {
+        guard coverage.contains(where: { $0 > 0 }) else { return nil }
+        let length = max(length, 1)
+        guard coverage.count > length else { return 0 }
+        var sum: Double = coverage[0..<length].reduce(0, +)
+        var best: Double = sum
+        var start = 0
+        for index in length..<coverage.count {
+            sum += coverage[index] - coverage[index - length]
+            // A sliver more, not rounding noise, moves the window.
+            if sum > best + 1e-9 {
+                best = sum
+                start = index - length + 1
+            }
+        }
+        return start
     }
 
     /// How long one cycle of the system at `path` takes to play out, in seconds: its emitters'
@@ -312,9 +434,10 @@ public enum EditorPreviewScene {
     /// How much wider than `particleFrame` the probe that finds a system's content looks.
     public static let particleProbeScale = 4
     /// How much of the preview the content fills, and the closest it is framed (a share of
-    /// `particleFrame`'s width), so a tiny system isn't blown up.
+    /// `particleFrame`'s width), so a tiny system isn't blown up: 256 units, the width of WE's own
+    /// preset previews (`presets/<name>/<variant preview>/scene.json`).
     public static let particleFill = 0.8
-    public static let particleClosest = 0.25
+    public static let particleClosest = 0.2
 
     /// `particleFrame` zoomed out `particleProbeScale` times about its middle, at the same pixel size.
     public static var probeFraming: Framing {
@@ -366,21 +489,29 @@ public enum EditorPreviewScene {
         public let pixelHeight: Int
         private var columns: [Int]
         private var rows: [Int]
-        private var background: [UInt8]?
+        private(set) var background: [UInt8]?
         /// A channel this far from the background's (of 255) is content.
         static let tolerance = 6
 
         public init(pixelWidth: Int, pixelHeight: Int) {
+            self.init(pixelWidth: pixelWidth, pixelHeight: pixelHeight, background: nil)
+        }
+
+        init(pixelWidth: Int, pixelHeight: Int, background: [UInt8]?) {
             self.pixelWidth = pixelWidth
             self.pixelHeight = pixelHeight
+            self.background = background
             columns = Array(repeating: 0, count: pixelWidth)
             rows = Array(repeating: 0, count: pixelHeight)
         }
 
-        public mutating func add(_ image: CGImage) {
-            guard let pixels = EditorPreviewScene.rgba(image, width: pixelWidth, height: pixelHeight) else { return }
+        /// Adds the frame's content, and returns its share of the frame's pixels, 0…1.
+        @discardableResult
+        public mutating func add(_ image: CGImage) -> Double {
+            guard let pixels = EditorPreviewScene.rgba(image, width: pixelWidth, height: pixelHeight) else { return 0 }
             let background: [UInt8] = self.background ?? Self.commonest(pixels)
             self.background = background
+            var drawn = 0
             for y in 0..<pixelHeight {
                 for x in 0..<pixelWidth {
                     let index = (y * pixelWidth + x) * 4
@@ -390,8 +521,18 @@ public enum EditorPreviewScene {
                     guard max(red, green, blue) > Self.tolerance else { continue }
                     columns[x] += 1
                     rows[y] += 1
+                    drawn += 1
                 }
             }
+            return Double(drawn) / Double(max(pixelWidth * pixelHeight, 1))
+        }
+
+        /// The content of these frames and `other`'s, of the same size.
+        mutating func formUnion(_ other: ContentBounds) {
+            guard other.pixelWidth == pixelWidth, other.pixelHeight == pixelHeight else { return }
+            for x in 0..<pixelWidth { columns[x] += other.columns[x] }
+            for y in 0..<pixelHeight { rows[y] += other.rows[y] }
+            if background == nil { background = other.background }
         }
 
         /// The pixel rectangle (from the top left) holding the content but `trim` of it at each
@@ -430,6 +571,52 @@ public enum EditorPreviewScene {
             }
             let key: UInt32 = counts.max { $0.value < $1.value }?.key ?? 0
             return [UInt8(key >> 16 & 0xFF), UInt8(key >> 8 & 0xFF), UInt8(key & 0xFF)]
+        }
+    }
+
+    /// A probe run's content frame by frame (`ContentBounds`, against the first frame's
+    /// background): how much each sampled frame draws, and where any run of them draws.
+    public struct ContentProbe: Sendable {
+        public let pixelWidth: Int
+        public let pixelHeight: Int
+        private var samples: [ContentBounds] = []
+        /// Each sample's share of pixels drawn, 0…1, in order.
+        public private(set) var coverage: [Double] = []
+
+        public init(pixelWidth: Int, pixelHeight: Int) {
+            self.pixelWidth = pixelWidth
+            self.pixelHeight = pixelHeight
+        }
+
+        public mutating func add(_ image: CGImage) {
+            var bounds = ContentBounds(pixelWidth: pixelWidth, pixelHeight: pixelHeight, background: samples.first?.background)
+            coverage.append(bounds.add(image))
+            samples.append(bounds)
+        }
+
+        /// A sample drawing at least this share of the most any sample of a run draws is one of
+        /// the run's fullest (`fullestBounds`).
+        public static let fullestShare = 0.5
+
+        /// Where the samples in `range` draw.
+        public func bounds(of range: Range<Int>) -> ContentBounds {
+            bounds(of: Array(range.clamped(to: samples.indices)))
+        }
+
+        /// Where the fullest samples in `range` draw: those drawing at least `fullestShare` of
+        /// the most any of them draws. A system that fills steadily (rain, fire) is framed on the
+        /// whole run; one that flares (a firework's burst, a lightning strike) on its flares, not
+        /// on the faint launches and trails between them.
+        public func fullestBounds(of range: Range<Int>) -> ContentBounds {
+            let indices = Array(range.clamped(to: samples.indices))
+            let peak: Double = indices.map { coverage[$0] }.max() ?? 0
+            return bounds(of: indices.filter { coverage[$0] >= peak * Self.fullestShare })
+        }
+
+        private func bounds(of indices: [Int]) -> ContentBounds {
+            var bounds = ContentBounds(pixelWidth: pixelWidth, pixelHeight: pixelHeight)
+            for index in indices { bounds.formUnion(samples[index]) }
+            return bounds
         }
     }
 

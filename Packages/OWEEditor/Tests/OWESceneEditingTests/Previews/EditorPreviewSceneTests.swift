@@ -171,7 +171,7 @@ final class EditorPreviewSceneTests: XCTestCase {
         let x: Double = (1560 * pixelsPerUnit).rounded()
         let y: Double = (Double(probe.frame.pixelHeight) - 2040 * pixelsPerUnit).rounded()
         let image = try XCTUnwrap(canvas(width: probe.frame.pixelWidth, height: probe.frame.pixelHeight,
-                                         square: CGRect(x: x - 15, y: y - 10, width: 30, height: 20)))
+                                         square: CGRect(x: x - 60, y: y - 40, width: 120, height: 80)))
         var bounds = EditorPreviewScene.ContentBounds(pixelWidth: probe.frame.pixelWidth, pixelHeight: probe.frame.pixelHeight)
         bounds.add(image)
         let content = try XCTUnwrap(bounds.rect())
@@ -196,6 +196,90 @@ final class EditorPreviewSceneTests: XCTestCase {
 
         let empty = EditorPreviewScene.ContentBounds(pixelWidth: 8, pixelHeight: 8)
         XCTAssertNil(empty.rect(), "nothing drawn: the default framing stays")
+    }
+
+    func testAnEffectIsSetAsWEsOwnPreviewSetsIt() throws {
+        let effectJSON = Data(#"{"name": "shake", "preview": "preview/project.json", "passes": []}"#.utf8)
+        XCTAssertEqual(EditorPreviewScene.previewProject(effectJSON: effectJSON), "preview/project.json")
+        XCTAssertNil(EditorPreviewScene.previewProject(effectJSON: Data(#"{"passes": []}"#.utf8)))
+        let scene = Data(#"""
+        {"objects": [
+          {"name": "hidden", "visible": false, "effects": [{"file": "effects/shake/effect.json",
+            "passes": [{"constantshadervalues": {"Strength": 0.5}}]}]},
+          {"name": "other", "effects": [{"file": "effects/opacity/effect.json", "passes": [{}]}]},
+          {"name": "shown", "visible": true, "effects": [
+            {"file": "effects/shake/effect.json", "visible": false, "passes": [{"constantshadervalues": {"Strength": 0.4}}]},
+            {"file": "effects/shake/effect.json", "passes": [{"constantshadervalues": {"Strength": 0.3}, "combos": {"NOISE": 1},
+              "textures": [null, "masks/shake_mask_a", "masks/shake_time_a", "_rt_imageLayerComposite_1_a"]}]}]}
+        ]}
+        """#.utf8)
+        let authored = EditorPreviewScene.authoredPasses(effectFile: "effects/shake/effect.json", scene: scene)
+        XCTAssertEqual(authored.count, 1, "the first visible instance on a visible layer")
+        XCTAssertEqual((authored[0]["constantshadervalues"] as? [String: Any])?["Strength"] as? Double, 0.3)
+        XCTAssertTrue(EditorPreviewScene.authoredPasses(effectFile: "effects/tint/effect.json", scene: scene).isEmpty)
+        XCTAssertEqual(EditorPreviewScene.authoredTextureFiles(authored).filter { $0.hasSuffix(".tex") },
+                       ["materials/masks/shake_mask_a.tex", "materials/masks/shake_time_a.tex"],
+                       "the preview's own textures; never its render targets")
+
+        let files = try EditorPreviewScene.effectFiles(effectFile: "effects/shake/effect.json",
+                                                       passInputs: [[1: .flow, 4: .mask]], authored: authored)
+        let object = try XCTUnwrap((try json(files["scene.json"])["objects"] as? [[String: Any]])?.first)
+        let pass = try XCTUnwrap(((object["effects"] as? [[String: Any]])?.first?["passes"] as? [[String: Any]])?.first)
+        XCTAssertEqual((pass["constantshadervalues"] as? [String: Any])?["Strength"] as? Double, 0.3)
+        XCTAssertEqual((pass["combos"] as? [String: Any])?["NOISE"] as? Int, 1)
+        let textures = try XCTUnwrap(pass["textures"] as? [Any])
+        XCTAssertEqual(textures.count, 5)
+        XCTAssertTrue(textures[0] is NSNull)
+        XCTAssertEqual(textures[1] as? String, "masks/shake_mask_a", "WE's map wins over a generated one")
+        XCTAssertEqual(textures[2] as? String, "masks/shake_time_a")
+        XCTAssertTrue(textures[3] is NSNull, "a render target of WE's scene is left to the effect's default")
+        XCTAssertEqual(textures[4] as? String, "masks/editorpreview_mask", "a slot WE leaves empty keeps its generated input")
+    }
+
+    func testWEsPreviewValuesAreHeldToTheirSlidersRange() throws {
+        let pass: [String: Any] = ["constantshadervalues": [
+            "Strength": 93.34, "speed": 3, "bounds": "-1 0.5", "color": "1 0 0", "flag": true,
+            "multiply": ["animation": ["c0": []], "value": 5],
+        ] as [String: Any]]
+        let clamped = EditorPreviewScene.clampedConstants(pass, ranges: ["strength": 0.01...1, "speed": 0...10, "bounds": 0...1,
+                                                                         "flag": 0...0.5, "multiply": 0...2])
+        let values = try XCTUnwrap(clamped["constantshadervalues"] as? [String: Any])
+        XCTAssertEqual(values["Strength"] as? Double, 1, "matched by key in any case, held to the range")
+        XCTAssertEqual(values["speed"] as? Double, 3)
+        XCTAssertEqual(values["bounds"] as? String, "0.0 0.5", "each component of a vector")
+        XCTAssertEqual(values["color"] as? String, "1 0 0", "no range: kept")
+        XCTAssertEqual(values["flag"] as? Bool, true, "not a number")
+        XCTAssertNotNil(values["multiply"] as? [String: Any], "an animated value is kept")
+    }
+
+    func testTheLoopIsTheRunWithTheMostContent() {
+        // A launch (a little), a burst (a lot), then nothing.
+        let coverage: [Double] = [0, 0.01, 0.01, 0.2, 0.3, 0.25, 0.02, 0, 0, 0]
+        XCTAssertEqual(EditorPreviewScene.busiestWindow(coverage: coverage, length: 3), 3)
+        XCTAssertEqual(EditorPreviewScene.busiestWindow(coverage: coverage, length: 1), 4)
+        XCTAssertEqual(EditorPreviewScene.busiestWindow(coverage: [0.1, 0.1, 0.1, 0.1], length: 2), 0, "a tie: the earliest")
+        XCTAssertEqual(EditorPreviewScene.busiestWindow(coverage: [0.1, 0.2], length: 5), 0, "a probe no longer than the loop")
+        XCTAssertNil(EditorPreviewScene.busiestWindow(coverage: [0, 0, 0], length: 2), "nothing drawn: nothing to choose by")
+    }
+
+    func testAProbeMeasuresEachFrameAndFramesARunOfThem() throws {
+        let width = 64, height = 40
+        var probe = EditorPreviewScene.ContentProbe(pixelWidth: width, pixelHeight: height)
+        let left = try XCTUnwrap(canvas(width: width, height: height, square: CGRect(x: 0, y: 0, width: 8, height: 8)))
+        let right = try XCTUnwrap(canvas(width: width, height: height, square: CGRect(x: 48, y: 20, width: 16, height: 10)))
+        probe.add(left)
+        probe.add(right)
+        XCTAssertEqual(probe.coverage.count, 2)
+        XCTAssertEqual(probe.coverage[0], 64.0 / Double(width * height), accuracy: 1e-9)
+        XCTAssertEqual(probe.coverage[1], 160.0 / Double(width * height), accuracy: 1e-9)
+        let later = try XCTUnwrap(probe.bounds(of: 1..<2).rect(trim: 0))
+        XCTAssertEqual(later, CGRect(x: 48, y: 20, width: 16, height: 10), "only the frames of the run")
+        let both = try XCTUnwrap(probe.bounds(of: 0..<2).rect(trim: 0))
+        XCTAssertEqual(both, CGRect(x: 0, y: 0, width: 64, height: 30))
+        XCTAssertNotNil(probe.bounds(of: 1..<9).rect(), "a run past the probe's end is cut to it")
+        let fullest = try XCTUnwrap(probe.fullestBounds(of: 0..<2).rect(trim: 0))
+        XCTAssertEqual(fullest, CGRect(x: 48, y: 20, width: 16, height: 10),
+                       "a sample drawing under half of the run's fullest isn't framed on")
     }
 
     func testContentRunningPastTheProbeIsNotFittedOnThatAxis() {

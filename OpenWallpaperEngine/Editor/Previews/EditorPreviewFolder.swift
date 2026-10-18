@@ -58,18 +58,27 @@ enum EditorPreviewFolder {
     /// (`EditorPreviewScene.cycleSeconds`), children included: the longest of its objects'.
     static func particleCycleSeconds(in folder: URL) -> Double {
         let read = folderReader(folder)
+        let cycles: [Double] = systemPaths(in: folder, read: read).map {
+            EditorPreviewScene.cycleSeconds(ofSystem: $0, read: definitionReader(read))
+        }
+        return cycles.max() ?? 0
+    }
+
+    /// The particle files the objects of the preview's scene show.
+    private static func systemPaths(in folder: URL, read: (String) -> Data?) -> [String] {
         // Optional: a scene that can't be read has no systems (the load reports it).
         guard let data = read("scene.json"),
-              let scene = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return 0 }
+              let scene = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [] }
         let objects = scene["objects"] as? [[String: Any]] ?? []
-        let paths: [String] = objects.compactMap { $0["particle"] as? String }
-        let definition: (String) -> ParticleDefinition? = { path in
+        return objects.compactMap { $0["particle"] as? String }
+    }
+
+    private static func definitionReader(_ read: @escaping (String) -> Data?) -> (String) -> ParticleDefinition? {
+        { path in
             // Optional: a system that can't be read plays nothing (the load reports it).
             guard let data = read(path), let object = try? TolerantJSON.object(from: data) else { return nil }
             return SceneJSONValue(any: object).flatMap { ParticleDefinition(json: $0) }
         }
-        let cycles: [Double] = paths.map { EditorPreviewScene.cycleSeconds(ofSystem: $0, read: definition) }
-        return cycles.max() ?? 0
     }
 
     // MARK: Effects
@@ -96,45 +105,99 @@ enum EditorPreviewFolder {
             }
         }
         let read = folderReader(folder)
-        let passInputs = try inputs(of: file, read: read)
+        let shaders = try passShaders(of: file, read: read)
+        let passInputs = shaders.map(inputs(of:))
         for input in Set(passInputs.flatMap(\.values)) {
             guard let png = EditorPreviewScene.png(input) else { throw Failure.unreadable(input.file) }
             try store([input.file: png], in: folder)
         }
-        guard let card = EditorPreviewResources.testCard else { throw Failure.noTestCard }
-        try copy(card, to: EditorPreviewScene.testCardFile, in: folder)
-        try store(EditorPreviewScene.effectFiles(effectFile: file, passInputs: passInputs), in: folder)
+        var authored = wallpaper == nil ? try authoredPasses(of: file, into: folder) : []
+        for index in authored.indices where index < shaders.count {
+            authored[index] = EditorPreviewScene.clampedConstants(authored[index], ranges: ranges(of: shaders[index]))
+        }
+        try copyTestCard(into: folder)
+        try store(EditorPreviewScene.effectFiles(effectFile: file, passInputs: passInputs, authored: authored), in: folder)
     }
 
-    /// The generated inputs of each of the effect's passes, by texture slot, from the samplers
-    /// its shaders declare (as the editor lists an effect's texture slots).
-    private static func inputs(of file: String, read: @escaping (String) -> Data?) throws -> [[Int: EditorPreviewScene.Input]] {
+    /// The passes WE's own preview of the built-in effect `file` gives it
+    /// (`EditorPreviewScene.authoredPasses`), with the textures they name that the preview ships
+    /// (its masks) copied into `folder`; none when the effect has no preview.
+    private static func authoredPasses(of file: String, into folder: URL) throws -> [[String: Any]] {
+        let effectFolder = (file as NSString).deletingLastPathComponent
+        guard let source = WallpaperEngineAssets.locate([file], in: WallpaperEngineAssets.searchDirectories),
+              let project = EditorPreviewScene.previewProject(effectJSON: try AssetPathResolver.readRegularFile(at: source))
+        else { return [] }
+        // Optional: a preview that can't be read leaves the effect at its defaults.
+        guard let projectURL = AssetPathResolver.fileURL(project, in: source.deletingLastPathComponent()),
+              case let previewFolder = projectURL.deletingLastPathComponent(),
+              let sceneFile = (try? WEProjectFile.json(in: previewFolder))?["file"] as? String,
+              let sceneURL = AssetPathResolver.fileURL(sceneFile, in: previewFolder) else {
+            OWELog.debug(.scene, "Editor preview: \(effectFolder)'s preview \(project) can't be read")
+            return []
+        }
+        let passes = EditorPreviewScene.authoredPasses(effectFile: file, scene: try AssetPathResolver.readRegularFile(at: sceneURL))
+        for path in EditorPreviewScene.authoredTextureFiles(passes) {
+            // The texture is the preview's own when it ships it, else one of WE's assets.
+            guard let texture = AssetPathResolver.fileURL(path, in: previewFolder) else { continue }
+            try copy(texture, to: path, in: folder)
+        }
+        return passes
+    }
+
+    /// The shader stages of each of the effect's passes; none for a pass without a material (a
+    /// copy) or with one that can't be read (the load logs it).
+    private static func passShaders(of file: String, read: @escaping (String) -> Data?) throws -> [[ShaderSource]] {
         guard let data = read(file) else { throw Failure.unreadable(file) }
         let effect = try decodeTolerant(EffectDocument.self, from: data)
         let loader = ShaderSourceLoader(readFile: read)
-        return effect.passes.map { pass -> [Int: EditorPreviewScene.Input] in
-            // A pass without a material (a copy) or with one that can't be read has no inputs; the load logs it.
+        return effect.passes.map { pass -> [ShaderSource] in
+            // Optional: a material that can't be read gives its pass no shaders; the load logs it.
             guard let materialPath = pass.material, let materialData = read(materialPath),
                   let material = try? decodeTolerant(MaterialDocument.self, from: materialData),
-                  let shader = material.passes.first?.shader else { return [:] }
-            var inputs: [Int: EditorPreviewScene.Input] = [:]
-            for stage in ShaderStage.allCases {
-                // Optional: a stage the shader doesn't have declares nothing.
-                guard let source = try? loader.load(shader, stage: stage) else { continue }
-                for sampler in source.samplers {
-                    guard let slot = sampler.textureSlot, slot > 0, inputs[slot] == nil,
-                          let input = EditorPreviewScene.input(mode: sampler.annotation["mode"] as? String, combo: sampler.combo,
-                                                               defaultTexture: sampler.defaultTexture,
-                                                               hidden: sampler.annotation["hidden"] as? Bool == true)
-                    else { continue }
-                    inputs[slot] = input
-                }
-            }
-            return inputs
+                  let shader = material.passes.first?.shader else { return [] }
+            // Optional: a stage the shader doesn't have declares nothing.
+            return ShaderStage.allCases.compactMap { try? loader.load(shader, stage: $0) }
         }
     }
 
+    /// A pass's generated inputs, by texture slot, from the samplers its shaders declare (as the
+    /// editor lists an effect's texture slots).
+    private static func inputs(of stages: [ShaderSource]) -> [Int: EditorPreviewScene.Input] {
+        var inputs: [Int: EditorPreviewScene.Input] = [:]
+        for source in stages {
+            for sampler in source.samplers {
+                guard let slot = sampler.textureSlot, slot > 0, inputs[slot] == nil,
+                      let input = EditorPreviewScene.input(mode: sampler.annotation["mode"] as? String, combo: sampler.combo,
+                                                           defaultTexture: sampler.defaultTexture,
+                                                           hidden: sampler.annotation["hidden"] as? Bool == true)
+                else { continue }
+                inputs[slot] = input
+            }
+        }
+        return inputs
+    }
+
+    /// The `range` a pass's shaders declare for each material key (the first stage's winning).
+    private static func ranges(of stages: [ShaderSource]) -> [String: ClosedRange<Double>] {
+        var ranges: [String: ClosedRange<Double>] = [:]
+        for source in stages {
+            for uniform in source.uniforms where !uniform.isSampler {
+                guard let key = uniform.materialKey, ranges[key] == nil,
+                      let bounds = uniform.annotation["range"] as? [Any], bounds.count == 2,
+                      let low = (bounds[0] as? NSNumber)?.doubleValue, let high = (bounds[1] as? NSNumber)?.doubleValue,
+                      low <= high else { continue }
+                ranges[key] = low...high
+            }
+        }
+        return ranges
+    }
+
     // MARK: Files
+
+    private static func copyTestCard(into folder: URL) throws {
+        guard let card = EditorPreviewResources.testCard else { throw Failure.noTestCard }
+        try copy(card, to: EditorPreviewScene.testCardFile, in: folder)
+    }
 
     /// The wallpaper's files: its package, else its folder.
     private static func wallpaperReader(_ directory: URL) throws -> (String) -> Data? {

@@ -12,9 +12,9 @@ import WEFormat
 public struct EditorPreviewCache: Sendable {
     /// Bump when what an effect's preview shows changes (its scene, test card, size, length or
     /// encoding).
-    public static let effectRevision = 2
+    public static let effectRevision = 3
     /// Bump when what a particle system's preview shows changes.
-    public static let particleRevision = 2
+    public static let particleRevision = 3
     /// The folder's revision, both kinds': a bump of one kind's carries the other's previews over.
     public static var revision: String { "\(effectRevision).\(particleRevision)" }
 
