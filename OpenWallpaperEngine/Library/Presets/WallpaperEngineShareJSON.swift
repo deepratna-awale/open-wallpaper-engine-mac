@@ -12,8 +12,10 @@ import Foundation
 enum WallpaperEngineShareJSON {
     /// The wallpaper's property definitions from its project.json; none when it can't be read.
     static func definitions(in directory: URL) -> [String: UserPropertyDefinition] {
-        // No project: no properties.
-        guard let root = (try? WEProject.object(in: directory)) as? [String: Any] else { return [:] }
+        // No project: no properties. One that can't be read logs once.
+        guard let root = OWELog.attempt(.library, "Properties: project.json in \(directory.lastPathComponent)", quietIfMissing: true, {
+            try WEProject.object(in: directory)
+        }) as? [String: Any] else { return [:] }
         return Dictionary(UserPropertyDefinition.all(projectJSON: root).map { ($0.key, $0) },
                           uniquingKeysWith: { first, _ in first })
     }

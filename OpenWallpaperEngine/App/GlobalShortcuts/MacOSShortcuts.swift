@@ -33,9 +33,10 @@ enum MacOSShortcuts {
 
     /// The enabled symbolic hotkeys in the plist at `url`; none when it can't be read.
     static func symbolicHotKeys(at url: URL = symbolicHotKeysURL) -> [MacOSShortcut] {
-        guard let data = try? Data(contentsOf: url),
-              let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
-        else { return [] }
+        // No plist: no system shortcuts set. One that can't be read logs once.
+        guard let plist = OWELog.attempt(.app, "macOS shortcuts: \(url.lastPathComponent)", quietIfMissing: true, {
+            try PropertyListSerialization.propertyList(from: Data(contentsOf: url), format: nil)
+        }) as? [String: Any] else { return [] }
         return symbolicHotKeys(from: plist)
     }
 

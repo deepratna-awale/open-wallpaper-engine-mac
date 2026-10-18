@@ -3,6 +3,7 @@ import CoreGraphics
 import Darwin
 import Foundation
 import os
+import OWESceneEditing
 
 /// Generates depth maps for depth parallax (`SceneDepthParallax`): one shared service per process,
 /// used by both editors. Inference runs off the main thread with Core ML on every compute unit
@@ -175,7 +176,8 @@ public final class DepthMapGenerator: ObservableObject {
             progress = 0.7
             depth = await Task.detached(priority: .userInitiated) { () -> DepthMapBuffer in
                 let normalized = DepthMapProcessing.normalized(raw, inverseDepth: estimator.outputIsInverseDepth)
-                let upscaled = (try? processing?.upscaled(normalized, guide: guide))
+                // A GPU pass that fails logs and falls back to the CPU one.
+                let upscaled = (EditorLog.attempt("Depth map: GPU upscale", { try processing?.upscaled(normalized, guide: guide) }) ?? nil)
                     ?? DepthMapProcessing.upscaled(normalized, guide: guide)
                 return upscaled
             }.value
@@ -189,7 +191,7 @@ public final class DepthMapGenerator: ObservableObject {
         phase = .refining
         progress = 0.85
         let result = try await Task.detached(priority: .userInitiated) { () throws -> Result in
-            let smoothed = (try? processing?.smoothed(depth, guide: guide, smoothing: smoothing))
+            let smoothed = (EditorLog.attempt("Depth map: GPU smoothing", { try processing?.smoothed(depth, guide: guide, smoothing: smoothing) }) ?? nil)
                 ?? DepthMapProcessing.smoothed(depth, guide: guide, smoothing: smoothing)
             guard let png = smoothed.pngData() else { throw Failure.unreadableSource }
             return Result(depth: smoothed, png: png, fromCache: cached != nil)
