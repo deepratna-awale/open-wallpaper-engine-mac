@@ -61,6 +61,7 @@ enum WebWallpaperPropertyBridge {
     }
 
     static func declaredProperties(wallpaperDirectory: URL) -> [String: Property] {
+        // Optional: a wallpaper without a readable project.json has no properties (its load reports why).
         guard let root = try? WEProject.json(in: wallpaperDirectory) else { return [:] }
         return declaredProperties(projectRoot: root)
     }

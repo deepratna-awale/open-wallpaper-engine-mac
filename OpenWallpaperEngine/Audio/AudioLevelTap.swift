@@ -64,7 +64,9 @@ final class AudioLevelTap {
         let asset = item.asset
         Task { [weak self] in
             guard let self,
-                  let track = try? await asset.loadTracks(withMediaType: .audio).first else { return }
+                  let track = await OWELog.attemptAsync(.audio, "Video audio level: the movie's tracks", {
+                      try await asset.loadTracks(withMediaType: .audio).first
+                  }) ?? nil else { return }
             guard let tap = self.makeTap() else { return }
             self.finishAttach(generation)
             let parameters = AVMutableAudioMixInputParameters(track: track)

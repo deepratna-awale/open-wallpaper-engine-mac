@@ -84,6 +84,7 @@ enum DepthMapPlugin {
 
     /// The texture an image layer's model draws: its material's first pass's first texture.
     static func textureName(ofModel model: String, resources: EditorWallpaperResources) -> String? {
+        // Optional: a model or material that isn't JSON names no texture (the scene's load logs it).
         guard let modelData = resources.data(model),
               let modelJSON = try? JSONSerialization.jsonObject(with: modelData) as? [String: Any],
               let material = modelJSON["material"] as? String,
