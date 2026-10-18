@@ -71,6 +71,15 @@ final class SceneScriptCorpusReplayTests: XCTestCase {
                         reason: "3283959988's Progress Bar is a child of the root text layer 'D a y', so getParent() of "
                             + "its parent is undefined (d.ts): the grandparent its visible script (from 3283687787) "
                             + "expects isn't there, as ecf70707afda; throws in WE too"),
+        ExpectedFailure(key: "cb3c105d9455", check: .exception,
+                        reason: "3815542599's day visibility reads 'wallpaperPpluginProps' (sic), which no script "
+                            + "or WE API declares: a ReferenceError in WE too"),
+        ExpectedFailure(key: "92ad0aadaa3b", check: .exception,
+                        reason: "3815542599's date visibility reads wallpaperPluginProps, which no script or WE API "
+                            + "declares (a web-wallpaper idea, not SceneScript): a ReferenceError in WE too"),
+        ExpectedFailure(key: "22df6e85f4b7", check: .exception,
+                        reason: "3815542599's clock visibility reads the undeclared wallpaperPluginProps, as "
+                            + "92ad0aadaa3b: a ReferenceError in WE too"),
         ExpectedFailure(key: "87c158cf40fa", check: .change,
                         reason: "3219510589's scriptproperties turn on media-based detection, so the scale follows "
                             + "playback, not the tone, and each cursor enter/leave restarts its 1.25 s fade-out: WE too"),
