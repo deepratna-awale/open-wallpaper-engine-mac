@@ -1,4 +1,5 @@
 import Foundation
+import OWESceneEditing
 
 /// The Depth Map Generation plugin on disk, shared by the app (which installs it, Settings ›
 /// Plugins) and every process that generates depth maps (the app's Scene Edit / Export, the Wallpaper
@@ -53,9 +54,10 @@ public enum DepthMapPluginLayout {
         }
 
         public static func read(in root: URL) -> State {
-            guard let data = try? Data(contentsOf: root.appending(path: fileName)),
-                  let state = try? JSONDecoder().decode(Self.self, from: data) else { return State() }
-            return state
+            // No file: nothing installed yet. One that can't be read or decoded logs and reads as none.
+            EditorLog.attempt("Depth map plug-in state", quietIfMissing: true) {
+                try JSONDecoder().decode(Self.self, from: Data(contentsOf: root.appending(path: fileName)))
+            } ?? State()
         }
 
         public func write(in root: URL) throws {

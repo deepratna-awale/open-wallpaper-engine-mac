@@ -29,7 +29,7 @@ public final class UserPropertyAuthoring: ObservableObject {
 
     /// project.json's `general.properties`, ordered as WE's sidebar orders them.
     public nonisolated static func read(projectJSON data: Data) -> [UserPropertyDraft] {
-        guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+        guard let root = EditorLog.attempt("Properties: project.json", { try JSONSerialization.jsonObject(with: data) }) as? [String: Any],
               let general = root["general"] as? [String: Any],
               let entries = general["properties"] as? [String: Any] else { return [] }
         var drafts: [(order: Int, draft: UserPropertyDraft)] = []
