@@ -958,19 +958,24 @@ extension SceneMetalRenderer {
                                  commandBuffer: commandBuffer)
     }
 
-    /// Compiles landed so far in the layer, effect, particle and puppet mesh renderers.
+    /// Compiles landed so far in every renderer that compiles off the render thread
+    /// (`pipelinesCompiling`'s).
     private var pipelinesLanded: Int {
         (effectGraph?.pipelinesLanded ?? 0) &+ (imageMaterials?.pipelinesLanded ?? 0) &+ (particleMaterials?.pipelinesLanded ?? 0)
-            &+ (puppetsMade ? puppets?.pipelinesLanded ?? 0 : 0) &+ (volumetrics?.pipelines?.pipelinesLanded ?? 0)
+            &+ (modelDrawing?.pipelinesLanded ?? 0) &+ (shadowPass?.pipelinesLanded ?? 0)
+            &+ (puppetsMade ? (puppets?.pipelinesLanded ?? 0) &+ (puppets?.channels.pipelinesLanded ?? 0) : 0)
+            &+ (volumetrics?.pipelines?.pipelinesLanded ?? 0)
     }
 
     /// Whether any pipeline is still compiling off the render thread. A puppet's mesh pipeline
     /// counts too: until it lands the puppet's image stays transparent (`ScenePuppetRenderer`);
-    /// so do the volumetrics', which draw no volume until theirs land.
+    /// so do its texture channels', the shadow casters' (no shadow until theirs land) and the
+    /// volumetrics' (no volume).
     var pipelinesCompiling: Bool {
         hasPendingEffectPipelines || imageMaterials?.hasPendingPipelines == true
             || particleMaterials?.hasPendingPipelines == true || modelDrawing?.hasPendingPipelines == true
-            || (puppetsMade && puppets?.hasPendingPipelines == true)
+            || shadowPass?.hasPendingPipelines == true
+            || (puppetsMade && (puppets?.hasPendingPipelines == true || puppets?.channels.hasPendingPipelines == true))
             || volumetrics?.pipelines?.hasPendingPipelines == true
     }
 
