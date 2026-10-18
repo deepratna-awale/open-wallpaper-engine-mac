@@ -961,10 +961,12 @@ extension SceneMetalRenderer {
     /// Compiles landed so far in every renderer that compiles off the render thread
     /// (`pipelinesCompiling`'s).
     private var pipelinesLanded: Int {
-        (effectGraph?.pipelinesLanded ?? 0) &+ (imageMaterials?.pipelinesLanded ?? 0) &+ (particleMaterials?.pipelinesLanded ?? 0)
-            &+ (modelDrawing?.pipelinesLanded ?? 0) &+ (shadowPass?.pipelinesLanded ?? 0)
-            &+ (puppetsMade ? (puppets?.pipelinesLanded ?? 0) &+ (puppets?.channels.pipelinesLanded ?? 0) : 0)
-            &+ (volumetrics?.pipelines?.pipelinesLanded ?? 0)
+        // Typed terms: one chained expression is past Swift 6.2's type-check budget.
+        let materials: Int = (imageMaterials?.pipelinesLanded ?? 0) &+ (particleMaterials?.pipelinesLanded ?? 0)
+        let geometry: Int = (modelDrawing?.pipelinesLanded ?? 0) &+ (shadowPass?.pipelinesLanded ?? 0)
+        let puppetLanded: Int = puppetsMade ? (puppets?.pipelinesLanded ?? 0) &+ (puppets?.channels.pipelinesLanded ?? 0) : 0
+        let volume: Int = volumetrics?.pipelines?.pipelinesLanded ?? 0
+        return (effectGraph?.pipelinesLanded ?? 0) &+ materials &+ geometry &+ puppetLanded &+ volume
     }
 
     /// Whether any pipeline is still compiling off the render thread. A puppet's mesh pipeline
@@ -972,11 +974,12 @@ extension SceneMetalRenderer {
     /// so do its texture channels', the shadow casters' (no shadow until theirs land) and the
     /// volumetrics' (no volume).
     var pipelinesCompiling: Bool {
-        hasPendingEffectPipelines || imageMaterials?.hasPendingPipelines == true
-            || particleMaterials?.hasPendingPipelines == true || modelDrawing?.hasPendingPipelines == true
-            || shadowPass?.hasPendingPipelines == true
-            || (puppetsMade && (puppets?.hasPendingPipelines == true || puppets?.channels.hasPendingPipelines == true))
-            || volumetrics?.pipelines?.hasPendingPipelines == true
+        let puppetPending: Bool = puppetsMade
+            && (puppets?.hasPendingPipelines == true || puppets?.channels.hasPendingPipelines == true)
+        let materials: Bool = imageMaterials?.hasPendingPipelines == true || particleMaterials?.hasPendingPipelines == true
+        let geometry: Bool = modelDrawing?.hasPendingPipelines == true || shadowPass?.hasPendingPipelines == true
+        let volume: Bool = volumetrics?.pipelines?.hasPendingPipelines == true
+        return hasPendingEffectPipelines || materials || geometry || puppetPending || volume
     }
 
     /// The unquantised pixels per unit that sizes the scene target to `drawable` when the scene is
