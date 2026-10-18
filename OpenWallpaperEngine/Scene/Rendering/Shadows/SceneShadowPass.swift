@@ -48,6 +48,12 @@ final class SceneShadowPass {
     private var pipelines: [String: MTLRenderPipelineState] = [:]
     private var pending = Set<String>()
     private var failed = Set<String>()
+    private var landedPipelines = 0
+
+    /// Whether a pipeline is still compiling: a frame drawn now lacks that caster's shadow.
+    var hasPendingPipelines: Bool { pipelineLock.withLock { !pending.isEmpty } }
+    /// Compiles finished so far, however they ended.
+    var pipelinesLanded: Int { pipelineLock.withLock { landedPipelines } }
 
     /// The frame's built-ins and the caster materials' bound constants, shared by the frame's draws.
     private let frameValues = SceneModelFrameValues()
@@ -547,6 +553,7 @@ final class SceneShadowPass {
             guard let self else { return }
             self.pipelineLock.withLock {
                 self.pending.remove(key)
+                self.landedPipelines &+= 1
                 if let result { self.pipelines[key] = result } else { self.failed.insert(key) }
             }
         }

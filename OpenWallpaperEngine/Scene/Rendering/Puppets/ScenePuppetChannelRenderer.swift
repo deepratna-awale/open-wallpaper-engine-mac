@@ -26,6 +26,12 @@ final class ScenePuppetChannelRenderer {
     private var pipelines: [String: MTLRenderPipelineState] = [:]
     private var pending = Set<String>()
     private var failed = Set<String>()
+    private var landedPipelines = 0
+
+    /// Whether a pipeline is still compiling: a frame drawn now lacks that puppet's texture channels.
+    var hasPendingPipelines: Bool { pipelineLock.withLock { !pending.isEmpty } }
+    /// Compiles finished so far, however they ended.
+    var pipelinesLanded: Int { pipelineLock.withLock { landedPipelines } }
 
     /// Per layer instance. Render thread only.
     private var layers: [String: LayerState] = [:]
@@ -296,6 +302,7 @@ final class ScenePuppetChannelRenderer {
             guard let self else { return }
             self.pipelineLock.withLock {
                 self.pending.remove(key)
+                self.landedPipelines &+= 1
                 if let result { self.pipelines[key] = result } else { self.failed.insert(key) }
             }
         }
