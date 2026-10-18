@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Workshop: card previews seen a moment ago show at once again.** Their thumbnails were kept in a cache the system could empty whenever it wanted memory, so a card could flash its placeholder and download its preview again; they now stay (most recently used first, up to the same 96 MB) and are dropped only under critical memory pressure.
 - **Scene sound on an output device at another sample rate no longer allocates memory on the audio thread.** When the default output device runs at a rate other than the one the scene's sound engine was made at, the output resamples through Core Audio's converter, set up as before and driven so the realtime callback allocates nothing (it made 7 to 8 heap allocations per callback before; the audio thread must never wait on the allocator). The sound is sample-for-sample the same.
 - **Wallpaper Editor: Escape cancels a timeline drag.** Pressing Escape while dragging keyframes or a curve handle drops the drag: the keyframes go back where they were, the rest of the drag does nothing and nothing is added to Undo. Escape without a drag still clears the keyframe selection.
 - **Wallpaper Editor: the script and timeline panels' heights** are kept in the app's own defaults, like every other setting, so a test run or an isolated development copy no longer writes them into the user's real preferences.
