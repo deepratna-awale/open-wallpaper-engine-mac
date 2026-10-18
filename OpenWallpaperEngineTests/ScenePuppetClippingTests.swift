@@ -145,9 +145,13 @@ final class ScenePuppetClippingTests: XCTestCase {
         for y in 0..<8 {
             for x in 0..<24 { bytes.replaceSubrange((y * 24 + x) * 4..<(y * 24 + x) * 4 + 4, with: [red, green, blue][x / 8]) }
         }
-        var mesh = ScenePuppetTests.mesh(quads: [(SIMD4(-12, 4, -4, -4), SIMD4(0, 0, 1 / 3, 1)),
-                                                 (SIMD4(-4, 4, 4, -4), SIMD4(1 / 3, 0, 2 / 3, 1)),
-                                                 (SIMD4(4, 4, 12, -4), SIMD4(2 / 3, 0, 1, 1))], bones: [0, 1, 2])
+        // Typed quads: Xcode 26.3 infers the untyped thirds as [Any].
+        let quads: [(position: SIMD4<Float>, uv: SIMD4<Float>)] = [
+            (SIMD4<Float>(-12, 4, -4, -4), SIMD4<Float>(0, 0, 1 / 3, 1)),
+            (SIMD4<Float>(-4, 4, 4, -4), SIMD4<Float>(1 / 3, 0, 2 / 3, 1)),
+            (SIMD4<Float>(4, 4, 12, -4), SIMD4<Float>(2 / 3, 0, 1, 1)),
+        ]
+        var mesh = ScenePuppetTests.mesh(quads: quads, bones: [0, 1, 2])
         mesh.vector4Block = Self.ranges([(0, 0, 6), (1, 6, 6), (2, 12, 6)])
         mesh.groups = [MDLMesh.Group(id: 1, name: "masks/red", flags: 0, listA: [1], listB: [0]),
                        MDLMesh.Group(id: 2, name: "masks/green", flags: 0, listA: [2], listB: [1])]

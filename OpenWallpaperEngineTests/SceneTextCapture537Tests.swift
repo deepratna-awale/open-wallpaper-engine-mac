@@ -95,6 +95,7 @@ final class SceneTextCapture537Tests: XCTestCase {
     }
 
     func testAtFullAlphaTheBoxGlows() throws {
+        _ = try Fixtures.assets() // the glow is WE's bloom, whose shaders are WE's assets
         let frame = try render("bg_pad0_a10")
         let inside = frame.pixel(900, 490)
         XCTAssertEqual(Double(inside.x), 55, accuracy: 4, "\(inside)")
