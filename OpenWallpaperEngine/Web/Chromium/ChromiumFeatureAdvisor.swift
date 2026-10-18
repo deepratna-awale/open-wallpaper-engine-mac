@@ -38,7 +38,7 @@ struct ChromiumFeatureStore {
 
     func finding(for path: String) -> ChromiumFeatureFinding? {
         guard let all = defaults.dictionary(forKey: Self.findingsKey), let data = all[path] as? Data else { return nil }
-        return try? JSONDecoder().decode(ChromiumFeatureFinding.self, from: data)
+        return OWELog.attempt(.web, "Stored Chromium finding for \(path)") { try JSONDecoder().decode(ChromiumFeatureFinding.self, from: data) }
     }
 
     func setFinding(_ finding: ChromiumFeatureFinding, for path: String) {

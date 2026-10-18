@@ -14,6 +14,8 @@ struct SceneInspectorContent: View {
     @State var statsFeed: RenderStatsFeed?
     @State var isMovementPresented = true
     @State var isConfirmingReset = false
+    /// Why a JSON editor's Save failed, shown until dismissed.
+    @State var saveError: String?
     @State var columnVisibility: NavigationSplitViewVisibility
     /// Moves when the Export Settings sheet closes, so the panel reads the properties it changed.
     @State var exportPanelRevision = 0
@@ -241,6 +243,11 @@ struct SceneInspectorContent: View {
                     Button("Cancel", role: .cancel) { }
                 } message: {
                     Text("Do you want to undo every scene edit of “\(wallpaper.project.displayTitle)”? Its properties are kept.")
+                }
+                .alert("Couldn't Save", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
+                    Button("OK", role: .cancel) { }
+                } message: {
+                    Text(saveError ?? "")
                 }
         }
         .background {

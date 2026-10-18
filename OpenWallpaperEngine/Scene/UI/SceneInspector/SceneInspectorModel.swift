@@ -58,11 +58,15 @@ final class SceneInspectorModel: ObservableObject {
         targets = WallpaperPropertyTargets(wallpaper: wallpaper, scopes: scopes)
         let scenePath = wallpaper.project.file
         let packageURL = directory.appending(path: (scenePath as NSString).deletingPathExtension + ".pkg")
-        package = try? PKGParser(url: packageURL)
+        // Most wallpapers have no package: a missing one is quiet.
+        package = OWELog.attempt(.ui, "Scene Edit / Export: \(packageURL.lastPathComponent)", quietIfMissing: true) {
+            try PKGParser(url: packageURL)
+        }
+        let directory = directory
+        let package = package
 
         func data(_ path: String) -> Data? {
-            // Optional: the inspector shows an unreadable file as a missing one.
-            package?.extractFile(named: path) ?? (try? AssetPathResolver.data(path, in: directory))
+            Self.assetData(path, package: package, directory: directory)
         }
         func rawJSON(_ path: String) -> String? {
             guard let data = data(path),
@@ -71,8 +75,8 @@ final class SceneInspectorModel: ObservableObject {
             return String(data: formatted, encoding: .utf8)
         }
         guard let sceneData = data(scenePath),
-              let scene = try? JSONDecoder().decode(WEScene.self, from: sceneData),
-              let sceneJSON = try? JSONSerialization.jsonObject(with: sceneData) as? [String: Any],
+              let scene = OWELog.attempt(.ui, "Scene Edit / Export: \(scenePath)", { try JSONDecoder().decode(WEScene.self, from: sceneData) }),
+              let sceneJSON = try? JSONSerialization.jsonObject(with: sceneData) as? [String: Any], // decoded just above
               let rawObjects = sceneJSON["objects"] as? [[String: Any]] else {
             if SceneContentLoader.isVideoType(wallpaper.project.type) {
                 buildVideoLayers(for: wallpaper)
@@ -82,7 +86,7 @@ final class SceneInspectorModel: ObservableObject {
             return
         }
         sceneSize = Self.drawnSize(of: sceneData, scene: scene, wallpaper: wallpaper, storedValues: targets.storedValues)
-        outline = try? SceneOutline(sceneData: sceneData)
+        outline = OWELog.attempt(.ui, "Scene Edit / Export: outline of \(scenePath)") { try SceneOutline(sceneData: sceneData) }
         objectTree = outline?.tree() ?? []
 
         let storedValues: [String: String] = targets.storedValues
@@ -108,9 +112,9 @@ final class SceneInspectorModel: ObservableObject {
             // Editor's list treats it.
             let authoredName = object.name.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 }
             if let imagePath = object.image {
-                let model: WEModel? = data(imagePath).flatMap { try? JSONDecoder().decode(WEModel.self, from: $0) }
+                let model: WEModel? = data(imagePath).flatMap { Self.decode(WEModel.self, from: $0, path: imagePath) }
                 let materialPath = model?.material
-                let material: WEMaterial? = materialPath.flatMap { data($0) }.flatMap { try? JSONDecoder().decode(WEMaterial.self, from: $0) }
+                let material: WEMaterial? = materialPath.flatMap { path in data(path).flatMap { Self.decode(WEMaterial.self, from: $0, path: path) } }
                 let passes = material?.passes ?? []
                 return SceneInspectorItem(id: String(object.id ?? index), name: authoredName ?? String(localized: "Image \(index + 1)", comment: "Scene Edit / Export: an image layer without a name"),
                                           kind: "Image", sourcePath: imagePath, materialPath: materialPath,
@@ -122,9 +126,9 @@ final class SceneInspectorModel: ObservableObject {
                                           visibility: visibility, isSwitchedOn: switchedOn)
             }
             if let particlePath = object.particle {
-                let particle: WEParticleSystem? = data(particlePath).flatMap { try? JSONDecoder().decode(WEParticleSystem.self, from: $0) }
+                let particle: WEParticleSystem? = data(particlePath).flatMap { Self.decode(WEParticleSystem.self, from: $0, path: particlePath) }
                 let materialPath = particle?.material
-                let material: WEMaterial? = materialPath.flatMap { data($0) }.flatMap { try? JSONDecoder().decode(WEMaterial.self, from: $0) }
+                let material: WEMaterial? = materialPath.flatMap { path in data(path).flatMap { Self.decode(WEMaterial.self, from: $0, path: path) } }
                 let passes = material?.passes ?? []
                 return SceneInspectorItem(id: String(object.id ?? index), name: authoredName ?? String(localized: "Particle \(index + 1)", comment: "Scene Edit / Export: a particle system without a name"),
                                           kind: "Particle", sourcePath: particlePath, materialPath: materialPath,
@@ -191,7 +195,11 @@ final class SceneInspectorModel: ObservableObject {
 
         Task { [weak self] in
             let asset = AVURLAsset(url: url)
-            let videoTrack = try? await asset.loadTracks(withMediaType: .video).first
+            // A video AVFoundation can't open logs once; the summary then shows only the file.
+            let videoTrack = await OWELog.attemptAsync(.ui, "Scene Edit / Export: \(file)") {
+                try await asset.loadTracks(withMediaType: .video).first
+            } ?? nil
+            // Optional below: a value the movie doesn't carry is left out of the summary.
             let audioTrack = try? await asset.loadTracks(withMediaType: .audio).first
             let duration = (try? await asset.load(.duration)).map { CMTimeGetSeconds($0) }
             let size = try? await videoTrack?.load(.naturalSize)
@@ -628,7 +636,7 @@ final class SceneInspectorModel: ObservableObject {
         guard let index = items.firstIndex(where: { $0.id == item.id }),
               var object = parsedObject(items[index]) else { return }
         object["alpha"] = min(max(value, 0), 1)
-        saveObjectJSON(prettyJSON(object), item: items[index])
+        saveObject(object, item: items[index])
     }
 
     /// An image layer's `color` (WE's default white); nil while something else sets it.
@@ -646,7 +654,7 @@ final class SceneInspectorModel: ObservableObject {
         let rgb = NSColor(color).usingColorSpace(.deviceRGB) ?? .white
         let components: [Double] = [rgb.redComponent, rgb.greenComponent, rgb.blueComponent].map { Double($0) }
         object["color"] = components.map { String(format: "%.5g", $0) }.joined(separator: " ")
-        saveObjectJSON(prettyJSON(object), item: items[index])
+        saveObject(object, item: items[index])
     }
 
     /// An image layer's `colorBlendMode` (WE's default 0, Normal).
@@ -660,7 +668,7 @@ final class SceneInspectorModel: ObservableObject {
         guard let index = items.firstIndex(where: { $0.id == item.id }),
               var object = parsedObject(items[index]) else { return }
         object["colorBlendMode"] = value
-        saveObjectJSON(prettyJSON(object), item: items[index])
+        saveObject(object, item: items[index])
     }
 
     /// The material blendings a layer offers: its kind's (`WEMaterialBlending`); none for a layer
@@ -725,10 +733,14 @@ final class SceneInspectorModel: ObservableObject {
             options: SceneBlendModeOptions.options(labels: labels).map { (title: $0.title, value: $0.value, group: $0.group) })
     }()
 
-    func saveObjectJSON(_ text: String, item: SceneInspectorItem) {
-        guard let data = text.data(using: .utf8),
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              JSONSerialization.isValidJSONObject(object) else { return }
+    /// Saves the layer's object as edited in the JSON editor. Throws, saving nothing, when the
+    /// text isn't a JSON object.
+    func saveObjectJSON(_ text: String, item: SceneInspectorItem) throws {
+        saveObject(try Self.jsonObject(text), item: item)
+    }
+
+    /// Saves the layer's object (a field edited in the inspector).
+    private func saveObject(_ object: [String: Any], item: SceneInspectorItem) {
         let formatted = prettyJSON(object)
         var values = storedValues
         values["_owe_scene_object_\(item.id)_json"] = formatted
@@ -738,13 +750,46 @@ final class SceneInspectorModel: ObservableObject {
         }
     }
 
-    func saveAssetJSON(_ text: String, path: String) {
-        guard let data = text.data(using: .utf8),
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              JSONSerialization.isValidJSONObject(object) else { return }
+    /// Saves a material or particle as edited in the JSON editor. Throws, saving nothing, when the
+    /// text isn't a JSON object.
+    func saveAssetJSON(_ text: String, path: String) throws {
+        let object = try Self.jsonObject(text)
         var values = storedValues
         values[sceneAssetOverrideKey(path: path)] = prettyJSON(object)
         persist(values)
+    }
+
+    /// Why a JSON editor's text can't be saved.
+    enum InvalidJSON: LocalizedError {
+        /// The text doesn't parse; the parser's reason.
+        case unparseable(String)
+        /// It parses, but to something other than an object.
+        case notAnObject
+
+        var errorDescription: String? {
+            switch self {
+            case .unparseable(let reason):
+                return String(localized: "This isn't valid JSON: \(reason)",
+                              comment: "Scene Edit / Export: Save in a JSON editor whose text doesn't parse; the argument is the parser's reason")
+            case .notAnObject:
+                return String(localized: "This is valid JSON, but not an object in braces { }.",
+                              comment: "Scene Edit / Export: Save in a JSON editor whose text is an array, string or number")
+            }
+        }
+    }
+
+    /// `text` as a JSON object, or why it isn't one.
+    static func jsonObject(_ text: String) throws -> [String: Any] {
+        let parsed: Any
+        do {
+            parsed = try JSONSerialization.jsonObject(with: Data(text.utf8), options: [.fragmentsAllowed])
+        } catch {
+            throw InvalidJSON.unparseable((error as NSError).userInfo[NSDebugDescriptionErrorKey] as? String ?? error.localizedDescription)
+        }
+        guard let object = parsed as? [String: Any], JSONSerialization.isValidJSONObject(object) else {
+            throw InvalidJSON.notAnObject
+        }
+        return object
     }
 
     func useVersion(_ item: SceneInspectorItem) {
@@ -847,8 +892,20 @@ final class SceneInspectorModel: ObservableObject {
     }
 
     private func data(_ path: String) -> Data? {
-        // Optional: the inspector shows an unreadable file as a missing one.
-        package?.extractFile(named: path) ?? (try? AssetPathResolver.data(path, in: directory))
+        Self.assetData(path, package: package, directory: directory)
+    }
+
+    /// The bytes of `path` in the package or the folder; nil when neither has it. The inspector
+    /// shows an unreadable file as a missing one, after logging why it couldn't be read.
+    private static func assetData(_ path: String, package: PKGParser?, directory: URL) -> Data? {
+        if let data = package?.extractFile(named: path) { return data }
+        return OWELog.attempt(.ui, "Scene Edit / Export: \(path)") { try AssetPathResolver.data(path, in: directory) } ?? nil
+    }
+
+    /// `data` decoded as `type`; nil, after one log line, when `path` isn't one (the layer then
+    /// shows without its model, material or particle details).
+    private static func decode<T: Decodable>(_ type: T.Type, from data: Data, path: String) -> T? {
+        OWELog.attempt(.ui, "Scene Edit / Export: \(path)") { try JSONDecoder().decode(type, from: data) }
     }
 
     private func prettyJSON(_ json: Any) -> String {
