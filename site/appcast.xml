@@ -6,6 +6,71 @@
         <description>Open Wallpaper Engine updates. Items are added by .github/workflows/appcast.yml when a release is published.</description>
         <language>en</language>
         <item>
+            <title>1.0.0-beta.8</title>
+            <pubDate>Sun, 18 Oct 2026 14:56:10 +0000</pubDate>
+            <sparkle:version>12</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.8</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.8/OpenWallpaperEngine-1.0.0-beta.8.zip" length="92928814" type="application/octet-stream" sparkle:edSignature="Qz1ldJqB4BfR+OT/DY3wY7kfRW0mpqdEc4mPu9pQHTR/oN0JGGkiWf40qsCxwUaMmxyljGm3bbGAgaTV/aeKDw==" />
+            <sparkle:deltas>
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.8/OpenWallpaperEngine-1.0.0-beta.8-from-11.delta" sparkle:deltaFrom="11" length="7831534" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="wBedNAMtJapBOx+K6Zg/8l4rSi3kUyU62Vfu6hMmXwvx6nyqW+P7fWHdlRpil9AEFw5ZI4vmKMorDVFFIrGpBw==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.8/OpenWallpaperEngine-1.0.0-beta.8-from-9.delta" sparkle:deltaFrom="9" length="13982254" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="aG91b8FIbqMnttMouv1peM4b/fsTd4BuMZBYgcayxgbTZmbkLRq94Gbp/qeHGv3WTXGefBR+0mVhv9l0VAtUCA==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.8/OpenWallpaperEngine-1.0.0-beta.8-from-7.delta" sparkle:deltaFrom="7" length="16227614" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="MuABpRB0w8TtdAgai37ELbxcGKFxK7EwmQfSm2GshFNsw6ahQKJD8fHG1sdLYFfgyVVEvWm1C2SndFjkec5RCw==" />
+            </sparkle:deltas>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:fullReleaseNotesLink>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.8</sparkle:fullReleaseNotesLink>
+            <link>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.8</link>
+            <description>&lt;p dir="auto"&gt;Beta 8 brings Wallpaper Engine's Puppet Warp tools to the Wallpaper Editor, makes Scene Edit / Export open several times faster, and tidies up a lot under the hood.&lt;/p&gt;
+&lt;h2 dir="auto"&gt;Highlights&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;Puppet Warp, as Wallpaper Engine plays it.&lt;/strong&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;Clipping masks.&lt;/li&gt;
+&lt;li&gt;Blend rules.&lt;/li&gt;
+&lt;li&gt;Inverse kinematics.&lt;/li&gt;
+&lt;li&gt;Kinematic chains.&lt;/li&gt;
+&lt;li&gt;Rope chains.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Puppet Warp in the Wallpaper Editor.&lt;/strong&gt; Edit clipping masks, blend rules and kinematic chains, with Wallpaper Engine's panels.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Texture variants&lt;/strong&gt; in the Wallpaper Editor: Wallpaper Engine 2.6's Texture Properties › Variants.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Particles: two more layer image emitter options.&lt;/strong&gt; "Update emission bitmap periodically" and "inherit layer motion".&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;View › Show Debug › Show Hitboxes&lt;/strong&gt; in the Wallpaper Editor.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Scene Edit / Export opens much faster.&lt;/strong&gt; On large scenes it opens in about a quarter of the time or less (1.8 s → 0.24 s on a scene with 276 effects).&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Add Effect's previews show what each effect does&lt;/strong&gt;, set up the way Wallpaper Engine's own previews are.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 dir="auto"&gt;Changed&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;Particles always simulate on the GPU.&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Imported models are compiled the way Wallpaper Engine 2.8 compiles them.&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Lower memory use:&lt;/strong&gt; checking a video's length or size no longer reads the whole file into memory.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 dir="auto"&gt;Fixes&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;A scene's first complete frame now includes everything.&lt;/strong&gt; It waits for volumetric light shafts, shadows and puppet texture channels. The screen saver, Live Photos and depth captures start from that frame.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Workshop:&lt;/strong&gt; card previews you saw a moment ago show at once, instead of flashing and downloading again.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Scene Edit / Export:&lt;/strong&gt; Save in a JSON editor tells you when the text isn't a JSON object, instead of doing nothing.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Audio:&lt;/strong&gt; scene sound on an output device at a different sample rate no longer allocates memory on the audio thread.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Wallpaper Editor:&lt;/strong&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;Escape cancels a timeline drag.&lt;/li&gt;
+&lt;li&gt;Crop transparent area keeps the picture in place.&lt;/li&gt;
+&lt;li&gt;Character Sheet Creation places the sheet at the scene's centre.&lt;/li&gt;
+&lt;li&gt;Texture bindings are written where Wallpaper Engine writes them.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Wallpaper Engine parity:&lt;/strong&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;Text with an opaque background fades as in Wallpaper Engine.&lt;/li&gt;
+&lt;li&gt;Clicking a 3D model hits the whole model.&lt;/li&gt;
+&lt;li&gt;A scene with "clear" turned off starts on black.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Diagnostics:&lt;/strong&gt; many errors that used to vanish silently are now logged once each.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p dir="auto"&gt;The full list is in &lt;a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/blob/main/CHANGELOG.md#100-beta8---2026-10-18"&gt;CHANGELOG.md&lt;/a&gt;.&lt;/p&gt;</description>
+        </item>
+        <item>
             <title>1.0.0-beta.7</title>
             <pubDate>Fri, 16 Oct 2026 22:38:45 +0000</pubDate>
             <sparkle:version>11</sparkle:version>
