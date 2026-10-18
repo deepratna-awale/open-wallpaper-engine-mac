@@ -241,7 +241,9 @@ class WorkshopViewModel: ObservableObject {
             fileSize: item.fileSize
         ) { destination in
             guard let destination,
-                  let project = try? WEProject.read(in: destination) else { return }
+                  let project = OWELog.attempt(.workshop, "Add to playlist: project.json of \(destination.lastPathComponent)", {
+                      try WEProject.read(in: destination)
+                  }) else { return }
             // steamcmd invokes this completion off the main thread.
             DispatchQueue.main.async {
                 wallpaperViewModel.addToPlaylist(WEWallpaper(using: project, where: destination), playlistID: playlistID)

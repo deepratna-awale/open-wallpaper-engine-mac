@@ -99,6 +99,7 @@ enum TexturePreparation {
 
     /// Whether a blob (compressed or kept original) exists for `key` with this encoder's revision.
     static func isPrepared(key: String) -> Bool {
+        // Optional: no blob, or one an older encoder wrote, is simply not prepared yet.
         guard let data = try? Data(contentsOf: url(key: key), options: .alwaysMapped) else { return false }
         return (try? decodeHeader(data)) != nil
     }

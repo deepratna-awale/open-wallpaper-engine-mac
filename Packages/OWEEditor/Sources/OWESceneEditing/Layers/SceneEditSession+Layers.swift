@@ -51,7 +51,7 @@ extension SceneEditSession {
     public func appliedObject(_ layerID: Int) -> [String: Any]? {
         guard let data = authored.sceneData,
               var root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
-        try? overlay.apply(to: &root)
+        EditorLog.attempt("Scene edits: applying to layer \(layerID)") { try overlay.apply(to: &root) }
         let objects = root["objects"] as? [[String: Any]] ?? []
         for (index, object) in objects.enumerated() where SceneObjects.objectID(object, index: index) == layerID {
             return object
@@ -216,7 +216,8 @@ extension SceneEditSession {
     private func authoredOrder(of overlay: SceneEditOverlay) -> [Int] {
         var structure = overlay.structureOnly
         structure.order = nil
-        guard let data = authored.sceneData, let outline = try? Self.outline(of: data, with: structure) else {
+        guard let data = authored.sceneData,
+              let outline = EditorLog.attempt("Scene edits: authored order", { try Self.outline(of: data, with: structure) }) else {
             return authored.layers.map(\.id)
         }
         return outline.layers.map(\.id)

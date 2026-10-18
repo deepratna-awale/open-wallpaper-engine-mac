@@ -42,7 +42,7 @@ final class WorkshopMetadataStore {
 
     private init() {
         guard let data = Self.storedData(forKey: storageKey),
-              let saved = try? JSONDecoder().decode([String: WorkshopItem].self, from: data) else {
+              let saved = OWELog.attempt(.workshop, "Stored Workshop metadata", { try JSONDecoder().decode([String: WorkshopItem].self, from: data) }) else {
             metadata = [:]
             return
         }
@@ -68,7 +68,7 @@ final class WorkshopMetadataStore {
         for item in items {
             metadata[item.id] = item
         }
-        if let data = try? JSONEncoder().encode(metadata) {
+        if let data = OWELog.attempt(.workshop, "Saving Workshop metadata", { try JSONEncoder().encode(metadata) }) {
             UserDefaults.app.set(data, forKey: storageKey)
         }
     }
@@ -88,7 +88,7 @@ final class SteamPlayerStore {
 
     private init() {
         guard let data = Self.storedData(forKey: storageKey),
-              let saved = try? JSONDecoder().decode([String: SteamPlayer].self, from: data) else {
+              let saved = OWELog.attempt(.workshop, "Stored Steam players", { try JSONDecoder().decode([String: SteamPlayer].self, from: data) }) else {
             players = [:]
             return
         }
@@ -105,7 +105,7 @@ final class SteamPlayerStore {
         lock.lock()
         defer { lock.unlock() }
         players[player.steamId] = player
-        if let data = try? JSONEncoder().encode(players) {
+        if let data = OWELog.attempt(.workshop, "Saving Steam players", { try JSONEncoder().encode(players) }) {
             UserDefaults.app.set(data, forKey: storageKey)
         }
     }

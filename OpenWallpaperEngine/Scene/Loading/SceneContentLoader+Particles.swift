@@ -208,6 +208,7 @@ extension SceneContentLoader {
         let candidates = ["\(materialDirectory)/\(name).tex-json", "\(root)/\(name).tex-json", "\(name).tex-json"]
         for candidate in candidates {
             let data = assetData(named: candidate, wallpaperDir: wallpaperDir)
+            // Optional: a candidate that isn't sprite-sheet metadata is skipped for the next one.
             guard let data, let metadata = try? JSONDecoder().decode(TextureMetadata.self, from: data),
                   let sequence = metadata.spritesheetsequences?.first, sequence.frames > 0,
                   sequence.width > 0, sequence.height > 0 else { continue }

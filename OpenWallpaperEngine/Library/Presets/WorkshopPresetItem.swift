@@ -60,12 +60,12 @@ enum WorkshopPresetItem {
         own["file"] = ""
         own["type"] = ""
         own.removeValue(forKey: "preset")
-        var project = (try? JSONSerialization.data(withJSONObject: own)).flatMap { try? JSONDecoder().decode(WEProject.self, from: $0) }
+        var project = Self.project(from: own, folder: folder)
             ?? WEProject(file: "", title: root["title"] as? String ?? "", type: "")
         project.applyTaggedContentRating()
         let base = baseDirectory(forPresetAt: folder, projectJSON: root, roots: roots)
         if let base, let baseRoot = projectJSON(in: base),
-           let baseProject = (try? JSONSerialization.data(withJSONObject: baseRoot)).flatMap({ try? JSONDecoder().decode(WEProject.self, from: $0) }) {
+           let baseProject = Self.project(from: baseRoot, folder: base) {
             project.type = baseProject.type
             project.file = baseProject.file
         } else {
@@ -98,7 +98,17 @@ enum WorkshopPresetItem {
     /// Property types whose strings are values, never asset paths.
     private static let valueTypes: Set<String> = ["bool", "slider", "combo", "color", "text", "textinput"]
 
+    /// `folder`'s project.json; nil without one, and, after one log line, when it can't be read.
     static func projectJSON(in folder: URL) -> [String: Any]? {
-        (try? WEProject.object(in: folder)) as? [String: Any]
+        OWELog.attempt(.library, "Preset: project.json in \(folder.lastPathComponent)", quietIfMissing: true) {
+            try WEProject.object(in: folder)
+        } as? [String: Any]
+    }
+
+    /// `root` (a parsed project.json) as a project; nil, after one log line, when it isn't one.
+    private static func project(from root: [String: Any], folder: URL) -> WEProject? {
+        OWELog.attempt(.library, "Preset: project in \(folder.lastPathComponent)") {
+            try JSONDecoder().decode(WEProject.self, from: JSONSerialization.data(withJSONObject: root))
+        }
     }
 }

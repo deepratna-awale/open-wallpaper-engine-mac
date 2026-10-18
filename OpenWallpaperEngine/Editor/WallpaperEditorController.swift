@@ -114,7 +114,9 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
                                         guard let preview else { return nil }
                                         return await Self.drawCanvas(preview, at: size)
                                     })
-        timeline = SceneTimelineEditor(session: session, index: (try? TimelineSceneIndex(sceneData: source.scene)) ?? .empty)
+        timeline = SceneTimelineEditor(session: session, index: OWELog.attempt(.ui, "Wallpaper Editor: timeline index", {
+            try TimelineSceneIndex(sceneData: source.scene)
+        }) ?? .empty)
         timelineCanvas = EditorTimelineCanvas(preview: preview)
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1360, height: 840),
                           styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
@@ -163,7 +165,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
                 guard let self else { return title }
                 return try self.saveAsNewWallpaper(title: title)
             },
-            projectJSON: try? WEProject.data(in: wallpaper.wallpaperDirectory),
+            projectJSON: OWELog.attempt(.ui, "Wallpaper Editor: project.json", { try WEProject.data(in: wallpaper.wallpaperDirectory) }),
             scriptConsole: scriptConsole)
         services.effectCatalog = { resources.effectCatalog(outline: session.authored) }
         services.effectSchema = { resources.effectSchema($0) }

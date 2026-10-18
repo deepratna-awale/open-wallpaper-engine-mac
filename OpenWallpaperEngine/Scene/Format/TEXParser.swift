@@ -518,13 +518,16 @@ class TEXParser {
         let temporaryURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: false)
             .appendingPathExtension("mp4")
-        guard (try? data.write(to: temporaryURL)) != nil else { return nil }
+        guard OWELog.attempt(.texture, "TEX video mipmap: can't write \(temporaryURL.lastPathComponent)", {
+            try data.write(to: temporaryURL)
+        }) != nil else { return nil }
         defer { try? FileManager.default.removeItem(at: temporaryURL) }
 
         let asset = AVURLAsset(url: temporaryURL)
         let durationSemaphore = DispatchSemaphore(value: 0)
         var durationSeconds: Double = 0
         Task {
+            // Optional: without a duration the poster frame is the first one.
             durationSeconds = (try? await asset.load(.duration))?.seconds ?? 0
             durationSemaphore.signal()
         }

@@ -63,7 +63,10 @@ public enum EditorModelImporter {
         guard let sourceURL = store.modelSource(for: model) else { throw EditorAssetStore.ImportError.unreadable(model) }
         let source = try ModelFileLoader.load(contentsOf: sourceURL)
         let directory = sourceURL.deletingLastPathComponent()
-        let additional = config.additionalFiles.compactMap { try? ModelFileLoader.load(contentsOf: directory.appending(path: $0)) }
+        // An additional file that can't be loaded is left out of the compile, after a log line.
+        let additional = config.additionalFiles.compactMap { file in
+            EditorLog.attempt("Model import: additional file \(file)") { try ModelFileLoader.load(contentsOf: directory.appending(path: file)) }
+        }
         let folder = (model as NSString).deletingLastPathComponent.components(separatedBy: "/").last ?? ""
         return try ModelCompiler.compile(source, config: config, folder: folder, additional: additional)
     }
