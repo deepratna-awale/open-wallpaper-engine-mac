@@ -90,6 +90,22 @@ func sceneObjectBlendingKey(objectID: Int) -> String {
     "_owe_scene_object_\(objectID)_blending"
 }
 
+/// Scene Edit / Export's replacement for a package file's JSON (`path` as the package names it,
+/// e.g. `materials/a.json`): the whole file's text.
+func sceneAssetOverrideKey(path: String) -> String {
+    "\(sceneAssetOverridePrefix)\(path)\(sceneAssetOverrideSuffix)"
+}
+
+/// The package path a `sceneAssetOverrideKey` names; nil for any other key.
+func sceneAssetOverridePath(fromKey key: String) -> String? {
+    guard key.hasPrefix(sceneAssetOverridePrefix), key.hasSuffix(sceneAssetOverrideSuffix),
+          key.count > sceneAssetOverridePrefix.count + sceneAssetOverrideSuffix.count else { return nil }
+    return String(key.dropFirst(sceneAssetOverridePrefix.count).dropLast(sceneAssetOverrideSuffix.count))
+}
+
+private let sceneAssetOverridePrefix = "_owe_scene_asset_"
+private let sceneAssetOverrideSuffix = "_json"
+
 // MARK: - Top-level Scene
 
 struct WEScene: Decodable {

@@ -204,6 +204,8 @@ final class FavoritesStore: ObservableObject {
 
 /// Whether a wallpaper's project.json declares any user-editable properties beyond the default color scheme.
 func projectHasCustomizableProperties(at wallpaperDirectory: URL) -> Bool {
+    // Optional: asked for every tile; a project.json that can't be read already shows the
+    // wallpaper as invalid, so it has no properties to customise here.
     guard let root = try? WEProject.json(in: wallpaperDirectory),
           let properties = (root["general"] as? [String: Any])?["properties"] as? [String: Any] else { return false }
     return properties.keys.contains { $0 != "schemecolor" }

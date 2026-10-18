@@ -1,4 +1,5 @@
 import Foundation
+import OWESceneEditing
 import QuartzCore
 import os
 
@@ -59,6 +60,7 @@ enum OWELog {
     /// `.info` and release builds errors.
     static func apply(logLevel: GSLogLevel) {
         minimumSeverity = threshold(for: logLevel)
+        EditorLog.isEnabled = logs(.error, at: logLevel)
         OWEFrameMetrics.isReportingEnabled = (logLevel == .verbose) || OWEFrameMetrics.defaultsEnabled
     }
 

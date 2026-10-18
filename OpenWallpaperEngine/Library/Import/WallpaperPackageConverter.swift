@@ -41,6 +41,7 @@ enum WallpaperPackageConverter {
         guard let files = fileManager.enumerator(at: directory, includingPropertiesForKeys: nil,
                                                  options: [.skipsHiddenFiles]) else { return false }
         for case let file as URL in files where file.pathExtension.lowercased() == "json" {
+            // Optional: a file that isn't UTF-8 text names no Workshop items.
             guard let text = try? String(contentsOf: file, encoding: .utf8), text.contains("workshop") else { continue }
             let range = NSRange(text.startIndex..., in: text)
             for match in workshopReference.matches(in: text, range: range) {
@@ -99,8 +100,10 @@ enum WallpaperPackageConverter {
     }
 
     static func manifest(in wallpaperDirectory: URL) -> Manifest? {
-        guard let data = try? Data(contentsOf: manifestURL(in: wallpaperDirectory)) else { return nil }
-        return try? JSONDecoder().decode(Manifest.self, from: data)
+        // No manifest: not converted. One that can't be read or decoded logs and counts as none.
+        OWELog.attempt(.importer, "Convert: manifest of \(wallpaperDirectory.lastPathComponent)", quietIfMissing: true) {
+            try JSONDecoder().decode(Manifest.self, from: Data(contentsOf: manifestURL(in: wallpaperDirectory)))
+        }
     }
 
     /// True when the directory already holds a bundle produced by this converter version.
@@ -258,9 +261,7 @@ enum WallpaperPackageConverter {
     static func convertInstalledLibrary() {
         let fileManager = FileManager.default
         let root = fileManager.wallpapersDirectory
-        guard let entries = try? fileManager.contentsOfDirectory(at: root,
-                                                                 includingPropertiesForKeys: [.isDirectoryKey],
-                                                                 options: [.skipsHiddenFiles]) else { return }
+        guard let entries = libraryFolders(in: root) else { return }
         var converted = 0
         for entry in entries {
             guard (try? entry.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true,
@@ -276,9 +277,7 @@ enum WallpaperPackageConverter {
     @discardableResult
     static func reclaimEligibleSources() -> Int {
         let fileManager = FileManager.default
-        guard let entries = try? fileManager.contentsOfDirectory(at: fileManager.wallpapersDirectory,
-                                                                 includingPropertiesForKeys: [.isDirectoryKey],
-                                                                 options: [.skipsHiddenFiles]) else { return 0 }
+        guard let entries = libraryFolders(in: fileManager.wallpapersDirectory) else { return 0 }
         return entries.reduce(into: 0) { total, entry in
             if reclaimSource(in: entry) { total += 1 }
         }
@@ -287,9 +286,7 @@ enum WallpaperPackageConverter {
     /// Bytes currently held by archived originals that are safe to delete.
     static func reclaimableBytes() -> Int64 {
         let fileManager = FileManager.default
-        guard let entries = try? fileManager.contentsOfDirectory(at: fileManager.wallpapersDirectory,
-                                                                 includingPropertiesForKeys: [.isDirectoryKey],
-                                                                 options: [.skipsHiddenFiles]) else { return 0 }
+        guard let entries = libraryFolders(in: fileManager.wallpapersDirectory) else { return 0 }
         return entries.reduce(into: Int64(0)) { total, entry in
             guard let manifest = manifest(in: entry), manifest.sourceRetained,
                   ineligibilityReason(for: manifest, directory: entry) == nil else { return }
@@ -299,15 +296,26 @@ enum WallpaperPackageConverter {
         }
     }
 
+    /// The library's folders; nil, after one log line, when the library can't be listed.
+    private static func libraryFolders(in root: URL) -> [URL]? {
+        OWELog.attempt(.importer, "Convert: listing \(root.path(percentEncoded: false))") {
+            try FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: [.isDirectoryKey],
+                                                        options: [.skipsHiddenFiles])
+        }
+    }
+
     private static func write(_ manifest: Manifest, to wallpaperDirectory: URL) {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        guard let data = try? encoder.encode(manifest) else { return }
-        try? data.write(to: manifestURL(in: wallpaperDirectory), options: .atomic)
+        OWELog.attempt(.importer, "Convert: writing the manifest of \(wallpaperDirectory.lastPathComponent)") {
+            try encoder.encode(manifest).write(to: manifestURL(in: wallpaperDirectory), options: .atomic)
+        }
     }
 
     private static func primarySceneFile(in wallpaperDirectory: URL) -> String? {
-        guard let project = try? WEProject.read(in: wallpaperDirectory) else { return nil }
+        guard let project = OWELog.attempt(.importer, "Convert: project.json of \(wallpaperDirectory.lastPathComponent)", {
+            try WEProject.read(in: wallpaperDirectory)
+        }) else { return nil }
         return project.file.lowercased().hasSuffix(".json") ? project.file : nil
     }
 

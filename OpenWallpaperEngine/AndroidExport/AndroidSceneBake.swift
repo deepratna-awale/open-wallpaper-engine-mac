@@ -11,16 +11,12 @@ import OWESceneEditing
 ///   (`sceneAuthoredEffectEnabledKey`), first pass's `constantshadervalues` and `combos`
 ///   (`sceneAuthoredEffectOverrideKey`), where the loader applies them: a value bound to a user
 ///   property keeps its binding, a timeline or script keeps running from the edited value;
-/// - a package file's replaced JSON (`_owe_scene_asset_<path>_json`) as that file;
+/// - a package file's replaced JSON (`sceneAssetOverrideKey`) as that file;
 /// - project.json: each declared user property's `value`, in its declared type.
 ///
 /// What WE's scene format has no field for stays out: material blending (a material file several
 /// layers can share), music sync, and the app's own picture settings.
 enum AndroidSceneBake {
-    /// The prefix and suffix of a package file's replaced JSON.
-    static let assetPrefix = "_owe_scene_asset_"
-    static let assetSuffix = "_json"
-
     // MARK: scene.json
 
     /// scene.json with the layer edits among `values`.
@@ -107,9 +103,8 @@ enum AndroidSceneBake {
     /// from WE's assets, which a package's own file overrides).
     static func replacingFiles(_ files: [AndroidPackageBuilder.File], values: [String: String]) -> [AndroidPackageBuilder.File] {
         var result = files
-        for (key, value) in values.sorted(by: { $0.key < $1.key })
-        where key.hasPrefix(assetPrefix) && key.hasSuffix(assetSuffix) && key.count > assetPrefix.count + assetSuffix.count {
-            let path = String(key.dropFirst(assetPrefix.count).dropLast(assetSuffix.count))
+        for (key, value) in values.sorted(by: { $0.key < $1.key }) {
+            guard let path = sceneAssetOverridePath(fromKey: key) else { continue }
             let data = Data(value.utf8)
             if let index = result.firstIndex(where: { $0.path == path }) {
                 result[index].data = data

@@ -317,6 +317,13 @@ final class AndroidExportEditorTests: XCTestCase {
         try XCTUnwrap(JSONSerialization.jsonObject(with: XCTUnwrap(data)) as? [String: Any])
     }
 
+    func testSceneAssetOverrideKeyKeepsItsStoredFormat() {
+        XCTAssertEqual(sceneAssetOverrideKey(path: "models/back.json"), "_owe_scene_asset_models/back.json_json")
+        XCTAssertEqual(sceneAssetOverridePath(fromKey: "_owe_scene_asset_models/back.json_json"), "models/back.json")
+        XCTAssertNil(sceneAssetOverridePath(fromKey: "_owe_scene_asset__json"), "no path")
+        XCTAssertNil(sceneAssetOverridePath(fromKey: "_owe_scene_object_1_json"))
+    }
+
     func testDynamicBakesTheModesEditsIntoSceneAndProjectJSON() async throws {
         let values: [String: String] = [
             sceneObjectVisibilityKey(objectID: 1): "false",

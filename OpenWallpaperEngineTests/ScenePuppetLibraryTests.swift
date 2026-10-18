@@ -31,6 +31,22 @@ final class ScenePuppetLibraryTests: XCTestCase {
         }
     }
 
+    func testEveryLibraryPuppetDrawsItsPose() throws {
+        _ = try Fixtures.assets()
+        let roots = LightingLibraryDecodeTests.roots.filter { FileManager.default.fileExists(atPath: $0.path) }
+        try XCTSkipIf(roots.count < LightingLibraryDecodeTests.roots.count, "wallpaper library not present")
+        let items = try Self.puppetScenes(in: roots)
+        let ids = Set(items.map(\.workshopID))
+        for expected in ["2542737668", "3803167460", "2804817823", "2321732083", "2515150033", "3802767544", "3803042537"] {
+            XCTAssertTrue(ids.contains(expected), "\(expected)'s puppets weren't found")
+        }
+        XCTAssertGreaterThanOrEqual(items.reduce(0) { $0 + $1.layers.count }, 32, "the survey's 32 puppet layers")
+        let output = ProcessInfo.processInfo.environment["OWE_PUPPET_OUT"].map { URL(fileURLWithPath: $0, isDirectory: true) }
+        var report = "scene\tlayer\tbones\tvertices\ttexture\tIoU\talpha MAE\tcolour MAE\tpicture covered\tunwarped\tposed\n"
+        for item in items { report += try sweep(item, output: output) }
+        print("Library puppets, posed (and their bind pose against the picture):\n\(report)")
+    }
+
     /// A puppet with effects moves with its pose, frame after frame. The Cyberpunk Samurai
     /// (2321732083: `pulse` and `blend` on the puppet) stood in its first pose while its effects'
     /// kept output was keyed by the image's texture alone, which the mesh redraws in place; only
@@ -209,15 +225,28 @@ final class ScenePuppetLibraryTests: XCTestCase {
             renderer.lastCommandBuffer?.waitUntilCompleted()
             RunLoop.main.run(until: Date().addingTimeInterval(0.005))
         }
-        // The clock stands still until every mesh has drawn (how long that takes depends on which
-        // pipelines earlier tests compiled), then runs a fixed second: every run checks the same pose.
+        // The clock is held at 0 until every mesh has drawn and nothing compiles for 3 frames in a
+        // row (how long that takes depends on which pipelines earlier tests compiled), then runs a
+        // fixed second: every run checks the same pose. A frame that merely stands still still
+        // steps WE's shortest frame (`SceneClock.minimumFrameDelta`), so without the hold the
+        // pose's time grew with the frames the warm-up took.
+        renderer.holdsClock = true
         deadline = Date().addingTimeInterval(90)
-        while plans.keys.contains(where: { renderer.puppetImage(ofLayer: $0) == nil })
-                || atlases.contains(where: { !renderer.puppetLaidOutEffects(ofLayer: $0) }), Date() < deadline { frame() }
+        var settled = 0
+        while settled < 3, Date() < deadline {
+            frame()
+            let ready = !plans.keys.contains(where: { renderer.puppetImage(ofLayer: $0) == nil })
+                && !atlases.contains(where: { !renderer.puppetLaidOutEffects(ofLayer: $0) }) && !renderer.pipelinesCompiling
+            settled = ready ? settled + 1 : 0
+        }
+        XCTAssertEqual(settled, 3, "\(item.id) never settled")
+        XCTAssertEqual(renderer.sceneTime, 0, "\(item.id): the clock held")
+        renderer.holdsClock = false
         for _ in 0..<30 {
             now += 1.0 / 30
             frame()
         }
+        XCTAssertEqual(renderer.sceneTime, 1, accuracy: 1e-9, "\(item.id): the posed time")
         for id in atlases.sorted() {
             XCTAssertNil(renderer.puppetImage(ofLayer: id), "\(item.id) layer \(id): an atlas rig with effects draws no image")
             XCTAssertTrue(renderer.puppetLaidOutEffects(ofLayer: id), "\(item.id) layer \(id): its effect output was never posed")
