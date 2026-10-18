@@ -107,13 +107,17 @@ public enum EditorPreviewScene {
 
     /// The files of an effect's preview besides the test card's picture (`testCardFile`) and the
     /// effect's own files: project.json, scene.json, and the card's model and material.
-    /// `passInputs` holds, per pass of the effect, the generated inputs by texture slot.
-    public static func effectFiles(effectFile: String, passInputs: [[Int: Input]]) throws -> [String: Data] {
+    /// `passInputs` holds, per pass of the effect, the generated inputs by texture slot;
+    /// `authored`, per pass, the settings WE's own preview of the effect gives it
+    /// (`authoredPasses`, its values already in range, `clampedConstants`), which win over the
+    /// effect's defaults.
+    public static func effectFiles(effectFile: String, passInputs: [[Int: Input]],
+                                   authored: [[String: Any]] = []) throws -> [String: Data] {
         let frame = effectFrame
-        let passes: [Any] = passInputs.map { inputs -> [String: Any] in
-            guard let last = inputs.keys.max() else { return [:] }
-            let textures: [Any] = (0...last).map { slot in inputs[slot].map { $0.texture as Any } ?? NSNull() }
-            return ["textures": textures]
+        let count = max(passInputs.count, authored.count)
+        let passes: [Any] = (0..<count).map { index -> [String: Any] in
+            effectPass(inputs: index < passInputs.count ? passInputs[index] : [:],
+                       authored: index < authored.count ? authored[index] : [:])
         }
         let object: [String: Any] = [
             "id": 1, "name": "Test card", "image": testCardModel, "visible": true,
@@ -122,14 +126,108 @@ public enum EditorPreviewScene {
             "effects": [["id": 2, "file": effectFile, "name": "", "visible": true, "passes": passes]],
         ]
         var files = try sceneFiles(scene(frame: frame, clearColor: "0 0 0", camera: nil, objects: [object]))
-        files[testCardMaterial] = try json([
-            "passes": [[
-                "blending": "translucent", "cullmode": "nocull", "depthtest": "disabled", "depthwrite": "disabled",
-                "shader": "genericimage2", "textures": [testCardTexture],
-            ]],
-        ])
-        files[testCardModel] = try json(["autosize": true, "material": testCardMaterial])
+        try files.merge(testCardFiles()) { $1 }
         return files
+    }
+
+    /// The test card's model and material.
+    static func testCardFiles() throws -> [String: Data] {
+        [
+            testCardMaterial: try json([
+                "passes": [[
+                    "blending": "translucent", "cullmode": "nocull", "depthtest": "disabled", "depthwrite": "disabled",
+                    "shader": "genericimage2", "textures": [testCardTexture],
+                ]],
+            ]),
+            testCardModel: try json(["autosize": true, "material": testCardMaterial]),
+        ]
+    }
+
+    /// One pass of the previewed effect: WE's preview's values and combos, its textures in the
+    /// slots it fills (its masks and maps: shake's is a sideways direction map over most of the
+    /// picture), but a render target of its own scene (`_rt_…`), and the generated inputs in the
+    /// others.
+    static func effectPass(inputs: [Int: Input], authored: [String: Any]) -> [String: Any] {
+        var pass: [String: Any] = [:]
+        for key in ["combos", "constantshadervalues"] { if let value = authored[key] { pass[key] = value } }
+        let named: [Int: String] = authoredTextures(authored)
+        let last: Int? = (Array(inputs.keys) + Array(named.keys)).max()
+        guard let last else { return pass }
+        pass["textures"] = (0...last).map { slot -> Any in named[slot] ?? inputs[slot]?.texture ?? NSNull() }
+        return pass
+    }
+
+    /// An authored pass's `constantshadervalues` with each plain number or vector held to the
+    /// range its shader declares for that key (`ranges`, by material key, any case), as the
+    /// editor's sliders hold them: a value from outside it is one an older version of the effect
+    /// took (WE's preview of foliage sway still has a strength of 93 for a 0.01…1 slider).
+    /// Animated values and keys without a range are kept.
+    public static func clampedConstants(_ pass: [String: Any], ranges: [String: ClosedRange<Double>]) -> [String: Any] {
+        guard let constants = pass["constantshadervalues"] as? [String: Any], !ranges.isEmpty else { return pass }
+        var lowered: [String: ClosedRange<Double>] = [:]
+        for (key, range) in ranges { lowered[key.lowercased()] = range }
+        var clamped = constants
+        for (key, value) in constants {
+            guard let range = lowered[key.lowercased()] else { continue }
+            func hold(_ number: Double) -> Double { min(max(number, range.lowerBound), range.upperBound) }
+            if let number = value as? NSNumber, CFGetTypeID(number) != CFBooleanGetTypeID() {
+                clamped[key] = hold(number.doubleValue)
+            } else if let text = value as? String {
+                let numbers = text.split(separator: " ").compactMap { Double($0) }
+                guard !numbers.isEmpty else { continue }
+                clamped[key] = numbers.map { hold($0) }.map { String($0) }.joined(separator: " ")
+            }
+        }
+        var result = pass
+        result["constantshadervalues"] = clamped
+        return result
+    }
+
+    /// The textures an authored pass names by slot, without slot 0 (the layer's own image) and
+    /// its scene's render targets.
+    static func authoredTextures(_ pass: [String: Any]) -> [Int: String] {
+        var named: [Int: String] = [:]
+        for (slot, texture) in (pass["textures"] as? [Any] ?? []).enumerated() {
+            guard slot > 0, let name = texture as? String, !name.isEmpty, !name.hasPrefix("_rt_") else { continue }
+            named[slot] = name
+        }
+        return named
+    }
+
+    // MARK: WE's own effect previews
+
+    /// The project of WE's own preview of a built-in effect (`effect.json`'s `preview`), relative
+    /// to the effect's folder; nil without one.
+    public static func previewProject(effectJSON: Data) -> String? {
+        // Optional: an effect file that can't be read has no preview (the load logs it).
+        guard let root = try? TolerantJSON.object(from: effectJSON) as? [String: Any],
+              let preview = root["preview"] as? String, !preview.isEmpty else { return nil }
+        return preview
+    }
+
+    /// The passes WE's own preview scene (`scene`, its scene.json) gives `effectFile`: those of its
+    /// first visible instance on a visible layer, as WE's editor shows the effect in its browser.
+    /// Empty when the scene doesn't use the effect.
+    public static func authoredPasses(effectFile: String, scene: Data) -> [[String: Any]] {
+        // Optional: a preview scene that can't be read leaves the effect at its defaults.
+        guard let root = try? TolerantJSON.object(from: scene) as? [String: Any] else { return [] }
+        let wanted = effectFile.lowercased()
+        for object in root["objects"] as? [[String: Any]] ?? [] where object["visible"] as? Bool ?? true {
+            for effect in object["effects"] as? [[String: Any]] ?? [] where effect["visible"] as? Bool ?? true {
+                guard (effect["file"] as? String)?.lowercased() == wanted else { continue }
+                return effect["passes"] as? [[String: Any]] ?? []
+            }
+        }
+        return []
+    }
+
+    /// The files of the textures `passes` name that a preview's folder may hold: each name's
+    /// `.tex`, `.tex-json`, `.png` and `.jpg` under `materials/`.
+    public static func authoredTextureFiles(_ passes: [[String: Any]]) -> [String] {
+        let names = Set(passes.flatMap { authoredTextures($0).values })
+        return names.sorted().flatMap { name in
+            ["tex", "tex-json", "png", "jpg"].map { "materials/\(name).\($0)" }
+        }
     }
 
     /// A built-in effect's files (`effect.json`'s `dependencies`): its materials, shaders and

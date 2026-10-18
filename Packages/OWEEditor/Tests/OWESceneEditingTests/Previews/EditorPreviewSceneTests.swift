@@ -198,6 +198,60 @@ final class EditorPreviewSceneTests: XCTestCase {
         XCTAssertNil(empty.rect(), "nothing drawn: the default framing stays")
     }
 
+    func testAnEffectIsSetAsWEsOwnPreviewSetsIt() throws {
+        let effectJSON = Data(#"{"name": "shake", "preview": "preview/project.json", "passes": []}"#.utf8)
+        XCTAssertEqual(EditorPreviewScene.previewProject(effectJSON: effectJSON), "preview/project.json")
+        XCTAssertNil(EditorPreviewScene.previewProject(effectJSON: Data(#"{"passes": []}"#.utf8)))
+        let scene = Data(#"""
+        {"objects": [
+          {"name": "hidden", "visible": false, "effects": [{"file": "effects/shake/effect.json",
+            "passes": [{"constantshadervalues": {"Strength": 0.5}}]}]},
+          {"name": "other", "effects": [{"file": "effects/opacity/effect.json", "passes": [{}]}]},
+          {"name": "shown", "visible": true, "effects": [
+            {"file": "effects/shake/effect.json", "visible": false, "passes": [{"constantshadervalues": {"Strength": 0.4}}]},
+            {"file": "effects/shake/effect.json", "passes": [{"constantshadervalues": {"Strength": 0.3}, "combos": {"NOISE": 1},
+              "textures": [null, "masks/shake_mask_a", "masks/shake_time_a", "_rt_imageLayerComposite_1_a"]}]}]}
+        ]}
+        """#.utf8)
+        let authored = EditorPreviewScene.authoredPasses(effectFile: "effects/shake/effect.json", scene: scene)
+        XCTAssertEqual(authored.count, 1, "the first visible instance on a visible layer")
+        XCTAssertEqual((authored[0]["constantshadervalues"] as? [String: Any])?["Strength"] as? Double, 0.3)
+        XCTAssertTrue(EditorPreviewScene.authoredPasses(effectFile: "effects/tint/effect.json", scene: scene).isEmpty)
+        XCTAssertEqual(EditorPreviewScene.authoredTextureFiles(authored).filter { $0.hasSuffix(".tex") },
+                       ["materials/masks/shake_mask_a.tex", "materials/masks/shake_time_a.tex"],
+                       "the preview's own textures; never its render targets")
+
+        let files = try EditorPreviewScene.effectFiles(effectFile: "effects/shake/effect.json",
+                                                       passInputs: [[1: .flow, 4: .mask]], authored: authored)
+        let object = try XCTUnwrap((try json(files["scene.json"])["objects"] as? [[String: Any]])?.first)
+        let pass = try XCTUnwrap(((object["effects"] as? [[String: Any]])?.first?["passes"] as? [[String: Any]])?.first)
+        XCTAssertEqual((pass["constantshadervalues"] as? [String: Any])?["Strength"] as? Double, 0.3)
+        XCTAssertEqual((pass["combos"] as? [String: Any])?["NOISE"] as? Int, 1)
+        let textures = try XCTUnwrap(pass["textures"] as? [Any])
+        XCTAssertEqual(textures.count, 5)
+        XCTAssertTrue(textures[0] is NSNull)
+        XCTAssertEqual(textures[1] as? String, "masks/shake_mask_a", "WE's map wins over a generated one")
+        XCTAssertEqual(textures[2] as? String, "masks/shake_time_a")
+        XCTAssertTrue(textures[3] is NSNull, "a render target of WE's scene is left to the effect's default")
+        XCTAssertEqual(textures[4] as? String, "masks/editorpreview_mask", "a slot WE leaves empty keeps its generated input")
+    }
+
+    func testWEsPreviewValuesAreHeldToTheirSlidersRange() throws {
+        let pass: [String: Any] = ["constantshadervalues": [
+            "Strength": 93.34, "speed": 3, "bounds": "-1 0.5", "color": "1 0 0", "flag": true,
+            "multiply": ["animation": ["c0": []], "value": 5],
+        ] as [String: Any]]
+        let clamped = EditorPreviewScene.clampedConstants(pass, ranges: ["strength": 0.01...1, "speed": 0...10, "bounds": 0...1,
+                                                                         "flag": 0...0.5, "multiply": 0...2])
+        let values = try XCTUnwrap(clamped["constantshadervalues"] as? [String: Any])
+        XCTAssertEqual(values["Strength"] as? Double, 1, "matched by key in any case, held to the range")
+        XCTAssertEqual(values["speed"] as? Double, 3)
+        XCTAssertEqual(values["bounds"] as? String, "0.0 0.5", "each component of a vector")
+        XCTAssertEqual(values["color"] as? String, "1 0 0", "no range: kept")
+        XCTAssertEqual(values["flag"] as? Bool, true, "not a number")
+        XCTAssertNotNil(values["multiply"] as? [String: Any], "an animated value is kept")
+    }
+
     func testContentRunningPastTheProbeIsNotFittedOnThatAxis() {
         let probe = EditorPreviewScene.probeFraming
         let width = Double(probe.frame.pixelWidth), height = Double(probe.frame.pixelHeight)

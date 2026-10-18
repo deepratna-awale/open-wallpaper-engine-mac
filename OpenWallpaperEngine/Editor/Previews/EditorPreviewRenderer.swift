@@ -12,7 +12,8 @@ import UniformTypeIdentifiers
 ///
 /// Each preview's small wallpaper (`EditorPreviewFolder`) is loaded by the real loader and drawn
 /// offscreen by its own real renderer, as the screen saver's loop and Live Photos are: muted, a
-/// silent spectrum, on a fixed frame step from load. An effect is drawn for `effectFrames`; when
+/// silent spectrum, on a fixed frame step from load. A built-in effect is set as WE's own preview
+/// of it sets it (`EditorPreviewScene.authoredPasses`). An effect is drawn for `effectFrames`; when
 /// no frame of its first two seconds differs from its first it is a still (HEIC), else a loop. A
 /// particle system is always a loop, after a lead-in, both as long as its systems' cycle; a 2D
 /// one is framed on where it draws.
