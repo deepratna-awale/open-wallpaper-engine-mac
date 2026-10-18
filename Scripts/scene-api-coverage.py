@@ -43,27 +43,64 @@ def collect_scripts(library):
     return found
 
 
+def required(relative):
+    """A source this report reads. A missing one means the runtime moved: stop, don't report from
+    a partial picture."""
+    path = os.path.join(REPO, relative)
+    if not os.path.exists(path):
+        sys.exit(f"error: {relative} is missing; update {os.path.relpath(__file__, REPO)} to where it lives now")
+    return path
+
+
+def object_members(block_start, js):
+    """Keys of the `{ name: … }` object literal that follows `block_start` in `js`."""
+    found = set()
+    for match in re.finditer(re.escape(block_start), js):
+        depth, index = 0, match.end()
+        while index < len(js):
+            if js[index] == "{":
+                depth += 1
+            elif js[index] == "}":
+                depth -= 1
+                if depth < 0:
+                    break
+            index += 1
+        found |= set(re.findall(r"^\s*(\w+)\s*:\s*\{", js[match.end():index], re.M))
+    return found
+
+
 def implemented():
-    """APIs the runtime provides, parsed from the sources so this can't drift."""
-    rendering = os.path.join(REPO, "OpenWallpaperEngine/Scene/Rendering")
-    renderer = "\n".join(open(os.path.join(rendering, name), encoding="utf-8").read()
-                         for name in sorted(os.listdir(rendering))
-                         if name.startswith("SceneMetalRenderer") and name.endswith(".swift"))
-    engine = open(os.path.join(REPO, "OpenWallpaperEngine/Scene/Scripting/AudioReactiveScriptEngine.swift"),
-                  encoding="utf-8").read()
+    """APIs the runtime provides, read from the sources so this can't drift.
 
-    state = re.search(r"scriptLayers\[entry\.layer\.id\] = \[(.*?)\n                    \]",
-                      renderer, re.S)
-    layer = set(re.findall(r'"(\w+)":', state.group(1))) if state else set()
-    layer |= set(re.findall(r"layer\.(\w+)\s*=", engine))
+    The object model (thisScene, thisLayer, thisObject) is WE's typings, as listed in the fixture
+    SceneScriptObjectTypingsTests checks member by member against the runtime. `engine` and
+    `input` are what the runtime's JavaScript assigns to those globals."""
+    fixture = required("Tests/Fixtures/SceneScript/object-model-members.json")
+    typed = json.load(open(fixture, encoding="utf-8"))["interfaces"]
+    for name in ("IScene", "IObject", "ILayer"):
+        if not typed.get(name):
+            sys.exit(f"error: {os.path.relpath(fixture, REPO)} has no {name} members")
+    # ILayer extends IObject, IImageLayer, ISoundLayer, …: every layer has the whole union
+    # (SceneScriptObjectTypingsTests.layerParts).
+    layer_parts = ("IObject", "IImageLayer", "ISoundLayer", "IEffectLayer", "ITextLayer",
+                   "IParticleSystem", "IModelLayer", "ICamera", "ILayer")
+    layer = set().union(*(typed.get(name, []) for name in layer_parts))
+    scene = set(typed["IScene"]) | set(typed["IObject"])
 
-    scene = set()
-    for block in re.finditer(r"var thisScene = \{(.*?)\n            \};", engine, re.S):
-        scene |= set(re.findall(r"(\w+)\s*:", block.group(1)))
-
-    shared = set(re.findall(r'"(\w+)":', engine)) | set(re.findall(r"engine\.(\w+)\s*=", engine))
-    return {"thisScene": scene, "thisLayer": layer, "thisObject": layer,
-            "engine": shared, "input": shared}
+    js_dirs = [required("OpenWallpaperEngine/Resources/SceneScript"),
+               required("OpenWallpaperEngine/Scene/Scripting")]
+    js = "\n".join(open(path, encoding="utf-8").read()
+                   for directory in js_dirs
+                   for path in sorted(glob.glob(os.path.join(directory, "**", "*.js"), recursive=True)))
+    engine = set(re.findall(r"\bengine\.(\w+)\s*=(?!=)", js)) | object_members("Object.defineProperties(engine, {", js)
+    inputs = object_members("global.input = Object.defineProperties({}, {", js)
+    for name, found in (("engine", engine), ("input", inputs)):
+        if not found:
+            sys.exit(f"error: found no `{name}` members in the runtime's JavaScript; update this script's parser")
+    # thisObject is whatever the script is bound to: a layer, the scene, an effect, a material…
+    anything = set().union(*typed.values())
+    return {"thisScene": scene, "thisLayer": layer, "thisObject": anything,
+            "engine": engine, "input": inputs}
 
 
 def main():
@@ -76,11 +113,13 @@ def main():
     supported = implemented()
     usage = collections.defaultdict(collections.Counter)
     users = collections.defaultdict(lambda: collections.defaultdict(set))
+    assigned = collections.defaultdict(set)
     for wallpaper, source in scripts:
         for obj in OBJECTS:
-            for match in re.finditer(obj + r"\.(\w+)", source):
+            for match in re.finditer(r"\b" + obj + r"\.(\w+)", source):
                 usage[obj][match.group(1)] += 1
                 users[obj][match.group(1)].add(wallpaper)
+            assigned[obj] |= set(re.findall(r"\b" + obj + r"\.(\w+)\s*=(?!=)", source))
 
     print(f"library:          {library}")
     print(f"scripts analysed: {len(scripts)}\n")
@@ -90,9 +129,15 @@ def main():
         if not usage[obj]:
             continue
         impl = supported.get(obj, set())
-        missing = [(n, c) for n, c in usage[obj].most_common() if n not in impl]
+        # A name a script assigns and the runtime doesn't define is the script's own field
+        # (`thisScene.world = …`), not an API.
+        own = sorted(n for n in usage[obj] if n not in impl and n in assigned[obj])
+        missing = [(n, c) for n, c in usage[obj].most_common() if n not in impl and n not in own]
         total_missing += len(missing)
-        print(f"=== {obj}: {len(usage[obj]) - len(missing)}/{len(usage[obj])} supported ===")
+        used = len(usage[obj]) - len(own)
+        print(f"=== {obj}: {used - len(missing)}/{used} supported ===")
+        if own:
+            print(f"    ({len(own)} script-defined fields not counted: {', '.join(own[:6])}{', …' if len(own) > 6 else ''})")
         for name, count in missing:
             affected = sorted(users[obj][name])
             shown = ", ".join(affected[:4]) + (", …" if len(affected) > 4 else "")
