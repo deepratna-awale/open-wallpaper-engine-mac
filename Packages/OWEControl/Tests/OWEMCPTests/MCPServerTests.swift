@@ -253,20 +253,24 @@ final class MCPServerTests: XCTestCase {
     }
 
     func testLongCallsReportProgressWhenAskedTo() async throws {
-        final class SlowChannel: ControlChannel {
-            func call(_ method: String, params: [String: JSONValue]) async throws -> JSONValue {
-                try await Task.sleep(nanoseconds: 300_000_000)
-                return ["photo": "/tmp/a.heic", "movie": "/tmp/a.mov"]
-            }
-        }
         final class Lines: @unchecked Sendable {
             private let lock = NSLock()
             private var values: [JSONValue] = []
             func append(_ data: Data) { lock.lock(); values.append((try? JSONValue.decode(data)) ?? .null); lock.unlock() }
             var all: [JSONValue] { lock.lock(); defer { lock.unlock() }; return values }
         }
-        let server = MCPServer(channel: SlowChannel(), version: "1", progressInterval: 0.05)
+        // Stays busy until two progress reports went out (5 s cap), so a loaded machine can't starve the ticker.
+        final class SlowChannel: ControlChannel {
+            let lines: Lines
+            init(lines: Lines) { self.lines = lines }
+            func call(_ method: String, params: [String: JSONValue]) async throws -> JSONValue {
+                let deadline = Date().addingTimeInterval(5)
+                while lines.all.count < 2, Date() < deadline { try await Task.sleep(nanoseconds: 20_000_000) }
+                return ["photo": "/tmp/a.heic", "movie": "/tmp/a.mov"]
+            }
+        }
         let lines = Lines()
+        let server = MCPServer(channel: SlowChannel(lines: lines), version: "1", progressInterval: 0.05)
         server.sendNotification = { lines.append($0) }
         _ = await server.handle(message: ["jsonrpc": "2.0", "id": 1, "method": "initialize", "params": ["protocolVersion": "2025-06-18"]])
         let call: JSONValue = ["jsonrpc": "2.0", "id": 2, "method": "tools/call",
