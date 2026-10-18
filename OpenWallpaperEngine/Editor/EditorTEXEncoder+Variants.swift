@@ -223,7 +223,8 @@ extension EditorTEXEncoder {
         }
         context.interpolationQuality = .high
         context.draw(image, in: CGRect(x: 0, y: 0, width: newWidth, height: newHeight))
-        guard let scaled = context.makeImage(), let result = try? rgba(scaled) else {
+        guard let scaled = context.makeImage(),
+              let result = OWELog.attempt(.texture, "Texture variant: scaling to \(newWidth)x\(newHeight)", { try rgba(scaled) }) else {
             return [UInt8](repeating: 0, count: newWidth * newHeight * 4)
         }
         return result
