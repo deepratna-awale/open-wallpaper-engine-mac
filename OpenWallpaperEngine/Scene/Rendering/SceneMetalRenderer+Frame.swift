@@ -961,15 +961,17 @@ extension SceneMetalRenderer {
     /// Compiles landed so far in the layer, effect, particle and puppet mesh renderers.
     private var pipelinesLanded: Int {
         (effectGraph?.pipelinesLanded ?? 0) &+ (imageMaterials?.pipelinesLanded ?? 0) &+ (particleMaterials?.pipelinesLanded ?? 0)
-            &+ (puppetsMade ? puppets?.pipelinesLanded ?? 0 : 0)
+            &+ (puppetsMade ? puppets?.pipelinesLanded ?? 0 : 0) &+ (volumetrics?.pipelines?.pipelinesLanded ?? 0)
     }
 
     /// Whether any pipeline is still compiling off the render thread. A puppet's mesh pipeline
-    /// counts too: until it lands the puppet's image stays transparent (`ScenePuppetRenderer`).
+    /// counts too: until it lands the puppet's image stays transparent (`ScenePuppetRenderer`);
+    /// so do the volumetrics', which draw no volume until theirs land.
     var pipelinesCompiling: Bool {
         hasPendingEffectPipelines || imageMaterials?.hasPendingPipelines == true
             || particleMaterials?.hasPendingPipelines == true || modelDrawing?.hasPendingPipelines == true
             || (puppetsMade && puppets?.hasPendingPipelines == true)
+            || volumetrics?.pipelines?.hasPendingPipelines == true
     }
 
     /// The unquantised pixels per unit that sizes the scene target to `drawable` when the scene is

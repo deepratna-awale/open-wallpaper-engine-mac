@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A scene's first complete frame waits for its volumetric light shafts.** The volumetrics' pipelines compile in the background like the others, but the renderer didn't count them, so a frame it called complete (what the screen saver, Live Photos and depth captures start from) could lack the shafts.
 - **Scene sound on an output device at another sample rate no longer allocates memory on the audio thread.** When the default output device runs at a rate other than the one the scene's sound engine was made at, the output resamples through Core Audio's converter, set up as before and driven so the realtime callback allocates nothing (it made 7 to 8 heap allocations per callback before; the audio thread must never wait on the allocator). The sound is sample-for-sample the same.
 - **Wallpaper Editor: Escape cancels a timeline drag.** Pressing Escape while dragging keyframes or a curve handle drops the drag: the keyframes go back where they were, the rest of the drag does nothing and nothing is added to Undo. Escape without a drag still clears the keyframe selection.
 - **Wallpaper Editor: the script and timeline panels' heights** are kept in the app's own defaults, like every other setting, so a test run or an isolated development copy no longer writes them into the user's real preferences.
