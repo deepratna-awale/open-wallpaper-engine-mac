@@ -39,10 +39,14 @@ final class EditorWallpaperResources {
     func data(_ path: String) -> Data? {
         if let text = draftFiles()[path] { return Data(text.utf8) }
         if let data = package?.extractFile(named: path) { return data }
-        if let data = try? AssetPathResolver.data(path, in: wallpaper.wallpaperDirectory) { return data }
-        if let url = assets.url(for: path), let data = try? Data(contentsOf: url) { return data }
+        // A source without the file is the next one's turn; one that has it but can't read it logs.
+        if let data = OWELog.attempt(.ui, "Wallpaper Editor: \(path)", { try AssetPathResolver.data(path, in: wallpaper.wallpaperDirectory) }) ?? nil {
+            return data
+        }
+        if let url = assets.url(for: path),
+           let data = OWELog.attempt(.ui, "Wallpaper Editor: added asset \(path)", { try Data(contentsOf: url) }) { return data }
         guard let candidate = WallpaperEngineAssets.locate([path], in: WallpaperEngineAssets.searchDirectories) else { return nil }
-        return try? AssetPathResolver.readRegularFile(at: candidate)
+        return OWELog.attempt(.ui, "Wallpaper Editor: Wallpaper Engine asset \(path)") { try AssetPathResolver.readRegularFile(at: candidate) }
     }
 
     // MARK: Effects
@@ -317,7 +321,7 @@ final class EditorWallpaperResources {
     }
 
     private func readUserPropertyChoices() -> [EditorUserPropertyChoice] {
-        guard let root = try? WEProject.json(in: wallpaper.wallpaperDirectory) else { return [] }
+        guard let root = OWELog.attempt(.ui, "Wallpaper Editor: project.json", { try WEProject.json(in: wallpaper.wallpaperDirectory) }) ?? nil else { return [] }
         let labels = self.labels.addingAuthorTranslations(projectJSON: root)
         return UserPropertyDefinition.all(projectJSON: root)
             .filter { !["text", "group"].contains($0.type) }

@@ -107,7 +107,9 @@ extension SceneOutline {
         guard let particles, particles.changesObjects else { return self }
         let removed = Set(particles.removedObjects)
         var layers = self.layers.filter { !removed.contains($0.id) }
-        let added = (try? SceneOutline(root: ["objects": particles.addedObjectDictionaries]))?.layers ?? []
+        let added = EditorLog.attempt("Particle editor: added objects", {
+            try SceneOutline(root: ["objects": particles.addedObjectDictionaries])
+        })?.layers ?? []
         let base = self.layers.count
         for (offset, layer) in added.enumerated() where !removed.contains(layer.id) {
             layers.append(SceneLayer(id: layer.id, index: base + offset, name: layer.name, kind: layer.kind,

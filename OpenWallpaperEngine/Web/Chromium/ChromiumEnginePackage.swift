@@ -128,8 +128,10 @@ enum ChromiumEnginePackage {
 
     /// The manifest of the install in `folder`, nil when it isn't a complete install.
     static func manifest(in folder: URL) -> Manifest? {
-        guard let data = try? Data(contentsOf: folder.appending(path: manifestName)),
-              let manifest = try? JSONDecoder().decode(Manifest.self, from: data),
+        // No manifest: not installed. One that can't be read or decoded logs and counts as none.
+        guard let manifest = OWELog.attempt(.web, "Chromium engine manifest", quietIfMissing: true, {
+                  try JSONDecoder().decode(Manifest.self, from: Data(contentsOf: folder.appending(path: manifestName)))
+              }),
               FileManager.default.fileExists(atPath: frameworksFolder(in: folder).appending(path: "\(frameworkName)/\(frameworkBinary)").path)
         else { return nil }
         return manifest

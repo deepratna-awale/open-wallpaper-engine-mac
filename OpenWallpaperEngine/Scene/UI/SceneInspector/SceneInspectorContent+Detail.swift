@@ -102,6 +102,11 @@ extension SceneInspectorContent {
         }
     }
 
+    /// Runs a JSON editor's Save; a failure is shown in the Couldn't Save alert.
+    func save(_ body: () throws -> Void) {
+        do { try body() } catch { saveError = error.localizedDescription }
+    }
+
     @ViewBuilder func editableAssetBlock(title: LocalizedStringKey, isParticle: Bool, text: String,
                                                 path: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -109,7 +114,7 @@ extension SceneInspectorContent {
                 Text(title).font(.headline)
                 Spacer()
                 Button("Save") {
-                    model.saveAssetJSON(text, path: path)
+                    save { try model.saveAssetJSON(text, path: path) }
                 }
                 .buttonStyle(.borderedProminent)
             }
@@ -152,7 +157,7 @@ extension SceneInspectorContent {
                     Spacer()
                     Button("Save") {
                         let current = model.items.first(where: { $0.id == item.id })?.rawObject ?? item.rawObject
-                        model.saveObjectJSON(current, item: item)
+                        save { try model.saveObjectJSON(current, item: item) }
                     }
                     .buttonStyle(.borderedProminent)
                 }

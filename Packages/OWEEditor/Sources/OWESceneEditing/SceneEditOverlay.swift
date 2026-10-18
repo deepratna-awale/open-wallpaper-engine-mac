@@ -269,7 +269,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
             sceneEdits.objects[key]?.locked = nil
             if !edit.hasSceneEdits { sceneEdits.objects[key] = nil }
         }
-        guard let data = try? sceneEdits.encoded() else { return "" }
+        guard let data = EditorLog.attempt("Scene edits: digest", { try sceneEdits.encoded() }) else { return "" }
         return Digest.hex(SHA256.hash(data: data).prefix(12))
     }
 }

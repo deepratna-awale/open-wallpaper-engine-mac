@@ -150,7 +150,7 @@ final class ModelEditorModel: ObservableObject {
     func material(_ name: String) -> MaterialPassDocument {
         if let edited = materials[name] { return edited }
         let path = materialPath(name)
-        let data = store.url(for: path).flatMap { try? Data(contentsOf: $0) } ?? readFile(path)
+        let data = store.url(for: path).flatMap { url in EditorLog.attempt("Model Editor: \(path)") { try Data(contentsOf: url) } } ?? readFile(path)
         return data.flatMap(MaterialPassDocument.init(json:))
             ?? MaterialPassDocument(root: ModelCompiler.materialJSON(texture: nil))
     }

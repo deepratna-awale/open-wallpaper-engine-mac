@@ -53,7 +53,8 @@ final class SceneEditorDepthMapHost: ObservableObject {
     }
 
     private func makeSession(overlay: SceneEditOverlay) {
-        guard let sceneData, let outline = try? SceneOutline(sceneData: sceneData) else { return }
+        guard let sceneData,
+              let outline = OWELog.attempt(.ui, "Depth maps: scene outline", { try SceneOutline(sceneData: sceneData) }) else { return }
         let session = SceneEditSession(outline: outline, overlay: overlay)
         session.onChange = { [weak self] overlay in self?.save(overlay) }
         self.session = session

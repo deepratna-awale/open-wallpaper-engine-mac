@@ -9,11 +9,11 @@ import OWESceneEditing
 enum EditorPuppetAssets {
     static func make(for wallpaper: WEWallpaper) -> PuppetEditorAssets {
         let directory = wallpaper.wallpaperDirectory
-        let package = (try? WallpaperEditorSource.read(wallpaper))?.package
+        let package = OWELog.attempt(.ui, "Puppet Warp: \(directory.lastPathComponent)", { try WallpaperEditorSource.read(wallpaper) })?.package
         let read: (String) -> Data? = { path in
             let normalized = path.replacingOccurrences(of: "\\", with: "/")
             if let package, let data = package.extractFile(named: normalized) { return Data(data) }
-            return try? AssetPathResolver.data(normalized, in: directory)
+            return OWELog.attempt(.ui, "Puppet Warp: \(normalized)") { try AssetPathResolver.data(normalized, in: directory) } ?? nil
         }
         return PuppetEditorAssets(readFile: read, image: { modelPath in image(modelPath: modelPath, read: read) })
     }
@@ -21,6 +21,7 @@ enum EditorPuppetAssets {
     /// The picture an image model draws: its material's first texture (`materials/<name>.tex`,
     /// or a PNG or JPEG in its place), as the scene loader looks for it.
     static func image(modelPath: String, read: (String) -> Data?) -> CGImage? {
+        // Optional: a model or material that isn't JSON has no picture here (the scene's load logs it).
         guard let model = read(modelPath).flatMap({ try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }),
               let materialPath = model["material"] as? String,
               let material = read(materialPath).flatMap({ try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }),
