@@ -24,6 +24,8 @@ protocol SceneModelDrawing: AnyObject {
     /// Whether a mesh's pipeline is still compiling off the render thread (the mesh draws nothing
     /// until it lands).
     var hasPendingPipelines: Bool { get }
+    /// Compiles finished so far, however they ended: a frame drawn before one landed lacked it.
+    var pipelinesLanded: Int { get }
 }
 
 /// What a model's draw gets from the renderer.

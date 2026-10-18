@@ -33,6 +33,7 @@ final class SceneModelRenderer: SceneModelDrawing {
     private var pipelines: [String: MTLRenderPipelineState] = [:]
     private var pending = Set<String>()
     private var failed = Set<String>()
+    private var landedPipelines = 0
 
     /// The content's model objects by id. Render thread only.
     private var objects: [String: SceneModelObject] = [:]
@@ -576,6 +577,8 @@ final class SceneModelRenderer: SceneModelDrawing {
     }
 
     var hasPendingPipelines: Bool { pipelineLock.withLock { !pending.isEmpty } }
+    /// Compiles finished so far, however they ended.
+    var pipelinesLanded: Int { pipelineLock.withLock { landedPipelines } }
 
     /// Blocks until every mesh's pipeline compiled or failed (tests, prewarming). True when all are ready.
     func waitUntilReady(_ plan: SceneModelPlan, pixelFormat: MTLPixelFormat, sampleCount: Int = 1,
@@ -636,6 +639,7 @@ final class SceneModelRenderer: SceneModelDrawing {
             guard let self else { return }
             self.pipelineLock.withLock {
                 self.pending.remove(key)
+                self.landedPipelines &+= 1
                 if let result { self.pipelines[key] = result } else { self.failed.insert(key) }
             }
         }
