@@ -6,7 +6,7 @@ import simd
 /// 12…14. Read as four columns of four, that is the same memory as a column-major matrix acting on
 /// column vectors, which is how every `simd_float4x4` of these types holds it: the translation is
 /// `columns.3`.
-public struct MDLBone: Equatable {
+public struct MDLBone: Equatable, Sendable {
     public var name: String
     /// 0x1 marks an armature bone: WE's importer sets it on every bone of an FBX armature, weighted
     /// or not, and on every Puppet Warp bone, and leaves it off the other nodes it keeps (the

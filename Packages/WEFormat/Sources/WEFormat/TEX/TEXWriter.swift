@@ -5,11 +5,11 @@ import Foundation
 /// converts, or in `TEXB0003`, as WE's editor writes a painted effect mask (`effectMask`).
 public enum TEXWriter {
     /// The `TEXB` container: `TEXB0004` has a video word after the FreeImage format.
-    public enum Container: Equatable {
+    public enum Container: Equatable, Sendable {
         case b0003, b0004
     }
 
-    public struct Mipmap: Equatable {
+    public struct Mipmap: Equatable, Sendable {
         public var width: Int
         public var height: Int
         /// 0 stored as is, 1 LZ4.
@@ -26,7 +26,7 @@ public enum TEXWriter {
         }
     }
 
-    public struct Texture: Equatable {
+    public struct Texture: Equatable, Sendable {
         public var format: UInt32
         public var flags: UInt32
         public var textureWidth: Int

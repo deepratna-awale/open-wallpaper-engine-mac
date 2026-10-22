@@ -2,10 +2,10 @@ import Foundation
 
 /// A clip of the `MDLA` section, versions 1–6 (docs/models-plan.md §1.4). A scene's
 /// `animationlayers` name it by `id`.
-public struct MDLAnimation: Equatable {
+public struct MDLAnimation: Equatable, Sendable {
     /// How the clip plays past its end (0x1401a8c71): "mirror" ping-pongs, "single" plays once,
     /// any other name loops.
-    public enum Mode: Equatable {
+    public enum Mode: Equatable, Sendable {
         case loop, mirror, single
 
         public init(name: String) {
@@ -18,7 +18,7 @@ public struct MDLAnimation: Equatable {
     }
 
     /// A bone or link track: `frames + 1` samples of 9 floats (`MDLBonePose`).
-    public struct Track: Equatable {
+    public struct Track: Equatable, Sendable {
         /// Bit 0: disabled, the bone keeps its bind pose.
         public var flags: UInt32
         public var samples: [Float]
@@ -39,7 +39,7 @@ public struct MDLAnimation: Equatable {
 
     /// One float per frame: a constraint track (`tag` is its value) or one of the scalar lists
     /// (`tag` is the u32 WE skips before it).
-    public struct ScalarTrack: Equatable {
+    public struct ScalarTrack: Equatable, Sendable {
         public var tag: UInt32
         public var samples: [Float]
 
@@ -50,8 +50,8 @@ public struct MDLAnimation: Equatable {
     }
 
     /// The morph-weight tracks of one mesh (`MDLA` 4 and later).
-    public struct MeshTrack: Equatable {
-        public struct MorphTrack: Equatable {
+    public struct MeshTrack: Equatable, Sendable {
+        public struct MorphTrack: Equatable, Sendable {
             public var morph: UInt16
             public var samples: [Float]
 
@@ -77,7 +77,7 @@ public struct MDLAnimation: Equatable {
     /// root-motion bone (0x140264fc9…0x140265348, the 0xc0-byte record at anim+0x150: the index
     /// at +0x8, the four u32s at +0xc…+0x18). WE's editor writes one for every clip it cuts
     /// (docs/test-risks.md MG4: start 0, end 30, offset 0, bone −1 or 2 for a 30-frame clip).
-    public struct Reference: Equatable {
+    public struct Reference: Equatable, Sendable {
         /// The clip it was cut from (earlier in the file).
         public var animation: UInt16
         /// The editor's Start frame and End frame, in the source clip; with root motion WE reads
@@ -100,7 +100,7 @@ public struct MDLAnimation: Equatable {
     }
 
     /// The clip flags the model editor sets (docs/test-risks.md MG4; 0x14021cc0c, 0x140225900).
-    public enum Flag {
+    public enum Flag: Sendable {
         /// `reference` follows.
         public static let reference: UInt32 = 0x1
         /// "Match loop" (on by default): the root's start and end matrices come from this clip's
@@ -117,7 +117,7 @@ public struct MDLAnimation: Equatable {
         public static let rootMotion: UInt32 = 0x1f800
     }
 
-    public struct Event: Equatable {
+    public struct Event: Equatable, Sendable {
         public var frame: Float
         public var name: String
 

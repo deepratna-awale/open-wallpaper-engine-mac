@@ -2,7 +2,7 @@ import simd
 
 /// One sample of a bone or link track: position, Euler angles in radians and scale, 9 floats
 /// (docs/models-plan.md §1.4).
-public struct MDLBonePose: Equatable {
+public struct MDLBonePose: Equatable, Sendable {
     public static let floatCount = 9
 
     public var position: SIMD3<Float>

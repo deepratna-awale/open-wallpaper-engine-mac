@@ -10,9 +10,9 @@ import Foundation
 /// WE's reader (0x140261c0d…0x140262025) keeps a record of 0x50 bytes: id, the clipped ranges
 /// (+0x08), the masking ranges (+0x20), the texture (+0x38), the clipped draw's blending (+0x40:
 /// 2, additive, with flag 0x1, else 1, translucent), the flags (+0x44) and the parent (+0x48).
-public struct MDLClippingMask: Equatable {
+public struct MDLClippingMask: Equatable, Sendable {
     /// The record's flags, as the editor writes them from the mask's settings.
-    public struct Flags: OptionSet, Equatable {
+    public struct Flags: OptionSet, Equatable, Sendable {
         public let rawValue: UInt32
         /// The clipped parts draw additive (the limb's "Additive blending"; 0x140261c45 → +0x40 = 2).
         public static let additive = Flags(rawValue: 0x1)
