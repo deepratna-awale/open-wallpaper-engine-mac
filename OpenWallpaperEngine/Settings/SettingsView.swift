@@ -9,6 +9,7 @@ import Cocoa
 import SwiftUI
 import UniformTypeIdentifiers
 
+@MainActor
 protocol SettingsPage: View {
     var viewModel: GlobalSettingsViewModel { get set }
 
