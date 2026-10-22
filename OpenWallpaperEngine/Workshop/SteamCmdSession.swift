@@ -24,29 +24,29 @@ protocol SteamCmdProcess: AnyObject {
 protocol SteamCmdProcessLaunching {
     /// Starts the steamcmd at `executable` with no arguments. `onOutput` receives its output as it
     /// arrives and `onExit` runs once it exited, both on a background queue.
-    func launch(executable: URL, onOutput: @escaping (String) -> Void,
-                onExit: @escaping () -> Void) throws -> SteamCmdProcess
+    func launch(executable: URL, onOutput: @escaping @Sendable (String) -> Void,
+                onExit: @escaping @Sendable () -> Void) throws -> SteamCmdProcess
 }
 
 /// Runs the session's delayed work (the idle quit, the wait before terminating a steamcmd that
 /// didn't quit); tests run it by hand.
 protocol SteamCmdSessionTimer {
-    func schedule(after delay: TimeInterval, _ action: @escaping () -> Void)
+    func schedule(after delay: TimeInterval, _ action: @escaping @Sendable () -> Void)
 }
 
 struct DispatchSteamCmdSessionTimer: SteamCmdSessionTimer {
-    func schedule(after delay: TimeInterval, _ action: @escaping () -> Void) {
+    func schedule(after delay: TimeInterval, _ action: @escaping @Sendable () -> Void) {
         DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + delay, execute: action)
     }
 }
 
-protocol SteamCmdSessionRunning: AnyObject {
+protocol SteamCmdSessionRunning: AnyObject, Sendable {
     /// Downloads one Workshop item with `command` in the steamcmd that ran `setup` (the commands up
     /// to and including `login`), starting one first when none runs or the running one had another
     /// setup. Blocks until steamcmd reports the item, or until `timeout` passes (nil: a long
     /// backstop). `onOutput` receives the output as it arrives, on a background queue.
     func download(workshopId: String, command: SteamCmdScript, setup: SteamCmdScript, executable: URL,
-                  timeout: TimeInterval?, onOutput: @escaping (String) -> Void) -> SteamCmdRun
+                  timeout: TimeInterval?, onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun
 
     /// Quits the kept steamcmd, if one runs. `waitingForExit` blocks until it exited (or was
     /// terminated), so the next steamcmd never starts beside it.
@@ -104,7 +104,7 @@ final class SteamCmdSession: SteamCmdSessionRunning, @unchecked Sendable {
     var isRunning: Bool { lock.withLock { live.map { !$0.hasExited } ?? false } }
 
     func download(workshopId: String, command: SteamCmdScript, setup: SteamCmdScript, executable: URL,
-                  timeout: TimeInterval?, onOutput: @escaping (String) -> Void) -> SteamCmdRun {
+                  timeout: TimeInterval?, onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
         commandLock.lock()
         defer { commandLock.unlock() }
         lock.withLock { endedDuringDownload = false }
@@ -347,8 +347,8 @@ private final class LiveSteamCmd: @unchecked Sendable {
 
 /// Launches the real steamcmd as a subprocess with pipes for stdin and output.
 struct ProcessSteamCmdLauncher: SteamCmdProcessLaunching {
-    func launch(executable: URL, onOutput: @escaping (String) -> Void,
-                onExit: @escaping () -> Void) throws -> SteamCmdProcess {
+    func launch(executable: URL, onOutput: @escaping @Sendable (String) -> Void,
+                onExit: @escaping @Sendable () -> Void) throws -> SteamCmdProcess {
         let process = Process()
         let outputPipe = Pipe()
         let inputPipe = Pipe()

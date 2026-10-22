@@ -29,7 +29,7 @@ final class WorkshopSetAsFlow: ObservableObject {
         /// Whether a download can start (steamcmd is there and logged in).
         var canDownload: @MainActor () -> Bool
         /// Downloads the item as Download does; the completion gets its folder, or nil when it failed.
-        var download: @MainActor (WorkshopItem, _ completion: @escaping @MainActor (URL?) -> Void) -> Void
+        var download: @MainActor (WorkshopItem, _ completion: @escaping @MainActor @Sendable (URL?) -> Void) -> Void
         /// The wallpaper in a downloaded folder, as the library reads it.
         var wallpaper: @MainActor (_ folder: URL) -> WEWallpaper?
         var setWallpaper: @MainActor (WEWallpaper) -> Void

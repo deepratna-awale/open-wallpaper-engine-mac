@@ -42,7 +42,7 @@ final class WorkshopDependencyService: ObservableObject {
     @Published private(set) var pending: [URL: Set<String>] = [:]
 
     private let steamCmd: SteamCmdService
-    private let makeResolver: () -> WorkshopAssetResolver
+    private let makeResolver: @Sendable () -> WorkshopAssetResolver
     private let store: UnavailableWorkshopItemStore
     private let checkAvailability: AvailabilityCheck
     private var requested = Set<String>()
@@ -52,7 +52,7 @@ final class WorkshopDependencyService: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
 
     init(steamCmd: SteamCmdService,
-         makeResolver: @escaping () -> WorkshopAssetResolver = { WorkshopAssetResolver(roots: WorkshopAssetResolver.defaultRoots()) },
+         makeResolver: @escaping @Sendable () -> WorkshopAssetResolver = { WorkshopAssetResolver(roots: WorkshopAssetResolver.defaultRoots()) },
          store: UnavailableWorkshopItemStore = UnavailableWorkshopItemStore(),
          checkAvailability: @escaping AvailabilityCheck = { try await WorkshopAPIService().availability(of: $0) }) {
         self.steamCmd = steamCmd
