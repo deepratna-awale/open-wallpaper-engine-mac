@@ -1,0 +1,24 @@
+551: MDLE reference pose vs bind pose (WE 2.8.0.42)
+
+## Setup
+- **Puppet:** 509's bars puppet with b_clip's clip 23 (blue 0 -> 180 -> 0 deg over 2 s; red has only rest keys), copied to p551_ref.
+- **Puppet Warp › Optional › Reference Pose:** select red (the root bone) › Angles Z = 30 › Confirm › Save. Saved as **ref_clip.mdl/.json**.
+  - .mdl: 25332 bytes, **MDLE block at 0x6262**. The control noref_clip.mdl (509 b_clip) has no MDLE.
+  - Json: `puppet.referencepose = [{"alpha":1.0, "id":24, "transform":"0.8645602 0.49915406 0 0 -0.49915406 0.8645602 0 0 0 0 0.9983081 0 0 -1.04e-06 0 1"}]`.
+  - The transform is a 30 deg z rotation with z-scale 0.998 (not exactly 1).
+- **Runtime projects** (make_551.py), for each of ref_clip / noref_clip:
+  - **none:** no animationlayers
+  - **f0:** an animation layer on clip 23 with **rate 0** (held at frame 0)
+  - **play:** clip 23 at rate 1
+- **Stills** at 2 s (none, f0) and 0.05 / 0.5 / 1.0 s (play). sheet_551.png; the red bar's tilt (slope of its pixels) was measured.
+
+## Result
+| variant | none | f0 (rate 0) | play 0.05 / 0.5 / 1.0 s |
+|---|---|---|---|
+| ref_clip (MDLE) | **red turned 30 deg (slope -0.49); blue follows as its child** | red flat (slope 0) | red flat; blue animates |
+| noref_clip | red flat | red flat | red flat; blue animates |
+
+- **With no animation layer, WE draws the reference pose (MDLE)**: the whole rig is rotated 30 deg about red's origin, with blue carried as the child. This matches 509-C.
+- **With any animation layer, even frozen at frame 0, the reference pose is NOT drawn.** The pose is the clip's (bind plus keys), and it is pixel-identical to the no-MDLE control at every time sampled.
+- So **MDLE only changes the drawn pose when no clip is applied**. It never offsets or blends with clip playback.
+- **"Done."** in the stills is WE's toast.

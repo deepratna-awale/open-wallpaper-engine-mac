@@ -1,0 +1,11 @@
+connected ident 38920
+p551_ref_clip_none still 2.0 triggered at 2.004 s frame 643
+p551_ref_clip_f0 still 2.0 triggered at 2.000 s frame 785
+p551_ref_clip_play still 0.05 triggered at 0.050 s frame 878
+p551_ref_clip_play still 0.5 triggered at 0.503 s frame 889
+p551_ref_clip_play still 1.0 triggered at 1.004 s frame 902
+p551_noref_clip_none still 2.0 triggered at 2.002 s frame 1044
+p551_noref_clip_f0 still 2.0 triggered at 2.004 s frame 1201
+p551_noref_clip_play still 0.05 triggered at 0.050 s frame 1291
+p551_noref_clip_play still 0.5 triggered at 0.504 s frame 1304
+p551_noref_clip_play still 1.0 triggered at 1.003 s frame 1316

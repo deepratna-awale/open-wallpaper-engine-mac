@@ -2,20 +2,52 @@
  "we": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\wallpaper_engine",
  "ident": 38920,
  "monitor": 0,
- "out": "K:\\DeepWorkspace\\wem-images2\\tools\\peer\\requests\\owe-beta7\\models-open\\543-fur\\stills",
+ "out": "K:\\DeepWorkspace\\wem-images2\\tools\\peer\\requests\\owe-beta8\\models-open\\551-mdle-reference-pose\\stills",
  "shots": [
   {
-   "project": "p543_fur_def",
-   "tag": "mo2_543_fur_def",
+   "project": "p551_ref_clip_none",
+   "tag": "mo2_551_ref_clip_none",
    "stills": [
     2.0
    ]
   },
   {
-   "project": "p543_fur_21",
-   "tag": "mo2_543_fur_21",
+   "project": "p551_ref_clip_f0",
+   "tag": "mo2_551_ref_clip_f0",
    "stills": [
     2.0
+   ]
+  },
+  {
+   "project": "p551_ref_clip_play",
+   "tag": "mo2_551_ref_clip_play",
+   "stills": [
+    0.05,
+    0.5,
+    1.0
+   ]
+  },
+  {
+   "project": "p551_noref_clip_none",
+   "tag": "mo2_551_noref_clip_none",
+   "stills": [
+    2.0
+   ]
+  },
+  {
+   "project": "p551_noref_clip_f0",
+   "tag": "mo2_551_noref_clip_f0",
+   "stills": [
+    2.0
+   ]
+  },
+  {
+   "project": "p551_noref_clip_play",
+   "tag": "mo2_551_noref_clip_play",
+   "stills": [
+    0.05,
+    0.5,
+    1.0
    ]
   }
  ]
