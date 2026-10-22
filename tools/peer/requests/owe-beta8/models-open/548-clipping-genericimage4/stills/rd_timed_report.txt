@@ -1,0 +1,13 @@
+connected ident 38920
+p548_c_mask_on still 0.25 triggered at 0.254 s frame 596
+p548_c_mask_on still 0.6 triggered at 0.600 s frame 604
+p548_c_mask_on still 1.0 triggered at 1.004 s frame 614
+p548_c_mask_removed still 0.25 triggered at 0.253 s frame 710
+p548_c_mask_removed still 0.6 triggered at 0.603 s frame 719
+p548_c_mask_removed still 1.0 triggered at 1.003 s frame 728
+p548_c_invert still 0.25 triggered at 0.251 s frame 846
+p548_c_invert still 0.6 triggered at 0.602 s frame 854
+p548_c_invert still 1.0 triggered at 1.003 s frame 864
+p548_c_hide still 0.25 triggered at 0.255 s frame 961
+p548_c_hide still 0.6 triggered at 0.600 s frame 971
+p548_c_hide still 1.0 triggered at 1.001 s frame 980

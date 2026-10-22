@@ -1,0 +1,8 @@
+== p548_c_mask_on capture K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame663.rdc draws 7
+  eid 25 ID3D11DeviceContext::DrawIndexed() idx=516 inst=0
+  eid 46 ID3D11DeviceContext::DrawIndexed() idx=516 inst=0
+  eid 66 ID3D11DeviceContext::DrawIndexed() idx=414 inst=0
+  eid 83 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 96 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 109 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 123 ID3D11DeviceContext::Draw() idx=3 inst=0

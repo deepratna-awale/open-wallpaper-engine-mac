@@ -1,0 +1,29 @@
+548: clipping masks with genericimage4 (WE 2.8.0.42)
+
+## Setup
+- **Rig:** the 532c rig (purple circle = Limb 21 with maskA painted over the red rectangle = Limb 20), copied to p548_clip with materials/circle_rect.json **shader genericimage2 -> genericimage4**.
+- **Clip id 29:** circle bone origin x 0 -> +275 -> 0 over 2 s, so the circle passes over the rectangle.
+- **Variants** (the editor saved each .mdl/.json; make_548.py builds runtime projects with an animation layer on clip 29):
+  - **c_mask_on:** clippingmasks [{id 40, invert false, hidemaskgeometry false}], circle island clippingmaskid 40
+  - **c_invert:** invert true
+  - **c_hide:** hidemaskgeometry true
+  - **c_mask_removed:** "Remove Clipping Mask" on the circle; island ids 0,0 (the maskA entry stays in the list)
+
+## Result (RenderDoc stills at 0.25 / 0.6 / 1.0 s; sheet_548.png)
+- **The material shader decides it.** The same static rig with genericimage2 (p532c) draws the circle in full; with genericimage4 the circle disappears when it is off the rectangle (stills/mo2_548_on_gi2 vs on_gi4, sheet_on.png). The editor preview also hides it once the material is genericimage4.
+- **mask_on:** the circle is visible **only where it overlaps the painted area** (the rectangle): nothing at 0.25 s, a sliver at 0.6 s, the full overlap at 1.0 s. It is drawn over the rectangle.
+- **mask_removed:** the circle is drawn in full everywhere (control).
+- **invert:** the circle is visible **only outside** the painted area. Where it overlaps the rectangle it is cut away and the rectangle shows; off the rectangle it is fully drawn.
+- **hide (hidemaskgeometry):** the **rectangle (the geometry under the mask) is not drawn**. The circle is still clipped to the rectangle's area, so you see a circle cut to the rectangle's shape floating on the background.
+
+## Draw list (one frame of c_mask_on: rd_draws_report.txt, inspect/inspect_report.txt, inspect/*.png)
+1. **eid 25** DrawIndexed(516): the **non-clipped limb (the rectangle)** to the swapchain. SRV0 = albedo (512x256 RGBA).
+2. **eid 46** DrawIndexed(516): **mask write**. The same rectangle geometry is drawn into a **half-resolution R8 render target (960x540 R8_UNORM)**. SRV0 = albedo, **SRV1 = the painted mask texture (512x256 R8)**. The mask texture is sampled in the mask-owner limb's UV space and rasterised at its screen position.
+3. **eid 66** DrawIndexed(414): **mask read**. The **clipped limb (the circle)** to the swapchain. SRV0 = albedo, **SRV1 = that 960x540 R8 target**, sampled in screen space.
+4. Then 4 fullscreen Draw(3) (bloom/composite).
+- So the mask is **screen-space**: the mask-owner limb renders mask.r (times its own coverage) into a half-res R8 buffer, and the clipped limb scales its alpha by that buffer (or its inverse, for invert) at its screen position.
+- Passes 2 and 3 use their own shader pairs (270/271 and 266/267), distinct from the plain pass (264/265). Constants are in inspect_report.txt.
+- With hidemaskgeometry, pass 1 is presumably skipped while pass 2 still writes; not captured separately.
+
+## Not yet done
+- The nested mask (B clipped by A, C clipped by B). It needs a 3-limb rig; that follows in a later commit.
