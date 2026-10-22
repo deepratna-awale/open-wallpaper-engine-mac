@@ -168,7 +168,7 @@ final class ScreenSaverLiveVideo {
         outputItem = nil
         pump.setOutput(nil)
         guard let item else { return }
-        var attributes: [String: Any] = [
+        var attributes: [String: any Sendable] = [
             kCVPixelBufferMetalCompatibilityKey as String: true,
             kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
         ]

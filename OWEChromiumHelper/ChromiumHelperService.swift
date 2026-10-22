@@ -26,7 +26,9 @@ final class ChromiumHelperListenerDelegate: NSObject, NSXPCListenerDelegate {
 /// Runs CEF on the main thread and forwards each painted frame to the app as a copy in one of a
 /// few IOSurfaces it owns per browser, because CEF takes its own surface back when the paint
 /// returns. Page messages, load results and `owe-wallpaper` requests go to the app too.
-final class ChromiumHelperService: NSObject, ChromiumBrowserHelperProtocol {
+// @unchecked Sendable: `rings` and `queue` are touched only on the main thread (`onMain`, CEF's
+// callbacks); `device` is a let and `connection` a weak reference set once in init.
+final class ChromiumHelperService: NSObject, ChromiumBrowserHelperProtocol, @unchecked Sendable {
     private weak var connection: NSXPCConnection?
     private let device = MTLCreateSystemDefaultDevice()
     private lazy var queue = device?.makeCommandQueue()
@@ -53,7 +55,7 @@ final class ChromiumHelperService: NSObject, ChromiumBrowserHelperProtocol {
 
     /// Runs `body` on the main thread. Once CEF runs, the main queue is busy in `owe_cef_run`, so
     /// work arrives as run-loop blocks, which its nested passes serve.
-    private static func onMain(_ body: @escaping () -> Void) {
+    private static func onMain(_ body: @escaping @Sendable () -> Void) {
         RunLoop.main.perform(body)
     }
 
@@ -69,6 +71,8 @@ final class ChromiumHelperService: NSObject, ChromiumBrowserHelperProtocol {
             reply("No Metal device")
             return
         }
+        // XPC reply blocks may be called once from any thread.
+        nonisolated(unsafe) let reply = reply
         DispatchQueue.main.async {
             var error = [CChar](repeating: 0, count: 512)
             let context = Unmanaged.passUnretained(self).toOpaque()
@@ -95,6 +99,8 @@ final class ChromiumHelperService: NSObject, ChromiumBrowserHelperProtocol {
             reply("No Metal device")
             return
         }
+        // XPC reply blocks may be called once from any thread.
+        nonisolated(unsafe) let reply = reply
         Self.onMain {
             var error = [CChar](repeating: 0, count: 512)
             var callbacks = owe_cef_callbacks()
@@ -142,6 +148,8 @@ final class ChromiumHelperService: NSObject, ChromiumBrowserHelperProtocol {
             reply("Browser size \(width)×\(height) at \(scale)× is out of range")
             return
         }
+        // XPC reply blocks may be called once from any thread.
+        nonisolated(unsafe) let reply = reply
         Self.onMain {
             var error = [CChar](repeating: 0, count: 512)
             let status = owe_cef_create_browser(Int32(browserId), url, Int32(width), Int32(height), scale,

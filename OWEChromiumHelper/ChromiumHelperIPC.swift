@@ -170,7 +170,7 @@ final class ChromiumResourceResponse: NSObject, NSSecureCoding {
 
 /// One mouse event for a windowless browser, at a point in the view (points, top-left origin).
 @objc(OWEChromiumMouseEvent)
-final class ChromiumMouseEvent: NSObject, NSSecureCoding {
+final class ChromiumMouseEvent: NSObject, NSSecureCoding, Sendable {
     static var supportsSecureCoding: Bool { true }
 
     enum Kind: Int {
