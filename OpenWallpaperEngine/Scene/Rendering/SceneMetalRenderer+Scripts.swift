@@ -81,7 +81,10 @@ extension SceneMetalRenderer {
     /// content changed meanwhile: that content was built with the change.
     func replaceObjects(_ replacement: SceneObjectReplacement) {
         let generation = currentContentGeneration
-        let content = replacement.content
+        let objectIDs = replacement.objectIDs
+        // Handed whole to the content queue, then to the render thread; nobody changes it after
+        // the loader made it.
+        nonisolated(unsafe) let content = replacement.content
         pendingReplacements += 1
         contentQueue.async { [weak self] in
             guard let self else { return }
@@ -107,12 +110,14 @@ extension SceneMetalRenderer {
                 systems = ParticleSystemRuntime.addingRendererDraws(runtimes.compactMap { $0 })
                 analysis = SceneLayerAnalysis.make(content: content)
             }
+            // Built here and handed whole to the render thread; this queue never touches it again.
+            nonisolated(unsafe) let built = (layers: prepared, systems: systems, analysis: analysis)
             // Thread boundary: content queue → render thread.
             self.performOnRenderThread { [weak self] in
                 guard let self else { return }
                 self.pendingReplacements -= 1
-                guard self.isCurrentContentGeneration(generation), let analysis else { return }
-                self.install(replacement.objectIDs, layers: prepared, systems: systems, motions: content.motions,
+                guard self.isCurrentContentGeneration(generation), let analysis = built.analysis else { return }
+                self.install(objectIDs, layers: built.layers, systems: built.systems, motions: content.motions,
                              analysis: analysis)
             }
         }
@@ -163,21 +168,26 @@ extension SceneMetalRenderer {
     /// Builds an object a script created through the loader, off the main thread: a layer, a
     /// particle system (with its children) or a sound.
     private func buildScriptLayer(_ id: String, object: [String: SceneJSON]) {
-        var visible = true
-        if case .bool(let flag)? = object["visible"] { visible = flag }
+        let visible: Bool
+        if case .bool(let flag)? = object["visible"] { visible = flag } else { visible = true }
         // Built on the script thread already: drawn in this frame, as WE's createLayer is.
         if let key = Int(id), let built = scripts.wallpaper?.takePrepared(key) as? PreparedScriptObject {
             destroyedScriptLayers.remove(id)
             installScriptObject(built, id: id, visible: visible)
             return
         }
-        guard let makeLayer = scripts.makeLayer else { return }
+        // The loader's builder, an immutable closure made to run off the script thread
+        // (`SceneScriptSceneContent.makeLayer`, which isn't typed @Sendable yet).
+        guard let builder = scripts.makeLayer else { return }
+        nonisolated(unsafe) let makeLayer = builder
         let generation = currentContentGeneration
-        let wallpaper = scripts.wallpaper
+        // Only compared by identity, never used off the render thread.
+        nonisolated(unsafe) let wallpaper = scripts.wallpaper
         pendingScriptLayers += 1
         contentQueue.async { [weak self] in
             guard let self else { return }
-            let built: PreparedScriptObject? = {
+            // Built here and handed whole to the render thread; this queue never touches it again.
+            nonisolated(unsafe) let built: PreparedScriptObject? = {
                 guard self.isCurrentContentGeneration(generation) else { return nil }
                 guard let created = makeLayer(object) else {
                     OWELog.error(.script, "createLayer: object \(id) can't be built")

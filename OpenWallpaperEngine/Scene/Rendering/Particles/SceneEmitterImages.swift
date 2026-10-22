@@ -15,7 +15,7 @@ final class SceneEmitterImages {
 
     private let device: MTLDevice
     private let queue: MTLCommandQueue
-    private let deliver: (@escaping () -> Void) -> Void
+    private let deliver: @Sendable (@escaping @Sendable () -> Void) -> Void
     private var rigs: [String: Rig] = [:]
     /// Puppet layers' model-space bones before this frame's update, by layer id.
     private var previousWorlds: [String: [simd_float4x4]] = [:]
@@ -24,7 +24,7 @@ final class SceneEmitterImages {
     private var frames: [String: RenderTextureFrame] = [:]
     private var resampler: ParticleEmitterImageResampler?
 
-    init(device: MTLDevice, queue: MTLCommandQueue, deliver: @escaping (@escaping () -> Void) -> Void) {
+    init(device: MTLDevice, queue: MTLCommandQueue, deliver: @escaping @Sendable (@escaping @Sendable () -> Void) -> Void) {
         self.device = device
         self.queue = queue
         self.deliver = deliver

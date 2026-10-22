@@ -31,7 +31,7 @@ extension SceneMetalRenderer {
         let generation = contentGeneration
         contentGenerationLock.unlock()
 
-        guard let content else {
+        guard let unwrapped = content else {
             layerAnalysis = nil
             audioCaptureLease = nil
             layers = []
@@ -68,6 +68,9 @@ extension SceneMetalRenderer {
             lastCommandBuffer = nil
             return
         }
+        // Handed whole to the content queue, then to the render thread; nobody changes it after
+        // the loader made it.
+        nonisolated(unsafe) let content = unwrapped
         // Subscribed before the scripts start, so the artwork the session already has is there.
         let bindsSystemTexture = content.layers.contains { layer in
             layer.systemImage != nil
@@ -81,12 +84,14 @@ extension SceneMetalRenderer {
             // Each layer's upload is independent; built side by side, kept in layer order.
             var built = [[RenderTextureFrame]?](repeating: nil, count: content.layers.count)
             built.withUnsafeMutableBufferPointer { slots in
-                let slots = slots
+                // Each iteration writes only its own slot.
+                nonisolated(unsafe) let slots = slots
                 DispatchQueue.concurrentPerform(iterations: content.layers.count) { index in
                     slots[index] = self.makeTextureFrames(from: content.layers[index].source)
                 }
             }
-            let preparedLayers: [PreparedLayer] = zip(built, content.layers).compactMap { frames, layer in
+            // Built here and handed whole to the render thread below; this queue never touches them again.
+            nonisolated(unsafe) let preparedLayers: [PreparedLayer] = zip(built, content.layers).compactMap { frames, layer in
                 guard let frames, !frames.isEmpty else { return nil }
                 return PreparedLayer(frames: frames, layer: Self.droppingPixels(layer))
             }
@@ -113,12 +118,12 @@ extension SceneMetalRenderer {
                                              fallbackTexture: fallback)
             }
             ParticleSystemRuntime.linkFamilies(runtimes)
-            let preparedParticleSystems = ParticleSystemRuntime.addingRendererDraws(runtimes.compactMap { $0 })
+            nonisolated(unsafe) let preparedParticleSystems = ParticleSystemRuntime.addingRendererDraws(runtimes.compactMap { $0 })
             guard self.isCurrentContentGeneration(generation) else { return }
             // The models' meshes go to the GPU here, off the render thread, so the first frame
             // drawing them has nothing to upload.
             for model in content.spatial.models { _ = model.plan?.upload(device: self.device) }
-            let analysis = SceneLayerAnalysis.make(content: content)
+            nonisolated(unsafe) let analysis = SceneLayerAnalysis.make(content: content)
             // Thread boundary: content queue → render thread.
             self.performOnRenderThread { [weak self] in
                 guard let self, self.isCurrentContentGeneration(generation) else { return }

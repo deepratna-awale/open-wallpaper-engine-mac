@@ -1,5 +1,5 @@
 import CoreGraphics
-import Metal
+@preconcurrency import Metal // MTLBuffer and MTLTexture are not annotated Sendable
 
 extension SceneMetalRenderer {
     /// Copies the latest shared frame (`renderShared`), as a display of `pixelSize` shows it, into
