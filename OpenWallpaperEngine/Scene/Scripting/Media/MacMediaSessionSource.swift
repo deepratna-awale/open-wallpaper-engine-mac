@@ -26,7 +26,10 @@ import UniformTypeIdentifiers
 /// WE's media blocklist (`mediablocklist`, `setBlocklist`): a session of a blocked app reaches no
 /// wallpaper, which sees nothing playing (no title, cover, colours or timeline) until another app
 /// plays. macOS has one now-playing session, so there is no other session to fall back to.
-final class MacMediaSessionSource: MediaSessionSource {
+///
+/// `@unchecked Sendable`: `lock` owns the subscriber state and the serial `queue` everything
+/// marked as confined to it; the rest are `let`s.
+final class MacMediaSessionSource: MediaSessionSource, @unchecked Sendable {
     private let queue = DispatchQueue(label: "OpenWallpaperEngine.MediaSession", qos: .utility)
     private let framework: NowPlayingFramework?
     private let now: () -> Date
@@ -154,7 +157,7 @@ final class MacMediaSessionSource: MediaSessionSource {
         framework.register(on: queue)
         for name in framework.notificationNames {
             observers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: nil) { [weak self] _ in
-                self?.queue.async { self?.fetch() }
+                self?.queue.async { [weak self] in self?.fetch() }
             })
         }
         publish()
@@ -192,7 +195,7 @@ final class MacMediaSessionSource: MediaSessionSource {
         fetchGeneration += 1
         let generation = fetchGeneration
         framework.nowPlayingInfo(on: queue) { [weak self] info in
-            guard let self, generation == self.fetchGeneration else { return }
+            guard let self, generation == self.fetchGeneration, let framework = self.framework else { return }
             self.info = info
             framework.isPlaying(on: self.queue) { [weak self] playing in
                 guard let self, generation == self.fetchGeneration else { return }

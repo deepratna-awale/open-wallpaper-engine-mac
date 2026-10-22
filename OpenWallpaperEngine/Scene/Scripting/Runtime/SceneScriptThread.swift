@@ -26,9 +26,16 @@ final class SceneScriptThread: @unchecked Sendable {
     /// Whether the caller runs on this thread's queue.
     var isCurrent: Bool { DispatchQueue.getSpecific(key: key) != nil }
 
+    /// A closure for `queue`. `@unchecked Sendable`: it runs only on the serial `queue`, which
+    /// owns what the posted work captures (the runtime and its extensions, see above).
+    private struct QueuedWork: @unchecked Sendable {
+        let body: () -> Void
+    }
+
     /// Runs `body` on the queue, after everything posted before it.
     func async(_ body: @escaping () -> Void) {
-        queue.async(execute: body)
+        let work = QueuedWork(body: body)
+        queue.async { work.body() }
     }
 
     /// Posts one frame's work unless the previous frame's is still queued or running; false when it
@@ -41,8 +48,9 @@ final class SceneScriptThread: @unchecked Sendable {
         frameInFlight = true
         lock.unlock()
         guard !busy else { return false }
+        let work = QueuedWork(body: body)
         queue.async { [self] in
-            body()
+            work.body()
             lock.lock()
             frameInFlight = false
             lock.unlock()

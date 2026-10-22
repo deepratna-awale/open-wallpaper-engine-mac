@@ -14,9 +14,11 @@ struct WorkspaceUserShortcutOpener: UserShortcutOpening {
             return false
         }
         if url.pathExtension.lowercased() == "app" {
-            let configuration = NSWorkspace.OpenConfiguration()
-            configuration.arguments = Self.splitArguments(arguments)
+            let launchArguments = Self.splitArguments(arguments)
             DispatchQueue.main.async {
+                // Made on the main thread, where it is used: it isn't Sendable.
+                let configuration = NSWorkspace.OpenConfiguration()
+                configuration.arguments = launchArguments
                 NSWorkspace.shared.openApplication(at: url, configuration: configuration) { _, error in
                     if let error { OWELog.error(.script, "User shortcut: \(url.path) didn't launch: \(error)") }
                 }

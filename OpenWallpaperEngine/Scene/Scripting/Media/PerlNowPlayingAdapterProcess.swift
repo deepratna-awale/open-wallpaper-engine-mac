@@ -6,7 +6,9 @@ import Foundation
 /// The script's input is a pipe that stays open while it runs: when the app quits or crashes the
 /// pipe closes and the script exits, so it never outlives the app. Its errors go to the log at
 /// `.debug`; the `E` line on its output carries the reason it failed.
-final class PerlNowPlayingAdapterProcess: NowPlayingAdapterProcess {
+///
+/// `@unchecked Sendable`: `lock` owns `process` and `input`; `script` is a `let`.
+final class PerlNowPlayingAdapterProcess: NowPlayingAdapterProcess, @unchecked Sendable {
     static let perl = URL(fileURLWithPath: "/usr/bin/perl")
 
     private let script: URL
@@ -24,7 +26,7 @@ final class PerlNowPlayingAdapterProcess: NowPlayingAdapterProcess {
         stop()
     }
 
-    func start(output: @escaping (Data) -> Void, exit: @escaping (Int32) -> Void) throws {
+    func start(output: @escaping @Sendable (Data) -> Void, exit: @escaping @Sendable (Int32) -> Void) throws {
         let process = Process()
         process.executableURL = Self.perl
         process.arguments = [script.path]
