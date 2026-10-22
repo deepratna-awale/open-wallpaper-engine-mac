@@ -61,7 +61,8 @@ final class WebEngineRouter: ObservableObject {
 
     @Published private(set) var installed: Bool
     @Published private(set) var overrides: [String: WebEngineOverride]
-    private var observer: NSObjectProtocol?
+    // Set once in init, then read by the nonisolated deinit.
+    nonisolated(unsafe) private var observer: NSObjectProtocol?
     private let isInstalled: () -> Bool
     private let defaults: UserDefaults
     private let store: ChromiumFeatureStore
