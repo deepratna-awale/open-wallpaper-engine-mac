@@ -3,6 +3,7 @@ import AppKit
 
 /// SwiftUI reuses the shared `NSColorPanel`, which reopens wherever macOS last left it — often far
 /// from the control that opened it. This parks it just outside the left edge of that control.
+@MainActor
 private final class ColorPanelPositioner {
     static let shared = ColorPanelPositioner()
 
@@ -17,7 +18,8 @@ private final class ColorPanelPositioner {
             forName: NSWindow.didBecomeKeyNotification, object: nil, queue: .main
         ) { [weak self] notification in
             guard let panel = notification.object as? NSColorPanel else { return }
-            self?.position(panel)
+            // Delivered on the main queue (`queue: .main` above), so this is on the main actor.
+            MainActor.assumeIsolated { self?.position(panel) }
         }
     }
 

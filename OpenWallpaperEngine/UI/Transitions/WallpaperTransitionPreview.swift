@@ -173,7 +173,7 @@ final class WallpaperTransitionPreviewView: NSView {
                                 into: surfaces[index].texture, commandBuffer: commands)
             frameInFlight = true
             commands.addCompletedHandler { [weak self] _ in
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
                     MainActor.assumeIsolated {
                         guard let self else { return }
                         self.frameInFlight = false
