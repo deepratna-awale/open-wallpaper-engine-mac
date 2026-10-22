@@ -1,0 +1,5 @@
+connected ident 38920
+p550c_v0 still 2.0 triggered at 2.003 s frame 50
+p550c_v0 still 3.0 triggered at 3.005 s frame 75
+p550c_v1 still 2.0 triggered at 2.002 s frame 51
+p550c_v1 still 3.0 triggered at 3.005 s frame 76

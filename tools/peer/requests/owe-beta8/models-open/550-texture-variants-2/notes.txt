@@ -1,0 +1,26 @@
+550: texture variants, part 2 (WE 2.8.0.42)
+
+All three cases are built in the editor in project p540_var (from 540), with the combo property "shapesel" (0 base, 1, 2).
+
+## (a) Two variant groups + (b) an option with no condition (ab/)
+- **Setup:** layer variant_a (the bars image) keeps group "shapes" from 540: variant_b replace when shapesel=1, variant_c alphablend when shapesel=2.
+  - Added a **second group "overlay"** with one option, **variant_d.png** (a yellow triangle), Replace, **no condition set**.
+- **ab/variant_a.tex-json:** `variants` has 2 entries, `[{"name":"shapes","options":[...]}, {"name":"overlay","options":[{"blend":"replace","file":"materials/variant_d.png","name":"variant_d"}]}]`.
+  - **An option without a condition has no `variantcondition` key at all** (540's freshly added option had `"variantcondition": null` before a condition was set).
+  - ab/variant_a.tex is the compiled texture; the option PNGs are copied alongside.
+- **Runtime** (make_550.py: only the variant_a layer, shapesel default 0/1/2; stills at 4 s; sheet_550ab.png):
+  - shapesel=0: base bars.
+  - shapesel=1: variant_b (replace).
+  - shapesel=2: variant_c blended over base.
+  - **The unconditioned "overlay" option (yellow triangle) never shows** at any value. An option with no condition is not applied, and a second group doesn't apply anything by default.
+- These stills are darker than 540's because I turned on Lighting for this material in 544 (LIGHTING combo plus a normal map), with ambient 0.3. It is not a fade.
+
+## (c) Video option (c/)
+- **Setup:** Edit › Import Image accepts **.mp4**; its filter lists `*.mp4` with the image types. vid_base.mp4 (512x256 testsrc2, 4 s, H.264) was imported as image layer **vid_base**.
+  - Texture Properties › Add Variant Group "clip" › Add Option **vid_opt.mp4** (512x256, blue plus a small testsrc, 4 s) was **accepted** (same resolution, same type). Replace; Condition = shapesel 1.
+  - An image option on a video base (or the reverse) is refused: "cannot mix images and videos in a texture" (locale string; seen in 540 for a size mismatch).
+- **c/vid_base.tex-json:** `{"format":"rgba8888", …, "variants":[{"name":"clip","options":[{"blend":"replace","file":"materials/vid_opt.mp4","name":"vid_opt","variantcondition":{"condition":"1","name":"shapesel"}}]}]}`.
+- **c/vid_base.tex** (270075 B): TEXV0005 / TEXI0001 / TEXB0004, then the condition JSON at 79, then **two embedded MP4 files**: `ftypisom` at offset 157 (the base, about 258 KB) and at **258327** (the option, about 11.7 KB). The variant video is stored raw in the same .tex.
+- **Runtime** (make_550c.py, stills at 2 s and 3 s; sheet_550c.png):
+  - shapesel=0: the base video plays (its timecode advances 1.633 to 2.667).
+  - shapesel=1: **the option video replaces it and plays**; the frames differ between 2 s and 3 s, with the changed area inside the moving testsrc patch.
