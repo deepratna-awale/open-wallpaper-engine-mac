@@ -13,7 +13,7 @@ final class ThreadGuardMonitor: ObservableObject {
 
     /// Guarded by `refreshLock`: a refresh is queued on the main thread.
     nonisolated(unsafe) private static var refreshQueued = false
-    private static let refreshLock = NSLock()
+    nonisolated private static let refreshLock = NSLock()
 
     /// Called from any thread after a violation is recorded.
     nonisolated static func violationRecorded() {

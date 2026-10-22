@@ -15,7 +15,7 @@ final class FoundationPrewarmProcessRunner: PrewarmProcessRunner {
     }
 
     func output(of executable: URL, arguments: [String], environment: [String: String],
-                timeout: TimeInterval, completion: @escaping @MainActor (Result<Data, Error>) -> Void) {
+                timeout: TimeInterval, completion: @escaping @MainActor @Sendable (Result<Data, Error>) -> Void) {
         let process = Process()
         process.executableURL = executable
         process.arguments = arguments
@@ -54,7 +54,7 @@ final class FoundationPrewarmProcessRunner: PrewarmProcessRunner {
     }
 
     func start(_ executable: URL, arguments: [String], environment: [String: String],
-               exited: @escaping @MainActor (Int32, Process.TerminationReason) -> Void) throws -> PrewarmProcess {
+               exited: @escaping @MainActor @Sendable (Int32, Process.TerminationReason) -> Void) throws -> PrewarmProcess {
         let process = Process()
         process.executableURL = executable
         process.arguments = arguments

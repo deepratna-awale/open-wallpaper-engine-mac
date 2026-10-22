@@ -35,5 +35,5 @@ final class MetalShaderCacheLock {
 
     /// The process-wide lock `AppMain` takes. Global by necessity (rule 3): the lock belongs to the
     /// process, not to any wallpaper or window, and must outlive everything that uses Metal.
-    static let process = MetalShaderCacheLock()
+    @MainActor static let process = MetalShaderCacheLock()
 }
