@@ -1,4 +1,4 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.0
 // The Wallpaper Editor (editor-plan notes), kept out of the app target:
 // Wallpaper Engine's file formats come from Packages/WEFormat, which the app links too.
 // - OWESceneEditing: the edit model, no UI (no AppKit or SwiftUI): Foundation, CoreGraphics, ImageIO, Accelerate, Combine,
@@ -40,5 +40,6 @@ let package = Package(
         .testTarget(name: "OWEEditorTests", dependencies: ["OWEEditor"]),
         .testTarget(name: "OWEModelImportTests", dependencies: ["OWEModelImport", "OWESceneEditing"],
                     resources: [.copy("Fixtures")]),
-    ]
+    ],
+    swiftLanguageModes: [.v6]
 )
