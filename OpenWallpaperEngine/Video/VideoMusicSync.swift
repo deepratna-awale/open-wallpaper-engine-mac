@@ -28,6 +28,7 @@ enum VideoMusicSyncSettings {
 /// UserDefaults is invisible to SwiftUI and to the Metal renderer, which bakes the zoom/tilt/
 /// saturation amounts into a layer at build time. Routing writes through here gives both a change
 /// signal, so the controls redraw and the wallpaper picks the new values up immediately.
+@MainActor
 final class VideoMusicSyncStore: ObservableObject {
     static let shared = VideoMusicSyncStore()
 
