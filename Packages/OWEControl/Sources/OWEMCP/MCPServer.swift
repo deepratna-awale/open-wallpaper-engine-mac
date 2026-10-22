@@ -201,7 +201,18 @@ public final class MCPServer {
         guard let token, Self.isValidID(token), let send = sendNotification else { return nil }
         let interval = progressInterval, withMessage = MCPProtocolVersion.hasProgressMessages(negotiatedVersion)
         let reporter = ProgressReporter()
-        reporter.task = Task {
+        reporter.task = Self.progressTask(reporter: reporter, send: send, token: token, tool: tool,
+                                          interval: interval, withMessage: withMessage)
+        return reporter
+    }
+
+    /// The reports' loop, built from Sendable values in a function of its own: Swift 6.2's
+    /// region-based isolation checker rejects the same `Task` written inline ("pattern that the
+    /// region based isolation checker does not understand").
+    private static func progressTask(reporter: ProgressReporter, send: @escaping @Sendable (Data) -> Void,
+                                     token: JSONValue, tool: String, interval: TimeInterval,
+                                     withMessage: Bool) -> Task<Void, Never> {
+        Task {
             var reports = 0
             while true {
                 do { try await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000)) } catch { return }
@@ -210,11 +221,10 @@ public final class MCPServer {
                 if withMessage {
                     params["message"] = .string("\(tool) is still running (\(Int((Double(reports) * interval).rounded())) s).")
                 }
-                let line: Data = Self.encode(["jsonrpc": "2.0", "method": "notifications/progress", "params": .object(params)])
+                let line: Data = encode(["jsonrpc": "2.0", "method": "notifications/progress", "params": .object(params)])
                 guard reporter.sendUnlessStopped({ send(line) }) else { return }
             }
         }
-        return reporter
     }
 
     /// `result` with its PNG saved to a file of its own (owner-only) instead: `path` replaces

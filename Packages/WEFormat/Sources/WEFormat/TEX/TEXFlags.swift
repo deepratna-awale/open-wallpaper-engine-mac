@@ -1,7 +1,7 @@
 import Foundation
 
 /// The `flags` word of a `.tex` file's `TEXI` header: how WE samples the texture.
-public struct TEXFlags: OptionSet, Equatable {
+public struct TEXFlags: OptionSet, Equatable, Sendable {
     public let rawValue: UInt32
 
     /// Nearest filtering instead of bilinear.

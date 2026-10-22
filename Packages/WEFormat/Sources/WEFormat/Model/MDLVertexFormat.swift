@@ -3,9 +3,9 @@ import Foundation
 /// A mesh's vertex format: which of the 26 attributes (`MDLVertexAttribute.all`) each vertex
 /// carries, interleaved in table order (docs/models-plan.md §1.2). `MDLV` before version 15 has
 /// one format for the whole file; later versions one per mesh.
-public struct MDLVertexFormat: Hashable, CustomStringConvertible {
+public struct MDLVertexFormat: Hashable, CustomStringConvertible, Sendable {
     /// An attribute and its byte offset in the vertex.
-    public struct Element: Hashable {
+    public struct Element: Hashable, Sendable {
         public let attribute: MDLVertexAttribute
         public let offset: Int
 

@@ -14,10 +14,9 @@ final class ModelEditorTests: XCTestCase {
         URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
     }
 
-    var directory: URL!
+    let directory = FileManager.default.temporaryDirectory.appending(path: "ModelEditorTests-\(UUID().uuidString)")
 
     override func setUpWithError() throws {
-        directory = FileManager.default.temporaryDirectory.appending(path: "ModelEditorTests-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     }
 

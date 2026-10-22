@@ -1,4 +1,4 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.0
 // Theming macOS with the wallpaper's scheme colour (docs/theming.md), kept out of the app target:
 // the colour (WE's "r g b" scheme colour, OKLab, the accent palette, a snapshot's main colour), the
 // menu bar strip drawn into the desktop picture, and the system preferences it writes. Every write
@@ -15,5 +15,6 @@ let package = Package(
     targets: [
         .target(name: "OWETheming"),
         .testTarget(name: "OWEThemingTests", dependencies: ["OWETheming"]),
-    ]
+    ],
+    swiftLanguageModes: [.v6]
 )
