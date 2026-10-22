@@ -34,7 +34,7 @@ final class SceneControlRequests: ControlRequestGroup {
 
     static func make(app: AppDelegate, model: AppControlModel) -> SceneControlRequests {
         let service = HeadlessSceneEditService(dependencies: .init(
-            resources: { [unowned app] wallpaper in
+            resources: { wallpaper in
                 guard let found = model.find(wallpaper) else { throw AppControlModel.missing(wallpaper) }
                 return try WallpaperSceneEditResources(wallpaper: found, depthMapGenerator: DepthMapPlugin.generator)
             },
