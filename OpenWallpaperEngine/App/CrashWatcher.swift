@@ -22,9 +22,9 @@ import Darwin
 /// showing stay unloaded, so a crashing wallpaper is never replayed by the relaunch.
 @MainActor
 final class CrashWatcher {
-    static let argument = "--crash-watcher"
-    static let quitMessage = "quit"
-    static let stopMessage = "stop"
+    nonisolated static let argument = "--crash-watcher"
+    nonisolated static let quitMessage = "quit"
+    nonisolated static let stopMessage = "stop"
 
     private var process: Process?
     private var pipe: Pipe?

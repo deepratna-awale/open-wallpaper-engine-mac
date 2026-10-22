@@ -90,6 +90,7 @@ struct WallpaperView: View {
     }
 }
 
+@MainActor
 private final class RemoteImageLoader: ObservableObject {
     @Published var image: NSImage?
     private var task: URLSessionDownloadTask?
@@ -110,7 +111,7 @@ private final class RemoteImageLoader: ObservableObject {
                 try FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
                 try FileManager.default.copyItem(at: temporaryURL, to: cacheURL)
                 guard let image = NSImage(contentsOf: cacheURL) else { return }
-                DispatchQueue.main.async { self?.image = image }
+                DispatchQueue.main.async { [weak self] in self?.image = image }
             } catch {
                 OWELog.error(.library, "Remote image cache failed: \(error.localizedDescription)")
             }
