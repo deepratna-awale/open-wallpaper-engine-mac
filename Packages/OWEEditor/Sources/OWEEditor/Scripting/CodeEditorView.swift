@@ -208,9 +208,9 @@ final class CodeEditorController {
 
 /// Fonts and colours of the code editor, following the system's appearance.
 enum CodeEditorStyle {
-    static let font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+    @MainActor static let font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
 
-    static var baseAttributes: [NSAttributedString.Key: Any] {
+    @MainActor static var baseAttributes: [NSAttributedString.Key: Any] {
         [.font: font, .foregroundColor: NSColor.textColor]
     }
 

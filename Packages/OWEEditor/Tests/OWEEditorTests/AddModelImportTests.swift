@@ -9,10 +9,9 @@ import OWEModelImport
 /// dropped one lands at the drop point.
 @MainActor
 final class AddModelImportTests: XCTestCase {
-    var directory: URL!
+    let directory = FileManager.default.temporaryDirectory.appending(path: "AddModelImportTests-\(UUID().uuidString)")
 
     override func setUpWithError() throws {
-        directory = FileManager.default.temporaryDirectory.appending(path: "AddModelImportTests-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     }
 

@@ -6,11 +6,10 @@ import XCTest
 /// batch, and a failed one falls back to the symbol.
 @MainActor
 final class EditorPreviewProviderTests: XCTestCase {
-    private var scratch: URL!
+    private let scratch = FileManager.default.temporaryDirectory.appending(path: "EditorPreviewProviderTests-\(UUID().uuidString)",
+                                                                           directoryHint: .isDirectory)
 
     override func setUpWithError() throws {
-        scratch = FileManager.default.temporaryDirectory.appending(path: "EditorPreviewProviderTests-\(UUID().uuidString)",
-                                                                   directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
     }
 
