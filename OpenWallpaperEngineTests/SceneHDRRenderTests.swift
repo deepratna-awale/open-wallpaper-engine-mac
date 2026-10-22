@@ -157,7 +157,7 @@ final class SceneHDRRenderTests: XCTestCase {
         view.framebufferOnly = false
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: Self.size.x, height: Self.size.y)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "hdr"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "hdr") })
         view.isPaused = true
         renderer.renderSettings.postProcessing = postProcessing
         renderer.setPlacement(.stretch)

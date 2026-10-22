@@ -138,16 +138,16 @@ final class StaleBundleRefreshTests: XCTestCase {
 
     // MARK: - Queue
 
-    private final class FakeDownloader: StaleBundleDownloading {
+    @MainActor private final class FakeDownloader: StaleBundleDownloading {
         var signedIn = true
         var failing: Set<String> = []
         var fetched: [String] = []
-        var pending: [(Bool) -> Void] = []
+        var pending: [@MainActor (Bool) -> Void] = []
 
-        func restoreSession(completion: @escaping (Bool) -> Void) { completion(signedIn) }
+        func restoreSession(completion: @escaping @MainActor @Sendable (Bool) -> Void) { completion(signedIn) }
 
         func fetchArchivedPackage(workshopId: String, packageName: String, into wallpaperDirectory: URL,
-                                  completion: @escaping (Bool) -> Void) {
+                                  completion: @escaping @MainActor @Sendable (Bool) -> Void) {
             fetched.append(workshopId)
             let ok = !failing.contains(workshopId)
             pending.append { _ in completion(ok) }

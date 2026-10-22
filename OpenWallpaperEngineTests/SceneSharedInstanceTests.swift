@@ -50,7 +50,7 @@ final class SceneSharedInstanceTests: XCTestCase {
         let renderer = try XCTUnwrap(SceneMetalRenderer(pixelFormat: .bgra8Unorm))
         let small = view(64, 64, device: device), wide = view(128, 64, device: device)
         for display in [small, wide] {
-            renderer.configure(display)
+            MainActor.assumeIsolated { renderer.configure(display) }
             display.isPaused = true
             display.framebufferOnly = false
         }

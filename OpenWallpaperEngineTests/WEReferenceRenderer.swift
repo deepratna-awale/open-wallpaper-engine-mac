@@ -54,7 +54,7 @@ struct WEReferenceRenderer {
         view.drawableSize = points
         let services = SceneScriptServices(prelude: SceneScriptPrelude.load(), storage: SceneScriptStorage(directory: storage),
                                            media: SceneScriptReplayMediaSource(), spectrum: { .silent })
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "we-reference"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: services, screenID: "we-reference") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.setPlacement(.fill)

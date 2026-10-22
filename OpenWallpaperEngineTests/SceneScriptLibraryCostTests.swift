@@ -62,7 +62,7 @@ final class SceneScriptLibraryCostTests: XCTestCase {
             view.framebufferOnly = false
             view.autoResizeDrawable = false
             view.drawableSize = CGSize(width: 480, height: 270)
-            let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "cost"))
+            let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: services, screenID: "cost") })
             view.isPaused = true
             var now: CFTimeInterval = 1000
             renderer.wallTime = { now }

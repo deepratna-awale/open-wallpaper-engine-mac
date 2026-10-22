@@ -106,7 +106,7 @@ final class SteamCmdSetupTests: XCTestCase {
     }
 
     /// What activating the app does: a steamcmd installed meanwhile is found, one removed is dropped.
-    func testRedetectPicksUpANewInstall() throws {
+    @MainActor func testRedetectPicksUpANewInstall() throws {
         let locator: SteamCmdLocator = locator()
         let service = SteamCmdService(runner: FakeLoginRunner(output: "", exitCode: 0), locator: { locator },
                                       asksLoginShell: false, restoresSession: false)
@@ -311,7 +311,7 @@ final class SteamCmdSetupTests: XCTestCase {
         XCTAssertEqual(String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self), "a b'c|+quit\n")
     }
 
-    func testSignedInInTerminalReusesTheCachedLogin() throws {
+    @MainActor func testSignedInInTerminalReusesTheCachedLogin() throws {
         let steamcmd = try makeFile("opt/homebrew/bin/steamcmd")
         let locator: SteamCmdLocator = locator()
         let runner = FakeLoginRunner(output: "Logging in user 'gaben' to Steam Public...OK\nLogged in OK\n", exitCode: 0)
@@ -326,7 +326,7 @@ final class SteamCmdSetupTests: XCTestCase {
         XCTAssertEqual(runner.scripts.last?.lines.last, #"login "gaben""#, "only the account name, no password")
     }
 
-    func testSignedInInTerminalWithoutASessionShowsTheError() throws {
+    @MainActor func testSignedInInTerminalWithoutASessionShowsTheError() throws {
         try makeFile("opt/homebrew/bin/steamcmd")
         let locator: SteamCmdLocator = locator()
         let runner = FakeLoginRunner(output: "Logging in user 'gaben' to Steam Public...FAILED (No cached credentials)\n", exitCode: 5)
