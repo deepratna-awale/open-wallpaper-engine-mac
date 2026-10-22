@@ -31,7 +31,8 @@ import AVFoundation
 ///
 /// A `spatialization` layer's mono files play from its object (`SceneSoundSpatialization`),
 /// placed when they start and on every update, like WE's.
-final class SceneSoundLayers {
+// Owner's thread only (the renderer's render thread); the fade timer runs on that thread's run loop.
+final class SceneSoundLayers: @unchecked Sendable {
     private struct Layer {
         var content: SceneSoundContent
         var voices: SceneSoundVoices

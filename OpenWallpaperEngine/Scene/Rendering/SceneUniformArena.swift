@@ -9,14 +9,14 @@ import Metal
 ///
 /// Thread-safe: `lock` owns every chunk's state and the free list, since completion handlers run
 /// on Metal's threads. Allocation happens on the render thread.
-final class SceneUniformArena {
+final class SceneUniformArena: @unchecked Sendable { // `lock` guards the chunks and the free list
     /// Constant-buffer offsets must be multiples of 256 on some Macs (Intel and AMD GPUs).
     static let alignment = 256
     /// `setVertexBytes`' limit. A test may lower `inlineLimit` to send every block through the arena.
     static let maximumInlineLength = 4096
     var inlineLimit = SceneUniformArena.maximumInlineLength
 
-    private final class Chunk {
+    private final class Chunk: @unchecked Sendable { // the arena's `lock` guards the mutable fields
         let buffer: MTLBuffer
         var offset = 0
         /// Command buffers holding a slice, not yet completed.

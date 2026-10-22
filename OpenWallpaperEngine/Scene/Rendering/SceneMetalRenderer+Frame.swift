@@ -46,7 +46,8 @@ extension SceneMetalRenderer {
               let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else { return }
         let size = SIMD2<Float>(Float(drawable.texture.width), Float(drawable.texture.height))
         let snapshot = SceneViewSnapshots.snapshot(of: view)
-        let pointWidth = snapshot.map { CGFloat($0.pointSize.x) } ?? view.bounds.width
+        // A view without a snapshot is drawn on the main thread (`SceneViewSnapshots`).
+        let pointWidth = snapshot.map { CGFloat($0.pointSize.x) } ?? MainActor.assumeIsolated { view.bounds.width }
         let pixelsPerPoint = pointWidth > 0 ? size.x / Float(pointWidth) : 1
         encodePlaced(frame, onto: encoder, size: size, pixelsPerPoint: pixelsPerPoint,
                      pipeline: extended ? layerPipelines.pipelines(for: frame.pixelFormat).copy : copyPipeline,

@@ -11,7 +11,8 @@ import AVFoundation
 /// input to AVAudioMixerNode comes out at 0.707 or 1 by the mixer's rate). Main thread; the
 /// players' completion handlers hop back to it (a player must not be scheduled from inside its own
 /// callback).
-final class SceneSoundVoices: SceneSoundOutput {
+// Owner's thread only (above); the players' completion handlers hop back through the main queue.
+final class SceneSoundVoices: SceneSoundOutput, @unchecked Sendable {
     private final class Voice {
         let node = AVAudioPlayerNode()
         var file: AVAudioFile?
@@ -160,7 +161,7 @@ final class SceneSoundVoices: SceneSoundOutput {
                           generation: Int) {
         node.scheduleSegment(file, startingFrame: 0, frameCount: frames, at: nil,
                              completionCallbackType: .dataPlayedBack) { [weak self, weak node] _ in
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self, weak node] in
                 guard let self, let node, self.generations[index] == generation else { return }
                 self.schedule(file, frames: frames, on: node, index: index, generation: generation)
             }

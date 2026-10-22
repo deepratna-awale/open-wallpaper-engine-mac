@@ -58,16 +58,24 @@ extension SceneViewport {
             cursor = snapshot.cursor(at: NSEvent.mouseLocation)
             return
         }
-        pointSize = SIMD2(Float(view.bounds.width), Float(view.bounds.height))
-        frameRateLimit = view.preferredFramesPerSecond
-        cursor = nil
-        let mouse = NSEvent.mouseLocation
-        guard let window = view.window, let screen = window.screen, screen.frame.contains(mouse) else { return }
-        let point = view.convert(window.convertPoint(fromScreen: mouse), from: nil)
-        guard view.bounds.contains(point) else { return }
-        // A flipped clone shows the view mirrored (`NSView.isMirroredOnScreen`).
-        let x = view.isMirroredOnScreen ? view.bounds.width - point.x : point.x
-        cursor = SIMD2(Float(x), Float(point.y))
+        // A view without a snapshot is drawn on the main thread (`SceneViewSnapshots`: a render
+        // loop's views have one from before their link starts until it is invalidated).
+        let read = MainActor.assumeIsolated { () -> (pointSize: SIMD2<Float>, frameRateLimit: Int, cursor: SIMD2<Float>?) in
+            let pointSize = SIMD2(Float(view.bounds.width), Float(view.bounds.height))
+            let frameRateLimit = view.preferredFramesPerSecond
+            let mouse = NSEvent.mouseLocation
+            guard let window = view.window, let screen = window.screen, screen.frame.contains(mouse) else {
+                return (pointSize, frameRateLimit, nil)
+            }
+            let point = view.convert(window.convertPoint(fromScreen: mouse), from: nil)
+            guard view.bounds.contains(point) else { return (pointSize, frameRateLimit, nil) }
+            // A flipped clone shows the view mirrored (`NSView.isMirroredOnScreen`).
+            let x = view.isMirroredOnScreen ? view.bounds.width - point.x : point.x
+            return (pointSize, frameRateLimit, SIMD2(Float(x), Float(point.y)))
+        }
+        pointSize = read.pointSize
+        frameRateLimit = read.frameRateLimit
+        cursor = read.cursor
     }
 }
 

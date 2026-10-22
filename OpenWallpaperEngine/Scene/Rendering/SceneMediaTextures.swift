@@ -9,7 +9,8 @@ import MetalKit
 ///
 /// A renderer makes one only while its content binds a media texture, so a wallpaper without one
 /// never starts the media session.
-final class SceneMediaTextures {
+// `lock` guards the artwork and textures; `makeTexture` runs only on `queue`.
+final class SceneMediaTextures: @unchecked Sendable {
     private typealias Artwork = (key: Int, png: Data)
     /// An artwork's texture; nil while it is being made or when it can't be.
     private typealias Made = (key: Int, texture: MTLTexture?)

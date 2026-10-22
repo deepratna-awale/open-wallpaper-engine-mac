@@ -1,5 +1,6 @@
 import Foundation
 import Darwin
+import os
 
 /// The shader compile helper: a copy of the app's executable run with `--shader-compile-helper`
 /// (`HelperRunCommand`), which translates shaders for the app that started it
@@ -19,11 +20,8 @@ enum ShaderCompileHelperServer {
     /// that is about to go).
     static let idleTimeout: TimeInterval = 300
 
-    /// Watch the parent and the idle clock; kept alive for the helper's lifetime.
-    private static var watchers: [DispatchSourceProtocol] = []
-    /// Uptime of the last request's end (0 while one runs); `activityLock` owns it.
-    private static var lastActivity = DispatchTime.now().uptimeNanoseconds
-    private static let activityLock = NSLock()
+    /// Uptime of the last request's end (0 while one runs).
+    private static let lastActivity = OSAllocatedUnfairLock(initialState: DispatchTime.now().uptimeNanoseconds)
 
     /// Serves requests until stdin closes; returns the exit status.
     static func run() -> Int32 {
@@ -32,22 +30,24 @@ enum ShaderCompileHelperServer {
             OWELog.error(.shader, "Shader compile helper: can't set up its output (errno \(errno))")
             return 1
         }
-        watchParentAndIdle()
+        // Watch the parent and the idle clock; kept alive for the helper's lifetime.
+        let watchers = watchParentAndIdle()
         // Compiles assert they run off the main thread (`ThreadGuards`), and glslang needs a big stack.
-        var status: Int32 = 0
+        let status = OSAllocatedUnfairLock<Int32>(initialState: 0)
         let done = DispatchSemaphore(value: 0)
         let thread = Thread {
-            status = serve(input: FileHandle.standardInput,
-                           output: FileHandle(fileDescriptor: responses, closeOnDealloc: true),
-                           compiler: ShaderCompilerFactory.makeDefault())
+            let served = serve(input: FileHandle.standardInput,
+                               output: FileHandle(fileDescriptor: responses, closeOnDealloc: true),
+                               compiler: ShaderCompilerFactory.makeDefault())
+            status.withLock { $0 = served }
             done.signal()
         }
         thread.name = "OWE shader compile helper"
         thread.stackSize = ShaderCompileThread.stackSize
         thread.qualityOfService = .userInitiated
         thread.start()
-        done.wait()
-        return status
+        withExtendedLifetime(watchers) { done.wait() }
+        return status.withLock { $0 }
     }
 
     static func serve(input: FileHandle, output: FileHandle, compiler: ShaderCompiler) -> Int32 {
@@ -56,8 +56,8 @@ enum ShaderCompileHelperServer {
         while true {
             do {
                 guard let payload = try nextFrame(input, buffer: &buffer) else { return 0 }
-                activityLock.withLock { lastActivity = 0 }
-                defer { activityLock.withLock { lastActivity = DispatchTime.now().uptimeNanoseconds } }
+                lastActivity.withLock { $0 = 0 }
+                defer { lastActivity.withLock { $0 = DispatchTime.now().uptimeNanoseconds } }
                 let request = try JSONDecoder().decode(ShaderCompileHelperMessage.Request.self, from: payload)
                 var response = handle(request, compiler: compiler)
                 let stuck = (compiler as? InProcessShaderCompiler)?.isStuck ?? false
@@ -76,7 +76,7 @@ enum ShaderCompileHelperServer {
 
     /// Exits when the app that started the helper goes away (as the other helper runs do), and
     /// after `idleTimeout` without a request.
-    private static func watchParentAndIdle() {
+    private static func watchParentAndIdle() -> [DispatchSourceProtocol] {
         let parent = getppid()
         guard parent > 1 else { exit(0) } // Already orphaned.
         let parentWatch = DispatchSource.makeProcessSource(identifier: parent, eventMask: .exit, queue: .global(qos: .utility))
@@ -85,13 +85,13 @@ enum ShaderCompileHelperServer {
         let idle = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
         idle.schedule(deadline: .now() + 30, repeating: 30)
         idle.setEventHandler {
-            let last = activityLock.withLock { lastActivity }
+            let last = lastActivity.withLock { $0 }
             guard last != 0, Double(DispatchTime.now().uptimeNanoseconds - last) / 1e9 > idleTimeout else { return }
             OWELog.info(.shader, "Shader compile helper idle for \(Int(idleTimeout)) s; exiting")
             exit(0)
         }
         idle.resume()
-        watchers = [parentWatch, idle]
+        return [parentWatch, idle]
     }
 
     /// Runs one request on `compiler`.

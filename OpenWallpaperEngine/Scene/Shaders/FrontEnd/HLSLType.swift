@@ -1,8 +1,8 @@
 import Foundation
 
 /// A GLSL type as the HLSL front end tracks it.
-indirect enum HLSLType: Equatable {
-    enum Scalar: String {
+indirect enum HLSLType: Equatable, Sendable {
+    enum Scalar: String, Sendable {
         case float, int, uint, bool
 
         /// HLSL's promotion order: an operation on two kinds takes the later one.

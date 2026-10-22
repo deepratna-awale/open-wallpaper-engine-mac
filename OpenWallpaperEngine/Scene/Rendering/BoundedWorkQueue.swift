@@ -5,11 +5,11 @@ import Foundation
 /// would start hundreds of Metal compiles at once.
 ///
 /// Thread-safe: `lock` owns `waiting` and `running`.
-final class BoundedWorkQueue {
+final class BoundedWorkQueue: @unchecked Sendable { // `lock` guards the mutable state
     let limit: Int
     private let queue: DispatchQueue
     private let lock = NSLock()
-    private var waiting: [() -> Void] = []
+    private var waiting: [@Sendable () -> Void] = []
     private var waitingStart = 0
     private var running = 0
 
@@ -27,7 +27,7 @@ final class BoundedWorkQueue {
         return ProcessInfo.processInfo.activeProcessorCount
     }
 
-    func async(_ work: @escaping () -> Void) {
+    func async(_ work: @escaping @Sendable () -> Void) {
         lock.withLock { waiting.append(work) }
         drain()
     }
@@ -43,7 +43,7 @@ final class BoundedWorkQueue {
     }
 
     /// The next item, counted as running, while under the limit.
-    private func claim() -> (() -> Void)? {
+    private func claim() -> (@Sendable () -> Void)? {
         lock.withLock {
             guard running < limit, waitingStart < waiting.count else { return nil }
             let work = waiting[waitingStart]
