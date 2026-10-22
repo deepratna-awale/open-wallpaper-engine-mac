@@ -14,7 +14,8 @@ final class SceneEditorDepthMapHost: ObservableObject {
     private let wallpaper: WEWallpaper
     private var identity: WallpaperSettingsIdentity?
     private var sceneData: Data?
-    private var observer: NSObjectProtocol?
+    /// Set only in init; read again only in deinit.
+    nonisolated(unsafe) private var observer: NSObjectProtocol?
 
     /// `generator`: the process's (`DepthMapPlugin.generator`) unless given.
     init(wallpaper: WEWallpaper, generator: DepthMapGenerator? = nil) {

@@ -283,7 +283,7 @@ final class LivePhotoExportModel: NSObject, ObservableObject, NSSharingServiceDe
 
     /// Runs `work` with the wallpaper and a snapshot of the isolated store (the helper renders with
     /// exactly these values, the mode's user properties and layer adjustments).
-    private func run(_ work: @escaping (WEWallpaper, [String: String], @escaping @MainActor (Double) -> Void) async throws -> Void) {
+    private func run(_ work: @escaping @MainActor (WEWallpaper, [String: String], @escaping @MainActor (Double) -> Void) async throws -> Void) {
         guard !isRendering else { return }
         isRendering = true
         progress = 0
