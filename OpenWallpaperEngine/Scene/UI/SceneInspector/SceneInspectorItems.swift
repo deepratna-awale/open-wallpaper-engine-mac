@@ -80,7 +80,7 @@ struct SceneInspectorEffectControl: Identifiable {
     var componentCount = 1
 }
 
-struct SceneInspectorTexture: Identifiable {
+struct SceneInspectorTexture: Identifiable, Sendable {
     let id: String
     let path: String
     let image: NSImage
