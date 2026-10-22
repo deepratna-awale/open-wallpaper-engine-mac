@@ -1,0 +1,10 @@
+== p548_nest_f0 capture K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame660.rdc draws 9
+  eid 25 ID3D11DeviceContext::DrawIndexed() idx=636 inst=0
+  eid 46 ID3D11DeviceContext::DrawIndexed() idx=636 inst=0
+  eid 66 ID3D11DeviceContext::DrawIndexed() idx=396 inst=0
+  eid 88 ID3D11DeviceContext::DrawIndexed() idx=1032 inst=0
+  eid 108 ID3D11DeviceContext::DrawIndexed() idx=150 inst=0
+  eid 125 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 138 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 151 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 165 ID3D11DeviceContext::Draw() idx=3 inst=0

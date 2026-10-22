@@ -25,5 +25,22 @@
 - Passes 2 and 3 use their own shader pairs (270/271 and 266/267), distinct from the plain pass (264/265). Constants are in inspect_report.txt.
 - With hidemaskgeometry, pass 1 is presumably skipped while pass 2 still writes; not captured separately.
 
-## Not yet done
-- The nested mask (B clipped by A, C clipped by B). It needs a 3-limb rig; that follows in a later commit.
+## Nested mask (make_548_nest.py, project p548_nest; nested/)
+- **Image abc.png** (genericimage4), three separate islands: **A** red square (20-180), **B** green circle (centre 260,128, r 50), **C** blue square (370-420).
+- **Bones:** A root > B > C. Clip 65 keys at frame 0 only: B origin x -90 (half onto A), C x -100 relative to B (onto B's right side). Played with **rate 0**.
+- **Masks:** **maskA** (id 34) painted over A, assigned to B. **maskB** (id 50) painted over B's area, assigned to C. A has none.
+  - Json `vertexislands[].clippingmaskid = [50, 0, 34]` (island order is C, A, B).
+  - **Limb numbers do not follow image order:** Limb 20 = C, Limb 21 = A, Limb 22 = B. My first assignment hit the wrong limbs; it was fixed, and the files here are the corrected ones.
+- **Result** (sheet_nested.png; stills mo2_548_nest_f0 / nest_rest):
+  - **A** is drawn in full.
+  - **B** is visible only where it overlaps A (the left half of the circle).
+  - **C** is visible only where it lies inside maskB at B's current screen position. That **includes the part of B's area that B itself lost to A's mask** (C shows to the right of A's edge, where B is cut away).
+  - So nesting is **not cumulative**: each mask is written from its owner's geometry, and is not reduced by the owner's own clipping.
+  - At rest (no clip): only A is visible; B and C are off their masks.
+- **Draw list** (nested/rd_draws_report.txt, nested/inspect/inspect_report.txt):
+  1. eid 25 DrawIndexed(636): A, plain, to the swapchain.
+  2. eid 46 DrawIndexed(636): write maskA into the 960x540 R8 target (SRV1 = maskA texture), using A's geometry.
+  3. eid 66 DrawIndexed(396): B to the swapchain, reading the R8 target.
+  4. eid 88 DrawIndexed(1032 = 636 + 396): write maskB into the **same R8 target** (SRV1 = maskB texture). It draws 1032 indices, i.e. both A's and B's ranges, not only B's.
+  5. eid 108 DrawIndexed(150): C to the swapchain, reading the R8 target.
+  - **One R8 target is reused:** each mask is written just before the limbs that read it.

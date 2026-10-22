@@ -1,0 +1,108 @@
+
+=== event 25
+  RT Swapchain Image 65 1920 1080 R8G8B8A8_UNORM
+  VTX POSITION R32G32B32_FLOAT buf 0 off 0
+  VTX NORMAL R32G32B32_FLOAT buf 0 off 12
+  VTX TANGENT R32G32B32A32_FLOAT buf 0 off 24
+  VTX BLENDINDICES R32G32B32A32_UINT buf 0 off 40
+  VTX BLENDWEIGHT R32G32B32A32_FLOAT buf 0 off 56
+  VTX TEXCOORD R32G32_FLOAT buf 0 off 72
+  ShaderStage.Vertex shader Vertex Shader 264
+    cb0 g_ModelMatrix = [5.458294322233718e+35, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    cb0 g_ModelViewProjectionMatrix = [0.001, 0.0, 0.0, 0.0, 0.0, 0.0019, 0.0, 0.0, 0.0, 0.0, 0.0003, 0.0, 0.0, 0.0, 0.5, 1.0]
+    cb0 g_Texture0Rotation = [0.0, 0.0, nan, nan]
+    cb0 g_Texture0Translation = [0.0, 0.0]
+    cb0 g_EyePosition = [0.0, 0.0, 0.0]
+    cb1 g_Bones.g_Bones[0] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+    cb1 g_Bones.g_Bones[1] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -90.0, 0.0, 0.0]
+    cb1 g_Bones.g_Bones[2] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -190.0, 0.0, 0.0]
+  ShaderStage.Pixel shader Pixel Shader 265
+    cb0 g_ViewProjectionMatrix = [10749003776.0, 4.861733869206459e+30, 2.8030606390893478e+20, 0.0, 3.90065376860846e+21, 0.0, 0.0, 0.0, 5.084274868362431e+31, 2.788611054217771e+29, 0.0, 0.0, 2.6185924946648105e+20, 7.156120728699916e+22, 0.0, 0.0]
+    cb0 g_Color4 = [1.0, 1.0, 1.0, 1.0]
+    SRV 0 2D Texture 260 512 256 R8G8B8A8_UNORM
+
+=== event 46
+  RT 2D Render Target 294 960 540 R8_UNORM
+  VTX POSITION R32G32B32_FLOAT buf 0 off 0
+  VTX NORMAL R32G32B32_FLOAT buf 0 off 12
+  VTX TANGENT R32G32B32A32_FLOAT buf 0 off 24
+  VTX BLENDINDICES R32G32B32A32_UINT buf 0 off 40
+  VTX BLENDWEIGHT R32G32B32A32_FLOAT buf 0 off 56
+  VTX TEXCOORD R32G32_FLOAT buf 0 off 72
+  ShaderStage.Vertex shader Vertex Shader 270
+    cb0 g_ModelViewProjectionMatrix = [0.001, 0.0, 0.0, 0.0, 0.0, 0.0019, 0.0, 0.0, 0.0, 0.0, 0.0003, 0.0, 0.0, 0.0, 0.5, 1.0]
+    cb0 g_Texture0Rotation = [0.0, 0.0, 0.0, 0.0]
+    cb0 g_Texture0Translation = [0.0, 0.0]
+    cb1 g_Bones.g_Bones[0] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+    cb1 g_Bones.g_Bones[1] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -90.0, 0.0, 0.0]
+    cb1 g_Bones.g_Bones[2] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -190.0, 0.0, 0.0]
+  ShaderStage.Pixel shader Pixel Shader 271
+    cb0 g_RenderVar0 = [0.0, 2.0, 1.0, 0.0]
+    SRV 0 2D Texture 260 512 256 R8G8B8A8_UNORM
+    SRV 1 2D Texture 297 512 256 R8_UNORM
+
+=== event 66
+  RT Swapchain Image 65 1920 1080 R8G8B8A8_UNORM
+  VTX POSITION R32G32B32_FLOAT buf 0 off 0
+  VTX NORMAL R32G32B32_FLOAT buf 0 off 12
+  VTX TANGENT R32G32B32A32_FLOAT buf 0 off 24
+  VTX BLENDINDICES R32G32B32A32_UINT buf 0 off 40
+  VTX BLENDWEIGHT R32G32B32A32_FLOAT buf 0 off 56
+  VTX TEXCOORD R32G32_FLOAT buf 0 off 72
+  ShaderStage.Vertex shader Vertex Shader 266
+    cb0 g_ModelMatrix = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    cb0 g_ModelViewProjectionMatrix = [0.001, 0.0, 0.0, 0.0, 0.0, 0.0019, 0.0, 0.0, 0.0, 0.0, 0.0003, 0.0, 0.0, 0.0, 0.5, 1.0]
+    cb0 g_Texture0Rotation = [0.0, 0.0, 0.0, 0.0]
+    cb0 g_Texture0Translation = [0.0, 0.0]
+    cb0 g_EyePosition = [0.0, 0.0, 0.0]
+    cb1 g_Bones.g_Bones[0] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+    cb1 g_Bones.g_Bones[1] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -90.0, 0.0, 0.0]
+    cb1 g_Bones.g_Bones[2] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -190.0, 0.0, 0.0]
+  ShaderStage.Pixel shader Pixel Shader 267
+    cb0 g_ViewProjectionMatrix = [10749003776.0, 4.861733869206459e+30, 2.8030606390893478e+20, 0.0, 3.90065376860846e+21, 0.0, 0.0, 0.0, 5.084274868362431e+31, 2.788611054217771e+29, 0.0, 0.0, 2.6185924946648105e+20, 7.156120728699916e+22, 0.0, 0.0]
+    cb0 g_Color4 = [1.0, 1.0, 1.0, 1.0]
+    SRV 0 2D Texture 260 512 256 R8G8B8A8_UNORM
+    SRV 1 2D Render Target 294 960 540 R8_UNORM
+
+=== event 88
+  RT 2D Render Target 294 960 540 R8_UNORM
+  VTX POSITION R32G32B32_FLOAT buf 0 off 0
+  VTX NORMAL R32G32B32_FLOAT buf 0 off 12
+  VTX TANGENT R32G32B32A32_FLOAT buf 0 off 24
+  VTX BLENDINDICES R32G32B32A32_UINT buf 0 off 40
+  VTX BLENDWEIGHT R32G32B32A32_FLOAT buf 0 off 56
+  VTX TEXCOORD R32G32_FLOAT buf 0 off 72
+  ShaderStage.Vertex shader Vertex Shader 270
+    cb0 g_ModelViewProjectionMatrix = [0.001, 0.0, 0.0, 0.0, 0.0, 0.0019, 0.0, 0.0, 0.0, 0.0, 0.0003, 0.0, 0.0, 0.0, 0.5, 1.0]
+    cb0 g_Texture0Rotation = [0.0, 0.0, 0.0, 0.0]
+    cb0 g_Texture0Translation = [0.0, 0.0]
+    cb1 g_Bones.g_Bones[0] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+    cb1 g_Bones.g_Bones[1] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -90.0, 0.0, 0.0]
+    cb1 g_Bones.g_Bones[2] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -190.0, 0.0, 0.0]
+  ShaderStage.Pixel shader Pixel Shader 271
+    cb0 g_RenderVar0 = [0.0, 2.0, 1.0, 0.0]
+    SRV 0 2D Texture 260 512 256 R8G8B8A8_UNORM
+    SRV 1 2D Texture 307 512 256 R8_UNORM
+
+=== event 108
+  RT Swapchain Image 65 1920 1080 R8G8B8A8_UNORM
+  VTX POSITION R32G32B32_FLOAT buf 0 off 0
+  VTX NORMAL R32G32B32_FLOAT buf 0 off 12
+  VTX TANGENT R32G32B32A32_FLOAT buf 0 off 24
+  VTX BLENDINDICES R32G32B32A32_UINT buf 0 off 40
+  VTX BLENDWEIGHT R32G32B32A32_FLOAT buf 0 off 56
+  VTX TEXCOORD R32G32_FLOAT buf 0 off 72
+  ShaderStage.Vertex shader Vertex Shader 266
+    cb0 g_ModelMatrix = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    cb0 g_ModelViewProjectionMatrix = [0.001, 0.0, 0.0, 0.0, 0.0, 0.0019, 0.0, 0.0, 0.0, 0.0, 0.0003, 0.0, 0.0, 0.0, 0.5, 1.0]
+    cb0 g_Texture0Rotation = [0.0, 0.0, 0.0, 0.0]
+    cb0 g_Texture0Translation = [0.0, 0.0]
+    cb0 g_EyePosition = [0.0, 0.0, 0.0]
+    cb1 g_Bones.g_Bones[0] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+    cb1 g_Bones.g_Bones[1] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -90.0, 0.0, 0.0]
+    cb1 g_Bones.g_Bones[2] = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, -190.0, 0.0, 0.0]
+  ShaderStage.Pixel shader Pixel Shader 267
+    cb0 g_ViewProjectionMatrix = [10749003776.0, 4.861733869206459e+30, 2.8030606390893478e+20, 0.0, 3.90065376860846e+21, 0.0, 0.0, 0.0, 5.084274868362431e+31, 2.788611054217771e+29, 0.0, 0.0, 2.6185924946648105e+20, 7.156120728699916e+22, 0.0, 0.0]
+    cb0 g_Color4 = [1.0, 1.0, 1.0, 1.0]
+    SRV 0 2D Texture 260 512 256 R8G8B8A8_UNORM
+    SRV 1 2D Render Target 294 960 540 R8_UNORM
