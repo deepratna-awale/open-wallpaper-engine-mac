@@ -171,7 +171,7 @@ final class HDRLibrarySweepTests: XCTestCase {
             view.framebufferOnly = false
             view.autoResizeDrawable = false
             view.drawableSize = CGSize(width: size.x, height: size.y)
-            renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "hdr-sweep"))
+            renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: services, screenID: "hdr-sweep") })
             view.isPaused = true
             renderer.renderSettings.postProcessing = postProcessing
             renderer.setPlacement(.stretch)

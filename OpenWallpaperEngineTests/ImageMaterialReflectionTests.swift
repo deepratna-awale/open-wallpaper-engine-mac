@@ -92,7 +92,7 @@ final class ImageMaterialReflectionTests: XCTestCase {
         view.framebufferOnly = false
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: size, height: size)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view) })
         view.isPaused = true
         renderer.setPlacement(.stretch)
         let scene = SIMD2<Float>(Float(size), Float(size))

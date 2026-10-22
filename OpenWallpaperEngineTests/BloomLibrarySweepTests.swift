@@ -224,7 +224,7 @@ final class BloomLibrarySweepTests: XCTestCase {
             view.framebufferOnly = false
             view.autoResizeDrawable = false
             view.drawableSize = CGSize(width: size.x, height: size.y)
-            renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "bloom-sweep"))
+            renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: services, screenID: "bloom-sweep") })
             view.isPaused = true
             renderer.renderSettings.postProcessing = .enabled
             renderer.setPlacement(.stretch)

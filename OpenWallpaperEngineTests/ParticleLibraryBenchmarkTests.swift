@@ -157,7 +157,7 @@ final class ParticleLibraryBenchmarkTests: XCTestCase {
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: 1920, height: 1080)
         view.preferredFramesPerSecond = 60
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view) })
         view.isPaused = true
         renderer.setPlacement(.stretch)
         let bloom = SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7, tint: SIMD3(repeating: 1))

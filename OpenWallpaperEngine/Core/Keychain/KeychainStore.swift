@@ -10,7 +10,7 @@ import Security
 /// An isolated copy (the test host, a copy started with `OWE_ISOLATED_STATE`) keeps its items in
 /// memory instead (`Backend.processDefault`) and never calls the Security framework: a keychain
 /// prompt there blocked whole test runs, and its items would otherwise sit in the login keychain.
-struct KeychainStore: KeychainStoring {
+struct KeychainStore: KeychainStoring, Sendable {
     /// Where the items live.
     enum Backend: Sendable {
         /// The keychain.

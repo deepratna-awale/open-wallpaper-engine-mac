@@ -212,7 +212,7 @@ final class ParticleSpriteSheetTests: XCTestCase {
         view.framebufferOnly = false
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: Self.size, height: Self.size)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "rain-sheet"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "rain-sheet") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.renderSettings.postProcessing = postProcessing

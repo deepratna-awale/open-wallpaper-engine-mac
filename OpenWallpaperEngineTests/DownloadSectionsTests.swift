@@ -55,7 +55,7 @@ final class DownloadSectionsTests: XCTestCase {
         XCTAssertNil(DownloadRateEstimate(fraction: 0.5, fileSize: 100, startedAt: nil, now: now))
     }
 
-    func testClearCompletedKeepsTheOthers() {
+    @MainActor func testClearCompletedKeepsTheOthers() {
         let service = SteamCmdService(account: SteamCmdAccountMemory(load: { nil }, save: { _ in }), restoresSession: false)
         service.downloadProgress = ["ok": .completed, "bad": .failed("no"), "run": .downloading(status: "…")]
         service.downloadFolders = ["ok": URL(fileURLWithPath: "/tmp/ok")]
@@ -64,7 +64,7 @@ final class DownloadSectionsTests: XCTestCase {
         XCTAssertNil(service.downloadFolders["ok"])
     }
 
-    func testRetryNeedsAFailedDownload() {
+    @MainActor func testRetryNeedsAFailedDownload() {
         let service = SteamCmdService(account: SteamCmdAccountMemory(load: { nil }, save: { _ in }), restoresSession: false)
         service.downloadProgress = ["ok": .completed]
         service.retryDownload("ok")
