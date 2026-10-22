@@ -40,9 +40,11 @@ extension SceneViewport {
     /// `view` now: its drawable's size (`drawableSize` when it has none yet), and the cursor
     /// when it is on the view's display. On the main thread, like every draw.
     init(_ view: MTKView, drawableSize: SIMD2<Float>? = nil) {
-        self.drawableSize = drawableSize ?? SIMD2(Float(view.drawableSize.width), Float(view.drawableSize.height))
-        // A view drawn on a render thread is read through its main-thread snapshot.
+        // A view drawn on a render thread is read through its main-thread snapshot, and its
+        // drawable's size through its layer (any thread may read it; MTKView's is the layer's).
         if let snapshot = SceneViewSnapshots.snapshot(of: view) {
+            self.drawableSize = drawableSize
+                ?? snapshot.layer.map { SIMD2(Float($0.drawableSize.width), Float($0.drawableSize.height)) } ?? .zero
             frameRateLimit = snapshot.frameRateLimit
             if let canvas = snapshot.canvas {
                 // A stretched display needs the whole canvas at its own density (WE renders a span
@@ -60,19 +62,22 @@ extension SceneViewport {
         }
         // A view without a snapshot is drawn on the main thread (`SceneViewSnapshots`: a render
         // loop's views have one from before their link starts until it is invalidated).
-        let read = MainActor.assumeIsolated { () -> (pointSize: SIMD2<Float>, frameRateLimit: Int, cursor: SIMD2<Float>?) in
+        let read = MainActor.assumeIsolated {
+            () -> (drawableSize: SIMD2<Float>, pointSize: SIMD2<Float>, frameRateLimit: Int, cursor: SIMD2<Float>?) in
+            let drawable = SIMD2(Float(view.drawableSize.width), Float(view.drawableSize.height))
             let pointSize = SIMD2(Float(view.bounds.width), Float(view.bounds.height))
             let frameRateLimit = view.preferredFramesPerSecond
             let mouse = NSEvent.mouseLocation
             guard let window = view.window, let screen = window.screen, screen.frame.contains(mouse) else {
-                return (pointSize, frameRateLimit, nil)
+                return (drawable, pointSize, frameRateLimit, nil)
             }
             let point = view.convert(window.convertPoint(fromScreen: mouse), from: nil)
-            guard view.bounds.contains(point) else { return (pointSize, frameRateLimit, nil) }
+            guard view.bounds.contains(point) else { return (drawable, pointSize, frameRateLimit, nil) }
             // A flipped clone shows the view mirrored (`NSView.isMirroredOnScreen`).
             let x = view.isMirroredOnScreen ? view.bounds.width - point.x : point.x
-            return (pointSize, frameRateLimit, SIMD2(Float(x), Float(point.y)))
+            return (drawable, pointSize, frameRateLimit, SIMD2(Float(x), Float(point.y)))
         }
+        self.drawableSize = drawableSize ?? read.drawableSize
         pointSize = read.pointSize
         frameRateLimit = read.frameRateLimit
         cursor = read.cursor

@@ -526,6 +526,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate, @unchecked Sendable {
     var sharedFrame: MTLTexture?
     /// The last `present(in:)`'s command buffer (tests and benchmarks).
     var lastPresentCommandBuffer: MTLCommandBuffer?
+    /// The drawable this frame took from the layer of a view a render thread draws (`viewOutput`),
+    /// held until the frame ends as MTKView holds its `currentDrawable` through a `draw()`.
+    var frameDrawable: (view: ObjectIdentifier, drawable: CAMetalDrawable)?
+    /// The pass onto `frameDrawable`, made once and reused, like MTKView's `currentRenderPassDescriptor`.
+    let frameDrawablePass = MTLRenderPassDescriptor()
     /// Counts this renderer's frames while the Wallpaper Editor's stats overlay shows them; nil,
     /// counting nothing, the rest of the time (`SceneFrameStatsRecorder`).
     var frameStats: SceneFrameStatsRecorder?
