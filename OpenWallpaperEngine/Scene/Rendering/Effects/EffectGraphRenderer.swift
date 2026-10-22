@@ -9,7 +9,8 @@ import simd
 /// buffer and becomes the current image (linux-wallpaperengine's per-pass swap); a pass with a
 /// `target` renders into that effect FBO. `previous` is the effect's input. The result is the
 /// processed image, which the scene pass then draws with the layer's transform and blending.
-final class EffectGraphRenderer {
+// `pipelineLock` guards what the compile queue lands; everything else is render-thread only.
+final class EffectGraphRenderer: @unchecked Sendable {
     private let device: MTLDevice
     private let quadPositions: MTLBuffer
     private let quadTexCoords: MTLBuffer
@@ -481,7 +482,7 @@ final class EffectGraphRenderer {
                     fbos[second] = a
                 case .render:
                     guard let variant = pass.variant, let program = state.programs[effectIndex][passIndex],
-                          let format = state.formats[effectIndex][passIndex],
+                          state.formats[effectIndex][passIndex] != nil,
                           let pipeline = state.pipelines[effectIndex][passIndex] else { continue }
                     let standInSizes = StandIn(input: input, inputSize: standIn, targets: state.standInSizes,
                                                label: passTimer == nil ? "" : Self.passLabel(layerID, effect: effect, pass: passIndex))

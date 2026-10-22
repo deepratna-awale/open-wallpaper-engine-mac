@@ -20,7 +20,9 @@ import simd
 ///   (`Recording`): drawing them again would write the same depth.
 ///
 /// Call on the render thread, apart from the pipeline compiles.
-final class SceneShadowPass {
+// `pipelineLock` guards what the compile queue lands and `finishLock` what completion handlers
+// write; everything else is render-thread only.
+final class SceneShadowPass: @unchecked Sendable {
     /// A caster this frame: a visible model object and its world matrix.
     struct Caster {
         let model: SceneModelObject
@@ -535,9 +537,11 @@ final class SceneShadowPass {
         if let pipeline = state.pipeline { return pipeline }
         guard !state.busy else { return nil }
         pipelineLock.withLock { _ = pending.insert(key) }
-        let device = self.device, archive = self.archive, format = mesh.format, name = material.materialPath
+        let device = self.device, archive = self.archive, name = material.materialPath
+        let formatBits = mesh.format.rawValue // MDLVertexFormat is a plain UInt32 but not Sendable
         let customShader = material.customShader
         compileQueue.async { [weak self] in
+            let format = MDLVertexFormat(rawValue: formatBits)
             let result: MTLRenderPipelineState?
             do {
                 result = try EffectGraphRenderer.makePipeline(Self.pipelineDescriptor(variant, format: format, customShader: customShader,
