@@ -146,9 +146,14 @@ final class ChromiumMouseForwarder {
     }
 
     private func handle(_ event: NSEvent) {
-        guard let view, let window = view.window else { return }
+        guard let view else { return }
+        // AppKit calls event monitors' handlers on the main thread.
+        let viewFrame: CGRect? = MainActor.assumeIsolated {
+            guard let window = view.window else { return nil }
+            return window.convertToScreen(view.convert(view.bounds, to: nil))
+        }
+        guard let viewFrame else { return }
         let hitPoint = NSEvent.mouseLocation
-        let viewFrame = window.convertToScreen(view.convert(view.bounds, to: nil))
         // Each NSEvent property is read only for the event types that have it (AppKit raises otherwise).
         var input = ChromiumMouseMapping.Input(type: event.type, screenPoint: locate(hitPoint),
                                                modifierFlags: event.modifierFlags)

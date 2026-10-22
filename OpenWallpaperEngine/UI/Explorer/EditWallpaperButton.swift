@@ -17,11 +17,13 @@ enum EditWallpaperButtonState: Equatable {
 
     /// The selection as the Details panel shows it: the placeholder it falls back to when no
     /// wallpaper is selected or set counts as nothing selected.
+    @MainActor
     init(displayed: WEWallpaper) {
         self.init(selection: Self.selection(displayed: displayed))
     }
 
     /// `displayed`, or nil when it is the placeholder.
+    @MainActor
     static func selection(displayed: WEWallpaper) -> WEWallpaper? {
         displayed.wallpaperDirectory == WallpaperViewModel.defaultWallpaper.wallpaperDirectory ? nil : displayed
     }

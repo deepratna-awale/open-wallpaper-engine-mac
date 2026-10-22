@@ -56,7 +56,7 @@ struct WallpaperPreview: SubviewOfContentView {
         return measuredSize.text
     }
 
-    private static func sizeText(of directory: URL) -> String {
+    nonisolated private static func sizeText(of directory: URL) -> String {
         // An unreadable folder has no size to show; the placeholder says so.
         guard let sizeBytes = try? directory.directoryTotalAllocatedSize(includingSubfolders: true) else {
             return String(localized: "Unknown Size", comment: "Details panel: the wallpaper's size on disk can't be read")
@@ -711,7 +711,7 @@ private struct MissingWorkshopDependenciesBanner: View {
             }
         }
         .onAppear { refresh() }
-        .onChange(of: steamCmd.downloadProgress) { _ in
+        .onChange(of: steamCmd.downloadProgress) { _, _ in
             for workshopId in missingIds where steamCmd.downloadProgress[workshopId] == .completed {
                 WorkshopDependencyResolver.linkInstalledDependencies(for: wallpaper)
             }

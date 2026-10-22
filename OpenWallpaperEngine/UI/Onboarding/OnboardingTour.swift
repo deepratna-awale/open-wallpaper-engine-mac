@@ -68,7 +68,7 @@ extension OnboardingTour {
         let subtitle: LocalizedStringKey
         let sections: [Section]
 
-        static let all: [Page] = [
+        @MainActor static let all: [Page] = [
             Page(title: "Welcome to Open Wallpaper Engine",
                  subtitle: "A live wallpaper engine for macOS",
                  sections: [

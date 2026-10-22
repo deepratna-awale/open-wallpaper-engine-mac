@@ -27,10 +27,10 @@ struct PlaylistHeader: View {
             controls
         }
         .onAppear { name = playlist.name }
-        .onChange(of: playlist.id) { _ in name = playlist.name }
-        .onChange(of: playlist.name) { newName in if !isNameFocused { name = newName } }
-        .onChange(of: isEditingName) { editing in if editing { isNameFocused = true } }
-        .onChange(of: isNameFocused) { focused in
+        .onChange(of: playlist.id) { _, _ in name = playlist.name }
+        .onChange(of: playlist.name) { _, newName in if !isNameFocused { name = newName } }
+        .onChange(of: isEditingName) { _, editing in if editing { isNameFocused = true } }
+        .onChange(of: isNameFocused) { _, focused in
             if !focused { commitName() }
             isEditingName = focused
         }

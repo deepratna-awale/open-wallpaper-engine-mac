@@ -13,15 +13,15 @@ import UniformTypeIdentifiers
 import WebKit
 
 final class WebWallpaperSchemeHandler: NSObject, WKURLSchemeHandler {
-    static let scheme = "owe-wallpaper"
-    static let host = "local"
+    nonisolated static let scheme = "owe-wallpaper"
+    nonisolated static let host = "local"
 
     /// The largest file served; anything bigger is answered with a 404.
-    static let maxFileSize: UInt64 = 2 << 30
+    nonisolated static let maxFileSize: UInt64 = 2 << 30
     /// The largest file read whole to have patches applied; bigger ones are served unpatched.
-    static let maxPatchedFileSize: UInt64 = 64 << 20
+    nonisolated static let maxPatchedFileSize: UInt64 = 64 << 20
     /// Files are sent in pieces of this size, so a large one is never held in memory at once.
-    static let chunkSize = 4 << 20
+    nonisolated static let chunkSize = 4 << 20
 
     /// Read on the main thread only (WebKit calls the handler there); the view model swaps it
     /// when the wallpaper changes.
@@ -30,7 +30,7 @@ final class WebWallpaperSchemeHandler: NSObject, WKURLSchemeHandler {
     /// The files outside the folder the page's `file` and `directory` properties let it read.
     var userFiles: WebUserFiles?
 
-    static func url(forRelativePath path: String) -> URL? {
+    nonisolated static func url(forRelativePath path: String) -> URL? {
         var components = URLComponents()
         components.scheme = scheme
         components.host = host
@@ -40,7 +40,7 @@ final class WebWallpaperSchemeHandler: NSObject, WKURLSchemeHandler {
 
     /// The regular file a request names, confined to the wallpaper folder once symlinks are
     /// resolved on both sides; nil for anything else.
-    static func fileURL(for requestURL: URL, in directory: URL) -> (url: URL, relativePath: String)? {
+    nonisolated static func fileURL(for requestURL: URL, in directory: URL) -> (url: URL, relativePath: String)? {
         let relative = WebCompatPatches.normalize(requestURL.path(percentEncoded: false))
         guard !relative.isEmpty, !relative.split(separator: "/").contains(".."),
               let root = ContainedPath.canonical(directory),
@@ -74,7 +74,7 @@ final class WebWallpaperSchemeHandler: NSObject, WKURLSchemeHandler {
         case unsatisfiable
     }
 
-    static func rangeRequest(_ header: String?, fileSize: UInt64) -> RangeRequest {
+    nonisolated static func rangeRequest(_ header: String?, fileSize: UInt64) -> RangeRequest {
         guard let header = header?.trimmingCharacters(in: .whitespaces), header.hasPrefix("bytes=") else { return .whole }
         let spec = header.dropFirst("bytes=".count)
         // Several ranges would need a multipart reply; the whole file answers them too.
@@ -94,13 +94,13 @@ final class WebWallpaperSchemeHandler: NSObject, WKURLSchemeHandler {
         return .partial(start..<(min(end, fileSize - 1) + 1))
     }
 
-    static func notFound() -> Reply {
+    nonisolated static func notFound() -> Reply {
         Reply(status: 404, headers: ["Access-Control-Allow-Origin": "*"], body: .data(Data()))
     }
 
     /// The reply to `request` from the wallpaper in `directory`, with `patches` applied, or from
     /// the user's files (`WebUserFiles.pathPrefix`) that `userFiles` allows.
-    static func reply(to request: URLRequest, directory: URL?, patches: WebCompatPatches,
+    nonisolated static func reply(to request: URLRequest, directory: URL?, patches: WebCompatPatches,
                       userFiles: WebUserFiles? = nil) -> Reply {
         if let requestURL = request.url {
             let relative = WebCompatPatches.normalize(requestURL.path(percentEncoded: false))
@@ -150,7 +150,7 @@ final class WebWallpaperSchemeHandler: NSObject, WKURLSchemeHandler {
         return fileReply(target.url, size: size, request: request, headers: headers)
     }
 
-    private static func userFileReply(_ url: URL, request: URLRequest) -> Reply {
+    nonisolated private static func userFileReply(_ url: URL, request: URLRequest) -> Reply {
         let size: UInt64
         do {
             size = (try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber)?.uint64Value ?? 0
@@ -166,7 +166,7 @@ final class WebWallpaperSchemeHandler: NSObject, WKURLSchemeHandler {
         return fileReply(url, size: size, request: request, headers: ["Content-Type": mime, "Access-Control-Allow-Origin": "*"])
     }
 
-    private static func fileReply(_ url: URL, size: UInt64, request: URLRequest, headers: [String: String]) -> Reply {
+    nonisolated private static func fileReply(_ url: URL, size: UInt64, request: URLRequest, headers: [String: String]) -> Reply {
         var headers = headers
         headers["Accept-Ranges"] = "bytes"
         switch rangeRequest(request.value(forHTTPHeaderField: "Range"), fileSize: size) {
