@@ -21,10 +21,11 @@ extension SceneContentLoader {
 
     /// The particle objects whose system, child systems or their materials read one of `paths`,
     /// found on the content queue and delivered on the main queue.
-    func particleObjectIDsAsync(using paths: Set<String>, completion: @escaping (Set<Int>) -> Void) {
+    func particleObjectIDsAsync(using paths: Set<String>, completion: @escaping @MainActor @Sendable (Set<Int>) -> Void) {
         contentQueue.async { [weak self] in
             let ids = self?.particleObjectIDs(using: paths) ?? []
-            DispatchQueue.main.async { completion(ids) }
+            // On the main queue, so `assumeIsolated` holds.
+            DispatchQueue.main.async { MainActor.assumeIsolated { completion(ids) } }
         }
     }
 

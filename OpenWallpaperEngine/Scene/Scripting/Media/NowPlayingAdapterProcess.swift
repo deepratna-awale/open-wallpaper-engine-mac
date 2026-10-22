@@ -5,7 +5,7 @@ import Foundation
 protocol NowPlayingAdapterProcess: AnyObject {
     /// Starts it. `output` receives its standard output in chunks as they come, and `exit` its
     /// status once it has ended, each on any thread.
-    func start(output: @escaping (Data) -> Void, exit: @escaping (Int32) -> Void) throws
+    func start(output: @escaping @Sendable (Data) -> Void, exit: @escaping @Sendable (Int32) -> Void) throws
 
     /// Ends it: closes its input, which makes it exit, and terminates it.
     func stop()

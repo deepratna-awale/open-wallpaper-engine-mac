@@ -9,7 +9,9 @@ import Foundation
 /// It is unavailable (`isAvailable == false`, so wallpapers see media integration disabled and get
 /// no events) until the script has reported, and after it failed; the failure is logged once. A
 /// failed script is not restarted until the last listener has left and a new one registers.
-final class NowPlayingAdapter: NowPlayingFramework {
+///
+/// `@unchecked Sendable`: `lock` owns every var; the rest are `let`s.
+final class NowPlayingAdapter: NowPlayingFramework, @unchecked Sendable {
     /// One line of the script's output.
     enum Line: Equatable {
         /// `S <base64 binary plist>`: MediaRemote's keys (`MediaRemote.Key`) and `isPlaying`.
@@ -77,14 +79,15 @@ final class NowPlayingAdapter: NowPlayingFramework {
         process?.stop()
     }
 
-    func nowPlayingInfo(on queue: DispatchQueue, _ handler: @escaping ([String: Any]) -> Void) {
+    func nowPlayingInfo(on queue: DispatchQueue, _ handler: @escaping @Sendable ([String: Any]) -> Void) {
         lock.lock()
-        let info = self.info
+        // A copy, never mutated: the session's plist values (strings, numbers, data, dates).
+        nonisolated(unsafe) let info = self.info
         lock.unlock()
         queue.async { handler(info) }
     }
 
-    func isPlaying(on queue: DispatchQueue, _ handler: @escaping (Bool) -> Void) {
+    func isPlaying(on queue: DispatchQueue, _ handler: @escaping @Sendable (Bool) -> Void) {
         lock.lock()
         let playing = self.playing
         lock.unlock()

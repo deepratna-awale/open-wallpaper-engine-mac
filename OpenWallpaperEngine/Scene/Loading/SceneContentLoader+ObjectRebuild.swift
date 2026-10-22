@@ -15,10 +15,11 @@ extension SceneContentLoader {
 
     /// Rebuilds objects `ids` off the render and main threads, on the content queue, and delivers
     /// them on the main queue (`rebuildObjects`); nil when they can't be rebuilt alone.
-    func rebuildObjectsAsync(_ ids: Set<Int>, completion: @escaping (SceneObjectReplacement?) -> Void) {
+    func rebuildObjectsAsync(_ ids: Set<Int>, completion: @escaping @MainActor @Sendable (SceneObjectReplacement?) -> Void) {
         contentQueue.async { [weak self] in
             let replacement = self?.rebuildObjects(ids)
-            DispatchQueue.main.async { completion(replacement) }
+            // Made here and handed over whole (`Task`'s closure is `sending`).
+            Task { @MainActor in completion(replacement) }
         }
     }
 

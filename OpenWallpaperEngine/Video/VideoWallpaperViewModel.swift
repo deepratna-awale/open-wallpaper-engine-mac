@@ -66,15 +66,12 @@ class VideoWallpaperViewModel: ObservableObject {
     private var audioPlayer = WallpaperAVPlayer.make()
     private let ownAudioTap = AudioLevelTap()
     private var cancellables = Set<AnyCancellable>()
-    private var itemEndObserver: NSObjectProtocol?
-    private var sleepObserver: NSObjectProtocol?
-    private var wakeObserver: NSObjectProtocol?
-    private var musicSyncObserver: NSObjectProtocol?
+    /// The notification observers and the probe timer, which the nonisolated `deinit` removes.
+    private let teardown = VideoWallpaperTeardown()
     /// Keeps system audio capture on while any music sync of the current wallpaper is on.
     private var musicSyncCaptureLease: AudioCaptureLease?
     /// Samples playback once a second for the render watchdog.
     private var probe = VideoPlaybackProbe()
-    private var probeTimer: Timer?
 
     /// Rates last handed to AVFoundation, so redundant assignments can be skipped.
     private var appliedVideoRate: Float?
@@ -96,15 +93,18 @@ class VideoWallpaperViewModel: ObservableObject {
         self.audioPlayer.isMuted = !playsAudio
         // Block-based observers with a weak target, so this instance can still deinit (and stop
         // playback) when the wallpaper view is torn down instead of being kept alive forever.
-        sleepObserver = NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.screensDidSleepNotification, object: nil, queue: .main) { [weak self] _ in
-            self?.systemWillSleep()
-        }
-        wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
-            self?.systemDidWake()
-        }
-        musicSyncObserver = NotificationCenter.default.addObserver(forName: .videoMusicSyncAudioLevelDidChange, object: nil, queue: .main) { [weak self] notification in
-            self?.videoMusicSyncAudioLevelDidChange(notification)
-        }
+        // Each is delivered on the main queue (`queue: .main`), so `assumeIsolated` holds.
+        let workspaceCenter = NSWorkspace.shared.notificationCenter
+        teardown.observe(.sleep, on: workspaceCenter, token: workspaceCenter.addObserver(forName: NSWorkspace.screensDidSleepNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.systemWillSleep() }
+        })
+        teardown.observe(.wake, on: workspaceCenter, token: workspaceCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.systemDidWake() }
+        })
+        teardown.observe(.musicSync, on: .default, token: NotificationCenter.default.addObserver(forName: .videoMusicSyncAudioLevelDidChange, object: nil, queue: .main) { [weak self] notification in
+            let level = notification.userInfo?["level"] as? Double
+            MainActor.assumeIsolated { self?.videoMusicSyncAudioLevelDidChange(level: level) }
+        })
 
         startPlaybackProbe()
 
@@ -162,8 +162,7 @@ class VideoWallpaperViewModel: ObservableObject {
         isPreparingVideo = false
         cancellables.removeAll()
         musicSyncCaptureLease = nil
-        probeTimer?.invalidate()
-        probeTimer = nil
+        teardown.setTimer(nil)
         player.pause()
         audioPlayer.pause()
         player.replaceCurrentItem(with: nil)
@@ -175,11 +174,7 @@ class VideoWallpaperViewModel: ObservableObject {
         preparation?.cancel()
         player.pause()
         audioPlayer.pause()
-        if let itemEndObserver { NotificationCenter.default.removeObserver(itemEndObserver) }
-        if let sleepObserver { NSWorkspace.shared.notificationCenter.removeObserver(sleepObserver) }
-        if let wakeObserver { NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver) }
-        if let musicSyncObserver { NotificationCenter.default.removeObserver(musicSyncObserver) }
-        probeTimer?.invalidate()
+        teardown.removeAll()
     }
 
     private func updateMusicSyncCapture() {
@@ -196,7 +191,7 @@ class VideoWallpaperViewModel: ObservableObject {
         }
         timer.tolerance = 0.2
         RunLoop.main.add(timer, forMode: .common)
-        probeTimer = timer
+        teardown.setTimer(timer)
     }
 
     private func samplePlayback() {
@@ -274,7 +269,7 @@ class VideoWallpaperViewModel: ObservableObject {
         audioPlayer.rate = rate
     }
 
-    private func playerDidFinishPlaying(_ notification: Notification) {
+    private func playerDidFinishPlaying() {
         wallpaperViewModel.advancePlaylistIfVideoEnds(currentWallpaper)
         probe.reset()
         self.player.seek(to: CMTime.zero)
@@ -294,18 +289,15 @@ class VideoWallpaperViewModel: ObservableObject {
         updatePlaybackRates(audioLevel: WallpaperServices.shared.audioLevel)
     }
 
-    private func videoMusicSyncAudioLevelDidChange(_ notification: Notification) {
-        let level = notification.userInfo?["level"] as? Double ?? WallpaperServices.shared.audioLevel
-        updatePlaybackRates(audioLevel: level)
+    private func videoMusicSyncAudioLevelDidChange(level: Double?) {
+        updatePlaybackRates(audioLevel: level ?? WallpaperServices.shared.audioLevel)
     }
 
     private func observeItemEnd(of item: AVPlayerItem?) {
-        if let itemEndObserver {
-            NotificationCenter.default.removeObserver(itemEndObserver)
-        }
-        itemEndObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { [weak self] notification in
-            self?.playerDidFinishPlaying(notification)
-        }
+        // Delivered on the main queue (`queue: .main`), so `assumeIsolated` holds.
+        teardown.observe(.itemEnd, on: .default, token: NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.playerDidFinishPlaying() }
+        })
     }
 
     /// Opens the wallpaper's video in the players once the file to open is known: a video whose
@@ -353,14 +345,15 @@ class VideoWallpaperViewModel: ObservableObject {
         appliedAudioRate = nil
         probe.reset()
         let videoItem = file.makeItem()
-        let audioItem = file.makeItem()
+        let audioAsset = file.makeAsset()
+        let audioItem = AVPlayerItem(asset: audioAsset)
         audioItem.audioTimePitchAlgorithm = .timeDomain
 
         player.replaceCurrentItem(with: videoItem)
         audioPlayer.replaceCurrentItem(with: audioItem)
         player.isMuted = true
         audioPlayer.isMuted = !playsAudio
-        ownAudioTap.attach(to: audioItem)
+        ownAudioTap.attach(to: audioItem, asset: audioAsset)
         observeItemEnd(of: videoItem)
         updatePlaybackRates(audioLevel: WallpaperServices.shared.audioLevel)
     }
@@ -373,5 +366,39 @@ extension VideoWallpaperViewModel: ScreenSaverVideoSharing {
         guard hold != heldForScreenSaver else { return }
         heldForScreenSaver = hold
         updatePlaybackRates(audioLevel: WallpaperServices.shared.audioLevel)
+    }
+}
+
+/// The view model's notification observers and probe timer, kept outside the main actor so its
+/// nonisolated `deinit` can remove them. `@unchecked Sendable`: `lock` guards both fields.
+private final class VideoWallpaperTeardown: @unchecked Sendable {
+    enum Observer { case itemEnd, sleep, wake, musicSync }
+
+    private let lock = NSLock()
+    private var observers: [Observer: (center: NotificationCenter, token: NSObjectProtocol)] = [:]
+    private var timer: Timer?
+
+    /// Keeps `token`, observing on `center`, as `observer`, removing the one it replaces.
+    func observe(_ observer: Observer, on center: NotificationCenter, token: NSObjectProtocol) {
+        let old = lock.withLock { observers.updateValue((center, token), forKey: observer) }
+        if let old { old.center.removeObserver(old.token) }
+    }
+
+    /// Keeps `timer` (nil for none), invalidating the one it replaces.
+    func setTimer(_ newTimer: Timer?) {
+        let old = lock.withLock { () -> Timer? in
+            defer { timer = newTimer }
+            return timer
+        }
+        old?.invalidate()
+    }
+
+    func removeAll() {
+        let (removed, oldTimer) = lock.withLock { () -> ([(center: NotificationCenter, token: NSObjectProtocol)], Timer?) in
+            defer { observers = [:]; timer = nil }
+            return (Array(observers.values), timer)
+        }
+        removed.forEach { $0.center.removeObserver($0.token) }
+        oldTimer?.invalidate()
     }
 }

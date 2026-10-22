@@ -32,8 +32,12 @@ enum ETC2Encoder {
         precondition(width % 4 == 0 && height % 4 == 0 && pixels.count >= width * height * 4)
         let columns = width / 4, rows = height / 4
         var output = [UInt8](repeating: 0, count: columns * rows * bytesPerBlock)
-        pixels.withUnsafeBufferPointer { source in
-            output.withUnsafeMutableBufferPointer { destination in
+        pixels.withUnsafeBufferPointer { sourceBuffer in
+            output.withUnsafeMutableBufferPointer { destinationBuffer in
+                // Immutable views of buffers that outlive the loop; each row reads its own pixels
+                // and writes its own disjoint blocks, so the rows never race.
+                nonisolated(unsafe) let source = sourceBuffer
+                nonisolated(unsafe) let destination = destinationBuffer
                 DispatchQueue.concurrentPerform(iterations: rows) { row in
                     var block = Block()
                     for column in 0..<columns {

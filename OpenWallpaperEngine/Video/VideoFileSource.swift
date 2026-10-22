@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 /// file's size in memory (about 200 MB for that video, against 18 MB from disk).
 ///
 /// The source must outlive its items: an asset holds its resource loader's delegate weakly.
-final class VideoFileSource {
+final class VideoFileSource: Sendable {
     let url: URL
     private let loader: MemoryVideoLoader?
 
@@ -40,10 +40,16 @@ final class VideoFileSource {
 
     /// A new player item of the video.
     func makeItem() -> AVPlayerItem {
-        guard let loader else { return AVPlayerItem(url: url) }
+        AVPlayerItem(asset: makeAsset())
+    }
+
+    /// A new asset of the video, for an item whose asset is needed off the main actor
+    /// (`AVPlayerItem.asset` is main-actor isolated): make the item with `AVPlayerItem(asset:)`.
+    func makeAsset() -> AVURLAsset {
+        guard let loader else { return AVURLAsset(url: url) }
         let asset = AVURLAsset(url: loader.assetURL(named: url.lastPathComponent))
         asset.resourceLoader.setDelegate(loader, queue: loader.queue)
-        return AVPlayerItem(asset: asset)
+        return asset
     }
 
     /// The file's type as AVFoundation wants it (a UTI); MPEG-4 when the extension says nothing.
@@ -58,7 +64,7 @@ final class VideoFileSource {
 /// Serves a video's bytes from memory to AVFoundation (`VideoFileSource`, in memory). Answers
 /// each request at once and in full, so no request is ever pending; the bytes handed out share
 /// the file's memory instead of copying it, and keep it alive while AVFoundation holds them.
-final class MemoryVideoLoader: NSObject, AVAssetResourceLoaderDelegate {
+final class MemoryVideoLoader: NSObject, AVAssetResourceLoaderDelegate, Sendable {
     static let scheme = "owe-memory-video"
     /// Responses are at most this long, so AVFoundation can start on a large request early.
     static let chunkLength = 1 << 20
@@ -69,9 +75,10 @@ final class MemoryVideoLoader: NSObject, AVAssetResourceLoaderDelegate {
     private let identifier = UUID()
 
     /// Owns the file's bytes; every response points into them and holds it.
-    private final class Storage {
+    private final class Storage: Sendable {
         let data: Data
-        let base: UnsafeMutableRawPointer?
+        /// Immutable after init, and only ever read through: points into `data`, which never changes.
+        nonisolated(unsafe) let base: UnsafeMutableRawPointer?
 
         init(data: Data) {
             self.data = data

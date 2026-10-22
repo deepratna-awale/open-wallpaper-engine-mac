@@ -93,7 +93,7 @@ final class ScenePreviewPlaceholder {
             let snapshot = snapshots?.bestSnapshot(forWallpaperAt: wallpaperDirectory, pixelSize: pixelSize)
             let image = snapshot.flatMap { Self.image(at: $0, maxPixels: maxPixels) }
                 ?? Self.previewImage(in: wallpaperDirectory, maxPixels: maxPixels)
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 MainActor.assumeIsolated {
                     guard let self, !self.isFading, let image else { return }
                     self.layer.contents = image

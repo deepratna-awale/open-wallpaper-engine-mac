@@ -12,7 +12,9 @@ import CoreAudio
 /// thread (the render thread), so a HAL call that waits on coreaudiod never stalls a frame or a
 /// wallpaper change. The IO proc runs on the HAL's IO thread and touches only `Renderer`, which
 /// `queue` replaces only while the IO proc is stopped.
-final class ManualRenderingOutput {
+///
+/// `@unchecked Sendable`: the serial `queue` owns every mutable field; the rest are `let`s.
+final class ManualRenderingOutput: @unchecked Sendable {
     /// The most frames one call of the engine's block renders (`enableManualRenderingMode`).
     static let maximumFrameCount: AVAudioFrameCount = 4096
 
@@ -52,7 +54,7 @@ final class ManualRenderingOutput {
 
     /// Stops and destroys the IO proc, then runs `completion` on the output's queue (the engine
     /// may go then: nothing pulls from it any more).
-    func shutdown(then completion: @escaping () -> Void) {
+    func shutdown(then completion: @escaping @Sendable () -> Void) {
         queue.async { [self] in
             wantsRunning = false
             stop()
