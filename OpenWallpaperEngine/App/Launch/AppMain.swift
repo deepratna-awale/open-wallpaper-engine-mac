@@ -28,7 +28,8 @@ public enum AppMain {
 
         // Before any Metal work: the Metal shader cache goes when the shaders changed or Metal's
         // usage database filled up, and this process holds it from now on.
-        MetalShaderCacheLaunch.run()
+        // `AppMain.run` is the executable's entry point (`main.swift`): on the main thread.
+        MainActor.assumeIsolated { MetalShaderCacheLaunch.run() }
 
         MainActor.assumeIsolated {
             // A helper run (`HelperRunCommand`) does its work and exits before the app's

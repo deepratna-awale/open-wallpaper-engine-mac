@@ -33,7 +33,7 @@ final class WallpaperEditorLauncher {
         }
         /// Opens the app at the URL with these arguments and environment.
         var launch: (_ app: URL, _ arguments: [String], _ environment: [String: String],
-                     _ done: @escaping @MainActor (Error?) -> Void) -> Void = WallpaperEditorLauncher.openApp
+                     _ done: @escaping @MainActor @Sendable (Error?) -> Void) -> Void = WallpaperEditorLauncher.openApp
         var now: () -> Date = Date.init
         /// How long a request that needs the editor's answer waits for it (`restartParticles`).
         var replyTimeout: TimeInterval = 1
@@ -168,7 +168,7 @@ final class WallpaperEditorLauncher {
     /// when one runs: one that runs isolated otherwise than this app would be brought forward
     /// instead (a running editor isolated as this app is gets the folder as a message, `open`).
     nonisolated static func openApp(at app: URL, arguments: [String], environment: [String: String],
-                                    done: @escaping @MainActor (Error?) -> Void) {
+                                    done: @escaping @MainActor @Sendable (Error?) -> Void) {
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.createsNewApplicationInstance = true
         configuration.activates = true

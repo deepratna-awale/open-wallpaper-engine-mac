@@ -1,6 +1,6 @@
 import AVFoundation
 import AppKit
-import Metal
+@preconcurrency import Metal
 
 /// A transition's outgoing picture: what a display (a split region, or the source of a clone or
 /// stretch) shows now, as a texture of the size it fills.
@@ -17,14 +17,20 @@ enum WallpaperTransitionCapture {
     /// `screenId`'s wallpaper as it shows now, `pixelSize` pixels; nil when nothing can be
     /// captured in time. `window`: the wallpaper window it shows in (for its page).
     static func capture(screenId: String, pixelSize: SIMD2<Int>, backingScale: CGFloat,
-                        wallpapers: WallpaperViewModel, window: NSWindow?, device: MTLDevice) async -> MTLTexture? {
+                        wallpapers: WallpaperViewModel, window: NSWindow?, device: MTLDevice) async -> sending MTLTexture? {
         let key = wallpapers.instanceKey(for: screenId)
         if let scene = wallpapers.sceneInstances.instance(for: key) {
             let texture: MTLTexture? = await withCheckedContinuation { continuation in
-                scene.renderLoop.captureTransitionFrame(pixelSize: pixelSize) { continuation.resume(returning: $0) }
+                scene.renderLoop.captureTransitionFrame(pixelSize: pixelSize) { texture in
+                    // The capture's finished picture, handed over: the render loop keeps no reference.
+                    nonisolated(unsafe) let texture = texture
+                    continuation.resume(returning: texture)
+                }
             }
             guard let texture else { return nil }
-            guard texture.device === device else {
+            // Compared by identity alone, so the texture stays apart from the caller's `device`
+            // and can be handed over (`sending`).
+            guard ObjectIdentifier(texture.device) == ObjectIdentifier(device) else {
                 OWELog.error(.app, "Transition: the scene renders on another GPU than the transition; no transition")
                 return nil
             }
@@ -53,14 +59,18 @@ enum WallpaperTransitionCapture {
             return nil
         }
         guard let image else { return nil }
-        return await Task.detached(priority: .userInitiated) {
-            texture(of: image, pixelSize: pixelSize, placement: placement, device: device)
-        }.value
+        do {
+            return try await detachedResult(qos: .userInitiated) {
+                texture(of: image, pixelSize: pixelSize, placement: placement, device: device)
+            }
+        } catch {
+            return nil // Not reached: `texture(of:)` doesn't throw.
+        }
     }
 
     /// Waits for `capture` up to `timeout`; nil after it.
     static func withTimeout(_ timeout: TimeInterval = timeout,
-                            _ capture: @escaping @MainActor () async -> MTLTexture?) async -> MTLTexture? {
+                            _ capture: @escaping @MainActor @Sendable () async -> sending MTLTexture?) async -> MTLTexture? {
         await withTaskGroup(of: MTLTexture?.self) { group in
             group.addTask { await capture() }
             group.addTask {

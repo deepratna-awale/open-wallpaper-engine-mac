@@ -5,21 +5,21 @@ import Foundation
 /// `fileConcurrency` at once.
 enum ExportLanes {
     @MainActor
-    static func run(gpu: [Int], files: [Int], fileConcurrency: Int, _ work: @escaping @MainActor (Int) async -> Void) async {
+    static func run(gpu: [Int], files: [Int], fileConcurrency: Int, _ work: @escaping @MainActor @Sendable (Int) async -> Void) async {
         await withTaskGroup(of: Void.self) { group in
-            group.addTask { @MainActor in
+            group.addTask {
                 for index in gpu { await work(index) }
             }
-            group.addTask { @MainActor in
+            group.addTask {
                 await withTaskGroup(of: Void.self) { lane in
                     var pending = files.makeIterator()
                     for _ in 0..<max(fileConcurrency, 1) {
                         guard let index = pending.next() else { break }
-                        lane.addTask { @MainActor in await work(index) }
+                        lane.addTask { await work(index) }
                     }
                     while await lane.next() != nil {
                         guard let index = pending.next() else { continue }
-                        lane.addTask { @MainActor in await work(index) }
+                        lane.addTask { await work(index) }
                     }
                 }
             }

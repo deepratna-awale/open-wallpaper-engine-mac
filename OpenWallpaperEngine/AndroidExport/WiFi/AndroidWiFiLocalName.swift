@@ -155,11 +155,11 @@ final class AndroidWiFiDNSSDRegistrar: AndroidWiFiNameRegistering {
 
     /// The callbacks' context, kept alive until `unregister()`.
     private final class Context {
-        var completion: (@MainActor (AndroidWiFiNameOutcome) -> Void)?
-        let onLost: @MainActor () -> Void
+        var completion: MainActorBox<@MainActor (AndroidWiFiNameOutcome) -> Void>?
+        let onLost: MainActorBox<@MainActor () -> Void>
         var registered = false
 
-        init(completion: @escaping @MainActor (AndroidWiFiNameOutcome) -> Void, onLost: @escaping @MainActor () -> Void) {
+        init(completion: MainActorBox<@MainActor (AndroidWiFiNameOutcome) -> Void>, onLost: MainActorBox<@MainActor () -> Void>) {
             self.completion = completion
             self.onLost = onLost
         }
@@ -174,11 +174,11 @@ final class AndroidWiFiDNSSDRegistrar: AndroidWiFiNameRegistering {
             if let completion {
                 self.completion = nil
                 registered = outcome == .registered
-                Task { @MainActor in completion(outcome) }
+                Task { @MainActor in completion.value(outcome) }
             } else if registered, outcome != .registered {
                 registered = false
                 let onLost = onLost
-                Task { @MainActor in onLost() }
+                Task { @MainActor in onLost.value() }
             }
         }
     }
@@ -191,7 +191,7 @@ final class AndroidWiFiDNSSDRegistrar: AndroidWiFiNameRegistering {
                   completion: @escaping @MainActor (AndroidWiFiNameOutcome) -> Void,
                   onLost: @escaping @MainActor () -> Void) {
         unregister()
-        let context = Unmanaged.passRetained(Context(completion: completion, onLost: onLost))
+        let context = Unmanaged.passRetained(Context(completion: MainActorBox(completion), onLost: MainActorBox(onLost)))
         self.context = context
         let interface = if_nametoindex(address.interface)
         var connection: DNSServiceRef?

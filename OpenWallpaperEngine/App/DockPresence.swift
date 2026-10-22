@@ -14,16 +14,18 @@ final class DockPresence {
         let center = NotificationCenter.default
         observers = [
             center.addObserver(forName: NSWindow.didBecomeKeyNotification, object: nil, queue: .main) { [weak self] note in
+                let window = note.object as? NSWindow
                 MainActor.assumeIsolated {
-                    guard let window = note.object as? NSWindow, Self.counts(window) else { return }
+                    guard let window, Self.counts(window) else { return }
                     self?.show()
                 }
             },
             center.addObserver(forName: NSWindow.willCloseNotification, object: nil, queue: .main) { [weak self] note in
+                let window = note.object as? NSWindow
                 MainActor.assumeIsolated {
-                    guard let window = note.object as? NSWindow, Self.counts(window) else { return }
+                    guard let window, Self.counts(window) else { return }
                     // The closing window is still visible here; look once it has gone.
-                    DispatchQueue.main.async { self?.update() }
+                    DispatchQueue.main.async { [weak self] in self?.update() }
                 }
             },
         ]

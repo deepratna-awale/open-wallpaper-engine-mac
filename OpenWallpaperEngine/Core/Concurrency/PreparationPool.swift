@@ -168,7 +168,7 @@ final class PreparationPool: @unchecked Sendable {
 
     private func takeReadyLocked() -> [Job] {
         var ready: [Job] = []
-        var index = 0
+        let index = 0
         var libraryAllowed: Bool?
         while index < pending.count, running < maxWorkers {
             let job = pending[index]
@@ -235,7 +235,7 @@ private final class JobBox: @unchecked Sendable {
     }
 }
 
-private final class ResumeOnce<T>: @unchecked Sendable {
+private final class ResumeOnce<T: Sendable>: @unchecked Sendable {
     private let lock = NSLock()
     private var continuation: CheckedContinuation<T, Error>?
     init(_ continuation: CheckedContinuation<T, Error>) { self.continuation = continuation }

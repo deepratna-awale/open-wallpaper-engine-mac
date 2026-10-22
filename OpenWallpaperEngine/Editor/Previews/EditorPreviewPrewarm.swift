@@ -156,6 +156,7 @@ final class EditorPreviewPrewarm: ObservableObject {
     // MARK: Running
 
     /// One run's shared state; its lanes run on the main actor between their awaits.
+    @MainActor
     private final class Run {
         let cache: EditorPreviewCache
         let lock: EditorPreviewPrewarmLock
@@ -216,7 +217,7 @@ final class EditorPreviewPrewarm: ObservableObject {
                         + "\(plan.cached) cached, \(plan.carriedOver) carried over, \(plan.failedBefore) failed before")
         await withTaskGroup(of: Void.self) { group in
             for _ in 0..<max(1, environment.laneCount) {
-                group.addTask { @MainActor in await self.runLane(state) }
+                group.addTask { await self.runLane(state) }
             }
         }
         lastSummary = state.summary

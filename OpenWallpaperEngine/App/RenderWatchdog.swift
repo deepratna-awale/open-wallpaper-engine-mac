@@ -41,7 +41,7 @@ final class RenderWatchdog: @unchecked Sendable {
         var heartbeatTimeout: TimeInterval = 10
     }
 
-    enum Trip: Equatable {
+    enum Trip: Equatable, Sendable {
         case mainThreadStalled(seconds: TimeInterval)
         case slowFrames(medianSeconds: TimeInterval)
         case heartbeatStopped(seconds: TimeInterval)
@@ -166,7 +166,7 @@ final class RenderWatchdog: @unchecked Sendable {
     // MARK: - Polling
 
     /// Polls on a background queue and reports a trip on the main actor.
-    func start(onTrip: @escaping @MainActor (Trip) -> Void) {
+    func start(onTrip: @escaping @MainActor @Sendable (Trip) -> Void) {
         guard timer == nil else { return }
         let timer = DispatchSource.makeTimerSource(queue: DispatchQueue(label: "OpenWallpaperEngine.RenderWatchdog",
                                                                         qos: .utility))

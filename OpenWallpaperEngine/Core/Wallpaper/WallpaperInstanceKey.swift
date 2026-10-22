@@ -8,7 +8,7 @@ import Foundation
 /// `properties` is the store the instance runs with (`WallpaperPropertyScope`): the shared one
 /// while properties are synced across displays, else a display's own. Displays whose own
 /// properties are equal share the instance of the first of them (`WallpaperPropertyGroups`).
-struct WallpaperInstanceKey: Hashable, CustomStringConvertible {
+struct WallpaperInstanceKey: Hashable, Sendable, CustomStringConvertible {
     let directory: String
     let file: String
     let type: String

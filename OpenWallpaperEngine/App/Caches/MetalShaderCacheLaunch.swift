@@ -10,6 +10,7 @@ enum MetalShaderCacheLaunch {
         "shader-variants \(ShaderVariantTranslator.revision), pipeline-archive \(EffectPipelineArchive.revision)"
     }
 
+    @MainActor
     static func run() {
         guard let cache = MetalShaderCache.current else { return }
         let isolated = AppStorageLocation.current.isIsolated

@@ -1,5 +1,6 @@
 import Foundation
 import Network
+import os
 
 /// "Send over Wi-Fi"'s HTTP server: a Network.framework listener on one local-network address
 /// (`AndroidLANAddress`) that answers what `AndroidWiFiRouter` decides, for the packages it is
@@ -104,22 +105,21 @@ final class AndroidWiFiServer: @unchecked Sendable {
                     return
                 }
                 self.listener = listener
-                var resumed = false
+                // True the first time only: the continuation resumes once.
+                let resumed = OSAllocatedUnfairLock(initialState: false)
+                let resumes: @Sendable () -> Bool = { resumed.withLock { done in defer { done = true }; return !done } }
                 listener.stateUpdateHandler = { [weak self] state in
                     switch state {
                     case .ready:
-                        guard !resumed else { return }
-                        resumed = true
+                        guard resumes() else { return }
                         continuation.resume(returning: listener.port?.rawValue ?? 0)
                     case .failed(let error):
-                        if !resumed {
-                            resumed = true
+                        if resumes() {
                             continuation.resume(throwing: error)
                         }
                         self?.stop(.failed(error.localizedDescription))
                     case .cancelled:
-                        if !resumed {
-                            resumed = true
+                        if resumes() {
                             continuation.resume(throwing: CancellationError())
                         }
                     default:

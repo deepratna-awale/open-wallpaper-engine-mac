@@ -20,7 +20,7 @@ struct AndroidWiFiRouter: Sendable {
     let nonceSource: @Sendable () throws -> String
 
     init(token: String, files: [AndroidWiFiFile], expiry: Date,
-         nonceSource: @escaping @Sendable () throws -> String = AndroidWiFiRouter.makeNonce) {
+         nonceSource: @escaping @Sendable () throws -> String = { try AndroidWiFiRouter.makeNonce() }) {
         self.token = token
         self.files = files
         self.expiry = expiry

@@ -16,7 +16,7 @@ import OWESceneEditing
 struct EditorShaderChecker: ShaderChecking {
     let translator: ShaderVariantTranslator
     /// A file as the editor's scene loader finds it (on the main actor: the editor's resources).
-    let read: @MainActor (String) -> Data?
+    let read: @MainActor @Sendable (String) -> Data?
 
     func check(_ request: ShaderCheckRequest) async -> ShaderCheckResult {
         let loaded: Result<(ShaderSource, ShaderSource, original: [ShaderDiagnostic.Stage: String]), Error> = await MainActor.run {

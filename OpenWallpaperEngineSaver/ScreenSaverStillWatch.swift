@@ -27,7 +27,7 @@ struct ScreenSaverStillChoice: Equatable {
 /// current still at once instead of the one it found when it was made. One `DispatchSource` on
 /// the folder for the whole process; changes close together are told once. Main thread.
 final class ScreenSaverFolderWatch {
-    static let shared = ScreenSaverFolderWatch(folder: ScreenSaverManifest.sharedFolder(home: ScreenSaverManifest.userHome))
+    @MainActor static let shared = ScreenSaverFolderWatch(folder: ScreenSaverManifest.sharedFolder(home: ScreenSaverManifest.userHome))
 
     /// How long after a change the views are told: the app writes a still and then lists it.
     static let settle: TimeInterval = 0.15

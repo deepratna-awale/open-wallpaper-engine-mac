@@ -200,7 +200,7 @@ final class DisplayPlaybackMonitor {
         let sources = sources
         scanQueue.async { [weak self] in
             let next = Self.playback(inputs, sources: sources)
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 MainActor.assumeIsolated { self?.finish(next, generation: generation) }
             }
         }
@@ -336,7 +336,7 @@ final class DisplayPlaybackMonitor {
         guard needed != (stopObservingAudioProcesses != nil) else { return }
         if needed {
             stopObservingAudioProcesses = sources.observeAudioProcesses { [weak self] in
-                DispatchQueue.main.async { MainActor.assumeIsolated { self?.setNeedsEvaluation() } }
+                DispatchQueue.main.async { [weak self] in MainActor.assumeIsolated { self?.setNeedsEvaluation() } }
             }
         } else {
             stopObservingAudioProcesses?()
@@ -365,7 +365,7 @@ final class DisplayPlaybackMonitor {
     }
 
     private func observe(_ center: NotificationCenter, _ name: Notification.Name,
-                         _ handler: @escaping @MainActor (DisplayPlaybackMonitor) -> Void) {
+                         _ handler: @escaping @MainActor @Sendable (DisplayPlaybackMonitor) -> Void) {
         let token = center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated {
                 guard let self else { return }

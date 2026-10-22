@@ -25,8 +25,11 @@ final class LivePhotoVideoFrames {
     }
 
     /// Hands frames `leadIn ..< leadIn + frames` of the `frameRate` grid, cut to `crop`, to `frame`.
+    /// Runs on the caller's actor (`isolation`), where `progress` and `frame` were made, as a
+    /// scene's frames are rendered there.
     func render(crop: LivePhotoCrop, leadIn: Int, frames: Int, frameRate: Int, progress: (Double) -> Void,
-                frame: (Int, CGImage) throws -> Void) async throws {
+                frame: (Int, CGImage) throws -> Void,
+                isolation: isolated (any Actor)? = #isolation) async throws {
         let asset = AVURLAsset(url: url)
         guard let track = try await asset.loadTracks(withMediaType: .video).first else { throw Failure.noVideoTrack }
         let (transform, range) = try await track.load(.preferredTransform, .timeRange)

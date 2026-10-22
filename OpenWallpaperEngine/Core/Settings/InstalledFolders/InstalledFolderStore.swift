@@ -6,7 +6,7 @@ import Observation
 /// tests pass a defaults suite of their own.
 @MainActor @Observable
 final class InstalledFolderStore {
-    static let storageKey = "InstalledFolders"
+    nonisolated static let storageKey = "InstalledFolders"
 
     private(set) var tree: InstalledFolderTree
     /// Called after every change (the Installed list drops its sorted copy).
