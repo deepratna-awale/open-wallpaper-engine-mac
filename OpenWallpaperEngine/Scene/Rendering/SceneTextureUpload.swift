@@ -39,7 +39,7 @@ enum SceneTextureUpload {
                                                     .union(.byteOrder32Big)) else {
             throw UploadError.unsupported(image.bitsPerPixel)
         }
-        var buffer = try vImage_Buffer(cgImage: image, format: format)
+        let buffer = try vImage_Buffer(cgImage: image, format: format)
         defer { buffer.free() }
         var bytes = [UInt8](repeating: 0, count: image.width * image.height * 4)
         let rowBytes = image.width * 4
