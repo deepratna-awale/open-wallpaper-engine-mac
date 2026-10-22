@@ -8,6 +8,7 @@ struct WorkshopPresetBase: Equatable {
     let title: String
 }
 
+@MainActor
 class WorkshopViewModel: ObservableObject {
     @Published var items: [WorkshopItem] = []
     @Published var searchText = ""
@@ -42,7 +43,7 @@ class WorkshopViewModel: ObservableObject {
     private let api = WorkshopAPIService()
     /// Where Hide Anime is saved.
     private let defaults: UserDefaults
-    static let hidesAnimeKey = "WorkshopHidesAnime"
+    nonisolated static let hidesAnimeKey = "WorkshopHidesAnime"
     /// One QueryFiles page: search text, filter, sort, page, page size.
     typealias PageSearch = (String, WorkshopQuery, WorkshopSortOrder, Int, Int) async throws -> [WorkshopItem]
     private let searchPage: PageSearch
@@ -61,7 +62,7 @@ class WorkshopViewModel: ObservableObject {
 
     /// How many QueryFiles pages one displayed page may read when results are filtered here
     /// (Show Only options Steam can't express): 2,000 items.
-    static let maxSourcePages = 40
+    nonisolated static let maxSourcePages = 40
 
     init(steamCmd: SteamCmdService, blockList: WorkshopBlockList = WorkshopBlockList(), searchPage: PageSearch? = nil,
          defaults: UserDefaults = .app) {
@@ -78,21 +79,21 @@ class WorkshopViewModel: ObservableObject {
             self?.objectWillChange.send()
         }
         self.downloadedIndexCancellable = DownloadedWallpaperIndex.shared.objectWillChange.sink { [weak self] _ in
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 self?.cachedPages.removeAll()
                 self?.objectWillChange.send()
             }
         }
         // "My Favourites" is checked on the results, so its pages go stale when favourites change.
         self.favoritesCancellable = FavoritesStore.shared.objectWillChange.sink { [weak self] _ in
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 guard let self, self.filter.showOnly.contains(.favourites) else { return }
                 self.cachedPages.removeAll()
             }
         }
         // Blocking or unblocking changes what the pages show; the source pages stay valid.
         self.blockListCancellable = blockList.objectWillChange.sink { [weak self] _ in
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 self.cachedPages.removeAll()
                 self.items.removeAll(where: self.blockList.isBlocked)
