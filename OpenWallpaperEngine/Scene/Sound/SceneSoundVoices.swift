@@ -8,10 +8,11 @@ import AVFoundation
 /// left and right gains (`setSpatialGains`). A mono file plays at OpenAL's level for a mono source,
 /// `SceneSoundSpatialization.monoLevel` of a stereo file's in each channel (WE's capture: 1/1.6789):
 /// its player outputs stereo, which copies the file to both channels at any sample rate (a mono
-/// input to AVAudioMixerNode comes out at 0.707 or 1 by the mixer's rate). Main thread; the
-/// players' completion handlers hop back to it (a player must not be scheduled from inside its own
-/// callback).
-// Owner's thread only (above); the players' completion handlers hop back through the main queue.
+/// input to AVAudioMixerNode comes out at 0.707 or 1 by the mixer's rate). Its owner's thread
+/// only, the one that made it (`SceneSoundLayers`, on the renderer's render thread); the players'
+/// completion handlers hop back to that thread's run loop (a player must not be scheduled from
+/// inside its own callback).
+// Owner's thread only (above); the players' completion handlers hop back to its run loop.
 final class SceneSoundVoices: SceneSoundOutput, @unchecked Sendable {
     private final class Voice {
         let node = AVAudioPlayerNode()
@@ -35,6 +36,9 @@ final class SceneSoundVoices: SceneSoundOutput, @unchecked Sendable {
     /// The files that play spatialized, and their left and right gains (`setSpatialGains`).
     let spatialFiles: Set<Int>
     private var spatialGains: [Int: SIMD2<Float>] = [:]
+    /// The run loop of the thread that made the voices, which owns them: the players' completion
+    /// handlers hop back to it (`CFRunLoopPerformBlock` may be called from any thread).
+    private let owner: CFRunLoop = CFRunLoopGetCurrent()
 
     init(files: [SceneSoundContent.File], spatialFiles: Set<Int> = [], mixer: @escaping () -> SceneSoundMixer?,
          label: String) {
@@ -161,10 +165,13 @@ final class SceneSoundVoices: SceneSoundOutput, @unchecked Sendable {
                           generation: Int) {
         node.scheduleSegment(file, startingFrame: 0, frameCount: frames, at: nil,
                              completionCallbackType: .dataPlayedBack) { [weak self, weak node] _ in
-            DispatchQueue.main.async { [weak self, weak node] in
+            guard let owner = self?.owner else { return }
+            // Thread boundary: the player's callback thread → the owner's thread.
+            CFRunLoopPerformBlock(owner, CFRunLoopMode.commonModes.rawValue) { [weak self, weak node] in
                 guard let self, let node, self.generations[index] == generation else { return }
                 self.schedule(file, frames: frames, on: node, index: index, generation: generation)
             }
+            CFRunLoopWakeUp(owner)
         }
     }
 }
