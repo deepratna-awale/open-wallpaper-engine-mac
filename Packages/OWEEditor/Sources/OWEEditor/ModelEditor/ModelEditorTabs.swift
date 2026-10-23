@@ -44,8 +44,9 @@ struct ModelAttachmentsTab: View {
     }
 }
 
-/// The Events tab: named frames of an animation or clip, which a scene's scripts receive
-/// (`animationEvent`).
+/// The Events tab: named frames of the source's animations, which a scene's scripts receive
+/// (`animationEvent`). As in WE's (capture 549), the list is the animations, not the clips, and
+/// Add Event adds to the one selected.
 struct ModelEventsTab: View {
     @ObservedObject var editor: ModelEditorModel
     @State private var animation: UInt64?
@@ -58,8 +59,8 @@ struct ModelEventsTab: View {
 
     var body: some View {
         ModelEditorColumns {
-            ModelEditorList(title: ML("Animations"), items: editor.output?.animations ?? [], selection: $animation) { item in
-                Label(item.listTitle, systemImage: item.isClip ? "film" : "figure.walk")
+            ModelEditorList(title: ML("Animations"), items: editor.animations, selection: $animation) { item in
+                Label(item.listTitle, systemImage: "figure.walk")
             } buttons: {
                 Button(ML("Add Event")) { animation.map { event = editor.addEvent(to: $0) } }
                     .disabled(animation == nil)
@@ -88,7 +89,7 @@ struct ModelEventsTab: View {
                     }
                 }
             } else {
-                Text(ML("Pick an animation or clip.")).foregroundStyle(.secondary)
+                Text(ML("Pick an animation.")).foregroundStyle(.secondary)
             }
         }
     }

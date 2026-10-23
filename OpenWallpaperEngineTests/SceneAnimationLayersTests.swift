@@ -115,9 +115,10 @@ final class SceneAnimationLayersTests: XCTestCase {
         XCTAssertEqual(update.removed, [7])
     }
 
-    /// Events fire once as the clock crosses their frame (at `frame / fps`).
+    /// Events fire once as the clock crosses their time: the record's float is seconds, as WE's
+    /// compilers write it (`frame / fps`, capture 549), so 0.5 at 10 fps is frame 5.
     func testClipEvents() {
-        let clip = Self.clip(events: [MDLAnimation.Event(frame: 5, name: "step")], pose: Self.still())
+        let clip = Self.clip(events: [MDLAnimation.Event(frame: 0.5, name: "step")], pose: Self.still())
         var stack = SceneAnimationLayerStack(skeleton: Self.skeleton(), clips: [clip])
         stack.insert(layer(clip, key: 3))
         var fired: [SceneAnimationLayerUpdate.Event] = []

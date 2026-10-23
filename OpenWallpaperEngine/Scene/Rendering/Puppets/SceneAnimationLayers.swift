@@ -49,8 +49,12 @@ struct SceneAnimationLayer: Equatable {
         self.visible = visible
     }
 
-    /// The clip's clock (0x1401a8c10): `frames / fps` seconds, its mode, its events at
-    /// `frame / fps`. A clip without a positive fps or duration gets a clock that never moves.
+    /// The clip's clock (0x1401a8c10): `frames / fps` seconds, its mode, its events. An event's
+    /// float is its time in seconds: WE's compilers write `frame / fps` (`resourcecompiler64.exe`
+    /// 0x1400a2b19 for models, 0x14001e4fa for puppets; capture 549's frame 15 at 30 fps is 0.5)
+    /// and the player copies it into the clip's clock as it is (`wallpaper64.exe` 0x14022322e…),
+    /// where a timeline's events are at `frame × frameDuration` (0x1401a57ca); its text (the
+    /// event's JSON) is the name. A clip without a positive fps or duration gets a clock that never moves.
     static func clock(for animation: MDLAnimation) -> SceneTimelineClock {
         var flags: SceneTimelineClock.Flags = []
         switch animation.mode {
@@ -62,7 +66,7 @@ struct SceneAnimationLayer: Equatable {
         let frameDuration: Float = fps > 0 ? 1 / fps : 1
         let duration: Float = fps > 0 ? Float(animation.frames) / fps : 0
         let events = animation.events.map {
-            SceneTimelineClock.Event(name: $0.name, frame: $0.frame, time: $0.frame * frameDuration)
+            SceneTimelineClock.Event(name: $0.name, frame: $0.frame / frameDuration, time: $0.frame)
         }
         return SceneTimelineClock(frameDuration: frameDuration, duration: max(0, duration),
                                   length: Int32(clamping: animation.frames), flags: flags, events: events)
