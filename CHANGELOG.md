@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Wallpaper Editor: a texture variant option without a condition is saved and compiled as Wallpaper Engine's.** Wallpaper Engine saves such an option with no `variantcondition` in the `.tex-json` and its compiler leaves it out of the `.tex`; the editor wrote `"variantcondition": null` and compiled it as a record that never turns on. The option still never shows, its file is still checked against the texture, and the `.tex` now has Wallpaper Engine's layout. Checked against WE 2.8.0.42's texture with two variant groups (capture 550).
+
 ## [1.0.0-beta.8] - 2026-10-18
 
 ### Added
