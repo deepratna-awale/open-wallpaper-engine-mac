@@ -80,10 +80,8 @@ class GlobalSettingsViewModel: ObservableObject {
     ///
     /// `power`: the power source `effectiveSettings` follows; nil for none (always on AC).
     init(followsLaunch: Bool = true, power: PowerPolicySource? = PowerPolicyMonitor.shared) {
-        let migration = GlobalSettingsMigration.current()
         let loaded: GlobalSettings = Self.loadSettings(from: UserDefaults.app.data(forKey: Self.defaultsKey),
-                                                       backupDirectory: AppStorageLocation.current.supportDirectory,
-                                                       migration: migration)
+                                                       backupDirectory: AppStorageLocation.current.supportDirectory)
         self.settings = loaded
         let state = power?.policy.state ?? PowerState()
         powerState = state
@@ -97,24 +95,19 @@ class GlobalSettingsViewModel: ObservableObject {
 
         // Add observers
         guard followsLaunch else { return }
-        // A carried-over Render Resolution is saved at once, so it is carried over once, for the
-        // display the app first ran on.
-        if migration.migrated { save() }
         self.didFinishLaunchingNotificationCancellable =
         NotificationCenter.default.publisher(for: NSApplication.didFinishLaunchingNotification)
             .sink { [weak self] _ in self?.didFinishLaunchingNotification() }
     }
 
-    /// The stored settings, an earlier Render Resolution carried over for `migration`'s display.
-    /// `GlobalSettings` reads each key on its own, so this only fails when
+    /// The stored settings. `GlobalSettings` reads each key on its own, so this only fails when
     /// the data isn't a settings object at all. The defaults are used then, and as the next save
     /// replaces the stored data, it is first copied to `settings.corrupt-<date>.json` in
     /// `backupDirectory`.
-    nonisolated static func loadSettings(from data: Data?, backupDirectory: URL, now: Date = Date(),
-                                         migration: GlobalSettingsMigration? = nil) -> GlobalSettings {
+    nonisolated static func loadSettings(from data: Data?, backupDirectory: URL, now: Date = Date()) -> GlobalSettings {
         guard let data else { return GlobalSettings() }
         do {
-            return try (migration?.decoder() ?? JSONDecoder()).decode(GlobalSettings.self, from: data)
+            return try JSONDecoder().decode(GlobalSettings.self, from: data)
         } catch {
             backUpUnreadableSettings(data, error: error, backupDirectory: backupDirectory, now: now)
             return GlobalSettings()

@@ -44,8 +44,6 @@ extension AppDelegate {
         }
         
         safeRestart.showPendingNotice()
-        // Once, after the move from the old bundle id: macOS asks for its permissions again.
-        identityNotice.showIfPending()
         updater.willRelaunch = { [unowned self] in
             self.captureUpdateRelaunchState().save(to: .app)
             // Sparkle quits next; a sheet would stop that.
@@ -99,10 +97,8 @@ extension AppDelegate {
             self.steamCmdInstaller.detectThenAutoInstall(self.contentViewModel.steamCmd)
         }
 
-        // Local wallpapers get their stable settings ids once, before any of them is edited.
-        let libraries = [FileManager.default.wallpapersDirectory] + LibraryFolders().folders
+        // Installed packages are converted in the background.
         DispatchQueue.global(qos: .utility).async { [weak self] in
-            LocalWallpaperIdentities.registerLibrary(libraries)
             WallpaperPackageConverter.convertInstalledLibrary()
             if UserDefaults.app.bool(forKey: "ReclaimOriginalPackages") {
                 WallpaperPackageConverter.reclaimEligibleSources()
@@ -117,38 +113,6 @@ extension AppDelegate {
         }
     }
     
-    /// What earlier versions left for the screen saver: what they set as the screen saver (a
-    /// scene's recording, a video's own file copied in) becomes the live pick of that wallpaper,
-    /// with its picture as the still; one of a wallpaper no longer in the library goes, so the
-    /// screen saver follows the desktop again. The old recordings and video files (only OWE's own,
-    /// in the screen saver's folder) and the retired settings are deleted.
-    func migrateScreenSaverRecording() {
-        let store = screenSaverSelection.store
-        store.removeRetiredKeys()
-        // Nothing is recorded, linked or copied any more: the old files go, in the background
-        // (only the user's own copy wrote them where the saver reads).
-        defer {
-            if ScreenSaverInstaller.current.mayInstall {
-                let videos = ScreenSaverVideoStore.current, caches = AppStorageLocation.current.cachesDirectory
-                DispatchQueue.global(qos: .utility).async { videos.removeOldFiles(cachesDirectory: caches) }
-            }
-        }
-        guard let selection = store.selection else {
-            store.migrateSelection() // Drops one that no longer decodes.
-            return
-        }
-        let folder = URL(filePath: selection.wallpaperDirectory, directoryHint: .isDirectory)
-        guard let wallpaper = InstalledLibrary.wallpaper(at: folder, hiding: []) else {
-            store.selection = nil
-            OWELog.info(.app, "Screen saver: \(folder.lastPathComponent), set as the screen saver, is no longer in the library")
-            return
-        }
-        guard store.migrateSelection() else { return }
-        OWELog.info(.app, "Screen saver: \(folder.lastPathComponent), set as the screen saver by an earlier version, is now drawn live")
-        // Its still now, once the app is set up (`renderPickStill`).
-        DispatchQueue.main.async { [weak self] in self?.liveScreenSaver.renderPickStill(wallpaper) }
-    }
-
     func screenSaverSessionChanged(_ running: Bool) {
         if running {
             screenSaverQuitTimer?.invalidate()
@@ -255,10 +219,8 @@ extension AppDelegate {
         themeTintCancellable = nil
         themeTint.publish(nil)
         // The user's pictures go back where they still exist; OWE's pictures stay on disk, since
-        // a Space macOS doesn't let OWE reach may still show one. Full-screen TIFFs earlier
-        // versions left in Caches go to the Trash.
+        // a Space macOS doesn't let OWE reach may still show one.
         desktopPictures.restoreUsersPictures()
-        DesktopSnapshotCache.current.trashLegacySnapshots()
     }
     
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

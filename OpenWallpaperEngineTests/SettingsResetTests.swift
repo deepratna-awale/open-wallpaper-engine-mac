@@ -97,14 +97,9 @@ final class SettingsResetTests: XCTestCase {
 
     /// Errors Only is the default; the old key's None (the old default) migrates to it, other
     /// old choices stay, and a None saved under the new key stays None.
-    func testLogLevelDefaultAndMigration() throws {
+    func testLogLevelDefault() throws {
         XCTAssertEqual(GlobalSettings().logLevel, .error)
-        func decode(_ json: String) throws -> GlobalSettings {
-            try JSONDecoder().decode(GlobalSettings.self, from: Data(json.utf8))
-        }
-        XCTAssertEqual(try decode(#"{"logLevel":"none"}"#).logLevel, .error)
-        XCTAssertEqual(try decode(#"{"logLevel":"verbose"}"#).logLevel, .verbose)
-        XCTAssertEqual(try decode("{}").logLevel, .error)
+        XCTAssertEqual(try JSONDecoder().decode(GlobalSettings.self, from: Data("{}".utf8)).logLevel, .error)
         var chosen = GlobalSettings()
         chosen.logLevel = .none
         let saved = try JSONDecoder().decode(GlobalSettings.self, from: JSONEncoder().encode(chosen))

@@ -104,11 +104,6 @@ choose, so they have no such tab and are set as they are):
   turning the plugin on if it is off. Its preview is the screen saver's picture until the
   screen saver has drawn it once. **Stop Using as Screen Saver** goes back to the desktop's
   wallpapers.
-- When the app starts, what an earlier version set as the screen saver (a scene's recording, a
-  video's own file) becomes this live choice of its wallpaper. The recordings and the video files
-  earlier versions linked or copied into the screen saver's folder are deleted: only OWE's own,
-  named as it named them, directly in that folder (a link goes, never what it points to; nothing in
-  the library is touched), each deletion logged.
 
 A video wallpaper (MP4, M4V or MOV) opens Scene Edit / Export on this tab too, with the
 video playing: its screen saver is the video itself, drawn live as the desktop shows it. **Set as Screen Saver**

@@ -20,8 +20,6 @@ final class SceneReviewFixTests: XCTestCase {
         // Deterministic and seed-free: a fixed input gives a fixed name, so it can't come from `hashValue`.
         XCTAssertEqual(SceneSoundContentBuilder.cacheName(entry: "a.ogg", wallpaperDirectory: nil, size: 0, modified: nil),
                        SceneSoundContentBuilder.cacheName(entry: "a.ogg", wallpaperDirectory: nil, size: 0, modified: nil))
-        XCTAssertTrue(SceneSoundContentBuilder.isCurrentCacheName(name))
-        XCTAssertFalse(SceneSoundContentBuilder.isCurrentCacheName("-4611686018427387904.mp3"))
     }
 
     func testSceneAudioCacheNameFollowsALooseSourceFile() throws {
@@ -47,7 +45,7 @@ final class SceneReviewFixTests: XCTestCase {
         XCTAssertNotEqual(touched, name(), "a resized file gets a new copy")
     }
 
-    func testSceneAudioCacheDropsOldNamesOnceAndKeepsUnderItsCap() throws {
+    func testSceneAudioCacheKeepsUnderItsCap() throws {
         let dir = FileManager.default.temporaryDirectory.appending(path: "owe-audio-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -57,20 +55,14 @@ final class SceneReviewFixTests: XCTestCase {
             try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSinceNow: -age)], ofItemAtPath: url.path)
             return url
         }
-        let legacy = try write("1234567890.mp3", bytes: 10, age: 0)
         let oldest = try write(String(repeating: "a", count: 64) + ".mp3", bytes: 100, age: 300)
         let middle = try write(String(repeating: "b", count: 64) + ".mp3", bytes: 100, age: 200)
         let newest = try write(String(repeating: "c", count: 64) + ".mp3", bytes: 100, age: 100)
         SceneSoundContentBuilder.prune(dir, byteLimit: 250, keeping: newest)
         let exists = { (url: URL) in FileManager.default.fileExists(atPath: url.path) }
-        XCTAssertFalse(exists(legacy), "the old per-launch names are swept")
         XCTAssertFalse(exists(oldest), "least recently used goes first")
         XCTAssertTrue(exists(middle))
         XCTAssertTrue(exists(newest))
-        // The sweep runs once: a later odd name is left alone.
-        let later = try write("99.mp3", bytes: 1, age: 0)
-        SceneSoundContentBuilder.prune(dir, byteLimit: 1 << 20)
-        XCTAssertTrue(exists(later))
     }
 
     // MARK: Effect visibility

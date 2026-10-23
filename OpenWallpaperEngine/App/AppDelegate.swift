@@ -270,8 +270,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         // Behind the screen saver: no Dock icon from the start.
         if launchedForScreenSaver { NSApp.setActivationPolicy(.accessory) }
-        // Animated previews are built in now; the old plugin's on/off is dropped.
-        ThumbnailAnimation.removeRetiredPreference(from: .app)
 
         workshopDependencyCancellable = wallpaperViewModel.$wallpapers.sink { [weak self] wallpapers in
             for wallpaper in wallpapers.values {
@@ -315,7 +313,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Stretched displays name their canvas to the scene views in their windows.
         stretchCanvasCancellable = wallpaperViewModel.$layoutResolution.map(\.canvases).removeDuplicates()
             .sink { [weak self] canvases in self?.applyStretchCanvases(canvases) }
-        migrateScreenSaverRecording()
         // The screen saver's loops follow the displays' wallpapers and layouts.
         screenSaver.observe(wallpaperViewModel)
         liveScreenSaver.onSessionChanged = { [weak self] running in self?.screenSaverSessionChanged(running) }
@@ -425,8 +422,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var screenSaverQuitTimer: Timer?
 
     var windowOpenedObserver: NSObjectProtocol?
-
-    lazy var identityNotice = AppIdentityNotice()
 
     var staleBundleRefresher: StaleBundleRefresher?
 

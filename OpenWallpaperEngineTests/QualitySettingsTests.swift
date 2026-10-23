@@ -31,7 +31,7 @@ final class QualitySettingsTests: XCTestCase {
     /// left behind (they held the inert "disabled" and false), everything else is kept, and a
     /// missing or unreadable key keeps its default instead of resetting every setting.
     func testSettingsSavedBeforeKeepTheirOtherValues() throws {
-        let old = #"{"otherApplicationFocused":"pause","antiAliasing":"msaa_x4","postProcessing":"disabled","reflections":false,"fps":45,"videoFramework":"metal","logLevel":"verbose","appearance":"sparkly"}"#
+        let old = #"{"otherApplicationFocused":"pause","antiAliasing":"msaa_x4","postProcessing":"disabled","reflections":false,"fps":45,"videoFramework":"metal","logLevelChoice":"verbose","appearance":"sparkly"}"#
         let settings = try JSONDecoder().decode(GlobalSettings.self, from: Data(old.utf8))
         XCTAssertEqual(settings.otherApplicationFocused, .pause)
         XCTAssertEqual(settings.antiAliasing, .none, "saved while it did nothing: left behind (WE's key is msaa)")

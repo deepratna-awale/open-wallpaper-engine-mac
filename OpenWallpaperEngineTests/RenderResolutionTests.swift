@@ -158,90 +158,12 @@ final class RenderResolutionTests: XCTestCase {
         XCTAssertEqual(SceneRenderSettings().renderResolution, .yourDisplay, "a settings-less renderer draws as WE does")
     }
 
-    private func decoded(_ json: String, backingScale: Double? = nil) throws -> (GlobalSettings, migrated: Bool) {
-        let migration = backingScale.map(GlobalSettingsMigration.init(mainBackingScale:))
-        let settings = try (migration?.decoder() ?? JSONDecoder()).decode(GlobalSettings.self, from: Data(json.utf8))
-        return (settings, migration?.migrated ?? false)
-    }
-
-    func testStoredValuesMigrate() throws {
-        func resolution(_ value: String) throws -> GSRenderResolution {
-            try decoded("{\"renderResolution\":\"\(value)\"}").0.renderResolution
-        }
-        XCTAssertEqual(try resolution("retina"), .yourDisplay, "the backing pixels")
-        XCTAssertEqual(try resolution("native"), .yourDisplay, "the backing pixels, as stored before Retina")
-        XCTAssertEqual(try resolution("display"), .yourDisplay, "the points, now Your Display (plus Upscaling)")
-        XCTAssertEqual(try resolution("desktop"), .yourDisplay)
-        XCTAssertEqual(try resolution("full"), .full)
-        XCTAssertEqual(try resolution("uhd4K"), .uhd4K)
-        XCTAssertEqual(try resolution("yourDisplay"), .yourDisplay)
-        XCTAssertEqual(try resolution("bogus"), .yourDisplay, "an unknown value keeps the default")
-        var settings = GlobalSettings()
-        settings.renderResolution = .uhd4K
-        settings.upscaling = .bilinear
-        settings.renderScale = .percent67
-        let roundTrip = try decoded(String(decoding: JSONEncoder().encode(settings), as: UTF8.self), backingScale: 2)
-        XCTAssertEqual(roundTrip.0, settings)
-        XCTAssertFalse(roundTrip.migrated, "a saved value of today's is read as it is")
-    }
-
-    /// The points-based Display becomes Your Display drawn natively: Upscaling stays as it was,
-    /// and on a Retina display web wallpapers stay at
-    /// standard resolution, as Display drew them. Once.
-    func testDisplayOnRetinaBecomesYourDisplayOnce() throws {
-        let (retina, migrated) = try decoded(#"{"renderResolution":"display","upscaling":"off","renderScale":"percent75"}"#,
-                                             backingScale: 2)
-        XCTAssertTrue(migrated)
-        XCTAssertEqual(retina.renderResolution, .yourDisplay)
-        XCTAssertEqual(retina.upscaling, .off)
-        XCTAssertEqual(retina.renderScale, .percent75)
-        XCTAssertTrue(retina.webStandardResolution)
-        XCTAssertEqual(target(hdScene, [self.retina], retina.renderResolution, scale: SceneRenderSettings(retina).drawnScale),
-                       SIMD2(3840, 2160), "the backing pixels, natively")
-        // Saved, it reads as it is: the migration happens once.
-        let again = try decoded(String(decoding: JSONEncoder().encode(retina), as: UTF8.self), backingScale: 2)
-        XCTAssertFalse(again.migrated)
-        XCTAssertEqual(again.0, retina)
-
-        // Upscaling the user turned on stays on, at their scale.
-        let upscaled = try decoded(#"{"renderResolution":"desktop","upscaling":"bilinear","renderScale":"percent67"}"#,
-                                   backingScale: 2).0
-        XCTAssertEqual(upscaled.upscaling, .bilinear)
-        XCTAssertEqual(upscaled.renderScale, .percent67)
-        // On a 1× display Display and Your Display are the same size: nothing else changes.
-        let (plain, plainMigrated) = try decoded(#"{"renderResolution":"display"}"#, backingScale: 1)
-        XCTAssertTrue(plainMigrated, "still saved, so it isn't migrated again on a later Retina display")
-        XCTAssertEqual(plain.renderResolution, .yourDisplay)
-        XCTAssertEqual(plain.upscaling, .off)
-        XCTAssertFalse(plain.webStandardResolution)
-        // Retina drew the backing pixels: nothing to carry over.
-        let (pixels, pixelsMigrated) = try decoded(#"{"renderResolution":"retina"}"#, backingScale: 2)
-        XCTAssertFalse(pixelsMigrated)
-        XCTAssertFalse(pixels.webStandardResolution)
-    }
-
-    func testLoadingStoredSettingsMigrates() {
-        let migration = GlobalSettingsMigration(mainBackingScale: 2)
-        let loaded = GlobalSettingsViewModel.loadSettings(from: Data(#"{"renderResolution":"display"}"#.utf8),
-                                                          backupDirectory: FileManager.default.temporaryDirectory,
-                                                          migration: migration)
-        XCTAssertTrue(migration.migrated)
-        XCTAssertEqual(loaded.renderResolution, .yourDisplay)
-        XCTAssertEqual(loaded.upscaling, .off)
-        XCTAssertTrue(loaded.webStandardResolution)
-    }
-
-    /// A first launch (no stored settings) draws natively at the display's pixels, on 1× and 2× alike.
+    /// A first launch (no stored settings) draws natively at the display's pixels.
     func testFirstLaunchDefaults() {
-        let folder = FileManager.default.temporaryDirectory
-        for scale in [1.0, 2.0] {
-            let launch = GlobalSettingsMigration(mainBackingScale: scale)
-            let settings = GlobalSettingsViewModel.loadSettings(from: nil, backupDirectory: folder, migration: launch)
-            XCTAssertEqual(settings, GlobalSettings(), "\(scale)×")
-            XCTAssertEqual(settings.renderResolution, .yourDisplay, "\(scale)×")
-            XCTAssertEqual(settings.upscaling, .off, "\(scale)×")
-            XCTAssertFalse(launch.migrated, "\(scale)×: nothing to carry over")
-        }
+        let settings = GlobalSettingsViewModel.loadSettings(from: nil, backupDirectory: FileManager.default.temporaryDirectory)
+        XCTAssertEqual(settings, GlobalSettings())
+        XCTAssertEqual(settings.renderResolution, .yourDisplay)
+        XCTAssertEqual(settings.upscaling, .off)
     }
 
     func testPresetsDrawNatively() {
@@ -265,30 +187,9 @@ final class RenderResolutionTests: XCTestCase {
         XCTAssertEqual(settings.upscaling, .off, "applying a preset again overrides it")
     }
 
-    /// The removed MetalFX Upscaling becomes bilinear Upscaling at the same render scale, once:
-    /// stored settings, an imported settings file and MCP's earlier `metalfx` alike.
+    /// MCP's upscaling names, and its earlier `metalfx`.
     @MainActor
-    func testMetalFXBecomesBilinearAtTheSameScale() throws {
-        let (stored, migrated) = try decoded(#"{"upscaling":"metalFX","renderScale":"percent67"}"#, backingScale: 2)
-        XCTAssertTrue(migrated, "saved at once, so it is carried over (and logged) once")
-        XCTAssertEqual(stored.upscaling, .bilinear)
-        XCTAssertEqual(stored.renderScale, .percent67)
-        XCTAssertEqual(SceneRenderSettings(stored).drawnScale, 2.0 / 3, "the scene keeps drawing at the same scale")
-        let again = try decoded(String(decoding: JSONEncoder().encode(stored), as: UTF8.self), backingScale: 2)
-        XCTAssertFalse(again.migrated)
-        XCTAssertEqual(again.0, stored)
-        XCTAssertEqual(try decoded(#"{"upscaling":"metalFX"}"#).0.upscaling, .bilinear, "without a migration context too")
-        XCTAssertEqual(try decoded(#"{"upscaling":"off"}"#).0.upscaling, .off)
-        XCTAssertEqual(try decoded(#"{"upscaling":"bogus"}"#).0.upscaling, .off, "an unknown value keeps the default")
-
-        let file = #"{"format":"open-wallpaper-engine-settings","version":1,"appVersion":"1.0.0-beta.5","#
-            + #""settings":{"upscaling":"metalFX","renderScale":"percent50"},"preferences":{}}"#
-        let migration = GlobalSettingsMigration(mainBackingScale: 1)
-        let imported = try SettingsTransfer.decode(Data(file.utf8), migration: migration)
-        XCTAssertTrue(migration.migrated)
-        XCTAssertEqual(imported.settings.upscaling, .bilinear)
-        XCTAssertEqual(imported.settings.renderScale, .percent50)
-
+    func testMCPUpscalingNames() throws {
         let setting = try LibrarySetting.named("upscaling")
         XCTAssertEqual(setting.kind, .choice(["off", "bilinear"]))
         for (given, expected) in [("off", "off"), ("bilinear", "bilinear"), ("metalfx", "bilinear"), ("MetalFX", "bilinear")] {

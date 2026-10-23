@@ -5,10 +5,8 @@ import Foundation
 /// each bound to a fingerprint of its folder's content when trust was given: a Workshop update,
 /// or another item downloaded to the same folder, asks again.
 ///
-/// Stored in the defaults as the trusted folders' paths (`TrustedWallpapers`, as before) and a
-/// fingerprint per path (`TrustedWallpaperFingerprints`). A path trusted before fingerprints
-/// existed has none: it is bound to the content found the first time it is checked, so updating
-/// the app asks no one again.
+/// Stored in the defaults as the trusted folders' paths (`TrustedWallpapers`) and a fingerprint
+/// per path (`TrustedWallpaperFingerprints`).
 struct WallpaperTrustStore {
     static let pathsKey = "TrustedWallpapers"
     static let fingerprintsKey = "TrustedWallpaperFingerprints"
@@ -30,18 +28,10 @@ struct WallpaperTrustStore {
         paths.contains(Self.key(of: wallpaper))
     }
 
-    /// Whether `fingerprint`, the folder's content now, is what was trusted. A listed folder
-    /// without a fingerprint (trusted before fingerprints existed) is bound to `fingerprint` here.
+    /// Whether `fingerprint`, the folder's content now, is what was trusted.
     func verdict(for wallpaper: WEWallpaper, fingerprint: String) -> Verdict {
         let path = Self.key(of: wallpaper)
-        guard paths.contains(path) else { return .untrusted }
-        var fingerprints = self.fingerprints
-        guard let recorded = fingerprints[path] else {
-            fingerprints[path] = fingerprint
-            defaults.set(fingerprints, forKey: Self.fingerprintsKey)
-            OWELog.info(.library, "Bound the trust given to \(wallpaper.wallpaperDirectory.lastPathComponent) to its content")
-            return .trusted
-        }
+        guard paths.contains(path), let recorded = fingerprints[path] else { return .untrusted }
         return recorded == fingerprint ? .trusted : .changed
     }
 

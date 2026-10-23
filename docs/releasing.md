@@ -263,25 +263,8 @@ storage, the safe-restart ledger), the Wallpaper Storage with its `.owe-assets` 
 the caches under `~/Library/Caches` all stay. No store is keyed on the app version.
 
 **The update that changed the bundle id.** Versions before the move to
-`openwallpaperengine.app` used another bundle id. The first launch under the new one moves
-that identity's state over once (`AppIdentityMigration`, before anything reads the defaults):
-the defaults (and the Wallpaper Editor's), the caches under `~/Library/Caches/<id>` (shader
-variants and pipeline archives included), the web views' data (`~/Library/WebKit/<id>`,
-`~/Library/HTTPStorages/<id>`) and the Steam keychain items, which may show one keychain prompt
-to read. It reinstalls the screen saver under the new id and registers launch at login again.
-The Application Support folder is named after the app, not its id, and stays as it is. Each
-step is recorded in `IdentityMigration.json` in that folder as it finishes, so an interrupted
-migration resumes where it stopped; the old copy of anything is removed only after the new one
-is verified. Afterwards the app says once that macOS will ask again for its permissions.
-
-- **Downgrading isn't supported** past this update: the old identity's defaults, caches and
-  keychain items are moved, not copied, so an older version starts as a new install.
-- **Privacy permissions (TCC) can't be migrated.** macOS grants System Audio Recording (or
-  Screen Recording), Local Network, Photos and the other privacy permissions to an app's
-  identity, so the renamed app asks for each again the first time it needs it. The old
-  identity's entries stay in System Settings › Privacy & Security until removed there.
-- **Launch at login:** the old identity's Login Items entry can't be removed by the new app;
-  remove it in System Settings › General › Login Items if it is still listed.
+`openwallpaperengine.app` used another bundle id. Their state (defaults, caches, keychain items)
+isn't carried over: the app starts under the new id as a new install.
 
 **Shader caches across updates.** The translated-shader cache is keyed on
 `ShaderVariantTranslator.revision` and the toolchain fingerprint, and the Metal pipeline

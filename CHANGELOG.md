@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **One-time migrations from older Open Wallpaper Engine versions.** The move from the old app id (its defaults, caches, keychain items, screen saver and login item, and the notice about permissions), the old settings keys and values (the earlier Render Resolution and MetalFX choices, the old log level key, the Animated Thumbnails and screen saver schedule keys), the screen saver's old recordings, video copies and selection, the old desktop snapshots in Caches, the old video texture cache folder, the old audio cache names, settings, favourites and trust saved under the old wallpaper identities and paths, SceneScript `localStorage` kept under a `workshopid`, and the single-wallpaper key from before per-display wallpapers. Data still in those old formats is ignored. Wallpaper Engine's own formats are read as before.
+- **Cleanup:** duplicate and weak tests, unused test helpers and a few functions only tests called are gone.
+
 ## [1.0.0-beta.8] - 2026-10-18
 
 ### Added
