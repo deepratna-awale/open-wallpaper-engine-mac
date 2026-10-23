@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Model clip events fire at their frame.** A `.mdl` event's time is stored in seconds (Wallpaper Engine's compilers write `frame / fps`), and the player read it as a frame, so an event Wallpaper Engine compiled fired far too early (frame 15 of a 30 fps clip at half a frame instead of half a second). It is now the clip clock's event time as Wallpaper Engine plays it.
+- **Wallpaper Editor: model events are added and compiled as in Wallpaper Engine.** The Model Editor's Events tab lists the model's animations, not its clips, and Add Event adds to the animation selected, as Wallpaper Engine's does. An event is compiled as Wallpaper Engine's compiler writes it: its time in seconds and the event as JSON (`{"frame":15,"name":"flapmid"}`), which scripts' `animationEvent` gets parsed, in the record Wallpaper Engine puts it in (for an event on an animation, the first other animation or clip, as Wallpaper Engine's compiler does). Before, the name was stored as plain text, which scripts couldn't parse. Checked against WE 2.8.0.42's Add Event on an imported FBX (capture 549).
+
 ## [1.0.0-beta.8] - 2026-10-18
 
 ### Added

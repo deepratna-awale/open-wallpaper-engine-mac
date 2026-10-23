@@ -38,7 +38,7 @@ let package = Package(
         .testTarget(name: "OWESceneEditingTests", dependencies: ["OWESceneEditing", "WEFormat"]),
         .testTarget(name: "OWEInspectorKitTests", dependencies: ["OWEInspectorKit"]),
         .testTarget(name: "OWEEditorTests", dependencies: ["OWEEditor"]),
-        .testTarget(name: "OWEModelImportTests", dependencies: ["OWEModelImport", "OWESceneEditing"],
+        .testTarget(name: "OWEModelImportTests", dependencies: ["OWEModelImport", "OWESceneEditing", "WEFormat"],
                     resources: [.copy("Fixtures")]),
     ],
     swiftLanguageModes: [.v6]

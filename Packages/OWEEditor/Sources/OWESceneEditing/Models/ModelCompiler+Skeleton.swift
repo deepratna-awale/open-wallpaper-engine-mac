@@ -193,7 +193,7 @@ extension ModelCompiler {
             let ids = config.animationIDs(tracks.map(\.name))
             var records: [Record] = zip(ids, tracks).map { id, track in
                 return Record(id: id, name: track.name, mode: "loop", fps: track.fps, frames: max(track.frames, 1), flags: 0,
-                              samples: track.samples, reference: nil, events: events(config, id))
+                              samples: track.samples, reference: nil, events: [])
             }
             for clip in config.clips {
                 guard let sourceIndex = records.prefix(tracks.count).firstIndex(where: { $0.id == clip.animation }) else { continue }
@@ -212,13 +212,38 @@ extension ModelCompiler {
                 records.append(Record(id: clip.id, name: clip.name, mode: clip.mode, fps: clip.fps ?? source.fps, frames: frames,
                                       flags: flags, samples: samples,
                                       reference: (sourceIndex, start, end, max(clip.frameOffset, 0), rootBone),
-                                      events: events(config, clip.id)))
+                                      events: []))
             }
+            placeEvents(config, in: &records)
             return records
         }
 
-        func events(_ config: ModelImportConfig, _ animation: UInt64) -> [(Float, String)] {
-            config.events.filter { $0.animation == animation }.sorted { $0.frame < $1.frame }.map { ($0.frame, $0.name) }
+        /// The configuration's events in the records, as WE's compiler puts them there
+        /// (`resourcecompiler64.exe` 0x1400a28c0…0x1400a2b43), in the configuration's order:
+        /// - An event keyed to a clip (`clip`: its id) goes in the record with that id. One keyed
+        ///   to an animation (`animation`: its name) goes in the first record whose name is *not*
+        ///   that name: WE's test of the name is inverted, so capture 549's "flapmid" on "Scene"
+        ///   is in the clip "Scene (Clip 54)" and the animation Scene has none. Without such a
+        ///   record (or with an id no animation has) the event is left out.
+        /// - Its time is `frame / fps` of that record (`1 / fps · frame`, the frame a whole
+        ///   number), its text the event as JSON, `{"frame":15,"name":"flapmid"}`.
+        func placeEvents(_ config: ModelImportConfig, in records: inout [Record]) {
+            let clipIDs = Set(config.clips.map(\.id))
+            let names = Dictionary(config.animationMapping.map { ($0.value, $0.key) }, uniquingKeysWith: min)
+            for event in config.events {
+                let target: Int?
+                if clipIDs.contains(event.animation) {
+                    target = records.firstIndex { $0.id == event.animation }
+                } else if let name = names[event.animation] ?? records.first(where: { $0.id == event.animation })?.name {
+                    target = records.firstIndex { $0.name != name }
+                } else {
+                    target = nil
+                }
+                guard let target else { continue }
+                let frame = Int(event.frame)
+                let time: Float = (1 / records[target].fps) * Float(frame)
+                records[target].events.append((time, ModelCompiler.eventJSON(name: event.name, frame: frame)))
+            }
         }
 
         func animationSection(_ records: [Record], meshes: [CompiledMesh], config: ModelImportConfig) -> [UInt8] {

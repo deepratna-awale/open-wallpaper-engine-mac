@@ -127,7 +127,9 @@ anim: u64 id; cstr name; cstr mode ("loop" | "mirror" | "single"); f32 fps; u32 
       A >= 5: f32[6] animated AABB;         A >= 6: a third scalar-track list (per-bone Depth offset)
       if flags & 1: u16 sourceAnim (< this one); u32 startFrame, endFrame, frameOffset; i32 rootBone (−1 = none)
                     (the model editor's "Add Clip" record; MG4)
-      i32 eventCount; eventCount × { f32 frame; cstr name }
+      i32 eventCount; eventCount × { f32 time; cstr name }
+                    (time in seconds, the compilers' `frame / fps`; name the event's JSON,
+                    `{"frame":15,"name":"flapmid"}`; capture 549)
 ```
 
 - **Samples:** F+1 frames of 9 floats: position xyz, **Euler xyz in radians**, scale xyz. At load they become a quaternion `q = qz·qy·qx` (R = Rz·Ry·Rx, X first), stored SoA, 10 floats per bone. The data confirms the order: frame-0 Euler z equals the bind matrix's `atan2(m01, m00)` for every bone.
