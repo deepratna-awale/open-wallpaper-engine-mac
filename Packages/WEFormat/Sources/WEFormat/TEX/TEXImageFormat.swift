@@ -2,7 +2,7 @@ import Foundation
 
 /// The `format` word of a `.tex` file's `TEXI` header. Its values are the shaders' `FORMAT_*`
 /// constants (`common_fragment.h`), which WE passes to a shader as `TEX<n>FORMAT`.
-public struct TEXImageFormat: RawRepresentable, Equatable {
+public struct TEXImageFormat: RawRepresentable, Equatable, Sendable {
     public let rawValue: UInt32
 
     public init(rawValue: UInt32) {

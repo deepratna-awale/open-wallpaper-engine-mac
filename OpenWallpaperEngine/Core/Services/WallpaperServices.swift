@@ -11,7 +11,9 @@ extension Notification.Name {
 /// The app's system audio capture and the user properties of every running wallpaper instance,
 /// shared by scene, video and web wallpapers. SceneScript itself runs per wallpaper instance in a
 /// `SceneScriptRuntime` (docs/scenescript-plan.md WP11).
-final class WallpaperServices {
+// @unchecked Sendable: only `let`s set in init. The services it holds are already used across
+// threads; checking them is their own types' job.
+final class WallpaperServices: @unchecked Sendable {
     static let shared = WallpaperServices()
 
     /// System audio capture: the level and WE's spectrum analyzer.

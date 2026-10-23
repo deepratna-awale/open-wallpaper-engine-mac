@@ -3,7 +3,7 @@ import Foundation
 /// A JSON document as WE reads and writes it (JsonCpp): integers and reals stay apart, as the
 /// text had them (`8` is an integer, `2.0` a real), so writing it back (`WEJSONWriter`) keeps
 /// each number's kind. Objects keep their members; WE writes them sorted by name.
-public indirect enum WEJSONDocument: Equatable {
+public indirect enum WEJSONDocument: Equatable, Sendable {
     case null
     case bool(Bool)
     case integer(Int64)
@@ -13,7 +13,7 @@ public indirect enum WEJSONDocument: Equatable {
     case array([WEJSONDocument])
     case object([String: WEJSONDocument])
 
-    public enum ParseError: Error, LocalizedError, Equatable {
+    public enum ParseError: Error, LocalizedError, Equatable, Sendable {
         case unexpected(String, offset: Int)
 
         public var errorDescription: String? {

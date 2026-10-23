@@ -1,15 +1,21 @@
 import AppKit
+import os
 
 /// What reading stored settings needs to carry an earlier Render Resolution over, handed to the
 /// decoder in `userInfo[.settingsMigration]`, and whether it did. Without it the migration
 /// assumes a 1× display.
-final class GlobalSettingsMigration {
+final class GlobalSettingsMigration: Sendable {
     /// The main display's backing scale when the settings are read (2 on Retina).
     let mainBackingScale: Double
     /// The settings read held the points-based Render Resolution ("display", "desktop") and were
     /// carried over (`GlobalSettings.migrateFromPoints`), or the removed MetalFX Upscaling
     /// (`GlobalSettings.migrateMetalFX`): save them, so it happens once.
-    var migrated = false
+    var migrated: Bool {
+        get { migratedState.withLock { $0 } }
+        set { migratedState.withLock { $0 = newValue } }
+    }
+
+    private let migratedState = OSAllocatedUnfairLock(initialState: false)
 
     init(mainBackingScale: Double) {
         self.mainBackingScale = mainBackingScale

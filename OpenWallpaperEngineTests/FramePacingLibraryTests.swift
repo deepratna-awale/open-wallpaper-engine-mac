@@ -102,7 +102,7 @@ final class FramePacingLibraryTests: XCTestCase {
         view.colorPixelFormat = .bgra8Unorm
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: size.x, height: size.y)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "pacing"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: services, screenID: "pacing") })
         view.isPaused = true
         renderer.setPlacement(.fill)
         renderer.skipsIdleFrames = paced

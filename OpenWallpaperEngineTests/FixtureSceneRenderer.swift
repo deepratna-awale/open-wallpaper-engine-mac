@@ -46,8 +46,8 @@ struct FixtureSceneRenderer {
         view.colorPixelFormat = .bgra8Unorm
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: CGFloat(drawable.x), height: CGFloat(drawable.y))
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil,
-                                                        screenID: "fixture-\(sceneFile)-\(pixelsPerPoint)"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil,
+                                                        screenID: "fixture-\(sceneFile)-\(pixelsPerPoint)") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.renderSettings = settings

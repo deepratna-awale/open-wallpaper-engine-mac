@@ -104,7 +104,7 @@ final class WebWallpaperSchemeHandlerTests: XCTestCase {
         }
     }
 
-    func testZCompatIsChosenByTheFolderNotProjectJSON() {
+    @MainActor func testZCompatIsChosenByTheFolderNotProjectJSON() {
         let project = WEProject(file: "index.html", title: "Web", workshopid: .string("999"), type: "web")
         XCTAssertEqual(WebWallpaperViewModel.compatWorkshopId(of: WEWallpaper(using: project, where: wallpaper)), "123456")
         XCTAssertNil(WebWallpaperViewModel.compatWorkshopId(of: WEWallpaper(using: project, where: outside)))

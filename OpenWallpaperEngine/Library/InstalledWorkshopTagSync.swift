@@ -13,11 +13,12 @@ import Foundation
 ///   `retryDelay`, not on every redraw.
 ///
 /// Main-thread only (it belongs to the Installed tab's view model).
+@MainActor
 final class InstalledWorkshopTagSync {
     typealias Fetch = ([String]) async throws -> [WorkshopItem]
 
     /// Ids per GetPublishedFileDetails request.
-    static let batchSize = 50
+    nonisolated static let batchSize = 50
 
     enum Plan: Equatable {
         case upToDate
@@ -59,7 +60,7 @@ final class InstalledWorkshopTagSync {
     }
 
     /// What to do for an item with `stored` tags, given the newest Steam response at hand.
-    static func plan(stored: InstalledWorkshopTags?, known: WorkshopItem?) -> Plan {
+    nonisolated static func plan(stored: InstalledWorkshopTags?, known: WorkshopItem?) -> Plan {
         let knownTime = known?.timeUpdated
         if let stored, stored.revision == InstalledWorkshopTags.currentRevision {
             guard let known, let knownTime, knownTime > (stored.timeUpdated ?? 0) else { return .upToDate }

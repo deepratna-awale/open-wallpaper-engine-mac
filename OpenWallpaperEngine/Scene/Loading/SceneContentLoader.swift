@@ -11,7 +11,10 @@ import CoreText
 import CryptoKit
 import OWESceneEditing
 
-class SceneContentLoader: ObservableObject {
+/// `@unchecked Sendable`: loads, content builds and the main thread share it through the locks
+/// documented on its fields (`stateLock`, `sceneLock`, `identityLock`, `embeddedVideoLock`,
+/// `editorAssetsLock`) and the serial `contentQueue`.
+class SceneContentLoader: ObservableObject, @unchecked Sendable {
     static func log(_ msg: String) {
         OWELog.info(.scene, msg)
     }
@@ -108,10 +111,11 @@ class SceneContentLoader: ObservableObject {
     /// Builds the render content off the main thread and delivers it on the main queue. While a
     /// load is in flight it delivers the previous content (nil at first); the load's commit bumps
     /// the revision, and the content is built again.
-    func contentAsync(completion: @escaping (SceneMetalContent?) -> Void) {
+    func contentAsync(completion: @escaping @MainActor @Sendable (SceneMetalContent?) -> Void) {
         contentQueue.async { [weak self] in
             let content = self?.metalContent()
-            DispatchQueue.main.async { completion(content) }
+            // The content was made here and is handed over whole (`Task`'s closure is `sending`).
+            Task { @MainActor in completion(content) }
         }
     }
 
@@ -285,7 +289,9 @@ class SceneContentLoader: ObservableObject {
 
     /// Shared by every scene: translated variants are cached in memory and on disk.
     /// Optional only for its callers' `guard let`s; it always exists.
-    static let defaultEffectTranslator: ShaderVariantTranslator? =
+    /// `nonisolated(unsafe)`: never reassigned, and the translator guards its own caches with its
+    /// lock; it can go once `ShaderVariantTranslator` is `Sendable`.
+    nonisolated(unsafe) static let defaultEffectTranslator: ShaderVariantTranslator? =
         ShaderVariantTranslator(compiler: ShaderCompilerFactory.makeIsolated(qos: .userInitiated))
     /// This scene's translator (`init`).
     let effectTranslator: ShaderVariantTranslator?

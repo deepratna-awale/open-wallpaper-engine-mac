@@ -303,7 +303,8 @@ final class TimelineLibraryRenderTests: XCTestCase {
             view.framebufferOnly = false
             view.autoResizeDrawable = false
             view.drawableSize = CGSize(width: 256, height: 144)
-            renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "timeline-sweep"))
+            let mtkView: MTKView = view // a local: the closure may not capture self before init completes
+            renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: mtkView, scriptServices: services, screenID: "timeline-sweep") })
             view.isPaused = true
             renderer.setPlacement(.stretch)
             renderer.scripts.frameWait = 5

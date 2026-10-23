@@ -10,6 +10,7 @@ import SwiftUI
 /// Redraws its observers when the system accent colour changes, so a selection drawn in the
 /// accent never stays in the old colour. It also holds Theming's tint of this process's windows
 /// (`themeTint`), which `AppAccentTint` applies at each window's root.
+@MainActor
 final class SystemAccentColor: ObservableObject {
     static let shared = SystemAccentColor()
 
@@ -20,7 +21,8 @@ final class SystemAccentColor: ObservableObject {
     @Published var themeTint: ThemeColor?
     private let center: NotificationCenter
     private let distributedCenter: NotificationCenter
-    private var tokens: [NSObjectProtocol] = []
+    // Filled in init and only read again by the nonisolated deinit; never mutated after init.
+    nonisolated(unsafe) private var tokens: [NSObjectProtocol] = []
 
     /// Posted by System Settings (and the Theming settings) when the accent or highlight
     /// colour changes; AppKit refreshes `controlAccentColor` on it.
@@ -30,14 +32,16 @@ final class SystemAccentColor: ObservableObject {
          distributedCenter: NotificationCenter = DistributedNotificationCenter.default()) {
         self.center = center
         self.distributedCenter = distributedCenter
-        let bump: (Notification) -> Void = { [weak self] _ in
+        let bump: @Sendable (Notification) -> Void = { [weak self] _ in
             // A later main-queue turn, after AppKit has read the new preference.
-            DispatchQueue.main.async { self?.revision &+= 1 }
+            DispatchQueue.main.async { [weak self] in self?.revision &+= 1 }
         }
-        tokens.append(center.addObserver(forName: NSColor.systemColorsDidChangeNotification,
-                                         object: nil, queue: nil, using: bump))
-        tokens.append(distributedCenter.addObserver(forName: Self.colorPreferencesChanged,
-                                                    object: nil, queue: nil, using: bump))
+        tokens = [
+            center.addObserver(forName: NSColor.systemColorsDidChangeNotification,
+                               object: nil, queue: nil, using: bump),
+            distributedCenter.addObserver(forName: Self.colorPreferencesChanged,
+                                          object: nil, queue: nil, using: bump),
+        ]
     }
 
     deinit {

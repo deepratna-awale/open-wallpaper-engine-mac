@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 
+@MainActor
 final class DownloadedWallpaperIndex: ObservableObject {
     static let shared = DownloadedWallpaperIndex()
 
@@ -134,6 +135,7 @@ final class DownloadedWallpaperIndex: ObservableObject {
 
 /// Tracks favorited wallpapers, keyed by an arbitrary caller-chosen ID (local wallpaper directory
 /// path, or "workshop-<id>" for not-yet-downloaded Workshop items).
+@MainActor
 final class FavoritesStore: ObservableObject {
     static let shared = FavoritesStore()
 
@@ -177,7 +179,7 @@ final class FavoritesStore: ObservableObject {
 
     /// A Workshop wallpaper keeps one identity whether or not it is installed, so favouriting it in
     /// the Workshop tab and in the local library refer to the same entry.
-    static func key(for wallpaper: WEWallpaper) -> String {
+    nonisolated static func key(for wallpaper: WEWallpaper) -> String {
         if let id = wallpaper.project.workshopid?.rawValue, !id.isEmpty, id.allSatisfy(\.isNumber) {
             return "workshop-\(id)"
         }

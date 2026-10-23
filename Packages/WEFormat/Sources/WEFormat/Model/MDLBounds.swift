@@ -2,7 +2,7 @@ import simd
 
 /// An axis-aligned box: a mesh's authored bounds (`MDLV` 17 and later), a clip's animated bounds
 /// (`MDLA` 5 and later) or a model's.
-public struct MDLBounds: Equatable {
+public struct MDLBounds: Equatable, Sendable {
     public var min: SIMD3<Float>
     public var max: SIMD3<Float>
 

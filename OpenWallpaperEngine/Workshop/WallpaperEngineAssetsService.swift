@@ -172,7 +172,7 @@ final class WallpaperEngineAssetsService: ObservableObject {
             let size: Int64? = FileManager.default.fileExists(atPath: cacheURL.path)
                 ? WallpaperEngineAssetsCache.size(of: cacheURL) : nil
             let free: Int64? = Self.freeSpace(at: storage)
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 self?.status.cacheSize = size
                 self?.status.freeSpace = free
             }
@@ -287,9 +287,11 @@ final class WallpaperEngineAssetsService: ObservableObject {
                              checksFirst: checksFirst, runner: runner, cancellation: token)
         steamCmd.enqueueSteamCmdWork { [weak self] in
             let result = job.run(
-                onProgress: { progress in DispatchQueue.main.async { self?.showDownloadProgress(progress) } },
-                onCopying: { DispatchQueue.main.async { self?.phase = .copying } })
-            DispatchQueue.main.async { self?.finishInstall(result, cancelled: token.isCancelled) }
+                onProgress: { [weak self] progress in
+                    DispatchQueue.main.async { [weak self] in self?.showDownloadProgress(progress) }
+                },
+                onCopying: { DispatchQueue.main.async { [weak self] in self?.phase = .copying } })
+            DispatchQueue.main.async { [weak self] in self?.finishInstall(result, cancelled: token.isCancelled) }
         }
     }
 
@@ -359,7 +361,7 @@ private struct InstallJob {
         case upToDate(build: String)
     }
 
-    func run(onProgress: @escaping (WallpaperEngineAssetsDownload.Progress) -> Void,
+    func run(onProgress: @escaping @Sendable (WallpaperEngineAssetsDownload.Progress) -> Void,
              onCopying: () -> Void) -> Result<Outcome, Error> {
         var currentBuild: String?
         if checksFirst {
@@ -395,7 +397,7 @@ private struct InstallJob {
         }
     }
 
-    private func download(currentBuild: String?, onProgress: @escaping (WallpaperEngineAssetsDownload.Progress) -> Void,
+    private func download(currentBuild: String?, onProgress: @escaping @Sendable (WallpaperEngineAssetsDownload.Progress) -> Void,
                           onCopying: () -> Void) -> Result<Outcome, Error> {
         let download = WallpaperEngineAssetsDownload.downloadDirectory(in: storage)
         // Only the assets are kept; the rest of the app is large and goes right away.

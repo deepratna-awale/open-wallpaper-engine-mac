@@ -31,6 +31,7 @@ struct InstalledWorkshopTags: Codable, Equatable {
     }
 
     /// The tags to show and filter `wallpaper` by, with its Workshop item's from `index`.
+    @MainActor
     static func tags(of wallpaper: WEWallpaper, in index: DownloadedWallpaperIndex) -> [String] {
         let workshop = workshopId(of: wallpaper).flatMap { index.workshopTags(for: $0)?.tags }
         return merged(project: wallpaper.project.tags, workshop: workshop)

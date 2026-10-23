@@ -588,7 +588,8 @@ final class ParticleGPUSimulator {
             encoder.setBuffer(fallback, offset: 0, index: index)
         } else if bytes <= 4096 {
             records.withUnsafeBytes { encoder.setBytes($0.baseAddress!, length: bytes, index: index) }
-        } else if let buffer = device.makeBuffer(bytes: records, length: bytes, options: .storageModeShared) {
+        } else if let buffer = records.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: bytes,
+                                                                            options: .storageModeShared) }) {
             encoder.setBuffer(buffer, offset: 0, index: index)
         } else {
             encoder.setBuffer(fallback, offset: 0, index: index)

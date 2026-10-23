@@ -99,9 +99,12 @@ enum SceneDisplayOutput: Equatable {
             return
         }
         let format = pixelFormat(standard: standard)
-        if view.colorPixelFormat != format { view.colorPixelFormat = format }
-        guard let layer = view.layer as? CAMetalLayer else { return }
-        apply(to: layer)
+        // A view without a snapshot is drawn on the main thread (`SceneViewSnapshots`).
+        MainActor.assumeIsolated {
+            if view.colorPixelFormat != format { view.colorPixelFormat = format }
+            guard let layer = view.layer as? CAMetalLayer else { return }
+            apply(to: layer)
+        }
     }
 
     private func apply(to layer: CAMetalLayer) {

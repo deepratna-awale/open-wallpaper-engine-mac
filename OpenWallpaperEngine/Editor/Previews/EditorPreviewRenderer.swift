@@ -101,8 +101,7 @@ final class EditorPreviewRenderer {
         })
     }
 
-    private static func run<Items: AsyncSequence & Sendable>(items: Items, prioritize: @escaping (Bool) -> Void = { _ in })
-        -> Int32 where Items.Element == EditorPreviewJob.Item? {
+    private static func run(items: AsyncStream<EditorPreviewJob.Item?>, prioritize: @escaping (Bool) -> Void = { _ in }) -> Int32 {
         let scratch = FileManager.default.temporaryDirectory
             .appending(path: "owe-editor-previews-\(ProcessInfo.processInfo.processIdentifier)", directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: scratch) } // Optional: a scratch folder.
@@ -112,26 +111,21 @@ final class EditorPreviewRenderer {
         Task { @MainActor in
             var failed = 0
             var index = 0
-            do {
-                for try await item in items {
-                    if let item {
-                        prioritize(item.isUrgent ?? false)
-                        do {
-                            let url = try await renderer.render(item.subject, outputBase: URL(filePath: item.outputBase))
-                            OWELog.debug(.scene, "Editor preview: wrote \(url.lastPathComponent)")
-                        } catch {
-                            failed += 1
-                            OWELog.error(.scene, "Editor preview of \(item.subject) failed: \(error.localizedDescription)")
-                        }
-                    } else {
+            for await item in items {
+                if let item {
+                    prioritize(item.isUrgent ?? false)
+                    do {
+                        let url = try await renderer.render(item.subject, outputBase: URL(filePath: item.outputBase))
+                        OWELog.debug(.scene, "Editor preview: wrote \(url.lastPathComponent)")
+                    } catch {
                         failed += 1
+                        OWELog.error(.scene, "Editor preview of \(item.subject) failed: \(error.localizedDescription)")
                     }
-                    FileHandle.standardOutput.write(Data(EditorPreviewJob.doneLine(index).utf8))
-                    index += 1
+                } else {
+                    failed += 1
                 }
-            } catch {
-                failed += 1
-                OWELog.error(.scene, "Editor previews: reading the items failed: \(error)")
+                FileHandle.standardOutput.write(Data(EditorPreviewJob.doneLine(index).utf8))
+                index += 1
             }
             status = failed == 0 ? 0 : 1
             OWELog.info(.scene, "Editor previews: helper rendered \(index) previews (\(failed) failed) in "
@@ -311,7 +305,7 @@ final class EditorPreviewRenderer {
             var settled = 0
             while renderer.hasContent, settled < 3, Date() < deadline {
                 renderer.renderShared([viewport])
-                renderer.lastCommandBuffer?.waitUntilCompleted()
+                renderer.lastCommandBuffer?.blockUntilCompleted()
                 try await Task.sleep(for: .milliseconds(5))
                 // Every pipeline, not only the effects': a particle pipeline still compiling draws
                 // nothing, and the probe would frame the preview on what drew without it.

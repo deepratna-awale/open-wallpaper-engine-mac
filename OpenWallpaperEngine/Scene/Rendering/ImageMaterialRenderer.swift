@@ -11,7 +11,8 @@ import simd
 /// Pipelines compile off the render thread, like effect pipelines, and share their binary
 /// archive. `draw` returns false until the pipeline is ready, or when it failed (logged once);
 /// the caller then draws the layer natively. Call on the render thread, apart from the compiles.
-final class ImageMaterialRenderer {
+// `pipelineLock` guards what the compile queue lands; everything else is render-thread only.
+final class ImageMaterialRenderer: @unchecked Sendable {
     private let device: MTLDevice
     private let archive: EffectPipelineArchive?
     private let zeroAttributes: MTLBuffer

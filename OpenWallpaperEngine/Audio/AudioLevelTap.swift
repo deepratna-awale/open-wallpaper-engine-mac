@@ -6,9 +6,12 @@ import Accelerate
 /// The system-wide ScreenCaptureKit capture in `WallpaperServices` cannot tell a
 /// wallpaper's own soundtrack apart from whatever else is playing, so music sync needs a tap on
 /// the wallpaper's audio track to drive visuals from its own music.
-final class AudioLevelTap {
+///
+/// `@unchecked Sendable`: `stateLock` guards `isAttached` and `attachGeneration`; `storage` owns its lock.
+final class AudioLevelTap: @unchecked Sendable {
     /// Shared with the C tap callbacks, which run on a realtime audio thread.
-    final class Storage {
+    /// `@unchecked Sendable`: `lock` guards `value`.
+    final class Storage: @unchecked Sendable {
         private let lock = NSLock()
         private var value: Double = 0
 
@@ -56,12 +59,12 @@ final class AudioLevelTap {
         stateLock.unlock()
     }
 
-    /// Installs the tap on `item`'s first audio track. Track loading is async, so the level stays
-    /// at 0 until it completes.
-    func attach(to item: AVPlayerItem) {
+    /// Installs the tap on the first audio track of `asset`, the asset `item` was made with
+    /// (`AVPlayerItem.asset` is main-actor isolated, and items are made off the main actor). Track
+    /// loading is async, so the level stays at 0 until it completes.
+    func attach(to item: AVPlayerItem, asset: AVAsset) {
         let generation = beginAttach()
         storage.store(0)
-        let asset = item.asset
         Task { [weak self] in
             guard let self,
                   let track = await OWELog.attemptAsync(.audio, "Video audio level: the movie's tracks", {
@@ -73,7 +76,7 @@ final class AudioLevelTap {
             parameters.audioTapProcessor = tap
             let mix = AVMutableAudioMix()
             mix.inputParameters = [parameters]
-            await MainActor.run { item.audioMix = mix }
+            Task { @MainActor in item.audioMix = mix }
         }
     }
 

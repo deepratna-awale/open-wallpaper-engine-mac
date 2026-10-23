@@ -8,7 +8,7 @@ import Foundation
 /// gives up until `reset()`.
 @MainActor
 final class CaptureRestartScheduler {
-    typealias Schedule = (TimeInterval, @escaping @MainActor () -> Void) -> Void
+    typealias Schedule = (TimeInterval, @escaping @MainActor @Sendable () -> Void) -> Void
 
     let debounce: TimeInterval
     let baseBackoff: TimeInterval

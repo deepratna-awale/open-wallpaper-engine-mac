@@ -11,7 +11,8 @@ import simd
 /// (every pipeline failed) keeps the renderer's built-in particle draw, logged once per system.
 /// A stage that reads the scene (`_rt_FullFrameBuffer`, refraction) draws with the snapshot the
 /// caller takes right before it (`readsSceneSnapshot`, `DrawContext.sceneSnapshot`).
-final class ParticleMaterialRenderer {
+// `pipelineLock` guards what the compile queue lands; everything else is render-thread only.
+final class ParticleMaterialRenderer: @unchecked Sendable {
     /// Vertex buffer slots; buffer 0 is the `WEUniforms` block.
     static let recordBuffer = 30
     static let zeroBuffer = 28
@@ -433,17 +434,18 @@ final class ParticleMaterialRenderer {
         let device = self.device
         let format = plan.format
         let blending = plan.blending
+        let variant = stage.variant, geometry = stage.geometry, material = plan.materialPath
         compileQueue.async { [weak self] in
             var failure: String?
             var pipeline: MTLRenderPipelineState?
             do {
                 pipeline = try OWEPhaseTiming.measure(.pipeline) {
-                    try Self.makePipeline(stage, format: format, blending: blending, pixelFormat: pixelFormat,
+                    try Self.makePipeline(variant, format: format, blending: blending, pixelFormat: pixelFormat,
                                           sampleCount: sampleCount, depthFormat: depthFormat, device: device)
                 }
             } catch {
                 failure = "\(error)"
-                OWELog.error(.shader, "Particle pipeline failed (\(plan.materialPath), \(stage.geometry)): \(error)")
+                OWELog.error(.shader, "Particle pipeline failed (\(material), \(geometry)): \(error)")
             }
             guard let self else { return }
             self.pipelineLock.withLock {
@@ -475,11 +477,11 @@ final class ParticleMaterialRenderer {
         return pipelineLock.withLock { failedPipelines[key] }
     }
 
-    static func makePipeline(_ stage: ParticleMaterialPlan.Stage, format: ParticleVertexFormat, blending: String,
+    static func makePipeline(_ variant: TranslatedShaderVariant, format: ParticleVertexFormat, blending: String,
                              pixelFormat: MTLPixelFormat, sampleCount: Int = 1, depthFormat: MTLPixelFormat = .invalid,
                              device: MTLDevice) throws -> MTLRenderPipelineState {
-        let vertexLibrary = try device.makeLibrary(source: stage.variant.vertexMSL, options: nil)
-        let fragmentLibrary = try device.makeLibrary(source: stage.variant.fragmentMSL, options: nil)
+        let vertexLibrary = try device.makeLibrary(source: variant.vertexMSL, options: nil)
+        let fragmentLibrary = try device.makeLibrary(source: variant.fragmentMSL, options: nil)
         guard let vertex = vertexLibrary.makeFunction(name: "main0"),
               let fragment = fragmentLibrary.makeFunction(name: "main0") else {
             throw ShaderCompilerError.failed(step: "metal", output: "entry point main0 missing")
@@ -498,7 +500,7 @@ final class ParticleMaterialRenderer {
             attachment.destinationRGBBlendFactor = blend.destination
             attachment.destinationAlphaBlendFactor = blend.destination
         }
-        descriptor.vertexDescriptor = vertexDescriptor(for: vertex, attributes: stage.variant.attributes, format: format)
+        descriptor.vertexDescriptor = vertexDescriptor(for: vertex, attributes: variant.attributes, format: format)
         return try device.makeRenderPipelineState(descriptor: descriptor)
     }
 

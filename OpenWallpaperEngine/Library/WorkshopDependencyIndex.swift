@@ -14,7 +14,8 @@
 
 import Foundation
 
-final class WorkshopDependencyIndex {
+/// Unchecked: `lock` owns `cache`; `libraryDirectory` is a `let`, set at init.
+final class WorkshopDependencyIndex: @unchecked Sendable {
     static let fileName = ".owe-workshop-dependencies.json"
 
     private let libraryDirectory: () -> URL

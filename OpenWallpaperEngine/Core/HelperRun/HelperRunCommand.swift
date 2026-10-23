@@ -150,8 +150,9 @@ enum HelperRunCommand {
 
     /// A helper run exists only for the app that started it: when that app quits or dies, the
     /// helper stops too instead of running on alone.
-    private static var parentWatch: DispatchSourceProcess?
+    @MainActor private static var parentWatch: DispatchSourceProcess?
 
+    @MainActor
     private static func exitWithParent() {
         let parent = getppid()
         guard parent > 1 else { exit(0) } // Already orphaned.

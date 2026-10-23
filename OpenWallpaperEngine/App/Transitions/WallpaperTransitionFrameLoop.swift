@@ -81,7 +81,9 @@ final class WallpaperTransitionFrameLoop: NSObject, @unchecked Sendable {
     /// reached 1 or a frame couldn't be drawn; not after `stop`.
     func start(onEnd: @escaping @MainActor @Sendable () -> Void) {
         guard let first = lock.withLock({ resources?.layers.first }) else { return }
-        let link = CAMetalDisplayLink(metalLayer: first)
+        // Handed to the transition's own thread, which adds it to its run loop; this thread only
+        // sets it up first.
+        nonisolated(unsafe) let link = CAMetalDisplayLink(metalLayer: first)
         link.delegate = self
         lock.withLock {
             self.link = link

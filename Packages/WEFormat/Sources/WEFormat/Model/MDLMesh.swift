@@ -3,10 +3,10 @@ import Foundation
 /// One mesh of an `MDLV` part (docs/models-plan.md §1.2): its materials, interleaved vertices and
 /// a triangle list. The bytes are kept as the file has them, ready for a vertex and index buffer;
 /// the accessors decode single attributes.
-public struct MDLMesh: Equatable {
+public struct MDLMesh: Equatable, Sendable {
     /// A group record of `MDLV` 23: a Puppet Warp clipping mask (`MDLClippingMask`, which reads
     /// it). Its lists index the mesh's `vector4Block`.
-    public struct Group: Equatable {
+    public struct Group: Equatable, Sendable {
         public var id: UInt64
         /// The mask's texture.
         public var name: String
@@ -30,7 +30,7 @@ public struct MDLMesh: Equatable {
     /// is its texture's layout: "Lock Geometry for Vertex Editing" with Edit Deformation, or a
     /// stored Reference Pose (WE 2.8's capture 509 A and C; the `u32` was 1 both times). The
     /// vertices' `a_Position` then hold the moved or reference-posed mesh, which WE draws.
-    public struct ExtraPositions: Equatable {
+    public struct ExtraPositions: Equatable, Sendable {
         public var discarded: UInt32
         public var data: Data
 
@@ -43,7 +43,7 @@ public struct MDLMesh: Equatable {
     /// One `vector4Block` record: four `u32`s, `(bone, 0, firstIndex, indexCount)`, the triangles
     /// of one bone's part (WE 2.8's capture 509 B). The records follow the bones' draw depth
     /// (`MDLSkeleton.boneDepths`), lowest first, and split the index buffer between them.
-    public struct BoneRange: Equatable {
+    public struct BoneRange: Equatable, Sendable {
         public var bone: Int
         public var firstIndex: Int
         public var indexCount: Int

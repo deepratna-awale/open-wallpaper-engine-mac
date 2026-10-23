@@ -75,7 +75,7 @@ final class SceneSnapshotTrackerTests: XCTestCase {
         view.colorPixelFormat = .bgra8Unorm
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: size, height: size)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view) })
         view.isPaused = true
         renderer.setPlacement(.stretch)
 

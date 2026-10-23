@@ -175,7 +175,6 @@ struct ParticleFrameInputs {
         inputs.timeOfDay = system.timeOfDay()
         let world = emitter ?? childEmitter(system) ?? configuration.authoredWorld
         inputs.motion = motion(of: system, to: world)
-        let time = Double(system.elapsedTime)
         let context = values ?? LiveSceneValueContext()
         let overrides = inputs.applyOverrides(system, values: context, scripted: scripted)
         let emitters = configuration.emitters

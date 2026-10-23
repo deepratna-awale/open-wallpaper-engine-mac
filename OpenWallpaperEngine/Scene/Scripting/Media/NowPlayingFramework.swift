@@ -12,8 +12,8 @@ protocol NowPlayingFramework {
     func register(on queue: DispatchQueue)
     func unregister()
     /// The now-playing dictionary (MediaRemote's `kMRMediaRemoteNowPlayingInfo…` keys), on `queue`.
-    func nowPlayingInfo(on queue: DispatchQueue, _ handler: @escaping ([String: Any]) -> Void)
-    func isPlaying(on queue: DispatchQueue, _ handler: @escaping (Bool) -> Void)
+    func nowPlayingInfo(on queue: DispatchQueue, _ handler: @escaping @Sendable ([String: Any]) -> Void)
+    func isPlaying(on queue: DispatchQueue, _ handler: @escaping @Sendable (Bool) -> Void)
 }
 
 extension NowPlayingFramework {

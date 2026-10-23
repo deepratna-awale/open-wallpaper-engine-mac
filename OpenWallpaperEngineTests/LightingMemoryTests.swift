@@ -29,7 +29,7 @@ final class LightingMemoryTests: XCTestCase {
         view.framebufferOnly = false
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: Self.size.x, height: Self.size.y)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "memory"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "memory") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.renderSettings.postProcessing = .ultra

@@ -105,10 +105,11 @@ final class DistributedAppProcessMessaging: AppProcessMessaging {
 
     func observe(_ name: Notification.Name,
                  _ handler: @escaping @MainActor (String?, [String: String]) -> Void) -> AnyObject {
+        let handler = MainActorBox(handler)
         let token = center.addObserver(forName: name, object: nil, queue: .main) { notification in
             let sender = notification.object as? String
             let info = notification.userInfo as? [String: String] ?? [:]
-            MainActor.assumeIsolated { handler(sender, info) }
+            MainActor.assumeIsolated { handler.value(sender, info) }
         }
         return token as AnyObject
     }

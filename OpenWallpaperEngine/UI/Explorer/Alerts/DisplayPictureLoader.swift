@@ -17,8 +17,8 @@ struct DisplayPictureLoader: Sendable {
     static let revision = 1
     static let videoFrameMaxPixelSize = 1280
 
-    // NSCache is thread-safe and evicts under memory pressure.
-    private static let images = NSCache<NSString, CGImage>()
+    // NSCache is thread-safe and evicts under memory pressure; the reference itself never changes.
+    nonisolated(unsafe) private static let images = NSCache<NSString, CGImage>()
 
     let snapshots: SceneLoadingSnapshotStore
     /// This revision's folder of video frames.

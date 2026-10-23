@@ -4,9 +4,9 @@ import simd
 /// A Wallpaper Engine `.mdl` model: the meshes of its `MDLV` part and the sections after it
 /// (docs/models-plan.md §1). Static models, animated models and Puppet Warp rigs all use it.
 /// `MDLReader` reads every version WE's runtime reads.
-public struct MDLModel: Equatable {
+public struct MDLModel: Equatable, Sendable {
     /// A section after the meshes (`MDLV` 13 and later), where it sat in the file.
-    public struct Section: Equatable {
+    public struct Section: Equatable, Sendable {
         public var tag: String
         /// The tag's offset.
         public var offset: Int

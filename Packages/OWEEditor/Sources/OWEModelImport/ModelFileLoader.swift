@@ -74,7 +74,7 @@ public enum ModelFileLoader {
 
     /// The `.mtl` files an OBJ's `mtllib` lines name.
     static func materialLibraries(objAt url: URL) -> [String] {
-        guard let text = try? String(contentsOf: url, encoding: .utf8) ?? String(contentsOf: url, encoding: .isoLatin1) else { return [] }
+        guard let text = (try? String(contentsOf: url, encoding: .utf8)) ?? (try? String(contentsOf: url, encoding: .isoLatin1)) else { return [] }
         return text.split(whereSeparator: \.isNewline).filter { $0.hasPrefix("mtllib") }.map {
             $0.dropFirst("mtllib".count).trimmingCharacters(in: .whitespaces)
         }
@@ -87,7 +87,7 @@ public enum ModelFileLoader {
         var names: [String] = []
         for library in libraries {
             let mtl = url.deletingLastPathComponent().appending(path: library)
-            guard let text = try? String(contentsOf: mtl, encoding: .utf8) ?? String(contentsOf: mtl, encoding: .isoLatin1) else { continue }
+            guard let text = (try? String(contentsOf: mtl, encoding: .utf8)) ?? (try? String(contentsOf: mtl, encoding: .isoLatin1)) else { continue }
             for line in text.split(whereSeparator: \.isNewline) {
                 let trimmed = line.trimmingCharacters(in: .whitespaces)
                 if trimmed.hasPrefix("newmtl") {

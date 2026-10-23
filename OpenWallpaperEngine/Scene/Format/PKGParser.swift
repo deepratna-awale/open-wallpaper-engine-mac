@@ -11,13 +11,14 @@
 
 import Foundation
 
-struct PKGEntry: Equatable {
+struct PKGEntry: Equatable, Sendable {
     let path: String
     let offset: UInt32
     let length: UInt32
 }
 
-class PKGParser {
+/// Immutable once read, so any thread may extract from it.
+final class PKGParser: Sendable {
     private let data: Data
     private let entries: [PKGEntry]
     private let entriesByPath: [String: PKGEntry]

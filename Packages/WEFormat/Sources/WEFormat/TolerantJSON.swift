@@ -2,7 +2,8 @@ import Foundation
 
 /// Collects the elements that element-wise decoding skipped. Pass one to `decodeTolerant` (or put
 /// it in `JSONDecoder.userInfo[.decodeFailureLog]`) to inspect failures, e.g. in tests.
-public final class DecodeFailureLog {
+// `storage` is only touched under `lock`.
+public final class DecodeFailureLog: @unchecked Sendable {
     private var storage: [String] = []
     private let lock = NSLock()
 
@@ -129,7 +130,7 @@ public func decodeTolerant<T: Decodable>(_ type: T.Type, from data: Data, failur
 }
 
 /// A coding key for dictionaries with arbitrary keys.
-public struct AnyCodingKey: CodingKey {
+public struct AnyCodingKey: CodingKey, Sendable {
     public let stringValue: String
     public let intValue: Int?
     public init(stringValue: String) { self.stringValue = stringValue; intValue = nil }

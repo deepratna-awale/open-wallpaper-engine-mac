@@ -72,7 +72,7 @@ final class AudioDeviceListMonitor {
     private let block: AudioObjectPropertyListenerBlock
     private let isListening: Bool
 
-    init(onChange: @escaping @MainActor () -> Void) {
+    init(onChange: @escaping @MainActor @Sendable () -> Void) {
         block = { _, _ in DispatchQueue.main.async { MainActor.assumeIsolated(onChange) } }
         let status = AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &address, queue, block)
         isListening = status == noErr

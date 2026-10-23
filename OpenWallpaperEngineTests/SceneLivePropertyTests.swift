@@ -175,7 +175,8 @@ final class SceneLivePropertyTests: XCTestCase {
             view.framebufferOnly = false
             view.autoResizeDrawable = false
             view.drawableSize = CGSize(width: Self.size.x, height: Self.size.y)
-            renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "live-properties"))
+            let mtkView: MTKView = view // a local: the closure may not capture self before init completes
+            renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: mtkView, scriptServices: nil, screenID: "live-properties") })
             view.isPaused = true
             renderer.setPlacement(.stretch)
             let content = try XCTUnwrap(model.metalContent())

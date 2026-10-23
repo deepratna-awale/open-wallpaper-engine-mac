@@ -7,7 +7,7 @@ import Foundation
 /// there), reads its progress from the pipe, and terminates it on cancel. The helper exits with
 /// the app (`HelperRunCommand.exitWithParent`).
 enum LivePhotoHelper {
-    struct Files {
+    struct Files: Sendable {
         let directory: URL
         let still: URL
         let movie: URL

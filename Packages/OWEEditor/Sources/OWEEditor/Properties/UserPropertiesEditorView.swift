@@ -170,7 +170,7 @@ private struct UserPropertyDetailForm: View {
                         }
                     }
                 }
-                Picker(L("Type"), selection: Binding(get: { property.kind }, set: changeKind)) {
+                Picker(L("Type"), selection: Binding(get: { property.kind }, set: { changeKind($0) })) {
                     ForEach(kinds, id: \.self) { kind in
                         Label(kind.title, systemImage: kind.symbol).tag(kind)
                     }
@@ -481,12 +481,12 @@ private struct ConditionSection: View {
         }
         if referenced?.kind == .bool {
             Picker(L("Value"), selection: Binding(get: { rule.value == "1" ? "true" : rule.value == "0" ? "false" : rule.value },
-                                                  set: setValue)) {
+                                                  set: { setValue($0) })) {
                 Text(L("On")).tag("true")
                 Text(L("Off")).tag("false")
             }
         } else if referenced?.kind == .combo {
-            Picker(L("Value"), selection: Binding(get: { rule.value }, set: setValue)) {
+            Picker(L("Value"), selection: Binding(get: { rule.value }, set: { setValue($0) })) {
                 ForEach(referenced?.options ?? [], id: \.value) { option in
                     Text(option.label).tag(option.value)
                 }
@@ -495,7 +495,7 @@ private struct ConditionSection: View {
                 }
             }
         } else {
-            TextField(L("Value"), text: Binding(get: { rule.value }, set: setValue))
+            TextField(L("Value"), text: Binding(get: { rule.value }, set: { setValue($0) }))
         }
     }
 

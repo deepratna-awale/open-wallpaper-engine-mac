@@ -37,7 +37,7 @@ import Metal
 /// Thread-safe: `lock` owns `recorded`, `recordedKeys`, `written`, `writesStopped`,
 /// `lastAddition`, `serializeScheduled` and the counters; `serializeQueue` runs writes one at a
 /// time and builds them outside the lock; `lookup` is immutable.
-final class EffectPipelineArchive {
+final class EffectPipelineArchive: @unchecked Sendable { // `lock` and `serializeQueue` guard it (above)
     /// Bump when what goes into the archive changes (e.g. descriptor fields).
     static let revision = 3
 
@@ -180,7 +180,7 @@ final class EffectPipelineArchive {
 
     /// Caller holds `lock` and has set `serializeScheduled`.
     private func scheduleSerialize(at deadline: DispatchTime) {
-        let work: () -> Void = { [weak self] in self?.serializeWhenIdle() }
+        let work: @Sendable () -> Void = { [weak self] in self?.serializeWhenIdle() }
         if let timing {
             timing.schedule(deadline, work)
         } else {

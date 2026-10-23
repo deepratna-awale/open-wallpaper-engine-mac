@@ -153,7 +153,7 @@ final class ThemingController: ObservableObject {
         let candidates = pictureCandidates(for: wallpaper)
         Self.queue.async { [weak self] in
             let dominant: ThemeColor? = Self.dominantColor(of: candidates)
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 MainActor.assumeIsolated {
                     guard let self, self.generation == generation else { return }
                     self.apply(dominant, derived: dominant != nil)

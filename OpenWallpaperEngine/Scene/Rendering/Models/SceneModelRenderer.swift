@@ -14,7 +14,8 @@ import simd
 /// zeros for it. Pipelines compile off the render thread, keyed by the depth format, and share
 /// the effects' binary archive; a mesh draws nothing until its pipeline is ready, and a pipeline
 /// that fails is logged once. Call on the render thread, apart from the compiles.
-final class SceneModelRenderer: SceneModelDrawing {
+// `pipelineLock` guards what the compile queue lands; everything else is render-thread only.
+final class SceneModelRenderer: SceneModelDrawing, @unchecked Sendable {
     private let device: MTLDevice
     private let archive: EffectPipelineArchive?
     private let uniformArena: SceneUniformArena
@@ -621,7 +622,9 @@ final class SceneModelRenderer: SceneModelDrawing {
         let blending = plan.blending
         let material = plan.materialPath
         let customShader = plan.customShader
+        let formatBits = format.rawValue // MDLVertexFormat is a plain UInt32 but not Sendable
         compileQueue.async { [weak self] in
+            let format = MDLVertexFormat(rawValue: formatBits)
             let result: MTLRenderPipelineState?
             do {
                 result = try EffectGraphRenderer.makePipeline(

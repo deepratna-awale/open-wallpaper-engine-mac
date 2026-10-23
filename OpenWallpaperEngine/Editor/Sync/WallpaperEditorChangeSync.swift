@@ -145,7 +145,7 @@ final class WallpaperEditorChangeSync {
         localObservers.append(dependencies.local.addObserver(forName: .wallpaperPropertiesDidSave, object: nil,
                                                              queue: nil) { [weak self] notification in
             guard let path = notification.object as? String else { return }
-            let forward = {
+            let forward: @Sendable () -> Void = { [weak self] in
                 MainActor.assumeIsolated {
                     guard let self, !self.isApplyingRemoteProperties else { return }
                     // What was just saved is in the shared defaults before the other process reads it.

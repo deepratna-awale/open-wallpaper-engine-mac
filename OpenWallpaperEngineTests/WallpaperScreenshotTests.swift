@@ -47,7 +47,7 @@ final class WallpaperScreenshotTests: XCTestCase {
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: 480, height: 272)
         view.isPaused = true
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "screenshot-test"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "screenshot-test") })
         defer { renderer.releaseContent() }
         var now: CFTimeInterval = 1000
         renderer.wallTime = { now }

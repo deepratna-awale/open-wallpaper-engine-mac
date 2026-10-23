@@ -5,10 +5,11 @@ import IOSurface
 /// Mach service the app side can publish) for the app's endpoint, connects to it, attaches its
 /// views and receives the rings' surfaces as XPC objects and each frame's stamp, filling `store`.
 /// No app or no broker: nothing arrives and the views play their video. One per process.
+@MainActor
 final class XPCFrameSource: NSObject, LiveFrameSource, LiveSaverClientProtocol {
     static let shared = XPCFrameSource()
 
-    let store = LiveFrameStore()
+    nonisolated let store = LiveFrameStore()
     /// Main thread: the views attached, the connection and its proxy.
     private var views: [String: (display: String?, isPreview: Bool)] = [:]
     private var connection: NSXPCConnection?
@@ -47,7 +48,8 @@ final class XPCFrameSource: NSObject, LiveFrameSource, LiveSaverClientProtocol {
         guard connection == nil, !connecting, now - lastAttempt >= Self.retryInterval else { return }
         connecting = true
         lastAttempt = now
-        let broker = NSXPCConnection(machServiceName: ScreenSaverLiveNames.brokerService)
+        // NSXPCConnection is thread-safe; its handlers only invalidate it, on the main queue.
+        nonisolated(unsafe) let broker = NSXPCConnection(machServiceName: ScreenSaverLiveNames.brokerService)
         broker.remoteObjectInterface = LiveSaverFramesMessage.brokerInterface()
         broker.resume()
         let proxy = broker.remoteObjectProxyWithErrorHandler { error in
@@ -76,7 +78,7 @@ final class XPCFrameSource: NSObject, LiveFrameSource, LiveSaverClientProtocol {
         connection.exportedInterface = LiveSaverFramesMessage.clientInterface()
         connection.exportedObject = self
         let ended: @Sendable () -> Void = { [weak self] in
-            DispatchQueue.main.async { self?.connectionEnded() }
+            DispatchQueue.main.async { [weak self] in self?.connectionEnded() }
         }
         connection.invalidationHandler = ended
         connection.interruptionHandler = ended
@@ -107,14 +109,14 @@ final class XPCFrameSource: NSObject, LiveFrameSource, LiveSaverClientProtocol {
 
     // MARK: LiveSaverClientProtocol (XPC's queue)
 
-    func use(_ message: LiveSaverFramesMessage) {
+    nonisolated func use(_ message: LiveSaverFramesMessage) {
         var surfaces: [Int: [IOSurface]] = [:]
         for ring in message.manifest.rings { surfaces[ring.id] = message.surfaces(ofRing: ring.id) }
         store.use(message.manifest, surfaces: surfaces)
         SaverLog.transport.notice("XPC rings generation=\(message.manifest.generation) rings=\(message.manifest.rings.count) surfaces=\(message.surfaces.count) fps=\(message.manifest.frameRate)")
     }
 
-    func show(ring: Int, stamp: UInt64) {
+    nonisolated func show(ring: Int, stamp: UInt64) {
         guard let stamp = ScreenSaverLiveStamp(state: stamp) else { return }
         store.show(ring: ring, stamp: stamp)
     }

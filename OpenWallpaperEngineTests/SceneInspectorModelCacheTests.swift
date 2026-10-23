@@ -27,7 +27,7 @@ final class SceneInspectorModelCacheTests: XCTestCase {
                        }.map(\.combo))
     }
 
-    func testLayerFieldsFollowAnEditedJSONText() throws {
+    @MainActor func testLayerFieldsFollowAnEditedJSONText() throws {
         let directory = FileManager.default.temporaryDirectory.appending(path: "owe-inspector-\(UUID().uuidString)",
                                                                          directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

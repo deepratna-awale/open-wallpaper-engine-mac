@@ -278,7 +278,7 @@ final class LivePhotoRenderer {
         while renderer.hasContent, settled < 3, Date() < deadline {
             try Task.checkCancellation()
             renderer.renderShared([viewport])
-            renderer.lastCommandBuffer?.waitUntilCompleted()
+            renderer.lastCommandBuffer?.blockUntilCompleted()
             try await Task.sleep(for: .milliseconds(5))
             settled = renderer.hasPendingEffectPipelines ? 0 : settled + 1
         }
@@ -292,7 +292,7 @@ final class LivePhotoRenderer {
             renderer.wallTime = { time }
             renderer.renderShared([viewport])
             if index < leadIn {
-                renderer.lastCommandBuffer?.waitUntilCompleted()
+                renderer.lastCommandBuffer?.blockUntilCompleted()
             } else {
                 guard let image = await capture(renderer, pixelSize: pixelSize),
                       let output = crop.outputImage(from: image) else { throw Failure.readBack }

@@ -36,7 +36,7 @@ final class SortByOrderTests: XCTestCase {
         XCTAssertFalse(InstalledLibraryModel.precedes((1, "a"), (1, "a"), in: .increase))
     }
 
-    func testLastUpdatedIsSteamsTimeElseTheFolderDateAndNoneForLocalWallpapers() throws {
+    @MainActor func testLastUpdatedIsSteamsTimeElseTheFolderDateAndNoneForLocalWallpapers() throws {
         let root = FileManager.default.temporaryDirectory.appending(path: "SortByOrderTests-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: root) }
         let workshop = root.appending(path: "123456"), local = root.appending(path: "My Wallpaper")

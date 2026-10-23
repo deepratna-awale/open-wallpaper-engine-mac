@@ -49,13 +49,14 @@ enum StaleBundleScanner {
 }
 
 /// What the refresh needs from the Workshop download path; `SteamCmdService` in the app.
+@MainActor
 protocol StaleBundleDownloading: AnyObject {
     /// Calls back on the main queue with whether a signed-in SteamCMD session is there.
-    func restoreSession(completion: @escaping (Bool) -> Void)
+    func restoreSession(completion: @escaping @MainActor @Sendable (Bool) -> Void)
     /// Downloads the item and puts its `packageName` into the folder's `.owe-source/`, leaving the
     /// live files alone. Calls back on the main queue with whether the package landed.
     func fetchArchivedPackage(workshopId: String, packageName: String, into wallpaperDirectory: URL,
-                              completion: @escaping (Bool) -> Void)
+                              completion: @escaping @MainActor @Sendable (Bool) -> Void)
 }
 
 extension SteamCmdService: StaleBundleDownloading {}

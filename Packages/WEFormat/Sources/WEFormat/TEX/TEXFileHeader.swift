@@ -3,8 +3,8 @@ import Foundation
 /// The header of a 2D `.tex` file (`TEXHeader`, which has the layout) and where its first image's
 /// mipmaps are: what a writer needs to copy or rewrite it (`TEXWriter`). `TEXParser` decodes the
 /// pictures.
-public struct TEXFileHeader: Equatable {
-    public struct Mipmap: Equatable {
+public struct TEXFileHeader: Equatable, Sendable {
+    public struct Mipmap: Equatable, Sendable {
         public var width: Int
         public var height: Int
         /// 0 stored as is, 1 LZ4.

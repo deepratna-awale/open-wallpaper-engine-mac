@@ -70,7 +70,7 @@ final class ScenePuppetCanvasLibraryTests: XCTestCase {
         view.framebufferOnly = false
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: size.x, height: size.y)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "puppet-canvas"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: services, screenID: "puppet-canvas") })
         view.isPaused = true
         var settings = SceneRenderSettings()
         settings.postProcessing = .disabled
