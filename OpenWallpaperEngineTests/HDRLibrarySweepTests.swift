@@ -15,6 +15,7 @@ import MetalKit
 ///
 /// With "enabled" the same scenes draw in LDR with WE's LDR bloom. Skipped when the library is
 /// absent (CI); roots as `LightingLibraryDecodeTests`.
+@MainActor
 final class HDRLibrarySweepTests: XCTestCase {
     private static let frames = 45
     private static let checkedFrames: Set<Int> = [20, 44]
@@ -24,14 +25,16 @@ final class HDRLibrarySweepTests: XCTestCase {
                          "2321732083", "3657770939", "3734636606", "2350874185"]
     private var storage: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         storage = FileManager.default.temporaryDirectory.appending(path: "owe-hdr-sweep-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let storage, FileManager.default.fileExists(atPath: storage.path) {
             try FileManager.default.removeItem(at: storage)
         }
+        try await super.tearDown()
     }
 
     func testEveryHDRSceneRunsWEsHDRChain() throws {
@@ -158,6 +161,7 @@ final class HDRLibrarySweepTests: XCTestCase {
     }
 
     /// A content on one offscreen view, its clock stepped 1/60 s per draw.
+    @MainActor
     private final class Scene {
         let renderer: SceneMetalRenderer
         let view: MTKView

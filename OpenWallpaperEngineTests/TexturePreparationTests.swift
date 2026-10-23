@@ -230,7 +230,10 @@ final class TexturePreparationTests: XCTestCase {
 
     /// Runs `work` on a background queue (preparation asserts it is off the main thread).
     private func offMain<T>(_ work: @escaping () throws -> T) throws -> T {
-        var result: Result<T, Error>!
+        // `work` runs once on the queue while this thread waits; `result` is written there before
+        // `done.signal()` and read only after `done.wait()`.
+        nonisolated(unsafe) let work = work
+        nonisolated(unsafe) var result: Result<T, Error>!
         let done = DispatchSemaphore(value: 0)
         DispatchQueue.global(qos: .userInitiated).async {
             result = Result { try work() }
@@ -285,6 +288,7 @@ final class TexturePreparationTests: XCTestCase {
 /// (`TEST_RUNNER_OWE_TEXTURE_GATE` through xcodebuild) lists workshop ids from `OWE_LIBRARY`.
 /// Scripts are left out; particles are random, so the frames with it off are drawn twice and a
 /// frame fails only when the change misses a bar that the repeat of itself passes.
+@MainActor
 final class TexturePreparationLibraryTests: XCTestCase {
     func testLibraryWallpapersPassTheLossyBar() throws {
         let environment = ProcessInfo.processInfo.environment

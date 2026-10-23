@@ -6,6 +6,7 @@ import simd
 /// `genericimage4`'s screen-space reflection (`REFLECTION` with `NORMALMAP`; docs/lighting-plan.md
 /// §2.4) through `_rt_MipMappedFrameBuffer`: against a CPU reference of the shader, with the
 /// reflection setting off, and through the whole renderer.
+@MainActor
 final class ImageMaterialReflectionTests: XCTestCase {
     private typealias Stage = SceneMipMappedFrameBufferTests
     private typealias Level = (width: Int, height: Int, texels: [Float])
@@ -15,15 +16,16 @@ final class ImageMaterialReflectionTests: XCTestCase {
     private var cache: URL?
 
     /// A dark, opaque albedo, so the reflection term stands out.
-    static let albedo: [UInt8] = [25, 25, 25, 255]
+    nonisolated static let albedo: [UInt8] = [25, 25, 25, 255]
     /// A constant tangent-space normal tilted along x: (0.6, 0.004, 0.8).
-    static let normal: [UInt8] = [204, 128, 255, 255]
+    nonisolated static let normal: [UInt8] = [204, 128, 255, 255]
     /// PBR mask (metallic, roughness, reflection): the left half is smooth metal, the right half
     /// rough and not metallic; both fully reflective.
-    static let maskLeft: [UInt8] = [255, 0, 255, 255]
-    static let maskRight: [UInt8] = [0, 255, 255, 255]
+    nonisolated static let maskLeft: [UInt8] = [255, 0, 255, 255]
+    nonisolated static let maskRight: [UInt8] = [0, 255, 255, 255]
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         try XCTSkipUnless(FileManager.default.fileExists(atPath: ShaderVariantTests.weAssets.appending(path: "shaders/genericimage4.frag").path),
                           "bundled WE shaders missing")
         device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
@@ -31,8 +33,9 @@ final class ImageMaterialReflectionTests: XCTestCase {
         cache = FileManager.default.temporaryDirectory.appending(path: "owe-reflection-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let cache { try? FileManager.default.removeItem(at: cache) } // scratch cleanup
+        try await super.tearDown()
     }
 
     /// The layer samples the copy at mip `roughness · g_Texture3MipMapInfo`: the stripes where the
@@ -277,7 +280,7 @@ final class ImageMaterialReflectionTests: XCTestCase {
         return Array(rgba[start..<start + 4])
     }
 
-    static func image(width: Int, height: Int, pixels: [UInt8]) throws -> NSImage {
+    nonisolated static func image(width: Int, height: Int, pixels: [UInt8]) throws -> NSImage {
         let provider = try XCTUnwrap(CGDataProvider(data: Data(pixels) as CFData))
         let image = try XCTUnwrap(CGImage(width: width, height: height, bitsPerComponent: 8, bitsPerPixel: 32,
                                           bytesPerRow: width * 4, space: CGColorSpaceCreateDeviceRGB(),

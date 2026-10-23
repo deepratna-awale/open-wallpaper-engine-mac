@@ -10,18 +10,21 @@ import simd
 /// (WE's 1 1). Measured in WE 2.8.0.42 at 1920×1080: moving the cursor from the left edge to the
 /// centre shifts the image by −82 px, and to the right edge by −164 px, linearly, the image moving
 /// opposite to the cursor, with about 2 px of vertical drift. Skipped without the library.
+@MainActor
 final class CameraParallaxLibraryTests: XCTestCase {
     private static let wallpaper = "3802047741"
     private var storage: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         storage = FileManager.default.temporaryDirectory.appending(path: "owe-parallax-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let storage, FileManager.default.fileExists(atPath: storage.path) {
             try FileManager.default.removeItem(at: storage)
         }
+        try await super.tearDown()
     }
 
     /// At 1920×1080, one frame pixel per scene unit, as WE was measured.

@@ -15,19 +15,22 @@ import MetalKit
 /// - the frame's GPU time is reported.
 ///
 /// Skipped when the library is absent (CI); roots as `LightingLibraryDecodeTests`.
+@MainActor
 final class LitLayerLibraryTests: XCTestCase {
     private static let frames = 30
     private static let drawable = SIMD2(480, 270)
     private var storage: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         storage = FileManager.default.temporaryDirectory.appending(path: "owe-lit-sweep-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let storage, FileManager.default.fileExists(atPath: storage.path) {
             try FileManager.default.removeItem(at: storage)
         }
+        try await super.tearDown()
     }
 
     func testEveryLitLayerDrawsThroughItsMaterial() throws {
@@ -243,6 +246,7 @@ final class LitLayerLibraryTests: XCTestCase {
     }
 
     /// A content on one offscreen view, its clock stepped 1/60 s per draw.
+    @MainActor
     private final class Scene {
         let renderer: SceneMetalRenderer
         let view: MTKView

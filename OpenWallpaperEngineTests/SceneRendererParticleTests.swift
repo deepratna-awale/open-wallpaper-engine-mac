@@ -4,6 +4,7 @@ import AppKit
 @testable import OpenWallpaperEngine
 
 /// Whole frames of `SceneMetalRenderer` with a particle system between two layers: particles cover the layer below and are covered by the layer above.
+@MainActor
 final class SceneRendererParticleTests: XCTestCase {
     private static let size = 128
 

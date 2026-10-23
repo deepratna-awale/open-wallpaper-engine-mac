@@ -6,6 +6,7 @@ import MetalKit
 /// and a refracting drop of WE's rain sheet (`particle/water/rain_drops_sheet`, 16 frames of 64 on
 /// 256 × 256, RG88 albedo and an RGBA normal map) drawn through the real loader and renderer; and a
 /// sheet from a `.tex`'s own `TEXS` frames, with no `.tex-json` (`Scenes/particle-texs-sheet`).
+@MainActor
 final class ParticleSpriteSheetTests: XCTestCase {
     // MARK: - Playback
 
@@ -159,13 +160,14 @@ final class ParticleSpriteSheetTests: XCTestCase {
 
     // MARK: - Helpers
 
-    private static let size = 256
+    nonisolated private static let size = 256
     private let directory = Fixtures.url("Scenes/particle-rain-sheet")
     private let texsDirectory = Fixtures.url("Scenes/particle-texs-sheet")
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         Fixtures.removeStoredSettings(for: directory)
         Fixtures.removeStoredSettings(for: texsDirectory)
+        try await super.tearDown()
     }
 
     private struct Pixels {
