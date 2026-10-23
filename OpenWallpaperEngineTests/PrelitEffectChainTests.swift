@@ -10,7 +10,7 @@ final class PrelitEffectChainTests: XCTestCase {
     private typealias Lit = ImageMaterialLightingTests
     private typealias Stage = SceneMipMappedFrameBufferTests
 
-    func testAPrelitLayersStaticChainRunsEveryFrame() throws {
+    @MainActor func testAPrelitLayersStaticChainRunsEveryFrame() throws {
         try XCTSkipUnless(FileManager.default.fileExists(atPath: ShaderVariantTests.weAssets.appending(path: "shaders/genericimage4.frag").path),
                           "bundled WE shaders missing")
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())

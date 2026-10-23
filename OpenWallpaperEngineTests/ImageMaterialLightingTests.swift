@@ -158,7 +158,7 @@ final class ImageMaterialLightingTests: XCTestCase {
 
     /// Through the whole renderer: the content's light object is packed each frame from its
     /// transform, and the layer draws through its material, lit.
-    func testRendererLightsTheLayerFromTheContentsLights() throws {
+    @MainActor func testRendererLightsTheLayerFromTheContentsLights() throws {
         let size = 128
         let view = MTKView(frame: CGRect(x: 0, y: 0, width: size, height: size), device: device)
         view.colorPixelFormat = .bgra8Unorm

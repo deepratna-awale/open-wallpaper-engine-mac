@@ -6,19 +6,20 @@ import MetalKit
 /// brightness 2, and a 0.85 one, on black) drawn by the real renderer under each post-processing
 /// setting: HDR only with "ultra" (and "displayhdr", which draws as "ultra" without an HDR
 /// output), float targets, WE's HDR chain on the finished frame, and the LDR path otherwise.
+@MainActor
 final class SceneHDRRenderTests: XCTestCase {
-    private static let size = SIMD2(480, 272)
+    private nonisolated static let size = SIMD2(480, 272)
     /// Drawable pixels (y down): the squares' centres and a point 8 px right of each.
     private static let bright = (center: SIMD2(320, 136), outside: SIMD2(360, 136))
     private static let dim = (center: SIMD2(120, 136), outside: SIMD2(160, 136))
 
     private var directory: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         directory = Fixtures.url("Scenes/hdr")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let directory { Fixtures.removeStoredSettings(for: directory) }
     }
 

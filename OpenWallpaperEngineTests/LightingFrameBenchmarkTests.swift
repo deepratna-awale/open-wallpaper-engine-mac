@@ -36,7 +36,7 @@ final class LightingFrameBenchmarkTests: XCTestCase {
         ]
     }
 
-    func testLightingStageCost() throws {
+    @MainActor func testLightingStageCost() throws {
         let environment = ProcessInfo.processInfo.environment
         guard let request = environment["OWE_LIGHTING_BENCH"], !request.isEmpty else {
             throw XCTSkip("set OWE_LIGHTING_BENCH to run the lighting benchmark")

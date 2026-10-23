@@ -1,20 +1,22 @@
 import AVFoundation
 import Metal
 import MetalKit
+import os
 import XCTest
 @testable import OpenWallpaperEngine
 
 /// HDR video on the Metal path (WE 2.8's "Scene DX11 (HDR Support)" framework): the range read
 /// from the file, frames decoded as linear BT.709 light, the 8-bit path kept for SDR, and
 /// `combine_video_hdr`'s plan. The clips are written here with AVFoundation.
+@MainActor
 final class VideoHDRTextureTests: XCTestCase {
     private var directory: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         directory = FileManager.default.temporaryDirectory.appending(path: "owe-hdr-video-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let directory { try? FileManager.default.removeItem(at: directory) }
     }
 
@@ -148,25 +150,28 @@ final class VideoHDRTextureTests: XCTestCase {
         var settings = SceneRenderSettings()
         settings.postProcessing = postProcessing
         model.setRenderSettings(settings)
-        var content: SceneMetalContent?
+        // Handed from the one builder job to this thread once it is done; never touched by both at once.
+        let content = OSAllocatedUnfairLock<SceneMetalContent?>(uncheckedState: nil)
         let done = XCTestExpectation(description: "content built")
         DispatchQueue.global().async {
-            content = model.metalContent()
+            let built = model.metalContent()
+            content.withLockUnchecked { $0 = built }
             done.fulfill()
         }
         XCTAssertEqual(XCTWaiter.wait(for: [done], timeout: 30), .completed)
-        return try XCTUnwrap(content)
+        return try XCTUnwrap(content.withLockUnchecked { $0 })
     }
 
     private static func range(of url: URL) throws -> VideoDynamicRange {
-        var range: VideoDynamicRange?
+        let range = OSAllocatedUnfairLock<VideoDynamicRange?>(initialState: nil)
         let done = XCTestExpectation(description: "range read")
         DispatchQueue.global().async {
-            range = VideoDynamicRange.of(url)
+            let read = VideoDynamicRange.of(url)
+            range.withLock { $0 = read }
             done.fulfill()
         }
         XCTAssertEqual(XCTWaiter.wait(for: [done], timeout: 10), .completed)
-        return try XCTUnwrap(range)
+        return try XCTUnwrap(range.withLock { $0 })
     }
 
     /// Plays `stream` and returns its first frame, prepared on a command buffer as a scene frame is.

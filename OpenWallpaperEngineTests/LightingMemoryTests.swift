@@ -21,7 +21,7 @@ final class LightingMemoryTests: XCTestCase {
         return try XCTUnwrap(model.metalContent())
     }
 
-    func testSwitchingInAndOutOfHDRReturnsItsMemory() throws {
+    @MainActor func testSwitchingInAndOutOfHDRReturnsItsMemory() throws {
         _ = try Fixtures.assets()
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let view = MTKView(frame: CGRect(x: 0, y: 0, width: Self.size.x, height: Self.size.y), device: device)

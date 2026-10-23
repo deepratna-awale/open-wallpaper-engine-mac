@@ -8,13 +8,14 @@ import UniformTypeIdentifiers
 /// which output a frame takes, how a view is set up for it, the chain's display HDR combine, and
 /// the HDR fixture (`Scenes/hdr`: an overbright square, 0.8 at brightness 2, and a 0.85 one) drawn
 /// by the real renderer onto a view whose screen reports EDR headroom.
+@MainActor
 final class SceneDisplayOutputTests: XCTestCase {
     private static let size = SIMD2(480, 272)
     /// The overbright square's centre, in drawable pixels (y down).
     private static let bright = SIMD2(320, 136)
     private static let edr = SceneDisplayHeadroom(potential: 4, current: 4)
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         Fixtures.removeStoredSettings(for: Fixtures.url("Scenes/hdr"))
     }
 

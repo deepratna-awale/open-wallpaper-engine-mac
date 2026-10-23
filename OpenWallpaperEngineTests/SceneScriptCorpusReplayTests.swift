@@ -103,7 +103,7 @@ final class SceneScriptCorpusReplayTests: XCTestCase {
 
     // MARK: - Corpus
 
-    func testEveryCorpusWallpaperReplays() throws {
+    @MainActor func testEveryCorpusWallpaperReplays() throws {
         _ = try Fixtures.assets()
         let index = SceneScriptCorpus.directory.appending(path: "index.json")
         try XCTSkipUnless(FileManager.default.fileExists(atPath: index.path), "SceneScript corpus not present")
