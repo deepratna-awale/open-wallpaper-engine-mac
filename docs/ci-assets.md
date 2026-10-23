@@ -122,6 +122,17 @@ Contributors run the asset tests locally with `OWE_ASSETS` (see Local use).
 
 `OWE_LIBRARY` stays unset in both jobs, so the library-gated tests skip.
 
+## Pull requests from other people
+
+CI's asset jobs run on main only, because GitHub gives `pull_request` runs from forks and bots no
+secrets. For someone else's PR, review its diff, then start **Actions › Asset tests (PR) › Run
+workflow** from main with the PR number (`.github/workflows/asset-tests-pr.yml`). The PR builds
+in a job with no secrets. The four test shards wait in the `asset-tests-pr` environment for the
+maintainer's approval. That environment holds only `OWE_ASSET_CACHE_KEY`, never the Steam
+account: the shards restore the existing encrypted cache and never fill or save it. Their actions
+and scripts come from main, and the PR arrives as its built test bundle. Approving runs the PR's
+tests with the assets on disk, so approve only a diff you have read.
+
 ## Local use
 
 Store the credentials in your login Keychain, service `owe-ci-steam`. Each command prompts for
