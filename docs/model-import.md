@@ -24,7 +24,9 @@ imported models, and the docs at docs.wallpaperengine.io/en/scene/models/.
   and so the skeleton, are written only when it is true, 0x1400207bf; WE writes it for a skinned
   import) and `skins` (a list of `{material: replacement}`, one material per skin and mesh);
   in `editor`: `animationmapping` (`{"Rig|walk": 41, "Rig|wave": 42}`: each animation's id, from
-  the editor's object counter; `null` without animations), `additionalfiles` (Add FBX File),
+  the editor's object counter; `null` for an FBX without animations, capture 549's static
+  `centered_cube.json` and 546's `pistols.json`, and absent for an OBJ, 546's `bars.json`; a
+  static model has no `skinning`), `additionalfiles` (Add FBX File),
   `clips` (`[{animation: "<animation name>", start, end, frameoffset, id, matchloop,
   motionflags, name: "Rig|walk (Clip 0)", rootmotion: "<bone>"}]`; `motionflags` is the clip
   record's flags as they are, Add Clip's 43008 = 0xA800 being position x, position z and yaw),

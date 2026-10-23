@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Wallpaper Editor: an imported static FBX's configuration is Wallpaper Engine's.** Wallpaper Engine's importer writes `"editor": {"animationmapping": null}` in an FBX's `models/<name>.json` when the file has no animations (an OBJ's has no `editor`); Import Model left it out. The static model itself already compiled as Wallpaper Engine's (meshes only, no skeleton or animation sections). Checked against WE 2.8.0.42's import of a static FBX (capture 549).
+
 ## [1.0.0-beta.8] - 2026-10-18
 
 ### Added
