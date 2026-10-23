@@ -16,9 +16,13 @@ extension EditorTEXEncoder {
             guard let plain = TEXVariantResolver.resolve(baseTexture, enabled: [:]) else { throw TextureVariantError.unsupportedTexture }
             layout = try Self.layout(plain)
         }
-        let writerOptions = try options.map { option in
-            TEXVariantWriter.Option(group: option.group, id: option.id, alphaBlend: option.alphaBlend, condition: option.condition,
-                                    texture: try Self.variantTexture(option.file, like: layout, option: option.id))
+        // Every option's file must be of the base's size and kind; only those with a condition are
+        // compiled (WE's compiler skips the others, capture 550).
+        let writerOptions = try options.compactMap { option -> TEXVariantWriter.Option? in
+            let texture = try Self.variantTexture(option.file, like: layout, option: option.id)
+            guard let condition = option.condition else { return nil }
+            return TEXVariantWriter.Option(group: option.group, id: option.id, alphaBlend: option.alphaBlend, condition: condition,
+                                           texture: texture)
         }
         do {
             return try TEXVariantWriter.write(base: baseTexture, options: writerOptions)

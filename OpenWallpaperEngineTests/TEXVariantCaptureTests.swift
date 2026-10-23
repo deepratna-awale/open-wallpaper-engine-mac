@@ -109,6 +109,20 @@ final class TEXVariantCaptureTests: XCTestCase {
         return lines
     }
 
+    /// From the container's tag through the option records.
+    private func records(_ data: Data) throws -> Data {
+        var reader = try XCTUnwrap(TEXReader(data))
+        let header = reader.header
+        _ = try XCTUnwrap(reader.options(count: header.variantCount))
+        return data.subdata(in: header.containerOffset..<reader.cursor)
+    }
+
+    /// A `.tex-json`'s `variants`.
+    private func variants(_ data: Data) throws -> NSArray {
+        let root = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        return try XCTUnwrap(root["variants"] as? NSArray)
+    }
+
     // MARK: The player reads WE's file
 
     func testWEsTextureReadsAsCaptured() throws {
@@ -152,10 +166,6 @@ final class TEXVariantCaptureTests: XCTestCase {
         XCTAssertEqual(document.groups.map(\.name), ["shapes"])
         XCTAssertEqual(document.groups[0].options.map(\.blend), [.replace, .alphaBlend])
         // Written again, `variants` is WE's own.
-        func variants(_ data: Data) throws -> NSArray {
-            let root = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [String: Any])
-            return try XCTUnwrap(root["variants"] as? NSArray)
-        }
         XCTAssertEqual(try variants(document.json), try variants(try fixture("variant_a.tex-json")))
     }
 
@@ -163,19 +173,13 @@ final class TEXVariantCaptureTests: XCTestCase {
         let document = try weDocument()
         let inputs = try document.compiledOptions.map { group, id, option in
             TextureVariantInput(group: group, id: id, alphaBlend: option.blend == .alphaBlend,
-                                condition: option.condition?.compiledJSON ?? "{}",
+                                condition: option.condition?.compiledJSON,
                                 file: try fixture((option.file as NSString).lastPathComponent))
         }
         let ours = try EditorTEXEncoder().texture(try fixture("variant_a.png"), withVariants: inputs)
         let theirs = try fixture("variant_a.tex")
         XCTAssertEqual(try structure(ours), try structure(theirs))
         // From the container's tag through the option records, byte for byte.
-        func records(_ data: Data) throws -> Data {
-            var reader = try XCTUnwrap(TEXReader(data))
-            let header = reader.header
-            _ = try XCTUnwrap(reader.options(count: header.variantCount))
-            return data.subdata(in: header.containerOffset..<reader.cursor)
-        }
         XCTAssertEqual(try records(ours), try records(theirs))
         // And it shows the same pictures for every value: exactly where the base is visible; where
         // an alpha-blended option covers the base's transparent pixels, through the bled colours,
@@ -194,5 +198,75 @@ final class TEXVariantCaptureTests: XCTestCase {
             count += 3
         }
         XCTAssertLessThan(Double(total) / Double(count), 14, "bleedtransparentcolors")
+    }
+    // MARK: Capture 550: two groups, an option without a condition
+
+    /// Capture 550 (WE 2.8.0.42, `Tests/Fixtures/TextureVariants/550`): 540's texture with a second
+    /// group "overlay" whose one option, `variant_d.png` (Replace), has no condition. WE saved it
+    /// without a `variantcondition` key, compiled a `variant_a.tex` byte for byte 540's (its
+    /// compiler skips the option) and never showed it at any `shapesel`.
+    private static let folder550 = "TextureVariants/550"
+
+    func testTwoGroupsAndAnOptionWithoutConditionReadAsWESavedThem() throws {
+        let json = try Fixtures.data("\(Self.folder550)/variant_a.tex-json")
+        let document = try XCTUnwrap(TextureVariantDocument(json: json, texture: "variant_a"))
+        XCTAssertEqual(document.groups.map(\.name), ["shapes", "overlay"])
+        XCTAssertEqual(document.groups[1].options.map(\.name), ["variant_d"])
+        XCTAssertEqual(document.groups[1].options.map(\.condition), [nil])
+        // Written again, `variants` is WE's own: the overlay option has no `variantcondition`.
+        XCTAssertEqual(try variants(document.json), try variants(json))
+        // Only the options with a condition compile, numbered as 540's.
+        XCTAssertEqual(document.compiledOptions.map { [$0.group, $0.id] }, [[1, 1], [1, 2]])
+    }
+
+    func testTheOptionWithoutConditionIsNotCompiledAndNeverShows() throws {
+        let document = try XCTUnwrap(TextureVariantDocument(json: try Fixtures.data("\(Self.folder550)/variant_a.tex-json"),
+                                                            texture: "variant_a"))
+        var inputs = try document.compiledOptions.map { group, id, option in
+            TextureVariantInput(group: group, id: id, alphaBlend: option.blend == .alphaBlend, condition: option.condition?.compiledJSON,
+                                file: try fixture((option.file as NSString).lastPathComponent))
+        }
+        // The editor checks the unconditioned option's file too, without compiling it.
+        inputs.append(TextureVariantInput(group: 2, id: 3, alphaBlend: false, condition: nil,
+                                          file: try Fixtures.data("\(Self.folder550)/variant_d.png")))
+        let ours = try EditorTEXEncoder().texture(try fixture("variant_a.png"), withVariants: inputs)
+        // WE's 550 texture is 540's.
+        let theirs = try fixture("variant_a.tex")
+        XCTAssertEqual(try structure(ours), try structure(theirs))
+        XCTAssertEqual(try records(ours), try records(theirs))
+        // No value shows the triangle: each is the base, variant_b or variant_c over the base.
+        let base = try picture(resolved(theirs, shapesel: "0"))
+        for value in ["0", "1", "2", "3"] {
+            let mine = try picture(resolved(ours, shapesel: value)), wes = try picture(resolved(theirs, shapesel: value))
+            XCTAssertLessThan(meanDifference(mine, wes), 6, "shapesel \(value)")
+        }
+        XCTAssertLessThanOrEqual(worstDifference(try picture(resolved(theirs, shapesel: "3")), base), 0)
+    }
+
+    /// Two groups with conditions both apply, each its first option that is on, group by group
+    /// (the overlay's triangle replacing over variant_b), as the loader composes them; authored
+    /// and read back.
+    func testTwoGroupsApplyTogether() throws {
+        let condition = { (value: String) in TextureVariantDocument.Condition.equals("shapesel", value).compiledJSON }
+        let inputs = [
+            TextureVariantInput(group: 1, id: 1, alphaBlend: false, condition: condition("1"), file: try fixture("variant_b.png")),
+            TextureVariantInput(group: 1, id: 2, alphaBlend: true, condition: condition("2"), file: try fixture("variant_c.png")),
+            TextureVariantInput(group: 2, id: 3, alphaBlend: true, condition: condition("1"),
+                                file: try Fixtures.data("\(Self.folder550)/variant_d.png")),
+        ]
+        let data = try EditorTEXEncoder().texture(try fixture("variant_a.png"), withVariants: inputs)
+        let lines = try structure(data)
+        XCTAssertEqual(lines.filter { $0.hasPrefix("option") }, ["option 1 1 0 shapesel=1", "option 1 2 1 shapesel=2", "option 2 3 1 shapesel=1"])
+        XCTAssertEqual(lines.filter { $0.hasPrefix(" patches") }, Array(repeating: [" patches 2", " patches 1"], count: 3).flatMap { $0 })
+        let variants = try XCTUnwrap(TEXVariants(texData: data))
+        XCTAssertEqual(variants.enabled { $0 == .equals(property: "shapesel", value: "1") }, [1: [], 3: .alphaBlend])
+
+        let triangle = try decodedPNG(try Fixtures.data("\(Self.folder550)/variant_d.png"))
+        let replaced = try decodedPNG(try fixture("variant_b.png"))
+        let both = try picture(resolved(data, shapesel: "1"))
+        XCTAssertLessThanOrEqual(worstDifference(both, blended(triangle, under: replaced, width: 512, height: 256)), 3)
+        let alone = try picture(resolved(data, shapesel: "2"))
+        let base = try picture(resolved(data, shapesel: "0"))
+        XCTAssertLessThanOrEqual(worstDifference(alone, blended(try decodedPNG(try fixture("variant_c.png")), under: base, width: 512, height: 256)), 3)
     }
 }

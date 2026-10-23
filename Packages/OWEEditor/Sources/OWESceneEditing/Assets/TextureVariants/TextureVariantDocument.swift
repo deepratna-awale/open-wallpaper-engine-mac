@@ -109,13 +109,16 @@ public struct TextureVariantDocument: Hashable, Sendable {
     // MARK: Compiling
 
     /// The options as the `.tex` numbers them, from 1 as WE's compiler does (capture 540: group 1,
-    /// options 1 and 2): groups by their position, options by their position among all options,
-    /// each group's options in its order (the first that is on wins).
+    /// options 1 and 2): groups by their position, options by their position among the compiled
+    /// ones, each group's options in its order (the first that is on wins). An option without a
+    /// condition isn't compiled: WE's compiler skips an option whose `variantcondition` isn't a
+    /// string or an object (`resourcecompiler64.exe` 0x14005edb3…0x14005edc1), so capture 550's
+    /// unconditioned "overlay" option leaves `variant_a.tex` byte for byte capture 540's.
     public var compiledOptions: [(group: UInt32, id: UInt32, option: Option)] {
         var result: [(UInt32, UInt32, Option)] = []
         var next: UInt32 = 1
         for (groupIndex, group) in groups.enumerated() {
-            for option in group.options {
+            for option in group.options where option.condition != nil {
                 result.append((UInt32(groupIndex + 1), next, option))
                 next += 1
             }
@@ -125,16 +128,17 @@ public struct TextureVariantDocument: Hashable, Sendable {
 
     // MARK: The .tex-json
 
-    /// The `.tex-json`: WE's `variants` as its editor writes them (capture 540: each group's `name`
-    /// and `options`, each option's `blend`, `file`, `name` and `variantcondition`, `null` while
-    /// unset) and the base texture, `source`, which WE's has no need of (its base is the picture
-    /// the `.tex-json` sits beside).
+    /// The `.tex-json`: WE's `variants` as its editor saves them (capture 550: each group's `name`
+    /// and `options`, each option's `blend`, `file`, `name` and `variantcondition`, which an option
+    /// without a condition doesn't have) and the base texture, `source`, which WE's has no need of
+    /// (its base is the picture the `.tex-json` sits beside).
     public var json: Data {
         let variants: [[String: Any]] = groups.map { group in
             ["name": group.name, "options": group.options.map { option -> [String: Any] in
-                // WE writes `null` for an option without a condition.
-                ["name": option.name, "file": option.file, "blend": option.blend.rawValue,
-                 "variantcondition": option.condition?.json ?? NSNull()]
+                var fields: [String: Any] = ["name": option.name, "file": option.file, "blend": option.blend.rawValue]
+                // WE saves no `variantcondition` for an option without a condition (capture 550).
+                if let condition = option.condition { fields["variantcondition"] = condition.json }
+                return fields
             }]
         }
         let root: [String: Any] = ["source": source, "variants": variants]
