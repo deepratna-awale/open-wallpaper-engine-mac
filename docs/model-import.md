@@ -35,10 +35,12 @@ imported models, and the docs at docs.wallpaperengine.io/en/scene/models/.
   writes `normals` and `tangentspace` as true; Import Model rewrites a default project's
   configuration that way (bars' `{"normals": true}`, pistols' `seconduvchannel`); a model
   without a configuration gets neither (the default projects' `techno/glow.mdl`, format 0x9).
-- **Compiling the configuration** (capture 546): animations get their `animationmapping` ids
-  and loop mode, flags 0; a clip record is flags `0x1 | 0x400` (Match loop) `| motionflags`
-  (0xAC01), mode "" (WE's clips have no mode), the index of its source animation and the root
-  bone. A bone's properties JSON is its constraint settings passed through with the tip `tp`
+- **Compiling the configuration** (captures 546 and 549): animations get their
+  `animationmapping` ids and loop mode, flags 0; a clip record is flags `0x1`, `| 0x400` (Match
+  loop) when its end is past its start, and `| motionflags & 0x1f800` only when `rootmotion`
+  names a bone of the skeleton (0x1400a0f17…0x1400a0fed: 546's clip on "root" is 0xAC01, 549's
+  without a root-motion bone 0x401), mode "" (WE's clips have no mode), the index of its source
+  animation and the root bone (−1 for none). A bone's properties JSON is its constraint settings passed through with the tip `tp`
   (`"%.5f %.5f %.5f"`), `tm` 10 when it isn't above 0, and `lamin`/`lamax` replaced by their z
   angle on each simulated rotation axis (`rax`/`ray`/`raz`) and 0 on the others when both z
   angles are non-zero ("0 0 ±π/2" with every axis on becomes "±1.57080" thrice; 0x1400b0270).

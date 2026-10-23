@@ -209,11 +209,15 @@ extension ModelCompiler {
                 let samples = source.samples.map { bone in
                     (0...frames).map { frame in bone[min(start + frame, bone.count - 1)] }
                 }
-                // The clip record (0x1), Match loop (0x400) and the configuration's `motionflags`
-                // as they are (capture 546: 43008 with Match loop is 0xAC01).
-                var flags: UInt32 = 0x1 | clip.motionFlags & ~0x4FF
-                if clip.matchLoop { flags |= 0x400 }
+                // The clip record (0x1); the configuration's root-motion `motionflags` (0x1f800)
+                // only with a root-motion bone the skeleton has; Match loop (0x400) only on a clip
+                // longer than a frame (`resourcecompiler64.exe` 0x1400a0f17…0x1400a0fed; capture
+                // 546: 43008 on "root" with Match loop is 0xAC01; capture 549: 43008 without a
+                // root-motion bone is 0x401).
                 let rootBone = clip.rootMotion.isEmpty ? -1 : Int32(index(of: clip.rootMotion) ?? -1)
+                var flags: UInt32 = 0x1
+                if rootBone >= 0 { flags |= clip.motionFlags & ModelImportConfig.Clip.rootMotionFlags }
+                if clip.matchLoop && end > start { flags |= 0x400 }
                 records.append(Record(id: clip.id, name: clip.name, mode: clip.mode, fps: clip.fps ?? source.fps, frames: frames,
                                       flags: flags, samples: samples,
                                       reference: (sourceIndex, start, end, max(clip.frameOffset, 0), rootBone),

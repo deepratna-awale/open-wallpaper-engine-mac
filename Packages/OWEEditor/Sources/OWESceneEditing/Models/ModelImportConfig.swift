@@ -71,6 +71,9 @@ public struct ModelImportConfig: Sendable, Equatable {
         public static let rotationY: UInt32 = 0x8000
         /// What WE's Add Clip writes (capture 546): position x and z and rotation y.
         public static let defaultMotionFlags: UInt32 = positionX | positionZ | rotationY
+        /// Every root-motion axis (position and rotation x, y, z): the bits of `motionFlags`
+        /// the compiler keeps.
+        public static let rootMotionFlags: UInt32 = 0x1F800
     }
 
     /// A named frame of an animation or clip (`MDLA`'s events, which a scene's
