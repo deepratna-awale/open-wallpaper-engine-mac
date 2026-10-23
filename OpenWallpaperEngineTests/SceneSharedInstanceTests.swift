@@ -135,7 +135,7 @@ final class SceneSharedInstanceTests: XCTestCase {
     func testTwoDisplaysStepTheScriptsOncePerFrame() throws {
         let scene = try scriptedScene(sizes: [(64, 64), (96, 64)])
         defer { scene.stop() }
-        let (renderer, thread, runtime, loop) = (scene.renderer, scene.thread, scene.runtime, scene.loop)
+        let (renderer, thread, runtime) = (scene.renderer, scene.thread, scene.runtime)
         XCTAssertEqual(scene.made, 1)
         XCTAssertEqual(scene.instance.displayCount, 2)
         let (renders, scriptFrames) = thread.sync {
@@ -145,8 +145,8 @@ final class SceneSharedInstanceTests: XCTestCase {
             runtime.waitUntilIdle()
             let framesBefore = runtime.frameTiming.frames
             for _ in 0..<5 {
-                loop.draw(ObjectIdentifier(scene.presenters[0]), in: scene.views[0])
-                loop.draw(ObjectIdentifier(scene.presenters[1]), in: scene.views[1])
+                Self.tick(scene.views[0])
+                Self.tick(scene.views[1])
                 renderer.lastPresentCommandBuffer?.waitUntilCompleted()
                 runtime.waitUntilIdle()
             }
@@ -163,9 +163,9 @@ final class SceneSharedInstanceTests: XCTestCase {
         let snapshots = SceneLoadingSnapshotSession(store: SceneLoadingSnapshotStore(cachesDirectory: storage))
         let scene = try scriptedScene(sizes: [(64, 64)], loadingSnapshots: snapshots)
         defer { scene.stop() }
-        let (renderer, thread, runtime, loop) = (scene.renderer, scene.thread, scene.runtime, scene.loop)
+        let (renderer, thread, runtime) = (scene.renderer, scene.thread, scene.runtime)
         func drawFrame() {
-            loop.draw(ObjectIdentifier(scene.presenters[0]), in: scene.views[0])
+            Self.tick(scene.views[0])
             renderer.lastPresentCommandBuffer?.waitUntilCompleted()
             runtime.waitUntilIdle()
         }
@@ -187,6 +187,13 @@ final class SceneSharedInstanceTests: XCTestCase {
         XCTAssertEqual(scriptFrames, 1, "one script frame: the redraw steps none")
     }
 
+    /// Draws `view` as its display link does (`SceneDisplayTicker`): `MTKView.draw()`, which hands
+    /// the view's drawable size to its layer, the size the render thread reads, and then calls its
+    /// presenter's `draw(in:)`. Render thread.
+    nonisolated private static func tick(_ view: MTKView) {
+        _ = view.perform(NSSelectorFromString("draw"))
+    }
+
     @MainActor private struct ScriptedScene {
         let directory: URL
         /// Owns the instance registry: once it goes, the instance shuts down and its render thread
@@ -196,7 +203,6 @@ final class SceneSharedInstanceTests: XCTestCase {
         let renderer: SceneMetalRenderer
         let thread: SceneRenderThread
         let runtime: SceneScriptWallpaper
-        let loop: SceneRenderLoop
         let presenters: [SceneWallpaperPresenter]
         let views: [MTKView]
         let made: Int
@@ -249,7 +255,7 @@ final class SceneSharedInstanceTests: XCTestCase {
         }
         let runtime = try XCTUnwrap(thread.sync { renderer.scripts.wallpaper }, "the scene's scripts run")
         return ScriptedScene(directory: directory, wallpapers: wallpapers, instance: instance, renderer: renderer, thread: thread, runtime: runtime,
-                             loop: instance.renderLoop, presenters: presenters, views: views, made: made, cleanup: cleanup)
+                             presenters: presenters, views: views, made: made, cleanup: cleanup)
     }
 
     /// Only the Wallpaper Editor's canvas (the editor's draft) runs its scripts "in the editor"

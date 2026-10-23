@@ -380,8 +380,9 @@ final class SceneRenderLoop {
         let driver = schedule.driver
         let ordered = displayOrder.filter { $0 == driver } + displayOrder.filter { $0 != driver }
         return ordered.compactMap { id -> SceneViewport? in
-            // The drawable's size from the view's layer (any thread may read it; `MTKView`'s
-            // `drawableSize` is the layer's), not the main-actor view. `attach` took its snapshot.
+            // The drawable's size from the view's layer (any thread may read it), not the
+            // main-actor view: `MTKView.draw()`, which the link sends, hands the view's
+            // `drawableSize` to the layer before its delegate draws. `attach` took its snapshot.
             guard let display = displays[id], !display.frozen, let view = display.view,
                   let drawable = SceneViewSnapshots.snapshot(of: view)?.layer?.drawableSize,
                   drawable.width > 0, drawable.height > 0 else { return nil }
