@@ -27,9 +27,10 @@ final class OutputDeviceChangeMonitor: @unchecked Sendable {
     private let source: OutputDeviceSource
     private let debounce: TimeInterval
     private let schedule: Schedule
-    private let reloadEnabled: () -> Bool
-    private let restartCapture: () -> Void
-    private let reloadWallpapers: () -> Void
+    /// Main actor: the scheduler's queue is main in the app (and the tests' clock runs on main).
+    private let reloadEnabled: @MainActor () -> Bool
+    private let restartCapture: @MainActor () -> Void
+    private let reloadWallpapers: @MainActor () -> Void
 
     /// Only touched on the scheduler's queue (the main queue in the app).
     private var lastDeviceID: AudioObjectID
@@ -38,9 +39,9 @@ final class OutputDeviceChangeMonitor: @unchecked Sendable {
     init(source: OutputDeviceSource,
          debounce: TimeInterval = 0.5,
          schedule: @escaping Schedule,
-         reloadEnabled: @escaping () -> Bool,
-         restartCapture: @escaping () -> Void,
-         reloadWallpapers: @escaping () -> Void) {
+         reloadEnabled: @escaping @MainActor () -> Bool,
+         restartCapture: @escaping @MainActor () -> Void,
+         reloadWallpapers: @escaping @MainActor () -> Void) {
         self.source = source
         self.debounce = debounce
         self.schedule = schedule
@@ -77,12 +78,15 @@ final class OutputDeviceChangeMonitor: @unchecked Sendable {
         let device = source.currentDeviceID()
         guard device != lastDeviceID else { return }
         lastDeviceID = device
-        restartCapture()
-        if reloadEnabled() {
-            OWELog.info(.audio, "Default output device changed; reloading wallpapers.")
-            reloadWallpapers()
-        } else {
-            OWELog.info(.audio, "Default output device changed; reload is off, only restarting capture.")
+        // The scheduler's queue is the main queue (see `schedule`), so the callbacks run on main.
+        MainActor.assumeIsolated {
+            restartCapture()
+            if reloadEnabled() {
+                OWELog.info(.audio, "Default output device changed; reloading wallpapers.")
+                reloadWallpapers()
+            } else {
+                OWELog.info(.audio, "Default output device changed; reload is off, only restarting capture.")
+            }
         }
     }
 }

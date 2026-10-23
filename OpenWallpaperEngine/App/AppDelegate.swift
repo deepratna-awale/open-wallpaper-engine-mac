@@ -228,8 +228,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         source: CoreAudioOutputDeviceSource(),
         schedule: { delay, work in DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work) },
         reloadEnabled: { [weak self] in self?.globalSettingsViewModel.settings.reloadWhenChangingOutputDevice ?? false },
-        restartCapture: { MainActor.assumeIsolated { WallpaperServices.shared.audioCapture.outputDeviceDidChange() } },
-        reloadWallpapers: { [weak self] in MainActor.assumeIsolated { self?.rebuildWallpaperWindows() } })
+        restartCapture: { WallpaperServices.shared.audioCapture.outputDeviceDidChange() },
+        reloadWallpapers: { [weak self] in self?.rebuildWallpaperWindows() })
     /// Settings › Performance › Playback, per display (`App/Playback`).
     private(set) lazy var displayPlaybackMonitor = makeDisplayPlaybackMonitor()
     /// Saved display profiles, which application rules' "Load profile" loads.

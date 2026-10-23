@@ -65,13 +65,14 @@ final class AudioLevelTap: @unchecked Sendable {
     func attach(to item: AVPlayerItem, asset: AVAsset) {
         let generation = beginAttach()
         storage.store(0)
-        // The task only calls the asset's async track loading (AVFoundation's thread-safe API);
-        // the caller's item keeps using the asset meanwhile.
-        nonisolated(unsafe) let asset = asset
+        // Unchecked: the task only calls the asset's async track loading (AVFoundation's thread-safe
+        // API) and sets the item's audio mix on the main actor; the caller's item keeps using the asset.
+        struct Handoff: @unchecked Sendable { let item: AVPlayerItem; let asset: AVAsset }
+        let handoff = Handoff(item: item, asset: asset)
         Task { [weak self] in
             guard let self,
                   let track = await OWELog.attemptAsync(.audio, "Video audio level: the movie's tracks", {
-                      try await asset.loadTracks(withMediaType: .audio).first
+                      try await handoff.asset.loadTracks(withMediaType: .audio).first
                   }) ?? nil else { return }
             guard let tap = self.makeTap() else { return }
             self.finishAttach(generation)
@@ -79,7 +80,9 @@ final class AudioLevelTap: @unchecked Sendable {
             parameters.audioTapProcessor = tap
             let mix = AVMutableAudioMix()
             mix.inputParameters = [parameters]
-            Task { @MainActor in item.audioMix = mix }
+            // Built here and handed whole to the main actor; this task never touches it again.
+            nonisolated(unsafe) let finished = mix
+            Task { @MainActor in handoff.item.audioMix = finished }
         }
     }
 

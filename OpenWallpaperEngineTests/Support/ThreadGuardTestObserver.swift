@@ -29,9 +29,10 @@ final class ThreadGuardTestObserver: NSObject, XCTestObservation, @unchecked Sen
         }
         // Teardown blocks run inside the test, so the issues are the test's own. XCTest calls this
         // and runs the block on the main thread, so the unguarded reference is never shared.
-        nonisolated(unsafe) weak let observed = testCase
+        final class WeakTestCase: @unchecked Sendable { weak var value: XCTestCase?; init(_ value: XCTestCase) { self.value = value } }
+        let observed = WeakTestCase(testCase)
         testCase.addTeardownBlock {
-            guard let testCase = observed else { return }
+            guard let testCase = observed.value else { return }
             for violation in ThreadGuards.store.takePending() {
                 guard Self.fails(violation) else {
                     print("Thread guard, from the test's own main-thread setup: " + violation.message(frames: 2))

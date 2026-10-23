@@ -2,6 +2,8 @@ import CoreAudio
 import XCTest
 @testable import OpenWallpaperEngine
 
+// Main actor: the monitor calls its callbacks there, and the manual clock runs on this thread.
+@MainActor
 final class OutputDeviceChangeMonitorTests: XCTestCase {
     private final class FakeDeviceSource: OutputDeviceSource {
         var device: AudioObjectID = 10
