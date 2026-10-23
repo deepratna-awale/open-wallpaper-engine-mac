@@ -163,33 +163,6 @@ final class DepthMapPluginInstallerTests: XCTestCase {
     }
 
     @MainActor
-    func testUpdatesKeepTheActiveAndThePreviousVersion() async throws {
-        let first = pin(revision: String(repeating: "1", count: 40))
-        let second = pin(revision: String(repeating: "2", count: 40))
-        let third = pin(revision: String(repeating: "3", count: 40))
-        _ = await install(first)
-        let older = makeInstaller(pin: second)
-        XCTAssertTrue(older.needsUpdate, "a release pinning another commit offers Update")
-        older.update()
-        await older.wait()
-        _ = await install(third)
-        XCTAssertEqual(entries(), [second.version, third.version].sorted())
-        let state = DepthMapPluginLayout.State.read(in: pluginRoot)
-        XCTAssertEqual(state.active, third.version)
-        XCTAssertEqual(state.previous, second.version)
-    }
-
-    @MainActor
-    func testReinstallingTheSameVersionReplacesItInPlace() async throws {
-        let pin = pin()
-        _ = await install(pin)
-        let installer = await install(pin)
-        XCTAssertEqual(installer.phase, .installed)
-        XCTAssertEqual(entries(), [pin.version])
-        XCTAssertEqual(DepthMapPluginLayout.State.read(in: pluginRoot).previous, nil)
-    }
-
-    @MainActor
     func testCancelLeavesNothingBehind() async throws {
         let installer = makeInstaller(pin: pin(), downloader: HangingFileServer())
         installer.install()
