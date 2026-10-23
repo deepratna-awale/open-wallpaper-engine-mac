@@ -209,11 +209,10 @@ final class ChromiumWebWallpaperBridgeTests: XCTestCase {
     func testFramesScriptResultsAndMouseInput() throws {
         let (page, _, id) = makePage()
         defer { page.close() }
-        var frames: [Int64] = []
-        let frameLock = NSLock()
-        page.onFrame = { frame in frameLock.withLock { frames.append(frame.frameNumber) } }
+        let frames = LockedValue<[Int64]>([]) // onFrame runs on the XPC queue
+        page.onFrame = { frame in frames.mutate { $0.append(frame.frameNumber) } }
         helper.paint(id, frames: 2)
-        waitUntil("frames") { frameLock.withLock { frames.count } == 2 }
+        waitUntil("frames") { frames.value.count == 2 }
 
         var result: Any?
         var answered = false
@@ -234,12 +233,11 @@ final class ChromiumWebWallpaperBridgeTests: XCTestCase {
     /// A page that has shown one frame at its own size (320×200 points at 2: 640×400 pixels).
     private func makeShownPage() -> (ChromiumBrowserPage, Int, () -> [Int]) {
         let (page, _, id) = makePage()
-        var widths: [Int] = []
-        let frameLock = NSLock()
-        page.onFrame = { frame in frameLock.withLock { widths.append(frame.texture.width) } }
+        let widths = LockedValue<[Int]>([]) // onFrame runs on the XPC queue
+        page.onFrame = { frame in widths.mutate { $0.append(frame.texture.width) } }
         helper.paint(id, frames: 1, width: 640, height: 400)
-        waitUntil("the first frame") { frameLock.withLock { widths.count } == 1 }
-        return (page, id, { frameLock.withLock { widths } })
+        waitUntil("the first frame") { widths.value.count == 1 }
+        return (page, id, { widths.value })
     }
 
     private func capture(_ page: ChromiumBrowserPage, pixelWidth: Int, timeout: TimeInterval = 5) -> CGImage? {
@@ -272,21 +270,20 @@ final class ChromiumWebWallpaperBridgeTests: XCTestCase {
     func testOneBrowserFeedsEveryDisplayMirroringIt() {
         let (page, id, _) = makeShownPage()
         defer { page.close() }
-        let lock = NSLock()
-        var seen: [Int: [Int64]] = [:]
+        let seen = LockedValue<[Int: [Int64]]>([:]) // the observers run on the XPC queue
         let mirrors = [NSObject(), NSObject()]
         for (index, mirror) in mirrors.enumerated() {
-            page.addFrameObserver(mirror) { frame in lock.withLock { seen[index, default: []].append(frame.frameNumber) } }
+            page.addFrameObserver(mirror) { frame in seen.mutate { $0[index, default: []].append(frame.frameNumber) } }
         }
-        XCTAssertEqual(lock.withLock { seen }, [0: [1], 1: [1]], "a mirror starts with the page's last frame")
+        XCTAssertEqual(seen.value, [0: [1], 1: [1]], "a mirror starts with the page's last frame")
         helper.paint(id, frames: 2, width: 640, height: 400)
-        waitUntil("the mirrors' frames") { lock.withLock { seen.values.allSatisfy { $0.count == 3 } } }
-        XCTAssertEqual(lock.withLock { seen }, [0: [1, 2, 3], 1: [1, 2, 3]])
+        waitUntil("the mirrors' frames") { seen.value.values.allSatisfy { $0.count == 3 } }
+        XCTAssertEqual(seen.value, [0: [1, 2, 3], 1: [1, 2, 3]])
         XCTAssertEqual(helper.created.count, 1, "one browser for every display")
         page.removeFrameObserver(mirrors[0])
         helper.paint(id, frames: 1, width: 640, height: 400)
-        waitUntil("the remaining mirror's frame") { lock.withLock { seen[1]?.count } == 4 }
-        XCTAssertEqual(lock.withLock { seen[0] }, [1, 2, 3])
+        waitUntil("the remaining mirror's frame") { seen.value[1]?.count == 4 }
+        XCTAssertEqual(seen.value[0], [1, 2, 3])
     }
 
     func testWithoutAFrameOfThatSizeTheScreenshotIsTheLastFrame() throws {

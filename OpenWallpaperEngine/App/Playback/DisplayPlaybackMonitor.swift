@@ -324,7 +324,8 @@ final class DisplayPlaybackMonitor {
                            leeway: .milliseconds(Int(needed * 500)))
             let shared = shared
             let sources = sources
-            timer.setEventHandler { [weak self] in Self.poll(shared, sources: sources, monitor: self) }
+            // @Sendable: it fires on `scanQueue`, so it must not inherit this method's main actor.
+            timer.setEventHandler { @Sendable [weak self] in Self.poll(shared, sources: sources, monitor: self) }
             timer.resume()
             pollTimer = timer
         }

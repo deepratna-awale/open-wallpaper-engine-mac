@@ -4,16 +4,19 @@ import MetalKit
 /// One display's view of a shared scene (`SceneWallpaperInstance`): it holds the instance while the
 /// display shows it and hands the instance the view's draws. Everything else (loading, scripts,
 /// particles, sound) belongs to the instance.
-final class SceneWallpaperPresenter: NSObject, MTKViewDelegate {
+/// Unchecked: its state is split by thread as each property says: `renderLoop` is set on main
+/// before the view's link starts and then only read on the render thread, `shownContent` is the
+/// render thread's, the rest is main's.
+final class SceneWallpaperPresenter: NSObject, MTKViewDelegate, @unchecked Sendable {
     typealias Lease = WallpaperInstanceLease<WallpaperInstanceKey, SceneWallpaperInstance>
 
     private var lease: Lease?
     /// The preview, shown until the live scene draws. Main thread.
     private(set) var placeholder: ScenePreviewPlaceholder?
     /// The instance's render side, set in `show` before the view's link starts; read by `draw(in:)`.
-    private var renderLoop: SceneRenderLoop?
+    nonisolated(unsafe) private var renderLoop: SceneRenderLoop?
     /// Render thread: the live scene's first frame was drawn and the preview told to go.
-    private var shownContent = false
+    nonisolated(unsafe) private var shownContent = false
 
     @MainActor var instance: SceneWallpaperInstance? { lease?.instance }
 
@@ -45,8 +48,10 @@ final class SceneWallpaperPresenter: NSObject, MTKViewDelegate {
 
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
 
-    /// Render thread: the view's display link draws it there (`SceneRenderLoop`).
-    func draw(in view: MTKView) {
+    /// Render thread: the view's display link draws it there (`SceneRenderLoop`). Nonisolated: the
+    /// delegate protocol is main-actor, but MetalKit calls a paused view's `draw()` on the thread
+    /// that sends it, and Swift 6 traps a main-actor witness run there.
+    nonisolated func draw(in view: MTKView) {
         guard let renderLoop, renderLoop.draw(ObjectIdentifier(self), in: view), !shownContent else { return }
         shownContent = true
         // Thread boundary: the live scene drew its first complete frame; crossfade to it on the main thread.

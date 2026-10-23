@@ -80,7 +80,8 @@ final class SceneRenderThreadTests: XCTestCase {
         let loop: SceneRenderLoop
         init(loop: SceneRenderLoop) { self.loop = loop }
         func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
-        func draw(in view: MTKView) { loop.draw(ObjectIdentifier(self), in: view) }
+        // Nonisolated: the render thread draws it (see SceneWallpaperPresenter.draw(in:)).
+        nonisolated func draw(in view: MTKView) { loop.draw(ObjectIdentifier(self), in: view) }
     }
 
     private func waitForFrames(_ frames: Frames, atLeast count: Int, timeout: TimeInterval = 5,

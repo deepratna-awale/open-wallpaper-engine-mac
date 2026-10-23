@@ -87,7 +87,9 @@ final class InstalledLibraryModel {
                 DispatchQueue.main.async { self?.refresh() }
             },
             // Other preferences (the library folders) change what the list holds.
+            // Posted on whichever thread changed the defaults; the memo is main's.
             NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+                .receive(on: DispatchQueue.main)
                 .sink { [weak self] _ in self?.invalidateSortedMemo() },
         ]
     }

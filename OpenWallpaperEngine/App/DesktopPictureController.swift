@@ -98,7 +98,9 @@ final class DesktopPictureController {
         guard mayChange else { return }
         saveUsersPicture()
         let center = NotificationCenter.default
+        // Posted from the page's snapshot completion, which for a Chromium page is its XPC queue.
         center.publisher(for: .webWallpaperPageSnapshot)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] note in
                 MainActor.assumeIsolated {
                     guard let page = note.object as? WebWallpaperPageSnapshot else { return }
