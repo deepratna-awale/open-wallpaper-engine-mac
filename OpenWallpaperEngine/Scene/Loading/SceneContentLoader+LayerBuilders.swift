@@ -30,8 +30,7 @@ extension SceneContentLoader {
         guard let loadedDocument else { return nil }
         let storeKey = propertyStoreKey
         let modelData = SceneScriptModelDataStore()
-        // Keyed on the install folder, not project.json (SceneScriptStorageKey); the key used before.
-        let previousKey = loadedProjectId ?? Self.localWallpaperID(wallpaperDir)
+        // Keyed on the install folder, not project.json (SceneScriptStorageKey).
         return SceneScriptSceneContent(
             wallpaperID: SceneScriptStorageKey.key(forWallpaperDirectory: wallpaperDir),
             document: loadedDocument.document, documentSignature: loadedDocument.signature,
@@ -39,8 +38,6 @@ extension SceneContentLoader {
             userValues: { WallpaperServices.shared.userProperties(wallpaper: storeKey) },
             file: { [weak self] path in self?.scriptFile(path, wallpaperDir: wallpaperDir) },
             modelData: modelData,
-            legacyStorageID: SceneScriptStorageKey.legacyKeyToAdopt(previousKey: previousKey,
-                                                                    wallpaperDirectory: wallpaperDir),
             makeLayer: { [weak self] json in
                 self?.buildScriptLayer(json, wallpaperDir: wallpaperDir, sceneSize: sceneSize, modelData: modelData)
             })

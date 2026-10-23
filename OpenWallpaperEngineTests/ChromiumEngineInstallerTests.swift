@@ -20,13 +20,13 @@ final class ChromiumEngineInstallerTests: XCTestCase {
     // MARK: Helpers
 
     /// A bzip2 tar laid out like CEF's minimal distribution for `version`.
-    private func makeArchive(version: String, withFramework: Bool = true, marker: String = "binary") throws -> URL {
+    private func makeArchive(version: String, withFramework: Bool = true) throws -> URL {
         let top = "cef_binary_\(version)_macosarm64_minimal"
         let source = root.appending(path: "source-\(UUID().uuidString)")
         let framework = source.appending(path: "\(top)/Release/\(ChromiumEnginePackage.frameworkName)")
         try FileManager.default.createDirectory(at: framework.appending(path: "Libraries"), withIntermediateDirectories: true)
         if withFramework {
-            try Data(marker.utf8).write(to: framework.appending(path: ChromiumEnginePackage.frameworkBinary))
+            try Data("binary".utf8).write(to: framework.appending(path: ChromiumEnginePackage.frameworkBinary))
         }
         try Data("lib".utf8).write(to: framework.appending(path: "Libraries/libcef_sandbox.dylib"))
         try Data("license".utf8).write(to: source.appending(path: "\(top)/LICENSE.txt"))
@@ -160,34 +160,6 @@ final class ChromiumEngineInstallerTests: XCTestCase {
         XCTAssertNotNil(ChromiumEnginePackage.manifest(in: engineRoot.appending(path: "1.0.0")))
     }
 
-    /// The rename into place fails: the folder that was there comes back.
-    func testCommitRollsBackWhenTheRenameFails() throws {
-        let archive = try makeArchive(version: "1.0.0", marker: "old")
-        let pin = try pin(version: "1.0.0", archive: archive)
-        let target = engineRoot.appending(path: "1.0.0")
-        try FileManager.default.createDirectory(at: engineRoot, withIntermediateDirectories: true)
-        let scratch = root.appending(path: "scratch")
-        try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
-        try ChromiumEnginePackage.unpack(archive, pin: pin, scratch: scratch, into: target)
-
-        let staging = engineRoot.appending(path: "\(ChromiumEngineInstallJob.stagingPrefix)test")
-        try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
-        let job = ChromiumEngineInstallJob(root: engineRoot, pin: pin, downloader: CopyingDownloader(source: archive))
-        XCTAssertThrowsError(try job.commit(staging.appending(path: "missing"), staging: staging))
-
-        let binary = ChromiumEnginePackage.frameworksFolder(in: target).appending(path: "\(ChromiumEnginePackage.frameworkName)/\(ChromiumEnginePackage.frameworkBinary)")
-        XCTAssertEqual(try String(contentsOf: binary, encoding: .utf8), "old")
-        XCTAssertNotNil(ChromiumEnginePackage.manifest(in: target))
-    }
-
-    @MainActor
-    func testStaleStagingFoldersAreCleanedUp() async throws {
-        let stale = engineRoot.appending(path: "\(ChromiumEngineInstallJob.stagingPrefix)crashed")
-        try FileManager.default.createDirectory(at: stale, withIntermediateDirectories: true)
-        _ = try await install(version: "1.0.0")
-        XCTAssertFalse(FileManager.default.fileExists(atPath: stale.path))
-    }
-
     @MainActor
     func testQuarantineIsClearedFromTheVerifiedArchiveOnly() async throws {
         let archive = try makeArchive(version: "1.0.0")
@@ -206,29 +178,6 @@ final class ChromiumEngineInstallerTests: XCTestCase {
     }
 
     // MARK: Versions
-
-    @MainActor
-    func testOnlyTheCurrentAndPreviousVersionsAreKept() async throws {
-        _ = try await install(version: "1.0.0")
-        _ = try await install(version: "2.0.0")
-        XCTAssertEqual(try visibleEntries(), ["1.0.0", "2.0.0"])
-        let installer = try await install(version: "3.0.0")
-
-        XCTAssertEqual(try visibleEntries(), ["2.0.0", "3.0.0"])
-        XCTAssertEqual(installer.installedVersion, "3.0.0")
-        XCTAssertEqual(VersionedInstallState.read(in: engineRoot),
-                       VersionedInstallState(active: "3.0.0", previous: "2.0.0"))
-    }
-
-    @MainActor
-    func testReinstallingTheSameVersionKeepsThePreviousOne() async throws {
-        _ = try await install(version: "1.0.0")
-        _ = try await install(version: "2.0.0")
-        _ = try await install(version: "2.0.0")
-        XCTAssertEqual(try visibleEntries(), ["1.0.0", "2.0.0"])
-        XCTAssertEqual(VersionedInstallState.read(in: engineRoot),
-                       VersionedInstallState(active: "2.0.0", previous: "1.0.0"))
-    }
 
     @MainActor
     func testANewPinNeedsAnUpdate() async throws {

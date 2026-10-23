@@ -19,19 +19,7 @@ final class DesktopSnapshotCacheTests: XCTestCase {
         let cache = DesktopSnapshotCache(cachesDirectory: root)
         XCTAssertTrue(cache.isSnapshot(cache.directory.appending(path: "lock-7-a.heic")))
         XCTAssertTrue(cache.isSnapshot(cache.directory.appending(path: "desktop-7-a.jpg")), "an earlier version's tint picture")
-        XCTAssertTrue(cache.isSnapshot(root.appending(path: "staticWP_123.tiff")))
         XCTAssertFalse(cache.isSnapshot(URL(filePath: "/Library/Desktop Pictures/x.heic")))
-    }
-
-    /// Old `staticWP_*.tiff` files go to the Trash; nothing else in Caches is touched.
-    func testLegacySnapshotsAreTrashedAndNothingElse() throws {
-        let cache = DesktopSnapshotCache(cachesDirectory: root)
-        for name in ["staticWP_-566.tiff", "staticWP_619.tiff", "other.tiff", "staticWP_notes.txt"] {
-            try Data([1]).write(to: root.appending(path: name))
-        }
-        var trashed: [String] = []
-        cache.trashLegacySnapshots { trashed.append($0.lastPathComponent) }
-        XCTAssertEqual(trashed.sorted(), ["staticWP_-566.tiff", "staticWP_619.tiff"])
     }
 
     /// An isolated copy leaves the user's desktop picture alone unless a test asks for it.

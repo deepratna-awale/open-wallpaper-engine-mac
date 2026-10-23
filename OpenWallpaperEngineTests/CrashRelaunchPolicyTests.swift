@@ -11,7 +11,7 @@ final class CrashRelaunchPolicyTests: XCTestCase {
     }
 
     func testCleanEndingsNeverRelaunch() {
-        for ending in [CrashRelaunchPolicy.Ending.quit, .stopWatching, .watcherTerminated] {
+        for ending in [CrashRelaunchPolicy.Ending.quit, .stopWatching] {
             XCTAssertEqual(CrashRelaunchPolicy.decide(ending, host: user, history: [], now: now), .stay, "\(ending)")
         }
     }

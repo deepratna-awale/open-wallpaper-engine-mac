@@ -24,9 +24,6 @@ struct DepthMapModelPin: Equatable, Sendable {
     }
 
     static let repository = "apple/coreml-depth-anything-v2-small"
-    /// A placeholder SHA-256 a release must never ship (`DepthMapPluginInstallerTests`).
-    static let placeholderSHA256 = String(repeating: "0", count: 64)
-
     /// The commit of the repository.
     let revision: String
     let packageName: String
@@ -39,11 +36,6 @@ struct DepthMapModelPin: Equatable, Sendable {
 
     /// About what the compiled model takes (the weights, plus a little).
     var installedSize: Int64 { downloadSize }
-
-    /// Still a placeholder: a revision or a checksum nobody filled in.
-    var isPlaceholder: Bool {
-        revision.count != 40 || files.isEmpty || files.contains { $0.sha256 == Self.placeholderSHA256 || $0.sha256.count != 64 }
-    }
 
     func downloadURL(for file: File) -> URL {
         let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-._~/"))

@@ -149,23 +149,6 @@ final class WallpaperTrustPromptTests: XCTestCase {
         XCTAssertEqual(store.verdict(for: web), .changed)
     }
 
-    func testLegacyPathOnlyEntryMigratesWithoutAsking() async throws {
-        // As trust was stored before fingerprints: the folder's path only.
-        defaults.set([web.wallpaperDirectory.path(percentEncoded: false)], forKey: WallpaperTrustStore.pathsKey)
-        let model = model()
-        await apply(web, on: model)
-        XCTAssertEqual(asked, [], "updating the app asks no one again")
-        XCTAssertEqual(model.wallpapers[model.selectedScreenId]?.project.title, "Page")
-        let fingerprints = defaults.dictionary(forKey: WallpaperTrustStore.fingerprintsKey) as? [String: String]
-        XCTAssertEqual(fingerprints?[web.wallpaperDirectory.path(percentEncoded: false)], WallpaperTrustStore.fingerprint(of: web),
-                       "bound to the content found on first use")
-
-        try Data("changed".utf8).write(to: folder.appending(path: "index.html"))
-        model.wallpapers = [:]
-        await apply(web, on: model)
-        XCTAssertEqual(asked, ["Page"], "from then on, a change asks")
-    }
-
     func testResetForgetsPathsAndFingerprints() {
         store.trust(web, fingerprint: "f")
         store.reset()

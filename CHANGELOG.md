@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **One-time migrations from older Open Wallpaper Engine versions.** The move from the old app id (its defaults, caches, keychain items, screen saver and login item, and the notice about permissions), the old settings keys and values (the earlier Render Resolution and MetalFX choices, the old log level key, the Animated Thumbnails and screen saver schedule keys), the screen saver's old recordings, video copies and selection, the old desktop snapshots in Caches, the old video texture cache folder, the old audio cache names, settings, favourites and trust saved under the old wallpaper identities and paths, SceneScript `localStorage` kept under a `workshopid`, and the single-wallpaper key from before per-display wallpapers. Data still in those old formats is ignored. Wallpaper Engine's own formats are read as before.
+- **Cleanup:** duplicate and weak tests, unused test helpers and a few functions only tests called are gone.
+
 ### Fixed
 
 - **Wallpaper Editor: a video texture's variant is written as Wallpaper Engine writes it.** A video option's patch now has Wallpaper Engine's empty rectangle (it held the video's size), so the compiled `.tex` of a video with a video option is byte for byte Wallpaper Engine's. The player already read Wallpaper Engine's file and played the option video in place of the base when its condition held; both are now checked against WE 2.8.0.42's own video variant (capture 550).

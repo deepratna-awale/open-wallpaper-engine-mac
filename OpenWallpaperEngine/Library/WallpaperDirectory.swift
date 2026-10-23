@@ -189,14 +189,12 @@ final class FavoritesStore: ObservableObject {
     }
 
     func contains(_ wallpaper: WEWallpaper) -> Bool {
-        ids.contains(Self.key(for: wallpaper)) || ids.contains(wallpaper.wallpaperDirectory.path)
+        ids.contains(Self.key(for: wallpaper))
     }
 
     func toggle(_ wallpaper: WEWallpaper) {
         if contains(wallpaper) {
-            // Older builds keyed local copies by path; drop both so it cannot stay half-favourited.
             ids.remove(Self.key(for: wallpaper))
-            ids.remove(wallpaper.wallpaperDirectory.path)
         } else {
             ids.insert(Self.key(for: wallpaper))
         }

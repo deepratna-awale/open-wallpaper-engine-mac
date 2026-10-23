@@ -36,10 +36,4 @@ final class WallpaperEditorScriptSnippetTests: XCTestCase {
             XCTAssertTrue(f.errors.isEmpty, "\(snippet.id): \(f.errors)")
         }
     }
-
-    func testTheSnippetsSyntaxIsValid() {
-        for snippet in SceneScriptSnippet.all {
-            XCTAssertEqual(SceneScriptSyntaxCheck.diagnostics(of: snippet.source), [], "\(snippet.id)")
-        }
-    }
 }

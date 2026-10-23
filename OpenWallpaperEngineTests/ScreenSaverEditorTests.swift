@@ -104,7 +104,6 @@ final class ScreenSaverEditorTests: XCTestCase {
         XCTAssertEqual(WallpaperServices.shared.userProperties(wallpaper: sharedKey), shared)
         XCTAssertEqual(WallpaperServices.shared.userProperties(wallpaper: session.runtimeKey)[visibility], "false")
         XCTAssertNil(session.instances.instance(for: WallpaperInstanceKey(wallpaper)))
-        XCTAssertNil(store.selection, "nothing is the screen saver until it is set")
         XCTAssertNil(store.livePick)
 
         model.close()
@@ -183,7 +182,6 @@ final class ScreenSaverEditorTests: XCTestCase {
         XCTAssertEqual(succeeded, true, "at once: nothing is recorded")
         let pick = try XCTUnwrap(store.livePick)
         XCTAssertEqual(pick.wallpaperDirectory, wallpaper.wallpaperDirectory.standardizedFileURL.path(percentEncoded: false))
-        XCTAssertNil(store.selection)
         XCTAssertTrue(service.isSelected(wallpaper))
         XCTAssertEqual(store.values(for: WallpaperSettingsIdentity.resolve(wallpaper, defaults: defaults)), values)
         XCTAssertFalse(plugin.followsDesktop)
@@ -348,7 +346,6 @@ final class ScreenSaverEditorTests: XCTestCase {
         XCTAssertEqual(succeeded, true, "at once")
         XCTAssertTrue(service.isSelected(video))
         XCTAssertEqual(store.livePick?.wallpaperDirectory, folder.standardizedFileURL.path(percentEncoded: false))
-        XCTAssertNil(store.selection)
         XCTAssertEqual(picked.map(\.wallpaperDirectory), [folder], "its still is made now (its first frame)")
         XCTAssertNil(store.values(for: WallpaperSettingsIdentity.resolve(video, defaults: defaults)), "a video plays as it is")
         XCTAssertFalse(FileManager.default.fileExists(atPath: videos.directory.path(percentEncoded: false)), "no file goes in the saver's folder")
@@ -388,22 +385,6 @@ final class ScreenSaverEditorTests: XCTestCase {
         }
         XCTAssertTrue(Service.canSet(make("web", "index.html")), "the menu offers it; without Chromium it offers the install")
         XCTAssertFalse(Service.canSet(make("application", "a.exe")))
-    }
-
-    /// What an earlier version set as the screen saver (a scene's recording, a video's own file)
-    /// becomes the live pick of its wallpaper.
-    func testAnEarlierSelectionMigratesToTheLivePick() throws {
-        let store = ScreenSaverSettingsStore(defaults: defaults)
-        let recorded = Date(timeIntervalSince1970: 1_790_000_000)
-        for file in ["a-rec1.mov", "v_c-video-r3-rec1790000000.mp4"] {
-            store.livePick = nil
-            store.selection = ScreenSaverSettingsStore.Selection(wallpaperDirectory: "/w/3810943704", fileName: file,
-                                                                 width: 3840, height: 2160, recorded: recorded)
-            XCTAssertTrue(store.migrateSelection(), file)
-            XCTAssertNil(store.selection)
-            XCTAssertEqual(store.livePick, ScreenSaverSettingsStore.LivePick(wallpaperDirectory: "/w/3810943704", picked: recorded))
-            XCTAssertFalse(store.migrateSelection(), "once")
-        }
     }
 
     /// The pick is drawn with the screen saver's own values (properties and layer edits), put in

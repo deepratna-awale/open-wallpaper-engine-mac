@@ -118,35 +118,17 @@ struct SceneSoundContentBuilder {
         Digest.hex(SHA256.hash(data: data))
     }
 
-    /// Whether a cache file name is this scheme's (a 64-digit hex stem), not the old per-launch
-    /// `hashValue` one (a signed decimal), which left a copy behind every launch.
-    static func isCurrentCacheName(_ name: String) -> Bool {
-        let stem = (name as NSString).deletingPathExtension
-        return stem.count == 64 && stem.allSatisfy(\.isHexDigit)
-    }
-
-    /// Marks a cache folder whose old-scheme copies are gone, so that sweep runs once.
-    static let migrationMarker = ".named-by-content"
-
-    /// Removes the old naming scheme's copies (once per folder), then the least recently used
-    /// copies until the folder fits `byteLimit`, never `keeping`.
+    /// Removes the least recently used copies until the folder fits `byteLimit`, never `keeping`.
     static func prune(_ directory: URL, byteLimit: Int, keeping: URL? = nil) {
         let files = FileManager.default
         let keys: Set<URLResourceKey> = [.isRegularFileKey, .fileSizeKey, .contentModificationDateKey]
         guard let urls = try? files.contentsOfDirectory(at: directory, includingPropertiesForKeys: Array(keys),
                                                         options: .skipsHiddenFiles) else { return }
-        let marker = directory.appending(path: migrationMarker)
-        let migrate = !files.fileExists(atPath: marker.path)
         var entries: [(url: URL, size: Int, used: Date)] = []
         for url in urls {
             guard let values = try? url.resourceValues(forKeys: keys), values.isRegularFile == true else { continue }
-            if migrate && !isCurrentCacheName(url.lastPathComponent) {
-                try? files.removeItem(at: url)
-                continue
-            }
             entries.append((url, values.fileSize ?? 0, values.contentModificationDate ?? .distantPast))
         }
-        if migrate { files.createFile(atPath: marker.path, contents: Data()) }
         var total = entries.reduce(0) { $0 + $1.size }
         let keep = keeping?.standardizedFileURL.path
         for entry in entries.sorted(by: { $0.used < $1.used }) where total > byteLimit {

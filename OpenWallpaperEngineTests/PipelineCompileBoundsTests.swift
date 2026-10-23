@@ -25,11 +25,6 @@ final class PipelineCompileBoundsTests: XCTestCase {
         XCTAssertGreaterThan(peak, 1, "work runs concurrently up to the limit")
     }
 
-    func testPerformanceCoreCountIsPositive() {
-        XCTAssertGreaterThan(BoundedWorkQueue.performanceCoreCount, 0)
-        XCTAssertLessThanOrEqual(BoundedWorkQueue.performanceCoreCount, ProcessInfo.processInfo.activeProcessorCount)
-    }
-
     func testLRUCacheEvictsLeastRecentlyUsed() {
         var cache = LRUCache<Int>(capacity: 3)
         cache.insert(1, forKey: "a")

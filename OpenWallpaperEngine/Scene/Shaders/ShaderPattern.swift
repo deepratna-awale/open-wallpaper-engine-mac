@@ -16,9 +16,4 @@ extension NSRegularExpression {
     func matches(_ text: String) -> Bool {
         firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil
     }
-
-    /// The range of the first match in `text`.
-    func firstRange(in text: String) -> Range<String.Index>? {
-        firstMatch(in: text, range: NSRange(text.startIndex..., in: text)).flatMap { Range($0.range, in: text) }
-    }
 }

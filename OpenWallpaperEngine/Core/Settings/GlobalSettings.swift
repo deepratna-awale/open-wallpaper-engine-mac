@@ -137,63 +137,19 @@ enum GSTextureResolutionQuality: String, CaseIterable, Identifiable, Codable {
 /// at the display's shape, and the composite fits that to the display; `full` draws at the
 /// wallpaper's authored size and places that onto the display as WE does. Upscaling then draws a
 /// share of whichever target (`GSUpscaling`, `GSRenderScale`).
-///
-/// Earlier stored values (`init(storedValue:)`): "retina" and "native" (the backing pixels) and
-/// "display" and "desktop" (the display's points, scaled up; `GlobalSettings.migrateFromPoints`
-/// keeps their cost on a Retina display) all read as `yourDisplay`.
 enum GSRenderResolution: String, CaseIterable, Identifiable, Codable {
     var id: Self { self }
     case yourDisplay, uhd4K, full
 
     /// The long side `uhd4K` draws at.
     static let uhd4KLongSide: Float = 3840
-
-    /// The choice a stored value means, including the values earlier versions wrote; nil for an
-    /// unknown value.
-    init?(storedValue value: String) {
-        switch value {
-        case "yourDisplay", "retina", "native", "display", "desktop": self = .yourDisplay
-        case "uhd4K": self = .uhd4K
-        case "full": self = .full
-        default: return nil
-        }
-    }
-
-    /// Whether `value` is an earlier stored value that drew at the display's points: one target
-    /// pixel per point, a quarter of the pixels on a 2× display.
-    static func isPointsValue(_ value: String) -> Bool { value == "display" || value == "desktop" }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let value = try container.decode(String.self)
-        guard let resolution = GSRenderResolution(storedValue: value) else {
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unknown render resolution \(value)")
-        }
-        self = resolution
-    }
 }
 
 /// "Upscaling": the scene drawn at `GSRenderScale` of its size, which the final composite scales
-/// up bilinearly. The earlier MetalFX choice ("metalFX") reads as `bilinear` at the same scale
-/// (`GlobalSettings.migrateMetalFX`): measured, MetalFX cost more GPU time than drawing natively.
+/// up bilinearly.
 enum GSUpscaling: String, CaseIterable, Identifiable, Codable {
     var id: Self { self }
     case off, bilinear
-
-    /// The stored value of the removed MetalFX choice.
-    static let metalFXValue = "metalFX"
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let value = try container.decode(String.self)
-        if value == Self.metalFXValue {
-            self = .bilinear
-        } else if let upscaling = GSUpscaling(rawValue: value) {
-            self = upscaling
-        } else {
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unknown upscaling \(value)")
-        }
-    }
 }
 
 /// "Render scale": the share of each side of the scene target drawn when upscaling.
@@ -475,10 +431,7 @@ struct GlobalSettings: Codable, Equatable {
     /// file, or from a copy read into memory once (`VideoFileSource`).
     var videoReadMode = GSVideoReadMode.fromDisk
 
-    /// The stored keys. `postProcessing`, `reflections` and `antiAliasing` moved to new keys when
-    /// the renderer started reading them: the old keys hold values saved while the settings did
-    /// nothing (post-processing then defaulted to "disabled", anti-aliasing to MSAA x2), so they
-    /// are left behind.
+    /// The stored keys.
     enum CodingKeys: String, CodingKey {
         case otherApplicationFocused, otherApplicationMaximized, otherApplicationFullscreen, otherApplicationPlayingAudio
         case displayAsleep, applicationRules
@@ -495,8 +448,6 @@ struct GlobalSettings: Codable, Equatable {
         case lockScreenPicture, screenSaver
         case reloadWhenChangingOutputDevice, videoFramework, processPiority, pauseOnVRAMExhausted
         case restartAfterCrashing, autoRefresh
-        /// Moved when Errors Only became the default: the old `logLevel` key can't tell the old
-        /// default (None) from a chosen None.
         case logLevel = "logLevelChoice"
         case syncPropertiesAcrossDisplays
         case mediaIntegration
@@ -512,9 +463,6 @@ struct GlobalSettings: Codable, Equatable {
 }
 
 extension GlobalSettings {
-    /// Keys settings were saved under before, read once to carry the user's choice over.
-    private enum LegacyKeys: String, CodingKey { case logLevel }
-
     /// Reads each stored setting on its own: a key that is missing (a setting added since the
     /// settings were saved) or unreadable keeps its default, and the others are kept.
     init(from decoder: Decoder) throws {
@@ -543,13 +491,8 @@ extension GlobalSettings {
         read(.postProcessing, &postProcessing)
         read(.textureResolution, &textureResolution)
         read(.renderResolution, &renderResolution)
-        // The raw value, read again: an earlier points value also carries its cost over. Its
-        // errors were reported by the read above.
-        let fromPoints = ((try? container.decodeIfPresent(String.self, forKey: .renderResolution)) ?? nil)
-            .map(GSRenderResolution.isPointsValue) ?? false
         read(.sceneDetail, &sceneDetail)
         read(.upscaling, &upscaling)
-        let fromMetalFX = ((try? container.decodeIfPresent(String.self, forKey: .upscaling)) ?? nil) == GSUpscaling.metalFXValue
         read(.renderScale, &renderScale)
         read(.reflections, &reflections)
         read(.shadows, &shadows)
@@ -576,14 +519,7 @@ extension GlobalSettings {
         read(.processPiority, &processPiority)
         read(.pauseOnVRAMExhausted, &pauseOnVRAMExhausted)
         read(.restartAfterCrashing, &restartAfterCrashing)
-        if container.contains(.logLevel) {
-            read(.logLevel, &logLevel)
-        } else if let legacy = try? decoder.container(keyedBy: LegacyKeys.self),
-                  let stored = try? legacy.decodeIfPresent(GSLogLevel.self, forKey: .logLevel),
-                  stored != .none {
-            // A stored None was the old default, so it becomes the new one, Errors Only.
-            logLevel = stored
-        }
+        read(.logLevel, &logLevel)
         read(.autoRefresh, &autoRefresh)
         read(.syncPropertiesAcrossDisplays, &syncPropertiesAcrossDisplays)
         read(.mediaIntegration, &mediaIntegration)
@@ -599,14 +535,5 @@ extension GlobalSettings {
         audioRecordingVolume = min(max(audioRecordingVolume, 0), 200)
         read(.mediaBlocklist, &mediaBlocklist)
         read(.videoReadMode, &videoReadMode)
-        if fromPoints {
-            let migration = decoder.userInfo[.settingsMigration] as? GlobalSettingsMigration
-            migrateFromPoints(backingScale: migration?.mainBackingScale ?? 1)
-            migration?.migrated = true
-        }
-        if fromMetalFX {
-            migrateMetalFX()
-            (decoder.userInfo[.settingsMigration] as? GlobalSettingsMigration)?.migrated = true
-        }
     }
 }

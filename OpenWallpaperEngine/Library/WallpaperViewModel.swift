@@ -391,12 +391,6 @@ class WallpaperViewModel: ObservableObject {
            let saved = OWELog.attempt(.library, "Saved display wallpapers", { try JSONDecoder().decode([String: WEWallpaper].self, from: data) }) {
             self.wallpapers = saved
         }
-        // Migrate legacy single wallpaper
-        else if let json = UserDefaults.app.data(forKey: "CurrentWallpaper"),
-                let wallpaper = OWELog.attempt(.library, "Saved wallpaper", { try JSONDecoder().decode(WEWallpaper.self, from: json) }) {
-            let mainId = Self.mainScreenId()
-            self.wallpapers = [mainId: wallpaper]
-        }
 
         // Load enabled screens (default: all connected screens enabled)
         if let saved = UserDefaults.app.array(forKey: "EnabledScreens") as? [String] {

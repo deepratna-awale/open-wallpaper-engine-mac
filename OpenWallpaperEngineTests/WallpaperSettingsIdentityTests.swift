@@ -85,53 +85,6 @@ final class WallpaperSettingsIdentityTests: XCTestCase {
         XCTAssertEqual(try WallpaperPresetStore(identity: after, directory: presetsDirectory).presets().map(\.name), ["Night"])
     }
 
-    /// An edit to a wallpaper never resolved before still keeps it: the edit registers it first.
-    func testFirstEditOfAnUnseenWallpaperKeepsItsOldSettings() throws {
-        let directory = try wallpaper("library/Rain")
-        let old = WallpaperSettingsIdentity(directory: directory, projectData: try Data(contentsOf: directory.appending(path: "project.json")))
-        defaults.set(["speed": "5"], forKey: old.key(.userProperties))
-        try WallpaperProjectFileEdit.set(["title": "Heavy rain"], inProjectAt: directory, defaults: defaults)
-        let identity = WallpaperSettingsIdentity.resolve(directory: directory, defaults: defaults)
-        XCTAssertEqual(defaults.dictionary(forKey: identity.key(.userProperties)) as? [String: String], ["speed": "5"])
-    }
-
-    /// Settings stored under the old project-hash identity are kept on first sight (the old string
-    /// becomes the id); the launch sweep does it for every wallpaper, is idempotent and counts
-    /// old identities no wallpaper claims.
-    func testOldHashIdentitiesMigrateIdempotently() throws {
-        let library = root.appending(path: "library")
-        let rain = try wallpaper("library/Rain")
-        let snow = try wallpaper("library/Snow", project: #"{"title":"Snow","file":"scene.json"}"#)
-        let fresh = try wallpaper("library/Fog", project: #"{"title":"Fog","file":"scene.json"}"#)
-        let rainOld = WallpaperSettingsIdentity(directory: rain, projectData: try Data(contentsOf: rain.appending(path: "project.json")))
-        let snowOld = WallpaperSettingsIdentity(directory: snow, projectData: try Data(contentsOf: snow.appending(path: "project.json")))
-        defaults.set(["speed": "2"], forKey: rainOld.key(.userProperties, scope: .display("1")))
-        let support = root.appending(path: "support")
-        try FileManager.default.createDirectory(at: support.appending(path: "presets"), withIntermediateDirectories: true)
-        try Data("[]".utf8).write(to: support.appending(path: "presets/\(snowOld.rawValue).json"))
-        // Settings orphaned by an edit made before ids were kept: no wallpaper's bytes hash to it.
-        defaults.set(["speed": "9"], forKey: "SceneUserProperties.local-0123456789abcdef-Gone")
-
-        let unmatched = LocalWallpaperIdentities.registerLibrary([library], defaults: defaults, supportDirectory: support)
-        // (The test host's own defaults domain is in the search list too, so only these are checked.)
-        XCTAssertTrue(unmatched.contains("local-0123456789abcdef-"))
-        let ids = [rain, snow, fresh].map { WallpaperSettingsIdentity.resolve(directory: $0, defaults: defaults) }
-        XCTAssertEqual(ids[0], rainOld, "properties found under the old id")
-        XCTAssertEqual(ids[1], snowOld, "presets found under the old id")
-        XCTAssertNotEqual(ids[2], WallpaperSettingsIdentity(directory: fresh, projectData: try Data(contentsOf: fresh.appending(path: "project.json"))),
-                          "nothing stored: a new id")
-        let registry = defaults.dictionary(forKey: LocalWallpaperIdentities.defaultsKey) as? [String: [String: String]]
-
-        for id in [rainOld, snowOld] { XCTAssertFalse(unmatched.contains { id.rawValue.hasPrefix($0) }, "claimed") }
-        XCTAssertEqual(LocalWallpaperIdentities.registerLibrary([library], defaults: defaults, supportDirectory: support), [], "runs once")
-        XCTAssertEqual(LocalWallpaperIdentities.registerLibrary([library], defaults: defaults, supportDirectory: support, force: true), unmatched)
-        XCTAssertEqual(defaults.dictionary(forKey: LocalWallpaperIdentities.defaultsKey) as? [String: [String: String]], registry, "idempotent")
-        XCTAssertEqual(defaults.dictionary(forKey: "SceneUserProperties.local-0123456789abcdef-Gone") as? [String: String], ["speed": "9"], "left alone")
-
-        try WallpaperProjectFileEdit.set(["title": "Drizzle"], inProjectAt: rain, defaults: defaults)
-        XCTAssertEqual(WallpaperSettingsIdentity.resolve(directory: rain, defaults: defaults), rainOld, "an adopted old id survives edits")
-    }
-
     /// A copy of a wallpaper's folder (Save as New Wallpaper, a Finder copy) is a new wallpaper.
     func testACopiedFolderGetsANewId() throws {
         let original = try wallpaper("library/Rain")

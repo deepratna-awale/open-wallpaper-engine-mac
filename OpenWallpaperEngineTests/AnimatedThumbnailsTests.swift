@@ -27,31 +27,12 @@ final class AnimatedThumbnailsTests: XCTestCase {
     func testPluginsPageNoLongerListsIt() throws {
         let page = try String(contentsOf: Self.sources.appending(path: "Settings/PluginsPage.swift"), encoding: .utf8)
         XCTAssertFalse(page.contains("Animated Thumbnails"))
-        XCTAssertFalse(page.contains(ThumbnailAnimation.retiredPreferenceKey))
         XCTAssertTrue(SettingsSearch.results(for: "Animated Thumbnails", locale: Locale(identifier: "en")).isEmpty)
-        XCTAssertFalse(SettingsTabReset.allPreferenceKeys.contains(ThumbnailAnimation.retiredPreferenceKey))
-        XCTAssertFalse(SettingsTransfer.preferenceKeys.contains(ThumbnailAnimation.retiredPreferenceKey))
         XCTAssertFalse(SettingsTabReset.hasChanges(.plugins, settings: GlobalSettings(), defaults: defaults))
-    }
-
-    /// A stored "off" is removed at launch, and a settings file that still carries it imports
-    /// without it.
-    func testRetiredKeyIsMigratedAndIgnored() throws {
-        defaults.set(false, forKey: ThumbnailAnimation.retiredPreferenceKey)
-        ThumbnailAnimation.removeRetiredPreference(from: defaults)
-        XCTAssertNil(defaults.object(forKey: ThumbnailAnimation.retiredPreferenceKey))
-
-        var old = SettingsTransfer.export(settings: GlobalSettings(), defaults: defaults, updates: nil, appVersion: "1")
-        old.preferences = [ThumbnailAnimation.retiredPreferenceKey: false, "ReclaimOriginalPackages": true]
-        let imported = try SettingsTransfer.decode(old.encoded())
-        XCTAssertEqual(imported.preferences, ["ReclaimOriginalPackages": true])
-        imported.applyPreferences(to: defaults)
-        XCTAssertNil(defaults.object(forKey: ThumbnailAnimation.retiredPreferenceKey))
     }
 
     /// Tiles play by default, with nothing stored; not while the app is in the background.
     func testThumbnailsAnimateByDefault() {
-        XCTAssertNil(defaults.object(forKey: ThumbnailAnimation.retiredPreferenceKey))
         XCTAssertTrue(ThumbnailAnimation.plays(isAppActive: true, isLowPowerMode: false, isHovered: false))
         XCTAssertFalse(ThumbnailAnimation.plays(isAppActive: false, isLowPowerMode: false, isHovered: true))
     }

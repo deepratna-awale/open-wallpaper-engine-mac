@@ -121,33 +121,18 @@ final class CacheSweeperTests: XCTestCase {
         XCTAssertNil(lease)
     }
 
-    func testProtectedFoldersAndForeignFilesAreKept() throws {
+    func testProtectedFoldersAreKept() throws {
         let previews = folder(.editorPreviews)
         let current = try entry("steam-1-r2.2/effects_blur.heic", in: previews, daysAgo: 120)
         let currentInputs = try entry("steam-1-r2.2/.inputs.json", in: previews, daysAgo: 120)
         let other = try entry("steam-0-r2.2/effects_blur.heic", in: previews, daysAgo: 120)
         try entry("steam-0-r2.2/.inputs.json", in: previews, daysAgo: 120)
-        let legacy = CacheFolder(id: .legacyVideoTextures, root: root.appending(path: "VideoTextures"), expires: true)
-        let ours = try entry(String(repeating: "ab", count: 32) + ".mp4", in: legacy, daysAgo: 70)
-        let foreign = try entry("someone-elses.mp4", in: legacy, daysAgo: 700)
 
-        let sweeper = CacheSweeper(folders: [previews, legacy], leases: CacheLeases(),
+        let sweeper = CacheSweeper(folders: [previews], leases: CacheLeases(),
                                    protected: [current.deletingLastPathComponent()])
-        XCTAssertEqual(sweep(sweeper).removedFiles, 2)
+        XCTAssertEqual(sweep(sweeper).removedFiles, 1)
         XCTAssertTrue(exists(current) && exists(currentInputs), "the previews of the assets in use stay")
         XCTAssertFalse(exists(other.deletingLastPathComponent()), "another build's folder goes with its bookkeeping")
-        XCTAssertFalse(exists(ours))
-        XCTAssertTrue(exists(foreign), "only OWE's own names in the shared Caches folder")
-    }
-
-    func testIsolatedCopiesLeaveTheLegacyFolderAlone() {
-        let caches = root.appending(path: "Caches")
-        let isolated = CacheFolder.ownCaches(location: AppStorageLocation(isolationTag: "sweeper"), textureRoot: root,
-                                             userCaches: caches)
-        XCTAssertFalse(isolated.contains { $0.id == .legacyVideoTextures })
-        XCTAssertTrue(isolated.allSatisfy { $0.root.path(percentEncoded: false).contains("isolated sweeper") || $0.id == .textures })
-        let user = CacheFolder.ownCaches(location: AppStorageLocation(isolationTag: nil), textureRoot: root, userCaches: caches)
-        XCTAssertEqual(user.first { $0.id == .legacyVideoTextures }?.root, caches.appending(path: "VideoTextures", directoryHint: .isDirectory))
     }
 
     // MARK: - Clear Caches

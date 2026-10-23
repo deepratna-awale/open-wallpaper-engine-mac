@@ -7,9 +7,6 @@ import Combine
 /// visible part and its window shows (not hidden, minimized or covered), letting a scrolled-away
 /// tile's decoded frames go; in Low Power Mode a tile plays only under the pointer.
 enum ThumbnailAnimation {
-    /// The retired plugin's on/off preference. Ignored, and removed at launch.
-    static let retiredPreferenceKey = "TestAnimates"
-
     /// Whether a shown tile plays: while the app is active, and in Low Power Mode only while
     /// hovered. (`windowShows` gates it further.)
     static func plays(isAppActive: Bool, isLowPowerMode: Bool, isHovered: Bool) -> Bool {
@@ -21,11 +18,6 @@ enum ThumbnailAnimation {
     static func windowShows(_ window: NSWindow?) -> Bool {
         guard let window else { return false }
         return window.isVisible && !window.isMiniaturized && window.occlusionState.contains(.visible)
-    }
-
-    /// Drops the retired plugin's preference, so an old "off" is gone with it.
-    static func removeRetiredPreference(from defaults: UserDefaults) {
-        defaults.removeObject(forKey: retiredPreferenceKey)
     }
 }
 
