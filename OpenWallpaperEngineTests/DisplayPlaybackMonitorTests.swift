@@ -25,8 +25,8 @@ final class DisplayPlaybackMonitorTests: XCTestCase {
     private var applied: [[String: DisplayPlayback]] = []
     private var monitor: DisplayPlaybackMonitor!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         desktop = Desktop()
         applied = []
         monitor = makeMonitor(scanQueue: nil)
@@ -48,10 +48,10 @@ final class DisplayPlaybackMonitorTests: XCTestCase {
     }
 
     /// Runs the main run loop until `condition` holds or `timeout` passes.
-    override func tearDown() {
+    override func tearDown() async throws {
         monitor.stop()
         monitor = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     func testAFocusedAppOnTheRightDisplayPausesOnlyThatDisplay() {

@@ -9,14 +9,14 @@ final class WallpaperEngineFavoritesImportTests: XCTestCase {
     private var defaults: UserDefaults!
     private var scratch: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         suiteName = "app.openwallpaperengine.isolated.tests.we-favorites-\(UUID().uuidString)"
         defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
         scratch = FileManager.default.temporaryDirectory
             .appending(path: "owe-we-favorites-\(UUID().uuidString)", directoryHint: .isDirectory)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         defaults.removePersistentDomain(forName: suiteName)
         if FileManager.default.fileExists(atPath: scratch.path) {
             try FileManager.default.removeItem(at: scratch)

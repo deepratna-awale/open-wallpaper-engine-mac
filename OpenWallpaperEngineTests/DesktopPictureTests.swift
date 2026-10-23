@@ -20,7 +20,7 @@ final class DesktopPictureTests: XCTestCase {
     private let green: [UInt8] = [0, 96, 0]
     private let black: [UInt8] = [0, 0, 0]
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         root = FileManager.default.temporaryDirectory.appending(path: "DesktopPictureTests-\(UUID().uuidString)",
                                                                 directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -33,7 +33,7 @@ final class DesktopPictureTests: XCTestCase {
                                   loader: DisplayPictureLoader(cachesDirectory: caches))
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         try? FileManager.default.removeItem(at: root)
     }
 

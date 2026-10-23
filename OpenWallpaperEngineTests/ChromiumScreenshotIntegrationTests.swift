@@ -9,7 +9,7 @@ import XCTest
 final class ChromiumScreenshotIntegrationTests: XCTestCase {
     private var folder: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         try XCTSkipIf(ChromiumEngineInstallation.activeInstall() == nil, "The Chromium engine isn't installed")
         folder = FileManager.default.temporaryDirectory.appending(path: "ChromiumScreenshotTests-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -17,7 +17,7 @@ final class ChromiumScreenshotIntegrationTests: XCTestCase {
             .write(to: folder.appending(path: "index.html"), atomically: true, encoding: .utf8)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let folder { try? FileManager.default.removeItem(at: folder) }
     }
 

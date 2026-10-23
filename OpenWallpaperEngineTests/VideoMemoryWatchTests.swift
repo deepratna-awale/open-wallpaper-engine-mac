@@ -67,8 +67,8 @@ final class VideoMemoryWatchTests: XCTestCase {
     private var monitor: DisplayPlaybackMonitor!
     private var watch: VideoMemoryWatch!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         gpu = FakeGPU()
         applied = []
         let display = DesktopDisplay(id: "1", frame: CGRect(x: 0, y: 0, width: 1920, height: 1080),
@@ -85,10 +85,10 @@ final class VideoMemoryWatchTests: XCTestCase {
         monitor.evaluate()
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         watch.setEnabled(false)
         monitor.stop()
-        super.tearDown()
+        try await super.tearDown()
     }
 
     func testExhaustionPausesAndRecoveryResumes() {
