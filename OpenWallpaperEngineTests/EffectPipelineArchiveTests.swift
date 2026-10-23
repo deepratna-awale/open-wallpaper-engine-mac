@@ -49,7 +49,8 @@ final class EffectPipelineArchiveTests: XCTestCase {
     /// Pipelines compile on a concurrent queue; lookups and additions must not corrupt the archive.
     func testConcurrentCompilesSerializeCleanly() throws {
         let archive = EffectPipelineArchive(device: device, directory: directory)
-        let descriptors = try (0..<24).map { try descriptor(red: $0) }
+        // Built before the concurrent compiles and only read by them.
+        nonisolated(unsafe) let descriptors = try (0..<24).map { try descriptor(red: $0) }
         let device: MTLDevice = self.device
         DispatchQueue.concurrentPerform(iterations: descriptors.count) { index in
             do {
@@ -317,8 +318,9 @@ final class EffectPipelineArchiveTests: XCTestCase {
         var hits = 0
         for round in 0..<8 {
             let archive = EffectPipelineArchive(device: device, directory: directory, serializeDelay: 0.01, metalScratchDirectory: nil)
-            let descriptors = try (0..<6).map { try descriptor(red: round * 6 + $0) }
-            let reused = round > 0 ? [try descriptor(red: (round - 1) * 6)] : []
+            // Built before the concurrent compiles and only read by them.
+            nonisolated(unsafe) let descriptors = try (0..<6).map { try descriptor(red: round * 6 + $0) }
+            nonisolated(unsafe) let reused = round > 0 ? [try descriptor(red: (round - 1) * 6)] : []
             DispatchQueue.concurrentPerform(iterations: descriptors.count + reused.count) { index in
                 let isReused = index >= descriptors.count
                 let red = isReused ? (round - 1) * 6 : round * 6 + index

@@ -87,17 +87,16 @@ final class InProcessShaderCompilerTests: XCTestCase {
     /// glslang is not thread-safe; the library serializes calls, so parallel output equals serial.
     func testParallelTranslationMatchesSerial() throws {
         let jobs = Array(try Self.corpus().prefix(24))
-        let compiler = InProcessShaderCompiler()
+        // Called from many threads on purpose: the compiler serializes its glslang calls itself.
+        nonisolated(unsafe) let compiler = InProcessShaderCompiler()
         let serial = jobs.map { Self.translate($0, with: compiler) }
         let rounds = 4
-        var parallel = [Outcome?](repeating: nil, count: jobs.count * rounds)
-        let lock = NSLock()
+        let outcomes = LockedValue([Outcome?](repeating: nil, count: jobs.count * rounds))
         DispatchQueue.concurrentPerform(iterations: jobs.count * rounds) { index in
             let outcome = Self.translate(jobs[index % jobs.count], with: compiler)
-            lock.lock()
-            parallel[index] = outcome
-            lock.unlock()
+            outcomes.mutate { $0[index] = outcome }
         }
+        let parallel = outcomes.value
         for index in parallel.indices {
             XCTAssertEqual(parallel[index], serial[index % jobs.count], jobs[index % jobs.count].label)
         }
@@ -211,7 +210,8 @@ final class InProcessShaderCompilerTests: XCTestCase {
     }
 
     func testCompileThreadTimesOutAndFailsQueuedJobs() throws {
-        let thread = ShaderCompileThread(timeout: 0.2)
+        // Shared with a second caller on purpose: the compile thread queues callers itself.
+        nonisolated(unsafe) let thread = ShaderCompileThread(timeout: 0.2)
         XCTAssertEqual(try thread.run { 42 }, 42)
         let hung = hang()
         let queued = expectation(description: "queued job fails")
@@ -236,23 +236,23 @@ final class InProcessShaderCompilerTests: XCTestCase {
     }
 
     func testTimeoutCountsRunTimeNotQueueTime() throws {
-        let thread = ShaderCompileThread(timeout: 0.3)
+        // Shared with eight callers on purpose: the compile thread queues callers itself.
+        nonisolated(unsafe) let thread = ShaderCompileThread(timeout: 0.3)
         let results = DispatchQueue.global()
         let group = DispatchGroup()
-        var failures = 0
-        let lock = NSLock()
+        let failures = LockedValue(0)
         // Eight 0.1 s jobs queue for up to 0.8 s, longer than the timeout, but none overruns it.
         for _ in 0..<8 {
             results.async(group: group) {
                 do {
                     _ = try thread.run { Thread.sleep(forTimeInterval: 0.1) }
                 } catch {
-                    lock.withLock { failures += 1 }
+                    failures.mutate { $0 += 1 }
                 }
             }
         }
         group.wait()
-        XCTAssertEqual(failures, 0)
+        XCTAssertEqual(failures.value, 0)
         XCTAssertFalse(thread.isStuck)
     }
 

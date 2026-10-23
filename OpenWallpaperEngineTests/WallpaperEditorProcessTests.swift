@@ -568,14 +568,16 @@ private final class FakeEditorWindows: WallpaperEditorWindows {
 
 /// The notifications of one name a centre posts, in order, until the log goes.
 private final class NotificationLog {
-    private(set) var notifications: [Notification] = []
+    var notifications: [Notification] { received.value }
+    /// Filled on whichever thread posts.
+    private let received = LockedValue<[Notification]>([])
     private let center: NotificationCenter
     private var token: NSObjectProtocol?
 
     init(_ name: Notification.Name, in center: NotificationCenter) {
         self.center = center
-        token = center.addObserver(forName: name, object: nil, queue: nil) { [weak self] notification in
-            self?.notifications.append(notification)
+        token = center.addObserver(forName: name, object: nil, queue: nil) { [received] notification in
+            received.mutate { $0.append(notification) }
         }
     }
 

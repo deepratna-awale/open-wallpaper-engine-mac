@@ -116,7 +116,7 @@ final class BatteryQualityTests: XCTestCase {
         defer { cancellable.cancel() }
 
         source.send(Self.battery)
-        try await sleepUntil("the battery state", timeout: 2) { model.powerState == Self.battery }
+        try await sleepUntil("the battery state", timeout: 2) { @Sendable @MainActor in model.powerState == Self.battery }
         XCTAssertTrue(model.isBatteryQualityActive)
         XCTAssertEqual(model.effectiveSettings, BatteryQuality.lowered(model.settings))
         XCTAssertEqual(model.settings, ultra(), "the stored settings are untouched")
@@ -131,7 +131,7 @@ final class BatteryQualityTests: XCTestCase {
         XCTAssertEqual(model.effectiveSettings.fps, GSQuality.low.fps)
 
         source.send(Self.ac)
-        try await sleepUntil("the AC state", timeout: 2) { model.powerState == Self.ac }
+        try await sleepUntil("the AC state", timeout: 2) { @Sendable @MainActor in model.powerState == Self.ac }
         XCTAssertEqual(model.effectiveSettings, model.settings, "the user's settings come back on AC")
         XCTAssertFalse(model.isBatteryQualityActive)
     }

@@ -147,12 +147,14 @@ final class EffectGraphTests: XCTestCase {
 
     /// Many callers asking for the same pipelines at once start one compile per pipeline.
     func testConcurrentRequestsCompileEachPipelineOnce() throws {
-        let plan = try builder.build(try effect(#"{"file":"effects/blur/effect.json","passes":[{},{},{},{}]}"#))
+        // Built here and only read by the concurrent callers below.
+        nonisolated(unsafe) let plan = try builder.build(try effect(#"{"file":"effects/blur/effect.json","passes":[{},{},{},{}]}"#))
         let keys = Set(plan.passes.compactMap { pass -> String? in
             guard case .render = pass.command, pass.variant != nil else { return nil }
             return "\(pass.variantKey)|\(pass.target ?? "")|\(pass.blending)"
         })
         XCTAssertGreaterThan(keys.count, 1)
+        let renderer: EffectGraphRenderer = renderer
         DispatchQueue.concurrentPerform(iterations: 16) { _ in
             XCTAssertTrue(renderer.waitUntilReady([plan], width: 256, height: 256))
         }

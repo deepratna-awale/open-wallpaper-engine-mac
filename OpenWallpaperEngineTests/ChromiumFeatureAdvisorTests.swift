@@ -9,33 +9,44 @@ final class ChromiumFeatureAdvisorTests: XCTestCase {
     private var defaults: UserDefaults!
     private var folder: URL!
     /// What the fake scanner reports; changing `key` is changing the wallpaper's content.
-    // Read by the advisor's @Sendable scanner; each test sets them before the advisor runs.
-    nonisolated(unsafe) private var key = "content-1"
-    nonisolated(unsafe) private var features = ["web-serial"]
-    nonisolated(unsafe) private var engine = WebEngine.webKit
-    nonisolated(unsafe) private var scans = 0
+    // The advisor's @Sendable scanner reads them off the main thread, so they live behind a lock.
+    private struct FakeContent { var key = "content-1"; var features = ["web-serial"]; var scans = 0 }
+    private let content = LockedValue(FakeContent())
+    private var key: String {
+        get { content.value.key }
+        set { content.mutate { $0.key = newValue } }
+    }
+    private var features: [String] {
+        get { content.value.features }
+        set { content.mutate { $0.features = newValue } }
+    }
+    private var scans: Int { content.value.scans }
+    private var engine = WebEngine.webKit
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         suiteName = "ChromiumFeatureAdvisorTests-\(UUID().uuidString)"
         defaults = UserDefaults(suiteName: suiteName)
         folder = FileManager.default.temporaryDirectory.appending(path: "ChromiumFeatureAdvisorTests-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         defaults.removePersistentDomain(forName: suiteName)
         try? FileManager.default.removeItem(at: folder)
+        try await super.tearDown()
     }
 
     private func makeAdvisor() -> ChromiumFeatureAdvisor {
         ChromiumFeatureAdvisor(
             store: ChromiumFeatureStore(defaults: defaults),
             engine: { [unowned self] in self.engine },
-            scanner: { [unowned self] _ in
-                self.scans += 1
-                return ChromiumFeatureScanner.Result(contentKey: self.key, features: self.features)
+            scanner: { [content] _ in
+                content.mutate { $0.scans += 1 }
+                let current = content.value
+                return ChromiumFeatureScanner.Result(contentKey: current.key, features: current.features)
             },
-            contentKey: { [unowned self] _ in self.key })
+            contentKey: { [content] _ in content.value.key })
     }
 
     private var wallpaper: WEWallpaper {
