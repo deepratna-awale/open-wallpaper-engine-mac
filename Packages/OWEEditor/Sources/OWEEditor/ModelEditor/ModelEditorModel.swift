@@ -83,8 +83,11 @@ final class ModelEditorModel: ObservableObject {
 
     // MARK: Events
 
+    /// Add Event on a source animation (WE's Events tab lists only those, capture 549); nil for
+    /// a clip or an id the model doesn't have.
     @discardableResult
-    func addEvent(to animation: UInt64) -> UInt64 {
+    func addEvent(to animation: UInt64) -> UInt64? {
+        guard animations.contains(where: { $0.id == animation }) else { return nil }
         let id = config.nextID(after: output?.animations.count ?? 0)
         let number = config.events.filter { $0.animation == animation }.count + 1
         config.events.append(ModelImportConfig.Event(id: id, name: ML("Event \(number)"), frame: 0, animation: animation))

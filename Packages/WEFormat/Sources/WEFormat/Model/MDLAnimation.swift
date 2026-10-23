@@ -117,6 +117,9 @@ public struct MDLAnimation: Equatable, Sendable {
         public static let rootMotion: UInt32 = 0x1f800
     }
 
+    /// An event record: WE's compilers write its time in seconds (`frame / fps`) in `frame` and the
+    /// event as JSON in `name` (`{"frame":15,"name":"flapmid"}`, capture 549), which scripts get
+    /// parsed.
     public struct Event: Equatable, Sendable {
         public var frame: Float
         public var name: String

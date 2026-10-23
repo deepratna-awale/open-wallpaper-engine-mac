@@ -5416,97 +5416,97 @@
         }
       }
     },
-    "Pick an animation or clip." : {
+    "Pick an animation." : {
       "comment" : "Wallpaper Editor, Model Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "اختر رسومًا متحركة أو مقطعًا."
+            "value" : "اختر رسومًا متحركة."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wählen Sie eine Animation oder einen Clip."
+            "value" : "Wählen Sie eine Animation."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elige una animación o un clip."
+            "value" : "Elige una animación."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Choisissez une animation ou un clip."
+            "value" : "Choisissez une animation."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "कोई एनिमेशन या क्लिप चुनें।"
+            "value" : "कोई एनिमेशन चुनें।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Scegli un’animazione o una clip."
+            "value" : "Scegli un’animazione."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "アニメーションかクリップを選んでください。"
+            "value" : "アニメーションを選んでください。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "애니메이션이나 클립을 선택하세요."
+            "value" : "애니메이션을 선택하세요."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wybierz animację lub klip."
+            "value" : "Wybierz animację."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Escolha uma animação ou clipe."
+            "value" : "Escolha uma animação."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Выберите анимацию или клип."
+            "value" : "Выберите анимацию."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bir animasyon veya klip seçin."
+            "value" : "Bir animasyon seçin."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Виберіть анімацію або кліп."
+            "value" : "Виберіть анімацію."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选择一个动画或片段。"
+            "value" : "选择一个动画。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "選擇一個動畫或片段。"
+            "value" : "選擇一個動畫。"
           }
         }
       }
