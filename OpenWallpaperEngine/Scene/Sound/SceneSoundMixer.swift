@@ -49,7 +49,8 @@ final class SceneSoundMixer {
     deinit {
         // The engine stays until its output no longer pulls from it; disposing it talks to
         // coreaudiod, which must not stall the renderer, so it goes on a queue of its own.
-        let engine = self.engine
+        // Unchecked: the mixer is going away, and the engine is handed to exactly one queue to stop.
+        nonisolated(unsafe) let engine = self.engine
         guard let output else {
             DispatchQueue.global(qos: .utility).async { engine.stop() }
             return

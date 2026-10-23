@@ -78,7 +78,7 @@ struct FilterResults: View {
 
     /// One checkbox per option; option `i` is bit `1 << i`.
     private func toggles<Option: FilterResultsModel>(
-        _ keyPath: ReferenceWritableKeyPath<FilterResultsViewModel, Option>, name: String
+        _ keyPath: ReferenceWritableKeyPath<FilterResultsViewModel, Option> & Sendable, name: String
     ) -> some View {
         ForEach(Array(Option.options.enumerated()), id: \.offset) { i, option in
             Toggle(isOn: Binding<Bool>(get: {

@@ -37,10 +37,11 @@ final class SceneFrameHarness {
             return view
         }
         view = mtkView
-        // `assumeIsolated` runs synchronously on this thread, so handing `services` to it races with nothing.
-        nonisolated(unsafe) let services = services
+        // Unchecked: `assumeIsolated` runs synchronously on this thread, so the hand-off races with nothing.
+        struct Handoff: @unchecked Sendable { let services: SceneScriptServices? }
+        let handoff = Handoff(services: services)
         renderer = try XCTUnwrap(MainActor.assumeIsolated {
-            let renderer = SceneMetalRenderer(view: mtkView, scriptServices: services, screenID: screenID)
+            let renderer = SceneMetalRenderer(view: mtkView, scriptServices: handoff.services, screenID: screenID)
             mtkView.isPaused = true
             return renderer
         })

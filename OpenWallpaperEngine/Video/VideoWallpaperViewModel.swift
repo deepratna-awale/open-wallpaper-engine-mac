@@ -319,14 +319,16 @@ class VideoWallpaperViewModel: ObservableObject {
         let cache = RepairedVideoCache.current
         let id = UUID()
         pendingPreparation = id
+        // Sendable, so the detached repair can call it: the view model is main-actor isolated.
+        let markPreparing: @Sendable () -> Void = { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self, self.pendingPreparation == id else { return }
+                self.isPreparingVideo = true
+            }
+        }
         preparation = Task { [weak self] in
             let file = await Task.detached(priority: .userInitiated) {
-                let url = cache.playableURL(for: source) {
-                    Task { @MainActor [weak self] in
-                        guard let self, self.pendingPreparation == id else { return }
-                        self.isPreparingVideo = true
-                    }
-                }
+                let url = cache.playableURL(for: source) { markPreparing() }
                 return VideoFileSource(url: url, mode: readMode)
             }.value
             guard let self, !Task.isCancelled, !self.stopped, self.pendingPreparation == id else { return }
