@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Wallpaper Editor: a model clip without a root-motion bone compiles as Wallpaper Engine's.** Add Clip flags position x and z and yaw for root motion; Wallpaper Engine's compiler keeps those flags only when the clip names a root-motion bone the skeleton has, and Match loop only on a clip longer than a frame. Import Model kept them on every clip, so the `.mdl` it wrote carried root-motion flags Wallpaper Engine's doesn't. Checked against WE 2.8.0.42's import of a rigged FBX with a clip (capture 549).
+- **Wallpaper Editor: an imported model's bones are in Wallpaper Engine's order.** Wallpaper Engine's importer lists a skeleton's bones breadth-first, each bone's children last to first in the file's order; Import Model listed siblings in the file's order, so a rig with side-by-side chains (two arms, two legs) numbered its bones differently from Wallpaper Engine's import of the same file. Checked against WE 2.8.0.42's import of an FBX with two sibling chains (capture 549).
 - **Puppet Warp clipping masks match Wallpaper Engine's coverage.** A mask's coverage is now drawn at half the size of the puppet's image, as Wallpaper Engine draws it at half the frame's size, and read with linear filtering, so a clipped limb's edge fades over two pixels as in Wallpaper Engine 2.8's captures. The coverage takes a quarter of the memory and drawing it a quarter of the work.
 
 ## [1.0.0-beta.8] - 2026-10-18
