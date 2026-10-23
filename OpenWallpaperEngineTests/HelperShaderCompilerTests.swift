@@ -63,7 +63,10 @@ final class HelperShaderCompilerTests: XCTestCase {
     }
 
     private func onBackground<T>(_ body: @escaping () throws -> T) throws -> T {
-        var result: Result<T, Error>!
+        // The one background job takes `body` and writes `result` before `done` fires; this thread
+        // reads `result` only after waiting for it, so neither is ever touched by two threads at once.
+        nonisolated(unsafe) var result: Result<T, Error>!
+        nonisolated(unsafe) let body = body
         let done = expectation(description: "compile")
         DispatchQueue.global().async {
             result = Result { try body() }

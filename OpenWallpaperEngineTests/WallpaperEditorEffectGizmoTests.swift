@@ -19,7 +19,7 @@ final class WallpaperEditorEffectGizmoTests: XCTestCase {
             try? FileManager.default.removeItem(at: SceneEditOverlayFiles.defaultStore.assetsDirectory(for: identity.rawValue))
         }
         let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
-        return try EditorWallpaperResources(wallpaper: WEWallpaper(using: project, where: directory), package: nil,
+        return EditorWallpaperResources(wallpaper: WEWallpaper(using: project, where: directory), package: nil,
                                             assets: SceneEditOverlayFiles.assets(for: identity))
     }
 

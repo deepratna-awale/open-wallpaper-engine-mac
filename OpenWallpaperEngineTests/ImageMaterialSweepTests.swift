@@ -9,7 +9,7 @@ import MetalKit
 /// layers draw natively. Lit (`LIGHTING`) materials draw with no light budget, as in a scene
 /// without `lightconfig`. Skipped without the library (CI); `OWE_LIBRARY` overrides it.
 final class ImageMaterialSweepTests: XCTestCase {
-    func testEveryLibraryImageMaterialPlansCompilesAndDraws() throws {
+    @MainActor func testEveryLibraryImageMaterialPlansCompilesAndDraws() throws {
         let assets = ShaderVariantTests.weAssets
         let library = LibrarySweepTests.libraryRoot
         try XCTSkipUnless(FileManager.default.fileExists(atPath: assets.path), "WE assets not present")

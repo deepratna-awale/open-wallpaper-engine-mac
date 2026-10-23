@@ -162,8 +162,8 @@ final class ApplicationRulesLoadTests: XCTestCase {
     private var loads: [ApplicationRuleLoad?] = []
     private var monitor: DisplayPlaybackMonitor!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         desktop = Desktop()
         applied = []
         loads = []
@@ -181,10 +181,10 @@ final class ApplicationRulesLoadTests: XCTestCase {
                                          apply: { [weak self] in self?.applied.append($0) })
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         monitor.stop()
         monitor = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     func testPlayingAudioFollowsCoreAudioWithoutPolling() {

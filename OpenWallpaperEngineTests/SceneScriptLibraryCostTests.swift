@@ -34,7 +34,7 @@ final class SceneScriptLibraryCostTests: XCTestCase {
     /// makes the table the scripts' cost of a 60 fps frame, whatever the drawing costs.
     static let frameInterval = 1.0 / 60
 
-    func testEveryLibrarySceneRunsItsScriptsUnderBudget() throws {
+    @MainActor func testEveryLibrarySceneRunsItsScriptsUnderBudget() throws {
         let library = LibrarySweepTests.libraryRoot
         try XCTSkipUnless(FileManager.default.fileExists(atPath: library.path), "wallpaper library not present")
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())

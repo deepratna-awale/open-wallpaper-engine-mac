@@ -8,12 +8,12 @@ final class StaleBundleRefreshTests: XCTestCase {
     private var root: URL!
     private let fm = FileManager.default
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         root = fm.temporaryDirectory.appending(path: "owe-stale-bundles-\(UUID().uuidString)")
         try fm.createDirectory(at: root, withIntermediateDirectories: true)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         try? fm.removeItem(at: root)
     }
 

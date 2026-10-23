@@ -5,6 +5,7 @@ import AppKit
 
 /// Whole renderer frames with particle children and animated parents: a static child draws where its link puts it, and a system under an animated group
 /// moves with the group, particles and all.
+@MainActor
 final class SceneRendererParticleFamilyTests: XCTestCase {
     private static let size = 128
 

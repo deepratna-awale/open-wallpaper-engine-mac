@@ -36,6 +36,12 @@ struct WEReferenceRenderer {
 
     /// The frames at `shots` (in time order), placed on the screen as WE places a scene (cover).
     func render(_ shots: [Shot]) throws -> [WEReferenceImage] {
+        // The callers are synchronous tests, which XCTest runs on the main thread; the view and
+        // renderer are main-actor types.
+        try MainActor.assumeIsolated { try renderOnMain(shots) }
+    }
+
+    @MainActor private func renderOnMain(_ shots: [Shot]) throws -> [WEReferenceImage] {
         let restore = Self.clearStoredSettings(directory: directory)
         defer { restore() }
         let restoreTime = localTime.map(WEReferenceLocalTime.set) ?? {}
@@ -105,7 +111,7 @@ struct WEReferenceRenderer {
         return images
     }
 
-    private func draw(_ renderer: SceneMetalRenderer, cursor: SIMD2<Double>) {
+    @MainActor private func draw(_ renderer: SceneMetalRenderer, cursor: SIMD2<Double>) {
         let size = SIMD2<Float>(Float(outputSize.x), Float(outputSize.y))
         // The viewport's cursor is in points from the bottom-left.
         let point = SIMD2(Float(cursor.x), size.y - Float(cursor.y))
@@ -120,7 +126,6 @@ struct WEReferenceRenderer {
     /// stored, so the wallpaper loads with its default properties as WE's captures did, and returns
     /// what puts it back.
     private static func clearStoredSettings(directory: URL) -> () -> Void {
-        let projectData = FileManager.default.contents(atPath: directory.appending(path: "project.json").path)
         let identity = WallpaperSettingsIdentity.resolve(directory: directory)
         var keys: [String] = []
         for family in WallpaperSettingsIdentity.Family.allCases {

@@ -32,6 +32,14 @@ struct FixtureSceneRenderer {
     var configure: (SceneMetalRenderer) -> Void = { _ in }
 
     func render() throws -> Frame {
+        // The callers are synchronous tests, which XCTest runs on the main thread; the view and
+        // renderer are main-actor types. `fixture` is a copy of this value (its `configure` closure
+        // isn't Sendable) that only this, the main, thread ever uses.
+        nonisolated(unsafe) let fixture = self
+        return try MainActor.assumeIsolated { try fixture.renderOnMain() }
+    }
+
+    @MainActor private func renderOnMain() throws -> Frame {
         defer { Fixtures.removeStoredSettings(for: directory) }
         var projectJSON = try XCTUnwrap(JSONSerialization.jsonObject(
             with: Data(contentsOf: directory.appending(path: "project.json"))) as? [String: Any])

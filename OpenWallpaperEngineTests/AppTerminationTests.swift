@@ -1,4 +1,5 @@
 import AppKit
+import os
 import XCTest
 @testable import OpenWallpaperEngine
 
@@ -8,11 +9,11 @@ final class AppTerminationTests: XCTestCase {
     func testQuitCompletesWhenAppKitRefuses() {
         let center = NotificationCenter()
         var terminateCalls = 0
-        var willTerminateAt: Date?
+        let willTerminateAt = OSAllocatedUnfairLock<Date?>(initialState: nil)
         let exited = expectation(description: "exit")
         var exitStatus: Int32?
         let observer = center.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: nil) { _ in
-            willTerminateAt = Date()
+            willTerminateAt.withLock { $0 = Date() }
         }
         defer { center.removeObserver(observer) }
         let termination = AppTermination(terminate: { terminateCalls += 1 }, notificationCenter: center,
@@ -23,7 +24,7 @@ final class AppTerminationTests: XCTestCase {
         wait(for: [exited], timeout: 2)
         XCTAssertEqual(terminateCalls, 1)
         XCTAssertEqual(exitStatus, 0)
-        let notified = try? XCTUnwrap(willTerminateAt)
+        let notified = try? XCTUnwrap(willTerminateAt.withLock { $0 })
         XCTAssertNotNil(notified, "applicationWillTerminate's notification must run before exiting")
         XCTAssertLessThan(Date().timeIntervalSince(start), 2)
     }

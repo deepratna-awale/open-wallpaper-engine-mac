@@ -42,15 +42,17 @@ private final class FakeNowPlayingFramework: NowPlayingFramework {
     func register(on queue: DispatchQueue) { lock.lock(); _registrations += 1; lock.unlock() }
     func unregister() { lock.lock(); _unregistrations += 1; lock.unlock() }
 
-    func nowPlayingInfo(on queue: DispatchQueue, _ handler: @escaping ([String: Any]) -> Void) {
-        let delay = self.delay, info = self.info
+    func nowPlayingInfo(on queue: DispatchQueue, _ handler: @escaping @Sendable ([String: Any]) -> Void) {
+        let delay = self.delay
+        // A copy, never mutated: the test's plist values (strings, numbers, data, dates).
+        nonisolated(unsafe) let info = self.info
         queue.async {
             if delay > 0 { Thread.sleep(forTimeInterval: delay) }
             handler(info)
         }
     }
 
-    func isPlaying(on queue: DispatchQueue, _ handler: @escaping (Bool) -> Void) {
+    func isPlaying(on queue: DispatchQueue, _ handler: @escaping @Sendable (Bool) -> Void) {
         queue.async { handler(false) }
     }
 
