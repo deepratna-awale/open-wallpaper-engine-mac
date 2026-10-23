@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Wallpaper Editor: a video texture's variant is written as Wallpaper Engine writes it.** A video option's patch now has Wallpaper Engine's empty rectangle (it held the video's size), so the compiled `.tex` of a video with a video option is byte for byte Wallpaper Engine's. The player already read Wallpaper Engine's file and played the option video in place of the base when its condition held; both are now checked against WE 2.8.0.42's own video variant (capture 550).
+
 ## [1.0.0-beta.8] - 2026-10-18
 
 ### Added

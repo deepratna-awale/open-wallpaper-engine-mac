@@ -1,0 +1,26 @@
+{
+	"bleedtransparentcolors" : true,
+	"clampuvs" : true,
+	"format" : "rgba8888",
+	"halfmip" : true,
+	"nonpoweroftwo" : true,
+	"variants" : 
+	[
+		{
+			"name" : "clip",
+			"options" : 
+			[
+				{
+					"blend" : "replace",
+					"file" : "materials/vid_opt.mp4",
+					"name" : "vid_opt",
+					"variantcondition" : 
+					{
+						"condition" : "1",
+						"name" : "shapesel"
+					}
+				}
+			]
+		}
+	]
+}
