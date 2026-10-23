@@ -30,8 +30,9 @@ imported models, and the docs at docs.wallpaperengine.io/en/scene/models/.
   `clips` (`[{animation: "<animation name>", start, end, frameoffset, id, matchloop,
   motionflags, name: "Rig|walk (Clip 0)", rootmotion: "<bone>"}]`; `motionflags` is the clip
   record's flags as they are, Add Clip's 43008 = 0xA800 being position x, position z and yaw),
-  `events` (`name`, `frame`, and `clip` (an id) or `animation` (a name), 0x1400a28dd; WE's Add
-  Event created nothing in the capture), `attachments` (`[{bone, id, name, transform: "<the
+  `events` (`[{animation: "Scene", frame: 15, id: 29, name: "flapmid"}]`, capture 549: Add
+  Event keys an event to a source animation by name; the compiler also takes `clip`, an id,
+  0x1400a28dd), `attachments` (`[{bone, id, name, transform: "<the
   16 numbers of the MDAT matrix>"}]`) and `constraints` (`[{bone, config: {Puppet Warp's
   whole constraint key set, IK keys, layout, preset, presetresponsiveness}}]`). WE's importer
   writes `normals` and `tangentspace` as true; Import Model rewrites a default project's
@@ -46,7 +47,14 @@ imported models, and the docs at docs.wallpaperengine.io/en/scene/models/.
   (`"%.5f %.5f %.5f"`), `tm` 10 when it isn't above 0, and `lamin`/`lamax` replaced by their z
   angle on each simulated rotation axis (`rax`/`ray`/`raz`) and 0 on the others when both z
   angles are non-zero ("0 0 ±π/2" with every axis on becomes "±1.57080" thrice; 0x1400b0270).
-  The attachment is `MDAT0001` with the transform as its matrix.
+  The attachment is `MDAT0001` with the transform as its matrix. An event (0x1400a28c0…
+  0x1400a2b43) becomes a record of its time in seconds, `frame / fps` of the record it goes in,
+  and its JSON, `{"frame":15,"name":"flapmid"}` (capture 549's 0.5 for frame 15 at 30 fps),
+  which the player keeps as the clip clock's event time and hands scripts parsed. One keyed to a
+  clip goes in that clip; one keyed to an animation goes in the first record whose name is
+  **not** the animation's, WE's name test being inverted: 549's "flapmid" on Scene is in the clip
+  "Scene (Clip 54)" and Scene has none, and an animation with no other record loses its events.
+  The importer compiles them the same way, so its models behave as WE's.
 - **Materials.** Each mesh material becomes `materials/models/<model>/<material>.json` with
   WE's `generic4` pass (`wallpaperui.exe`'s template: depth test and write on, back faces
   culled) and its albedo texture named after the material
@@ -57,8 +65,9 @@ imported models, and the docs at docs.wallpaperengine.io/en/scene/models/.
 - **The Model Editor** (Configure Model; `views/modals/editormodeleditormodal.html` and
   `EditorModelEditorModalCtrl` in `scripts.js`) has four tabs: **Animation** (the source's
   animations with Add Clip, the FBX files with Add FBX File, the clips and their options),
-  **Attachments** (Add Attachment; bone, name, origin), **Events** (per animation or clip:
-  Add Event, name, frame) and **Constraints** (the bones, each with the bone-physics settings
+  **Attachments** (Add Attachment; bone, name, origin), **Events** (the source's animations,
+  not the clips; Add Event adds to the one selected and does nothing without one, capture 549;
+  name, start frame) and **Constraints** (the bones, each with the bone-physics settings
   Puppet Warp uses, presets, Reset, Copy and Paste). **Blend Layers and Transitions are
   commented out** in WE 2.8.0.42's template: their strings exist
   (`ui_editor_model_editor_tab_blend_layers`, `…_tab_transitions`) but the tabs are empty and
@@ -178,7 +187,6 @@ What WE's own files didn't show, so the writer writes WE's common case:
 |---|---|---|
 | `MDLS` version | `MDLS0004`, `MDLA0006`, `MDAT0001` | Capture 546. |
 | Animation ids | `animationmapping`'s; an animation without one gets its position (1, 2, …), which the importer then saves in the mapping | WE's are its editor's counter (41, 42); scenes name them by id, so any stable number works. |
-| Events | `{id, name, frame, clip: id}` or `{…, animation: name}` in `editor.events` | The compiler's keys (0x1400a28dd); WE's Add Event created nothing in capture 546. |
 | Mesh flags | 0, or 1 for 32-bit indices | The library's imports. |
 | `MDLV` 21/23 blobs and groups | none | Every imported model in the library. |
 | Triangle order | the polygons' | WE's Assimp reorders triangles for the vertex cache (ImproveCacheLocality), not ported. |
@@ -186,7 +194,5 @@ What WE's own files didn't show, so the writer writes WE's common case:
 
 ## Needs a capture in WE
 
-- Add an event to a clip (select the clip first) and to an animation, to confirm the event
-  record's layout.
 - Import an FBX with pre-rotations (Mixamo), whose helper nodes Assimp makes.
 - Import a large OBJ and FBX to see the scale WE gives the new layer.

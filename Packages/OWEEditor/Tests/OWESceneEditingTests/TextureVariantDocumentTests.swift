@@ -23,14 +23,18 @@ final class TextureVariantDocumentTests: XCTestCase {
                 .init(name: "Coat", file: "materials/editor/variants/coat.png", condition: .equals("outfit", "2")),
             ]),
             .init(name: "Empty"),
+            .init(name: "Unset", options: [.init(name: "Plain", file: "materials/editor/variants/plain.png")]),
         ])
         let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: document.json) as? [String: Any])
         let options = try XCTUnwrap(((json["variants"] as? [[String: Any]])?.first)?["options"] as? [[String: Any]])
         XCTAssertEqual(Set(options[0].keys), ["blend", "file", "name", "variantcondition"], "WE's option keys")
+        let unset = try XCTUnwrap(((json["variants"] as? [[String: Any]])?.last?["options"] as? [[String: Any]])?.first)
+        XCTAssertEqual(Set(unset.keys), ["blend", "file", "name"], "no `variantcondition` without a condition (capture 550)")
         XCTAssertEqual(options[1]["variantcondition"] as? [String: String], ["name": "outfit", "condition": "2"])
         let read = try XCTUnwrap(TextureVariantDocument(json: document.json, texture: "ignored"))
         XCTAssertEqual(read.source, "editor/bg-1")
-        XCTAssertEqual(read.groups.map(\.name), ["Clothes", "Empty"])
+        XCTAssertEqual(read.groups.map(\.name), ["Clothes", "Empty", "Unset"])
+        XCTAssertEqual(read.groups[2].options.map(\.condition), [nil])
         XCTAssertEqual(read.groups[0].options.map(\.name), ["Hat", "Coat"])
         XCTAssertEqual(read.groups[0].options.map(\.file), document.groups[0].options.map(\.file))
         XCTAssertEqual(read.groups[0].options.map(\.blend), [.alphaBlend, .replace])
@@ -51,12 +55,14 @@ final class TextureVariantDocumentTests: XCTestCase {
 
     func testOptionsAreNumberedByGroupAndPosition() {
         let document = TextureVariantDocument(source: "a", groups: [
-            .init(name: "A", options: [.init(name: "1", file: "f1"), .init(name: "2", file: "f2")]),
+            .init(name: "A", options: [.init(name: "1", file: "f1", condition: .flag("a")), .init(name: "2", file: "f2", condition: .flag("b"))]),
             .init(name: "B"),
-            .init(name: "C", options: [.init(name: "3", file: "f3")]),
+            .init(name: "C", options: [.init(name: "none", file: "f0"), .init(name: "3", file: "f3", condition: .equals("c", "1"))]),
+            .init(name: "D", options: [.init(name: "none", file: "f0")]),
         ])
         let compiled = document.compiledOptions
-        // From 1, as WE's compiler numbers them (capture 540: group 1, options 1 and 2).
+        // From 1, as WE's compiler numbers them (capture 540: group 1, options 1 and 2); an option
+        // without a condition isn't compiled (capture 550).
         XCTAssertEqual(compiled.map(\.group), [1, 1, 3])
         XCTAssertEqual(compiled.map(\.id), [1, 2, 3])
         XCTAssertEqual(compiled.map(\.option.name), ["1", "2", "3"])
@@ -118,9 +124,10 @@ final class TextureVariantDocumentTests: XCTestCase {
 
         let call = try XCTUnwrap(encoder.compiled.last)
         XCTAssertEqual(call.base, Data("base".utf8))
+        // An option without a condition is checked but not compiled (capture 550): no condition.
         XCTAssertEqual(call.options.map(\.id), [1, 2])
         XCTAssertEqual(call.options.map(\.alphaBlend), [true, false])
-        XCTAssertEqual(call.options.map(\.condition), [#"{"condition":"hat"}"#, "{}"], "an option without a condition is never on")
+        XCTAssertEqual(call.options.map(\.condition), [#"{"condition":"hat"}"#, nil])
         XCTAssertEqual(call.options.map(\.file), [Data("hat".utf8), Data("coat".utf8)])
         let model = try XCTUnwrap(session.overlay.field("image", of: 10)?.stringValue)
         let applied = try XCTUnwrap(ImageLayerMaterial(modelPath: model, readFile: readFile))

@@ -92,13 +92,15 @@ public struct TextureVariantInput: Sendable {
     public var group: UInt32
     public var id: UInt32
     public var alphaBlend: Bool
-    /// The option record's condition JSON (`TextureVariantDocument.Condition.compiledJSON`); `{}`
-    /// for an option without one, which is never on.
-    public var condition: String
+    /// The option record's condition JSON (`TextureVariantDocument.Condition.compiledJSON`); nil
+    /// for an option without one, whose file is checked against the texture (WE refuses an
+    /// incompatible one when it is added) but which isn't compiled (WE's compiler skips it,
+    /// capture 550).
+    public var condition: String?
     /// The option's image or video file.
     public var file: Data
 
-    public init(group: UInt32, id: UInt32, alphaBlend: Bool, condition: String, file: Data) {
+    public init(group: UInt32, id: UInt32, alphaBlend: Bool, condition: String?, file: Data) {
         self.group = group
         self.id = id
         self.alphaBlend = alphaBlend

@@ -75,9 +75,6 @@ enum TextureCompressor {
         return packMode1(mode1)
     }
 
-    /// One block as a mode 6 block (low, high 64 bits).
-    static func encodeMode6(_ texels: [Int32]) -> (UInt64, UInt64) { pack(fitMode6(texels)) }
-
     private static func fitMode6(_ texels: [Int32]) -> Fit {
         var mean = SIMD4<Float>.zero
         var points = [SIMD4<Float>](repeating: .zero, count: 16)

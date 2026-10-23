@@ -128,10 +128,4 @@ extension SceneRawValue {
         if case .object(let object) = self { return object.userName }
         return nil
     }
-
-    /// The script this value is driven by, if any.
-    var scriptSource: String? {
-        if case .object(let object) = self { return object.script }
-        return nil
-    }
 }

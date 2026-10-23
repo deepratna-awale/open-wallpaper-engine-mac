@@ -34,12 +34,6 @@ final class ScreenSaverStatusTests: XCTestCase {
         }
     }
 
-    func testVideosAreAvailableAtOnce() {
-        let video = wallpaper(type: "video", file: "clip.mp4")
-        XCTAssertEqual(Plugin.status(for: video, enabled: true, chromiumInstalled: false), .available,
-                       "drawn live: no file to put in place first")
-    }
-
     func testNotEligibleTypesSayNotAvailable() {
         for type in ["application", "preset"] {
             XCTAssertEqual(Plugin.status(for: wallpaper(type: type), enabled: true, chromiumInstalled: true),

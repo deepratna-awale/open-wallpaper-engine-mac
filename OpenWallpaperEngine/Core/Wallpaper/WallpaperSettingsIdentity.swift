@@ -23,7 +23,7 @@ struct WallpaperSettingsIdentity: Hashable {
     /// The identity derived from the wallpaper's `project.json` alone (nil when unreadable: the
     /// folder name alone then): its Workshop id, else a hash of the file's bytes plus the folder
     /// name. For a local wallpaper this changes when the file is edited; `resolve` gives the stable
-    /// identity, and uses this one only to keep settings stored before local ids were kept.
+    /// identity, and uses this one only to recognise an unedited wallpaper moved to another volume.
     init(directory: URL, projectData: Data?) {
         let folder = directory.standardizedFileURL.lastPathComponent
         if let id = Self.workshopID(projectData: projectData, folder: folder) {
@@ -42,11 +42,6 @@ struct WallpaperSettingsIdentity: Hashable {
 
     /// The identity of the wallpaper in `directory`.
     static func resolve(directory: URL, defaults: UserDefaults = .app) -> WallpaperSettingsIdentity {
-        resolve(directory: directory, defaults: defaults, index: nil)
-    }
-
-    /// `resolve`, with the stored-settings names already read when many wallpapers are resolved.
-    static func resolve(directory: URL, defaults: UserDefaults, index: LegacySettingsIndex?) -> WallpaperSettingsIdentity {
         let projectURL = WEProject.url(in: directory)
         let projectData: Data?
         do {
@@ -61,8 +56,7 @@ struct WallpaperSettingsIdentity: Hashable {
         guard !derived.isWorkshop, FileManager.default.fileExists(atPath: directory.path, isDirectory: &isFolder),
               isFolder.boolValue else { return derived }
         let local = LocalWallpaperIdentities.identity(
-            directory: directory, derived: derived.rawValue, contentKnown: projectData != nil, defaults: defaults,
-            index: { index ?? LegacySettingsIndex(defaults: defaults, supportDirectory: AppStorageLocation.current.supportDirectory) })
+            directory: directory, derived: derived.rawValue, contentKnown: projectData != nil, defaults: defaults)
         return WallpaperSettingsIdentity(rawValue: local)
     }
 

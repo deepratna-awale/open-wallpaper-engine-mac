@@ -66,7 +66,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - **Wallpaper Engine's own shaders** — layers, effects and materials now draw through each wallpaper's original shaders, translated to Metal, including effects that Workshop authors made themselves.
 - Composition, fullscreen and solid layers, layers that sample other layers, all 33 blend modes, and more effect masks.
 - **Faithful text layout** — text is sized, aligned and positioned as in Wallpaper Engine, with outline, blur and drop-shadow font effects, letter spacing and an opaque background, laid out again when a script changes it.
-- Texture variants (Wallpaper Engine 2.6): textures with Replace and Alpha-blended options that a checkbox or combo property swaps in, composed as Wallpaper Engine loads them.
+- Texture variants (Wallpaper Engine 2.6): textures with Replace and Alpha-blended options that a checkbox or combo property swaps in, composed as Wallpaper Engine loads them; a video texture's option is another video of its size, which plays in its place.
 - Texture user properties (`scenetexture`): a picture or video you pick replaces an image layer's image.
 - Scene gravity and wind (Physics options) and `clearenabled` (frames drawn over the last one), as in Wallpaper Engine.
 - **Timelines** — keyframe and texture animations follow Wallpaper Engine's single, loop and mirror rules.

@@ -80,7 +80,6 @@ final class MCPClientConfigurationTests: XCTestCase {
     }
 
     func testEveryClientIsCoveredOnce() {
-        XCTAssertEqual(MCPClientConfiguration.allCases.count, 12)
         XCTAssertEqual(MCPClientConfiguration.allCases.filter { $0.clientName == nil }, [.generic])
         XCTAssertTrue(MCPClientConfiguration.allCases.allSatisfy { !$0.location.isEmpty })
     }

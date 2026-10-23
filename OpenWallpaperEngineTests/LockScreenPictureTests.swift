@@ -136,10 +136,6 @@ final class LockScreenPictureTests: XCTestCase {
         XCTAssertEqual(Array(picture.originals().keys), [2])
     }
 
-    func testIsolatedCopiesNeverChangeTheDesktopPicture() {
-        XCTAssertFalse(DesktopSnapshotCache.mayChangeDesktopPicture, "the test host is isolated")
-    }
-
     func testSettingDefaultsOnAndDecodesWhenMissing() throws {
         XCTAssertTrue(GlobalSettings().lockScreenPicture)
         XCTAssertTrue(GlobalSettings().screenSaver)

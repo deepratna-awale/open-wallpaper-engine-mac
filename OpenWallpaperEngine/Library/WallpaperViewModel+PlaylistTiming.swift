@@ -135,13 +135,4 @@ extension WallpaperViewModel {
         }
         restartPlaylistTimer()
     }
-
-    /// WE's limit for a day-of-week playlist: removes the wallpapers after the seventh.
-    func trimToDayOfWeekLimit(_ playlistID: UUID? = nil) {
-        updatePlaylistSettings(playlistID) { playlist in
-            if playlist.items.count > PlaylistTiming.maxDayOfWeekItems {
-                playlist.items.removeSubrange(PlaylistTiming.maxDayOfWeekItems...)
-            }
-        }
-    }
 }

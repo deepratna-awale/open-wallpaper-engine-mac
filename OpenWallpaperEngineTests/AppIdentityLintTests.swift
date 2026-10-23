@@ -2,8 +2,7 @@ import XCTest
 @testable import OpenWallpaperEngine
 
 /// The app's identity: every target's bundle id is under `app.openwallpaperengine`, the code agrees
-/// with the project, and the old bundle id and the old site are gone from the repository except
-/// where the migration needs them.
+/// with the project, and the old bundle id and the old site are gone from the repository.
 final class AppIdentityLintTests: XCTestCase {
     static let repository = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
     static let appIdentifier = "app.openwallpaperengine"
@@ -60,14 +59,12 @@ final class AppIdentityLintTests: XCTestCase {
 
     // MARK: Leftovers
 
-    /// The old bundle id appears only in the migration that moves away from it.
-    func testTheOldBundleIdentifierIsOnlyInTheMigration() throws {
+    /// The old bundle id appears nowhere.
+    func testTheOldBundleIdentifierIsGone() throws {
         // Built from pieces, so this file doesn't match itself.
         let old = ["com", "winddog"].joined(separator: ".")
-        let allowed: Set<String> = ["OpenWallpaperEngine/App/IdentityMigration/AppIdentityMigration.swift"]
-        XCTAssertEqual(AppIdentityMigration.legacyBundleIdentifier.lowercased().hasPrefix(old), true)
-        let hits = try occurrences(of: old).filter { !allowed.contains($0.file) }
-        XCTAssertTrue(hits.isEmpty, "The old bundle id outside the migration:\n" + hits.map(\.description).joined(separator: "\n"))
+        let hits = try occurrences(of: old)
+        XCTAssertTrue(hits.isEmpty, "The old bundle id:\n" + hits.map(\.description).joined(separator: "\n"))
     }
 
     /// Links go to openwallpaperengine.app; only the releasing guide names the old Pages address,

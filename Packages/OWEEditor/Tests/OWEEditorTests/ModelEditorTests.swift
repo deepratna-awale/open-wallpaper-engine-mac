@@ -48,7 +48,9 @@ final class ModelEditorTests: XCTestCase {
         XCTAssertEqual(editor.clips.map(\.id), [clip])
         editor.updateClip(clip) { $0.start = 5; $0.end = 15; $0.rootMotion = "Root"; $0.motionFlags = ModelImportConfig.Clip.positionY }
         XCTAssertEqual(editor.clips.first?.frames, 10)
-        let event = editor.addEvent(to: clip)
+        // Add Event is for the source's animations (capture 549), not clips.
+        XCTAssertNil(editor.addEvent(to: clip))
+        let event = try XCTUnwrap(editor.addEvent(to: 1))
         editor.updateEvent(event) { $0.name = "step"; $0.frame = 3 }
         let attachment = editor.addAttachment()
         XCTAssertEqual(editor.config.attachments.first?.bone, "Root")
@@ -82,7 +84,8 @@ final class ModelEditorTests: XCTestCase {
         let (store, model, _, _) = try imported()
         let editor = ModelEditorModel(model: model.model, store: store, readFile: { _ in nil })
         let clip = editor.addClip(from: 1)
-        editor.addEvent(to: clip)
+        // An event on a clip comes from a configuration (`"clip": id`); Add Event adds to animations.
+        editor.config.events.append(ModelImportConfig.Event(id: 9999, name: "on clip", frame: 0, animation: clip))
         editor.addEvent(to: 1)
         editor.removeClip(clip)
         XCTAssertEqual(editor.config.events.map(\.animation), [1])

@@ -21,9 +21,6 @@ struct SceneScriptSceneContent {
     /// What `thisScene.createModelData` made, by token: the object model writes it, `makeLayer`
     /// reads it for a layer whose `model` is a token (pass the store `makeLayer` uses).
     var modelData = SceneScriptModelDataStore()
-    /// The `localStorage` key an earlier version kept this wallpaper's stores under, when they are
-    /// to be adopted under `wallpaperID` (`SceneScriptStorageKey.legacyKeyToAdopt`); nil otherwise.
-    var legacyStorageID: String?
     /// Builds an object `createLayer` made (scene.json form), through the loader's builders; nil
     /// when it can't be built. Called off the main thread.
     var makeLayer: ([String: SceneJSON]) -> SceneScriptCreatedObject?

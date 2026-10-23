@@ -190,9 +190,6 @@ final class PlaylistTimingTests: XCTestCase {
         model.updatePlaylistSettings { $0.timing = .timer }
         model.addToPlaylist(wallpaper("eighth"))
         XCTAssertEqual(model.activePlaylist?.items.count, 8)
-        model.updatePlaylistSettings { $0.timing = .dayofweek }
-        model.trimToDayOfWeekLimit()
-        XCTAssertEqual(model.activePlaylist?.items.count, 7)
     }
 
     // MARK: - Settings

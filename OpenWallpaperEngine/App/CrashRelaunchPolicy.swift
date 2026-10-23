@@ -5,7 +5,7 @@ import Foundation
 /// - Only after a crash: the app ending without saying it quits (a crash, a hang the user
 ///   force-quit, `kill -9`). A normal quit, a SIGTERM (which quits through AppKit), a logout and
 ///   an update or language relaunch all say so first and are never followed by a relaunch; nor is
-///   the watcher being told to stop (the setting turned off) or being terminated itself (logout).
+///   the watcher being told to stop (the setting turned off).
 /// - At most `maxRelaunches` in `window`, so a crash loop ends. `SafeRestart` keeps the wallpaper
 ///   that was showing from loading again after the relaunch.
 /// - Never for an isolated copy, a test or preview host, or a run under a debugger
@@ -22,8 +22,6 @@ struct CrashRelaunchPolicy {
         case stopWatching
         /// The app went away without a word: it crashed or was killed.
         case vanished
-        /// The watcher itself was told to terminate (logout, shutdown).
-        case watcherTerminated
     }
 
     enum Decision: Equatable {

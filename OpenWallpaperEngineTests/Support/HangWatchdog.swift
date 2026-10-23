@@ -124,25 +124,3 @@ final class HangWatchdog: @unchecked Sendable {
         }
     }
 }
-
-/// Base class for render and benchmark tests: watches for hangs through each test and fails it
-/// when one happens. Set `watchesForHangs = false` in `setUp` (before `super.setUp()` returns
-/// is fine) to opt out, or wrap deliberate synchronous work in `hangWatchdog.paused { }`.
-class HangWatchdogTestCase: XCTestCase {
-    var watchesForHangs = true
-    private(set) var hangWatchdog = HangWatchdog()
-
-    override func setUp() {
-        super.setUp()
-        hangWatchdog = HangWatchdog()
-        hangWatchdog.start()
-    }
-
-    override func tearDown() {
-        let events = hangWatchdog.stop()
-        if watchesForHangs {
-            for event in events { XCTFail("Hang: \(event)") }
-        }
-        super.tearDown()
-    }
-}

@@ -6,7 +6,7 @@ import Foundation
 /// Generation plugin's model and the exports are not caches and are not listed.
 struct CacheFolder: Equatable, Sendable {
     enum ID: String, CaseIterable, Sendable {
-        case textures, loadingSnapshots, editorPreviews, videoTextures, legacyVideoTextures, repairedVideos
+        case textures, loadingSnapshots, editorPreviews, videoTextures, repairedVideos
         case displayPictures, shaderVariants, pipelineArchives
 
         /// The id `caches_get` reports (MCP).
@@ -16,7 +16,6 @@ struct CacheFolder: Equatable, Sendable {
             case .loadingSnapshots: return "loading_snapshots"
             case .editorPreviews: return "editor_previews"
             case .videoTextures: return "video_textures"
-            case .legacyVideoTextures: return "legacy_video_textures"
             case .repairedVideos: return "repaired_videos"
             case .displayPictures: return "display_pictures"
             case .shaderVariants: return "shader_variants"
@@ -30,13 +29,4 @@ struct CacheFolder: Equatable, Sendable {
     /// Entries unused for `CacheSweeper.unusedLifetime` are deleted (`CacheSweeper.expire`);
     /// the others only go with Clear Caches.
     let expires: Bool
-
-    /// Whether a file named `name` in this cache is an entry the sweeper may delete. The legacy
-    /// video texture folder sits directly in the user's Caches folder, so only OWE's own names
-    /// (a SHA-256 and `.mp4`) count there.
-    func isEntry(named name: String) -> Bool {
-        guard id == .legacyVideoTextures else { return true }
-        let parts = name.split(separator: ".")
-        return parts.count == 2 && parts[1] == "mp4" && parts[0].count == 64 && parts[0].allSatisfy(\.isHexDigit)
-    }
 }

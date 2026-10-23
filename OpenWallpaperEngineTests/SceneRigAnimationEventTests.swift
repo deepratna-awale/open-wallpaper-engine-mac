@@ -83,7 +83,8 @@ final class SceneRigAnimationEventTests: XCTestCase {
     /// The animator keeps the events its layers crossed until scripts take them.
     func testTheAnimatorCollectsItsClipEvents() throws {
         let clip = SceneAnimationLayersTests.clip(id: 1, fps: 10, frames: 20, bones: 1,
-                                                  events: [.init(frame: 0, name: "start"), .init(frame: 5, name: "half")],
+                                                  // Times in seconds, as WE compiles them: 0.5 s is frame 5 at 10 fps.
+                                                  events: [.init(frame: 0, name: "start"), .init(frame: 0.5, name: "half")],
                                                   pose: SceneAnimationLayersTests.still())
         let skeleton = MDLSkeleton(version: 1, bones: [MDLBone(name: "b0", flags: 1, parent: 0xFFFF_FFFF,
                                                                matrix: matrix_identity_float4x4, properties: "")])

@@ -67,7 +67,18 @@ extension SceneEditSession {
             for (group, id, option) in document.compiledOptions {
                 guard let file = readFile(option.file) else { throw TextureVariantError.unreadable(option.name) }
                 inputs.append(TextureVariantInput(group: group, id: id, alphaBlend: option.blend == .alphaBlend,
-                                                  condition: option.condition?.compiledJSON ?? "{}", file: file))
+                                                  condition: option.condition?.compiledJSON, file: file))
+            }
+            // The options without a condition aren't compiled, but their files are checked too
+            // (numbered after the compiled ones).
+            var next = UInt32(inputs.count + 1)
+            for (groupIndex, group) in document.groups.enumerated() {
+                for option in group.options where option.condition == nil {
+                    guard let file = readFile(option.file) else { throw TextureVariantError.unreadable(option.name) }
+                    inputs.append(TextureVariantInput(group: UInt32(groupIndex + 1), id: next, alphaBlend: option.blend == .alphaBlend,
+                                                      condition: nil, file: file))
+                    next += 1
+                }
             }
             let compiled = try encoder.texture(base.data, withVariants: inputs)
             texture = try store.writeTextureVariants(compiled, document: document)

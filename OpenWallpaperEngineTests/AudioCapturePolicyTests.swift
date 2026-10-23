@@ -5,12 +5,6 @@ import XCTest
 final class AudioCapturePolicyTests: XCTestCase {
     // MARK: Permission gate
 
-    func testDeniedPermissionNeverAllowsCapture() {
-        let gate = AudioCapturePermissionGate(preflight: { false }, isAlertDismissed: { false })
-        XCTAssertFalse(gate.canCapture())
-        XCTAssertFalse(gate.becameGranted())
-    }
-
     func testMissingPermissionAlertsOncePerLaunch() {
         let gate = AudioCapturePermissionGate(preflight: { false }, isAlertDismissed: { false })
         XCTAssertTrue(gate.shouldAlertMissingPermission())

@@ -72,7 +72,7 @@ struct CacheSweeper {
                 }
                 continue
             }
-            guard values.isRegularFile == true, folder.isEntry(named: url.lastPathComponent) else { continue }
+            guard values.isRegularFile == true else { continue }
             let modified = values.contentModificationDate ?? .distantPast
             if url.lastPathComponent.hasPrefix(".") {
                 guard url.pathExtension == "tmp", modified < tmpCutoff else { continue }
