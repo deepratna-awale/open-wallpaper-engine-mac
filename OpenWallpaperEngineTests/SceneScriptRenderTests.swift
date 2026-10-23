@@ -6,17 +6,20 @@ import MetalKit
 /// headlessly by the renderer with its SceneScript runtime, and script writes checked in the
 /// pixels: an origin moves a layer, visibility scripts show and hide layers, a material constant
 /// changes an effect's output, `createLayer` draws, and a text script changes the text.
+@MainActor
 final class SceneScriptRenderTests: XCTestCase {
     private var storage: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         storage = FileManager.default.temporaryDirectory.appending(path: "owe-render-scripts-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let storage, FileManager.default.fileExists(atPath: storage.path) {
             try FileManager.default.removeItem(at: storage)
         }
+        try await super.tearDown()
     }
 
     // MARK: - Pixels
@@ -288,6 +291,7 @@ final class SceneScriptRenderTests: XCTestCase {
     }
 
     /// One scene fixture on one display: its loader, renderer and offscreen view.
+    @MainActor
     private final class Scene {
         let model: SceneContentLoader
         let renderer: SceneMetalRenderer

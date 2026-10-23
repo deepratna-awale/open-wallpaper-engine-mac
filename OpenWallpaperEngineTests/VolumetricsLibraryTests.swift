@@ -14,17 +14,20 @@ import simd
 ///   scene's root, the volume drawn through the scene's own camera.
 ///
 /// Skipped when the library is absent (CI).
+@MainActor
 final class VolumetricsLibraryTests: XCTestCase {
     private static let storage = URL(fileURLWithPath: "/Volumes/980Pro/OpenWallpaperStorage")
     private static let drawable = SIMD2(480, 270)
     private var scripts: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         scripts = FileManager.default.temporaryDirectory.appending(path: "owe-volumetrics-library-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let scripts, FileManager.default.fileExists(atPath: scripts.path) { try FileManager.default.removeItem(at: scripts) }
+        try await super.tearDown()
     }
 
     private func wallpaper(_ id: String) throws -> (directory: URL, project: WEProject) {
@@ -442,6 +445,7 @@ final class VolumetricsLibraryTests: XCTestCase {
     }
 
     /// A content on one offscreen view, its clock stepped 1/60 s per draw.
+    @MainActor
     private final class Scene {
         let renderer: SceneMetalRenderer
         let view: MTKView

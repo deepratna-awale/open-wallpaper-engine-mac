@@ -5,6 +5,7 @@ import simd
 
 /// An image in a padded `.tex` (the picture in the top-left of a power-of-two texture, as WE's
 /// editor stores most imported pictures) with a masked effect, placed on a 1920×1080 display.
+@MainActor
 final class EffectPaddedImagePlacementTests: XCTestCase {
     static let image = SIMD2(1000, 601)
     static let display = SIMD2(1920, 1080)
