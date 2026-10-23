@@ -89,7 +89,7 @@ final class SceneScriptRuntimeReachTests: XCTestCase {
 
     func testHooksAndRuntimeFunctionsAreSealed() throws {
         let runtime = try transformerRuntime()
-        evaluate("__rt.hooks.coerce = function () { return 'hijacked'; }; __rt.push = null;", in: runtime)
+        _ = evaluate("__rt.hooks.coerce = function () { return 'hijacked'; }; __rt.push = null;", in: runtime)
         XCTAssertEqual(evaluate("Object.isFrozen(__rt.hooks)", in: runtime)?.toBool(), true)
         XCTAssertEqual(evaluate("typeof __rt.push", in: runtime)?.toString(), "function")
         XCTAssertEqual(evaluate("__rt.hooks.coerce({}, 5)", in: runtime)?.toInt32(), 5)

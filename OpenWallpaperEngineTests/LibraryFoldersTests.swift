@@ -11,7 +11,7 @@ final class LibraryFoldersTests: XCTestCase {
     private var defaults: UserDefaults!
     private var suiteName: String!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         root = FileManager.default.temporaryDirectory.appending(path: "owe-library-folders-\(UUID().uuidString)")
         storage = root.appending(path: "storage")
         extra = root.appending(path: "extra")
@@ -22,7 +22,7 @@ final class LibraryFoldersTests: XCTestCase {
         defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         defaults.removePersistentDomain(forName: suiteName)
         try FileManager.default.removeItem(at: root)
     }

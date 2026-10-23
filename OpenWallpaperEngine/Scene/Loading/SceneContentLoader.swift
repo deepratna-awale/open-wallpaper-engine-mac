@@ -289,9 +289,7 @@ class SceneContentLoader: ObservableObject, @unchecked Sendable {
 
     /// Shared by every scene: translated variants are cached in memory and on disk.
     /// Optional only for its callers' `guard let`s; it always exists.
-    /// `nonisolated(unsafe)`: never reassigned, and the translator guards its own caches with its
-    /// lock; it can go once `ShaderVariantTranslator` is `Sendable`.
-    nonisolated(unsafe) static let defaultEffectTranslator: ShaderVariantTranslator? =
+    static let defaultEffectTranslator: ShaderVariantTranslator? =
         ShaderVariantTranslator(compiler: ShaderCompilerFactory.makeIsolated(qos: .userInitiated))
     /// This scene's translator (`init`).
     let effectTranslator: ShaderVariantTranslator?

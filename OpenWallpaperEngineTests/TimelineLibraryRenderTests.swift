@@ -22,6 +22,7 @@ import MetalKit
 ///   hitches outside the frames that answer the song's start.
 ///
 /// Skipped when the library is absent (CI); `OWE_LIBRARY` replaces the roots.
+@MainActor
 final class TimelineLibraryRenderTests: XCTestCase {
     private static let frames = 180
     private static let warmUpFrames = 60
@@ -30,14 +31,16 @@ final class TimelineLibraryRenderTests: XCTestCase {
     private static let step = 1.0 / 60
     private var storage: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         storage = FileManager.default.temporaryDirectory.appending(path: "owe-timeline-sweep-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let storage, FileManager.default.fileExists(atPath: storage.path) {
             try FileManager.default.removeItem(at: storage)
         }
+        try await super.tearDown()
     }
 
     func testEveryAnimatedLibrarySceneDrawsItsTimelines() throws {
@@ -291,6 +294,7 @@ final class TimelineLibraryRenderTests: XCTestCase {
     }
 
     /// A content on one offscreen view, its clock stepped 1/60 s per draw; the first draw anchors it.
+    @MainActor
     private final class Scene {
         let renderer: SceneMetalRenderer
         let view: MTKView

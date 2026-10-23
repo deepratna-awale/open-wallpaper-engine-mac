@@ -6,7 +6,7 @@ import XCTest
 @MainActor
 final class WallpaperInstanceRegistryTests: XCTestCase {
     /// A wallpaper instance with an audio engine, counted: each instance makes one.
-    private final class FakeInstance {
+    @MainActor private final class FakeInstance {
         static var audioEngines = 0
         let key: String
         private(set) var stopped = false

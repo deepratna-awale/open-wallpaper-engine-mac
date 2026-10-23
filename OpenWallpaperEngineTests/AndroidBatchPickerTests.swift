@@ -10,16 +10,18 @@ final class AndroidBatchPickerTests: XCTestCase {
     private var defaults: UserDefaults!
     private var suite: String!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         suite = "owe-android-selection-\(UUID().uuidString)"
         defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         directory = FileManager.default.temporaryDirectory.appending(path: suite, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         defaults.removePersistentDomain(forName: suite)
         try? FileManager.default.removeItem(at: directory) // scratch cleanup
+        try await super.tearDown()
     }
 
     // MARK: Fixtures

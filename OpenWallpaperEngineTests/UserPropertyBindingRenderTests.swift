@@ -71,8 +71,9 @@ final class UserPropertyBindingRenderTests: XCTestCase {
 
     // MARK: - Fixture
 
+    @MainActor
     private final class BindingFixture {
-        static let size = SIMD2(256, 64)
+        nonisolated static let size = SIMD2(256, 64)
         let directory = Fixtures.url("Scenes/binding-kinds")
         let wallpaper: WEWallpaper
         let model: SceneContentLoader

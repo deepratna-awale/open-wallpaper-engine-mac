@@ -17,7 +17,11 @@ protocol OutputDeviceSource: AnyObject {
 /// seconds after the last one, and only when the device ID really differs from the last one
 /// seen. System audio capture always restarts on a change, so audio-reactive visuals never go
 /// silent; the running wallpapers reload (re-routing their sounds) only while `reloadEnabled`.
-final class OutputDeviceChangeMonitor {
+///
+/// `@unchecked Sendable`: the `@Sendable` scheduled work captures it, but its state and callbacks
+/// are only used on the scheduler's queue (the main queue in the app); notifications hop there
+/// first (`start`).
+final class OutputDeviceChangeMonitor: @unchecked Sendable {
     typealias Schedule = (_ delay: TimeInterval, _ work: @escaping @Sendable () -> Void) -> Void
 
     private let source: OutputDeviceSource
@@ -48,8 +52,9 @@ final class OutputDeviceChangeMonitor {
 
     func start() {
         source.startObserving { [weak self] in
+            guard let self else { return }
             // Hop onto the scheduler's queue before touching state.
-            self?.schedule(0) { self?.deviceMayHaveChanged() }
+            self.schedule(0) { [weak self] in self?.deviceMayHaveChanged() }
         }
     }
 

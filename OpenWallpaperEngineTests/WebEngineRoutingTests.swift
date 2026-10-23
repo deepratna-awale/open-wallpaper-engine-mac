@@ -10,7 +10,7 @@ final class WebEngineRoutingTests: XCTestCase {
     private var defaults: UserDefaults!
     private var suiteName: String!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         root = FileManager.default.temporaryDirectory.appending(path: "WebEngineRoutingTests-\(UUID().uuidString)")
         folder = root.appending(path: "wallpaper")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -18,7 +18,7 @@ final class WebEngineRoutingTests: XCTestCase {
         defaults = UserDefaults(suiteName: suiteName)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         try? FileManager.default.removeItem(at: root)
         defaults.removePersistentDomain(forName: suiteName)
     }

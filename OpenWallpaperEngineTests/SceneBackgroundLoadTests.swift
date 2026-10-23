@@ -48,15 +48,16 @@ final class SceneBackgroundLoadTests: XCTestCase {
 
         let model = SceneContentLoader(wallpaper: wallpaper, loadsInBackground: true)
         spin(until: { model.metalRevision > 0 && !model.isLoading }, timeout: 60)
-        var built: SceneMetalContent??
-        model.contentAsync { built = .some($0) }
-        spin(until: { built != nil }, timeout: 60)
+        // Set by the completion on the main actor, read by this test between run-loop turns.
+        let built = LockedValue<SceneMetalContent??>(nil)
+        model.contentAsync { content in built.mutate { $0 = .some(content) } }
+        spin(until: { built.value != nil }, timeout: 60)
 
         let hangs = watchdog.stop()
         XCTAssertEqual(hangs, [], "\(directory.lastPathComponent)")
         let revision: Int = model.metalRevision
         XCTAssertEqual(revision, 1)
-        let content = try XCTUnwrap(built ?? nil, "no content")
+        let content = try XCTUnwrap(built.value ?? nil, "no content")
         XCTAssertFalse(content.layers.isEmpty)
         // A thread guard hit fails the test through `ThreadGuardTestObserver`.
     }
@@ -202,9 +203,9 @@ final class SceneLoadBlockingBenchmarkTests: XCTestCase {
     }
 
     private static func build(_ model: SceneContentLoader) {
-        var built = false
-        model.contentAsync { _ in built = true }
-        pump(model, until: { built })
+        let built = LockedValue(false)
+        model.contentAsync { _ in built.mutate { $0 = true } }
+        pump(model, until: { built.value })
     }
 
     /// Spins the main run loop, reading what `SceneWallpaperInstance.update()` reads every 16 ms.

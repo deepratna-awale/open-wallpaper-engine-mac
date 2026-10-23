@@ -131,7 +131,7 @@ final class SceneFrameBenchmarkTests: XCTestCase {
         }
     }
 
-    func testSceneFrameCost() throws {
+    @MainActor func testSceneFrameCost() throws {
         let environment = ProcessInfo.processInfo.environment
         guard let request = environment["OWE_SCENE_BENCH"], !request.isEmpty else {
             throw XCTSkip("set OWE_SCENE_BENCH to run the scene benchmark")
@@ -419,7 +419,7 @@ final class SceneFrameBenchmarkTests: XCTestCase {
 
     /// Frames of `content` at `size`: two and a half seconds at 60 fps to load, compile and fill,
     /// then 60 frames back to back.
-    private func frameCost(_ content: SceneMetalContent, size: SIMD2<Int>, settings: SceneRenderSettings,
+    @MainActor private func frameCost(_ content: SceneMetalContent, size: SIMD2<Int>, settings: SceneRenderSettings,
                            device: MTLDevice, services: SceneScriptServices) throws -> Measure {
         let view = MTKView(frame: CGRect(x: 0, y: 0, width: size.x / 2, height: size.y / 2), device: device)
         view.colorPixelFormat = .bgra8Unorm

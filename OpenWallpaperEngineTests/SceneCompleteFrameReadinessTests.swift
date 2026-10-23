@@ -81,7 +81,7 @@ final class SceneCompleteFrameReadinessTests: XCTestCase {
     /// has it. A frame drawn while the channel's pipeline compiles shows the rope's orange
     /// (250, 200, 70) there. No library rig has texture channels
     /// (docs/models-plan.md §2.13), so the scene is built here from WE's own files.
-    func testTheFirstCompleteFrameHasThePuppetsTextureChannel() throws {
+    @MainActor func testTheFirstCompleteFrameHasThePuppetsTextureChannel() throws {
         let assets = try Fixtures.assets()
         try XCTSkipUnless(FileManager.default.fileExists(atPath: assets.appending(path: "shaders/puppettexturechannels.vert").path),
                           "WE's puppettexturechannels shader missing")

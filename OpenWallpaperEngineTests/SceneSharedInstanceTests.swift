@@ -9,11 +9,11 @@ import MetalKit
 final class SceneSharedInstanceTests: XCTestCase {
     private var storage: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         storage = FileManager.default.temporaryDirectory.appending(path: "owe-shared-instance-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let storage, FileManager.default.fileExists(atPath: storage.path) {
             try FileManager.default.removeItem(at: storage)
         }

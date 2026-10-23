@@ -29,13 +29,15 @@ final class ScreenSaverVideoSourceTests: XCTestCase {
         }
     }
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         root = FileManager.default.temporaryDirectory.appending(path: "ScreenSaverVideoSourceTests-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         try? FileManager.default.removeItem(at: root)
+        try await super.tearDown()
     }
 
     private func wallpaper(file: String, type: String = "video") -> WEWallpaper {

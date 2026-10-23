@@ -18,17 +18,20 @@ import simd
 ///
 /// `OWE_PUPPET_OUT` names a folder for each layer's source texture and drawn image as PNG.
 /// Skipped when the library is absent (CI); roots as `LightingLibraryDecodeTests`.
+@MainActor
 final class ScenePuppetLibraryTests: XCTestCase {
     private var storage: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         storage = FileManager.default.temporaryDirectory.appending(path: "owe-puppet-sweep-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let storage, FileManager.default.fileExists(atPath: storage.path) {
             try FileManager.default.removeItem(at: storage)
         }
+        try await super.tearDown()
     }
 
     func testEveryLibraryPuppetDrawsItsPose() throws {
@@ -419,7 +422,7 @@ final class ScenePuppetLibraryTests: XCTestCase {
                           unwarped: unwarped)
     }
 
-    static func png(_ pixels: [UInt8], size: SIMD2<Int>) throws -> Data {
+    nonisolated static func png(_ pixels: [UInt8], size: SIMD2<Int>) throws -> Data {
         let provider = try XCTUnwrap(CGDataProvider(data: Data(pixels) as CFData))
         let image = try XCTUnwrap(CGImage(width: size.x, height: size.y, bitsPerComponent: 8, bitsPerPixel: 32,
                                           bytesPerRow: size.x * 4, space: CGColorSpaceCreateDeviceRGB(),

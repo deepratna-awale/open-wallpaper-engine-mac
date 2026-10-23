@@ -13,14 +13,16 @@ import XCTest
 final class EditorPreviewRenderTests: XCTestCase {
     private var scratch: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         scratch = FileManager.default.temporaryDirectory.appending(path: "EditorPreviewRenderTests-\(UUID().uuidString)",
                                                                    directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         try? FileManager.default.removeItem(at: scratch) // Optional: a scratch folder.
+        try await super.tearDown()
     }
 
     func testTheHelpersDoneLinesAreRead() {

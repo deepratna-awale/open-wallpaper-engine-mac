@@ -6,6 +6,7 @@ import simd
 /// WE's prelighting path (docs/lighting-plan.md §2.3, A4): a lit or reflective layer with effects
 /// is lit by its material with `PRELIGHTING` into the buffer its effects start from, at the
 /// layer's place in the scene (the `g_Alt*` matrices), and then drawn with both combos off.
+@MainActor
 final class ImageMaterialPrelightingTests: XCTestCase {
     private typealias Lit = ImageMaterialLightingTests
     private typealias Stage = SceneMipMappedFrameBufferTests
@@ -14,7 +15,8 @@ final class ImageMaterialPrelightingTests: XCTestCase {
     private var queue: MTLCommandQueue!
     private var cache: URL?
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         try XCTSkipUnless(FileManager.default.fileExists(atPath: ShaderVariantTests.weAssets.appending(path: "shaders/genericimage4.frag").path),
                           "bundled WE shaders missing")
         device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
@@ -22,8 +24,9 @@ final class ImageMaterialPrelightingTests: XCTestCase {
         cache = FileManager.default.temporaryDirectory.appending(path: "owe-prelighting-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let cache { try? FileManager.default.removeItem(at: cache) } // scratch cleanup
+        try await super.tearDown()
     }
 
     // MARK: - Plans

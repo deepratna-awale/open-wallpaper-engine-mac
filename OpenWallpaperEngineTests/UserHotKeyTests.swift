@@ -34,16 +34,16 @@ final class UserHotKeyTests: XCTestCase {
     private var suiteName = ""
     private var defaults: UserDefaults!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         suiteName = "owe-user-hotkey-tests-\(UUID().uuidString)"
         defaults = UserDefaults(suiteName: suiteName)
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         defaults.removePersistentDomain(forName: suiteName)
         defaults = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     private func wallpaper(_ name: String) -> WEWallpaper {

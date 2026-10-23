@@ -157,6 +157,7 @@ final class SceneMipMappedFrameBufferTests: XCTestCase {
     /// full-size target for it (a material that reads the scene draws inside the scene pass, so it
     /// needs a copy); a layer whose effects alone read the scene needs no copy at all: they run
     /// while the scene pass is paused and read the scene target itself.
+    @MainActor
     func testASharedSnapshotLeasesNoTargetOfItsOwn() throws {
         var reader = Self.layer("reader")
         reader.imageMaterial = ImageMaterialPlan(materialPath: "materials/test.json", pass: Self.snapshotPass(),

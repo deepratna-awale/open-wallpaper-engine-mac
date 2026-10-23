@@ -8,18 +8,21 @@ import MetalKit
 /// start-paused single holds its first keyframe until a script plays it, and its linked child
 /// follows; scripts on animated fields see and beat the animated value for their frame (P2); an
 /// effect constant animates; a sprite sheet steps on its shared clock unless a script holds it.
+@MainActor
 final class TimelineRenderTests: XCTestCase {
     private var storage: URL!
     private static let step = 1.0 / 60
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         storage = FileManager.default.temporaryDirectory.appending(path: "owe-render-timeline-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let storage, FileManager.default.fileExists(atPath: storage.path) {
             try FileManager.default.removeItem(at: storage)
         }
+        try await super.tearDown()
     }
 
     /// Alpha on WE's default (ease) handles with `wraploop`, against the float32 model stepped by
@@ -205,6 +208,7 @@ final class TimelineRenderTests: XCTestCase {
     }
 
     /// The fixture on one offscreen view, its clock stepped by `step` per draw.
+    @MainActor
     private final class Scene {
         let renderer: SceneMetalRenderer
         let view: MTKView

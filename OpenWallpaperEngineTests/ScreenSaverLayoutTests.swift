@@ -41,7 +41,7 @@ final class ScreenSaverLayoutTests: XCTestCase {
         XCTAssertEqual(decoded, ScreenSaverDisplayLayout())
         let name = "owe-screensaver-layout-tests-\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: name))
-        addTeardownBlock { defaults.removePersistentDomain(forName: name) }
+        addTeardownBlock { UserDefaults.standard.removePersistentDomain(forName: name) }
         XCTAssertEqual(ScreenSaverDisplayLayout.load(from: defaults), ScreenSaverDisplayLayout())
         for layout in DisplayLayoutMode.allCases {
             XCTAssertEqual(decoded.effectiveLayout(wallpaperLayout: layout), layout, "follows the wallpapers' layout")

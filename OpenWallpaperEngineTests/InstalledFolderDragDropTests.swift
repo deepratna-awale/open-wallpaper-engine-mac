@@ -118,7 +118,7 @@ final class InstalledFolderDragDropTests: XCTestCase {
     /// The innermost destination under `point`, as AppKit picks it.
     private func destination(at point: NSPoint, in window: NSWindow) throws -> NSDraggingDestination {
         let view = destinations(in: try XCTUnwrap(window.contentView)).last { $0.convert($0.bounds, to: nil).contains(point) }
-        return try XCTUnwrap(view as? NSDraggingDestination, "no drop target at \(point)")
+        return try XCTUnwrap(view as NSDraggingDestination?, "no drop target at \(point)")
     }
 
     private func pasteboard(_ text: String) -> NSPasteboard {
@@ -175,7 +175,7 @@ private final class DraggingInfo: NSObject, NSDraggingInfo {
     var numberOfValidItemsForDrop = 1
     var springLoadingHighlight: NSSpringLoadingHighlight { .none }
 
-    init(pasteboard: NSPasteboard, location: NSPoint, window: NSWindow) {
+    @MainActor init(pasteboard: NSPasteboard, location: NSPoint, window: NSWindow) {
         draggingPasteboard = pasteboard
         draggingLocation = location
         draggingDestinationWindow = window

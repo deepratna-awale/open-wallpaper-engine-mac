@@ -18,6 +18,7 @@ final class LibrarySweepTests: XCTestCase {
         let detail: String
     }
 
+    @MainActor
     func testEveryLibraryEffectPlansTranslatesAndRuns() throws {
         let assets = ShaderVariantTests.weAssets
         let library = Self.libraryRoot

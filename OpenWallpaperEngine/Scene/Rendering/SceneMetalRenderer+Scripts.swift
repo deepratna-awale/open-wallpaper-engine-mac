@@ -182,7 +182,7 @@ extension SceneMetalRenderer {
         nonisolated(unsafe) let makeLayer = builder
         let generation = currentContentGeneration
         // Only compared by identity, never used off the render thread.
-        nonisolated(unsafe) let wallpaper = scripts.wallpaper
+        let wallpaper = scripts.wallpaper
         pendingScriptLayers += 1
         contentQueue.async { [weak self] in
             guard let self else { return }

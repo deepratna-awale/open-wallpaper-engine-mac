@@ -7,13 +7,15 @@ import XCTest
 final class UpdatePreservesUserStateTests: XCTestCase {
     private var temporary: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         temporary = FileManager.default.temporaryDirectory.appending(path: "UpdatePreservesUserState-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: temporary, withIntermediateDirectories: true)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         try FileManager.default.removeItem(at: temporary)
+        try await super.tearDown()
     }
 
     /// A minimal bundle with the app's identifier and the given versions.

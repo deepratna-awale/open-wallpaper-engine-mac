@@ -206,13 +206,11 @@ final class SteamCmdSessionTests: XCTestCase {
 
         let installed = await withTaskGroup(of: URL?.self) { group in
             for id in ["1", "2", "3"] {
-                group.addTask { @MainActor in
-                    await withCheckedContinuation { continuation in
-                        service.downloadWorkshopItem(workshopId: id) { continuation.resume(returning: $0) }
-                    }
-                }
+                group.addTask { await Self.download(id, with: service) }
             }
-            return await group.reduce(into: [URL?]()) { $0.append($1) }
+            var urls: [URL?] = []
+            for await url in group { urls.append(url) }
+            return urls
         }
 
         XCTAssertEqual(Set(installed.compactMap { $0?.lastPathComponent }), ["1", "2", "3"])
@@ -221,6 +219,13 @@ final class SteamCmdSessionTests: XCTestCase {
         service.sessionExpired()
         XCTAssertEqual(launcher.processes[0].lines.last, "quit")
         XCTAssertFalse(session.isRunning)
+    }
+
+    /// One queued download through `service`: where its item landed, or nil.
+    @MainActor private static func download(_ id: String, with service: SteamCmdService) async -> URL? {
+        await withCheckedContinuation { continuation in
+            service.downloadWorkshopItem(workshopId: id) { continuation.resume(returning: $0) }
+        }
     }
 
     /// The real launcher and pipes, with a shell script answering like steamcmd.

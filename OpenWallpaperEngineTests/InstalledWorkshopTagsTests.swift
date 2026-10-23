@@ -11,7 +11,8 @@ final class InstalledWorkshopTagsTests: XCTestCase {
     private var suiteName: String!
     private var index: DownloadedWallpaperIndex!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         root = FileManager.default.temporaryDirectory.appending(path: "owe-installed-tags-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         suiteName = "owe-installed-tags-tests-\(UUID().uuidString)"
@@ -20,9 +21,10 @@ final class InstalledWorkshopTagsTests: XCTestCase {
         index = DownloadedWallpaperIndex(defaults: defaults, libraryDirectory: { root })
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         defaults.removePersistentDomain(forName: suiteName)
         try FileManager.default.removeItem(at: root)
+        try await super.tearDown()
     }
 
     private func wallpaper(_ folder: String, tags: [String]?, workshopId: String? = nil) -> WEWallpaper {
@@ -130,6 +132,7 @@ final class InstalledWorkshopTagsTests: XCTestCase {
 
     // MARK: Sync
 
+    @MainActor
     private final class FakeSteam {
         var batches: [[String]] = []
         var fail = false

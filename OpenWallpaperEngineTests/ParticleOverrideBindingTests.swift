@@ -66,9 +66,9 @@ final class ParticleOverrideBindingTests: XCTestCase {
         let authored: String
         let changed: String
         /// Holds for particles spawned with the authored value and fails for the changed one.
-        let authoredHolds: ([ParticleGPUState]) -> Bool
+        let authoredHolds: @Sendable ([ParticleGPUState]) -> Bool
         /// Holds for particles spawned with the changed value and fails for the authored one.
-        let changedHolds: ([ParticleGPUState]) -> Bool
+        let changedHolds: @Sendable ([ParticleGPUState]) -> Bool
     }
 
     private static let eps: Float = 1e-3

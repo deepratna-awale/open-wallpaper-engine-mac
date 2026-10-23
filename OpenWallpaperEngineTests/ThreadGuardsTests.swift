@@ -53,7 +53,9 @@ final class ThreadGuardsTests: XCTestCase {
         thread.name = "owe.test.render"
         let hits = expectThreadGuardViolations {
             let done = expectation(description: "thread")
-            let watcher = Thread { while !thread.isFinished { usleep(1000) }; done.fulfill() }
+            // Made before the watcher starts; the watcher only reads `isFinished`, which Thread keeps thread-safe.
+            nonisolated(unsafe) let watched = thread
+            let watcher = Thread { while !watched.isFinished { usleep(1000) }; done.fulfill() }
             thread.start()
             watcher.start()
             wait(for: [done], timeout: 5)

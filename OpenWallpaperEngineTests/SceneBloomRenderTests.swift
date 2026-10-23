@@ -5,19 +5,20 @@ import MetalKit
 /// The bloom fixture (a white and a 0.6 grey square on black, `bloom` on with WE's defaults) drawn
 /// by the real renderer: WE's chain runs once on the finished frame, before the composite puts it
 /// on the drawable, and only when the post-processing setting allows it.
+@MainActor
 final class SceneBloomRenderTests: XCTestCase {
-    private static let size = SIMD2(480, 272)
+    private nonisolated static let size = SIMD2(480, 272)
     /// Drawable pixels (y down): the squares' centres and a point 4 px right of each.
     private static let bright = (center: SIMD2(320, 136), outside: SIMD2(356, 136))
     private static let dim = (center: SIMD2(120, 136), outside: SIMD2(156, 136))
 
     private var directory: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         directory = Fixtures.url("Scenes/bloom")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let directory { Fixtures.removeStoredSettings(for: directory) }
     }
 

@@ -7,19 +7,20 @@ import Metal
 final class PipelineCompileBoundsTests: XCTestCase {
     func testWorkQueueNeverExceedsItsLimit() {
         let queue = BoundedWorkQueue(label: "test.bounded", qos: .userInitiated, limit: 3)
-        let lock = NSLock()
-        var running = 0, peak = 0, finished = 0
+        struct Counts { var running = 0, peak = 0, finished = 0 }
+        let counts = LockedValue(Counts())
         let done = expectation(description: "all ran")
         done.expectedFulfillmentCount = 40
         for _ in 0..<40 {
             queue.async {
-                lock.withLock { running += 1; peak = max(peak, running) }
+                counts.mutate { $0.running += 1; $0.peak = max($0.peak, $0.running) }
                 Thread.sleep(forTimeInterval: 0.005)
-                lock.withLock { running -= 1; finished += 1 }
+                counts.mutate { $0.running -= 1; $0.finished += 1 }
                 done.fulfill()
             }
         }
         wait(for: [done], timeout: 10)
+        let (finished, peak) = (counts.value.finished, counts.value.peak)
         XCTAssertEqual(finished, 40)
         XCTAssertLessThanOrEqual(peak, 3)
         XCTAssertGreaterThan(peak, 1, "work runs concurrently up to the limit")
@@ -110,16 +111,16 @@ final class PipelineCompileBoundsTests: XCTestCase {
 
 final class PriorityGateTests: XCTestCase {
     func testWaitersGoInPriorityOrder() {
-        let gate = PriorityGate()
+        // Entered from several threads on purpose: the gate orders its waiters itself.
+        nonisolated(unsafe) let gate = PriorityGate()
         gate.enter(priority: 0)
-        let lock = NSLock()
-        var order: [Int] = []
+        let entered = LockedValue<[Int]>([])
         let done = expectation(description: "all")
         done.expectedFulfillmentCount = 3
         for priority in [9, 25, 17] {
             Thread.detachNewThread {
                 gate.enter(priority: priority)
-                lock.withLock { order.append(priority) }
+                entered.mutate { $0.append(priority) }
                 gate.leave()
                 done.fulfill()
             }
@@ -127,6 +128,7 @@ final class PriorityGateTests: XCTestCase {
         }
         gate.leave()
         wait(for: [done], timeout: 5)
+        let order = entered.value
         XCTAssertEqual(order, [25, 17, 9])
     }
 }

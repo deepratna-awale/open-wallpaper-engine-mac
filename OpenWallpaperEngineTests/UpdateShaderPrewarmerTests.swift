@@ -11,15 +11,17 @@ final class UpdateShaderPrewarmerTests: XCTestCase {
     private var runner: FakePrewarmProcessRunner!
     private var installs = 0
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         bundle = FileManager.default.temporaryDirectory.appending(path: "owe-prewarm-\(UUID().uuidString)/New.app")
         try UpdateBundleLocatorTests.makeBundle(at: bundle, identifier: "com.example.app", version: "42")
         runner = FakePrewarmProcessRunner()
         installs = 0
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         try FileManager.default.removeItem(at: bundle.deletingLastPathComponent())
+        try await super.tearDown()
     }
 
     private func prewarmer(bundle: URL? = nil, verify: @escaping (URL) throws -> Void = { _ in },

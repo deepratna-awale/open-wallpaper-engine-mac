@@ -31,6 +31,7 @@ import XCTest
 /// `OWE_PROPERTY_SWEEP_REPORT` (default: the temporary directory). `OWE_PROPERTY_SWEEP_ITEMS`
 /// (comma-separated folder names) limits the wallpapers; `OWE_PROPERTY_SWEEP_RESUME=1` keeps the
 /// rows already in the report's `.tsv` and sweeps only the rest.
+@MainActor
 final class UserPropertySweepTests: XCTestCase {
     private static let size = SIMD2(256, 144)
     private static let warmUpFrames = 20
@@ -43,11 +44,11 @@ final class UserPropertySweepTests: XCTestCase {
 
     private var storage: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         storage = FileManager.default.temporaryDirectory.appending(path: "owe-property-sweep-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let storage, FileManager.default.fileExists(atPath: storage.path) {
             try FileManager.default.removeItem(at: storage)
         }
@@ -679,7 +680,7 @@ final class UserPropertySweepTests: XCTestCase {
         let defaults = WebWallpaperPropertyBridge.currentValues(properties: properties, stored: [:])
         let scopes: [WallpaperPropertyScope] = [.display("sweep-a"), .display("sweep-b")]
         defer { removeScopedSettings(directory, scopes: scopes) }
-        var pair = [open(wallpaper, scope: scopes[0], values: defaults, properties: properties),
+        let pair = [open(wallpaper, scope: scopes[0], values: defaults, properties: properties),
                     open(wallpaper, scope: scopes[1], values: defaults, properties: properties)]
         defer { pair.forEach { $0.close() } }
         // Two fresh pages with the defaults: how much two loads differ on their own.

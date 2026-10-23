@@ -11,7 +11,7 @@ final class DisplayLayoutTests: XCTestCase {
     private func defaults() -> UserDefaults {
         let name = "owe-display-layout-tests-\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: name)!
-        addTeardownBlock { defaults.removePersistentDomain(forName: name) }
+        addTeardownBlock { UserDefaults.standard.removePersistentDomain(forName: name) } // the domain, not this instance
         return defaults
     }
 

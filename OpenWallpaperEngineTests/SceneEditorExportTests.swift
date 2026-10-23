@@ -16,16 +16,18 @@ final class SceneEditorExportTests: XCTestCase {
     private var defaults: UserDefaults!
     private var suite: String!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         suite = "owe-editor-export-\(UUID().uuidString)"
         defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         directory = FileManager.default.temporaryDirectory.appending(path: suite, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         defaults.removePersistentDomain(forName: suite)
         try? FileManager.default.removeItem(at: directory) // scratch cleanup
+        try await super.tearDown()
     }
 
     // MARK: Fixtures
@@ -498,9 +500,9 @@ final class SceneEditorExportTests: XCTestCase {
     }
 }
 
-/// `XCTUnwrap` for a value an `await` gives.
-private func XCTUnwrapAsync<T>(_ value: @autoclosure () async throws -> T?, file: StaticString = #filePath,
-                               line: UInt = #line) async throws -> T {
+/// `XCTUnwrap` for a value an `await` gives. Runs in the caller's isolation, so `value` never leaves it.
+private func XCTUnwrapAsync<T>(_ value: @autoclosure () async throws -> T?, isolation: isolated (any Actor)? = #isolation,
+                               file: StaticString = #filePath, line: UInt = #line) async throws -> T {
     let resolved = try await value()
     return try XCTUnwrap(resolved, file: file, line: line)
 }

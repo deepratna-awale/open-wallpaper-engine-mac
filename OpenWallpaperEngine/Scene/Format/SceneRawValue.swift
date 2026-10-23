@@ -81,7 +81,7 @@ indirect enum SceneRawValue: Decodable, Equatable {
 }
 
 /// Arbitrary JSON, for parts of the format that are kept raw.
-indirect enum SceneJSON: Decodable, Equatable {
+indirect enum SceneJSON: Decodable, Equatable, Sendable {
     case null
     case bool(Bool)
     case number(Double)

@@ -51,10 +51,11 @@ final class WallpaperEditorDraftTests: XCTestCase {
             local: NotificationCenter(), defaults: .app))
         let editor = try editor(sync: sync)
         defer { editor.window.close() }
-        var drafts: [Bool] = []
+        let heard = LockedValue<[Bool]>([])
         let token = NotificationCenter.default.addObserver(forName: .sceneEditOverlayDidChange, object: nil, queue: nil) { [folder = fixture.folder] note in
             guard (note.userInfo?["wallpaperDirectory"] as? URL)?.path == folder.standardizedFileURL.path else { return }
-            drafts.append(note.userInfo?["draft"] as? Bool ?? false)
+            let draft = note.userInfo?["draft"] as? Bool ?? false
+            heard.mutate { $0.append(draft) }
         }
         defer { NotificationCenter.default.removeObserver(token) }
         func saves() -> Int { messaging.posted.filter { $0.name.rawValue.hasSuffix("editor.overlayDidSave") }.count }
@@ -65,7 +66,7 @@ final class WallpaperEditorDraftTests: XCTestCase {
         XCTAssertEqual(try store.draft(for: identity.rawValue)?.field("alpha", of: 4), .number(0.5), "the draft is on disk at once")
         XCTAssertTrue(editor.isEdited)
         XCTAssertTrue(editor.window.isDocumentEdited, "the close button's dot")
-        XCTAssertEqual(drafts, [true], "only the canvas hears the edit")
+        XCTAssertEqual(heard.value, [true], "only the canvas hears the edit")
         XCTAssertEqual(saves(), 0, "Open Wallpaper Engine hears nothing")
 
         try editor.saveDraft()
@@ -74,7 +75,7 @@ final class WallpaperEditorDraftTests: XCTestCase {
         XCTAssertFalse(editor.isEdited)
         XCTAssertFalse(editor.window.isDocumentEdited)
         XCTAssertEqual(saves(), 1, "the running instances reload once")
-        XCTAssertEqual(drafts, [true, false])
+        XCTAssertEqual(heard.value, [true, false])
         try editor.saveDraft()
         XCTAssertEqual(saves(), 1, "nothing left to save")
     }

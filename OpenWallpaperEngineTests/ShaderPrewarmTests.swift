@@ -9,13 +9,13 @@ final class ShaderPrewarmTests: XCTestCase {
     private var defaults: UserDefaults!
     private var caches: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         suiteName = "app.openwallpaperengine.isolated.tests.prewarm-\(UUID().uuidString)"
         defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
         caches = FileManager.default.temporaryDirectory.appending(path: "owe-prewarm-caches-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         defaults.removePersistentDomain(forName: suiteName)
         if FileManager.default.fileExists(atPath: caches.path) { try FileManager.default.removeItem(at: caches) }
     }

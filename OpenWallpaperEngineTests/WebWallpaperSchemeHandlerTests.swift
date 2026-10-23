@@ -3,12 +3,14 @@ import XCTest
 @testable import OpenWallpaperEngine
 
 /// Local web wallpapers load through `owe-wallpaper://`, confined to their own folder.
+@MainActor
 final class WebWallpaperSchemeHandlerTests: XCTestCase {
     private var root: URL!
     private var wallpaper: URL!
     private var outside: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         root = FileManager.default.temporaryDirectory.appending(path: "owe-scheme-\(UUID().uuidString)")
         wallpaper = root.appending(path: "123456")
         outside = root.appending(path: "outside")
@@ -19,8 +21,9 @@ final class WebWallpaperSchemeHandlerTests: XCTestCase {
         try Data("secret".utf8).write(to: outside.appending(path: "secret.txt"))
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         try FileManager.default.removeItem(at: root)
+        try await super.tearDown()
     }
 
     private func request(_ path: String) -> URL {

@@ -1,5 +1,6 @@
 import XCTest
 import MetalKit
+import os
 @testable import OpenWallpaperEngine
 
 /// Effect constants, visibility, text and particle colours apply without a content rebuild, while
@@ -85,19 +86,21 @@ final class SceneLivePropertyTests: XCTestCase {
         let key = model.propertyStoreKey
         let running = WallpaperServices.shared.userProperties(wallpaper: key)
         XCTAssertEqual(running["showeffect"], "true")
-        var posted: [[String]] = []
+        let posted = OSAllocatedUnfairLock<[[String]]>(initialState: [])
         let token = NotificationCenter.default.addObserver(forName: .sceneUserPropertiesDidChange, object: nil, queue: nil) { note in
             guard note.userInfo?["wallpaper"] as? String == key else { return }
-            posted.append(note.userInfo?["keys"] as? [String] ?? [])
+            let keys = note.userInfo?["keys"] as? [String] ?? []
+            posted.withLock { $0.append(keys) }
         }
         defer { NotificationCenter.default.removeObserver(token) }
         RunLoop.main.run(until: Date().addingTimeInterval(0.2))
-        posted.removeAll()
+        posted.withLock { $0.removeAll() }
         let panel = SceneUserPropertiesModel(wallpaper: wallpaper, scopes: [.shared])
         RunLoop.main.run(until: Date().addingTimeInterval(0.3))
         XCTAssertFalse(panel.properties.isEmpty)
         XCTAssertEqual(WallpaperServices.shared.userProperties(wallpaper: key), running)
-        XCTAssertEqual(posted.map { model.impact(of: $0) }.filter { $0 > .none }, [], "rebuilds: \(posted)")
+        let rebuilds = posted.withLock { $0 }
+        XCTAssertEqual(rebuilds.map { model.impact(of: $0) }.filter { $0 > .none }, [], "rebuilds: \(rebuilds)")
         // A real change still reaches the wallpaper.
         panel.set("0.5", forID: "red")
         XCTAssertEqual(WallpaperServices.shared.userProperties(wallpaper: key)["red"], "0.5")
@@ -155,8 +158,8 @@ final class SceneLivePropertyTests: XCTestCase {
         XCTAssertEqual(fixture.renderer.bindingRevisions.staleReuses, 0)
     }
 
-    private final class LiveFixture {
-        static let size = SIMD2(128, 64)
+    @MainActor private final class LiveFixture {
+        nonisolated static let size = SIMD2(128, 64)
         let directory = Fixtures.url("Scenes/live-properties")
         let wallpaper: WEWallpaper
         let model: SceneContentLoader

@@ -4,6 +4,7 @@ import MetalKit
 @testable import OpenWallpaperEngine
 
 /// Scene-input sampling, placement scale, .tex content size and emitter-space directions.
+@MainActor
 final class SceneRendererPlacementTests: XCTestCase {
     private let scene = SIMD2<Float>(1000, 500)
 

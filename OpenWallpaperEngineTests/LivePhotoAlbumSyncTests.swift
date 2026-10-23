@@ -1,3 +1,4 @@
+import os
 import Photos
 import XCTest
 @testable import OpenWallpaperEngine
@@ -7,33 +8,65 @@ import XCTest
 /// notice, never a failed export. A fake library stands in for Photos: nothing is written to the
 /// real one.
 final class LivePhotoAlbumSyncTests: XCTestCase {
+    /// Sendable as the protocol asks: every field lives behind one lock.
     private final class FakeLibrary: LivePhotoLibrary {
-        var status: PHAuthorizationStatus
-        var answer: PHAuthorizationStatus
-        var albums: [String: String] = [:]
-        var saved: [LivePhotoAssetRequest] = []
-        var requests = 0
-        var failure: Error?
+        private struct State {
+            var status: PHAuthorizationStatus
+            var answer: PHAuthorizationStatus
+            var albums: [String: String] = [:]
+            var saved: [LivePhotoAssetRequest] = []
+            var requests = 0
+            var failure: Error?
+        }
+        private let state: OSAllocatedUnfairLock<State>
+
+        var status: PHAuthorizationStatus {
+            get { state.withLock { $0.status } }
+            set { state.withLock { $0.status = newValue } }
+        }
+        var answer: PHAuthorizationStatus {
+            get { state.withLock { $0.answer } }
+            set { state.withLock { $0.answer = newValue } }
+        }
+        var albums: [String: String] {
+            get { state.withLock { $0.albums } }
+            set { state.withLock { $0.albums = newValue } }
+        }
+        var saved: [LivePhotoAssetRequest] {
+            get { state.withLock { $0.saved } }
+            set { state.withLock { $0.saved = newValue } }
+        }
+        var requests: Int {
+            get { state.withLock { $0.requests } }
+            set { state.withLock { $0.requests = newValue } }
+        }
+        var failure: Error? {
+            get { state.withLock { $0.failure } }
+            set { state.withLock { $0.failure = newValue } }
+        }
 
         init(status: PHAuthorizationStatus = .authorized, answer: PHAuthorizationStatus = .authorized) {
-            self.status = status
-            self.answer = answer
+            state = OSAllocatedUnfairLock(initialState: State(status: status, answer: answer))
         }
 
         func authorizationStatus() -> PHAuthorizationStatus { status }
 
         func requestAuthorization() async -> PHAuthorizationStatus {
-            requests += 1
-            status = answer
-            return answer
+            state.withLock { state in
+                state.requests += 1
+                state.status = state.answer
+                return state.answer
+            }
         }
 
         func albumIdentifier(named name: String) async throws -> String? { albums[name] }
 
         func save(_ request: LivePhotoAssetRequest) async throws {
-            if let failure { throw failure }
-            saved.append(request)
-            if request.albumIdentifier == nil { albums[request.albumName] = "album-\(albums.count + 1)" }
+            try state.withLock { state in
+                if let failure = state.failure { throw failure }
+                state.saved.append(request)
+                if request.albumIdentifier == nil { state.albums[request.albumName] = "album-\(state.albums.count + 1)" }
+            }
         }
     }
 

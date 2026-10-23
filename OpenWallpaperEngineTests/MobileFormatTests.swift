@@ -130,7 +130,10 @@ final class MobileFormatTests: XCTestCase {
 
     /// Runs `work` off the main thread (the converter's thread guard), and returns what it returns.
     private func offMain<T>(_ work: @escaping () throws -> T) throws -> T {
-        var result: Result<T, Error>?
+        // `work` runs once on the queue while this thread waits; `result` is written there before
+        // `done.signal()` and read only after `done.wait()`.
+        nonisolated(unsafe) let work = work
+        nonisolated(unsafe) var result: Result<T, Error>?
         let done = DispatchSemaphore(value: 0)
         DispatchQueue.global().async {
             result = Result { try work() }
