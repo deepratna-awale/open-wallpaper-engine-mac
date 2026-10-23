@@ -71,6 +71,9 @@ public struct ModelImportConfig: Sendable, Equatable {
         public static let rotationY: UInt32 = 0x8000
         /// What WE's Add Clip writes (capture 546): position x and z and rotation y.
         public static let defaultMotionFlags: UInt32 = positionX | positionZ | rotationY
+        /// Every root-motion axis (position and rotation x, y, z): the bits of `motionFlags`
+        /// the compiler keeps.
+        public static let rootMotionFlags: UInt32 = 0x1F800
     }
 
     /// A named frame of an animation or clip (`MDLA`'s events, which a scene's
@@ -134,6 +137,10 @@ public struct ModelImportConfig: Sendable, Equatable {
     /// animation layers name. WE's are its editor's object counter (41 and 42 in capture 546);
     /// an animation without one gets its position (1, 2, …).
     public var animationMapping: [String: UInt64]
+    /// `editor.animationmapping` is written even without animations, as `null`: WE's importer
+    /// writes it for an FBX (capture 549's static `centered_cube.json`, capture 546's
+    /// `pistols.json`), not for an OBJ (546's `bars.json`, `flow.json`).
+    public var writesAnimationMapping = false
     /// More source files whose animations the model gets (Add FBX File), by name beside the source.
     public var additionalFiles: [String]
     public var clips: [Clip]
@@ -196,9 +203,12 @@ public struct ModelImportConfig: Sendable, Equatable {
     }
 
     /// The configuration as the importer saves it with the model compiled from it: `skinning`
-    /// on for a skinned model, and every source animation in `animationmapping` with its id.
-    public func completed(with output: ModelCompiler.Output) -> ModelImportConfig {
+    /// on for a skinned model, and every source animation in `animationmapping` with its id;
+    /// `mapsAnimations` for a source that can hold animations (an FBX), whose mapping is written
+    /// even when empty.
+    public func completed(with output: ModelCompiler.Output, mapsAnimations: Bool = false) -> ModelImportConfig {
         var config = self
+        if mapsAnimations { config.writesAnimationMapping = true }
         if config.skinning == nil, !output.bones.isEmpty { config.skinning = true }
         for animation in output.animations where !animation.isClip && config.animationMapping[animation.name] == nil {
             config.animationMapping[animation.name] = animation.id
@@ -227,6 +237,7 @@ public struct ModelImportConfig: Sendable, Equatable {
         if case .object(let mapping)? = editor["animationmapping"] {
             animationMapping = mapping.compactMapValues(\.idValue)
         }
+        writesAnimationMapping = editor["animationmapping"] != nil
         // WE's records are in `editor`; this project's earlier ones at the top level.
         let legacy = root["editor"] == nil
         let lists = legacy ? root : editor
@@ -296,7 +307,11 @@ public struct ModelImportConfig: Sendable, Equatable {
         var editor = editorOther
         let names = Dictionary(animationMapping.map { ($0.value, $0.key) }, uniquingKeysWith: min)
         func animation(_ id: UInt64) -> SceneJSONValue { names[id].map { .string($0) } ?? .number(Double(id)) }
-        if !animationMapping.isEmpty { editor["animationmapping"] = .object(animationMapping.mapValues { .number(Double($0)) }) }
+        if !animationMapping.isEmpty {
+            editor["animationmapping"] = .object(animationMapping.mapValues { .number(Double($0)) })
+        } else if writesAnimationMapping {
+            editor["animationmapping"] = .null
+        }
         if !additionalFiles.isEmpty { editor["additionalfiles"] = .array(additionalFiles.map { .string($0) }) }
         if !clips.isEmpty {
             editor["clips"] = .array(clips.map { clip in

@@ -228,6 +228,15 @@ public enum ModelCompiler {
         return cleaned.isEmpty || cleaned == "." || cleaned == ".." ? "material" : cleaned
     }
 
+    /// An `MDLA` event's text as WE's compiler writes it: the event as compact JSON with sorted
+    /// keys, `{"frame":15,"name":"flapmid"}` (capture 549).
+    static func eventJSON(name: String, frame: Int) -> String {
+        // A string and a whole number are always encodable.
+        let data = (try? JSONSerialization.data(withJSONObject: ["frame": frame, "name": name] as [String: Any],
+                                                options: [.sortedKeys, .withoutEscapingSlashes])) ?? Data()
+        return String(decoding: data, as: UTF8.self)
+    }
+
     /// The material WE's importer writes for a mesh (the `generic4` pass of `wallpaperui.exe`'s
     /// template: depth test and write on, back faces culled) drawing `texture`, or WE's white.
     public static func materialJSON(texture: String?) -> [String: SceneJSONValue] {

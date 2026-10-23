@@ -3,7 +3,7 @@ import simd
 
 extension ModelCompiler {
     /// The `MDLS` bones of a skinned model: the root ("RootNode"), every node a skin deforms
-    /// with and every ancestor of one, in the source's order (parents first), as WE's importer
+    /// with and every ancestor of one, breadth-first (each node's children last to first), as WE's importer
     /// keeps them (the library's skinned imports: PaRappa's `windows_front.mdl` keeps RootNode,
     /// the mesh's object, the armature and its bones; docs/models-plan.md §1.3, capture 509 D).
     struct Skeleton {
@@ -38,16 +38,21 @@ extension ModelCompiler {
             if !source.nodes.isEmpty { skeleton.insert(0) }
             var needed = skeleton
             for node in meshNodes { chain(node, into: &needed) }
-            // Parents first by depth; at a depth the skeleton's nodes (the skins' bones and
-            // their ancestors) before the other meshes' nodes, each in the file's order
-            // (capture 546 keeps RootNode, Rig, Plinth, root, arm: the armature Rig before
-            // the static Plinth, which the file lists first).
-            var depth = Array(repeating: 0, count: source.nodes.count)
-            for (index, node) in source.nodes.enumerated() {
-                if let parent = node.parent, parent < index { depth[index] = depth[parent] + 1 }
+            // Breadth-first from the root, each node's children last to first in the file's
+            // order (capture 549: RootNode, Rig, root, armR1, armL1, armR2, armL2 for root's
+            // chains armL1 › armL2 and armR1 › armR2, which the file connects L first; capture
+            // 546: RootNode, Rig, Plinth, root, arm, the file connecting Plinth before Rig).
+            var children = Array(repeating: [Int](), count: source.nodes.count)
+            var roots: [Int] = []
+            for (index, node) in source.nodes.enumerated() where needed.contains(index) {
+                if let parent = node.parent, parent < index { children[parent].append(index) } else { roots.append(index) }
             }
-            let order = source.nodes.indices.filter { needed.contains($0) }.sorted {
-                (depth[$0], skeleton.contains($0) ? 0 : 1, $0) < (depth[$1], skeleton.contains($1) ? 0 : 1, $1)
+            var order: [Int] = []
+            var queue = roots
+            while !queue.isEmpty {
+                let index = queue.removeFirst()
+                order.append(index)
+                queue += children[index].reversed()
             }
             var bones: [Bone] = []
             var map: [Int: Int] = [:]
@@ -193,7 +198,7 @@ extension ModelCompiler {
             let ids = config.animationIDs(tracks.map(\.name))
             var records: [Record] = zip(ids, tracks).map { id, track in
                 return Record(id: id, name: track.name, mode: "loop", fps: track.fps, frames: max(track.frames, 1), flags: 0,
-                              samples: track.samples, reference: nil, events: events(config, id))
+                              samples: track.samples, reference: nil, events: [])
             }
             for clip in config.clips {
                 guard let sourceIndex = records.prefix(tracks.count).firstIndex(where: { $0.id == clip.animation }) else { continue }
@@ -204,21 +209,50 @@ extension ModelCompiler {
                 let samples = source.samples.map { bone in
                     (0...frames).map { frame in bone[min(start + frame, bone.count - 1)] }
                 }
-                // The clip record (0x1), Match loop (0x400) and the configuration's `motionflags`
-                // as they are (capture 546: 43008 with Match loop is 0xAC01).
-                var flags: UInt32 = 0x1 | clip.motionFlags & ~0x4FF
-                if clip.matchLoop { flags |= 0x400 }
+                // The clip record (0x1); the configuration's root-motion `motionflags` (0x1f800)
+                // only with a root-motion bone the skeleton has; Match loop (0x400) only on a clip
+                // longer than a frame (`resourcecompiler64.exe` 0x1400a0f17…0x1400a0fed; capture
+                // 546: 43008 on "root" with Match loop is 0xAC01; capture 549: 43008 without a
+                // root-motion bone is 0x401).
                 let rootBone = clip.rootMotion.isEmpty ? -1 : Int32(index(of: clip.rootMotion) ?? -1)
+                var flags: UInt32 = 0x1
+                if rootBone >= 0 { flags |= clip.motionFlags & ModelImportConfig.Clip.rootMotionFlags }
+                if clip.matchLoop && end > start { flags |= 0x400 }
                 records.append(Record(id: clip.id, name: clip.name, mode: clip.mode, fps: clip.fps ?? source.fps, frames: frames,
                                       flags: flags, samples: samples,
                                       reference: (sourceIndex, start, end, max(clip.frameOffset, 0), rootBone),
-                                      events: events(config, clip.id)))
+                                      events: []))
             }
+            placeEvents(config, in: &records)
             return records
         }
 
-        func events(_ config: ModelImportConfig, _ animation: UInt64) -> [(Float, String)] {
-            config.events.filter { $0.animation == animation }.sorted { $0.frame < $1.frame }.map { ($0.frame, $0.name) }
+        /// The configuration's events in the records, as WE's compiler puts them there
+        /// (`resourcecompiler64.exe` 0x1400a28c0…0x1400a2b43), in the configuration's order:
+        /// - An event keyed to a clip (`clip`: its id) goes in the record with that id. One keyed
+        ///   to an animation (`animation`: its name) goes in the first record whose name is *not*
+        ///   that name: WE's test of the name is inverted, so capture 549's "flapmid" on "Scene"
+        ///   is in the clip "Scene (Clip 54)" and the animation Scene has none. Without such a
+        ///   record (or with an id no animation has) the event is left out.
+        /// - Its time is `frame / fps` of that record (`1 / fps · frame`, the frame a whole
+        ///   number), its text the event as JSON, `{"frame":15,"name":"flapmid"}`.
+        func placeEvents(_ config: ModelImportConfig, in records: inout [Record]) {
+            let clipIDs = Set(config.clips.map(\.id))
+            let names = Dictionary(config.animationMapping.map { ($0.value, $0.key) }, uniquingKeysWith: min)
+            for event in config.events {
+                let target: Int?
+                if clipIDs.contains(event.animation) {
+                    target = records.firstIndex { $0.id == event.animation }
+                } else if let name = names[event.animation] ?? records.first(where: { $0.id == event.animation })?.name {
+                    target = records.firstIndex { $0.name != name }
+                } else {
+                    target = nil
+                }
+                guard let target else { continue }
+                let frame = Int(event.frame)
+                let time: Float = (1 / records[target].fps) * Float(frame)
+                records[target].events.append((time, ModelCompiler.eventJSON(name: event.name, frame: frame)))
+            }
         }
 
         func animationSection(_ records: [Record], meshes: [CompiledMesh], config: ModelImportConfig) -> [UInt8] {
