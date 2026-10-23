@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Wallpaper Editor: a video texture's variant is written as Wallpaper Engine writes it.** A video option's patch now has Wallpaper Engine's empty rectangle (it held the video's size), so the compiled `.tex` of a video with a video option is byte for byte Wallpaper Engine's. The player already read Wallpaper Engine's file and played the option video in place of the base when its condition held; both are now checked against WE 2.8.0.42's own video variant (capture 550).
+- **Puppet Warp clipping masks match Wallpaper Engine's coverage.** A mask's coverage is now drawn at half the size of the puppet's image, as Wallpaper Engine draws it at half the frame's size, and read with linear filtering, so a clipped limb's edge fades over two pixels as in Wallpaper Engine 2.8's captures. The coverage takes a quarter of the memory and drawing it a quarter of the work.
 
 ## [1.0.0-beta.8] - 2026-10-18
 

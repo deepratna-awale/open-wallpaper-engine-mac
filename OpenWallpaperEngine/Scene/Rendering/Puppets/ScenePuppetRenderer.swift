@@ -42,7 +42,8 @@ final class ScenePuppetRenderer: @unchecked Sendable {
 
     /// The premultiplied draw every puppet shares, grown to the largest image drawn. Render thread only.
     private var scratch: MTLTexture?
-    /// WE's `_rt_FullAlphaMask` and `_rt_FullAlphaMaskIntermediate`, the size of the drawing.
+    /// WE's `_rt_FullAlphaMask` and `_rt_FullAlphaMaskIntermediate`, half the drawing's size
+    /// (`coverageSize`).
     private var coverage: [MTLTexture?] = [nil, nil]
     /// Per layer instance. Render thread only.
     private var layers: [String: LayerState] = [:]
@@ -611,7 +612,9 @@ final class ScenePuppetRenderer: @unchecked Sendable {
     /// WE's `_rt_FullAlphaMask` for a clipped draw (0x14020d6a0): each layer's mask drawn through
     /// its ranges with `clippingmaskimage4` into a target cleared to 0, or to 1 and with
     /// `g_RenderVar0.x` = 1 for an inverted mask; a nested mask's layers after the first drawn into
-    /// the intermediate target and multiplied in. nil when a target can't be made.
+    /// the intermediate target and multiplied in. Every mask reuses the same target, cleared and
+    /// written just before the parts it clips (capture 548: one R8 target for both masks of the
+    /// nested rig). nil when a target can't be made.
     private func encodeCoverage(_ plan: ScenePuppetPlan, clip: ScenePuppetClipPlan, layers: [ScenePuppetClipping.Layer],
                                 state: LayerState, _ draw: Draw, image: MTLTexture, projection: simd_float4x4,
                                 content: SIMD2<Int>, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
@@ -619,6 +622,7 @@ final class ScenePuppetRenderer: @unchecked Sendable {
               let pipeline = pipeline(material, format: plan.format, blend: .coverage, pixelFormat: Self.coverageFormat),
               let base = textures(of: material, plan: plan, draw, image: image, morph: state.morphTexture),
               let first = coverageTexture(0, content: content) else { return nil }
+        let size = Self.coverageSize(content)
         for (index, layer) in layers.enumerated() {
             guard let target = index == 0 ? first : coverageTexture(1, content: content) else { return nil }
             let mask = clip.layout.masks[layer.mask]
@@ -626,9 +630,10 @@ final class ScenePuppetRenderer: @unchecked Sendable {
             let painted = layer.mask < clip.maskTextures.count ? clip.maskTextures[layer.mask].flatMap { draw.assetTexture($0.key, $0.source) } : nil
             var bound = base
             bound.append((ImagePuppetCombos.clippingMaskTextureSlot, painted ?? emptyMorphTexture, clampSampler, nil))
-            var bytes = uniformBytes(uniforms, material: material, bound: bound, draw, projection: projection, content: content)
+            var bytes = uniformBytes(uniforms, material: material, bound: bound, draw, projection: projection, content: size)
             if let member = material.pass.variant?.uniforms?.members["g_RenderVar0"] {
-                UniformWriter.write([inverted, 0, 0, 0], member: member, into: &bytes)
+                // Capture 548's mask writes: (0, 2, 1, 0); the shader reads only x.
+                UniformWriter.write([inverted, 2, 1, 0], member: member, into: &bytes)
             }
             let pass = MTLRenderPassDescriptor()
             pass.colorAttachments[0].texture = target
@@ -637,7 +642,7 @@ final class ScenePuppetRenderer: @unchecked Sendable {
                                                                blue: Double(inverted), alpha: Double(inverted))
             pass.colorAttachments[0].storeAction = .store
             guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return nil }
-            bindMesh(encoder, plan: plan, state: state, draw, pipeline: pipeline, bound: bound, bytes: bytes, content: content,
+            bindMesh(encoder, plan: plan, state: state, draw, pipeline: pipeline, bound: bound, bytes: bytes, content: size,
                      commandBuffer: commandBuffer)
             Self.drawMesh(plan, ranges: clip.layout.drawRanges(layer.ranges), indices: state.indices, encoder: encoder)
             encoder.endEncoding()
@@ -648,7 +653,7 @@ final class ScenePuppetRenderer: @unchecked Sendable {
             compose.colorAttachments[0].storeAction = .store
             guard let composer = commandBuffer.makeRenderCommandEncoder(descriptor: compose) else { return nil }
             composer.setRenderPipelineState(coverageCompose)
-            composer.setViewport(MTLViewport(originX: 0, originY: 0, width: Double(content.x), height: Double(content.y),
+            composer.setViewport(MTLViewport(originX: 0, originY: 0, width: Double(size.x), height: Double(size.y),
                                              znear: 0, zfar: 1))
             composer.setFragmentTexture(target, index: 0)
             composer.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
@@ -660,12 +665,23 @@ final class ScenePuppetRenderer: @unchecked Sendable {
     /// The coverage's format: its red channel is all the clipped draw reads.
     static let coverageFormat: MTLPixelFormat = .r8Unorm
 
-    /// Coverage target `index` (0 the mask, 1 the intermediate), exactly `content` texels: the
-    /// clipped draw samples it over its viewport (`CLIPPINGUVS`).
+    /// The coverage's size for a drawing of `content` texels: half of it, as WE makes its masks'
+    /// targets half the size of the frame the parts draw into (0x1402088fa passes 2 to the
+    /// target's creation; capture 548 has a 960 × 540 R8 target for a 1920 × 1080 frame). The
+    /// parts draw into the layer's image here (§2.13), so that is the drawing. The clipped draw
+    /// samples it linearly at its screen position (`CLIPPINGUVS`): the capture's clipped edge
+    /// fades over two pixels, 0.25 and 0.75 either side of the masking part's edge.
+    static func coverageSize(_ content: SIMD2<Int>) -> SIMD2<Int> {
+        SIMD2(max(1, content.x / 2), max(1, content.y / 2))
+    }
+
+    /// Coverage target `index` (0 the mask, 1 the intermediate), `coverageSize(content)` texels,
+    /// which the clipped draw samples over its viewport (`CLIPPINGUVS`).
     private func coverageTexture(_ index: Int, content: SIMD2<Int>) -> MTLTexture? {
-        if let existing = coverage[index], existing.width == content.x, existing.height == content.y { return existing }
-        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: Self.coverageFormat, width: content.x,
-                                                                  height: content.y, mipmapped: false)
+        let size = Self.coverageSize(content)
+        if let existing = coverage[index], existing.width == size.x, existing.height == size.y { return existing }
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: Self.coverageFormat, width: size.x,
+                                                                  height: size.y, mipmapped: false)
         descriptor.usage = [.renderTarget, .shaderRead]
         descriptor.storageMode = .private
         coverage[index] = device.makeTexture(descriptor: descriptor)
