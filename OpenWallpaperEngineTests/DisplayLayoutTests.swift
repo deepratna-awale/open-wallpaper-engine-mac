@@ -131,7 +131,6 @@ final class DisplayLayoutTests: XCTestCase {
         let resolution = DisplayLayoutResolution(layout, displays: [b, a, c])
         XCTAssertEqual(resolution.sources, ["1": "2", "3": "2"], "the main display (listed first) is the source")
         XCTAssertEqual(resolution.clones.map(\.id), [DisplayLayoutResolution.globalCloneID])
-        XCTAssertEqual(resolution.expandingClones(["3"]), ["1", "2", "3"])
     }
 
     func testGroupsApplyUnderAWallpaperPerDisplayOnly() {

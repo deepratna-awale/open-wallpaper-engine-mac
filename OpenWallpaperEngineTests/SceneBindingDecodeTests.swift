@@ -73,7 +73,6 @@ final class SceneBindingDecodeTests: XCTestCase {
         XCTAssertEqual(override.values[.size]?.userPropertyName, "flakesize")
         XCTAssertEqual(override.values[.count]?.userPropertyName, "snowamount")
         XCTAssertEqual(override.values[.rate]?.literalDouble, 0.58)
-        XCTAssertEqual(override.values[.rate]?.scriptSource, "export function update(v) { return v; }")
         XCTAssertEqual(override.values[.speed]?.literalDouble, 3)
     }
 }

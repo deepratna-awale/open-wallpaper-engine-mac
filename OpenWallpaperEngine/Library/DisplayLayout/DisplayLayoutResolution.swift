@@ -194,12 +194,4 @@ struct DisplayLayoutResolution: Equatable {
     func region(_ id: String) -> Region? {
         regions[Self.screen(of: id)]?.first { $0.id == id }
     }
-
-    /// `screenIds` and every display that shares a clone or stretch with one of them.
-    func expandingClones(_ screenIds: Set<String>) -> Set<String> {
-        var result = screenIds
-        for clone in clones where !screenIds.isDisjoint(with: clone.screens) { result.formUnion(clone.screens) }
-        for stretch in stretches where !screenIds.isDisjoint(with: stretch.screens) { result.formUnion(stretch.screens) }
-        return result
-    }
 }
