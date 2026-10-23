@@ -108,14 +108,17 @@ archive between runs (`.github/actions/shader-cache`). Those hold MSL translated
 Engine's shaders, so they are cached the same way: one archive, encrypted with
 `OWE_ASSET_CACHE_KEY`, never plaintext.
 
-The key is the `OWE_ASSET_CACHE_KEY` secret in the `steam-ci` environment. Only the steps that
+The key is the `OWE_ASSET_CACHE_KEY` secret in the `steam-ci` environment, with the same value in `asset-tests-pr` (pull requests from others). Its value is never stored anywhere else, so it can only be rotated, not copied: set both environments together. Only the steps that
 decrypt or encrypt get it, through `-pass env:`, so it is never on a command line or in the log.
 The cache itself holds nothing but ciphertext: a pull request or a fork can restore the file, but
 without the key it can't read it. To set or rotate the key (a rotation just makes the next run
 download and re-save):
 
 ```sh
-openssl rand -base64 48 | gh secret set OWE_ASSET_CACHE_KEY --env steam-ci
+KEY=$(openssl rand -base64 48)
+printf %s "$KEY" | gh secret set OWE_ASSET_CACHE_KEY --env steam-ci
+printf %s "$KEY" | gh secret set OWE_ASSET_CACHE_KEY --env asset-tests-pr
+unset KEY
 ```
 
 Contributors run the asset tests locally with `OWE_ASSETS` (see Local use).
