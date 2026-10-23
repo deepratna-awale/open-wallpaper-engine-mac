@@ -65,6 +65,9 @@ final class AudioLevelTap: @unchecked Sendable {
     func attach(to item: AVPlayerItem, asset: AVAsset) {
         let generation = beginAttach()
         storage.store(0)
+        // The task only calls the asset's async track loading (AVFoundation's thread-safe API);
+        // the caller's item keeps using the asset meanwhile.
+        nonisolated(unsafe) let asset = asset
         Task { [weak self] in
             guard let self,
                   let track = await OWELog.attemptAsync(.audio, "Video audio level: the movie's tracks", {

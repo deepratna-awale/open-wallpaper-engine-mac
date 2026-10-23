@@ -30,7 +30,9 @@ final class MediaThumbnailEffectLibraryTests: XCTestCase {
         }
         let harness = try ModelSceneHarness(directory: directory, settings: SceneRenderSettings(), size: SIMD2(1920, 1080),
                                             storage: storage, media: media)
-        addTeardownBlock { harness.close() }
+        // Teardown blocks run on the main thread after the test, when nothing else uses the harness.
+        nonisolated(unsafe) let closing = harness
+        addTeardownBlock { closing.close() }
         try harness.settle(seconds: 20)
         return harness
     }

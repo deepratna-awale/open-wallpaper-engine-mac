@@ -27,14 +27,23 @@ final class SceneFrameHarness {
             return SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory), propertyScope: scope)
         }
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        view = MTKView(frame: CGRect(x: 0, y: 0, width: size.x, height: size.y), device: device)
-        view.colorPixelFormat = .bgra8Unorm
-        view.framebufferOnly = false
-        view.autoResizeDrawable = false
-        view.drawableSize = CGSize(width: size.x, height: size.y)
-        let mtkView: MTKView = view // a local: the closure may not capture self before init completes
-        renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: mtkView, scriptServices: services, screenID: screenID) })
-        view.isPaused = true
+        // XCTest builds harnesses on the main thread; the view and the renderer's init are main-actor isolated.
+        let mtkView = MainActor.assumeIsolated {
+            let view = MTKView(frame: CGRect(x: 0, y: 0, width: size.x, height: size.y), device: device)
+            view.colorPixelFormat = .bgra8Unorm
+            view.framebufferOnly = false
+            view.autoResizeDrawable = false
+            view.drawableSize = CGSize(width: size.x, height: size.y)
+            return view
+        }
+        view = mtkView
+        // `assumeIsolated` runs synchronously on this thread, so handing `services` to it races with nothing.
+        nonisolated(unsafe) let services = services
+        renderer = try XCTUnwrap(MainActor.assumeIsolated {
+            let renderer = SceneMetalRenderer(view: mtkView, scriptServices: services, screenID: screenID)
+            mtkView.isPaused = true
+            return renderer
+        })
         renderer.setPlacement(.stretch)
         renderer.scripts.frameWait = 5
         renderer.wallTime = { [unowned self] in self.now }
@@ -44,6 +53,17 @@ final class SceneFrameHarness {
         let deadline = Date().addingTimeInterval(60)
         while !renderer.hasContent, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
         XCTAssertTrue(renderer.hasContent)
+    }
+
+    /// The current drawable's BGRA8 bytes, zeros when there is none (`currentDrawable` is
+    /// main-actor isolated; XCTest reads harnesses on the main thread).
+    func drawableBytes() -> [UInt8] {
+        MainActor.assumeIsolated { [view, size] in
+            var bytes = [UInt8](repeating: 0, count: size.x * size.y * 4)
+            view.currentDrawable?.texture.getBytes(&bytes, bytesPerRow: size.x * 4,
+                                                   from: MTLRegionMake2D(0, 0, size.x, size.y), mipmapLevel: 0)
+            return bytes
+        }
     }
 
     func close() {

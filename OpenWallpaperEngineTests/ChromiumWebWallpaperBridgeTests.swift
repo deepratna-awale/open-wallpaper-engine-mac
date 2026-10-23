@@ -15,7 +15,8 @@ final class ChromiumWebWallpaperBridgeTests: XCTestCase {
     private var host: ChromiumBrowserHost!
     private var folder: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         helper = FakeBrowserHelper()
         listener = NSXPCListener.anonymous()
         listener.delegate = helper
@@ -37,9 +38,10 @@ final class ChromiumWebWallpaperBridgeTests: XCTestCase {
         try "<html><body>bridge</body></html>".write(to: folder.appending(path: "index.html"), atomically: true, encoding: .utf8)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         listener.invalidate()
         try? FileManager.default.removeItem(at: folder)
+        try await super.tearDown()
     }
 
     private var wallpaper: WEWallpaper {

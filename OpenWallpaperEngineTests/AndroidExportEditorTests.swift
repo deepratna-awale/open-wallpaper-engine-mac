@@ -40,7 +40,8 @@ final class AndroidExportEditorTests: XCTestCase {
      "version": 1}
     """
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         suite = "owe-android-editor-\(UUID().uuidString)"
         defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         directory = FileManager.default.temporaryDirectory.appending(path: suite, directoryHint: .isDirectory)
@@ -53,9 +54,10 @@ final class AndroidExportEditorTests: XCTestCase {
         try Data([4, 5]).write(to: directory.appending(path: "sounds/drop.WAV"))
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         defaults.removePersistentDomain(forName: suite)
         try? FileManager.default.removeItem(at: directory) // scratch cleanup
+        try await super.tearDown()
     }
 
     private func wallpaper() throws -> WEWallpaper {

@@ -66,10 +66,9 @@ final class ParticleEmitterImageResampler: @unchecked Sendable {
         pending.insert(key)
         let work = work, deliver = deliver
         let imageSize = source.imageSize
-        // A value copy, immutable from here; WEFormat's bone vectors aren't marked Sendable.
-        nonisolated(unsafe) let rig = source.rig
+        let rig = source.rig
         // Render-thread state: only dereferenced in `deliver`'s block, on the render thread.
-        nonisolated(unsafe) weak var system = system
+        nonisolated(unsafe) weak let system = system
         commands.addCompletedHandler { [weak self] buffer in
             let failed = buffer.error
             work.async { [weak self] in

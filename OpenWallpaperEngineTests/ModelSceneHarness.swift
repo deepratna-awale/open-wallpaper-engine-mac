@@ -47,17 +47,26 @@ final class ModelSceneHarness {
         model = SceneContentLoader(wallpaper: WEWallpaper(using: project, where: directory))
         model.setRenderSettings(settings)
         content = try XCTUnwrap(model.metalContent(), "\(directory.lastPathComponent): no content", file: file, line: line)
-        device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        self.device = device
         let points = CGSize(width: size.x, height: size.y)
-        view = MTKView(frame: CGRect(origin: .zero, size: points), device: device)
-        view.colorPixelFormat = .bgra8Unorm
-        view.autoResizeDrawable = false
-        view.drawableSize = points
-        let services = SceneScriptServices(prelude: SceneScriptPrelude.load(), storage: SceneScriptStorage(directory: storage),
-                                           media: media, spectrum: { .silent })
-        let mtkView: MTKView = view // a local: the closure may not capture self before init completes
-        renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: mtkView, scriptServices: services, screenID: "model-harness") })
-        view.isPaused = true
+        // XCTest builds harnesses on the main thread; the view and the renderer's init are main-actor isolated.
+        let mtkView = MainActor.assumeIsolated {
+            let view = MTKView(frame: CGRect(origin: .zero, size: points), device: device)
+            view.colorPixelFormat = .bgra8Unorm
+            view.autoResizeDrawable = false
+            view.drawableSize = points
+            return view
+        }
+        view = mtkView
+        // `assumeIsolated` runs synchronously on this thread, so handing `services` to it races with nothing.
+        nonisolated(unsafe) let services = SceneScriptServices(prelude: SceneScriptPrelude.load(), storage: SceneScriptStorage(directory: storage),
+                                                               media: media, spectrum: { .silent })
+        renderer = try XCTUnwrap(MainActor.assumeIsolated {
+            let renderer = SceneMetalRenderer(view: mtkView, scriptServices: services, screenID: "model-harness")
+            mtkView.isPaused = true
+            return renderer
+        })
         renderer.setPlacement(.fill)
         renderer.renderSettings = settings
         renderer.scripts.frameWait = 5

@@ -9,16 +9,18 @@ final class WorkshopBlockListTests: XCTestCase {
     private var defaults: UserDefaults!
     private var root: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         suiteName = "owe-workshop-block-list-tests-\(UUID().uuidString)"
         defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
         root = FileManager.default.temporaryDirectory.appending(path: "owe-workshop-block-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         defaults.removePersistentDomain(forName: suiteName)
         try FileManager.default.removeItem(at: root)
+        try await super.tearDown()
     }
 
     private static func item(_ id: String, author: String) -> WorkshopItem {

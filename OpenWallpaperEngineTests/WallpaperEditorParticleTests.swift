@@ -11,7 +11,8 @@ import OWESceneEditing
 final class WallpaperEditorParticleTests: XCTestCase {
     private var schema: ParticleEditorSchema!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         schema = try ParticleEditorServices.bundledSchema()
     }
 

@@ -144,8 +144,11 @@ final class SceneScriptParityTests: XCTestCase {
                 }
             }
         }
-        XCTContext.runActivity(named: "SceneScript library errors (\(scenes) scenes)") { activity in
-            activity.add(XCTAttachment(string: report.isEmpty ? "none" : report))
+        // XCTest runs this test on the main thread; `runActivity` is main-actor isolated.
+        MainActor.assumeIsolated {
+            XCTContext.runActivity(named: "SceneScript library errors (\(scenes) scenes)") { activity in
+                activity.add(XCTAttachment(string: report.isEmpty ? "none" : report))
+            }
         }
         if let path = ProcessInfo.processInfo.environment["OWE_SCRIPT_PARITY_REPORT"] {
             try report.write(toFile: path, atomically: true, encoding: .utf8)

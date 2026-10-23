@@ -4,6 +4,7 @@ import AppKit
 @testable import OpenWallpaperEngine
 
 /// Blend-mode layers copy only the part of the scene they read, and share a copy that still holds.
+@MainActor
 final class SceneSnapshotTrackerTests: XCTestCase {
     private typealias Rect = SceneSnapshotTracker.Rect
 

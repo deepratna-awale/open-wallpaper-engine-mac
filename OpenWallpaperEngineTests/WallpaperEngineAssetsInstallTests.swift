@@ -190,9 +190,10 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
 
     @MainActor
     func testTheServiceReportsMissingAssetsAndWhatInstallingNeeds() throws {
+        let scratch: URL = self.scratch // a value: the @Sendable storage closure may not capture self
         try XCTSkipIf(WallpaperEngineAssets.directory != nil, "OWE_ASSETS is set for this run")
         let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { self.scratch }),
-                                       runner: UnusedRunner(), storageDirectory: { self.scratch },
+                                       runner: UnusedRunner(), storageDirectory: { scratch },
                                        previewCacheRoot: scratch.appending(path: "previews"),
                                        downloadedIndex: DownloadedWallpaperIndex(defaults: makeDefaults(),
                                                                                  libraryDirectory: { self.scratch }),
@@ -212,9 +213,10 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
     /// download folder is gone afterwards.
     @MainActor
     func testANotOwnedAppIsReportedAndTheDownloadRemoved() throws {
+        let scratch: URL = self.scratch // a value: the @Sendable storage closure may not capture self
         let runner = ScriptedRunner(output: "ERROR! Failed to install app '431960' (No subscription)", exitCode: 8)
         let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { self.scratch }),
-                                       runner: runner, storageDirectory: { self.scratch },
+                                       runner: runner, storageDirectory: { scratch },
                                        previewCacheRoot: scratch.appending(path: "previews"),
                                        downloadedIndex: DownloadedWallpaperIndex(defaults: makeDefaults(),
                                                                                  libraryDirectory: { self.scratch }),
@@ -384,13 +386,14 @@ extension WallpaperEngineAssetsInstallTests {
     /// Settings › Assets › Install from Steam. The install runs with the account.
     @MainActor
     func testCachedLoginThenActivationThenInstallRuns() throws {
+        let scratch: URL = self.scratch // a value: the @Sendable storage closure may not capture self
         let runner = SteamSessionRunner(loginOutput: steamCmdCachedLoginOutput)
         let steamcmd = scratch.appending(path: "bin/steamcmd")
         try FileManager.default.createDirectory(at: steamcmd.deletingLastPathComponent(), withIntermediateDirectories: true)
         try Data("#!/bin/sh\n".utf8).write(to: steamcmd)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: steamcmd.path)
         let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { self.scratch }),
-                                       runner: runner, storageDirectory: { self.scratch },
+                                       runner: runner, storageDirectory: { scratch },
                                        previewCacheRoot: scratch.appending(path: "previews"),
                                        downloadedIndex: DownloadedWallpaperIndex(defaults: makeDefaults(),
                                                                                  libraryDirectory: { self.scratch }),

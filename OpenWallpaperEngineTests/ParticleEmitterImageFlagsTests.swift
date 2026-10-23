@@ -227,15 +227,17 @@ final class ParticleEmitterImageFlagsTests: XCTestCase {
         let simulator = try ParticleGPUSimulator(device: device)
         let gpu = try XCTUnwrap(simulator.state(for: runtime))
         let firstBuffer = gpu.imagePoints
-        var delivered: XCTestExpectation?
+        // Set on the test's thread, fulfilled on the main queue.
+        let delivered = LockedValue<XCTestExpectation?>(nil)
         let resampler = ParticleEmitterImageResampler(device: device, queue: queue) { block in
             DispatchQueue.main.async {
                 block()
-                delivered?.fulfill()
+                delivered.value?.fulfill()
             }
         }
         func sample(_ image: MTLTexture) {
-            delivered = expectation(description: "sampled")
+            let sampled = expectation(description: "sampled")
+            delivered.mutate { $0 = sampled }
             // The pipeline is made in the background; ask until it is.
             let deadline = Date().addingTimeInterval(5)
             var asked = false
@@ -246,7 +248,7 @@ final class ParticleEmitterImageFlagsTests: XCTestCase {
                 asked = resampler.hasPending
                 if !asked { RunLoop.current.run(until: Date().addingTimeInterval(0.02)) }
             }
-            wait(for: [delivered!], timeout: 5)
+            wait(for: [sampled], timeout: 5)
         }
         sample(right)
         XCTAssertEqual(runtime.emitterImagesRevision, 1)

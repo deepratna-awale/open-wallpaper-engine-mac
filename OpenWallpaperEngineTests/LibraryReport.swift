@@ -8,6 +8,7 @@ enum LibraryReport {
         guard !lines.isEmpty else { return }
         let text = ([title] + lines.map { "  " + $0 }).joined(separator: "\n")
         print(text)
-        XCTContext.runActivity(named: title) { $0.add(XCTAttachment(string: text)) }
+        // XCTest runs the tests that report on the main thread; `runActivity` is main-actor isolated.
+        MainActor.assumeIsolated { XCTContext.runActivity(named: title) { $0.add(XCTAttachment(string: text)) } }
     }
 }

@@ -4,6 +4,7 @@ import AppKit
 @testable import OpenWallpaperEngine
 
 /// Memory pressure trims what the renderer can rebuild, and nothing a frame still uses.
+@MainActor
 final class SceneMemoryPressureTests: XCTestCase {
     func testLevels() {
         XCTAssertEqual(SceneMemoryPressure.level(for: .warning), .warning)

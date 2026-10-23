@@ -10,6 +10,7 @@ import MetalKit
 /// The puppet drawn alone (every other object hidden, the clear colour black): left of its image
 /// its pixels show. `OWE_SWORD_OUT` names a folder for the frames as PNG. Skipped without the wallpaper;
 /// `OWE_LIBRARY` overrides the library root.
+@MainActor
 final class ScenePuppetCanvasLibraryTests: XCTestCase {
     private static let drawable = SIMD2(960, 540)
     private static let puppet = "21"

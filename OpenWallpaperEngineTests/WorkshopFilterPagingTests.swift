@@ -8,7 +8,9 @@ import XCTest
 /// or any, excluded tags, pages); nothing touches the network or the keychain.
 @MainActor
 final class WorkshopFilterPagingTests: XCTestCase {
-    /// QueryFiles over `catalogue`, with a per-request delay to make searches overlap.
+    /// QueryFiles over `catalogue`, with a per-request delay to make searches overlap. On the main
+    /// actor, as the tests that read what it recorded.
+    @MainActor
     private final class FakeSteam {
         let catalogue: [WorkshopItem]
         var requests: [WorkshopQuery] = []
@@ -62,7 +64,8 @@ final class WorkshopFilterPagingTests: XCTestCase {
                             votesUp: 0, votesDown: 0)
     }
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         root = FileManager.default.temporaryDirectory.appending(path: "owe-workshop-paging-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let root = root!
@@ -76,11 +79,12 @@ final class WorkshopFilterPagingTests: XCTestCase {
         viewModel = WorkshopViewModel(steamCmd: steamCmd, searchPage: steam.search, defaults: defaults)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         viewModel = nil
         defaults.removePersistentDomain(forName: suiteName)
         defaults = nil
         try FileManager.default.removeItem(at: root)
+        try await super.tearDown()
     }
 
     /// Waits for the newest search to finish (the view model runs it in its own task).

@@ -98,7 +98,7 @@ final class VideoTextureStream {
 
         // Weak and never reassigned: `nonisolated(unsafe)` only lets the `@Sendable` observer
         // block capture it. The block runs on the main queue, as before.
-        nonisolated(unsafe) weak var stream = self
+        nonisolated(unsafe) weak let stream = self
         for observed in [item, audioItem] {
             observers.append(NotificationCenter.default.addObserver(
                 forName: .AVPlayerItemDidPlayToEndTime, object: observed, queue: .main
