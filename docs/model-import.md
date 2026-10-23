@@ -37,10 +37,12 @@ imported models, and the docs at docs.wallpaperengine.io/en/scene/models/.
   writes `normals` and `tangentspace` as true; Import Model rewrites a default project's
   configuration that way (bars' `{"normals": true}`, pistols' `seconduvchannel`); a model
   without a configuration gets neither (the default projects' `techno/glow.mdl`, format 0x9).
-- **Compiling the configuration** (capture 546): animations get their `animationmapping` ids
-  and loop mode, flags 0; a clip record is flags `0x1 | 0x400` (Match loop) `| motionflags`
-  (0xAC01), mode "" (WE's clips have no mode), the index of its source animation and the root
-  bone. A bone's properties JSON is its constraint settings passed through with the tip `tp`
+- **Compiling the configuration** (captures 546 and 549): animations get their
+  `animationmapping` ids and loop mode, flags 0; a clip record is flags `0x1`, `| 0x400` (Match
+  loop) when its end is past its start, and `| motionflags & 0x1f800` only when `rootmotion`
+  names a bone of the skeleton (0x1400a0f17…0x1400a0fed: 546's clip on "root" is 0xAC01, 549's
+  without a root-motion bone 0x401), mode "" (WE's clips have no mode), the index of its source
+  animation and the root bone (−1 for none). A bone's properties JSON is its constraint settings passed through with the tip `tp`
   (`"%.5f %.5f %.5f"`), `tm` 10 when it isn't above 0, and `lamin`/`lamax` replaced by their z
   angle on each simulated rotation axis (`rax`/`ray`/`raz`) and 0 on the others when both z
   angles are non-zero ("0 0 ±π/2" with every axis on becomes "±1.57080" thrice; 0x1400b0270).
@@ -104,9 +106,11 @@ imported models, and the docs at docs.wallpaperengine.io/en/scene/models/.
   (pistols' two meshes split as WE 2.8 splits them once a polygon's corners are shared and every
   texture coordinate set is compared).
 - **Skinned models** keep the nodes the skin needs (the root as "RootNode", every bone and its
-  ancestors, and the node of each mesh without a skin), parents first by depth, at a depth the
-  skeleton's nodes before the other meshes' (capture 546: RootNode, Rig, Plinth, root, arm;
-  one sample, so the tie rule is ours), bone flag 1 on bones and those meshes' nodes, each bone's
+  ancestors, and the node of each mesh without a skin) breadth-first from the root, each node's
+  children last to first in the file's order (capture 549: root's chains armL1 › armL2 and
+  armR1 › armR2, connected L first, give RootNode, Rig, root, armR1, armL1, armR2, armL2;
+  capture 546: RootNode, Rig, Plinth, root, arm, the file connecting Plinth before Rig), bone
+  flag 1 on bones and those meshes' nodes, each bone's
   local matrix in the skin's bind pose (a skinned bone at its cluster's bind matrix, not where the
   file's current frame left it), and the mesh skinned in that pose (four influences, the
   largest, renormalised). A mesh without a skin keeps its model-space vertices and is bound to
@@ -175,7 +179,6 @@ What WE's own files didn't show, so the writer writes WE's common case:
 | `MDLS` version | `MDLS0004`, `MDLA0006`, `MDAT0001` | Capture 546. |
 | Animation ids | `animationmapping`'s; an animation without one gets its position (1, 2, …), which the importer then saves in the mapping | WE's are its editor's counter (41, 42); scenes name them by id, so any stable number works. |
 | Events | `{id, name, frame, clip: id}` or `{…, animation: name}` in `editor.events` | The compiler's keys (0x1400a28dd); WE's Add Event created nothing in capture 546. |
-| Bone order at a depth | the skeleton's nodes, then other meshes' nodes, each in file order | One sample (capture 546). |
 | Mesh flags | 0, or 1 for 32-bit indices | The library's imports. |
 | `MDLV` 21/23 blobs and groups | none | Every imported model in the library. |
 | Triangle order | the polygons' | WE's Assimp reorders triangles for the vertex cache (ImproveCacheLocality), not ported. |
@@ -185,6 +188,5 @@ What WE's own files didn't show, so the writer writes WE's common case:
 
 - Add an event to a clip (select the clip first) and to an animation, to confirm the event
   record's layout.
-- Import an FBX with two sibling chains and a static mesh between them (bone order at a depth),
-  and one with pre-rotations (Mixamo), whose helper nodes Assimp makes.
+- Import an FBX with pre-rotations (Mixamo), whose helper nodes Assimp makes.
 - Import a large OBJ and FBX to see the scale WE gives the new layer.
