@@ -172,10 +172,12 @@ enum WebPageScale {
         return scale == max(backingScale, 1) ? 0 : scale
     }
 
+    @MainActor
     static func apply(_ settings: GlobalSettings, to webView: WKWebView) {
         apply(standardResolution: settings.webStandardResolution, halfResolution: halfResolution(settings), to: webView)
     }
 
+    @MainActor
     static func apply(standardResolution: Bool, halfResolution: Bool = false, to webView: WKWebView) {
         let backingScale = webView.window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 1
         let factor = scaleFactor(standardResolution: standardResolution, halfResolution: halfResolution,

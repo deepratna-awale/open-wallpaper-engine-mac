@@ -12,7 +12,10 @@ import ScreenCaptureKit
 /// permission), or from a ScreenCaptureKit stream (Screen Recording) before that or when the tap
 /// can't start, or from the recording device chosen in Settings (`recordingDevice`, Microphone
 /// permission) (`SystemAudioBackend`). All feed `consume(left:right:)`.
-final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
+///
+/// `@unchecked Sendable`: `levelLock` guards `level` and `captureLock` the running capture; every
+/// other mutable member is `@MainActor`, and `demand` and the spectrum analyzer own their locks.
+final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate, @unchecked Sendable {
     private let levelLock = NSLock()
     private var level: Double = 0
 
@@ -236,12 +239,18 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
         return level
     }
 
-    private typealias RunningCapture = (stream: SCStream?, tap: ProcessTapAudioCapture?, input: InputDeviceAudioCapture?)
+    /// The capture `takeRunningCapture` moves out from under `captureLock`. `@unchecked Sendable`:
+    /// a hand-off; once taken, only the one task that stops it touches it.
+    private struct RunningCapture: @unchecked Sendable {
+        let stream: SCStream?
+        let tap: ProcessTapAudioCapture?
+        let input: InputDeviceAudioCapture?
+    }
 
     private func takeRunningCapture() -> RunningCapture {
         captureLock.lock()
         defer { captureLock.unlock() }
-        let current = (stream, processTap, inputCapture)
+        let current = RunningCapture(stream: stream, tap: processTap, input: inputCapture)
         stream = nil
         processTap = nil
         inputCapture = nil

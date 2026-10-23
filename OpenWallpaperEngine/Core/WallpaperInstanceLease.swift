@@ -4,7 +4,7 @@ import Foundation
 /// keeps the lease while it shows the instance; releasing it, or dropping the lease, lets the
 /// instance stop once no display holds it.
 @MainActor
-final class WallpaperInstanceLease<Key: Hashable, Instance: AnyObject>: ObservableObject {
+final class WallpaperInstanceLease<Key: Hashable & Sendable, Instance: AnyObject>: ObservableObject {
     /// Names this lease in the registry. Kept alive until the release has run, so its identity
     /// can't be reused by another lease in between.
     private final class Holder: Sendable {}

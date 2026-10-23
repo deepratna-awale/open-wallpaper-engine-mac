@@ -32,7 +32,10 @@ final class Broker: NSObject, NSXPCListenerDelegate, LiveSaverBrokerProtocol, @u
         connection.exportedInterface = LiveSaverFramesMessage.brokerInterface()
         connection.exportedObject = self
         connection.invalidationHandler = { [weak self, weak connection] in
-            DispatchQueue.main.async { self?.ended(connection) }
+            // NSXPCConnection is thread-safe; the main queue only compares it with `registrar`.
+            nonisolated(unsafe) let connection = connection
+            guard let self else { return }
+            DispatchQueue.main.async { self.ended(connection) }
         }
         connection.resume()
         brokerLog.notice("peer pid=\(connection.processIdentifier)")
@@ -40,11 +43,14 @@ final class Broker: NSObject, NSXPCListenerDelegate, LiveSaverBrokerProtocol, @u
     }
 
     func register(_ endpoint: NSXPCListenerEndpoint) {
-        let connection = NSXPCConnection.current()
+        // NSXPCConnection is thread-safe; the main queue only keeps a weak reference to it.
+        nonisolated(unsafe) let connection = NSXPCConnection.current()
         DispatchQueue.main.async { self.registered(endpoint, over: connection) }
     }
 
     func endpoint(reply: @escaping (NSXPCListenerEndpoint?) -> Void) {
+        // XPC reply blocks may be called once from any thread.
+        nonisolated(unsafe) let reply = reply
         DispatchQueue.main.async { self.answer(reply) }
     }
 

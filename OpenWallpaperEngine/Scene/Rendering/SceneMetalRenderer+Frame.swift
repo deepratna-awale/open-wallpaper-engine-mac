@@ -9,7 +9,62 @@ extension SceneMetalRenderer {
     /// Renders a frame for `view` alone and presents it there.
     func draw(in view: MTKView) {
         if drawsOnRenderThreadOnly { ThreadGuards.assertRenderThread("A scene frame") }
+        defer { releaseFrameDrawable() }
         ThreadGuards.renderFrame { renderFrame(.view(view)) }
+    }
+
+    /// `view`'s drawable for this frame and the pass onto it. A view a render thread draws (it
+    /// has a snapshot) gives its layer's next drawable, which any thread may take; it is taken
+    /// once per frame and held until the frame ends (`releaseFrameDrawable`), and the pass clears
+    /// it to `SceneFrameDestination.clearColor` and stores it, as MTKView's own pass does (one
+    /// colour attachment: the views have no depth, stencil or samples). A view without a snapshot
+    /// is drawn on the main thread (`SceneViewSnapshots`) and gives MTKView's own.
+    func viewOutput(_ view: MTKView) -> (descriptor: MTLRenderPassDescriptor, drawable: CAMetalDrawable)? {
+        let id = ObjectIdentifier(view)
+        if let frameDrawable, frameDrawable.view == id { return (frameDrawablePass, frameDrawable.drawable) }
+        guard let snapshot = SceneViewSnapshots.snapshot(of: view) else {
+            let output = MainActor.assumeIsolated { () -> MainThreadOutput? in
+                guard let descriptor = view.currentRenderPassDescriptor, let drawable = view.currentDrawable else { return nil }
+                return MainThreadOutput(descriptor: descriptor, drawable: drawable)
+            }
+            return output.map { ($0.descriptor, $0.drawable) }
+        }
+        guard let drawable = snapshot.layer?.nextDrawable() else { return nil }
+        frameDrawable = (id, drawable)
+        let attachment = frameDrawablePass.colorAttachments[0]!
+        attachment.texture = drawable.texture
+        attachment.loadAction = .clear
+        attachment.storeAction = .store
+        attachment.clearColor = SceneFrameDestination.clearColor
+        return (frameDrawablePass, drawable)
+    }
+
+    /// MTKView's pass and drawable, read and used on the main thread: `assumeIsolated` hands them
+    /// back on the thread it ran on, so nothing crosses threads.
+    private struct MainThreadOutput: @unchecked Sendable {
+        let descriptor: MTLRenderPassDescriptor
+        let drawable: CAMetalDrawable
+    }
+
+    /// The frame ended: its drawable goes back to the layer's pool (MTKView lets go of its own
+    /// after each `draw()`).
+    func releaseFrameDrawable() {
+        guard frameDrawable != nil else { return }
+        frameDrawable = nil
+        frameDrawablePass.colorAttachments[0].texture = nil
+    }
+
+    /// `view`'s drawable size and format. A view a render thread draws gives its layer's (from its
+    /// snapshot): any thread may read them, and MTKView's are its layer's. A view without a
+    /// snapshot is drawn on the main thread (`SceneViewSnapshots`) and gives MTKView's.
+    static func drawableTarget(of view: MTKView) -> (size: SIMD2<Float>, format: MTLPixelFormat)? {
+        if let snapshot = SceneViewSnapshots.snapshot(of: view) {
+            guard let layer = snapshot.layer else { return nil }
+            return (SIMD2(Float(layer.drawableSize.width), Float(layer.drawableSize.height)), layer.pixelFormat)
+        }
+        return MainActor.assumeIsolated {
+            (SIMD2(Float(view.drawableSize.width), Float(view.drawableSize.height)), view.colorPixelFormat)
+        }
     }
 
     /// Renders one frame for all the displays of a shared scene, at the largest scene target any
@@ -35,18 +90,20 @@ extension SceneMetalRenderer {
     /// placement: one pass per display. A stretched display shows its rect of the frame placed on
     /// the whole canvas.
     func present(in view: MTKView) {
+        defer { releaseFrameDrawable() }
         let headroom = viewHeadroom(view)
         sharedHeadrooms[ObjectIdentifier(view)] = headroom
         guard let frame = sharedFrame else { return }
         // The view shows the frame in its own format: EDR when the frame was drawn for it.
         let extended = frame.pixelFormat == SceneDisplayOutput.extendedPixelFormat && pixelFormat != frame.pixelFormat
         (extended ? SceneDisplayOutput.extendedRange(headroom: headroom.current) : .standard).apply(to: view, standard: pixelFormat)
-        guard let descriptor = view.currentRenderPassDescriptor,
-              let drawable = view.currentDrawable, let commandBuffer = commandQueue.makeCommandBuffer(),
-              let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else { return }
+        guard let output = viewOutput(view), let commandBuffer = commandQueue.makeCommandBuffer(),
+              let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: output.descriptor) else { return }
+        let drawable = output.drawable
         let size = SIMD2<Float>(Float(drawable.texture.width), Float(drawable.texture.height))
         let snapshot = SceneViewSnapshots.snapshot(of: view)
-        let pointWidth = snapshot.map { CGFloat($0.pointSize.x) } ?? view.bounds.width
+        // A view without a snapshot is drawn on the main thread (`SceneViewSnapshots`).
+        let pointWidth = snapshot.map { CGFloat($0.pointSize.x) } ?? MainActor.assumeIsolated { view.bounds.width }
         let pixelsPerPoint = pointWidth > 0 ? size.x / Float(pointWidth) : 1
         encodePlaced(frame, onto: encoder, size: size, pixelsPerPoint: pixelsPerPoint,
                      pipeline: extended ? layerPipelines.pipelines(for: frame.pixelFormat).copy : copyPipeline,
@@ -107,9 +164,8 @@ extension SceneMetalRenderer {
         case .view(let view):
             // The drawable is taken late (`lateOutput`, F1): its size and format are the view's,
             // which `selectDisplayOutput` set up.
-            let size = SIMD2<Float>(Float(view.drawableSize.width), Float(view.drawableSize.height))
-            guard size.x >= 1, size.y >= 1 else { return nil }
-            let format = SceneViewSnapshots.snapshot(of: view)?.layer?.pixelFormat ?? view.colorPixelFormat
+            guard let target = Self.drawableTarget(of: view), target.size.x >= 1, target.size.y >= 1 else { return nil }
+            let size = target.size, format = target.format
             return SceneFrameDestination(descriptor: nil, drawable: nil, pixelFormat: format,
                                          placement: placement, viewports: [SceneViewport(view, drawableSize: size)])
         case .shared(let viewports):
@@ -197,14 +253,13 @@ extension SceneMetalRenderer {
         if passesThrough {
             switch output {
             case .view(let view):
-                if let descriptor = view.currentRenderPassDescriptor, let drawable = view.currentDrawable,
-                   drawable.texture.width == size.x, drawable.texture.height == size.y,
-                   drawable.texture.pixelFormat == format {
+                if let output = viewOutput(view), output.drawable.texture.width == size.x,
+                   output.drawable.texture.height == size.y, output.drawable.texture.pixelFormat == format {
                     // The scene's own target isn't needed while it draws into the drawable.
                     sceneRenderTarget = nil
                     sceneRenderTargetSize = .zero
-                    lastDrawableScene = drawable.texture
-                    return FrameTargets(scene: drawable.texture, output: (descriptor, drawable))
+                    lastDrawableScene = output.drawable.texture
+                    return FrameTargets(scene: output.drawable.texture, output: (output.descriptor, output.drawable))
                 }
             case .shared:
                 if let scene = sceneRenderTarget(pixelFormat: format, size: size) {
@@ -235,8 +290,8 @@ extension SceneMetalRenderer {
         -> (descriptor: MTLRenderPassDescriptor?, drawable: CAMetalDrawable?) {
         switch output {
         case .view(let view):
-            guard let descriptor = view.currentRenderPassDescriptor, let drawable = view.currentDrawable else { return (nil, nil) }
-            return (descriptor, drawable)
+            guard let output = viewOutput(view) else { return (nil, nil) }
+            return (output.descriptor, output.drawable)
         case .shared:
             return (sharedFramePass(width: size?.x ?? scene.width, height: size?.y ?? scene.height), nil)
         }

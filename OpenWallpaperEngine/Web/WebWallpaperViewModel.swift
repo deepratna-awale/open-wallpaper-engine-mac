@@ -12,6 +12,7 @@ import Combine
 /// One web wallpaper page on one display: WE's web API (user and general properties, audio,
 /// media, pause), mute, scheduling and the watchdog's heartbeat. It talks to the page through
 /// `WebWallpaperPage`, so a WKWebView and a Chromium browser get exactly the same treatment.
+@MainActor
 class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     @Published var currentWallpaper: WEWallpaper
 
@@ -72,12 +73,16 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     /// Whether the current page has beaten yet: one that never runs the bridge (a load error
     /// page) is not judged.
     private var pageHasBeaten = false
-    private var visibilityObservers: [NSObjectProtocol] = []
-    private var audioTimer: Timer?
+    // Filled by `observeVisibility` from init only, then read by the nonisolated deinit.
+    nonisolated(unsafe) private var visibilityObservers: [NSObjectProtocol] = []
+    // Written only on the main actor; the nonisolated deinit reads it once no other reference to
+    // the model exists, so the two never overlap. The timer runs on the main run loop.
+    nonisolated(unsafe) private var audioTimer: Timer?
     /// The page's own smoothing of the captured spectrum, stepped by `audioTimer`, so the page
     /// hears audio whether or not a scene is running next to it.
     private var audioClock: AudioSpectrumClock?
-    private var propertyObserver: NSObjectProtocol?
+    // Set once in init, then read by the nonisolated deinit.
+    nonisolated(unsafe) private var propertyObserver: NSObjectProtocol?
     /// Resends WE's general properties when the user's FPS changes.
     private var fpsObserver: AnyCancellable?
 
@@ -85,7 +90,8 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     let propertyScope: WallpaperPropertyScope
 
     /// The now-playing session the page's media listeners hear (`WebWallpaperMediaBridge`).
-    private let media: MediaSessionSource?
+    // Immutable after init; the deinit unsubscribes through it, as `stopMedia` does.
+    nonisolated(unsafe) private let media: MediaSessionSource?
     private var mediaSubscription: Int?
     /// The media state the current page has been sent; nil until its first delivery.
     private var mediaSent: MediaSessionState?
@@ -107,7 +113,14 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         propertyObserver = NotificationCenter.default.addObserver(
             forName: .wallpaperUserPropertyChanged, object: nil, queue: .main
         ) { [weak self] notification in
-            self?.propertyChanged(notification)
+            let path = notification.object as? String
+            let stores = notification.userInfo?["stores"] as? [String]
+            let key = notification.userInfo?["key"] as? String
+            let value = notification.userInfo?["value"] as? String
+            // Delivered on the main queue (`queue: .main` above), so this is on the main actor.
+            MainActor.assumeIsolated {
+                self?.propertyChanged(path: path, stores: stores, key: key, value: value)
+            }
         }
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(systemWillSleep(_:)), name: NSWorkspace.screensDidSleepNotification, object: nil)
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(systemDidWake(_:)), name: NSWorkspace.didWakeNotification, object: nil)
@@ -115,6 +128,9 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     }
 
     deinit {
+        // Read before `self` is handed to the notification centers below.
+        let mediaSubscription = mediaSubscription
+        let renderWatchdog = renderWatchdog
         NotificationCenter.default.removeObserver(self)
         NSWorkspace.shared.notificationCenter.removeObserver(self)
         if let propertyObserver { NotificationCenter.default.removeObserver(propertyObserver) }
@@ -143,17 +159,24 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         ]
         for (name, awake) in displays {
             visibilityObservers.append(workspace.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                self?.heartbeatGate.displaysAwake = awake
-                self?.reportHeartbeatGate()
+                // Delivered on the main queue (`queue: .main`), so this is on the main actor.
+                MainActor.assumeIsolated {
+                    self?.heartbeatGate.displaysAwake = awake
+                    self?.reportHeartbeatGate()
+                }
             })
         }
         visibilityObservers.append(NotificationCenter.default.addObserver(
             forName: NSWindow.didChangeOcclusionStateNotification, object: nil, queue: .main
         ) { [weak self] notification in
-            guard let self, let window = notification.object as? NSWindow else { return }
-            let windows = [self.page?.hostWindow].compactMap { $0 } + self.mirrorWindows()
-            guard windows.contains(where: { $0 === window }) else { return }
-            self.windowOcclusionChanged(visible: windows.contains { $0.occlusionState.contains(.visible) })
+            guard let window = notification.object as? NSWindow else { return }
+            // Delivered on the main queue (`queue: .main` above), so this is on the main actor.
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                let windows = [self.page?.hostWindow].compactMap { $0 } + self.mirrorWindows()
+                guard windows.contains(where: { $0 === window }) else { return }
+                self.windowOcclusionChanged(visible: windows.contains { $0.occlusionState.contains(.visible) })
+            }
         })
     }
 
@@ -332,13 +355,13 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         }
     }
 
-    private func propertyChanged(_ notification: Notification) {
-        guard let path = notification.object as? String, path == currentWallpaper.settingsDirectory.path,
+    /// A `.wallpaperUserPropertyChanged` notification: its object (`path`) and its user info.
+    private func propertyChanged(path: String?, stores: [String]?, key: String?, value: String?) {
+        guard let path, path == currentWallpaper.settingsDirectory.path,
               // An edit of another display's properties doesn't reach this page.
-              (notification.userInfo?["stores"] as? [String])?
-                .contains(propertyScope.runtimeKey(directory: currentWallpaper.settingsDirectory)) ?? true,
-              let key = notification.userInfo?["key"] as? String,
-              let value = notification.userInfo?["value"] as? String,
+              stores?.contains(propertyScope.runtimeKey(directory: currentWallpaper.settingsDirectory)) ?? true,
+              let key,
+              let value,
               let page else { return }
         let properties = declaredProperties
         changedValues[key] = value
@@ -374,14 +397,17 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         }
         guard audioTimer == nil else { return }
         audioCaptureLease = WallpaperServices.shared.acquireAudioCapture()
-        let clock = audioClock ?? WallpaperServices.shared.makeAudioSpectrumClock(publishes: false)
-        audioClock = clock
+        if audioClock == nil { audioClock = WallpaperServices.shared.makeAudioSpectrumClock(publishes: false) }
         // WE delivers 64 left and 64 right values to web listeners 30 times a second.
         let timer = Timer(timeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
-            guard let self, !self.isPaused, let page = self.page else { return }
-            let snapshot = clock.advanceFrame()
-            let samples = WebWallpaperPropertyBridge.audioArray(left: snapshot.left64, right: snapshot.right64)
-            page.evaluate(WebWallpaperPropertyBridge.audioDeliveryScript(samples))
+            // Added to the main run loop below, so it fires on the main thread.
+            MainActor.assumeIsolated {
+                // `audioClock` is set above and never cleared.
+                guard let self, !self.isPaused, let page = self.page, let clock = self.audioClock else { return }
+                let snapshot = clock.advanceFrame()
+                let samples = WebWallpaperPropertyBridge.audioArray(left: snapshot.left64, right: snapshot.right64)
+                page.evaluate(WebWallpaperPropertyBridge.audioDeliveryScript(samples))
+            }
         }
         RunLoop.main.add(timer, forMode: .common)
         audioTimer = timer
@@ -462,7 +488,7 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         audioTimer = nil
     }
 
-    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping @MainActor @Sendable (WKNavigationActionPolicy) -> Void) {
         // Allow navigation to external URLs (e.g. YouTube embeds from URL-based web wallpapers)
         decisionHandler(.allow)
     }

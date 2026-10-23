@@ -77,7 +77,7 @@ final class SceneBloomRenderTests: XCTestCase {
         view.framebufferOnly = false
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: Self.size.x, height: Self.size.y)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "bloom"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "bloom") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.renderSettings.postProcessing = postProcessing

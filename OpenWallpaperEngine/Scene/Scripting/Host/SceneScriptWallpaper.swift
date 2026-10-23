@@ -9,7 +9,11 @@ import Foundation
 /// `SceneScriptFrameState` that `take()` hands back. The renderer waits for it a little
 /// (`waitForSubmittedFrame`, `Timing.frameWait`), so what scripts did is drawn in the same frame,
 /// as in WE. Everything else here runs on the script thread.
-final class SceneScriptWallpaper {
+///
+/// `@unchecked Sendable`: the fields marked "script thread" are confined to `thread`'s serial
+/// queue, `lock` and `shortcutLock` guard the ones they name, and the "main thread" ones are only
+/// touched there.
+final class SceneScriptWallpaper: @unchecked Sendable {
     struct CreationError: Error, CustomStringConvertible {
         var description: String
     }

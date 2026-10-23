@@ -12,6 +12,7 @@ struct SceneInspectorEditBuffer {
     }
 }
 
+@MainActor
 final class SceneInspectorModel: ObservableObject {
     @Published var items: [SceneInspectorItem] = []
     @Published var errorMessage: String?
@@ -194,42 +195,52 @@ final class SceneInspectorModel: ObservableObject {
         initiallySelectedID = "video"
 
         Task { [weak self] in
-            let asset = AVURLAsset(url: url)
-            // A video AVFoundation can't open logs once; the summary then shows only the file.
-            let videoTrack = await OWELog.attemptAsync(.ui, "Scene Edit / Export: \(file)") {
-                try await asset.loadTracks(withMediaType: .video).first
-            } ?? nil
-            // Optional below: a value the movie doesn't carry is left out of the summary.
-            let audioTrack = try? await asset.loadTracks(withMediaType: .audio).first
-            let duration = (try? await asset.load(.duration)).map { CMTimeGetSeconds($0) }
-            let size = try? await videoTrack?.load(.naturalSize)
-            let frameRate = try? await videoTrack?.load(.nominalFrameRate)
-
+            let video = await Self.readVideoSummary(url, file: file)
+            guard let self else { return }
             var summary: [String: Any] = ["file": file]
-            if let size { summary["resolution"] = "\(Int(size.width)) x \(Int(size.height))" }
-            if let duration, duration.isFinite { summary["duration"] = String(format: "%.2f s", duration) }
-            if let frameRate { summary["frameRate"] = String(format: "%.2f fps", frameRate) }
-            summary["hasAudio"] = audioTrack != nil
+            if let size = video.size { summary["resolution"] = "\(Int(size.width)) x \(Int(size.height))" }
+            if let duration = video.duration, duration.isFinite { summary["duration"] = String(format: "%.2f s", duration) }
+            if let frameRate = video.frameRate { summary["frameRate"] = String(format: "%.2f fps", frameRate) }
+            summary["hasAudio"] = video.hasAudio
 
-            await MainActor.run { [weak self] in
-                guard let self else { return }
-                if let index = self.items.firstIndex(where: { $0.id == "video" }) {
-                    self.items[index].rawObject = prettyJSON(summary)
-                }
-                guard audioTrack != nil else { return }
-                var audioSummary: [String: Any] = ["file": file, "track": "embedded soundtrack"]
-                if let duration, duration.isFinite {
-                    audioSummary["duration"] = String(format: "%.2f s", duration)
-                }
-                let audio = SceneInspectorItem(id: "audio", name: String(localized: "Audio"), kind: "Audio", sourcePath: file,
-                                               materialPath: nil, texturePaths: [], shaderPaths: [],
-                                               rawObject: prettyJSON(audioSummary),
-                                               rawMaterial: nil, rawParticle: nil, visible: true,
-                                               version: nil,
-                                               effects: [], isSynthetic: true)
-                self.items.insert(audio, at: 1)
+            if let index = self.items.firstIndex(where: { $0.id == "video" }) {
+                self.items[index].rawObject = prettyJSON(summary)
             }
+            guard video.hasAudio else { return }
+            var audioSummary: [String: Any] = ["file": file, "track": "embedded soundtrack"]
+            if let duration = video.duration, duration.isFinite {
+                audioSummary["duration"] = String(format: "%.2f s", duration)
+            }
+            let audio = SceneInspectorItem(id: "audio", name: String(localized: "Audio"), kind: "Audio", sourcePath: file,
+                                           materialPath: nil, texturePaths: [], shaderPaths: [],
+                                           rawObject: prettyJSON(audioSummary),
+                                           rawMaterial: nil, rawParticle: nil, visible: true,
+                                           version: nil,
+                                           effects: [], isSynthetic: true)
+            self.items.insert(audio, at: 1)
         }
+    }
+
+    /// What a video layer's summary shows, read off the main actor.
+    private struct VideoSummary: Sendable {
+        var size: CGSize?
+        var duration: Double?
+        var frameRate: Float?
+        var hasAudio: Bool
+    }
+
+    private nonisolated static func readVideoSummary(_ url: URL, file: String) async -> VideoSummary {
+        let asset = AVURLAsset(url: url)
+        // A video AVFoundation can't open logs once; the summary then shows only the file.
+        let videoTrack = await OWELog.attemptAsync(.ui, "Scene Edit / Export: \(file)") {
+            try await asset.loadTracks(withMediaType: .video).first
+        } ?? nil
+        // Optional below: a value the movie doesn't carry is left out of the summary.
+        let audioTrack = try? await asset.loadTracks(withMediaType: .audio).first
+        let duration = (try? await asset.load(.duration)).map { CMTimeGetSeconds($0) }
+        let size = try? await videoTrack?.load(.naturalSize)
+        let frameRate = try? await videoTrack?.load(.nominalFrameRate)
+        return VideoSummary(size: size, duration: duration, frameRate: frameRate, hasAudio: audioTrack != nil)
     }
 
     private func makeEffects(_ effects: [WEObjectEffect], objectID: Int, storedValues: [String: String],
@@ -673,7 +684,7 @@ final class SceneInspectorModel: ObservableObject {
 
     /// The material blendings a layer offers: its kind's (`WEMaterialBlending`); none for a layer
     /// without a material of its own.
-    static func blendingOptions(for item: SceneInspectorItem) -> [WEMaterialBlending] {
+    nonisolated static func blendingOptions(for item: SceneInspectorItem) -> [WEMaterialBlending] {
         guard !item.isSynthetic, item.materialPath != nil, Int(item.id) != nil else { return [] }
         switch item.kind {
         case "Image": return WEMaterialBlending.imageLayer
@@ -779,7 +790,7 @@ final class SceneInspectorModel: ObservableObject {
     }
 
     /// `text` as a JSON object, or why it isn't one.
-    static func jsonObject(_ text: String) throws -> [String: Any] {
+    nonisolated static func jsonObject(_ text: String) throws -> [String: Any] {
         let parsed: Any
         do {
             parsed = try JSONSerialization.jsonObject(with: Data(text.utf8), options: [.fragmentsAllowed])
@@ -845,36 +856,42 @@ final class SceneInspectorModel: ObservableObject {
         }
         loadingItemID = item.id
 
+        // Only Sendable values go to the decoding queue: the paths, the package and the folder.
+        let itemID = item.id, texturePaths = item.texturePaths, materialPath = item.materialPath
+        let maskPaths = item.effects.compactMap { effect in effect.maskPath.map { (id: effect.id, path: $0) } }
+        let package = package, directory = directory
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            guard let self else { return }
-            let textures = self.decodeTextures(for: item)
-            let masks = Dictionary(uniqueKeysWithValues: item.effects.compactMap { effect -> (String, SceneInspectorTexture)? in
-                guard let path = effect.maskPath, let texture = self.decodeTexture(path, itemID: effect.id,
-                                                                                   materialPath: "materials") else { return nil }
-                return (effect.id, texture)
+            guard self != nil else { return }
+            let textures = texturePaths.compactMap {
+                Self.decodeTexture($0, itemID: itemID, materialPath: materialPath, package: package, directory: directory)
+            }
+            let masks = Dictionary(uniqueKeysWithValues: maskPaths.compactMap { mask -> (String, SceneInspectorTexture)? in
+                guard let texture = Self.decodeTexture(mask.path, itemID: mask.id, materialPath: "materials",
+                                                       package: package, directory: directory) else { return nil }
+                return (mask.id, texture)
             })
             DispatchQueue.main.async { [weak self] in
-                guard let self, self.textureLoadGeneration == generation else { return }
-                self.decodedTextures = textures
-                self.decodedMasks = masks
-                self.decodedItemID = item.id
-                self.loadingItemID = nil
+                // On the main queue, so `assumeIsolated` holds.
+                MainActor.assumeIsolated {
+                    guard let self, self.textureLoadGeneration == generation else { return }
+                    self.decodedTextures = textures
+                    self.decodedMasks = masks
+                    self.decodedItemID = itemID
+                    self.loadingItemID = nil
+                }
             }
         }
     }
 
-    private func decodeTextures(for item: SceneInspectorItem) -> [SceneInspectorTexture] {
-        item.texturePaths.compactMap { decodeTexture($0, itemID: item.id, materialPath: item.materialPath) }
-    }
-
-    private func decodeTexture(_ textureName: String, itemID: String, materialPath: String?) -> SceneInspectorTexture? {
+    private nonisolated static func decodeTexture(_ textureName: String, itemID: String, materialPath: String?,
+                                                  package: PKGParser?, directory: URL) -> SceneInspectorTexture? {
         let materialDirectory = ((materialPath ?? "") as NSString).deletingLastPathComponent
         let fileName = (textureName as NSString).pathExtension.isEmpty ? "\(textureName).tex" : textureName
         let candidates = ["\(materialDirectory)/\(fileName)", "materials/\(fileName)", fileName]
             .filter { !$0.hasPrefix("/") }
         var visited = Set<String>()
         for path in candidates where visited.insert(path).inserted {
-            guard let bytes = data(path) else { continue }
+            guard let bytes = assetData(path, package: package, directory: directory) else { continue }
             let parser = TEXParser(data: bytes)
             let image = parser.extractAnimatedImages()?.images.first ?? parser.extractImage() ?? NSImage(data: bytes)
             if let image { return SceneInspectorTexture(id: "\(itemID):\(path)", path: path, image: image) }
@@ -897,7 +914,7 @@ final class SceneInspectorModel: ObservableObject {
 
     /// The bytes of `path` in the package or the folder; nil when neither has it. The inspector
     /// shows an unreadable file as a missing one, after logging why it couldn't be read.
-    private static func assetData(_ path: String, package: PKGParser?, directory: URL) -> Data? {
+    private nonisolated static func assetData(_ path: String, package: PKGParser?, directory: URL) -> Data? {
         if let data = package?.extractFile(named: path) { return data }
         return OWELog.attempt(.ui, "Scene Edit / Export: \(path)") { try AssetPathResolver.data(path, in: directory) } ?? nil
     }
@@ -932,8 +949,11 @@ final class SceneInspectorModel: ObservableObject {
         }
         pendingSave?.cancel()
         let work = DispatchWorkItem { [weak self, targets] in
-            targets.save(values)
-            self?.editBuffer.pending = nil
+            // Run on the main queue (`asyncAfter` below), so `assumeIsolated` holds.
+            MainActor.assumeIsolated {
+                targets.save(values)
+                self?.editBuffer.pending = nil
+            }
         }
         pendingSave = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: work)

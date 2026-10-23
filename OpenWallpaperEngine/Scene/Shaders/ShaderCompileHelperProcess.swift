@@ -36,7 +36,7 @@ enum ShaderCompileHelperChannelError: Error, CustomStringConvertible {
 ///
 /// Thread-safe for one caller at a time (`HelperShaderCompiler` serializes); `lock` owns `buffer`
 /// and `ended`.
-final class ShaderCompileHelperProcess: ShaderCompileHelperChannel {
+final class ShaderCompileHelperProcess: ShaderCompileHelperChannel, @unchecked Sendable { // `lock` guards (above)
     private let process = Process()
     private let requests: FileHandle
     private let responses: FileHandle

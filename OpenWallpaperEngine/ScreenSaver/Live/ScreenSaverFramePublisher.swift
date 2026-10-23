@@ -1,7 +1,7 @@
 import CoreImage
 import Foundation
 import IOSurface
-import Metal
+@preconcurrency import Metal
 
 /// The live screen saver's frames, for both of the savers' transports: each loop of the screen
 /// saver's layout gets a ring of `ringSize` global IOSurfaces at its pixel size. A new set of rings

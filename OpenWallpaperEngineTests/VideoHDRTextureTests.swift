@@ -110,7 +110,7 @@ final class VideoHDRTextureTests: XCTestCase {
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: 64, height: 64)
         view.isPaused = true
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "hdr-video"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "hdr-video") })
         defer { renderer.releaseContent() }
         renderer.displayHeadroom = { _ in SceneDisplayHeadroom(potential: 4, current: 4) }
         renderer.renderSettings.postProcessing = .displayhdr

@@ -40,7 +40,8 @@ struct SceneFrameStats: Equatable, Sendable {
 /// buffer is wrapped (`SceneStatsCommandBuffer`), which counts the draws, passes, pipelines,
 /// textures and copies of every encoder made from it; the renderer adds the scene's own numbers
 /// when the frame ends. Counting happens on the render thread; `latest` is read from any thread.
-final class SceneFrameStatsRecorder {
+// `lock` guards `published`; the frame being counted is render-thread only.
+final class SceneFrameStatsRecorder: @unchecked Sendable {
     private let lock = NSLock()
     /// Guarded by `lock`: the last finished frame's numbers.
     private var published = SceneFrameStats()

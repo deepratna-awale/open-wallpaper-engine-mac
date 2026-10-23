@@ -8,8 +8,9 @@
 //
 
 import Foundation
+import os
 
-struct SteamCmdRun {
+struct SteamCmdRun: Sendable {
     let output: String
     let exitCode: Int32
 }
@@ -42,16 +43,16 @@ final class SteamCmdCancellation: @unchecked Sendable {
     }
 }
 
-protocol SteamCmdRunning {
+protocol SteamCmdRunning: Sendable {
     /// Runs the steamcmd at `executable` with `script` on its stdin and blocks until it exits, or
     /// until `timeout` passes (nil waits for as long as it takes). `onOutput` receives the output as
     /// it arrives, on a background queue.
     func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?,
-             onOutput: @escaping (String) -> Void) -> SteamCmdRun
+             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun
 
     /// As above; `cancellation` terminates steamcmd.
     func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?, cancellation: SteamCmdCancellation,
-             onOutput: @escaping (String) -> Void) -> SteamCmdRun
+             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun
 
     /// A steamcmd kept running between Workshop downloads, or nil to run each download alone.
     func makeSession() -> SteamCmdSessionRunning?
@@ -62,7 +63,7 @@ extension SteamCmdRunning {
 
     /// A runner that can't stop steamcmd early runs it to the end.
     func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?, cancellation: SteamCmdCancellation,
-             onOutput: @escaping (String) -> Void) -> SteamCmdRun {
+             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
         run(executable: executable, script: script, timeout: timeout, onOutput: onOutput)
     }
 
@@ -76,13 +77,13 @@ struct ProcessSteamCmdRunner: SteamCmdRunning {
     func makeSession() -> SteamCmdSessionRunning? { SteamCmdSession() }
 
     func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?,
-             onOutput: @escaping (String) -> Void) -> SteamCmdRun {
+             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
         run(executable: executable, script: script, timeout: timeout, cancellation: SteamCmdCancellation(),
             onOutput: onOutput)
     }
 
     func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?, cancellation: SteamCmdCancellation,
-             onOutput: @escaping (String) -> Void) -> SteamCmdRun {
+             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
         let process = Process()
         let outputPipe = Pipe()
         let inputPipe = Pipe()
@@ -94,13 +95,12 @@ struct ProcessSteamCmdRunner: SteamCmdRunning {
         process.standardError = outputPipe
 
         // Read the pipe while steamcmd runs, so a full pipe buffer can't block it.
-        var outputData = Data()
-        let readQueue = DispatchQueue(label: "steamcmd.pipe.read")
+        let outputData = OSAllocatedUnfairLock(initialState: Data())
         let handle = outputPipe.fileHandleForReading
         handle.readabilityHandler = { fileHandle in
             let data = fileHandle.availableData
             guard !data.isEmpty else { return }
-            readQueue.sync { outputData.append(data) }
+            outputData.withLock { $0.append(data) }
             onOutput(String(decoding: data, as: UTF8.self))
         }
 
@@ -132,10 +132,11 @@ struct ProcessSteamCmdRunner: SteamCmdRunning {
         handle.readabilityHandler = nil
         let remaining = handle.readDataToEndOfFile()
         if !remaining.isEmpty { onOutput(String(decoding: remaining, as: UTF8.self)) }
-        return readQueue.sync {
-            outputData.append(remaining)
-            return SteamCmdRun(output: String(decoding: outputData, as: UTF8.self), exitCode: process.terminationStatus)
+        let output: Data = outputData.withLock {
+            $0.append(remaining)
+            return $0
         }
+        return SteamCmdRun(output: String(decoding: output, as: UTF8.self), exitCode: process.terminationStatus)
     }
 
     /// Writes the whole script and closes stdin, so steamcmd reads EOF after `quit`.

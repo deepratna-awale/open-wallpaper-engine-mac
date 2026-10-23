@@ -412,7 +412,7 @@ final class TexturePreparationLibraryTests: XCTestCase {
         view.colorPixelFormat = .bgra8Unorm
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: size.x, height: size.y)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "texture-gate"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "texture-gate") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.setPlacement(.fill)

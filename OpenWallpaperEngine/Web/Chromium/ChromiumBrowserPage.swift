@@ -111,14 +111,12 @@ final class ChromiumBrowserPage: NSObject, WebWallpaperPage, ChromiumBrowserClie
         browserId = nil
         guard !closed, let content, let size else { return }
         let url = content.embedHTML != nil ? URL(string: ChromiumResourceServing.embedPageURL)! : content.url
-        var opened: Int?
         let id = host.openBrowser(for: self, url: url, width: size.width, height: size.height, scale: size.scale,
-                                  frameRate: frameRate, startScript: startScript) { [weak self] error in
+                                  frameRate: frameRate, startScript: startScript) { [weak self] opened, error in
             guard let error else { return }
             OWELog.error(.web, "Can't open \(url.lastPathComponent) in Chromium: \(error)")
             if let self, self.browserId == opened { self.browserId = nil }
         }
-        opened = id
         browserId = id
         // A new browser starts shown and audible.
         if hidden { host.setHidden(id, hidden: true) }
@@ -127,11 +125,13 @@ final class ChromiumBrowserPage: NSObject, WebWallpaperPage, ChromiumBrowserClie
 
     // MARK: WebWallpaperPage
 
+    @MainActor
     func evaluate(_ script: String) {
         guard let browserId else { return }
         host.execute(browserId, script: script)
     }
 
+    @MainActor
     func evaluate(_ script: String, completion: @escaping (Any?) -> Void) {
         guard let browserId else {
             completion(nil)
@@ -143,6 +143,7 @@ final class ChromiumBrowserPage: NSObject, WebWallpaperPage, ChromiumBrowserClie
         host.execute(browserId, script: ChromiumPageScripts.evaluation(script, id: id))
     }
 
+    @MainActor
     func setPageMuted(_ muted: Bool) {
         self.muted = muted
         if let browserId { host.setAudioMuted(browserId, muted: muted) }
@@ -150,19 +151,23 @@ final class ChromiumBrowserPage: NSObject, WebWallpaperPage, ChromiumBrowserClie
 
     /// Pausing is the bridge's scripts plus hiding the page (`applySchedulingPolicy`), which stops
     /// Chromium drawing it: unlike WebKit, a page that ignores `setPaused` stops too.
+    @MainActor
     func setPagePaused(_ paused: Bool) {}
 
     /// A page nobody can see is hidden: Chromium stops its layout, painting and animation frames
     /// and throttles its timers, while its sound plays on (an audible covered wallpaper keeps its
     /// sound, as in WebKit).
+    @MainActor
     func applySchedulingPolicy(muted: Bool, visible: Bool) {
         guard hidden == visible else { return }
         hidden = !visible
         if let browserId { host.setHidden(browserId, hidden: hidden) }
     }
 
+    @MainActor
     var hostWindow: NSWindow? { view?.window }
 
+    @MainActor
     func snapshot(completion: @escaping (CGImage?) -> Void) {
         completion(lock.withLock { lastFrame }.flatMap(Self.image))
     }

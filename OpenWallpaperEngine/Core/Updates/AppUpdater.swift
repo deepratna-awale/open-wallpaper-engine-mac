@@ -56,12 +56,12 @@ final class AppUpdater: NSObject, ObservableObject {
         self.controller = controller
         let updater: SPUUpdater = controller.updater
         observations = [
-            updater.observe(\.canCheckForUpdates, options: [.initial, .new]) { [weak self] updater, _ in
-                let value: Bool = updater.canCheckForUpdates
+            updater.observe(\.canCheckForUpdates, options: [.initial, .new]) { [weak self] _, change in
+                let value: Bool = change.newValue ?? false
                 Task { @MainActor in self?.canCheckForUpdates = value }
             },
-            updater.observe(\.lastUpdateCheckDate, options: [.initial, .new]) { [weak self] updater, _ in
-                let value: Date? = updater.lastUpdateCheckDate
+            updater.observe(\.lastUpdateCheckDate, options: [.initial, .new]) { [weak self] _, change in
+                let value: Date? = change.newValue ?? nil
                 Task { @MainActor in self?.lastUpdateCheckDate = value }
             }
         ]
@@ -198,6 +198,8 @@ extension AppUpdater: SPUUpdaterDelegate {
     nonisolated func updater(_ updater: SPUUpdater, shouldPostponeRelaunchForUpdate item: SUAppcastItem,
                              untilInvokingBlock installHandler: @escaping () -> Void) -> Bool {
         let version: String = item.versionString
+        // Sparkle's block, called once by the prewarmer on the main thread.
+        nonisolated(unsafe) let installHandler = installHandler
         return MainActor.assumeIsolated {
             guard let shaderPrewarmer else { return false }
             shaderPrewarmer.prewarmThenInstall(version: version, install: installHandler)
@@ -212,6 +214,8 @@ extension AppUpdater: SPUUpdaterDelegate {
     /// Takes over installing a silently downloaded update, which Sparkle otherwise leaves until quit.
     nonisolated func updater(_ updater: SPUUpdater, willInstallUpdateOnQuit item: SUAppcastItem,
                              immediateInstallationBlock immediateInstallHandler: @escaping () -> Void) -> Bool {
+        // Sparkle's block, called once on the main thread.
+        nonisolated(unsafe) let immediateInstallHandler = immediateInstallHandler
         MainActor.assumeIsolated { holdPendingInstall(immediateInstallHandler) }
         return true
     }

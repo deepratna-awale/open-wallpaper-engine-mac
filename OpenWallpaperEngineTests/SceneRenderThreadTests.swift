@@ -57,7 +57,7 @@ final class SceneRenderThreadTests: XCTestCase {
                               styleMask: .borderless, backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         let view = SceneRenderLoop.makeView(frame: CGRect(x: 0, y: 0, width: 64, height: 64))
-        renderer.configure(view)
+        MainActor.assumeIsolated { renderer.configure(view) }
         let delegate = Delegate(loop: loop)
         self.delegate = delegate
         let id = ObjectIdentifier(delegate)

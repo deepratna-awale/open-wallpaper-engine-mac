@@ -8,6 +8,7 @@ import notify
 /// looks their surfaces up (`IOSurfaceLookup`), reads each ring's newest stamp from its
 /// notification's state as the notification comes, and posts `saverAlive` while a view shows. One per process: hosts keep
 /// several views (one per display, stacked instances).
+@MainActor
 final class GlobalSurfaceFrameSource: LiveFrameSource {
     static let shared = GlobalSurfaceFrameSource(
         manifestURL: ScreenSaverManifest.sharedFolder(home: ScreenSaverManifest.userHome)
@@ -31,12 +32,14 @@ final class GlobalSurfaceFrameSource: LiveFrameSource {
     init(manifestURL: URL) {
         self.manifestURL = manifestURL
         let center = DistributedNotificationCenter.default()
+        // Both observers are delivered on the main queue.
         observers.append(center.addObserver(forName: ScreenSaverLiveNames.didStart, object: nil, queue: .main) { [weak self] note in
-            self?.previewSession = LiveSaverLaunchPolicy.isFromPreferences(note.userInfo)
+            let fromPreferences = LiveSaverLaunchPolicy.isFromPreferences(note.userInfo)
+            MainActor.assumeIsolated { self?.previewSession = fromPreferences }
         })
         for name in [ScreenSaverLiveNames.willStop, ScreenSaverLiveNames.didStop] {
             observers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                self?.previewSession = false
+                MainActor.assumeIsolated { self?.previewSession = false }
             })
         }
     }
@@ -69,7 +72,7 @@ final class GlobalSurfaceFrameSource: LiveFrameSource {
 
     /// Ring `ring`'s newest stamp, from its notification's state, on the draw queue as the frame
     /// is drawn: `store` drops a stamp of other rings.
-    private static func read(ring: Int, token: Int32, into store: LiveFrameStore) {
+    nonisolated private static func read(ring: Int, token: Int32, into store: LiveFrameStore) {
         var state: UInt64 = 0
         guard notify_get_state(token, &state) == UInt32(NOTIFY_STATUS_OK),
               let stamp = ScreenSaverLiveStamp(state: state) else { return }

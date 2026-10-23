@@ -9,10 +9,11 @@ final class ChromiumFeatureAdvisorTests: XCTestCase {
     private var defaults: UserDefaults!
     private var folder: URL!
     /// What the fake scanner reports; changing `key` is changing the wallpaper's content.
-    private var key = "content-1"
-    private var features = ["web-serial"]
-    private var engine = WebEngine.webKit
-    private var scans = 0
+    // Read by the advisor's @Sendable scanner; each test sets them before the advisor runs.
+    nonisolated(unsafe) private var key = "content-1"
+    nonisolated(unsafe) private var features = ["web-serial"]
+    nonisolated(unsafe) private var engine = WebEngine.webKit
+    nonisolated(unsafe) private var scans = 0
 
     override func setUpWithError() throws {
         suiteName = "ChromiumFeatureAdvisorTests-\(UUID().uuidString)"

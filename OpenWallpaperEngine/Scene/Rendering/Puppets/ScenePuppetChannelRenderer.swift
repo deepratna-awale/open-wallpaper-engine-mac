@@ -9,7 +9,8 @@ import simd
 /// pipeline compiles, or while no channel weighs anything (`drawsAnything`, so the target would
 /// be the image), there is no target and the mesh samples the image itself. Render thread only,
 /// apart from the compiles.
-final class ScenePuppetChannelRenderer {
+// `pipelineLock` guards what the compile queue lands; everything else is render-thread only.
+final class ScenePuppetChannelRenderer: @unchecked Sendable {
     /// The target's format: the layer images' (`ScenePuppetRenderer.targetFormat`).
     static let targetFormat: MTLPixelFormat = .rgba8Unorm
 
@@ -266,10 +267,11 @@ final class ScenePuppetChannelRenderer {
         pipelineLock.withLock { _ = pending.insert(key) }
         let device = self.device
         let archive = self.archive
-        let format = plan.format
+        let formatBits = plan.format.rawValue // MDLVertexFormat is a plain UInt32 but not Sendable
         let writesAlpha = plan.material.writesAlpha
         let material = plan.material.materialPath
         compileQueue.async { [weak self] in
+            let format = MDLVertexFormat(rawValue: formatBits)
             let result: MTLRenderPipelineState?
             do {
                 let (vertexLibrary, fragmentLibrary) = try variant.makeLibraries(device: device)

@@ -409,7 +409,7 @@ final class SceneWallpaperInstance {
         })
         // N10: thermal state and Low Power Mode move the slider's effective stop.
         powerObserver = PowerPolicyMonitor.shared.observe { [weak self] _ in
-            DispatchQueue.main.async { MainActor.assumeIsolated { self?.update() } }
+            DispatchQueue.main.async { [weak self] in MainActor.assumeIsolated { self?.update() } }
         }
         observers.append(center.addObserver(forName: .sceneUserPropertiesDidChange, object: nil, queue: .main) { [weak self] notification in
             let keys = notification.userInfo?["keys"] as? [String] ?? []

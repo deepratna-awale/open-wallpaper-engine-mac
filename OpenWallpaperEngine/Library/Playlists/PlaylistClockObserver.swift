@@ -5,9 +5,10 @@ import AppKit
 /// the Mac sleeps, and a wall-clock time moves when the clock or the zone does. Nothing polls.
 @MainActor
 final class PlaylistClockObserver {
-    private var tokens: [(NotificationCenter, NSObjectProtocol)] = []
+    /// Set once in `init` and only read again by `deinit`, which can't be main-actor isolated.
+    nonisolated(unsafe) private let tokens: [(NotificationCenter, NSObjectProtocol)]
 
-    init(onChange: @escaping @MainActor () -> Void) {
+    init(onChange: @escaping @MainActor @Sendable () -> Void) {
         let workspace = NSWorkspace.shared.notificationCenter
         let center = NotificationCenter.default
         let observed: [(NotificationCenter, Notification.Name)] = [

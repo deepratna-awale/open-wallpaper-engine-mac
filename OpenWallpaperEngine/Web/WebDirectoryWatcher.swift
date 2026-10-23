@@ -12,14 +12,14 @@ final class WebDirectoryWatcher: @unchecked Sendable {
     static let latency: CFTimeInterval = 0.3
 
     private let queue = DispatchQueue(label: "app.openwallpaperengine.web-directory", qos: .utility)
-    private let onChange: @MainActor ([String: Date]) -> Void
+    private let onChange: @MainActor @Sendable ([String: Date]) -> Void
     // Touched only on `queue`.
     private var stream: FSEventStreamRef?
     private var stopped = false
     /// Main thread only: `stop` was called, so listings still on their way are dropped.
     private var reporting = true
 
-    init(folder: URL, fileType: WebDirectoryProperty.FileType, onChange: @escaping @MainActor ([String: Date]) -> Void) {
+    init(folder: URL, fileType: WebDirectoryProperty.FileType, onChange: @escaping @MainActor @Sendable ([String: Date]) -> Void) {
         self.folder = folder
         self.fileType = fileType
         self.onChange = onChange

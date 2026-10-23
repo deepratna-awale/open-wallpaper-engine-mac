@@ -6,7 +6,8 @@ import simd
 /// transparent (the layer shows nothing rather than its unassembled atlas). A target is redrawn
 /// only when what it is drawn from changed: the pose, the albedo texture, or a user-bound constant.
 /// Call on the render thread, apart from the compiles.
-final class ScenePuppetRenderer {
+// `pipelineLock` guards what the compile queue lands; everything else is render-thread only.
+final class ScenePuppetRenderer: @unchecked Sendable {
     private let device: MTLDevice
     private let archive: EffectPipelineArchive?
     private let unpremultiply: MTLComputePipelineState
@@ -822,7 +823,9 @@ final class ScenePuppetRenderer {
         pipelineLock.withLock { _ = pending.insert(key) }
         let device = self.device
         let archive = self.archive
+        let formatBits = format.rawValue // MDLVertexFormat is a plain UInt32 but not Sendable
         compileQueue.async { [weak self] in
+            let format = MDLVertexFormat(rawValue: formatBits)
             let result: MTLRenderPipelineState?
             do {
                 let (vertexLibrary, fragmentLibrary) = try variant.makeLibraries(device: device)

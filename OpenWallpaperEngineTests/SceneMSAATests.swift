@@ -77,7 +77,7 @@ final class SceneMSAATests: XCTestCase {
         view.framebufferOnly = false
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: Self.size.x, height: Self.size.y)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "msaa-\(quality)"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "msaa-\(quality)") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.renderSettings.antiAliasing = quality

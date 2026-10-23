@@ -77,7 +77,7 @@ final class CameraParallaxLibraryTests: XCTestCase {
         view.drawableSize = CGSize(width: drawable.x, height: drawable.y)
         let services = SceneScriptServices(prelude: SceneScriptPrelude.load(), storage: SceneScriptStorage(directory: storage),
                                            media: SceneScriptReplayMediaSource(), spectrum: { .silent })
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "parallax"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: services, screenID: "parallax") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.setPlacement(.fill)

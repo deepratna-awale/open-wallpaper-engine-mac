@@ -90,7 +90,7 @@ struct WallpaperDisplayOptions: Codable, Equatable {
 /// (`defaultsKey`). Options at their defaults aren't stored.
 @MainActor
 final class WallpaperDisplayOptionsStore: ObservableObject {
-    static let defaultsKey = "WallpaperDisplayOptions"
+    nonisolated static let defaultsKey = "WallpaperDisplayOptions"
 
     @Published private(set) var entries: [String: WallpaperDisplayOptions]
     /// Nil: kept in memory only (a preview's wallpapers).

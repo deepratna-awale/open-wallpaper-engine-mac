@@ -7,7 +7,8 @@ import simd
 ///
 /// Pipelines compile off the render thread, like the effect graph's; a frame whose pipelines
 /// aren't ready draws no volumetrics.
-final class SceneVolumetricsPipelines {
+// `lock` guards what the compile queue lands; everything else is render-thread only.
+final class SceneVolumetricsPipelines: @unchecked Sendable {
     /// How a pass rasterises: which faces it keeps and whether it writes depth.
     enum Raster: Hashable {
         /// `volumetrics_back`: the far faces' depth, nothing else.

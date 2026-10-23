@@ -11,9 +11,10 @@ enum WebPageAudio {
     /// `_WKMediaAudioMuted`, the audio bit of `_WKMediaMutedState`.
     private static let audioMuted: UInt = 1
     private static let setPageMuted = NSSelectorFromString("_setPageMuted:")
-    private static var reportedMissingMute = false
+    @MainActor private static var reportedMissingMute = false
 
     /// Mutes or unmutes `webView`'s page.
+    @MainActor
     static func setMuted(_ muted: Bool, on webView: WKWebView) {
         if webView.responds(to: setPageMuted), let method = webView.method(for: setPageMuted) {
             typealias SetPageMuted = @convention(c) (AnyObject, Selector, UInt) -> Void

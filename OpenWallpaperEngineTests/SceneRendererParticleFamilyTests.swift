@@ -114,7 +114,7 @@ final class SceneRendererParticleFamilyTests: XCTestCase {
         view.colorPixelFormat = .bgra8Unorm
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: Self.size, height: Self.size)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view) })
         view.isPaused = true
         renderer.setPlacement(.stretch)
         let scene = Float(Self.size)

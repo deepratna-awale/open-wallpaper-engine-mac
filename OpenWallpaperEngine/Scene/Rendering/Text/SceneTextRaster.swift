@@ -1,6 +1,6 @@
 import AppKit
 import Metal
-import MetalKit
+@preconcurrency import MetalKit // MTKTextureLoader is not annotated Sendable
 
 /// Everything one text raster needs, read on the render thread (user settings, script values) so
 /// the raster itself can run anywhere.
@@ -127,7 +127,8 @@ enum SceneTextRaster {
 ///
 /// A slot is one drawn raster of a layer (its id, and whether it's the scene draw or its
 /// composite). Only the render thread calls it, except the jobs' hand-back, which is locked.
-final class SceneTextRasterQueue {
+// `lock` guards what the raster jobs hand back; `shown` is render-thread only.
+final class SceneTextRasterQueue: @unchecked Sendable {
     private let device: MTLDevice
     private let loader: MTKTextureLoader
     private let queue = DispatchQueue(label: "owe.text-raster", qos: .userInitiated, attributes: .concurrent)

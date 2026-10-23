@@ -68,7 +68,8 @@ final class AndroidExporter: AndroidExportWorking {
     /// Builds the entries and writes the package off the main thread; cancelling stops it.
     private static func package(to url: URL, progress: @escaping @MainActor (Double) -> Void,
                                 entries: @escaping @Sendable (@escaping (Double) -> Void) throws -> [MobilePackageWriter.Entry]) async throws {
-        let report: @Sendable (Double) -> Void = { value in Task { @MainActor in progress(value) } }
+        let sink = MainActorBox(progress)
+        let report: @Sendable (Double) -> Void = { value in Task { @MainActor in sink.value(value) } }
         let work = Task.detached(priority: .userInitiated) {
             let built = try entries(report)
             try MobilePackageWriter.write(built, to: url) { report(0.85 + $0 * 0.15) }

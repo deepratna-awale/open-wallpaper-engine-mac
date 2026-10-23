@@ -1,5 +1,6 @@
 import AppKit
-import Metal
+@preconcurrency import IOSurface
+@preconcurrency import Metal
 import MetalPerformanceShaders
 
 /// One web or WebM loop of the screen saver's layout drawn live: the frames of a Chromium page,
@@ -146,9 +147,10 @@ final class ScreenSaverLiveWeb {
                 return
             }
             let publisher = publisher, ring = ring
+            let held = (frame.texture, frame.surface)
             buffer.addCompletedHandler { done in
                 // The helper reuses the frame's surface once handed on: held until copied.
-                withExtendedLifetime(frame) {}
+                withExtendedLifetime(held) {}
                 guard done.status == .completed else { return }
                 publisher.drawn(ring: ring, slot: target.slot, generation: target.generation)
             }

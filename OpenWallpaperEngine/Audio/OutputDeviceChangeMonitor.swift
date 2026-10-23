@@ -18,7 +18,7 @@ protocol OutputDeviceSource: AnyObject {
 /// seen. System audio capture always restarts on a change, so audio-reactive visuals never go
 /// silent; the running wallpapers reload (re-routing their sounds) only while `reloadEnabled`.
 final class OutputDeviceChangeMonitor {
-    typealias Schedule = (_ delay: TimeInterval, _ work: @escaping () -> Void) -> Void
+    typealias Schedule = (_ delay: TimeInterval, _ work: @escaping @Sendable () -> Void) -> Void
 
     private let source: OutputDeviceSource
     private let debounce: TimeInterval

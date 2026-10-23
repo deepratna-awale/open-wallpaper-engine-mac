@@ -21,7 +21,7 @@ extension Notification.Name {
 /// instance and its offscreen render, never on a display. `editorDraft` is the Wallpaper Editor's
 /// (`WallpaperEditorDraft`): its canvas runs the draft's properties and edit overlay alone until
 /// File › Save.
-enum WallpaperPropertyScope: Hashable, CustomStringConvertible {
+enum WallpaperPropertyScope: Hashable, Sendable, CustomStringConvertible {
     case shared
     case display(String)
     case isolated(String)

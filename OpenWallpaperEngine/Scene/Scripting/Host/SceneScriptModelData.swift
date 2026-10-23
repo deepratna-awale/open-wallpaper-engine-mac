@@ -50,7 +50,9 @@ struct SceneScriptModelData: Equatable {
     var bounds: MDLBounds
 
     /// The vertex format names in their required order, with the attribute each enables.
-    static let formatOrder: [(name: String, attribute: MDLVertexAttribute)] = [
+    /// `nonisolated(unsafe)`: a constant table of values; it can go once WEFormat's
+    /// `MDLVertexAttribute` is `Sendable`.
+    nonisolated(unsafe) static let formatOrder: [(name: String, attribute: MDLVertexAttribute)] = [
         ("position", .position), ("normal", .normal), ("tangentSigned", .tangent4), ("uv", .texCoord), ("color", .color),
     ]
 

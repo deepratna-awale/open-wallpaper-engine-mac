@@ -2,6 +2,7 @@ import AppKit
 
 /// A view that shows its display's part of a stretched wallpaper's canvas (a wallpaper window's
 /// content while its display is in a stretch).
+@MainActor
 protocol StretchCanvasHosting: AnyObject {
     /// The canvas in global desktop points (`DisplayCanvas`), nil while the display isn't stretched.
     var stretchCanvas: CGRect? { get }

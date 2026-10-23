@@ -90,7 +90,7 @@ final class SceneCompleteFrameReadinessTests: XCTestCase {
         view.colorPixelFormat = .bgra8Unorm
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: 96, height: 512)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "complete-frame"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "complete-frame") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         var now: CFTimeInterval = 1000

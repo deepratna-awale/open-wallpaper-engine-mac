@@ -341,9 +341,11 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
         let center = NotificationCenter.default
         let occlusion = center.addObserver(forName: NSWindow.didChangeOcclusionStateNotification, object: nil,
                                            queue: .main) { [weak self] notification in
+            // Only the window's identity crosses into the main-actor closure, not the notification.
+            let changed = (notification.object as? NSWindow).map(ObjectIdentifier.init)
             MainActor.assumeIsolated {
-                guard let self, let window = notification.object as? NSWindow,
-                      window === self.page.hostWindow else { return }
+                guard let self, let changed, let window = self.page.hostWindow,
+                      ObjectIdentifier(window) == changed else { return }
                 self.visibility.windowVisible = window.occlusionState.contains(.visible)
                 self.updateMusicSyncTimer()
             }

@@ -63,12 +63,12 @@ enum DepthMapSceneCapture {
         let edits = Self.overlay(request.overlay, drawing: request.drawnLayers, of: request.allLayers)
         let settings = LivePhotoRenderer.renderSettings(from: OffscreenRendering.globalSettings(from: .app))
         // The scene is read and its content built off the main thread, as the app's instances do.
-        let (model, content) = try await Task.detached(priority: .userInitiated) { () throws -> (SceneContentLoader, SceneMetalContent) in
+        let (model, content) = try await detachedResult(qos: .userInitiated) { () throws -> (SceneContentLoader, SceneMetalContent) in
             let model = SceneContentLoader(wallpaper: wallpaper, overlay: edits)
             model.setRenderSettings(settings)
             guard let content = model.metalContent() else { throw Failure.noScene }
             return (model, content)
-        }.value
+        }
         try Task.checkCancellation()
         let scratch = FileManager.default.temporaryDirectory.appending(path: "owe-depthmap-\(UUID().uuidString)", directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: scratch) } // Scratch scripts' storage; a leftover is harmless.
@@ -100,7 +100,7 @@ enum DepthMapSceneCapture {
         while renderer.hasContent, settled < 3, Date() < deadline {
             try Task.checkCancellation()
             renderer.renderShared([viewport])
-            renderer.lastCommandBuffer?.waitUntilCompleted()
+            renderer.lastCommandBuffer?.blockUntilCompleted()
             try await Task.sleep(for: .milliseconds(5))
             settled = renderer.hasPendingEffectPipelines ? 0 : settled + 1
         }
@@ -112,7 +112,7 @@ enum DepthMapSceneCapture {
             let time = start + Double(index) / Double(frameRate)
             renderer.wallTime = { time }
             renderer.renderShared([viewport])
-            renderer.lastCommandBuffer?.waitUntilCompleted()
+            renderer.lastCommandBuffer?.blockUntilCompleted()
             await Task.yield()
         }
         guard let frame = await capture(renderer, pixelSize: pixels) else { throw Failure.readBack }

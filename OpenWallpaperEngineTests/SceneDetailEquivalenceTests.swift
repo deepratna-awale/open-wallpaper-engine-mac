@@ -136,7 +136,7 @@ final class SceneDetailEquivalenceTests: XCTestCase {
         view.drawableSize = CGSize(width: drawable.x, height: drawable.y)
         let services = SceneScriptServices(prelude: SceneScriptPrelude.load(), storage: SceneScriptStorage(directory: storage),
                                            media: SceneScriptReplayMediaSource(), spectrum: { .silent })
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "detail"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: services, screenID: "detail") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.renderSettings = settings

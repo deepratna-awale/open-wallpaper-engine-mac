@@ -49,37 +49,43 @@ enum SceneViewSnapshots {
         weak var view: MTKView?
         var snapshot: SceneViewSnapshot
     }
-    private static let lock = NSLock()
-    private static var entries: [ObjectIdentifier: Entry] = [:]
+    private final class Store: @unchecked Sendable { // `lock` guards `entries`
+        let lock = NSLock()
+        var entries: [ObjectIdentifier: Entry] = [:]
+    }
+    private static let store = Store()
 
     /// Main: takes `view`'s state now.
     static func refresh(_ view: MTKView) {
-        dispatchPrecondition(condition: .onQueue(.main))
-        var snapshot = SceneViewSnapshot()
-        snapshot.pointSize = SIMD2(Float(view.bounds.width), Float(view.bounds.height))
-        snapshot.frameRateLimit = view.preferredFramesPerSecond
-        if let window = view.window, let screen = window.screen {
-            snapshot.viewInScreen = window.convertToScreen(view.convert(view.bounds, to: nil))
-            snapshot.screenFrame = screen.frame
-            snapshot.headroom = SceneDisplayHeadroom(screen: screen)
-            snapshot.mirrored = view.isMirroredOnScreen
-            snapshot.canvas = view.stretchCanvasOnScreen
-        }
-        snapshot.layer = view.layer as? CAMetalLayer
-        lock.withLock {
-            entries = entries.filter { $0.value.view != nil }
-            entries[ObjectIdentifier(view)] = Entry(view: view, snapshot: snapshot)
+        // Main only, which this checks as the `dispatchPrecondition` it replaced did: callers are
+        // the views' main-thread setup and main-queue blocks.
+        MainActor.assumeIsolated {
+            var snapshot = SceneViewSnapshot()
+            snapshot.pointSize = SIMD2(Float(view.bounds.width), Float(view.bounds.height))
+            snapshot.frameRateLimit = view.preferredFramesPerSecond
+            if let window = view.window, let screen = window.screen {
+                snapshot.viewInScreen = window.convertToScreen(view.convert(view.bounds, to: nil))
+                snapshot.screenFrame = screen.frame
+                snapshot.headroom = SceneDisplayHeadroom(screen: screen)
+                snapshot.mirrored = view.isMirroredOnScreen
+                snapshot.canvas = view.stretchCanvasOnScreen
+            }
+            snapshot.layer = view.layer as? CAMetalLayer
+            store.lock.withLock {
+                store.entries = store.entries.filter { $0.value.view != nil }
+                store.entries[ObjectIdentifier(view)] = Entry(view: view, snapshot: snapshot)
+            }
         }
     }
 
     /// `view` is no longer drawn on a render thread.
     static func remove(_ view: MTKView) {
-        lock.withLock { entries[ObjectIdentifier(view)] = nil }
+        store.lock.withLock { store.entries[ObjectIdentifier(view)] = nil }
     }
 
     static func snapshot(of view: MTKView) -> SceneViewSnapshot? {
-        lock.withLock {
-            guard let entry = entries[ObjectIdentifier(view)], entry.view === view else { return nil }
+        store.lock.withLock {
+            guard let entry = store.entries[ObjectIdentifier(view)], entry.view === view else { return nil }
             return entry.snapshot
         }
     }

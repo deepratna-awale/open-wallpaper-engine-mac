@@ -4,8 +4,8 @@ import Photos
 /// A Live Photo as Photos takes it: the HEIC as the photo and the MOV as its paired video (the
 /// files already carry the same content identifier), into the album named `albumName`, which is
 /// created when `albumIdentifier` is nil.
-struct LivePhotoAssetRequest: Equatable {
-    struct Resource: Equatable {
+struct LivePhotoAssetRequest: Equatable, Sendable {
+    struct Resource: Equatable, Sendable {
         let type: PHAssetResourceType
         let url: URL
     }
@@ -16,7 +16,7 @@ struct LivePhotoAssetRequest: Equatable {
 }
 
 /// The Photos library, as saving to an album uses it (`PhotoKitLibrary`; tests use a fake).
-protocol LivePhotoLibrary {
+protocol LivePhotoLibrary: Sendable {
     /// Read and write access, which an album needs.
     func authorizationStatus() -> PHAuthorizationStatus
     func requestAuthorization() async -> PHAuthorizationStatus

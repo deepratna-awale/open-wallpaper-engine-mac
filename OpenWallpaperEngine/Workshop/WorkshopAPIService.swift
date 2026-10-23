@@ -1,6 +1,6 @@
 import Foundation
 
-struct WorkshopItem: Identifiable, Codable {
+struct WorkshopItem: Identifiable, Codable, Sendable {
     let id: String
     let title: String
     let previewURL: String?
@@ -33,7 +33,8 @@ struct WorkshopItem: Identifiable, Codable {
     }
 }
 
-final class WorkshopMetadataStore {
+// `lock` guards `metadata`.
+final class WorkshopMetadataStore: @unchecked Sendable {
     static let shared = WorkshopMetadataStore()
 
     private let storageKey = "WorkshopMetadataById"
@@ -79,7 +80,8 @@ final class WorkshopMetadataStore {
     }
 }
 
-final class SteamPlayerStore {
+// `lock` guards `players`.
+final class SteamPlayerStore: @unchecked Sendable {
     static let shared = SteamPlayerStore()
 
     private let storageKey = "SteamPlayersById"
@@ -116,7 +118,7 @@ final class SteamPlayerStore {
     }
 }
 
-struct SteamPlayer: Codable, Equatable {
+struct SteamPlayer: Codable, Equatable, Sendable {
     let steamId: String
     let personaName: String
     let avatarURL: URL?
@@ -192,7 +194,7 @@ enum WorkshopSortOrder: String, CaseIterable, Identifiable {
     }
 }
 
-class WorkshopAPIService {
+final class WorkshopAPIService: Sendable {
     static let wallpaperEngineAppId = 431960
     /// Steam reads the Web API key from this header, which keeps it out of request URLs.
     static let apiKeyHeader = "x-webapi-key"

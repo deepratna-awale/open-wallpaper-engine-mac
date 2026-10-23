@@ -10,6 +10,7 @@ import Cocoa
 import Compression
 import Foundation
 import AVFoundation
+import os
 
 struct TEXAnimatedImages {
     let images: [NSImage]
@@ -525,13 +526,15 @@ class TEXParser {
 
         let asset = AVURLAsset(url: temporaryURL)
         let durationSemaphore = DispatchSemaphore(value: 0)
-        var durationSeconds: Double = 0
+        let loadedDuration = OSAllocatedUnfairLock<Double>(initialState: 0)
         Task {
             // Optional: without a duration the poster frame is the first one.
-            durationSeconds = (try? await asset.load(.duration))?.seconds ?? 0
+            let seconds = (try? await asset.load(.duration))?.seconds ?? 0
+            loadedDuration.withLock { $0 = seconds }
             durationSemaphore.signal()
         }
         durationSemaphore.wait()
+        let durationSeconds = loadedDuration.withLock { $0 }
         let sampleSeconds = durationSeconds.isFinite && durationSeconds > 0
             ? min(max(durationSeconds * 0.1, 0.5), durationSeconds, 2)
             : 0
@@ -539,14 +542,14 @@ class TEXParser {
         let generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
         let semaphore = DispatchSemaphore(value: 0)
-        var decodedImage: CGImage?
+        let decodedImage = OSAllocatedUnfairLock<CGImage?>(uncheckedState: nil)
         let sampleTime = CMTime(seconds: sampleSeconds, preferredTimescale: 600)
         generator.generateCGImagesAsynchronously(forTimes: [NSValue(time: sampleTime)]) { _, cgImage, _, _, _ in
-            decodedImage = cgImage
+            decodedImage.withLockUnchecked { $0 = cgImage }
             semaphore.signal()
         }
         semaphore.wait()
-        guard let cgImage = decodedImage else { return nil }
+        guard let cgImage = decodedImage.withLockUnchecked({ $0 }) else { return nil }
         return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
     }
 

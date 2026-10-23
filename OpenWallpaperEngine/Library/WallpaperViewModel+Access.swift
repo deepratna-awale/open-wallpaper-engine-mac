@@ -265,23 +265,25 @@ extension WallpaperViewModel {
             destination = fileManager.wallpapersDirectory.appending(path: "\(baseName) \(suffix)")
             suffix += 1
         }
+        let folder = destination
         let fileName = url.lastPathComponent
         let project = WEProject(file: fileName, preview: "preview.jpg", title: baseName, type: "video")
         let generator = AVAssetImageGenerator(asset: AVAsset(url: url))
         generator.appliesPreferredTrackTransform = true
-        generator.generateCGImagesAsynchronously(forTimes: [NSValue(time: CMTime(seconds: 0, preferredTimescale: 600))]) { [weak self] _, cgImage, _, _, _ in
+        generator.generateCGImagesAsynchronously(forTimes: [NSValue(time: CMTime(seconds: 0, preferredTimescale: 600))]) { _, cgImage, _, _, _ in
             // AVFoundation can't decode every video it imports (WebM plays through WebKit), so a
             // missing first frame leaves the wallpaper without a preview instead of unimported.
             let previewData = cgImage.flatMap { NSBitmapImageRep(cgImage: $0).representation(using: .jpeg, properties: [:]) }
             if previewData == nil { OWELog.info(.importer, "No preview frame for \(fileName); importing it without one") }
             DispatchQueue.main.async {
                 do {
-                    try fileManager.createDirectory(at: destination, withIntermediateDirectories: true)
-                    try fileManager.copyItem(at: url, to: destination.appending(path: fileName))
-                    if let previewData { try previewData.write(to: destination.appending(path: "preview.jpg"), options: .atomic) }
-                    try JSONEncoder().encode(project).write(to: WEProject.url(in: destination), options: .atomic)
+                    let fileManager = FileManager.default
+                    try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
+                    try fileManager.copyItem(at: url, to: folder.appending(path: fileName))
+                    if let previewData { try previewData.write(to: folder.appending(path: "preview.jpg"), options: .atomic) }
+                    try JSONEncoder().encode(project).write(to: WEProject.url(in: folder), options: .atomic)
                     DispatchQueue.global(qos: .utility).async {
-                        WallpaperPreparation.prepareVideo(wallpaperDirectory: destination)
+                        WallpaperPreparation.prepareVideo(wallpaperDirectory: folder)
                     }
                 } catch {
                     OWELog.error(.importer, "Failed to import video: \(error.localizedDescription)")

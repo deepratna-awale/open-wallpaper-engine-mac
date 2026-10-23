@@ -103,7 +103,7 @@ final class ScenePuppetLibraryTests: XCTestCase {
         view.colorPixelFormat = .bgra8Unorm
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: 1920, height: 1080)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "atlas-puppet"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "atlas-puppet") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.setPlacement(.fill)
@@ -210,7 +210,7 @@ final class ScenePuppetLibraryTests: XCTestCase {
         view.drawableSize = CGSize(width: 320, height: 180)
         let services = SceneScriptServices(prelude: SceneScriptPrelude.load(), storage: SceneScriptStorage(directory: storage),
                                            media: SceneScriptReplayMediaSource(), spectrum: { .silent })
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "puppets"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: services, screenID: "puppets") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         var now: CFTimeInterval = 1000

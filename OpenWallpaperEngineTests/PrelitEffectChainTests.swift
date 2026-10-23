@@ -38,7 +38,7 @@ final class PrelitEffectChainTests: XCTestCase {
         view.framebufferOnly = false
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: size, height: size)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view) })
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.setPlacement(.stretch)

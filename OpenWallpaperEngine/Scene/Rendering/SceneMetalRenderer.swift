@@ -62,7 +62,9 @@ struct RenderTextureFrame {
     var textCenter = SIMD2<Float>.zero
 }
 
-final class SceneMetalRenderer: NSObject, MTKViewDelegate {
+// Its state belongs to the thread that draws it (`performOnRenderThread`, the thread boundary
+// every background result lands through); `contentGenerationLock` guards `contentGeneration`.
+final class SceneMetalRenderer: NSObject, MTKViewDelegate, @unchecked Sendable {
     let device: MTLDevice
     /// The drawables' format, which the layer and copy pipelines draw in.
     let pixelFormat: MTLPixelFormat
@@ -235,7 +237,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// thread is a thread-guard hit. Without one (tests, prewarm) the thread drawing it counts as
     /// the render thread while it draws. Set once, before the first frame.
     var drawsOnRenderThreadOnly = false
-    var performOnRenderThread: (@escaping () -> Void) -> Void = { DispatchQueue.main.async(execute: $0) }
+    var performOnRenderThread: (@escaping @Sendable () -> Void) -> Void = { DispatchQueue.main.async(execute: $0) }
     /// The paused clock has eased to a stop.
     var hasStoppedPlayback: Bool { clock.hasStopped }
     /// A script's fog on/off switch was reported (`frameLighting`).
@@ -524,6 +526,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     var sharedFrame: MTLTexture?
     /// The last `present(in:)`'s command buffer (tests and benchmarks).
     var lastPresentCommandBuffer: MTLCommandBuffer?
+    /// The drawable this frame took from the layer of a view a render thread draws (`viewOutput`),
+    /// held until the frame ends as MTKView holds its `currentDrawable` through a `draw()`.
+    var frameDrawable: (view: ObjectIdentifier, drawable: CAMetalDrawable)?
+    /// The pass onto `frameDrawable`, made once and reused, like MTKView's `currentRenderPassDescriptor`.
+    let frameDrawablePass = MTLRenderPassDescriptor()
     /// Counts this renderer's frames while the Wallpaper Editor's stats overlay shows them; nil,
     /// counting nothing, the rest of the time (`SceneFrameStatsRecorder`).
     var frameStats: SceneFrameStatsRecorder?
@@ -535,7 +542,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// `view`'s screen's headroom: from its main-thread snapshot when a render thread draws it.
     func viewHeadroom(_ view: MTKView) -> SceneDisplayHeadroom {
-        SceneViewSnapshots.snapshot(of: view)?.headroom ?? displayHeadroom(view.window?.screen)
+        // A view without a snapshot is drawn on the main thread (`SceneViewSnapshots`).
+        SceneViewSnapshots.snapshot(of: view)?.headroom ?? MainActor.assumeIsolated { displayHeadroom(view.window?.screen) }
     }
     /// How the last frame reached the display (`SceneDisplayOutput`).
     var displayOutput = SceneDisplayOutput.standard
@@ -599,6 +607,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// A renderer that draws into `view` itself (`draw(in:)`). `scriptServices` runs the scenes'
     /// SceneScripts (nil runs none); `screenID` names the display whose script storage they use.
+    @MainActor
     convenience init?(view: MTKView, scriptServices: SceneScriptServices? = nil,
                       screenID: String = "", pipelineArchiveDirectory: URL? = EffectPipelineArchive.defaultDirectory) {
         self.init(pixelFormat: view.colorPixelFormat,
@@ -679,6 +688,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Sets `view` up to show this renderer's frames, on its device. It leaves the view's own timer
     /// as it is: a scene instance's view stays paused, drawn only by its link on the render thread
     /// (`SceneRenderLoop`). Its delegate is whoever draws it: this renderer, or a shared scene's presenter.
+    @MainActor
     func configure(_ view: MTKView) {
         view.device = device
         view.colorPixelFormat = pixelFormat

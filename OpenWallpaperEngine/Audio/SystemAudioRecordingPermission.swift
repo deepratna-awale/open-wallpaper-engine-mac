@@ -17,7 +17,8 @@ enum SystemAudioRecordingPermission {
         case unknown
     }
 
-    private static let service = "kTCCServiceAudioCapture" as CFString
+    /// A `String` (Sendable), bridged to the `CFString` the TCC functions take at each call.
+    private static let service = "kTCCServiceAudioCapture"
     private static let frameworkPath = "/System/Library/PrivateFrameworks/TCC.framework/Versions/A/TCC"
 
     private typealias Preflight = @convention(c) (CFString, CFDictionary?) -> Int
@@ -27,7 +28,7 @@ enum SystemAudioRecordingPermission {
     /// Never prompts.
     static var status: Status {
         guard let preflight: Preflight = symbol("TCCAccessPreflight") else { return .unknown }
-        return status(preflightResult: preflight(service, nil))
+        return status(preflightResult: preflight(service as CFString, nil))
     }
 
     /// `TCCAccessPreflight`'s result: 0 granted, 1 denied, anything else not asked yet.
@@ -45,7 +46,7 @@ enum SystemAudioRecordingPermission {
     @discardableResult
     static func request(completion: @escaping (Bool) -> Void) -> Bool {
         guard let request: Request = symbol("TCCAccessRequest") else { return false }
-        request(service, nil) { granted in completion(granted) }
+        request(service as CFString, nil) { granted in completion(granted) }
         return true
     }
 
