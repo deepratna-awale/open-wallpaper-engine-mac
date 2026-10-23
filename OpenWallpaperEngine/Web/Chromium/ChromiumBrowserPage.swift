@@ -27,7 +27,8 @@ final class ChromiumBrowserPage: NSObject, WebWallpaperPage, ChromiumBrowserClie
     /// The main frame finished loading (main thread); the status is HTTP's or a CEF error.
     var onLoad: ((Int) -> Void)?
     /// Each frame (XPC's queue).
-    var onFrame: ((ChromiumFrame) -> Void)?
+    /// Called on the XPC connection's queue, not main.
+    var onFrame: (@Sendable (ChromiumFrame) -> Void)?
     weak var view: NSView?
 
     // Main thread only.
@@ -58,7 +59,7 @@ final class ChromiumBrowserPage: NSObject, WebWallpaperPage, ChromiumBrowserClie
     /// A screenshot's size, whose frames still in flight after it are dropped.
     private var staleSize: (width: Int, height: Int)?
     /// The displays mirroring the page (`WebPageMirrorView`), each fed every frame shown.
-    private var frameObservers: [ObjectIdentifier: (ChromiumFrame) -> Void] = [:]
+    private var frameObservers: [ObjectIdentifier: @Sendable (ChromiumFrame) -> Void] = [:]
 
     init(host: ChromiumBrowserHost = .shared, startScripts: [String], frameRate: Int) {
         self.host = host
@@ -257,7 +258,8 @@ final class ChromiumBrowserPage: NSObject, WebWallpaperPage, ChromiumBrowserClie
 
     /// Hands `owner` every frame the page shows from now on (XPC's queue), starting with the
     /// last one (on this thread), so a mirror shows the page at once.
-    func addFrameObserver(_ owner: AnyObject, _ observer: @escaping (ChromiumFrame) -> Void) {
+    /// `observer` runs on the XPC connection's queue, not main.
+    func addFrameObserver(_ owner: AnyObject, _ observer: @escaping @Sendable (ChromiumFrame) -> Void) {
         let last = lock.withLock {
             frameObservers[ObjectIdentifier(owner)] = observer
             return lastFrame
