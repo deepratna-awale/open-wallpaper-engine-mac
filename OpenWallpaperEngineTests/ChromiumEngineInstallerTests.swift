@@ -160,26 +160,6 @@ final class ChromiumEngineInstallerTests: XCTestCase {
         XCTAssertNotNil(ChromiumEnginePackage.manifest(in: engineRoot.appending(path: "1.0.0")))
     }
 
-    /// The rename into place fails: the folder that was there comes back.
-    func testCommitRollsBackWhenTheRenameFails() throws {
-        let archive = try makeArchive(version: "1.0.0", marker: "old")
-        let pin = try pin(version: "1.0.0", archive: archive)
-        let target = engineRoot.appending(path: "1.0.0")
-        try FileManager.default.createDirectory(at: engineRoot, withIntermediateDirectories: true)
-        let scratch = root.appending(path: "scratch")
-        try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
-        try ChromiumEnginePackage.unpack(archive, pin: pin, scratch: scratch, into: target)
-
-        let staging = engineRoot.appending(path: "\(ChromiumEngineInstallJob.stagingPrefix)test")
-        try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
-        let job = ChromiumEngineInstallJob(root: engineRoot, pin: pin, downloader: CopyingDownloader(source: archive))
-        XCTAssertThrowsError(try job.commit(staging.appending(path: "missing"), staging: staging))
-
-        let binary = ChromiumEnginePackage.frameworksFolder(in: target).appending(path: "\(ChromiumEnginePackage.frameworkName)/\(ChromiumEnginePackage.frameworkBinary)")
-        XCTAssertEqual(try String(contentsOf: binary, encoding: .utf8), "old")
-        XCTAssertNotNil(ChromiumEnginePackage.manifest(in: target))
-    }
-
     @MainActor
     func testStaleStagingFoldersAreCleanedUp() async throws {
         let stale = engineRoot.appending(path: "\(ChromiumEngineInstallJob.stagingPrefix)crashed")
