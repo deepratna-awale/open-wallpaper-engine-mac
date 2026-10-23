@@ -5,6 +5,7 @@ import XCTest
 /// the library and the screen saver stubbed: nothing is downloaded or recorded.
 @MainActor
 final class WorkshopSetAsFlowTests: XCTestCase {
+    @MainActor
     private final class Stub {
         var installed: [String: WEWallpaper] = [:]
         var canDownload = true

@@ -10,16 +10,16 @@ final class FilterResultsViewModelTests: XCTestCase {
                                 "SortingBy", "SortingSequence", "ExplorerIconSize", "FilterReveal"]
     private var saved: [String: Any] = [:]
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         for key in keys { saved[key] = UserDefaults.app.object(forKey: key) }
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         for key in keys {
             if let value = saved[key] { UserDefaults.app.set(value, forKey: key) } else { UserDefaults.app.removeObject(forKey: key) }
         }
-        super.tearDown()
+        try await super.tearDown()
     }
 
     func testLoadsSavedFiltersAndDefaultsTheRest() {
