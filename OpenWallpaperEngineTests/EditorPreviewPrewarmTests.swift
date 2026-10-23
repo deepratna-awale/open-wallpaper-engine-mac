@@ -17,7 +17,8 @@ final class EditorPreviewPrewarmTests: XCTestCase {
     private let turbulence = EditorPreviewSubject.particleSystem(path: "particles/exampleturbolence.json", is3D: false)
     private var catalog: [EditorPreviewSubject] { [tint, blur, example, turbulence] }
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         scratch = FileManager.default.temporaryDirectory.appending(path: "EditorPreviewPrewarmTests-\(UUID().uuidString)",
                                                                    directoryHint: .isDirectory)
         assets = scratch.appending(path: "we/assets", directoryHint: .isDirectory)
@@ -29,8 +30,9 @@ final class EditorPreviewPrewarmTests: XCTestCase {
         try setBuild("100")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         try? FileManager.default.removeItem(at: scratch) // Optional: a scratch folder.
+        try await super.tearDown()
     }
 
     // MARK: Order, resume, reuse

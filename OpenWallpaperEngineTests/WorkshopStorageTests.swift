@@ -4,11 +4,18 @@ import XCTest
 /// Every way a Workshop item reaches the app ends in the Wallpaper Storage folder, as `<storage>/<id>`,
 /// with nothing left in steamcmd's install dir. steamcmd is a fake that "downloads" by writing the
 /// item where the script's `force_install_dir` says.
+@MainActor
 final class WorkshopStorageTests: XCTestCase {
     /// The storage folder the service reads at each download, so a test can change it.
-    private final class StorageLocation {
-        var url: URL
-        init(_ url: URL) { self.url = url }
+    /// Read by the service's `@Sendable` folder closures off the main thread, so it is lock-guarded.
+    private final class StorageLocation: @unchecked Sendable {
+        private let lock = NSLock()
+        private var stored: URL
+        var url: URL {
+            get { lock.withLock { stored } }
+            set { lock.withLock { stored = newValue } }
+        }
+        init(_ url: URL) { stored = url }
     }
 
     private var root: URL!
@@ -22,7 +29,8 @@ final class WorkshopStorageTests: XCTestCase {
     private var presented: [WEWallpaper] = []
     private var service: SteamCmdService!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         root = FileManager.default.temporaryDirectory.appending(path: "owe-storage-\(UUID().uuidString)", directoryHint: .isDirectory)
         let firstStorage = root.appending(path: "Storage A", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: firstStorage, withIntermediateDirectories: true)
@@ -33,37 +41,33 @@ final class WorkshopStorageTests: XCTestCase {
         steamCmd = FakeSteamCmd()
         let storage = storage!
         dependencyIndex = WorkshopDependencyIndex(libraryDirectory: { storage.url })
-        // XCTest calls setUp on the main thread; the index and service are main-actor types.
-        MainActor.assumeIsolated {
-            downloadedIndex = DownloadedWallpaperIndex(defaults: defaults, libraryDirectory: { storage.url })
-            service = SteamCmdService(dependencyIndex: dependencyIndex, runner: steamCmd,
-                                      storageDirectory: { try WallpaperStorage.availableDirectory(storage.url) },
-                                      previewCacheRoot: previewCache, downloadedIndex: downloadedIndex,
-                                      presentPreview: { [weak self] in self?.presented.append($0) },
-                                      restoresSession: false)
-            service.steamCmdPath = "/fake/steamcmd"
-            service.steamUsername = "tester"
-            service.isLoggedIn = true
-        }
+        downloadedIndex = DownloadedWallpaperIndex(defaults: defaults, libraryDirectory: { storage.url })
+        service = SteamCmdService(dependencyIndex: dependencyIndex, runner: steamCmd,
+                                  storageDirectory: { try WallpaperStorage.availableDirectory(storage.url) },
+                                  previewCacheRoot: previewCache, downloadedIndex: downloadedIndex,
+                                  presentPreview: { [weak self] in self?.presented.append($0) },
+                                  restoresSession: false)
+        service.steamCmdPath = "/fake/steamcmd"
+        service.steamUsername = "tester"
+        service.isLoggedIn = true
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         defaults.removePersistentDomain(forName: defaultsSuite)
         if FileManager.default.fileExists(atPath: root.path) {
             try FileManager.default.removeItem(at: root)
         }
+        try await super.tearDown()
     }
 
     // MARK: - Helpers
 
-    @MainActor
     private func download(_ id: String, asDependency: Bool = false) async -> URL? {
         await withCheckedContinuation { continuation in
             service.downloadWorkshopItem(workshopId: id, asDependency: asDependency) { continuation.resume(returning: $0) }
         }
     }
 
-    @MainActor
     private func children(of directory: URL) throws -> Set<String> {
         Set(try FileManager.default.contentsOfDirectory(atPath: directory.path))
     }
@@ -84,7 +88,6 @@ final class WorkshopStorageTests: XCTestCase {
 
     /// A dependency service on the test storage whose Steam check answers `availability`
     /// (nothing by default, as when Steam leaves the ids out).
-    @MainActor
     private func makeDependencyService(
         availability: @escaping WorkshopDependencyService.AvailabilityCheck = { _ in [:] },
         now: @escaping () -> Date = Date.init
@@ -99,7 +102,6 @@ final class WorkshopStorageTests: XCTestCase {
 
     // MARK: - Downloads
 
-    @MainActor
     func testUserDownloadGoesIntoStorage() async throws {
         let destination = await download("1000000001")
 
@@ -113,13 +115,12 @@ final class WorkshopStorageTests: XCTestCase {
         XCTAssertEqual(listed(in: storage.url), ["1000000001"])
     }
 
-    @MainActor
     func testDependencyDownloadGoesIntoStorageHiddenAndResolvable() async throws {
         let wallpaper = try makeWallpaper("1000000001", in: storage.url, referencing: "2000000002")
         let dependencies = makeDependencyService()
 
         dependencies.ensureDependencies(ofItemAt: wallpaper)
-        try await sleepUntil("the dependency is installed", timeout: 10) { dependencies.states["2000000002"] == .installed }
+        try await sleepUntil("the dependency is installed", timeout: 10) { @Sendable @MainActor in dependencies.states["2000000002"] == .installed }
 
         XCTAssertTrue(FileManager.default.fileExists(atPath: storage.url.appending(path: "2000000002/project.json").path))
         XCTAssertEqual(try children(of: storage.url), ["1000000001", "2000000002", WorkshopDependencyIndex.fileName])
@@ -131,24 +132,23 @@ final class WorkshopStorageTests: XCTestCase {
 
     /// A dependency Steam reports removed is never handed to steamcmd, is remembered for the next
     /// load, and the wallpaper still loads: its assets resolve as missing and nothing waits on it.
-    @MainActor
     func testUnavailableDependencyIsSkippedAndTheWallpaperStillLoads() async throws {
         let wallpaper = try makeWallpaper("1000000001", in: storage.url, referencing: "9000000009")
-        var reloads = 0
+        let reloads = LockedValue(0)
         let observer = NotificationCenter.default.addObserver(forName: .workshopDependenciesDidInstall, object: nil,
-                                                              queue: .main) { _ in reloads += 1 }
+                                                              queue: .main) { _ in reloads.mutate { $0 += 1 } }
         defer { NotificationCenter.default.removeObserver(observer) }
         let dependencies = makeDependencyService(availability: { _ in ["9000000009": .unavailable(.removedOrPrivate)] })
 
         dependencies.ensureDependencies(ofItemAt: wallpaper)
-        try await sleepUntil("the dependency is unavailable", timeout: 10) {
+        try await sleepUntil("the dependency is unavailable", timeout: 10) { @Sendable @MainActor in
             dependencies.states["9000000009"] == .itemUnavailable(.removedOrPrivate)
         }
 
         XCTAssertTrue(steamCmd.installDirectories.isEmpty, "steamcmd isn't asked for a removed item")
         XCTAssertTrue(dependencies.pending.isEmpty)
         XCTAssertEqual(dependencies.unavailableReason(for: "9000000009"), .removedOrPrivate)
-        XCTAssertEqual(reloads, 0)
+        XCTAssertEqual(reloads.value, 0)
         // Loading: the reference resolves as missing and no link is made.
         let resolver = WorkshopAssetResolver(roots: [storage.url])
         WorkshopDependencyResolver.linkInstalledDependencies(inItemAt: wallpaper, resolver: resolver)
@@ -161,20 +161,19 @@ final class WorkshopStorageTests: XCTestCase {
             return [:]
         })
         later.ensureDependencies(ofItemAt: wallpaper)
-        try await sleepUntil("the skipped dependency is reported", timeout: 10) {
+        try await sleepUntil("the skipped dependency is reported", timeout: 10) { @Sendable @MainActor in
             later.states["9000000009"] == .itemUnavailable(.removedOrPrivate)
         }
         XCTAssertTrue(steamCmd.installDirectories.isEmpty)
     }
 
     /// steamcmd's `File Not Found` reads as a removed item, with the clear message, and is remembered.
-    @MainActor
     func testSteamCmdFileNotFoundMarksTheDependencyUnavailable() async throws {
         let wallpaper = try makeWallpaper("1000000001", in: storage.url, referencing: "9000000009")
         let dependencies = makeDependencyService()
 
         dependencies.ensureDependencies(ofItemAt: wallpaper)
-        try await sleepUntil("the dependency is unavailable", timeout: 10) {
+        try await sleepUntil("the dependency is unavailable", timeout: 10) { @Sendable @MainActor in
             dependencies.states["9000000009"] == .itemUnavailable(.removedOrPrivate)
         }
 
@@ -185,17 +184,15 @@ final class WorkshopStorageTests: XCTestCase {
     }
 
     /// When Steam can't be reached the dependency is downloaded as before.
-    @MainActor
     func testOfflineCheckFallsBackToDownloading() async throws {
         let wallpaper = try makeWallpaper("1000000001", in: storage.url, referencing: "2000000002")
         let dependencies = makeDependencyService(availability: { _ in throw WorkshopAPIError.requestFailed })
 
         dependencies.ensureDependencies(ofItemAt: wallpaper)
-        try await sleepUntil("the dependency is installed", timeout: 10) { dependencies.states["2000000002"] == .installed }
+        try await sleepUntil("the dependency is installed", timeout: 10) { @Sendable @MainActor in dependencies.states["2000000002"] == .installed }
     }
 
     /// Retry forgets the item and checks it again; an item back on Steam downloads.
-    @MainActor
     func testRetryChecksAnUnavailableDependencyAgain() async throws {
         let wallpaper = try makeWallpaper("1000000001", in: storage.url, referencing: "2000000002")
         var removed = true
@@ -203,17 +200,16 @@ final class WorkshopStorageTests: XCTestCase {
             removed ? ["2000000002": .unavailable(.otherApp)] : ["2000000002": .available]
         })
         dependencies.ensureDependencies(ofItemAt: wallpaper)
-        try await sleepUntil("the dependency is unavailable", timeout: 10) {
+        try await sleepUntil("the dependency is unavailable", timeout: 10) { @Sendable @MainActor in
             dependencies.states["2000000002"] == .itemUnavailable(.otherApp)
         }
 
         removed = false
         dependencies.retry(["2000000002"], forItemAt: wallpaper)
-        try await sleepUntil("the dependency is installed", timeout: 10) { dependencies.states["2000000002"] == .installed }
+        try await sleepUntil("the dependency is installed", timeout: 10) { @Sendable @MainActor in dependencies.states["2000000002"] == .installed }
         XCTAssertNil(dependencies.unavailableReason(for: "2000000002"))
     }
 
-    @MainActor
     func testRedownloadKeepsTheInstalledItemAndLeavesNoCopy() async throws {
         _ = await download("1000000001")
         let marker = storage.url.appending(path: "1000000001/settings-marker")
@@ -226,7 +222,6 @@ final class WorkshopStorageTests: XCTestCase {
         XCTAssertEqual(try children(of: storage.url), ["1000000001"])
     }
 
-    @MainActor
     func testFailedDownloadReportsSteamCmdAndCleansUp() async throws {
         let destination = await download("9999999999")
 
@@ -239,7 +234,6 @@ final class WorkshopStorageTests: XCTestCase {
         XCTAssertEqual(try children(of: storage.url), [])
     }
 
-    @MainActor
     func testChangedStorageTakesNewDownloads() async throws {
         let firstStorage = storage.url
         _ = await download("1000000001")
@@ -253,7 +247,6 @@ final class WorkshopStorageTests: XCTestCase {
         XCTAssertEqual(try children(of: firstStorage), ["1000000001"])
     }
 
-    @MainActor
     func testStorageOnDisconnectedVolumeFailsWithoutFallback() async throws {
         let volume = URL(fileURLWithPath: "/Volumes/owe-missing-\(UUID().uuidString)", isDirectory: true)
         storage.url = volume.appending(path: "OpenWallpaperStorage", directoryHint: .isDirectory)
@@ -271,11 +264,10 @@ final class WorkshopStorageTests: XCTestCase {
 
     // MARK: - Previews
 
-    @MainActor
     func testKeptPreviewMovesIntoStorage() async throws {
         dependencyIndex.recordDependencyDownload("1000000001", copiedIntoLibrary: true)
         service.previewWorkshopItem(workshopId: "1000000001")
-        try await sleepUntil("the preview is presented", timeout: 10) { !presented.isEmpty }
+        try await sleepUntil("the preview is presented", timeout: 10) { @Sendable @MainActor in !presented.isEmpty }
         let preview = try XCTUnwrap(presented.first)
         XCTAssertTrue(WorkshopItemInstaller.isPreview(preview.wallpaperDirectory, cacheRoot: previewCache))
         XCTAssertEqual(try children(of: storage.url), [WorkshopDependencyIndex.fileName], "a preview isn't in the library")
@@ -290,7 +282,6 @@ final class WorkshopStorageTests: XCTestCase {
         XCTAssertEqual(listed(in: storage.url), ["1000000001"])
     }
 
-    @MainActor
     func testKeepPreviewIgnoresLibraryWallpapers() async throws {
         let downloaded = await download("1000000001")
         let destination = try XCTUnwrap(downloaded)
@@ -336,7 +327,8 @@ final class WorkshopStorageTests: XCTestCase {
 
 /// Stands in for steamcmd: a `workshop_download_item` of a known id writes the item (and a
 /// manifest, like steamcmd) under the script's `force_install_dir`; an unknown id fails.
-private final class FakeSteamCmd: SteamCmdRunning {
+// `@unchecked Sendable`: its one mutable list is guarded by `lock`.
+private final class FakeSteamCmd: SteamCmdRunning, @unchecked Sendable {
     private let lock = NSLock()
     private var recordedInstallDirectories: [String] = []
 

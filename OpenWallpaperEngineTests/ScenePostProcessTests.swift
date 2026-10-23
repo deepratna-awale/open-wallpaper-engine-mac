@@ -5,6 +5,7 @@ import MetalKit
 
 /// `ScenePostProcess`, the stage after the scene pass: WE's bloom gate and strength, and the
 /// composite that carries the app's own adjustments.
+@MainActor
 final class ScenePostProcessTests: XCTestCase {
     private let placement = LayerUniform(position: SIMD2(960, 540), size: SIMD2(1920, 1080), sceneSize: SIMD2(1920, 1080),
                                          opacity: 1, particleShape: 0, rotation: 0, color: SIMD4(repeating: 1),

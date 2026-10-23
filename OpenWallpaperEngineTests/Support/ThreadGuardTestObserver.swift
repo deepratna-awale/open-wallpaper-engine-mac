@@ -8,16 +8,18 @@ import XCTest
 /// (or `expectThreadGuardViolations`), so they don't reach here.
 ///
 /// Registered once, by the bundle's principal class (`TestPhaseTimer`).
-final class ThreadGuardTestObserver: NSObject, XCTestObservation {
+// `@unchecked Sendable`: it keeps no state of its own; XCTest calls it on the main thread.
+final class ThreadGuardTestObserver: NSObject, XCTestObservation, @unchecked Sendable {
     static let shared = ThreadGuardTestObserver()
 
-    private static var registered = false
-
-    static func register() {
-        guard !registered else { return }
-        registered = true
+    /// Runs once, however often `register` is called (a static's initializer runs exactly once).
+    private static let registration: Void = {
         ThreadGuards.store.collectPending()
         XCTestObservationCenter.shared.addTestObserver(shared)
+    }()
+
+    static func register() {
+        _ = registration
     }
 
     func testCaseWillStart(_ testCase: XCTestCase) {
@@ -25,9 +27,11 @@ final class ThreadGuardTestObserver: NSObject, XCTestObservation {
         for violation in ThreadGuards.store.takePending() {
             print("Thread guard, outside any test: " + violation.message())
         }
-        // Teardown blocks run inside the test, so the issues are the test's own.
-        testCase.addTeardownBlock { [weak testCase] in
-            guard let testCase else { return }
+        // Teardown blocks run inside the test, so the issues are the test's own. XCTest calls this
+        // and runs the block on the main thread, so the unguarded reference is never shared.
+        nonisolated(unsafe) weak let observed = testCase
+        testCase.addTeardownBlock {
+            guard let testCase = observed else { return }
             for violation in ThreadGuards.store.takePending() {
                 guard Self.fails(violation) else {
                     print("Thread guard, from the test's own main-thread setup: " + violation.message(frames: 2))

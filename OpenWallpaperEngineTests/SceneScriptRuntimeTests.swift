@@ -73,7 +73,7 @@ final class SceneScriptRuntimeTests: XCTestCase {
         XCTAssertEqual(evaluate("shared.total", in: first)?.toInt32(), 3)
         XCTAssertEqual(evaluate("shared.total", in: second)?.toInt32(), 1)
 
-        evaluate("var onlyInFirst = 1;", in: first)
+        _ = evaluate("var onlyInFirst = 1;", in: first)
         XCTAssertEqual(evaluate("typeof onlyInFirst", in: second)?.toString(), "undefined")
 
         // Tearing one down (a display switching wallpaper) leaves the other running.
@@ -268,7 +268,7 @@ final class SceneScriptRuntimeTests: XCTestCase {
         table.values[SceneScriptObjectTable.index(slot: 1, field: Layout.alpha)] = 0.5
         XCTAssertEqual(evaluate("__rt.table.values[1 * __rt.table.layout.stride + __rt.table.layout.alpha]",
                                 in: runtime)?.toDouble(), 0.5)
-        evaluate("__rt.table.values[__rt.table.layout.origin] = 3; __rt.table.dirty[0] = 1;", in: runtime)
+        _ = evaluate("__rt.table.values[__rt.table.layout.origin] = 3; __rt.table.dirty[0] = 1;", in: runtime)
         XCTAssertEqual(table.values[SceneScriptObjectTable.index(slot: 0, field: Layout.origin)], 3)
         XCTAssertEqual(table.dirty[0], 1)
     }

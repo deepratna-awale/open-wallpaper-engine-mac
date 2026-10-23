@@ -10,17 +10,17 @@ final class WallpaperDisplayOptionsTests: XCTestCase {
     private var suiteName = ""
     private var folders: [URL] = []
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         suiteName = "owe-display-options-tests-\(UUID().uuidString)"
         defaults = UserDefaults(suiteName: suiteName)
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         defaults.removePersistentDomain(forName: suiteName)
         defaults = nil
         for folder in folders { try? FileManager.default.removeItem(at: folder) }
-        super.tearDown()
+        try await super.tearDown()
     }
 
     /// A wallpaper folder with a project.json, so it has an identity.

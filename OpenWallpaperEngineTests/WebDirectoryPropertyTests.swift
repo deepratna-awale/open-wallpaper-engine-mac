@@ -9,14 +9,16 @@ import XCTest
 final class WebDirectoryPropertyTests: XCTestCase {
     private var root: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         root = FileManager.default.temporaryDirectory.appending(path: "owe-directory-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root.appending(path: "pictures/sub"), withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: root.appending(path: "wallpaper"), withIntermediateDirectories: true)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         try? FileManager.default.removeItem(at: root)
+        try await super.tearDown()
     }
 
     private var pictures: URL { root.appending(path: "pictures") }

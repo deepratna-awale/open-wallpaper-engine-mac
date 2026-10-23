@@ -102,6 +102,7 @@ final class LiveUserPropertyChangeTests: XCTestCase {
         return pixels
     }
 
+    @MainActor
     private struct Pixels {
         let bytes: [UInt8]
 

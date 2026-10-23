@@ -6,6 +6,7 @@ import simd
 /// WE's camera parallax and shake against the formulas recovered from `wallpaper64.exe`
 /// (see `SceneCameraParallax` and `SceneCameraShake` for the addresses). The expected numbers
 /// were worked out by hand from the disassembly, not from our code.
+@MainActor
 final class SceneCameraMotionTests: XCTestCase {
     private let size = SIMD2<Float>(1920, 1080)
 

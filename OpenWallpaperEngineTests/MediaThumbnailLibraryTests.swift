@@ -29,8 +29,9 @@ final class MediaThumbnailLibraryTests: XCTestCase {
                 do { try FileManager.default.removeItem(at: storage) } catch { XCTFail("\(storage.path): \(error)") }
             }
         }
-        let harness = try ModelSceneHarness(directory: directory, settings: SceneRenderSettings(), size: SIMD2(1920, 1080),
-                                            storage: storage, media: media)
+        // The teardown block runs on the main thread after the test, which is done with the harness by then.
+        nonisolated(unsafe) let harness = try ModelSceneHarness(directory: directory, settings: SceneRenderSettings(),
+                                                                size: SIMD2(1920, 1080), storage: storage, media: media)
         addTeardownBlock { harness.close() }
         try harness.settle(seconds: 20)
         return harness

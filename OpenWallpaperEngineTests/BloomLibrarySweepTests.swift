@@ -14,6 +14,7 @@ import MetalKit
 /// - the frame's GPU time is reported.
 ///
 /// Skipped when the library is absent (CI); roots as `LightingLibraryDecodeTests`.
+@MainActor
 final class BloomLibrarySweepTests: XCTestCase {
     private static let frames = 45
     private static let checkedFrames: Set<Int> = [20, 44]
@@ -28,14 +29,16 @@ final class BloomLibrarySweepTests: XCTestCase {
     ]
     private var storage: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         storage = FileManager.default.temporaryDirectory.appending(path: "owe-bloom-sweep-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let storage, FileManager.default.fileExists(atPath: storage.path) {
             try FileManager.default.removeItem(at: storage)
         }
+        try await super.tearDown()
     }
 
     func testEveryBloomSceneBloomsLikeWE() throws {
@@ -211,6 +214,7 @@ final class BloomLibrarySweepTests: XCTestCase {
     }
 
     /// A content on one offscreen view, its clock stepped 1/60 s per draw.
+    @MainActor
     private final class Scene {
         let renderer: SceneMetalRenderer
         let view: MTKView

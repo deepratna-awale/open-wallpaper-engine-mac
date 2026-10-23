@@ -14,19 +14,22 @@ import Darwin
 /// Only runs when asked: `OWE_TEXTURE_BENCH` (`TEST_RUNNER_OWE_TEXTURE_BENCH`) lists workshop ids in
 /// the library (`OWE_LIBRARY`). `OWE_TEXTURE_BENCH_SIZE` is the drawable (default 1920x1080).
 /// Particle systems are drawn unless `OWE_TEXTURE_BENCH_PARTICLES` is 0.
+@MainActor
 final class SceneTextureLoadBenchmarkTests: XCTestCase {
     private static let warmFrames = 150
     private static let comparedFrames = [0, 30, 59]
     private var storage: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         storage = FileManager.default.temporaryDirectory.appending(path: "owe-texture-bench-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let storage, FileManager.default.fileExists(atPath: storage.path) {
             try FileManager.default.removeItem(at: storage)
         }
+        try await super.tearDown()
     }
 
     func testTextureLoadCost() throws {

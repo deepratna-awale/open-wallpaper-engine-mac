@@ -5,16 +5,19 @@ import MetalKit
 /// WE's MSAA setting (`msaa`: none, x2, x4, x8; none is WE's default): the scene pass draws into a
 /// multisampled target and resolves into `_rt_FullFrameBuffer` (`wallpaper64.exe` 0x140181dcc,
 /// 0x140183550, 0x1400d3310). The fixture is a white square turned 0.3 rad on black.
+@MainActor
 final class SceneMSAATests: XCTestCase {
     private static let size = SIMD2(480, 272)
     private var directory: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         directory = Fixtures.url("Scenes/msaa")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let directory { Fixtures.removeStoredSettings(for: directory) }
+        try await super.tearDown()
     }
 
     /// WE's default is none, stored under WE's own key; a value saved under the old key (while the

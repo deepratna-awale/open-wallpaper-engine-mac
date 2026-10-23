@@ -15,6 +15,7 @@ import simd
 ///   frame's inputs and encode per system.
 /// - frame: whole `SceneMetalRenderer` frames of the particle systems alone (drawn through their
 ///   materials) at 1920×1080, less a frame of an empty scene: GPU and CPU time.
+@MainActor
 final class ParticleLibraryBenchmarkTests: XCTestCase {
     private struct Row {
         var id: String

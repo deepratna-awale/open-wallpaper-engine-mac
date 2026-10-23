@@ -4,17 +4,20 @@ import XCTest
 
 /// WE's "Video loading" (`videoreadmode`: `fromdisk`, the default, or `frommemory`): in memory,
 /// the file is read once and the player items read it through `MemoryVideoLoader`.
+@MainActor
 final class VideoFileSourceTests: XCTestCase {
     private var directory: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         directory = FileManager.default.temporaryDirectory.appending(path: "VideoFileSourceTests-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let directory, FileManager.default.fileExists(atPath: directory.path) {
             try FileManager.default.removeItem(at: directory)
         }
+        try await super.tearDown()
     }
 
     func testTheSettingIsWEsAndFromDiskByDefault() throws {

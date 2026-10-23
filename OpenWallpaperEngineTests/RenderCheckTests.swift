@@ -5,6 +5,7 @@ import MetalKit
 /// Headless checks that the scene pipeline actually produces what WE content needs. Known gaps are
 /// recorded with XCTExpectFailure (strict), so fixing one makes its test fail until the expectation
 /// is removed, and the gap can't be forgotten.
+@MainActor
 final class RenderCheckTests: XCTestCase {
     func testLoaderKeepsEveryVisibleLayer() throws {
         _ = try Fixtures.assets()

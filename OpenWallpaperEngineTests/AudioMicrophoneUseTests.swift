@@ -225,8 +225,11 @@ private final class ReferenceResampler {
 /// Counts heap allocations on the calling thread (`malloc_logger`, the hook malloc stack logging uses).
 private enum AllocationCounter {
     private typealias Logger = @convention(c) (UInt32, UInt, UInt, UInt, UInt, UInt32) -> Void
-    private static var counted = 0
-    private static var thread: pthread_t?
+    // malloc's hook can't take a lock (it would allocate or re-enter), so these are unguarded:
+    // `thread` is set before the hook is installed and cleared after it is removed, and only
+    // that thread's callbacks touch `counted`, which `count` reads once the hook is gone.
+    nonisolated(unsafe) private static var counted = 0
+    nonisolated(unsafe) private static var thread: pthread_t?
     /// `MALLOC_LOG_TYPE_ALLOCATE`.
     private static let allocate: UInt32 = 2
     private static let logger: Logger = { type, _, _, _, _, _ in

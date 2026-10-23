@@ -95,11 +95,12 @@ private final class PlayingFramework: NowPlayingFramework {
 
     func register(on queue: DispatchQueue) {}
     func unregister() {}
-    func nowPlayingInfo(on queue: DispatchQueue, _ handler: @escaping ([String: Any]) -> Void) {
-        let info = self.info
+    func nowPlayingInfo(on queue: DispatchQueue, _ handler: @escaping @Sendable ([String: Any]) -> Void) {
+        // A copy, never mutated after init.
+        nonisolated(unsafe) let info = self.info
         queue.async { handler(info) }
     }
-    func isPlaying(on queue: DispatchQueue, _ handler: @escaping (Bool) -> Void) {
+    func isPlaying(on queue: DispatchQueue, _ handler: @escaping @Sendable (Bool) -> Void) {
         queue.async { handler(true) }
     }
 }

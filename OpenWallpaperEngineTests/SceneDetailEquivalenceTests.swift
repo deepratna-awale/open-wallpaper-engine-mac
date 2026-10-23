@@ -16,19 +16,22 @@ import simd
 /// app draws Your Display; `half`; joined with `+`, e.g. `match+your-display`). Particle systems are left out: two renderers' GPU simulations
 /// don't draw the same particles. Frames, and an amplified difference, are written under
 /// `OWE_SCENE_DETAIL_OUT` when set.
+@MainActor
 final class SceneDetailEquivalenceTests: XCTestCase {
     private static let warmFrames = 240
     private static let comparedFrames = [0, 45]
     private var storage: URL!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
+        try await super.setUp()
         storage = FileManager.default.temporaryDirectory.appending(path: "owe-detail-\(UUID().uuidString)")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         if let storage, FileManager.default.fileExists(atPath: storage.path) {
             try FileManager.default.removeItem(at: storage)
         }
+        try await super.tearDown()
     }
 
     struct Difference {

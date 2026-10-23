@@ -18,6 +18,7 @@ final class ModelMaterialSweepTests: XCTestCase {
         var failures: [String] = []
     }
 
+    @MainActor
     func testEveryLibraryModelMeshBuildsAPipelineAndDraws() throws {
         let assets = ShaderVariantTests.weAssets
         let library = LibrarySweepTests.libraryRoot

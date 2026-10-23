@@ -162,25 +162,25 @@ final class ParticleProgramTests: XCTestCase {
 
     func testTwoOperatorsOfAKindBothApplyInOrder() throws {
         let plain = try XCTUnwrap(burst(age: 0.5).first)
-        let both = try XCTUnwrap(burst(age: 0.5) {
+        let both = try XCTUnwrap(burst(age: 0.5, {
             $0.operators = [ParticleOperator(.sizeChange, a: SIMD4(1, 3, 0, 1)), ParticleOperator(.sizeChange, a: SIMD4(1, 0.5, 0, 1))]
-        }.first)
+        }).first)
         XCTAssertEqual(both.size, plain.baseSize * 2 * 0.75, accuracy: 1e-4, "both multiply the base size")
     }
 
     func testAlphaFadeUsesFractionsOfTheLife() throws {
         for (age, expected) in [(0.25, 0.5), (0.5, 1), (0.75, 0.5)] as [(Float, Float)] {
-            let particle = try XCTUnwrap(burst(age: age) {
+            let particle = try XCTUnwrap(burst(age: age, {
                 $0.operators = [ParticleOperator(.alphaFade, a: SIMD4(0.5, 0.5, 0, 0))]
-            }.first)
+            }).first)
             XCTAssertEqual(particle.alpha, expected, accuracy: 1e-4, "age \(age)")
         }
     }
 
     func testOscillationsDrawEachParticlesOwnRandom() {
-        let particles = burst(count: 3, age: 0.3) {
+        let particles = burst(count: 3, age: 0.3, {
             $0.operators = [ParticleOperator(.oscillateAlpha, b: SIMD4(1, 10, 0, 6.28), c: SIMD4(0, 1, 0, 0))]
-        }
+        })
         XCTAssertEqual(particles.count, 3)
         XCTAssertTrue(particles.allSatisfy { $0.alpha <= 1 + 1e-5 }, "the random scales the swing")
         XCTAssertEqual(Set(particles.map(\.alpha)).count, 3, "not the middle of the range for all")
@@ -198,9 +198,9 @@ final class ParticleProgramTests: XCTestCase {
         XCTAssertEqual(record.a.x, minimum.x, accuracy: 1e-5)
         XCTAssertEqual(record.b.x, maximum.x, accuracy: 1e-5)
         let count: Int = 400
-        let particles = burst(count: count, age: 0) {
+        let particles = burst(count: count, age: 0, {
             $0.initializers = [colorRandom]
-        }
+        })
         XCTAssertEqual(particles.count, count)
         var sum = SIMD3<Float>.zero
         for particle in particles {
@@ -219,9 +219,9 @@ final class ParticleProgramTests: XCTestCase {
     }
 
     func testHSVColorRandomPicksHueSteps() {
-        let particles = burst(count: 200, age: 0) {
+        let particles = burst(count: 200, age: 0, {
             $0.initializers = [ParticleInitializer(.hsvColorRandom, a: SIMD4(0, 1.0 / 6.0, 6, 0), b: SIMD4(1, 1, 1, 1))]
-        }
+        })
         XCTAssertEqual(particles.count, 200)
         var hues: Set<[Float]> = []
         for particle in particles {
@@ -261,7 +261,7 @@ final class ParticleProgramTests: XCTestCase {
         let records = ParticleInitializer.encoded([initializer], records: [initializer.record])
         XCTAssertEqual(records.count, 2, "one colour record holds the six past the fourth")
         XCTAssertEqual(records[0].header.w, 1)
-        let particles = burst(count: 400, age: 0) { $0.initializers = [initializer] }
+        let particles = burst(count: 400, age: 0, { $0.initializers = [initializer] })
         XCTAssertEqual(particles.count, 400)
         var seen: Set<Int> = []
         for particle in particles {
@@ -284,7 +284,7 @@ final class ParticleProgramTests: XCTestCase {
                                                          + #""outputrangemin": 0, "outputrangemax": 1"# + flags + "}")
             let remap = try XCTUnwrap(ParticleOperatorBuilder.make(element, defaults: ParticleDefaults(pixelUnits: true),
                                                                    sceneSize: SIMD2(100, 100), path: "t"))
-            let particle = try XCTUnwrap(burst(age: 0.75) { $0.operators = [remap] }.first)
+            let particle = try XCTUnwrap(burst(age: 0.75, { $0.operators = [remap] }).first)
             XCTAssertEqual(particle.size, particle.baseSize * factor, accuracy: 1e-3, "flags\(flags)")
         }
     }
@@ -327,7 +327,7 @@ final class ParticleProgramTests: XCTestCase {
         let element: WEParticleInitializer = try decode(#"{"name":"remapinitialvalue"}"#)
         let remap = try XCTUnwrap(ParticleInitializerBuilder.make(element, defaults: ParticleDefaults(pixelUnits: true), path: "t"))
         let plain = try XCTUnwrap(burst(age: 0, lifetime: 0.25).first)
-        let remapped = try XCTUnwrap(burst(age: 0, lifetime: 0.25) { $0.initializers = [remap] }.first)
+        let remapped = try XCTUnwrap(burst(age: 0, lifetime: 0.25, { $0.initializers = [remap] }).first)
         XCTAssertEqual(remapped.baseSize, plain.baseSize * 0.25, accuracy: 1e-4)
     }
 
