@@ -108,19 +108,37 @@ archive between runs (`.github/actions/shader-cache`). Those hold MSL translated
 Engine's shaders, so they are cached the same way: one archive, encrypted with
 `OWE_ASSET_CACHE_KEY`, never plaintext.
 
-The key is the `OWE_ASSET_CACHE_KEY` secret in the `steam-ci` environment. Only the steps that
+The key is the `OWE_ASSET_CACHE_KEY` secret in the `steam-ci` environment, with the same value in `asset-tests-pr` (pull requests from others). Its value is never stored anywhere else, so it can only be rotated, not copied: set both environments together. Only the steps that
 decrypt or encrypt get it, through `-pass env:`, so it is never on a command line or in the log.
 The cache itself holds nothing but ciphertext: a pull request or a fork can restore the file, but
-without the key it can't read it. To set or rotate the key (a rotation just makes the next run
-download and re-save):
+without the key it can't read it. To set or rotate the key, set it in both environments, then
+delete the caches encrypted with the old key: their names don't depend on the key, so the next
+run would hit them and fail to decrypt. The next main run then downloads the assets once and saves
+them under the new key.
 
 ```sh
-openssl rand -base64 48 | gh secret set OWE_ASSET_CACHE_KEY --env steam-ci
+KEY=$(openssl rand -base64 48)
+printf %s "$KEY" | gh secret set OWE_ASSET_CACHE_KEY --env steam-ci
+printf %s "$KEY" | gh secret set OWE_ASSET_CACHE_KEY --env asset-tests-pr
+unset KEY
+gh cache list --limit 100 --json key --jq '.[].key | select(test("^(we-assets-enc|shader-cache-enc)-"))' \
+  | xargs -n1 gh cache delete
 ```
 
 Contributors run the asset tests locally with `OWE_ASSETS` (see Local use).
 
 `OWE_LIBRARY` stays unset in both jobs, so the library-gated tests skip.
+
+## Pull requests from other people
+
+CI's asset jobs run on main only, because GitHub gives `pull_request` runs from forks and bots no
+secrets. For someone else's PR, review its diff, then start **Actions › Asset tests (PR) › Run
+workflow** from main with the PR number (`.github/workflows/asset-tests-pr.yml`). The PR builds
+in a job with no secrets. The four test shards wait in the `asset-tests-pr` environment for the
+maintainer's approval. That environment holds only `OWE_ASSET_CACHE_KEY`, never the Steam
+account: the shards restore the existing encrypted cache and never fill or save it. Their actions
+and scripts come from main, and the PR arrives as its built test bundle. Approving runs the PR's
+tests with the assets on disk, so approve only a diff you have read.
 
 ## Local use
 
