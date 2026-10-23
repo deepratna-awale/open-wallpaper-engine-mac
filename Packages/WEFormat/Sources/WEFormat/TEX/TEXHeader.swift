@@ -13,7 +13,7 @@ import Foundation
 ///
 /// A volume (TEXI flag 0x40, `TEXVolume`) has a depth word after the image height, and so does
 /// each of its mipmaps.
-public struct TEXHeader: Equatable {
+public struct TEXHeader: Equatable, Sendable {
     /// The TEXI flag of a volume texture, whose header and mipmaps carry a depth word.
     public static let volumeFlag: UInt32 = 0x40
 

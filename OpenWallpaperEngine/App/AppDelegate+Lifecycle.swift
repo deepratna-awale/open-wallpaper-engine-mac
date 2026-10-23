@@ -101,7 +101,7 @@ extension AppDelegate {
 
         // Local wallpapers get their stable settings ids once, before any of them is edited.
         let libraries = [FileManager.default.wallpapersDirectory] + LibraryFolders().folders
-        DispatchQueue.global(qos: .utility).async {
+        DispatchQueue.global(qos: .utility).async { [weak self] in
             LocalWallpaperIdentities.registerLibrary(libraries)
             WallpaperPackageConverter.convertInstalledLibrary()
             if UserDefaults.app.bool(forKey: "ReclaimOriginalPackages") {
@@ -175,8 +175,9 @@ extension AppDelegate {
     func observeWindowsOpenedAfterScreenSaverLaunch() {
         windowOpenedObserver = NotificationCenter.default.addObserver(forName: NSWindow.didBecomeKeyNotification, object: nil,
                                                                       queue: .main) { [weak self] note in
+            let window = note.object as? NSWindow
             MainActor.assumeIsolated {
-                guard let self, let window = note.object as? NSWindow, window.styleMask.contains(.titled),
+                guard let self, let window, window.styleMask.contains(.titled),
                       !(window is NSPanel) else { return }
                 self.quitsAfterScreenSaver = false
                 self.screenSaverQuitTimer?.invalidate()

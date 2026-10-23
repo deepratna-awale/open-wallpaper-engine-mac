@@ -1,18 +1,20 @@
 import Foundation
 
-enum ShaderStage: String, CaseIterable {
+enum ShaderStage: String, CaseIterable, Sendable {
     case vertex = "vert"
     case fragment = "frag"
 }
 
 /// `// [COMBO] {"combo":"MASK","default":0,...}`: a preprocessor switch the shader declares.
-struct ShaderComboDeclaration: Equatable {
+struct ShaderComboDeclaration: Equatable, Sendable {
     let name: String
     let defaultValue: Int
 }
 
 /// A `uniform` declaration and its trailing `// {...}` annotation.
-struct ShaderUniformDeclaration {
+/// Unchecked: `annotation` is JSONSerialization output (strings, numbers, arrays, dictionaries),
+/// set once when the source is parsed and never mutated.
+struct ShaderUniformDeclaration: @unchecked Sendable {
     let type: String
     let name: String
     let arrayCount: Int?
@@ -82,7 +84,7 @@ extension ShaderUniformDeclaration {
 }
 
 /// One WE shader stage with its includes inlined and its declarations parsed.
-struct ShaderSource {
+struct ShaderSource: Sendable {
     let stage: ShaderStage
     /// Relative path as WE names it, e.g. `shaders/effects/shake.frag`.
     let path: String
@@ -106,7 +108,7 @@ struct ShaderSource {
 }
 
 /// Holds one source's prelude analysis. Thread-safe: `lock` owns `analysis`.
-private final class PreludeAnalysisCache {
+private final class PreludeAnalysisCache: @unchecked Sendable {
     private let lock = NSLock()
     private var analysis: ShaderPrelude.SourceAnalysis?
 

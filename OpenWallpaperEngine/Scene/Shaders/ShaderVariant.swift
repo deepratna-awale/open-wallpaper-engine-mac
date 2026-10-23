@@ -49,7 +49,9 @@ enum ShaderVariantError: Error, CustomStringConvertible {
 ///
 /// Variants are compiled lazily: scenes reference a few hundred (shader, combo) pairs out of
 /// hundreds of thousands possible, so nothing is precompiled.
-final class ShaderVariantTranslator {
+/// Unchecked: its stored properties are `let`s set at init; `lock` owns `memory`, and `sources`
+/// (`ShaderSourceMemo`) is thread-safe. Materials are planned through it from several queues.
+final class ShaderVariantTranslator: @unchecked Sendable {
     /// Bump whenever translated output for the same input can change.
     static let revision = 17
 

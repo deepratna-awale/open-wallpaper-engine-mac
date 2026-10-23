@@ -90,7 +90,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate, NSMenuItemVal
             wallpaperID: SceneScriptStorageKey.key(forWallpaperDirectory: wallpaper.wallpaperDirectory))
         self.scriptConsole = scriptConsole
         consoleToken = SceneScriptConsoleTap.listen(to: scriptConsole.wallpaperID) { [weak scriptConsole] line in
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak scriptConsole] in
                 MainActor.assumeIsolated {
                     scriptConsole?.append(level: line.isError ? .error : .log, message: line.message,
                                           scriptID: line.scriptID, line: line.line)

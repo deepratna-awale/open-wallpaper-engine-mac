@@ -115,14 +115,19 @@ final class OutputOnlyAudioDevice: @unchecked Sendable {
     private func defaultOutputDidChange() {
         guard let id = deviceID else { return make() }
         guard let outputUID = Self.defaultOutputUID() else { return }
-        var list = [outputUID] as CFArray
+        // Core Audio takes a pointer to the CF reference itself.
+        let list = [outputUID] as CFArray
         var listAddress = AudioObjectPropertyAddress(mSelector: kAudioAggregateDevicePropertyFullSubDeviceList,
                                                      mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
-        let listStatus = AudioObjectSetPropertyData(id, &listAddress, 0, nil, UInt32(MemoryLayout<CFArray>.size), &list)
-        var main = outputUID as CFString
+        let listStatus = withUnsafePointer(to: list) {
+            AudioObjectSetPropertyData(id, &listAddress, 0, nil, UInt32(MemoryLayout<CFArray>.size), $0)
+        }
+        let main = outputUID as CFString
         var mainAddress = AudioObjectPropertyAddress(mSelector: kAudioAggregateDevicePropertyMainSubDevice,
                                                      mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
-        let mainStatus = AudioObjectSetPropertyData(id, &mainAddress, 0, nil, UInt32(MemoryLayout<CFString>.size), &main)
+        let mainStatus = withUnsafePointer(to: main) {
+            AudioObjectSetPropertyData(id, &mainAddress, 0, nil, UInt32(MemoryLayout<CFString>.size), $0)
+        }
         if listStatus == noErr, mainStatus == noErr {
             OWELog.info(.audio, "Output device: wallpaper sound follows the default output device to \(outputUID).")
         } else {

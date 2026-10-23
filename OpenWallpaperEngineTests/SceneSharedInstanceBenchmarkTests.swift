@@ -85,7 +85,7 @@ final class SceneSharedInstanceBenchmarkTests: XCTestCase {
                             services: SceneScriptServices) throws -> Measure {
         let views = sizes.map { view($0, device: device) }
         let renderers = try views.enumerated().map { index, view in
-            try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "bench\(index)"))
+            try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: services, screenID: "bench\(index)") })
         }
         for (renderer, view) in zip(renderers, views) {
             view.isPaused = true
@@ -110,7 +110,7 @@ final class SceneSharedInstanceBenchmarkTests: XCTestCase {
         let views = sizes.map { view($0, device: device) }
         let renderer = try XCTUnwrap(SceneMetalRenderer(pixelFormat: .bgra8Unorm, scriptServices: services, screenID: "bench"))
         for view in views {
-            renderer.configure(view)
+            MainActor.assumeIsolated { renderer.configure(view) }
             view.isPaused = true
         }
         renderer.setPlacement(.fill)

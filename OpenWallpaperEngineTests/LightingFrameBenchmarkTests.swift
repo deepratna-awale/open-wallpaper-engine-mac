@@ -73,7 +73,7 @@ final class LightingFrameBenchmarkTests: XCTestCase {
                         view.framebufferOnly = false
                         view.autoResizeDrawable = false
                         view.drawableSize = CGSize(width: size.x, height: size.y)
-                        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "bench"))
+                        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: services, screenID: "bench") })
                         view.isPaused = true
                         renderer.renderSettings = mode.settings
                         renderer.setPlacement(.stretch)

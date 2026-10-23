@@ -458,7 +458,8 @@ final class VolumetricsLibraryTests: XCTestCase {
             let services = SceneScriptServices(prelude: SceneScriptPrelude.load(),
                                                storage: SceneScriptStorage(directory: scripts),
                                                media: SceneScriptReplayMediaSource(), spectrum: { .silent })
-            renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "volumetrics"))
+            let mtkView: MTKView = view // a local: the closure may not capture self before init completes
+            renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: mtkView, scriptServices: services, screenID: "volumetrics") })
             view.isPaused = true
             renderer.setPlacement(.stretch)
             renderer.scripts.frameWait = 5

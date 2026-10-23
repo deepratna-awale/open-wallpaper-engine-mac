@@ -12,7 +12,7 @@ enum WallpaperPackageConverter {
 
     /// For each converter version, which bundles made by an earlier version it changes. A stale
     /// bundle no newer rule matches is only stamped current. Add an entry with every bump.
-    static let versionRules: [Int: (Manifest, URL) -> Bool] = [
+    static let versionRules: [Int: @Sendable (Manifest, URL) -> Bool] = [
         // Version 3 extracts the `workshop/<id>/` asset-pack files version 2 left in the package.
         // Manifests from before the field was recorded are checked against the files themselves.
         3: { manifest, directory in

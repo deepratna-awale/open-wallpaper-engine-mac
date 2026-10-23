@@ -51,7 +51,7 @@ final class SceneStartFrameTests: XCTestCase {
         view.colorPixelFormat = .bgra8Unorm
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: 256, height: 128)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "start-frame"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "start-frame") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         var now: CFTimeInterval = 1000

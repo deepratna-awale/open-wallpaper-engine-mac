@@ -95,7 +95,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// Launched by the screen saver's broker for a saver showing while the app wasn't running
     /// (`ScreenSaverLiveNames.launchArgument`): no window and no Dock icon until that screen saver
     /// session ends or a window opens.
-    internal(set) var launchedForScreenSaver = ProcessInfo.processInfo.arguments.contains(ScreenSaverLiveNames.launchArgument)
+    var launchedForScreenSaver = ProcessInfo.processInfo.arguments.contains(ScreenSaverLiveNames.launchArgument)
     /// Sparkle, off in builds without an update signing key (`Core/Updates`).
     lazy var updater = AppUpdater(configuration: .main)
     /// The system's now-playing session, one for the process (MediaRemote registers per process):

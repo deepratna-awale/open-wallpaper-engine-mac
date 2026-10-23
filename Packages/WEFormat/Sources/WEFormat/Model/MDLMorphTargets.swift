@@ -3,11 +3,11 @@ import Foundation
 /// One mesh's morph targets (blend shapes) from the `MDMP0001` section (docs/models-plan.md
 /// §1.5). No library file has the section; the layout is the reader's and the writer's, and WE's
 /// editor wrote one for docs/test-risks.md MG5.
-public struct MDLMorphTargets: Equatable {
-    public struct Target: Equatable {
+public struct MDLMorphTargets: Equatable, Sendable {
+    public struct Target: Equatable, Sendable {
         /// The writer's `modifierbone`, `modifiermode`, `modifierstartdistance` and
         /// `modifierenddistance` (mesh flag 0x2000, `MORPHING_MODIFIERS`).
-        public struct Modifier: Equatable {
+        public struct Modifier: Equatable, Sendable {
             public var bone: UInt32
             public var mode: UInt32
             public var startDistance: Float

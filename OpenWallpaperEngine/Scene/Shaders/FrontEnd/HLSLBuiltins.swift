@@ -5,7 +5,7 @@ import Foundation
 /// to one type (scalars splat, wider vectors truncate, ints convert), where GLSL's overloads want
 /// the arguments to match.
 enum HLSLBuiltins {
-    enum Rule {
+    enum Rule: Sendable {
         /// Every argument is brought to one type, which is the result. `scalarParameters` may stay
         /// scalars where the others are vectors (GLSL has those overloads); `keepsIntegers`
         /// functions stay integer when every argument is.
@@ -31,7 +31,7 @@ enum HLSLBuiltins {
         case transpose
     }
 
-    enum SampleResult {
+    enum SampleResult: Sendable {
         case color
         case size
     }

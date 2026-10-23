@@ -3,9 +3,9 @@ import simd
 /// The `MDLS` section, versions 1–4 (docs/models-plan.md §1.3): the bones, then (version 2 and
 /// later) links, bind matrices, constraints, u32-keyed maps, IK sets and per-bone blocks. Every
 /// library file with version 2 or later has links, constraints, maps and IK sets empty.
-public struct MDLSkeleton: Equatable {
+public struct MDLSkeleton: Equatable, Sendable {
     /// A "link" record (0x80 bytes at model+0x78; the writer's `controllers` [I]).
-    public struct Link: Equatable {
+    public struct Link: Equatable, Sendable {
         public var name: String
         public var bone: UInt32
         /// 0 or 1: which of WE's two bone → link maps it goes in.
@@ -22,7 +22,7 @@ public struct MDLSkeleton: Equatable {
 
     /// A constraint: Puppet Warp's blend rule (the editor's `blendrules`; WE 2.8's capture 533,
     /// docs/models-plan.md §2.15; `SceneBlendRules`), unless the bone has flag 0x2.
-    public struct Constraint: Equatable {
+    public struct Constraint: Equatable, Sendable {
         public var bone: UInt32
         /// The weight the clips key: the index of the clips' constraint track.
         public var a: UInt32
@@ -46,7 +46,7 @@ public struct MDLSkeleton: Equatable {
     }
 
     /// One `u32 key → 12 bytes` entry of the maps WE keeps at model+0xf0 [?].
-    public struct MapEntry: Equatable {
+    public struct MapEntry: Equatable, Sendable {
         public var key: UInt32
         public var value: SIMD3<Float>
 
@@ -56,8 +56,8 @@ public struct MDLSkeleton: Equatable {
         }
     }
 
-    public struct IKSet: Equatable {
-        public struct Joint: Equatable {
+    public struct IKSet: Equatable, Sendable {
+        public struct Joint: Equatable, Sendable {
             public var bone: UInt32
             /// Bit 2 sets the IK set's flag at +0x38.
             public var flags: UInt32
@@ -74,7 +74,7 @@ public struct MDLSkeleton: Equatable {
             }
         }
 
-        public struct Element: Equatable {
+        public struct Element: Equatable, Sendable {
             public var bone: UInt32
             public var joints: [Joint]
 
@@ -97,7 +97,7 @@ public struct MDLSkeleton: Equatable {
     }
 
     /// The optional per-bone `{vec3, mat4}` block (model+0x1a0) [?].
-    public struct BoneVector: Equatable {
+    public struct BoneVector: Equatable, Sendable {
         public var vector: SIMD3<Float>
         public var matrix: simd_float4x4
 

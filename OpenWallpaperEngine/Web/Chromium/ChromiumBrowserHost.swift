@@ -2,7 +2,7 @@ import Foundation
 import Metal
 
 /// What a browser reports back to the page object that owns it.
-protocol ChromiumBrowserClient: AnyObject {
+protocol ChromiumBrowserClient: AnyObject, Sendable {
     /// A painted frame (XPC's queue).
     func chromiumFrame(_ frame: ChromiumFrame)
     /// The page called `__owePost(name, body)`; `body` is JSON (main thread).
@@ -120,11 +120,12 @@ final class ChromiumBrowserHost: NSObject, ChromiumBrowserHostProtocol, @uncheck
         }
     }
 
-    /// Opens a browser for `client` and returns its number at once; `completion` gets nil when the
-    /// browser exists, else the reason (main thread).
+    /// Opens a browser for `client` and returns its number at once; `completion` gets that number
+    /// and nil when the browser exists, else the reason (main thread).
     @discardableResult
     func openBrowser(for client: ChromiumBrowserClient, url: URL, width: Int, height: Int, scale: Double,
-                     frameRate: Int, startScript: String, completion: @escaping (String?) -> Void) -> Int {
+                     frameRate: Int, startScript: String,
+                     completion: @escaping @MainActor @Sendable (_ id: Int, _ error: String?) -> Void) -> Int {
         let id: Int = lock.withLock {
             let id = nextId
             nextId += 1
@@ -132,9 +133,9 @@ final class ChromiumBrowserHost: NSObject, ChromiumBrowserHostProtocol, @uncheck
             idleGeneration += 1
             return id
         }
-        let fail: (String) -> Void = { [weak self] reason in
+        let fail: @Sendable (String) -> Void = { [weak self] reason in
             self?.forget(id)
-            DispatchQueue.main.async { completion(reason) }
+            DispatchQueue.main.async { completion(id, reason) }
         }
         guard let engine = engine() else {
             fail("The Chromium engine isn't installed")
@@ -162,7 +163,7 @@ final class ChromiumBrowserHost: NSObject, ChromiumBrowserHostProtocol, @uncheck
             }
             helper.createBrowser(id, url: url.absoluteString, width: width, height: height, scale: scale,
                                  frameRate: frameRate, startScript: startScript) { error in
-                if let error { fail(error) } else { DispatchQueue.main.async { completion(nil) } }
+                if let error { fail(error) } else { DispatchQueue.main.async { completion(id, nil) } }
             }
         }
         return id

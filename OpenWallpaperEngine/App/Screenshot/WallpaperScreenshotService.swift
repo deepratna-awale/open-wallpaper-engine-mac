@@ -160,7 +160,7 @@ extension AppDelegate {
             window: { [unowned self] in wallpaperWindows[$0] })
         Task {
             do {
-                try await service.take(on: screen)
+                _ = try await service.take(on: screen)
             } catch {
                 OWELog.error(.app, "Screenshot failed: \(error.localizedDescription)")
                 NSSound.beep()

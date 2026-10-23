@@ -3,6 +3,7 @@ import Foundation
 /// A saver process's way to the app's live frames: the `.saver`'s global surfaces and Darwin
 /// notifications (`GlobalSurfaceFrameSource`) or the extension's XPC connection. One per process,
 /// shared by its views (`LiveSaverPresenter`). Main thread.
+@MainActor
 protocol LiveFrameSource: AnyObject {
     var store: LiveFrameStore { get }
     /// A view started showing (not a preview: previews never make the app draw).

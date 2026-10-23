@@ -111,7 +111,7 @@ final class EffectPaddedImagePlacementTests: XCTestCase {
         view.framebufferOnly = false
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: size.x, height: size.y)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "padded-effect"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "padded-effect") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.setPlacement(placement)

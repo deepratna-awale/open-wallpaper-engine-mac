@@ -91,6 +91,7 @@ final class SceneRenderLoop {
     /// Main: a view for `attach`, its own timer stopped from the start. An `MTKView` starts its
     /// timer when it is made and draws from it on the main thread; one tick left over while the
     /// render thread already draws would draw the scene on both.
+    @MainActor
     static func makeView(frame: CGRect = .zero) -> MTKView {
         let view = MTKView(frame: frame)
         view.isPaused = true
@@ -100,6 +101,7 @@ final class SceneRenderLoop {
 
     /// Main: `view` shows the scene from now on, drawn by its own display link (which follows it
     /// across screens) on the render thread. The view's own timer is stopped.
+    @MainActor
     func attach(_ id: ObjectIdentifier, view: MTKView, state: DisplayState) {
         let link = view.displayLink(target: SceneDisplayTicker(view: view), selector: #selector(SceneDisplayTicker.tick(_:)))
         view.isPaused = true
@@ -378,9 +380,13 @@ final class SceneRenderLoop {
         let driver = schedule.driver
         let ordered = displayOrder.filter { $0 == driver } + displayOrder.filter { $0 != driver }
         return ordered.compactMap { id -> SceneViewport? in
+            // The drawable's size from the view's layer (any thread may read it), not the
+            // main-actor view: `MTKView.draw()`, which the link sends, hands the view's
+            // `drawableSize` to the layer before its delegate draws. `attach` took its snapshot.
             guard let display = displays[id], !display.frozen, let view = display.view,
-                  view.drawableSize.width > 0, view.drawableSize.height > 0 else { return nil }
-            return SceneViewport(view)
+                  let drawable = SceneViewSnapshots.snapshot(of: view)?.layer?.drawableSize,
+                  drawable.width > 0, drawable.height > 0 else { return nil }
+            return SceneViewport(view, drawableSize: SIMD2(Float(drawable.width), Float(drawable.height)))
         }
     }
 }
@@ -410,8 +416,13 @@ private final class SceneDisplayTicker: NSObject {
         self.view = view
     }
 
+    /// `MTKView.draw()`, which MetalKit runs on any thread while the view is paused with
+    /// `enableSetNeedsDisplay` off (`SceneRenderLoop.makeView`); AppKit's annotations make it
+    /// main-actor only, so the render thread sends it as a message.
+    private static let draw = NSSelectorFromString("draw")
+
     /// Render thread: draws the view, which calls its delegate's `draw(in:)`.
     @objc func tick(_ link: CADisplayLink) {
-        view?.draw()
+        _ = view?.perform(Self.draw)
     }
 }

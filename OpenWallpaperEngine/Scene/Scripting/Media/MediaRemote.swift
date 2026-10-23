@@ -59,7 +59,7 @@ struct MediaRemote: NowPlayingFramework {
         unregisterFunction()
     }
 
-    func nowPlayingInfo(on queue: DispatchQueue, _ handler: @escaping ([String: Any]) -> Void) {
+    func nowPlayingInfo(on queue: DispatchQueue, _ handler: @escaping @Sendable ([String: Any]) -> Void) {
         getNowPlayingInfo(queue) { [self] dictionary in
             let info = (dictionary as? [String: Any]) ?? [:]
             let hasArtwork = [Key.artworkData, Key.artworkIdentifier, Key.artworkMIMEType].contains { info[$0] != nil }
@@ -76,7 +76,7 @@ struct MediaRemote: NowPlayingFramework {
         }
     }
 
-    func isPlaying(on queue: DispatchQueue, _ handler: @escaping (Bool) -> Void) {
+    func isPlaying(on queue: DispatchQueue, _ handler: @escaping @Sendable (Bool) -> Void) {
         getIsPlaying(queue) { playing in handler(playing) }
     }
 

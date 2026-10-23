@@ -33,15 +33,18 @@ final class WorkshopStorageTests: XCTestCase {
         steamCmd = FakeSteamCmd()
         let storage = storage!
         dependencyIndex = WorkshopDependencyIndex(libraryDirectory: { storage.url })
-        downloadedIndex = DownloadedWallpaperIndex(defaults: defaults, libraryDirectory: { storage.url })
-        service = SteamCmdService(dependencyIndex: dependencyIndex, runner: steamCmd,
-                                  storageDirectory: { try WallpaperStorage.availableDirectory(storage.url) },
-                                  previewCacheRoot: previewCache, downloadedIndex: downloadedIndex,
-                                  presentPreview: { [weak self] in self?.presented.append($0) },
-                                  restoresSession: false)
-        service.steamCmdPath = "/fake/steamcmd"
-        service.steamUsername = "tester"
-        service.isLoggedIn = true
+        // XCTest calls setUp on the main thread; the index and service are main-actor types.
+        MainActor.assumeIsolated {
+            downloadedIndex = DownloadedWallpaperIndex(defaults: defaults, libraryDirectory: { storage.url })
+            service = SteamCmdService(dependencyIndex: dependencyIndex, runner: steamCmd,
+                                      storageDirectory: { try WallpaperStorage.availableDirectory(storage.url) },
+                                      previewCacheRoot: previewCache, downloadedIndex: downloadedIndex,
+                                      presentPreview: { [weak self] in self?.presented.append($0) },
+                                      restoresSession: false)
+            service.steamCmdPath = "/fake/steamcmd"
+            service.steamUsername = "tester"
+            service.isLoggedIn = true
+        }
     }
 
     override func tearDownWithError() throws {

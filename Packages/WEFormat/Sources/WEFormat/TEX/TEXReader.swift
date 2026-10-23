@@ -3,9 +3,9 @@ import Foundation
 /// Reads a `.tex` on from its header (`TEXHeader` has the layout): the words, strings and mipmap
 /// records after it. It only walks the bytes; decoding a mipmap is the caller's (the app's
 /// `TEXParser`).
-public struct TEXReader {
+public struct TEXReader: Sendable {
     /// One mipmap's record: its sizes and where its stored bytes are.
-    public struct Mipmap: Equatable {
+    public struct Mipmap: Equatable, Sendable {
         public var width: Int
         public var height: Int
         /// A volume's slice count (`TEXHeader.volumeFlag`).
@@ -82,7 +82,7 @@ public struct TEXReader {
 
 /// Writes a `.tex`: a header (`TEXHeader.data`), then each image's mipmap count and mipmap
 /// records, with whatever a caller adds between them (texture variants' patches).
-public struct TEXContainerWriter {
+public struct TEXContainerWriter: Sendable {
     public private(set) var data: Data
 
     public init(header: TEXHeader) {

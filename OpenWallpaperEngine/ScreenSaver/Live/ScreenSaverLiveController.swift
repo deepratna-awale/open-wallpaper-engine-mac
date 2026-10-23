@@ -446,7 +446,7 @@ final class ScreenSaverLiveController {
                     // Shut down once the still is drawn (the capture runs on its render thread).
                     self.pickStill?.timer.invalidate()
                     self.pickStill = nil
-                    scene.captureStill { image in
+                    scene.captureStill { [weak self] image in
                         DispatchQueue.main.async { [weak self] in
                             MainActor.assumeIsolated {
                                 scene.shutdown()

@@ -57,7 +57,8 @@ final class ChromiumFramePresenter: @unchecked Sendable { // `lock` guards the w
         blit.copy(from: frame.texture, to: drawable.texture)
         blit.endEncoding()
         // The surface stays referenced until the copy is done; the helper reuses it a few frames on.
-        commands.addCompletedHandler { _ in _ = frame.surface }
+        let surface = frame.surface
+        commands.addCompletedHandler { _ in _ = surface }
         commands.present(drawable)
         commands.commit()
     }

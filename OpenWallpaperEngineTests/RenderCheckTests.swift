@@ -45,7 +45,7 @@ final class RenderCheckTests: XCTestCase {
         view.framebufferOnly = false
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: size.x, height: size.y)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "zero-size-solid"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "zero-size-solid") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.setPlacement(.stretch)
@@ -92,7 +92,7 @@ final class RenderCheckTests: XCTestCase {
         view.framebufferOnly = false
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: size.x, height: size.y)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "solid-effect"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "solid-effect") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.setPlacement(.stretch)
@@ -138,7 +138,7 @@ final class RenderCheckTests: XCTestCase {
         view.framebufferOnly = false
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: size.x, height: size.y)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "solid-position-effect"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "solid-position-effect") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.setPlacement(.stretch)
@@ -187,7 +187,7 @@ final class RenderCheckTests: XCTestCase {
             view.framebufferOnly = false
             view.autoResizeDrawable = false
             view.drawableSize = CGSize(width: size.x, height: size.y)
-            let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "brightness"))
+            let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "brightness") })
             defer { renderer.releaseContent() }
             view.isPaused = true
             renderer.setPlacement(.stretch)
@@ -241,7 +241,7 @@ final class RenderCheckTests: XCTestCase {
         view.framebufferOnly = false
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: size.x, height: size.y)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "audio-bars"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "audio-bars") })
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.setPlacement(.stretch)

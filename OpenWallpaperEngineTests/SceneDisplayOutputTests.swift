@@ -168,7 +168,7 @@ final class SceneDisplayOutputTests: XCTestCase {
         let view = Self.view(device: device)
         let renderer = try XCTUnwrap(SceneMetalRenderer(pixelFormat: .bgra8Unorm, scriptServices: nil, screenID: "edr-shared"))
         defer { renderer.releaseContent() }
-        renderer.configure(view)
+        MainActor.assumeIsolated { renderer.configure(view) }
         view.isPaused = true
         renderer.displayHeadroom = { _ in Self.edr }
         renderer.renderSettings.postProcessing = .displayhdr
@@ -251,7 +251,7 @@ final class SceneDisplayOutputTests: XCTestCase {
         let content = try Self.content(postProcessing)
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let view = Self.view(device: device)
-        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "edr"))
+        let renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: view, scriptServices: nil, screenID: "edr") })
         view.isPaused = true
         renderer.displayHeadroom = { _ in headroom }
         renderer.renderSettings.postProcessing = postProcessing

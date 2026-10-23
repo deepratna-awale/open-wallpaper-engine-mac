@@ -256,7 +256,8 @@ final class LitLayerLibraryTests: XCTestCase {
             view.framebufferOnly = false
             view.autoResizeDrawable = false
             view.drawableSize = CGSize(width: size.x, height: size.y)
-            renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "lit-sweep"))
+            let mtkView: MTKView = view // a local: the closure may not capture self before init completes
+            renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: mtkView, scriptServices: services, screenID: "lit-sweep") })
             view.isPaused = true
             renderer.renderSettings = settings
             renderer.setPlacement(.stretch)

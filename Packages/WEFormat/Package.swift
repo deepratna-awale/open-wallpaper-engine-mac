@@ -1,4 +1,4 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.0
 // Wallpaper Engine's file formats, the one home for reading and writing them (docs/architecture.md):
 // tolerant JSON (WE's byte order mark, comments and trailing commas) and the hex spelling of
 // digests. Foundation only, with no logging, threads or images of its own: callers get errors back.
@@ -14,5 +14,6 @@ let package = Package(
     targets: [
         .target(name: "WEFormat"),
         .testTarget(name: "WEFormatTests", dependencies: ["WEFormat"]),
-    ]
+    ],
+    swiftLanguageModes: [.v6]
 )

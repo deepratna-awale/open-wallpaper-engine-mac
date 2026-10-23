@@ -6,13 +6,13 @@
 //
 
 import Cocoa
-import Combine
+@preconcurrency import Combine
 import SwiftUI
 import ServiceManagement
 
 @MainActor
 class GlobalSettingsViewModel: ObservableObject {
-    private static let audioPermissionAlertDismissedKey = "SuppressAudioPermissionPrompt"
+    nonisolated private static let audioPermissionAlertDismissedKey = "SuppressAudioPermissionPrompt"
 
     /// The user chose "Don't Ask Again" on the missing Screen Recording permission alert.
     /// Nonisolated because the audio engine reads it off the settings view model's lifetime.
@@ -67,11 +67,12 @@ class GlobalSettingsViewModel: ObservableObject {
     /// The language this process runs in; a different choice applies at the next launch.
     let languageChange: LanguageChange
     
-    var didFinishLaunchingNotificationCancellable: Cancellable?
-    var didCurrentWallpaperChangeCancellable: Cancellable?
-    var didAddToLoginItemCancellable: Cancellable?
-    var didChangeScreenSaverCancellable: Cancellable?
-    var didChangeAppPresenceCancellable: Cancellable?
+    // Each cancels its subscription when the view model goes away.
+    var didFinishLaunchingNotificationCancellable: AnyCancellable?
+    var didCurrentWallpaperChangeCancellable: AnyCancellable?
+    var didAddToLoginItemCancellable: AnyCancellable?
+    var didChangeScreenSaverCancellable: AnyCancellable?
+    var didChangeAppPresenceCancellable: AnyCancellable?
     
     /// `followsLaunch`: at launch, the settings that act on the system (launch at login, the menu
     /// bar tint and lock-screen pictures, the screen saver) start following the app's wallpaper.
@@ -90,7 +91,7 @@ class GlobalSettingsViewModel: ObservableObject {
         powerSource = power
         languageChange = LanguageChange(atLaunch: loaded.language)
         powerObserver = power?.observe { [weak self] policy in
-            DispatchQueue.main.async { MainActor.assumeIsolated { self?.setPowerState(policy.state) } }
+            DispatchQueue.main.async { [weak self] in MainActor.assumeIsolated { self?.setPowerState(policy.state) } }
         }
         OWELog.apply(logLevel: settings.logLevel)
 
@@ -138,11 +139,6 @@ class GlobalSettingsViewModel: ObservableObject {
 
     deinit {
         if let powerObserver { powerSource?.removeObserver(powerObserver) }
-        didFinishLaunchingNotificationCancellable?.cancel()
-        didCurrentWallpaperChangeCancellable?.cancel()
-        didAddToLoginItemCancellable?.cancel()
-        didChangeScreenSaverCancellable?.cancel()
-        didChangeAppPresenceCancellable?.cancel()
     }
     
     func didFinishLaunchingNotification() {

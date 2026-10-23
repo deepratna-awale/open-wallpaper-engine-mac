@@ -22,13 +22,13 @@ class WallpaperViewModel: ObservableObject {
 
     /// A web or application wallpaper waiting for the user's answer to the trust prompt
     /// (`apply(_:)`); nil once it is answered or dismissed.
-    @Published internal(set) var trustRequest: WallpaperTrustRequest?
+    @Published var trustRequest: WallpaperTrustRequest?
     /// The trusted wallpapers (`WallpaperTrustStore`).
     var trustStore = WallpaperTrustStore()
     /// Shows the trust prompt for `trustRequest`. Tests replace it.
     var askToTrust: (WEWallpaper) -> Void = { AppDelegate.shared.contentViewModel.warningUnsafeWallpaperModal(which: $0) }
     /// Reads a trusted wallpaper's folder before it is applied, to see whether it changed.
-    internal(set) var trustCheck: Task<Void, Never>?
+    var trustCheck: Task<Void, Never>?
     /// The fingerprint of `trustRequest`'s folder, recorded when the user trusts it.
     var trustRequestFingerprint: Task<String, Never>?
 
@@ -56,7 +56,7 @@ class WallpaperViewModel: ObservableObject {
     }
 
     /// The display layout on the displays connected now (`refreshDisplayLayout`).
-    @Published internal(set) var layoutResolution = DisplayLayoutResolution.empty
+    @Published var layoutResolution = DisplayLayoutResolution.empty
 
     /// The screen saver's layout: the wallpapers' ("Same as wallpaper", the default) or its own.
     @Published var screenSaverLayout = ScreenSaverDisplayLayout() {
@@ -81,7 +81,7 @@ class WallpaperViewModel: ObservableObject {
 
     /// The displays connected before: only one never seen gets wallpapers turned on when it
     /// connects (`enableNewDisplays`).
-    internal(set) var knownDisplays = KnownDisplays()
+    var knownDisplays = KnownDisplays()
 
     /// Told after a display's wallpapers are turned on or off (`toggleScreen`): the app delegate
     /// adds or removes that display's window.
@@ -202,7 +202,7 @@ class WallpaperViewModel: ObservableObject {
     /// or Play. Each display keeps its wallpaper here, so resuming shows exactly what was shown.
     /// For this session only. The playlist holds still meanwhile; the playback and application
     /// rules keep evaluating and apply again on resume.
-    @Published internal(set) var isStopped = false {
+    @Published var isStopped = false {
         didSet {
             guard oldValue != isStopped else { return }
             restartPlaylistTimer()
@@ -284,7 +284,7 @@ class WallpaperViewModel: ObservableObject {
 
     /// Each display's playback: the playback rules', and muted where the display is muted
     /// (`DisplayLayoutConfiguration.muted`). Empty in the Workshop preview: every display plays.
-    @Published internal(set) var displayPlayback: [String: DisplayPlayback] = [:]
+    @Published var displayPlayback: [String: DisplayPlayback] = [:]
 
     // MARK: - User properties per display
 
@@ -300,7 +300,7 @@ class WallpaperViewModel: ObservableObject {
     /// Each display's running instance: its wallpaper and the user properties it runs with
     /// (`WallpaperPropertyGroups`). Refreshed when a display's wallpaper, the sync setting or saved
     /// properties change; `WallpaperView` keys a display's view by it.
-    @Published internal(set) var instanceKeys: [String: WallpaperInstanceKey] = [:]
+    @Published var instanceKeys: [String: WallpaperInstanceKey] = [:]
 
     var settingsIdentities: [String: WallpaperSettingsIdentity] = [:]
 

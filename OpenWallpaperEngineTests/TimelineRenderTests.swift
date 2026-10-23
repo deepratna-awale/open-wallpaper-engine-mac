@@ -223,7 +223,8 @@ final class TimelineRenderTests: XCTestCase {
             view.framebufferOnly = false
             view.autoResizeDrawable = false
             view.drawableSize = CGSize(width: size.x, height: size.y)
-            renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "timeline"))
+            let mtkView: MTKView = view // a local: the closure may not capture self before init completes
+            renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: mtkView, scriptServices: services, screenID: "timeline") })
             view.isPaused = true
             renderer.setPlacement(.stretch)
             renderer.scripts.frameWait = 5

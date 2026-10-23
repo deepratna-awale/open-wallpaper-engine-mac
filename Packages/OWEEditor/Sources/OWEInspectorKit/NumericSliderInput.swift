@@ -52,7 +52,7 @@ public struct NumericSliderInput<Value: BinaryFloatingPoint>: View where Value.S
     /// being edited; while it is, only when the value moved away from what the text says (the
     /// slider was dragged, or Reset ran, with the field still focused), so typing isn't rewritten
     /// under the cursor but the field never goes stale waiting for a click elsewhere.
-    static func shouldMirror(text: String, displayed: Double, isEditing: Bool, fractionDigits: Int) -> Bool {
+    nonisolated static func shouldMirror(text: String, displayed: Double, isEditing: Bool, fractionDigits: Int) -> Bool {
         guard isEditing else { return true }
         guard let typed = Double(text.trimmingCharacters(in: .whitespaces)) else { return true }
         return abs(typed - displayed) > 0.5 * pow(10, -Double(max(fractionDigits, 0)))
@@ -70,7 +70,7 @@ public struct NumericSliderInput<Value: BinaryFloatingPoint>: View where Value.S
 
     /// Rounds `raw` to the nearest multiple of `step` counted from the range's lower bound,
     /// clamped to the range; without a step the value passes through.
-    static func snapped(_ raw: Value, in range: ClosedRange<Value>, step: Value.Stride?) -> Value {
+    nonisolated static func snapped(_ raw: Value, in range: ClosedRange<Value>, step: Value.Stride?) -> Value {
         guard let step, step > 0 else { return raw }
         let steps = (range.lowerBound.distance(to: raw) / step).rounded()
         return min(max(range.lowerBound.advanced(by: steps * step), range.lowerBound), range.upperBound)

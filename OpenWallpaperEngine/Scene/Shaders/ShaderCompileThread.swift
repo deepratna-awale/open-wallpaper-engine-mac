@@ -45,7 +45,7 @@ final class ShaderCompileThread {
     }
 
     /// Shared with the thread, which must not keep the owner alive.
-    private final class State {
+    private final class State: @unchecked Sendable { // `condition` guards every field
         let condition = NSCondition()
         var jobs: [Job] = []
         var running: Job?

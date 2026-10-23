@@ -414,7 +414,7 @@ struct TextureVariantsSection: View {
     }
 
     /// The texture name of a file in `materials/` (`materials/editor/variants/a.png` → `editor/variants/a`).
-    static func textureName(of file: String) -> String {
+    nonisolated static func textureName(of file: String) -> String {
         var name = (file as NSString).deletingPathExtension
         if name.hasPrefix("materials/") { name.removeFirst("materials/".count) }
         return name

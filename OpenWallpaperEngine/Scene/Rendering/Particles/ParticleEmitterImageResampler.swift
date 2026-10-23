@@ -1,5 +1,5 @@
 import Foundation
-import Metal
+@preconcurrency import Metal // MTLBuffer is not annotated Sendable
 
 /// Samples a `layerimage` emitter's layer again while the wallpaper runs (flag 0x20000, "update
 /// emission bitmap periodically"): WE marks the layer's points stale once a second of emitting
@@ -11,7 +11,8 @@ import Metal
 /// completion hands the texels to a background queue, which makes the points, and the render
 /// thread takes them (`ParticleSystemRuntime.replaceImagePoints`), which uploads them only when
 /// they changed. The render thread never waits. Render thread only, apart from the queue's work.
-final class ParticleEmitterImageResampler {
+// `pipelineLock` guards `pipeline`; `pending` is render-thread only (`deliver` brings results there).
+final class ParticleEmitterImageResampler: @unchecked Sendable {
     private struct Key: Hashable {
         var system: ObjectIdentifier
         var slot: Int
@@ -28,9 +29,9 @@ final class ParticleEmitterImageResampler {
     /// Whether a sampling is on its way.
     var hasPending: Bool { !pending.isEmpty }
     /// Runs a block on the render thread (`SceneMetalRenderer.performOnRenderThread`).
-    private let deliver: (@escaping () -> Void) -> Void
+    private let deliver: @Sendable (@escaping @Sendable () -> Void) -> Void
 
-    init(device: MTLDevice, queue: MTLCommandQueue, deliver: @escaping (@escaping () -> Void) -> Void) {
+    init(device: MTLDevice, queue: MTLCommandQueue, deliver: @escaping @Sendable (@escaping @Sendable () -> Void) -> Void) {
         self.device = device
         self.queue = queue
         self.deliver = deliver
@@ -64,18 +65,23 @@ final class ParticleEmitterImageResampler {
         }
         pending.insert(key)
         let work = work, deliver = deliver
-        commands.addCompletedHandler { [weak self, weak system] buffer in
+        let imageSize = source.imageSize
+        // A value copy, immutable from here; WEFormat's bone vectors aren't marked Sendable.
+        nonisolated(unsafe) let rig = source.rig
+        // Render-thread state: only dereferenced in `deliver`'s block, on the render thread.
+        nonisolated(unsafe) weak var system = system
+        commands.addCompletedHandler { [weak self] buffer in
             let failed = buffer.error
-            work.async {
+            work.async { [weak self] in
                 var points: [SIMD4<Int32>]?
                 if let failed {
                     OWELog.error(.scene, "A layerimage emitter's layer sampling failed on the GPU: \(failed)")
                 } else {
                     ThreadGuards.assertBackground("ParticleEmitterImageResampler points")
                     points = ParticleEmitterImagePoints.points(rgba: ParticleEmitterImagePoints.bytes(of: output), target: target,
-                                                               imageSize: source.imageSize, rig: source.rig)
+                                                               imageSize: imageSize, rig: rig)
                 }
-                deliver {
+                deliver { [weak self, points] in
                     self?.pending.remove(key)
                     if let points { system?.replaceImagePoints(points, slot: slot) }
                 }

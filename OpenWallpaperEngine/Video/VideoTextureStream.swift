@@ -89,16 +89,20 @@ final class VideoTextureStream {
         player.isMuted = true
         player.actionAtItemEnd = .none
 
-        let audioItem = file.makeItem()
+        let audioAsset = file.makeAsset()
+        let audioItem = AVPlayerItem(asset: audioAsset)
         audioItem.audioTimePitchAlgorithm = .timeDomain
         audioPlayer = WallpaperAVPlayer.make(item: audioItem)
         audioPlayer.actionAtItemEnd = .none
-        ownAudioTap.attach(to: audioItem)
+        ownAudioTap.attach(to: audioItem, asset: audioAsset)
 
+        // Weak and never reassigned: `nonisolated(unsafe)` only lets the `@Sendable` observer
+        // block capture it. The block runs on the main queue, as before.
+        nonisolated(unsafe) weak var stream = self
         for observed in [item, audioItem] {
             observers.append(NotificationCenter.default.addObserver(
                 forName: .AVPlayerItemDidPlayToEndTime, object: observed, queue: .main
-            ) { [weak self] _ in self?.reachedEnd() })
+            ) { _ in stream?.reachedEnd() })
         }
     }
 
@@ -129,7 +133,7 @@ final class VideoTextureStream {
 
     /// HDR mode's decoder output: linear half floats in BT.2020, whose range AVFoundation keeps
     /// (1.0 = 100 nits). Asked for BT.709 it would tone map into 0…1.
-    static let hdrOutputSettings: [String: Any] = [
+    static let hdrOutputSettings: [String: any Sendable] = [
         kCVPixelBufferMetalCompatibilityKey as String: true,
         kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_64RGBAHalf,
         AVVideoColorPropertiesKey: [

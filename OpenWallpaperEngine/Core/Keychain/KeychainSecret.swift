@@ -1,7 +1,7 @@
 import Foundation
 
 /// One secret in the keychain. Errors are logged without the value.
-struct KeychainSecret {
+struct KeychainSecret: Sendable {
     let keychain: KeychainStore
     let account: String
 

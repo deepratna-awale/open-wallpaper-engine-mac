@@ -7,12 +7,12 @@ protocol PrewarmProcessRunner: AnyObject {
     /// Throws when it can't start, exits unsuccessfully or runs over (it is then terminated).
     /// `completion` runs on the main queue.
     func output(of executable: URL, arguments: [String], environment: [String: String],
-                timeout: TimeInterval, completion: @escaping @MainActor (Result<Data, Error>) -> Void)
+                timeout: TimeInterval, completion: @escaping @MainActor @Sendable (Result<Data, Error>) -> Void)
 
     /// Starts `executable` in the background; `exited` runs on the main queue with its exit
     /// status (a crash or termination included).
     func start(_ executable: URL, arguments: [String], environment: [String: String],
-               exited: @escaping @MainActor (_ status: Int32, _ reason: Process.TerminationReason) -> Void) throws -> PrewarmProcess
+               exited: @escaping @MainActor @Sendable (_ status: Int32, _ reason: Process.TerminationReason) -> Void) throws -> PrewarmProcess
 }
 
 /// A started helper process.

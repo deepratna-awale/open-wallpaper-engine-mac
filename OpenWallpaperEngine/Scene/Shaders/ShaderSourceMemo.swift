@@ -9,7 +9,7 @@ import Foundation
 /// Keyed by the full text (and path, stage, combos), so a wallpaper's own copy of a shader never
 /// reads another's entry. Held by the `ShaderVariantTranslator`, next to its variants, and as
 /// long-lived. Thread-safe: `lock` owns the tables and counters.
-final class ShaderSourceMemo {
+final class ShaderSourceMemo: @unchecked Sendable {
     private let lock = NSLock()
     private var sources: [String: ShaderSource] = [:]
     private var emulations: [String: GeometryShaderEmulation] = [:]

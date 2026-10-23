@@ -323,8 +323,8 @@ final class InstalledLibraryModel {
     /// Workshop item when known (from browsing or from reading its tags), else when its folder last
     /// changed (a Workshop download is rewritten on each update). 0 for a local wallpaper, which
     /// has none and sorts after the others, as in WE.
-    nonisolated static func lastUpdated(of wallpaper: WEWallpaper,
-                                        known: (String) -> Int? = InstalledLibraryModel.knownTimeUpdated) -> Int {
+    static func lastUpdated(of wallpaper: WEWallpaper,
+                             known: @MainActor (String) -> Int? = InstalledLibraryModel.knownTimeUpdated) -> Int {
         guard let workshopId = InstalledWorkshopTags.workshopId(of: wallpaper) else { return 0 }
         if let time = known(workshopId) { return time }
         // A folder without a readable date counts as never updated.
@@ -334,7 +334,7 @@ final class InstalledLibraryModel {
     }
 
     /// Steam's `time_updated` of a Workshop item the app has read.
-    nonisolated static func knownTimeUpdated(_ workshopId: String) -> Int? {
+    static func knownTimeUpdated(_ workshopId: String) -> Int? {
         WorkshopMetadataStore.shared.item(for: workshopId)?.timeUpdated
             ?? DownloadedWallpaperIndex.shared.workshopTags(for: workshopId)?.timeUpdated
     }

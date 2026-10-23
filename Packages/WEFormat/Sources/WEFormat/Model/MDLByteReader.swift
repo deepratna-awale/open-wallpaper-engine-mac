@@ -4,7 +4,7 @@ import simd
 /// The primitives of WE's `.mdl` stream reader (docs/models-plan.md §1.1; dd-models FORMAT.md §0),
 /// strict: a read past the end throws `MDLError.truncated` where WE's returns zeros. No count
 /// from the file sizes an allocation before the bytes it needs are known to be there.
-public struct MDLByteReader {
+public struct MDLByteReader: Sendable {
     public let bytes: [UInt8]
     public private(set) var offset = 0
 

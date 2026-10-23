@@ -3,7 +3,7 @@ import Foundation
 /// Why a `.mdl` didn't load. WE's reader never fails on a short file (it reads zeros) and
 /// fast-fails the process on a few impossible counts; ours rejects both, for that model only
 /// (docs/models-plan.md §1.1).
-public enum MDLError: Error, Equatable, CustomStringConvertible {
+public enum MDLError: Error, Equatable, CustomStringConvertible, Sendable {
     /// A read past the end of the file: a truncated download or a misread count.
     case truncated(reading: String, offset: Int)
     /// The file doesn't start with an `MDLVnnnn` tag.

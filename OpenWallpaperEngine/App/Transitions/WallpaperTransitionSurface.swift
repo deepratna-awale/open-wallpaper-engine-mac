@@ -18,7 +18,7 @@ enum WallpaperTransitionSurface {
     /// A BGRA IOSurface of `size` in sRGB and a render target over it. A `global` surface can be
     /// looked up by id from another process (`IOSurfaceLookup`, the `.saver`'s only way to it).
     static func make(_ size: SIMD2<Int>, device: MTLDevice, global: Bool = false) throws -> (surface: IOSurface, texture: MTLTexture) {
-        var properties: [IOSurfacePropertyKey: Any] = [
+        var properties: [IOSurfacePropertyKey: any Sendable] = [
             .width: size.x, .height: size.y, .bytesPerElement: 4,
             .pixelFormat: kCVPixelFormatType_32BGRA,
         ]

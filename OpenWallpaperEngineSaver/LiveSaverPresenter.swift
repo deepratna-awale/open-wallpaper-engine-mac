@@ -251,7 +251,7 @@ final class LiveSaverPresenter: NSObject {
         stillKey = key
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let image = CGImageSourceCreateWithURL(url as CFURL, nil).flatMap { CGImageSourceCreateImageAtIndex($0, 0, nil) }
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 MainActor.assumeIsolated {
                     guard let self, self.stillKey == key else { return }
                     guard let image else {

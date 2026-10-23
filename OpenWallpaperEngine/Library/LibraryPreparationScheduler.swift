@@ -25,7 +25,7 @@ final class LibraryPreparationScheduler: @unchecked Sendable {
     private var known = Set<String>()
     private var running = false
 
-    init(pool: PreparationPool = .shared, runner: @escaping Runner = LibraryPreparationScheduler.runHelper) {
+    init(pool: PreparationPool = .shared, runner: @escaping Runner = { LibraryPreparationScheduler.runHelper($0) }) {
         self.pool = pool
         self.runner = runner
     }

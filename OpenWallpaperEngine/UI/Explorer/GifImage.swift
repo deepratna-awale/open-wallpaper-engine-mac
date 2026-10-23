@@ -10,7 +10,8 @@ import SwiftUI
 import ImageIO
 
 struct GifImage: NSViewRepresentable {
-    private static let imageCache = NSCache<NSString, StillImage>()
+    // NSCache is thread-safe; the reference itself never changes. Filled off the main thread.
+    nonisolated(unsafe) private static let imageCache = NSCache<NSString, StillImage>()
 
     var gifName: String?
     var gifUrl: URL?
@@ -20,6 +21,7 @@ struct GifImage: NSViewRepresentable {
 
     var animates: Bool
 
+    @MainActor
     final class Coordinator {
         var loadedKey: String?
         var loadingKey: String?
@@ -114,7 +116,7 @@ struct GifImage: NSViewRepresentable {
         init(image: CGImage) { self.image = image }
     }
 
-    private static func downsampledImage(at url: URL, maxPixelSize: Int) -> CGImage? {
+    nonisolated private static func downsampledImage(at url: URL, maxPixelSize: Int) -> CGImage? {
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
         return CGImageSourceCreateThumbnailAtIndex(source, 0, [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
@@ -144,9 +146,9 @@ struct GifImage: NSViewRepresentable {
 /// (`PreviewFrameSequence`). A preview that stops keeps the frame it shows.
 final class PreviewImageView: NSView {
     let imageLayer = CALayer()
-    private var windowObservers: [NSObjectProtocol] = []
+    private let windowObservers = NotificationObservers()
     /// The enclosing scroll view's clip view, watched so a tile scrolled out of sight stops.
-    private var scrollObserver: NSObjectProtocol?
+    private let scrollObserver = NotificationObservers()
     private var sequence: PreviewFrameSequence?
     private var shownFrame: Int?
     /// `animationURL` isn't an animation (one frame, or unreadable): the still stays.
@@ -210,11 +212,6 @@ final class PreviewImageView: NSView {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
 
-    deinit {
-        windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
-        if let scrollObserver { NotificationCenter.default.removeObserver(scrollObserver) }
-    }
-
     override func layout() {
         super.layout()
         imageLayer.frame = bounds
@@ -233,25 +230,24 @@ final class PreviewImageView: NSView {
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
-        windowObservers = []
+        // Both sets of observers are also removed when the view goes (`NotificationObservers`).
+        windowObservers.removeAll()
         if let window {
             for name in [NSWindow.didChangeOcclusionStateNotification, NSWindow.didMiniaturizeNotification,
                          NSWindow.didDeminiaturizeNotification] {
-                windowObservers.append(NotificationCenter.default.addObserver(
+                windowObservers.add(NotificationCenter.default.addObserver(
                     forName: name, object: window, queue: .main) { [weak self] _ in
                         MainActor.assumeIsolated { self?.updateAnimation() }
                     })
             }
         }
-        if let scrollObserver { NotificationCenter.default.removeObserver(scrollObserver) }
-        scrollObserver = nil
+        scrollObserver.removeAll()
         if window != nil, let clip = enclosingScrollView?.contentView {
             clip.postsBoundsChangedNotifications = true
-            scrollObserver = NotificationCenter.default.addObserver(
+            scrollObserver.add(NotificationCenter.default.addObserver(
                 forName: NSView.boundsDidChangeNotification, object: clip, queue: .main) { [weak self] _ in
                     MainActor.assumeIsolated { self?.updateAnimation() }
-                }
+                })
         }
         updateAnimation()
     }

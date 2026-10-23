@@ -19,7 +19,7 @@ final class EditWallpaperButtonStateTests: XCTestCase {
         }
     }
 
-    func testDisabledWithNothingSelected() {
+    @MainActor func testDisabledWithNothingSelected() {
         XCTAssertEqual(EditWallpaperButtonState(selection: nil), .nothingSelected)
         XCTAssertFalse(EditWallpaperButtonState(selection: nil).isEnabled)
         // The Details panel falls back to the placeholder when no wallpaper is selected or set.

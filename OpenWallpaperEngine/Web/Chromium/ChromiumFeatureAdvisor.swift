@@ -79,16 +79,17 @@ final class ChromiumFeatureAdvisor: ObservableObject {
 
     private let store: ChromiumFeatureStore
     private let engine: () -> WebEngine
-    private let scanner: (URL) -> ChromiumFeatureScanner.Result
-    private let contentKey: (URL) -> String
+    // Run on a detached task by `scan`, off the main actor.
+    private let scanner: @Sendable (URL) -> ChromiumFeatureScanner.Result
+    private let contentKey: @Sendable (URL) -> String
     /// Wallpapers applied and still waiting for their scan to decide on an alert.
     private var awaitingAdvice: Set<String> = []
     private var scans: [String: Task<ChromiumFeatureFinding?, Never>] = [:]
 
     init(store: ChromiumFeatureStore = ChromiumFeatureStore(defaults: .app),
          engine: (() -> WebEngine)? = nil,
-         scanner: @escaping (URL) -> ChromiumFeatureScanner.Result = ChromiumFeatureScanner.scan(directory:),
-         contentKey: @escaping (URL) -> String = ChromiumFeatureScanner.contentKey(of:)) {
+         scanner: @escaping @Sendable (URL) -> ChromiumFeatureScanner.Result = { ChromiumFeatureScanner.scan(directory: $0) },
+         contentKey: @escaping @Sendable (URL) -> String = { ChromiumFeatureScanner.contentKey(of: $0) }) {
         self.store = store
         self.engine = engine ?? { WebEngineRouter.shared.installed ? .chromium : .webKit }
         self.scanner = scanner

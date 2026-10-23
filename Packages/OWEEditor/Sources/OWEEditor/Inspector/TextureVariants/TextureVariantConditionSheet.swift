@@ -124,7 +124,7 @@ struct TextureVariantConditionSheet: View {
     }
 
     /// The property a new condition makes and the conditions it gives the group's options.
-    static func newProperty(_ kind: UserPropertyDraft.Kind, label: String, group: TextureVariantDocument.Group, option: UUID)
+    nonisolated static func newProperty(_ kind: UserPropertyDraft.Kind, label: String, group: TextureVariantDocument.Group, option: UUID)
         -> (draft: UserPropertyDraft, conditions: [UUID: TextureVariantDocument.Condition]) {
         var draft = UserPropertyDraft.new(kind, key: label, text: label)
         guard kind == .combo else { return (draft, [option: .flag(label)]) }

@@ -55,7 +55,8 @@ final class ModelSceneHarness {
         view.drawableSize = points
         let services = SceneScriptServices(prelude: SceneScriptPrelude.load(), storage: SceneScriptStorage(directory: storage),
                                            media: media, spectrum: { .silent })
-        renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "model-harness"))
+        let mtkView: MTKView = view // a local: the closure may not capture self before init completes
+        renderer = try XCTUnwrap(MainActor.assumeIsolated { SceneMetalRenderer(view: mtkView, scriptServices: services, screenID: "model-harness") })
         view.isPaused = true
         renderer.setPlacement(.fill)
         renderer.renderSettings = settings

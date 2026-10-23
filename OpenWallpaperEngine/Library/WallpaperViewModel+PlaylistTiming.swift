@@ -62,7 +62,7 @@ extension WallpaperViewModel {
         }
     }
 
-    private func schedulePlaylistTimer(at date: Date, _ action: @escaping @MainActor () -> Void) {
+    private func schedulePlaylistTimer(at date: Date, _ action: @escaping @MainActor @Sendable () -> Void) {
         let timer = Timer(fire: date, interval: 0, repeats: false) { _ in
             MainActor.assumeIsolated { action() }
         }

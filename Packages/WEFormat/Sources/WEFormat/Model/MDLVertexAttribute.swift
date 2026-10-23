@@ -3,8 +3,8 @@ import Foundation
 /// One of the 26 vertex attributes a `.mdl` mesh's format bits select (docs/models-plan.md §1.2):
 /// WE's tables at 0x140484a20 (mask), 0x1404849b0 (byte size), 0x140484a90 (GLSL name) and
 /// 0x140482af0 (D3D11 input element: semantic, index, DXGI format).
-public struct MDLVertexAttribute: Hashable, CustomStringConvertible {
-    public enum ComponentType: Hashable {
+public struct MDLVertexAttribute: Hashable, CustomStringConvertible, Sendable {
+    public enum ComponentType: Hashable, Sendable {
         case float32
         /// `a_BlendIndices`: R32G32B32A32_UINT.
         case uint32

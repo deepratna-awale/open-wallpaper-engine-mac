@@ -72,7 +72,8 @@ final class ExternalImageEditor {
             return
         }
         watch(file, layerID: layer.id, session: session, store: store, tools: tools)
-        NSWorkspace.shared.open([file], withApplicationAt: application, configuration: NSWorkspace.OpenConfiguration()) { _, error in
+        NSWorkspace.shared.open([file], withApplicationAt: application, configuration: NSWorkspace.OpenConfiguration()) { @Sendable _, error in
+            // NSWorkspace calls this on its own queue, so it isn't the main actor's.
             guard let error else { return }
             Task { @MainActor in tools.problem = L("The image editor couldn’t open the picture: \(error.localizedDescription)") }
         }
