@@ -109,9 +109,7 @@ final class EffectResolutionPolicyTests: XCTestCase {
 
     private static func read(_ scene: SceneFrameHarness) -> PerceptualImage {
         let size = scene.size
-        var bytes = [UInt8](repeating: 0, count: size.x * size.y * 4)
-        scene.view.currentDrawable?.texture.getBytes(&bytes, bytesPerRow: size.x * 4,
-                                                     from: MTLRegionMake2D(0, 0, size.x, size.y), mipmapLevel: 0)
+        var bytes = scene.drawableBytes()
         for pixel in stride(from: 0, to: bytes.count, by: 4) {
             bytes.swapAt(pixel, pixel + 2)
             bytes[pixel + 3] = 255

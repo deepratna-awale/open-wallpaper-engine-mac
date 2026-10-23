@@ -77,7 +77,8 @@ final class ModelLibraryRenderTests: XCTestCase {
         }
         let report = lines.joined(separator: "\n")
         print("Model library render:\n\(report)")
-        XCTContext.runActivity(named: "Model library render") { $0.add(XCTAttachment(string: report)) }
+        // XCTest runs this test on the main thread; `runActivity` is main-actor isolated.
+        MainActor.assumeIsolated { XCTContext.runActivity(named: "Model library render") { $0.add(XCTAttachment(string: report)) } }
         if let path = ProcessInfo.processInfo.environment["OWE_MODEL_LIBRARY_OUT"] {
             try report.write(toFile: path, atomically: true, encoding: .utf8)
         }

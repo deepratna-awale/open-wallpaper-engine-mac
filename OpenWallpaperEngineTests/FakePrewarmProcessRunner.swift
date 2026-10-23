@@ -16,17 +16,17 @@ final class FakePrewarmProcessRunner: PrewarmProcessRunner {
     private(set) var startedArguments: [[String]] = []
     private(set) var startedEnvironment: [String: String]?
     private(set) var child: Child?
-    private(set) var exited: (@MainActor (Int32, Process.TerminationReason) -> Void)?
+    private(set) var exited: (@MainActor @Sendable (Int32, Process.TerminationReason) -> Void)?
 
     func output(of executable: URL, arguments: [String], environment: [String: String],
-                timeout: TimeInterval, completion: @escaping @MainActor (Result<Data, Error>) -> Void) {
+                timeout: TimeInterval, completion: @escaping @MainActor @Sendable (Result<Data, Error>) -> Void) {
         outputArguments.append(arguments)
         let result = keyOutput
         DispatchQueue.main.async { completion(result) }
     }
 
     func start(_ executable: URL, arguments: [String], environment: [String: String],
-               exited: @escaping @MainActor (Int32, Process.TerminationReason) -> Void) throws -> PrewarmProcess {
+               exited: @escaping @MainActor @Sendable (Int32, Process.TerminationReason) -> Void) throws -> PrewarmProcess {
         if let startError { throw startError }
         startedArguments.append(arguments)
         startedEnvironment = environment
