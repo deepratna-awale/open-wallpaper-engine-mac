@@ -258,7 +258,8 @@ enum ETC2Encoder {
         let origin = sum / 16 - 1.5 * slopeX - 1.5 * slopeY
         let top = Double((1 << bits) - 1)
         func quantise(_ value: Double) -> Int { min(max(Int((value * top / 255).rounded()), 0), Int(top)) }
-        let expand: (Int) -> Int = bits == 7 ? e7 : e6
+        // A closure, not `bits == 7 ? e7 : e6`: Swift 6 mode fails to type-check the method-reference ternary.
+        let expand: (Int) -> Int = { bits == 7 ? e7($0) : e6($0) }
         let guesses = (quantise(origin), quantise(origin + 4 * slopeX), quantise(origin + 4 * slopeY))
         var best = (o: guesses.0, h: guesses.1, v: guesses.2, error: Int.max)
         for o in guesses.0 - 1...guesses.0 + 1 where o >= 0 && o <= Int(top) {

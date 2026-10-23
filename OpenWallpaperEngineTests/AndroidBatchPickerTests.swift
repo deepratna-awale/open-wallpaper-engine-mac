@@ -66,7 +66,7 @@ final class AndroidBatchPickerTests: XCTestCase {
     }
 
     private func selection(_ library: Library, model: AndroidExportEditorModel? = nil,
-                           exported: @escaping ([WEWallpaper]) -> Void = { _ in }) -> AndroidBatchPicker {
+                           exported: @escaping @MainActor ([WEWallpaper]) -> Void = { _ in }) -> AndroidBatchPicker {
         AndroidBatchPicker(model: model ?? self.model(library.edited), library: { library.all }, export: exported)
     }
 
