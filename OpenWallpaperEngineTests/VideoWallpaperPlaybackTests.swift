@@ -1,5 +1,6 @@
 import AVFoundation
 import Metal
+import os
 import XCTest
 @testable import OpenWallpaperEngine
 
@@ -8,14 +9,14 @@ import XCTest
 final class VideoWallpaperPlaybackTests: XCTestCase {
     private var directory: URL!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         directory = FileManager.default.temporaryDirectory.appending(path: "owe-video-tests-\(UUID().uuidString)")
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         if let directory { try? FileManager.default.trashItem(at: directory, resultingItemURL: nil) } // Optional: best-effort cleanup.
-        super.tearDown()
+        try await super.tearDown()
     }
 
     private func wallpaper(_ clip: URL) -> WEWallpaper {
@@ -49,13 +50,16 @@ final class VideoWallpaperPlaybackTests: XCTestCase {
         let model = VideoWallpaperViewModel(wallpaper: wallpaper(clip), wallpaperViewModel: wallpapers)
         defer { model.stop() }
         XCTAssertEqual(model.player.actionAtItemEnd, .none)
-        var ended = 0
+        let endedCount = OSAllocatedUnfairLock(initialState: 0)
+        func ended() -> Int { endedCount.withLock { $0 } }
         let observer = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime,
-                                                              object: model.player.currentItem, queue: .main) { _ in ended += 1 }
+                                                              object: model.player.currentItem, queue: .main) { _ in
+            endedCount.withLock { $0 += 1 }
+        }
         defer { NotificationCenter.default.removeObserver(observer) }
         let deadline = Date().addingTimeInterval(5)
-        while ended < 2, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.05)) }
-        XCTAssertGreaterThanOrEqual(ended, 2, "the clip reached its end a second time")
+        while ended() < 2, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.05)) }
+        XCTAssertGreaterThanOrEqual(ended(), 2, "the clip reached its end a second time")
         let rate: Float = model.player.rate
         XCTAssertGreaterThan(rate, 0)
     }

@@ -1,3 +1,4 @@
+import os
 import XCTest
 import OWEControlProtocol
 import OWEEditor
@@ -77,18 +78,22 @@ final class MCPSceneHeadlessTests: XCTestCase {
 
     func testTheRunningInstancesHearOnlyTheSave() throws {
         let center = NotificationCenter()
-        var notifications: [Notification] = []
-        let token = center.addObserver(forName: .sceneEditOverlayDidChange, object: nil, queue: nil) { notifications.append($0) }
+        // Posted synchronously on this thread; the lock only satisfies the observer's @Sendable block.
+        let notifications = OSAllocatedUnfairLock(uncheckedState: [Notification]())
+        func received() -> [Notification] { notifications.withLockUnchecked { $0 } }
+        let token = center.addObserver(forName: .sceneEditOverlayDidChange, object: nil, queue: nil) { note in
+            notifications.withLockUnchecked { $0.append(note) }
+        }
         defer { center.removeObserver(token) }
         var saves: [SceneEditOverlay] = []
         let document = try fixture.service(center: center, announceSave: { _, overlay in saves.append(overlay) })
             .document(for: fixture.wallpaper)
         _ = try document.apply([edit(["op": "set_alpha", "layer": 4, "alpha": 0.5])], actionName: nil)
-        XCTAssertTrue(notifications.isEmpty, "an edit stays in the draft")
+        XCTAssertTrue(received().isEmpty, "an edit stays in the draft")
         XCTAssertTrue(document.hasUnsavedChanges)
         XCTAssertTrue(try document.save())
-        XCTAssertEqual(notifications.count, 1, "the save is applied once")
-        let info = try XCTUnwrap(notifications.first?.userInfo)
+        XCTAssertEqual(received().count, 1, "the save is applied once")
+        let info = try XCTUnwrap(received().first?.userInfo)
         XCTAssertEqual((info["wallpaperDirectory"] as? URL)?.path, fixture.folder.standardizedFileURL.path)
         XCTAssertEqual(info["transient"] as? Bool, false)
         XCTAssertEqual(info["draft"] as? Bool, false, "the displays' instances take it, not the editor's canvas")
@@ -97,7 +102,7 @@ final class MCPSceneHeadlessTests: XCTestCase {
         XCTAssertFalse(try document.save(), "nothing left to save")
         _ = try document.apply([edit(["op": "set_locked", "layer": 4, "locked": true])], actionName: nil)
         XCTAssertTrue(try document.save())
-        XCTAssertEqual(notifications.count, 1, "a lock doesn't change the running scene")
+        XCTAssertEqual(received().count, 1, "a lock doesn't change the running scene")
     }
 
     /// The app writes an MCP edit into the draft and says so; the editor's process hears it, its open
@@ -114,9 +119,9 @@ final class MCPSceneHeadlessTests: XCTestCase {
             return WallpaperEditorChangeSync(role: role, dependencies: dependencies)
         }
         let appSync = sync(.app, "app", appCenter), editorSync = sync(.editor, "editor", NotificationCenter())
-        var appApplied: [SceneEditOverlay] = []
+        let appApplied = OSAllocatedUnfairLock<[SceneEditOverlay]>(initialState: [])
         let token = appCenter.addObserver(forName: .sceneEditOverlayDidChange, object: nil, queue: nil) { notification in
-            if let overlay = notification.userInfo?["overlay"] as? SceneEditOverlay { appApplied.append(overlay) }
+            if let overlay = notification.userInfo?["overlay"] as? SceneEditOverlay { appApplied.withLock { $0.append(overlay) } }
         }
         defer { appCenter.removeObserver(token) }
         appSync.start()
@@ -156,7 +161,7 @@ final class MCPSceneHeadlessTests: XCTestCase {
         XCTAssertEqual(heard.first?.1, "Fade Picture", "the window's Edit menu names it")
         XCTAssertEqual(window.overlay, document.session.overlay, "the open window shows the edit")
         XCTAssertEqual(window.undoManager.undoActionName, "Fade Picture")
-        XCTAssertTrue(appApplied.isEmpty, "the app's displays don't run the draft")
+        XCTAssertTrue(appApplied.withLock { $0 }.isEmpty, "the app's displays don't run the draft")
 
         // Undo in the window goes into the draft; the client's session reads it.
         window.undo()
@@ -168,10 +173,10 @@ final class MCPSceneHeadlessTests: XCTestCase {
         // The client's save reaches the app's instances once and tells the window.
         _ = try document.apply([edit(["op": "set_alpha", "layer": 4, "alpha": 0.5])], actionName: nil)
         XCTAssertTrue(try document.save())
-        XCTAssertEqual(appApplied.count, 1)
-        XCTAssertEqual(appApplied.first?.field("alpha", of: 4), .number(0.5))
+        XCTAssertEqual(appApplied.withLock { $0 }.count, 1)
+        XCTAssertEqual(appApplied.withLock { $0 }.first?.field("alpha", of: 4), .number(0.5))
         appSync.applySavedOverlay(of: fixture.folder)
-        XCTAssertEqual(appApplied.count, 1, "applied once, not again when the folder or a message reports it")
+        XCTAssertEqual(appApplied.withLock { $0 }.count, 1, "applied once, not again when the folder or a message reports it")
         XCTAssertEqual(savesHeard.map(\.standardizedFileURL.path), [fixture.folder.standardizedFileURL.path])
     }
 

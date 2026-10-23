@@ -1,5 +1,6 @@
 import Compression
 import Foundation
+import os
 import XCTest
 @testable import OpenWallpaperEngine
 
@@ -147,7 +148,7 @@ final class MobilePackageTests: XCTestCase {
         let path = "materials/centurion 1080p_bg.tex"
         let theirs = Data(try XCTUnwrap(sample.extractFile(named: path)))
         let source = try Data(contentsOf: wallpaper.wallpaperDirectory.appending(path: path))
-        var result: (ours: Double, theirs: Double)?
+        let result = OSAllocatedUnfairLock<(ours: Double, theirs: Double)?>(initialState: nil)
         let done = expectation(description: "encoded")
         DispatchQueue.global().async {
             defer { done.fulfill() }
@@ -160,10 +161,11 @@ final class MobilePackageTests: XCTestCase {
             let weDecoded = ETC2TestDecoder.decode(blocks, width: mipmap.width, height: mipmap.height)
             let ours = ETC2TestDecoder.decode(ETC2Encoder.encode(half.bytes, width: mipmap.width, height: mipmap.height),
                                               width: mipmap.width, height: mipmap.height)
-            result = (ETC2TestDecoder.psnr(ours, half.bytes), ETC2TestDecoder.psnr(weDecoded, half.bytes))
+            let psnr = (ours: ETC2TestDecoder.psnr(ours, half.bytes), theirs: ETC2TestDecoder.psnr(weDecoded, half.bytes))
+            result.withLock { $0 = psnr }
         }
         wait(for: [done], timeout: 300)
-        let psnr = try XCTUnwrap(result)
+        let psnr = try XCTUnwrap(result.withLock { $0 })
         XCTAssertGreaterThan(psnr.ours, psnr.theirs - 1.5, "ours \(psnr.ours) dB, WE's \(psnr.theirs) dB")
     }
 
@@ -173,17 +175,19 @@ final class MobilePackageTests: XCTestCase {
     func testDynamicBalancedMatchesWE() throws {
         let sample = try PKGParser(url: Self.samples().appending(path: Self.dynamicSample), magic: "PKGM")
         let wallpaper = try Self.sampleItem()
-        var built: [MobilePackageWriter.Entry] = []
+        let builtBox = OSAllocatedUnfairLock<[MobilePackageWriter.Entry]>(initialState: [])
         let expectation = expectation(description: "built")
         DispatchQueue.global().async {
             do {
-                built = try AndroidPackageBuilder.dynamicEntries(wallpaper, options: AndroidExportOptions(mode: .balanced))
+                let entries = try AndroidPackageBuilder.dynamicEntries(wallpaper, options: AndroidExportOptions(mode: .balanced))
+                builtBox.withLock { $0 = entries }
             } catch {
                 XCTFail("\(error)")
             }
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 300)
+        let built = builtBox.withLock { $0 }
         let package = try PKGParser(data: MobilePackageWriter.data(built), magic: "PKGM")
         XCTAssertEqual(package.fileList, sample.fileList)
         var converted: [String] = []

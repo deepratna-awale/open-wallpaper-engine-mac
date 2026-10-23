@@ -1,5 +1,6 @@
 import XCTest
 import MetalKit
+import os
 @testable import OpenWallpaperEngine
 
 /// A scene renders on its own render thread (`SceneRenderLoop`): its displays' links draw there,
@@ -35,13 +36,13 @@ final class SceneRenderThreadTests: XCTestCase {
     /// The view holds its delegate weakly.
     private var delegate: Delegate?
 
-    override func tearDown() {
+    override func tearDown() async throws {
         loop?.shutdown()
         loop = nil
         delegate = nil
         window?.orderOut(nil)
         window = nil
-        super.tearDown()
+        try await super.tearDown()
     }
 
     /// A render loop drawing one on-screen view, its frames recorded in `frames`.
@@ -164,12 +165,15 @@ final class SceneRenderThreadTests: XCTestCase {
             device: device, vertex: try XCTUnwrap(library.makeFunction(name: "sceneVertex")),
             fragment: try XCTUnwrap(library.makeFunction(name: "sceneFragment")),
             copyFragment: try XCTUnwrap(library.makeFunction(name: "sceneCopyFragment")), formats: [.bgra8Unorm])
-        let lock = NSLock()
-        var made: [ObjectIdentifier] = []
+        // Shared on purpose: the pipelines' own lock is what this test checks under concurrent access.
+        nonisolated(unsafe) let shared = pipelines
+        let madeBox = OSAllocatedUnfairLock<[ObjectIdentifier]>(initialState: [])
         DispatchQueue.concurrentPerform(iterations: 8) { _ in
-            let normal = pipelines.pipelines(for: .bgra8Unorm, sampleCount: 2)?.normal
-            lock.withLock { made.append(normal.map { ObjectIdentifier($0 as AnyObject) } ?? ObjectIdentifier(NSNull())) }
+            let normal = shared.pipelines(for: .bgra8Unorm, sampleCount: 2)?.normal
+            let id = normal.map { ObjectIdentifier($0 as AnyObject) } ?? ObjectIdentifier(NSNull())
+            madeBox.withLock { $0.append(id) }
         }
+        let made = madeBox.withLock { $0 }
         XCTAssertEqual(made.count, 8)
         XCTAssertEqual(Set(made).count, 1, "one set of ×2 pipelines")
     }
