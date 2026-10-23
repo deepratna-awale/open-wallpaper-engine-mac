@@ -99,7 +99,13 @@ final class EditorModelImportTests: XCTestCase {
         XCTAssertEqual(clip.flags, 0x1 | 0x400 | 0x800 | 0x8000)
         XCTAssertEqual(clip.reference, MDLAnimation.Reference(animation: 0, startFrame: 10, endFrame: 20, frameOffset: 2, rootBone: 1))
         XCTAssertEqual(clip.boneTracks[2].pose(at: 0), animations[0].boneTracks[2].pose(at: 10))
-        XCTAssertEqual(clip.events, [MDLAnimation.Event(frame: 5, name: "step")])
+        // WE's event record (capture 549): its time, 5 / 30 s, and its JSON, which scripts get
+        // parsed; the clip's clock fires it at frame 5.
+        XCTAssertEqual(clip.events, [MDLAnimation.Event(frame: (1 / 30) * 5, name: #"{"frame":5,"name":"step"}"#)])
+        let clock = SceneAnimationLayer.clock(for: clip)
+        XCTAssertEqual(clock.events.map(\.name), [#"{"frame":5,"name":"step"}"#])
+        XCTAssertEqual(clock.events.first?.frame ?? 0, 5, accuracy: 1e-4)
+        XCTAssertEqual(clock.events.first?.time ?? 0, 5 / 30, accuracy: 1e-6)
         // The animated box: the top corners, √2 from Tip, swing out past x = -√2.
         XCTAssertEqual(animations[0].bounds?.min.x ?? 0, -Float(2).squareRoot(), accuracy: 1e-4)
     }
