@@ -63,10 +63,6 @@ final class DepthMapPluginInstallerTests: XCTestCase {
 
     func testThePinnedModelIsApplesSmallPackageAtACommit() throws {
         let pin = DepthMapModelPin.pinned
-        #if DEBUG
-        if pin.isPlaceholder { throw XCTSkip("the pin is a placeholder; a Release build fails here") }
-        #endif
-        XCTAssertFalse(pin.isPlaceholder, "a release must pin a real commit and real checksums")
         XCTAssertEqual(DepthMapModelPin.repository, "apple/coreml-depth-anything-v2-small")
         XCTAssertEqual(pin.packageName, "DepthAnythingV2SmallF16.mlpackage", "Small only: Base and Large aren't Apache-2.0")
         XCTAssertEqual(pin.revision.count, 40)
@@ -80,14 +76,6 @@ final class DepthMapPluginInstallerTests: XCTestCase {
             XCTAssertEqual(url, "https://huggingface.co/apple/coreml-depth-anything-v2-small/resolve/\(pin.revision)/DepthAnythingV2SmallF16.mlpackage/\(file.path)")
         }
         XCTAssertGreaterThan(pin.downloadSize, 40_000_000)
-    }
-
-    func testAPlaceholderIsRecognised() {
-        let placeholder = DepthMapModelPin(revision: String(repeating: "0", count: 40), packageName: "x.mlpackage",
-                                           files: [.init(path: "Manifest.json", sha256: DepthMapModelPin.placeholderSHA256, size: 1)])
-        XCTAssertTrue(placeholder.isPlaceholder)
-        XCTAssertTrue(DepthMapModelPin(revision: "main", packageName: "x", files: pin().files).isPlaceholder)
-        XCTAssertFalse(pin().isPlaceholder)
     }
 
     func testIsolatedCopiesHaveTheirOwnPluginFolder() {

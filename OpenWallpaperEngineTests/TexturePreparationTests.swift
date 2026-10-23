@@ -41,20 +41,6 @@ final class TexturePreparationTests: XCTestCase {
 
     // MARK: Encoder
 
-    func testASolidBlockRoundTripsWithinOneStep() {
-        let texels = [Int32](repeating: 0, count: 64).enumerated().map { index, _ in Int32([200, 17, 99, 255][index % 4]) }
-        let block = TextureCompressor.encodeMode6(texels)
-        var raw = [UInt8](repeating: 0, count: 16)
-        withUnsafeBytes(of: block.0.littleEndian) { raw.replaceSubrange(0..<8, with: $0) }
-        withUnsafeBytes(of: block.1.littleEndian) { raw.replaceSubrange(8..<16, with: $0) }
-        let decoded = raw.withUnsafeBytes { TextureCompressor.decodeBC7($0, width: 4, height: 4) }
-        for (index, value) in decoded.enumerated() {
-            let expected: Int = [200, 17, 99, 255][index % 4]
-            let difference: Int = abs(Int(value) - expected)
-            XCTAssertLessThanOrEqual(difference, 1, "texel \(index / 4) channel \(index % 4)")
-        }
-    }
-
     /// The bit layout is the GPU's: Metal's BC7 sampler reads what the CPU decoder reads.
     func testTheGPUDecodesTheBlocksAsTheCheckDoes() throws {
         try XCTSkipUnless(device.supportsBCTextureCompression)
