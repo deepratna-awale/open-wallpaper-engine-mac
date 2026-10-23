@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Wallpaper Editor: a texture variant option without a condition is saved and compiled as Wallpaper Engine's.** Wallpaper Engine saves such an option with no `variantcondition` in the `.tex-json` and its compiler leaves it out of the `.tex`; the editor wrote `"variantcondition": null` and compiled it as a record that never turns on. The option still never shows, its file is still checked against the texture, and the `.tex` now has Wallpaper Engine's layout. Checked against WE 2.8.0.42's texture with two variant groups (capture 550).
+- **Puppet Warp clipping masks match Wallpaper Engine's coverage.** A mask's coverage is now drawn at half the size of the puppet's image, as Wallpaper Engine draws it at half the frame's size, and read with linear filtering, so a clipped limb's edge fades over two pixels as in Wallpaper Engine 2.8's captures. The coverage takes a quarter of the memory and drawing it a quarter of the work.
 
 ## [1.0.0-beta.8] - 2026-10-18
 
