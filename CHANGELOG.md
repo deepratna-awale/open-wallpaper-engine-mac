@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Wallpaper Editor: an imported model's bones are in Wallpaper Engine's order.** Wallpaper Engine's importer lists a skeleton's bones breadth-first, each bone's children last to first in the file's order; Import Model listed siblings in the file's order, so a rig with side-by-side chains (two arms, two legs) numbered its bones differently from Wallpaper Engine's import of the same file. Checked against WE 2.8.0.42's import of an FBX with two sibling chains (capture 549).
+
 ## [1.0.0-beta.8] - 2026-10-18
 
 ### Added
