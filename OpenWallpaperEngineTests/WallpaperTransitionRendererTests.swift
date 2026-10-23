@@ -11,7 +11,8 @@ final class WallpaperTransitionRendererTests: XCTestCase {
     private static let height = 90
 
     /// One renderer and one pair of pictures for the class.
-    private final class Fixture {
+    /// `@unchecked Sendable`: only `let`s, and the texture is written once in `init` and only read after.
+    private final class Fixture: @unchecked Sendable {
         let device: MTLDevice
         let queue: MTLCommandQueue
         let renderer: WallpaperTransitionRenderer

@@ -7,7 +7,7 @@ import XCTest
 final class WallpaperAuthorLocalizationTests: XCTestCase {
     /// Shaped like the library's localized web wallpapers: `ui_` keys in mixed case, markup in
     /// the values, a table under a code WE doesn't use (`nn-no`), and a key only some languages have.
-    private static let project: [String: Any] = [
+    private static var project: [String: Any] { [
         "general": [
             "properties": [
                 "HEADER_AUDIO": ["text": "ui_HEADER_AUDIO", "type": "bool", "order": 1],
@@ -23,7 +23,7 @@ final class WallpaperAuthorLocalizationTests: XCTestCase {
                 "nn-no": ["ui_background_color": "Bakgrunnsfarge"],
             ],
         ],
-    ]
+    ] }
 
     private func labels(_ languages: [String], we: WallpaperEngineLabels = WallpaperEngineLabels()) -> WallpaperEngineLabels {
         we.addingAuthorTranslations(projectJSON: Self.project, languages: languages)

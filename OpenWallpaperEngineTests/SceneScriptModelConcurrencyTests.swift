@@ -113,6 +113,8 @@ final class SceneScriptModelConcurrencyTests: XCTestCase {
         let scriptDone = DispatchSemaphore(value: 0), loaderDone = DispatchSemaphore(value: 0)
         let stop = ManagedAtomicFlag()
         let scriptErrors = LockedList<Error>()
+        // The asset reader the app's script thread calls too; it reads immutable package data.
+        nonisolated(unsafe) let readFile = scripts.file
         // The script's thread: applyData every step, replaceData every eighth, and asset reads.
         let script = Thread {
             defer { scriptDone.signal() }
@@ -127,7 +129,7 @@ final class SceneScriptModelConcurrencyTests: XCTestCase {
                             SceneScriptModelDataUpdate(vertices: Self.quad(left: left + Float(index)).withUnsafeBytes { Data($0) })
                         })
                     }
-                    _ = scripts.file("materials/facecolor.json")
+                    _ = readFile("materials/facecolor.json")
                 }
             } catch {
                 scriptErrors.append(error)
