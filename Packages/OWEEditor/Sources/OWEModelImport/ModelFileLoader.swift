@@ -15,6 +15,10 @@ public enum ModelFileLoader {
     /// .dae, .3ds, .lxo and .gltf (`resourcecompiler64.exe`'s list); this importer doesn't.
     public static let fileExtensions: Set<String> = ["fbx", "obj"]
 
+    /// Whether a model file's format holds animations (an FBX; an OBJ has none), for which WE's
+    /// importer writes `editor.animationmapping` (`ModelImportConfig.writesAnimationMapping`).
+    public static func mapsAnimations(_ url: URL) -> Bool { url.pathExtension.lowercased() == "fbx" }
+
     public enum LoadError: Error, Equatable, LocalizedError {
         case unsupported(String)
         case unreadable(String, String)

@@ -1,0 +1,35 @@
+{
+	"editor" : 
+	{
+		"animationmapping" : 
+		{
+			"Scene" : 52
+		},
+		"clips" : 
+		[
+			{
+				"animation" : "Scene",
+				"end" : 30,
+				"frameoffset" : 0,
+				"id" : 26,
+				"matchloop" : true,
+				"motionflags" : 43008,
+				"name" : "Scene (Clip 54)",
+				"rootmotion" : "",
+				"start" : 0
+			}
+		],
+		"events" : 
+		[
+			{
+				"animation" : "Scene",
+				"frame" : 15,
+				"id" : 29,
+				"name" : "flapmid"
+			}
+		]
+	},
+	"normals" : true,
+	"skinning" : true,
+	"tangentspace" : true
+}

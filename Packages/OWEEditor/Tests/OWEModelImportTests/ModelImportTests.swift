@@ -184,8 +184,12 @@ final class ModelImportTests: XCTestCase {
         XCTAssertEqual(clip.reference?.end, 20)
         XCTAssertEqual(clip.reference?.offset, 3)
         XCTAssertEqual(clip.reference?.rootBone, 1)
-        XCTAssertEqual(clip.events.map(\.1), ["step"])
-        XCTAssertEqual(model.animations[0].events.map(\.1), ["start"])
+        // Events as WE compiles them (capture 549): JSON at `frame / fps`; "step" in its clip, and
+        // "start", keyed to the animation Wave, in the first record not named Wave.
+        XCTAssertEqual(clip.events.map(\.1), [#"{"frame":4,"name":"step"}"#, #"{"frame":0,"name":"start"}"#])
+        let eventTimes: [Float] = [4.0 / 30.0, 0] // typed: Swift 6.2 infers [4 / 30, 0] as [Int]
+        XCTAssertEqual(clip.events.map(\.0), eventTimes)
+        XCTAssertEqual(model.animations[0].events.count, 0)
         // The clip's first frame is the source's frame 10.
         XCTAssertEqual(Array(clip.tracks[2].prefix(9)), Array(model.animations[0].tracks[2][90..<99]))
         XCTAssertEqual(model.attachments.map(\.name), ["hand"])
