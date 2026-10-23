@@ -50,9 +50,7 @@ struct SceneScriptModelData: Equatable {
     var bounds: MDLBounds
 
     /// The vertex format names in their required order, with the attribute each enables.
-    /// `nonisolated(unsafe)`: a constant table of values; it can go once WEFormat's
-    /// `MDLVertexAttribute` is `Sendable`.
-    nonisolated(unsafe) static let formatOrder: [(name: String, attribute: MDLVertexAttribute)] = [
+    static let formatOrder: [(name: String, attribute: MDLVertexAttribute)] = [
         ("position", .position), ("normal", .normal), ("tangentSigned", .tangent4), ("uv", .texCoord), ("color", .color),
     ]
 
@@ -101,7 +99,9 @@ struct SceneScriptModelDataUpdate: Equatable {
 /// (`SceneScriptObjectModel`); the loader reads it to plan a model layer and the renderer every
 /// frame for the geometry `applyData` changed (`SceneModelGeometrySource`). One lock owns
 /// `entries`, `generations`, `nextToken` and `viewers`.
-final class SceneScriptModelDataStore {
+///
+/// `@unchecked Sendable`: every mutable property is read and written under `lock`.
+final class SceneScriptModelDataStore: @unchecked Sendable {
     /// WE's messages (scenescript64.dll 0x18162fc80's table).
     enum Failure: Error, Equatable, CustomStringConvertible {
         case invalidToken, vertexBufferGrew, indexBufferGrew, notDynamic, indexType, addsShapes, inconsistentVertices

@@ -42,7 +42,7 @@ enum DepthMapPlugin {
     /// `openPlugins`: shows Settings › Plugins › Depth Map Generation (the app's, from either process).
     static func services(for wallpaper: WEWallpaper, resources: EditorWallpaperResources,
                          generator: DepthMapGenerator? = nil,
-                         openPlugins: @escaping @MainActor () -> Void) -> DepthMapEditorServices {
+                         openPlugins: @escaping @MainActor @Sendable () -> Void) -> DepthMapEditorServices {
         DepthMapEditorServices(
             generator: generator ?? DepthMapPlugin.generator,
             assetStore: resources.assets,
