@@ -111,16 +111,6 @@ enum WEEffectGallery {
         return directory
     }
 
-    /// Adds a `preview` to a gallery project.json that has none. Not needed since `WEProject.preview`
-    /// became optional; kept only until the particle gallery drops its calls.
-    static func addPreview(to directory: URL) throws {
-        let url = directory.appending(path: "project.json")
-        var project = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
-        guard project["preview"] == nil else { return }
-        project["preview"] = "preview.jpg"
-        try json(project).write(to: url)
-    }
-
     /// Copies `assets/effects/<effect>` into the project as WE's editor does: `effect.json` into
     /// `effects/<effect>/`, its `materials/`, `shaders/`… merged into the project's own.
     static func copyEffect(_ effect: String, assets: URL, into directory: URL) throws {
