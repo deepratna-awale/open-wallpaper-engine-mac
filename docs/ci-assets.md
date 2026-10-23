@@ -111,14 +111,18 @@ Engine's shaders, so they are cached the same way: one archive, encrypted with
 The key is the `OWE_ASSET_CACHE_KEY` secret in the `steam-ci` environment, with the same value in `asset-tests-pr` (pull requests from others). Its value is never stored anywhere else, so it can only be rotated, not copied: set both environments together. Only the steps that
 decrypt or encrypt get it, through `-pass env:`, so it is never on a command line or in the log.
 The cache itself holds nothing but ciphertext: a pull request or a fork can restore the file, but
-without the key it can't read it. To set or rotate the key (a rotation just makes the next run
-download and re-save):
+without the key it can't read it. To set or rotate the key, set it in both environments, then
+delete the caches encrypted with the old key: their names don't depend on the key, so the next
+run would hit them and fail to decrypt. The next main run then downloads the assets once and saves
+them under the new key.
 
 ```sh
 KEY=$(openssl rand -base64 48)
 printf %s "$KEY" | gh secret set OWE_ASSET_CACHE_KEY --env steam-ci
 printf %s "$KEY" | gh secret set OWE_ASSET_CACHE_KEY --env asset-tests-pr
 unset KEY
+gh cache list --limit 100 --json key --jq '.[].key | select(test("^(we-assets-enc|shader-cache-enc)-"))' \
+  | xargs -n1 gh cache delete
 ```
 
 Contributors run the asset tests locally with `OWE_ASSETS` (see Local use).
