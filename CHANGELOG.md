@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Wallpaper Editor: an imported static FBX's configuration is Wallpaper Engine's.** Wallpaper Engine's importer writes `"editor": {"animationmapping": null}` in an FBX's `models/<name>.json` when the file has no animations (an OBJ's has no `editor`); Import Model left it out. The static model itself already compiled as Wallpaper Engine's (meshes only, no skeleton or animation sections). Checked against WE 2.8.0.42's import of a static FBX (capture 549).
+- **Puppet Warp clipping masks match Wallpaper Engine's coverage.** A mask's coverage is now drawn at half the size of the puppet's image, as Wallpaper Engine draws it at half the frame's size, and read with linear filtering, so a clipped limb's edge fades over two pixels as in Wallpaper Engine 2.8's captures. The coverage takes a quarter of the memory and drawing it a quarter of the work.
 
 ## [1.0.0-beta.8] - 2026-10-18
 
