@@ -16,7 +16,8 @@ import UniformTypeIdentifiers
 /// texels, LZ4 when the mipmap is, in a raw texture). Replace is blend 0 (the rectangle copied in),
 /// Alpha blended blend 1 (drawn over the base by its alpha; RGBA8888 only, WE's
 /// `variantallowcomplexblend`). A video's option replaces the whole mipmap (blend 2), as does one
-/// of a format the loader copies no rectangles of.
+/// of a format the loader copies no rectangles of, its patch's rectangle all zeros (capture
+/// 550: `vid_base.tex`, a 512 × 256 video with a Replace video option, both MP4s stored as they are).
 ///
 /// Each option comes as a texture of the base's layout (its format, mipmap sizes and container;
 /// `EditorTEXEncoder.variantTexture`).
@@ -130,6 +131,13 @@ enum TEXVariantWriter {
                          freeImageFormat: variantFreeImageFormat, bytes: variant.stored)
         }
         guard let texels = texels(variant) else { throw Failure.incompatible(option: option.id) }
+        guard layout.patchesRegions || option.alphaBlend else {
+            // A whole-mipmap patch (blend 2) has no rectangle: capture 550's video option is
+            // x, y, width and height 0, FreeImage format -1, then the option's MP4 as it is
+            // [I: no WE file shows a whole-mipmap patch of a raw format; written the same way].
+            return Patch(option: option.id, x: 0, y: 0, width: 0, height: 0, freeImageFormat: -1,
+                         bytes: base.compression == 1 ? LZ4BlockEncoder.compress(texels) : texels)
+        }
         if layout.patchesRegions {
             // A DXT mipmap smaller than whole blocks can't take a rectangle (the loader copies rows of blocks).
             let side = block(format: layout.header.format).side
