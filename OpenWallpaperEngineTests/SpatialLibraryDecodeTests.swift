@@ -69,19 +69,25 @@ final class SpatialLibraryDecodeTests: XCTestCase {
             .union(Self.surveyPerspective)
         let missing = expected.subtracting(seen).sorted()
         XCTAssertGreaterThan(seen.count, 0)
+        // The surveyed scenes must decode as surveyed; scenes downloaded since are reported, not judged.
+        let surveyedModels = tally.models.filter { Self.surveyModels[$0.key] != nil }
+        let surveyedCameraLayers = tally.cameraLayers.filter { Self.surveyCameraLayers[$0.key] != nil }
+        let added = Set(tally.models.keys).union(tally.cameraLayers.keys).union(tally.pathScenes).union(tally.perspective)
+            .subtracting(expected).sorted()
         if missing.isEmpty {
-            XCTAssertEqual(tally.models, Self.surveyModels)
-            XCTAssertEqual(tally.models.values.reduce(0, +), 254)
-            XCTAssertEqual(tally.cameraLayers, Self.surveyCameraLayers)
-            XCTAssertEqual(tally.cameraLayers.values.reduce(0, +), 15)
-            XCTAssertEqual(tally.pathScenes, Self.surveyPathScenes)
-            XCTAssertEqual(tally.perspective, Self.surveyPerspective)
+            XCTAssertEqual(surveyedModels, Self.surveyModels)
+            XCTAssertEqual(surveyedModels.values.reduce(0, +), 254)
+            XCTAssertEqual(surveyedCameraLayers, Self.surveyCameraLayers)
+            XCTAssertEqual(surveyedCameraLayers.values.reduce(0, +), 15)
+            XCTAssertEqual(tally.pathScenes.intersection(Self.surveyPathScenes), Self.surveyPathScenes)
+            XCTAssertEqual(tally.perspective.intersection(Self.surveyPerspective), Self.surveyPerspective)
         }
         var lines = ["\(tally.models.values.reduce(0, +)) model objects in \(tally.models.count) scenes; "
                      + "\(tally.cameraLayers.values.reduce(0, +)) camera layers in \(tally.cameraLayers.count) scenes "
                      + "(\(tally.layerPaths) paths); \(tally.pathScenes.count) scenes with camera paths "
                      + "(\(tally.scenePaths) paths); \(tally.perspective.count) perspective scenes"]
         if !missing.isEmpty { lines.append("survey scenes not in the library, totals not checked: \(missing.joined(separator: ", "))") }
+        if !added.isEmpty { lines.append("scenes not in the survey (reported, not checked): \(added.joined(separator: ", "))") }
         LibraryReport.attach("3D library survey", lines)
     }
 
