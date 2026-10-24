@@ -6,6 +6,28 @@
         <description>Open Wallpaper Engine updates. Items are added by .github/workflows/appcast.yml when a release is published.</description>
         <language>en</language>
         <item>
+            <title>1.0.0-beta.11</title>
+            <pubDate>Sat, 24 Oct 2026 09:22:32 +0000</pubDate>
+            <sparkle:version>15</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.11</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.11/OpenWallpaperEngine-1.0.0-beta.11.zip" length="93679716" type="application/octet-stream" sparkle:edSignature="0IGk2zokfxls7LB+23PZsuoQZhwFvp8Hy8C4tVHYV95TKGIszCj3pipIFxxGpG7lB0wb66mWL2+cU+/fxG1wAg==" />
+            <sparkle:deltas>
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.11/OpenWallpaperEngine-1.0.0-beta.11-from-14.delta" sparkle:deltaFrom="14" length="2323658" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="LUIvdeLeh+RUKtWI4utL97Ky66xOp88vnYXzGOVb90VWSntdgHe1xpeZs8kTlGmBYNRDyHamA2fCLTVSuZ7zCg==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.11/OpenWallpaperEngine-1.0.0-beta.11-from-13.delta" sparkle:deltaFrom="13" length="2588638" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="PaxDIGDEUoo7jxFHkpnK1hSU79ta9S/7UNRr9c/Sfwg7zIEsD2RKxYk2oQuCRxlletVhtwI5Cich8UkYbQlMDw==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.11/OpenWallpaperEngine-1.0.0-beta.11-from-12.delta" sparkle:deltaFrom="12" length="8972694" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="f+PO3tZhnbqLdF52FIN2x0+Sh8HaZ4RLUEZu9l/QBLymWtNIpeoVg8LBBlhsad52T+O0Wpt9cgeYWZT1vYwvDA==" />
+            </sparkle:deltas>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:fullReleaseNotesLink>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.11</sparkle:fullReleaseNotesLink>
+            <link>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.11</link>
+            <description>&lt;p dir="auto"&gt;Beta 11 fixes a blank tile in Installed when a Workshop preset and its base wallpaper are both installed.&lt;/p&gt;
+&lt;h2 dir="auto"&gt;Fixes&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;A Workshop preset and its base wallpaper each get their own tile.&lt;/strong&gt; When a preset's base was installed (for example downloaded because the preset needs it), the two tiles shared one id and one of them showed blank. Selecting or unsubscribing the preset also picked its base, so Unsubscribe on a preset deleted the base wallpaper. Each now acts on its own folder.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p dir="auto"&gt;The full list is in &lt;a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/blob/main/CHANGELOG.md#100-beta11---2026-10-24"&gt;CHANGELOG.md&lt;/a&gt;.&lt;/p&gt;</description>
+        </item>
+        <item>
             <title>1.0.0-beta.10</title>
             <pubDate>Sat, 24 Oct 2026 07:24:29 +0000</pubDate>
             <sparkle:version>14</sparkle:version>
