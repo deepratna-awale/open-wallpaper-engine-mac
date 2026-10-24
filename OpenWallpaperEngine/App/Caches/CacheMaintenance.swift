@@ -23,7 +23,7 @@ final class CacheMaintenance {
     init() {}
 
     func start() {
-        let work = DispatchWorkItem { Self.expireInBackground(reason: "launch") }
+        let work = Self.launchExpiryWork { Self.expireInBackground(reason: "launch") }
         launchWork = work
         DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + Self.launchDelay, execute: work)
         // An isolated copy's activity is its own (its caches are too).
@@ -47,6 +47,13 @@ final class CacheMaintenance {
     }
 
     // MARK: Expiry
+
+    /// Wraps the expiry that runs `launchDelay` after launch. `@Sendable`: it runs on a utility
+    /// queue, so it must not inherit this type's main actor (Swift 6 traps when main-actor code
+    /// runs elsewhere).
+    static func launchExpiryWork(_ expire: @escaping @Sendable () -> Void) -> DispatchWorkItem {
+        DispatchWorkItem { @Sendable in expire() }
+    }
 
     nonisolated private static func expireInBackground(reason: String) {
         let result = CacheSweeper(folders: CacheFolder.current, protected: expiryProtected()).expire()

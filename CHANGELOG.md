@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The app no longer quits two minutes after launch.** The cache expiry that runs two minutes after launch inherited the main thread's isolation but ran on a background queue, so the Swift 6 runtime stopped the app (1.0.0-beta.9).
+
 ## [1.0.0-beta.9] - 2026-10-23
 
 ### Changed
