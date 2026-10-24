@@ -6,7 +6,7 @@ Building from source and where the code lives. Read [CONTRIBUTING.md](../CONTRIB
 
 ### Prerequisites
 - macOS >= 14.0
-- Xcode >= 26.3 (macOS 26 SDK)
+- Xcode >= 26.3 (macOS 26 SDK). The code is Swift 6 language mode; CI builds with Xcode 26.3 (Swift 6.2), which is stricter than newer Xcodes about some concurrency checks, so see CONTRIBUTING.md › Building for checking with CI's compiler.
 - Xcode Command Line Tools
 
 ### Steps

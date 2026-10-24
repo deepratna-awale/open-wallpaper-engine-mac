@@ -130,9 +130,10 @@ final class UserPropertyBindingRenderTests: XCTestCase {
                 RunLoop.main.run(until: Date().addingTimeInterval(0.01))
                 renderer.draw(in: view)
                 renderer.lastCommandBuffer?.waitUntilCompleted()
-                // Settled: nothing compiling, rasterising or being swapped in.
-                if renderer.hasContent, renderer.pendingReplacements == 0, !renderer.hasPendingEffectPipelines,
-                   renderer.pendingTextRasters == 0 { drawn += 1 }
+                // Settled: nothing compiling (every background pipeline, `pipelinesCompiling`), rasterising
+                // or being swapped in, for `frames` frames in a row.
+                if renderer.hasContent, renderer.pendingReplacements == 0, !renderer.pipelinesCompiling,
+                   renderer.pendingTextRasters == 0 { drawn += 1 } else { drawn = 0 }
                 var bytes = [UInt8](repeating: 0, count: Self.size.x * Self.size.y * 4)
                 view.currentDrawable?.texture.getBytes(&bytes, bytesPerRow: Self.size.x * 4,
                                                        from: MTLRegionMake2D(0, 0, Self.size.x, Self.size.y), mipmapLevel: 0)

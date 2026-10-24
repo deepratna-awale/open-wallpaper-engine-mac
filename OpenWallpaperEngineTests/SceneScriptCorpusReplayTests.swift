@@ -71,6 +71,13 @@ final class SceneScriptCorpusReplayTests: XCTestCase {
                         reason: "3283959988's Progress Bar is a child of the root text layer 'D a y', so getParent() of "
                             + "its parent is undefined (d.ts): the grandparent its visible script (from 3283687787) "
                             + "expects isn't there, as ecf70707afda; throws in WE too"),
+        ExpectedFailure(key: "3fcbb503dee9", check: .exception,
+                        reason: "3326873240's visibility script calls a `scene` object (`scene.getLayer`, "
+                            + "`scene.on(\"update\")`) that SceneScript doesn't have (it's `thisScene` and exported "
+                            + "functions): a ReferenceError in WE too"),
+        ExpectedFailure(key: "c45428486097", check: .exception,
+                        reason: "3326873240's mouse-pointer image has no animation layers, so its cursorClick's "
+                            + "`getAnimationLayer(\"dianji\")` is null and `.play()` throws in WE too"),
         ExpectedFailure(key: "cb3c105d9455", check: .exception,
                         reason: "3815542599's day visibility reads 'wallpaperPpluginProps' (sic), which no script "
                             + "or WE API declares: a ReferenceError in WE too"),

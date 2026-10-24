@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Built in Swift 6 language mode, with full concurrency checking.** Every target and package now compiles as Swift 6, so the compiler checks which thread each piece of code runs on. The render thread, the audio thread, Chromium's frame callbacks and notification handlers each hand work over to the main thread explicitly. The Swift 6 runtime then stops the app outright if main-thread-only code ever runs elsewhere, instead of letting it race silently.
+
 ### Removed
 
 - **One-time migrations from older Open Wallpaper Engine versions.** The move from the old app id (its defaults, caches, keychain items, screen saver and login item, and the notice about permissions), the old settings keys and values (the earlier Render Resolution and MetalFX choices, the old log level key, the Animated Thumbnails and screen saver schedule keys), the screen saver's old recordings, video copies and selection, the old desktop snapshots in Caches, the old video texture cache folder, the old audio cache names, settings, favourites and trust saved under the old wallpaper identities and paths, SceneScript `localStorage` kept under a `workshopid`, and the single-wallpaper key from before per-display wallpapers. Data still in those old formats is ignored. Wallpaper Engine's own formats are read as before.
@@ -14,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Wallpaper Editor: imported OBJ and MTL files that aren't UTF-8 load.** They were read as empty: the Latin-1 fallback never ran, because one `try?` covered both reads.
+- **Scene sound: player callbacks no longer race with the render thread.** A sound voice's finished-playing callback ran on the main thread and changed state the render thread uses; it now runs on the thread that owns the voice.
 - **Wallpaper Editor: a video texture's variant is written as Wallpaper Engine writes it.** A video option's patch now has Wallpaper Engine's empty rectangle (it held the video's size), so the compiled `.tex` of a video with a video option is byte for byte Wallpaper Engine's. The player already read Wallpaper Engine's file and played the option video in place of the base when its condition held; both are now checked against WE 2.8.0.42's own video variant (capture 550).
 - **Wallpaper Editor: a texture variant option without a condition is saved and compiled as Wallpaper Engine's.** Wallpaper Engine saves such an option with no `variantcondition` in the `.tex-json` and its compiler leaves it out of the `.tex`; the editor wrote `"variantcondition": null` and compiled it as a record that never turns on. The option still never shows, its file is still checked against the texture, and the `.tex` now has Wallpaper Engine's layout. Checked against WE 2.8.0.42's texture with two variant groups (capture 550).
 - **Model clip events fire at their frame.** A `.mdl` event's time is stored in seconds (Wallpaper Engine's compilers write `frame / fps`), and the player read it as a frame, so an event Wallpaper Engine compiled fired far too early (frame 15 of a 30 fps clip at half a frame instead of half a second). It is now the clip clock's event time as Wallpaper Engine plays it.
