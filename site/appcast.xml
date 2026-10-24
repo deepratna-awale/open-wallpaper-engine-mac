@@ -6,6 +6,58 @@
         <description>Open Wallpaper Engine updates. Items are added by .github/workflows/appcast.yml when a release is published.</description>
         <language>en</language>
         <item>
+            <title>1.0.0-beta.9</title>
+            <pubDate>Sat, 24 Oct 2026 02:07:31 +0000</pubDate>
+            <sparkle:version>13</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.9</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.9/OpenWallpaperEngine-1.0.0-beta.9.zip" length="93675924" type="application/octet-stream" sparkle:edSignature="nyuHqXZARJkd3tZl0bYAX+MJu26jOGk3PqGQqntM7vl63f5AnLLsztT97d7elfvVNXKpip335lJ0f2+bpusVBA==" />
+            <sparkle:deltas>
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.9/OpenWallpaperEngine-1.0.0-beta.9-from-12.delta" sparkle:deltaFrom="12" length="8973958" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="4P6yefdxp8TpHvTBPRMgogL/yL5F6jvrU2pdzgZtx6ZJaJHlV3p3wCmxLOeN9B2mBuQjUsKANrRyS0PyY6u5BA==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.9/OpenWallpaperEngine-1.0.0-beta.9-from-11.delta" sparkle:deltaFrom="11" length="11621742" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="QPNG5n7tKga9Wxzz9l/3+HnDpwxacC/O3INZrSnmpON4MCHilDBznDMZHpOT0gOFycgyUa7Q2GL7hgDA516EDg==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.9/OpenWallpaperEngine-1.0.0-beta.9-from-9.delta" sparkle:deltaFrom="9" length="16436074" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="riSkOXlK/5p6pPUVxfqWsMjP2MZEEY0XxGREq43nb9BPS7ds5VhWqdaLk9IYG/ElGJ4I6lr8uJuRTPokRDAmAQ==" />
+            </sparkle:deltas>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:fullReleaseNotesLink>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.9</sparkle:fullReleaseNotesLink>
+            <link>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.9</link>
+            <description>&lt;p dir="auto"&gt;Beta 9 moves the whole app to Swift 6 and brings model import, texture variants and Puppet Warp clipping closer to Wallpaper Engine, all checked against Wallpaper Engine 2.8's own files.&lt;/p&gt;
+&lt;h2 dir="auto"&gt;Highlights&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;Swift 6, with full concurrency checking.&lt;/strong&gt; Every part of the app now compiles as Swift 6, so the compiler checks which thread each piece of code runs on. The render thread, the audio thread, Chromium's frame callbacks and notification handlers each hand work back to the main thread explicitly. If main-thread code ever runs elsewhere, the app now stops at once instead of racing silently.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Model import matches Wallpaper Engine.&lt;/strong&gt; Imported FBX models number their bones in Wallpaper Engine's order, so rigs with side-by-side chains (two arms, two legs) line up. Static models and root-motion clips compile exactly as Wallpaper Engine's compiler writes them.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Model events work as in Wallpaper Engine.&lt;/strong&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;The Model Editor's Events tab adds events to an animation, not a clip, as Wallpaper Engine does.&lt;/li&gt;
+&lt;li&gt;Events compile byte for byte as Wallpaper Engine's.&lt;/li&gt;
+&lt;li&gt;Events in models compiled by Wallpaper Engine now fire at their frame, not far too early.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Texture variants match Wallpaper Engine.&lt;/strong&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;An option without a condition is saved and compiled as Wallpaper Engine's.&lt;/li&gt;
+&lt;li&gt;A video's video option produces a &lt;code class="notranslate"&gt;.tex&lt;/code&gt; that is byte for byte Wallpaper Engine's.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Puppet Warp clipping masks&lt;/strong&gt; fade over two pixels at the edge, as in Wallpaper Engine 2.8, and use a quarter of the memory.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 dir="auto"&gt;Fixes&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;Imported OBJ and MTL files that aren't UTF-8 load again (they read as empty).&lt;/li&gt;
+&lt;li&gt;Scene sound: a sound's finished-playing callback no longer races with the render thread.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 dir="auto"&gt;Removed&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;One-time migrations from older versions:&lt;/strong&gt; the old app id, old settings keys and values, screen saver recordings and older wallpaper ids.
+&lt;ul dir="auto"&gt;
+&lt;li&gt;Anything still stored the old way is ignored, not converted.&lt;/li&gt;
+&lt;li&gt;A Render Resolution or MetalFX setting saved under its old value goes back to the default.&lt;/li&gt;
+&lt;li&gt;A wallpaper trusted under its old entry asks once again.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p dir="auto"&gt;The full list is in &lt;a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/blob/main/CHANGELOG.md#100-beta9---2026-10-23"&gt;CHANGELOG.md&lt;/a&gt;.&lt;/p&gt;</description>
+        </item>
+        <item>
             <title>1.0.0-beta.8</title>
             <pubDate>Sun, 18 Oct 2026 14:56:10 +0000</pubDate>
             <sparkle:version>12</sparkle:version>
