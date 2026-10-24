@@ -102,7 +102,7 @@ struct ContentView: View {
         }
         .confirmationDialog("Unsubscribe Confirmation",
                             isPresented: Bindable(viewModel.presentation).isUnsubscribeConfirming) {
-            if let url = viewModel.presentation.hoveredWallpaper?.wallpaperDirectory {
+            if let url = viewModel.presentation.hoveredWallpaper?.settingsDirectory {
                 Button("Delete Immediately", role: .destructive) {
                     viewModel.library.deleteWallpapers(at: [url], toTrash: false, wallpaperViewModel: wallpaperViewModel)
                     viewModel.presentation.hoveredWallpaper = nil

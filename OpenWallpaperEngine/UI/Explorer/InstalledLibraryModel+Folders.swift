@@ -101,7 +101,7 @@ extension InstalledLibraryModel {
     func wallpapersActedOn(from wallpaper: WEWallpaper?) -> [WEWallpaper] {
         let selected = selectedWallpaperItems()
         guard let wallpaper else { return selected }
-        return selected.contains(where: { $0.wallpaperDirectory == wallpaper.wallpaperDirectory }) ? selected : [wallpaper]
+        return selected.contains(where: { $0.isSameWallpaper(as: wallpaper) }) ? selected : [wallpaper]
     }
 
     /// WE's Move to: files the wallpapers in `folder` (the top level for nil), out of wherever

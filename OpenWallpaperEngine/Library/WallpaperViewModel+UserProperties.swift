@@ -106,7 +106,8 @@ extension WallpaperViewModel {
     /// Remove a wallpaper from all screens (e.g., when unsubscribing).
     func removeWallpaperFromAllScreens(directory: URL) {
         // One assignment: each change saves and refreshes the instances.
-        let shown = wallpapers.filter { $0.value.wallpaperDirectory == directory }.keys
+        // A preset item goes with its own folder or its base's.
+        let shown = wallpapers.filter { $0.value.wallpaperDirectory == directory || $0.value.settingsDirectory == directory }.keys
         guard !shown.isEmpty else { return }
         var updated = wallpapers
         for key in shown { updated[key] = Self.defaultWallpaper }

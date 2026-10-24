@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.11] - 2026-10-24
+
+### Fixed
+
+- **Installed: a Workshop preset and its base wallpaper each get their own tile.** When a preset's base was installed (for example downloaded because the preset needs it), the two tiles shared one id and one of them showed blank. Selecting or unsubscribing the preset also picked its base: Unsubscribe on a preset deleted the base wallpaper's folder. Each now goes by its own folder.
+
 ## [1.0.0-beta.10] - 2026-10-24
 
 ### Fixed
