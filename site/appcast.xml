@@ -6,6 +6,28 @@
         <description>Open Wallpaper Engine updates. Items are added by .github/workflows/appcast.yml when a release is published.</description>
         <language>en</language>
         <item>
+            <title>1.0.0-beta.10</title>
+            <pubDate>Sat, 24 Oct 2026 07:24:29 +0000</pubDate>
+            <sparkle:version>14</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.10</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.10/OpenWallpaperEngine-1.0.0-beta.10.zip" length="93675926" type="application/octet-stream" sparkle:edSignature="Rj9aHtOws6kuj5tVbzf8q1zcnGgpNI1INqvVnNmDZT8miRFfXrQ8ic6RNiRv2gzb9W70MYXWj/FH17gtAETuBg==" />
+            <sparkle:deltas>
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.10/OpenWallpaperEngine-1.0.0-beta.10-from-13.delta" sparkle:deltaFrom="13" length="2119702" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="iGhTxTilzQhgbKotENWcFEfdv5BN7qQqdjRkJK4oOugakVFTs6KVR/PI2i2DQHbHiRzY4hBSn6VfSprnh9xjBA==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.10/OpenWallpaperEngine-1.0.0-beta.10-from-12.delta" sparkle:deltaFrom="12" length="8963454" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="G6t2WJ9RC8lQAFhcQn0kkCBnqKFRaci8iNKhgdEIOdlSTEwrhwY45yr+RByM+DIcAfzucs5TlvEG1xy41WkXCA==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.10/OpenWallpaperEngine-1.0.0-beta.10-from-11.delta" sparkle:deltaFrom="11" length="11595990" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="y/ZgSr+pajIZ4KW8OEKcJP0e5k3591p6st/NmDXE3YwAFgtg6yA22a1iLft/VIVYaG5DFT7MUxlyLT8N9YTkBw==" />
+            </sparkle:deltas>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:fullReleaseNotesLink>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.10</sparkle:fullReleaseNotesLink>
+            <link>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.10</link>
+            <description>&lt;p dir="auto"&gt;Beta 10 is a hotfix for Beta 9, which quit about two minutes after every launch.&lt;/p&gt;
+&lt;h2 dir="auto"&gt;Fixes&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;The app no longer quits two minutes after launch.&lt;/strong&gt; In Beta 9 the cache cleanup that runs two minutes after launch was treated as main-thread code but ran on a background queue, so the Swift 6 runtime stopped the app.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p dir="auto"&gt;Everything else is as in &lt;a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.9"&gt;Beta 9&lt;/a&gt;. The full list is in &lt;a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/blob/main/CHANGELOG.md#100-beta10---2026-10-24"&gt;CHANGELOG.md&lt;/a&gt;.&lt;/p&gt;</description>
+        </item>
+        <item>
             <title>1.0.0-beta.9</title>
             <pubDate>Sat, 24 Oct 2026 02:07:31 +0000</pubDate>
             <sparkle:version>13</sparkle:version>
