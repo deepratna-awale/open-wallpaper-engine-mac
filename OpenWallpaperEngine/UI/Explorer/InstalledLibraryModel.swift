@@ -373,7 +373,7 @@ final class InstalledLibraryModel {
     }
 
     func toggleSelection(for wallpaper: WEWallpaper) {
-        ClickSelection.apply(.toggle, on: wallpaper.wallpaperDirectory, in: [],
+        ClickSelection.apply(.toggle, on: wallpaper.settingsDirectory, in: [],
                              selected: &selectedWallpapers, anchor: &selectionAnchor)
     }
 
@@ -385,8 +385,8 @@ final class InstalledLibraryModel {
         inspectingWith wallpaperViewModel: WallpaperViewModel,
         kind: ClickSelection.Kind = ClickSelection.current
     ) {
-        let url = wallpaper.wallpaperDirectory
-        guard !ClickSelection.apply(kind, on: url, in: wallpapers.map(\.wallpaperDirectory),
+        let url = wallpaper.settingsDirectory
+        guard !ClickSelection.apply(kind, on: url, in: wallpapers.map(\.settingsDirectory),
                                     selected: &selectedWallpapers, anchor: &selectionAnchor) else { return }
         clearSelection()
         wallpaperViewModel.inspect(wallpaper)
@@ -397,8 +397,8 @@ final class InstalledLibraryModel {
     /// as Finder selects every item its window shows. Folders have no selection.
     func selectAll() {
         let wallpapers = displayedWallpapers
-        selectedWallpapers = Set(wallpapers.map(\.wallpaperDirectory))
-        selectionAnchor = wallpapers.first?.wallpaperDirectory
+        selectedWallpapers = Set(wallpapers.map(\.settingsDirectory))
+        selectionAnchor = wallpapers.first?.settingsDirectory
     }
 
     func clearSelection() {
@@ -407,10 +407,10 @@ final class InstalledLibraryModel {
     }
 
     func isSelected(_ wallpaper: WEWallpaper) -> Bool {
-        selectedWallpapers.contains(wallpaper.wallpaperDirectory)
+        selectedWallpapers.contains(wallpaper.settingsDirectory)
     }
 
     func selectedWallpaperItems() -> [WEWallpaper] {
-        autoRefreshWallpapers.filter { selectedWallpapers.contains($0.wallpaperDirectory) }
+        autoRefreshWallpapers.filter { selectedWallpapers.contains($0.settingsDirectory) }
     }
 }

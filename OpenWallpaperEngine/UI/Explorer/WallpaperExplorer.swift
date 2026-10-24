@@ -54,7 +54,9 @@ struct WallpaperExplorer: SubviewOfContentView {
                                         ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
                                     }
                             }
-                            ForEach(viewModel.library.displayedWallpapers, id: \.wallpaperDirectory) { wallpaper in
+                            // By its own folder: a Workshop preset shares its base's `wallpaperDirectory`, and two tiles
+                            // with one id leave one of them blank.
+                            ForEach(viewModel.library.displayedWallpapers, id: \.settingsDirectory) { wallpaper in
                                 ExplorerItem(viewModel: viewModel, wallpaperViewModel: wallpaperViewModel, wallpaper: wallpaper)
                                     .transition(InstalledDropAnimation.removal(reduceMotion: reduceMotion))
                                     .libraryContextMenu(isEnabled: viewModel.allowsLibraryActions) {
