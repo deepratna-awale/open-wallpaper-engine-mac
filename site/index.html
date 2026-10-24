@@ -507,9 +507,9 @@
 // Points the button at the newest published release's DMG (or zip), pre-releases included. If the
 // list is unavailable it falls back to releases/latest; if that fails too, the button keeps its link.
 const REPO_API = "https://api.github.com/repos/deepratna-awale/open-wallpaper-engine-mac";
-// "v1.0.0-beta.1" -> "1.0.0 Beta 1" (alpha -> "Alpha N", rc -> "RC N"); final or unknown tags stay as tagged.
+// "v1.0.0-beta.1" -> "1.0.0 Beta 1", "v1.0.0-beta.9.1" -> "1.0.0 Beta 9.1" (alpha -> "Alpha N", rc -> "RC N"); final or unknown tags stay as tagged.
 function releaseLabel(tag) {
-  const m = /^v?(\d+(?:\.\d+)*)-(alpha|beta|rc)\.?(\d+)?$/i.exec(tag || "");
+  const m = /^v?(\d+(?:\.\d+)*)-(alpha|beta|rc)\.?(\d+(?:\.\d+)?)?$/i.exec(tag || "");
   if (!m) return { text: `Download ${tag}`, pre: false };
   const kind = { alpha: "Alpha", beta: "Beta", rc: "RC" }[m[2].toLowerCase()];
   return { text: `Download ${m[1]} ${kind}${m[3] ? " " + m[3] : ""}`, pre: true };

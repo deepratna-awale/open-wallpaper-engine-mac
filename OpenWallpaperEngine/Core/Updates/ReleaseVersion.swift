@@ -1,7 +1,9 @@
 import Foundation
 
-/// A release version as the tags spell it: `X.Y.Z` or `X.Y.Z-(alpha|beta|rc).N`.
-/// `Scripts/release-version.sh` applies the same rules to tags in the release workflow.
+/// A release version as the tags spell it: `X.Y.Z`, `X.Y.Z-(alpha|beta|rc).N`, or
+/// `X.Y.Z-(alpha|beta|rc).N.H` for a hotfix of a pre-release (`1.0.0-beta.9.1` follows
+/// `1.0.0-beta.9`). `Scripts/release/release-version.sh` applies the same rules to tags in the
+/// release workflow.
 struct ReleaseVersion: Comparable, CustomStringConvertible {
     enum Stage: String, Comparable {
         case alpha, beta, rc
@@ -13,7 +15,7 @@ struct ReleaseVersion: Comparable, CustomStringConvertible {
     let major: Int
     let minor: Int
     let patch: Int
-    let prerelease: (stage: Stage, number: Int)?
+    let prerelease: (stage: Stage, number: Int, hotfix: Int?)?
 
     init?(_ text: String) {
         let trimmed: Substring = text.hasPrefix("v") ? text.dropFirst() : Substring(text)
@@ -25,9 +27,14 @@ struct ReleaseVersion: Comparable, CustomStringConvertible {
         (major, minor, patch) = (numbers[0], numbers[1], numbers[2])
         if parts.count == 2 {
             let suffix: [Substring] = parts[1].split(separator: ".", omittingEmptySubsequences: false)
-            guard suffix.count == 2, let stage = Stage(rawValue: String(suffix[0])),
+            guard suffix.count == 2 || suffix.count == 3, let stage = Stage(rawValue: String(suffix[0])),
                   let number = Self.number(suffix[1]) else { return nil }
-            prerelease = (stage, number)
+            var hotfix: Int?
+            if suffix.count == 3 {
+                guard let value = Self.number(suffix[2]) else { return nil }
+                hotfix = value
+            }
+            prerelease = (stage, number, hotfix)
         } else {
             prerelease = nil
         }
@@ -43,13 +50,15 @@ struct ReleaseVersion: Comparable, CustomStringConvertible {
     /// `X.Y.Z`, the bundle's `CFBundleShortVersionString`.
     var marketingVersion: String { "\(major).\(minor).\(patch)" }
 
-    /// `X.Y.Z` or `X.Y.Z-stage.N`, without the tag's `v`.
+    /// `X.Y.Z`, `X.Y.Z-stage.N` or `X.Y.Z-stage.N.H`, without the tag's `v`.
     var description: String {
         guard let prerelease else { return marketingVersion }
-        return "\(marketingVersion)-\(prerelease.stage.rawValue).\(prerelease.number)"
+        let hotfix = prerelease.hotfix.map { ".\($0)" } ?? ""
+        return "\(marketingVersion)-\(prerelease.stage.rawValue).\(prerelease.number)\(hotfix)"
     }
 
-    /// SemVer precedence: a pre-release comes before its final release, alpha < beta < rc.
+    /// SemVer precedence: a pre-release comes before its final release, alpha < beta < rc, and a
+    /// pre-release's hotfix comes after it (beta.9 < beta.9.1 < beta.10).
     static func < (lhs: ReleaseVersion, rhs: ReleaseVersion) -> Bool {
         let left: [Int] = [lhs.major, lhs.minor, lhs.patch]
         let right: [Int] = [rhs.major, rhs.minor, rhs.patch]
@@ -57,7 +66,10 @@ struct ReleaseVersion: Comparable, CustomStringConvertible {
         switch (lhs.prerelease, rhs.prerelease) {
         case (nil, _): return false
         case (_, nil): return true
-        case let (l?, r?): return l.stage != r.stage ? l.stage < r.stage : l.number < r.number
+        case let (l?, r?):
+            if l.stage != r.stage { return l.stage < r.stage }
+            if l.number != r.number { return l.number < r.number }
+            return (l.hotfix ?? -1) < (r.hotfix ?? -1)
         }
     }
 
@@ -65,5 +77,6 @@ struct ReleaseVersion: Comparable, CustomStringConvertible {
         lhs.marketingVersion == rhs.marketingVersion
             && lhs.prerelease?.stage == rhs.prerelease?.stage
             && lhs.prerelease?.number == rhs.prerelease?.number
+            && lhs.prerelease?.hotfix == rhs.prerelease?.hotfix
     }
 }

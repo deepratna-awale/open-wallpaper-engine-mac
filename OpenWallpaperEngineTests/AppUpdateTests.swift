@@ -33,11 +33,27 @@ final class AppUpdateTests: XCTestCase {
         XCTAssertEqual(beta.prerelease?.number, 4)
         XCTAssertEqual(ReleaseVersion("v2.0.0-alpha.1")?.prerelease?.stage, .alpha)
         XCTAssertEqual(ReleaseVersion("v2.0.0-rc.12")?.prerelease?.number, 12)
+        XCTAssertNil(beta.prerelease?.hotfix)
+
+        let hotfix: ReleaseVersion = try XCTUnwrap(ReleaseVersion("v1.0.0-beta.9.1"))
+        XCTAssertEqual(hotfix.prerelease?.number, 9)
+        XCTAssertEqual(hotfix.prerelease?.hotfix, 1)
+        XCTAssertEqual(hotfix.description, "1.0.0-beta.9.1")
 
         for bad in ["", "v1", "v1.0", "1.0.0.0", "v1.0.0-", "v1.0.0-beta", "v1.0.0-beta.", "v1.0.0-preview.1",
-                    "v1.0.0-beta.1.2", "v1.0.x", "1.0.0 ", "v1..0", "v1.0.0-Beta.1", "v01.0.0", "v1.0.0-beta.01"] {
+                    "v1.0.0-beta.1.2.3", "v1.0.0-beta.1.", "v1.0.0-beta.1.01", "v1.0.x", "1.0.0 ", "v1..0", "v1.0.0-Beta.1", "v01.0.0", "v1.0.0-beta.01"] {
             XCTAssertNil(ReleaseVersion(bad), bad)
         }
+    }
+
+    /// A pre-release's hotfix follows it and comes before the next pre-release.
+    func testHotfixPrereleaseOrdering() throws {
+        let versions: [ReleaseVersion] = try ["1.0.0-beta.9", "1.0.0-beta.9.1", "1.0.0-beta.9.2", "1.0.0-beta.10",
+                                              "1.0.0-rc.1", "1.0.0"].map { try XCTUnwrap(ReleaseVersion($0)) }
+        for (lower, higher) in zip(versions, versions.dropFirst()) {
+            XCTAssertLessThan(lower, higher, "\(lower) < \(higher)")
+        }
+        XCTAssertNotEqual(versions[0], versions[1])
     }
 
     // MARK: Configuration

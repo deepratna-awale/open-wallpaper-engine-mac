@@ -68,7 +68,7 @@ jobs:
         run: |
           set -euo pipefail
           parsed=$(Scripts/release/release-version.sh "$TAG") \
-            || { echo "::error::tag '$TAG' is not vX.Y.Z or vX.Y.Z-(alpha|beta|rc).N"; exit 1; }
+            || { echo "::error::tag '$TAG' is not vX.Y.Z or vX.Y.Z-(alpha|beta|rc).N[.H]"; exit 1; }
           echo "$parsed"
           echo "$parsed" >> "$GITHUB_OUTPUT"
           draft=$(gh release view "$TAG" --repo "$REPO" --json isDraft --jq .isDraft)

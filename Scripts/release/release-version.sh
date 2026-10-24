@@ -1,5 +1,6 @@
 #!/bin/bash
-# Parses a release tag: vX.Y.Z or vX.Y.Z-(alpha|beta|rc).N. The same rules as
+# Parses a release tag: vX.Y.Z, vX.Y.Z-(alpha|beta|rc).N, or vX.Y.Z-(alpha|beta|rc).N.H for a
+# hotfix of a pre-release (1.0.0-beta.9.1 follows 1.0.0-beta.9). The same rules as
 # OpenWallpaperEngine/Core/Updates/ReleaseVersion.swift.
 #
 #   Scripts/release/release-version.sh v1.0.0-beta.1
@@ -13,12 +14,12 @@ set -euo pipefail
 
 parse_release_tag() {
   local tag="$1"
-  if [[ ! "$tag" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-(alpha|beta|rc)\.(0|[1-9][0-9]*))?$ ]]; then
-    echo "error: tag '$tag' is not vX.Y.Z or vX.Y.Z-(alpha|beta|rc).N" >&2
+  if [[ ! "$tag" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-(alpha|beta|rc)\.(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))?)?$ ]]; then
+    echo "error: tag '$tag' is not vX.Y.Z or vX.Y.Z-(alpha|beta|rc).N[.H]" >&2
     return 1
   fi
   local version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
-  local stage="${BASH_REMATCH[5]}" number="${BASH_REMATCH[6]}"
+  local stage="${BASH_REMATCH[5]}" number="${BASH_REMATCH[6]}${BASH_REMATCH[7]}"
   echo "tag=$tag"
   echo "version=$version"
   if [ -n "$stage" ]; then

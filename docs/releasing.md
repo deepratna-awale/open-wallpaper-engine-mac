@@ -170,9 +170,11 @@ Tags decide everything:
 | `v1.2.0-beta.1` | 1.2.0 | 1.2.0-beta.1 | draft, **pre-release** | `beta` only |
 | `v1.2.0-rc.1` | 1.2.0 | 1.2.0-rc.1 | draft, **pre-release** | `beta` only |
 | `v1.2.0-alpha.1` | 1.2.0 | 1.2.0-alpha.1 | draft, **pre-release** | `beta` only |
+| `v1.2.0-beta.3.1` | 1.2.0 | 1.2.0-beta.3.1 | draft, **pre-release** | `beta` only |
 
 `CFBundleVersion` is the workflow run number, so it always increases; Sparkle compares
-builds by it. Anything else (`v1.2`, `v1.2.0-preview.1`, leading zeros) fails the run
+builds by it. A fourth number is a hotfix of a pre-release: `v1.2.0-beta.3.1` comes after
+`v1.2.0-beta.3` and before `v1.2.0-beta.4`. Anything else (`v1.2`, `v1.2.0-preview.1`, leading zeros) fails the run
 (`Scripts/release/release-version.sh`, tested by `Scripts/release/test-release-version.sh`).
 
 ```sh
