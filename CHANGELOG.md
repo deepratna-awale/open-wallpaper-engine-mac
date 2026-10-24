@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.9] - 2026-10-23
+
 ### Changed
 
 - **Built in Swift 6 language mode, with full concurrency checking.** Every target and package now compiles as Swift 6, so the compiler checks which thread each piece of code runs on. The render thread, the audio thread, Chromium's frame callbacks and notification handlers each hand work over to the main thread explicitly. The Swift 6 runtime then stops the app outright if main-thread-only code ever runs elsewhere, instead of letting it race silently.
