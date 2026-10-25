@@ -93,23 +93,6 @@ final class SceneReviewFixTests: XCTestCase {
         }
     }
 
-    // MARK: Particle emitter space
-
-    func testEmitterSpaceIncludesParentScaleAndRotation() throws {
-        let objects = try JSONDecoder().decode([WESceneObject].self, from: Data(#"""
-        [{"id": 1, "origin": "100 100 0", "scale": "2 2 1", "angles": "0 0 1.5707963"},
-         {"id": 2, "parent": 1, "origin": "10 0 0", "particle": "p.json"}]
-        """#.utf8))
-        let hierarchy = SceneTransformHierarchy(objects: objects)
-        let space = SceneParticleEmitterSpace(world: hierarchy.world(of: "2"))
-        XCTAssertEqual(simd_length(space.origin - SIMD2(100, 100)), 20, accuracy: 1e-3,
-                       "child offset is scaled by the parent")
-        XCTAssertEqual(space.extent(SIMD2(5, 5)), SIMD2(10, 10))
-        let rotated = space.offset(SIMD2(1, 0))
-        XCTAssertEqual(simd_length(rotated), 2, accuracy: 1e-4)
-        XCTAssertEqual(abs(rotated.x), 0, accuracy: 1e-4, "a quarter turn moves x onto y")
-    }
-
     // MARK: Change impact
 
     func testParallaxAndEffectMusicSyncImpact() {

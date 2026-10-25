@@ -86,12 +86,12 @@ static void spawnsLayerWorld(thread EmitterState &state, EmitterStep step) {
     state.lastWorldTranslation = float4(step.translations.xy, 1, 0);
 }
 
-/// A collision shape in scene space (`ParticleCollisionPlacement`).
+/// A collision shape in the system's space, or in the scene when `extra.z` is set (`ParticleCollisionPlacement`).
 struct CollisionPlacement {
     float4 shape;    // plane: normal xy, distance; sphere: centre xy, radius; quad: centre xy, normal xy;
                      // capsule: start xyz, length
     float4 axis;     // quad: right xy, half size along it, half size along `extra`; capsule: direction xyz, radius
-    float4 extra;    // quad: second axis xy; z: fixed in the scene
+    float4 extra;    // quad: second axis xy; z: in the scene (bounds, capsules), not the system's space
     float4 response; // bounce coefficient, behaviour, stops rotation, kind
 };
 

@@ -41,7 +41,8 @@ struct ParticleFrameInputs {
     var spawnScale = SIMD4<Float>(repeating: 1)
     /// The overrides' tint times brightness: spawned particles' base colour.
     var colorScale = SIMD3<Float>(repeating: 1)
-    /// Collision shapes in the scene this step (`ParticleOperatorKind.collision` records index them).
+    /// Collision shapes this step, in the system's space unless `extra.z` is set (`ParticleOperatorKind.collision`
+    /// records index them).
     var collisions: [ParticleCollisionPlacement] = []
     /// How many of `collisions` each collision operator placed, in program order.
     var collisionCounts: [Int] = []
@@ -390,17 +391,15 @@ struct ParticleFrameInputs {
         previousControlPoints = system.previousControlPoints ?? controlPoints
         system.previousControlPoints = controlPoints
         guard configuration.program.operators.contains(where: { $0.collision != nil }) else { return }
-        let simulationSpace = SceneParticleEmitterSpace(world: space)
         let points = controlPoints
-        let spaceToScene = space
         for collision in configuration.program.operators.compactMap(\.collision) {
             let placed: [ParticleCollisionPlacement]
             if let index = collision.modelIndex {
                 placed = configuration.collisionModels[index].map { collision.placed(capsules: modelCapsules($0)) } ?? []
             } else {
-                placed = collision.placed(in: simulationSpace) { index in
+                placed = collision.placed { index in
                     let point = points[min(max(index, 0), 7)]
-                    return spaceToScene.apply(SIMD2(point.x, point.y))
+                    return SIMD2(point.x, point.y)
                 }
             }
             collisions += placed
@@ -496,7 +495,7 @@ struct ParticleFrameInputs {
 
     /// These inputs for one instance of an instanced system, whose emitter sits at `translation`
     /// (on top of the shared emitter transform the inputs were placed with); it sat at `previous`
-    /// last step.
+    /// last step. Collision shapes in the system's space move with it; those in the scene stay.
     func placed(at translation: SIMD2<Float>, previous: SIMD2<Float>) -> ParticleFrameInputs {
         var inputs = self
         inputs.space.translation += translation
@@ -505,7 +504,6 @@ struct ParticleFrameInputs {
             inputs.controlPoints[index] -= SIMD3(toSpace * translation, 0)
             inputs.previousControlPoints[index] -= SIMD3(toSpace * previous, 0)
         }
-        inputs.collisions = collisions.map { $0.moved(by: translation) }
         return inputs
     }
 }

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Particles: collision shapes scale with a stretched particle system, as in Wallpaper Engine.** Wallpaper Engine runs a particle system's collision planes, spheres and quads in the system's own space, like its movement and the other operators. They were placed in the scene and scaled by the object's average scale, so under a non-uniform scale a sphere stayed a circle (Wallpaper Engine's is an ellipse) and particles bounced off the wrong angle. Uniformly scaled, rotated and `worldspace` systems are unchanged; scene bounds and model collisions stay in the scene.
+
 ## [1.0.0-beta.11] - 2026-10-24
 
 ### Fixed
