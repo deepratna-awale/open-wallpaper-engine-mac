@@ -404,14 +404,23 @@ final class EffectGraphRenderer: @unchecked Sendable {
         let prefix = Self.staticPrefix(effects, programs: state.programs, hidden: context.hiddenEffects)
         var prefixValueCount = 0
         var dynamicValues: [Float] = []
+        // The placement built-ins as the buffer passes get them (`draw` without a scene).
+        var placement = BuiltinPassContext(targetSize: .one)
+        placement.effectTextureProjection = context.effectTextureProjection
+        placement.layerModelMatrix = context.layerModelMatrix
         for (effectIndex, programs) in state.programs.enumerated() where !context.hiddenEffects.contains(effectIndex) {
             defer { if effectIndex < prefix { prefixValueCount = dynamicValues.count } }
             for program in programs { program?.appendDynamicValues(to: &dynamicValues, values: context.values) }
-            // The layer's matrix moves with an animated or scripted layer while the chain's input
-            // stays: a chain that reads it is kept only while it holds.
-            if let layerModel = context.layerModelMatrix, programs.contains(where: { $0?.readsLayerModelMatrix == true }) {
-                dynamicValues += BuiltinUniforms.value(.layerModelMatrix, frame: context.frame,
-                                                       pass: BuiltinPassContext(targetSize: .one, layerModelMatrix: layerModel))
+            // The layer's matrices, `g_EffectTextureProjectionMatrix`, the eye and `g_Screen` change
+            // as the layer, the camera or the display does while the chain's input stays: a chain
+            // whose passes read them is kept only while they hold. The last pass drawn into the
+            // scene is drawn every frame with its own, so it doesn't count.
+            for (passIndex, program) in programs.enumerated() {
+                guard let program, !program.placementKeys.isEmpty,
+                      last.map({ $0 != (effectIndex, passIndex) }) ?? true else { continue }
+                for key in program.placementKeys {
+                    dynamicValues += BuiltinUniforms.value(key, frame: context.frame, pass: placement)
+                }
             }
             // A sprite sheet's frame changes the output like a live constant does.
             guard let assetSprite = context.assetSprite else { continue }

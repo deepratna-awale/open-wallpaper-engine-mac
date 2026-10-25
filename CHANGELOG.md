@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Audio-reactive wallpapers no longer bring a headset's microphone into the system audio capture.** The Core Audio process tap was read through an aggregate device that included the default output device, so with a headset (or any output device that also records) the capture included the device's microphone stream, which made macOS check the Microphone permission. The aggregate now holds only the tap.
+- **Effects that read where a layer is on screen follow it when it moves.** An effect chain that doesn't change over time keeps its last output, and only a change of the layer's object matrix (`g_LayerModelMatrix`) drew it again. A chain that read the layer's screen placement (`g_EffectTextureProjectionMatrix` or its inverse), the camera's eye or view axes, or the display size (`g_Screen`) kept the output it had before the layer, the camera or the display changed. Every built-in a chain's passes read that follows the placement, the camera or the display now counts.
 
 ## [1.0.0-beta.11] - 2026-10-24
 
