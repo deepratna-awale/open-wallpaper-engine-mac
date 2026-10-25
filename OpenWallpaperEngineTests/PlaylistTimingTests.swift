@@ -192,6 +192,17 @@ final class PlaylistTimingTests: XCTestCase {
         XCTAssertEqual(model.activePlaylist?.items.count, 8)
     }
 
+    func testAWorkshopPresetAndItsBaseAreSeparateItems() {
+        let model = model(items: 0)
+        let base = wallpaper("base")
+        var preset = base
+        preset.presetDirectory = URL(fileURLWithPath: "/tmp/owe-timing/preset")
+        model.addToPlaylist(base)
+        model.addToPlaylist(preset)
+        model.addToPlaylist(preset)
+        XCTAssertEqual(model.activePlaylist?.items.map(\.wallpaper.identityPath), [base.identityPath, preset.identityPath])
+    }
+
     // MARK: - Settings
 
     func testEndsStayOnlyInATimeOfDayPlaylist() {

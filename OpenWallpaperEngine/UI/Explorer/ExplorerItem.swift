@@ -91,7 +91,7 @@ struct ExplorerItem: SubviewOfContentView {
     private var libraryTile: some View {
         tile
             .help(tooltip)
-            .selectionHighlight(wallpaper.wallpaperDirectory == wallpaperViewModel.displayedWallpaper.wallpaperDirectory,
+            .selectionHighlight(wallpaper.isSameWallpaper(as: wallpaperViewModel.displayedWallpaper),
                                 cornerRadius: Self.cornerRadius)
             .overlay(alignment: .topLeading) {
                 if !viewModel.library.selectedWallpapers.isEmpty {

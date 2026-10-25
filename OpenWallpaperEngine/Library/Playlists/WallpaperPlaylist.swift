@@ -16,7 +16,7 @@ struct WallpaperPlaylistItem: Codable, Identifiable, Equatable {
     }
 
     static func == (lhs: WallpaperPlaylistItem, rhs: WallpaperPlaylistItem) -> Bool {
-        lhs.id == rhs.id && lhs.wallpaper.wallpaperDirectory == rhs.wallpaper.wallpaperDirectory
+        lhs.id == rhs.id && lhs.wallpaper.isSameWallpaper(as: rhs.wallpaper)
             && lhs.duration == rhs.duration && lhs.daytimeEnd == rhs.daytimeEnd
     }
 }
