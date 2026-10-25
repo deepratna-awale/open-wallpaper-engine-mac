@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Effects that read where a layer is on screen follow it when it moves.** An effect chain that doesn't change over time keeps its last output, and only a change of the layer's object matrix (`g_LayerModelMatrix`) drew it again. A chain that read the layer's screen placement (`g_EffectTextureProjectionMatrix` or its inverse), the camera's eye or view axes, or the display size (`g_Screen`) kept the output it had before the layer, the camera or the display changed. Every built-in a chain's passes read that follows the placement, the camera or the display now counts.
+
 ## [1.0.0-beta.11] - 2026-10-24
 
 ### Fixed
