@@ -31,6 +31,34 @@ final class AudioMicrophoneUseTests: XCTestCase {
         XCTAssertNil(description[kAudioAggregateDeviceTapListKey], "no tap: nothing is recorded")
     }
 
+    /// System audio capture reads the process tap alone: with the output device as a sub-device,
+    /// a headset's microphone stream came with it and starting the capture asked for the microphone.
+    func testSystemAudioCaptureHasOnlyTheTap() throws {
+        let description = ProcessTapAudioCapture.aggregateDescription(tapUID: "tap-uid")
+        let subDevices = try XCTUnwrap(description[kAudioAggregateDeviceSubDeviceListKey] as? [[String: Any]])
+        XCTAssertTrue(subDevices.isEmpty, "no sub-device, so no device's input streams")
+        XCTAssertNil(description[kAudioAggregateDeviceMainSubDeviceKey], "the tap clocks it")
+        XCTAssertNil(description[kAudioAggregateDeviceClockDeviceKey])
+        let taps = try XCTUnwrap(description[kAudioAggregateDeviceTapListKey] as? [[String: Any]])
+        XCTAssertEqual(taps.map { $0[kAudioSubTapUIDKey] as? String }, ["tap-uid"])
+    }
+
+    /// The real aggregate, made without a tap (no permission needed, nothing started): the HAL
+    /// gives it no sub-device and no input stream, whatever the default output device records.
+    func testTheSystemAudioAggregateHasNoDeviceInputs() throws {
+        var id = AudioObjectID(kAudioObjectUnknown)
+        let description = ProcessTapAudioCapture.aggregateDescription(tapUID: UUID().uuidString)
+        let status = AudioHardwareCreateAggregateDevice(description as CFDictionary, &id)
+        guard status == noErr, id != kAudioObjectUnknown else { throw XCTSkip("no aggregate devices here (status \(status))") }
+        defer { AudioHardwareDestroyAggregateDevice(id) }
+        XCTAssertEqual(OutputOnlyAudioDevice.inputStreamCount(of: id), 0)
+        var address = AudioObjectPropertyAddress(mSelector: kAudioAggregateDevicePropertyActiveSubDeviceList,
+                                                 mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+        var size: UInt32 = 0
+        XCTAssertEqual(AudioObjectGetPropertyDataSize(id, &address, 0, nil, &size), noErr)
+        XCTAssertEqual(size, 0, "no sub-device")
+    }
+
     /// The real device, on a Mac with an output device: it has no input stream for coreaudiod to
     /// check the microphone for, whatever the default output device records.
     func testTheOutputOnlyDeviceHasNoInputs() throws {

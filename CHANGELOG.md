@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Audio-reactive wallpapers no longer bring a headset's microphone into the system audio capture.** The Core Audio process tap was read through an aggregate device that included the default output device, so with a headset (or any output device that also records) the capture included the device's microphone stream, which made macOS check the Microphone permission. The aggregate now holds only the tap.
+
 ## [1.0.0-beta.11] - 2026-10-24
 
 ### Fixed
