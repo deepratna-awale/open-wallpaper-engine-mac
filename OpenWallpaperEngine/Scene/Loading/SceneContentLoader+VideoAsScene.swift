@@ -38,14 +38,11 @@ extension SceneContentLoader {
         // placement handles fitting. `keepaspect` then costs nothing: the layer fills its scene.
         let sceneSize = stream.frameSize
         builtVideoFrameSize = sceneSize
-        let wallpaper = currentWallpaper
+        let sync = VideoMusicSyncEffect(settingsIdentity(of: currentWallpaper))
         let musicSync = VideoMusicSyncVisuals(
-            zoomAmount: VideoMusicSyncSettings.bool(wallpaper, "zoomEnabled")
-                ? Float(VideoMusicSyncSettings.double(wallpaper, "zoomAmount", default: 0.08)) : 0,
-            tiltAmount: VideoMusicSyncSettings.bool(wallpaper, "tiltEnabled")
-                ? Float(VideoMusicSyncSettings.double(wallpaper, "tiltAmount", default: 3)) : 0,
-            saturationAmount: VideoMusicSyncSettings.bool(wallpaper, "saturationEnabled")
-                ? Float(VideoMusicSyncSettings.double(wallpaper, "saturationAmount", default: 0.6)) : 0,
+            zoomAmount: Float(sync.zoomAmount),
+            tiltAmount: Float(sync.tiltAmount),
+            saturationAmount: Float(sync.saturationAmount),
             levelSource: { [weak stream] in
                 stream?.musicSyncLevel ?? WallpaperServices.shared.audioLevel
             })
@@ -98,8 +95,9 @@ extension SceneContentLoader {
                              audioEnabled: Bool, volume: Float) {
         guard let stream = videoStream else { return }
         stream.setAudio(enabled: audioEnabled, volume: volume)
-        let pace = VideoMusicSyncSettings.bool(currentWallpaper, "paceEnabled")
-            ? VideoMusicSyncSettings.double(currentWallpaper, "paceAmount", default: 0.25)
+        let identity = settingsIdentity(of: currentWallpaper)
+        let pace = VideoMusicSyncSettings.bool(identity, "paceEnabled")
+            ? VideoMusicSyncSettings.double(identity, "paceAmount", default: 0.25)
             : 0
         stream.update(playRate: playRate, audioRate: audioRate,
                       audioLevel: stream.musicSyncLevel, paceAmount: pace)

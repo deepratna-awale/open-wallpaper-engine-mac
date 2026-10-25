@@ -30,21 +30,17 @@ final class VideoMusicSyncEffectTests: XCTestCase {
         XCTAssertEqual(effect.rate(base: 1, level: 1), 1)
     }
 
-    func testAmountsComeFromTheSwitchedOnSettings() {
-        let wallpaper = WEWallpaper(using: WEProject(file: "a.webm", preview: "p.jpg", title: "sync", type: "video"),
-                                    where: URL(fileURLWithPath: "/tmp/owe-music-sync-\(UUID().uuidString)"))
-        defer {
-            for name in ["zoom", "tilt", "saturation", "pace"] {
-                UserDefaults.app.removeObject(forKey: VideoMusicSyncSettings.key(wallpaper, "\(name)Enabled"))
-                UserDefaults.app.removeObject(forKey: VideoMusicSyncSettings.key(wallpaper, "\(name)Amount"))
-            }
-        }
-        XCTAssertEqual(VideoMusicSyncEffect(wallpaper), VideoMusicSyncEffect())
-        UserDefaults.app.set(true, forKey: VideoMusicSyncSettings.key(wallpaper, "zoomEnabled"))
-        UserDefaults.app.set(true, forKey: VideoMusicSyncSettings.key(wallpaper, "paceEnabled"))
-        UserDefaults.app.set(-0.5, forKey: VideoMusicSyncSettings.key(wallpaper, "paceAmount"))
-        UserDefaults.app.set(9, forKey: VideoMusicSyncSettings.key(wallpaper, "tiltAmount"))
-        XCTAssertEqual(VideoMusicSyncEffect(wallpaper), VideoMusicSyncEffect(zoomAmount: 0.08, paceAmount: -0.5),
+    func testAmountsComeFromTheSwitchedOnSettings() throws {
+        let suite = "owe-music-sync-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let identity = WallpaperSettingsIdentity(rawValue: "local-\(UUID().uuidString)")
+        XCTAssertEqual(VideoMusicSyncEffect(identity, defaults: defaults), VideoMusicSyncEffect())
+        defaults.set(true, forKey: VideoMusicSyncSettings.key(identity, "zoomEnabled"))
+        defaults.set(true, forKey: VideoMusicSyncSettings.key(identity, "paceEnabled"))
+        defaults.set(-0.5, forKey: VideoMusicSyncSettings.key(identity, "paceAmount"))
+        defaults.set(9, forKey: VideoMusicSyncSettings.key(identity, "tiltAmount"))
+        XCTAssertEqual(VideoMusicSyncEffect(identity, defaults: defaults), VideoMusicSyncEffect(zoomAmount: 0.08, paceAmount: -0.5),
                        "defaults for an unset amount; an amount whose switch is off is 0")
     }
 

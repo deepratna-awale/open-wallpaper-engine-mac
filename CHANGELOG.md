@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Music settings follow the wallpaper, not its folder.** A video wallpaper's music sync (zoom, tilt, saturation and pace) and a scene's Scene Music switch and volume were saved under the wallpaper's folder path, so moving or renaming the folder or the library lost them. They are now saved under the wallpaper's settings identity (its Workshop id, or the id the app keeps for a local wallpaper), like its user properties, display options and screen saver values. **Saved-format change:** music settings saved by earlier versions are not read; set them again once.
+
 ## [1.0.0-beta.11] - 2026-10-24
 
 ### Fixed
