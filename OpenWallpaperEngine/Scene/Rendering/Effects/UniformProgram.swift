@@ -20,8 +20,11 @@ final class UniformProgram {
     /// Built-ins that follow the placement or the camera (`BuiltinUniforms.Key.followsCamera`):
     /// written when those change, which a camera path or shake does every frame.
     private let cameraBuiltins: [(member: UniformMember, key: BuiltinUniforms.Key)]
-    /// Reads `g_LayerModelMatrix`, which the chain's kept output depends on.
-    let readsLayerModelMatrix: Bool
+    /// The built-ins it reads that follow the layer's placement, the camera or the screen
+    /// (`BuiltinUniforms.Key.followsCamera`, `g_Screen`): they change while the chain's input
+    /// stays (a moved, scaled or rotated layer, a camera shake, a new display size), so a chain's
+    /// kept output holds only while their values do.
+    let placementKeys: [BuiltinUniforms.Key]
     /// Built-ins that change every frame (time, pointer, audio).
     private let frameBuiltins: [UniformMember]
     private var passSignature: [Float] = []
@@ -92,7 +95,7 @@ final class UniformProgram {
         }
         let cameraNames = Set(camera.map(\.member.name))
         cameraBuiltins = camera
-        readsLayerModelMatrix = camera.contains { $0.key == .layerModelMatrix }
+        placementKeys = camera.map(\.key) + (fixed.contains { $0.name == "g_Screen" } ? [.screen] : [])
         passBuiltins = fixed.filter { !cameraNames.contains($0.name) }
         needsTextureInfo = builtins.contains { $0.name.hasPrefix("g_Texture") }
         isReusable = frameBuiltins.isEmpty
