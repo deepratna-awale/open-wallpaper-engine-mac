@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Web wallpapers can't ask for the microphone or camera.** A page that called `getUserMedia` in the WebKit engine got WebKit's own prompt and then macOS's Microphone prompt. It is now refused without asking, as the Chromium engine already did; pages hear the system's sound through Wallpaper Engine's audio listener.
+
 ## [1.0.0-beta.11] - 2026-10-24
 
 ### Fixed
