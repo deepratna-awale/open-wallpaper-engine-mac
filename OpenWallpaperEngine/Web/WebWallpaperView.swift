@@ -35,6 +35,7 @@ struct WebWallpaperView: NSViewRepresentable {
         wallpaperViewModel.webProcessGroup.register(nsView, for: pageURL)
         AppDelegate.shared.webDevtools.register(nsView)
         nsView.navigationDelegate = viewModel
+        nsView.uiDelegate = viewModel  // refuses getUserMedia (`WebMediaCapture`)
         viewModel.webView = nsView
         viewModel.applySchedulingPolicy()
         Self.loadWallpaper(nsView, viewModel: viewModel)
