@@ -48,35 +48,14 @@ final class SystemAudioBackendTests: XCTestCase {
     // MARK: Aggregate device
 
     func testAggregateDeviceIsPrivateAndCarriesTheTap() {
-        let description = ProcessTapAudioCapture.aggregateDescription(outputUID: "speakers", tapUID: "tap-uid")
+        let description = ProcessTapAudioCapture.aggregateDescription(tapUID: "tap-uid")
         XCTAssertEqual(description[kAudioAggregateDeviceIsPrivateKey] as? Bool, true)
         XCTAssertEqual(description[kAudioAggregateDeviceTapAutoStartKey] as? Bool, true)
-        XCTAssertEqual(description[kAudioAggregateDeviceMainSubDeviceKey] as? String, "speakers")
         let taps = description[kAudioAggregateDeviceTapListKey] as? [[String: Any]]
         XCTAssertEqual(taps?.count, 1)
         XCTAssertEqual(taps?.first?[kAudioSubTapUIDKey] as? String, "tap-uid")
-        let unique = ProcessTapAudioCapture.aggregateDescription(outputUID: "speakers", tapUID: "tap-uid")
+        let unique = ProcessTapAudioCapture.aggregateDescription(tapUID: "tap-uid")
         XCTAssertNotEqual(description[kAudioAggregateDeviceUIDKey] as? String,
                           unique[kAudioAggregateDeviceUIDKey] as? String, "each capture gets its own device")
-    }
-
-    func testTapBuffersAreTheTrailingOnes() {
-        let storage = (0..<3).map { _ in UnsafeMutableRawPointer.allocate(byteCount: 8, alignment: 4) }
-        let all = AudioBufferList.allocate(maximumBuffers: 3)
-        let target = AudioBufferList.allocate(maximumBuffers: 1)
-        defer {
-            storage.forEach { $0.deallocate() }
-            free(all.unsafeMutablePointer)
-            free(target.unsafeMutablePointer)
-        }
-        for index in 0..<3 {
-            all[index] = AudioBuffer(mNumberChannels: 2, mDataByteSize: 8, mData: storage[index])
-        }
-        XCTAssertTrue(ProcessTapAudioCapture.copyTrailingBuffers(from: all, into: target))
-        XCTAssertEqual(target[0].mData, all[2].mData, "a microphone's input streams come before the tap")
-
-        let tooMany = AudioBufferList.allocate(maximumBuffers: 4)
-        defer { free(tooMany.unsafeMutablePointer) }
-        XCTAssertFalse(ProcessTapAudioCapture.copyTrailingBuffers(from: all, into: tooMany))
     }
 }
