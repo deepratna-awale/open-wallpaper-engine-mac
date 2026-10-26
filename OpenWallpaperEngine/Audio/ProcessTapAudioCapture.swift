@@ -5,6 +5,11 @@ import CoreAudio
 /// aggregate device that reads it, and an IO block that converts each buffer to the consumer
 /// pipeline's format (`CaptureFormatConverter`). Needs only the System Audio Recording permission.
 ///
+/// The aggregate holds the tap and nothing else. With the output device as a sub-device, it also
+/// carried that device's input streams (a headset's microphone), so the IO block was a client of
+/// a microphone and coreaudiod checked the Microphone permission, the same prompt
+/// `OutputOnlyAudioDevice` keeps playback from asking for.
+///
 /// Threading: `start()` and `stop()` are called by one owner, never concurrently (at most one
 /// capture exists and `SystemAudioCapture` starts and stops it in turn). The IO block runs on
 /// `ioQueue`, which alone touches `converter` and `tapBuffers` while the device runs.
@@ -39,7 +44,6 @@ final class ProcessTapAudioCapture {
 
     // IO queue only while the device runs.
     private var converter: CaptureFormatConverter?
-    private var tapBuffers: UnsafeMutableAudioBufferListPointer?
 
     init(consume: @escaping Consumer, onInterruption: @escaping (String) -> Void) {
         self.consume = consume
@@ -68,21 +72,14 @@ final class ProcessTapAudioCapture {
     private func startTap() throws {
         let description = Self.tapDescription()
         try check(AudioHardwareCreateProcessTap(description, &tapID), "create the process tap")
-        let tapUID = description.uuid.uuidString
-
-        let outputDevice: AudioObjectID = try Self.property(
-            AudioObjectID(kAudioObjectSystemObject), kAudioHardwarePropertyDefaultOutputDevice,
-            default: AudioObjectID(kAudioObjectUnknown))
-        let outputUID: String = try Self.property(outputDevice, kAudioDevicePropertyDeviceUID,
-                                                  default: "" as CFString) as String
         try check(AudioHardwareCreateAggregateDevice(
-            Self.aggregateDescription(outputUID: outputUID, tapUID: tapUID) as CFDictionary, &aggregateID),
+            Self.aggregateDescription(tapUID: description.uuid.uuidString) as CFDictionary, &aggregateID),
                   "create the aggregate device")
 
         var streamDescription: AudioStreamBasicDescription = try Self.property(
             tapID, kAudioTapPropertyFormat, default: AudioStreamBasicDescription())
-        // The aggregate device clocks the tap with drift compensation, so its buffers arrive at
-        // the device's rate. Reading it is optional: the tap's own rate is the fallback.
+        // The tap clocks the aggregate, so the two rates agree. Reading the device's is optional:
+        // the tap's own rate is the fallback.
         if let rate: Float64 = try? Self.property(aggregateID, kAudioDevicePropertyNominalSampleRate,
                                                   default: Float64(0)), rate > 0 {
             streamDescription.mSampleRate = rate
@@ -92,13 +89,14 @@ final class ProcessTapAudioCapture {
             throw StartError(description: "unsupported tap format \(streamDescription)")
         }
         self.converter = converter
-        tapBuffers = AudioBufferList.allocate(maximumBuffers: Int(format.isInterleaved ? 1 : format.channelCount))
 
         try check(AudioDeviceCreateIOProcIDWithBlock(&ioProcID, aggregateID, ioQueue) { [weak self] _, input, _, _, _ in
             self?.process(input)
         }, "create the IO block")
+        // A global tap follows the default output device, and takes its format.
         addListener(AudioObjectID(kAudioObjectSystemObject), kAudioHardwarePropertyDefaultOutputDevice,
                     reason: "the default output device changed")
+        addListener(tapID, kAudioTapPropertyFormat, reason: "the tap's format changed")
         addListener(aggregateID, kAudioDevicePropertyNominalSampleRate, reason: "the output sample rate changed")
         addListener(aggregateID, kAudioDevicePropertyDeviceIsAlive, reason: "the output device went away")
         try check(AudioDeviceStart(aggregateID, ioProcID), "start the aggregate device")
@@ -117,17 +115,18 @@ final class ProcessTapAudioCapture {
         return description
     }
 
-    /// A private aggregate device clocked by the default output device, with the tap as its input.
-    static func aggregateDescription(outputUID: String, tapUID: String) -> [String: Any] {
+    /// A private aggregate device whose only stream is the tap, which clocks it: no sub-device, so
+    /// no device's input streams (a microphone) come with it. Nothing else clocks it, so the tap
+    /// needs no drift compensation.
+    static func aggregateDescription(tapUID: String) -> [String: Any] {
         [
             kAudioAggregateDeviceNameKey: "Open Wallpaper Engine system audio",
             kAudioAggregateDeviceUIDKey: "com.owe.audio.process-tap.\(UUID().uuidString)",
-            kAudioAggregateDeviceMainSubDeviceKey: outputUID,
             kAudioAggregateDeviceIsPrivateKey: true,
             kAudioAggregateDeviceIsStackedKey: false,
             kAudioAggregateDeviceTapAutoStartKey: true,
-            kAudioAggregateDeviceSubDeviceListKey: [[kAudioSubDeviceUIDKey: outputUID]],
-            kAudioAggregateDeviceTapListKey: [[kAudioSubTapUIDKey: tapUID, kAudioSubTapDriftCompensationKey: true]]
+            kAudioAggregateDeviceSubDeviceListKey: [] as [[String: Any]],
+            kAudioAggregateDeviceTapListKey: [[kAudioSubTapUIDKey: tapUID]]
         ]
     }
 
@@ -154,41 +153,26 @@ final class ProcessTapAudioCapture {
             logFailure(AudioHardwareDestroyProcessTap(tapID), "destroy the process tap")
         }
         tapID = AudioObjectID(kAudioObjectUnknown)
-        // The device is stopped, so this drains the last IO block before its buffers go away.
-        ioQueue.sync {
-            converter = nil
-            if let tapBuffers { free(tapBuffers.unsafeMutablePointer) }
-            tapBuffers = nil
-        }
+        // The device is stopped, so this drains the last IO block before its converter goes away.
+        ioQueue.sync { converter = nil }
     }
 
     // MARK: - IO
 
+    /// The aggregate's input is the tap's buffers alone (`aggregateDescription`).
     private func process(_ input: UnsafePointer<AudioBufferList>) {
-        guard let converter, let tapBuffers else { return }
-        let all = UnsafeMutableAudioBufferListPointer(UnsafeMutablePointer(mutating: input))
-        guard Self.copyTrailingBuffers(from: all, into: tapBuffers), let first = tapBuffers.first else { return }
-        let bytesPerFrame = converter.inputFormat.streamDescription.pointee.mBytesPerFrame
+        guard let converter else { return }
+        let format = converter.inputFormat
+        let buffers = UnsafeMutableAudioBufferListPointer(UnsafeMutablePointer(mutating: input))
+        guard buffers.count == Int(format.isInterleaved ? 1 : format.channelCount), let first = buffers.first else { return }
+        let bytesPerFrame = format.streamDescription.pointee.mBytesPerFrame
         guard bytesPerFrame > 0,
-              let pcm = AVAudioPCMBuffer(pcmFormat: converter.inputFormat,
-                                         bufferListNoCopy: tapBuffers.unsafePointer, deallocator: nil) else { return }
+              let pcm = AVAudioPCMBuffer(pcmFormat: format, bufferListNoCopy: input, deallocator: nil) else { return }
         pcm.frameLength = min(first.mDataByteSize / bytesPerFrame, pcm.frameCapacity)
         guard let output = converter.convert(pcm), let channels = output.floatChannelData else { return }
         let count = Int(output.frameLength)
         consume(UnsafeBufferPointer(start: channels[0], count: count),
                 UnsafeBufferPointer(start: channels[1], count: count))
-    }
-
-    /// Points `target`'s buffers at the last `target.count` buffers of `all`. The aggregate device
-    /// lists its sub-device's own input streams (a headset's microphone, say) before its taps, so
-    /// the tap's buffers are the trailing ones. False when `all` has too few buffers.
-    static func copyTrailingBuffers(from all: UnsafeMutableAudioBufferListPointer,
-                                    into target: UnsafeMutableAudioBufferListPointer) -> Bool {
-        let count = target.count
-        guard count > 0, all.count >= count else { return false }
-        let offset = all.count - count
-        for index in 0..<count { target[index] = all[offset + index] }
-        return true
     }
 
     // MARK: - Core Audio helpers

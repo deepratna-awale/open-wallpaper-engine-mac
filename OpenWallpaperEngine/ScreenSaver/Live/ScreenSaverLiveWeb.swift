@@ -83,7 +83,7 @@ final class ScreenSaverLiveWeb {
             case .webm:
                 let player = WebKitVideoPlayer(chromiumPage: page, url: wallpaper.mediaURL, readAccess: wallpaper.wallpaperDirectory)
                 player.state = WebKitVideoPlayer.State(placement: placement, paused: false, muted: true, volume: 0, rate: 1)
-                player.musicSync = VideoMusicSyncEffect(wallpaper)
+                player.musicSync = VideoMusicSyncStore.shared.effect(for: wallpaper)
                 player.holdForScreenSaver(true)
                 self.player = player
             }

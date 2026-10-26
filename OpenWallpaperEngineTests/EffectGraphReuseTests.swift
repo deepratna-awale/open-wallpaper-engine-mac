@@ -1,5 +1,6 @@
 import XCTest
 import Metal
+import simd
 @testable import OpenWallpaperEngine
 
 /// Static-chain reuse and target recycling with real WE effects (needs the toolchain and a WE install).
@@ -223,5 +224,129 @@ final class EffectGraphReuseTests: XCTestCase {
         renderer.trimMemory(dropIdlePipelines: true)
         XCTAssertEqual(renderer.pipelineCount, 0, "idle since the last trim: dropped")
         XCTAssertTrue(renderer.waitUntilReady([plan], width: 64, height: 64), "and rebuilt when needed again")
+    }
+
+    // MARK: - Placement built-ins
+
+    /// An effect written here: `effects/<name>/effect.json`, one material and one shader pair,
+    /// served before the WE install's files.
+    private func probePlan(_ name: String, vertex: String, fragment: String) throws -> SceneEffectPlan {
+        let files: [String: String] = [
+            "effects/\(name)/effect.json": #"{"version": 1, "passes": [{"material": "materials/effects/\#(name).json"}]}"#,
+            "materials/effects/\(name).json": #"{"passes": [{"shader": "effects/\#(name)", "blending": "normal", "#
+                + #""depthtest": "disabled", "depthwrite": "disabled", "cullmode": "nocull"}]}"#,
+            "shaders/effects/\(name).vert": vertex,
+            "shaders/effects/\(name).frag": fragment,
+        ]
+        let root = ShaderVariantTests.weAssets
+        let probeBuilder = SceneEffectPlanBuilder(
+            translator: ShaderVariantTranslator(compiler: InProcessShaderCompiler(), cacheDirectory: cache),
+            readFile: { path in
+                if let text = files.first(where: { path.hasSuffix($0.key) })?.value { return Data(text.utf8) }
+                return FileManager.default.contents(atPath: root.appending(path: path).path)
+            },
+            loadTexture: { _, _ in nil })
+        let effect = try JSONDecoder().decode(WEObjectEffect.self, from: Data(#"{"file": "effects/\#(name)/effect.json"}"#.utf8))
+        let plan = try probeBuilder.build(effect)
+        XCTAssertNotNil(plan.passes.first?.variant, "\(name) translates")
+        return plan
+    }
+
+    private static let probeVertex = """
+        uniform mat4 g_ModelViewProjectionMatrix;
+        uniform mat4 g_EffectTextureProjectionMatrix;
+        attribute vec3 a_Position;
+        attribute vec2 a_TexCoord;
+        varying vec2 v_TexCoord;
+        varying vec4 v_Placement;
+        void main() {
+            gl_Position = mul(vec4(a_Position, 1.0), g_ModelViewProjectionMatrix);
+            v_TexCoord = a_TexCoord;
+            v_Placement = vec4(g_EffectTextureProjectionMatrix[3][0] * 0.5 + 0.5,
+                               g_EffectTextureProjectionMatrix[3][1] * 0.5 + 0.5, 0.0, 1.0);
+        }
+        """
+
+    /// Shows where the layer lies on the screen: the centre of `g_EffectTextureProjectionMatrix`
+    /// in red and green. Nothing in it changes over time.
+    private func placementPlan() throws -> SceneEffectPlan {
+        try probePlan("placementprobe", vertex: Self.probeVertex, fragment: """
+            varying vec2 v_TexCoord;
+            varying vec4 v_Placement;
+            uniform sampler2D g_Texture0; // {"hidden":true}
+            void main() {
+                gl_FragColor = v_Placement + texSample2D(g_Texture0, v_TexCoord) * 0.0;
+            }
+            """)
+    }
+
+    /// Passes its input through with `fract(g_Time)` in blue: it changes over time, so a chain
+    /// with it after the placement probe keeps the probe as its static prefix.
+    private func timedPlan() throws -> SceneEffectPlan {
+        try probePlan("timedprobe", vertex: """
+            uniform mat4 g_ModelViewProjectionMatrix;
+            attribute vec3 a_Position;
+            attribute vec2 a_TexCoord;
+            varying vec2 v_TexCoord;
+            void main() {
+                gl_Position = mul(vec4(a_Position, 1.0), g_ModelViewProjectionMatrix);
+                v_TexCoord = a_TexCoord;
+            }
+            """, fragment: """
+            varying vec2 v_TexCoord;
+            uniform sampler2D g_Texture0; // {"hidden":true}
+            uniform float g_Time;
+            void main() {
+                vec4 image = texSample2D(g_Texture0, v_TexCoord);
+                gl_FragColor = vec4(image.rg, frac(g_Time), 1.0);
+            }
+            """)
+    }
+
+    private func placed(at centre: SIMD2<Float>) -> EffectGraphRenderer.Context {
+        var context = context()
+        context.effectTextureProjection = simd_float4x4(columns: (SIMD4(0.5, 0, 0, 0), SIMD4(0, 0.5, 0, 0),
+                                                                  SIMD4(0, 0, 1, 0), SIMD4(centre.x, centre.y, 0, 1)))
+        return context
+    }
+
+    private func centrePixel(_ effects: [SceneEffectPlan], _ input: MTLTexture,
+                             _ context: EffectGraphRenderer.Context) throws -> [UInt8] {
+        let buffer = try XCTUnwrap(queue.makeCommandBuffer())
+        let output = try XCTUnwrap(renderer.apply(effects, to: input, layerID: "layer", context: context, commandBuffer: buffer))
+        buffer.commit()
+        buffer.waitUntilCompleted()
+        let offset = ((output.height / 2) * output.width + output.width / 2) * 4
+        return Array(try readBack(output)[offset..<offset + 4])
+    }
+
+    /// A chain that reads only the layer's placement (`g_EffectTextureProjectionMatrix`) is kept
+    /// while the layer stays and drawn again when it moves; as a static prefix too.
+    func testAChainReadingThePlacementRerendersWhenTheLayerMoves() throws {
+        let probe = try placementPlan()
+        XCTAssertTrue(renderer.waitUntilReady([probe], width: 16, height: 16))
+        let input = try texture(16, 16)
+        let left = try centrePixel([probe], input, placed(at: SIMD2(-0.5, 0)))
+        XCTAssertEqual(Int(left[0]), 64, accuracy: 2, "\(left)")
+        XCTAssertEqual(Int(left[1]), 128, accuracy: 2, "\(left)")
+        _ = try centrePixel([probe], input, placed(at: SIMD2(-0.5, 0)))
+        XCTAssertEqual(renderer.layersReused, 1, "the layer stayed: kept")
+        let moved = try centrePixel([probe], input, placed(at: SIMD2(0.5, 0.5)))
+        XCTAssertEqual(Int(moved[0]), 191, accuracy: 2, "moved: drawn again \(moved)")
+        XCTAssertEqual(Int(moved[1]), 191, accuracy: 2, "moved: drawn again \(moved)")
+        XCTAssertEqual(renderer.layersReused, 1)
+
+        let timed = try timedPlan()
+        let chain = [probe, timed]
+        XCTAssertTrue(renderer.waitUntilReady(chain, width: 16, height: 16))
+        let chainInput = try texture(16, 16)
+        _ = try centrePixel(chain, chainInput, placed(at: SIMD2(-0.5, 0)))
+        let held = try centrePixel(chain, chainInput, placed(at: SIMD2(-0.5, 0)))
+        XCTAssertEqual(renderer.prefixesReused, 1, "the layer stayed: the prefix is kept")
+        XCTAssertEqual(Int(held[0]), 64, accuracy: 2, "\(held)")
+        let away = try centrePixel(chain, chainInput, placed(at: SIMD2(0.5, 0.5)))
+        XCTAssertEqual(renderer.prefixesReused, 1, "moved: the prefix is drawn again")
+        XCTAssertEqual(Int(away[0]), 191, accuracy: 2, "\(away)")
+        XCTAssertEqual(Int(away[1]), 191, accuracy: 2, "\(away)")
     }
 }

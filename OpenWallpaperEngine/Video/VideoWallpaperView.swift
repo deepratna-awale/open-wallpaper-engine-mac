@@ -75,7 +75,7 @@ struct AudioReactiveVideoWallpaperView: View {
 
     var body: some View {
         TimelineView(.animation) { _ in
-            let effect = VideoMusicSyncEffect(wallpaperViewModel.wallpaper(for: screenId))
+            let effect = VideoMusicSyncStore.shared.effect(for: wallpaperViewModel.wallpaper(for: screenId))
             let audioLevel = viewModel.musicSyncLevel
             VideoWallpaperView(wallpaperViewModel: wallpaperViewModel, viewModel: viewModel, screenId: screenId)
                 .scaleEffect(effect.zoom(at: audioLevel))

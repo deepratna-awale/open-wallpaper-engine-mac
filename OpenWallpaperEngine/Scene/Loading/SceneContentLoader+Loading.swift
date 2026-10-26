@@ -283,6 +283,11 @@ extension SceneContentLoader {
         return identity
     }
 
+    /// The settings identity of the wallpaper playing now (`settingsIdentity(for:settingsDirectory:)`).
+    func settingsIdentity(of wallpaper: WEWallpaper) -> WallpaperSettingsIdentity {
+        settingsIdentity(for: wallpaper.wallpaperDirectory, settingsDirectory: wallpaper.settingsDirectory)
+    }
+
     private func prepareSceneUserPropertyDefaults(for wallpaper: WEWallpaper, scene: WEScene) {
         guard wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame else { return }
         let identity = settingsIdentity(for: wallpaper.wallpaperDirectory, settingsDirectory: wallpaper.settingsDirectory)

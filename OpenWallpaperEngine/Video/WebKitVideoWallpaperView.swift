@@ -22,7 +22,7 @@ struct WebKitVideoWallpaperView: NSViewRepresentable {
         let player = WebKitVideoPlayer(url: wallpaper.mediaURL, readAccess: wallpaper.wallpaperDirectory)
         context.coordinator.player = player
         player.state = state(for: wallpaper)
-        player.musicSync = VideoMusicSyncEffect(wallpaper)
+        player.musicSync = musicSyncStore.effect(for: wallpaper)
         // The WebKit initializer always makes a WKWebView.
         return player.webView ?? WKWebView()
     }
@@ -30,7 +30,7 @@ struct WebKitVideoWallpaperView: NSViewRepresentable {
     func updateNSView(_ nsView: WKWebView, context: Context) {
         let wallpaper = wallpaperViewModel.wallpaper(for: screenId)
         context.coordinator.player?.state = state(for: wallpaper)
-        context.coordinator.player?.musicSync = VideoMusicSyncEffect(wallpaper)
+        context.coordinator.player?.musicSync = musicSyncStore.effect(for: wallpaper)
     }
 
     static func dismantleNSView(_ nsView: WKWebView, coordinator: Coordinator) {

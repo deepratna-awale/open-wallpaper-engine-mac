@@ -173,7 +173,7 @@ final class SceneInspectorModel: ObservableObject {
         let file = wallpaper.project.file
         let url = directory.appending(path: file)
         let syncKeys = ["zoom", "pace", "tilt", "saturation"]
-        let enabledSync = syncKeys.filter { VideoMusicSyncSettings.bool(wallpaper, "\($0)Enabled") }
+        let enabledSync = syncKeys.filter { VideoMusicSyncStore.shared.bool(wallpaper, "\($0)Enabled") }
 
         items = [
             SceneInspectorItem(id: "video", name: String(localized: "Video"), kind: "Video", sourcePath: file,
