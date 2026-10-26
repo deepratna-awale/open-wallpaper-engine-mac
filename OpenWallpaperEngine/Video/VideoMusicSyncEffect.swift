@@ -9,11 +9,11 @@ struct VideoMusicSyncEffect: Equatable {
     var saturationAmount: Double = 0
     var paceAmount: Double = 0
 
-    /// The amounts set for `wallpaper`, with the controls' defaults.
-    init(_ wallpaper: WEWallpaper) {
+    /// The amounts set for the wallpaper of `identity`, with the controls' defaults.
+    init(_ identity: WallpaperSettingsIdentity, defaults: UserDefaults = .app) {
         func amount(_ name: String, _ defaultValue: Double) -> Double {
-            VideoMusicSyncSettings.bool(wallpaper, "\(name)Enabled")
-                ? VideoMusicSyncSettings.double(wallpaper, "\(name)Amount", default: defaultValue)
+            VideoMusicSyncSettings.bool(identity, "\(name)Enabled", defaults: defaults)
+                ? VideoMusicSyncSettings.double(identity, "\(name)Amount", default: defaultValue, defaults: defaults)
                 : 0
         }
         zoomAmount = amount("zoom", 0.08)

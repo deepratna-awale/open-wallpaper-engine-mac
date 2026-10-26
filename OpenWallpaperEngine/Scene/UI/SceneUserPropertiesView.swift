@@ -429,11 +429,11 @@ struct SceneUserPropertiesView: View {
                                    range: ClosedRange<Double>, defaultAmount: Double, suffix: String) -> some View {
         let wallpaper = self.wallpaper
         let isEnabled = Binding<Bool>(
-            get: { VideoMusicSyncSettings.bool(wallpaper, enabledKey) },
+            get: { VideoMusicSyncStore.shared.bool(wallpaper, enabledKey) },
             set: { VideoMusicSyncStore.shared.set($0, wallpaper, enabledKey) }
         )
         let amount = Binding<Double>(
-            get: { VideoMusicSyncSettings.double(wallpaper, amountKey, default: defaultAmount) },
+            get: { VideoMusicSyncStore.shared.double(wallpaper, amountKey, default: defaultAmount) },
             set: { VideoMusicSyncStore.shared.set($0, wallpaper, amountKey) }
         )
         return VStack(alignment: .leading, spacing: 4) {
