@@ -127,34 +127,38 @@ struct ParticleCollision: Equatable {
         }
     }
 
-    /// The shape in scene space this frame. `controlPoint` gives a control point's position.
-    func placed(in space: SceneParticleEmitterSpace, controlPoint position: (Int) -> SIMD2<Float>) -> [ParticleCollisionPlacement] {
-        let scale = sqrt(abs(simd_determinant(space.world.linear)))
+    /// The shape this frame. A plane, sphere or quad is in the system's space, as authored: WE runs
+    /// the collision operators in the operator VM (0x14023fbc0) on the particle in its system's
+    /// space, so under a scaled object the shape scales with it (a sphere is an ellipse in the
+    /// scene under a non-uniform scale) and the bounce follows the scaled normal. `controlPoint`
+    /// gives a control point's position in the system's space. `bounds` are the scene's edges,
+    /// in the scene (`ParticleCollisionPlacement.extra`).
+    func placed(controlPoint position: (Int) -> SIMD2<Float>) -> [ParticleCollisionPlacement] {
         let response = self.response
         func direction(_ v: SIMD3<Float>) -> SIMD2<Float>? {
-            let turned = space.rotation * SIMD2(v.x, v.y)
-            return simd_length(turned) > 1e-6 ? simd_normalize(turned) : nil
+            let flat = SIMD2(v.x, v.y)
+            return simd_length(flat) > 1e-6 ? simd_normalize(flat) : nil
         }
         let anchor = controlPoint.map(position)
         switch shape {
         case .plane(let normal, let distance):
             guard let n = direction(normal) else { return [] }
-            let d = anchor.map { simd_dot(n, $0) } ?? distance * scale + simd_dot(n, space.origin)
+            let d = anchor.map { simd_dot(n, $0) } ?? distance
             return [ParticleCollisionPlacement(kind: .plane, shape: SIMD4(n.x, n.y, d, 0), response: response)]
         case .sphere(let origin, let radius):
-            let center = anchor ?? space.world.apply(SIMD2(origin.x, origin.y))
-            return [ParticleCollisionPlacement(kind: .sphere, shape: SIMD4(center.x, center.y, radius * scale, 0),
+            let center = anchor ?? SIMD2(origin.x, origin.y)
+            return [ParticleCollisionPlacement(kind: .sphere, shape: SIMD4(center.x, center.y, radius, 0),
                                                response: response)]
         case .quad(let origin, let normal, let forward, let size):
             // WE's axes: right = normal × forward spans size.x, normal × … size.y (along z in 2D).
             let right3 = simd_cross(normal, forward)
             guard let n = direction(normal), let right = direction(right3) else { return [] }
             let up3 = simd_cross(simd_normalize(right3), simd_normalize(normal))
-            let center = anchor ?? space.world.apply(SIMD2(origin.x, origin.y))
-            let halfUp = simd_length(SIMD2(up3.x, up3.y)) > 1e-6 ? size.y / 2 * scale : .infinity
+            let center = anchor ?? SIMD2(origin.x, origin.y)
+            let halfUp = simd_length(SIMD2(up3.x, up3.y)) > 1e-6 ? size.y / 2 : .infinity
             let up = direction(up3) ?? .zero
             return [ParticleCollisionPlacement(kind: .quad, shape: SIMD4(center.x, center.y, n.x, n.y),
-                                               axis: SIMD4(right.x, right.y, size.x / 2 * scale, halfUp),
+                                               axis: SIMD4(right.x, right.y, size.x / 2, halfUp),
                                                extra: SIMD4(up.x, up.y, 0, 0), response: response)]
         case .bounds(let size):
             // Keeps particles inside the scene.
@@ -170,8 +174,8 @@ struct ParticleCollision: Equatable {
     }
 }
 
-/// A collision shape in scene space for one step (`ParticleCollision.placed`); the GPU reads the
-/// same layout (`ParticleShared.h`).
+/// A collision shape for one step (`ParticleCollision.placed`), in the system's space or (`extra.z`)
+/// in the scene; the GPU reads the same layout (`ParticleShared.h`).
 struct ParticleCollisionPlacement: Equatable {
     enum Kind: UInt32 { case plane = 0, sphere, quad, capsule }
 
@@ -181,8 +185,9 @@ struct ParticleCollisionPlacement: Equatable {
     /// Quad: right axis xy, half size along it, half size along `extra`. Capsule: unit direction
     /// xyz, radius.
     var axis = SIMD4<Float>.zero
-    /// Quad: second axis xy. z: 1 when the shape is fixed in the scene (bounds), so an instance
-    /// of an instanced system doesn't carry it (`moved(by:)`).
+    /// Quad: second axis xy. z: 1 when the shape is in the scene (bounds, a model's capsules)
+    /// instead of the system's space; an instance of an instanced system, whose space sits at its
+    /// position, carries only those in the system's space.
     var extra = SIMD4<Float>.zero
     /// Bounce coefficient −(1 + bouncefactor), behaviour, stops rotation, kind.
     var response: SIMD4<Float>
@@ -197,16 +202,4 @@ struct ParticleCollisionPlacement: Equatable {
 
     var kind: Kind { Kind(rawValue: UInt32(response.w)) ?? .plane }
 
-    /// The shape carried by `translation` (an instance's position).
-    func moved(by translation: SIMD2<Float>) -> ParticleCollisionPlacement {
-        guard extra.z < 0.5 else { return self }
-        var moved = self
-        switch kind {
-        case .plane: moved.shape.z += simd_dot(SIMD2(shape.x, shape.y), translation)
-        case .sphere, .quad, .capsule:
-            moved.shape.x += translation.x
-            moved.shape.y += translation.y
-        }
-        return moved
-    }
 }

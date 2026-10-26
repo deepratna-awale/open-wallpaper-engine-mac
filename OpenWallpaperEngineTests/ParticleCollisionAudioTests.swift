@@ -10,9 +10,6 @@ final class ParticleCollisionAudioTests: XCTestCase {
         try JSONDecoder().decode(WEParticleOperator.self, from: Data(json.utf8))
     }
 
-    private let space = SceneParticleEmitterSpace(world: SceneAffineTransform(linear: matrix_identity_float2x2,
-                                                                              translation: SIMD2(500, 500)))
-
     // MARK: - Collisions
 
     func testCollisionDefaultsAndBehaviours() throws {
@@ -32,17 +29,20 @@ final class ParticleCollisionAudioTests: XCTestCase {
         XCTAssertEqual(ParticleCollision.Behavior("bounce"), .bounce)
     }
 
-    /// `bounds` is four planes fixed in the scene: an instance's position doesn't carry them.
-    func testBoundsAreFourPlanesFixedInTheScene() throws {
+    /// `bounds` is four planes in the scene; the other shapes are in the system's space, as authored.
+    func testBoundsAreFourPlanesInTheScene() throws {
         let bounds = ParticleCollision(shape: .bounds(size: SIMD2(1000, 800)), behavior: .slide)
-        let planes = bounds.placed(in: space) { _ in .zero }
+        let planes = bounds.placed { _ in .zero }
         XCTAssertEqual(planes.count, 4)
-        XCTAssertEqual(planes[0].moved(by: SIMD2(100, 100)), planes[0], "bounds stay with the scene")
+        XCTAssertTrue(planes.allSatisfy { $0.extra.z == 1 }, "bounds stay with the scene")
+        let sphere = try XCTUnwrap(ParticleCollision(shape: .sphere(origin: SIMD3(30, -60, 0), radius: 40)).placed { _ in .zero }.first)
+        XCTAssertEqual(sphere.shape, SIMD4(30, -60, 40, 0))
+        XCTAssertEqual(sphere.extra.z, 0)
     }
 
     func testAControlPointAnchorsTheShape() throws {
         let sphere = ParticleCollision(shape: .sphere(origin: SIMD3(0, -200, 0), radius: 250), controlPoint: 1)
-        let placed = try XCTUnwrap(sphere.placed(in: space) { $0 == 1 ? SIMD2(10, 20) : .zero }.first)
+        let placed = try XCTUnwrap(sphere.placed { $0 == 1 ? SIMD2(10, 20) : .zero }.first)
         XCTAssertEqual(placed.shape, SIMD4(10, 20, 250, 0))
     }
 

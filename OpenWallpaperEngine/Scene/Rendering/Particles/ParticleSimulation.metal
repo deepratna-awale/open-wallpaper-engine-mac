@@ -299,15 +299,11 @@ kernel void particleEmit(device ParticleState *particles [[buffer(0)]],
 }
 
 /// Resolves a particle that moved from `previous` to `position` against a collision shape
-/// (`ParticleCollisionPlacement`), the shape carried by `shift` (`moved(by:)`).
-static void collide(CollisionPlacement collision, float2 shift, thread float2 &position, thread float2 &velocity,
+/// (`ParticleCollisionPlacement`), both in the shape's space.
+static void collide(CollisionPlacement collision, thread float2 &position, thread float2 &velocity,
                     thread float &angularVelocity, thread bool &dies, float2 previous) {
-    float4 shape = collision.shape;
+    const float4 shape = collision.shape;
     const uint kind = uint(collision.response.w);
-    if (collision.extra.z < 0.5) {
-        if (kind == 0) shape.z += dot(shape.xy, shift);
-        else shape.xy += shift;
-    }
     float2 normal;
     if (kind == 0) {
         const float depth = dot(shape.xy, position) - shape.z;
@@ -374,26 +370,35 @@ static void collideCapsules(constant CollisionPlacement *collisions, uint first,
 }
 
 static bool programCollide(ProgramOp record, thread ProgramState &p, thread const ProgramContext &c,
-                           constant CollisionPlacement *collisions, uint collisionCount, float2 shift) {
+                           constant CollisionPlacement *collisions, uint collisionCount) {
     const uint first = record.header.z & 0xFFFFu, count = record.header.z >> 16;
-    float2 position = c.space * p.position.xy + c.origin;
-    float2 velocity = c.space * p.velocity.xy;
-    const float2 previous = c.space * p.previous.xy + c.origin;
     bool dies = false;
     const uint start = min(first, collisionCount), end = min(first + count, collisionCount);
     if (start < end && uint(collisions[start].response.w) == 3) {
-        // `collisionmodel`: capsules stay where their model is (not carried by `shift`).
-        float3 point = float3(position, p.position.z), motion = float3(velocity, p.velocity.z);
+        // `collisionmodel`: capsules stay where their model is, in the scene.
+        float3 point = float3(c.space * p.position.xy + c.origin, p.position.z);
+        float3 motion = float3(c.space * p.velocity.xy, p.velocity.z);
         collideCapsules(collisions, start, end, point, motion, dies);
         p.position = float3(c.toSpace * (point.xy - c.origin), point.z);
         p.velocity = float3(c.toSpace * motion.xy, motion.z);
         return dies;
     }
-    for (uint index = first; index < min(first + count, collisionCount); ++index) {
-        collide(collisions[index], shift, position, velocity, p.angularVelocity, dies, previous);
+    for (uint index = start; index < end; ++index) {
+        const CollisionPlacement collision = collisions[index];
+        if (collision.extra.z > 0.5) {
+            // `collisionbounds`: the scene's edges, in the scene.
+            float2 position = c.space * p.position.xy + c.origin, velocity = c.space * p.velocity.xy;
+            collide(collision, position, velocity, p.angularVelocity, dies, c.space * p.previous.xy + c.origin);
+            p.position.xy = c.toSpace * (position - c.origin);
+            p.velocity.xy = c.toSpace * velocity;
+        } else {
+            // Authored in the system's space, where WE's operator VM runs it on the particle.
+            float2 position = p.position.xy, velocity = p.velocity.xy;
+            collide(collision, position, velocity, p.angularVelocity, dies, p.previous.xy);
+            p.position.xy = position;
+            p.velocity.xy = velocity;
+        }
     }
-    p.position = float3(c.toSpace * (position - c.origin), p.position.z);
-    p.velocity = float3(c.toSpace * velocity, p.velocity.z);
     return dies;
 }
 
@@ -556,7 +561,7 @@ kernel void particleSimulate(device const ParticleState *particles [[buffer(0)]]
     const BoidsList boids = {boidsMembers, listsBoids != 0 ? control[cBoidsTotal] : ~0u};
     bool dies = false;
     for (uint substep = 0; substep < max(f.emission.x, 1u); ++substep) {
-        dies = runOperators(program + (f.extra.w & 0xFFFFu), f.extra.w >> 16, state, c, collisions, f.extra.z, start.shift,
+        dies = runOperators(program + (f.extra.w & 0xFFFFu), f.extra.w >> 16, state, c, collisions, f.extra.z,
                             particles, total, gid, control[cLive], f.indices.x, alive, aged, boids) || dies;
     }
     endSimulate(gid, particle, state, c, dies, start, stepped, alive, history, p, f, instances);
@@ -748,7 +753,7 @@ kernel void particleSimulateSerial(device const ParticleState *particles [[buffe
                 }
                 loadPoints(c, own.group);
                 ProgramState state = serial[gid].state;
-                if (runOperator(operators[k], state, c, collisions, f.extra.z, start.shift, particles, total, gid,
+                if (runOperator(operators[k], state, c, collisions, f.extra.z, particles, total, gid,
                                 control[cLive], f.indices.x, alive, aged, BoidsList{nullptr, ~0u})) {
                     serial[gid].dies = 1;
                 }
