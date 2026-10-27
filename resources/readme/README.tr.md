@@ -3,7 +3,7 @@ Open Wallpaper Engine
 
 [English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | **Türkçe** | [Українська](README.uk.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
-[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
+[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE) [![Downloads](https://img.shields.io/github/downloads/deepratna-awale/open-wallpaper-engine-mac/total.svg)](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases)
 
 Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve web) oynatan ve düzenleyen ücretsiz ve açık kaynaklı bir macOS uygulamasıdır. Sahneler yerel bir Metal işleyiciyle; efektler, parçacıklar, 3B modeller, aydınlatma, SceneScript ve sese duyarlı görsellerle çizilir; Steam Atölyesi ise uygulamada yerleşik olarak bulunur. Haren Chen ve MrWindDog’un [Open Wallpaper Engine](https://github.com/MrWindDog) projesinin bir çatalı olarak başladı ve o zamandan beri büyük ölçüde yeniden yazıldı.
 

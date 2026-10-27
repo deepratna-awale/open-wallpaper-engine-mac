@@ -3,7 +3,7 @@ Open Wallpaper Engine
 
 [English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | **日本語** | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
-[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
+[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE) [![Downloads](https://img.shields.io/github/downloads/deepratna-awale/open-wallpaper-engine-mac/total.svg)](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases)
 
 Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・Web）を再生・編集できる、無料でオープンソースの macOS アプリです。シーンはネイティブの Metal レンダラーで描画され、エフェクト、パーティクル、3D モデル、ライティング、SceneScript、オーディオ連動ビジュアルに対応し、Steam ワークショップも組み込まれています。Haren Chen 氏と MrWindDog 氏の [Open Wallpaper Engine](https://github.com/MrWindDog) のフォークとして始まり、現在ではその大部分が書き直されています。
 
