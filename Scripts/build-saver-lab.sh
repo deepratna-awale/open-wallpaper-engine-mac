@@ -52,7 +52,7 @@ ditto "$products/owe-saver-broker" "$app/Contents/Helpers/owe-saver-broker"
 
 # The app's signature covers its nested code: sign it again with the identity it was built with,
 # keeping its entitlements, flags and requirements.
-identity=$(codesign -dvv "$app" 2>&1 | sed -n 's/^Authority=\(Apple Development.*\)$/\1/p' | head -1)
+identity=$(codesign -dvv "$app" 2>&1 | sed -En 's/^Authority=((Developer ID Application|Apple Development).*)$/\1/p' | head -1)
 codesign --force --sign "${identity:--}" --preserve-metadata=entitlements,requirements,flags,runtime --timestamp=none "$app"
 
 broker="$app/Contents/Helpers/owe-saver-broker"
