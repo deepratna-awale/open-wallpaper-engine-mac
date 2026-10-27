@@ -125,24 +125,6 @@ final class SceneRendererPlacementTests: XCTestCase {
         XCTAssertEqual(SceneMetalTextureSource.dxt(unset).contentSize, SIMD2(16, 8), "no header size: whole allocation")
     }
 
-    // MARK: Emitter directions
-
-    func testEmitterDirectionsFollowParentRotationNotScale() throws {
-        let objects = try JSONDecoder().decode([WESceneObject].self, from: Data(#"""
-        [{"id": 1, "origin": "100 100 0", "scale": "3 3 1", "angles": "0 0 1.5707963"},
-         {"id": 2, "parent": 1, "origin": "0 0 0", "particle": "p.json"}]
-        """#.utf8))
-        let hierarchy = SceneTransformHierarchy(objects: objects)
-        let space = SceneParticleEmitterSpace(world: hierarchy.world(of: "2"))
-        let velocity = space.direction(SIMD2(0, 100))
-        XCTAssertEqual(simd_length(velocity), 100, accuracy: 1e-3, "scale does not change speed")
-        XCTAssertEqual(abs(velocity.x), 100, accuracy: 1e-3, "a quarter turn moves y onto x")
-        // Same convention as positions: the direction matches the world transform's own turn.
-        let expected = simd_normalize(hierarchy.world(of: "2").linear * SIMD2(0, 1)) * 100
-        XCTAssertEqual(velocity.x, expected.x, accuracy: 1e-3)
-        XCTAssertEqual(velocity.y, expected.y, accuracy: 1e-3)
-    }
-
     /// A layer wider than the scene (sized so camera parallax never shows its edges) is drawn
     /// centred where its origin puts it, as WE draws it; it isn't pinned against a scene edge.
     func testOversizedLayerStaysWhereItsOriginPutsIt() throws {

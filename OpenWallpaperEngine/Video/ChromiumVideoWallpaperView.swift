@@ -18,7 +18,7 @@ struct ChromiumVideoWallpaperView: NSViewRepresentable {
         let player = WebKitVideoPlayer(chromiumPage: page, url: wallpaper.mediaURL, readAccess: wallpaper.wallpaperDirectory)
         context.coordinator.player = player
         player.state = state(for: wallpaper)
-        player.musicSync = VideoMusicSyncEffect(wallpaper)
+        player.musicSync = musicSyncStore.effect(for: wallpaper)
         context.coordinator.share(view, of: screenId, through: wallpaperViewModel.webPageMirrors, sharing: player)
         return view
     }
@@ -26,7 +26,7 @@ struct ChromiumVideoWallpaperView: NSViewRepresentable {
     func updateNSView(_ nsView: ChromiumPageView, context: Context) {
         let wallpaper = wallpaperViewModel.wallpaper(for: screenId)
         context.coordinator.player?.state = state(for: wallpaper)
-        context.coordinator.player?.musicSync = VideoMusicSyncEffect(wallpaper)
+        context.coordinator.player?.musicSync = musicSyncStore.effect(for: wallpaper)
     }
 
     static func dismantleNSView(_ nsView: ChromiumPageView, coordinator: WebKitVideoWallpaperView.Coordinator) {

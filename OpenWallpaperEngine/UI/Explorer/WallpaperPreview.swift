@@ -493,25 +493,14 @@ struct WallpaperPreview: SubviewOfContentView {
     }
 
     private func sceneMusicControls(for wallpaper: WEWallpaper) -> some View {
-        let enabledKey = "SceneMusicEnabled.\(wallpaper.wallpaperDirectory.path)"
-        let volumeKey = "SceneMusicVolume.\(wallpaper.wallpaperDirectory.path)"
+        let musicSync = musicSync
         let enabled = Binding<Bool>(
-            get: { UserDefaults.app.object(forKey: enabledKey) == nil ? true : UserDefaults.app.bool(forKey: enabledKey) },
-            set: {
-                UserDefaults.app.set($0, forKey: enabledKey)
-                musicSync.objectWillChange.send()
-                NotificationCenter.default.post(name: .sceneMusicSettingsDidChange, object: nil,
-                                                userInfo: ["path": wallpaper.wallpaperDirectory.path])
-            }
+            get: { musicSync.sceneMusicEnabled(wallpaper) },
+            set: { musicSync.setSceneMusicEnabled($0, wallpaper) }
         )
         let volume = Binding<Double>(
-            get: { UserDefaults.app.object(forKey: volumeKey) == nil ? 1 : UserDefaults.app.double(forKey: volumeKey) },
-            set: {
-                UserDefaults.app.set($0, forKey: volumeKey)
-                musicSync.objectWillChange.send()
-                NotificationCenter.default.post(name: .sceneMusicSettingsDidChange, object: nil,
-                                                userInfo: ["path": wallpaper.wallpaperDirectory.path])
-            }
+            get: { musicSync.sceneMusicVolume(wallpaper) },
+            set: { musicSync.setSceneMusicVolume($0, wallpaper) }
         )
         return VStack(alignment: .leading, spacing: 8) {
             Toggle("Scene Music", isOn: enabled)

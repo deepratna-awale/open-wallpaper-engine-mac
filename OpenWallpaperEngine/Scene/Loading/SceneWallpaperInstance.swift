@@ -313,16 +313,12 @@ final class SceneWallpaperInstance {
                                       volume: wallpapers.playVolume)
     }
 
-    private var sceneMusicEnabled: Bool {
-        let key = "SceneMusicEnabled.\(viewModel.currentWallpaper.wallpaperDirectory.path)"
-        return UserDefaults.app.object(forKey: key) == nil ? true : UserDefaults.app.bool(forKey: key)
-    }
+    /// The settings identity of the wallpaper running now, which its music settings are kept under.
+    private var settingsIdentity: WallpaperSettingsIdentity { viewModel.settingsIdentity(of: viewModel.currentWallpaper) }
 
-    private var sceneMusicVolume: Float {
-        let key = "SceneMusicVolume.\(viewModel.currentWallpaper.wallpaperDirectory.path)"
-        guard UserDefaults.app.object(forKey: key) != nil else { return 1 }
-        return Float(UserDefaults.app.double(forKey: key))
-    }
+    private var sceneMusicEnabled: Bool { SceneMusicSettings.enabled(settingsIdentity) }
+
+    private var sceneMusicVolume: Float { Float(SceneMusicSettings.volume(settingsIdentity)) }
 
     /// The wallpaper's sound (`SceneSoundLayers.setTarget`): its level, the app's volume times this
     /// wallpaper's music volume, which applies at once, and whether it is heard, which fades: not
@@ -495,9 +491,9 @@ final class SceneWallpaperInstance {
             }
         })
         observers.append(center.addObserver(forName: .sceneMusicSettingsDidChange, object: nil, queue: .main) { [weak self] notification in
-            let path = notification.userInfo?["path"] as? String
+            let identity = notification.userInfo?["identity"] as? String
             MainActor.assumeIsolated {
-                guard let self, path == nil || path == self.viewModel.currentWallpaper.wallpaperDirectory.path else { return }
+                guard let self, identity == nil || identity == self.settingsIdentity.rawValue else { return }
                 let sound = self.soundTarget
                 self.renderLoop.perform { $0.sounds.setTarget(level: sound.level, audible: sound.audible) }
             }
@@ -505,9 +501,9 @@ final class SceneWallpaperInstance {
         // Zoom/tilt/saturation amounts are baked into the layer when content is built, so the
         // toggles do nothing until the content is rebuilt.
         observers.append(center.addObserver(forName: .videoMusicSyncSettingsDidChange, object: nil, queue: .main) { [weak self] notification in
-            let path = notification.userInfo?["path"] as? String
+            let identity = notification.userInfo?["identity"] as? String
             MainActor.assumeIsolated {
-                guard let self, path == nil || path == self.viewModel.currentWallpaper.wallpaperDirectory.path else { return }
+                guard let self, identity == nil || identity == self.settingsIdentity.rawValue else { return }
                 self.viewModel.invalidateContent()
             }
         })

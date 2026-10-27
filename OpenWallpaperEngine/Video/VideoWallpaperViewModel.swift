@@ -178,7 +178,7 @@ class VideoWallpaperViewModel: ObservableObject {
     }
 
     private func updateMusicSyncCapture() {
-        let needed = VideoMusicSyncSettings.isAnyEnabled(currentWallpaper)
+        let needed = VideoMusicSyncStore.shared.isAnyEnabled(currentWallpaper)
         guard needed != (musicSyncCaptureLease != nil) else { return }
         musicSyncCaptureLease = needed ? WallpaperServices.shared.acquireAudioCapture() : nil
     }
@@ -222,8 +222,8 @@ class VideoWallpaperViewModel: ObservableObject {
     }
 
     func updatePlaybackRates(audioLevel: Double) {
-        let paceAmount = VideoMusicSyncSettings.bool(currentWallpaper, "paceEnabled")
-            ? VideoMusicSyncSettings.double(currentWallpaper, "paceAmount", default: 0.25)
+        let paceAmount = VideoMusicSyncStore.shared.bool(currentWallpaper, "paceEnabled")
+            ? VideoMusicSyncStore.shared.double(currentWallpaper, "paceAmount", default: 0.25)
             : 0
         // The raw level is per-sample noisy; pacing straight off it reads as stutter rather than
         // a pulse. Smoothing is skipped when pacing is off so play/pause stays instant.

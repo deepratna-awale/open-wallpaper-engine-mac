@@ -571,9 +571,9 @@ static float oscillation(ProgramOp record, thread const ProgramState &p, thread 
     return record.c.x + (wave + 1) * 0.5f * r * (record.c.y - record.c.x);
 }
 
-/// `collisions[first…]`, carried by `shift`, in the scene.
+/// `collisions[first…]`, each in the system's space or in the scene (`CollisionPlacement.extra.z`).
 static bool programCollide(ProgramOp record, thread ProgramState &p, thread const ProgramContext &c,
-                           constant CollisionPlacement *collisions, uint collisionCount, float2 shift);
+                           constant CollisionPlacement *collisions, uint collisionCount);
 
 /// The start of a VM run.
 static void beginRun(thread ProgramState &p) {
@@ -602,7 +602,7 @@ struct BoidsList {
 /// One record. `neighbors` are the step's particles (scene space)
 /// for boids; true when it deletes the particle.
 static bool runOperator(ProgramOp record, thread ProgramState &p, thread ProgramContext &c,
-                        constant CollisionPlacement *collisions, uint collisionCount, float2 shift,
+                        constant CollisionPlacement *collisions, uint collisionCount,
                         device const ParticleState *neighbors, uint neighborCount, uint self, uint liveCount,
                         uint frame, device const uint *alive, uint aged, BoidsList boids) {
     bool dies = false;
@@ -845,7 +845,7 @@ static bool runOperator(ProgramOp record, thread ProgramState &p, thread Program
         case oRemapValue: remap(record, p, c, false, blend); break;
         case oInheritValue: inheritFromSource(flags, p, c, false); break;
         case oCollision:
-            if (programCollide(record, p, c, collisions, collisionCount, shift)) dies = true;
+            if (programCollide(record, p, c, collisions, collisionCount)) dies = true;
             break;
         default: break;
         }
@@ -855,13 +855,13 @@ static bool runOperator(ProgramOp record, thread ProgramState &p, thread Program
 
 /// One VM run of every record, in order.
 static bool runOperators(constant ProgramOp *records, uint count, thread ProgramState &p, thread ProgramContext &c,
-                         constant CollisionPlacement *collisions, uint collisionCount, float2 shift,
+                         constant CollisionPlacement *collisions, uint collisionCount,
                          device const ParticleState *neighbors, uint neighborCount, uint self, uint liveCount,
                          uint frame, device const uint *alive, uint aged, BoidsList boids) {
     beginRun(p);
     bool dies = false;
     for (uint index = 0; index < count; ++index) {
-        dies = runOperator(records[index], p, c, collisions, collisionCount, shift, neighbors, neighborCount, self,
+        dies = runOperator(records[index], p, c, collisions, collisionCount, neighbors, neighborCount, self,
                            liveCount, frame, alive, aged, boids) || dies;
     }
     return dies;
