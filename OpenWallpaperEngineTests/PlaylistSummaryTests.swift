@@ -29,6 +29,14 @@ final class PlaylistSummaryTests: XCTestCase {
         XCTAssertEqual(PlaylistSummary.coverURLs(of: playlist).count, 2)
     }
 
+    func testCoverShowsAWorkshopPresetBesideItsBase() {
+        let base = wallpaper("base")
+        var preset = base
+        preset.presetDirectory = URL(fileURLWithPath: "/tmp/owe-summary/preset")
+        let playlist = WallpaperPlaylist(name: "p", items: [WallpaperPlaylistItem(wallpaper: base), WallpaperPlaylistItem(wallpaper: preset)])
+        XCTAssertEqual(PlaylistSummary.coverURLs(of: playlist), [base.previewURL, preset.previewURL].compactMap { $0 })
+    }
+
     func testCoverOfAnEmptyPlaylistIsEmpty() {
         XCTAssertEqual(PlaylistSummary.coverURLs(of: playlist([])), [])
     }

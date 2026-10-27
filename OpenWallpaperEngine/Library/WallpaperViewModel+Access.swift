@@ -30,15 +30,15 @@ extension WallpaperViewModel {
         // A tile tap inspects twice (once via selectWallpaper, once from the tile itself). Clearing
         // and refetching on the second call raced the first request, and Steam rejected the
         // duplicate, so the metadata stayed empty until a later visit read it from cache.
-        let isSameWallpaper = workshopDetailsDirectory == wallpaper.wallpaperDirectory
-        workshopDetailsDirectory = wallpaper.wallpaperDirectory
+        let isSameWallpaper = workshopDetailsDirectory == wallpaper.settingsDirectory
+        workshopDetailsDirectory = wallpaper.settingsDirectory
         if !isSameWallpaper {
             inspectedWorkshopItem = nil
             inspectedAuthor = nil
         }
 
         let projectWorkshopId = wallpaper.project.workshopid?.rawValue
-        let folderWorkshopId = wallpaper.wallpaperDirectory.lastPathComponent
+        let folderWorkshopId = wallpaper.settingsDirectory.lastPathComponent
         let workshopId = (projectWorkshopId?.allSatisfy(\.isNumber) == true ? projectWorkshopId : nil)
             ?? (folderWorkshopId.allSatisfy(\.isNumber) ? folderWorkshopId : nil)
         guard let workshopId else { return }
@@ -61,11 +61,11 @@ extension WallpaperViewModel {
             let fetched = try? await WorkshopAPIService().getItemDetails(workshopIds: [workshopId]).first
             guard let self else { return }
             guard let item = fetched ?? WorkshopMetadataStore.shared.item(for: workshopId) else { return }
-            guard self.displayedWallpaper.wallpaperDirectory.lastPathComponent == folderWorkshopId else { return }
+            guard self.displayedWallpaper.settingsDirectory.lastPathComponent == folderWorkshopId else { return }
             self.inspectedWorkshopItem = item
             if let creatorId = item.creatorId,
                let author = try? await WorkshopAPIService().getPlayerSummary(steamId: creatorId) {
-                guard self.displayedWallpaper.wallpaperDirectory.lastPathComponent == folderWorkshopId else { return }
+                guard self.displayedWallpaper.settingsDirectory.lastPathComponent == folderWorkshopId else { return }
                 self.inspectedAuthor = author
             }
         }
@@ -192,7 +192,7 @@ extension WallpaperViewModel {
         guard wallpaper.project != .invalid,
               let id = playlistID ?? activePlaylistID,
               let index = playlists.firstIndex(where: { $0.id == id }),
-              !playlists[index].items.contains(where: { $0.wallpaper.wallpaperDirectory == wallpaper.wallpaperDirectory }) else { return }
+              !playlists[index].items.contains(where: { $0.wallpaper.isSameWallpaper(as: wallpaper) }) else { return }
         // WE's limit: a day-of-week playlist has a wallpaper per day at most.
         if playlists[index].timing == .dayofweek, playlists[index].items.count >= PlaylistTiming.maxDayOfWeekItems {
             OWELog.info(.app, "Playlist \"\(playlists[index].name)\" is a day-of-week playlist with 7 wallpapers; \"\(wallpaper.project.title)\" wasn't added")
@@ -252,7 +252,7 @@ extension WallpaperViewModel {
         func advancePlaylistIfVideoEnds(_ wallpaper: WEWallpaper) {
           guard let playlist = activePlaylist, playlist.changeWhenVideoEnds, playlist.timing.usesTimerOptions,
               playlist.items.indices.contains(playlistIndex),
-              playlist.items[playlistIndex].wallpaper.wallpaperDirectory == wallpaper.wallpaperDirectory else { return }
+              playlist.items[playlistIndex].wallpaper.isSameWallpaper(as: wallpaper) else { return }
           advancePlaylistAutomatically()
         }
 
@@ -425,8 +425,8 @@ extension WallpaperViewModel {
         guard wallpaper.project.workshopid == nil else { return }
         var updated = wallpaper
         updated.project.contentrating = rating
-        guard WallpaperProjectFileEdit.setLogging(["contentrating": rating], inProjectAt: updated.wallpaperDirectory) else { return }
-        for key in wallpapers.keys where wallpapers[key]?.wallpaperDirectory == updated.wallpaperDirectory {
+        guard WallpaperProjectFileEdit.setLogging(["contentrating": rating], inProjectAt: updated.settingsDirectory) else { return }
+        for key in wallpapers.keys where wallpapers[key]?.isSameWallpaper(as: updated) == true {
             wallpapers[key] = updated
         }
         inspect(updated)

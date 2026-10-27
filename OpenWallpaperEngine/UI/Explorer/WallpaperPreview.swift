@@ -231,7 +231,7 @@ struct WallpaperPreview: SubviewOfContentView {
                         }
                         Spacer()
                     }
-                    .task(id: wallpaperViewModel.displayedWallpaper.wallpaperDirectory) {
+                    .task(id: wallpaperViewModel.displayedWallpaper.settingsDirectory) {
                         wallpaperViewModel.loadDisplayedWorkshopDetails()
                     }
                     favoriteControl

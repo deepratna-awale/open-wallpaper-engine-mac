@@ -9,10 +9,10 @@ enum PlaylistSummary {
     /// The cover's previews: the first items with a preview, up to `coverLimit`, each wallpaper
     /// once (a playlist may list a folder twice).
     static func coverURLs(of playlist: WallpaperPlaylist) -> [URL] {
-        var seen = Set<URL>()
+        var seen = Set<String>()
         var urls: [URL] = []
         for item in playlist.items where urls.count < coverLimit {
-            guard seen.insert(item.wallpaper.wallpaperDirectory).inserted,
+            guard seen.insert(item.wallpaper.identityPath).inserted,
                   let url = previewURL(for: item.wallpaper) else { continue }
             urls.append(url)
         }

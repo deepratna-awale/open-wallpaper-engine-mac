@@ -34,7 +34,7 @@ extension WallpaperViewModel {
 
     func addToRecents(_ wallpaper: WEWallpaper) {
         guard wallpaper.project != .invalid else { return }
-        recentWallpapers.removeAll { $0.wallpaperDirectory == wallpaper.wallpaperDirectory }
+        recentWallpapers.removeAll { $0.isSameWallpaper(as: wallpaper) }
         recentWallpapers.insert(wallpaper, at: 0)
         if recentWallpapers.count > Self.maxRecents {
             recentWallpapers = Array(recentWallpapers.prefix(Self.maxRecents))

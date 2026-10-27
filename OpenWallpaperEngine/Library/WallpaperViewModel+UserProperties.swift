@@ -30,7 +30,7 @@ extension WallpaperViewModel {
     /// selected display's, then those of the other selected displays showing it. The first is shown.
     func editedPropertyScopes(of wallpaper: WEWallpaper) -> [WallpaperPropertyScope] {
         let others = selectedScreenIds.sorted().filter {
-            $0 != selectedScreenId && self.wallpaper(for: $0).wallpaperDirectory == wallpaper.wallpaperDirectory
+            $0 != selectedScreenId && self.wallpaper(for: $0).isSameWallpaper(as: wallpaper)
         }
         var scopes: [WallpaperPropertyScope] = []
         for screen in [selectedScreenId] + others where !screen.isEmpty {
