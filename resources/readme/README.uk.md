@@ -3,7 +3,7 @@ Open Wallpaper Engine
 
 [English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | **Українська** | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
-[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
+[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE) [![Downloads](https://img.shields.io/github/downloads/deepratna-awale/open-wallpaper-engine-mac/total.svg)](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases)
 
 Open Wallpaper Engine — безкоштовна програма з відкритим кодом для macOS, яка відтворює й редагує шпалери Wallpaper Engine: сцени, відео та вебшпалери. Сцени малюються власним рендерером на Metal з ефектами, частинками, 3D-моделями, освітленням, SceneScript і візуалізаціями, що реагують на звук, а Майстерню Steam вбудовано в програму. Проєкт починався як форк [Open Wallpaper Engine](https://github.com/MrWindDog) від Харена Чена (Haren Chen) і MrWindDog, а відтоді його здебільшого переписано.
 
