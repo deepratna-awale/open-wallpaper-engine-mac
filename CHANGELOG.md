@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.12] - 2026-10-28
+
 ### Fixed
 
 - **Installed: clicking a Workshop preset no longer highlights its base wallpaper too.** A preset (such as "Pixels - Green Forest") plays from its base's folder, and the library, Details, Recent, playlists and property edits compared wallpapers by that folder, so both tiles lit up together, the preset showed its base's Workshop page, adding one to a playlist that held the other did nothing, and the cover and Recent list kept only one of them. Each now goes by its own folder.
