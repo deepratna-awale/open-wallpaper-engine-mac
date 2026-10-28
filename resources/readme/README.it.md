@@ -3,7 +3,7 @@ Open Wallpaper Engine
 
 [English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | **Italiano** | [日本語](README.ja.md) | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
-[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE) [![Downloads](https://img.shields.io/github/downloads/deepratna-awale/open-wallpaper-engine-mac/total.svg)](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases)
+[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE) [![Downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fopenwallpaperengine.app%2Fdownloads.json)](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases)
 
 Open Wallpaper Engine è un’app gratuita e open source per macOS che riproduce e modifica gli sfondi di Wallpaper Engine: scena, video e web. Le scene vengono disegnate da un renderer Metal nativo, con effetti, particelle, modelli 3D, illuminazione, SceneScript ed elementi visivi reattivi all’audio, e lo Steam Workshop è integrato. È nata come fork di [Open Wallpaper Engine](https://github.com/MrWindDog) di Haren Chen e MrWindDog ed è stata poi in gran parte riscritta.
 

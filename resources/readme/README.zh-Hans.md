@@ -3,7 +3,7 @@ Open Wallpaper Engine
 
 [English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | **简体中文** | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
-[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE) [![Downloads](https://img.shields.io/github/downloads/deepratna-awale/open-wallpaper-engine-mac/total.svg)](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases)
+[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE) [![Downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fopenwallpaperengine.app%2Fdownloads.json)](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases)
 
 Open Wallpaper Engine 是一款免费、开源的 macOS App，可播放和编辑 Wallpaper Engine 的场景、视频和网页墙纸。场景使用原生 Metal 渲染器绘制，支持特效、粒子、3D 模型、光照、SceneScript 和音频响应视觉效果，并内置 Steam 创意工坊。本项目最初是 Haren Chen 与 MrWindDog 的 [Open Wallpaper Engine](https://github.com/MrWindDog) 的分支，此后已大部分重写。
 

@@ -3,7 +3,7 @@ Open Wallpaper Engine
 
 [English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | **한국어** | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
-[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE) [![Downloads](https://img.shields.io/github/downloads/deepratna-awale/open-wallpaper-engine-mac/total.svg)](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases)
+[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE) [![Downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fopenwallpaperengine.app%2Fdownloads.json)](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases)
 
 Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)을 재생하고 편집하는 무료 오픈 소스 macOS 앱입니다. 장면은 네이티브 Metal 렌더러로 그려지며 효과, 파티클, 3D 모델, 조명, SceneScript, 오디오 반응형 비주얼을 지원하고, Steam 창작마당이 내장되어 있습니다. Haren Chen과 MrWindDog의 [Open Wallpaper Engine](https://github.com/MrWindDog) 포크로 시작했으며, 이후 대부분 새로 작성되었습니다.
 
