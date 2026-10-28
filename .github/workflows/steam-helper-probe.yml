@@ -1,5 +1,7 @@
 # Research build for the Steam QR sign-in work: a SteamKit2 probe and DepotDownloader with a
 # refresh-token patch, for osx-arm64. Runs only on the research branch; not part of CI.
+# Built on Linux because macOS runners queue for a long time; the SDK can't sign there, so the
+# binaries need `codesign -s -` on the Mac before they run.
 name: Steam helper probe
 
 on:
@@ -12,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -31,7 +33,7 @@ jobs:
           git -C dd apply "$GITHUB_WORKSPACE/SteamHelper/Probe/depotdownloader-refresh-token.patch"
           dotnet publish dd/DepotDownloader/DepotDownloader.csproj -c Release -r osx-arm64 --self-contained \
             -p:PublishSingleFile=true -p:DebugType=embedded -o out
-      - run: ls -la out && shasum -a 256 out/SteamProbe out/DepotDownloader
+      - run: ls -la out && sha256sum out/SteamProbe out/DepotDownloader
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: steam-helper-probe-osx-arm64
