@@ -1,0 +1,18 @@
+diff --git a/DepotDownloader/Program.cs b/DepotDownloader/Program.cs
+index 26b7f16..a0faf38 100644
+--- a/DepotDownloader/Program.cs
++++ b/DepotDownloader/Program.cs
+@@ -68,6 +68,13 @@ namespace DepotDownloader
+             var password = GetParameter<string>(args, "-password") ?? GetParameter<string>(args, "-pass");
+             ContentDownloader.Config.RememberPassword = HasParameter(args, "-remember-password");
+             ContentDownloader.Config.UseQrCode = HasParameter(args, "-qr");
++            // A refresh token from the app's own QR sign-in, kept out of argv and the process list.
++            var refreshToken = Environment.GetEnvironmentVariable("OWE_STEAM_REFRESH_TOKEN");
++            if (username != null && !string.IsNullOrEmpty(refreshToken))
++            {
++                AccountSettingsStore.Instance.LoginTokens[username] = refreshToken;
++                ContentDownloader.Config.RememberPassword = true;
++            }
+             ContentDownloader.Config.SkipAppConfirmation = HasParameter(args, "-no-mobile");
+ 
+             if (username == null)
