@@ -6,6 +6,33 @@
         <description>Open Wallpaper Engine updates. Items are added by .github/workflows/appcast.yml when a release is published.</description>
         <language>en</language>
         <item>
+            <title>1.0.0-beta.12</title>
+            <pubDate>Wed, 28 Oct 2026 22:25:36 +0000</pubDate>
+            <sparkle:version>16</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.12</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.12/OpenWallpaperEngine-1.0.0-beta.12.zip" length="93689321" type="application/octet-stream" sparkle:edSignature="w0pCafEeq9bLktkZ5HLSrGoaQRmrW0zL7p2GOyn+veevZ+oIYXzkAheLeP2gKqkETl8x0bO6UcvNmGyK1P76AA==" />
+            <sparkle:deltas>
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.12/OpenWallpaperEngine-1.0.0-beta.12-from-15.delta" sparkle:deltaFrom="15" length="3409786" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="9ysw587A0THfKVu8Gl0suQm6IrusY3fTppSALhBdXFBOm7sMYM3+D+h+xxrNl5LQEdwWJsg5XNFKAv+iKFJADQ==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.12/OpenWallpaperEngine-1.0.0-beta.12-from-14.delta" sparkle:deltaFrom="14" length="3428762" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="XXPbAT4MDdoVFixMJcm/jv6sXRE74kAF9kuszrDDuf5mnDFvSOkiWceF37omqyOj1iW+YD+Z/4eUalYbiA7FAA==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.12/OpenWallpaperEngine-1.0.0-beta.12-from-13.delta" sparkle:deltaFrom="13" length="3350062" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="ued+p5QUIqI6d8w9+h2s6kQOgQ4Hv3wN6ets/q7RGIRT3xtqDJgLI2WA4eeFiYaAM03dD+6nYK1sV6fv6GHHCA==" />
+            </sparkle:deltas>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:fullReleaseNotesLink>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.12</sparkle:fullReleaseNotesLink>
+            <link>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.12</link>
+            <description>&lt;p dir="auto"&gt;Beta 12 fixes Workshop presets that lit up together with their base wallpaper, keeps audio-reactive wallpapers from touching a headset's microphone, and brings particle collisions and screen-placed effects closer to Wallpaper Engine.&lt;/p&gt;
+&lt;h2 dir="auto"&gt;Fixes&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;Clicking a Workshop preset no longer highlights its base wallpaper too.&lt;/strong&gt; The library, Details, Recent, playlists and property edits now tell a preset and its base apart, so each shows its own Workshop page and can be added to a playlist on its own.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Audio-reactive wallpapers no longer bring a headset's microphone into the system audio capture,&lt;/strong&gt; so macOS no longer checks the Microphone permission for it.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Web wallpapers can't ask for the microphone or camera.&lt;/strong&gt; A page that calls &lt;code class="notranslate"&gt;getUserMedia&lt;/code&gt; is refused without a prompt, as in the Chromium engine; pages hear the system's sound through Wallpaper Engine's audio listener.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Particle collision shapes scale with a stretched particle system,&lt;/strong&gt; as in Wallpaper Engine, so particles bounce off the right angle.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Effects that read where a layer is on screen follow it&lt;/strong&gt; when the layer, the camera or the display changes.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Music settings follow the wallpaper, not its folder,&lt;/strong&gt; so moving or renaming the folder keeps them. Music settings saved by earlier versions are not read; set them again once.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p dir="auto"&gt;The full list is in &lt;a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/blob/main/CHANGELOG.md#100-beta12---2026-10-28"&gt;CHANGELOG.md&lt;/a&gt;.&lt;/p&gt;</description>
+        </item>
+        <item>
             <title>1.0.0-beta.11</title>
             <pubDate>Sat, 24 Oct 2026 09:22:32 +0000</pubDate>
             <sparkle:version>15</sparkle:version>
