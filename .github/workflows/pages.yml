@@ -4,10 +4,14 @@ name: Pages
 # release from the GitHub API, so it needs no redeploy when a release is published.
 # The site is served at https://openwallpaperengine.app/: the custom domain is set in the
 # repository's Settings → Pages (an Actions deployment has no CNAME file). See docs/releasing.md.
+# Each deploy also writes downloads.json, the README's downloads badge (DMG downloads across every
+# release), so it redeploys every six hours to keep that count current.
 on:
   push:
     branches: [main]
     paths: [site/**, .github/workflows/pages.yml]
+  schedule:
+    - cron: "17 */6 * * *"
   workflow_dispatch:
 
 permissions:
@@ -28,6 +32,20 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      # A shields.io endpoint badge. GitHub's own count includes update deltas and the zips the
+      # Appcast workflow downloads, so only DMGs are counted.
+      - name: Count DMG downloads
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          count=$(gh api --paginate "repos/${{ github.repository }}/releases?per_page=100" \
+            --jq '.[].assets[] | select(.name | endswith(".dmg")) | .download_count' \
+            | awk '{ n += $1 } END { print n + 0 }')
+          jq -n --arg count "$count" \
+            '{schemaVersion: 1, label: "downloads", message: $count, color: "brightgreen"}' \
+            > site/downloads.json
+          cat site/downloads.json
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: site

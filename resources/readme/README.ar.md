@@ -5,7 +5,7 @@ Open Wallpaper Engine
 
 <div dir="rtl">
 
-[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE) [![Downloads](https://img.shields.io/github/downloads/deepratna-awale/open-wallpaper-engine-mac/total.svg)](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases)
+[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE) [![Downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fopenwallpaperengine.app%2Fdownloads.json)](https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases)
 
 Open Wallpaper Engine تطبيق مجاني ومفتوح المصدر لنظام macOS يشغّل خلفيات Wallpaper Engine ويحرّرها: المشهد والفيديو والويب. تُرسم المشاهد بمحرك عرض أصلي مبني على Metal، مع التأثيرات والجسيمات والنماذج ثلاثية الأبعاد والإضاءة وSceneScript والمؤثرات المرئية المتفاعلة مع الصوت، وورشة Steam مدمجة فيه. بدأ المشروع كنسخة متفرعة (fork) من [Open Wallpaper Engine](https://github.com/MrWindDog) لمطوّريه Haren Chen وMrWindDog، ثم أُعيدت كتابة معظمه منذ ذلك الحين.
 
