@@ -23,6 +23,10 @@ namespace OWESteamHelper
             ["PublishedFile.QueryFiles"] = Make<CPublishedFile_QueryFiles_Request, CPublishedFile_QueryFiles_Response>("PublishedFile.QueryFiles#1"),
             ["PublishedFile.GetUserFiles"] = Make<CPublishedFile_GetUserFiles_Request, CPublishedFile_GetUserFiles_Response>("PublishedFile.GetUserFiles#1"),
             ["PublishedFile.GetDetails"] = Make<CPublishedFile_GetDetails_Request, CPublishedFile_GetDetails_Response>("PublishedFile.GetDetails#1"),
+            ["PublishedFile.Subscribe"] = Make<CPublishedFile_Subscribe_Request, CPublishedFile_Subscribe_Response>("PublishedFile.Subscribe#1"),
+            ["PublishedFile.Unsubscribe"] = Make<CPublishedFile_Unsubscribe_Request, CPublishedFile_Unsubscribe_Response>("PublishedFile.Unsubscribe#1"),
+            ["PublishedFile.Vote"] = Make<CPublishedFile_Vote_Request, CPublishedFile_Vote_Response>("PublishedFile.Vote#1"),
+            ["PublishedFile.GetUserVoteSummary"] = Make<CPublishedFile_GetUserVoteSummary_Request, CPublishedFile_GetUserVoteSummary_Response>("PublishedFile.GetUserVoteSummary#1"),
         };
 
         /// SteamKit hands a response only to a service created on the handler; without that it
