@@ -418,6 +418,22 @@ final class WorkshopAPIService: Sendable {
         return try WorkshopVote.votes(from: response)
     }
 
+    /// A page of the comments on `workshopId`, whose thread belongs to its creator
+    /// (Community.GetCommentThread through the Steam login, Workshop thread type 5).
+    func comments(on workshopId: String, creatorId: String, start: Int, count: Int) async throws -> WorkshopComment.Page {
+        guard WorkshopCollection.isID(workshopId), WorkshopSubscriptions.isSteamID64(creatorId) else {
+            throw WorkshopAPIError.invalidURL
+        }
+        let response = try await serviceCall("Community.GetCommentThread", parameters: [
+            URLQueryItem(name: "steamid", value: creatorId),
+            URLQueryItem(name: "comment_thread_type", value: "5"),
+            URLQueryItem(name: "gidfeature", value: workshopId),
+            URLQueryItem(name: "start", value: String(start)),
+            URLQueryItem(name: "count", value: String(count)),
+        ])
+        return try WorkshopComment.page(from: response)
+    }
+
     private func getUserFileIDs(steamID: String,
                                 list: WorkshopSubscriptions.List) async throws -> WorkshopSubscriptions.Outcome {
         guard WorkshopSubscriptions.isSteamID64(steamID) else { throw WorkshopAPIError.invalidURL }

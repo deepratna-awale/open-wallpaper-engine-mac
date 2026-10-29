@@ -454,6 +454,14 @@ struct WallpaperPreview: SubviewOfContentView {
                             title: wallpaper.project.displayTitle,
                             scopes: wallpaperViewModel.editedPropertyScopes(of: wallpaper)))
                     }
+                    // MARK: Comments
+                    if let workshopId = SceneContentLoader.workshopId(of: wallpaperViewModel.displayedWallpaper),
+                       viewModel.workshopDownloads.isLoggedIn {
+                        CollapsibleSection(title: "Comments", initiallyExpanded: false) {
+                            WorkshopCommentsView(workshopId: workshopId, steam: viewModel.steamAccount.client)
+                                .id(workshopId)
+                        }
+                    }
                 }
                 .blur(radius: wallpaperViewModel.displayedWallpaper.project == .invalid ? 16.0 : 0)
                 .overlay {

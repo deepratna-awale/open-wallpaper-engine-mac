@@ -49,6 +49,7 @@ namespace OWESteamHelper
         readonly SteamUser user;
         readonly SteamApps apps;
         readonly SteamUnifiedMessages unified;
+        readonly RawServiceCalls raw = new();
         readonly Action<string, JsonObject> onEvent;
         readonly Thread pump;
         readonly SemaphoreSlim connecting = new(1, 1);
@@ -74,6 +75,7 @@ namespace OWESteamHelper
             apps = client.GetHandler<SteamApps>()!;
             unified = client.GetHandler<SteamUnifiedMessages>()!;
             ServiceCalls.Register(unified);
+            client.AddHandler(raw);
             manager.Subscribe<SteamClient.ConnectedCallback>(_ =>
             {
                 isConnected = true;
@@ -286,10 +288,12 @@ namespace OWESteamHelper
 
         public async Task<JsonNode?> CallAsync(string method, JsonElement body, CancellationToken cancellation)
         {
-            if (!ServiceCalls.IsKnown(method))
+            var isComments = method == CommentThreads.Method;
+            if (!isComments && !ServiceCalls.IsKnown(method))
                 throw new HelperException(ErrorCode.UnknownMethod, $"No service method \"{method}\".");
             await EnsureLoggedOnAsync(cancellation);
-            return await ServiceCalls.InvokeAsync(unified, method, body).WaitAsync(StepTimeout, cancellation);
+            var call = isComments ? CommentThreads.InvokeAsync(raw, body) : ServiceCalls.InvokeAsync(unified, method, body);
+            return await call.WaitAsync(StepTimeout, cancellation);
         }
 
         public async Task<AppInfo> GetAppInfoAsync(uint appID, CancellationToken cancellation)
