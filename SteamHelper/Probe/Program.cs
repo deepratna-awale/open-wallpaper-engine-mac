@@ -1,6 +1,7 @@
 // Research probe: signs in to Steam's client protocol with the refresh token a QR sign-in
 // returned and checks what the app needs from it. Prints results only, never tokens.
-// usage: SteamProbe <tokens.json>   ({"account", "steamid", "refresh"})
+// usage: SteamProbe <tokens.json> [--renew]   ({"account", "steamid", "refresh"})
+// Renewal is opt-in: a failed renewal may be what revoked the first test session.
 using System.Text;
 using System.Text.Json;
 using SteamKit2;
@@ -44,7 +45,7 @@ Report("Client logon with the QR refresh token", logon == EResult.OK, $"result={
 if (logon != EResult.OK) return 1;
 
 // 1. Renewal over the client protocol.
-try
+if (args.Contains("--renew")) try
 {
     var renewed = await client.Authentication.GenerateAccessTokenForAppAsync(new SteamID(steamId), refresh, allowRenewal: true);
     var c = Claims(renewed.AccessToken);
