@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <Compile Remove="Tests/**" />
+    <Compile Remove="Probe/**" />
     <Compile Include="../Vendor/DepotDownloader/DepotDownloader/*.cs" Link="DepotDownloader/%(Filename)%(Extension)" />
     <AdditionalFiles Include="../Vendor/DepotDownloader/DepotDownloader/NativeMethods.txt" />
     <InternalsVisibleTo Include="OWESteamHelper.Tests" />
