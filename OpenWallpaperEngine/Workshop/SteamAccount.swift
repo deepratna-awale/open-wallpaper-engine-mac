@@ -179,7 +179,8 @@ final class SteamAccount: ObservableObject {
 
     /// Steam no longer accepts the login: it is forgotten, and the user is asked to log in again.
     func loginRejected() async {
-        guard isSignedIn else { return }
+        // Concurrent requests can each report it; the first forgets the login.
+        guard isSignedIn, login != nil else { return }
         OWELog.info(.workshop, "Steam no longer accepts the saved login")
         await forget(SteamHelperError(code: .tokenRejected, message: "The saved login was rejected."))
     }

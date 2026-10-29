@@ -39,15 +39,18 @@ struct SteamSignInView: View {
     }
 
     private func signedIn(_ name: String) -> some View {
-        HStack {
-            Label {
-                Text("Logged in to Steam as \(name)", comment: "%@ is the Steam account name")
-            } icon: {
-                Image(systemName: "person.crop.circle.badge.checkmark")
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Label {
+                    Text("Logged in to Steam as \(name)", comment: "%@ is the Steam account name")
+                } icon: {
+                    Image(systemName: "person.crop.circle.badge.checkmark")
+                }
+                Spacer()
+                if case .restoring = account.status { ProgressView().controlSize(.small) }
+                Button("Log Out") { account.signOut() }
             }
-            Spacer()
-            if case .restoring = account.status { ProgressView().controlSize(.small) }
-            Button("Log Out") { account.signOut() }
+            SteamLoginExpiryNotice(account: account)
         }
     }
 
@@ -131,5 +134,28 @@ struct SteamSignInView: View {
         guard !guardCode.isEmpty else { return }
         account.submitGuardCode(guardCode)
         guardCode = ""
+    }
+}
+
+/// Steam's login ends after about 200 days and is never renewed: within two weeks of that, says
+/// when, and offers to log in again (Log Out shows the login in its place).
+struct SteamLoginExpiryNotice: View {
+    @ObservedObject var account: SteamAccount
+
+    var body: some View {
+        if let login = account.login, login.endsSoon(), let expiresAt = login.expiresAt {
+            HStack {
+                Label {
+                    Text("Your Steam login ends on \(expiresAt.formatted(date: .abbreviated, time: .omitted)). Log in again to keep using the Workshop.",
+                         comment: "%@ is a date")
+                } icon: {
+                    Image(systemName: "clock.badge.exclamationmark")
+                }
+                .foregroundStyle(.orange)
+                Spacer()
+                Button("Log In Again") { account.signOut() }
+            }
+            .font(.callout)
+        }
     }
 }

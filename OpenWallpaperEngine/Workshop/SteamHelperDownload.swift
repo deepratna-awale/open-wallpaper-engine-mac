@@ -79,7 +79,8 @@ enum SteamHelperDownload {
             + ["-dir", directory.path, "-filelist", fileList.path, "-validate"]
     }
 
-    /// What a finished run came to; `downloaded` says whether the files are there.
+    /// What a finished run came to; `downloaded` says whether the files are there. The lines it
+    /// reads are DepotDownloader's; `DownloadMessagesTests` (SteamHelper/Tests) checks they're still printed.
     static func outcome(output: String, exitCode: Int32, downloaded: Bool) -> Outcome {
         // Any failed logon prints "Unable to get steam3 credentials"; only this one is the login's.
         if output.contains("Access token was rejected") { return .loginRejected }

@@ -20,6 +20,7 @@ enum WorkshopItemInstaller {
     /// `WallpaperStorage.setDirectory` and the dependency cleanup all skip it.
     static let stagingFolderName = ".owe-download"
     private static let incomingPrefix = ".owe-incoming-"
+    private static let replacedPrefix = ".owe-replaced-"
 
     enum Failure: LocalizedError {
         case notDownloaded(workshopId: String)
@@ -103,6 +104,43 @@ enum WorkshopItemInstaller {
             throw error
         }
         try fileManager.removeItem(at: source)
+        return .installed(destination)
+    }
+
+    /// Puts a downloaded update at `<storage>/<id>` in place of the installed folder, keeping a web
+    /// wallpaper's user files (`WebUserFiles`) when the update hasn't brought them along. The old
+    /// folder is renamed aside first and deleted only once the new one is in, so a failure leaves it
+    /// where it was. Without an installed folder it installs as `install` does.
+    static func replace(itemAt source: URL, workshopId: String, into storage: URL,
+                        fileManager: FileManager = .default) throws -> Outcome {
+        guard fileManager.fileExists(atPath: source.path) else { throw Failure.notDownloaded(workshopId: workshopId) }
+        let destination = storage.appending(path: workshopId, directoryHint: .isDirectory)
+        guard fileManager.fileExists(atPath: destination.path) else {
+            return try install(itemAt: source, workshopId: workshopId, into: storage, fileManager: fileManager)
+        }
+        let oldUserFiles = destination.appending(path: WebUserFiles.pathPrefix, directoryHint: .isDirectory)
+        let newUserFiles = source.appending(path: WebUserFiles.pathPrefix, directoryHint: .isDirectory)
+        if fileManager.fileExists(atPath: oldUserFiles.path), !fileManager.fileExists(atPath: newUserFiles.path) {
+            try fileManager.copyItem(at: oldUserFiles, to: newUserFiles)
+        }
+        let replaced = storage.appending(path: replacedPrefix + workshopId + "-" + UUID().uuidString,
+                                         directoryHint: .isDirectory)
+        try fileManager.moveItem(at: destination, to: replaced)
+        do {
+            _ = try install(itemAt: source, workshopId: workshopId, into: storage, fileManager: fileManager)
+        } catch {
+            do {
+                try fileManager.moveItem(at: replaced, to: destination)
+            } catch let restoreError {
+                OWELog.error(.workshop, "Can't put \(workshopId) back after a failed update: \(restoreError)")
+            }
+            throw error
+        }
+        do {
+            try fileManager.removeItem(at: replaced)
+        } catch {
+            OWELog.error(.workshop, "Can't remove the replaced copy \(replaced.path): \(error)")
+        }
         return .installed(destination)
     }
 

@@ -12,6 +12,9 @@ struct WorkshopView: SubviewOfContentView {
         VStack(spacing: 0) {
             // The browser ends its toolbar with the window's items; the login has only those.
             if viewModel.workshopDownloads.isLoggedIn {
+                SteamLoginExpiryNotice(account: viewModel.steamAccount)
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
                 WorkshopBrowserView(
                     viewModel: viewModel.workshopVM,
                     contentViewModel: viewModel

@@ -1,3 +1,4 @@
+import Combine
 import XCTest
 @testable import OpenWallpaperEngine
 
@@ -219,6 +220,87 @@ final class WorkshopStorageTests: XCTestCase {
         XCTAssertEqual(try children(of: storage.url), ["1000000001"])
     }
 
+    func testUpdateDownloadsOverACopyOfTheInstalledItem() async throws {
+        _ = await download("1000000001")
+        let item = storage.url.appending(path: "1000000001", directoryHint: .isDirectory)
+        // A file Steam's manifest still has: in the copy, DepotDownloader only checks it.
+        try Data("unchanged".utf8).write(to: item.appending(path: "textures.bin"))
+        try Data(#"{"type": "scene", "title": "Old"}"#.utf8).write(to: item.appending(path: "project.json"))
+        let updated = Updates(service)
+
+        service.updateWorkshopItem(workshopId: "1000000001", title: "Item", previewURL: nil)
+        try await sleepUntil("the update is in", timeout: 10) { updated.ids == ["1000000001"] }
+
+        XCTAssertEqual(try String(contentsOf: item.appending(path: "textures.bin"), encoding: .utf8), "unchanged")
+        XCTAssertTrue(try String(contentsOf: item.appending(path: "project.json"), encoding: .utf8).contains("Item 1000000001"))
+        XCTAssertEqual(try children(of: storage.url), ["1000000001"])
+        XCTAssertEqual(service.downloadProgress["1000000001"], .completed)
+    }
+
+    func testUpdateKeepsTheUserFilesOfAConvertedBundle() async throws {
+        _ = await download("1000000001")
+        let item = storage.url.appending(path: "1000000001", directoryHint: .isDirectory)
+        try Data("{}".utf8).write(to: item.appending(path: WallpaperPackageConverter.manifestName))
+        try Data("converted".utf8).write(to: item.appending(path: "converted.tex"))
+        let userFiles = item.appending(path: WebUserFiles.pathPrefix, directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: userFiles, withIntermediateDirectories: true)
+        try Data("mine".utf8).write(to: userFiles.appending(path: "photo.jpg"))
+        let updated = Updates(service)
+
+        service.updateWorkshopItem(workshopId: "1000000001", title: "Item", previewURL: nil)
+        try await sleepUntil("the update is in", timeout: 10) { updated.ids == ["1000000001"] }
+
+        // A converted bundle's files aren't the Workshop's, so it downloads in full.
+        XCTAssertFalse(FileManager.default.fileExists(atPath: item.appending(path: "converted.tex").path))
+        XCTAssertEqual(try String(contentsOf: userFiles.appending(path: "photo.jpg"), encoding: .utf8), "mine")
+        XCTAssertEqual(try children(of: storage.url), ["1000000001"])
+    }
+
+    func testUpdateCheckUpdatesOnlyItemsChangedSinceTheirDownload() async throws {
+        _ = await download("1000000001")
+        _ = await download("1000000002")
+        let downloadedAt = try XCTUnwrap(downloadedIndex.contentDate(for: "1000000001"))
+        let unchangedAt = downloadedIndex.contentDate(for: "1000000002")
+        let seconds = Int(downloadedAt.timeIntervalSince1970)
+        let checker = WorkshopUpdateChecker(downloads: service, index: downloadedIndex) { ids in
+            ids.map {
+                WorkshopItem(id: $0, title: $0, previewURL: nil, tags: [], subscriptions: 0, fileSize: 0,
+                             creatorAppId: nil, creatorId: nil, description: nil, votesUp: 0, votesDown: 0,
+                             timeUpdated: $0 == "1000000001" ? seconds + 60 : seconds - 60)
+            }
+        }
+        let updated = Updates(service)
+
+        await checker.checkNow()
+        try await sleepUntil("the update is in", timeout: 10) { !updated.ids.isEmpty }
+
+        XCTAssertEqual(updated.ids, ["1000000001"])
+        XCTAssertEqual(workshopDownloads.installDirectories.count, 3)
+        XCTAssertGreaterThan(try XCTUnwrap(downloadedIndex.contentDate(for: "1000000001")), downloadedAt)
+        XCTAssertEqual(downloadedIndex.contentDate(for: "1000000002"), unchangedAt)
+    }
+
+    func testItemsDownloadedBeforeContentDatesUseTheirDateAdded() {
+        downloadedIndex.insert("1000000001")
+
+        XCTAssertNotNil(downloadedIndex.contentDate(for: "1000000001"))
+        XCTAssertNil(downloadedIndex.contentDate(for: "1000000002"))
+    }
+
+    func testOutdatedNeedsSteamsDateAndTheDownloadDate() {
+        func item(_ id: String, _ updated: Int?) -> WorkshopItem {
+            WorkshopItem(id: id, title: id, previewURL: nil, tags: [], subscriptions: 0, fileSize: 0, creatorAppId: nil,
+                         creatorId: nil, description: nil, votesUp: 0, votesDown: 0, timeUpdated: updated)
+        }
+        let downloaded = Date(timeIntervalSince1970: 1_000)
+
+        let outdated = WorkshopUpdateChecker.outdated(
+            [item("1", 2_000), item("2", 500), item("3", nil), item("4", 2_000)],
+            downloadedAt: { $0 == "4" ? nil : downloaded })
+
+        XCTAssertEqual(outdated.map(\.id), ["1"])
+    }
+
     func testFailedDownloadReportsTheReasonAndCleansUp() async throws {
         let destination = await download("9999999999")
 
@@ -319,6 +401,19 @@ final class WorkshopStorageTests: XCTestCase {
 
         XCTAssertEqual(WorkshopDependencyIndex(libraryDirectory: { destination }).ids, ["2000000002"])
         XCTAssertFalse(FileManager.default.fileExists(atPath: source.appending(path: WorkshopDependencyIndex.fileName).path))
+    }
+}
+
+/// The ids of the items `WorkshopDownloadService.itemUpdated` reported, in order.
+@MainActor
+private final class Updates {
+    private(set) var ids: [String] = []
+    private var cancellable: AnyCancellable?
+
+    init(_ service: WorkshopDownloadService) {
+        cancellable = service.itemUpdated.sink { [weak self] directory in
+            MainActor.assumeIsolated { self?.ids.append(directory.lastPathComponent) }
+        }
     }
 }
 
