@@ -75,7 +75,7 @@ final class InstalledLibraryTests: XCTestCase {
     func testDependencyDownloadOfUserItemKeepsItListed() throws {
         let directory = try temporaryLibrary()
         let index = WorkshopDependencyIndex(libraryDirectory: { directory })
-        // The user's own copy was already in the library, so steamcmd didn't copy anything.
+        // The user's own copy was already in the library, so the download didn't copy anything.
         index.recordDependencyDownload("4000000004", copiedIntoLibrary: false)
         XCTAssertFalse(index.contains("4000000004"))
     }

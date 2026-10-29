@@ -2,8 +2,8 @@ import XCTest
 @testable import OpenWallpaperEngine
 
 /// Every way a Workshop item reaches the app ends in the Wallpaper Storage folder, as `<storage>/<id>`,
-/// with nothing left in steamcmd's install dir. steamcmd is a fake that "downloads" by writing the
-/// item where the script's `force_install_dir` says.
+/// with nothing left in the download's staging folder. The Steam helper is a fake that "downloads"
+/// by writing the item into its `-dir`.
 @MainActor
 final class WorkshopStorageTests: XCTestCase {
     /// The storage folder the service reads at each download, so a test can change it.
@@ -23,11 +23,11 @@ final class WorkshopStorageTests: XCTestCase {
     private var previewCache: URL!
     private var defaults: UserDefaults!
     private var defaultsSuite: String!
-    private var steamCmd: FakeSteamCmd!
+    private var workshopDownloads: FakeHelper!
     private var dependencyIndex: WorkshopDependencyIndex!
     private var downloadedIndex: DownloadedWallpaperIndex!
     private var presented: [WEWallpaper] = []
-    private var service: SteamCmdService!
+    private var service: WorkshopDownloadService!
 
     override func setUp() async throws {
         try await super.setUp()
@@ -38,18 +38,15 @@ final class WorkshopStorageTests: XCTestCase {
         previewCache = root.appending(path: "Caches/WorkshopPreviews", directoryHint: .isDirectory)
         defaultsSuite = "owe-tests-\(UUID().uuidString)"
         defaults = UserDefaults(suiteName: defaultsSuite)
-        steamCmd = FakeSteamCmd()
+        workshopDownloads = FakeHelper()
         let storage = storage!
         dependencyIndex = WorkshopDependencyIndex(libraryDirectory: { storage.url })
         downloadedIndex = DownloadedWallpaperIndex(defaults: defaults, libraryDirectory: { storage.url })
-        service = SteamCmdService(dependencyIndex: dependencyIndex, runner: steamCmd,
+        service = WorkshopDownloadService(dependencyIndex: dependencyIndex, helperDownloads: workshopDownloads,
                                   storageDirectory: { try WallpaperStorage.availableDirectory(storage.url) },
                                   previewCacheRoot: previewCache, downloadedIndex: downloadedIndex,
-                                  presentPreview: { [weak self] in self?.presented.append($0) },
-                                  restoresSession: false)
-        service.steamCmdPath = "/fake/steamcmd"
-        service.steamUsername = "tester"
-        service.isLoggedIn = true
+                                  presentPreview: { [weak self] in self?.presented.append($0) })
+        service.useSteamLogin(SteamLogin(accountName: "tester", steamID: "76561190000000001", refreshToken: "test-token"))
     }
 
     override func tearDown() async throws {
@@ -94,7 +91,7 @@ final class WorkshopStorageTests: XCTestCase {
     ) -> WorkshopDependencyService {
         let storage = storage!
         return WorkshopDependencyService(
-            steamCmd: service,
+            workshopDownloads: service,
             makeResolver: { WorkshopAssetResolver(roots: [storage.url]) },
             store: UnavailableWorkshopItemStore(fileURL: root.appending(path: "UnavailableWorkshopItems.json"), now: now),
             checkAvailability: availability)
@@ -107,9 +104,9 @@ final class WorkshopStorageTests: XCTestCase {
 
         XCTAssertEqual(destination?.standardizedFileURL, storage.url.appending(path: "1000000001").standardizedFileURL)
         XCTAssertTrue(FileManager.default.fileExists(atPath: storage.url.appending(path: "1000000001/project.json").path))
-        // steamcmd's staging folder, manifests included, is gone.
+        // The staging folder, DepotDownloader's bookkeeping included, is gone.
         XCTAssertEqual(try children(of: storage.url), ["1000000001"])
-        XCTAssertEqual(steamCmd.installDirectories, [WorkshopItemInstaller.stagingDirectory(in: storage.url).path])
+        XCTAssertEqual(workshopDownloads.installDirectories, [WorkshopItemInstaller.stagingDirectory(in: storage.url).path])
         XCTAssertEqual(service.downloadProgress["1000000001"], .completed)
         XCTAssertTrue(downloadedIndex.contains("1000000001"))
         XCTAssertEqual(listed(in: storage.url), ["1000000001"])
@@ -130,7 +127,7 @@ final class WorkshopStorageTests: XCTestCase {
                        storage.url.appending(path: "2000000002").standardizedFileURL)
     }
 
-    /// A dependency Steam reports removed is never handed to steamcmd, is remembered for the next
+    /// A dependency Steam reports removed is never downloaded, is remembered for the next
     /// load, and the wallpaper still loads: its assets resolve as missing and nothing waits on it.
     func testUnavailableDependencyIsSkippedAndTheWallpaperStillLoads() async throws {
         let wallpaper = try makeWallpaper("1000000001", in: storage.url, referencing: "9000000009")
@@ -145,7 +142,7 @@ final class WorkshopStorageTests: XCTestCase {
             dependencies.states["9000000009"] == .itemUnavailable(.removedOrPrivate)
         }
 
-        XCTAssertTrue(steamCmd.installDirectories.isEmpty, "steamcmd isn't asked for a removed item")
+        XCTAssertTrue(workshopDownloads.installDirectories.isEmpty, "a removed item isn't downloaded")
         XCTAssertTrue(dependencies.pending.isEmpty)
         XCTAssertEqual(dependencies.unavailableReason(for: "9000000009"), .removedOrPrivate)
         XCTAssertEqual(reloads.value, 0)
@@ -164,11 +161,11 @@ final class WorkshopStorageTests: XCTestCase {
         try await sleepUntil("the skipped dependency is reported", timeout: 10) { @Sendable @MainActor in
             later.states["9000000009"] == .itemUnavailable(.removedOrPrivate)
         }
-        XCTAssertTrue(steamCmd.installDirectories.isEmpty)
+        XCTAssertTrue(workshopDownloads.installDirectories.isEmpty)
     }
 
-    /// steamcmd's `File Not Found` reads as a removed item, with the clear message, and is remembered.
-    func testSteamCmdFileNotFoundMarksTheDependencyUnavailable() async throws {
+    /// A download that finds no manifest reads as a removed item, with the clear message, and is remembered.
+    func testAMissingManifestMarksTheDependencyUnavailable() async throws {
         let wallpaper = try makeWallpaper("1000000001", in: storage.url, referencing: "9000000009")
         let dependencies = makeDependencyService()
 
@@ -222,14 +219,14 @@ final class WorkshopStorageTests: XCTestCase {
         XCTAssertEqual(try children(of: storage.url), ["1000000001"])
     }
 
-    func testFailedDownloadReportsSteamCmdAndCleansUp() async throws {
+    func testFailedDownloadReportsTheReasonAndCleansUp() async throws {
         let destination = await download("9999999999")
 
         XCTAssertNil(destination)
         guard case .failed(let message) = service.downloadProgress["9999999999"] else {
             return XCTFail("expected a failure, got \(String(describing: service.downloadProgress["9999999999"]))")
         }
-        // steamcmd's `File Not Found` is shown as what it means.
+        // A missing manifest is shown as what it means.
         XCTAssertEqual(message, WorkshopItemAvailability.Reason.removedOrPrivate.message)
         XCTAssertEqual(try children(of: storage.url), [])
     }
@@ -258,7 +255,7 @@ final class WorkshopStorageTests: XCTestCase {
             return XCTFail("expected a failure")
         }
         XCTAssertTrue(message.contains("isn't connected"), message)
-        XCTAssertTrue(steamCmd.installDirectories.isEmpty, "steamcmd must not run without the storage folder")
+        XCTAssertTrue(workshopDownloads.installDirectories.isEmpty, "nothing downloads without the storage folder")
         XCTAssertFalse(FileManager.default.fileExists(atPath: volume.path))
     }
 
@@ -325,50 +322,40 @@ final class WorkshopStorageTests: XCTestCase {
     }
 }
 
-/// Stands in for steamcmd: a `workshop_download_item` of a known id writes the item (and a
-/// manifest, like steamcmd) under the script's `force_install_dir`; an unknown id fails.
+/// Stands in for the Steam helper: a download of a known id writes the item (and DepotDownloader's
+/// bookkeeping) into `-dir`; an unknown id is reported removed.
 // `@unchecked Sendable`: its one mutable list is guarded by `lock`.
-private final class FakeSteamCmd: SteamCmdRunning, @unchecked Sendable {
+private final class FakeHelper: SteamHelperDownloading, @unchecked Sendable {
     private let lock = NSLock()
     private var recordedInstallDirectories: [String] = []
 
-    var installDirectories: [String] {
-        lock.lock()
-        defer { lock.unlock() }
-        return recordedInstallDirectories
-    }
+    /// The install dir of each download: `-dir` without `steamapps/workshop/content/431960/<id>`.
+    var installDirectories: [String] { lock.withLock { recordedInstallDirectories } }
 
-    func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?,
-             onOutput: @escaping (String) -> Void) -> SteamCmdRun {
-        var installDirectory: URL?
-        var workshopId: String?
-        for line in script.lines {
-            // Every argument is quoted, so the odd pieces between quotes are the arguments.
-            let pieces = line.components(separatedBy: "\"")
-            let arguments = stride(from: 1, to: pieces.count, by: 2).map { pieces[$0] }
-            if line.hasPrefix("force_install_dir") { installDirectory = arguments.first.map { URL(fileURLWithPath: $0) } }
-            if line.hasPrefix("workshop_download_item") { workshopId = arguments.dropFirst().first }
+    func run(arguments: [String], login: SteamLogin, cancellation: ProcessCancellation,
+             onOutput: @escaping @Sendable (String) -> Void) -> ProcessRun {
+        func value(_ option: String) -> String? {
+            arguments.firstIndex(of: option).flatMap { $0 + 1 < arguments.count ? arguments[$0 + 1] : nil }
         }
-        guard let installDirectory, let workshopId else {
-            return SteamCmdRun(output: "Logged in OK\n", exitCode: 0)
+        guard let directory = value("-dir").map({ URL(fileURLWithPath: $0, isDirectory: true) }),
+              let workshopId = value("-pubfile") else {
+            return ProcessRun(output: "no -dir or -pubfile\n", exitCode: 2)
         }
-        lock.lock()
-        recordedInstallDirectories.append(installDirectory.path)
-        lock.unlock()
+        var installDirectory = directory
+        for _ in 0..<5 { installDirectory = installDirectory.deletingLastPathComponent() }
+        lock.withLock { recordedInstallDirectories.append(installDirectory.path) }
         guard workshopId.hasPrefix("1") || workshopId.hasPrefix("2") || workshopId.hasPrefix("3") else {
-            return SteamCmdRun(output: "ERROR! Download item \(workshopId) failed (File Not Found).\n", exitCode: 0)
+            return ProcessRun(output: "Unable to locate manifest ID for published file \(workshopId)\n", exitCode: 0)
         }
-        let item = WorkshopItemInstaller.contentDirectory(inSteamCmdRoot: installDirectory, workshopId: workshopId)
         do {
-            try FileManager.default.createDirectory(at: item, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: directory.appending(path: SteamHelperDownload.bookkeepingFolderName),
+                                                    withIntermediateDirectories: true)
             try Data(#"{"type": "scene", "title": "Item \#(workshopId)", "file": "scene.json", "preview": "preview.jpg"}"#.utf8)
-                .write(to: item.appending(path: "project.json"))
-            try Data("\"AppWorkshop\" {}".utf8)
-                .write(to: installDirectory.appending(path: "steamapps/workshop/appworkshop_431960.acf"))
+                .write(to: directory.appending(path: "project.json"))
         } catch {
-            return SteamCmdRun(output: "ERROR! \(error)\n", exitCode: 1)
+            return ProcessRun(output: "Error: \(error)\n", exitCode: 1)
         }
-        onOutput("Downloading item \(workshopId) ...\n")
-        return SteamCmdRun(output: "Success. Downloaded item \(workshopId) to \"\(item.path)\"\n", exitCode: 0)
+        onOutput("100.00% project.json\n")
+        return ProcessRun(output: "100.00% project.json\nTotal downloaded: 100 bytes\n", exitCode: 0)
     }
 }

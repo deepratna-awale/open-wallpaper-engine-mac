@@ -94,25 +94,19 @@ struct OnboardingPrivacyStep: View {
                               title: "Privacy",
                               subtitle: "Everything stays on your Mac")
             OnboardingCard {
-                Label("Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login.",
+                Label("Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and your Steam login.",
                       systemImage: "internaldrive")
                 Label("There are no servers, accounts, analytics or tracking.", systemImage: "hand.raised")
-                Label("The app contacts Valve (Steam and SteamCMD), GitHub (app updates) and, when you install an optional plugin, its publisher. Web wallpapers and URLs you add load their own online content.",
+                Label("The app contacts Valve (Steam), GitHub (app updates) and, when you install an optional plugin, its publisher. Web wallpapers and URLs you add load their own online content.",
                       systemImage: "network")
                 Label("You can turn update checks off in Settings › Updates.", systemImage: "arrow.down.circle")
             }
             OnboardingCard {
                 Label {
-                    Text("Your password and Steam Guard code go straight to SteamCMD, Valve's official tool. Open Wallpaper Engine never stores, logs or sends them anywhere. It remembers only your account name, to reuse SteamCMD's saved login.")
+                    Text("With the Steam mobile app, you log in without typing your password. A password goes only to Steam. Your login is kept in your keychain on this Mac.")
                         .fixedSize(horizontal: false, vertical: true)
                 } icon: {
                     Image(systemName: "key.fill").foregroundStyle(.secondary)
-                }
-                Label {
-                    Text("Needed to browse and search the Workshop. It is stored in your keychain and checked with Steam before saving. Without it, author names come from public Steam profiles.")
-                        .fixedSize(horizontal: false, vertical: true)
-                } icon: {
-                    Image(systemName: "lock.fill").foregroundStyle(.secondary)
                 }
             }
             if updater.isEnabled {
@@ -124,11 +118,10 @@ struct OnboardingPrivacyStep: View {
     }
 }
 
-// MARK: - 3. Steam and SteamCMD
+// MARK: - 3. Steam
 
 struct OnboardingSteamStep: View {
-    @ObservedObject var steamCmd: SteamCmdService
-    @ObservedObject var installer: SteamCmdInstaller
+    @ObservedObject var account: SteamAccount
 
     var body: some View {
         VStack(spacing: 18) {
@@ -136,69 +129,13 @@ struct OnboardingSteamStep: View {
                               title: "Steam",
                               subtitle: "For the Workshop and the Wallpaper Engine assets")
             OnboardingCard {
-                HStack {
-                    Label("SteamCMD", systemImage: "terminal")
-                        .font(.headline)
-                    Spacer()
-                    if steamCmd.steamCmdPath != nil {
-                        Label("Ready", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-                    } else if installer.isBusy {
-                        ProgressView().controlSize(.small)
-                    } else {
-                        Label("Missing", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
-                    }
-                }
-                Text("Workshop downloads and the assets install use SteamCMD, Valve's command-line Steam client. When none is found, Open Wallpaper Engine downloads it from Valve. Homebrew's steamcmd works too.")
+                Label("Steam Login", systemImage: "person.crop.circle")
+                    .font(.headline)
+                Text("Log in to Steam to browse and download Workshop wallpapers.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                if steamCmd.steamCmdPath == nil || installer.isBusy {
-                    SteamCmdSetupView(installer: installer)
-                        .frame(maxWidth: .infinity)
-                }
-            }
-            .onAppear { installer.detectThenAutoInstall(steamCmd) }
-
-            OnboardingCard {
-                HStack {
-                    Label("Steam Login", systemImage: "person.crop.circle")
-                        .font(.headline)
-                    Spacer()
-                    if steamCmd.isLoggedIn {
-                        Label {
-                            Text("Logged in as \(steamCmd.steamUsername)", comment: "%@ is a Steam account name")
-                        } icon: {
-                            Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                        }
-                    }
-                }
-                if !steamCmd.isLoggedIn {
-                    if steamCmd.steamCmdPath == nil {
-                        Text("Log in once SteamCMD is ready.")
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        SteamLoginForm(steamCmd: steamCmd)
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-            }
-
-            if steamCmd.isLoggedIn {
-                OnboardingCard {
-                    HStack {
-                        Label("Steam Web API Key", systemImage: "key")
-                            .font(.headline)
-                        Spacer()
-                        Text("Optional")
-                            .foregroundStyle(.secondary)
-                    }
-                    Text("Workshop browsing and search use a Steam Web API key. You can skip this and add one later in Settings or the Workshop tab. The key is kept in your Keychain.")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    SteamWebAPIKeyView()
-                }
+                SteamSignInView(account: account)
             }
         }
     }
@@ -208,7 +145,7 @@ struct OnboardingSteamStep: View {
 
 struct OnboardingAssetsStep: View {
     @ObservedObject var assets: WallpaperEngineAssetsService
-    @ObservedObject var steamCmd: SteamCmdService
+    @ObservedObject var workshopDownloads: WorkshopDownloadService
     /// Goes back to the Steam step.
     let logIn: () -> Void
     @AppStorage(WallpaperEngineAssetsService.addsDefaultWallpapersKey, store: .app) private var addsDefaultWallpapers = true
@@ -247,12 +184,12 @@ struct OnboardingAssetsStep: View {
                             assets.installFromSteam(includingDefaultWallpapers: addsDefaultWallpapers)
                         }
                         .glassButtonStyle(.prominent)
-                        .disabled(steamCmd.steamCmdPath == nil || !steamCmd.isLoggedIn)
+                        .disabled(!workshopDownloads.isLoggedIn)
                         Button("Choose a Wallpaper Engine Folder…") { chooseFolder() }
                     }
                     Spacer()
                 }
-                if !assets.isBusy && (steamCmd.steamCmdPath == nil || !steamCmd.isLoggedIn) {
+                if !assets.isBusy && !workshopDownloads.isLoggedIn {
                     Text("To install from Steam, log in on the Steam step first.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -266,7 +203,7 @@ struct OnboardingAssetsStep: View {
             OnboardingCard {
                 Label("Wallpaper Engine Favourites", systemImage: "heart")
                     .font(.headline)
-                WallpaperEngineFavoritesImportView(assets: assets, steamCmd: steamCmd)
+                WallpaperEngineFavoritesImportView(assets: assets, workshopDownloads: workshopDownloads)
             }
             OnboardingCard {
                 Label("Wallpaper Engine Folders", systemImage: "folder")

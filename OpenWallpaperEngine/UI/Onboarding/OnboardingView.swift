@@ -8,7 +8,7 @@ enum OnboardingShortcut: Equatable {
     case displaySettings
 }
 
-/// The setup assistant: the Terms of Use and Privacy Policy notice, welcome and language, privacy, Steam and SteamCMD, the Wallpaper Engine
+/// The setup assistant: the Terms of Use and Privacy Policy notice, welcome and language, privacy, Steam, the Wallpaper Engine
 /// assets, bringing wallpapers in, and a summary. Every step can be skipped and visited again,
 /// here with Back or the step list, or later with Settings › General › "Run setup again…".
 struct OnboardingView: View {
@@ -16,8 +16,8 @@ struct OnboardingView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var globalSettingsViewModel: GlobalSettingsViewModel
     @StateObject private var flow = OnboardingFlow()
-    @ObservedObject var steamCmd: SteamCmdService
-    @ObservedObject var installer: SteamCmdInstaller
+    @ObservedObject var workshopDownloads: WorkshopDownloadService
+    let steamAccount: SteamAccount
     @ObservedObject var assets: WallpaperEngineAssetsService
     @ObservedObject var imports: OnboardingImports
     /// Called with the shortcut the user picked on the Done step, before the sheet closes.
@@ -121,14 +121,14 @@ struct OnboardingView: View {
         case .privacy:
             OnboardingPrivacyStep(updater: AppDelegate.shared.updater)
         case .steam:
-            OnboardingSteamStep(steamCmd: steamCmd, installer: installer)
+            OnboardingSteamStep(account: steamAccount)
         case .assets:
-            OnboardingAssetsStep(assets: assets, steamCmd: steamCmd,
+            OnboardingAssetsStep(assets: assets, workshopDownloads: workshopDownloads,
                                  logIn: { withAnimation(.easeInOut(duration: 0.15)) { flow.go(to: .steam) } })
         case .wallpapers:
-            OnboardingWallpapersStep(steamCmd: steamCmd, imports: imports)
+            OnboardingWallpapersStep(workshopDownloads: workshopDownloads, imports: imports)
         case .done:
-            OnboardingDoneStep(flow: flow, steamCmd: steamCmd, assets: assets, imports: imports,
+            OnboardingDoneStep(flow: flow, workshopDownloads: workshopDownloads, assets: assets, imports: imports,
                                language: globalSettingsViewModel.settings.language,
                                onShortcut: finish)
         }
@@ -201,7 +201,7 @@ struct OnboardingView: View {
 
     private var skipNote: LocalizedStringKey? {
         switch flow.step {
-        case .steam where !steamCmd.isLoggedIn:
+        case .steam where !workshopDownloads.isLoggedIn:
             return "Without Steam, video and web wallpapers still work."
         case .assets where assets.isBusy:
             return "The download continues in the background."

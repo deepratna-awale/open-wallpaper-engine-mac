@@ -9,7 +9,7 @@ import Foundation
 /// - Unread items are asked for with GetPublishedFileDetails, `batchSize` ids per request, one
 ///   request at a time with `throttle` between them, in the background; results are stored as
 ///   they arrive and the Installed tab redraws from the store. Offline, the stored tags are used.
-/// - Nothing is requested without a Steam Web API key. A failed request is retried after
+/// - Nothing is requested without the Steam login. A failed request is retried after
 ///   `retryDelay`, not on every redraw.
 ///
 /// Main-thread only (it belongs to the Installed tab's view model).
@@ -28,35 +28,35 @@ final class InstalledWorkshopTagSync {
     }
 
     private let index: DownloadedWallpaperIndex
-    private let apiKey: () -> String?
+    private let hasLogin: () -> Bool
     private let knownItem: (String) -> WorkshopItem?
     private let fetch: Fetch
     private let throttle: Duration
     private let retryDelay: TimeInterval
-    /// How long a missing key is believed before the keychain is read again.
-    private let keyRecheckDelay: TimeInterval
+    /// How long a missing login is believed before the keychain is read again.
+    private let loginRecheckDelay: TimeInterval
 
     private var queued: [String] = []
     private var inFlight = Set<String>()
     private var failedAt: [String: Date] = [:]
-    private var keyCheck: (date: Date, hasKey: Bool)?
+    private var loginCheck: (date: Date, hasLogin: Bool)?
     private var worker: Task<Void, Never>?
     private var pendingWallpapers: [WEWallpaper]?
 
     init(index: DownloadedWallpaperIndex = .shared,
-         apiKey: @escaping () -> String? = { SteamCredentials.webAPIKey().load() },
+         hasLogin: @escaping () -> Bool = { SteamLoginStore.app().load() != nil },
          knownItem: @escaping (String) -> WorkshopItem? = { WorkshopMetadataStore.shared.item(for: $0) },
          fetch: @escaping Fetch = { try await WorkshopAPIService().getItemDetails(workshopIds: $0) },
          throttle: Duration = .seconds(1),
          retryDelay: TimeInterval = 600,
-         keyRecheckDelay: TimeInterval = 30) {
+         loginRecheckDelay: TimeInterval = 30) {
         self.index = index
-        self.apiKey = apiKey
+        self.hasLogin = hasLogin
         self.knownItem = knownItem
         self.fetch = fetch
         self.throttle = throttle
         self.retryDelay = retryDelay
-        self.keyRecheckDelay = keyRecheckDelay
+        self.loginRecheckDelay = loginRecheckDelay
     }
 
     /// What to do for an item with `stored` tags, given the newest Steam response at hand.
@@ -106,7 +106,7 @@ final class InstalledWorkshopTagSync {
         if !adopted.isEmpty {
             index.setWorkshopTags(adopted)
         }
-        guard !toFetch.isEmpty, hasKey(now: now) else { return }
+        guard !toFetch.isEmpty, isLoggedIn(now: now) else { return }
         inFlight.formUnion(toFetch)
         queued += toFetch
         startWorker()
@@ -119,13 +119,13 @@ final class InstalledWorkshopTagSync {
         }
     }
 
-    private func hasKey(now: Date) -> Bool {
-        if let keyCheck, now.timeIntervalSince(keyCheck.date) < keyRecheckDelay {
-            return keyCheck.hasKey
+    private func isLoggedIn(now: Date) -> Bool {
+        if let loginCheck, now.timeIntervalSince(loginCheck.date) < loginRecheckDelay {
+            return loginCheck.hasLogin
         }
-        let hasKey = apiKey() != nil
-        keyCheck = (now, hasKey)
-        return hasKey
+        let isLoggedIn = hasLogin()
+        loginCheck = (now, isLoggedIn)
+        return isLoggedIn
     }
 
     private func startWorker() {

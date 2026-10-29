@@ -461,6 +461,7 @@
 				EE6000000000000000000018 /* Chromium Helper Apps */,
 				FB1000000000000000000011 /* Embed Wallpaper Editor */,
 				EC2000000000000000000011 /* Embed MCP Server */,
+				EE5100000000000000000001 /* Embed Steam Helper */,
 				EE9000000000000000000001 /* Embed Screen Saver Extension and Broker */,
 			);
 			buildRules = (
@@ -942,6 +943,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "set -euo pipefail\n# The live screen saver's extension (Contents/PlugIns) and its broker (Contents/Helpers, with\n# its launch agent in Contents/Library/LaunchAgents for SMAppService), in builds that set\n# OWE_EMBED_SCREEN_SAVER_EXTENSION (Release: archives and the lab's release check). Xcode\n# registers every app it builds with LaunchServices, and pkd would list each Debug copy's\n# extension as another OWE screen saver in System Settings, and its agent would compete for the\n# broker's Mach service; so Debug builds (Dev copies, tests) carry neither.\n# Scripts/build-saver-lab.sh puts them into a copy for testing.\nCONTENTS=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}\"\nAPPEX=\"$CONTENTS/PlugIns/OpenWallpaperEngineSaverExtension.appex\"\nBROKER=\"$CONTENTS/Helpers/owe-saver-broker\"\nAGENT=\"$CONTENTS/Library/LaunchAgents/app.openwallpaperengine.saver-broker.plist\"\nif [ \"${OWE_EMBED_SCREEN_SAVER_EXTENSION:-NO}\" != \"YES\" ]; then\n  rm -rf \"$APPEX\" \"$BROKER\" \"$AGENT\"\n  exit 0\nfi\nmkdir -p \"$CONTENTS/PlugIns\" \"$CONTENTS/Helpers\" \"$CONTENTS/Library/LaunchAgents\"\nrm -rf \"$APPEX\"\nditto \"${BUILT_PRODUCTS_DIR}/OpenWallpaperEngineSaverExtension.appex\" \"$APPEX\"\nditto \"${BUILT_PRODUCTS_DIR}/owe-saver-broker\" \"$BROKER\"\ncp \"${SRCROOT}/OWESaverBroker/app.openwallpaperengine.saver-broker.plist\" \"$AGENT\"\n";
+		};
+		EE5100000000000000000001 /* Embed Steam Helper */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed Steam Helper";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\n# The Steam helper (SteamHelper/, a .NET program) for each architecture of this build, from\n# build/steam-helper/<rid>/ (Scripts/build-steam-helper.sh), as Contents/Helpers/owe-steam-helper-<arch>\n# (AppBundleLayout.steamHelperURL). Signed like the app's other helpers, with the hardened\n# runtime and only the JIT entitlement .NET needs; ad-hoc when the build doesn't sign. A build\n# without it runs but can't log in to Steam; release builds require it (OWE_REQUIRE_STEAM_HELPER).\nHELPERS=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers\"\nmkdir -p \"$HELPERS\"\nrm -f \"$HELPERS\"/owe-steam-helper-*\nfor ARCH in ${ARCHS}; do\n  case \"$ARCH\" in\n    arm64) RID=osx-arm64 ;;\n    x86_64) RID=osx-x64 ;;\n    *) continue ;;\n  esac\n  SOURCE=\"${SRCROOT}/build/steam-helper/$RID/owe-steam-helper\"\n  if [ ! -f \"$SOURCE\" ]; then\n    if [ \"${OWE_REQUIRE_STEAM_HELPER:-NO}\" = \"YES\" ]; then\n      echo \"error: $SOURCE is missing; run Scripts/build-steam-helper.sh\"\n      exit 1\n    fi\n    echo \"note: no Steam helper for $ARCH (Scripts/build-steam-helper.sh); this build can't log in to Steam\"\n    continue\n  fi\n  TARGET=\"$HELPERS/owe-steam-helper-$ARCH\"\n  cp \"$SOURCE\" \"$TARGET\"\n  chmod 755 \"$TARGET\"\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ]; then\n    codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --options runtime ${OTHER_CODE_SIGN_FLAGS:-} --entitlements \"${SRCROOT}/SteamHelper/OWESteamHelper.entitlements\" \"$TARGET\"\n  else\n    codesign --force --sign - --options runtime --entitlements \"${SRCROOT}/SteamHelper/OWESteamHelper.entitlements\" \"$TARGET\"\n  fi\ndone\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

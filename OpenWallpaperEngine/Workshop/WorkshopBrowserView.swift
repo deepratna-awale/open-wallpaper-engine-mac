@@ -4,7 +4,6 @@ import SwiftUI
 struct WorkshopBrowserView: View {
     @ObservedObject var viewModel: WorkshopViewModel
     var contentViewModel: ContentViewModel
-    @State private var hasAPIKey = true
     /// Measured, so the page size leaves room for the pagination row whatever its style.
     @State private var footerHeight: CGFloat = 44
 
@@ -19,7 +18,6 @@ struct WorkshopBrowserView: View {
         workshopContent
             .padding(.horizontal)
             .padding(.top, 8)
-            .onAppear { hasAPIKey = SteamCredentials.webAPIKey().load() != nil }
             .onChange(of: viewModel.searchText) { oldText, newText in
                 // The field's clear button empties it: search again from the first page.
                 guard newText.isEmpty, !oldText.isEmpty else { return }
@@ -132,12 +130,6 @@ struct WorkshopBrowserView: View {
         WindowActionsToolbar(viewModel: contentViewModel)
     }
 
-    private func searchWithNewKey() {
-        hasAPIKey = true
-        viewModel.currentPage = 1
-        Task { await viewModel.search() }
-    }
-
     private var workshopContent: some View {
         VStack(spacing: 8) {
             // Results
@@ -154,8 +146,6 @@ struct WorkshopBrowserView: View {
                     Text(error)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
-
-                    SteamWebAPIKeyView(onSaved: searchWithNewKey)
                 }
                 Spacer()
             } else if viewModel.items.isEmpty {
@@ -170,14 +160,6 @@ struct WorkshopBrowserView: View {
                     Text("Find wallpapers by name, tag, or browse trending content.")
                         .font(.callout)
                         .foregroundStyle(.tertiary)
-
-                    if !hasAPIKey {
-                        Divider().frame(width: 300).padding(.vertical, 4)
-                        Text("A Steam Web API key is required to browse.")
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                        SteamWebAPIKeyView(onSaved: searchWithNewKey)
-                    }
                 }
                 Spacer()
             } else {

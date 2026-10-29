@@ -157,7 +157,7 @@ final class VersionedInstallStoreTests: XCTestCase {
         }
         XCTAssertEqual(message(URLError(.notConnectedToInternet)), "offline")
         XCTAssertEqual(message(URLError(.timedOut)), "offline")
-        XCTAssertTrue(message(URLSessionSteamCmdDownloader.Failure.httpStatus(503)).contains("503"))
+        XCTAssertTrue(message(URLSessionPackageDownloader.Failure.httpStatus(503)).contains("503"))
         XCTAssertEqual(message(CocoaError(.fileWriteOutOfSpace)), "disk full")
         XCTAssertEqual(message(NSError(domain: NSPOSIXErrorDomain, code: Int(ENOSPC))), "disk full")
         XCTAssertEqual(message(URLError(.cannotWriteToFile)), "disk full")
@@ -166,7 +166,7 @@ final class VersionedInstallStoreTests: XCTestCase {
 }
 
 /// Copies a local file as if it were downloaded.
-private struct LocalFileDownloader: SteamCmdPackageDownloading {
+private struct LocalFileDownloader: PackageDownloading {
     let source: URL
 
     func download(_ url: URL, to destination: URL, progress: @escaping @Sendable (Double?) -> Void) async throws {

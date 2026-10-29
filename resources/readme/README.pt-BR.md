@@ -29,7 +29,7 @@ O Open Wallpaper Engine é um app gratuito e de código aberto para macOS que re
 ## Destaques
 
 - **Imagens de fundo de cena, vídeo e web**: cenas com efeitos, partículas, modelos 3D, luzes, linhas do tempo, SceneScript e visuais reativos ao áudio, e saída HDR para cenas e vídeos HDR10 ou HLG nas telas capazes de exibi-la. As imagens de fundo web rodam no WebKit ou no mecanismo Chromium opcional, com as propriedades da pasta, áudio ao vivo e Tocando Agora.
-- **Oficina Steam**: navegue com as ordenações e os filtros do Wallpaper Engine, baixe pelo SteamCMD com a sua própria conta Steam, ou importe pastas e arquivos zip de imagens de fundo. A aba Instaladas tem as pastas e as ordenações do Wallpaper Engine.
+- **Oficina Steam**: navegue com as ordenações e os filtros do Wallpaper Engine, baixe com a sua própria conta Steam (inicie sessão com o código QR do app Steam Mobile ou com a senha), ou importe pastas e arquivos zip de imagens de fundo. A aba Instaladas tem as pastas e as ordenações do Wallpaper Engine.
 - **Editor de Imagem de Fundo**: um editor no estilo do Wallpaper Engine. Adicione e organize camadas com gizmos, adicione efeitos com pré-visualização, escreva e edite seus próprios efeitos no Editor de shaders, importe modelos FBX e OBJ, anime em uma linha do tempo, escreva SceneScript, crie propriedades do usuário, edite sistemas de partículas e rigs de Puppet Warp, e use as ferramentas de imagem do Wallpaper Engine (Separação do plano frontal, Criação de ficha de personagem, Geração de mapa normal). **Nova Imagem de Fundo…** cria uma a partir de uma imagem ou de um dos modelos do Wallpaper Engine. Você edita um rascunho: **Salvar** aplica o rascunho, **Salvar como Nova Imagem de Fundo** adiciona uma cópia à biblioteca, e os arquivos da própria imagem de fundo nunca são alterados.
 
   <!-- demo: wallpaper-editor -->
@@ -92,7 +92,7 @@ Você precisa do **macOS 14.0 (Sonoma) ou posterior**. As imagens de fundo de ce
 
 ## Início rápido
 
-1. Abra o app. O assistente de configuração define o idioma, o SteamCMD, seu login da Steam e os recursos do Wallpaper Engine, e pode importar seus favoritos e pastas do Wallpaper Engine; todas as etapas podem ser puladas.
+1. Abra o app. O assistente de configuração define o idioma, seu login da Steam e os recursos do Wallpaper Engine, e pode importar seus favoritos e pastas do Wallpaper Engine; todas as etapas podem ser puladas.
 2. Instale os recursos do Wallpaper Engine (*Ajustes › Recursos*) se quiser imagens de fundo de cena. Eles vêm da sua própria cópia do Wallpaper Engine no Steam; imagens de fundo de vídeo e web funcionam sem eles.
 3. Encontre imagens de fundo nas abas **Descobrir** e **Oficina**, importe uma pasta ou um zip de imagem de fundo (*Arquivo › Importar Imagem de Fundo de Pasta…*, ⌘I) ou crie uma com **Adicionar Imagem de Fundo › Nova Imagem de Fundo…**.
 4. Clique em uma imagem de fundo na biblioteca e depois em **Definir Imagem de Fundo** nos detalhes dela (ou clique nela com o botão direito e escolha **Definir como Imagem de Fundo**). As propriedades aparecem logo abaixo.

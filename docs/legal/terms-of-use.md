@@ -1,6 +1,6 @@
 # Open Wallpaper Engine — Terms of Use
 
-**Version 1.0 · Effective date: 2026-09-28**
+**Version 1.1 · Effective date: 2026-10-29**
 
 ---
 
@@ -45,17 +45,17 @@ You must be old enough to enter into a binding agreement where you live, or use 
 When using OWE, you agree that:
 
 - **You own Wallpaper Engine.** To download Steam Workshop wallpapers or Wallpaper Engine's assets, you must use your own Steam account that has purchased Wallpaper Engine. OWE only downloads content that your account is entitled to.
-- **You respect Valve's terms.** Your use of Steam, the Steam Workshop, the Steam Web API and SteamCMD is subject to the Steam Subscriber Agreement (https://store.steampowered.com/subscriber_agreement/), the Steam Web API Terms of Use (https://steamcommunity.com/dev/apiterms) and Valve's other applicable terms. You are responsible for complying with them.
+- **You respect Valve's terms.** Your use of Steam, the Steam Workshop and the Steam Web API is subject to the Steam Subscriber Agreement (https://store.steampowered.com/subscriber_agreement/), the Steam Web API Terms of Use (https://steamcommunity.com/dev/apiterms) and Valve's other applicable terms. You are responsible for complying with them.
 - **You respect creators' rights.** Workshop wallpapers and Wallpaper Engine's assets belong to their creators and owners and are licensed to you through Steam. Do not redistribute, sell or use them beyond what those licences allow.
 - **No piracy or circumvention.** You will not use OWE to obtain, share or use Wallpaper Engine, its assets or Workshop content that you are not entitled to, or to circumvent any licensing or access control.
 - **Lawful use.** You will use the app in accordance with the law where you are, and not to infringe anyone's rights.
-- **Your credentials are yours to protect.** Keep your Steam credentials and Steam Web API key confidential. OWE stores your API key and Steam account name in the macOS Keychain and never stores your password (see the Privacy Policy).
+- **Your credentials are yours to protect.** Keep your Steam credentials confidential. OWE keeps your Steam sign-in in the macOS Keychain and never stores your password (see the Privacy Policy).
 
 ## 5. Third-party services and content
 
-### 5.1 Valve, Steam and SteamCMD
+### 5.1 Valve and Steam
 
-OWE is a client that talks to Valve's public Steam services and uses SteamCMD, Valve's official tool, which the app downloads from Valve's servers at runtime. Valve provides those services and that tool under its own terms; we do not control them, and they may change or stop working at any time. We are not responsible for their availability, behaviour or content, or for any action Valve takes on your account.
+OWE is a client that talks to Valve's public Steam services, through a Steam helper built into the app with the open-source SteamKit2 and DepotDownloader. Valve provides those services under its own terms; we do not control them, and they may change or stop working at any time. We are not responsible for their availability, behaviour or content, or for any action Valve takes on your account.
 
 ### 5.2 Workshop and imported content
 

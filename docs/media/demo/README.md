@@ -45,4 +45,4 @@ Every wallpaper shown is rated Everyone in its `project.json`.
   previews with `img2webp`.
 
 Not recorded: the screen saver (starting it on this Mac would lock the session), Workshop browsing
-and downloads (they need a Steam login and a Steam Web API key), model import and the Shader Editor.
+and downloads (they need a Steam login), model import and the Shader Editor.

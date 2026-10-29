@@ -2,7 +2,7 @@ import Foundation
 import Combine
 
 /// Imports Workshop items by list: a public collection, or the user's subscriptions. Items come
-/// from Steam's Web API; the checked ones go into the SteamCMD download queue, which fetches
+/// from Steam; the checked ones go into the download queue, which fetches
 /// their dependencies too (`WorkshopDependencyService`).
 @MainActor
 final class WorkshopItemsImportModel: ObservableObject {
@@ -26,23 +26,23 @@ final class WorkshopItemsImportModel: ObservableObject {
     let checklist: ImportChecklist
 
     private let api: WorkshopAPIService
-    private let steamCmd: SteamCmdService
+    private let workshopDownloads: WorkshopDownloadService
     private let wallpaperViewModel: WallpaperViewModel
     private let storageDirectory: () -> URL
     private var checklistChange: AnyCancellable?
 
-    init(api: WorkshopAPIService = WorkshopAPIService(), steamCmd: SteamCmdService,
+    init(api: WorkshopAPIService = WorkshopAPIService(), workshopDownloads: WorkshopDownloadService,
          wallpaperViewModel: WallpaperViewModel, ratings: Set<String>,
          storageDirectory: @escaping () -> URL = { WallpaperStorage.directory }) {
         self.api = api
-        self.steamCmd = steamCmd
+        self.workshopDownloads = workshopDownloads
         self.wallpaperViewModel = wallpaperViewModel
         self.storageDirectory = storageDirectory
         checklist = ImportChecklist(ratings: ratings)
         checklistChange = checklist.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
     }
 
-    var canDownload: Bool { steamCmd.steamCmdPath != nil && steamCmd.isLoggedIn }
+    var canDownload: Bool { workshopDownloads.isLoggedIn }
 
     /// Reads the collection the user pasted.
     func loadCollection() async {
@@ -105,10 +105,10 @@ final class WorkshopItemsImportModel: ObservableObject {
             }
         }
         for candidate in selection {
-            steamCmd.downloadWorkshopItem(workshopId: candidate.id, title: candidate.title,
+            workshopDownloads.downloadWorkshopItem(workshopId: candidate.id, title: candidate.title,
                                           previewURL: candidate.previewURL) { [weak wallpaperViewModel] destination in
                 guard let playlistID, let destination else { return }
-                // steamcmd calls back off the main thread.
+                // The download calls back off the main thread.
                 DispatchQueue.main.async {
                     guard let wallpaper = Self.wallpaper(at: destination) else { return }
                     wallpaperViewModel?.addToPlaylist(wallpaper, playlistID: playlistID)

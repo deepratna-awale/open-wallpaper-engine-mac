@@ -85,7 +85,7 @@ enum WallpaperStorage {
     }
 
     /// Whether a storage item moves with the folder: the wallpapers, and the app's own hidden data
-    /// (`.owe-*`: the assets cache with its info file, SteamCMD's staging, converted packages).
+    /// (`.owe-*`: the assets cache with its info file, the download staging, converted packages).
     /// Other hidden files (`.DS_Store`, `._*`, `.Trashes`…) belong to the old folder, the dependency
     /// index is merged by `WorkshopDependencyIndex.carry`, and half-finished work (a download
     /// being unpacked, a staging copy) is left behind: it is rebuilt when needed.

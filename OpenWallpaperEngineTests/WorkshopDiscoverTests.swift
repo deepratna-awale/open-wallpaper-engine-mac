@@ -110,15 +110,15 @@ final class WorkshopDiscoverTests: XCTestCase {
         XCTAssertEqual(requested, [1, 2], "nothing is read past the last page")
     }
 
-    func testAMissingAPIKeyAsksForOne() async throws {
+    func testNoLoginAsksForIt() async throws {
         let model = WorkshopDiscoverViewModel(sections: [try section("top-rated")], fetch: { _, _, _ in
-            throw WorkshopAPIError.noAPIKey
+            throw WorkshopAPIError.notLoggedIn
         })
         await model.loadIfNeeded(model.sections[0])
-        XCTAssertTrue(model.needsAPIKey)
+        XCTAssertTrue(model.needsLogin)
         XCTAssertNotNil(model.row(model.sections[0]).error)
         model.reload()
-        XCTAssertFalse(model.needsAPIKey)
+        XCTAssertFalse(model.needsLogin)
         XCTAssertEqual(model.row(model.sections[0]), WorkshopDiscoverViewModel.Row())
     }
 

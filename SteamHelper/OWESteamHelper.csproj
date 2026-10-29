@@ -11,6 +11,9 @@
     <Version>1.0.0</Version>
     <Deterministic>true</Deterministic>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- A single-file publish keeps its assemblies compressed: about 39 MB per architecture
+         instead of 88 MB, unpacked in memory at start. -->
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <TreatWarningsAsErrors Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</TreatWarningsAsErrors>
   </PropertyGroup>
 

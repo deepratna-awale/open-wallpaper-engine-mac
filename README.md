@@ -29,7 +29,7 @@ Open Wallpaper Engine is a free, open-source macOS app that plays and edits Wall
 ## Highlights
 
 - **Scene, video and web wallpapers**: scenes with effects, particles, 3D models, lights, timelines, SceneScript and audio-reactive visuals, and HDR output for scenes and HDR10 or HLG videos on displays that can show it. Web wallpapers run in WebKit or the optional Chromium engine, with their folder properties, live audio and Now Playing.
-- **Steam Workshop**: browse with Wallpaper Engine's sorts and filters, download through SteamCMD with your own Steam account, or import wallpaper folders and zips. The Installed tab has Wallpaper Engine's folders and sorts.
+- **Steam Workshop**: browse with Wallpaper Engine's sorts and filters, download with your own Steam account (sign in with the Steam mobile app's QR code or your password), or import wallpaper folders and zips. The Installed tab has Wallpaper Engine's folders and sorts.
 - **Wallpaper Editor**: an editor in the spirit of Wallpaper Engine's. Add and arrange layers with gizmos, add effects with previews, write and edit your own effects in the Shader Editor, import FBX and OBJ models, animate on a timeline, write SceneScript, author user properties, edit particle systems and Puppet Warp rigs, and use Wallpaper Engine's image tools (Foreground Separation, Character Sheet Creation, Normal Map Generation). **New Wallpaper…** starts one from a picture or one of Wallpaper Engine's templates. You edit a draft: **Save** applies it, **Save as New Wallpaper** adds a copy to the library, and the wallpaper's own files are never changed.
 
   <!-- demo: wallpaper-editor -->
@@ -92,7 +92,7 @@ You need **macOS 14.0 (Sonoma) or later**. Scene wallpapers need the Wallpaper E
 
 ## Quick start
 
-1. Open the app. The setup assistant sets the language, SteamCMD, your Steam login and the Wallpaper Engine assets, and can import your Wallpaper Engine favourites and folders; every step can be skipped.
+1. Open the app. The setup assistant sets the language, your Steam login and the Wallpaper Engine assets, and can import your Wallpaper Engine favourites and folders; every step can be skipped.
 2. Install the Wallpaper Engine assets (*Settings › Assets*) if you want scene wallpapers. They come from your own copy of Wallpaper Engine on Steam; video and web wallpapers work without them.
 3. Find wallpapers in the **Discover** and **Workshop** tabs, import a wallpaper folder or zip (*File › Import Wallpaper from Folder…*, ⌘I), or make one with **Add Wallpaper › New Wallpaper…**.
 4. Click a wallpaper in the library, then **Set Wallpaper** in its details (or right-click it and choose **Set as Wallpaper**). Its properties are listed below it.

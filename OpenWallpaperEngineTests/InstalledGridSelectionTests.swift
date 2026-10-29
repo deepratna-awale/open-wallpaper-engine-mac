@@ -36,7 +36,7 @@ final class InstalledGridSelectionTests: XCTestCase {
     private func library() -> InstalledLibraryModel {
         let filters = FilterResultsViewModel()
         filters.reset()
-        return InstalledLibraryModel(filters: filters, steamCmd: SteamCmdService(), presentation: ContentPresentation(),
+        return InstalledLibraryModel(filters: filters, workshopDownloads: WorkshopDownloadService(), presentation: ContentPresentation(),
                                      folders: InstalledFolderStore(defaults: defaults))
     }
 

@@ -23,6 +23,12 @@ enum AppBundleLayout {
         app.appending(path: "Contents/Helpers/owe-mcp", directoryHint: .notDirectory)
     }
 
+    /// The Steam helper (`SteamHelper/`, a .NET program built outside Xcode) for `architecture`,
+    /// one file per architecture: `owe-steam-helper-arm64`, `owe-steam-helper-x86_64`.
+    static func steamHelperURL(inApp app: URL, architecture: String) -> URL {
+        app.appending(path: "Contents/Helpers/owe-steam-helper-\(architecture)", directoryHint: .notDirectory)
+    }
+
     /// The app a helper app sits in (`<app>/Contents/Helpers/<helper>.app`); nil when `helper`
     /// isn't inside one.
     static func appURL(containingHelper helper: URL) -> URL? {
