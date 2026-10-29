@@ -44,8 +44,20 @@ namespace DepotDownloader
         public static AccountSettingsStore Instance;
         static readonly IsolatedStorageFile IsolatedStorage = IsolatedStorageFile.GetUserStoreForAssembly();
 
+        // OWE: the Steam helper passes the login token in memory and never stores it on disk.
+        public static bool Ephemeral { get; private set; }
+
+        public static void UseEphemeral()
+        {
+            Ephemeral = true;
+            Instance ??= new AccountSettingsStore();
+        }
+
         public static void LoadFromFile(string filename)
         {
+            if (Ephemeral)
+                return;
+
             if (Loaded)
                 throw new Exception("Config already loaded");
 
@@ -73,6 +85,9 @@ namespace DepotDownloader
 
         public static void Save()
         {
+            if (Ephemeral)
+                return;
+
             if (!Loaded)
                 throw new Exception("Saved config before loading");
 

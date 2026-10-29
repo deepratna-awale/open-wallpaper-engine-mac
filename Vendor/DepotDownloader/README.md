@@ -15,3 +15,11 @@ packages as upstream's `DepotDownloader.csproj`.
 
 Clone the repository at the new commit, copy the same files over these ones, update the table,
 and re-apply the changes listed below.
+
+## Changes from upstream
+
+Each is marked with an `// OWE:` comment.
+
+- `AccountSettingsStore`: `UseEphemeral()` keeps the store in memory only, so the login token the
+  helper passes in is never written to disk (`LoadFromFile` and `Save` do nothing).
+- `Program.Main` is `internal`, so the helper's entry point can run it for a download.

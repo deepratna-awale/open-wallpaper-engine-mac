@@ -19,7 +19,8 @@ namespace DepotDownloader
     {
         private static bool[] consumedArgs;
 
-        static async Task<int> Main(string[] args)
+        // OWE: internal so the Steam helper's entry point can run it.
+        internal static async Task<int> Main(string[] args)
         {
             if (args.Length == 0)
             {
