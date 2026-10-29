@@ -94,6 +94,9 @@ namespace OWESteamHelper
 
         public bool IsLoggedOn => isLoggedOn;
 
+        /// The SteamKit client, for `Probe`.
+        internal SteamClient Client => client;
+
         async Task EnsureConnectedAsync(CancellationToken cancellation)
         {
             await connecting.WaitAsync(cancellation);
