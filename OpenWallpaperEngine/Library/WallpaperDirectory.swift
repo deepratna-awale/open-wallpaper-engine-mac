@@ -11,7 +11,10 @@ final class DownloadedWallpaperIndex: ObservableObject {
     private let storageKey = "DownloadedWorkshopWallpaperIds"
     private let dateStorageKey = "DownloadedWorkshopWallpaperDates"
     private let tagsStorageKey = "DownloadedWorkshopWallpaperTags"
+    private let contentDateStorageKey = "DownloadedWorkshopWallpaperContentDates"
     private var downloadDates: [String: Date]
+    /// When each item's files were last downloaded (a download or an update), for update checks.
+    private var contentDates: [String: Date]
     private let defaults: UserDefaults
     private let libraryDirectory: () -> URL
 
@@ -21,6 +24,7 @@ final class DownloadedWallpaperIndex: ObservableObject {
         self.libraryDirectory = libraryDirectory
         ids = Set(defaults.stringArray(forKey: storageKey) ?? [])
         downloadDates = Self.decodeDates(defaults.dictionary(forKey: dateStorageKey))
+        contentDates = Self.decodeDates(defaults.dictionary(forKey: contentDateStorageKey))
         workshopTags = Self.decodeTags(defaults.data(forKey: tagsStorageKey))
         if ids.isEmpty || downloadDates.isEmpty {
             rebuildFromLibrary()
@@ -47,6 +51,18 @@ final class DownloadedWallpaperIndex: ObservableObject {
         return (try? directory.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
     }
 
+    /// When the installed files of `workshopId` were downloaded: its last download or update, or,
+    /// for an item from before these were kept, when it was added.
+    func contentDate(for workshopId: String) -> Date? {
+        contentDates[workshopId] ?? downloadDates[workshopId]
+    }
+
+    /// `workshopId`'s files were just downloaded into the library.
+    func markContentDownloaded(_ workshopId: String, at date: Date = .now) {
+        contentDates[workshopId] = date
+        save()
+    }
+
     func workshopTags(for workshopId: String) -> InstalledWorkshopTags? {
         workshopTags[workshopId]
     }
@@ -64,6 +80,7 @@ final class DownloadedWallpaperIndex: ObservableObject {
         }
         guard ids.remove(workshopId) != nil else { return }
         downloadDates.removeValue(forKey: workshopId)
+        contentDates.removeValue(forKey: workshopId)
         save()
     }
 
@@ -104,6 +121,7 @@ final class DownloadedWallpaperIndex: ObservableObject {
             downloadDates.mapValues(\.timeIntervalSince1970),
             forKey: dateStorageKey
         )
+        defaults.set(contentDates.mapValues(\.timeIntervalSince1970), forKey: contentDateStorageKey)
     }
 
     private func saveTags() {

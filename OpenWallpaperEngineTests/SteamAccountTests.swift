@@ -74,7 +74,23 @@ final class SteamAccountTests: XCTestCase {
         await account.restore()
         XCTAssertEqual(account.status, .signedIn(accountName: Fake.login.accountName))
         XCTAssertEqual(account.login, Fake.login, "downloads use it")
-        XCTAssertEqual(fake.methods, ["logOn"])
+        XCTAssertEqual(fake.methods, ["logOn", "ownsApp"])
+    }
+
+    func testRestoreAsksWhetherTheAccountOwnsWallpaperEngine() async throws {
+        try store.save(Fake.login)
+        let (account, fake) = makeAccount { request in
+            switch request.method {
+            case "ownsApp": [Fake.result(request, #"{"owned":false}"#)]
+            default: [Fake.result(request)]
+            }
+        }
+        await account.restore()
+        XCTAssertEqual(account.ownsWallpaperEngine, false)
+        XCTAssertEqual(fake.requests.last?.param("appID") as? Int, 431960)
+        account.signOut()
+        try await waitFor("logged out") { account.status == .signedOut }
+        XCTAssertNil(account.ownsWallpaperEngine)
     }
 
     func testRestoreForgetsALoginSteamRejects() async throws {
@@ -82,6 +98,26 @@ final class SteamAccountTests: XCTestCase {
         let (account, _) = makeAccount { [Fake.error($0, code: "tokenRejected", eresult: 5)] }
         await account.restore()
         XCTAssertEqual(account.status, .signedOut)
+        XCTAssertNil(store.load())
+        XCTAssertNil(account.login)
+        XCTAssertEqual(account.errorMessage, SteamHelperError(code: .tokenRejected, message: "").errorDescription)
+    }
+
+    /// Steam refusing the login partway through a session signs the account out, as at launch.
+    func testALoginSteamRejectsDuringASessionIsForgotten() async throws {
+        try store.save(Fake.login)
+        let (account, _) = makeAccount { request in
+            switch request.method {
+            case "logOn": [Fake.result(request, #"{"steamID":"76561190000000001"}"#)]
+            case "ownsApp": [Fake.result(request, #"{"owned":true}"#)]
+            default: [Fake.error(request, code: "tokenRejected", eresult: 5)]
+            }
+        }
+        await account.restore()
+        XCTAssertTrue(account.isSignedIn)
+
+        _ = try? await account.client.webAPIResponse("PublishedFile.QueryFiles", parameters: [])
+        try await waitFor("signed out") { account.status == .signedOut }
         XCTAssertNil(store.load())
         XCTAssertNil(account.login)
         XCTAssertEqual(account.errorMessage, SteamHelperError(code: .tokenRejected, message: "").errorDescription)

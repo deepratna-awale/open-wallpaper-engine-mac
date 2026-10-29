@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 #nullable enable
 using System;
 using System.Collections.Generic;

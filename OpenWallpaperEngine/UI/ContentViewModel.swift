@@ -37,6 +37,8 @@ final class ContentViewModel {
     private let workshopDownloadService = WorkshopDownloadService()
     @ObservationIgnored private var steamLoginCancellable: AnyCancellable?
     @ObservationIgnored private var steamLoginCancellables: Set<AnyCancellable> = []
+    /// Downloads Steam's newer versions of installed Workshop items.
+    private let workshopUpdates: WorkshopUpdateChecker
 
     /// Reading it observes whether downloads are logged in.
     var workshopDownloads: WorkshopDownloadService {
@@ -65,6 +67,7 @@ final class ContentViewModel {
         steamWorkshopLists = lists
         lists.follow(downloads: workshopDownloadService.userItemDownloaded, favorites: .shared)
         library.workshopItemsDeleted = { [weak lists] in lists?.unsubscribe(from: $0) }
+        workshopUpdates = WorkshopUpdateChecker(downloads: workshopDownloadService)
         let svc = workshopDownloadService
         steamLoginCancellable = svc.$isLoggedIn
             .removeDuplicates()
@@ -86,6 +89,13 @@ final class ContentViewModel {
         svc.steamLoginRejected
             .sink { [weak account] in Task { await account?.loginRejected() } }
             .store(in: &steamLoginCancellables)
+        // An updated wallpaper on a display is shown again from its new files.
+        svc.itemUpdated
+            .sink { directory in
+                MainActor.assumeIsolated { AppDelegate.shared.wallpaperViewModel.reloadWallpaper(directory: directory) }
+            }
+            .store(in: &steamLoginCancellables)
+        workshopUpdates.start()
     }
 
     /// Asks whether to trust `wallpaper` before it runs its code. The sheet is on the main window,

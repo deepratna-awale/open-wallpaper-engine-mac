@@ -28,6 +28,8 @@ final class SteamAccount: ObservableObject {
     /// The sign-in requests use, from launch or a sign-in until it is forgotten; Workshop downloads
     /// use it too (`WorkshopDownloadService.useSteamLogin`).
     @Published private(set) var login: SteamLogin?
+    /// Whether the account owns Wallpaper Engine, which Workshop downloads need; nil until Steam says.
+    @Published private(set) var ownsWallpaperEngine: Bool?
 
     let client: SteamHelperClient
     private let store: SteamLoginStore
@@ -68,6 +70,7 @@ final class SteamAccount: ObservableObject {
         do {
             try await client.ensureLoggedOn()
             status = .signedIn(accountName: login.accountName)
+            await checkOwnership()
         } catch let error as SteamHelperError where error.needsNewSignIn {
             OWELog.info(.workshop, "Steam no longer accepts the saved sign-in: \(error.message)")
             await forget(error)
@@ -129,6 +132,7 @@ final class SteamAccount: ObservableObject {
                 status = .signedIn(accountName: login.accountName)
                 OWELog.info(.workshop, "Signed in to Steam as \(login.accountName)")
                 try await client.ensureLoggedOn()
+                await checkOwnership()
             } catch let error as SteamHelperError where error.code == .cancelled {
                 status = .signedOut
             } catch is CancellationError {
@@ -153,6 +157,17 @@ final class SteamAccount: ObservableObject {
         }
     }
 
+    /// Asks Steam whether the account owns Wallpaper Engine, so the login can say why downloads
+    /// won't work before one fails.
+    private func checkOwnership() async {
+        do {
+            ownsWallpaperEngine = try await client.ownsApp(appID: UInt32(WorkshopAPIService.wallpaperEngineAppId))
+            if ownsWallpaperEngine == false { OWELog.info(.workshop, "The Steam account doesn't own Wallpaper Engine") }
+        } catch {
+            OWELog.error(.workshop, "Can't check whether the Steam account owns Wallpaper Engine: \(error)")
+        }
+    }
+
     /// Has the client log on with `login`, and forget it when Steam stops accepting it.
     private func adopt(_ login: SteamLogin) async {
         await client.setLoginRejectedHandler { [weak self] in
@@ -164,7 +179,8 @@ final class SteamAccount: ObservableObject {
 
     /// Steam no longer accepts the login: it is forgotten, and the user is asked to log in again.
     func loginRejected() async {
-        guard isSignedIn else { return }
+        // Concurrent requests can each report it; the first forgets the login.
+        guard isSignedIn, login != nil else { return }
         OWELog.info(.workshop, "Steam no longer accepts the saved login")
         await forget(SteamHelperError(code: .tokenRejected, message: "The saved login was rejected."))
     }
@@ -172,6 +188,7 @@ final class SteamAccount: ObservableObject {
     /// Removes the saved sign-in; `reason` is shown when Steam ended it.
     private func forget(_ reason: SteamHelperError?) async {
         login = nil
+        ownsWallpaperEngine = nil
         await client.use(nil)
         do {
             try store.remove()

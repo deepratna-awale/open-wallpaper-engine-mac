@@ -244,6 +244,37 @@ final class SteamHelperClientTests: XCTestCase {
         XCTAssertEqual(calls.values.count, 1)
     }
 
+    /// After Steam disconnects it, the helper logs on again by itself on the next call; Steam
+    /// refusing the token then fails that call, and the account hears about it the same way.
+    func testATokenRejectedDuringACallCallsTheHandler() async throws {
+        let transports = Box<Fake>()
+        let client = makeClient(transports) { request in
+            switch request.method {
+            case "logOn":
+                return [Fake.result(request, #"{"steamID":"76561190000000001"}"#)]
+            default:
+                return [Fake.error(request, code: "tokenRejected", eresult: 5)]
+            }
+        }
+        struct Body: Encodable, Sendable { let appid = 431960 }
+        struct Response: Decodable, Sendable { let total: Int }
+        let calls = Box<Int>()
+        await client.setLoginRejectedHandler { calls.append(1) }
+        await client.use(Fake.login)
+        do {
+            _ = try await client.call("PublishedFile.QueryFiles", body: Body(), as: Response.self)
+            XCTFail("the call succeeded with a rejected token")
+        } catch let error as SteamHelperError {
+            XCTAssertTrue(error.needsNewSignIn)
+        }
+        XCTAssertEqual(calls.values.count, 1)
+
+        // Not logged on any more: the next request logs on first.
+        _ = try? await client.webAPIResponse("PublishedFile.QueryFiles", parameters: [])
+        XCTAssertEqual(transports.values.first?.methods, ["logOn", "call", "logOn", "call"])
+        XCTAssertEqual(calls.values.count, 2)
+    }
+
     // MARK: Locator and login
 
     func testLocatorUsesTheEnvironmentOverrideOnlyWhenItRuns() throws {
@@ -269,6 +300,30 @@ final class SteamHelperClientTests: XCTestCase {
             XCTAssertFalse(text.contains(Fake.login.refreshToken), text)
             XCTAssertTrue(text.contains(Fake.login.accountName), text)
         }
+    }
+
+    /// A JWT whose payload is `claims`, as Steam's refresh tokens are (base64url, unpadded).
+    private func jwt(_ claims: String) -> String {
+        let payload = Data(claims.utf8).base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+        return "eyJhbGciOiJFZERTQSJ9.\(payload).c2lnbmF0dXJl"
+    }
+
+    func testLoginExpiryComesFromTheTokensExpClaim() {
+        let login = SteamLogin(accountName: "owe_test", steamID: "76561190000000001",
+                               refreshToken: jwt(#"{"iss":"steam","sub":"76561190000000001","exp":1800000000}"#))
+        XCTAssertEqual(login.expiresAt, Date(timeIntervalSince1970: 1_800_000_000))
+        XCTAssertFalse(login.endsSoon(now: Date(timeIntervalSince1970: 1_800_000_000 - 15 * 86_400)))
+        XCTAssertTrue(login.endsSoon(now: Date(timeIntervalSince1970: 1_800_000_000 - 13 * 86_400)))
+        XCTAssertTrue(login.endsSoon(now: Date(timeIntervalSince1970: 1_800_000_001)), "already ended")
+    }
+
+    func testLoginWithoutAReadableExpiryNeverEndsSoon() {
+        XCTAssertNil(Fake.login.expiresAt)
+        XCTAssertFalse(Fake.login.endsSoon())
+        let noExp = SteamLogin(accountName: "a", steamID: "1", refreshToken: jwt(#"{"sub":"1"}"#))
+        XCTAssertNil(noExp.expiresAt)
     }
 
     func testLoginStoreRoundTrips() throws {

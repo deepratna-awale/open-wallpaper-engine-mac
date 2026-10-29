@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 #nullable enable
 using System;
 using System.Linq;
@@ -27,6 +28,8 @@ namespace OWESteamHelper
         void LogOff();
         Task<JsonNode?> CallAsync(string method, JsonElement body, CancellationToken cancellation);
         Task<AppInfo> GetAppInfoAsync(uint appID, CancellationToken cancellation);
+        /// Whether one of the account's licenses grants `appID`.
+        Task<bool> OwnsAppAsync(uint appID, CancellationToken cancellation);
     }
 
     /// One SteamKit2 client connection, kept while the app runs. Callbacks run on a pump thread;
@@ -49,6 +52,8 @@ namespace OWESteamHelper
         readonly Action<string, JsonObject> onEvent;
         readonly Thread pump;
         readonly SemaphoreSlim connecting = new(1, 1);
+        // One logon at a time: concurrent calls after a disconnect share the first one's.
+        readonly SemaphoreSlim loggingOn = new(1, 1);
         volatile bool running = true;
         // Read and written on the pump thread and under `connecting`; volatile for the reads elsewhere.
         volatile bool isConnected;
@@ -56,6 +61,10 @@ namespace OWESteamHelper
         TaskCompletionSource? connected;
         TaskCompletionSource<EResult>? loggedOn;
         (string Account, string Token)? login;
+        // The account's licenses, which Steam sends after each logon.
+        TaskCompletionSource<SteamApps.LicenseListCallback.License[]> licenses = NewLicenses();
+        // Why Steam refused `login`, kept after it is forgotten so later calls fail the same way.
+        HelperException? rejection;
 
         public SteamSession(Action<string, JsonObject> onEvent)
         {
@@ -80,6 +89,10 @@ namespace OWESteamHelper
                 if (wasLoggedOn && !cb.UserInitiated) onEvent("disconnected", new JsonObject());
             });
             manager.Subscribe<SteamUser.LoggedOnCallback>(cb => loggedOn?.TrySetResult(cb.Result));
+            manager.Subscribe<SteamApps.LicenseListCallback>(cb =>
+            {
+                if (cb.Result == EResult.OK) licenses.TrySetResult(cb.LicenseList.ToArray());
+            });
             manager.Subscribe<SteamUser.LoggedOffCallback>(cb =>
             {
                 isLoggedOn = false;
@@ -194,16 +207,27 @@ namespace OWESteamHelper
 
         public async Task<ulong> LogOnAsync(string accountName, string refreshToken, CancellationToken cancellation)
         {
-            login = (accountName, refreshToken);
-            return await LogOnRememberedAsync(cancellation);
+            await loggingOn.WaitAsync(cancellation);
+            try
+            {
+                login = (accountName, refreshToken);
+                rejection = null;
+                return await LogOnRememberedAsync(cancellation);
+            }
+            finally
+            {
+                loggingOn.Release();
+            }
         }
 
+        /// Logs on with `login`; callers hold `loggingOn`.
         async Task<ulong> LogOnRememberedAsync(CancellationToken cancellation)
         {
             if (login is not { } remembered)
-                throw new HelperException(ErrorCode.NotLoggedOn, "Not signed in to Steam.");
+                throw rejection ?? new HelperException(ErrorCode.NotLoggedOn, "Not signed in to Steam.");
             var (account, token) = remembered;
             await EnsureConnectedAsync(cancellation);
+            if (licenses.Task.IsCompleted) licenses = NewLicenses();
             loggedOn = new TaskCompletionSource<EResult>(TaskCreationOptions.RunContinuationsAsynchronously);
             user.LogOn(new SteamUser.LogOnDetails
             {
@@ -229,7 +253,8 @@ namespace OWESteamHelper
                 case EResult.AccessDenied or EResult.Revoked or EResult.Expired or EResult.InvalidSignature
                     or EResult.InvalidPassword:
                     login = null;
-                    throw new HelperException(ErrorCode.TokenRejected, $"Steam refused the saved sign-in ({result}).", (int)result);
+                    rejection = new HelperException(ErrorCode.TokenRejected, $"Steam refused the saved sign-in ({result}).", (int)result);
+                    throw rejection;
                 case EResult.NoConnection or EResult.ServiceUnavailable or EResult.TryAnotherCM or EResult.Timeout:
                     throw new HelperException(ErrorCode.Network, $"Steam is unavailable ({result}).", (int)result);
                 default:
@@ -239,12 +264,22 @@ namespace OWESteamHelper
 
         async Task EnsureLoggedOnAsync(CancellationToken cancellation)
         {
-            if (!isLoggedOn) await LogOnRememberedAsync(cancellation);
+            if (isLoggedOn) return;
+            await loggingOn.WaitAsync(cancellation);
+            try
+            {
+                if (!isLoggedOn) await LogOnRememberedAsync(cancellation);
+            }
+            finally
+            {
+                loggingOn.Release();
+            }
         }
 
         public void LogOff()
         {
             login = null;
+            rejection = null;
             if (isLoggedOn) user.LogOff();
             isLoggedOn = false;
         }
@@ -273,6 +308,30 @@ namespace OWESteamHelper
                     .Where(d => uint.TryParse(d.Name, out _))
                     .Select(d => (uint.Parse(d.Name!), d["config"]["oslist"].Value))
                     .ToArray());
+        }
+
+        static TaskCompletionSource<SteamApps.LicenseListCallback.License[]> NewLicenses() =>
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public async Task<bool> OwnsAppAsync(uint appID, CancellationToken cancellation)
+        {
+            await EnsureLoggedOnAsync(cancellation);
+            SteamApps.LicenseListCallback.License[] owned;
+            try
+            {
+                owned = await licenses.Task.WaitAsync(StepTimeout, cancellation);
+            }
+            catch (TimeoutException)
+            {
+                throw new HelperException(ErrorCode.Network, "Steam didn't send the account's licenses.");
+            }
+            if (owned.Length == 0) return false;
+            var requests = owned
+                .Select(license => new SteamApps.PICSRequest(license.PackageID, license.AccessToken))
+                .ToList();
+            var info = await apps.PICSGetProductInfo([], requests);
+            return info.Results?.SelectMany(r => r.Packages.Values)
+                .Any(package => package.KeyValues["appids"].Children.Any(id => id.AsUnsignedInteger() == appID)) ?? false;
         }
 
         public void Dispose()

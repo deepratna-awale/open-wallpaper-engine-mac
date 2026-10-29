@@ -62,6 +62,12 @@ class WorkshopDownloadService: ObservableObject {
     /// Steam no longer accepts the Steam login (a download said so), on the main queue.
     let steamLoginRejected = PassthroughSubject<Void, Never>()
 
+    /// An installed item whose files an update just replaced, on the main queue after `itemInstalled`.
+    let itemUpdated = PassthroughSubject<URL, Never>()
+
+    /// The queued and running downloads that update an installed item (`updateWorkshopItem`).
+    private var updateIds = Set<String>()
+
     nonisolated private let helperDownloads: SteamHelperDownloading
     /// The Wallpaper Storage folder every download goes into; throws when it can't be used.
     nonisolated private let storageDirectory: @Sendable () throws -> URL
@@ -117,6 +123,21 @@ class WorkshopDownloadService: ObservableObject {
         fileSize: Int = 0,
         onCompleted: (@MainActor @Sendable (URL?) -> Void)? = nil
     ) {
+        enqueue(workshopId: workshopId, isUpdate: false, asDependency: asDependency, title: title, previewURL: previewURL,
+                creatorId: creatorId, subscriptions: subscriptions, fileSize: fileSize, onCompleted: onCompleted)
+    }
+
+    /// Downloads Steam's newer version of an installed item over the installed one
+    /// (`WorkshopUpdateChecker`), as Steam updates Wallpaper Engine's subscriptions. It is listed in
+    /// the Downloads tab like a download.
+    func updateWorkshopItem(workshopId: String, title: String?, previewURL: URL?) {
+        enqueue(workshopId: workshopId, isUpdate: true, asDependency: false, title: title, previewURL: previewURL,
+                creatorId: nil, subscriptions: 0, fileSize: 0, onCompleted: nil)
+    }
+
+    private func enqueue(workshopId: String, isUpdate: Bool, asDependency: Bool, title: String?, previewURL: URL?,
+                         creatorId: String?, subscriptions: Int, fileSize: Int,
+                         onCompleted: (@MainActor @Sendable (URL?) -> Void)?) {
         guard let login = steamLogin else {
             onCompleted?(nil)
             return
@@ -137,6 +158,7 @@ class WorkshopDownloadService: ObservableObject {
             )
         }
         queuedDownloadIds.append(workshopId)
+        if isUpdate { updateIds.insert(workshopId) } else { updateIds.remove(workshopId) }
         downloadPercentages[workshopId] = 0
         downloadProgress[workshopId] = .downloading(status: Self.queuedStatus)
 
@@ -149,14 +171,15 @@ class WorkshopDownloadService: ObservableObject {
                     status: String(localized: "Authenticating…", comment: "Download status: logging in to Steam"))
             }
             let result = Result {
-                try self.downloadIntoStorage(workshopId, login: login)
+                try self.downloadIntoStorage(workshopId, login: login, replacing: isUpdate)
             }
             DispatchQueue.main.async {
                 self.queuedDownloadIds.removeAll { $0 == workshopId }
                 if self.activeDownloadId == workshopId {
                     self.activeDownloadId = nil
                 }
-                self.finishDownload(workshopId, asDependency: asDependency, result: result, onCompleted: onCompleted)
+                self.finishDownload(workshopId, isUpdate: isUpdate, asDependency: asDependency, result: result,
+                                    onCompleted: onCompleted)
             }
         }
     }
@@ -165,6 +188,10 @@ class WorkshopDownloadService: ObservableObject {
     func retryDownload(_ workshopId: String) {
         guard case .failed = downloadProgress[workshopId] else { return }
         let item = downloadItems[workshopId]
+        if updateIds.contains(workshopId) {
+            return updateWorkshopItem(workshopId: workshopId, title: item?.title ?? downloadTitles[workshopId],
+                                      previewURL: item?.previewURL)
+        }
         downloadWorkshopItem(workshopId: workshopId, title: item?.title ?? downloadTitles[workshopId],
                              previewURL: item?.previewURL, creatorId: item?.creatorId,
                              subscriptions: item?.subscriptions ?? 0, fileSize: item?.fileSize ?? 0)
@@ -231,14 +258,16 @@ class WorkshopDownloadService: ObservableObject {
     }
 
     /// Downloads into a staging folder inside the storage folder and moves the finished item to
-    /// `<storage>/<id>`. Call on `downloadQueue`: downloads share the one staging folder.
-    nonisolated private func downloadIntoStorage(_ workshopId: String,
-                                                 login: SteamLogin) throws -> WorkshopItemInstaller.Outcome {
+    /// `<storage>/<id>`, or, `replacing`, in place of the installed one. Call on `downloadQueue`:
+    /// downloads share the one staging folder.
+    nonisolated private func downloadIntoStorage(_ workshopId: String, login: SteamLogin,
+                                                 replacing: Bool = false) throws -> WorkshopItemInstaller.Outcome {
         // No fallback: without the storage folder the download doesn't start.
         let storage = try storageDirectory()
         let staging = WorkshopItemInstaller.stagingDirectory(in: storage)
         defer { WorkshopItemInstaller.removeStaging(staging) }
         try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
+        if replacing { try Self.stageInstalledCopy(of: workshopId, from: storage, into: staging) }
 
         let downloaded = try helperDownload(workshopId, login: login, into: staging, validate: true) { [weak self] chunk in
             guard let percentage = SteamHelperDownload.progress(in: chunk) else { return }
@@ -259,10 +288,27 @@ class WorkshopDownloadService: ObservableObject {
             self.downloadPercentages[workshopId] = 1
         }
         // The storage folder as it is now, in case it changed while the item downloaded.
+        if replacing {
+            return try WorkshopItemInstaller.replace(itemAt: downloaded, workshopId: workshopId, into: storageDirectory())
+        }
         return try WorkshopItemInstaller.install(itemAt: downloaded, workshopId: workshopId, into: storageDirectory())
     }
 
-    private func finishDownload(_ workshopId: String, asDependency: Bool,
+    /// For an update, a copy of the installed item where the download goes: DepotDownloader checks
+    /// the files already there against Steam's manifest and fetches only the chunks that changed.
+    /// Not for a converted bundle (`WallpaperPackageConverter`), whose files no longer match the
+    /// Workshop's; that downloads in full. On APFS the copy is a clone.
+    nonisolated static func stageInstalledCopy(of workshopId: String, from storage: URL, into staging: URL) throws {
+        let installed = storage.appending(path: workshopId, directoryHint: .isDirectory)
+        let manifest = installed.appending(path: WallpaperPackageConverter.manifestName)
+        guard FileManager.default.fileExists(atPath: installed.path),
+              !FileManager.default.fileExists(atPath: manifest.path) else { return }
+        let item = WorkshopItemInstaller.contentDirectory(in: staging, workshopId: workshopId)
+        try FileManager.default.createDirectory(at: item.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.copyItem(at: installed, to: item)
+    }
+
+    private func finishDownload(_ workshopId: String, isUpdate: Bool, asDependency: Bool,
                                 result: Result<WorkshopItemInstaller.Outcome, Error>,
                                 onCompleted: (@MainActor @Sendable (URL?) -> Void)?) {
         let outcome: WorkshopItemInstaller.Outcome
@@ -283,16 +329,22 @@ class WorkshopDownloadService: ObservableObject {
                 WallpaperPreparation.prepare(wallpaperDirectory: destination)
             }
         }
-        if asDependency {
+        if isUpdate {
+            // An update leaves the item as it was: the user's own download, or a dependency.
+            updateIds.remove(workshopId)
+            OWELog.info(.workshop, "Updated Workshop item \(workshopId)")
+        } else if asDependency {
             dependencyIndex.recordDependencyDownload(workshopId, copiedIntoLibrary: isNew)
         } else {
             dependencyIndex.recordUserDownload(workshopId)
         }
+        if isNew { downloadedIndex.markContentDownloaded(workshopId) }
         downloadProgress[workshopId] = .completed
         downloadFolders[workshopId] = destination
         downloadedIndex.insert(workshopId)
         itemInstalled.send(destination)
-        if !asDependency { userItemDownloaded.send(workshopId) }
+        if !asDependency, !isUpdate { userItemDownloaded.send(workshopId) }
+        if isUpdate { itemUpdated.send(destination) }
         onCompleted?(destination)
     }
 

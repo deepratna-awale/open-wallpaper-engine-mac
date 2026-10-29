@@ -132,18 +132,36 @@ actor SteamHelperClient {
         if self.login == login { isLoggedOn = true }
     }
 
+    /// Runs `body` logged on. The helper logs on again by itself after Steam disconnects it, so a
+    /// login Steam refuses then fails `body`; that is reported like one `ensureLoggedOn` finds.
+    private func loggedOn<Value: Sendable>(_ body: () async throws -> Value) async throws -> Value {
+        try await ensureLoggedOn()
+        let login = login
+        do {
+            return try await body()
+        } catch let error as SteamHelperError where error.needsNewSignIn {
+            if self.login == login {
+                isLoggedOn = false
+                await onLoginRejected?()
+            }
+            throw error
+        }
+    }
+
     /// One of the helper's Steam service methods (`PublishedFile.QueryFiles`…), logged on.
     func call<Body: Encodable & Sendable, Response: Decodable & Sendable>(
         _ method: String, body: Body, as type: Response.Type) async throws -> Response {
-        try await ensureLoggedOn()
-        return try await request("call", CallParams(method: method, body: body), as: Response.self)
+        try await loggedOn {
+            try await request("call", CallParams(method: method, body: body), as: Response.self)
+        }
     }
 
     /// A Steam service method with the Web API's parameters for it, answered as the Web API
     /// answers it: `{"response": …}`, so the app reads both the same way.
     func webAPIResponse(_ method: String, parameters: [URLQueryItem]) async throws -> Data {
-        try await ensureLoggedOn()
-        let line = try await requestLine("call", CallParams(method: method, body: SteamServiceBody(parameters)))
+        let line = try await loggedOn {
+            try await requestLine("call", CallParams(method: method, body: SteamServiceBody(parameters)))
+        }
         do {
             let message = try JSONSerialization.jsonObject(with: line) as? [String: Any]
             return try JSONSerialization.data(withJSONObject: ["response": message?["result"] ?? [String: Any]()])
@@ -154,8 +172,16 @@ actor SteamHelperClient {
 
     func appInfo(appID: UInt32) async throws -> SteamAppInfo {
         struct Params: Encodable { let appID: UInt32 }
-        try await ensureLoggedOn()
-        return try await request("appInfo", Params(appID: appID), as: SteamAppInfo.self)
+        return try await loggedOn {
+            try await request("appInfo", Params(appID: appID), as: SteamAppInfo.self)
+        }
+    }
+
+    /// Whether one of the account's licenses grants `appID`.
+    func ownsApp(appID: UInt32) async throws -> Bool {
+        struct Params: Encodable { let appID: UInt32 }
+        struct Owned: Decodable { let owned: Bool }
+        try await loggedOn { try await request("ownsApp", Params(appID: appID), as: Owned.self).owned }
     }
 
     /// Ends the helper; the next request starts it again.

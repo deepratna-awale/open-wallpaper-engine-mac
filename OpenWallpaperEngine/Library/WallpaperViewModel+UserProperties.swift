@@ -103,6 +103,26 @@ extension WallpaperViewModel {
         return new
     }
 
+    /// Shows `directory`'s wallpaper anew, read from disk, on the displays showing it: a Workshop
+    /// update replaced its files.
+    func reloadWallpaper(directory: URL) {
+        let shown = wallpapers.filter { $0.value.wallpaperDirectory == directory }.keys
+        guard !shown.isEmpty else { return }
+        let project: WEProject
+        do {
+            project = try WEProject.read(in: directory)
+        } catch {
+            OWELog.error(.library, "Can't read the updated \(directory.lastPathComponent) to show it again: \(error)")
+            return
+        }
+        // Off and on again: the displays drop the old files' wallpaper and load the new one.
+        var updated = wallpapers
+        for key in shown { updated[key] = Self.defaultWallpaper }
+        wallpapers = updated
+        for key in shown { updated[key] = WEWallpaper(using: project, where: directory) }
+        wallpapers = updated
+    }
+
     /// Remove a wallpaper from all screens (e.g., when unsubscribing).
     func removeWallpaperFromAllScreens(directory: URL) {
         // One assignment: each change saves and refreshes the instances.
