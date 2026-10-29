@@ -60,10 +60,12 @@ namespace OWESteamHelper
                 foreach (var fixedIDs in new[] { true, false })
                 {
                     var label = $"GetCommentThread type={type} {(fixedIDs ? "fixed64" : "varint")}";
-                    sniffer.Expect(SendRaw(session.Client, "Community.GetCommentThread#1",
-                        fixedIDs
-                            ? new CommentThreadRequestFixed { SteamID = creator, ThreadType = type, Feature = pubfile, Count = 5 }
-                            : new CommentThreadRequestVarint { SteamID = creator, ThreadType = type, Feature = pubfile, Count = 5 }), label);
+                    var job = fixedIDs
+                        ? SendRaw(session.Client, "Community.GetCommentThread#1",
+                            new CommentThreadRequestFixed { SteamID = creator, ThreadType = type, Feature = pubfile, Count = 5 })
+                        : SendRaw(session.Client, "Community.GetCommentThread#1",
+                            new CommentThreadRequestVarint { SteamID = creator, ThreadType = type, Feature = pubfile, Count = 5 });
+                    sniffer.Expect(job, label);
                     Log($"sent {label}");
                     await Task.Delay(3000);
                 }
