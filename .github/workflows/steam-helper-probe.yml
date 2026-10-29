@@ -7,7 +7,7 @@ name: Steam helper probe
 on:
   push:
     branches: [steam-qr-signin-research]
-    paths: ['SteamHelper/**', '.github/workflows/steam-helper-probe.yml']
+    paths: ['SteamHelper/**', 'Vendor/DepotDownloader/**', '.github/workflows/steam-helper-probe.yml']
 
 permissions:
   contents: read
@@ -33,6 +33,11 @@ jobs:
           git -C dd apply "$GITHUB_WORKSPACE/SteamHelper/Probe/depotdownloader-refresh-token.patch"
           dotnet publish dd/DepotDownloader/DepotDownloader.csproj -c Release -r osx-arm64 --self-contained \
             -p:PublishSingleFile=true -p:DebugType=embedded -o out
+      - name: Helper
+        run: |
+          dotnet publish SteamHelper/OWESteamHelper.csproj -c Release -r osx-arm64 --self-contained \
+            -p:PublishSingleFile=true -p:DebugType=embedded -o out
+          cp SteamHelper/smoke-test.py SteamHelper/smoke-test-qr.swift out/
       - run: ls -la out && sha256sum out/SteamProbe out/DepotDownloader
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -40,4 +45,7 @@ jobs:
           path: |
             out/SteamProbe
             out/DepotDownloader
+            out/owe-steam-helper
+            out/smoke-test.py
+            out/smoke-test-qr.swift
           retention-days: 7
