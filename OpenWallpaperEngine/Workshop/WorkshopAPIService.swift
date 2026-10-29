@@ -389,6 +389,35 @@ final class WorkshopAPIService: Sendable {
         try await getUserFileIDs(steamID: steamID, list: .favorites)
     }
 
+    /// Adds `workshopId` to one of the account's lists, or takes it off (PublishedFile.Subscribe
+    /// and Unsubscribe through the Steam login), as Wallpaper Engine's download, Unsubscribe and
+    /// heart do.
+    func setItem(_ workshopId: String, on list: WorkshopSubscriptions.List, _ isOn: Bool) async throws {
+        guard WorkshopCollection.isID(workshopId) else { throw WorkshopAPIError.invalidURL }
+        _ = try await serviceCall(isOn ? "PublishedFile.Subscribe" : "PublishedFile.Unsubscribe",
+                                  parameters: WorkshopSubscriptions.changeItems(workshopId: workshopId, list: list, adding: isOn))
+    }
+
+    /// Rates `workshopId` up or down for the account (PublishedFile.Vote through the Steam login).
+    func vote(_ vote: WorkshopVote, on workshopId: String) async throws {
+        guard WorkshopCollection.isID(workshopId) else { throw WorkshopAPIError.invalidURL }
+        _ = try await serviceCall("PublishedFile.Vote", parameters: [
+            URLQueryItem(name: "publishedfileid", value: workshopId),
+            URLQueryItem(name: "vote_up", value: vote == .up ? "true" : "false"),
+        ])
+    }
+
+    /// The account's own rating of each of `workshopIds` (PublishedFile.GetUserVoteSummary through
+    /// the Steam login); an item it hasn't rated is left out.
+    func votes(on workshopIds: [String]) async throws -> [String: WorkshopVote] {
+        let ids = workshopIds.filter(WorkshopCollection.isID)
+        guard !ids.isEmpty else { return [:] }
+        let response = try await serviceCall("PublishedFile.GetUserVoteSummary", parameters: ids.enumerated().map {
+            URLQueryItem(name: "publishedfileids[\($0.offset)]", value: $0.element)
+        })
+        return try WorkshopVote.votes(from: response)
+    }
+
     private func getUserFileIDs(steamID: String,
                                 list: WorkshopSubscriptions.List) async throws -> WorkshopSubscriptions.Outcome {
         guard WorkshopSubscriptions.isSteamID64(steamID) else { throw WorkshopAPIError.invalidURL }

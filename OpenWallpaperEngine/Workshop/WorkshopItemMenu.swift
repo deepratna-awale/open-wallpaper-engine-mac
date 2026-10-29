@@ -60,6 +60,9 @@ struct WorkshopItemMenu: View {
             Label(viewModel.isFavorite(item) ? "Remove from Favorites" : "Add to Favorites",
                   systemImage: viewModel.isFavorite(item) ? "heart.slash" : "heart.fill")
         }
+        if let lists = viewModel.steamLists {
+            WorkshopRateButtons(workshopId: item.id, lists: lists)
+        }
 
         Divider()
 
@@ -101,6 +104,30 @@ struct WorkshopItemMenu: View {
                 .help("Hides this author's wallpapers from the Workshop and Discover tabs on this Mac")
             }
         }
+    }
+}
+
+/// Rate Up and Rate Down: the Steam account's rating of a Workshop item, filled in when it is
+/// known. They need the Steam login.
+struct WorkshopRateButtons: View {
+    let workshopId: String
+    @ObservedObject var lists: SteamWorkshopLists
+
+    var body: some View {
+        Group {
+            Button {
+                lists.rate(.up, on: workshopId)
+            } label: {
+                Label("Rate Up", systemImage: lists.votes[workshopId] == .up ? "hand.thumbsup.fill" : "hand.thumbsup")
+            }
+            Button {
+                lists.rate(.down, on: workshopId)
+            } label: {
+                Label("Rate Down", systemImage: lists.votes[workshopId] == .down ? "hand.thumbsdown.fill" : "hand.thumbsdown")
+            }
+        }
+        .disabled(!lists.canChangeAccount)
+        .task { await lists.loadVotes(for: [workshopId]) }
     }
 }
 

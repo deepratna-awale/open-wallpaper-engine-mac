@@ -48,6 +48,10 @@ class WorkshopDownloadService: ObservableObject {
     /// on the main queue.
     let itemInstalled = PassthroughSubject<URL, Never>()
 
+    /// The id of an item the user downloaded or kept as their own (not a required item), on the
+    /// main queue after `itemInstalled`: Wallpaper Engine subscribes to it (`SteamWorkshopLists`).
+    let userItemDownloaded = PassthroughSubject<String, Never>()
+
     /// Ids Steam reported as removed or private, on the main queue before the download's
     /// completion runs.
     let itemUnavailable = PassthroughSubject<String, Never>()
@@ -288,6 +292,7 @@ class WorkshopDownloadService: ObservableObject {
         downloadFolders[workshopId] = destination
         downloadedIndex.insert(workshopId)
         itemInstalled.send(destination)
+        if !asDependency { userItemDownloaded.send(workshopId) }
         onCompleted?(destination)
     }
 
@@ -388,6 +393,7 @@ class WorkshopDownloadService: ObservableObject {
         dependencyIndex.recordUserDownload(workshopId)
         downloadedIndex.insert(workshopId)
         itemInstalled.send(destination)
+        userItemDownloaded.send(workshopId)
         OWELog.info(.workshop, "Kept Workshop preview \(workshopId) in \(destination.path)")
         return WEWallpaper(using: wallpaper.project, where: destination)
     }

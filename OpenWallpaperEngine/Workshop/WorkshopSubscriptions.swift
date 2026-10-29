@@ -10,6 +10,15 @@ enum WorkshopSubscriptions {
     enum List: String {
         case subscriptions = "mysubscriptions"
         case favorites = "myfavorites"
+
+        /// The list's `list_type` in PublishedFile.Subscribe and Unsubscribe (Steam's
+        /// `k_EUCMListSubscribed` and `k_EUCMListFavorites`).
+        var listType: Int {
+            switch self {
+            case .subscriptions: 1
+            case .favorites: 2
+            }
+        }
     }
 
     /// The probe's answer, kept so an account Steam returns nothing for doesn't show the option again.
@@ -37,6 +46,20 @@ enum WorkshopSubscriptions {
             URLQueryItem(name: "numperpage", value: String(perPage)),
             URLQueryItem(name: "return_short_description", value: "false"),
         ]
+    }
+
+    /// The parameters of PublishedFile.Subscribe (`adding`) or Unsubscribe for `workshopId` on
+    /// `list`. Steam isn't asked to tell the account's Steam clients, nor to add required items:
+    /// the app downloads those itself.
+    static func changeItems(workshopId: String, list: List, adding: Bool) -> [URLQueryItem] {
+        var items = [
+            URLQueryItem(name: "publishedfileid", value: workshopId),
+            URLQueryItem(name: "list_type", value: String(list.listType)),
+            URLQueryItem(name: "appid", value: String(WorkshopAPIService.wallpaperEngineAppId)),
+            URLQueryItem(name: "notify_client", value: "false"),
+        ]
+        if adding { items.append(URLQueryItem(name: "include_dependencies", value: "false")) }
+        return items
     }
 
     /// The subscribed ids in a GetUserFiles response; `.empty` for `{"response":{}}` or no files.

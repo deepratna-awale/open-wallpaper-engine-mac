@@ -45,12 +45,15 @@ final class ContentViewModel {
     }
     /// The Steam login, which the app's Steam helper uses for everything on Steam.
     let steamAccount = SteamAccount()
+    /// Mirrors downloads, Unsubscribe, the heart and ratings on the Steam account, as WE does.
+    let steamWorkshopLists: SteamWorkshopLists
     /// Workshop wallpapers and authors hidden from the Workshop and Discover tabs.
     @ObservationIgnored lazy var workshopBlockList = WorkshopBlockList()
     @ObservationIgnored lazy var workshopVM: WorkshopViewModel = {
         let model = WorkshopViewModel(workshopDownloads: workshopDownloadService, blockList: workshopBlockList, steam: steamAccount.client)
         model.showsBrowser = { [weak self] in self?.navigation.topTabBarSelection = 1 }
         model.attach(setAs: WorkshopSetAsFlow(environment: .app(workshop: model, library: library)))
+        model.steamLists = steamWorkshopLists
         return model
     }()
     /// The Discover tab's lists.
@@ -58,6 +61,10 @@ final class ContentViewModel {
 
     init() {
         library = InstalledLibraryModel(filters: filters, workshopDownloads: workshopDownloadService, presentation: presentation)
+        let lists = SteamWorkshopLists(downloads: workshopDownloadService, steam: steamAccount.client)
+        steamWorkshopLists = lists
+        lists.follow(downloads: workshopDownloadService.userItemDownloaded, favorites: .shared)
+        library.workshopItemsDeleted = { [weak lists] in lists?.unsubscribe(from: $0) }
         let svc = workshopDownloadService
         steamLoginCancellable = svc.$isLoggedIn
             .removeDuplicates()

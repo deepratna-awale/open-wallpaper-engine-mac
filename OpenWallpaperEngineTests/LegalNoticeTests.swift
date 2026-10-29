@@ -55,7 +55,7 @@ final class LegalNoticeTests: XCTestCase {
             editions[document] = edition
         }
         XCTAssertEqual(LegalNotice.version(of: editions), LegalNotice.currentVersion)
-        XCTAssertEqual(LegalNotice.currentVersion, "terms-of-use 1.1, privacy-policy 1.2")
+        XCTAssertEqual(LegalNotice.currentVersion, "terms-of-use 1.1, privacy-policy 1.3")
     }
 
     func testTheMarkdownReaderFindsTheBlocks() {

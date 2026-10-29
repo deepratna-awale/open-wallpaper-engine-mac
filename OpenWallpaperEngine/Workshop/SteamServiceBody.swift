@@ -12,7 +12,7 @@ struct SteamServiceBody: Encodable, Equatable, Sendable {
     }
 
     /// Fields that are text even when they hold digits: a search for "2024", 64-bit ids.
-    static let textFields: Set<String> = ["search_text", "cursor", "type", "steamid", "child_publishedfileid"]
+    static let textFields: Set<String> = ["search_text", "cursor", "type", "steamid", "child_publishedfileid", "publishedfileid"]
 
     private(set) var fields: [String: Value] = [:]
 

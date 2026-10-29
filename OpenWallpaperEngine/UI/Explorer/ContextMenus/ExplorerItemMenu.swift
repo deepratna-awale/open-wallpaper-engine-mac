@@ -88,6 +88,9 @@ struct ExplorerItemMenu: SubviewOfContentView {
                     Label(favorites.contains(hoveredWallpaper) ? "Remove from Favorites" : "Add to Favorites",
                           systemImage: favorites.contains(hoveredWallpaper) ? "heart.slash" : "heart.fill")
                 }
+                if let workshopId {
+                    WorkshopRateButtons(workshopId: workshopId, lists: viewModel.steamWorkshopLists)
+                }
                 MoveToFolderMenu(library: viewModel.library) { destination in
                     viewModel.library.move(viewModel.library.wallpapersActedOn(from: hoveredWallpaper), toFolder: destination)
                 }

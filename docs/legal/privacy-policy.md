@@ -1,6 +1,6 @@
 # Open Wallpaper Engine — Privacy Policy
 
-**Version 1.2 · Effective date: 2026-10-29**
+**Version 1.3 · Effective date: 2026-10-29**
 
 ---
 
@@ -57,7 +57,7 @@ OWE itself has no backend, but some features need the internet. When they do, th
 
 Used only for Steam Workshop features and for downloading your own copy of Wallpaper Engine's assets. These features are optional and require your own Steam account that owns Wallpaper Engine.
 
-- **Steam's servers** — The app's built-in Steam helper (`owe-steam-helper`, made with the open-source SteamKit2 and DepotDownloader) connects to Valve the way the Steam client does: to sign you in (with a QR code you scan in the Steam mobile app, or with your account name, password and Steam Guard code), to search the Workshop and list your own subscriptions and favourites, to read Wallpaper Engine's current version, and to download Workshop items and your own copy of Wallpaper Engine's assets (Steam app 431960) from Valve's content servers.
+- **Steam's servers** — The app's built-in Steam helper (`owe-steam-helper`, made with the open-source SteamKit2 and DepotDownloader) connects to Valve the way the Steam client does: to sign you in (with a QR code you scan in the Steam mobile app, or with your account name, password and Steam Guard code), to search the Workshop, to list your own subscriptions, favourites and ratings and change them when you download, unsubscribe from, favourite or rate a Workshop item in the app (as Wallpaper Engine does), to read Wallpaper Engine's current version, and to download Workshop items and your own copy of Wallpaper Engine's assets (Steam app 431960) from Valve's content servers.
 - **`api.steampowered.com`** — Workshop item and collection details, which need no sign-in. Your IP address and the item IDs you ask for are necessarily part of these requests, as are your search terms in the Steam helper's requests.
 - **`steamcommunity.com`** — Workshop pages, related community content, and the public profile (name and avatar) of a wallpaper's author.
 
