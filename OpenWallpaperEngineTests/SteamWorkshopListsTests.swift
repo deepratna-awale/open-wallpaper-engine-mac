@@ -44,7 +44,7 @@ final class SteamWorkshopListsTests: XCTestCase {
 
         downloads.send("1000000001")
 
-        try await sleepUntil("the subscription is sent") { !changes.isEmpty }
+        try await sleepUntil("the subscription is sent") { @Sendable @MainActor in !changes.isEmpty }
         XCTAssertEqual(changes, [Change(id: "1000000001", list: .subscriptions, isOn: true)])
     }
 
@@ -56,7 +56,7 @@ final class SteamWorkshopListsTests: XCTestCase {
         favorites.merge(["workshop-1000000003"])
         favorites.toggle("workshop-1000000001")
 
-        try await sleepUntil("both changes are sent") { changes.count == 2 }
+        try await sleepUntil("both changes are sent") { @Sendable @MainActor in changes.count == 2 }
         XCTAssertEqual(changes, [Change(id: "1000000001", list: .favorites, isOn: true),
                                  Change(id: "1000000001", list: .favorites, isOn: false)])
     }
@@ -64,7 +64,7 @@ final class SteamWorkshopListsTests: XCTestCase {
     func testDeletingUnsubscribes() async throws {
         lists.unsubscribe(from: ["1000000001", "1000000002"])
 
-        try await sleepUntil("both are unsubscribed") { changes.count == 2 }
+        try await sleepUntil("both are unsubscribed") { @Sendable @MainActor in changes.count == 2 }
         XCTAssertEqual(Set(changes.map(\.id)), ["1000000001", "1000000002"])
         XCTAssertTrue(changes.allSatisfy { $0.list == .subscriptions && !$0.isOn })
     }

@@ -229,7 +229,7 @@ final class WorkshopStorageTests: XCTestCase {
         let updated = Updates(service)
 
         service.updateWorkshopItem(workshopId: "1000000001", title: "Item", previewURL: nil)
-        try await sleepUntil("the update is in", timeout: 10) { updated.ids == ["1000000001"] }
+        try await sleepUntil("the update is in", timeout: 10) { @Sendable @MainActor in updated.ids == ["1000000001"] }
 
         XCTAssertEqual(try String(contentsOf: item.appending(path: "textures.bin"), encoding: .utf8), "unchanged")
         XCTAssertTrue(try String(contentsOf: item.appending(path: "project.json"), encoding: .utf8).contains("Item 1000000001"))
@@ -248,7 +248,7 @@ final class WorkshopStorageTests: XCTestCase {
         let updated = Updates(service)
 
         service.updateWorkshopItem(workshopId: "1000000001", title: "Item", previewURL: nil)
-        try await sleepUntil("the update is in", timeout: 10) { updated.ids == ["1000000001"] }
+        try await sleepUntil("the update is in", timeout: 10) { @Sendable @MainActor in updated.ids == ["1000000001"] }
 
         // A converted bundle's files aren't the Workshop's, so it downloads in full.
         XCTAssertFalse(FileManager.default.fileExists(atPath: item.appending(path: "converted.tex").path))
@@ -272,7 +272,7 @@ final class WorkshopStorageTests: XCTestCase {
         let updated = Updates(service)
 
         await checker.checkNow()
-        try await sleepUntil("the update is in", timeout: 10) { !updated.ids.isEmpty }
+        try await sleepUntil("the update is in", timeout: 10) { @Sendable @MainActor in !updated.ids.isEmpty }
 
         XCTAssertEqual(updated.ids, ["1000000001"])
         XCTAssertEqual(workshopDownloads.installDirectories.count, 3)
