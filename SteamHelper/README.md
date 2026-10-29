@@ -53,6 +53,7 @@ they belong to, or none for the connection's own.
 | `logOff` | | |
 | `call` | `method`, `body` | the response message. `method` is one of `PublishedFile.QueryFiles`, `PublishedFile.GetUserFiles`, `PublishedFile.GetDetails`; `body` is the request message. Messages use the Web API's JSON: proto field names, 64-bit integers as strings, unset fields left out |
 | `appInfo` | `appID` | `appID`, `publicBuildID`, `depots` `[{id, oslist}]` |
+| `ownsApp` | `appID` | `owned`: whether one of the account's licenses grants the app |
 
 Error codes: `invalidRequest`, `unknownMethod`, `notLoggedOn`, `tokenRejected` (sign in again),
 `wrongPassword`, `cancelled`, `network`, `steam`, `internal`.

@@ -20,6 +20,15 @@ struct SteamSignInView: View {
             case .signingIn(let step):
                 signingIn(step)
             }
+            if account.isSignedIn, account.ownsWallpaperEngine == false {
+                Label {
+                    Text("This Steam account can't download Wallpaper Engine items.")
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                }
+                .foregroundStyle(.orange)
+                .font(.callout)
+            }
             if let error = account.errorMessage {
                 Label(error, systemImage: "exclamationmark.triangle.fill")
                     .foregroundStyle(.red)

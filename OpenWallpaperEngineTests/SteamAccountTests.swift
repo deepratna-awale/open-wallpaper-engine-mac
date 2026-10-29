@@ -74,7 +74,23 @@ final class SteamAccountTests: XCTestCase {
         await account.restore()
         XCTAssertEqual(account.status, .signedIn(accountName: Fake.login.accountName))
         XCTAssertEqual(account.login, Fake.login, "downloads use it")
-        XCTAssertEqual(fake.methods, ["logOn"])
+        XCTAssertEqual(fake.methods, ["logOn", "ownsApp"])
+    }
+
+    func testRestoreAsksWhetherTheAccountOwnsWallpaperEngine() async throws {
+        try store.save(Fake.login)
+        let (account, fake) = makeAccount { request in
+            switch request.method {
+            case "ownsApp": [Fake.result(request, #"{"owned":false}"#)]
+            default: [Fake.result(request)]
+            }
+        }
+        await account.restore()
+        XCTAssertEqual(account.ownsWallpaperEngine, false)
+        XCTAssertEqual(fake.requests.last?.param("appID") as? Int, 431960)
+        account.signOut()
+        try await waitFor("logged out") { account.status == .signedOut }
+        XCTAssertNil(account.ownsWallpaperEngine)
     }
 
     func testRestoreForgetsALoginSteamRejects() async throws {
@@ -93,6 +109,7 @@ final class SteamAccountTests: XCTestCase {
         let (account, _) = makeAccount { request in
             switch request.method {
             case "logOn": [Fake.result(request, #"{"steamID":"76561190000000001"}"#)]
+            case "ownsApp": [Fake.result(request, #"{"owned":true}"#)]
             default: [Fake.error(request, code: "tokenRejected", eresult: 5)]
             }
         }
