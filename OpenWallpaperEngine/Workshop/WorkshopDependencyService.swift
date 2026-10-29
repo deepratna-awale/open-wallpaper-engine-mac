@@ -5,7 +5,7 @@
 //  Downloads the Workshop items a wallpaper borrows assets from. When a wallpaper is shown (or a
 //  Workshop item finishes downloading) its references are scanned off the main thread; every
 //  missing id is checked on Steam first (GetPublishedFileDetails) and the ones that still exist
-//  are fetched through steamcmd; each download is scanned in turn, so dependencies of dependencies
+//  are fetched through the Steam login; each download is scanned in turn, so dependencies of dependencies
 //  arrive too. Each id is requested once per session. Items that were removed, made private,
 //  banned or belong to another app are remembered (`UnavailableWorkshopItemStore`) and skipped;
 //  the wallpaper plays without them, as their assets resolve as missing. When a wallpaper's last
@@ -27,7 +27,7 @@ final class WorkshopDependencyService: ObservableObject {
         case downloading
         case installed
         case failed
-        /// steamcmd isn't set up or logged in, so the item can't be fetched automatically.
+        /// Steam isn't logged in, so the item can't be fetched automatically.
         case unavailable
         /// Nobody can download the item: removed, private, banned or from another app.
         case itemUnavailable(WorkshopItemAvailability.Reason)
@@ -41,7 +41,7 @@ final class WorkshopDependencyService: ObservableObject {
     /// Wallpaper folder → the dependency ids it still waits for.
     @Published private(set) var pending: [URL: Set<String>] = [:]
 
-    private let steamCmd: SteamCmdService
+    private let workshopDownloads: WorkshopDownloadService
     private let makeResolver: @Sendable () -> WorkshopAssetResolver
     private let store: UnavailableWorkshopItemStore
     private let checkAvailability: AvailabilityCheck
@@ -51,24 +51,24 @@ final class WorkshopDependencyService: ObservableObject {
     private var reloadDue = Set<URL>()
     private var cancellables = Set<AnyCancellable>()
 
-    init(steamCmd: SteamCmdService,
+    init(workshopDownloads: WorkshopDownloadService,
          makeResolver: @escaping @Sendable () -> WorkshopAssetResolver = { WorkshopAssetResolver(roots: WorkshopAssetResolver.defaultRoots()) },
          store: UnavailableWorkshopItemStore = UnavailableWorkshopItemStore(),
          checkAvailability: @escaping AvailabilityCheck = { try await WorkshopAPIService().availability(of: $0) }) {
-        self.steamCmd = steamCmd
+        self.workshopDownloads = workshopDownloads
         self.makeResolver = makeResolver
         self.store = store
         self.checkAvailability = checkAvailability
         // Any item that reaches the storage folder (from the Workshop tab too) may itself need dependencies.
-        steamCmd.itemInstalled.sink { [weak self] directory in
+        workshopDownloads.itemInstalled.sink { [weak self] directory in
             Task { @MainActor [weak self] in self?.ensureDependencies(ofItemAt: directory) }
         }.store(in: &cancellables)
-        // steamcmd's `File Not Found`, for downloads started here or from the dependency list.
-        steamCmd.itemUnavailable.sink { [weak self] id in
+        // The download's "removed or private", for downloads started here or from the dependency list.
+        workshopDownloads.itemUnavailable.sink { [weak self] id in
             Task { @MainActor [weak self] in self?.markUnavailable(id, reason: .removedOrPrivate) }
         }.store(in: &cancellables)
         // Wallpapers that were waiting on a login get another try once there is one.
-        steamCmd.$isLoggedIn.removeDuplicates().filter { $0 }.sink { [weak self] _ in
+        workshopDownloads.$isLoggedIn.removeDuplicates().filter { $0 }.sink { [weak self] _ in
             Task { @MainActor [weak self] in self?.retryUnavailable() }
         }.store(in: &cancellables)
     }
@@ -140,7 +140,7 @@ final class WorkshopDependencyService: ObservableObject {
     }
 
     /// Checks the ids not requested yet on Steam, then downloads the ones that still exist. When
-    /// Steam can't be reached every id is downloaded, and steamcmd has the last word.
+    /// Steam can't be reached every id is downloaded, and the download has the last word.
     private func fetch(_ ids: Set<String>) {
         let new = ids.filter { requested.insert($0).inserted }.sorted()
         guard !new.isEmpty else { return }
@@ -168,14 +168,14 @@ final class WorkshopDependencyService: ObservableObject {
     }
 
     private func download(_ id: String) {
-        guard steamCmd.isInstalled, steamCmd.isLoggedIn else {
-            OWELog.error(.workshop, "Workshop dependency \(id) is missing; log in to steamcmd on the Workshop tab to download it")
+        guard workshopDownloads.isLoggedIn else {
+            OWELog.error(.workshop, "Workshop dependency \(id) is missing; log in to Steam to download it")
             states[id] = .unavailable
             requested.remove(id)
             return
         }
         states[id] = .downloading
-        steamCmd.downloadWorkshopItem(workshopId: id, asDependency: true) { [weak self] destination in
+        workshopDownloads.downloadWorkshopItem(workshopId: id, asDependency: true) { [weak self] destination in
             Task { @MainActor [weak self] in
                 self?.finishDownload(id, destination: destination)
             }
@@ -192,7 +192,7 @@ final class WorkshopDependencyService: ObservableObject {
 
     private func finishDownload(_ id: String, destination: URL?) {
         guard let destination else {
-            // steamcmd's `File Not Found` arrives through `itemUnavailable`.
+            // A removed or private item arrives through `itemUnavailable`.
             if case .itemUnavailable = states[id] { return }
             OWELog.error(.workshop, "Workshop dependency \(id) failed to download")
             states[id] = .failed

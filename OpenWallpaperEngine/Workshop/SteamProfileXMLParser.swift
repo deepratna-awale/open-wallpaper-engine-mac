@@ -1,7 +1,7 @@
 import Foundation
 
 /// Reads a player's persona name and avatar from `steamcommunity.com/profiles/<id>?xml=1`,
-/// the keyless source for author names when no Steam Web API key is set.
+/// the keyless source for author names.
 ///
 /// Private profiles still list the name and avatar. A missing profile answers with
 /// `<response><error>…</error></response>`, which parses to `nil`.

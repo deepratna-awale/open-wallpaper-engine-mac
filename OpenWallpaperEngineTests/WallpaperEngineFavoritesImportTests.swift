@@ -7,20 +7,14 @@ import XCTest
 final class WallpaperEngineFavoritesImportTests: XCTestCase {
     private var suiteName: String!
     private var defaults: UserDefaults!
-    private var scratch: URL!
 
     override func setUp() async throws {
         suiteName = "app.openwallpaperengine.isolated.tests.we-favorites-\(UUID().uuidString)"
         defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
-        scratch = FileManager.default.temporaryDirectory
-            .appending(path: "owe-we-favorites-\(UUID().uuidString)", directoryHint: .isDirectory)
     }
 
     override func tearDown() async throws {
         defaults.removePersistentDomain(forName: suiteName)
-        if FileManager.default.fileExists(atPath: scratch.path) {
-            try FileManager.default.removeItem(at: scratch)
-        }
     }
 
     private func favoritesFixture() throws -> Data {
@@ -60,22 +54,18 @@ final class WallpaperEngineFavoritesImportTests: XCTestCase {
 
     // MARK: Asking
 
-    private func model(store: FavoritesStore, hasKey: Bool = true, steamID: String? = "76561190000000001",
+    private func model(store: FavoritesStore, steamID: String? = "76561190000000001",
                        answer: @escaping () throws -> WorkshopSubscriptions.Outcome) -> WallpaperEngineFavoritesImportModel {
-        WallpaperEngineFavoritesImportModel(store: store, fetch: { _ in try answer() },
-                                            findSteamID: { steamID }, hasAPIKey: { hasKey })
+        WallpaperEngineFavoritesImportModel(store: store, fetch: { _ in try answer() }, loginSteamID: { steamID })
     }
 
-    func testNoSourceWithoutAKeyOrAnAccount() async {
-        let store = FavoritesStore(defaults: defaults)
+    func testNoSourceWithoutTheSteamLogin() async {
         var asked = false
-        for import_ in [model(store: store, hasKey: false) { asked = true; return .items(["5"]) },
-                        model(store: store, steamID: nil) { asked = true; return .items(["5"]) }] {
-            XCTAssertFalse(import_.isSourceAvailable)
-            await import_.check()
-            XCTAssertEqual(import_.phase, .idle)
-            XCTAssertFalse(import_.isAsking)
-        }
+        let import_ = model(store: FavoritesStore(defaults: defaults), steamID: nil) { asked = true; return .items(["5"]) }
+        XCTAssertFalse(import_.isSourceAvailable)
+        await import_.check()
+        XCTAssertEqual(import_.phase, .idle)
+        XCTAssertFalse(import_.isAsking)
         XCTAssertFalse(asked, "Steam isn't asked without a source")
     }
 
@@ -124,48 +114,5 @@ final class WallpaperEngineFavoritesImportTests: XCTestCase {
         await import_.check()
         guard case .failed = import_.phase else { return XCTFail("expected a failure, got \(import_.phase)") }
         XCTAssertFalse(import_.isAsking)
-    }
-
-    // MARK: Which account
-
-    private func writeLoginUsers(_ text: String, steamRoot: URL) throws {
-        try FileManager.default.createDirectory(at: steamRoot.appending(path: "config"), withIntermediateDirectories: true)
-        try Data(text.utf8).write(to: steamRoot.appending(path: "config/loginusers.vdf"))
-    }
-
-    /// A chosen install inside a Steam folder (here a CrossOver-style bottle) gives the account
-    /// Steam last logged in with there; the SteamCMD account wins when it is listed.
-    func testTheAccountComesFromSteamCmdOrTheChosenInstallsSteamFolder() throws {
-        let steam = scratch.appending(path: "drive_c/Program Files (x86)/Steam", directoryHint: .isDirectory)
-        let install = steam.appending(path: "steamapps/common/wallpaper_engine", directoryHint: .isDirectory)
-        try FileManager.default.createDirectory(at: install.appending(path: "assets"), withIntermediateDirectories: true)
-        try writeLoginUsers("""
-        "users"
-        {
-            "76561190000000004" { "AccountName" "older" "MostRecent" "0" }
-            "76561190000000005" { "AccountName" "Player" "MostRecent" "1" }
-        }
-        """, steamRoot: steam)
-        let home = scratch.appending(path: "home", directoryHint: .isDirectory)
-
-        XCTAssertEqual(WorkshopSubscriptions.steamRoot(containing: install.appending(path: "assets"))?.standardizedFileURL.path,
-                       steam.standardizedFileURL.path)
-        XCTAssertNil(WorkshopSubscriptions.steamRoot(containing: scratch))
-        XCTAssertEqual(WallpaperEngineFavorites.steamID(steamCmdAccount: nil, steamCmdPath: nil,
-                                                        chosenFolder: install.path, home: home), "76561190000000005")
-        XCTAssertEqual(WallpaperEngineFavorites.steamID(steamCmdAccount: "older", steamCmdPath: nil,
-                                                        chosenFolder: install.appending(path: "assets").path, home: home),
-                       "76561190000000004")
-        XCTAssertNil(WallpaperEngineFavorites.steamID(steamCmdAccount: nil, steamCmdPath: nil, chosenFolder: nil, home: home),
-                     "a SteamCMD download alone names no account until SteamCMD is logged in")
-    }
-
-    func testTheOnlyListedUserCountsAsTheMostRecent() throws {
-        let steam = scratch.appending(path: "Steam", directoryHint: .isDirectory)
-        try writeLoginUsers(#""users" { "76561190000000006" { "AccountName" "solo" } }"#, steamRoot: steam)
-        XCTAssertEqual(WorkshopSubscriptions.mostRecentSteamID64(steamRoots: [steam]), "76561190000000006")
-        try writeLoginUsers(#""users" { "76561190000000006" { "AccountName" "a" } "76561190000000007" { "AccountName" "b" } }"#,
-                            steamRoot: steam)
-        XCTAssertNil(WorkshopSubscriptions.mostRecentSteamID64(steamRoots: [steam]), "two accounts and no MostRecent: no guess")
     }
 }

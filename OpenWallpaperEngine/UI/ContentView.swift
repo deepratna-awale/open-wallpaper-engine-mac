@@ -32,7 +32,7 @@ struct ContentView: View {
     private var hasSidebar: Bool {
         switch tab {
         case 0, 3: return true
-        case 1: return viewModel.steamCmd.isInstalled && viewModel.steamCmd.isLoggedIn
+        case 1: return viewModel.workshopDownloads.isLoggedIn
         default: return false
         }
     }
@@ -144,8 +144,8 @@ struct ContentView: View {
 
         }
         .sheet(isPresented: onboardingPresented, onDismiss: openOnboardingShortcut) {
-            OnboardingView(steamCmd: viewModel.steamCmd,
-                           installer: AppDelegate.shared.steamCmdInstaller,
+            OnboardingView(workshopDownloads: viewModel.workshopDownloads,
+                           steamAccount: viewModel.steamAccount,
                            assets: AppDelegate.shared.assets,
                            imports: AppDelegate.shared.onboardingImports,
                            onShortcut: { onboardingShortcut = $0 })
@@ -261,7 +261,7 @@ struct ContentView: View {
     @ViewBuilder private var sidebarContent: some View {
         if viewModel.navigation.isStaging {
             keptAlive(FilterResults(viewModel: viewModel.filters), isShown: tab == 0)
-            if viewModel.steamCmd.isInstalled && viewModel.steamCmd.isLoggedIn {
+            if viewModel.workshopDownloads.isLoggedIn {
                 keptAlive(WorkshopFiltersSidebar(viewModel: viewModel.workshopVM), isShown: tab == 1)
             }
             keptAlive(PlaylistSidebar(wallpaperViewModel: wallpaperViewModel), isShown: tab == 3)
@@ -302,7 +302,7 @@ struct ContentView: View {
         case 1:
             WorkshopView(contentViewModel: viewModel)
         case 2:
-            DownloadsView(steamCmd: viewModel.steamCmd, wallpaperViewModel: wallpaperViewModel)
+            DownloadsView(workshopDownloads: viewModel.workshopDownloads, wallpaperViewModel: wallpaperViewModel)
                 .toolbar { WindowActionsToolbar(viewModel: viewModel) }
         case 3:
             PlaylistView(wallpaperViewModel: wallpaperViewModel, showInInstalled: showInInstalled)

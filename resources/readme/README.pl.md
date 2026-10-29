@@ -29,7 +29,7 @@ Open Wallpaper Engine to darmowa aplikacja open source dla macOS, która odtwarz
 ## Najważniejsze funkcje
 
 - **Tapety typu scena, wideo i internetowe**: sceny z efektami, cząsteczkami, modelami 3D, światłami, osiami czasu, SceneScript i wizualizacjami reagującymi na dźwięk oraz wyjście HDR dla scen i filmów HDR10 lub HLG na wyświetlaczach, które potrafią je pokazać. Tapety internetowe działają w WebKit lub w opcjonalnym silniku Chromium, z właściwościami swojego folderu, dźwiękiem na żywo i funkcją Teraz odtwarzane.
-- **Warsztat Steam**: przeglądaj z sortowaniem i filtrami Wallpaper Engine, pobieraj przez SteamCMD z własnego konta Steam albo importuj foldery i pliki zip z tapetami. Karta Zainstalowane ma foldery i sortowanie Wallpaper Engine.
+- **Warsztat Steam**: przeglądaj z sortowaniem i filtrami Wallpaper Engine, pobieraj z własnego konta Steam (logowanie kodem QR z aplikacji mobilnej Steam lub hasłem) albo importuj foldery i pliki zip z tapetami. Karta Zainstalowane ma foldery i sortowanie Wallpaper Engine.
 - **Edytor tapet**: edytor wzorowany na edytorze Wallpaper Engine. Dodawaj i rozmieszczaj warstwy za pomocą uchwytów, dodawaj efekty z podglądem, pisz i edytuj własne efekty w Edytorze shaderów, importuj modele FBX i OBJ, animuj na osi czasu, pisz SceneScript, twórz właściwości użytkownika, edytuj systemy cząsteczek i szkielety Puppet Warp oraz korzystaj z narzędzi do obrazów Wallpaper Engine (Oddzielenie pierwszego planu, Stworzenie karty postaci, Generowanie mapy normalnych). **Nowa tapeta…** tworzy tapetę z obrazu lub z jednego z szablonów Wallpaper Engine. Edytujesz wersję roboczą: **Zachowaj** ją stosuje, **Zachowaj jako nową tapetę** dodaje kopię do biblioteki, a własne pliki tapety nigdy nie są zmieniane.
 
   <!-- demo: wallpaper-editor -->
@@ -92,7 +92,7 @@ Potrzebujesz **macOS 14.0 (Sonoma) lub nowszego**. Tapety typu scena wymagają z
 
 ## Szybki start
 
-1. Otwórz aplikację. Asystent konfiguracji ustawia język, SteamCMD, logowanie do Steam i zasoby Wallpaper Engine, a także może zaimportować Twoje ulubione i foldery z Wallpaper Engine; każdy krok można pominąć.
+1. Otwórz aplikację. Asystent konfiguracji ustawia język, logowanie do Steam i zasoby Wallpaper Engine, a także może zaimportować Twoje ulubione i foldery z Wallpaper Engine; każdy krok można pominąć.
 2. Zainstaluj zasoby Wallpaper Engine (*Ustawienia › Zasoby*), jeśli chcesz korzystać z tapet typu scena. Pochodzą one z Twojej własnej kopii Wallpaper Engine w Steam; tapety wideo i internetowe działają bez nich.
 3. Znajdź tapety na kartach **Odkryj** i **Warsztat**, zaimportuj folder lub plik zip z tapetą (*Plik › Importuj tapetę z folderu…*, ⌘I) albo utwórz tapetę za pomocą **Dodaj tapetę › Nowa tapeta…**.
 4. Kliknij tapetę w bibliotece, a następnie **Ustaw tapetę** w jej szczegółach (albo kliknij ją prawym przyciskiem i wybierz **Ustaw jako tapetę**). Jej właściwości są wymienione poniżej.

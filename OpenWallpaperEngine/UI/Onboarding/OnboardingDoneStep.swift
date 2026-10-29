@@ -5,7 +5,7 @@ import SwiftUI
 /// What was set up, a way back to any skipped step, and shortcuts into the app.
 struct OnboardingDoneStep: View {
     @ObservedObject var flow: OnboardingFlow
-    @ObservedObject var steamCmd: SteamCmdService
+    @ObservedObject var workshopDownloads: WorkshopDownloadService
     @ObservedObject var assets: WallpaperEngineAssetsService
     @ObservedObject var imports: OnboardingImports
     let language: GSLocalization
@@ -26,10 +26,8 @@ struct OnboardingDoneStep: View {
                 }
                 Divider()
                 row(.steam, title: OnboardingView.title(of: .steam), systemImage: "person.badge.key") {
-                    if steamCmd.isLoggedIn {
-                        Text("Logged in as \(steamCmd.steamUsername)", comment: "%@ is a Steam account name")
-                    } else if steamCmd.steamCmdPath != nil {
-                        Text("SteamCMD is ready; not logged in")
+                    if workshopDownloads.isLoggedIn {
+                        Text("Logged in as \(workshopDownloads.steamUsername)", comment: "%@ is a Steam account name")
                     } else {
                         Text("Not set up")
                     }

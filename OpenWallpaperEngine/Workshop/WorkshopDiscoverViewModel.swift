@@ -33,8 +33,8 @@ final class WorkshopDiscoverViewModel: ObservableObject {
     @Published private(set) var rows: [String: Row] = [:]
     /// The list "See More" opened, shown as a grid; nil shows the home.
     @Published var openSection: WorkshopDiscoverSection?
-    /// Discover's queries need the Web API key the Workshop tab asks for.
-    @Published private(set) var needsAPIKey = false
+    /// Discover's queries need the Steam login.
+    @Published private(set) var needsLogin = false
 
     private let fetch: PageFetch
     private let blockList: WorkshopBlockList
@@ -44,9 +44,9 @@ final class WorkshopDiscoverViewModel: ObservableObject {
 
     init(sections: [WorkshopDiscoverSection] = WorkshopDiscover.home,
          blockList: WorkshopBlockList = WorkshopBlockList(),
-         fetch: PageFetch? = nil) {
+         fetch: PageFetch? = nil, steam: SteamHelperClient? = nil) {
         self.sections = sections
-        let service = WorkshopAPIService()
+        let service = WorkshopAPIService(steam: steam)
         self.fetch = fetch ?? { section, page, perPage in
             try await service.discoverItems(section, page: page, perPage: perPage)
         }
@@ -101,22 +101,21 @@ final class WorkshopDiscoverViewModel: ObservableObject {
                 if added.isEmpty { emptyPages += 1 }
             }
             current.items += added
-            needsAPIKey = false
+            needsLogin = false
         } catch {
             guard started == generation else { return }
-            if case WorkshopAPIError.noAPIKey = error { needsAPIKey = true }
-            if case WorkshopAPIError.invalidAPIKey = error { needsAPIKey = true }
+            if case WorkshopAPIError.notLoggedIn = error { needsLogin = true }
             current.error = error.localizedDescription
         }
         current.isLoading = false
         rows[section.id] = current
     }
 
-    /// Forgets every list, so they load again (a new API key, or the block list changed).
+    /// Forgets every list, so they load again (a new login, or the block list changed).
     func reload() {
         generation += 1
         rows = [:]
-        needsAPIKey = false
+        needsLogin = false
     }
 
     /// Takes hidden items out of the loaded lists without reloading them.

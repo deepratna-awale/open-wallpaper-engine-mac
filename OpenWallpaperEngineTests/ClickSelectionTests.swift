@@ -77,10 +77,10 @@ final class ClickSelectionTests: XCTestCase {
         let root = FileManager.default.temporaryDirectory.appending(path: "owe-click-\(UUID().uuidString)", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         addTeardownBlock { try? FileManager.default.removeItem(at: root) } // cleanup of a temp folder; nothing to report
-        let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { root }),
+        let workshopDownloads = WorkshopDownloadService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { root }),
                                        storageDirectory: { root }, previewCacheRoot: root,
-                                       presentPreview: { _ in }, restoresSession: false)
-        return WorkshopViewModel(steamCmd: steamCmd, searchPage: { _, _, _, _, _ in [] })
+                                       presentPreview: { _ in })
+        return WorkshopViewModel(workshopDownloads: workshopDownloads, searchPage: { _, _, _, _, _ in [] })
     }
 
     private static func item(_ number: Int) -> WorkshopItem {

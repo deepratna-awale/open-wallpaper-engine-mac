@@ -73,6 +73,7 @@ final class SteamAccountTests: XCTestCase {
         let (account, fake) = makeAccount { [Fake.result($0)] }
         await account.restore()
         XCTAssertEqual(account.status, .signedIn(accountName: Fake.login.accountName))
+        XCTAssertEqual(account.login, Fake.login, "downloads use it")
         XCTAssertEqual(fake.methods, ["logOn"])
     }
 
@@ -82,6 +83,7 @@ final class SteamAccountTests: XCTestCase {
         await account.restore()
         XCTAssertEqual(account.status, .signedOut)
         XCTAssertNil(store.load())
+        XCTAssertNil(account.login)
         XCTAssertEqual(account.errorMessage, SteamHelperError(code: .tokenRejected, message: "").errorDescription)
     }
 
@@ -107,6 +109,7 @@ final class SteamAccountTests: XCTestCase {
         account.signOut()
         try await waitFor("logged out") { account.status == .signedOut }
         XCTAssertNil(store.load())
+        XCTAssertNil(account.login)
         try await waitFor("the helper's logOff") { fake.methods.contains("logOff") }
     }
 }

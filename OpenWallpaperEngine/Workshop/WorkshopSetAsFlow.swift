@@ -26,7 +26,7 @@ final class WorkshopSetAsFlow: ObservableObject {
         var isInstalled: @MainActor (_ workshopId: String) -> Bool
         /// The installed wallpaper of the item, if any.
         var installedWallpaper: @MainActor (_ workshopId: String) -> WEWallpaper?
-        /// Whether a download can start (steamcmd is there and logged in).
+        /// Whether a download can start (Steam is logged in).
         var canDownload: @MainActor () -> Bool
         /// Downloads the item as Download does; the completion gets its folder, or nil when it failed.
         var download: @MainActor (WorkshopItem, _ completion: @escaping @MainActor @Sendable (URL?) -> Void) -> Void
@@ -73,7 +73,7 @@ final class WorkshopSetAsFlow: ObservableObject {
         let id = item.id
         environment.download(item) { [weak self] folder in
             guard let self else { return }
-            // A failed download shows its own error (`SteamCmdService.downloadProgress`).
+            // A failed download shows its own error (`WorkshopDownloadService.downloadProgress`).
             guard let folder else {
                 self.phases[id] = nil
                 return
@@ -117,7 +117,7 @@ final class WorkshopSetAsFlow: ObservableObject {
     }
 
     /// What the item's card shows over its download's state: setting the screen saver, or why the run failed.
-    func downloadState(for workshopId: String) -> SteamCmdService.DownloadState? {
+    func downloadState(for workshopId: String) -> WorkshopDownloadService.DownloadState? {
         switch phases[workshopId] {
         case .settingScreenSaver?:
             return .downloading(status: String(localized: "Setting the screen saver…",

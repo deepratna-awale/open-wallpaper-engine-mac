@@ -4,7 +4,6 @@ import SystemConfiguration
 /// The user's Steam sign-in: a QR code scanned with the Steam mobile app, or an account name and
 /// password with a Steam Guard code. The sign-in is kept in the keychain (`SteamLoginStore`) and
 /// used for everything the app does on Steam, through the Steam helper (`SteamHelperClient`).
-/// No Web API key and no SteamCMD login are involved.
 @MainActor
 final class SteamAccount: ObservableObject {
     enum Status: Equatable {
@@ -26,6 +25,9 @@ final class SteamAccount: ObservableObject {
     @Published private(set) var status: Status = .signedOut
     /// Why the last sign-in or logon failed, for the user.
     @Published private(set) var errorMessage: String?
+    /// The sign-in requests use, from launch or a sign-in until it is forgotten; Workshop downloads
+    /// use it too (`WorkshopDownloadService.useSteamLogin`).
+    @Published private(set) var login: SteamLogin?
 
     let client: SteamHelperClient
     private let store: SteamLoginStore
@@ -62,7 +64,7 @@ final class SteamAccount: ObservableObject {
     func restore() async {
         guard let login = store.load() else { return }
         status = .restoring(accountName: login.accountName)
-        await client.use(login)
+        await adopt(login)
         do {
             try await client.ensureLoggedOn()
             status = .signedIn(accountName: login.accountName)
@@ -123,7 +125,7 @@ final class SteamAccount: ObservableObject {
                     await self?.show(event)
                 }
                 try store.save(login)
-                await client.use(login)
+                await adopt(login)
                 status = .signedIn(accountName: login.accountName)
                 OWELog.info(.workshop, "Signed in to Steam as \(login.accountName)")
                 try await client.ensureLoggedOn()
@@ -151,8 +153,25 @@ final class SteamAccount: ObservableObject {
         }
     }
 
+    /// Has the client log on with `login`, and forget it when Steam stops accepting it.
+    private func adopt(_ login: SteamLogin) async {
+        await client.setLoginRejectedHandler { [weak self] in
+            await self?.loginRejected()
+        }
+        await client.use(login)
+        self.login = login
+    }
+
+    /// Steam no longer accepts the login: it is forgotten, and the user is asked to log in again.
+    func loginRejected() async {
+        guard isSignedIn else { return }
+        OWELog.info(.workshop, "Steam no longer accepts the saved login")
+        await forget(SteamHelperError(code: .tokenRejected, message: "The saved login was rejected."))
+    }
+
     /// Removes the saved sign-in; `reason` is shown when Steam ended it.
     private func forget(_ reason: SteamHelperError?) async {
+        login = nil
         await client.use(nil)
         do {
             try store.remove()

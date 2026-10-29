@@ -2,7 +2,7 @@ import Foundation
 
 /// The copy of the Wallpaper Engine assets the app keeps in the Wallpaper Storage folder
 /// (`<storage>/.owe-assets`), taken from a Wallpaper Engine install: the user's Steam copy
-/// downloaded with SteamCMD, or an install folder on disk.
+/// downloaded through the Steam login, or an install folder on disk.
 ///
 /// Only what wallpapers and the Wallpaper Editor use is kept: the effect manifests (without editor
 /// preview projects), the GLSL shaders and shared headers (without Direct3D or editor shaders),

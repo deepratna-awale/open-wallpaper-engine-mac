@@ -1,13 +1,13 @@
 #if DEBUG
 import Foundation
 
-extension SteamCmdService {
+extension WorkshopDownloadService {
     /// The launch argument that fills the Downloads tab with sample rows, for screenshots of an
-    /// isolated development copy (`OWE_ISOLATED_STATE`) without running steamcmd. Debug builds only.
+    /// isolated development copy (`OWE_ISOLATED_STATE`) without downloading anything. Debug builds only.
     static let screenshotFixtureArgument = "-OWEDownloadsScreenshotFixture"
 
     /// One row per state, made from the wallpapers already in the Wallpaper Storage folder: one
-    /// running, two queued, one failed with a steamcmd error, the rest finished.
+    /// running, two queued, one failed with a download error, the rest finished.
     func loadScreenshotFixtureIfRequested(arguments: [String] = ProcessInfo.processInfo.arguments) {
         guard arguments.contains(Self.screenshotFixtureArgument), downloadProgress.isEmpty else { return }
         let folders: [URL]

@@ -97,7 +97,7 @@ struct WorkshopItemCard: View {
                 .foregroundStyle(.red)
                 .help(msg)
         case .none:
-            if viewModel.steamCmd.isLoggedIn {
+            if viewModel.workshopDownloads.isLoggedIn {
                 Button {
                     viewModel.download(item: item)
                 } label: {

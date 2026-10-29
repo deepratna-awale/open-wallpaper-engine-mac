@@ -43,6 +43,8 @@ actor SteamHelperClient {
     /// Whether the running helper is logged on with `login`.
     private var isLoggedOn = false
     private var logOnTask: Task<Void, any Error>?
+    /// Told when Steam no longer accepts the login (`tokenRejected`), so it can be forgotten.
+    private var onLoginRejected: (@Sendable () async -> Void)?
 
     init(makeTransport: @escaping TransportFactory) {
         self.makeTransport = makeTransport
@@ -101,6 +103,13 @@ actor SteamHelperClient {
         }
     }
 
+    /// Whether requests have a login to log on with (`use(_:)`).
+    var hasLogin: Bool { login != nil }
+
+    func setLoginRejectedHandler(_ handler: @escaping @Sendable () async -> Void) {
+        onLoginRejected = handler
+    }
+
     /// Logs on with the sign-in from `use(_:)` unless the running helper already is.
     /// `tokenRejected` means the user must sign in again.
     func ensureLoggedOn() async throws {
@@ -114,7 +123,12 @@ actor SteamHelperClient {
         }
         logOnTask = task
         defer { if self.login == login { logOnTask = nil } }
-        try await task.value
+        do {
+            try await task.value
+        } catch let error as SteamHelperError where error.needsNewSignIn {
+            if self.login == login { await onLoginRejected?() }
+            throw error
+        }
         if self.login == login { isLoggedOn = true }
     }
 
@@ -123,6 +137,19 @@ actor SteamHelperClient {
         _ method: String, body: Body, as type: Response.Type) async throws -> Response {
         try await ensureLoggedOn()
         return try await request("call", CallParams(method: method, body: body), as: Response.self)
+    }
+
+    /// A Steam service method with the Web API's parameters for it, answered as the Web API
+    /// answers it: `{"response": …}`, so the app reads both the same way.
+    func webAPIResponse(_ method: String, parameters: [URLQueryItem]) async throws -> Data {
+        try await ensureLoggedOn()
+        let line = try await requestLine("call", CallParams(method: method, body: SteamServiceBody(parameters)))
+        do {
+            let message = try JSONSerialization.jsonObject(with: line) as? [String: Any]
+            return try JSONSerialization.data(withJSONObject: ["response": message?["result"] ?? [String: Any]()])
+        } catch {
+            throw SteamHelperError(code: .badResponse, message: "\(method): \(error)")
+        }
     }
 
     func appInfo(appID: UInt32) async throws -> SteamAppInfo {
@@ -177,12 +204,24 @@ actor SteamHelperClient {
     private func request<Params: Encodable, Value: Decodable>(
         _ method: String, _ params: Params, as type: Value.Type,
         onEvent: (@Sendable (SteamSignInEvent) async -> Void)? = nil) async throws -> Value {
+        let response = try await requestLine(method, params, onEvent: onEvent)
+        do {
+            return try JSONDecoder().decode(Success<Value>.self, from: response).result
+        } catch {
+            throw SteamHelperError(code: .badResponse, message: "\(method): \(error)")
+        }
+    }
+
+    /// Sends one request and waits for its answer: the response's whole line.
+    private func requestLine<Params: Encodable>(
+        _ method: String, _ params: Params,
+        onEvent: (@Sendable (SteamSignInEvent) async -> Void)? = nil) async throws -> Data {
         try Task.checkCancellation()
         let transport = try startIfNeeded()
         nextID += 1
         let id = nextID
         let line = try JSONEncoder().encode(Outgoing(id: id, method: method, params: params))
-        let response = try await withTaskCancellationHandler {
+        return try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { continuation in
                 pending[id] = Pending(continuation: continuation, onEvent: onEvent)
                 do {
@@ -194,11 +233,6 @@ actor SteamHelperClient {
             }
         } onCancel: {
             Task { await self.cancel(id) }
-        }
-        do {
-            return try JSONDecoder().decode(Success<Value>.self, from: response).result
-        } catch {
-            throw SteamHelperError(code: .badResponse, message: "\(method): \(error)")
         }
     }
 

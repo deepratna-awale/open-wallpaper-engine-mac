@@ -1,14 +1,15 @@
 import Foundation
 
-/// Fetches Valve's SteamCMD package; tests stand in a fake that writes a local archive.
-protocol SteamCmdPackageDownloading: Sendable {
+/// Fetches a package the app installs (the Chromium engine, depth-map plugins); tests stand in a
+/// fake that writes a local archive.
+protocol PackageDownloading: Sendable {
     /// Downloads `url` to `destination`, reporting the fraction done (nil while the size is
     /// unknown). Throws `CancellationError` when the calling task is cancelled.
     func download(_ url: URL, to destination: URL, progress: @escaping @Sendable (Double?) -> Void) async throws
 }
 
 /// Downloads over HTTPS with URLSession; nothing else is accepted.
-struct URLSessionSteamCmdDownloader: SteamCmdPackageDownloading {
+struct URLSessionPackageDownloader: PackageDownloading {
     enum Failure: LocalizedError {
         case insecureURL
         case httpStatus(Int)
@@ -16,10 +17,10 @@ struct URLSessionSteamCmdDownloader: SteamCmdPackageDownloading {
         var errorDescription: String? {
             switch self {
             case .insecureURL:
-                return String(localized: "SteamCMD is only downloaded over HTTPS.", comment: "SteamCMD install error")
+                return String(localized: "Only HTTPS downloads are allowed.", comment: "Package download error")
             case .httpStatus(let code):
-                return String(localized: "Valve's server answered with HTTP status \(code).",
-                              comment: "SteamCMD install error; %lld is an HTTP status code")
+                return String(localized: "The download server answered with HTTP status \(code).",
+                              comment: "Package download error; %lld is an HTTP status code")
             }
         }
     }
@@ -76,7 +77,7 @@ private final class DownloadDelegate: NSObject, URLSessionDownloadDelegate, @unc
         // The temporary file is deleted when this returns, so it moves now.
         do {
             if let response = downloadTask.response as? HTTPURLResponse, !(200..<300).contains(response.statusCode) {
-                throw URLSessionSteamCmdDownloader.Failure.httpStatus(response.statusCode)
+                throw URLSessionPackageDownloader.Failure.httpStatus(response.statusCode)
             }
             if FileManager.default.fileExists(atPath: destination.path) {
                 try FileManager.default.removeItem(at: destination)

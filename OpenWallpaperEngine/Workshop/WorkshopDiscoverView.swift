@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 /// The Discover tab: WE's curated Workshop lists (`WorkshopDiscover.home`), each a row of cards
@@ -46,7 +47,7 @@ struct WorkshopDiscoverView: View {
     private var home: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 20) {
-                if model.needsAPIKey { apiKeyNotice }
+                if model.needsLogin { loginNotice }
                 ForEach(model.visibleSections) { section in
                     sectionRow(section)
                 }
@@ -81,7 +82,7 @@ struct WorkshopDiscoverView: View {
                 }
             }
             .frame(height: cardSize)
-            if let error = row.error, !model.needsAPIKey {
+            if let error = row.error, !model.needsLogin {
                 errorRow(error, section: section)
             }
         }
@@ -96,7 +97,7 @@ struct WorkshopDiscoverView: View {
             VStack(alignment: .leading, spacing: 13) {
                 Text(section.title.text)
                     .font(.title2.bold())
-                if model.needsAPIKey { apiKeyNotice }
+                if model.needsLogin { loginNotice }
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: cardSize, maximum: cardSize), spacing: 13)],
                           alignment: .leading, spacing: 13) {
                     ForEach(row.items) { item in
@@ -107,7 +108,7 @@ struct WorkshopDiscoverView: View {
                 if row.isLoading {
                     ProgressView()
                         .frame(maxWidth: .infinity)
-                } else if let error = row.error, !model.needsAPIKey {
+                } else if let error = row.error, !model.needsLogin {
                     errorRow(error, section: section)
                 }
             }
@@ -138,14 +139,16 @@ struct WorkshopDiscoverView: View {
         .font(.callout)
     }
 
-    private var apiKeyNotice: some View {
+    private var loginNotice: some View {
         VStack(spacing: 8) {
-            Text("A Steam Web API key is required to browse.")
+            Text("Log in to Steam to browse and download Workshop wallpapers.")
                 .foregroundStyle(.secondary)
-            SteamWebAPIKeyView(onSaved: { model.reload() })
+            SteamSignInView(account: contentViewModel.steamAccount)
+                .frame(maxWidth: 420)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical)
+        .onReceive(contentViewModel.steamAccount.$login.dropFirst().filter { $0 != nil }) { _ in model.reload() }
     }
 }
 
