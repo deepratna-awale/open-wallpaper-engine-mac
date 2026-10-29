@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Xunit;
 
 /// The app tells a download's outcome from DepotDownloader's console text
@@ -9,10 +9,16 @@ using Xunit;
 /// changes one fails here instead of turning that outcome into a generic failure in the app.
 public class DownloadMessagesTests
 {
-    static string VendoredSources([CallerFilePath] string here = "")
+    /// The vendored sources, found from the test's build folder up (CI maps source paths to `/_/`).
+    static string VendoredSources()
     {
-        var folder = Path.Combine(Path.GetDirectoryName(here)!, "..", "..", "Vendor", "DepotDownloader", "DepotDownloader");
-        return string.Join("\n", Directory.GetFiles(folder, "*.cs").Select(File.ReadAllText));
+        for (var folder = new DirectoryInfo(AppContext.BaseDirectory); folder != null; folder = folder.Parent)
+        {
+            var sources = Path.Combine(folder.FullName, "Vendor", "DepotDownloader", "DepotDownloader");
+            if (Directory.Exists(sources))
+                return string.Join("\n", Directory.GetFiles(sources, "*.cs").Select(File.ReadAllText));
+        }
+        throw new DirectoryNotFoundException("No Vendor/DepotDownloader above " + AppContext.BaseDirectory);
     }
 
     [Theory]
