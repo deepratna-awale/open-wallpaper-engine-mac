@@ -45,8 +45,14 @@ actor SteamHelperClient {
     private var logOnTask: Task<Void, any Error>?
     /// Told when Steam no longer accepts the login (`tokenRejected`), so it can be forgotten.
     private var onLoginRejected: (@Sendable () async -> Void)?
+    /// Told the Wallpaper Engine item the account just subscribed to anywhere.
+    private var onWorkshopSubscribe: (@Sendable (String) async -> Void)?
+    /// Logs on again after Steam dropped the logon (`logOnAgain`).
+    private var logOnAgainTask: Task<Void, Never>?
+    private let firstLogOnRetry: Duration
 
-    init(makeTransport: @escaping TransportFactory) {
+    init(firstLogOnRetry: Duration = .seconds(5), makeTransport: @escaping TransportFactory) {
+        self.firstLogOnRetry = firstLogOnRetry
         self.makeTransport = makeTransport
     }
 
@@ -108,6 +114,12 @@ actor SteamHelperClient {
 
     func setLoginRejectedHandler(_ handler: @escaping @Sendable () async -> Void) {
         onLoginRejected = handler
+    }
+
+    /// `handler` gets each Wallpaper Engine item the account subscribes to while logged on: in
+    /// the Steam app, on the website or on the phone, as well as here.
+    func setWorkshopSubscribeHandler(_ handler: @escaping @Sendable (String) async -> Void) {
+        onWorkshopSubscribe = handler
     }
 
     /// Logs on with the sign-in from `use(_:)` unless the running helper already is.
@@ -181,7 +193,7 @@ actor SteamHelperClient {
     func ownsApp(appID: UInt32) async throws -> Bool {
         struct Params: Encodable { let appID: UInt32 }
         struct Owned: Decodable { let owned: Bool }
-        try await loggedOn { try await request("ownsApp", Params(appID: appID), as: Owned.self).owned }
+        return try await loggedOn { try await request("ownsApp", Params(appID: appID), as: Owned.self).owned }
     }
 
     /// Ends the helper; the next request starts it again.
@@ -221,6 +233,8 @@ actor SteamHelperClient {
         let kind: String?
         let previousCodeWasIncorrect: Bool?
         let eresult: Int?
+        let publishedfileid: String?
+        let appid: Int?
     }
 
     private struct Success<Value: Decodable>: Decodable {
@@ -326,11 +340,23 @@ actor SteamHelperClient {
         case "deviceConfirmationRequired":
             event = .deviceConfirmationRequired
         case "loggedOff":
-            // The helper logs on again by itself on the next request; a rejected token fails that request.
             OWELog.info(.workshop, "Steam logged the helper off (EResult \(message.eresult.map { String($0) } ?? "none"))")
+            logOnAgain()
             event = nil
         case "disconnected":
             OWELog.info(.workshop, "The Steam helper lost its connection to Steam")
+            logOnAgain()
+            event = nil
+        case "workshopItemSubscribed":
+            if let id = message.publishedfileid, message.appid == WorkshopAPIService.wallpaperEngineAppId {
+                OWELog.info(.workshop, "The Steam account subscribed to Workshop item \(id)")
+                // Not awaited: the helper's next lines wait for nothing the app does with it.
+                if let handler = onWorkshopSubscribe { Task { await handler(id) } }
+            }
+            event = nil
+        case "workshopItemUnsubscribed":
+            // As in Wallpaper Engine's absence: the installed item stays until the user deletes it.
+            if let id = message.publishedfileid { OWELog.info(.workshop, "The Steam account unsubscribed from Workshop item \(id)") }
             event = nil
         default:
             OWELog.debug(.workshop, "Steam helper event \(name)")
@@ -338,6 +364,37 @@ actor SteamHelperClient {
         }
         guard let event, let id = message.id, let onEvent = pending[id]?.onEvent else { return }
         await onEvent(event)
+    }
+
+    /// Steam only tells a logged-on helper about subscriptions, so after Steam drops the logon the
+    /// client logs on again by itself: soon, then less often while that fails, until it works, the
+    /// login changes, or Steam refuses it (`onLoginRejected`).
+    private func logOnAgain() {
+        isLoggedOn = false
+        guard login != nil, logOnAgainTask == nil else { return }
+        let first = firstLogOnRetry
+        logOnAgainTask = Task { [weak self] in
+            var delay = first
+            while true {
+                try? await Task.sleep(for: delay)
+                guard let self, await self.retryLogOn() else { return }
+                delay = min(delay * 4, .seconds(600))
+            }
+        }
+    }
+
+    /// One attempt of `logOnAgain`; whether to try again.
+    private func retryLogOn() async -> Bool {
+        do {
+            if login != nil { try await ensureLoggedOn() }
+        } catch let error as SteamHelperError where !error.needsNewSignIn {
+            OWELog.info(.workshop, "Can't log on to Steam again yet: \(error.message)")
+            return true
+        } catch {
+            OWELog.info(.workshop, "Not logging on to Steam again: \(error)")
+        }
+        logOnAgainTask = nil
+        return false
     }
 
     private func helperExited(_ exited: any SteamHelperTransport) {
