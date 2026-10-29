@@ -109,6 +109,7 @@ final class SteamAccountTests: XCTestCase {
         let (account, _) = makeAccount { request in
             switch request.method {
             case "logOn": [Fake.result(request, #"{"steamID":"76561190000000001"}"#)]
+            case "ownsApp": [Fake.result(request, #"{"owned":true}"#)]
             default: [Fake.error(request, code: "tokenRejected", eresult: 5)]
             }
         }
