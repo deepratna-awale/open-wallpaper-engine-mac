@@ -161,7 +161,7 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
     }
 
     /// A Steam helper connection whose app info has build `build`.
-    private func makeClient(build: String = "20112233") async -> SteamHelperClient {
+    private static func makeClient(build: String = "20112233") async -> SteamHelperClient {
         let client = SteamHelperClient {
             FakeSteamHelperTransport { request in
                 switch request.method {
@@ -207,7 +207,7 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
     func testANotOwnedAppIsReportedAndTheDownloadRemoved() async throws {
         let scratch: URL = self.scratch
         let helper = AssetsHelper(output: "Depot 431961 is not available from this account.")
-        let service = WallpaperEngineAssetsService(workshopDownloads: makeDownloads(storage: scratch), steamHelper: await makeClient(),
+        let service = WallpaperEngineAssetsService(workshopDownloads: makeDownloads(storage: scratch), steamHelper: await Self.makeClient(),
                                                    helperDownloads: helper, storageDirectory: { scratch },
                                                    defaults: makeDefaults())
         service.installFromSteam()
@@ -225,7 +225,7 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
         for includes in [true, false] {
             let storage = scratch.appending(path: "storage-\(includes)")
             try FileManager.default.createDirectory(at: storage, withIntermediateDirectories: true)
-            let service = WallpaperEngineAssetsService(workshopDownloads: makeDownloads(storage: storage), steamHelper: await makeClient(),
+            let service = WallpaperEngineAssetsService(workshopDownloads: makeDownloads(storage: storage), steamHelper: await Self.makeClient(),
                                                        helperDownloads: AssetsHelper(), storageDirectory: { storage },
                                                        defaults: makeDefaults())
             service.installFromSteam(includingDefaultWallpapers: includes)
@@ -246,7 +246,7 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
         let storage = scratch.appending(path: "storage-helper")
         try FileManager.default.createDirectory(at: storage, withIntermediateDirectories: true)
         let helper = AssetsHelper()
-        let service = WallpaperEngineAssetsService(workshopDownloads: makeDownloads(storage: storage), steamHelper: await makeClient(),
+        let service = WallpaperEngineAssetsService(workshopDownloads: makeDownloads(storage: storage), steamHelper: await Self.makeClient(),
                                                    helperDownloads: helper, storageDirectory: { storage },
                                                    defaults: makeDefaults())
         service.installFromSteam()
@@ -271,7 +271,7 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
         var rejected = 0
         let cancellable = workshopDownloads.steamLoginRejected.sink { rejected += 1 }
         defer { cancellable.cancel() }
-        let service = WallpaperEngineAssetsService(workshopDownloads: workshopDownloads, steamHelper: await makeClient(),
+        let service = WallpaperEngineAssetsService(workshopDownloads: workshopDownloads, steamHelper: await Self.makeClient(),
                                                    helperDownloads: AssetsHelper(output: "Access token was rejected (Revoked).",
                                                                                  exitCode: 1),
                                                    storageDirectory: { scratch }, defaults: makeDefaults())
