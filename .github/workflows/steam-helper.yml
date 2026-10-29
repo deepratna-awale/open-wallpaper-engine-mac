@@ -1,0 +1,51 @@
+name: Steam helper
+
+# Tests the Steam helper (SteamHelper/) and publishes it for both Mac architectures, under the same
+# rule as CI: on a pull request once it's labelled "ready to merge", and on main after it merges.
+# Built on Linux: the binaries are unsigned until the release signs them.
+on:
+  push:
+    branches: [main]
+    paths: ['SteamHelper/**', 'Vendor/DepotDownloader/**', '.github/workflows/steam-helper.yml']
+  pull_request:
+    types: [labeled, synchronize, reopened]
+    paths: ['SteamHelper/**', 'Vendor/DepotDownloader/**', '.github/workflows/steam-helper.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: >-
+      github.event_name != 'pull_request' ||
+      (contains(github.event.pull_request.labels.*.name, 'ready to merge') &&
+      (github.event.action != 'labeled' || github.event.label.name == 'ready to merge'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
+      ContinuousIntegrationBuild: 'true'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: .NET 9 SDK
+        run: |
+          curl -sSfL https://dot.net/v1/dotnet-install.sh -o "$RUNNER_TEMP/dotnet-install.sh"
+          bash "$RUNNER_TEMP/dotnet-install.sh" --channel 9.0 --install-dir "$HOME/.dotnet"
+          echo "$HOME/.dotnet" >> "$GITHUB_PATH"
+      - name: Test
+        run: dotnet test SteamHelper/Tests -c Release
+      - name: Publish
+        run: |
+          for rid in osx-arm64 osx-x64; do
+            dotnet publish SteamHelper/OWESteamHelper.csproj -c Release -r "$rid" --self-contained \
+              -p:PublishSingleFile=true -p:DebugType=embedded -o "build/steam-helper/$rid"
+          done
+          ls -l build/steam-helper/*/owe-steam-helper
+          sha256sum build/steam-helper/*/owe-steam-helper
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: owe-steam-helper
+          path: build/steam-helper/
+          retention-days: 14
