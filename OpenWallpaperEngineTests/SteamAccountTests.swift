@@ -13,6 +13,16 @@ final class SteamAccountTests: XCTestCase {
             keychain: KeychainStore(service: "app.openwallpaperengine.tests.keychain.\(UUID().uuidString)"), account: "SteamLogin"))
     }
 
+    /// `sleepUntil` for main-actor state.
+    private func waitFor(_ what: String, timeout: TimeInterval = 5, file: StaticString = #filePath, line: UInt = #line,
+                         _ condition: () -> Bool) async throws {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !condition() {
+            guard Date() < deadline else { return XCTFail("Timed out waiting for \(what)", file: file, line: line) }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+    }
+
     private func makeAccount(respond: @escaping @Sendable (FakeSteamHelperRequest) -> [String]) -> (SteamAccount, Fake) {
         let fake = Fake(respond: respond)
         let account = SteamAccount(client: SteamHelperClient { fake }, store: store, deviceName: "Test Mac")
@@ -27,15 +37,15 @@ final class SteamAccountTests: XCTestCase {
             }
         }
         account.signInWithQR()
-        try await sleepUntil("the QR code") { account.status == .signingIn(.scanQRCode(URL(string: "https://s.team/q/1/1")!)) }
+        try await waitFor("the QR code") { account.status == .signingIn(.scanQRCode(URL(string: "https://s.team/q/1/1")!)) }
         XCTAssertNil(store.load(), "nothing is saved before the scan")
 
         let signIn = try XCTUnwrap(fake.requests.first { $0.method == "signInWithQR" })
         fake.emit(Fake.result(signIn, Fake.loginJSON))
-        try await sleepUntil("the login") { account.isSignedIn }
+        try await waitFor("the login") { account.isSignedIn }
         XCTAssertEqual(account.accountName, Fake.login.accountName)
         XCTAssertEqual(store.load(), Fake.login)
-        try await sleepUntil("the logon") { fake.methods.contains("logOn") }
+        try await waitFor("the logon") { fake.methods.contains("logOn") }
         XCTAssertNil(account.errorMessage)
     }
 
@@ -50,9 +60,9 @@ final class SteamAccountTests: XCTestCase {
             }
         }
         account.signInWithQR()
-        try await sleepUntil("the QR code") { if case .signingIn(.scanQRCode) = account.status { true } else { false } }
+        try await waitFor("the QR code") { if case .signingIn(.scanQRCode) = account.status { true } else { false } }
         account.cancelSignIn()
-        try await sleepUntil("signed out") { account.status == .signedOut }
+        try await waitFor("signed out") { account.status == .signedOut }
         XCTAssertNil(account.errorMessage)
         XCTAssertNil(store.load())
         XCTAssertTrue(fake.methods.contains("cancel"))
@@ -95,8 +105,8 @@ final class SteamAccountTests: XCTestCase {
         let (account, fake) = makeAccount { [Fake.result($0)] }
         await account.restore()
         account.signOut()
-        try await sleepUntil("logged out") { account.status == .signedOut }
+        try await waitFor("logged out") { account.status == .signedOut }
         XCTAssertNil(store.load())
-        try await sleepUntil("the helper's logOff") { fake.methods.contains("logOff") }
+        try await waitFor("the helper's logOff") { fake.methods.contains("logOff") }
     }
 }
