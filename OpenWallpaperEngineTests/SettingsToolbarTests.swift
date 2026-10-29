@@ -23,7 +23,7 @@ final class SettingsToolbarTests: XCTestCase {
         let storage = SettingsSearch.results(for: "wallpaper storage", locale: Locale(identifier: "en"))
         XCTAssertEqual(storage.first?.tab, .assets)
         XCTAssertEqual(storage.first?.anchor, SettingsAnchor.storage)
-        XCTAssertEqual(SettingsSearch.results(for: "api key").first?.tab, .assets)
+        XCTAssertEqual(SettingsSearch.results(for: "steam login", locale: Locale(identifier: "en")).first?.tab, .assets)
         XCTAssertEqual(SettingsSearch.results(for: "log level").first?.tab, .diagnostics)
         XCTAssertEqual(SettingsSearch.results(for: "rendering").first?.tab, .optimizations)
         XCTAssertTrue(SettingsSearch.results(for: "   ").isEmpty)

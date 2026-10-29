@@ -30,7 +30,7 @@ class WorkshopViewModel: ObservableObject {
 
     @Published private(set) var itemsPerPage = 21
 
-    let steamCmd: SteamCmdService
+    let workshopDownloads: WorkshopDownloadService
     /// Wallpapers and authors hidden from the results (`WorkshopBlockList`).
     let blockList: WorkshopBlockList
     /// The cards' preview images, cached and decoded at card size for the Workshop and Discover tabs.
@@ -65,9 +65,9 @@ class WorkshopViewModel: ObservableObject {
     nonisolated static let maxSourcePages = 40
 
     /// `steam` is the Steam login's connection, which searches go through.
-    init(steamCmd: SteamCmdService, blockList: WorkshopBlockList = WorkshopBlockList(), searchPage: PageSearch? = nil,
+    init(workshopDownloads: WorkshopDownloadService, blockList: WorkshopBlockList = WorkshopBlockList(), searchPage: PageSearch? = nil,
          defaults: UserDefaults = .app, steam: SteamHelperClient? = nil) {
-        self.steamCmd = steamCmd
+        self.workshopDownloads = workshopDownloads
         self.blockList = blockList
         self.defaults = defaults
         let service = WorkshopAPIService(steam: steam)
@@ -76,8 +76,8 @@ class WorkshopViewModel: ObservableObject {
             try await service.searchItems(query: text, filter: query, sortOrder: sortOrder, page: page, perPage: perPage)
         }
         filter.hidesAnime = defaults.bool(forKey: Self.hidesAnimeKey)
-        // Forward steamCmd changes (e.g. downloadProgress) to trigger view updates
-        self.cancellable = steamCmd.objectWillChange.sink { [weak self] _ in
+        // Forward workshopDownloads changes (e.g. downloadProgress) to trigger view updates
+        self.cancellable = workshopDownloads.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
         }
         self.downloadedIndexCancellable = DownloadedWallpaperIndex.shared.objectWillChange.sink { [weak self] _ in
@@ -155,7 +155,7 @@ class WorkshopViewModel: ObservableObject {
     }
 
     func download(item: WorkshopItem) {
-        steamCmd.downloadWorkshopItem(
+        workshopDownloads.downloadWorkshopItem(
             workshopId: item.id,
             title: item.title,
             previewURL: item.previewImageURL,
@@ -233,9 +233,9 @@ class WorkshopViewModel: ObservableObject {
         clearSelection()
     }
 
-    /// Downloads the item, then adds it to the given playlist once steamcmd finishes copying it into the library.
+    /// Downloads the item, then adds it to the given playlist once the download is in the library.
     func downloadAndAddToPlaylist(_ item: WorkshopItem, playlistID: UUID, wallpaperViewModel: WallpaperViewModel) {
-        steamCmd.downloadWorkshopItem(
+        workshopDownloads.downloadWorkshopItem(
             workshopId: item.id,
             title: item.title,
             previewURL: item.previewImageURL,
@@ -247,7 +247,7 @@ class WorkshopViewModel: ObservableObject {
                   let project = OWELog.attempt(.workshop, "Add to playlist: project.json of \(destination.lastPathComponent)", {
                       try WEProject.read(in: destination)
                   }) else { return }
-            // steamcmd invokes this completion off the main thread.
+            // The download calls this completion off the main thread.
             DispatchQueue.main.async {
                 wallpaperViewModel.addToPlaylist(WEWallpaper(using: project, where: destination), playlistID: playlistID)
             }
@@ -255,14 +255,14 @@ class WorkshopViewModel: ObservableObject {
     }
 
     func preview(item: WorkshopItem) {
-        steamCmd.previewWorkshopItem(workshopId: item.id)
+        workshopDownloads.previewWorkshopItem(workshopId: item.id)
     }
 
-    func downloadState(for item: WorkshopItem) -> SteamCmdService.DownloadState? {
+    func downloadState(for item: WorkshopItem) -> WorkshopDownloadService.DownloadState? {
         if isDownloaded(item) {
             return .completed
         }
-        return steamCmd.downloadProgress[item.id]
+        return workshopDownloads.downloadProgress[item.id]
     }
 
     var visibleItems: [WorkshopItem] {
@@ -272,7 +272,7 @@ class WorkshopViewModel: ObservableObject {
     /// In the library as the user's own item. A dependency-only copy doesn't count, so the user can
     /// still download it to make it theirs.
     func isDownloaded(_ item: WorkshopItem) -> Bool {
-        DownloadedWallpaperIndex.shared.contains(item.id) && !steamCmd.dependencyIndex.contains(item.id)
+        DownloadedWallpaperIndex.shared.contains(item.id) && !workshopDownloads.dependencyIndex.contains(item.id)
     }
 
     /// Key namespace for Workshop items (as opposed to local wallpapers) in `FavoritesStore`.
@@ -287,7 +287,7 @@ class WorkshopViewModel: ObservableObject {
     }
 
     func isPreviewLoading(_ item: WorkshopItem) -> Bool {
-        steamCmd.previewProgress.contains(item.id)
+        workshopDownloads.previewProgress.contains(item.id)
     }
 
     /// Changes the filter and searches again from the first page.

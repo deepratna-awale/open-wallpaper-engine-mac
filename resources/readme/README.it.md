@@ -29,7 +29,7 @@ Open Wallpaper Engine è un’app gratuita e open source per macOS che riproduce
 ## In evidenza
 
 - **Sfondi scena, video e web**: scene con effetti, particelle, modelli 3D, luci, timeline, SceneScript ed elementi visivi reattivi all’audio, e uscita HDR per le scene e per i video HDR10 o HLG sugli schermi in grado di mostrarla. Gli sfondi web girano in WebKit o nel motore Chromium opzionale, con le proprietà della loro cartella, l’audio dal vivo e In riproduzione.
-- **Steam Workshop**: sfoglia con gli ordinamenti e i filtri di Wallpaper Engine, scarica tramite SteamCMD con il tuo account Steam, oppure importa cartelle e file zip di sfondi. La scheda Installati ha le cartelle e gli ordinamenti di Wallpaper Engine.
+- **Steam Workshop**: sfoglia con gli ordinamenti e i filtri di Wallpaper Engine, scarica con il tuo account Steam (accedi con il codice QR dell’app Steam Mobile o con la password), oppure importa cartelle e file zip di sfondi. La scheda Installati ha le cartelle e gli ordinamenti di Wallpaper Engine.
 - **Editor sfondi**: un editor sul modello di quello di Wallpaper Engine. Aggiungi e disponi i livelli con i gizmo, aggiungi effetti con anteprime, scrivi e modifica i tuoi effetti nell’Editor shader, importa modelli FBX e OBJ, anima su una timeline, scrivi SceneScript, crea proprietà utente, modifica sistemi particellari e rig Puppet Warp, e usa gli strumenti immagine di Wallpaper Engine (Separazione primo piano, Creazione del foglio del personaggio, Generazione mappatura normale). **Nuovo sfondo…** ne crea uno da un’immagine o da uno dei modelli di Wallpaper Engine. Modifichi una bozza: **Salva** la applica, **Salva come nuovo sfondo** ne aggiunge una copia alla libreria, e i file dello sfondo stesso non vengono mai modificati.
 
   <!-- demo: wallpaper-editor -->
@@ -92,7 +92,7 @@ Serve **macOS 14.0 (Sonoma) o successivo**. Gli sfondi di tipo scena richiedono 
 
 ## Avvio rapido
 
-1. Apri l’app. L’assistente di configurazione imposta la lingua, SteamCMD, l’accesso a Steam e le risorse di Wallpaper Engine, e può importare i tuoi preferiti e le tue cartelle di Wallpaper Engine; ogni passaggio si può saltare.
+1. Apri l’app. L’assistente di configurazione imposta la lingua, l’accesso a Steam e le risorse di Wallpaper Engine, e può importare i tuoi preferiti e le tue cartelle di Wallpaper Engine; ogni passaggio si può saltare.
 2. Installa le risorse di Wallpaper Engine (*Impostazioni › Risorse*) se vuoi gli sfondi di tipo scena. Provengono dalla tua copia di Wallpaper Engine su Steam; gli sfondi video e web funzionano anche senza.
 3. Trova sfondi nelle schede **Esplora** e **Workshop**, importa una cartella o un file zip di uno sfondo (*File › Importa sfondo da cartella…*, ⌘I) oppure creane uno con **Aggiungi sfondo › Nuovo sfondo…**.
 4. Fai clic su uno sfondo nella libreria, poi su **Imposta sfondo** nei suoi dettagli (oppure fai clic su di esso con il tasto destro e scegli **Imposta come sfondo**). Le sue proprietà sono elencate subito sotto.

@@ -95,12 +95,6 @@ extension AppDelegate {
         // input closes when the app exits.
         Task { await contentViewModel.steamAccount.restore() }
 
-        // Workshop downloads need SteamCMD; set it up from Valve in the background when it's missing.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
-            guard let self else { return }
-            self.steamCmdInstaller.detectThenAutoInstall(self.contentViewModel.steamCmd)
-        }
-
         // Installed packages are converted in the background.
         DispatchQueue.global(qos: .utility).async { [weak self] in
             WallpaperPackageConverter.convertInstalledLibrary()
@@ -110,7 +104,7 @@ extension AppDelegate {
             // Bundles left on an older conversion with no package to redo it from.
             let stale = StaleBundleScanner.scan(storage: FileManager.default.wallpapersDirectory)
             guard !stale.isEmpty else { return }
-            // Later, so the cached SteamCMD login restored at launch has had its turn.
+            // Later, so the Steam login restored at launch has had its turn.
             DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [weak self] in
                 self?.refreshStaleBundles(stale)
             }
@@ -159,7 +153,7 @@ extension AppDelegate {
 
     private func refreshStaleBundles(_ stale: [StaleBundle]) {
         let refresher = StaleBundleRefresher(
-            downloader: contentViewModel.steamCmd,
+            downloader: contentViewModel.workshopDownloads,
             isShown: { [weak self] directory in
                 self?.wallpaperViewModel.wallpapers.values.contains {
                     $0.wallpaperDirectory.standardizedFileURL == directory.standardizedFileURL
@@ -182,10 +176,6 @@ extension AppDelegate {
 
     func applicationDidBecomeActive(_ notification: Notification) {
         contentViewModel.navigation.isApplicationActive = true
-        // Picks up a steamcmd installed meanwhile, e.g. with Homebrew.
-        if !steamCmdInstaller.isBusy {
-            contentViewModel.steamCmd.detectSteamCmd()
-        }
     }
 
     func applicationDidResignActive(_ notification: Notification) {
@@ -213,8 +203,6 @@ extension AppDelegate {
         safeRestart.applicationWillTerminate()
         crashWatcher.applicationWillTerminate()
         mcpServerPlugin.stop()
-        // The steamcmd kept logged in between Workshop downloads quits with the app.
-        contentViewModel.steamCmd.endSteamCmdSession()
         updater.stopShaderPrewarm()
         cacheMaintenance.stop()
         // The system colours go back when the user chose "Restore on quit".

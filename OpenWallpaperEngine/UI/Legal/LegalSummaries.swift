@@ -16,8 +16,8 @@ struct LegalSummary: View {
         case .privacyPolicy:
             return [
                 "Everything stays on your Mac. There are no servers, accounts, analytics or tracking.",
-                "The app contacts Valve (Steam and SteamCMD), GitHub (app updates) and, when you install an optional plugin, its publisher. Web wallpapers and URLs you add load their own online content.",
-                "Your Steam Web API key and account name stay in your keychain. Your password is never stored.",
+                "The app contacts Valve (Steam), GitHub (app updates) and, when you install an optional plugin, its publisher. Web wallpapers and URLs you add load their own online content.",
+                "Your Steam login stays in your keychain. Your password is never stored.",
             ]
         }
     }

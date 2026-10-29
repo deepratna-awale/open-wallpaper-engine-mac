@@ -29,7 +29,7 @@ Open Wallpaper Engine ist eine kostenlose Open-Source-App für macOS, die Wallpa
 ## Highlights
 
 - **Szenen-, Video- und Web-Hintergrundbilder**: Szenen mit Effekten, Partikeln, 3D-Modellen, Lichtern, Zeitleisten, SceneScript und audioreaktiven Visuals sowie HDR-Ausgabe für Szenen und für HDR10- oder HLG-Videos auf Displays, die sie darstellen können. Web-Hintergrundbilder laufen in WebKit oder in der optionalen Chromium-Engine, mit ihren Ordnereigenschaften, Live-Audio und „Aktuelle Wiedergabe“.
-- **Steam Workshop**: mit den Sortierungen und Filtern von Wallpaper Engine durchsuchen, über SteamCMD mit Ihrem eigenen Steam-Account laden oder Hintergrundbildordner und Zip-Dateien importieren. Der Tab „Installiert“ hat die Ordner und Sortierungen von Wallpaper Engine.
+- **Steam Workshop**: mit den Sortierungen und Filtern von Wallpaper Engine durchsuchen, mit Ihrem eigenen Steam-Account laden (Anmeldung per QR-Code in der Steam Mobile App oder mit Passwort) oder Hintergrundbildordner und Zip-Dateien importieren. Der Tab „Installiert“ hat die Ordner und Sortierungen von Wallpaper Engine.
 - **Hintergrundbild-Editor**: ein Editor nach dem Vorbild von Wallpaper Engine. Ebenen mit Gizmos hinzufügen und anordnen, Effekte mit Vorschauen hinzufügen, eigene Effekte im Shader-Editor schreiben und bearbeiten, FBX- und OBJ-Modelle importieren, auf einer Zeitleiste animieren, SceneScript schreiben, Benutzereigenschaften erstellen, Partikelsysteme und Puppet-Warp-Rigs bearbeiten und die Bildwerkzeuge von Wallpaper Engine nutzen (Vordergrund-Separation, Erstellung eines Character-Sheets, Generieren einer Normal-Map). **Neues Hintergrundbild …** beginnt eines aus einem Bild oder aus einer der Vorlagen von Wallpaper Engine. Sie bearbeiten einen Entwurf: **Sichern** übernimmt ihn, **Als neues Hintergrundbild sichern** fügt der Mediathek eine Kopie hinzu, und die eigenen Dateien des Hintergrundbilds werden nie verändert.
 
   <!-- demo: wallpaper-editor -->
@@ -92,7 +92,7 @@ Sie benötigen **macOS 14.0 (Sonoma) oder neuer**. Szenen-Hintergrundbilder ben�
 
 ## Schnellstart
 
-1. Öffnen Sie die App. Der Einrichtungsassistent legt die Sprache, SteamCMD, Ihre Steam-Anmeldung und die Wallpaper-Engine-Assets fest und kann Ihre Wallpaper-Engine-Favoriten und -Ordner importieren; jeder Schritt lässt sich überspringen.
+1. Öffnen Sie die App. Der Einrichtungsassistent legt die Sprache, Ihre Steam-Anmeldung und die Wallpaper-Engine-Assets fest und kann Ihre Wallpaper-Engine-Favoriten und -Ordner importieren; jeder Schritt lässt sich überspringen.
 2. Installieren Sie die Wallpaper-Engine-Assets (*Einstellungen › Assets*), wenn Sie Szenen-Hintergrundbilder nutzen möchten. Sie stammen aus Ihrer eigenen Wallpaper-Engine-Kopie auf Steam; Video- und Web-Hintergrundbilder funktionieren ohne sie.
 3. Hintergrundbilder finden Sie in den Tabs **Entdecken** und **Workshop**; Sie können auch einen Hintergrundbildordner oder eine Zip-Datei importieren (*Ablage › Hintergrundbild aus Ordner importieren …*, ⌘I) oder mit **Hintergrundbild hinzufügen › Neues Hintergrundbild …** eines erstellen.
 4. Klicken Sie in der Mediathek auf ein Hintergrundbild und dann in seinen Details auf **Hintergrundbild festlegen** (oder klicken Sie es mit der rechten Maustaste an und wählen Sie **Als Hintergrundbild verwenden**). Seine Eigenschaften stehen darunter.

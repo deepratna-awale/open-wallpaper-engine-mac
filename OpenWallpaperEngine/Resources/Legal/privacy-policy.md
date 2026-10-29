@@ -1,6 +1,6 @@
 # Open Wallpaper Engine — Privacy Policy
 
-**Version 1.1 · Effective date: 2026-10-06**
+**Version 1.2 · Effective date: 2026-10-29**
 
 ---
 
@@ -45,7 +45,7 @@ OWE stores the following **only on your Mac**, under your control. None of it is
 | Your wallpaper library (imported and downloaded wallpapers) | A storage folder you choose. The default is `~/Documents/Open Wallpaper Engine` |
 | Caches (for example, decoded images and translated shaders that speed up loading) | The app's cache folders on your Mac |
 | A local copy of your own Wallpaper Engine assets, downloaded through your Steam account | Your storage folder |
-| Your Steam Web API key (if you enter one) and your Steam account name (to reuse SteamCMD's saved login) | The macOS Keychain (see section 6) |
+| Your Steam sign-in: your account name, SteamID and the refresh token Steam issues when you sign in | The macOS Keychain (see section 6) |
 
 You can view, move or delete any of this at any time. Section 7 lists the locations.
 
@@ -57,9 +57,9 @@ OWE itself has no backend, but some features need the internet. When they do, th
 
 Used only for Steam Workshop features and for downloading your own copy of Wallpaper Engine's assets. These features are optional and require your own Steam account that owns Wallpaper Engine.
 
-- **`api.steampowered.com`** — Workshop search, item details, collections and the list of your own Workshop subscriptions. If you enter a Steam Web API key, the app sends that key in a request header so Valve can authorise the request. Your IP address and the search terms or item IDs you ask for are necessarily part of these requests.
-- **`steamcommunity.com`** — Workshop pages and related community content.
-- **SteamCMD** — Valve's official command-line tool. OWE downloads it at runtime from Valve's content servers (`steamcdn-a.akamaihd.net`); it is not bundled with the app. SteamCMD then makes its own connections to Valve to log in and to download Workshop items and Wallpaper Engine's assets (Steam app 431960).
+- **Steam's servers** — The app's built-in Steam helper (`owe-steam-helper`, made with the open-source SteamKit2 and DepotDownloader) connects to Valve the way the Steam client does: to sign you in (with a QR code you scan in the Steam mobile app, or with your account name, password and Steam Guard code), to search the Workshop and list your own subscriptions and favourites, to read Wallpaper Engine's current version, and to download Workshop items and your own copy of Wallpaper Engine's assets (Steam app 431960) from Valve's content servers.
+- **`api.steampowered.com`** — Workshop item and collection details, which need no sign-in. Your IP address and the item IDs you ask for are necessarily part of these requests, as are your search terms in the Steam helper's requests.
+- **`steamcommunity.com`** — Workshop pages, related community content, and the public profile (name and avatar) of a wallpaper's author.
 
 Your use of these services is subject to Valve's Steam Subscriber Agreement (https://store.steampowered.com/subscriber_agreement/) and Valve's Privacy Policy (https://store.steampowered.com/privacy_agreement/).
 
@@ -103,9 +103,8 @@ OWE may ask for the following macOS permissions. Each is optional; the app works
 
 ## 6. Keychain and credentials
 
-- If you enter a **Steam Web API key**, it is stored in the macOS Keychain on your Mac and used only in requests to `api.steampowered.com`. You can remove it from the app's Settings or with the Keychain Access app.
-- Your **Steam account name** is stored in the Keychain so the app can reuse SteamCMD's saved login without asking again.
-- Your **Steam password and Steam Guard codes are never stored or logged by OWE.** When you sign in through the app, they are passed only to SteamCMD, Valve's official tool, through its standard input. SteamCMD then keeps its own login token in its own folder, as it does when you use it directly. If you prefer, you can sign in with SteamCMD yourself in Terminal and the app will reuse that login.
+- When you sign in to Steam, the app keeps your **Steam sign-in** in the macOS Keychain: your account name, SteamID and the refresh token Steam issues for this sign-in. It goes only to the app's Steam helper, through its standard input, which uses it to connect to Steam; the helper never writes it to disk. Signing out in Settings › Assets removes it, and you can also end the sign-in from your Steam account's security settings.
+- Your **Steam password and Steam Guard codes are never stored or logged by OWE.** When you sign in with your password, they go only to the app's Steam helper, which sends them to Steam to sign you in, as the Steam client does. Signing in with the QR code needs neither.
 
 ## 7. Retention and deletion
 
@@ -116,8 +115,8 @@ To remove everything OWE has stored, delete the app and these locations (paths m
 - **Wallpaper library and Wallpaper Engine assets:** the storage folder you chose (default `~/Documents/Open Wallpaper Engine`)
 - **Settings:** the app's user defaults (`~/Library/Preferences/`, the entry named after the app's bundle identifier)
 - **Caches:** the app's folder under `~/Library/Caches/`
-- **Other app support files, including SteamCMD and its login token:** the app's folder under `~/Library/Application Support/`
-- **Keychain entries:** the Steam Web API key and Steam account name, removable in the Keychain Access app
+- **Other app support files:** the app's folder under `~/Library/Application Support/`
+- **Keychain entries:** the Steam sign-in, removed when you sign out of Steam in Settings › Assets, or in the Keychain Access app
 
 To delete data held by Valve or GitHub, use their tools and privacy policies, since that data is theirs, not ours.
 
@@ -146,9 +145,9 @@ We make no international transfers of personal data, since we make no transfers 
 ## 10. Security
 
 - Credentials are kept in the macOS Keychain, which encrypts them at rest and restricts access to the app.
-- Passwords and Steam Guard codes are handled in memory only, for the duration of the sign-in, and passed only to Valve's SteamCMD.
+- Passwords and Steam Guard codes are handled in memory only, for the duration of the sign-in, and sent only to Valve's Steam servers.
 - Update downloads are signed and verified before installation, so a tampered update will not install.
-- All connections to Valve, GitHub and the plugin hosts use HTTPS. Send over Wi-Fi uses plain HTTP on your local network only, behind a random token.
+- The sign-in and the Steam helper's connection to Valve are encrypted, as in Valve's own Steam client. Connections to GitHub and the plugin hosts use HTTPS. Send over Wi-Fi uses plain HTTP on your local network only, behind a random token.
 
 No software is perfectly secure. Because OWE is open source, you can inspect exactly what it does. Please report security problems privately through the repository's Security tab ("Report a vulnerability"), as described in SECURITY.md.
 

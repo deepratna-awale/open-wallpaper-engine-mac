@@ -48,7 +48,7 @@ final class ChromiumEngineInstallerTests: XCTestCase {
     }
 
     @MainActor
-    private func makeInstaller(pin: ChromiumEnginePin, downloader: SteamCmdPackageDownloading) -> ChromiumEngineInstaller {
+    private func makeInstaller(pin: ChromiumEnginePin, downloader: PackageDownloading) -> ChromiumEngineInstaller {
         ChromiumEngineInstaller(root: engineRoot, pin: pin, downloader: downloader,
                                 trash: { try FileManager.default.removeItem(at: $0) })
     }
@@ -116,7 +116,7 @@ final class ChromiumEngineInstallerTests: XCTestCase {
 
     func testOfflineHTTPAndDiskFullErrorsSaySo() {
         XCTAssertTrue(ChromiumEngineInstaller.message(for: URLError(.notConnectedToInternet)).contains("internet connection"))
-        XCTAssertTrue(ChromiumEngineInstaller.message(for: URLSessionSteamCmdDownloader.Failure.httpStatus(404)).contains("404"))
+        XCTAssertTrue(ChromiumEngineInstaller.message(for: URLSessionPackageDownloader.Failure.httpStatus(404)).contains("404"))
         XCTAssertTrue(ChromiumEngineInstaller.message(for: CocoaError(.fileWriteOutOfSpace)).contains("disk space"))
         XCTAssertTrue(ChromiumEngineInstaller.message(for: URLError(.cannotWriteToFile)).contains("disk space"))
     }
@@ -173,7 +173,7 @@ final class ChromiumEngineInstallerTests: XCTestCase {
         let files = FileManager.default.enumerator(atPath: folder.path)?.compactMap { $0 as? String } ?? []
         XCTAssertFalse(files.isEmpty)
         for file in files {
-            XCTAssertFalse(SteamCmdPackage.hasQuarantine(folder.appending(path: file).path), file)
+            XCTAssertFalse(PackageFiles.hasQuarantine(folder.appending(path: file).path), file)
         }
     }
 
@@ -224,7 +224,7 @@ final class ChromiumEngineInstallerTests: XCTestCase {
 }
 
 /// Copies a local archive as if it were downloaded, optionally flagging it quarantined.
-private struct CopyingDownloader: SteamCmdPackageDownloading {
+private struct CopyingDownloader: PackageDownloading {
     let source: URL
     var quarantine = false
 
@@ -233,14 +233,14 @@ private struct CopyingDownloader: SteamCmdPackageDownloading {
         try FileManager.default.copyItem(at: source, to: destination)
         if quarantine {
             let value = "0081;00000000;Test;"
-            XCTAssertEqual(setxattr(destination.path, SteamCmdPackage.quarantineAttribute, value, value.utf8.count, 0, 0), 0)
+            XCTAssertEqual(setxattr(destination.path, PackageFiles.quarantineAttribute, value, value.utf8.count, 0, 0), 0)
         }
         progress(1)
     }
 }
 
 /// Never finishes until cancelled.
-private struct HangingDownloader: SteamCmdPackageDownloading {
+private struct HangingDownloader: PackageDownloading {
     func download(_ url: URL, to destination: URL, progress: @escaping @Sendable (Double?) -> Void) async throws {
         while true {
             try Task.checkCancellation()

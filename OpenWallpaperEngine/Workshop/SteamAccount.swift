@@ -4,7 +4,6 @@ import SystemConfiguration
 /// The user's Steam sign-in: a QR code scanned with the Steam mobile app, or an account name and
 /// password with a Steam Guard code. The sign-in is kept in the keychain (`SteamLoginStore`) and
 /// used for everything the app does on Steam, through the Steam helper (`SteamHelperClient`).
-/// No Web API key and no SteamCMD login are involved.
 @MainActor
 final class SteamAccount: ObservableObject {
     enum Status: Equatable {
@@ -27,7 +26,7 @@ final class SteamAccount: ObservableObject {
     /// Why the last sign-in or logon failed, for the user.
     @Published private(set) var errorMessage: String?
     /// The sign-in requests use, from launch or a sign-in until it is forgotten; Workshop downloads
-    /// use it too (`SteamCmdService.useSteamLogin`).
+    /// use it too (`WorkshopDownloadService.useSteamLogin`).
     @Published private(set) var login: SteamLogin?
 
     let client: SteamHelperClient

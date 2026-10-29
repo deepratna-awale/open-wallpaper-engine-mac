@@ -12,26 +12,26 @@ final class SteamHelperDownloadTests: XCTestCase {
         // `lock` owns `runs`.
         private let lock = NSLock()
         private var runs: [[String]] = []
-        private let respond: @Sendable (URL) throws -> SteamCmdRun
+        private let respond: @Sendable (URL) throws -> ProcessRun
 
-        init(respond: @escaping @Sendable (URL) throws -> SteamCmdRun) {
+        init(respond: @escaping @Sendable (URL) throws -> ProcessRun) {
             self.respond = respond
         }
 
         var arguments: [[String]] { lock.withLock { runs } }
 
-        func run(arguments: [String], login: SteamLogin, cancellation: SteamCmdCancellation,
-                 onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
+        func run(arguments: [String], login: SteamLogin, cancellation: ProcessCancellation,
+                 onOutput: @escaping @Sendable (String) -> Void) -> ProcessRun {
             lock.withLock { runs.append(arguments) }
             guard let index = arguments.firstIndex(of: "-dir"), index + 1 < arguments.count else {
-                return SteamCmdRun(output: "no -dir", exitCode: 2)
+                return ProcessRun(output: "no -dir", exitCode: 2)
             }
             do {
                 let run = try respond(URL(fileURLWithPath: arguments[index + 1], isDirectory: true))
                 onOutput(run.output)
                 return run
             } catch {
-                return SteamCmdRun(output: "\(error)", exitCode: 1)
+                return ProcessRun(output: "\(error)", exitCode: 1)
             }
         }
     }
@@ -127,42 +127,41 @@ final class SteamHelperDownloadTests: XCTestCase {
 
     // MARK: Workshop downloads
 
-    private func makeService(_ helper: FakeHelper) throws -> SteamCmdService {
+    private func makeService(_ helper: FakeHelper) throws -> WorkshopDownloadService {
         let storage = root.appending(path: "Storage", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: storage, withIntermediateDirectories: true)
         let library = root!
         let suite = "owe-tests-\(UUID().uuidString)"
-        let service = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { library }),
-                                      runner: UnusedSteamCmd(), helperDownloads: helper,
+        let service = WorkshopDownloadService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { library }),
+                                      helperDownloads: helper,
                                       storageDirectory: { try WallpaperStorage.availableDirectory(storage) },
                                       previewCacheRoot: root.appending(path: "Previews"),
                                       downloadedIndex: DownloadedWallpaperIndex(defaults: UserDefaults(suiteName: suite)!,
                                                                                 libraryDirectory: { library }),
-                                      presentPreview: { _ in }, account: .inMemory(), restoresSession: false)
+                                      presentPreview: { _ in })
         addTeardownBlock { UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite) }
         return service
     }
 
-    private func download(_ id: String, with service: SteamCmdService) async -> URL? {
+    private func download(_ id: String, with service: WorkshopDownloadService) async -> URL? {
         await withCheckedContinuation { continuation in
             service.downloadWorkshopItem(workshopId: id) { continuation.resume(returning: $0) }
         }
     }
 
-    func testTheSteamLoginLogsInAndDownloadsWithoutSteamCmd() async throws {
+    func testTheSteamLoginLogsInAndDownloads() async throws {
         let helper = FakeHelper { directory in
             try FileManager.default.createDirectory(at: directory.appending(path: ".DepotDownloader"), withIntermediateDirectories: true)
             try Data(#"{"type": "scene", "title": "T", "file": "scene.json"}"#.utf8).write(to: directory.appending(path: "project.json"))
-            return SteamCmdRun(output: "100.00% project.json\n", exitCode: 0)
+            return ProcessRun(output: "100.00% project.json\n", exitCode: 0)
         }
         let service = try makeService(helper)
-        XCTAssertFalse(service.isInstalled)
+        XCTAssertFalse(service.isLoggedIn)
         var logins = 0
         let cancellable = service.loginSucceeded.sink { logins += 1 }
         defer { cancellable.cancel() }
 
         service.useSteamLogin(Self.login)
-        XCTAssertTrue(service.isInstalled, "no SteamCMD needed")
         XCTAssertTrue(service.isLoggedIn)
         XCTAssertEqual(service.steamUsername, "owe_test")
         XCTAssertEqual(logins, 1)
@@ -177,12 +176,11 @@ final class SteamHelperDownloadTests: XCTestCase {
 
         service.useSteamLogin(nil)
         XCTAssertFalse(service.isLoggedIn)
-        XCTAssertFalse(service.isInstalled)
     }
 
     func testARemovedItemIsReportedUnavailable() async throws {
         let service = try makeService(FakeHelper { _ in
-            SteamCmdRun(output: "Unable to locate manifest ID for published file 1000000002", exitCode: 0)
+            ProcessRun(output: "Unable to locate manifest ID for published file 1000000002", exitCode: 0)
         })
         service.useSteamLogin(Self.login)
         var unavailable: [String] = []
@@ -199,7 +197,7 @@ final class SteamHelperDownloadTests: XCTestCase {
 
     func testARejectedLoginIsReported() async throws {
         let service = try makeService(FakeHelper { _ in
-            SteamCmdRun(output: "Access token was rejected (Revoked).", exitCode: 1)
+            ProcessRun(output: "Access token was rejected (Revoked).", exitCode: 1)
         })
         service.useSteamLogin(Self.login)
         var rejected = 0
@@ -211,14 +209,5 @@ final class SteamHelperDownloadTests: XCTestCase {
         try await waitFor("the rejection") { rejected == 1 }
         XCTAssertEqual(service.downloadProgress["1000000003"],
                        .failed(SteamHelperError(code: .tokenRejected, message: "").errorDescription ?? ""))
-    }
-}
-
-/// steamcmd, which these tests never run.
-private struct UnusedSteamCmd: SteamCmdRunning {
-    func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?,
-             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
-        XCTFail("steamcmd ran")
-        return SteamCmdRun(output: "", exitCode: 1)
     }
 }

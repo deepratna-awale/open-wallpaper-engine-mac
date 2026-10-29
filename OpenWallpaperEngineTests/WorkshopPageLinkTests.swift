@@ -24,10 +24,10 @@ final class WorkshopPageLinkTests: XCTestCase {
         let root = FileManager.default.temporaryDirectory.appending(path: "owe-page-link-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) } // cleanup of a temp folder; nothing to report
-        let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { root }),
+        let workshopDownloads = WorkshopDownloadService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { root }),
                                        storageDirectory: { root }, previewCacheRoot: root,
-                                       presentPreview: { _ in }, restoresSession: false)
-        let model = WorkshopViewModel(steamCmd: steamCmd, searchPage: { _, _, _, _, _ in [] })
+                                       presentPreview: { _ in })
+        let model = WorkshopViewModel(workshopDownloads: workshopDownloads, searchPage: { _, _, _, _, _ in [] })
         let items = try WorkshopAPIService.parseItems(from: Data(contentsOf: Fixtures.url("Workshop/api/query-files.json")))
 
         let scene = try XCTUnwrap(items.first { $0.id == "3100000001" })

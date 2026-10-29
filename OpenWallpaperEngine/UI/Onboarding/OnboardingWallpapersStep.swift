@@ -10,40 +10,37 @@ final class OnboardingImports: ObservableObject {
     let library: SteamLibraryImportModel
     /// The probe's last answer for the subscriptions option; nil before one ran.
     @Published private(set) var probe: WorkshopSubscriptions.ProbeResult?
-    @Published var steamIDInput = ""
     private let defaults: UserDefaults
-    private let hasAPIKey: () -> Bool
+    private let loginSteamID: () -> String?
     private var changes: [AnyCancellable] = []
 
     init(collection: WorkshopItemsImportModel, subscriptions: WorkshopItemsImportModel,
          library: SteamLibraryImportModel, defaults: UserDefaults = .app,
-         hasAPIKey: @escaping () -> Bool) {
+         loginSteamID: @escaping () -> String?) {
         self.collection = collection
         self.subscriptions = subscriptions
         self.library = library
         self.defaults = defaults
-        self.hasAPIKey = hasAPIKey
+        self.loginSteamID = loginSteamID
         probe = defaults.string(forKey: WorkshopSubscriptions.probeResultKey).flatMap(WorkshopSubscriptions.ProbeResult.init(rawValue:))
         for model in [collection.objectWillChange, subscriptions.objectWillChange, library.objectWillChange] {
             changes.append(model.sink { [weak self] _ in self?.objectWillChange.send() })
         }
     }
 
-    /// The app's own wiring: its Steam login, SteamCMD, playlists and rating filter.
+    /// The app's own wiring: its Steam login, downloads, playlists and rating filter.
     convenience init(contentViewModel: ContentViewModel, wallpaperViewModel: WallpaperViewModel) {
         let ratings = contentViewModel.workshopVM.filter.ratings
         let api = WorkshopAPIService(steam: contentViewModel.steamAccount.client)
-        let steamCmd = contentViewModel.steamCmd
-        self.init(collection: WorkshopItemsImportModel(api: api, steamCmd: steamCmd,
+        let workshopDownloads = contentViewModel.workshopDownloads
+        self.init(collection: WorkshopItemsImportModel(api: api, workshopDownloads: workshopDownloads,
                                                        wallpaperViewModel: wallpaperViewModel, ratings: ratings),
-                  subscriptions: WorkshopItemsImportModel(api: api, steamCmd: steamCmd,
+                  subscriptions: WorkshopItemsImportModel(api: api, workshopDownloads: workshopDownloads,
                                                           wallpaperViewModel: wallpaperViewModel, ratings: ratings),
                   library: SteamLibraryImportModel(ratings: ratings, onImported: { folders in
                       OnboardingImports.didImport(folders, contentViewModel: contentViewModel)
                   }),
-                  hasAPIKey: { [weak steamCmd] in
-                      steamCmd?.steamLogin != nil || SteamCredentials.webAPIKey().load() != nil
-                  })
+                  loginSteamID: { [weak workshopDownloads] in workshopDownloads?.steamLogin?.steamID })
     }
 
     /// Copied folders join the library like any import: converted, indexed, their dependencies fetched.
@@ -58,24 +55,16 @@ final class OnboardingImports: ObservableObject {
         contentViewModel.refresh()
     }
 
-    /// Whether to offer "Download my subscriptions": a key is saved, and the probe hasn't found
-    /// Steam returning nothing.
+    /// Whether to offer "Download my subscriptions": the user is logged in to Steam, and the probe
+    /// hasn't found Steam returning nothing.
     var offersSubscriptions: Bool {
-        hasAPIKey() && probe != .empty
+        steamID != nil && probe != .empty
     }
 
-    var canProbe: Bool { hasAPIKey() }
+    var canProbe: Bool { steamID != nil }
 
-    /// The account's SteamID64, from what the user typed or Steam's files for the logged-in account.
-    func steamID(for steamCmd: SteamCmdService) -> String? {
-        let typed = steamIDInput.trimmingCharacters(in: .whitespacesAndNewlines)
-        if WorkshopSubscriptions.isSteamID64(typed) { return typed }
-        if let steamID = steamCmd.steamLogin?.steamID { return steamID }
-        guard steamCmd.isLoggedIn else { return nil }
-        return WorkshopSubscriptions.steamID64(
-            forAccount: steamCmd.steamUsername,
-            steamRoots: WorkshopSubscriptions.steamRoots(steamCmdPath: steamCmd.steamCmdPath))
-    }
+    /// The logged-in account's SteamID64.
+    var steamID: String? { loginSteamID() }
 
     /// Asks Steam once; an empty answer hides the option until the user checks again.
     func probeSubscriptions(steamID: String) async {
@@ -107,7 +96,7 @@ final class OnboardingImports: ObservableObject {
 
 struct OnboardingWallpapersStep: View {
     @Environment(\.appAccentColor) private var accentColor
-    @ObservedObject var steamCmd: SteamCmdService
+    @ObservedObject var workshopDownloads: WorkshopDownloadService
     @ObservedObject var imports: OnboardingImports
     @State private var isCollectionPresented = false
     @State private var isLibraryPresented = false
@@ -177,7 +166,7 @@ struct OnboardingWallpapersStep: View {
         }
     }
 
-    /// Best effort, so it only shows while it can work: with a Web API key, and until Steam has
+    /// Best effort, so it only shows while it can work: with the Steam login, and until Steam has
     /// answered with no subscriptions.
     @ViewBuilder
     private var subscriptionsOption: some View {
@@ -190,15 +179,10 @@ struct OnboardingWallpapersStep: View {
                         .frame(width: 36)
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Download My Subscriptions").font(.headline)
-                        Text("Asks Steam for your Workshop subscriptions with your Web API key. Steam doesn't always answer; the options above always work.")
+                        Text("Asks Steam for your Workshop subscriptions through your Steam login. Steam doesn't always answer; the options above always work.")
                             .font(.callout)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
-                        if imports.steamID(for: steamCmd) == nil || !imports.steamIDInput.isEmpty {
-                            TextField("SteamID64 (17 digits)", text: $imports.steamIDInput)
-                                .textFieldStyle(.roundedBorder)
-                                .frame(maxWidth: 240)
-                        }
                         if imports.subscriptions.phase == .loading {
                             ProgressView().controlSize(.small)
                         } else if case .failed(let message) = imports.subscriptions.phase {
@@ -207,14 +191,14 @@ struct OnboardingWallpapersStep: View {
                     }
                     Spacer()
                     Button(imports.probe == .items ? "Choose…" : "Check") {
-                        guard let id = imports.steamID(for: steamCmd) else { return }
+                        guard let id = imports.steamID else { return }
                         Task {
                             await imports.probeSubscriptions(steamID: id)
                             if imports.subscriptions.phase == .loaded { isSubscriptionsPresented = true }
                         }
                     }
                     .glassButtonStyle()
-                    .disabled(imports.steamID(for: steamCmd) == nil || imports.subscriptions.phase == .loading)
+                    .disabled(imports.steamID == nil || imports.subscriptions.phase == .loading)
                 }
             }
         } else if imports.probe == .empty && imports.canProbe {

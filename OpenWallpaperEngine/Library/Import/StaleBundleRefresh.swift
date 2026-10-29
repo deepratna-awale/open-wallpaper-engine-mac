@@ -48,18 +48,18 @@ enum StaleBundleScanner {
     }
 }
 
-/// What the refresh needs from the Workshop download path; `SteamCmdService` in the app.
+/// What the refresh needs from the Workshop download path; `WorkshopDownloadService` in the app.
 @MainActor
 protocol StaleBundleDownloading: AnyObject {
-    /// Calls back on the main queue with whether a signed-in SteamCMD session is there.
-    func restoreSession(completion: @escaping @MainActor @Sendable (Bool) -> Void)
+    /// Whether the Steam login is there to download with.
+    var isLoggedIn: Bool { get }
     /// Downloads the item and puts its `packageName` into the folder's `.owe-source/`, leaving the
     /// live files alone. Calls back on the main queue with whether the package landed.
     func fetchArchivedPackage(workshopId: String, packageName: String, into wallpaperDirectory: URL,
                               completion: @escaping @MainActor @Sendable (Bool) -> Void)
 }
 
-extension SteamCmdService: StaleBundleDownloading {}
+extension WorkshopDownloadService: StaleBundleDownloading {}
 
 /// Gets stale bundles their package back one at a time, then re-converts them once they aren't
 /// on screen. Whatever can't be updated keeps its current files, is listed in one notice, and is
@@ -92,15 +92,12 @@ final class StaleBundleRefresher {
         failed = bundles.filter { $0.workshopId == nil }.map(\.title)
         let workshop = bundles.filter { $0.workshopId != nil }
         guard !workshop.isEmpty else { return finish() }
-        downloader.restoreSession { [weak self] signedIn in
-            guard let self else { return }
-            guard signedIn else {
-                self.failed += workshop.map(\.title)
-                return self.finish()
-            }
-            self.queue = workshop
-            self.next()
+        guard downloader.isLoggedIn else {
+            failed += workshop.map(\.title)
+            return finish()
         }
+        queue = workshop
+        next()
     }
 
     /// Call when the shown wallpapers change: converts what was waiting on them.

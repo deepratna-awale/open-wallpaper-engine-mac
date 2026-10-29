@@ -2,7 +2,7 @@ import XCTest
 @testable import OpenWallpaperEngine
 
 /// Installed wallpapers' tags: project.json's merged with the Workshop item's, which are read from
-/// Steam once (in batches, only with an API key) and stored with the installed ids. Steam is a
+/// Steam once (in batches, only with the Steam login) and stored with the installed ids. Steam is a
 /// fixture; nothing touches the network or the keychain.
 @MainActor
 final class InstalledWorkshopTagsTests: XCTestCase {
@@ -148,13 +148,13 @@ final class InstalledWorkshopTagsTests: XCTestCase {
 
     private final class Counter { var count = 0 }
 
-    private func makeSync(_ steam: FakeSteam, key: String? = "KEY", known: [String: WorkshopItem] = [:],
-                          keyChecks: Counter = Counter()) -> InstalledWorkshopTagSync {
+    private func makeSync(_ steam: FakeSteam, loggedIn: Bool = true, known: [String: WorkshopItem] = [:],
+                          loginChecks: Counter = Counter()) -> InstalledWorkshopTagSync {
         InstalledWorkshopTagSync(index: index,
-                                 apiKey: { keyChecks.count += 1; return key },
+                                 hasLogin: { loginChecks.count += 1; return loggedIn },
                                  knownItem: { known[$0] },
                                  fetch: steam.fetch,
-                                 throttle: .zero, retryDelay: 600, keyRecheckDelay: 30)
+                                 throttle: .zero, retryDelay: 600, loginRecheckDelay: 30)
     }
 
     func testFetchesInBatchesOnlyWhatsMissingAndStoresIt() async {
@@ -193,10 +193,10 @@ final class InstalledWorkshopTagsTests: XCTestCase {
         XCTAssertEqual(steam.batches.count, 1)
     }
 
-    func testNoKeyMeansNoRequestAndNothingStored() async {
+    func testNoLoginMeansNoRequestAndNothingStored() async {
         let steam = FakeSteam()
         let checks = Counter()
-        let sync = makeSync(steam, key: nil, keyChecks: checks)
+        let sync = makeSync(steam, loggedIn: false, loginChecks: checks)
         let now = Date()
         sync.update(for: [wallpaper("42", tags: nil)], now: now)
         sync.update(for: [wallpaper("43", tags: nil)], now: now.addingTimeInterval(1))

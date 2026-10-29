@@ -26,7 +26,7 @@ class VersionedInstaller<InstallPhase: VersionedInstallPhase>: ObservableObject 
     @Published private(set) var installedSize: Int64?
 
     let root: URL
-    let downloader: SteamCmdPackageDownloading
+    let downloader: PackageDownloading
     private let store: VersionedInstallStore
     private let message: (Error) -> String
     private let trash: (URL) throws -> Void
@@ -34,7 +34,7 @@ class VersionedInstaller<InstallPhase: VersionedInstallPhase>: ObservableObject 
 
     /// `message` turns a failure into what the user sees (`VersionedInstallFailure`).
     init(store: VersionedInstallStore,
-         downloader: SteamCmdPackageDownloading,
+         downloader: PackageDownloading,
          message: @escaping (Error) -> String,
          trash: @escaping (URL) throws -> Void) {
         self.root = store.root

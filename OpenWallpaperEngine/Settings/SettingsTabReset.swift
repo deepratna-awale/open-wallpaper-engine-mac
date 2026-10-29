@@ -5,13 +5,13 @@ import Foundation
 @MainActor
 enum SettingsTabReset {
     /// The `UserDefaults.app` preferences a tab shows, removed on reset so they read as default.
-    /// (`SteamCmdInstaller.autoInstallKey` and `WallpaperEngineAssetsService.autoInstallKey` for
-    /// Assets, `WhatsNew.hidesReleaseNotesKey` and `AppUpdater.receivesBetaUpdatesKey` for Updates.)
+    /// (`WallpaperEngineAssetsService.autoInstallKey` for Assets, `WhatsNew.hidesReleaseNotesKey` and
+    /// `AppUpdater.receivesBetaUpdatesKey` for Updates.)
     /// Every `@AppStorage` key a Settings view uses is here or in `nonSettingViewKeys`.
     nonisolated static func preferenceKeys(of tab: SettingsTab) -> [String] {
         switch tab {
         case .optimizations: return ["ReclaimOriginalPackages"]
-        case .assets: return ["InstallSteamCmdAutomatically", "InstallsWallpaperEngineAssetsAfterLogin"]
+        case .assets: return ["InstallsWallpaperEngineAssetsAfterLogin"]
         case .updates: return ["HidesReleaseNotesAfterUpdate", "ReceiveBetaUpdates"]
         default: return []
         }

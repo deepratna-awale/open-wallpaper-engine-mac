@@ -29,7 +29,7 @@ Open Wallpaper Engine es una app gratuita y de código abierto para macOS que re
 ## Lo más destacado
 
 - **Fondos de pantalla de escena, de vídeo y web**: escenas con efectos, partículas, modelos 3D, luces, líneas de tiempo, SceneScript y visuales que reaccionan al audio, y salida HDR para escenas y vídeos HDR10 o HLG en las pantallas que puedan mostrarla. Los fondos web se ejecutan en WebKit o en el motor Chromium opcional, con las propiedades de su carpeta, audio en vivo y Ahora suena.
-- **Steam Workshop**: explora con las ordenaciones y los filtros de Wallpaper Engine, descarga mediante SteamCMD con tu propia cuenta de Steam, o importa carpetas y archivos zip de fondos de pantalla. La pestaña Instalados tiene las carpetas y las ordenaciones de Wallpaper Engine.
+- **Steam Workshop**: explora con las ordenaciones y los filtros de Wallpaper Engine, descarga con tu propia cuenta de Steam (inicia sesión con el código QR de la app Steam Mobile o con tu contraseña), o importa carpetas y archivos zip de fondos de pantalla. La pestaña Instalados tiene las carpetas y las ordenaciones de Wallpaper Engine.
 - **Editor de fondos de pantalla**: un editor al estilo del de Wallpaper Engine. Añade y coloca capas con gizmos, añade efectos con vista previa, escribe y edita tus propios efectos en el Editor de sombreadores, importa modelos FBX y OBJ, anima en una línea de tiempo, escribe SceneScript, crea propiedades de usuario, edita sistemas de partículas y esqueletos de Puppet Warp, y usa las herramientas de imagen de Wallpaper Engine (Separación del primer plano, Hoja de creación de personaje, Generar mapeado normal). **Nuevo fondo de pantalla…** crea uno a partir de una imagen o de una de las plantillas de Wallpaper Engine. Editas un borrador: **Guardar** lo aplica, **Guardar como nuevo fondo de pantalla** añade una copia a la biblioteca, y los archivos del propio fondo de pantalla nunca se modifican.
 
   <!-- demo: wallpaper-editor -->
@@ -92,7 +92,7 @@ Necesitas **macOS 14.0 (Sonoma) o posterior**. Los fondos de pantalla de escena 
 
 ## Inicio rápido
 
-1. Abre la app. El asistente de configuración establece el idioma, SteamCMD, tu inicio de sesión de Steam y los recursos de Wallpaper Engine, y puede importar tus favoritos y carpetas de Wallpaper Engine; todos los pasos se pueden omitir.
+1. Abre la app. El asistente de configuración establece el idioma, tu inicio de sesión de Steam y los recursos de Wallpaper Engine, y puede importar tus favoritos y carpetas de Wallpaper Engine; todos los pasos se pueden omitir.
 2. Instala los recursos de Wallpaper Engine (*Ajustes › Recursos*) si quieres fondos de pantalla de escena. Proceden de tu propia copia de Wallpaper Engine en Steam; los fondos de vídeo y web funcionan sin ellos.
 3. Busca fondos de pantalla en las pestañas **Descubrir** y **Workshop**, importa una carpeta o un archivo zip de fondo de pantalla (*Archivo › Importar fondo de pantalla desde carpeta…*, ⌘I) o crea uno con **Añadir fondo de pantalla › Nuevo fondo de pantalla…**.
 4. Haz clic en un fondo de pantalla de la biblioteca y luego en **Establecer fondo de pantalla** en sus detalles (o haz clic en él con el botón derecho y elige **Usar como fondo de pantalla**). Sus propiedades aparecen debajo.

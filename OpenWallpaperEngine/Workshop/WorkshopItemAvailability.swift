@@ -4,7 +4,7 @@
 //
 //  Whether a Workshop item can still be downloaded, read from the keyless
 //  `ISteamRemoteStorage/GetPublishedFileDetails/v1`. An item its author deleted or made private
-//  answers `result: 9`; steamcmd reports the same item as `File Not Found`. Pure parsing, so tests
+//  answers `result: 9`; its download finds no manifest for it. Pure parsing, so tests
 //  run on fixture JSON without the network.
 //
 
@@ -22,7 +22,7 @@ enum WorkshopItemAvailability: Equatable {
         /// The item was published for another app than Wallpaper Engine.
         case otherApp
 
-        /// What the dependency list shows in place of steamcmd's error.
+        /// What the dependency list shows in place of the download's error.
         var message: String {
             switch self {
             case .removedOrPrivate:
@@ -78,12 +78,6 @@ enum WorkshopItemAvailability: Equatable {
             return .unavailable(.otherApp)
         }
         return .available
-    }
-
-    /// Whether steamcmd's output says the item doesn't exist for this account
-    /// (`ERROR! Download item <id> failed (File Not Found).`).
-    static func steamCmdReportsNotFound(_ output: String) -> Bool {
-        output.range(of: "File Not Found", options: .caseInsensitive) != nil
     }
 
     /// Steam sends ids as strings, older responses as numbers.
