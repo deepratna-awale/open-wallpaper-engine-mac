@@ -22,6 +22,7 @@ extension AppDelegate {
 struct AboutUsView: View {
     static let websiteURL = URL(string: "https://openwallpaperengine.app/")!
     static let authorsURL = URL(string: "https://github.com/deepratna-awale/open-wallpaper-engine-mac/blob/main/AUTHORS.md")!
+    static let steamHelperLicenseURL = URL(string: "https://github.com/deepratna-awale/open-wallpaper-engine-mac/blob/main/SteamHelper/README.md#license")!
 
     var body: some View {
         VStack(spacing: 28) {
@@ -63,6 +64,12 @@ struct AboutUsView: View {
 
                 Link("All contributors", destination: Self.authorsURL)
                     .font(.caption)
+
+                // The Steam helper's libraries; the helper is GPL-2.0-or-later (SteamHelper/README.md).
+                Link(destination: Self.steamHelperLicenseURL) {
+                    Text(verbatim: "SteamKit2 (LGPL-2.1), DepotDownloader (GPL-2.0)")
+                }
+                .font(.caption)
 
                 // The optional Depth Map Generation plugin's model (`DepthMapModelPin`).
                 DepthMapPluginCredit()
