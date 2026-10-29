@@ -129,6 +129,8 @@ This project is built on top of the work of:
 
 Licensed under [GPL-3.0](LICENSE), same as the original project.
 
+The Steam helper the app runs as a separate program ([`SteamHelper/`](SteamHelper/README.md#license)) is GPL-2.0-or-later, because it includes [DepotDownloader](https://github.com/SteamRE/DepotDownloader) (GPL-2.0) and [SteamKit2](https://github.com/SteamRE/SteamKit) (LGPL-2.1).
+
 ## Legal
 
 [Terms of Use](docs/legal/terms-of-use.md) · [Privacy Policy](docs/legal/privacy-policy.md) · [Security Policy](SECURITY.md)

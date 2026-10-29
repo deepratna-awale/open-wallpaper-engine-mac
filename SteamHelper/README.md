@@ -73,3 +73,12 @@ Built on Linux (as CI does), the binary is unsigned: sign it before it runs on a
 
 `smoke-test.py` runs the real thing against Steam on a Mac: a QR sign-in, the calls the app makes
 and one Workshop download (see its header).
+
+## License
+
+The helper is licensed under the **GNU General Public License, version 2 or (at your option) any
+later version** (GPL-2.0-or-later, [LICENSE](LICENSE)), unlike the rest of the repository
+(GPL-3.0). It is built into one executable with DepotDownloader, which is GPL-2.0 only, and
+SteamKit2 (LGPL-2.1), and GPL-3.0 code can't be combined with GPL-2.0-only code. The app runs the
+helper as a separate program and talks to it only over its stdin and stdout, so the app stays
+GPL-3.0.
