@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -23,6 +24,19 @@ namespace OWESteamHelper
             ["PublishedFile.GetUserFiles"] = Make<CPublishedFile_GetUserFiles_Request, CPublishedFile_GetUserFiles_Response>("PublishedFile.GetUserFiles#1"),
             ["PublishedFile.GetDetails"] = Make<CPublishedFile_GetDetails_Request, CPublishedFile_GetDetails_Response>("PublishedFile.GetDetails#1"),
         };
+
+        /// SteamKit hands a response only to a service created on the handler; without that it
+        /// drops the response and the call times out.
+        static readonly Func<SteamUnifiedMessages, SteamUnifiedMessages.UnifiedService>[] Services =
+        [
+            unified => unified.CreateService<PublishedFile>(),
+        ];
+
+        public static IEnumerable<string> MethodNames => Methods.Keys;
+
+        /// Creates the services `Methods` call on `unified`; returns their names.
+        public static IReadOnlyList<string> Register(SteamUnifiedMessages unified) =>
+            Services.Select(create => create(unified).ServiceName).ToList();
 
         public static bool IsKnown(string method) => Methods.ContainsKey(method);
 
