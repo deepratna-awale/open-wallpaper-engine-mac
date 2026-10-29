@@ -69,14 +69,14 @@ final class WorkshopFilterPagingTests: XCTestCase {
         root = FileManager.default.temporaryDirectory.appending(path: "owe-workshop-paging-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let root = root!
-        let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { root }),
+        let workshopDownloads = WorkshopDownloadService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { root }),
                                        storageDirectory: { root }, previewCacheRoot: root,
-                                       presentPreview: { _ in }, restoresSession: false)
+                                       presentPreview: { _ in })
         let steam = FakeSteam(catalogue: Self.catalogue)
         self.steam = steam
         suiteName = "WorkshopFilterPagingTests.\(UUID().uuidString)"
         defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
-        viewModel = WorkshopViewModel(steamCmd: steamCmd, searchPage: steam.search, defaults: defaults)
+        viewModel = WorkshopViewModel(workshopDownloads: workshopDownloads, searchPage: steam.search, defaults: defaults)
     }
 
     override func tearDown() async throws {
@@ -267,10 +267,10 @@ final class WorkshopFilterPagingTests: XCTestCase {
     }
 
     func testHideAnimeIsSavedForTheNextLaunch() {
-        let first = WorkshopViewModel(steamCmd: viewModel.steamCmd, searchPage: steam.search, defaults: defaults)
+        let first = WorkshopViewModel(workshopDownloads: viewModel.workshopDownloads, searchPage: steam.search, defaults: defaults)
         XCTAssertFalse(first.filter.hidesAnime, "WE shows Anime until asked to hide it")
         first.setHidesAnime(true)
-        let next = WorkshopViewModel(steamCmd: viewModel.steamCmd, searchPage: steam.search, defaults: defaults)
+        let next = WorkshopViewModel(workshopDownloads: viewModel.workshopDownloads, searchPage: steam.search, defaults: defaults)
         XCTAssertTrue(next.filter.hidesAnime)
     }
 

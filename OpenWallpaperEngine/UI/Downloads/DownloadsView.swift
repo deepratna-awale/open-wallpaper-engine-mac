@@ -3,19 +3,19 @@ import SwiftUI
 /// The Downloads tab: Workshop downloads grouped as Safari and the App Store list theirs, the
 /// running one first, then the queue, the failed ones and the finished ones.
 struct DownloadsView: View {
-    @ObservedObject var steamCmd: SteamCmdService
+    @ObservedObject var workshopDownloads: WorkshopDownloadService
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     @State private var selection: Set<String> = []
 
     private var sections: DownloadSections {
-        DownloadSections(progress: steamCmd.downloadProgress, activeId: steamCmd.activeDownloadId,
-                         queuedIds: steamCmd.queuedDownloadIds, startedAt: steamCmd.downloadStartedAt)
+        DownloadSections(progress: workshopDownloads.downloadProgress, activeId: workshopDownloads.activeDownloadId,
+                         queuedIds: workshopDownloads.queuedDownloadIds, startedAt: workshopDownloads.downloadStartedAt)
     }
 
     var body: some View {
         let sections = sections
         VStack(spacing: 0) {
-            if let problem = steamCmdProblem {
+            if let problem = downloadProblem {
                 DownloadsProblemBanner(message: problem)
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
@@ -34,14 +34,14 @@ struct DownloadsView: View {
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 Button {
-                    withAnimation(.snappy) { steamCmd.retryFailedDownloads(sections.failed) }
+                    withAnimation(.snappy) { workshopDownloads.retryFailedDownloads(sections.failed) }
                 } label: {
                     Label("Retry All Failed", systemImage: "arrow.clockwise")
                 }
                 .help("Starts every failed download again")
                 .disabled(sections.failed.isEmpty || !canDownload)
                 Button {
-                    withAnimation(.snappy) { steamCmd.clearCompletedDownloads() }
+                    withAnimation(.snappy) { workshopDownloads.clearCompletedDownloads() }
                 } label: {
                     Label("Clear Completed", systemImage: "checkmark.circle.badge.xmark")
                 }
@@ -50,7 +50,7 @@ struct DownloadsView: View {
             }
         }
         #if DEBUG
-        .task { steamCmd.loadScreenshotFixtureIfRequested() }
+        .task { workshopDownloads.loadScreenshotFixtureIfRequested() }
         #endif
     }
 
@@ -61,7 +61,7 @@ struct DownloadsView: View {
                 if !ids.isEmpty {
                     Section {
                         ForEach(ids, id: \.self) { workshopId in
-                            DownloadRow(workshopId: workshopId, kind: kind, steamCmd: steamCmd,
+                            DownloadRow(workshopId: workshopId, kind: kind, workshopDownloads: workshopDownloads,
                                         canDownload: canDownload, actions: actions)
                                 .tag(workshopId)
                         }
@@ -82,34 +82,28 @@ struct DownloadsView: View {
         .animation(.snappy, value: sections)
     }
 
-    private var canDownload: Bool { steamCmd.isInstalled && steamCmd.isLoggedIn }
+    private var canDownload: Bool { workshopDownloads.isLoggedIn }
 
-    /// Why downloads can't start now, in steamcmd's or the login's words.
-    private var steamCmdProblem: String? {
-        if !steamCmd.isInstalled {
-            return String(localized: "Set up SteamCMD in the Workshop tab first.")
-        }
-        if !steamCmd.isLoggedIn {
-            return steamCmd.loginError
-                ?? String(localized: "Log in to Steam to download. You can do it in the Workshop tab or the setup assistant.")
-        }
-        return nil
+    /// Why downloads can't start now.
+    private var downloadProblem: String? {
+        guard !workshopDownloads.isLoggedIn else { return nil }
+        return String(localized: "Log in to Steam to download. You can do it in the Workshop tab or the setup assistant.")
     }
 
     private var actions: DownloadActions {
-        DownloadActions(steamCmd: steamCmd, wallpaperViewModel: wallpaperViewModel)
+        DownloadActions(workshopDownloads: workshopDownloads, wallpaperViewModel: wallpaperViewModel)
     }
 }
 
 /// What a row, its menu and the keyboard can do with a download.
 @MainActor
 struct DownloadActions {
-    let steamCmd: SteamCmdService
+    let workshopDownloads: WorkshopDownloadService
     let wallpaperViewModel: WallpaperViewModel
 
-    func retry(_ id: String) { steamCmd.retryDownload(id) }
+    func retry(_ id: String) { workshopDownloads.retryDownload(id) }
 
-    func folder(_ id: String) -> URL? { steamCmd.downloadFolders[id] }
+    func folder(_ id: String) -> URL? { workshopDownloads.downloadFolders[id] }
 
     func showInFinder(_ id: String) {
         guard let folder = folder(id) else { return }
@@ -182,7 +176,7 @@ private struct DownloadMenu: View {
     }
 }
 
-/// steamcmd isn't there or isn't logged in: why downloads won't start.
+/// No Steam login: why downloads won't start.
 private struct DownloadsProblemBanner: View {
     let message: String
 

@@ -32,4 +32,4 @@ In scope:
 - updates: the Sparkle feed (`appcast.xml`), update signing and the release pipeline (GitHub Actions workflows, signing and notarization);
 - the openwallpaperengine.app site.
 
-Out of scope: Steam, SteamCMD, Wallpaper Engine, macOS and third-party wallpapers, which belong to their own owners and go to them. A wallpaper that is merely heavy, ugly or crashes the renderer is a normal bug; please open an issue for it.
+Out of scope: Steam, Wallpaper Engine, macOS and third-party wallpapers, which belong to their own owners and go to them. A wallpaper that is merely heavy, ugly or crashes the renderer is a normal bug; please open an issue for it.

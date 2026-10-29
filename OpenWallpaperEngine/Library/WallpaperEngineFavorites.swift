@@ -18,22 +18,4 @@ enum WallpaperEngineFavorites {
             return seen.insert(key).inserted ? key : nil
         }
     }
-
-    /// The SteamID64 whose favourites to read, without asking for anything new: the SteamCMD
-    /// account's, from Steam's files next to SteamCMD, the Steam client's and the Steam folder of
-    /// the chosen Wallpaper Engine install; else, for a chosen install, the account that Steam
-    /// last logged in with there.
-    static func steamID(steamCmdAccount: String?, steamCmdPath: String?, chosenFolder: String?,
-                        home: URL = FileManager.default.homeDirectoryForCurrentUser,
-                        fileManager: FileManager = .default) -> String? {
-        let installRoot = chosenFolder.flatMap { WorkshopSubscriptions.steamRoot(containing: URL(fileURLWithPath: $0)) }
-        var roots = WorkshopSubscriptions.steamRoots(steamCmdPath: steamCmdPath, home: home)
-        if let installRoot { roots.append(installRoot) }
-        if let account = steamCmdAccount, !account.isEmpty,
-           let id = WorkshopSubscriptions.steamID64(forAccount: account, steamRoots: roots, fileManager: fileManager) {
-            return id
-        }
-        guard let installRoot else { return nil }
-        return WorkshopSubscriptions.mostRecentSteamID64(steamRoots: [installRoot], fileManager: fileManager)
-    }
 }

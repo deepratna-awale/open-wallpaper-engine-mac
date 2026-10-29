@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Import a Workshop collection: paste its link or number, check the items, download them with
-/// SteamCMD (dependencies included), optionally into a playlist named after the collection.
+/// Import a Workshop collection: paste its link or number, check the items, download them through
+/// the Steam login (dependencies included), optionally into a playlist named after the collection.
 /// Shown from the setup assistant, the Installed tab's Add menu and the Workshop tab.
 struct WorkshopCollectionImportView: View {
     @ObservedObject var model: WorkshopItemsImportModel
@@ -13,7 +13,7 @@ struct WorkshopCollectionImportView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Import a Workshop Collection")
                 .font(.title2.bold())
-            Text("Paste the link of a public Steam Workshop collection, or its number. Open Wallpaper Engine lists its items from Steam; the ones you check download with SteamCMD, with the items they need.")
+            Text("Paste the link of a public Steam Workshop collection, or its number. Open Wallpaper Engine lists its items from Steam; the ones you check download through your Steam login, with the items they need.")
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             HStack {

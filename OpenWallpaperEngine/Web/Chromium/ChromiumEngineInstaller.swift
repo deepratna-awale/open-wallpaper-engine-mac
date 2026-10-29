@@ -22,8 +22,7 @@ enum ChromiumEngineInstallPhase: VersionedInstallPhase {
     }
 }
 
-/// Installs the optional Chromium web engine (CEF) on demand, the way `SteamCmdInstaller`
-/// installs SteamCMD: nothing of CEF ships with the app.
+/// Installs the optional Chromium web engine (CEF) on demand: nothing of CEF ships with the app.
 ///
 /// Layout under `<Application Support>/Open Wallpaper Engine/ChromiumEngine` (or the isolated
 /// sibling `AppStorageLocation` picks), a `VersionedInstallStore`:
@@ -54,7 +53,7 @@ final class ChromiumEngineInstaller: VersionedInstaller<ChromiumEngineInstallPha
 
     init(root: URL = ChromiumEngineInstaller.defaultRoot,
          pin: ChromiumEnginePin? = ChromiumEnginePin.current(),
-         downloader: SteamCmdPackageDownloading = URLSessionSteamCmdDownloader(),
+         downloader: PackageDownloading = URLSessionPackageDownloader(),
          trash: @escaping (URL) throws -> Void = { try FileManager.default.trashItem(at: $0, resultingItemURL: nil) }) {
         self.pin = pin
         super.init(store: ChromiumEngineInstallJob.store(in: root), downloader: downloader,
@@ -122,7 +121,7 @@ final class ChromiumEngineInstaller: VersionedInstaller<ChromiumEngineInstallPha
 struct ChromiumEngineInstallJob: Sendable {
     let root: URL
     let pin: ChromiumEnginePin
-    let downloader: SteamCmdPackageDownloading
+    let downloader: PackageDownloading
     /// The helper apps copied into the engine bundle; nil copies none (tests).
     var helpers: URL? = ChromiumEngineHelpers.bundled
 

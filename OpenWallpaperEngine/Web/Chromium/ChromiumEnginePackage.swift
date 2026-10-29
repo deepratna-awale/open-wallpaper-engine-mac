@@ -103,8 +103,8 @@ enum ChromiumEnginePackage {
     /// tar has no flag to copy onto the files. URLSession downloads are normally not flagged, so
     /// this is usually a no-op; nothing else is ever touched.
     static func removeQuarantine(fromVerified archive: URL) {
-        let attribute = SteamCmdPackage.quarantineAttribute
-        guard SteamCmdPackage.hasQuarantine(archive.path) else { return }
+        let attribute = PackageFiles.quarantineAttribute
+        guard PackageFiles.hasQuarantine(archive.path) else { return }
         if removexattr(archive.path, attribute, XATTR_NOFOLLOW) != 0 {
             OWELog.error(.web, "Can't clear the quarantine flag of \(archive.path): errno \(errno)")
         } else {

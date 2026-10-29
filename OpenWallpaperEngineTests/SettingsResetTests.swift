@@ -23,7 +23,6 @@ final class SettingsResetTests: XCTestCase {
 
     /// Constants Settings views pass to `@AppStorage`, by the name the source spells.
     private static let keyConstants: [String: String] = [
-        "SteamCmdInstaller.autoInstallKey": SteamCmdInstaller.autoInstallKey,
         "WallpaperEngineAssetsService.autoInstallKey": WallpaperEngineAssetsService.autoInstallKey,
         "WhatsNew.hidesReleaseNotesKey": WhatsNew.hidesReleaseNotesKey,
         "AppUpdater.receivesBetaUpdatesKey": AppUpdater.receivesBetaUpdatesKey,

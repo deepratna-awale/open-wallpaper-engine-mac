@@ -44,7 +44,7 @@ final class InstalledLibraryModel {
     private var revision = 0
 
     private let filters: FilterResultsViewModel
-    private let steamCmd: SteamCmdService
+    private let workshopDownloads: WorkshopDownloadService
     private let presentation: ContentPresentation
 
     /// Re-reads only the wallpapers that changed on disk.
@@ -71,10 +71,10 @@ final class InstalledLibraryModel {
         static let sortingSequence = "SortingSequence"
     }
 
-    init(filters: FilterResultsViewModel, steamCmd: SteamCmdService, presentation: ContentPresentation,
+    init(filters: FilterResultsViewModel, workshopDownloads: WorkshopDownloadService, presentation: ContentPresentation,
          folders: InstalledFolderStore? = nil) {
         self.filters = filters
-        self.steamCmd = steamCmd
+        self.workshopDownloads = workshopDownloads
         self.presentation = presentation
         let folders = folders ?? InstalledFolderStore()
         self.folders = folders
@@ -120,7 +120,7 @@ final class InstalledLibraryModel {
         _ = revision
         let wallpapers = library.wallpapers(in: FileManager.default.wallpapersDirectory,
                                             libraryFolders: LibraryFolders().folders,
-                                            hiding: steamCmd.dependencyIndex.ids)
+                                            hiding: workshopDownloads.dependencyIndex.ids)
         tagSync.schedule(wallpapers)
         return wallpapers
     }
@@ -173,7 +173,7 @@ final class InstalledLibraryModel {
     /// After wallpapers were deleted: removes the dependency-only items none of the remaining ones use.
     func removeUnusedWorkshopDependencies() {
         let library = FileManager.default.wallpapersDirectory
-        let index = steamCmd.dependencyIndex
+        let index = workshopDownloads.dependencyIndex
         Task.detached(priority: .utility) {
             let removed = WorkshopDependencyCleanup.removeOrphans(in: library, index: index)
             guard !removed.isEmpty else { return }

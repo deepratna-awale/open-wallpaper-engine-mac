@@ -45,7 +45,7 @@ struct VersionedInstallStore: Sendable {
     /// then renames it to `destination`. `verifying` runs between the two; `mismatch` turns a wrong
     /// checksum into the specialization's own error.
     func fetch(_ url: URL, sha256: String, to destination: URL,
-               downloader: SteamCmdPackageDownloading,
+               downloader: PackageDownloading,
                progress: @escaping @Sendable (Double?) -> Void,
                verifying: () -> Void = {},
                mismatch: (ChecksumMismatch) -> Error = { $0 }) async throws {
@@ -111,7 +111,7 @@ struct VersionedInstallStore: Sendable {
     var installedSize: Int64? {
         let versions = installedVersions
         return versions.isEmpty ? nil : versions.reduce(Int64(0)) {
-            $0 + SteamCmdPackage.size(of: root.appending(path: $1, directoryHint: .isDirectory))
+            $0 + PackageFiles.size(of: root.appending(path: $1, directoryHint: .isDirectory))
         }
     }
 

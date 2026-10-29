@@ -29,7 +29,7 @@ Open Wallpaper Engine est une app macOS gratuite et open source qui lit et modif
 ## Points forts
 
 - **Fonds d’écran de scène, vidéo et web** : des scènes avec effets, particules, modèles 3D, lumières, chronologies, SceneScript et visuels réactifs à l’audio, et une sortie HDR pour les scènes et les vidéos HDR10 ou HLG sur les moniteurs capables de l’afficher. Les fonds d’écran web s’exécutent dans WebKit ou dans le moteur Chromium facultatif, avec les propriétés de leur dossier, l’audio en direct et À l’écoute.
-- **Steam Workshop** : parcourez avec les tris et les filtres de Wallpaper Engine, téléchargez via SteamCMD avec votre propre compte Steam, ou importez des dossiers et des fichiers zip de fonds d’écran. L’onglet Installés propose les dossiers et les tris de Wallpaper Engine.
+- **Steam Workshop** : parcourez avec les tris et les filtres de Wallpaper Engine, téléchargez avec votre propre compte Steam (connexion par le code QR de l’app Steam Mobile ou par mot de passe), ou importez des dossiers et des fichiers zip de fonds d’écran. L’onglet Installés propose les dossiers et les tris de Wallpaper Engine.
 - **Éditeur de fond d’écran** : un éditeur dans l’esprit de celui de Wallpaper Engine. Ajoutez et disposez des calques avec des gizmos, ajoutez des effets avec aperçus, écrivez et modifiez vos propres effets dans l’Éditeur de nuanceurs, importez des modèles FBX et OBJ, animez sur une chronologie, écrivez du SceneScript, créez des propriétés utilisateur, modifiez des systèmes de particules et des armatures Puppet Warp, et utilisez les outils d’image de Wallpaper Engine (Séparation premier plan, Création feuille du personnage, Génération de carte normale). **Nouveau fond d’écran…** en crée un à partir d’une image ou de l’un des modèles de Wallpaper Engine. Vous modifiez un brouillon : **Enregistrer** l’applique, **Enregistrer comme nouveau fond d’écran** en ajoute une copie à la bibliothèque, et les fichiers du fond d’écran lui-même ne sont jamais modifiés.
 
   <!-- demo: wallpaper-editor -->
@@ -92,7 +92,7 @@ Il vous faut **macOS 14.0 (Sonoma) ou version ultérieure**. Les fonds d’écra
 
 ## Démarrage rapide
 
-1. Ouvrez l’app. L’assistant de configuration règle la langue, SteamCMD, votre connexion Steam et les ressources de Wallpaper Engine, et peut importer vos favoris et vos dossiers Wallpaper Engine ; chaque étape peut être ignorée.
+1. Ouvrez l’app. L’assistant de configuration règle la langue, votre connexion Steam et les ressources de Wallpaper Engine, et peut importer vos favoris et vos dossiers Wallpaper Engine ; chaque étape peut être ignorée.
 2. Installez les ressources de Wallpaper Engine (*Réglages › Ressources*) si vous voulez des fonds d’écran de scène. Elles proviennent de votre propre exemplaire de Wallpaper Engine sur Steam ; les fonds d’écran vidéo et web fonctionnent sans elles.
 3. Trouvez des fonds d’écran dans les onglets **Découvrir** et **Workshop**, importez un dossier ou un fichier zip de fond d’écran (*Fichier › Importer un fond d’écran depuis un dossier…*, ⌘I), ou créez-en un avec **Ajouter un fond d’écran › Nouveau fond d’écran…**.
 4. Cliquez sur un fond d’écran dans la bibliothèque, puis sur **Définir le fond d’écran** dans ses détails (ou cliquez dessus avec le bouton droit et choisissez **Définir comme fond d’écran**). Ses propriétés sont listées en dessous.

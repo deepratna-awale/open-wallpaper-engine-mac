@@ -59,11 +59,6 @@ final class WorkshopItemAvailabilityTests: XCTestCase {
         XCTAssertNil(WorkshopItemAvailability.steamClientPageURL(for: "../x"))
     }
 
-    func testSteamCmdFileNotFound() {
-        XCTAssertTrue(WorkshopItemAvailability.steamCmdReportsNotFound("ERROR! Download item 1000000001 failed (File Not Found)."))
-        XCTAssertFalse(WorkshopItemAvailability.steamCmdReportsNotFound("ERROR! Download item 1000000001 failed (Timeout)."))
-    }
-
     // MARK: - Skip store
 
     private final class Clock {

@@ -29,7 +29,7 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 ## Öne Çıkanlar
 
 - **Sahne, video ve web duvar kâğıtları**: efektler, parçacıklar, 3B modeller, ışıklar, zaman çizelgeleri, SceneScript ve sese duyarlı görseller içeren sahneler; ayrıca bunu gösterebilen ekranlarda sahneler ve HDR10 ya da HLG videolar için HDR çıkışı. Web duvar kâğıtları WebKit’te veya isteğe bağlı Chromium motorunda; klasör özellikleri, canlı ses ve Şu An Çalan bilgisiyle çalışır.
-- **Steam Atölyesi**: Wallpaper Engine’in sıralamaları ve filtreleriyle göz atın, kendi Steam hesabınızla SteamCMD üzerinden indirin ya da duvar kâğıdı klasörlerini ve zip dosyalarını içe aktarın. Yüklü sekmesinde Wallpaper Engine’in klasörleri ve sıralamaları bulunur.
+- **Steam Atölyesi**: Wallpaper Engine’in sıralamaları ve filtreleriyle göz atın, kendi Steam hesabınızla indirin (Steam mobil uygulamasının QR koduyla ya da parolanızla giriş yapın) ya da duvar kâğıdı klasörlerini ve zip dosyalarını içe aktarın. Yüklü sekmesinde Wallpaper Engine’in klasörleri ve sıralamaları bulunur.
 - **Duvar Kâğıdı Düzenleyici**: Wallpaper Engine’in düzenleyicisinin ruhunu taşıyan bir düzenleyici. Katmanları gizmo’larla ekleyip yerleştirin, efektleri önizlemeleriyle ekleyin, kendi efektlerinizi Gölgelendirici Düzenleyici’de yazıp düzenleyin, FBX ve OBJ modelleri içe aktarın, bir zaman çizelgesinde canlandırın, SceneScript yazın, kullanıcı özellikleri oluşturun, parçacık sistemlerini ve Puppet Warp iskeletlerini düzenleyin ve Wallpaper Engine’in görüntü araçlarını kullanın (Ön Plan Ayırma, Karakter Sayfası Oluşturma, Normal Harita Oluşturma). **Yeni Duvar Kâğıdı…** bir resimden ya da Wallpaper Engine’in şablonlarından birinden yeni bir duvar kâğıdı başlatır. Bir taslağı düzenlersiniz: **Kaydet** taslağı uygular, **Yeni Duvar Kâğıdı Olarak Kaydet** kitaplığa bir kopya ekler; duvar kâğıdının kendi dosyaları hiçbir zaman değiştirilmez.
 
   <!-- demo: wallpaper-editor -->
@@ -92,7 +92,7 @@ Geri kalan her şey, alan alan: [docs/features.md](../../docs/features.md).
 
 ## Hızlı Başlangıç
 
-1. Uygulamayı açın. Kurulum yardımcısı dili, SteamCMD’yi, Steam oturumunuzu ve Wallpaper Engine varlıklarını ayarlar ve Wallpaper Engine favorilerinizi ve klasörlerinizi içe aktarabilir; her adım atlanabilir.
+1. Uygulamayı açın. Kurulum yardımcısı dili, Steam oturumunuzu ve Wallpaper Engine varlıklarını ayarlar ve Wallpaper Engine favorilerinizi ve klasörlerinizi içe aktarabilir; her adım atlanabilir.
 2. Sahne duvar kâğıtlarını kullanmak istiyorsanız Wallpaper Engine varlıklarını yükleyin (*Ayarlar › Varlıklar*). Bunlar Steam’deki kendi Wallpaper Engine kopyanızdan gelir; video ve web duvar kâğıtları bunlar olmadan da çalışır.
 3. **Keşfet** ve **Atölye** sekmelerinde duvar kâğıdı bulun, bir duvar kâğıdı klasörünü veya zip dosyasını içe aktarın (*Dosya › Klasörden Duvar Kâğıdı İçe Aktar…*, ⌘I) ya da **Duvar Kâğıdı Ekle › Yeni Duvar Kâğıdı…** ile bir tane oluşturun.
 4. Kitaplıkta bir duvar kâğıdına tıklayın, ardından ayrıntılarında **Duvar Kâğıdı Yap**’a tıklayın (ya da duvar kâğıdına sağ tıklayıp **Duvar Kâğıdı Yap**’ı seçin). Özellikleri hemen altında listelenir.

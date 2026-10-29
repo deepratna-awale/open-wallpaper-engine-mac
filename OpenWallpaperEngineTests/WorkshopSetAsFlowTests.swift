@@ -171,7 +171,7 @@ final class WorkshopSetAsFlowTests: XCTestCase {
         XCTAssertTrue(flow.canRun(.screenSaver, for: item("8", tags: ["Web"])))
 
         stub.canDownload = false
-        XCTAssertFalse(flow.canRun(.wallpaper, for: item("10")), "not installed and steamcmd can't download")
+        XCTAssertFalse(flow.canRun(.wallpaper, for: item("10")), "not installed and Steam can't download")
         stub.installed["10"] = wallpaper("10")
         XCTAssertTrue(flow.canRun(.wallpaper, for: item("10")))
         XCTAssertTrue(flow.canRun(.screenSaver, for: item("10")))

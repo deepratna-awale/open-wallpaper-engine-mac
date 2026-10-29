@@ -258,7 +258,7 @@ everyone.
 **What an update keeps.** Sparkle replaces only the app bundle, and the app writes nothing
 inside its bundle (`UpdatePreservesUserStateTests` checks the sources): the defaults
 (settings, per-display wallpapers, playlists, first-launch and setup-assistant flags), the
-keychain items (Steam Web API key), Application Support (SteamCMD and its login, SceneScript
+keychain items (the Steam sign-in), Application Support (SceneScript
 storage, the safe-restart ledger), the Wallpaper Storage with its `.owe-assets` cache, and
 the caches under `~/Library/Caches` all stay. No store is keyed on the app version.
 
@@ -280,7 +280,7 @@ them by its designated requirement (bundle identifier + Developer ID + team). Ev
 signed by the same team, so updates read them without a prompt. A copy signed differently
 (an *Apple Development* Debug build, an ad-hoc build) has a different requirement: the first
 time the release reads an item such a build created, macOS asks to allow access once
-(*Always Allow* ends it); or re-enter the Steam Web API key in Settings.
+(*Always Allow* ends it); or sign in to Steam again in Settings.
 
 ## Verifying a download
 
