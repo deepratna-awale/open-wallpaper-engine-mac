@@ -77,6 +77,74 @@ namespace OWESteamHelper
             return 0;
         }
 
+        /// `owe-steam-helper probe-lists <pubfileid> < login.json`: which `list_type` of
+        /// PublishedFile.Subscribe is the subscriptions list and which the favourites. Adds the item to
+        /// each list type in turn, reads both lists, removes it again, plus the account's vote on it.
+        /// Pick an item that is in neither list.
+        public static async Task<int> ListsAsync(string[] args, TextReader input)
+        {
+            if (args.Length < 1 || !ulong.TryParse(args[0], out var pubfile))
+            {
+                Console.Error.WriteLine("usage: owe-steam-helper probe-lists <pubfileid> < login.json");
+                return 2;
+            }
+            var (account, token) = DownloadCommand.ReadLogin(await input.ReadLineAsync());
+            using var session = new SteamSession((name, fields) => Log($"event {name} {fields.ToJsonString()}"));
+            var steamID = await session.LogOnAsync(account, token, CancellationToken.None);
+            Log($"logged on, steamID {steamID}");
+
+            async Task<JsonNode?> Call(string method, string json)
+            {
+                using var body = JsonDocument.Parse(json);
+                return await session.CallAsync(method, body.RootElement, CancellationToken.None);
+            }
+
+            async Task<string> Lists()
+            {
+                var found = new List<string>();
+                foreach (var type in new[] { "mysubscriptions", "myfavorites" })
+                {
+                    var inList = false;
+                    for (var page = 1; page <= 10 && !inList; page++)
+                    {
+                        var response = await Call("PublishedFile.GetUserFiles",
+                            $$"""{"steamid":"{{steamID}}","appid":431960,"page":{{page}},"numperpage":100,"type":"{{type}}","ids_only":true}""");
+                        var files = response?["publishedfiledetails"]?.AsArray();
+                        if (files == null || files.Count == 0) break;
+                        inList = files.Any(f => f?["publishedfileid"]?.GetValue<string>() == pubfile.ToString());
+                    }
+                    if (inList) found.Add(type);
+                }
+                return found.Count == 0 ? "in neither list" : "in " + string.Join(" and ", found);
+            }
+
+            try
+            {
+                Log($"before: {await Lists()}");
+                var votes = await Call("PublishedFile.GetUserVoteSummary", $$"""{"publishedfileids":["{{pubfile}}"]}""");
+                Log($"GetUserVoteSummary: {votes?.ToJsonString()}");
+                foreach (var listType in new[] { 1, 2 })
+                {
+                    var subscribed = await Call("PublishedFile.Subscribe",
+                        $$"""{"publishedfileid":"{{pubfile}}","list_type":{{listType}},"appid":431960,"notify_client":false,"include_dependencies":false}""");
+                    Log($"Subscribe list_type={listType}: {subscribed?.ToJsonString()}");
+                    await Task.Delay(2000);
+                    Log($"  after Subscribe: {await Lists()}");
+                    var unsubscribed = await Call("PublishedFile.Unsubscribe",
+                        $$"""{"publishedfileid":"{{pubfile}}","list_type":{{listType}},"appid":431960,"notify_client":false}""");
+                    Log($"Unsubscribe list_type={listType}: {unsubscribed?.ToJsonString()}");
+                    await Task.Delay(2000);
+                    Log($"  after Unsubscribe: {await Lists()}");
+                }
+            }
+            catch (HelperException e)
+            {
+                Log($"failed: {e.Code} {e.Message}");
+                return 1;
+            }
+            return 0;
+        }
+
         static ulong SendRaw<T>(SteamClient client, string jobName, T body) where T : IExtensible, new()
         {
             var message = new ClientMsgProtobuf<T>(EMsg.ServiceMethodCallFromClient);

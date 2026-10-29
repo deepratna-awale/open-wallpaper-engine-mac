@@ -16,6 +16,8 @@ namespace OWESteamHelper
                     return await DownloadCommand.RunAsync(args[1..], Console.In);
                 case "probe":
                     return await Probe.RunAsync(args[1..], Console.In);
+                case "probe-lists":
+                    return await Probe.ListsAsync(args[1..], Console.In);
                 case "--version":
                     Console.WriteLine(typeof(Entry).Assembly.GetName().Version);
                     return 0;
