@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.13] - 2026-10-29
+
 ### Changed
 
 - **One Steam sign-in for everything.** Sign in once, with the QR code in the Steam mobile app or with your password and Steam Guard code, and Workshop browsing and search, downloads, the Wallpaper Engine assets, and importing your subscriptions and favourites all use it. The app talks to Steam through a helper built into it (SteamKit2 and DepotDownloader), so there is nothing else to install or set up.
