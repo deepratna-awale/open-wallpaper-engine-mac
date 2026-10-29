@@ -15,7 +15,7 @@ namespace OWESteamHelper
     /// `owe-steam-helper serve`: answers the app's requests on stdin until stdin closes. Requests
     /// run concurrently (a sign-in waits on the user while other calls go on); each gets exactly one
     /// response with its id. Methods (README.md has the parameters):
-    /// ping, signInWithQR, signInWithCredentials, submitGuardCode, cancel, logOn, logOff, call, appInfo.
+    /// ping, signInWithQR, signInWithCredentials, submitGuardCode, cancel, logOn, logOff, call, appInfo, ownsApp.
     sealed class HelperServer(ISteamSession session, ProtocolWriter writer)
     {
         readonly ConcurrentDictionary<long, CancellationTokenSource> running = new();
@@ -160,6 +160,14 @@ namespace OWESteamHelper
                             .Select(d => (JsonNode)new JsonObject { ["id"] = d.ID, ["oslist"] = d.OSList })
                             .ToArray()),
                     };
+                }
+
+                case "ownsApp":
+                {
+                    var appID = p.RequiredInt64("appID");
+                    if (appID is <= 0 or > uint.MaxValue)
+                        throw new HelperException(ErrorCode.InvalidRequest, "appID is out of range.");
+                    return new JsonObject { ["owned"] = await session.OwnsAppAsync((uint)appID, cancellation) };
                 }
 
                 default:

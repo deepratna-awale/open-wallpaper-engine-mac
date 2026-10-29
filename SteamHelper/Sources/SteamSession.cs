@@ -27,6 +27,8 @@ namespace OWESteamHelper
         void LogOff();
         Task<JsonNode?> CallAsync(string method, JsonElement body, CancellationToken cancellation);
         Task<AppInfo> GetAppInfoAsync(uint appID, CancellationToken cancellation);
+        /// Whether one of the account's licenses grants `appID`.
+        Task<bool> OwnsAppAsync(uint appID, CancellationToken cancellation);
     }
 
     /// One SteamKit2 client connection, kept while the app runs. Callbacks run on a pump thread;
@@ -56,6 +58,8 @@ namespace OWESteamHelper
         TaskCompletionSource? connected;
         TaskCompletionSource<EResult>? loggedOn;
         (string Account, string Token)? login;
+        // The account's licenses, which Steam sends after each logon.
+        TaskCompletionSource<SteamApps.LicenseListCallback.License[]> licenses = NewLicenses();
 
         public SteamSession(Action<string, JsonObject> onEvent)
         {
@@ -80,6 +84,10 @@ namespace OWESteamHelper
                 if (wasLoggedOn && !cb.UserInitiated) onEvent("disconnected", new JsonObject());
             });
             manager.Subscribe<SteamUser.LoggedOnCallback>(cb => loggedOn?.TrySetResult(cb.Result));
+            manager.Subscribe<SteamApps.LicenseListCallback>(cb =>
+            {
+                if (cb.Result == EResult.OK) licenses.TrySetResult(cb.LicenseList.ToArray());
+            });
             manager.Subscribe<SteamUser.LoggedOffCallback>(cb =>
             {
                 isLoggedOn = false;
@@ -204,6 +212,7 @@ namespace OWESteamHelper
                 throw new HelperException(ErrorCode.NotLoggedOn, "Not signed in to Steam.");
             var (account, token) = remembered;
             await EnsureConnectedAsync(cancellation);
+            if (licenses.Task.IsCompleted) licenses = NewLicenses();
             loggedOn = new TaskCompletionSource<EResult>(TaskCreationOptions.RunContinuationsAsynchronously);
             user.LogOn(new SteamUser.LogOnDetails
             {
@@ -273,6 +282,30 @@ namespace OWESteamHelper
                     .Where(d => uint.TryParse(d.Name, out _))
                     .Select(d => (uint.Parse(d.Name!), d["config"]["oslist"].Value))
                     .ToArray());
+        }
+
+        static TaskCompletionSource<SteamApps.LicenseListCallback.License[]> NewLicenses() =>
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public async Task<bool> OwnsAppAsync(uint appID, CancellationToken cancellation)
+        {
+            await EnsureLoggedOnAsync(cancellation);
+            SteamApps.LicenseListCallback.License[] owned;
+            try
+            {
+                owned = await licenses.Task.WaitAsync(StepTimeout, cancellation);
+            }
+            catch (TimeoutException)
+            {
+                throw new HelperException(ErrorCode.Network, "Steam didn't send the account's licenses.");
+            }
+            if (owned.Length == 0) return false;
+            var requests = owned
+                .Select(license => new SteamApps.PICSRequest(license.PackageID, license.AccessToken))
+                .ToList();
+            var info = await apps.PICSGetProductInfo([], requests);
+            return info.Results?.SelectMany(r => r.Packages.Values)
+                .Any(package => package.KeyValues["appids"].Children.Any(id => id.AsUnsignedInteger() == appID)) ?? false;
         }
 
         public void Dispose()

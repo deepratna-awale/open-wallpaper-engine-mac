@@ -158,6 +158,14 @@ actor SteamHelperClient {
         return try await request("appInfo", Params(appID: appID), as: SteamAppInfo.self)
     }
 
+    /// Whether one of the account's licenses grants `appID`.
+    func ownsApp(appID: UInt32) async throws -> Bool {
+        struct Params: Encodable { let appID: UInt32 }
+        struct Owned: Decodable { let owned: Bool }
+        try await ensureLoggedOn()
+        return try await request("ownsApp", Params(appID: appID), as: Owned.self).owned
+    }
+
     /// Ends the helper; the next request starts it again.
     func stop() {
         transport?.stop()

@@ -56,6 +56,8 @@ public class HelperServerTests
         public Task<AppInfo> GetAppInfoAsync(uint appID, CancellationToken cancellation) =>
             Task.FromResult(new AppInfo(appID, "26168761", [(431961u, "windows"), (431966u, null)]));
 
+        public Task<bool> OwnsAppAsync(uint appID, CancellationToken cancellation) => Task.FromResult(appID == 431960);
+
         public void Dispose() { }
     }
 
@@ -193,6 +195,19 @@ public class HelperServerTests
         var rejected = (await h.ResponseAsync(10))["error"]!;
         Assert.Equal(ErrorCode.TokenRejected, rejected["code"]!.GetValue<string>());
         Assert.Equal(5, rejected["eresult"]!.GetValue<int>());
+        await h.CloseAsync();
+    }
+
+    [Fact]
+    public async Task AnswersWhetherTheAccountOwnsAnApp()
+    {
+        var h = new Harness();
+        h.Send("""{"id": 40, "method": "ownsApp", "params": {"appID": 431960}}""");
+        h.Send("""{"id": 41, "method": "ownsApp", "params": {"appID": 570}}""");
+        h.Send("""{"id": 42, "method": "ownsApp", "params": {"appID": 0}}""");
+        Assert.True((await h.ResponseAsync(40))["result"]!["owned"]!.GetValue<bool>());
+        Assert.False((await h.ResponseAsync(41))["result"]!["owned"]!.GetValue<bool>());
+        Assert.Equal(ErrorCode.InvalidRequest, (await h.ResponseAsync(42))["error"]!["code"]!.GetValue<string>());
         await h.CloseAsync();
     }
 
