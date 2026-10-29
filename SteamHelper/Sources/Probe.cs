@@ -148,7 +148,7 @@ namespace OWESteamHelper
                     Log($"msg {type} job_name={header.target_job_name} jobid_target={header.jobid_target}" +
                         $"{(label != null ? $" (answer to {label})" : "")} eresult={(EResult)header.eresult} " +
                         $"error={header.error_message} body={body.Length} bytes");
-                    var interesting = label != null || type is EMsg.ServiceMethod or EMsg.ServiceMethodSendToClient
+                    var interesting = label != null || type is EMsg.ServiceMethod or EMsg.ServiceMethodSendToClient or EMsg.ServiceMethodResponse
                         || (header.target_job_name ?? "").Contains("PublishedFile", StringComparison.Ordinal);
                     if (interesting) Console.WriteLine(Wire.Dump(body, "    ", 0));
                 }
