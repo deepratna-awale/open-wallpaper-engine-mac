@@ -302,6 +302,30 @@ final class SteamHelperClientTests: XCTestCase {
         }
     }
 
+    /// A JWT whose payload is `claims`, as Steam's refresh tokens are (base64url, unpadded).
+    private func jwt(_ claims: String) -> String {
+        let payload = Data(claims.utf8).base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+        return "eyJhbGciOiJFZERTQSJ9.\(payload).c2lnbmF0dXJl"
+    }
+
+    func testLoginExpiryComesFromTheTokensExpClaim() {
+        let login = SteamLogin(accountName: "owe_test", steamID: "76561190000000001",
+                               refreshToken: jwt(#"{"iss":"steam","sub":"76561190000000001","exp":1800000000}"#))
+        XCTAssertEqual(login.expiresAt, Date(timeIntervalSince1970: 1_800_000_000))
+        XCTAssertFalse(login.endsSoon(now: Date(timeIntervalSince1970: 1_800_000_000 - 15 * 86_400)))
+        XCTAssertTrue(login.endsSoon(now: Date(timeIntervalSince1970: 1_800_000_000 - 13 * 86_400)))
+        XCTAssertTrue(login.endsSoon(now: Date(timeIntervalSince1970: 1_800_000_001)), "already ended")
+    }
+
+    func testLoginWithoutAReadableExpiryNeverEndsSoon() {
+        XCTAssertNil(Fake.login.expiresAt)
+        XCTAssertFalse(Fake.login.endsSoon())
+        let noExp = SteamLogin(accountName: "a", steamID: "1", refreshToken: jwt(#"{"sub":"1"}"#))
+        XCTAssertNil(noExp.expiresAt)
+    }
+
     func testLoginStoreRoundTrips() throws {
         let store = SteamLoginStore(secret: KeychainSecret(
             keychain: KeychainStore(service: "app.openwallpaperengine.tests.keychain.\(UUID().uuidString)"), account: "SteamLogin"))
