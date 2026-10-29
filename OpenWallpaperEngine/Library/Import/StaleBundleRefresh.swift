@@ -48,7 +48,7 @@ enum StaleBundleScanner {
     }
 }
 
-/// What the refresh needs from the Workshop download path; `SteamCmdService` in the app.
+/// What the refresh needs from the Workshop download path; `WorkshopDownloadService` in the app.
 @MainActor
 protocol StaleBundleDownloading: AnyObject {
     /// Whether the Steam login is there to download with.
@@ -59,7 +59,7 @@ protocol StaleBundleDownloading: AnyObject {
                               completion: @escaping @MainActor @Sendable (Bool) -> Void)
 }
 
-extension SteamCmdService: StaleBundleDownloading {}
+extension WorkshopDownloadService: StaleBundleDownloading {}
 
 /// Gets stale bundles their package back one at a time, then re-converts them once they aren't
 /// on screen. Whatever can't be updated keeps its current files, is listed in one notice, and is

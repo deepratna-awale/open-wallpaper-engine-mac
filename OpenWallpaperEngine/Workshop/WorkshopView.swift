@@ -11,7 +11,7 @@ struct WorkshopView: SubviewOfContentView {
     var body: some View {
         VStack(spacing: 0) {
             // The browser ends its toolbar with the window's items; the login has only those.
-            if viewModel.steamCmd.isLoggedIn {
+            if viewModel.workshopDownloads.isLoggedIn {
                 WorkshopBrowserView(
                     viewModel: viewModel.workshopVM,
                     contentViewModel: viewModel

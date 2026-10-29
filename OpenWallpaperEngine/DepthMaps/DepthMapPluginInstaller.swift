@@ -47,7 +47,7 @@ final class DepthMapPluginInstaller: VersionedInstaller<DepthMapPluginInstallPha
 
     init(root: URL = DepthMapPluginInstaller.defaultRoot,
          pin: DepthMapModelPin = .pinned,
-         downloader: SteamCmdPackageDownloading = URLSessionSteamCmdDownloader(),
+         downloader: PackageDownloading = URLSessionPackageDownloader(),
          compile: @escaping @Sendable (URL) async throws -> URL = { try await MLModel.compileModel(at: $0) },
          trash: @escaping (URL) throws -> Void = { try FileManager.default.trashItem(at: $0, resultingItemURL: nil) }) {
         self.pin = pin
@@ -110,7 +110,7 @@ struct DepthMapPluginInstallJob: Sendable {
 
     let root: URL
     let pin: DepthMapModelPin
-    let downloader: SteamCmdPackageDownloading
+    let downloader: PackageDownloading
     let compile: @Sendable (URL) async throws -> URL
 
     static func store(in root: URL) -> VersionedInstallStore {

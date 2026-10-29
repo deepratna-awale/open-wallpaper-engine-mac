@@ -41,7 +41,7 @@ final class WorkshopDependencyService: ObservableObject {
     /// Wallpaper folder → the dependency ids it still waits for.
     @Published private(set) var pending: [URL: Set<String>] = [:]
 
-    private let steamCmd: SteamCmdService
+    private let workshopDownloads: WorkshopDownloadService
     private let makeResolver: @Sendable () -> WorkshopAssetResolver
     private let store: UnavailableWorkshopItemStore
     private let checkAvailability: AvailabilityCheck
@@ -51,24 +51,24 @@ final class WorkshopDependencyService: ObservableObject {
     private var reloadDue = Set<URL>()
     private var cancellables = Set<AnyCancellable>()
 
-    init(steamCmd: SteamCmdService,
+    init(workshopDownloads: WorkshopDownloadService,
          makeResolver: @escaping @Sendable () -> WorkshopAssetResolver = { WorkshopAssetResolver(roots: WorkshopAssetResolver.defaultRoots()) },
          store: UnavailableWorkshopItemStore = UnavailableWorkshopItemStore(),
          checkAvailability: @escaping AvailabilityCheck = { try await WorkshopAPIService().availability(of: $0) }) {
-        self.steamCmd = steamCmd
+        self.workshopDownloads = workshopDownloads
         self.makeResolver = makeResolver
         self.store = store
         self.checkAvailability = checkAvailability
         // Any item that reaches the storage folder (from the Workshop tab too) may itself need dependencies.
-        steamCmd.itemInstalled.sink { [weak self] directory in
+        workshopDownloads.itemInstalled.sink { [weak self] directory in
             Task { @MainActor [weak self] in self?.ensureDependencies(ofItemAt: directory) }
         }.store(in: &cancellables)
         // The download's "removed or private", for downloads started here or from the dependency list.
-        steamCmd.itemUnavailable.sink { [weak self] id in
+        workshopDownloads.itemUnavailable.sink { [weak self] id in
             Task { @MainActor [weak self] in self?.markUnavailable(id, reason: .removedOrPrivate) }
         }.store(in: &cancellables)
         // Wallpapers that were waiting on a login get another try once there is one.
-        steamCmd.$isLoggedIn.removeDuplicates().filter { $0 }.sink { [weak self] _ in
+        workshopDownloads.$isLoggedIn.removeDuplicates().filter { $0 }.sink { [weak self] _ in
             Task { @MainActor [weak self] in self?.retryUnavailable() }
         }.store(in: &cancellables)
     }
@@ -168,14 +168,14 @@ final class WorkshopDependencyService: ObservableObject {
     }
 
     private func download(_ id: String) {
-        guard steamCmd.isLoggedIn else {
+        guard workshopDownloads.isLoggedIn else {
             OWELog.error(.workshop, "Workshop dependency \(id) is missing; log in to Steam to download it")
             states[id] = .unavailable
             requested.remove(id)
             return
         }
         states[id] = .downloading
-        steamCmd.downloadWorkshopItem(workshopId: id, asDependency: true) { [weak self] destination in
+        workshopDownloads.downloadWorkshopItem(workshopId: id, asDependency: true) { [weak self] destination in
             Task { @MainActor [weak self] in
                 self?.finishDownload(id, destination: destination)
             }

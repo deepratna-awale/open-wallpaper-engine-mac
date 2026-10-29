@@ -38,7 +38,7 @@ final class DepthMapPluginInstallerTests: XCTestCase {
     }
 
     @MainActor
-    private func makeInstaller(pin: DepthMapModelPin, downloader: SteamCmdPackageDownloading = FakeFileServer(files: DepthMapPluginInstallerTests.files),
+    private func makeInstaller(pin: DepthMapModelPin, downloader: PackageDownloading = FakeFileServer(files: DepthMapPluginInstallerTests.files),
                                compiler: FakeCompiler = FakeCompiler()) -> DepthMapPluginInstaller {
         let scratch = root.appending(path: "compiled", directoryHint: .isDirectory)
         return DepthMapPluginInstaller(root: pluginRoot, pin: pin, downloader: downloader,
@@ -175,7 +175,7 @@ final class DepthMapPluginInstallerTests: XCTestCase {
 
     func testOfflineHTTPAndDiskFullErrorsSaySo() {
         XCTAssertTrue(DepthMapPluginInstaller.message(for: URLError(.notConnectedToInternet)).contains("Hugging Face"))
-        XCTAssertTrue(DepthMapPluginInstaller.message(for: URLSessionSteamCmdDownloader.Failure.httpStatus(404)).contains("404"))
+        XCTAssertTrue(DepthMapPluginInstaller.message(for: URLSessionPackageDownloader.Failure.httpStatus(404)).contains("404"))
         let diskFull = DepthMapPluginInstaller.message(for: CocoaError(.fileWriteOutOfSpace))
         XCTAssertTrue(diskFull.contains("disk space"), diskFull)
         XCTAssertEqual(DepthMapPluginInstaller.message(for: URLError(.cannotWriteToFile)), diskFull,
@@ -195,7 +195,7 @@ final class DepthMapPluginInstallerTests: XCTestCase {
 }
 
 /// Serves `files` by their path inside the package, and records what was asked for.
-private final class FakeFileServer: SteamCmdPackageDownloading, @unchecked Sendable {
+private final class FakeFileServer: PackageDownloading, @unchecked Sendable {
     let files: [String: Data]
     private let lock = NSLock()
     private var _requested: [URL] = []
@@ -214,7 +214,7 @@ private final class FakeFileServer: SteamCmdPackageDownloading, @unchecked Senda
     }
 }
 
-private struct HangingFileServer: SteamCmdPackageDownloading {
+private struct HangingFileServer: PackageDownloading {
     func download(_ url: URL, to destination: URL, progress: @escaping @Sendable (Double?) -> Void) async throws {
         while true {
             try Task.checkCancellation()

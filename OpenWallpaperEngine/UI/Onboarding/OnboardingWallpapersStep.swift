@@ -32,15 +32,15 @@ final class OnboardingImports: ObservableObject {
     convenience init(contentViewModel: ContentViewModel, wallpaperViewModel: WallpaperViewModel) {
         let ratings = contentViewModel.workshopVM.filter.ratings
         let api = WorkshopAPIService(steam: contentViewModel.steamAccount.client)
-        let steamCmd = contentViewModel.steamCmd
-        self.init(collection: WorkshopItemsImportModel(api: api, steamCmd: steamCmd,
+        let workshopDownloads = contentViewModel.workshopDownloads
+        self.init(collection: WorkshopItemsImportModel(api: api, workshopDownloads: workshopDownloads,
                                                        wallpaperViewModel: wallpaperViewModel, ratings: ratings),
-                  subscriptions: WorkshopItemsImportModel(api: api, steamCmd: steamCmd,
+                  subscriptions: WorkshopItemsImportModel(api: api, workshopDownloads: workshopDownloads,
                                                           wallpaperViewModel: wallpaperViewModel, ratings: ratings),
                   library: SteamLibraryImportModel(ratings: ratings, onImported: { folders in
                       OnboardingImports.didImport(folders, contentViewModel: contentViewModel)
                   }),
-                  loginSteamID: { [weak steamCmd] in steamCmd?.steamLogin?.steamID })
+                  loginSteamID: { [weak workshopDownloads] in workshopDownloads?.steamLogin?.steamID })
     }
 
     /// Copied folders join the library like any import: converted, indexed, their dependencies fetched.
@@ -96,7 +96,7 @@ final class OnboardingImports: ObservableObject {
 
 struct OnboardingWallpapersStep: View {
     @Environment(\.appAccentColor) private var accentColor
-    @ObservedObject var steamCmd: SteamCmdService
+    @ObservedObject var workshopDownloads: WorkshopDownloadService
     @ObservedObject var imports: OnboardingImports
     @State private var isCollectionPresented = false
     @State private var isLibraryPresented = false

@@ -6,14 +6,14 @@ import SwiftUI
 /// Steam by itself and asks only if there are new favourites.
 struct WallpaperEngineFavoritesImportView: View {
     @ObservedObject var assets: WallpaperEngineAssetsService
-    @ObservedObject var steamCmd: SteamCmdService
+    @ObservedObject var workshopDownloads: WorkshopDownloadService
     @StateObject private var model: WallpaperEngineFavoritesImportModel
 
-    init(assets: WallpaperEngineAssetsService, steamCmd: SteamCmdService) {
+    init(assets: WallpaperEngineAssetsService, workshopDownloads: WorkshopDownloadService) {
         self.assets = assets
-        self.steamCmd = steamCmd
+        self.workshopDownloads = workshopDownloads
         _model = StateObject(wrappedValue: WallpaperEngineFavoritesImportModel(
-            steamCmd: steamCmd, steam: AppDelegate.shared.contentViewModel.steamAccount.client))
+            workshopDownloads: workshopDownloads, steam: AppDelegate.shared.contentViewModel.steamAccount.client))
     }
 
     var body: some View {
@@ -38,7 +38,7 @@ struct WallpaperEngineFavoritesImportView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .onAppear { model.refreshSource() }
-        .onChange(of: steamCmd.steamLogin?.steamID) { _, _ in model.refreshSource() }
+        .onChange(of: workshopDownloads.steamLogin?.steamID) { _, _ in model.refreshSource() }
         // The assets were just requested: a folder was chosen, or an install from Steam ended.
         .onChange(of: assets.status.chosenFolder) { _, folder in
             model.refreshSource()

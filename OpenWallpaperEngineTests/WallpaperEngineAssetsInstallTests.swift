@@ -149,15 +149,15 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
 
     /// A download service logged in with `login`, or logged out.
     @MainActor
-    private func makeSteamCmd(storage: URL, login: SteamLogin? = FakeSteamHelperTransport.login) -> SteamCmdService {
-        let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { storage }),
+    private func makeDownloads(storage: URL, login: SteamLogin? = FakeSteamHelperTransport.login) -> WorkshopDownloadService {
+        let workshopDownloads = WorkshopDownloadService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { storage }),
                                        helperDownloads: AssetsHelper(), storageDirectory: { storage },
                                        previewCacheRoot: storage.appending(path: "previews"),
                                        downloadedIndex: DownloadedWallpaperIndex(defaults: makeDefaults(),
                                                                                  libraryDirectory: { storage }),
                                        presentPreview: { _ in })
-        steamCmd.useSteamLogin(login)
-        return steamCmd
+        workshopDownloads.useSteamLogin(login)
+        return workshopDownloads
     }
 
     /// A Steam helper connection whose app info has build `build`.
@@ -193,7 +193,7 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
     func testTheServiceReportsMissingAssetsAndThatInstallingNeedsTheLogin() throws {
         try XCTSkipIf(WallpaperEngineAssets.directory != nil, "OWE_ASSETS is set for this run")
         let scratch: URL = self.scratch
-        let service = WallpaperEngineAssetsService(steamCmd: makeSteamCmd(storage: scratch, login: nil),
+        let service = WallpaperEngineAssetsService(workshopDownloads: makeDownloads(storage: scratch, login: nil),
                                                    helperDownloads: AssetsHelper(), storageDirectory: { scratch },
                                                    defaults: makeDefaults())
         XCTAssertTrue(service.isMissing)
@@ -207,7 +207,7 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
     func testANotOwnedAppIsReportedAndTheDownloadRemoved() async throws {
         let scratch: URL = self.scratch
         let helper = AssetsHelper(output: "Depot 431961 is not available from this account.")
-        let service = WallpaperEngineAssetsService(steamCmd: makeSteamCmd(storage: scratch), steamHelper: await makeClient(),
+        let service = WallpaperEngineAssetsService(workshopDownloads: makeDownloads(storage: scratch), steamHelper: await makeClient(),
                                                    helperDownloads: helper, storageDirectory: { scratch },
                                                    defaults: makeDefaults())
         service.installFromSteam()
@@ -225,7 +225,7 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
         for includes in [true, false] {
             let storage = scratch.appending(path: "storage-\(includes)")
             try FileManager.default.createDirectory(at: storage, withIntermediateDirectories: true)
-            let service = WallpaperEngineAssetsService(steamCmd: makeSteamCmd(storage: storage), steamHelper: await makeClient(),
+            let service = WallpaperEngineAssetsService(workshopDownloads: makeDownloads(storage: storage), steamHelper: await makeClient(),
                                                        helperDownloads: AssetsHelper(), storageDirectory: { storage },
                                                        defaults: makeDefaults())
             service.installFromSteam(includingDefaultWallpapers: includes)
@@ -246,7 +246,7 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
         let storage = scratch.appending(path: "storage-helper")
         try FileManager.default.createDirectory(at: storage, withIntermediateDirectories: true)
         let helper = AssetsHelper()
-        let service = WallpaperEngineAssetsService(steamCmd: makeSteamCmd(storage: storage), steamHelper: await makeClient(),
+        let service = WallpaperEngineAssetsService(workshopDownloads: makeDownloads(storage: storage), steamHelper: await makeClient(),
                                                    helperDownloads: helper, storageDirectory: { storage },
                                                    defaults: makeDefaults())
         service.installFromSteam()
@@ -267,11 +267,11 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
     @MainActor
     func testARejectedLoginAsksForANewOne() async throws {
         let scratch: URL = self.scratch
-        let steamCmd = makeSteamCmd(storage: scratch)
+        let workshopDownloads = makeDownloads(storage: scratch)
         var rejected = 0
-        let cancellable = steamCmd.steamLoginRejected.sink { rejected += 1 }
+        let cancellable = workshopDownloads.steamLoginRejected.sink { rejected += 1 }
         defer { cancellable.cancel() }
-        let service = WallpaperEngineAssetsService(steamCmd: steamCmd, steamHelper: await makeClient(),
+        let service = WallpaperEngineAssetsService(workshopDownloads: workshopDownloads, steamHelper: await makeClient(),
                                                    helperDownloads: AssetsHelper(output: "Access token was rejected (Revoked).",
                                                                                  exitCode: 1),
                                                    storageDirectory: { scratch }, defaults: makeDefaults())
@@ -288,20 +288,20 @@ private final class AssetsHelper: SteamHelperDownloading, @unchecked Sendable {
     // `lock` owns `runs`.
     private let lock = NSLock()
     private var runs: [[String]] = []
-    private let answer: SteamCmdRun?
+    private let answer: ProcessRun?
 
     init(output: String? = nil, exitCode: Int32 = 0) {
-        answer = output.map { SteamCmdRun(output: $0, exitCode: exitCode) }
+        answer = output.map { ProcessRun(output: $0, exitCode: exitCode) }
     }
 
     var arguments: [[String]] { lock.withLock { runs } }
 
-    func run(arguments: [String], login: SteamLogin, cancellation: SteamCmdCancellation,
-             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
+    func run(arguments: [String], login: SteamLogin, cancellation: ProcessCancellation,
+             onOutput: @escaping @Sendable (String) -> Void) -> ProcessRun {
         lock.withLock { runs.append(arguments) }
         if let answer { return answer }
         guard let index = arguments.firstIndex(of: "-dir"), index + 1 < arguments.count else {
-            return SteamCmdRun(output: "no -dir", exitCode: 2)
+            return ProcessRun(output: "no -dir", exitCode: 2)
         }
         let install = URL(fileURLWithPath: arguments[index + 1], isDirectory: true)
         let files: [(String, String)] = [
@@ -316,9 +316,9 @@ private final class AssetsHelper: SteamHelperDownloading, @unchecked Sendable {
                 try Data(text.utf8).write(to: url)
             }
         } catch {
-            return SteamCmdRun(output: "write failed: \(error)", exitCode: 1)
+            return ProcessRun(output: "write failed: \(error)", exitCode: 1)
         }
         onOutput("100.00% assets/shaders/common.h\n")
-        return SteamCmdRun(output: "100.00% assets/shaders/common.h\nTotal downloaded: 1 bytes", exitCode: 0)
+        return ProcessRun(output: "100.00% assets/shaders/common.h\nTotal downloaded: 1 bytes", exitCode: 0)
     }
 }

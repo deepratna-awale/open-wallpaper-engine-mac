@@ -2,7 +2,7 @@ import Foundation
 
 /// File helpers for packages the app downloads and unpacks (the Chromium engine, depth-map plugins):
 /// the quarantine flag and the size on disk.
-enum SteamCmdPackage {
+enum PackageFiles {
     static let quarantineAttribute = "com.apple.quarantine"
 
     /// Removes Gatekeeper's quarantine flag from every file under `directory`, so the shell script

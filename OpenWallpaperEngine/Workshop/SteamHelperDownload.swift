@@ -1,30 +1,30 @@
 import Foundation
 
 /// Runs one `owe-steam-helper download` (SteamHelper/README.md): DepotDownloader logged on with the
-/// app's Steam login, which goes to its stdin. `SteamCmdService` and the assets install take it as
+/// app's Steam login, which goes to its stdin. `WorkshopDownloadService` and the assets install take it as
 /// a dependency, so tests can stand in a fake.
 protocol SteamHelperDownloading: Sendable {
     /// Blocks until the helper exits; `onOutput` receives the output as it arrives, on a
     /// background queue, and `cancellation` stops the helper.
-    func run(arguments: [String], login: SteamLogin, cancellation: SteamCmdCancellation,
-             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun
+    func run(arguments: [String], login: SteamLogin, cancellation: ProcessCancellation,
+             onOutput: @escaping @Sendable (String) -> Void) -> ProcessRun
 }
 
 /// Runs the bundled helper (`SteamHelperLocator`).
 struct ProcessSteamHelperDownloader: SteamHelperDownloading {
-    func run(arguments: [String], login: SteamLogin, cancellation: SteamCmdCancellation,
-             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
+    func run(arguments: [String], login: SteamLogin, cancellation: ProcessCancellation,
+             onOutput: @escaping @Sendable (String) -> Void) -> ProcessRun {
         guard let executable = SteamHelperLocator.executable() else {
-            return SteamCmdRun(output: SteamHelperError(code: .helperMissing, message: "").errorDescription ?? "",
+            return ProcessRun(output: SteamHelperError(code: .helperMissing, message: "").errorDescription ?? "",
                                exitCode: -1)
         }
         let input: Data
         do {
             input = try SteamHelperDownload.standardInput(for: login)
         } catch {
-            return SteamCmdRun(output: "Can't encode the Steam login: \(error)", exitCode: -1)
+            return ProcessRun(output: "Can't encode the Steam login: \(error)", exitCode: -1)
         }
-        return ProcessSteamCmdRunner.runProcess(executable: executable, arguments: ["download"] + arguments,
+        return ProcessRunner.runProcess(executable: executable, arguments: ["download"] + arguments,
                                                 standardInput: input, timeout: nil, cancellation: cancellation,
                                                 onOutput: onOutput)
     }

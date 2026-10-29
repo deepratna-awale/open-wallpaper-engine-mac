@@ -8,7 +8,7 @@ import AppKit
 struct AssetsPage: SettingsPage {
     var viewModel: GlobalSettingsViewModel
     @ObservedObject private var assets: WallpaperEngineAssetsService
-    @ObservedObject private var steamCmd: SteamCmdService
+    @ObservedObject private var workshopDownloads: WorkshopDownloadService
     private let steamAccount: SteamAccount
     private let editorPreviews: EditorPreviewPrewarm
     @AppStorage(WallpaperEngineAssetsService.autoInstallKey, store: .app) private var installsAssetsAutomatically = true
@@ -18,7 +18,7 @@ struct AssetsPage: SettingsPage {
     init(globalSettings: GlobalSettingsViewModel) {
         self.viewModel = globalSettings
         self.assets = AppDelegate.shared.assets
-        self.steamCmd = AppDelegate.shared.contentViewModel.steamCmd
+        self.workshopDownloads = AppDelegate.shared.contentViewModel.workshopDownloads
         self.steamAccount = AppDelegate.shared.contentViewModel.steamAccount
         self.editorPreviews = AppDelegate.shared.editorPreviewPrewarm
     }
@@ -47,7 +47,7 @@ struct AssetsPage: SettingsPage {
             }
 
             Section {
-                WallpaperEngineFavoritesImportView(assets: assets, steamCmd: steamCmd)
+                WallpaperEngineFavoritesImportView(assets: assets, workshopDownloads: workshopDownloads)
             } header: {
                 Label("Wallpaper Engine Favourites", systemImage: "heart")
             }
@@ -142,11 +142,11 @@ struct AssetsPage: SettingsPage {
             } else {
                 Button(status.info == nil ? "Install from Steam" : "Update from Steam") { assets.installFromSteam() }
                     .glassButtonStyle(.prominent)
-                    .disabled(!steamCmd.isLoggedIn)
+                    .disabled(!workshopDownloads.isLoggedIn)
                     .help("Downloads your Wallpaper Engine copy's assets and default wallpapers through your Steam login. Needs a Steam account that owns Wallpaper Engine.")
                 if status.info != nil {
                     Button("Re-download") { assets.installFromSteam(force: true) }
-                        .disabled(!steamCmd.isLoggedIn)
+                        .disabled(!workshopDownloads.isLoggedIn)
                         .help("Downloads the assets from Steam again even when they're up to date, to repair a damaged copy.")
                 }
                 Button("Choose Folder…") { chooseFolder() }

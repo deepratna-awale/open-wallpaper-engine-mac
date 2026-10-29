@@ -1,5 +1,5 @@
 //
-//  SteamCmdRunner.swift
+//  ProcessRunner.swift
 //  Open Wallpaper Engine
 //
 //  Runs one Steam helper download: its input goes to stdin, and its output is collected (and
@@ -9,13 +9,13 @@
 import Foundation
 import os
 
-struct SteamCmdRun: Sendable {
+struct ProcessRun: Sendable {
     let output: String
     let exitCode: Int32
 }
 
 /// Stops a running download from another thread. One token per run.
-final class SteamCmdCancellation: @unchecked Sendable {
+final class ProcessCancellation: @unchecked Sendable {
     // `lock` owns `isCancelled` and `onCancel`.
     private let lock = NSLock()
     private var cancelled = false
@@ -43,13 +43,13 @@ final class SteamCmdCancellation: @unchecked Sendable {
 }
 
 /// Runs a program to the end, collecting its output.
-enum ProcessSteamCmdRunner {
+enum ProcessRunner {
     /// Runs `executable` with `standardInput` written to its stdin, which is then closed, and blocks
     /// until it exits or `timeout` passes (nil waits for as long as it takes). `onOutput` receives the
     /// output as it arrives, on a background queue; `cancellation` terminates the program.
     static func runProcess(executable: URL, arguments: [String], standardInput: Data, timeout: TimeInterval?,
-                           cancellation: SteamCmdCancellation,
-                           onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
+                           cancellation: ProcessCancellation,
+                           onOutput: @escaping @Sendable (String) -> Void) -> ProcessRun {
         let process = Process()
         let outputPipe = Pipe()
         let inputPipe = Pipe()
@@ -76,7 +76,7 @@ enum ProcessSteamCmdRunner {
             handle.readabilityHandler = nil
             let failure = SteamHelperError(code: .helperExited,
                                            message: "Can't start \(executable.lastPathComponent): \(error.localizedDescription)")
-            return SteamCmdRun(output: failure.errorDescription ?? failure.message, exitCode: -1)
+            return ProcessRun(output: failure.errorDescription ?? failure.message, exitCode: -1)
         }
         cancellation.setCancelAction { process.terminate() }
         defer { cancellation.setCancelAction(nil) }
@@ -91,7 +91,7 @@ enum ProcessSteamCmdRunner {
         if let timeout, exited.wait(timeout: .now() + timeout) == .timedOut {
             process.terminate()
             handle.readabilityHandler = nil
-            return SteamCmdRun(output: "\(executable.lastPathComponent) timed out after \(Int(timeout))s", exitCode: -1)
+            return ProcessRun(output: "\(executable.lastPathComponent) timed out after \(Int(timeout))s", exitCode: -1)
         }
         exited.wait()
 
@@ -102,7 +102,7 @@ enum ProcessSteamCmdRunner {
             $0.append(remaining)
             return $0
         }
-        return SteamCmdRun(output: String(decoding: output, as: UTF8.self), exitCode: process.terminationStatus)
+        return ProcessRun(output: String(decoding: output, as: UTF8.self), exitCode: process.terminationStatus)
     }
 
     /// Writes the whole input and closes stdin, so the program reads EOF after it.

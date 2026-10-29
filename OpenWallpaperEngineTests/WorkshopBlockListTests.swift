@@ -64,10 +64,10 @@ final class WorkshopBlockListTests: XCTestCase {
         list.blockAuthor("odd", name: "Odd")
         list.block(catalogue[0])
         let root = root!
-        let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { root }),
+        let workshopDownloads = WorkshopDownloadService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { root }),
                                        storageDirectory: { root }, previewCacheRoot: root,
                                        presentPreview: { _ in })
-        let model = WorkshopViewModel(steamCmd: steamCmd, blockList: list, searchPage: { _, _, _, page, perPage in
+        let model = WorkshopViewModel(workshopDownloads: workshopDownloads, blockList: list, searchPage: { _, _, _, page, perPage in
             let start = (page - 1) * perPage
             guard start < catalogue.count else { return [] }
             return Array(catalogue[start..<min(start + perPage, catalogue.count)])

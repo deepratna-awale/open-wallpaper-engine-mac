@@ -5,17 +5,17 @@ extension WorkshopSetAsFlow.Environment {
     /// Wallpaper and the screen saver's selection service.
     @MainActor
     static func app(workshop: WorkshopViewModel, library: InstalledLibraryModel) -> Self {
-        let steamCmd = workshop.steamCmd
+        let workshopDownloads = workshop.workshopDownloads
         return Self(
             isInstalled: { id in
-                DownloadedWallpaperIndex.shared.contains(id) && !steamCmd.dependencyIndex.contains(id)
+                DownloadedWallpaperIndex.shared.contains(id) && !workshopDownloads.dependencyIndex.contains(id)
             },
             installedWallpaper: { id in
                 library.allWallpapers.first { SceneContentLoader.workshopId(of: $0) == id }
             },
-            canDownload: { steamCmd.isLoggedIn },
+            canDownload: { workshopDownloads.isLoggedIn },
             download: { item, completion in
-                steamCmd.downloadWorkshopItem(workshopId: item.id, title: item.title, previewURL: item.previewImageURL,
+                workshopDownloads.downloadWorkshopItem(workshopId: item.id, title: item.title, previewURL: item.previewImageURL,
                                               creatorId: item.creatorId, subscriptions: item.subscriptions,
                                               fileSize: item.fileSize) { folder in
                     // The download may call back off the main thread.

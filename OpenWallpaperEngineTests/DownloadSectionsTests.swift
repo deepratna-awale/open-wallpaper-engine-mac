@@ -56,7 +56,7 @@ final class DownloadSectionsTests: XCTestCase {
     }
 
     @MainActor func testClearCompletedKeepsTheOthers() {
-        let service = SteamCmdService()
+        let service = WorkshopDownloadService()
         service.downloadProgress = ["ok": .completed, "bad": .failed("no"), "run": .downloading(status: "…")]
         service.downloadFolders = ["ok": URL(fileURLWithPath: "/tmp/ok")]
         service.clearCompletedDownloads()
@@ -65,7 +65,7 @@ final class DownloadSectionsTests: XCTestCase {
     }
 
     @MainActor func testRetryNeedsAFailedDownload() {
-        let service = SteamCmdService()
+        let service = WorkshopDownloadService()
         service.downloadProgress = ["ok": .completed]
         service.retryDownload("ok")
         XCTAssertEqual(service.downloadProgress["ok"], .completed)

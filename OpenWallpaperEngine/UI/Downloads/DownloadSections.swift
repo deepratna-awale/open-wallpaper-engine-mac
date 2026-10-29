@@ -12,9 +12,9 @@ struct DownloadSections: Equatable {
     var failed: [String] = []
     var completed: [String] = []
 
-    /// Groups the ids `SteamCmdService` tracks. `startedAt` orders the finished ones, most recent
+    /// Groups the ids `WorkshopDownloadService` tracks. `startedAt` orders the finished ones, most recent
     /// first (ids without a start time last, by id, so the order never jumps).
-    init(progress: [String: SteamCmdService.DownloadState], activeId: String?, queuedIds: [String],
+    init(progress: [String: WorkshopDownloadService.DownloadState], activeId: String?, queuedIds: [String],
          startedAt: [String: Date]) {
         if let activeId { inProgress = [activeId] }
         queued = queuedIds.filter { $0 != activeId }

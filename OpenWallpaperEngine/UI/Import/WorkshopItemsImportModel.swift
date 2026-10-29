@@ -26,23 +26,23 @@ final class WorkshopItemsImportModel: ObservableObject {
     let checklist: ImportChecklist
 
     private let api: WorkshopAPIService
-    private let steamCmd: SteamCmdService
+    private let workshopDownloads: WorkshopDownloadService
     private let wallpaperViewModel: WallpaperViewModel
     private let storageDirectory: () -> URL
     private var checklistChange: AnyCancellable?
 
-    init(api: WorkshopAPIService = WorkshopAPIService(), steamCmd: SteamCmdService,
+    init(api: WorkshopAPIService = WorkshopAPIService(), workshopDownloads: WorkshopDownloadService,
          wallpaperViewModel: WallpaperViewModel, ratings: Set<String>,
          storageDirectory: @escaping () -> URL = { WallpaperStorage.directory }) {
         self.api = api
-        self.steamCmd = steamCmd
+        self.workshopDownloads = workshopDownloads
         self.wallpaperViewModel = wallpaperViewModel
         self.storageDirectory = storageDirectory
         checklist = ImportChecklist(ratings: ratings)
         checklistChange = checklist.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
     }
 
-    var canDownload: Bool { steamCmd.isLoggedIn }
+    var canDownload: Bool { workshopDownloads.isLoggedIn }
 
     /// Reads the collection the user pasted.
     func loadCollection() async {
@@ -105,7 +105,7 @@ final class WorkshopItemsImportModel: ObservableObject {
             }
         }
         for candidate in selection {
-            steamCmd.downloadWorkshopItem(workshopId: candidate.id, title: candidate.title,
+            workshopDownloads.downloadWorkshopItem(workshopId: candidate.id, title: candidate.title,
                                           previewURL: candidate.previewURL) { [weak wallpaperViewModel] destination in
                 guard let playlistID, let destination else { return }
                 // The download calls back off the main thread.

@@ -57,13 +57,13 @@ final class WallpaperEngineAssetsService: ObservableObject {
     /// Fires when the asset tree in use changed, so wallpapers can reload.
     let assetsChanged = PassthroughSubject<Void, Never>()
 
-    private let steamCmd: SteamCmdService
+    private let workshopDownloads: WorkshopDownloadService
     /// The Steam login's connection, for the current build.
     private let steamHelper: SteamHelperClient?
     private let helperDownloads: SteamHelperDownloading
     private let storageDirectory: () throws -> URL
     private let defaults: UserDefaults
-    private var cancellation: SteamCmdCancellation?
+    private var cancellation: ProcessCancellation?
     private var loginCancellable: AnyCancellable?
 
     /// Settings › Assets: install the assets by themselves after a Steam login (on by default).
@@ -75,20 +75,20 @@ final class WallpaperEngineAssetsService: ObservableObject {
     static let notOwnedAccountKey = "WallpaperEngineAssetsNotOwnedAccount"
 
     /// `automaticInstallAllowed` is off under XCTest unless a test turns it on.
-    init(steamCmd: SteamCmdService,
+    init(workshopDownloads: WorkshopDownloadService,
          steamHelper: SteamHelperClient? = nil,
          helperDownloads: SteamHelperDownloading = ProcessSteamHelperDownloader(),
          storageDirectory: @escaping () throws -> URL = { try WallpaperStorage.availableDirectory() },
          defaults: UserDefaults = .app,
          automaticInstallAllowed: Bool = !WallpaperEngineAssets.isTesting) {
-        self.steamCmd = steamCmd
+        self.workshopDownloads = workshopDownloads
         self.steamHelper = steamHelper
         self.helperDownloads = helperDownloads
         self.storageDirectory = storageDirectory
         self.defaults = defaults
         refresh()
         guard automaticInstallAllowed else { return }
-        loginCancellable = steamCmd.loginSucceeded.sink { [weak self] in self?.installAfterLoginIfNeeded() }
+        loginCancellable = workshopDownloads.loginSucceeded.sink { [weak self] in self?.installAfterLoginIfNeeded() }
     }
 
     enum AutomaticInstallDecision: Equatable {
@@ -112,7 +112,7 @@ final class WallpaperEngineAssetsService: ObservableObject {
         }
         guard let cache = cacheDirectory else { return .storageUnavailable }
         if WallpaperEngineAssets.isAssetTree(cache) { return .cached }
-        if let account = defaults.string(forKey: Self.notOwnedAccountKey), account == steamCmd.steamUsername {
+        if let account = defaults.string(forKey: Self.notOwnedAccountKey), account == workshopDownloads.steamUsername {
             return .notOwned
         }
         let includes: Bool = defaults.object(forKey: Self.addsDefaultWallpapersKey) as? Bool ?? true
@@ -241,7 +241,7 @@ final class WallpaperEngineAssetsService: ObservableObject {
     func installFromSteam(includingDefaultWallpapers: Bool = true, force: Bool = false) {
         guard !isBusy else { return }
         notice = nil
-        guard let login = steamCmd.steamLogin else { return fail(.notLoggedIn) }
+        guard let login = workshopDownloads.steamLogin else { return fail(.notLoggedIn) }
         lastFailure = nil
         let storage: URL
         do {
@@ -249,7 +249,7 @@ final class WallpaperEngineAssetsService: ObservableObject {
         } catch {
             return fail(.steam(error.localizedDescription))
         }
-        let token = SteamCmdCancellation()
+        let token = ProcessCancellation()
         cancellation = token
         let cache = WallpaperEngineAssets.cacheDirectory(in: storage)
         let installed = WallpaperEngineAssetsCache.readInfo(cache: cache)
@@ -302,8 +302,8 @@ final class WallpaperEngineAssetsService: ObservableObject {
         }
     }
 
-    private func enqueue(_ job: InstallJob, cancellation token: SteamCmdCancellation) {
-        steamCmd.enqueueSteamCmdWork { [weak self] in
+    private func enqueue(_ job: InstallJob, cancellation token: ProcessCancellation) {
+        workshopDownloads.enqueueSteamWork { [weak self] in
             let result = job.run(
                 onProgress: { [weak self] progress in
                     DispatchQueue.main.async { [weak self] in self?.showDownloadProgress(progress) }
@@ -340,9 +340,9 @@ final class WallpaperEngineAssetsService: ObservableObject {
             } else {
                 let failure = error as? Failure
                 if failure == .notOwned {
-                    defaults.set(steamCmd.steamUsername, forKey: Self.notOwnedAccountKey)
+                    defaults.set(workshopDownloads.steamUsername, forKey: Self.notOwnedAccountKey)
                 }
-                if failure == .notLoggedIn { steamCmd.steamLoginRejected.send() }
+                if failure == .notLoggedIn { workshopDownloads.steamLoginRejected.send() }
                 lastFailure = failure
                 OWELog.error(.library, "Assets install failed: \(error.localizedDescription)")
                 phase = .failed(error.localizedDescription)
@@ -370,7 +370,7 @@ private struct InstallJob {
     let downloader: SteamHelperDownloading
     let storage: URL
     let includesDefaultWallpapers: Bool
-    let cancellation: SteamCmdCancellation
+    let cancellation: ProcessCancellation
     /// Steam's current build, recorded with the cache.
     var currentBuild: String?
 

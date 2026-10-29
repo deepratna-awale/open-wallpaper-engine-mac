@@ -13,7 +13,7 @@ enum VersionedInstallFailure {
                 break
             }
         }
-        if case URLSessionSteamCmdDownloader.Failure.httpStatus(let code) = error {
+        if case URLSessionPackageDownloader.Failure.httpStatus(let code) = error {
             return String(localized: "The download server answered with HTTP status \(code).",
                           comment: "Package download error; %lld is an HTTP status code")
         }

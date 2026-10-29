@@ -231,7 +231,7 @@ final class InstalledFolderTests: XCTestCase {
     }
 
     private func library() -> InstalledLibraryModel {
-        InstalledLibraryModel(filters: FilterResultsViewModel(), steamCmd: SteamCmdService(), presentation: ContentPresentation(),
+        InstalledLibraryModel(filters: FilterResultsViewModel(), workshopDownloads: WorkshopDownloadService(), presentation: ContentPresentation(),
                               folders: InstalledFolderStore(defaults: defaults))
     }
 

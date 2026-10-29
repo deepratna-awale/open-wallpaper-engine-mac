@@ -40,11 +40,11 @@ final class WallpaperEngineFavoritesImportModel: ObservableObject {
     }
 
     /// The app's own wiring: its favourites and Steam login.
-    convenience init(steamCmd: SteamCmdService, steam: SteamHelperClient) {
+    convenience init(workshopDownloads: WorkshopDownloadService, steam: SteamHelperClient) {
         let api = WorkshopAPIService(steam: steam)
         self.init(store: .shared,
                   fetch: { try await api.getFavoritedItemIDs(steamID: $0) },
-                  loginSteamID: { [weak steamCmd] in steamCmd?.steamLogin?.steamID })
+                  loginSteamID: { [weak workshopDownloads] in workshopDownloads?.steamLogin?.steamID })
     }
 
     /// Whether favourites can be read: the user is logged in to Steam.

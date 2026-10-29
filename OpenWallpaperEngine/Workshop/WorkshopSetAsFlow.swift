@@ -73,7 +73,7 @@ final class WorkshopSetAsFlow: ObservableObject {
         let id = item.id
         environment.download(item) { [weak self] folder in
             guard let self else { return }
-            // A failed download shows its own error (`SteamCmdService.downloadProgress`).
+            // A failed download shows its own error (`WorkshopDownloadService.downloadProgress`).
             guard let folder else {
                 self.phases[id] = nil
                 return
@@ -117,7 +117,7 @@ final class WorkshopSetAsFlow: ObservableObject {
     }
 
     /// What the item's card shows over its download's state: setting the screen saver, or why the run failed.
-    func downloadState(for workshopId: String) -> SteamCmdService.DownloadState? {
+    func downloadState(for workshopId: String) -> WorkshopDownloadService.DownloadState? {
         switch phases[workshopId] {
         case .settingScreenSaver?:
             return .downloading(status: String(localized: "Setting the screen saver…",

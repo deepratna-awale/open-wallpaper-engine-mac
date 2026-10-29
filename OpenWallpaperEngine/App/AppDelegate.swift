@@ -193,7 +193,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                                                 systemHash: UserShortcutSystemHash.current()))
     }()
     /// The Wallpaper Engine assets scenes need, from the user's own Steam copy (Settings › Assets).
-    lazy var assets = WallpaperEngineAssetsService(steamCmd: contentViewModel.steamCmd,
+    lazy var assets = WallpaperEngineAssetsService(workshopDownloads: contentViewModel.workshopDownloads,
                                                    steamHelper: contentViewModel.steamAccount.client)
     private var assetsCancellable: AnyCancellable?
     /// Lists wallpapers added to or removed from the library folders as they change.
@@ -203,7 +203,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         return watcher
     }()
     /// Fetches the Workshop items shown wallpapers borrow assets from.
-    lazy var workshopDependencies = WorkshopDependencyService(steamCmd: contentViewModel.steamCmd)
+    lazy var workshopDependencies = WorkshopDependencyService(workshopDownloads: contentViewModel.workshopDownloads)
     private var workshopDependencyCancellable: AnyCancellable?
     /// The collection, subscription and Steam library imports, shared by the setup assistant and
     /// the Installed and Workshop tabs.
@@ -287,7 +287,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             self.editorPreviewPrewarm.start(reason: "assets changed")
         }
 
-        wallpaperViewModel.keepWorkshopPreview = { [steamCmd = contentViewModel.steamCmd] in try steamCmd.keepPreview($0) }
+        wallpaperViewModel.keepWorkshopPreview = { [workshopDownloads = contentViewModel.workshopDownloads] in try workshopDownloads.keepPreview($0) }
 
         // Settings › Optimizations › Audio Output silences every wallpaper (`WallpaperAudioRouting`).
         audioOutputCancellable = globalSettingsViewModel.$settings.map(\.audioOutput).removeDuplicates()

@@ -62,12 +62,12 @@ enum WorkshopItemInstaller {
     }
 
     /// Where a download puts an item under `installDirectory`.
-    static func contentDirectory(inSteamCmdRoot installDirectory: URL, workshopId: String) -> URL {
-        contentRoot(inSteamCmdRoot: installDirectory).appending(path: workshopId, directoryHint: .isDirectory)
+    static func contentDirectory(in installDirectory: URL, workshopId: String) -> URL {
+        contentRoot(in: installDirectory).appending(path: workshopId, directoryHint: .isDirectory)
     }
 
     /// The folder holding every item downloaded under `installDirectory`.
-    static func contentRoot(inSteamCmdRoot installDirectory: URL) -> URL {
+    static func contentRoot(in installDirectory: URL) -> URL {
         installDirectory.appending(path: "steamapps/workshop/content/\(WorkshopAPIService.wallpaperEngineAppId)",
                                    directoryHint: .isDirectory)
     }
@@ -118,7 +118,7 @@ enum WorkshopItemInstaller {
 
     /// Whether `directory` is an item folder in the preview cache at `cacheRoot`.
     static func isPreview(_ directory: URL, cacheRoot: URL = previewCacheRoot) -> Bool {
-        let content = contentRoot(inSteamCmdRoot: cacheRoot).standardizedFileURL
+        let content = contentRoot(in: cacheRoot).standardizedFileURL
         return directory.standardizedFileURL.deletingLastPathComponent() == content
     }
 

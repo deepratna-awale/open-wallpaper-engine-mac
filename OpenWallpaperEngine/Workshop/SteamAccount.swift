@@ -26,7 +26,7 @@ final class SteamAccount: ObservableObject {
     /// Why the last sign-in or logon failed, for the user.
     @Published private(set) var errorMessage: String?
     /// The sign-in requests use, from launch or a sign-in until it is forgotten; Workshop downloads
-    /// use it too (`SteamCmdService.useSteamLogin`).
+    /// use it too (`WorkshopDownloadService.useSteamLogin`).
     @Published private(set) var login: SteamLogin?
 
     let client: SteamHelperClient

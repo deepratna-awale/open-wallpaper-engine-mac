@@ -112,12 +112,12 @@ final class WallpaperEngineAssetsUpdateCheckTests: XCTestCase {
     private func makeService(appInfo: AppInfo, helper: RecordingDownloader) async -> WallpaperEngineAssetsService {
         let storage: URL = scratch
         let defaults = UserDefaults(suiteName: "owe-tests-\(UUID().uuidString)")!
-        let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { storage }),
+        let workshopDownloads = WorkshopDownloadService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { storage }),
                                        helperDownloads: helper, storageDirectory: { storage },
                                        previewCacheRoot: storage.appending(path: "previews"),
                                        downloadedIndex: DownloadedWallpaperIndex(defaults: defaults, libraryDirectory: { storage }),
                                        presentPreview: { _ in })
-        steamCmd.useSteamLogin(FakeSteamHelperTransport.login)
+        workshopDownloads.useSteamLogin(FakeSteamHelperTransport.login)
         let client = SteamHelperClient {
             FakeSteamHelperTransport { request in
                 guard request.method == "appInfo" else { return [FakeSteamHelperTransport.result(request)] }
@@ -130,7 +130,7 @@ final class WallpaperEngineAssetsUpdateCheckTests: XCTestCase {
             }
         }
         await client.use(FakeSteamHelperTransport.login)
-        return WallpaperEngineAssetsService(steamCmd: steamCmd, steamHelper: client, helperDownloads: helper,
+        return WallpaperEngineAssetsService(workshopDownloads: workshopDownloads, steamHelper: client, helperDownloads: helper,
                                             storageDirectory: { storage }, defaults: defaults)
     }
 
@@ -151,11 +151,11 @@ private final class RecordingDownloader: SteamHelperDownloading, @unchecked Send
     private var runs = 0 // Owned by `lock`.
     var count: Int { lock.withLock { runs } }
 
-    func run(arguments: [String], login: SteamLogin, cancellation: SteamCmdCancellation,
-             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
+    func run(arguments: [String], login: SteamLogin, cancellation: ProcessCancellation,
+             onOutput: @escaping @Sendable (String) -> Void) -> ProcessRun {
         lock.withLock { runs += 1 }
         guard let index = arguments.firstIndex(of: "-dir"), index + 1 < arguments.count else {
-            return SteamCmdRun(output: "no -dir", exitCode: 2)
+            return ProcessRun(output: "no -dir", exitCode: 2)
         }
         let install = URL(fileURLWithPath: arguments[index + 1], isDirectory: true)
         do {
@@ -165,8 +165,8 @@ private final class RecordingDownloader: SteamHelperDownloading, @unchecked Send
                 try Data(text.utf8).write(to: url)
             }
         } catch {
-            return SteamCmdRun(output: "write failed: \(error)", exitCode: 1)
+            return ProcessRun(output: "write failed: \(error)", exitCode: 1)
         }
-        return SteamCmdRun(output: "100.00% assets/shaders/common.h\nTotal downloaded: 1 bytes", exitCode: 0)
+        return ProcessRun(output: "100.00% assets/shaders/common.h\nTotal downloaded: 1 bytes", exitCode: 0)
     }
 }

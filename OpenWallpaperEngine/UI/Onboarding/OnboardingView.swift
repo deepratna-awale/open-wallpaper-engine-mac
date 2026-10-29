@@ -16,7 +16,7 @@ struct OnboardingView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var globalSettingsViewModel: GlobalSettingsViewModel
     @StateObject private var flow = OnboardingFlow()
-    @ObservedObject var steamCmd: SteamCmdService
+    @ObservedObject var workshopDownloads: WorkshopDownloadService
     let steamAccount: SteamAccount
     @ObservedObject var assets: WallpaperEngineAssetsService
     @ObservedObject var imports: OnboardingImports
@@ -123,12 +123,12 @@ struct OnboardingView: View {
         case .steam:
             OnboardingSteamStep(account: steamAccount)
         case .assets:
-            OnboardingAssetsStep(assets: assets, steamCmd: steamCmd,
+            OnboardingAssetsStep(assets: assets, workshopDownloads: workshopDownloads,
                                  logIn: { withAnimation(.easeInOut(duration: 0.15)) { flow.go(to: .steam) } })
         case .wallpapers:
-            OnboardingWallpapersStep(steamCmd: steamCmd, imports: imports)
+            OnboardingWallpapersStep(workshopDownloads: workshopDownloads, imports: imports)
         case .done:
-            OnboardingDoneStep(flow: flow, steamCmd: steamCmd, assets: assets, imports: imports,
+            OnboardingDoneStep(flow: flow, workshopDownloads: workshopDownloads, assets: assets, imports: imports,
                                language: globalSettingsViewModel.settings.language,
                                onShortcut: finish)
         }
@@ -201,7 +201,7 @@ struct OnboardingView: View {
 
     private var skipNote: LocalizedStringKey? {
         switch flow.step {
-        case .steam where !steamCmd.isLoggedIn:
+        case .steam where !workshopDownloads.isLoggedIn:
             return "Without Steam, video and web wallpapers still work."
         case .assets where assets.isBusy:
             return "The download continues in the background."

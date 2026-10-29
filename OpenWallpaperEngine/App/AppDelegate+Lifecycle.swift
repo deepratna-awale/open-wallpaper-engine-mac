@@ -153,7 +153,7 @@ extension AppDelegate {
 
     private func refreshStaleBundles(_ stale: [StaleBundle]) {
         let refresher = StaleBundleRefresher(
-            downloader: contentViewModel.steamCmd,
+            downloader: contentViewModel.workshopDownloads,
             isShown: { [weak self] directory in
                 self?.wallpaperViewModel.wallpapers.values.contains {
                     $0.wallpaperDirectory.standardizedFileURL == directory.standardizedFileURL

@@ -399,7 +399,7 @@ struct WallpaperPreview: SubviewOfContentView {
                                         .disabled(wallpaperViewModel.arePlaybackRatesLinked)
                                 }
                             case "scene":
-                                MissingWorkshopDependenciesBanner(steamCmd: viewModel.steamCmd,
+                                MissingWorkshopDependenciesBanner(workshopDownloads: viewModel.workshopDownloads,
                                                                   dependencies: AppDelegate.shared.workshopDependencies,
                                                                   wallpaper: wallpaperViewModel.displayedWallpaper)
                                     .id(wallpaperViewModel.displayedWallpaper.wallpaperDirectory)
@@ -646,7 +646,7 @@ private struct ChromiumFeatureBadge: View {
 /// removed, made private or belong to another app are named with the reason and a link to their
 /// Workshop page; the wallpaper plays without them.
 private struct MissingWorkshopDependenciesBanner: View {
-    @ObservedObject var steamCmd: SteamCmdService
+    @ObservedObject var workshopDownloads: WorkshopDownloadService
     @ObservedObject var dependencies: WorkshopDependencyService
     let wallpaper: WEWallpaper
 
@@ -681,14 +681,14 @@ private struct MissingWorkshopDependenciesBanner: View {
                         }
                         if downloadableIds.isEmpty {
                             // Nothing left to download.
-                        } else if !steamCmd.isLoggedIn {
+                        } else if !workshopDownloads.isLoggedIn {
                             Text("Log in on the Workshop tab to download these.")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         } else {
                             Button("Download All") {
                                 for workshopId in downloadableIds {
-                                    steamCmd.downloadWorkshopItem(workshopId: workshopId, asDependency: true)
+                                    workshopDownloads.downloadWorkshopItem(workshopId: workshopId, asDependency: true)
                                 }
                             }
                             .frame(maxWidth: .infinity)
@@ -700,8 +700,8 @@ private struct MissingWorkshopDependenciesBanner: View {
             }
         }
         .onAppear { refresh() }
-        .onChange(of: steamCmd.downloadProgress) { _, _ in
-            for workshopId in missingIds where steamCmd.downloadProgress[workshopId] == .completed {
+        .onChange(of: workshopDownloads.downloadProgress) { _, _ in
+            for workshopId in missingIds where workshopDownloads.downloadProgress[workshopId] == .completed {
                 WorkshopDependencyResolver.linkInstalledDependencies(for: wallpaper)
             }
             refresh()
@@ -732,7 +732,7 @@ private struct MissingWorkshopDependenciesBanner: View {
 
     @ViewBuilder
     private func statusView(for workshopId: String) -> some View {
-        switch steamCmd.downloadProgress[workshopId] {
+        switch workshopDownloads.downloadProgress[workshopId] {
         case .downloading(let status):
             Text(status).font(.caption).foregroundStyle(.secondary)
         case .completed:

@@ -5,7 +5,7 @@ import Combine
 /// (`SteamAccount`). Main-actor state; the helper runs on `downloadQueue` and `previewQueue`,
 /// which use only the nonisolated members and hand their results back on the main queue.
 @MainActor
-class SteamCmdService: ObservableObject {
+class WorkshopDownloadService: ObservableObject {
     /// Whether there is a Steam login to download with.
     @Published private(set) var isLoggedIn = false
     @Published private(set) var steamUsername: String = ""
@@ -90,7 +90,7 @@ class SteamCmdService: ObservableObject {
 
     /// Runs `work` on the queue Workshop downloads use, so another Steam download (installing the
     /// assets) never runs beside one of them.
-    func enqueueSteamCmdWork(_ work: @escaping @Sendable () -> Void) {
+    func enqueueSteamWork(_ work: @escaping @Sendable () -> Void) {
         downloadQueue.async(execute: work)
     }
 
@@ -295,11 +295,11 @@ class SteamCmdService: ObservableObject {
     /// under `installDirectory`, and returns that folder. A failed download leaves nothing there.
     nonisolated private func helperDownload(_ workshopId: String, login: SteamLogin, into installDirectory: URL, validate: Bool,
                                             onOutput: @escaping @Sendable (String) -> Void = { _ in }) throws -> URL {
-        let item = WorkshopItemInstaller.contentDirectory(inSteamCmdRoot: installDirectory, workshopId: workshopId)
+        let item = WorkshopItemInstaller.contentDirectory(in: installDirectory, workshopId: workshopId)
         try FileManager.default.createDirectory(at: item, withIntermediateDirectories: true)
         let run = helperDownloads.run(arguments: SteamHelperDownload.workshopArguments(workshopId: workshopId, directory: item,
                                                                                         validate: validate),
-                                      login: login, cancellation: SteamCmdCancellation(), onOutput: onOutput)
+                                      login: login, cancellation: ProcessCancellation(), onOutput: onOutput)
         OWELog.info(.workshop, "Steam helper download [\(workshopId)] exit=\(run.exitCode)\n\(SteamSecretRedactor.redact(run.output, secrets: [login.refreshToken]))")
         SteamHelperDownload.removeBookkeeping(in: item)
         let outcome = SteamHelperDownload.outcome(output: run.output, exitCode: run.exitCode,
@@ -349,7 +349,7 @@ class SteamCmdService: ObservableObject {
             guard let self = self else { return }
 
             let cacheRoot = self.previewCacheRoot
-            let sourcePath = WorkshopItemInstaller.contentDirectory(inSteamCmdRoot: cacheRoot, workshopId: workshopId)
+            let sourcePath = WorkshopItemInstaller.contentDirectory(in: cacheRoot, workshopId: workshopId)
 
             do {
                 try FileManager.default.createDirectory(at: cacheRoot, withIntermediateDirectories: true)
@@ -413,7 +413,7 @@ class SteamCmdService: ObservableObject {
     }
 
     nonisolated private func trimPreviewCache(at cacheRoot: URL, keeping workshopId: String) throws {
-        let contentDirectory = WorkshopItemInstaller.contentRoot(inSteamCmdRoot: cacheRoot)
+        let contentDirectory = WorkshopItemInstaller.contentRoot(in: cacheRoot)
         guard FileManager.default.fileExists(atPath: contentDirectory.path) else { return }
 
         var cacheSize = try directorySize(at: cacheRoot)

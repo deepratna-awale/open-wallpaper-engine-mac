@@ -36,7 +36,7 @@ struct WorkshopItemMenu: View {
         } label: {
             Label("Download", systemImage: "arrow.down.circle")
         }
-        .disabled(!viewModel.steamCmd.isLoggedIn || viewModel.isDownloaded(item))
+        .disabled(!viewModel.workshopDownloads.isLoggedIn || viewModel.isDownloaded(item))
 
         Menu("Add to Playlist") {
             let playlists = AppDelegate.shared.wallpaperViewModel.playlists
@@ -52,7 +52,7 @@ struct WorkshopItemMenu: View {
                 }
             }
         }
-        .disabled(!viewModel.steamCmd.isLoggedIn)
+        .disabled(!viewModel.workshopDownloads.isLoggedIn)
 
         Button {
             viewModel.toggleFavorite(item)

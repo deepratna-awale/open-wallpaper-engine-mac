@@ -8,15 +8,15 @@ struct DownloadRow: View {
     @Environment(\.appAccentColor) private var accentColor
     let workshopId: String
     let kind: DownloadSections.Kind
-    @ObservedObject var steamCmd: SteamCmdService
+    @ObservedObject var workshopDownloads: WorkshopDownloadService
     let canDownload: Bool
     let actions: DownloadActions
     @State private var isHovered = false
 
-    private var item: SteamCmdService.DownloadItem? { steamCmd.downloadItems[workshopId] }
+    private var item: WorkshopDownloadService.DownloadItem? { workshopDownloads.downloadItems[workshopId] }
 
     private var title: String {
-        item?.title ?? steamCmd.downloadTitles[workshopId]
+        item?.title ?? workshopDownloads.downloadTitles[workshopId]
             ?? String(localized: "Workshop item \(workshopId)", comment: "Download title before the item's name is known; %@ is its Workshop ID")
     }
 
@@ -101,7 +101,7 @@ struct DownloadRow: View {
                 ProgressView(value: fraction(at: context.date))
                     .progressViewStyle(.linear)
                     .tint(accentColor)
-                if let percentage = steamCmd.downloadPercentages[workshopId], percentage > 0 {
+                if let percentage = workshopDownloads.downloadPercentages[workshopId], percentage > 0 {
                     Text(percentage, format: .percent.precision(.fractionLength(0)))
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.secondary)
@@ -117,9 +117,9 @@ struct DownloadRow: View {
             TimelineView(.periodic(from: .now, by: 1)) { context in
                 HStack(spacing: 8) {
                     Text(verbatim: statusText)
-                    if let estimate = DownloadRateEstimate(fraction: steamCmd.downloadPercentages[workshopId],
+                    if let estimate = DownloadRateEstimate(fraction: workshopDownloads.downloadPercentages[workshopId],
                                                            fileSize: item?.fileSize ?? 0,
-                                                           startedAt: steamCmd.downloadStartedAt[workshopId],
+                                                           startedAt: workshopDownloads.downloadStartedAt[workshopId],
                                                            now: context.date) {
                         Text("\(Int64(estimate.bytesPerSecond).formatted(.byteCount(style: .file)))/s",
                              comment: "Download speed; %@ is an amount of data such as 2.4 MB")
@@ -134,7 +134,7 @@ struct DownloadRow: View {
             }
         case .queued:
             Label {
-                Text(verbatim: SteamCmdService.queuedStatus)
+                Text(verbatim: WorkshopDownloadService.queuedStatus)
             } icon: {
                 Image(systemName: "clock")
             }
@@ -216,20 +216,20 @@ struct DownloadRow: View {
     }
 
     private var statusText: String {
-        switch steamCmd.downloadProgress[workshopId] {
+        switch workshopDownloads.downloadProgress[workshopId] {
         case .downloading(let status)?: return status
         case .failed(let message)?: return message
         case .completed?: return String(localized: "Downloaded", comment: "Download status")
-        case nil: return SteamCmdService.queuedStatus
+        case nil: return WorkshopDownloadService.queuedStatus
         }
     }
 
     /// Steam's percentage; before it reports one, a slow creep so the bar shows it's working.
     private func fraction(at date: Date) -> Double {
-        guard case .downloading(let status)? = steamCmd.downloadProgress[workshopId] else { return 0.05 }
-        if status == SteamCmdService.installingStatus { return 0.92 }
-        if let percentage = steamCmd.downloadPercentages[workshopId], percentage > 0 { return percentage }
-        let startedAt = steamCmd.downloadStartedAt[workshopId] ?? date
+        guard case .downloading(let status)? = workshopDownloads.downloadProgress[workshopId] else { return 0.05 }
+        if status == WorkshopDownloadService.installingStatus { return 0.92 }
+        if let percentage = workshopDownloads.downloadPercentages[workshopId], percentage > 0 { return percentage }
+        let startedAt = workshopDownloads.downloadStartedAt[workshopId] ?? date
         return min(0.88, 0.18 + date.timeIntervalSince(startedAt) / 180 * 0.7)
     }
 

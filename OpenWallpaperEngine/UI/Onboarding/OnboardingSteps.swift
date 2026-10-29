@@ -145,7 +145,7 @@ struct OnboardingSteamStep: View {
 
 struct OnboardingAssetsStep: View {
     @ObservedObject var assets: WallpaperEngineAssetsService
-    @ObservedObject var steamCmd: SteamCmdService
+    @ObservedObject var workshopDownloads: WorkshopDownloadService
     /// Goes back to the Steam step.
     let logIn: () -> Void
     @AppStorage(WallpaperEngineAssetsService.addsDefaultWallpapersKey, store: .app) private var addsDefaultWallpapers = true
@@ -184,12 +184,12 @@ struct OnboardingAssetsStep: View {
                             assets.installFromSteam(includingDefaultWallpapers: addsDefaultWallpapers)
                         }
                         .glassButtonStyle(.prominent)
-                        .disabled(!steamCmd.isLoggedIn)
+                        .disabled(!workshopDownloads.isLoggedIn)
                         Button("Choose a Wallpaper Engine Folder…") { chooseFolder() }
                     }
                     Spacer()
                 }
-                if !assets.isBusy && !steamCmd.isLoggedIn {
+                if !assets.isBusy && !workshopDownloads.isLoggedIn {
                     Text("To install from Steam, log in on the Steam step first.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -203,7 +203,7 @@ struct OnboardingAssetsStep: View {
             OnboardingCard {
                 Label("Wallpaper Engine Favourites", systemImage: "heart")
                     .font(.headline)
-                WallpaperEngineFavoritesImportView(assets: assets, steamCmd: steamCmd)
+                WallpaperEngineFavoritesImportView(assets: assets, workshopDownloads: workshopDownloads)
             }
             OnboardingCard {
                 Label("Wallpaper Engine Folders", systemImage: "folder")

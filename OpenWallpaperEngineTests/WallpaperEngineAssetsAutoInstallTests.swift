@@ -32,18 +32,18 @@ final class WallpaperEngineAssetsAutoInstallTests: XCTestCase {
 
     @MainActor
     private func makeServices(helper: RecordingHelper, defaults: UserDefaults)
-        -> (SteamCmdService, WallpaperEngineAssetsService) {
+        -> (WorkshopDownloadService, WallpaperEngineAssetsService) {
         let storage: URL = scratch
-        let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { storage }),
+        let workshopDownloads = WorkshopDownloadService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { storage }),
                                        helperDownloads: helper, storageDirectory: { storage },
                                        previewCacheRoot: storage.appending(path: "previews"),
                                        downloadedIndex: DownloadedWallpaperIndex(defaults: makeDefaults(),
                                                                                  libraryDirectory: { storage }),
                                        presentPreview: { _ in })
-        steamCmd.useSteamLogin(SteamLogin(accountName: "someone", steamID: "76561190000000001", refreshToken: "test-token"))
-        let service = WallpaperEngineAssetsService(steamCmd: steamCmd, helperDownloads: helper, storageDirectory: { storage },
+        workshopDownloads.useSteamLogin(SteamLogin(accountName: "someone", steamID: "76561190000000001", refreshToken: "test-token"))
+        let service = WallpaperEngineAssetsService(workshopDownloads: workshopDownloads, helperDownloads: helper, storageDirectory: { storage },
                                                    defaults: defaults, automaticInstallAllowed: true)
-        return (steamCmd, service)
+        return (workshopDownloads, service)
     }
 
     @MainActor
@@ -95,15 +95,15 @@ final class WallpaperEngineAssetsAutoInstallTests: XCTestCase {
     func testALoginStartsTheInstallOnceAndANotOwnedAccountIsNotRetried() throws {
         let defaults = makeDefaults()
         let runner = RecordingHelper(output: "Depot 431961 is not available from this account.", exitCode: 0)
-        let (steamCmd, service) = makeServices(helper: runner, defaults: defaults)
-        steamCmd.loginSucceeded.send()
+        let (workshopDownloads, service) = makeServices(helper: runner, defaults: defaults)
+        workshopDownloads.loginSucceeded.send()
         XCTAssertTrue(service.isBusy)
-        steamCmd.loginSucceeded.send() // already running: ignored
+        workshopDownloads.loginSucceeded.send() // already running: ignored
         waitUntilIdle(service)
         XCTAssertEqual(runner.count, 1)
         XCTAssertEqual(defaults.string(forKey: WallpaperEngineAssetsService.notOwnedAccountKey), "someone")
 
-        steamCmd.loginSucceeded.send()
+        workshopDownloads.loginSucceeded.send()
         XCTAssertFalse(service.isBusy)
         XCTAssertEqual(service.phase, .failed(WallpaperEngineAssetsService.Failure.notOwned.errorDescription ?? ""))
         XCTAssertEqual(runner.count, 1)
@@ -115,13 +115,13 @@ final class WallpaperEngineAssetsAutoInstallTests: XCTestCase {
         let defaults = makeDefaults()
         defaults.set(false, forKey: WallpaperEngineAssetsService.autoInstallKey)
         let runner = RecordingHelper(output: "", exitCode: 1)
-        let (steamCmd, service) = makeServices(helper: runner, defaults: defaults)
-        steamCmd.loginSucceeded.send()
+        let (workshopDownloads, service) = makeServices(helper: runner, defaults: defaults)
+        workshopDownloads.loginSucceeded.send()
         XCTAssertFalse(service.isBusy)
 
-        let plain = WallpaperEngineAssetsService(steamCmd: steamCmd, helperDownloads: runner, storageDirectory: { self.scratch },
+        let plain = WallpaperEngineAssetsService(workshopDownloads: workshopDownloads, helperDownloads: runner, storageDirectory: { self.scratch },
                                                  defaults: makeDefaults())
-        steamCmd.loginSucceeded.send()
+        workshopDownloads.loginSucceeded.send()
         XCTAssertFalse(plain.isBusy)
         XCTAssertEqual(runner.count, 0)
     }
@@ -168,9 +168,9 @@ private final class RecordingHelper: SteamHelperDownloading, @unchecked Sendable
         self.exitCode = exitCode
     }
 
-    func run(arguments: [String], login: SteamLogin, cancellation: SteamCmdCancellation,
-             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
+    func run(arguments: [String], login: SteamLogin, cancellation: ProcessCancellation,
+             onOutput: @escaping @Sendable (String) -> Void) -> ProcessRun {
         lock.withLock { runs += 1 }
-        return SteamCmdRun(output: output, exitCode: exitCode)
+        return ProcessRun(output: output, exitCode: exitCode)
     }
 }
