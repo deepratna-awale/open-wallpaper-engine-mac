@@ -10,7 +10,8 @@ struct WallpaperEngineFavoritesImportView: View {
 
     init(assets: WallpaperEngineAssetsService, steamCmd: SteamCmdService) {
         self.assets = assets
-        _model = StateObject(wrappedValue: WallpaperEngineFavoritesImportModel(steamCmd: steamCmd, assets: assets))
+        _model = StateObject(wrappedValue: WallpaperEngineFavoritesImportModel(
+            steamCmd: steamCmd, assets: assets, steam: AppDelegate.shared.contentViewModel.steamAccount.client))
     }
 
     var body: some View {

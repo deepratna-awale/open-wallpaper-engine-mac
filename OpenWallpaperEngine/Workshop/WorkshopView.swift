@@ -3,6 +3,8 @@ import SwiftUI
 
 struct WorkshopView: SubviewOfContentView {
     var viewModel: ContentViewModel
+    /// The SteamCMD setup and login in place of the Steam login.
+    @State private var usesSteamCmd = false
 
     init(contentViewModel viewModel: ContentViewModel) {
         self.viewModel = viewModel
@@ -11,11 +13,14 @@ struct WorkshopView: SubviewOfContentView {
     var body: some View {
         VStack(spacing: 0) {
             // The browser ends its toolbar with the window's items; setup and login have only those.
-            if !viewModel.steamCmd.isInstalled {
-                SteamCmdNotInstalledView(steamCmd: viewModel.steamCmd)
+            if !viewModel.steamCmd.isLoggedIn && !usesSteamCmd {
+                WorkshopLoginView(account: viewModel.steamAccount, usesSteamCmd: $usesSteamCmd)
+                    .toolbar { WindowActionsToolbar(viewModel: viewModel) }
+            } else if !viewModel.steamCmd.isInstalled {
+                SteamCmdNotInstalledView(steamCmd: viewModel.steamCmd, usesSteamCmd: $usesSteamCmd)
                     .toolbar { WindowActionsToolbar(viewModel: viewModel) }
             } else if !viewModel.steamCmd.isLoggedIn {
-                SteamLoginView(steamCmd: viewModel.steamCmd)
+                SteamLoginView(steamCmd: viewModel.steamCmd, usesSteamCmd: $usesSteamCmd)
                     .toolbar { WindowActionsToolbar(viewModel: viewModel) }
             } else {
                 WorkshopBrowserView(
@@ -28,10 +33,58 @@ struct WorkshopView: SubviewOfContentView {
     }
 }
 
+// MARK: - Steam Login
+
+/// The Workshop's login: the Steam login, which browsing, searching and downloads go through.
+private struct WorkshopLoginView: View {
+    @ObservedObject var account: SteamAccount
+    @Binding var usesSteamCmd: Bool
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                Image(systemName: "person.badge.key")
+                    .font(.system(size: 40))
+                    .foregroundStyle(.secondary)
+
+                Text("Steam Login")
+                    .font(.title2)
+                    .bold()
+
+                Text("Log in to Steam to browse and download Workshop wallpapers.")
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: 420)
+
+                SteamSignInView(account: account)
+                    .frame(maxWidth: 420)
+
+                Button("Use SteamCMD Instead…") { usesSteamCmd = true }
+                    .buttonStyle(.link)
+                    .font(.caption)
+            }
+            .padding(40)
+            .frame(maxWidth: .infinity)
+        }
+    }
+}
+
+/// Back from the SteamCMD setup or login to the Steam login.
+private struct UseSteamLoginButton: View {
+    @Binding var usesSteamCmd: Bool
+
+    var body: some View {
+        Button("Use the Steam Login") { usesSteamCmd = false }
+            .buttonStyle(.link)
+            .font(.caption)
+    }
+}
+
 // MARK: - steamcmd Not Installed
 
 private struct SteamCmdNotInstalledView: View {
     @ObservedObject var steamCmd: SteamCmdService
+    @Binding var usesSteamCmd: Bool
     @ObservedObject private var installer = AppDelegate.shared.steamCmdInstaller
     @State private var isCopied = false
 
@@ -56,6 +109,8 @@ private struct SteamCmdNotInstalledView: View {
                 if !installer.isBusy {
                     alternatives
                 }
+
+                UseSteamLoginButton(usesSteamCmd: $usesSteamCmd)
             }
             .padding(40)
             .frame(maxWidth: .infinity)
@@ -136,6 +191,7 @@ private struct SteamCmdNotInstalledView: View {
 
 private struct SteamLoginView: View {
     @ObservedObject var steamCmd: SteamCmdService
+    @Binding var usesSteamCmd: Bool
 
     var body: some View {
         ScrollView {
@@ -158,6 +214,8 @@ private struct SteamLoginView: View {
                         .foregroundStyle(.secondary)
                     SteamWebAPIKeyView()
                 }
+
+                UseSteamLoginButton(usesSteamCmd: $usesSteamCmd)
             }
             .padding(40)
             .frame(maxWidth: .infinity)

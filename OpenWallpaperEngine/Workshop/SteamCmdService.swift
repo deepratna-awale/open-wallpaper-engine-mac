@@ -21,6 +21,9 @@ class SteamCmdService: ObservableObject {
     /// Where each finished download landed in the Wallpaper Storage folder, for Show in Finder and
     /// Set as Wallpaper in the Downloads tab.
     @Published var downloadFolders: [String: URL] = [:]
+    /// The app's Steam login (`SteamAccount`). While there is one, downloads go through the Steam
+    /// helper with it, and SteamCMD isn't needed.
+    @Published private(set) var steamLogin: SteamLogin?
 
     enum DownloadState: Equatable {
         case downloading(status: String)
@@ -58,7 +61,11 @@ class SteamCmdService: ObservableObject {
     /// cached session, or the session restored at launch.
     let loginSucceeded = PassthroughSubject<Void, Never>()
 
+    /// Steam no longer accepts the Steam login (a download said so), on the main queue.
+    let steamLoginRejected = PassthroughSubject<Void, Never>()
+
     nonisolated private let runner: SteamCmdRunning
+    nonisolated private let helperDownloads: SteamHelperDownloading
     /// The steamcmd kept logged in between downloads, when the runner keeps one.
     nonisolated private let session: SteamCmdSessionRunning?
     /// The Wallpaper Storage folder every download goes into; throws when it can't be used.
@@ -73,6 +80,7 @@ class SteamCmdService: ObservableObject {
 
     init(dependencyIndex: WorkshopDependencyIndex = WorkshopDependencyIndex(),
          runner: SteamCmdRunning = ProcessSteamCmdRunner(),
+         helperDownloads: SteamHelperDownloading = ProcessSteamHelperDownloader(),
          storageDirectory: @escaping @Sendable () throws -> URL = { try WallpaperStorage.availableDirectory() },
          previewCacheRoot: URL = WorkshopItemInstaller.previewCacheRoot,
          downloadedIndex: DownloadedWallpaperIndex = .shared,
@@ -86,6 +94,7 @@ class SteamCmdService: ObservableObject {
         self.asksLoginShell = asksLoginShell
         self.dependencyIndex = dependencyIndex
         self.runner = runner
+        self.helperDownloads = helperDownloads
         self.session = runner.makeSession()
         self.storageDirectory = storageDirectory
         self.previewCacheRoot = previewCacheRoot
@@ -131,6 +140,7 @@ class SteamCmdService: ObservableObject {
     /// Another steamcmd run found the cached login gone (e.g. the assets install): the app shows
     /// the account as logged out again.
     func sessionExpired() {
+        if steamLogin != nil { return steamLoginRejected.send() }
         session?.end(waitingForExit: false)
         isLoggedIn = false
         loginError = String(localized: "SteamCMD has no saved login for this account. Log in again.",
@@ -202,7 +212,34 @@ class SteamCmdService: ObservableObject {
         }
     }
 
-    var isInstalled: Bool { steamCmdPath != nil }
+    /// Whether Workshop downloads can run: through the Steam login, or with SteamCMD.
+    var isInstalled: Bool { steamLogin != nil || steamCmdPath != nil }
+
+    /// Downloads go through the Steam helper with `login` from now on; nil goes back to SteamCMD
+    /// and its cached login.
+    func useSteamLogin(_ login: SteamLogin?) {
+        guard login != steamLogin else { return }
+        let hadLogin = steamLogin != nil
+        steamLogin = login
+        if let login {
+            session?.end(waitingForExit: false)
+            steamUsername = login.accountName
+            isLoggedIn = true
+            loginError = nil
+            loginSucceeded.send()
+        } else if hadLogin {
+            isLoggedIn = false
+            steamUsername = account.load() ?? ""
+            attemptCachedLogin()
+        }
+    }
+
+    /// Where downloads come from now: the Steam login, or SteamCMD's login.
+    private var downloadSource: DownloadSource? {
+        if let steamLogin { return .steamHelper(steamLogin) }
+        guard let steamCmdPath, isLoggedIn else { return nil }
+        return .steamCmd(URL(fileURLWithPath: steamCmdPath), username: steamUsername)
+    }
 
     /// Runs `work` on the queue Workshop downloads use, so another steamcmd session (installing
     /// the assets) never runs beside one of them.
@@ -342,6 +379,8 @@ class SteamCmdService: ObservableObject {
 
             DispatchQueue.main.async {
                 self.isLoggingIn = false
+                // The Steam login came in meanwhile; it stays the one downloads use.
+                if self.steamLogin != nil { completion?(true); return }
                 if Self.loginOutcome(output: output) == .loggedIn {
                     self.isLoggedIn = true
                     self.rememberAccount(username)
@@ -372,7 +411,7 @@ class SteamCmdService: ObservableObject {
         fileSize: Int = 0,
         onCompleted: (@MainActor @Sendable (URL?) -> Void)? = nil
     ) {
-        guard let cmdPath = steamCmdPath, isLoggedIn else {
+        guard let source = downloadSource else {
             onCompleted?(nil)
             return
         }
@@ -394,17 +433,16 @@ class SteamCmdService: ObservableObject {
         queuedDownloadIds.append(workshopId)
         downloadPercentages[workshopId] = 0
         downloadProgress[workshopId] = .downloading(status: Self.queuedStatus)
-        let username = steamUsername
 
         downloadQueue.async { [weak self] in
             guard let self = self else { return }
             DispatchQueue.main.async {
                 self.activeDownloadId = workshopId
                 self.downloadStartedAt[workshopId] = .now
-                self.downloadProgress[workshopId] = .downloading(status: String(localized: "Starting steamcmd…", comment: "Download status; steamcmd is a program name"))
+                self.downloadProgress[workshopId] = .downloading(status: source.startingStatus)
             }
             let result = Result {
-                try self.downloadIntoStorage(workshopId, steamCmd: URL(fileURLWithPath: cmdPath), username: username)
+                try self.downloadIntoStorage(workshopId, from: source)
             }
             DispatchQueue.main.async {
                 self.queuedDownloadIds.removeAll { $0 == workshopId }
@@ -447,11 +485,10 @@ class SteamCmdService: ObservableObject {
     /// Runs after other downloads at background priority; `completion` runs on the main queue.
     func fetchArchivedPackage(workshopId: String, packageName: String, into wallpaperDirectory: URL,
                               completion: @escaping @MainActor @Sendable (Bool) -> Void) {
-        guard let cmdPath = steamCmdPath, isLoggedIn,
+        guard let source = downloadSource,
               !packageName.contains("/"), !packageName.contains("\\"), !packageName.hasPrefix(".") else {
             return completion(false)
         }
-        let username = steamUsername
         downloadQueue.async(qos: .background) { [weak self] in
             guard let self else { return }
             let landed: Bool
@@ -460,13 +497,21 @@ class SteamCmdService: ObservableObject {
                 let staging = WorkshopItemInstaller.stagingDirectory(in: storage)
                 defer { WorkshopItemInstaller.removeStaging(staging) }
                 try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
-                let run = try self.runWorkshopDownload(steamCmd: URL(fileURLWithPath: cmdPath), installDirectory: staging,
-                                                       workshopId: workshopId, username: username)
-                OWELog.info(.workshop, "steamcmd package refresh [\(workshopId)] exit=\(run.exitCode)")
                 let package = WorkshopItemInstaller.contentDirectory(inSteamCmdRoot: staging, workshopId: workshopId)
                     .appending(path: packageName)
-                guard FileManager.default.fileExists(atPath: package.path(percentEncoded: false)) else {
-                    throw DownloadError.steamCmdFailed(Self.failureMessage(output: run.output, exitCode: run.exitCode))
+                switch source {
+                case .steamHelper(let login):
+                    _ = try self.helperDownload(workshopId, login: login, installDirectory: staging, validate: true)
+                    guard FileManager.default.fileExists(atPath: package.path(percentEncoded: false)) else {
+                        throw DownloadError.steamCmdFailed("\(packageName) isn't in the download")
+                    }
+                case .steamCmd(let steamCmd, let username):
+                    let run = try self.runWorkshopDownload(steamCmd: steamCmd, installDirectory: staging,
+                                                           workshopId: workshopId, username: username)
+                    OWELog.info(.workshop, "steamcmd package refresh [\(workshopId)] exit=\(run.exitCode)")
+                    guard FileManager.default.fileExists(atPath: package.path(percentEncoded: false)) else {
+                        throw DownloadError.steamCmdFailed(Self.failureMessage(output: run.output, exitCode: run.exitCode))
+                    }
                 }
                 guard ContainedPath.hasNoLinks(below: wallpaperDirectory,
                                                relativePath: WallpaperPackageConverter.sourceFolderName) else {
@@ -491,23 +536,19 @@ class SteamCmdService: ObservableObject {
 
     /// Runs steamcmd into a staging folder inside the storage folder and moves the finished item to
     /// `<storage>/<id>`. Call on `downloadQueue`: downloads share the one staging folder.
-    nonisolated private func downloadIntoStorage(_ workshopId: String, steamCmd: URL,
-                                                 username: String) throws -> WorkshopItemInstaller.Outcome {
+    nonisolated private func downloadIntoStorage(_ workshopId: String,
+                                                 from source: DownloadSource) throws -> WorkshopItemInstaller.Outcome {
         // No fallback: without the storage folder the download doesn't start.
         let storage = try storageDirectory()
         let staging = WorkshopItemInstaller.stagingDirectory(in: storage)
         defer { WorkshopItemInstaller.removeStaging(staging) }
         try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
 
-        // Output arrives in chunks as steamcmd reports progress.
-        let run = try runWorkshopDownload(steamCmd: steamCmd, installDirectory: staging, workshopId: workshopId,
-                                          username: username) { [weak self] chunk in
-            let status = self?.parseProgress(chunk)
-            let percentage = self?.parseDownloadPercentage(chunk)
+        let showProgress: @Sendable (String?, Double?) -> Void = { [weak self] status, percentage in
             guard status != nil || percentage != nil else { return }
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                // Only changed values are published: steamcmd repeats its status in every chunk.
+                // Only changed values are published: the output repeats its status in every chunk.
                 if let status, self.downloadProgress[workshopId] != .downloading(status: status) {
                     self.downloadProgress[workshopId] = .downloading(status: status)
                 }
@@ -516,14 +557,27 @@ class SteamCmdService: ObservableObject {
                 }
             }
         }
-        OWELog.info(.workshop, "steamcmd download [\(workshopId)] exit=\(run.exitCode)\n\(SteamSecretRedactor.redact(run.output))")
-
-        let downloaded = WorkshopItemInstaller.contentDirectory(inSteamCmdRoot: staging, workshopId: workshopId)
-        guard FileManager.default.fileExists(atPath: downloaded.path) else {
-            if WorkshopItemAvailability.steamCmdReportsNotFound(run.output) {
-                throw DownloadError.itemUnavailable(.removedOrPrivate)
+        let downloaded: URL
+        switch source {
+        case .steamHelper(let login):
+            downloaded = try helperDownload(workshopId, login: login, installDirectory: staging, validate: true) { chunk in
+                let percentage = SteamHelperDownload.progress(in: chunk)
+                showProgress(percentage.map(Self.downloadingStatus), percentage)
             }
-            throw DownloadError.steamCmdFailed(Self.failureMessage(output: run.output, exitCode: run.exitCode))
+        case .steamCmd(let steamCmd, let username):
+            // Output arrives in chunks as steamcmd reports progress.
+            let run = try runWorkshopDownload(steamCmd: steamCmd, installDirectory: staging, workshopId: workshopId,
+                                              username: username) { [weak self] chunk in
+                showProgress(self?.parseProgress(chunk), self?.parseDownloadPercentage(chunk))
+            }
+            OWELog.info(.workshop, "steamcmd download [\(workshopId)] exit=\(run.exitCode)\n\(SteamSecretRedactor.redact(run.output))")
+            downloaded = WorkshopItemInstaller.contentDirectory(inSteamCmdRoot: staging, workshopId: workshopId)
+            guard FileManager.default.fileExists(atPath: downloaded.path) else {
+                if WorkshopItemAvailability.steamCmdReportsNotFound(run.output) {
+                    throw DownloadError.itemUnavailable(.removedOrPrivate)
+                }
+                throw DownloadError.steamCmdFailed(Self.failureMessage(output: run.output, exitCode: run.exitCode))
+            }
         }
         DispatchQueue.main.async {
             self.downloadProgress[workshopId] = .downloading(status: Self.installingStatus)
@@ -603,19 +657,59 @@ class SteamCmdService: ObservableObject {
         return String(localized: "steamcmd finished without downloading the item.", comment: "Download error; steamcmd is a program name")
     }
 
+    /// Downloads `workshopId` with the Steam helper into where steamcmd would put it under
+    /// `installDirectory`, and returns that folder. A failed download leaves nothing there.
+    nonisolated private func helperDownload(_ workshopId: String, login: SteamLogin, installDirectory: URL, validate: Bool,
+                                            onOutput: @escaping @Sendable (String) -> Void = { _ in }) throws -> URL {
+        let item = WorkshopItemInstaller.contentDirectory(inSteamCmdRoot: installDirectory, workshopId: workshopId)
+        try FileManager.default.createDirectory(at: item, withIntermediateDirectories: true)
+        let run = helperDownloads.run(arguments: SteamHelperDownload.workshopArguments(workshopId: workshopId, directory: item,
+                                                                                        validate: validate),
+                                      login: login, cancellation: SteamCmdCancellation(), onOutput: onOutput)
+        OWELog.info(.workshop, "Steam helper download [\(workshopId)] exit=\(run.exitCode)\n\(SteamSecretRedactor.redact(run.output, secrets: [login.refreshToken]))")
+        SteamHelperDownload.removeBookkeeping(in: item)
+        let outcome = SteamHelperDownload.outcome(output: run.output, exitCode: run.exitCode,
+                                                  downloaded: SteamHelperDownload.hasFiles(in: item))
+        guard outcome != .downloaded else { return item }
+        do {
+            try FileManager.default.removeItem(at: item)
+        } catch {
+            OWELog.error(.workshop, "Can't remove the failed download \(item.path): \(error)")
+        }
+        switch outcome {
+        case .downloaded:
+            return item
+        case .unavailable:
+            throw DownloadError.itemUnavailable(.removedOrPrivate)
+        case .loginRejected:
+            DispatchQueue.main.async { self.steamLoginRejected.send() }
+            throw SteamHelperError(code: .tokenRejected, message: "Steam rejected the login for a download.")
+        case .notOwned:
+            throw DownloadError.steamCmdFailed(String(localized: "This Steam account can't download Wallpaper Engine items.",
+                                                      comment: "Download error"))
+        case .failed(let message):
+            throw DownloadError.steamCmdFailed(message)
+        }
+    }
+
+    /// `Downloading… 45%`.
+    nonisolated private static func downloadingStatus(_ fraction: Double) -> String {
+        let percent: String = fraction.formatted(.percent.precision(.fractionLength(0)))
+        return String(localized: "Downloading… \(percent)", comment: "Download status; %@ is a percentage")
+    }
+
     func previewWorkshopItem(workshopId: String) {
         prepareWorkshopPreview(workshopId: workshopId, presentWhenReady: true)
     }
 
     private func prepareWorkshopPreview(workshopId: String, presentWhenReady: Bool) {
-        guard let cmdPath = steamCmdPath, isLoggedIn else { return }
+        guard let source = downloadSource else { return }
 
         if presentWhenReady {
             requestedPreviewId = workshopId
         }
         guard !previewProgress.contains(workshopId) else { return }
         previewProgress.insert(workshopId)
-        let username = steamUsername
 
         previewQueue.async { [weak self] in
             guard let self = self else { return }
@@ -631,7 +725,15 @@ class SteamCmdService: ObservableObject {
                 return
             }
 
-            if !FileManager.default.fileExists(atPath: sourcePath.path) {
+            if case .steamHelper(let login) = source, !FileManager.default.fileExists(atPath: sourcePath.path) {
+                do {
+                    _ = try self.helperDownload(workshopId, login: login, installDirectory: cacheRoot, validate: false)
+                } catch {
+                    self.finishPreview(workshopId, with: .failure(error), presentWhenReady: presentWhenReady)
+                    return
+                }
+            }
+            if case .steamCmd(let steamCmd, let username) = source, !FileManager.default.fileExists(atPath: sourcePath.path) {
                 let script: SteamCmdScript
                 do {
                     script = try Self.workshopDownloadScript(
@@ -644,7 +746,7 @@ class SteamCmdService: ObservableObject {
                     self.finishPreview(workshopId, with: .failure(error), presentWhenReady: presentWhenReady)
                     return
                 }
-                let (output, exitCode) = self.runSteamCmd(at: cmdPath, script: script, timeout: 300)
+                let (output, exitCode) = self.runSteamCmd(at: steamCmd.path, script: script, timeout: 300)
 
                 guard exitCode == 0, FileManager.default.fileExists(atPath: sourcePath.path) else {
                     let errorLine = output.components(separatedBy: "\n")
@@ -826,6 +928,19 @@ class SteamCmdService: ObservableObject {
         return min(max(percentage / 100, 0), 1)
     }
 
+}
+
+/// What a download runs: the Steam helper with the Steam login, or steamcmd with its cached login.
+private enum DownloadSource: Sendable {
+    case steamHelper(SteamLogin)
+    case steamCmd(URL, username: String)
+
+    var startingStatus: String {
+        switch self {
+        case .steamHelper: String(localized: "Authenticating…", comment: "Download status: logging in to Steam")
+        case .steamCmd: String(localized: "Starting steamcmd…", comment: "Download status; steamcmd is a program name")
+        }
+    }
 }
 
 private enum DownloadError: LocalizedError {

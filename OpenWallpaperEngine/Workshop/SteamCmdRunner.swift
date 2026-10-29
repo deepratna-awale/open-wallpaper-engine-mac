@@ -84,12 +84,21 @@ struct ProcessSteamCmdRunner: SteamCmdRunning {
 
     func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?, cancellation: SteamCmdCancellation,
              onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
+        Self.runProcess(executable: executable, arguments: [], standardInput: script.standardInput, timeout: timeout,
+                        cancellation: cancellation, onOutput: onOutput)
+    }
+
+    /// Runs `executable` with `standardInput` written to its stdin, which is then closed (the
+    /// Steam helper's downloads run this way too).
+    static func runProcess(executable: URL, arguments: [String], standardInput: Data, timeout: TimeInterval?,
+                           cancellation: SteamCmdCancellation,
+                           onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
         let process = Process()
         let outputPipe = Pipe()
         let inputPipe = Pipe()
         process.executableURL = executable
         process.currentDirectoryURL = executable.deletingLastPathComponent()
-        process.arguments = []
+        process.arguments = arguments
         process.standardInput = inputPipe
         process.standardOutput = outputPipe
         process.standardError = outputPipe
@@ -114,7 +123,7 @@ struct ProcessSteamCmdRunner: SteamCmdRunning {
         }
         cancellation.setCancelAction { process.terminate() }
         defer { cancellation.setCancelAction(nil) }
-        Self.write(script, to: inputPipe)
+        write(standardInput, to: inputPipe)
 
         let exited = DispatchGroup()
         exited.enter()
@@ -139,13 +148,13 @@ struct ProcessSteamCmdRunner: SteamCmdRunning {
         return SteamCmdRun(output: String(decoding: output, as: UTF8.self), exitCode: process.terminationStatus)
     }
 
-    /// Writes the whole script and closes stdin, so steamcmd reads EOF after `quit`.
-    private static func write(_ script: SteamCmdScript, to pipe: Pipe) {
+    /// Writes the whole input and closes stdin, so steamcmd reads EOF after `quit`.
+    private static func write(_ input: Data, to pipe: Pipe) {
         let handle = pipe.fileHandleForWriting
         // If steamcmd already exited, the write must fail with EPIPE rather than kill the app.
         _ = fcntl(handle.fileDescriptor, F_SETNOSIGPIPE, 1)
         do {
-            try handle.write(contentsOf: script.standardInput)
+            try handle.write(contentsOf: input)
             try handle.close()
         } catch {
             // steamcmd exited before reading its input; its output says why.

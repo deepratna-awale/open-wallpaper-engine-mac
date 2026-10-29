@@ -19,7 +19,9 @@ struct WorkshopBrowserView: View {
         workshopContent
             .padding(.horizontal)
             .padding(.top, 8)
-            .onAppear { hasAPIKey = SteamCredentials.webAPIKey().load() != nil }
+            .onAppear {
+                hasAPIKey = contentViewModel.steamCmd.steamLogin != nil || SteamCredentials.webAPIKey().load() != nil
+            }
             .onChange(of: viewModel.searchText) { oldText, newText in
                 // The field's clear button empties it: search again from the first page.
                 guard newText.isEmpty, !oldText.isEmpty else { return }
@@ -155,7 +157,9 @@ struct WorkshopBrowserView: View {
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
 
-                    SteamWebAPIKeyView(onSaved: searchWithNewKey)
+                    if contentViewModel.steamCmd.steamLogin == nil {
+                        SteamWebAPIKeyView(onSaved: searchWithNewKey)
+                    }
                 }
                 Spacer()
             } else if viewModel.items.isEmpty {

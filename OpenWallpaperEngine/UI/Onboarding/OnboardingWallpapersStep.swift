@@ -17,7 +17,7 @@ final class OnboardingImports: ObservableObject {
 
     init(collection: WorkshopItemsImportModel, subscriptions: WorkshopItemsImportModel,
          library: SteamLibraryImportModel, defaults: UserDefaults = .app,
-         hasAPIKey: @escaping () -> Bool = { SteamCredentials.webAPIKey().load() != nil }) {
+         hasAPIKey: @escaping () -> Bool) {
         self.collection = collection
         self.subscriptions = subscriptions
         self.library = library
@@ -29,16 +29,21 @@ final class OnboardingImports: ObservableObject {
         }
     }
 
-    /// The app's own wiring: its SteamCMD, playlists and rating filter.
+    /// The app's own wiring: its Steam login, SteamCMD, playlists and rating filter.
     convenience init(contentViewModel: ContentViewModel, wallpaperViewModel: WallpaperViewModel) {
         let ratings = contentViewModel.workshopVM.filter.ratings
-        self.init(collection: WorkshopItemsImportModel(steamCmd: contentViewModel.steamCmd,
+        let api = WorkshopAPIService(steam: contentViewModel.steamAccount.client)
+        let steamCmd = contentViewModel.steamCmd
+        self.init(collection: WorkshopItemsImportModel(api: api, steamCmd: steamCmd,
                                                        wallpaperViewModel: wallpaperViewModel, ratings: ratings),
-                  subscriptions: WorkshopItemsImportModel(steamCmd: contentViewModel.steamCmd,
+                  subscriptions: WorkshopItemsImportModel(api: api, steamCmd: steamCmd,
                                                           wallpaperViewModel: wallpaperViewModel, ratings: ratings),
                   library: SteamLibraryImportModel(ratings: ratings, onImported: { folders in
                       OnboardingImports.didImport(folders, contentViewModel: contentViewModel)
-                  }))
+                  }),
+                  hasAPIKey: { [weak steamCmd] in
+                      steamCmd?.steamLogin != nil || SteamCredentials.webAPIKey().load() != nil
+                  })
     }
 
     /// Copied folders join the library like any import: converted, indexed, their dependencies fetched.
@@ -65,6 +70,7 @@ final class OnboardingImports: ObservableObject {
     func steamID(for steamCmd: SteamCmdService) -> String? {
         let typed = steamIDInput.trimmingCharacters(in: .whitespacesAndNewlines)
         if WorkshopSubscriptions.isSteamID64(typed) { return typed }
+        if let steamID = steamCmd.steamLogin?.steamID { return steamID }
         guard steamCmd.isLoggedIn else { return nil }
         return WorkshopSubscriptions.steamID64(
             forAccount: steamCmd.steamUsername,

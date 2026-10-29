@@ -44,9 +44,9 @@ final class WorkshopDiscoverViewModel: ObservableObject {
 
     init(sections: [WorkshopDiscoverSection] = WorkshopDiscover.home,
          blockList: WorkshopBlockList = WorkshopBlockList(),
-         fetch: PageFetch? = nil) {
+         fetch: PageFetch? = nil, steam: SteamHelperClient? = nil) {
         self.sections = sections
-        let service = WorkshopAPIService()
+        let service = WorkshopAPIService(steam: steam)
         self.fetch = fetch ?? { section, page, perPage in
             try await service.discoverItems(section, page: page, perPage: perPage)
         }

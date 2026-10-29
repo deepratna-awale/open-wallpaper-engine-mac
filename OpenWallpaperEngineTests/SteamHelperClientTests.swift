@@ -190,6 +190,60 @@ final class SteamHelperClientTests: XCTestCase {
         }
     }
 
+    /// A service call made from Web API parameters comes back the Web API's way, `{"response": …}`.
+    func testWebAPIResponseWrapsTheResultAndTypesTheParameters() async throws {
+        let transports = Box<Fake>()
+        let client = makeClient(transports) { request in
+            switch request.method {
+            case "call": [Fake.result(request, #"{"total":7,"publishedfiledetails":[{"publishedfileid":"123"}]}"#)]
+            default: [Fake.result(request)]
+            }
+        }
+        await client.use(Fake.login)
+        let data = try await client.webAPIResponse("PublishedFile.QueryFiles", parameters: [
+            URLQueryItem(name: "search_text", value: "2024"), URLQueryItem(name: "numperpage", value: "30"),
+            URLQueryItem(name: "return_tags", value: "true"), URLQueryItem(name: "requiredtags[1]", value: "Anime"),
+            URLQueryItem(name: "requiredtags[0]", value: "Scene"), URLQueryItem(name: "cursor", value: "*"),
+        ])
+        let response = try XCTUnwrap((try JSONSerialization.jsonObject(with: data) as? [String: Any])?["response"] as? [String: Any])
+        XCTAssertEqual(response["total"] as? Int, 7)
+        let call = try XCTUnwrap(transports.values.first?.requests.last)
+        XCTAssertEqual(call.param("method") as? String, "PublishedFile.QueryFiles")
+        let body = try XCTUnwrap(call.param("body") as? [String: Any])
+        XCTAssertEqual(body["search_text"] as? String, "2024", "search text stays text")
+        XCTAssertEqual(body["numperpage"] as? Int, 30)
+        XCTAssertEqual(body["return_tags"] as? Bool, true)
+        XCTAssertEqual(body["requiredtags"] as? [String], ["Scene", "Anime"], "in index order")
+        XCTAssertEqual(body["cursor"] as? String, "*")
+    }
+
+    func testWebAPIResponseNeedsALogin() async {
+        let client = makeClient(Box<Fake>()) { [Fake.result($0)] }
+        let hasLogin = await client.hasLogin
+        XCTAssertFalse(hasLogin)
+        do {
+            _ = try await client.webAPIResponse("PublishedFile.QueryFiles", parameters: [])
+            XCTFail("called without a login")
+        } catch let error as SteamHelperError {
+            XCTAssertEqual(error.code, .notLoggedOn)
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
+    /// Steam refusing the token tells the account, which forgets it.
+    func testARejectedTokenCallsTheHandler() async throws {
+        let client = makeClient(Box<Fake>()) { [Fake.error($0, code: "tokenRejected", eresult: 5)] }
+        let calls = Box<Int>()
+        await client.setLoginRejectedHandler { calls.append(1) }
+        await client.use(Fake.login)
+        do {
+            try await client.ensureLoggedOn()
+            XCTFail("logged on with a rejected token")
+        } catch {}
+        XCTAssertEqual(calls.values.count, 1)
+    }
+
     // MARK: Locator and login
 
     func testLocatorUsesTheEnvironmentOverrideOnlyWhenItRuns() throws {

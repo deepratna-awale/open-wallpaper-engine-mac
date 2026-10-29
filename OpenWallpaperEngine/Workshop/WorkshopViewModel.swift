@@ -40,7 +40,7 @@ class WorkshopViewModel: ObservableObject {
     /// The menus' Set as Wallpaper and Set as Screen Saver (`attach(setAs:)`); nil until the app attaches it.
     private(set) var setAs: WorkshopSetAsFlow?
     private var setAsCancellable: AnyCancellable?
-    private let api = WorkshopAPIService()
+    private let api: WorkshopAPIService
     /// Where Hide Anime is saved.
     private let defaults: UserDefaults
     nonisolated static let hidesAnimeKey = "WorkshopHidesAnime"
@@ -64,12 +64,14 @@ class WorkshopViewModel: ObservableObject {
     /// (Show Only options Steam can't express): 2,000 items.
     nonisolated static let maxSourcePages = 40
 
+    /// `steam` is the Steam login's connection, which searches go through.
     init(steamCmd: SteamCmdService, blockList: WorkshopBlockList = WorkshopBlockList(), searchPage: PageSearch? = nil,
-         defaults: UserDefaults = .app) {
+         defaults: UserDefaults = .app, steam: SteamHelperClient? = nil) {
         self.steamCmd = steamCmd
         self.blockList = blockList
         self.defaults = defaults
-        let service = WorkshopAPIService()
+        let service = WorkshopAPIService(steam: steam)
+        api = service
         self.searchPage = searchPage ?? { text, query, sortOrder, page, perPage in
             try await service.searchItems(query: text, filter: query, sortOrder: sortOrder, page: page, perPage: perPage)
         }

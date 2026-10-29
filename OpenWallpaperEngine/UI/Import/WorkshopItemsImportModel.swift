@@ -42,7 +42,7 @@ final class WorkshopItemsImportModel: ObservableObject {
         checklistChange = checklist.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
     }
 
-    var canDownload: Bool { steamCmd.steamCmdPath != nil && steamCmd.isLoggedIn }
+    var canDownload: Bool { steamCmd.isInstalled && steamCmd.isLoggedIn }
 
     /// Reads the collection the user pasted.
     func loadCollection() async {

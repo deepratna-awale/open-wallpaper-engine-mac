@@ -41,18 +41,21 @@ final class WallpaperEngineFavoritesImportModel: ObservableObject {
         refreshSource()
     }
 
-    /// The app's own wiring: its favourites, Web API key, SteamCMD account and chosen folder.
-    convenience init(steamCmd: SteamCmdService, assets: WallpaperEngineAssetsService) {
-        let api = WorkshopAPIService()
+    /// The app's own wiring: its favourites, Steam login (or Web API key), SteamCMD account and
+    /// chosen folder.
+    convenience init(steamCmd: SteamCmdService, assets: WallpaperEngineAssetsService, steam: SteamHelperClient) {
+        let api = WorkshopAPIService(steam: steam)
         self.init(store: .shared,
                   fetch: { try await api.getFavoritedItemIDs(steamID: $0) },
                   findSteamID: { [weak steamCmd, weak assets] in
-                      WallpaperEngineFavorites.steamID(
+                      steamCmd?.steamLogin?.steamID ?? WallpaperEngineFavorites.steamID(
                           steamCmdAccount: steamCmd?.isLoggedIn == true ? steamCmd?.steamUsername : nil,
                           steamCmdPath: steamCmd?.steamCmdPath,
                           chosenFolder: assets?.status.chosenFolder)
                   },
-                  hasAPIKey: { SteamCredentials.webAPIKey().load() != nil })
+                  hasAPIKey: { [weak steamCmd] in
+                      steamCmd?.steamLogin != nil || SteamCredentials.webAPIKey().load() != nil
+                  })
     }
 
     /// Whether favourites can be read: a key is saved and the account is known.

@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 /// The Discover tab: WE's curated Workshop lists (`WorkshopDiscover.home`), each a row of cards
@@ -140,12 +141,16 @@ struct WorkshopDiscoverView: View {
 
     private var apiKeyNotice: some View {
         VStack(spacing: 8) {
-            Text("A Steam Web API key is required to browse.")
+            Text("Log in to Steam to browse and download Workshop wallpapers.")
                 .foregroundStyle(.secondary)
+            SteamSignInView(account: contentViewModel.steamAccount)
+                .frame(maxWidth: 420)
+            Divider().frame(width: 300).padding(.vertical, 4)
             SteamWebAPIKeyView(onSaved: { model.reload() })
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical)
+        .onReceive(contentViewModel.steamAccount.$login.dropFirst().filter { $0 != nil }) { _ in model.reload() }
     }
 }
 

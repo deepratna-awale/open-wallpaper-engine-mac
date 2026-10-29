@@ -36,6 +36,7 @@ final class ContentViewModel {
     private var steamCmdStatus: [Bool] = []
     private let steamCmdService = SteamCmdService()
     @ObservationIgnored private var steamCmdCancellable: AnyCancellable?
+    @ObservationIgnored private var steamLoginCancellables: Set<AnyCancellable> = []
 
     /// Reading it observes whether steamcmd is there and logged in.
     var steamCmd: SteamCmdService {
@@ -47,20 +48,20 @@ final class ContentViewModel {
     /// Workshop wallpapers and authors hidden from the Workshop and Discover tabs.
     @ObservationIgnored lazy var workshopBlockList = WorkshopBlockList()
     @ObservationIgnored lazy var workshopVM: WorkshopViewModel = {
-        let model = WorkshopViewModel(steamCmd: steamCmdService, blockList: workshopBlockList)
+        let model = WorkshopViewModel(steamCmd: steamCmdService, blockList: workshopBlockList, steam: steamAccount.client)
         model.showsBrowser = { [weak self] in self?.navigation.topTabBarSelection = 1 }
         model.attach(setAs: WorkshopSetAsFlow(environment: .app(workshop: model, library: library)))
         return model
     }()
     /// The Discover tab's lists.
-    @ObservationIgnored lazy var discoverVM = WorkshopDiscoverViewModel(blockList: workshopBlockList)
+    @ObservationIgnored lazy var discoverVM = WorkshopDiscoverViewModel(blockList: workshopBlockList, steam: steamAccount.client)
 
     init() {
         library = InstalledLibraryModel(filters: filters, steamCmd: steamCmdService, presentation: presentation)
         let svc = steamCmdService
         steamCmdCancellable = svc.$isLoggedIn
-            .combineLatest(svc.$steamCmdPath.map { $0 != nil })
-            .map { [$0, $1] }
+            .combineLatest(svc.$steamCmdPath.map { $0 != nil }, svc.$steamLogin.map { $0 != nil })
+            .map { [$0, $1, $2] }
             .removeDuplicates()
             .dropFirst()
             .sink { [weak self] status in
@@ -70,6 +71,16 @@ final class ContentViewModel {
                     DispatchQueue.main.async { self?.steamCmdStatus = status }
                 }
             }
+        // Downloads use the Steam login while there is one, and a download Steam refused it for
+        // ends it here too.
+        let account = steamAccount
+        steamAccount.$login
+            .removeDuplicates()
+            .sink { [weak svc] login in svc?.useSteamLogin(login) }
+            .store(in: &steamLoginCancellables)
+        svc.steamLoginRejected
+            .sink { [weak account] in Task { await account?.loginRejected() } }
+            .store(in: &steamLoginCancellables)
     }
 
     /// Asks whether to trust `wallpaper` before it runs its code. The sheet is on the main window,

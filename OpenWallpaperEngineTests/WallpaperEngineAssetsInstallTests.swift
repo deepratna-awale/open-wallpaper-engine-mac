@@ -202,7 +202,8 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
                                                    defaults: makeDefaults())
         XCTAssertTrue(service.isMissing)
         service.installFromSteam()
-        XCTAssertEqual(service.phase, .failed(WallpaperEngineAssetsService.Failure.steamCmdMissing.errorDescription ?? ""))
+        XCTAssertEqual(service.phase, .failed(WallpaperEngineAssetsService.Failure.notLoggedIn(account: nil).errorDescription ?? ""),
+                       "neither a Steam login nor SteamCMD")
         steamCmd.steamCmdPath = "/usr/bin/false"
         service.installFromSteam()
         XCTAssertEqual(service.phase, .failed(WallpaperEngineAssetsService.Failure.notLoggedIn(account: nil).errorDescription ?? ""))
@@ -555,5 +556,91 @@ private final class ScriptedRunner: SteamCmdRunning, @unchecked Sendable {
         lock.withLock { recorded.append(script) }
         onOutput(output)
         return SteamCmdRun(output: output, exitCode: exitCode)
+    }
+}
+
+// MARK: - Through the Steam login
+
+extension WallpaperEngineAssetsInstallTests {
+    /// With the Steam login, the build comes from the helper's app info and DepotDownloader fetches
+    /// only the listed parts of the two depots; SteamCMD never runs.
+    @MainActor
+    func testTheSteamLoginInstallsTheAssetsWithTheHelper() async throws {
+        let storage = scratch.appending(path: "storage-helper")
+        try FileManager.default.createDirectory(at: storage, withIntermediateDirectories: true)
+        let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { storage }),
+                                       runner: UnusedRunner(), storageDirectory: { storage },
+                                       previewCacheRoot: scratch.appending(path: "previews"),
+                                       downloadedIndex: DownloadedWallpaperIndex(defaults: makeTestDefaults(),
+                                                                                 libraryDirectory: { storage }),
+                                       presentPreview: { _ in }, account: .inMemory(), restoresSession: false)
+        steamCmd.useSteamLogin(FakeSteamHelperTransport.login)
+        let client = SteamHelperClient {
+            FakeSteamHelperTransport { request in
+                switch request.method {
+                case "appInfo":
+                    [FakeSteamHelperTransport.result(request, #"{"appID":431960,"publicBuildID":"20112233","depots":[]}"#)]
+                default:
+                    [FakeSteamHelperTransport.result(request)]
+                }
+            }
+        }
+        let helper = AssetsHelper()
+        let service = WallpaperEngineAssetsService(steamCmd: steamCmd, runner: UnusedRunner(), steamHelper: client,
+                                                   helperDownloads: helper, storageDirectory: { storage },
+                                                   defaults: makeTestDefaults())
+        let finished = expectation(description: "install finished")
+        let cancellable = service.$phase.dropFirst().sink { phase in
+            switch phase {
+            case .idle, .failed: finished.fulfill()
+            case .downloading, .copying: break
+            }
+        }
+        await client.use(FakeSteamHelperTransport.login)
+        service.installFromSteam()
+        await fulfillment(of: [finished], timeout: 10)
+        cancellable.cancel()
+        XCTAssertEqual(service.phase, .idle)
+        let cache = WallpaperEngineAssets.cacheDirectory(in: storage)
+        XCTAssertTrue(WallpaperEngineAssets.isAssetTree(cache))
+        XCTAssertEqual(WallpaperEngineAssetsCache.readInfo(cache: cache)?.steamBuildID, "20112233")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: storage.appending(path: "aurora/project.json").path))
+        let arguments = try XCTUnwrap(helper.arguments.first)
+        XCTAssertEqual(Array(arguments.prefix(6)), ["-app", "431960", "-depot", "431961", "-depot", "431966"])
+        XCTAssertTrue(arguments.contains("-filelist"))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: WallpaperEngineAssetsDownload.downloadDirectory(in: storage).path))
+    }
+}
+
+/// A fake Steam helper that "downloads" the listed parts of Wallpaper Engine into `-dir`.
+private final class AssetsHelper: SteamHelperDownloading, @unchecked Sendable {
+    // `lock` owns `runs`.
+    private let lock = NSLock()
+    private var runs: [[String]] = []
+
+    var arguments: [[String]] { lock.withLock { runs } }
+
+    func run(arguments: [String], login: SteamLogin, cancellation: SteamCmdCancellation,
+             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
+        lock.withLock { runs.append(arguments) }
+        guard let index = arguments.firstIndex(of: "-dir"), index + 1 < arguments.count else {
+            return SteamCmdRun(output: "no -dir", exitCode: 2)
+        }
+        let install = URL(fileURLWithPath: arguments[index + 1], isDirectory: true)
+        let files: [(String, String)] = [
+            ("assets/shaders/common.h", "x"), ("assets/effects/tint/effect.json", "{}"),
+            ("projects/defaultprojects/aurora/project.json", #"{"title":"A","file":"scene.json","type":"scene"}"#),
+        ]
+        do {
+            for (relative, text) in files {
+                let url = install.appending(path: relative)
+                try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try Data(text.utf8).write(to: url)
+            }
+        } catch {
+            return SteamCmdRun(output: "write failed: \(error)", exitCode: 1)
+        }
+        onOutput("100.00% assets/shaders/common.h\n")
+        return SteamCmdRun(output: "100.00% assets/shaders/common.h\nTotal downloaded: 1 bytes", exitCode: 0)
     }
 }

@@ -202,13 +202,18 @@ final class WorkshopAPIService: Sendable {
 
     private let apiKey: KeychainSecret
     private let session: URLSession
+    /// The Steam login's connection: QueryFiles and GetUserFiles go through it while the user is
+    /// logged in, otherwise to the Web API with the key.
+    private let steam: SteamHelperClient?
 
-    init(apiKey: KeychainSecret = SteamCredentials.webAPIKey(), session: URLSession = .shared) {
+    init(apiKey: KeychainSecret = SteamCredentials.webAPIKey(), session: URLSession = .shared,
+         steam: SteamHelperClient? = nil) {
         self.apiKey = apiKey
         self.session = session
+        self.steam = steam
     }
 
-    /// Browse and search need a Steam Web API key (IPublishedFileService/QueryFiles).
+    /// Browse and search need the Steam login or a Steam Web API key (IPublishedFileService/QueryFiles).
     /// GetPublishedFileDetails doesn't. `filter` gives the tags; what it leaves to the results
     /// (`WorkshopQuery.clientShowOnly`) is the caller's to check.
     func searchItems(
@@ -267,20 +272,36 @@ final class WorkshopAPIService: Sendable {
         return queryItems
     }
 
-    /// One page of a Discover section (QueryFiles with the user's Web API key).
+    /// One page of a Discover section (QueryFiles through the Steam login or the Web API key).
     func discoverItems(_ section: WorkshopDiscoverSection, page: Int, perPage: Int) async throws -> [WorkshopItem] {
         try await queryFiles(WorkshopDiscover.queryItems(for: section, page: page, perPage: perPage))
     }
 
-    /// A QueryFiles request with the user's Web API key; the items are remembered for the library.
+    /// A QueryFiles request through the Steam login, or with the user's Web API key; the items are
+    /// remembered for the library.
     private func queryFiles(_ queryItems: [URLQueryItem]) async throws -> [WorkshopItem] {
-        guard let key = apiKey.load() else { throw WorkshopAPIError.noAPIKey }
-        var components = URLComponents(url: Self.queryFilesURL, resolvingAgainstBaseURL: false)!
-        components.queryItems = queryItems
-        guard let url = components.url else { throw WorkshopAPIError.invalidURL }
-        let items = try Self.parseItems(from: try await sendKeyed(url, key: key))
+        let items = try Self.parseItems(from: try await serviceCall("PublishedFile.QueryFiles",
+                                                                    url: Self.queryFilesURL, parameters: queryItems))
         WorkshopMetadataStore.shared.save(items)
         return items
+    }
+
+    /// An `IPublishedFileService` method's `{"response": …}`: through the Steam login when there
+    /// is one, else from the Web API at `url` with the key.
+    private func serviceCall(_ method: String, url: URL, parameters: [URLQueryItem]) async throws -> Data {
+        if let steam, await steam.hasLogin {
+            do {
+                return try await steam.webAPIResponse(method, parameters: parameters)
+            } catch let error as SteamHelperError {
+                OWELog.error(.workshop, "\(method) through the Steam login failed: \(error.code.rawValue) \(error.message)")
+                throw WorkshopAPIError.steam(error)
+            }
+        }
+        guard let key = apiKey.load() else { throw WorkshopAPIError.noAPIKey }
+        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)!
+        components.queryItems = parameters
+        guard let url = components.url else { throw WorkshopAPIError.invalidURL }
+        return try await sendKeyed(url, key: key)
     }
 
     /// Get details for specific workshop items by their IDs.
@@ -372,14 +393,14 @@ final class WorkshopAPIService: Sendable {
         return result
     }
 
-    /// The account's subscribed Wallpaper Engine items (GetUserFiles `type=mysubscriptions`, with
-    /// the user's Web API key). An account with none, or a private one, answers `.empty`.
+    /// The account's subscribed Wallpaper Engine items (GetUserFiles `type=mysubscriptions`, through
+    /// the Steam login or the Web API key). An account with none, or a private one, answers `.empty`.
     func getSubscribedItemIDs(steamID: String) async throws -> WorkshopSubscriptions.Outcome {
         try await getUserFileIDs(steamID: steamID, list: .subscriptions)
     }
 
-    /// The account's favourited Wallpaper Engine items (GetUserFiles `type=myfavorites`, with the
-    /// user's Web API key): Wallpaper Engine's own favourites, which live in the Steam account.
+    /// The account's favourited Wallpaper Engine items (GetUserFiles `type=myfavorites`, through the
+    /// Steam login or the Web API key): Wallpaper Engine's own favourites, which live in the Steam account.
     func getFavoritedItemIDs(steamID: String) async throws -> WorkshopSubscriptions.Outcome {
         try await getUserFileIDs(steamID: steamID, list: .favorites)
     }
@@ -387,14 +408,12 @@ final class WorkshopAPIService: Sendable {
     private func getUserFileIDs(steamID: String,
                                 list: WorkshopSubscriptions.List) async throws -> WorkshopSubscriptions.Outcome {
         guard WorkshopSubscriptions.isSteamID64(steamID) else { throw WorkshopAPIError.invalidURL }
-        guard let key = apiKey.load() else { throw WorkshopAPIError.noAPIKey }
         var ids: [String] = []
         // Up to 50 pages of 100; Steam stops returning files past the last one.
         for page in 1...50 {
-            var components = URLComponents(url: WorkshopSubscriptions.userFilesURL, resolvingAgainstBaseURL: false)!
-            components.queryItems = WorkshopSubscriptions.queryItems(steamID: steamID, page: page, list: list)
-            guard let url = components.url else { throw WorkshopAPIError.invalidURL }
-            guard case .items(let found) = try WorkshopSubscriptions.outcome(from: try await sendKeyed(url, key: key)) else { break }
+            let response = try await serviceCall("PublishedFile.GetUserFiles", url: WorkshopSubscriptions.userFilesURL,
+                                                 parameters: WorkshopSubscriptions.queryItems(steamID: steamID, page: page, list: list))
+            guard case .items(let found) = try WorkshopSubscriptions.outcome(from: response) else { break }
             let new = found.filter { !ids.contains($0) }
             ids += new
             if found.count < 100 || new.isEmpty { break }
@@ -604,6 +623,8 @@ enum WorkshopAPIError: LocalizedError {
     case httpError(Int)
     /// The answer isn't the shape Steam's API answers with.
     case unexpectedResponse
+    /// A request through the Steam login failed.
+    case steam(SteamHelperError)
 
     var errorDescription: String? {
         switch self {
@@ -614,6 +635,7 @@ enum WorkshopAPIError: LocalizedError {
         case .httpError(let code): return String(localized: "Steam API returned HTTP \(code)", comment: "%lld is an HTTP status code")
         case .unexpectedResponse: return String(localized: "Steam API returned an unexpected response.",
                                                 comment: "Workshop error when Steam's answer can't be read")
+        case .steam(let error): return error.errorDescription
         }
     }
 }
