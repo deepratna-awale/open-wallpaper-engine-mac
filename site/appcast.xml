@@ -6,33 +6,6 @@
         <description>Open Wallpaper Engine updates. Items are added by .github/workflows/appcast.yml when a release is published.</description>
         <language>en</language>
         <item>
-            <title>1.0.0-beta.13</title>
-            <pubDate>Thu, 29 Oct 2026 15:36:39 +0000</pubDate>
-            <sparkle:version>17</sparkle:version>
-            <sparkle:shortVersionString>1.0.0-beta.13</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.13/OpenWallpaperEngine-1.0.0-beta.13.zip" length="160167852" type="application/octet-stream" sparkle:edSignature="hn2DB6ulTPNTLVamuiZjx8UR9GvLxyhFG9Z600uCqjH8GsVZu8N6DRegXiLZ139NWSLmcMioQNm6KmnjzWVsDA==" />
-            <sparkle:deltas>
-                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.13/OpenWallpaperEngine-1.0.0-beta.13-from-16.delta" sparkle:deltaFrom="16" length="68492550" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="4rL4OymxZbV/PRqD9h1PT1obJMYYRnleld+lSZzhTIE7QlgRvOd02o3WVEtz7g2/G8QaTOr9DxgdCta3001GDg==" />
-                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.13/OpenWallpaperEngine-1.0.0-beta.13-from-15.delta" sparkle:deltaFrom="15" length="68615150" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="Jv8KSKH7TdBaoy7yk+Zpi2ex07lY4Ep1CvI35gQs1k4CcnN+SjQH0H1TjuV2WRFm9xRJhdSQNQpO6rGf8LPjAw==" />
-                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.13/OpenWallpaperEngine-1.0.0-beta.13-from-14.delta" sparkle:deltaFrom="14" length="68620054" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="SJYi35iuIWOeaj1ng7a6ieJ+xPgK8uV9BAofO3eL8QcbDjGwuJhq/KvsGAQWK+us8JVfPQw8w5Ye6fCrpeqcAw==" />
-            </sparkle:deltas>
-            <sparkle:channel>beta</sparkle:channel>
-            <sparkle:fullReleaseNotesLink>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.13</sparkle:fullReleaseNotesLink>
-            <link>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.13</link>
-            <description>&lt;p dir="auto"&gt;Beta 13 replaces SteamCMD and the Steam Web API key with one Steam sign-in, built into the app.&lt;/p&gt;
-&lt;h2 dir="auto"&gt;Changed&lt;/h2&gt;
-&lt;ul dir="auto"&gt;
-&lt;li&gt;&lt;strong&gt;One Steam sign-in for everything.&lt;/strong&gt; Sign in once, with the QR code in the Steam mobile app or with your password and Steam Guard code, and Workshop browsing and search, downloads, the Wallpaper Engine assets, and importing your subscriptions and favourites all use it. The app talks to Steam through a helper built into it (SteamKit2 and DepotDownloader), so there is nothing else to install or set up.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Terms of Use 1.1 and Privacy Policy 1.2&lt;/strong&gt; describe the Steam sign-in in place of SteamCMD and the Web API key, so the setup notice shows once more.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 dir="auto"&gt;Removed&lt;/h2&gt;
-&lt;ul dir="auto"&gt;
-&lt;li&gt;&lt;strong&gt;SteamCMD and the Steam Web API key.&lt;/strong&gt; Neither is used any more: Settings › Assets has no SteamCMD section or key field, and the setup assistant no longer sets up SteamCMD or asks for a key. Downloads still need a Steam account that owns Wallpaper Engine.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p dir="auto"&gt;The full list is in &lt;a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/blob/main/CHANGELOG.md#100-beta13---2026-10-29"&gt;CHANGELOG.md&lt;/a&gt;.&lt;/p&gt;</description>
-        </item>
-        <item>
             <title>1.0.0-beta.12</title>
             <pubDate>Wed, 28 Oct 2026 22:25:36 +0000</pubDate>
             <sparkle:version>16</sparkle:version>
