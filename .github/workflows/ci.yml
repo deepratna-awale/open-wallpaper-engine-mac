@@ -1,26 +1,27 @@
 name: CI
 
-# CI runs twice per change: on its pull request once it's labelled "ready to merge" (and up to
-# date with main), and on main once it's merged. A pull request without the label runs nothing;
-# a push to a labelled one runs again.
+# CI runs twice per change: on its pull request once it's out of draft or labelled "ready to merge"
+# (and up to date with main), and on main once it's merged. A draft without the label runs
+# nothing; a push to a ready or labelled one runs again.
 on:
   push:
     branches: [main]
   pull_request:
-    types: [labeled, synchronize, reopened]
+    types: [opened, ready_for_review, labeled, synchronize, reopened]
   workflow_dispatch:
 
 # Every job only reads the repository (and the Actions cache and artifacts, which need no token scope).
 permissions:
   contents: read
 
-# A run that won't test anything (an unlabelled pull request, or another label added) gets a group
+# A run that won't test anything (an unlabelled draft, or another label added) gets a group
 # of its own, so it never cancels a real run.
 concurrency:
   group: >-
     ci-${{ github.ref }}-${{ (github.event_name != 'pull_request' ||
-    (contains(github.event.pull_request.labels.*.name, 'ready to merge') &&
-    (github.event.action != 'labeled' || github.event.label.name == 'ready to merge'))) && 'run' || github.run_id }}
+    (github.event.action == 'labeled' && github.event.label.name == 'ready to merge') ||
+    (github.event.action != 'labeled' && (!github.event.pull_request.draft ||
+    contains(github.event.pull_request.labels.*.name, 'ready to merge')))) && 'run' || github.run_id }}
   cancel-in-progress: true
 
 env:
@@ -43,13 +44,14 @@ env:
   # once); Scripts/ci-local.sh runs the whole suite the same way locally.
 
 jobs:
-  # Lets a pull request through only with the "ready to merge" label and only when it has every
-  # commit on main, so what is tested is what merges.
+  # Lets a pull request through only out of draft or with the "ready to merge" label, and only
+  # when it has every commit on main, so what is tested is what merges.
   gate:
     if: >-
       github.event_name != 'pull_request' ||
-      (contains(github.event.pull_request.labels.*.name, 'ready to merge') &&
-      (github.event.action != 'labeled' || github.event.label.name == 'ready to merge'))
+      (github.event.action == 'labeled' && github.event.label.name == 'ready to merge') ||
+      (github.event.action != 'labeled' && (!github.event.pull_request.draft ||
+      contains(github.event.pull_request.labels.*.name, 'ready to merge')))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -65,7 +67,7 @@ jobs:
           base_sha=$(gh api "repos/$REPO/commits/$BASE" --jq .sha)
           behind=$(gh api "repos/$REPO/compare/$base_sha...$HEAD_SHA" --jq .behind_by)
           if [[ "$behind" != 0 ]]; then
-            echo "::error::The branch is $behind commit(s) behind $BASE. Merge $BASE into it, then label it again."
+            echo "::error::The branch is $behind commit(s) behind $BASE. Merge $BASE into it and push."
             exit 1
           fi
 

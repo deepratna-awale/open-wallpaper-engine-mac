@@ -1,13 +1,13 @@
 name: CodeQL
 
 # The same scan as GitHub's default CodeQL setup (languages, autobuild, runners), under CI's rule:
-# on a pull request only once it's labelled "ready to merge" (ci.yml's gate checks it's up to
-# date with main), on main after the merge, and weekly.
+# on a pull request once it's out of draft or labelled "ready to merge" (ci.yml's gate checks
+# it's up to date with main), on main after the merge, and weekly.
 on:
   push:
     branches: [main]
   pull_request:
-    types: [labeled, synchronize, reopened]
+    types: [opened, ready_for_review, labeled, synchronize, reopened]
   schedule:
     - cron: '41 4 * * 1'
   workflow_dispatch:
@@ -20,8 +20,9 @@ permissions:
 concurrency:
   group: >-
     codeql-${{ github.ref }}-${{ (github.event_name != 'pull_request' ||
-    (contains(github.event.pull_request.labels.*.name, 'ready to merge') &&
-    (github.event.action != 'labeled' || github.event.label.name == 'ready to merge'))) && 'run' || github.run_id }}
+    (github.event.action == 'labeled' && github.event.label.name == 'ready to merge') ||
+    (github.event.action != 'labeled' && (!github.event.pull_request.draft ||
+    contains(github.event.pull_request.labels.*.name, 'ready to merge')))) && 'run' || github.run_id }}
   cancel-in-progress: true
 
 jobs:
@@ -29,8 +30,9 @@ jobs:
     name: Analyze (${{ matrix.language }})
     if: >-
       github.event_name != 'pull_request' ||
-      (contains(github.event.pull_request.labels.*.name, 'ready to merge') &&
-      (github.event.action != 'labeled' || github.event.label.name == 'ready to merge'))
+      (github.event.action == 'labeled' && github.event.label.name == 'ready to merge') ||
+      (github.event.action != 'labeled' && (!github.event.pull_request.draft ||
+      contains(github.event.pull_request.labels.*.name, 'ready to merge')))
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     permissions:

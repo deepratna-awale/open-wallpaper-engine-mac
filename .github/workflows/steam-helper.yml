@@ -1,14 +1,15 @@
 name: Steam helper
 
 # Tests the Steam helper (SteamHelper/) and publishes it for both Mac architectures, under the same
-# rule as CI: on a pull request once it's labelled "ready to merge", and on main after it merges.
+# rule as CI: on a pull request once it's out of draft or labelled "ready to merge", and on main
+# after it merges.
 # Built on Linux: the binaries are unsigned until the release signs them.
 on:
   push:
     branches: [main]
     paths: ['SteamHelper/**', 'Vendor/DepotDownloader/**', '.github/workflows/steam-helper.yml']
   pull_request:
-    types: [labeled, synchronize, reopened]
+    types: [opened, ready_for_review, labeled, synchronize, reopened]
     paths: ['SteamHelper/**', 'Vendor/DepotDownloader/**', '.github/workflows/steam-helper.yml']
   workflow_dispatch:
 
@@ -19,8 +20,9 @@ jobs:
   build:
     if: >-
       github.event_name != 'pull_request' ||
-      (contains(github.event.pull_request.labels.*.name, 'ready to merge') &&
-      (github.event.action != 'labeled' || github.event.label.name == 'ready to merge'))
+      (github.event.action == 'labeled' && github.event.label.name == 'ready to merge') ||
+      (github.event.action != 'labeled' && (!github.event.pull_request.draft ||
+      contains(github.event.pull_request.labels.*.name, 'ready to merge')))
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
