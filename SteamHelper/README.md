@@ -51,7 +51,7 @@ they belong to, or none for the connection's own.
 | `cancel` | `id` | (the cancelled request fails with `cancelled`) |
 | `logOn` | `accountName`, `refreshToken` | `steamID` |
 | `logOff` | | |
-| `call` | `method`, `body` | the response message. `method` is one of `PublishedFile.QueryFiles`, `PublishedFile.GetUserFiles`, `PublishedFile.GetDetails`; `body` is the request message. Messages use the Web API's JSON: proto field names, 64-bit integers as strings, unset fields left out |
+| `call` | `method`, `body` | the response message. `method` is one of `PublishedFile.QueryFiles`, `PublishedFile.GetUserFiles`, `PublishedFile.GetDetails`, `PublishedFile.Subscribe`, `PublishedFile.Unsubscribe`, `PublishedFile.Vote`, `PublishedFile.GetUserVoteSummary`; `body` is the request message. Messages use the Web API's JSON: proto field names, 64-bit integers as strings, unset fields left out |
 | `appInfo` | `appID` | `appID`, `publicBuildID`, `depots` `[{id, oslist}]` |
 | `ownsApp` | `appID` | `owned`: whether one of the account's licenses grants the app |
 

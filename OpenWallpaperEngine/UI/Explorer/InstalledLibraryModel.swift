@@ -46,6 +46,9 @@ final class InstalledLibraryModel {
     private let filters: FilterResultsViewModel
     private let workshopDownloads: WorkshopDownloadService
     private let presentation: ContentPresentation
+    /// Gets the ids of the Workshop items the user downloaded and then deleted, to unsubscribe
+    /// from them on Steam as Wallpaper Engine does (`SteamWorkshopLists`).
+    @ObservationIgnored var workshopItemsDeleted: ([String]) -> Void = { _ in }
 
     /// Re-reads only the wallpapers that changed on disk.
     private let library: InstalledLibraryCache = {
@@ -161,10 +164,18 @@ final class InstalledLibraryModel {
     func deleteWallpapersNow(at directories: [URL], toTrash: Bool,
                              wallpaperViewModel: WallpaperViewModel) async -> WallpaperDeletion.Failure? {
         let libraries = [FileManager.default.wallpapersDirectory] + LibraryFolders().folders
+        // The items the user downloaded from the Workshop, before deleting forgets them.
+        let downloaded = Dictionary(directories.compactMap { directory -> (URL, String)? in
+            let id = directory.lastPathComponent
+            return DownloadedWallpaperIndex.shared.contains(id) && !workshopDownloads.dependencyIndex.contains(id)
+                ? (directory, id) : nil
+        }, uniquingKeysWith: { first, _ in first })
         let result: (deleted: [URL], failure: WallpaperDeletion.Failure?) = await Task.detached(priority: .userInitiated) {
             WallpaperDeletion.delete(directories, toTrash: toTrash, libraries: libraries)
         }.value
         for directory in result.deleted { forgetDeletedWallpaper(at: directory) }
+        let unsubscribed = result.deleted.compactMap { downloaded[$0] }
+        if !unsubscribed.isEmpty { workshopItemsDeleted(unsubscribed) }
         for directory in directories { wallpaperViewModel.removeWallpaperFromAllScreens(directory: directory) }
         removeUnusedWorkshopDependencies()
         return result.failure

@@ -18,4 +18,11 @@ enum WallpaperEngineFavorites {
             return seen.insert(key).inserted ? key : nil
         }
     }
+
+    /// The Workshop id a `FavoritesStore` key names; nil for a local wallpaper's key.
+    static func workshopID(forKey key: String) -> String? {
+        guard key.hasPrefix("workshop-") else { return nil }
+        let id = String(key.dropFirst("workshop-".count))
+        return WorkshopCollection.isID(id) ? id : nil
+    }
 }

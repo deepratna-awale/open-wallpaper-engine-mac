@@ -158,6 +158,8 @@ final class FavoritesStore: ObservableObject {
     static let shared = FavoritesStore()
 
     @Published private(set) var ids: Set<String>
+    /// A key the user just favourited or unfavourited (`toggle`); a merge doesn't send it.
+    let toggled = PassthroughSubject<(key: String, isFavorite: Bool), Never>()
     private let storageKey = "FavoriteWallpaperIds"
     private let defaults: UserDefaults
 
@@ -178,6 +180,7 @@ final class FavoritesStore: ObservableObject {
             ids.insert(id)
         }
         save()
+        toggled.send((id, ids.contains(id)))
     }
 
     /// Adds `keys` to the favourites, keeping every one already there; returns how many were new.
@@ -211,12 +214,7 @@ final class FavoritesStore: ObservableObject {
     }
 
     func toggle(_ wallpaper: WEWallpaper) {
-        if contains(wallpaper) {
-            ids.remove(Self.key(for: wallpaper))
-        } else {
-            ids.insert(Self.key(for: wallpaper))
-        }
-        save()
+        toggle(Self.key(for: wallpaper))
     }
 }
 

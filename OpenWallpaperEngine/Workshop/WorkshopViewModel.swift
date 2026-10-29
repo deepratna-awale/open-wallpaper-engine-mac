@@ -39,6 +39,9 @@ class WorkshopViewModel: ObservableObject {
     var showsBrowser: () -> Void = {}
     /// The menus' Set as Wallpaper and Set as Screen Saver (`attach(setAs:)`); nil until the app attaches it.
     private(set) var setAs: WorkshopSetAsFlow?
+    /// The Steam account's Workshop lists and ratings, which the menus' Rate Up and Rate Down
+    /// change; nil until the app attaches them.
+    var steamLists: SteamWorkshopLists?
     private var setAsCancellable: AnyCancellable?
     private let api: WorkshopAPIService
     /// Where Hide Anime is saved.
@@ -123,6 +126,7 @@ class WorkshopViewModel: ObservableObject {
                 // The author's items come unfiltered; the whole filter is checked here.
                 items = results.filter { query.matchesAllTags($0, isFavorite: isFavorite) && !blockList.isBlocked($0) }
                 preloadThumbnails(items)
+                loadVotes(items)
             } catch {
                 guard generation == searchGeneration else { return }
                 errorMessage = error.localizedDescription
@@ -144,6 +148,7 @@ class WorkshopViewModel: ObservableObject {
             guard generation == searchGeneration else { return }
             items = results
             preloadThumbnails(results)
+            loadVotes(results)
             await preloadAdjacentPages(for: page, searchKey: searchKey)
         } catch {
             guard generation == searchGeneration else { return }
@@ -470,6 +475,12 @@ class WorkshopViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    /// Reads the account's ratings of the shown items, for the menus' Rate Up and Rate Down.
+    private func loadVotes(_ items: [WorkshopItem]) {
+        guard let steamLists else { return }
+        Task { await steamLists.loadVotes(for: items.map(\.id)) }
     }
 
     private func preloadThumbnails(_ items: [WorkshopItem]) {
