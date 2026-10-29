@@ -58,7 +58,9 @@ Error codes: `invalidRequest`, `unknownMethod`, `notLoggedOn`, `tokenRejected` (
 `wrongPassword`, `cancelled`, `network`, `steam`, `internal`.
 
 Connection events: `loggedOff` `{eresult}` and `disconnected`. After either, the next call logs on
-again with the last `logOn`'s account by itself.
+again with the last `logOn`'s account by itself; concurrent calls share that one logon. If Steam
+refuses the token then, that call and every later one fail with `tokenRejected` until the next
+`logOn`.
 
 ## Building and testing
 

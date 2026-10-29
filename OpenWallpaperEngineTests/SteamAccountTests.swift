@@ -87,6 +87,25 @@ final class SteamAccountTests: XCTestCase {
         XCTAssertEqual(account.errorMessage, SteamHelperError(code: .tokenRejected, message: "").errorDescription)
     }
 
+    /// Steam refusing the login partway through a session signs the account out, as at launch.
+    func testALoginSteamRejectsDuringASessionIsForgotten() async throws {
+        try store.save(Fake.login)
+        let (account, _) = makeAccount { request in
+            switch request.method {
+            case "logOn": [Fake.result(request, #"{"steamID":"76561190000000001"}"#)]
+            default: [Fake.error(request, code: "tokenRejected", eresult: 5)]
+            }
+        }
+        await account.restore()
+        XCTAssertTrue(account.isSignedIn)
+
+        _ = try? await account.client.webAPIResponse("PublishedFile.QueryFiles", parameters: [])
+        try await waitFor("signed out") { account.status == .signedOut }
+        XCTAssertNil(store.load())
+        XCTAssertNil(account.login)
+        XCTAssertEqual(account.errorMessage, SteamHelperError(code: .tokenRejected, message: "").errorDescription)
+    }
+
     func testRestoreWithoutANetworkKeepsTheLogin() async throws {
         try store.save(Fake.login)
         let (account, _) = makeAccount { [Fake.error($0, code: "network")] }
