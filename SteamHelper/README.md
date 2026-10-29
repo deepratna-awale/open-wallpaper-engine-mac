@@ -63,6 +63,10 @@ again with the last `logOn`'s account by itself; concurrent calls share that one
 refuses the token then, that call and every later one fail with `tokenRejected` until the next
 `logOn`.
 
+While logged on, Steam tells the helper when the account subscribes to a Workshop item or
+unsubscribes anywhere (the Steam app, the website, the phone): `workshopItemSubscribed` and
+`workshopItemUnsubscribed` `{publishedfileid, appid}`. Favourites send nothing.
+
 ## Building and testing
 
 ```sh

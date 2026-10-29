@@ -49,6 +49,8 @@ final class ContentViewModel {
     let steamAccount = SteamAccount()
     /// Mirrors downloads, Unsubscribe, the heart and ratings on the Steam account, as WE does.
     let steamWorkshopLists: SteamWorkshopLists
+    /// Brings favourites changed elsewhere on the Steam account into the hearts.
+    private let steamFavoritesSync: SteamFavoritesSync
     /// Workshop wallpapers and authors hidden from the Workshop and Discover tabs.
     @ObservationIgnored lazy var workshopBlockList = WorkshopBlockList()
     @ObservationIgnored lazy var workshopVM: WorkshopViewModel = {
@@ -65,8 +67,13 @@ final class ContentViewModel {
         library = InstalledLibraryModel(filters: filters, workshopDownloads: workshopDownloadService, presentation: presentation)
         let lists = SteamWorkshopLists(downloads: workshopDownloadService, steam: steamAccount.client)
         steamWorkshopLists = lists
+        steamFavoritesSync = SteamFavoritesSync(account: steamAccount)
         lists.follow(downloads: workshopDownloadService.userItemDownloaded, favorites: .shared)
         library.workshopItemsDeleted = { [weak lists] in lists?.unsubscribe(from: $0) }
+        let subscriptions = SteamSubscriptionDownloads(downloads: workshopDownloadService, steam: steamAccount.client)
+        Task { [client = steamAccount.client] in
+            await client.setWorkshopSubscribeHandler { await subscriptions.subscribed($0) }
+        }
         workshopUpdates = WorkshopUpdateChecker(downloads: workshopDownloadService)
         let svc = workshopDownloadService
         steamLoginCancellable = svc.$isLoggedIn
@@ -86,6 +93,16 @@ final class ContentViewModel {
             .removeDuplicates()
             .sink { [weak svc] login in svc?.useSteamLogin(login) }
             .store(in: &steamLoginCancellables)
+        // `$login` publishes before the property changes; the read, a task, comes after.
+        let favoritesSync = steamFavoritesSync
+        steamAccount.$login
+            .map { $0?.steamID }
+            .removeDuplicates()
+            .sink { steamID in
+                if steamID != nil { Task { await favoritesSync.read() } }
+            }
+            .store(in: &steamLoginCancellables)
+        favoritesSync.start()
         svc.steamLoginRejected
             .sink { [weak account] in Task { await account?.loginRejected() } }
             .store(in: &steamLoginCancellables)

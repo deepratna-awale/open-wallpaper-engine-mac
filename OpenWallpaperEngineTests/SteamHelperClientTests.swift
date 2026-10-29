@@ -275,6 +275,63 @@ final class SteamHelperClientTests: XCTestCase {
         XCTAssertEqual(calls.values.count, 2)
     }
 
+    private static func loggingOn(_ request: FakeSteamHelperRequest) -> [String] {
+        request.method == "logOn" ? [Fake.result(request, #"{"steamID":"76561190000000001"}"#)] : [Fake.result(request)]
+    }
+
+    /// Steam tells the logged-on helper when the account subscribes anywhere; the handler gets
+    /// Wallpaper Engine's items only, and an unsubscribe does nothing.
+    func testSubscribesElsewhereReachTheHandler() async throws {
+        let transports = Box<Fake>()
+        let client = makeClient(transports, respond: Self.loggingOn)
+        let subscribed = Box<String>()
+        await client.setWorkshopSubscribeHandler { subscribed.append($0) }
+        await client.use(Fake.login)
+        try await client.ensureLoggedOn()
+        let fake = try XCTUnwrap(transports.values.first)
+
+        fake.emit(#"{"event":"workshopItemSubscribed","publishedfileid":"111","appid":730}"#)
+        fake.emit(#"{"event":"workshopItemUnsubscribed","publishedfileid":"222","appid":431960}"#)
+        fake.emit(#"{"event":"workshopItemSubscribed","publishedfileid":"3826203207","appid":431960}"#)
+
+        try await sleepUntil("the subscribe") { !subscribed.values.isEmpty }
+        XCTAssertEqual(subscribed.values, ["3826203207"])
+    }
+
+    /// Notices only reach a logged-on helper, so the client logs on again after Steam drops it.
+    func testLogsOnAgainAfterSteamDisconnects() async throws {
+        let transports = Box<Fake>()
+        let client = SteamHelperClient(firstLogOnRetry: .milliseconds(10)) {
+            let transport = Fake(respond: Self.loggingOn)
+            transports.append(transport)
+            return transport
+        }
+        await client.use(Fake.login)
+        try await client.ensureLoggedOn()
+        let fake = try XCTUnwrap(transports.values.first)
+
+        fake.emit(#"{"event":"disconnected"}"#)
+
+        try await sleepUntil("the second logon") { fake.methods == ["logOn", "logOn"] }
+    }
+
+    func testNoLogOnAgainWithoutALogin() async throws {
+        let transports = Box<Fake>()
+        let client = SteamHelperClient(firstLogOnRetry: .milliseconds(10)) {
+            let transport = Fake(respond: Self.loggingOn)
+            transports.append(transport)
+            return transport
+        }
+        _ = try await client.ping()
+        let fake = try XCTUnwrap(transports.values.first)
+
+        fake.emit(#"{"event":"loggedOff","eresult":6}"#)
+        _ = try await client.ping()
+        try await Task.sleep(for: .milliseconds(100))
+
+        XCTAssertEqual(fake.methods, ["ping", "ping"])
+    }
+
     // MARK: Locator and login
 
     func testLocatorUsesTheEnvironmentOverrideOnlyWhenItRuns() throws {
