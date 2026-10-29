@@ -42,6 +42,8 @@ final class ContentViewModel {
         _ = steamCmdStatus
         return steamCmdService
     }
+    /// The Steam login, which the app's Steam helper uses for everything on Steam.
+    let steamAccount = SteamAccount()
     /// Workshop wallpapers and authors hidden from the Workshop and Discover tabs.
     @ObservationIgnored lazy var workshopBlockList = WorkshopBlockList()
     @ObservationIgnored lazy var workshopVM: WorkshopViewModel = {

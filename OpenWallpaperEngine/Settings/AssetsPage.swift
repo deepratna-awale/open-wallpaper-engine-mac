@@ -1,8 +1,8 @@
 import SwiftUI
 import AppKit
 
-/// Settings › Assets: the Wallpaper Engine assets scenes need, from the user's own Steam copy,
-/// SteamCMD, the Wallpaper Storage folder, the library folders, the Steam Web API key and the
+/// Settings › Assets: the Steam login, the Wallpaper Engine assets scenes need, from the user's
+/// own Steam copy, SteamCMD, the Wallpaper Storage folder, the library folders, the Steam Web API key and the
 /// Workshop block list. Shows which copy is in use
 /// and installs, updates or removes it. Changes apply at once; the
 /// window's OK and Cancel don't cover them.
@@ -10,6 +10,7 @@ struct AssetsPage: SettingsPage {
     var viewModel: GlobalSettingsViewModel
     @ObservedObject private var assets: WallpaperEngineAssetsService
     @ObservedObject private var steamCmd: SteamCmdService
+    private let steamAccount: SteamAccount
     private let installer: SteamCmdInstaller
     private let editorPreviews: EditorPreviewPrewarm
     @State private var confirmsRemoval = false
@@ -19,12 +20,16 @@ struct AssetsPage: SettingsPage {
         self.viewModel = globalSettings
         self.assets = AppDelegate.shared.assets
         self.steamCmd = AppDelegate.shared.contentViewModel.steamCmd
+        self.steamAccount = AppDelegate.shared.contentViewModel.steamAccount
         self.installer = AppDelegate.shared.steamCmdInstaller
         self.editorPreviews = AppDelegate.shared.editorPreviewPrewarm
     }
 
     var body: some View {
         SettingsForm {
+            SteamAccountSection(account: steamAccount)
+                .settingsAnchor(SettingsAnchor.steamLogin)
+
             Section {
                 Text("Scenes need Wallpaper Engine assets from your Steam copy: built-in effects, shaders, materials and fonts. Video and web wallpapers play without them.")
                     .foregroundStyle(.secondary)

@@ -91,6 +91,10 @@ extension AppDelegate {
         // Cache entries unused for 60 days go, a while after launch and then daily.
         cacheMaintenance.start()
 
+        // Log on to Steam with the saved login, if any. The Steam helper ends with the app: its
+        // input closes when the app exits.
+        Task { await contentViewModel.steamAccount.restore() }
+
         // Workshop downloads need SteamCMD; set it up from Valve in the background when it's missing.
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
             guard let self else { return }

@@ -15123,6 +15123,100 @@
         }
       }
     },
+    "Approve the login in the Steam mobile app." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "وافق على تسجيل الدخول في تطبيق Steam للجوال."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestätigen Sie die Anmeldung in der Steam Mobile App."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aprueba el inicio de sesión en la aplicación móvil de Steam."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approuvez la connexion dans l’application mobile Steam."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam मोबाइल ऐप में लॉग इन को स्वीकृत करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approva l’accesso nell’app mobile di Steam."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steamモバイルアプリでログインを承認してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam 모바일 앱에서 로그인을 승인하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zatwierdź logowanie w aplikacji mobilnej Steam."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aprove o início de sessão no aplicativo móvel do Steam."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подтвердите вход в мобильном приложении Steam."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Girişi Steam mobil uygulamasında onaylayın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підтвердьте вхід у мобільному застосунку Steam."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在 Steam 手机应用中批准此次登录。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請在 Steam 行動應用程式中核准此次登入。"
+          }
+        }
+      }
+    },
     "Approved" : {
       "comment" : "Filter: Workshop items the Wallpaper Engine team approved",
       "localizations" : {
@@ -23441,6 +23535,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法解壓縮 SteamCMD：%@"
+          }
+        }
+      }
+    },
+    "Can't reach Steam. Check your internet connection and try again." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر الوصول إلى Steam. تحقق من اتصالك بالإنترنت وحاول مرة أخرى."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam ist nicht erreichbar. Überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puede conectar con Steam. Comprueba tu conexión a internet e inténtalo de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de joindre Steam. Vérifiez votre connexion à Internet et réessayez."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam तक नहीं पहुँचा जा सका। अपना इंटरनेट कनेक्शन जाँचें और फिर से कोशिश करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile raggiungere Steam. Controlla la connessione a Internet e riprova."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steamに接続できません。インターネット接続を確認して、もう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam에 연결할 수 없습니다. 인터넷 연결을 확인한 다음 다시 시도하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można połączyć się ze Steam. Sprawdź połączenie z internetem i spróbuj ponownie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não é possível acessar o Steam. Verifique sua conexão com a internet e tente novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удается подключиться к Steam. Проверьте подключение к интернету и повторите попытку."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam’e ulaşılamıyor. İnternet bağlantınızı denetleyip yeniden deneyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдається підʼєднатися до Steam. Перевірте підключення до інтернету й повторіть спробу."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法连接 Steam。请检查你的互联网连接，然后重试。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法連線至 Steam。請檢查你的網際網路連線，然後再試一次。"
           }
         }
       }
@@ -49333,6 +49521,195 @@
         }
       }
     },
+    "Enter the Steam Guard code Steam sent to %@." : {
+      "comment" : "%@ is an email address",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أدخل رمز Steam Guard الذي أرسله Steam إلى %@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geben Sie den Steam-Guard-Code ein, den Steam an %@ gesendet hat."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce el código de Steam Guard que Steam ha enviado a %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez le code Steam Guard que Steam a envoyé à %@."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam ने %@ पर जो Steam Guard कोड भेजा है, उसे दर्ज करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inserisci il codice di Steam Guard che Steam ha inviato a %@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steamが%@に送信したSteamガードコードを入力してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam이 %@(으)로 보낸 Steam Guard 코드를 입력하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wpisz kod Steam Guard wysłany przez Steam na adres %@."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite o código do Steam Guard que o Steam enviou para %@."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите код Steam Guard, который Steam отправил на %@."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam’in %@ adresine gönderdiği Steam Guard kodunu girin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введіть код Steam Guard, який Steam надіслав на %@."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请输入 Steam 发送到 %@ 的 Steam 令牌验证码。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請輸入 Steam 傳送至 %@ 的 Steam Guard 代碼。"
+          }
+        }
+      }
+    },
+    "Enter the Steam Guard code from the Steam mobile app." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أدخل رمز Steam Guard من تطبيق Steam للجوال."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geben Sie den Steam-Guard-Code aus der Steam Mobile App ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce el código de Steam Guard de la aplicación móvil de Steam."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez le code Steam Guard de l’application mobile Steam."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam मोबाइल ऐप से Steam Guard कोड दर्ज करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inserisci il codice di Steam Guard dall’app mobile di Steam."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamモバイルアプリのSteamガードコードを入力してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam 모바일 앱의 Steam Guard 코드를 입력하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wpisz kod Steam Guard z aplikacji mobilnej Steam."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digite o código do Steam Guard do aplicativo móvel do Steam."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите код Steam Guard из мобильного приложения Steam."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam mobil uygulamasındaki Steam Guard kodunu girin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введіть код Steam Guard із мобільного застосунку Steam."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请输入 Steam 手机应用中的 Steam 令牌验证码。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請輸入 Steam 行動應用程式中的 Steam Guard 代碼。"
+          }
+        }
+      }
+    },
     "Enter the screen's width and height in pixels" : {
       "localizations" : {
         "ar" : {
@@ -70673,6 +71050,100 @@
         }
       }
     },
+    "In the Steam mobile app, open Steam Guard and scan this code." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "في تطبيق Steam للجوال، افتح Steam Guard وامسح هذا الرمز."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnen Sie in der Steam Mobile App „Steam Guard“ und scannen Sie diesen Code."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En la aplicación móvil de Steam, abre Steam Guard y escanea este código."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dans l’application mobile Steam, ouvrez Steam Guard et scannez ce code."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam मोबाइल ऐप में Steam Guard खोलें और यह कोड स्कैन करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nell’app mobile di Steam, apri Steam Guard e scansiona questo codice."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamモバイルアプリでSteam Guardを開き、このコードをスキャンしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam 모바일 앱에서 Steam Guard를 열고 이 코드를 스캔하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "W aplikacji mobilnej Steam otwórz Steam Guard i zeskanuj ten kod."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No aplicativo móvel do Steam, abra o Steam Guard e escaneie este código."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В мобильном приложении Steam откройте Steam Guard и отсканируйте этот код."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam mobil uygulamasında Steam Guard’ı açın ve bu kodu tarayın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У мобільному застосунку Steam відкрийте Steam Guard і відскануйте цей код."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Steam 手机应用中打开 Steam 令牌，然后扫描此代码。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Steam 行動應用程式中開啟 Steam Guard，然後掃描此代碼。"
+          }
+        }
+      }
+    },
     "In use now: your Mac is on battery or in Low Power Mode." : {
       "localizations" : {
         "ar" : {
@@ -78604,6 +79075,100 @@
         }
       }
     },
+    "Log In with the Steam Mobile App" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تسجيل الدخول باستخدام تطبيق Steam للجوال"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit der Steam Mobile App anmelden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar sesión con la aplicación móvil de Steam"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se connecter avec l’application mobile Steam"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam मोबाइल ऐप से लॉग इन करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accedi con l’app mobile di Steam"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steamモバイルアプリでログイン"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam 모바일 앱으로 로그인"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaloguj się przez aplikację mobilną Steam"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar Sessão com o Aplicativo Móvel do Steam"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти через мобильное приложение Steam"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam Mobil Uygulamasıyla Giriş Yap"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Увійти через мобільний застосунок Steam"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 Steam 手机应用登录"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 Steam 行動應用程式登入"
+          }
+        }
+      }
+    },
     "Log In…" : {
       "localizations" : {
         "ar" : {
@@ -79546,6 +80111,100 @@
         }
       }
     },
+    "Log in with your account name and password instead" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تسجيل الدخول باسم الحساب وكلمة المرور بدلًا من ذلك"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stattdessen mit Kontoname und Passwort anmelden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar sesión con el nombre de cuenta y la contraseña"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se connecter plutôt avec le nom de compte et le mot de passe"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इसके बजाय खाते के नाम और पासवर्ड से लॉग इन करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accedi invece con nome dell’account e password"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "代わりにアカウント名とパスワードでログイン"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "대신 계정 이름과 비밀번호로 로그인"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaloguj się nazwą konta i hasłem"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar sessão com o nome da conta e a senha"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти с именем аккаунта и паролем"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bunun yerine hesap adı ve parolayla giriş yapın"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Увійти з іменем облікового запису й паролем"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改用帐户名称和密码登录"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改用帳號名稱和密碼登入"
+          }
+        }
+      }
+    },
     "Logged in as %@" : {
       "comment" : "%@ is a Steam account name",
       "localizations" : {
@@ -79637,6 +80296,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已登入為 %@"
+          }
+        }
+      }
+    },
+    "Logged in to Steam as %@" : {
+      "comment" : "%@ is the Steam account name",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم تسجيل الدخول إلى Steam باسم %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei Steam angemeldet als %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesión iniciada en Steam como %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecté à Steam en tant que %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam में %@ के रूप में लॉग इन है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accesso a Steam eseguito come %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@としてSteamにログイン中"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@(으)로 Steam에 로그인됨"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zalogowano do Steam jako %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sessão Iniciada no Steam como %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в Steam выполнен: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam’e %@ olarak giriş yapıldı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вхід у Steam виконано як %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已以 %@ 身份登录 Steam"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已以 %@ 身分登入 Steam"
           }
         }
       }
@@ -114077,6 +114831,100 @@
         }
       }
     },
+    "QR code to log in to Steam" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "رمز QR لتسجيل الدخول إلى Steam"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR-Code zum Anmelden bei Steam"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Código QR para iniciar sesión en Steam"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code QR pour se connecter à Steam"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam में लॉग इन करने के लिए QR कोड"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codice QR per accedere a Steam"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamにログインするためのQRコード"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam 로그인용 QR 코드"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kod QR do logowania do Steam"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Código QR para iniciar sessão no Steam"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR-код для входа в Steam"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam’e giriş için QR kodu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR-код для входу в Steam"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用于登录 Steam 的二维码"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用於登入 Steam 的 QR 碼"
+          }
+        }
+      }
+    },
     "Quality" : {
       "localizations" : {
         "ar" : {
@@ -146882,6 +147730,100 @@
         }
       }
     },
+    "Steam ended your login. Log in to Steam again." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أنهى Steam تسجيل دخولك. سجّل الدخول إلى Steam مرة أخرى."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam hat Ihre Anmeldung beendet. Melden Sie sich erneut bei Steam an."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam ha cerrado tu sesión. Vuelve a iniciar sesión en Steam."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam a mis fin à votre connexion. Reconnectez-vous à Steam."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam ने आपका लॉग इन समाप्त कर दिया है। Steam में फिर से लॉग इन करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam ha chiuso il tuo accesso. Accedi di nuovo a Steam."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steamがログインを終了しました。もう一度Steamにログインしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam에서 로그인을 종료했습니다. Steam에 다시 로그인하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam zakończył logowanie. Zaloguj się do Steam ponownie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Steam encerrou sua sessão. Inicie sessão no Steam novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam завершил ваш вход. Войдите в Steam снова."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam oturumunuzu sonlandırdı. Steam’e yeniden giriş yapın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam завершив ваш вхід. Увійдіть у Steam знову."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam 已结束你的登录。请重新登录 Steam。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam 已結束你的登入。請重新登入 Steam。"
+          }
+        }
+      }
+    },
     "Steam has banned this Workshop item." : {
       "localizations" : {
         "ar" : {
@@ -147067,6 +148009,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Steam 上沒有公開收藏集 %@。"
+          }
+        }
+      }
+    },
+    "Steam reported an error: %@" : {
+      "comment" : "%@ is Steam's or the helper's message, in English",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أبلغ Steam عن خطأ: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam hat einen Fehler gemeldet: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam ha informado de un error: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam a signalé une erreur : %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam ने एक त्रुटि बताई: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam ha segnalato un errore: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steamがエラーを報告しました：%@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam에서 오류를 보고했습니다: %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam zgłosił błąd: %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Steam informou um erro: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam сообщил об ошибке: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam bir hata bildirdi: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam повідомив про помилку: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam 报告了错误：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam 回報了錯誤：%@"
           }
         }
       }
@@ -153214,6 +154251,100 @@
         }
       }
     },
+    "That code didn't work. Try again." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يعمل هذا الرمز. حاول مرة أخرى."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Code hat nicht funktioniert. Versuchen Sie es erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ese código no ha funcionado. Inténtalo de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce code n’a pas fonctionné. Réessayez."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वह कोड काम नहीं किया। फिर से कोशिश करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il codice non ha funzionato. Riprova."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "そのコードは使用できませんでした。もう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "해당 코드가 작동하지 않았습니다. 다시 시도하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ten kod nie zadziałał. Spróbuj ponownie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esse código não funcionou. Tente novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот код не подошел. Повторите попытку."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu kod işe yaramadı. Yeniden deneyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей код не підійшов. Повторіть спробу."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "该验证码无效。请重试。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "該代碼無效。請再試一次。"
+          }
+        }
+      }
+    },
     "The Chromium download doesn't match the version this app expects, so it wasn't installed. Try again later." : {
       "comment" : "Chromium engine install error: the downloaded file's checksum is wrong",
       "localizations" : {
@@ -155199,6 +156330,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "背景圖片儲存位置檔案夾 %1$@ 位於「%2$@」，但該磁碟未連接。請連接磁碟，或在「設定」→「一般」中選擇其他檔案夾。"
+          }
+        }
+      }
+    },
+    "The account name or password is wrong." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اسم الحساب أو كلمة المرور غير صحيح."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Kontoname oder das Passwort ist falsch."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El nombre de cuenta o la contraseña no son correctos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nom de compte ou le mot de passe est incorrect."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "खाते का नाम या पासवर्ड गलत है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il nome dell’account o la password non sono corretti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウント名またはパスワードが正しくありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계정 이름 또는 비밀번호가 올바르지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nazwa konta lub hasło są nieprawidłowe."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O nome da conta ou a senha está incorreto."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неверное имя аккаунта или пароль."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hesap adı veya parola yanlış."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неправильне імʼя облікового запису або пароль."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帐户名称或密码不正确。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帳號名稱或密碼不正確。"
           }
         }
       }
@@ -162182,6 +163407,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此版本的 App 不包含 owe-mcp。"
+          }
+        }
+      }
+    },
+    "This copy of Open Wallpaper Engine has no Steam helper. Install a release build." : {
+      "comment" : "The Steam helper is the program that connects the app to Steam",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا تحتوي هذه النسخة من Open Wallpaper Engine على مساعد Steam. ثبّت إصدارًا منشورًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diesem Exemplar von Open Wallpaper Engine fehlt das Steam-Hilfsprogramm. Installieren Sie eine veröffentlichte Version."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta copia de Open Wallpaper Engine no tiene el asistente de Steam. Instala una versión publicada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette copie d’Open Wallpaper Engine n’a pas d’assistant Steam. Installez une version publiée."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine की इस कॉपी में Steam हेल्पर नहीं है। कोई रिलीज़ बिल्ड इंस्टॉल करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa copia di Open Wallpaper Engine non ha l’assistente di Steam. Installa una versione pubblicata."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このOpen Wallpaper EngineにはSteamヘルパーが含まれていません。リリース版をインストールしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 Open Wallpaper Engine에는 Steam 도우미가 없습니다. 정식 빌드를 설치하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta kopia Open Wallpaper Engine nie ma pomocnika Steam. Zainstaluj wydaną wersję."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta cópia do Open Wallpaper Engine não tem o auxiliar do Steam. Instale uma versão publicada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В этой копии Open Wallpaper Engine нет помощника Steam. Установите выпущенную версию."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine’in bu kopyasında Steam yardımcısı yok. Yayımlanmış bir sürüm yükleyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У цій копії Open Wallpaper Engine немає помічника Steam. Установіть випущену версію."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此 Open Wallpaper Engine 副本没有 Steam 辅助程序。请安装正式版本。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此 Open Wallpaper Engine 副本沒有 Steam 輔助程式。請安裝正式版本。"
           }
         }
       }
@@ -175527,6 +176847,100 @@
         }
       }
     },
+    "Waiting for Steam…" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "في انتظار Steam…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten auf Steam …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando a Steam…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente de Steam…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam की प्रतीक्षा की जा रही है…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa di Steam…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steamを待っています…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam을 기다리는 중…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oczekiwanie na Steam…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aguardando o Steam…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ожидание Steam…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam bekleniyor…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очікування Steam…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在等待 Steam…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在等待 Steam⋯"
+          }
+        }
+      }
+    },
     "Wallpaper" : {
       "comment" : "Scene Edit / Export: the mode that edits the running wallpaper",
       "localizations" : {
@@ -180999,6 +182413,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "視窗"
+          }
+        }
+      }
+    },
+    "With the Steam mobile app, you log in without typing your password. A password goes only to Steam. Your login is kept in your keychain on this Mac." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "باستخدام تطبيق Steam للجوال، تسجّل الدخول دون كتابة كلمة المرور. لا تُرسَل كلمة المرور إلا إلى Steam. يُحفظ تسجيل دخولك في سلسلة المفاتيح على هذا الـ Mac."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit der Steam Mobile App melden Sie sich an, ohne Ihr Passwort einzugeben. Ein Passwort geht nur an Steam. Ihre Anmeldung wird in Ihrem Schlüsselbund auf diesem Mac aufbewahrt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con la aplicación móvil de Steam, inicias sesión sin escribir tu contraseña. Una contraseña solo se envía a Steam. Tu sesión se guarda en tu llavero de este Mac."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avec l’application mobile Steam, vous vous connectez sans saisir votre mot de passe. Un mot de passe n’est envoyé qu’à Steam. Votre connexion est conservée dans votre trousseau sur ce Mac."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam मोबाइल ऐप से आप पासवर्ड टाइप किए बिना लॉग इन करते हैं। पासवर्ड केवल Steam को जाता है। आपका लॉग इन इस Mac के कीचेन में रखा जाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con l’app mobile di Steam accedi senza digitare la password. Una password viene inviata solo a Steam. Il tuo accesso è conservato nel portachiavi di questo Mac."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steamモバイルアプリを使えば、パスワードを入力せずにログインできます。パスワードはSteamにのみ送信されます。ログイン情報はこのMacのキーチェーンに保管されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam 모바일 앱을 사용하면 비밀번호를 입력하지 않고 로그인합니다. 비밀번호는 Steam으로만 전송됩니다. 로그인 정보는 이 Mac의 키체인에 보관됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Z aplikacją mobilną Steam logujesz się bez wpisywania hasła. Hasło trafia tylko do Steam. Dane logowania są przechowywane w pęku kluczy na tym Macu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Com o aplicativo móvel do Steam, você inicia sessão sem digitar a senha. Uma senha é enviada somente ao Steam. Sua sessão fica nas suas chaves neste Mac."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "С мобильным приложением Steam вы входите, не вводя пароль. Пароль передается только в Steam. Данные входа хранятся в связке ключей на этом Mac."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam mobil uygulamasıyla parolanızı yazmadan giriş yaparsınız. Parola yalnızca Steam’e gönderilir. Giriş bilgileriniz bu Mac’teki anahtar zincirinizde saklanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З мобільним застосунком Steam ви входите, не вводячи пароль. Пароль надсилається лише в Steam. Дані входу зберігаються у вʼязці ключів на цьому Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 Steam 手机应用，无需输入密码即可登录。密码只会发送给 Steam。你的登录信息保存在此 Mac 的钥匙串中。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 Steam 行動應用程式，不必輸入密碼即可登入。密碼只會傳送給 Steam。你的登入資訊保存在此 Mac 的鑰匙圈中。"
           }
         }
       }

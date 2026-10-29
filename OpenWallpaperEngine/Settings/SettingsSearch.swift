@@ -22,6 +22,7 @@ enum SettingsAnchor {
     static let rendering = "rendering"
     static let webDevtools = "webdevtools"
     static let assets = "assets"
+    static let steamLogin = "steamlogin"
     static let steamCmd = "steamcmd"
     static let storage = "storage"
     static let libraryFolders = "libraryfolders"
@@ -129,6 +130,7 @@ struct SettingsSearch {
             entry("Web wallpaper devtools", .optimizations, SettingsAnchor.webDevtools),
 
             entry("Wallpaper Engine Assets", .assets, SettingsAnchor.assets),
+            entry("Steam Login", .assets, SettingsAnchor.steamLogin),
             entry("SteamCMD", .assets, SettingsAnchor.steamCmd),
             entry("Wallpaper Storage", .assets, SettingsAnchor.storage),
             entry("Library Folders", .assets, SettingsAnchor.libraryFolders),

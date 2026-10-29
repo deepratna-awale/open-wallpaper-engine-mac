@@ -1,0 +1,231 @@
+import XCTest
+@testable import OpenWallpaperEngine
+
+/// The app's side of the Steam helper's protocol (SteamHelper/README.md), against a fake helper.
+final class SteamHelperClientTests: XCTestCase {
+    private typealias Fake = FakeSteamHelperTransport
+
+    /// Collects what a test's callbacks receive, in order.
+    private final class Box<Value: Sendable>: @unchecked Sendable { // `lock` owns `values`.
+        private let lock = NSLock()
+        private var stored: [Value] = []
+        var values: [Value] { lock.withLock { stored } }
+        func append(_ value: Value) { lock.withLock { stored.append(value) } }
+    }
+
+    private func makeClient(_ transports: Box<Fake>, respond: @escaping @Sendable (FakeSteamHelperRequest) -> [String]) -> SteamHelperClient {
+        SteamHelperClient {
+            let transport = Fake(respond: respond)
+            transports.append(transport)
+            return transport
+        }
+    }
+
+    func testResponsesReachTheirOwnRequests() async throws {
+        let transports = Box<Fake>()
+        let client = makeClient(transports) { _ in [] }
+        async let first = client.ping()
+        async let second = client.ping()
+        try await sleepUntil("both requests") { transports.values.first?.requests.count == 2 }
+        let fake = try XCTUnwrap(transports.values.first)
+        let requests = fake.requests
+        // Answered in reverse.
+        fake.emit(Fake.result(requests[1], #"{"version":"second"}"#))
+        fake.emit(Fake.result(requests[0], #"{"version":"first"}"#))
+        let versions = try await [first, second]
+        XCTAssertEqual(Set(versions), ["first", "second"])
+        XCTAssertEqual(transports.values.count, 1, "one helper serves both")
+    }
+
+    func testQRSignInShowsEachCodeInOrderAndReturnsTheLogin() async throws {
+        let transports = Box<Fake>()
+        let client = makeClient(transports) { request in
+            guard request.method == "signInWithQR" else { return [] }
+            XCTAssertEqual(request.param("deviceName") as? String, "Test Mac")
+            return [Fake.event(request, "qrChallenge", #""url":"https://s.team/q/1/1""#),
+                    Fake.event(request, "qrChallenge", #""url":"https://s.team/q/1/2""#),
+                    Fake.result(request, Fake.loginJSON)]
+        }
+        let events = Box<SteamSignInEvent>()
+        let login = try await client.signInWithQR(deviceName: "Test Mac") { events.append($0) }
+        XCTAssertEqual(login, Fake.login)
+        XCTAssertEqual(events.values, [.qrChallenge(URL(string: "https://s.team/q/1/1")!),
+                                       .qrChallenge(URL(string: "https://s.team/q/1/2")!)])
+    }
+
+    func testPasswordSignInAsksForTheGuardCode() async throws {
+        let transports = Box<Fake>()
+        let client = makeClient(transports) { request in
+            switch request.method {
+            case "signInWithCredentials":
+                return [Fake.event(request, "guardCodeRequired", #""kind":"email","email":"o***@example.com","previousCodeWasIncorrect":false"#)]
+            default:
+                return [Fake.result(request)]
+            }
+        }
+        let events = Box<SteamSignInEvent>()
+        async let login = client.signInWithCredentials(accountName: "owe_test", password: "pw", deviceName: "Test Mac") {
+            events.append($0)
+        }
+        try await sleepUntil("the guard code question") { !events.values.isEmpty }
+        XCTAssertEqual(events.values, [.guardCodeRequired(email: "o***@example.com", previousCodeWasIncorrect: false)])
+        try await client.submitGuardCode("ABCDE")
+        let fake = try XCTUnwrap(transports.values.first)
+        let submit = try XCTUnwrap(fake.requests.last)
+        XCTAssertEqual(submit.method, "submitGuardCode")
+        XCTAssertEqual(submit.param("code") as? String, "ABCDE")
+        let signIn = try XCTUnwrap(fake.requests.first)
+        fake.emit(Fake.result(signIn, Fake.loginJSON))
+        let result = try await login
+        XCTAssertEqual(result, Fake.login)
+    }
+
+    func testCallsLogOnFirstAndAgainAfterTheHelperRestarts() async throws {
+        let transports = Box<Fake>()
+        let client = makeClient(transports) { request in
+            switch request.method {
+            case "logOn":
+                XCTAssertEqual(request.param("refreshToken") as? String, Fake.login.refreshToken)
+                return [Fake.result(request, #"{"steamID":"76561190000000001"}"#)]
+            case "call":
+                return [Fake.result(request, #"{"total":3}"#)]
+            default:
+                return [Fake.result(request)]
+            }
+        }
+        struct Body: Encodable, Sendable { let appid = 431960 }
+        struct Response: Decodable, Sendable { let total: Int }
+        await client.use(Fake.login)
+
+        let first = try await client.call("PublishedFile.QueryFiles", body: Body(), as: Response.self)
+        XCTAssertEqual(first.total, 3)
+        _ = try await client.call("PublishedFile.QueryFiles", body: Body(), as: Response.self)
+        let fake = try XCTUnwrap(transports.values.first)
+        XCTAssertEqual(fake.methods, ["logOn", "call", "call"])
+        XCTAssertEqual(fake.requests[1].param("method") as? String, "PublishedFile.QueryFiles")
+        XCTAssertEqual((fake.requests[1].param("body") as? [String: Any])?["appid"] as? Int, 431960)
+
+        fake.exit(status: 1)
+        try await sleepUntil("the client to notice the exit") {
+            do {
+                _ = try await client.call("PublishedFile.QueryFiles", body: Body(), as: Response.self)
+                return true
+            } catch {
+                return false
+            }
+        }
+        XCTAssertEqual(transports.values.count, 2)
+        XCTAssertEqual(transports.values.last?.methods, ["logOn", "call"])
+    }
+
+    func testRejectedTokenFailsTheLogOn() async throws {
+        let transports = Box<Fake>()
+        let client = makeClient(transports) { request in
+            [Fake.error(request, code: "tokenRejected", eresult: 5)]
+        }
+        await client.use(Fake.login)
+        do {
+            try await client.ensureLoggedOn()
+            XCTFail("logged on with a rejected token")
+        } catch let error as SteamHelperError {
+            XCTAssertEqual(error.code, .tokenRejected)
+            XCTAssertEqual(error.eresult, 5)
+            XCTAssertTrue(error.needsNewSignIn)
+        }
+    }
+
+    func testHelperExitFailsWaitingRequests() async throws {
+        let transports = Box<Fake>()
+        let client = makeClient(transports) { _ in [] }
+        async let version = client.ping()
+        try await sleepUntil("the request") { transports.values.first?.requests.count == 1 }
+        transports.values.first?.exit(status: 134)
+        do {
+            _ = try await version
+            XCTFail("a request survived the helper")
+        } catch let error as SteamHelperError {
+            XCTAssertEqual(error.code, .helperExited)
+        }
+    }
+
+    func testCancellingARequestAsksTheHelperToStopIt() async throws {
+        let transports = Box<Fake>()
+        let signInID = Box<Int64>()
+        let client = makeClient(transports) { request in
+            switch request.method {
+            case "signInWithQR":
+                signInID.append(request.id)
+                return [Fake.event(request, "qrChallenge", #""url":"https://s.team/q/1/1""#)]
+            case "cancel":
+                let target = FakeSteamHelperRequest(id: signInID.values.first ?? -1, method: "signInWithQR", params: Data())
+                return [Fake.error(target, code: "cancelled")]
+            default:
+                return []
+            }
+        }
+        let task = Task { try await client.signInWithQR(deviceName: "Test Mac") { _ in } }
+        try await sleepUntil("the sign-in") { !signInID.values.isEmpty }
+        task.cancel()
+        do {
+            _ = try await task.value
+            XCTFail("the sign-in wasn't cancelled")
+        } catch let error as SteamHelperError {
+            XCTAssertEqual(error.code, .cancelled)
+        }
+        let cancel = try XCTUnwrap(transports.values.first?.requests.last)
+        XCTAssertEqual(cancel.method, "cancel")
+        XCTAssertEqual((cancel.param("id") as? NSNumber)?.int64Value, signInID.values.first)
+    }
+
+    func testMissingHelperFailsRequests() async {
+        let client = SteamHelperClient { throw SteamHelperError(code: .helperMissing, message: "none") }
+        do {
+            _ = try await client.ping()
+            XCTFail("pinged a missing helper")
+        } catch let error as SteamHelperError {
+            XCTAssertEqual(error.code, .helperMissing)
+            XCTAssertNotNil(error.errorDescription)
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+
+    // MARK: Locator and login
+
+    func testLocatorUsesTheEnvironmentOverrideOnlyWhenItRuns() throws {
+        let folder = FileManager.default.temporaryDirectory.appending(path: "SteamHelperClientTests-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer {
+            do { try FileManager.default.removeItem(at: folder) } catch { XCTFail("\(error)") }
+        }
+        let helper = folder.appending(path: "owe-steam-helper")
+        try Data("#!/bin/sh\n".utf8).write(to: helper)
+        XCTAssertNil(SteamHelperLocator.executable(environment: [SteamHelperLocator.environmentKey: helper.path], app: folder),
+                     "not executable yet")
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: helper.path)
+        XCTAssertEqual(SteamHelperLocator.executable(environment: [SteamHelperLocator.environmentKey: helper.path], app: folder),
+                       helper)
+        XCTAssertNil(SteamHelperLocator.executable(environment: [:], app: folder), "no helper in the app")
+        XCTAssertEqual(AppBundleLayout.steamHelperURL(inApp: URL(filePath: "/Applications/OWE.app"), architecture: "arm64").path,
+                       "/Applications/OWE.app/Contents/Helpers/owe-steam-helper-arm64")
+    }
+
+    func testLoginNeverPrintsItsToken() {
+        for text in [String(describing: Fake.login), String(reflecting: Fake.login), "\(Fake.login)"] {
+            XCTAssertFalse(text.contains(Fake.login.refreshToken), text)
+            XCTAssertTrue(text.contains(Fake.login.accountName), text)
+        }
+    }
+
+    func testLoginStoreRoundTrips() throws {
+        let store = SteamLoginStore(secret: KeychainSecret(
+            keychain: KeychainStore(service: "app.openwallpaperengine.tests.keychain.\(UUID().uuidString)"), account: "SteamLogin"))
+        XCTAssertNil(store.load())
+        try store.save(Fake.login)
+        XCTAssertEqual(store.load(), Fake.login)
+        try store.remove()
+        XCTAssertNil(store.load())
+        XCTAssertEqual(SteamCredentials.steamLogin().keychain.service,
+                       "\(AppStorageLocation.current.keychainServicePrefix).steam-login")
+    }
+}
