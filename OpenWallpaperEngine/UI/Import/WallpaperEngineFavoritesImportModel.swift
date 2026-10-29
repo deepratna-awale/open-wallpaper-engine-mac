@@ -1,8 +1,8 @@
 import Foundation
 
 /// Imports Wallpaper Engine's favourites (the Steam account's favourited Workshop items, see
-/// `WallpaperEngineFavorites`) into My Favourites, after asking. It needs a Steam Web API key and a
-/// SteamID64 found in Steam's files; without them there is no source and nothing is offered.
+/// `WallpaperEngineFavorites`) into My Favourites, after asking. It needs the Steam login; without
+/// it there is no source and nothing is offered.
 /// Steam is asked first, and the question is only put when it returned favourites that aren't
 /// favourites here yet, so an account with none, or one already imported, is never asked.
 @MainActor
@@ -29,43 +29,32 @@ final class WallpaperEngineFavoritesImportModel: ObservableObject {
     private var pending: [String] = []
     private let store: FavoritesStore
     private let fetch: (String) async throws -> WorkshopSubscriptions.Outcome
-    private let findSteamID: () -> String?
-    private let hasAPIKey: () -> Bool
+    private let loginSteamID: () -> String?
 
     init(store: FavoritesStore, fetch: @escaping (String) async throws -> WorkshopSubscriptions.Outcome,
-         findSteamID: @escaping () -> String?, hasAPIKey: @escaping () -> Bool) {
+         loginSteamID: @escaping () -> String?) {
         self.store = store
         self.fetch = fetch
-        self.findSteamID = findSteamID
-        self.hasAPIKey = hasAPIKey
+        self.loginSteamID = loginSteamID
         refreshSource()
     }
 
-    /// The app's own wiring: its favourites, Steam login (or Web API key), SteamCMD account and
-    /// chosen folder.
-    convenience init(steamCmd: SteamCmdService, assets: WallpaperEngineAssetsService, steam: SteamHelperClient) {
+    /// The app's own wiring: its favourites and Steam login.
+    convenience init(steamCmd: SteamCmdService, steam: SteamHelperClient) {
         let api = WorkshopAPIService(steam: steam)
         self.init(store: .shared,
                   fetch: { try await api.getFavoritedItemIDs(steamID: $0) },
-                  findSteamID: { [weak steamCmd, weak assets] in
-                      steamCmd?.steamLogin?.steamID ?? WallpaperEngineFavorites.steamID(
-                          steamCmdAccount: steamCmd?.isLoggedIn == true ? steamCmd?.steamUsername : nil,
-                          steamCmdPath: steamCmd?.steamCmdPath,
-                          chosenFolder: assets?.status.chosenFolder)
-                  },
-                  hasAPIKey: { [weak steamCmd] in
-                      steamCmd?.steamLogin != nil || SteamCredentials.webAPIKey().load() != nil
-                  })
+                  loginSteamID: { [weak steamCmd] in steamCmd?.steamLogin?.steamID })
     }
 
-    /// Whether favourites can be read: a key is saved and the account is known.
+    /// Whether favourites can be read: the user is logged in to Steam.
     var isSourceAvailable: Bool { steamID != nil }
 
     var isChecking: Bool { phase == .checking }
 
-    /// Looks again for the key and the account, after a login, a new key or a chosen folder.
+    /// Looks again for the account, after a login or a logout.
     func refreshSource() {
-        steamID = hasAPIKey() ? findSteamID() : nil
+        steamID = loginSteamID()
     }
 
     /// Asks Steam for the favourites; puts the question only when some are new here.

@@ -82,18 +82,12 @@ struct DownloadsView: View {
         .animation(.snappy, value: sections)
     }
 
-    private var canDownload: Bool { steamCmd.isInstalled && steamCmd.isLoggedIn }
+    private var canDownload: Bool { steamCmd.isLoggedIn }
 
-    /// Why downloads can't start now, in steamcmd's or the login's words.
+    /// Why downloads can't start now.
     private var steamCmdProblem: String? {
-        if !steamCmd.isInstalled {
-            return String(localized: "Set up SteamCMD in the Workshop tab first.")
-        }
-        if !steamCmd.isLoggedIn {
-            return steamCmd.loginError
-                ?? String(localized: "Log in to Steam to download. You can do it in the Workshop tab or the setup assistant.")
-        }
-        return nil
+        guard !steamCmd.isLoggedIn else { return nil }
+        return String(localized: "Log in to Steam to download. You can do it in the Workshop tab or the setup assistant.")
     }
 
     private var actions: DownloadActions {
@@ -182,7 +176,7 @@ private struct DownloadMenu: View {
     }
 }
 
-/// steamcmd isn't there or isn't logged in: why downloads won't start.
+/// No Steam login: why downloads won't start.
 private struct DownloadsProblemBanner: View {
     let message: String
 

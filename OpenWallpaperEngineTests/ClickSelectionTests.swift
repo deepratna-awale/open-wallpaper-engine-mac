@@ -79,7 +79,7 @@ final class ClickSelectionTests: XCTestCase {
         addTeardownBlock { try? FileManager.default.removeItem(at: root) } // cleanup of a temp folder; nothing to report
         let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { root }),
                                        storageDirectory: { root }, previewCacheRoot: root,
-                                       presentPreview: { _ in }, restoresSession: false)
+                                       presentPreview: { _ in })
         return WorkshopViewModel(steamCmd: steamCmd, searchPage: { _, _, _, _, _ in [] })
     }
 

@@ -10,7 +10,7 @@ import Foundation
 /// wallpaper its file's path on the PC. Each wallpaper is in one folder at most; folders nest.
 enum WallpaperEngineFolders {
     /// `config.json` of the Wallpaper Engine install the chosen assets folder is (or is the
-    /// `assets` folder of); nil when there is none, as for the cache SteamCMD fills.
+    /// `assets` folder of); nil when there is none, as for the cache the Steam download fills.
     static func configURL(chosenFolder: String?, fileManager: FileManager = .default) -> URL? {
         guard let chosenFolder, !chosenFolder.isEmpty else { return nil }
         var root = URL(fileURLWithPath: chosenFolder, isDirectory: true).standardizedFileURL

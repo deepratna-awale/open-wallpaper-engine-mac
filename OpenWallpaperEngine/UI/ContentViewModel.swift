@@ -30,15 +30,15 @@ final class ContentViewModel {
     /// folders, imports, deleting, the other tabs): off while it picks wallpapers for an export.
     var allowsLibraryActions: Bool { androidBatchPicker == nil }
 
-    /// Whether steamcmd is there and logged in: the only part of the service that reaches this
-    /// model (the main window's Workshop tab and sidebar depend on it). The Workshop and Downloads
-    /// views observe the service itself, so a download's progress doesn't redraw the window.
-    private var steamCmdStatus: [Bool] = []
+    /// Whether downloads are logged in: the only part of the service that reaches this model (the
+    /// main window's Workshop tab and sidebar depend on it). The Workshop and Downloads views
+    /// observe the service itself, so a download's progress doesn't redraw the window.
+    private var steamCmdStatus = false
     private let steamCmdService = SteamCmdService()
     @ObservationIgnored private var steamCmdCancellable: AnyCancellable?
     @ObservationIgnored private var steamLoginCancellables: Set<AnyCancellable> = []
 
-    /// Reading it observes whether steamcmd is there and logged in.
+    /// Reading it observes whether downloads are logged in.
     var steamCmd: SteamCmdService {
         _ = steamCmdStatus
         return steamCmdService
@@ -60,8 +60,6 @@ final class ContentViewModel {
         library = InstalledLibraryModel(filters: filters, steamCmd: steamCmdService, presentation: presentation)
         let svc = steamCmdService
         steamCmdCancellable = svc.$isLoggedIn
-            .combineLatest(svc.$steamCmdPath.map { $0 != nil }, svc.$steamLogin.map { $0 != nil })
-            .map { [$0, $1, $2] }
             .removeDuplicates()
             .dropFirst()
             .sink { [weak self] status in

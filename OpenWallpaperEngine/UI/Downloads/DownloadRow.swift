@@ -2,7 +2,7 @@ import OWEInspectorKit
 import SwiftUI
 
 /// One download in the Downloads tab: the preview, the title, who made it and its size, then its
-/// progress (with speed and time left while steamcmd reports a percentage) or how it ended. Its
+/// progress (with speed and time left while Steam reports a percentage) or how it ended. Its
 /// buttons show on hover; VoiceOver reads them as the row's actions.
 struct DownloadRow: View {
     @Environment(\.appAccentColor) private var accentColor
@@ -224,7 +224,7 @@ struct DownloadRow: View {
         }
     }
 
-    /// steamcmd's percentage; before it reports one, a slow creep so the bar shows it's working.
+    /// Steam's percentage; before it reports one, a slow creep so the bar shows it's working.
     private func fraction(at date: Date) -> Double {
         guard case .downloading(let status)? = steamCmd.downloadProgress[workshopId] else { return 0.05 }
         if status == SteamCmdService.installingStatus { return 0.92 }

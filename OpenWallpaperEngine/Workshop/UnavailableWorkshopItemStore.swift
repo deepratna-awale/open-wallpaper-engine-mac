@@ -3,7 +3,7 @@
 //  Open Wallpaper Engine
 //
 //  Workshop items found removed, private, banned or from another app, with when that was found,
-//  so later loads don't ask steamcmd for them again. An entry is checked again after
+//  so later loads don't ask Steam for them again. An entry is checked again after
 //  `recheckInterval`, or at once when the user asks to retry. Kept as a small JSON file in the
 //  app's support folder (`AppStorageLocation`), so isolated copies and tests keep their own.
 //

@@ -2,9 +2,8 @@
 //  SteamCmdRunner.swift
 //  Open Wallpaper Engine
 //
-//  Runs one steamcmd session: the script goes to its stdin, and its output is collected (and
-//  streamed to the caller, for download progress) until it exits. `SteamCmdService` takes the
-//  runner as a dependency, so tests can stand in a fake steamcmd.
+//  Runs one Steam helper download: its input goes to stdin, and its output is collected (and
+//  streamed to the caller, for download progress) until it exits.
 //
 
 import Foundation
@@ -15,7 +14,7 @@ struct SteamCmdRun: Sendable {
     let exitCode: Int32
 }
 
-/// Stops a running steamcmd from another thread. One token per run.
+/// Stops a running download from another thread. One token per run.
 final class SteamCmdCancellation: @unchecked Sendable {
     // `lock` owns `isCancelled` and `onCancel`.
     private let lock = NSLock()
@@ -43,53 +42,11 @@ final class SteamCmdCancellation: @unchecked Sendable {
     }
 }
 
-protocol SteamCmdRunning: Sendable {
-    /// Runs the steamcmd at `executable` with `script` on its stdin and blocks until it exits, or
-    /// until `timeout` passes (nil waits for as long as it takes). `onOutput` receives the output as
-    /// it arrives, on a background queue.
-    func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?,
-             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun
-
-    /// As above; `cancellation` terminates steamcmd.
-    func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?, cancellation: SteamCmdCancellation,
-             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun
-
-    /// A steamcmd kept running between Workshop downloads, or nil to run each download alone.
-    func makeSession() -> SteamCmdSessionRunning?
-}
-
-extension SteamCmdRunning {
-    func makeSession() -> SteamCmdSessionRunning? { nil }
-
-    /// A runner that can't stop steamcmd early runs it to the end.
-    func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?, cancellation: SteamCmdCancellation,
-             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
-        run(executable: executable, script: script, timeout: timeout, onOutput: onOutput)
-    }
-
-    func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?) -> SteamCmdRun {
-        run(executable: executable, script: script, timeout: timeout, onOutput: { _ in })
-    }
-}
-
-/// Runs the real steamcmd as a subprocess.
-struct ProcessSteamCmdRunner: SteamCmdRunning {
-    func makeSession() -> SteamCmdSessionRunning? { SteamCmdSession() }
-
-    func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?,
-             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
-        run(executable: executable, script: script, timeout: timeout, cancellation: SteamCmdCancellation(),
-            onOutput: onOutput)
-    }
-
-    func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?, cancellation: SteamCmdCancellation,
-             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
-        Self.runProcess(executable: executable, arguments: [], standardInput: script.standardInput, timeout: timeout,
-                        cancellation: cancellation, onOutput: onOutput)
-    }
-
-    /// Runs `executable` with `standardInput` written to its stdin, which is then closed (the
-    /// Steam helper's downloads run this way too).
+/// Runs a program to the end, collecting its output.
+enum ProcessSteamCmdRunner {
+    /// Runs `executable` with `standardInput` written to its stdin, which is then closed, and blocks
+    /// until it exits or `timeout` passes (nil waits for as long as it takes). `onOutput` receives the
+    /// output as it arrives, on a background queue; `cancellation` terminates the program.
     static func runProcess(executable: URL, arguments: [String], standardInput: Data, timeout: TimeInterval?,
                            cancellation: SteamCmdCancellation,
                            onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
@@ -103,7 +60,7 @@ struct ProcessSteamCmdRunner: SteamCmdRunning {
         process.standardOutput = outputPipe
         process.standardError = outputPipe
 
-        // Read the pipe while steamcmd runs, so a full pipe buffer can't block it.
+        // Read the pipe while the program runs, so a full pipe buffer can't block it.
         let outputData = OSAllocatedUnfairLock(initialState: Data())
         let handle = outputPipe.fileHandleForReading
         handle.readabilityHandler = { fileHandle in
@@ -117,9 +74,9 @@ struct ProcessSteamCmdRunner: SteamCmdRunning {
             try process.run()
         } catch {
             handle.readabilityHandler = nil
-            return SteamCmdRun(output: String(localized: "Failed to run steamcmd: \(error.localizedDescription)",
-                                                comment: "steamcmd is a program name; %@ is the system's reason"),
-                               exitCode: -1)
+            let failure = SteamHelperError(code: .helperExited,
+                                           message: "Can't start \(executable.lastPathComponent): \(error.localizedDescription)")
+            return SteamCmdRun(output: failure.errorDescription ?? failure.message, exitCode: -1)
         }
         cancellation.setCancelAction { process.terminate() }
         defer { cancellation.setCancelAction(nil) }
@@ -134,7 +91,7 @@ struct ProcessSteamCmdRunner: SteamCmdRunning {
         if let timeout, exited.wait(timeout: .now() + timeout) == .timedOut {
             process.terminate()
             handle.readabilityHandler = nil
-            return SteamCmdRun(output: "steamcmd timed out after \(Int(timeout))s", exitCode: -1)
+            return SteamCmdRun(output: "\(executable.lastPathComponent) timed out after \(Int(timeout))s", exitCode: -1)
         }
         exited.wait()
 
@@ -148,17 +105,17 @@ struct ProcessSteamCmdRunner: SteamCmdRunning {
         return SteamCmdRun(output: String(decoding: output, as: UTF8.self), exitCode: process.terminationStatus)
     }
 
-    /// Writes the whole input and closes stdin, so steamcmd reads EOF after `quit`.
+    /// Writes the whole input and closes stdin, so the program reads EOF after it.
     private static func write(_ input: Data, to pipe: Pipe) {
         let handle = pipe.fileHandleForWriting
-        // If steamcmd already exited, the write must fail with EPIPE rather than kill the app.
+        // If the program already exited, the write must fail with EPIPE rather than kill the app.
         _ = fcntl(handle.fileDescriptor, F_SETNOSIGPIPE, 1)
         do {
             try handle.write(contentsOf: input)
             try handle.close()
         } catch {
-            // steamcmd exited before reading its input; its output says why.
-            OWELog.error(.workshop, "Can't write the steamcmd script: \(error)")
+            // The program exited before reading its input; its output says why.
+            OWELog.error(.workshop, "Can't write the program's input: \(error)")
         }
     }
 }

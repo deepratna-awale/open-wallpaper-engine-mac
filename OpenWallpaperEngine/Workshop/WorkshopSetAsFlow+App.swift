@@ -1,7 +1,7 @@
 import Foundation
 
 extension WorkshopSetAsFlow.Environment {
-    /// The app's: Download's steamcmd path, the Installed library, the Details panel's Set
+    /// The app's: the Steam login's downloads, the Installed library, the Details panel's Set
     /// Wallpaper and the screen saver's selection service.
     @MainActor
     static func app(workshop: WorkshopViewModel, library: InstalledLibraryModel) -> Self {
@@ -13,12 +13,12 @@ extension WorkshopSetAsFlow.Environment {
             installedWallpaper: { id in
                 library.allWallpapers.first { SceneContentLoader.workshopId(of: $0) == id }
             },
-            canDownload: { steamCmd.isLoggedIn && steamCmd.steamCmdPath != nil },
+            canDownload: { steamCmd.isLoggedIn },
             download: { item, completion in
                 steamCmd.downloadWorkshopItem(workshopId: item.id, title: item.title, previewURL: item.previewImageURL,
                                               creatorId: item.creatorId, subscriptions: item.subscriptions,
                                               fileSize: item.fileSize) { folder in
-                    // steamcmd may call back off the main thread.
+                    // The download may call back off the main thread.
                     DispatchQueue.main.async { MainActor.assumeIsolated { completion(folder) } }
                 }
             },

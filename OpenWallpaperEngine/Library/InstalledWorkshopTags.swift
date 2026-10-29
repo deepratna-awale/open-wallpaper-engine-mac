@@ -44,7 +44,7 @@ struct InstalledWorkshopTags: Codable, Equatable {
     }
 
     /// The wallpaper's Workshop id: project.json's `workshopid`, else a numeric folder name (what
-    /// steamcmd names it); nil for local wallpapers.
+    /// a download names it); nil for local wallpapers.
     static func workshopId(of wallpaper: WEWallpaper) -> String? {
         if let id = wallpaper.project.workshopid?.rawValue, !id.isEmpty, id.allSatisfy(\.isNumber), id != "0" {
             return id

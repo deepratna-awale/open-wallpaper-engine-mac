@@ -66,7 +66,7 @@ final class WorkshopBlockListTests: XCTestCase {
         let root = root!
         let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { root }),
                                        storageDirectory: { root }, previewCacheRoot: root,
-                                       presentPreview: { _ in }, restoresSession: false)
+                                       presentPreview: { _ in })
         let model = WorkshopViewModel(steamCmd: steamCmd, blockList: list, searchPage: { _, _, _, page, perPage in
             let start = (page - 1) * perPage
             guard start < catalogue.count else { return [] }

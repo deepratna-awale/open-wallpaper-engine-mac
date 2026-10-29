@@ -71,7 +71,7 @@ final class WorkshopFilterPagingTests: XCTestCase {
         let root = root!
         let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { root }),
                                        storageDirectory: { root }, previewCacheRoot: root,
-                                       presentPreview: { _ in }, restoresSession: false)
+                                       presentPreview: { _ in })
         let steam = FakeSteam(catalogue: Self.catalogue)
         self.steam = steam
         suiteName = "WorkshopFilterPagingTests.\(UUID().uuidString)"

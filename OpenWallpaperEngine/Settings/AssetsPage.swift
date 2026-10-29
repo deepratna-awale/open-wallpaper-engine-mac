@@ -2,8 +2,7 @@ import SwiftUI
 import AppKit
 
 /// Settings › Assets: the Steam login, the Wallpaper Engine assets scenes need, from the user's
-/// own Steam copy, SteamCMD, the Wallpaper Storage folder, the library folders, the Steam Web API key and the
-/// Workshop block list. Shows which copy is in use
+/// own Steam copy, the Wallpaper Storage folder, the library folders and the Workshop block list. Shows which copy is in use
 /// and installs, updates or removes it. Changes apply at once; the
 /// window's OK and Cancel don't cover them.
 struct AssetsPage: SettingsPage {
@@ -11,8 +10,8 @@ struct AssetsPage: SettingsPage {
     @ObservedObject private var assets: WallpaperEngineAssetsService
     @ObservedObject private var steamCmd: SteamCmdService
     private let steamAccount: SteamAccount
-    private let installer: SteamCmdInstaller
     private let editorPreviews: EditorPreviewPrewarm
+    @AppStorage(WallpaperEngineAssetsService.autoInstallKey, store: .app) private var installsAssetsAutomatically = true
     @State private var confirmsRemoval = false
     @State private var folderError: String?
 
@@ -21,7 +20,6 @@ struct AssetsPage: SettingsPage {
         self.assets = AppDelegate.shared.assets
         self.steamCmd = AppDelegate.shared.contentViewModel.steamCmd
         self.steamAccount = AppDelegate.shared.contentViewModel.steamAccount
-        self.installer = AppDelegate.shared.steamCmdInstaller
         self.editorPreviews = AppDelegate.shared.editorPreviewPrewarm
     }
 
@@ -42,8 +40,10 @@ struct AssetsPage: SettingsPage {
             Section {
                 progress
                 actions
+                Toggle("Install Wallpaper Engine assets automatically after signing in", isOn: $installsAssetsAutomatically)
+                    .help("After you sign in to Steam, downloads the Wallpaper Engine assets if none are installed or chosen.")
             } footer: {
-                Text("Downloads your Wallpaper Engine copy with SteamCMD, keeps only its assets and default wallpapers, and deletes the rest. Log in to Steam in the Workshop tab first.")
+                Text("Downloads the parts of your Wallpaper Engine copy that scenes use through your Steam login, and keeps only its assets and default wallpapers. Log in to Steam above first.")
             }
 
             Section {
@@ -59,23 +59,11 @@ struct AssetsPage: SettingsPage {
                 Label("Wallpaper Engine Folders", systemImage: "folder")
             }
 
-            SteamCmdSection(steamCmd: steamCmd, installer: installer)
-                .settingsAnchor(SettingsAnchor.steamCmd)
-
             WallpaperStorageSection()
                 .settingsAnchor(SettingsAnchor.storage)
 
             LibraryFoldersSection()
                 .settingsAnchor(SettingsAnchor.libraryFolders)
-
-            Section {
-                SteamWebAPIKeyView()
-            } header: {
-                Label("Steam Web API Key", systemImage: "key")
-            } footer: {
-                Text("Needed to browse and search the Workshop. It is stored in your keychain and checked with Steam before saving. Without it, author names come from public Steam profiles.")
-            }
-            .settingsAnchor(SettingsAnchor.apiKey)
 
             WorkshopBlockListSection(blockList: AppDelegate.shared.contentViewModel.workshopBlockList)
                 .settingsAnchor(SettingsAnchor.blockList)
@@ -152,17 +140,14 @@ struct AssetsPage: SettingsPage {
             if assets.isBusy {
                 Button("Cancel") { assets.cancel() }
             } else {
-                if steamCmd.steamCmdPath == nil {
-                    // Installing from Steam needs SteamCMD first; offer it here.
-                    SteamCmdSetupView(installer: installer)
-                } else {
-                    Button(status.info == nil ? "Install from Steam" : "Update from Steam") { assets.installFromSteam() }
-                        .glassButtonStyle(.prominent)
-                        .help("Downloads your Wallpaper Engine copy with SteamCMD and keeps only its assets and default wallpapers. Needs a Steam login that owns Wallpaper Engine.")
-                    if status.info != nil {
-                        Button("Re-download") { assets.installFromSteam(force: true) }
-                            .help("Downloads the assets from Steam again even when they're up to date, to repair a damaged copy.")
-                    }
+                Button(status.info == nil ? "Install from Steam" : "Update from Steam") { assets.installFromSteam() }
+                    .glassButtonStyle(.prominent)
+                    .disabled(!steamCmd.isLoggedIn)
+                    .help("Downloads your Wallpaper Engine copy's assets and default wallpapers through your Steam login. Needs a Steam account that owns Wallpaper Engine.")
+                if status.info != nil {
+                    Button("Re-download") { assets.installFromSteam(force: true) }
+                        .disabled(!steamCmd.isLoggedIn)
+                        .help("Downloads the assets from Steam again even when they're up to date, to repair a damaged copy.")
                 }
                 Button("Choose Folder…") { chooseFolder() }
                     .help("Uses the assets of a Wallpaper Engine folder already on this Mac, read in place instead of downloaded.")

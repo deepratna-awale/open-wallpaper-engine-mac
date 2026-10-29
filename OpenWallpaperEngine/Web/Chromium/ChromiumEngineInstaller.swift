@@ -22,8 +22,7 @@ enum ChromiumEngineInstallPhase: VersionedInstallPhase {
     }
 }
 
-/// Installs the optional Chromium web engine (CEF) on demand, the way `SteamCmdInstaller`
-/// installs SteamCMD: nothing of CEF ships with the app.
+/// Installs the optional Chromium web engine (CEF) on demand: nothing of CEF ships with the app.
 ///
 /// Layout under `<Application Support>/Open Wallpaper Engine/ChromiumEngine` (or the isolated
 /// sibling `AppStorageLocation` picks), a `VersionedInstallStore`:

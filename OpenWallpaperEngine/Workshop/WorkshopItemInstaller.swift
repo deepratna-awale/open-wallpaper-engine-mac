@@ -2,10 +2,10 @@
 //  WorkshopItemInstaller.swift
 //  Open Wallpaper Engine
 //
-//  Where steamcmd downloads to, and how a finished item gets into the Wallpaper Storage folder.
+//  Where Workshop downloads go, and how a finished item gets into the Wallpaper Storage folder.
 //
-//  steamcmd writes an item to `<force_install_dir>/steamapps/workshop/content/431960/<id>`, along
-//  with its own manifests and partial downloads. A download's install dir is a hidden staging folder
+//  The Steam helper writes an item to `<install dir>/steamapps/workshop/content/431960/<id>`, along
+//  with DepotDownloader's bookkeeping. A download's install dir is a hidden staging folder
 //  inside the storage folder, so the finished item reaches `<storage>/<id>` with a rename on the
 //  same volume: the library never sees half an item, and no copy is left behind. The staging folder
 //  is deleted after every download. An item that has to cross volumes (a preview kept from the
@@ -16,9 +16,9 @@
 import Foundation
 
 enum WorkshopItemInstaller {
-    /// steamcmd's install dir while it downloads into a storage folder. Hidden, so the library,
+    /// A download's install dir while it downloads into a storage folder. Hidden, so the library,
     /// `WallpaperStorage.setDirectory` and the dependency cleanup all skip it.
-    static let stagingFolderName = ".owe-steamcmd"
+    static let stagingFolderName = ".owe-download"
     private static let incomingPrefix = ".owe-incoming-"
 
     enum Failure: LocalizedError {
@@ -26,9 +26,8 @@ enum WorkshopItemInstaller {
 
         var errorDescription: String? {
             switch self {
-            case .notDownloaded(let workshopId):
-                return String(localized: "steamcmd finished without downloading item \(workshopId).",
-                              comment: "Download error; steamcmd is a program name, %@ a Workshop ID")
+            case .notDownloaded:
+                return String(localized: "Steam finished without downloading the item.", comment: "Download error")
             }
         }
     }
@@ -62,12 +61,12 @@ enum WorkshopItemInstaller {
         storage.appending(path: stagingFolderName, directoryHint: .isDirectory)
     }
 
-    /// Where steamcmd puts an item under `installDirectory` (its `force_install_dir`).
+    /// Where a download puts an item under `installDirectory`.
     static func contentDirectory(inSteamCmdRoot installDirectory: URL, workshopId: String) -> URL {
         contentRoot(inSteamCmdRoot: installDirectory).appending(path: workshopId, directoryHint: .isDirectory)
     }
 
-    /// The folder holding every item steamcmd downloaded under `installDirectory`.
+    /// The folder holding every item downloaded under `installDirectory`.
     static func contentRoot(inSteamCmdRoot installDirectory: URL) -> URL {
         installDirectory.appending(path: "steamapps/workshop/content/\(WorkshopAPIService.wallpaperEngineAppId)",
                                    directoryHint: .isDirectory)
@@ -107,13 +106,13 @@ enum WorkshopItemInstaller {
         return .installed(destination)
     }
 
-    /// Deletes a steamcmd staging folder once its download is in the library or has failed.
+    /// Deletes a download's staging folder once its download is in the library or has failed.
     static func removeStaging(_ staging: URL, fileManager: FileManager = .default) {
         guard fileManager.fileExists(atPath: staging.path) else { return }
         do {
             try fileManager.removeItem(at: staging)
         } catch {
-            OWELog.error(.workshop, "Can't remove the steamcmd staging folder \(staging.path): \(error)")
+            OWELog.error(.workshop, "Can't remove the download staging folder \(staging.path): \(error)")
         }
     }
 

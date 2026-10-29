@@ -85,39 +85,17 @@ final class WorkshopSubscriptionsTests: XCTestCase {
         XCTAssertThrowsError(try WorkshopSubscriptions.outcome(from: Data("<html>".utf8)))
     }
 
-    /// The query names the account and asks for subscriptions; the key is never in it.
-    func testTheQueryAsksForSubscribedItemsWithoutTheKey() {
+    /// The query names the account and asks for subscriptions.
+    func testTheQueryAsksForSubscribedItems() {
         let query = WorkshopSubscriptions.queryItems(steamID: "76561190000000001", page: 2)
         let values = Dictionary(uniqueKeysWithValues: query.map { ($0.name, $0.value ?? "") })
         XCTAssertEqual(values["type"], "mysubscriptions")
         XCTAssertEqual(values["appid"], "431960")
         XCTAssertEqual(values["steamid"], "76561190000000001")
         XCTAssertEqual(values["page"], "2")
-        XCTAssertNil(values["key"])
     }
 
-    /// The logged-in account's SteamID64 from Steam's own files.
-    func testTheSteamIDComesFromSteamsFiles() throws {
-        let root = FileManager.default.temporaryDirectory.appending(path: "owe-steam-root-\(UUID().uuidString)", directoryHint: .isDirectory)
-        defer { try? FileManager.default.removeItem(at: root) } // scratch cleanup
-        let other = root.appending(path: "other", directoryHint: .isDirectory)
-        let steam = root.appending(path: "steam", directoryHint: .isDirectory)
-        try FileManager.default.createDirectory(at: other.appending(path: "config"), withIntermediateDirectories: true)
-        try FileManager.default.createDirectory(at: steam.appending(path: "config"), withIntermediateDirectories: true)
-        try Data("""
-        "users"
-        {
-            "76561190000000002" { "AccountName" "someoneelse" }
-            "76561190000000001" { "AccountName" "Player" "PersonaName" "P" }
-        }
-        """.utf8).write(to: steam.appending(path: "config/loginusers.vdf"))
-        try Data("""
-        "InstallConfigStore" { "Software" { "Valve" { "Steam" { "Accounts" { "cfguser" { "SteamID" "76561190000000003" } } } } } }
-        """.utf8).write(to: other.appending(path: "config/config.vdf"))
-        XCTAssertEqual(WorkshopSubscriptions.steamID64(forAccount: "player", steamRoots: [other, steam]), "76561190000000001")
-        XCTAssertEqual(WorkshopSubscriptions.steamID64(forAccount: "cfguser", steamRoots: [steam, other]), "76561190000000003")
-        XCTAssertNil(WorkshopSubscriptions.steamID64(forAccount: "nobody", steamRoots: [steam, other]))
-        XCTAssertNil(WorkshopSubscriptions.steamID64(forAccount: "", steamRoots: [steam]))
+    func testASteamID64IsSeventeenDigitsOfAnIndividualAccount() {
         XCTAssertTrue(WorkshopSubscriptions.isSteamID64("76561190000000001"))
         XCTAssertFalse(WorkshopSubscriptions.isSteamID64("12345"))
     }

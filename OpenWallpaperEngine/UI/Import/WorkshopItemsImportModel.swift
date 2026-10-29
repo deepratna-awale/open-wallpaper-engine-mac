@@ -2,7 +2,7 @@ import Foundation
 import Combine
 
 /// Imports Workshop items by list: a public collection, or the user's subscriptions. Items come
-/// from Steam's Web API; the checked ones go into the SteamCMD download queue, which fetches
+/// from Steam; the checked ones go into the download queue, which fetches
 /// their dependencies too (`WorkshopDependencyService`).
 @MainActor
 final class WorkshopItemsImportModel: ObservableObject {
@@ -42,7 +42,7 @@ final class WorkshopItemsImportModel: ObservableObject {
         checklistChange = checklist.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
     }
 
-    var canDownload: Bool { steamCmd.isInstalled && steamCmd.isLoggedIn }
+    var canDownload: Bool { steamCmd.isLoggedIn }
 
     /// Reads the collection the user pasted.
     func loadCollection() async {
@@ -108,7 +108,7 @@ final class WorkshopItemsImportModel: ObservableObject {
             steamCmd.downloadWorkshopItem(workshopId: candidate.id, title: candidate.title,
                                           previewURL: candidate.previewURL) { [weak wallpaperViewModel] destination in
                 guard let playlistID, let destination else { return }
-                // steamcmd calls back off the main thread.
+                // The download calls back off the main thread.
                 DispatchQueue.main.async {
                     guard let wallpaper = Self.wallpaper(at: destination) else { return }
                     wallpaperViewModel?.addToPlaylist(wallpaper, playlistID: playlistID)

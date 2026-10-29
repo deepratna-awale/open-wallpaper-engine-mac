@@ -32,7 +32,7 @@ struct ContentView: View {
     private var hasSidebar: Bool {
         switch tab {
         case 0, 3: return true
-        case 1: return viewModel.steamCmd.isInstalled && viewModel.steamCmd.isLoggedIn
+        case 1: return viewModel.steamCmd.isLoggedIn
         default: return false
         }
     }
@@ -145,7 +145,7 @@ struct ContentView: View {
         }
         .sheet(isPresented: onboardingPresented, onDismiss: openOnboardingShortcut) {
             OnboardingView(steamCmd: viewModel.steamCmd,
-                           installer: AppDelegate.shared.steamCmdInstaller,
+                           steamAccount: viewModel.steamAccount,
                            assets: AppDelegate.shared.assets,
                            imports: AppDelegate.shared.onboardingImports,
                            onShortcut: { onboardingShortcut = $0 })
@@ -261,7 +261,7 @@ struct ContentView: View {
     @ViewBuilder private var sidebarContent: some View {
         if viewModel.navigation.isStaging {
             keptAlive(FilterResults(viewModel: viewModel.filters), isShown: tab == 0)
-            if viewModel.steamCmd.isInstalled && viewModel.steamCmd.isLoggedIn {
+            if viewModel.steamCmd.isLoggedIn {
                 keptAlive(WorkshopFiltersSidebar(viewModel: viewModel.workshopVM), isShown: tab == 1)
             }
             keptAlive(PlaylistSidebar(wallpaperViewModel: wallpaperViewModel), isShown: tab == 3)

@@ -139,12 +139,10 @@ final class StaleBundleRefreshTests: XCTestCase {
     // MARK: - Queue
 
     @MainActor private final class FakeDownloader: StaleBundleDownloading {
-        var signedIn = true
+        var isLoggedIn = true
         var failing: Set<String> = []
         var fetched: [String] = []
         var pending: [@MainActor (Bool) -> Void] = []
-
-        func restoreSession(completion: @escaping @MainActor @Sendable (Bool) -> Void) { completion(signedIn) }
 
         func fetchArchivedPackage(workshopId: String, packageName: String, into wallpaperDirectory: URL,
                                   completion: @escaping @MainActor @Sendable (Bool) -> Void) {
@@ -185,7 +183,7 @@ final class StaleBundleRefreshTests: XCTestCase {
 
     func testNoSessionKeepsBundlesAndNotifiesOnce() {
         let downloader = FakeDownloader()
-        downloader.signedIn = false
+        downloader.isLoggedIn = false
         var converted: [URL] = []
         var notices: [[String]] = []
         let refresher = StaleBundleRefresher(downloader: downloader, isShown: { _ in false },

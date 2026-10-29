@@ -26,7 +26,7 @@ final class WorkshopPageLinkTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: root) } // cleanup of a temp folder; nothing to report
         let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { root }),
                                        storageDirectory: { root }, previewCacheRoot: root,
-                                       presentPreview: { _ in }, restoresSession: false)
+                                       presentPreview: { _ in })
         let model = WorkshopViewModel(steamCmd: steamCmd, searchPage: { _, _, _, _, _ in [] })
         let items = try WorkshopAPIService.parseItems(from: Data(contentsOf: Fixtures.url("Workshop/api/query-files.json")))
 

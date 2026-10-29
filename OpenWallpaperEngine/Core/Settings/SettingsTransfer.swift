@@ -4,8 +4,8 @@ import Foundation
 /// or keep a copy.
 ///
 /// The file holds the global settings, the on/off preferences stored beside them, Sparkle's
-/// update choices and the Installed tab's folders. It never holds secrets: the Steam Web API key and the Steam account stay in
-/// the Keychain and are never read here. Paths (the Wallpaper Storage folder, a chosen assets
+/// update choices and the Installed tab's folders. It never holds secrets: the Steam login stays
+/// in the Keychain and is never read here. Paths (the Wallpaper Storage folder, a chosen assets
 /// folder) are left out too, since they belong to one Mac.
 struct SettingsTransfer: Codable, Equatable {
     /// Identifies the file, so importing some other JSON fails clearly.

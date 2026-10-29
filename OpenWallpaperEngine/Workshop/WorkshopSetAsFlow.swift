@@ -26,7 +26,7 @@ final class WorkshopSetAsFlow: ObservableObject {
         var isInstalled: @MainActor (_ workshopId: String) -> Bool
         /// The installed wallpaper of the item, if any.
         var installedWallpaper: @MainActor (_ workshopId: String) -> WEWallpaper?
-        /// Whether a download can start (steamcmd is there and logged in).
+        /// Whether a download can start (Steam is logged in).
         var canDownload: @MainActor () -> Bool
         /// Downloads the item as Download does; the completion gets its folder, or nil when it failed.
         var download: @MainActor (WorkshopItem, _ completion: @escaping @MainActor @Sendable (URL?) -> Void) -> Void

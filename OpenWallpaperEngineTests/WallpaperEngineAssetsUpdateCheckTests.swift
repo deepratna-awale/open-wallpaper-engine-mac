@@ -3,7 +3,7 @@ import XCTest
 
 /// "Update from Steam" looks up the current Wallpaper Engine build first and downloads only when
 /// it differs from the installed one; "Re-download" always downloads; a failed lookup downloads
-/// nothing. SteamCMD itself never runs here.
+/// nothing. The Steam helper is always a fake.
 final class WallpaperEngineAssetsUpdateCheckTests: XCTestCase {
     private typealias Check = WallpaperEngineAssetsUpdateCheck
     private var scratch: URL!
@@ -15,32 +15,6 @@ final class WallpaperEngineAssetsUpdateCheckTests: XCTestCase {
 
     override func tearDownWithError() throws {
         try? FileManager.default.removeItem(at: scratch) // scratch cleanup
-    }
-
-    // MARK: Parsing app_info_print
-
-    func testThePublicBuildIDComesFromTheLastAppInfoBlock() {
-        XCTAssertEqual(Check.publicBuildID(appInfo: appInfoOutput(build: "20112233")), "20112233")
-        // A stale block printed before the refreshed one: the last one wins.
-        let twice = appInfoOutput(build: "100") + "\n" + appInfoOutput(build: "200")
-        XCTAssertEqual(Check.publicBuildID(appInfo: twice), "200")
-        XCTAssertNil(Check.publicBuildID(appInfo: "Loading Steam API...OK\nNo app info for AppID 431960 found"))
-        XCTAssertNil(Check.publicBuildID(appInfo: #""431960" { "depots" { "branches" { "public" { "buildid" "#))
-    }
-
-    func testTheLookupTellsTheBuildTheLoginAndFailuresApart() {
-        XCTAssertEqual(Check.lookup(output: appInfoOutput(build: "7"), exitCode: 0), .build("7"))
-        XCTAssertEqual(Check.lookup(output: steamCmdNoCachedLoginOutput, exitCode: 0), .loginRequired)
-        XCTAssertEqual(Check.lookup(output: "Loading Steam API...OK\nERROR! Timed out waiting for AppInfo update.", exitCode: 0),
-                       .failed("ERROR! Timed out waiting for AppInfo update."))
-        guard case .failed = Check.lookup(output: "", exitCode: 1) else { return XCTFail("empty output is a failure") }
-    }
-
-    func testTheScriptOnlyReadsAppInfo() throws {
-        let script = try Check.script(username: "someone")
-        XCTAssertEqual(script.lines, ["@NoPromptForPassword 1", #"login "someone""#, #"app_info_update "1""#,
-                                      #"app_info_print "431960""#])
-        XCTAssertFalse(script.lines.contains { $0.hasPrefix("app_update") })
     }
 
     // MARK: Skip or update
@@ -64,61 +38,66 @@ final class WallpaperEngineAssetsUpdateCheckTests: XCTestCase {
     // MARK: Service
 
     @MainActor
-    func testTheCurrentBuildIsNotDownloadedAgain() throws {
+    func testTheCurrentBuildIsNotDownloadedAgain() async throws {
         try installCache(build: "100")
-        let runner = AppInfoRunner(appInfo: appInfoOutput(build: "100"))
-        let service = makeService(runner: runner)
+        let helper = RecordingDownloader()
+        let service = await makeService(appInfo: .build("100"), helper: helper)
         service.installFromSteam()
-        waitUntilSettled(service)
+        try await waitUntilSettled(service)
         XCTAssertEqual(service.phase, .idle)
         XCTAssertTrue(service.notice?.contains("100") == true, String(describing: service.notice))
-        XCTAssertEqual(runner.commands, ["app_info_print"])
+        XCTAssertEqual(helper.count, 0)
     }
 
     @MainActor
-    func testANewerBuildDownloadsAndIsRecorded() throws {
+    func testANewerBuildDownloadsAndIsRecorded() async throws {
         try installCache(build: "100")
-        let runner = AppInfoRunner(appInfo: appInfoOutput(build: "101"))
-        let service = makeService(runner: runner)
+        let helper = RecordingDownloader()
+        let service = await makeService(appInfo: .build("101"), helper: helper)
         service.installFromSteam()
-        waitUntilSettled(service)
+        try await waitUntilSettled(service)
         XCTAssertEqual(service.phase, .idle)
         XCTAssertNil(service.notice)
-        XCTAssertEqual(runner.commands, ["app_info_print", "app_update"])
+        XCTAssertEqual(helper.count, 1)
         XCTAssertEqual(WallpaperEngineAssetsCache.readInfo(cache: cache)?.steamBuildID, "101")
     }
 
     @MainActor
-    func testReDownloadSkipsTheCheck() throws {
+    func testReDownloadSkipsTheCheck() async throws {
         try installCache(build: "100")
-        let runner = AppInfoRunner(appInfo: appInfoOutput(build: "100"))
-        let service = makeService(runner: runner)
+        let helper = RecordingDownloader()
+        let service = await makeService(appInfo: .build("100"), helper: helper)
         service.installFromSteam(force: true)
-        waitUntilSettled(service)
+        try await waitUntilSettled(service)
         XCTAssertEqual(service.phase, .idle)
-        XCTAssertEqual(runner.commands, ["app_update"])
+        XCTAssertEqual(helper.count, 1)
     }
 
     @MainActor
-    func testAFailedCheckDownloadsNothing() throws {
+    func testAFailedCheckDownloadsNothing() async throws {
         try installCache(build: "100")
-        let runner = AppInfoRunner(appInfo: "Loading Steam API...OK\nERROR! Timed out waiting for AppInfo update.")
-        let service = makeService(runner: runner)
+        let helper = RecordingDownloader()
+        let service = await makeService(appInfo: .error("network"), helper: helper)
         service.installFromSteam()
-        waitUntilSettled(service)
+        try await waitUntilSettled(service)
         guard case .updateCheckFailed = service.lastFailure else { return XCTFail("\(String(describing: service.lastFailure))") }
-        XCTAssertEqual(runner.commands, ["app_info_print"])
+        XCTAssertEqual(helper.count, 0)
         XCTAssertEqual(WallpaperEngineAssetsCache.readInfo(cache: cache)?.steamBuildID, "100")
 
-        let noLogin = AppInfoRunner(appInfo: steamCmdNoCachedLoginOutput)
-        let loggedOut = makeService(runner: noLogin)
+        let loggedOut = await makeService(appInfo: .error("tokenRejected"), helper: helper)
         loggedOut.installFromSteam()
-        waitUntilSettled(loggedOut)
-        XCTAssertEqual(loggedOut.lastFailure, .notLoggedIn(account: "someone"))
-        XCTAssertEqual(noLogin.commands, ["app_info_print"])
+        try await waitUntilSettled(loggedOut)
+        XCTAssertEqual(loggedOut.lastFailure, .notLoggedIn)
+        XCTAssertEqual(helper.count, 0)
     }
 
     // MARK: Helpers
+
+    private enum AppInfo {
+        case build(String)
+        /// A helper error with this code.
+        case error(String)
+    }
 
     private var cache: URL { WallpaperEngineAssets.cacheDirectory(in: scratch) }
 
@@ -130,98 +109,55 @@ final class WallpaperEngineAssetsUpdateCheckTests: XCTestCase {
     }
 
     @MainActor
-    private func makeService(runner: SteamCmdRunning) -> WallpaperEngineAssetsService {
+    private func makeService(appInfo: AppInfo, helper: RecordingDownloader) async -> WallpaperEngineAssetsService {
         let storage: URL = scratch
         let defaults = UserDefaults(suiteName: "owe-tests-\(UUID().uuidString)")!
         let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { storage }),
-                                       runner: runner, storageDirectory: { storage },
+                                       helperDownloads: helper, storageDirectory: { storage },
                                        previewCacheRoot: storage.appending(path: "previews"),
                                        downloadedIndex: DownloadedWallpaperIndex(defaults: defaults, libraryDirectory: { storage }),
-                                       presentPreview: { _ in }, account: .inMemory(), restoresSession: false)
-        steamCmd.steamCmdPath = "/usr/bin/false"
-        steamCmd.isLoggedIn = true
-        steamCmd.steamUsername = "someone"
-        return WallpaperEngineAssetsService(steamCmd: steamCmd, runner: runner, storageDirectory: { storage },
-                                            defaults: defaults)
+                                       presentPreview: { _ in })
+        steamCmd.useSteamLogin(FakeSteamHelperTransport.login)
+        let client = SteamHelperClient {
+            FakeSteamHelperTransport { request in
+                guard request.method == "appInfo" else { return [FakeSteamHelperTransport.result(request)] }
+                switch appInfo {
+                case .build(let build):
+                    return [FakeSteamHelperTransport.result(request, #"{"appID":431960,"publicBuildID":"\#(build)","depots":[]}"#)]
+                case .error(let code):
+                    return [FakeSteamHelperTransport.error(request, code: code)]
+                }
+            }
+        }
+        await client.use(FakeSteamHelperTransport.login)
+        return WallpaperEngineAssetsService(steamCmd: steamCmd, steamHelper: client, helperDownloads: helper,
+                                            storageDirectory: { storage }, defaults: defaults)
     }
 
     @MainActor
-    private func waitUntilSettled(_ service: WallpaperEngineAssetsService) {
-        let settled = expectation(for: NSPredicate { _, _ in
-            MainActor.assumeIsolated {
-                switch service.phase {
-                case .idle, .failed: return true
-                case .downloading, .copying: return false
-                }
-            }
-        }, evaluatedWith: nil)
-        wait(for: [settled], timeout: 10)
+    private func waitUntilSettled(_ service: WallpaperEngineAssetsService) async throws {
+        let deadline = Date().addingTimeInterval(10)
+        // The phase is `.downloading` from the start; the lookup and download run after.
+        while service.isBusy {
+            guard Date() < deadline else { return XCTFail("the install didn't finish") }
+            try await Task.sleep(for: .milliseconds(10))
+        }
     }
 }
 
-/// SteamCMD's output for `app_info_print 431960`, trimmed to what matters, around its other lines.
-private func appInfoOutput(build: String) -> String {
-    """
-    Loading Steam API...OK
-    Logging in user 'someone' [U:1:12345] to Steam Public...OK
-    Waiting for user info...OK
-    Steam>AppID : 431960, change number : 31234567/0, last change : Mon Sep 28 10:00:00 2026
-    "431960"
-    {
-    \t"common"
-    \t{
-    \t\t"name"\t\t"Wallpaper Engine"
-    \t\t"type"\t\t"Tool"
-    \t}
-    \t"depots"
-    \t{
-    \t\t"431961"
-    \t\t{
-    \t\t\t"config" { "oslist" "windows" }
-    \t\t\t"manifests" { "public" { "gid" "123" "size" "456" } }
-    \t\t}
-    \t\t"branches"
-    \t\t{
-    \t\t\t"public"
-    \t\t\t{
-    \t\t\t\t"buildid"\t\t"\(build)"
-    \t\t\t\t"timeupdated"\t\t"1790000000"
-    \t\t\t}
-    \t\t\t"beta"
-    \t\t\t{
-    \t\t\t\t"buildid"\t\t"999999"
-    \t\t\t\t"description"\t\t"Beta {testing}"
-    \t\t\t}
-    \t\t}
-    \t}
-    }
-    Steam>
-    """
-}
-
-/// A fake SteamCMD: `app_info_print` prints `appInfo`; `app_update` installs a tiny asset tree
-/// where the script's `force_install_dir` says, with no app manifest.
-private final class AppInfoRunner: SteamCmdRunning, @unchecked Sendable {
-    private let appInfo: String
+/// A fake Steam helper download that counts its runs and writes a tiny asset tree into `-dir`.
+private final class RecordingDownloader: SteamHelperDownloading, @unchecked Sendable {
     private let lock = NSLock()
-    private var recorded: [String] = [] // Owned by `lock`.
-    /// The download-relevant command of each run, in order.
-    var commands: [String] { lock.withLock { recorded } }
+    private var runs = 0 // Owned by `lock`.
+    var count: Int { lock.withLock { runs } }
 
-    init(appInfo: String) { self.appInfo = appInfo }
-
-    func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?,
-             onOutput: @escaping (String) -> Void) -> SteamCmdRun {
-        if script.lines.contains(where: { $0.hasPrefix("app_info_print") }) {
-            lock.withLock { recorded.append("app_info_print") }
-            return SteamCmdRun(output: appInfo, exitCode: 0)
+    func run(arguments: [String], login: SteamLogin, cancellation: SteamCmdCancellation,
+             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
+        lock.withLock { runs += 1 }
+        guard let index = arguments.firstIndex(of: "-dir"), index + 1 < arguments.count else {
+            return SteamCmdRun(output: "no -dir", exitCode: 2)
         }
-        lock.withLock { recorded.append(script.lines.contains { $0.hasPrefix("app_update") } ? "app_update" : "other") }
-        guard let line = script.lines.first(where: { $0.hasPrefix("force_install_dir ") }) else {
-            return SteamCmdRun(output: "no install dir", exitCode: 1)
-        }
-        let path = String(line.dropFirst("force_install_dir ".count)).trimmingCharacters(in: CharacterSet(charactersIn: "\""))
-        let install = URL(fileURLWithPath: path, isDirectory: true)
+        let install = URL(fileURLWithPath: arguments[index + 1], isDirectory: true)
         do {
             for (relative, text) in [("assets/shaders/common.h", "x"), ("assets/effects/tint/effect.json", "{}")] {
                 let url = install.appending(path: relative)
@@ -231,6 +167,6 @@ private final class AppInfoRunner: SteamCmdRunning, @unchecked Sendable {
         } catch {
             return SteamCmdRun(output: "write failed: \(error)", exitCode: 1)
         }
-        return SteamCmdRun(output: "Success! App '431960' fully installed.", exitCode: 0)
+        return SteamCmdRun(output: "100.00% assets/shaders/common.h\nTotal downloaded: 1 bytes", exitCode: 0)
     }
 }

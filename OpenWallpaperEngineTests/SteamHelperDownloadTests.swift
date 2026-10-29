@@ -133,12 +133,12 @@ final class SteamHelperDownloadTests: XCTestCase {
         let library = root!
         let suite = "owe-tests-\(UUID().uuidString)"
         let service = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { library }),
-                                      runner: UnusedSteamCmd(), helperDownloads: helper,
+                                      helperDownloads: helper,
                                       storageDirectory: { try WallpaperStorage.availableDirectory(storage) },
                                       previewCacheRoot: root.appending(path: "Previews"),
                                       downloadedIndex: DownloadedWallpaperIndex(defaults: UserDefaults(suiteName: suite)!,
                                                                                 libraryDirectory: { library }),
-                                      presentPreview: { _ in }, account: .inMemory(), restoresSession: false)
+                                      presentPreview: { _ in })
         addTeardownBlock { UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite) }
         return service
     }
@@ -149,20 +149,19 @@ final class SteamHelperDownloadTests: XCTestCase {
         }
     }
 
-    func testTheSteamLoginLogsInAndDownloadsWithoutSteamCmd() async throws {
+    func testTheSteamLoginLogsInAndDownloads() async throws {
         let helper = FakeHelper { directory in
             try FileManager.default.createDirectory(at: directory.appending(path: ".DepotDownloader"), withIntermediateDirectories: true)
             try Data(#"{"type": "scene", "title": "T", "file": "scene.json"}"#.utf8).write(to: directory.appending(path: "project.json"))
             return SteamCmdRun(output: "100.00% project.json\n", exitCode: 0)
         }
         let service = try makeService(helper)
-        XCTAssertFalse(service.isInstalled)
+        XCTAssertFalse(service.isLoggedIn)
         var logins = 0
         let cancellable = service.loginSucceeded.sink { logins += 1 }
         defer { cancellable.cancel() }
 
         service.useSteamLogin(Self.login)
-        XCTAssertTrue(service.isInstalled, "no SteamCMD needed")
         XCTAssertTrue(service.isLoggedIn)
         XCTAssertEqual(service.steamUsername, "owe_test")
         XCTAssertEqual(logins, 1)
@@ -177,7 +176,6 @@ final class SteamHelperDownloadTests: XCTestCase {
 
         service.useSteamLogin(nil)
         XCTAssertFalse(service.isLoggedIn)
-        XCTAssertFalse(service.isInstalled)
     }
 
     func testARemovedItemIsReportedUnavailable() async throws {
@@ -211,14 +209,5 @@ final class SteamHelperDownloadTests: XCTestCase {
         try await waitFor("the rejection") { rejected == 1 }
         XCTAssertEqual(service.downloadProgress["1000000003"],
                        .failed(SteamHelperError(code: .tokenRejected, message: "").errorDescription ?? ""))
-    }
-}
-
-/// steamcmd, which these tests never run.
-private struct UnusedSteamCmd: SteamCmdRunning {
-    func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?,
-             onOutput: @escaping @Sendable (String) -> Void) -> SteamCmdRun {
-        XCTFail("steamcmd ran")
-        return SteamCmdRun(output: "", exitCode: 1)
     }
 }

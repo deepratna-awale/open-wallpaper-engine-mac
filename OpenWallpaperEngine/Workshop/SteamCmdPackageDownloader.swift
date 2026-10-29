@@ -1,6 +1,7 @@
 import Foundation
 
-/// Fetches Valve's SteamCMD package; tests stand in a fake that writes a local archive.
+/// Fetches a package the app installs (the Chromium engine, depth-map plugins); tests stand in a
+/// fake that writes a local archive.
 protocol SteamCmdPackageDownloading: Sendable {
     /// Downloads `url` to `destination`, reporting the fraction done (nil while the size is
     /// unknown). Throws `CancellationError` when the calling task is cancelled.
@@ -16,10 +17,10 @@ struct URLSessionSteamCmdDownloader: SteamCmdPackageDownloading {
         var errorDescription: String? {
             switch self {
             case .insecureURL:
-                return String(localized: "SteamCMD is only downloaded over HTTPS.", comment: "SteamCMD install error")
+                return String(localized: "Only HTTPS downloads are allowed.", comment: "Package download error")
             case .httpStatus(let code):
-                return String(localized: "Valve's server answered with HTTP status \(code).",
-                              comment: "SteamCMD install error; %lld is an HTTP status code")
+                return String(localized: "The download server answered with HTTP status \(code).",
+                              comment: "Package download error; %lld is an HTTP status code")
             }
         }
     }

@@ -681,7 +681,7 @@ private struct MissingWorkshopDependenciesBanner: View {
                         }
                         if downloadableIds.isEmpty {
                             // Nothing left to download.
-                        } else if !steamCmd.isInstalled || !steamCmd.isLoggedIn {
+                        } else if !steamCmd.isLoggedIn {
                             Text("Log in on the Workshop tab to download these.")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)

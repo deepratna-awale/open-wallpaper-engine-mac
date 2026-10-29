@@ -1,6 +1,6 @@
 import Foundation
 
-/// The Downloads tab's groups, as Safari and the App Store list downloads: the one steamcmd is
+/// The Downloads tab's groups, as Safari and the App Store list downloads: the one Steam is
 /// running, the ones waiting for it, then the finished ones, newest first.
 struct DownloadSections: Equatable {
     enum Kind: CaseIterable, Equatable {
@@ -50,7 +50,7 @@ struct DownloadSections: Equatable {
     var isEmpty: Bool { Kind.allCases.allSatisfy { ids($0).isEmpty } }
 }
 
-/// A running download's speed and time left, from steamcmd's percentage and the item's Workshop
+/// A running download's speed and time left, from Steam's percentage and the item's Workshop
 /// size; nil until there is enough to say (a few seconds in and some progress).
 struct DownloadRateEstimate: Equatable {
     /// Bytes per second.

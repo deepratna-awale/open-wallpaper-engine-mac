@@ -22,16 +22,15 @@ final class AppStorageIsolationTests: XCTestCase {
     }
 
     /// The test host never calls the keychain: a run once sat for half an hour on a macOS prompt
-    /// for the isolated steamcmd account item, read by `SteamCmdService.attemptCachedLogin`.
+    /// for an isolated keychain item read at launch.
     /// Every keychain item of an isolated copy lives in memory; the user's launch keeps the keychain.
     func testTheTestHostKeepsKeychainItemsInMemory() throws {
         guard case .memory(let memory) = KeychainStore.Backend.processDefault else {
             return XCTFail("the test host must not use the system keychain")
         }
         XCTAssertTrue(memory === InMemoryKeychain.shared)
-        for secret in [SteamCredentials.webAPIKey(), SteamCredentials.steamCmdAccount()] {
-            guard case .memory = secret.keychain.backend else { return XCTFail("\(secret.keychain.service) uses the keychain") }
-        }
+        let secret = SteamCredentials.steamLogin()
+        guard case .memory = secret.keychain.backend else { return XCTFail("\(secret.keychain.service) uses the keychain") }
         guard case .memory = KeychainStore(service: "any").backend else { return XCTFail("the default backend is memory") }
         guard case .memory = KeychainStore.Backend.for(AppStorageLocation(isolationTag: "shots")) else {
             return XCTFail("an isolated copy keeps its items in memory")

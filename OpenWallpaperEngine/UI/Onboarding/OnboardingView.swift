@@ -8,7 +8,7 @@ enum OnboardingShortcut: Equatable {
     case displaySettings
 }
 
-/// The setup assistant: the Terms of Use and Privacy Policy notice, welcome and language, privacy, Steam and SteamCMD, the Wallpaper Engine
+/// The setup assistant: the Terms of Use and Privacy Policy notice, welcome and language, privacy, Steam, the Wallpaper Engine
 /// assets, bringing wallpapers in, and a summary. Every step can be skipped and visited again,
 /// here with Back or the step list, or later with Settings › General › "Run setup again…".
 struct OnboardingView: View {
@@ -17,7 +17,7 @@ struct OnboardingView: View {
     @EnvironmentObject private var globalSettingsViewModel: GlobalSettingsViewModel
     @StateObject private var flow = OnboardingFlow()
     @ObservedObject var steamCmd: SteamCmdService
-    @ObservedObject var installer: SteamCmdInstaller
+    let steamAccount: SteamAccount
     @ObservedObject var assets: WallpaperEngineAssetsService
     @ObservedObject var imports: OnboardingImports
     /// Called with the shortcut the user picked on the Done step, before the sheet closes.
@@ -121,7 +121,7 @@ struct OnboardingView: View {
         case .privacy:
             OnboardingPrivacyStep(updater: AppDelegate.shared.updater)
         case .steam:
-            OnboardingSteamStep(steamCmd: steamCmd, installer: installer)
+            OnboardingSteamStep(account: steamAccount)
         case .assets:
             OnboardingAssetsStep(assets: assets, steamCmd: steamCmd,
                                  logIn: { withAnimation(.easeInOut(duration: 0.15)) { flow.go(to: .steam) } })

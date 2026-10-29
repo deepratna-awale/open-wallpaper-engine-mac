@@ -28,8 +28,6 @@ struct OnboardingDoneStep: View {
                 row(.steam, title: OnboardingView.title(of: .steam), systemImage: "person.badge.key") {
                     if steamCmd.isLoggedIn {
                         Text("Logged in as \(steamCmd.steamUsername)", comment: "%@ is a Steam account name")
-                    } else if steamCmd.steamCmdPath != nil {
-                        Text("SteamCMD is ready; not logged in")
                     } else {
                         Text("Not set up")
                     }

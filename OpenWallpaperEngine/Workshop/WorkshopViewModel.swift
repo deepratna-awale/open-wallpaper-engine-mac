@@ -233,7 +233,7 @@ class WorkshopViewModel: ObservableObject {
         clearSelection()
     }
 
-    /// Downloads the item, then adds it to the given playlist once steamcmd finishes copying it into the library.
+    /// Downloads the item, then adds it to the given playlist once the download is in the library.
     func downloadAndAddToPlaylist(_ item: WorkshopItem, playlistID: UUID, wallpaperViewModel: WallpaperViewModel) {
         steamCmd.downloadWorkshopItem(
             workshopId: item.id,
@@ -247,7 +247,7 @@ class WorkshopViewModel: ObservableObject {
                   let project = OWELog.attempt(.workshop, "Add to playlist: project.json of \(destination.lastPathComponent)", {
                       try WEProject.read(in: destination)
                   }) else { return }
-            // steamcmd invokes this completion off the main thread.
+            // The download calls this completion off the main thread.
             DispatchQueue.main.async {
                 wallpaperViewModel.addToPlaylist(WEWallpaper(using: project, where: destination), playlistID: playlistID)
             }

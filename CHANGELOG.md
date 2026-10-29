@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **One Steam sign-in for everything.** Sign in once, with the QR code in the Steam mobile app or with your password and Steam Guard code, and Workshop browsing and search, downloads, the Wallpaper Engine assets, and importing your subscriptions and favourites all use it. The app talks to Steam through a helper built into it (SteamKit2 and DepotDownloader), so there is nothing else to install or set up.
+- **Terms of Use 1.1 and Privacy Policy 1.2** describe the Steam sign-in in place of SteamCMD and the Web API key, so the setup notice shows once more.
+
+### Removed
+
+- **SteamCMD and the Steam Web API key.** Neither is used any more: Settings › Assets has no SteamCMD section or key field, and the setup assistant no longer sets up SteamCMD or asks for a key. Downloads still need a Steam account that owns Wallpaper Engine.
+
 ## [1.0.0-beta.12] - 2026-10-28
 
 ### Fixed
