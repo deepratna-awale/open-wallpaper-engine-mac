@@ -127,6 +127,15 @@ jobs:
           sudo xcode-select -s "$X"
           xcodebuild -version
 
+      - name: Build the Steam helper
+        # SteamHelper/ is a .NET program; the archive's "Embed Steam Helper" phase signs and embeds
+        # one file per architecture (OWE_REQUIRE_STEAM_HELPER fails the archive without them).
+        run: |
+          set -euo pipefail
+          curl -sSfL https://dot.net/v1/dotnet-install.sh -o "$RUNNER_TEMP/dotnet-install.sh"
+          bash "$RUNNER_TEMP/dotnet-install.sh" --channel 9.0 --install-dir "$RUNNER_TEMP/dotnet"
+          PATH="$RUNNER_TEMP/dotnet:$PATH" Scripts/build-steam-helper.sh
+
       - name: Import signing certificate
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
@@ -182,6 +191,7 @@ jobs:
             MARKETING_VERSION="${{ steps.version.outputs.version }}" \
             CURRENT_PROJECT_VERSION="${{ steps.version.outputs.build }}" \
             OWE_VERSION_LABEL="${{ steps.version.outputs.label }}" \
+            OWE_REQUIRE_STEAM_HELPER=YES \
             SPARKLE_PUBLIC_ED_KEY="$(printf '%s' "$SPARKLE_PUBLIC_ED_KEY" | tr -d '[:space:]')"
 
       - name: Export signed app
@@ -312,6 +322,23 @@ jobs:
           echo "owe-mcp: ${MCP_KB} KB"
           test "$MCP_KB" -lt 10240 || { echo "::error::owe-mcp is ${MCP_KB} KB; it should link only what it needs"; exit 1; }
 
+          # The Steam helper (SteamHelper/, .NET), one file per architecture: signed by the app's team
+          # with the hardened runtime and only the JIT entitlement, and it runs.
+          for arch in arm64 x86_64; do
+            STEAM_HELPER="$APP/Contents/Helpers/owe-steam-helper-$arch"
+            test -x "$STEAM_HELPER" || { echo "::error::owe-steam-helper-$arch is missing from Contents/Helpers"; exit 1; }
+            codesign --verify --strict --verbose=2 "$STEAM_HELPER"
+            test "$(team "$STEAM_HELPER")" = "$(team "$APP")" || { echo "::error::owe-steam-helper-$arch isn't signed by the app's team"; exit 1; }
+            STEAM_HELPER_ENTS=$(codesign -d --entitlements - --xml "$STEAM_HELPER" 2>/dev/null | plutil -p - 2>/dev/null || true)
+            echo "$STEAM_HELPER_ENTS"
+            grep -q "com.apple.security.cs.allow-jit" <<<"$STEAM_HELPER_ENTS" \
+              || { echo "::error::owe-steam-helper-$arch lacks allow-jit, which .NET needs"; exit 1; }
+            if grep -Eq "get-task-allow|disable-library-validation|allow-unsigned|allow-dyld" <<<"$STEAM_HELPER_ENTS"; then
+              echo "::error::owe-steam-helper-$arch's entitlements weaken the hardened runtime"; exit 1
+            fi
+          done
+          "$APP/Contents/Helpers/owe-steam-helper-$(uname -m)" --version
+
           # The live screen saver: its extension (sandboxed, the app's team and App Group) and its
           # broker, a launch agent SMAppService registers from Contents/Library/LaunchAgents.
           APPEX="$APP/Contents/PlugIns/OpenWallpaperEngineSaverExtension.appex"
@@ -369,7 +396,7 @@ jobs:
           fi
           # No executables besides the app's own, the Chromium helper, the bundled screen saver (copied to
           # ~/Library/Screen Savers by the installer), the screen saver extension and its broker (the live
-          # screen saver's launch agent) and Sparkle's (nowPlayingAdapter.pl runs as an
+          # screen saver's launch agent), the Steam helper and Sparkle's (nowPlayingAdapter.pl runs as an
           # argument to /usr/bin/perl and is a plain resource). Sparkle's are each verified; the
           # XPC services are unused (the app isn't sandboxed) but ship signed inside the framework.
           SPARKLE="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
@@ -389,6 +416,8 @@ jobs:
             "$APP/Contents/Resources/Open Wallpaper Engine.saver/Contents/MacOS/Open Wallpaper Engine"
             "$APP/Contents/PlugIns/OpenWallpaperEngineSaverExtension.appex/Contents/MacOS/OpenWallpaperEngineSaverExtension"
             "$APP/Contents/Helpers/owe-saver-broker"
+            "$APP/Contents/Helpers/owe-steam-helper-arm64"
+            "$APP/Contents/Helpers/owe-steam-helper-x86_64"
             "$FRAMEWORK_BINARY"
           )
           for helper in "${sparkle_executables[@]}"; do
