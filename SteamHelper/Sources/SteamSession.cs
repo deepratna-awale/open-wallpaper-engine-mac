@@ -74,6 +74,7 @@ namespace OWESteamHelper
             apps = client.GetHandler<SteamApps>()!;
             unified = client.GetHandler<SteamUnifiedMessages>()!;
             ServiceCalls.Register(unified);
+            client.AddHandler(new WorkshopNotices(onEvent));
             manager.Subscribe<SteamClient.ConnectedCallback>(_ =>
             {
                 isConnected = true;

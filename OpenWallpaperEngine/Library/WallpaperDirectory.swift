@@ -194,6 +194,17 @@ final class FavoritesStore: ObservableObject {
         return new.count
     }
 
+    /// Takes `keys` off the favourites; returns how many were there. Like `merge`, it doesn't
+    /// send `toggled`.
+    @discardableResult
+    func remove(_ keys: some Sequence<String>) -> Int {
+        let gone = Set(keys).intersection(ids)
+        guard !gone.isEmpty else { return 0 }
+        ids.subtract(gone)
+        save()
+        return gone.count
+    }
+
     private func save() {
         defaults.set(ids.sorted(), forKey: storageKey)
     }
