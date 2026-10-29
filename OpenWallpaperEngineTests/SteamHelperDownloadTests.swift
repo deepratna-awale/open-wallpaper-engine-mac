@@ -167,7 +167,8 @@ final class SteamHelperDownloadTests: XCTestCase {
         XCTAssertEqual(service.steamUsername, "owe_test")
         XCTAssertEqual(logins, 1)
 
-        let destination = try XCTUnwrap(await download("1000000001", with: service))
+        let downloaded = await download("1000000001", with: service)
+        let destination = try XCTUnwrap(downloaded)
         let files = try FileManager.default.contentsOfDirectory(atPath: destination.path)
         XCTAssertTrue(files.contains("project.json"))
         XCTAssertFalse(files.contains(SteamHelperDownload.bookkeepingFolderName), "DepotDownloader's bookkeeping is gone")
