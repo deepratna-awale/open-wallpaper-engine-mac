@@ -30,10 +30,10 @@ class Helper:
                                         text=True, bufsize=1)
         self.next_id = 0
 
-    def request(self, method, on_event=None, **params):
+    def request(self, method_name, on_event=None, **params):
         self.next_id += 1
         request_id = self.next_id
-        self.process.stdin.write(json.dumps({"id": request_id, "method": method, "params": params}) + "\n")
+        self.process.stdin.write(json.dumps({"id": request_id, "method": method_name, "params": params}) + "\n")
         self.process.stdin.flush()
         while True:
             line = self.process.stdout.readline()
