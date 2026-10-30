@@ -7,16 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0-beta.13] - 2026-10-29
+## [1.0.0-beta.13] - 2026-10-30
+
+### Added
+
+- **Workshop actions change your Steam account, as in Wallpaper Engine.** Downloading a Workshop item (or setting it as wallpaper, or keeping a preview) subscribes to it, Unsubscribe unsubscribes, and the heart adds or removes a Steam favourite. Rate Up and Rate Down are in the Workshop and Installed menus, and your own rating shows filled in. Required items the app downloads on its own aren't subscribed. Without the Steam login, or when Steam refuses a change, the action still happens in the app.
+- **Subscriptions and favourites follow changes made elsewhere on Steam.** Subscribing to a Wallpaper Engine item on the Steam website or another computer downloads it right away; unsubscribing there keeps the installed copy. Favourites are read at login, when the app comes forward (at most every 2 minutes) and every 30 minutes, and hearts follow what changed since the last read.
+- **Installed Workshop wallpapers stay up to date.** At login and every 6 hours the app checks installed Workshop items and updates any that changed since they were downloaded, fetching only the changed parts. Updates show in the Downloads tab, and a wallpaper on screen reloads from the new files.
+- **Comments on a Workshop wallpaper.** The details panel has a Comments section with the item's Steam comments and their authors' names, 20 at a time. Nothing is fetched until you open it.
+- **A warning two weeks before the Steam login ends.** Steam's login lasts about 200 days. Settings › Assets › Steam Login and the Workshop tab show the end date with a Log In Again button.
+- **The app says up front when the Steam account doesn't own Wallpaper Engine,** right after logging in, instead of on the first failed download.
 
 ### Changed
 
 - **One Steam sign-in for everything.** Sign in once, with the QR code in the Steam mobile app or with your password and Steam Guard code, and Workshop browsing and search, downloads, the Wallpaper Engine assets, and importing your subscriptions and favourites all use it. The app talks to Steam through a helper built into it (SteamKit2 and DepotDownloader), so there is nothing else to install or set up.
-- **Terms of Use 1.1 and Privacy Policy 1.2** describe the Steam sign-in in place of SteamCMD and the Web API key, so the setup notice shows once more.
+- **Terms of Use 1.1 and Privacy Policy 1.3** describe the Steam sign-in in place of SteamCMD and the Web API key, and say that the app changes your Workshop subscriptions, favourites and ratings and reads Workshop comments and their authors' public names, so the setup notice shows once more.
+- **The Steam helper is licensed GPL-2.0-or-later,** because it includes DepotDownloader (GPL-2.0). The app itself stays GPL-3.0, and the About window credits SteamKit2 and DepotDownloader.
 
 ### Removed
 
 - **SteamCMD and the Steam Web API key.** Neither is used any more: Settings › Assets has no SteamCMD section or key field, and the setup assistant no longer sets up SteamCMD or asks for a key. Downloads still need a Steam account that owns Wallpaper Engine.
+
+### Fixed
+
+- **A Steam login that Steam refuses mid-session signs out.** The app kept showing the account as signed in while every Workshop request failed until a relaunch; it now asks for a new login. Requests made together after a disconnect also share one logon, instead of all but one timing out.
 
 ## [1.0.0-beta.12] - 2026-10-28
 
