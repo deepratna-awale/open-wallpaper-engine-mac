@@ -145,6 +145,7 @@ extension SceneContentLoader {
             read.hasScriptSites = !SceneScriptSiteBuilder(wallpaperID: "").sites(in: document).isEmpty
         }
         read.project = Self.project(in: dir)
+        read.bindingTable.setHeadings(SceneScriptUserProperties(project: read.project).headings)
         return read
     }
 
