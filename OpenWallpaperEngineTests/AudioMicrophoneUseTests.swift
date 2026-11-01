@@ -176,10 +176,14 @@ final class AudioMicrophoneUseTests: XCTestCase {
         return { frames, list, _ in
             call += 1
             guard !failing.contains(call) else { return .insufficientDataFromInputNode }
+            // The captured `phase` is read once: the test target builds unoptimised, where each
+            // read of a captured variable is a dynamic exclusivity check, and the callback is
+            // measured for allocations.
+            let start = phase
             for (channel, buffer) in UnsafeMutableAudioBufferListPointer(list).enumerated() {
                 let samples = buffer.mData!.assumingMemoryBound(to: Float.self)
                 let step: Float = channel == 0 ? 0.031 : 0.017
-                for frame in 0..<Int(frames) { samples[frame] = sinf(Float(phase + frame) * step) / 2 }
+                for frame in 0..<Int(frames) { samples[frame] = sinf(Float(start + frame) * step) / 2 }
             }
             phase += Int(frames)
             return .success
