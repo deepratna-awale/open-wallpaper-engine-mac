@@ -109,15 +109,40 @@ jobs:
           echo "Test classes: $summary" >> "$GITHUB_STEP_SUMMARY"
 
   # Builds the app and the test bundle once; every test shard runs that build without recompiling.
+  # A build of the same sources from an earlier run is reused instead: the push to main after a
+  # merge has the very sources its pull request built (the gate keeps a pull request up to date
+  # with main), so main tests that build rather than spending 20 minutes compiling it again. The
+  # Actions cache can't carry it over, as main can't read a pull request's cache; the products
+  # artifact can.
   build:
     needs: gate
     runs-on: macos-26
     timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: read # to find and download another run's products
+    outputs:
+      artifact: ${{ steps.name.outputs.artifact }}
+      run-id: ${{ steps.reuse.outputs.run-id }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - id: xcode
         uses: ./.github/actions/select-xcode
+
+      # The build's inputs: Xcode, the test build settings, the packages and every source. Two
+      # builds with the same key are the same build.
+      - name: Name the build
+        id: name
+        env:
+          KEY: dd-opt-${{ steps.xcode.outputs.version }}-${{ hashFiles('Scripts/test-build-settings.txt') }}-${{ hashFiles('OpenWallpaperEngine.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ hashFiles('OpenWallpaperEngine/**', 'OpenWallpaperEngineTests/**', 'OpenWallpaperEngine.xcodeproj/**', 'OpenWallpaperEngine-Info.plist', 'Vendor/**', 'Packages/**') }}
+          PARTIAL: dd-opt-${{ steps.xcode.outputs.version }}-${{ hashFiles('Scripts/test-build-settings.txt') }}-${{ hashFiles('OpenWallpaperEngine.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-
+        run: |
+          {
+            echo "key=$KEY"
+            echo "partial=$PARTIAL"
+            echo "artifact=products-$(printf %s "$KEY" | shasum -a 256 | cut -c1-32)"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Restore the Swift packages
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -129,16 +154,37 @@ jobs:
         # An exact hit is a build of these very sources: it is used as is. A partial hit still
         # saves rebuilding the packages.
         id: dd
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: build/DerivedData
           # dd-opt: optimised builds, keyed on their settings too, never mixed with unoptimised ones.
-          key: dd-opt-${{ steps.xcode.outputs.version }}-${{ hashFiles('Scripts/test-build-settings.txt') }}-${{ hashFiles('OpenWallpaperEngine.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ hashFiles('OpenWallpaperEngine/**', 'OpenWallpaperEngineTests/**', 'OpenWallpaperEngine.xcodeproj/**', 'OpenWallpaperEngine-Info.plist', 'Vendor/**', 'Packages/**') }}
+          key: ${{ steps.name.outputs.key }}
           restore-keys: |
-            dd-opt-${{ steps.xcode.outputs.version }}-${{ hashFiles('Scripts/test-build-settings.txt') }}-${{ hashFiles('OpenWallpaperEngine.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-
+            ${{ steps.name.outputs.partial }}
+
+      - name: Find a build of these sources from another run
+        # Only from runs of this repository's own branches: a fork's pull request could upload
+        # anything under that name, and main's asset shards run the products with the steam-ci
+        # secrets.
+        id: reuse
+        if: steps.dd.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          REPO_ID: ${{ github.repository_id }}
+          ARTIFACT: ${{ steps.name.outputs.artifact }}
+        run: |
+          set -euo pipefail
+          run_id=$(gh api "repos/$REPO/actions/artifacts?name=$ARTIFACT&per_page=20" --jq \
+            "[.artifacts[] | select(.expired | not) | select(.workflow_run.head_repository_id == $REPO_ID)][0].workflow_run.id // empty" \
+            || true)
+          if [[ -n "$run_id" ]]; then
+            echo "Reusing the build from run $run_id" | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Build for testing
-        if: steps.dd.outputs.cache-hit != 'true'
+        if: steps.dd.outputs.cache-hit != 'true' && !steps.reuse.outputs.run-id
         run: |
           set -o pipefail
           read -ra OPTIMISE < Scripts/test-build-settings.txt
@@ -148,24 +194,36 @@ jobs:
       - name: Check for deployment target mismatches
         # A library built for a newer macOS than the app's deployment target links, and then
         # fails to load on that older macOS.
-        if: steps.dd.outputs.cache-hit != 'true'
+        if: steps.dd.outputs.cache-hit != 'true' && !steps.reuse.outputs.run-id
         run: |
           if grep -E "was built for newer (macOS|macosx) version" xcodebuild.log; then
             echo "::error::a linked library targets a newer macOS than the app"; exit 1
           fi
 
+      # A reused build passed this check in the run that built it.
       - name: Check glslang and SPIRV-Cross for symbol clashes
+        if: ${{ !steps.reuse.outputs.run-id }}
         run: Scripts/check-toolchain-symbols.sh build/DerivedData
 
       - name: Pack the test build
+        if: ${{ !steps.reuse.outputs.run-id }}
         run: tar -C build/DerivedData -czf products.tgz Build/Products
 
+      # Kept a week, so a pull request that merges days after its run still hands its build over.
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !steps.reuse.outputs.run-id }}
         with:
-          name: products
+          name: ${{ steps.name.outputs.artifact }}
           path: products.tgz
-          retention-days: 1
+          retention-days: 7
           compression-level: 0
+
+      - name: Save the build
+        if: steps.dd.outputs.cache-hit != 'true' && !steps.reuse.outputs.run-id
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: build/DerivedData
+          key: ${{ steps.name.outputs.key }}
 
       - name: Upload log
         if: failure()
@@ -182,6 +240,9 @@ jobs:
     if: needs.plan.outputs.selection != 'none'
     runs-on: macos-26
     timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: read # to download the products of the run the build reused
     strategy:
       fail-fast: false
       matrix:
@@ -201,9 +262,12 @@ jobs:
           python3 Scripts/test_steam_totp.py
           for f in Scripts/release/*.sh Scripts/*.sh; do bash -n "$f"; done
 
+      # This run's build, or the earlier run's that it reused.
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: products
+          name: ${{ needs.build.outputs.artifact }}
+          run-id: ${{ needs.build.outputs.run-id }}
+          github-token: ${{ needs.build.outputs.run-id && github.token || '' }}
 
       - name: Unpack the test build
         run: |
@@ -354,6 +418,9 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 60
     environment: steam-ci
+    permissions:
+      contents: read
+      actions: read # to download the products of the run the build reused
     strategy:
       fail-fast: false
       matrix:
@@ -374,9 +441,12 @@ jobs:
           build-id: ${{ needs.asset-cache.outputs.build-id }}
           download: 'false'
 
+      # This run's build, or the earlier run's that it reused.
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: products
+          name: ${{ needs.build.outputs.artifact }}
+          run-id: ${{ needs.build.outputs.run-id }}
+          github-token: ${{ needs.build.outputs.run-id && github.token || '' }}
 
       - name: Unpack the test build
         run: |
