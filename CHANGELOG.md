@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta.14] - 2026-11-01
+
 ### Fixed
 
 - **A Workshop preset and its base wallpaper show their own looks.** Choosing a preset item and its base (Pixels and Pixels - Green Forest), on one display or two, no longer shows whichever of them loaded first on both.
