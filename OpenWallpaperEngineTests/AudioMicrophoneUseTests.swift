@@ -170,25 +170,18 @@ final class AudioMicrophoneUseTests: XCTestCase {
     }
 
     /// A test engine: two sines (left, right), failing on the `failing` calls (1-based).
-    ///
-    /// The sines are computed up front and each render only copies them with `memcpy`: the test
-    /// target builds unoptimised, where typed pointer calls here (a per-sample store, then
-    /// `update(from:count:)`) each allocated, and the render runs inside the zero-allocation check.
     private static func tone(failing: Set<Int>) -> AVAudioEngineManualRenderingBlock {
-        let table = ToneTable()
         var phase = 0
         var call = 0
         return { frames, list, _ in
             call += 1
             guard !failing.contains(call) else { return .insufficientDataFromInputNode }
-            let count = Int(frames)
-            guard phase + count <= ToneTable.length else { return .error }
-            let buffers = UnsafeMutableAudioBufferListPointer(list)
-            let bytes = count * MemoryLayout<Float>.size
-            for channel in 0..<buffers.count {
-                memcpy(buffers[channel].mData!, table.bytes(channel: channel, from: phase), bytes)
+            for (channel, buffer) in UnsafeMutableAudioBufferListPointer(list).enumerated() {
+                let samples = buffer.mData!.assumingMemoryBound(to: Float.self)
+                let step: Float = channel == 0 ? 0.031 : 0.017
+                for frame in 0..<Int(frames) { samples[frame] = sinf(Float(phase + frame) * step) / 2 }
             }
-            phase += count
+            phase += Int(frames)
             return .success
         }
     }
@@ -206,27 +199,6 @@ final class AudioMicrophoneUseTests: XCTestCase {
     private static func release(_ list: UnsafeMutableAudioBufferListPointer) {
         for buffer in list { Darwin.free(buffer.mData) }
         Darwin.free(list.unsafeMutablePointer)
-    }
-}
-
-/// The test engine's two sines, precomputed: left steps 0.031 radians a frame, right 0.017.
-private final class ToneTable {
-    /// Frames per channel, more than the resampling test pulls at either device rate.
-    static let length = 1 << 16
-    private let storage = UnsafeMutablePointer<Float>.allocate(capacity: 2 * ToneTable.length)
-
-    init() {
-        for frame in 0..<Self.length {
-            storage[frame] = sinf(Float(frame) * 0.031) / 2
-            storage[Self.length + frame] = sinf(Float(frame) * 0.017) / 2
-        }
-    }
-
-    deinit { storage.deallocate() }
-
-    /// Channel `channel`'s samples from frame `frame` on, as raw bytes for `memcpy`.
-    func bytes(channel: Int, from frame: Int) -> UnsafeRawPointer {
-        UnsafeRawPointer(storage).advanced(by: (channel * Self.length + frame) * MemoryLayout<Float>.size)
     }
 }
 
