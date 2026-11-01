@@ -170,22 +170,25 @@ final class AudioMicrophoneUseTests: XCTestCase {
     }
 
     /// A test engine: two sines (left, right), failing on the `failing` calls (1-based).
+    ///
+    /// The sines are computed up front and each render only copies them: the test target builds
+    /// unoptimised, where a per-sample loop here allocated once a sample, and the render runs
+    /// inside the zero-allocation check.
     private static func tone(failing: Set<Int>) -> AVAudioEngineManualRenderingBlock {
+        let table = ToneTable()
         var phase = 0
         var call = 0
         return { frames, list, _ in
             call += 1
             guard !failing.contains(call) else { return .insufficientDataFromInputNode }
-            // The captured `phase` is read once: the test target builds unoptimised, where each
-            // read of a captured variable is a dynamic exclusivity check, and the callback is
-            // measured for allocations.
-            let start = phase
-            for (channel, buffer) in UnsafeMutableAudioBufferListPointer(list).enumerated() {
-                let samples = buffer.mData!.assumingMemoryBound(to: Float.self)
-                let step: Float = channel == 0 ? 0.031 : 0.017
-                for frame in 0..<Int(frames) { samples[frame] = sinf(Float(start + frame) * step) / 2 }
+            let count = Int(frames)
+            guard phase + count <= ToneTable.length else { return .error }
+            let buffers = UnsafeMutableAudioBufferListPointer(list)
+            for channel in 0..<buffers.count {
+                buffers[channel].mData!.assumingMemoryBound(to: Float.self)
+                    .update(from: table.samples(channel: channel) + phase, count: count)
             }
-            phase += Int(frames)
+            phase += count
             return .success
         }
     }
@@ -204,6 +207,24 @@ final class AudioMicrophoneUseTests: XCTestCase {
         for buffer in list { Darwin.free(buffer.mData) }
         Darwin.free(list.unsafeMutablePointer)
     }
+}
+
+/// The test engine's two sines, precomputed: left steps 0.031 radians a frame, right 0.017.
+private final class ToneTable {
+    /// Frames per channel, more than the resampling test pulls at either device rate.
+    static let length = 1 << 16
+    private let storage = UnsafeMutablePointer<Float>.allocate(capacity: 2 * ToneTable.length)
+
+    init() {
+        for frame in 0..<Self.length {
+            storage[frame] = sinf(Float(frame) * 0.031) / 2
+            storage[Self.length + frame] = sinf(Float(frame) * 0.017) / 2
+        }
+    }
+
+    deinit { storage.deallocate() }
+
+    func samples(channel: Int) -> UnsafePointer<Float> { UnsafePointer(storage + channel * Self.length) }
 }
 
 /// The output's resampling as `AVAudioConverter` does it, chunked like the IO callback: what the
