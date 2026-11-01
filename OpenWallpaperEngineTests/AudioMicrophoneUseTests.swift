@@ -171,9 +171,9 @@ final class AudioMicrophoneUseTests: XCTestCase {
 
     /// A test engine: two sines (left, right), failing on the `failing` calls (1-based).
     ///
-    /// The sines are computed up front and each render only copies them: the test target builds
-    /// unoptimised, where a per-sample loop here allocated once a sample, and the render runs
-    /// inside the zero-allocation check.
+    /// The sines are computed up front and each render only copies them with `memcpy`: the test
+    /// target builds unoptimised, where typed pointer calls here (a per-sample store, then
+    /// `update(from:count:)`) each allocated, and the render runs inside the zero-allocation check.
     private static func tone(failing: Set<Int>) -> AVAudioEngineManualRenderingBlock {
         let table = ToneTable()
         var phase = 0
@@ -184,9 +184,9 @@ final class AudioMicrophoneUseTests: XCTestCase {
             let count = Int(frames)
             guard phase + count <= ToneTable.length else { return .error }
             let buffers = UnsafeMutableAudioBufferListPointer(list)
+            let bytes = count * MemoryLayout<Float>.size
             for channel in 0..<buffers.count {
-                buffers[channel].mData!.assumingMemoryBound(to: Float.self)
-                    .update(from: table.samples(channel: channel) + phase, count: count)
+                memcpy(buffers[channel].mData!, table.bytes(channel: channel, from: phase), bytes)
             }
             phase += count
             return .success
@@ -224,7 +224,10 @@ private final class ToneTable {
 
     deinit { storage.deallocate() }
 
-    func samples(channel: Int) -> UnsafePointer<Float> { UnsafePointer(storage + channel * Self.length) }
+    /// Channel `channel`'s samples from frame `frame` on, as raw bytes for `memcpy`.
+    func bytes(channel: Int, from frame: Int) -> UnsafeRawPointer {
+        UnsafeRawPointer(storage).advanced(by: (channel * Self.length + frame) * MemoryLayout<Float>.size)
+    }
 }
 
 /// The output's resampling as `AVAudioConverter` does it, chunked like the IO callback: what the
