@@ -22,8 +22,16 @@ final class UserPropertyBindingTable {
     private var assetOwners: [String: Set<UserPropertyBindingOwner>] = [:]
     /// The object being built, which owns the asset documents read meanwhile (guarded by `lock`).
     private var building: UserPropertyBindingOwner?
+    /// The wallpaper's `text` properties (guarded by `lock`), `setHeadings`.
+    private var headings: Set<String> = []
 
     init() {}
+
+    /// A `text` property is a heading in WE's sidebar, with no control and so no value (project.json
+    /// still writes one, usually `false`): a site bound to it keeps its authored value.
+    func setHeadings(_ names: Set<String>) {
+        lock.withLock { headings = names }
+    }
 
     // MARK: - Recording
 
@@ -122,7 +130,9 @@ final class UserPropertyBindingTable {
     /// The value the bound site at `site` takes with `properties`; nil when nothing is bound there.
     func resolve(_ site: UserPropertyBindingSite, properties: (String) -> String?) -> SceneJSON? {
         let binding = lock.withLock { bindingsByDocument[site.document]?.first { $0.site == site } }
-        return binding.map { Self.value(of: $0, properties: properties) }
+        let headings = lock.withLock { self.headings }
+        guard let binding else { return nil }
+        return Self.value(of: binding) { headings.contains($0) ? nil : properties($0) }
     }
 
     /// `binding`'s value: the property converted to the site's type, else the authored value.
@@ -142,10 +152,12 @@ final class UserPropertyBindingTable {
     func resolvedDocument(_ json: SceneJSON, document: UserPropertyBindingDocument,
                           properties: (String) -> String?) -> SceneJSON {
         let bindings = lock.withLock { bindingsByDocument[document] ?? [] }
+        let headings = lock.withLock { self.headings }
         var resolved = json
         for binding in bindings {
             if case .userShaderValue = binding.target { continue }
-            resolved.setBoundValue(Self.value(of: binding, properties: properties), at: binding.site.path.components[...],
+            let value = Self.value(of: binding) { headings.contains($0) ? nil : properties($0) }
+            resolved.setBoundValue(value, at: binding.site.path.components[...],
                                    replacing: binding.collapses)
         }
         return resolved

@@ -26,6 +26,20 @@ final class WallpaperPropertyScopeTests: XCTestCase {
         return WallpaperInstanceKey(WEWallpaper(using: project, where: URL(filePath: "/tmp/owe/\(folder)")))
     }
 
+    // MARK: - Instances
+
+    /// A preset item plays from its base's folder but runs with its own properties, so it never
+    /// shares its base's instance (Workshop 3332091404 of 3122339805).
+    func testAPresetItemAndItsBaseAreDifferentInstances() {
+        let project = WEProject(file: "scene.json", preview: "preview.jpg", title: "base", type: "scene")
+        let base = WEWallpaper(using: project, where: URL(filePath: "/tmp/owe/base"))
+        var preset = base
+        preset.presetDirectory = URL(filePath: "/tmp/owe/preset")
+        XCTAssertNotEqual(WallpaperInstanceKey(preset), WallpaperInstanceKey(base))
+        XCTAssertEqual(WallpaperInstanceKey(preset).directory, "/tmp/owe/preset")
+        XCTAssertEqual(WallpaperInstanceKey(preset), WallpaperInstanceKey(preset))
+    }
+
     // MARK: - Stores
 
     func testEachDisplayHasItsOwnStoreStartedFromTheShared() throws {

@@ -35,6 +35,28 @@ final class SceneBindingResolutionTests: XCTestCase {
         XCTAssertEqual(hidden.color, "1 0.5 0.25", "missing properties keep the literal")
     }
 
+    /// A heading (Workshop 3122339805's `newproperty`, value false) gives a bound text nothing.
+    func testASiteBoundToAHeadingKeepsItsAuthoredValue() throws {
+        let document = try decodeTolerant(SceneJSON.self, from: Data("""
+        {"objects":[{"id":1,"text":{"user":"section","value":""},"visible":{"user":"section","value":true}},
+                    {"id":2,"text":{"user":"caption","value":""}}]}
+        """.utf8))
+        let project = try decodeTolerant(SceneJSON.self, from: Data("""
+        {"general":{"properties":{"section":{"type":"text","value":false},"caption":{"type":"textinput","value":"x"}}}}
+        """.utf8))
+        let table = UserPropertyBindingTable()
+        table.record(.scene, json: document)
+        table.setHeadings(SceneScriptUserProperties(project: project).headings)
+        let values = ["section": "false", "caption": "false"]
+        guard case .object(let root) = table.resolvedDocument(document, document: .scene, properties: { values[$0] }),
+              case .array(let objects)? = root["objects"],
+              case .object(let heading) = objects[0], case .object(let input) = objects[1],
+              case .object(let visible)? = heading["visible"] else { return XCTFail("not the scene's shape") }
+        XCTAssertEqual(heading["text"], .string(""))
+        XCTAssertEqual(visible["value"], .bool(true))
+        XCTAssertEqual(input["text"], .string("false"), "a text input shows what it holds")
+    }
+
     /// User-bound `scriptproperties` are the SceneScript runtime's (`SceneScriptSiteBuilder`).
     func testTextAndPointSize() throws {
         let resolved = try resolvedScene(["caption": "Hello there", "fontsize": "64", "ylensy": "0.7"]).objects[1]

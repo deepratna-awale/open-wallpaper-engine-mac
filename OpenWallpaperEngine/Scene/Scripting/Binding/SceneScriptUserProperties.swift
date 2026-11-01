@@ -49,6 +49,11 @@ struct SceneScriptUserProperties {
         self.init(definitions: general["properties"])
     }
 
+    /// The properties WE's sidebar shows as headings (`UserPropertyBindingTable.setHeadings`).
+    var headings: Set<String> {
+        Set(properties.filter { $0.value.type.lowercased() == "text" }.keys)
+    }
+
     /// The property's current value, or nil when the wallpaper has no such property.
     func value(of name: String) -> SceneJSON? {
         properties[name]?.value
