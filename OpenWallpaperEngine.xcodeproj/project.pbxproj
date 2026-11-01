@@ -1245,6 +1245,7 @@
 				INFOPLIST_KEY_NSPrincipalClass = OWETestPhaseTimer;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
+				OTHER_SWIFT_FLAGS = "$(inherited) -Onone";
 				PRODUCT_BUNDLE_IDENTIFIER = "app.openwallpaperengine.tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
