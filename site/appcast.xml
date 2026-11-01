@@ -6,6 +6,29 @@
         <description>Open Wallpaper Engine updates. Items are added by .github/workflows/appcast.yml when a release is published.</description>
         <language>en</language>
         <item>
+            <title>1.0.0-beta.14</title>
+            <pubDate>Sun, 01 Nov 2026 03:28:32 +0000</pubDate>
+            <sparkle:version>19</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.14</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.14/OpenWallpaperEngine-1.0.0-beta.14.zip" length="160342191" type="application/octet-stream" sparkle:edSignature="3Eqsv8Pc1F8GM7nveEPRmPXvxMh7SCy8fcHuZTvAqeGtPIy2CYhXB+GzZ3oN0zWPt2572l68djVY+aufdj1xDA==" />
+            <sparkle:deltas>
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.14/OpenWallpaperEngine-1.0.0-beta.14-from-18.delta" sparkle:deltaFrom="18" length="3514234" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="hLL+p/SyUKpqGf3mFTzeMkWky4tSJJ7tS4rrwYSfHjZjWH1xDBNHYfCuQGNYQQYX69ofyGKVUXBbKnfhC1i2Dg==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.14/OpenWallpaperEngine-1.0.0-beta.14-from-16.delta" sparkle:deltaFrom="16" length="68846146" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="H3gMxQifIQElJXzl82DK0Tcjhw46LUG2HqoQScnuhC4Ef7pL0ppNxlWXBxDdo1FY+odRa/iAQRmo4x7JfMBaAA==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.14/OpenWallpaperEngine-1.0.0-beta.14-from-15.delta" sparkle:deltaFrom="15" length="68945262" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="iCmeMvsjE2HrnsXuzuF8itWcL/qhDbZLrXqUFUOexpvnTaaaCJDMOZqv8WpOAB1FY0u4Z3N+7YgqG/I2mgUcAg==" />
+            </sparkle:deltas>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:fullReleaseNotesLink>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.14</sparkle:fullReleaseNotesLink>
+            <link>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.14</link>
+            <description>&lt;p dir="auto"&gt;Beta 14 fixes Workshop presets that looked like their base wallpaper, and stray text on wallpapers that bind a text layer to a section heading.&lt;/p&gt;
+&lt;h2 dir="auto"&gt;Fixes&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;A Workshop preset and its base wallpaper show their own looks.&lt;/strong&gt; Choosing a preset item and its base (Pixels and Pixels - Green Forest), on one display or two, no longer shows whichever of them loaded first on both.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Section headings in a wallpaper's properties no longer change what it shows.&lt;/strong&gt; A text layer bound to a heading showed the word "false"; it now keeps the text its author gave it.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p dir="auto"&gt;The full list is in &lt;a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/blob/main/CHANGELOG.md#100-beta14---2026-11-01"&gt;CHANGELOG.md&lt;/a&gt;.&lt;/p&gt;</description>
+        </item>
+        <item>
             <title>1.0.0-beta.13</title>
             <pubDate>Sat, 31 Oct 2026 05:09:05 +0000</pubDate>
             <sparkle:version>18</sparkle:version>
