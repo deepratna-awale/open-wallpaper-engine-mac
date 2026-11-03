@@ -13,11 +13,11 @@ private struct NoProperties: SceneValueContext {
 /// Roots: the Workshop folder, OpenWallpaperStorage and WE's default projects, or `OWE_LIBRARY`
 /// (paths separated by ':'); skipped when none is present (CI).
 final class SceneTransform3DLibraryTests: XCTestCase {
-    private static let weRoot = "/Volumes/980Pro/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps"
+    private static let weRoot = "\(OwnerMachine.volume)/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps"
 
     static var roots: [URL] {
         let paths = ProcessInfo.processInfo.environment["OWE_LIBRARY"].map { $0.split(separator: ":").map(String.init) }
-            ?? ["\(weRoot)/workshop/content/431960", "/Volumes/980Pro/OpenWallpaperStorage",
+            ?? ["\(weRoot)/workshop/content/431960", "\(OwnerMachine.volume)/OpenWallpaperStorage",
                 "\(weRoot)/common/wallpaper_engine/projects/defaultprojects"]
         return paths.map { URL(fileURLWithPath: $0, isDirectory: true) }
             .filter { FileManager.default.fileExists(atPath: $0.path) }

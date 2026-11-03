@@ -18,8 +18,8 @@ import XCTest
 final class TimelineLibrarySweepTests: XCTestCase {
     static var roots: [URL] {
         let paths = ProcessInfo.processInfo.environment["OWE_LIBRARY"].map { $0.split(separator: ":").map(String.init) }
-            ?? ["/Volumes/980Pro/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps/workshop/content/431960",
-                "/Volumes/980Pro/OpenWallpaperStorage"]
+            ?? ["\(OwnerMachine.volume)/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps/workshop/content/431960",
+                "\(OwnerMachine.volume)/OpenWallpaperStorage"]
         return paths.map { URL(fileURLWithPath: $0, isDirectory: true) }
     }
 

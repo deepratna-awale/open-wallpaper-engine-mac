@@ -34,6 +34,9 @@ env:
     -clonedSourcePackagesDirPath build/SourcePackages
     CODE_SIGNING_ALLOWED=NO
     COMPILER_INDEX_STORE_ENABLE=NO
+  # Tests that read the maintainer's drive (OwnerMachine.swift) skip in CI, on the self-hosted Mac
+  # as on GitHub's runners; Scripts/ci-local.sh still runs them.
+  TEST_RUNNER_OWE_HERMETIC: '1'
   # The slow tier (tests over about a minute, SlowTests.swift) skips unless OWE_SLOW_TESTS=1;
   # nightly.yml and Scripts/ci-local.sh run it. The test build is optimised
   # (Scripts/test-build-settings.txt) but stays a Debug build: DEBUG code, signing and @testable
@@ -42,6 +45,11 @@ env:
   # holds the serial classes and what a pull request's changed files select.
   # Scripts/ci-run-tests.sh runs a shard (parallel classes, then serial ones, failures retried
   # once); Scripts/ci-local.sh runs the whole suite the same way locally.
+
+# The macOS jobs run on the maintainer's Mac (a self-hosted runner labelled owe-mac) while the
+# repository variable OWE_SELF_HOSTED_MAC is 'true', for pushes, schedules, manual runs and pull
+# requests from this repository's own branches; pull requests from forks always run on GitHub's
+# macos-26 runners, so no outside code runs on that Mac (docs/self-hosted-runner.md).
 
 jobs:
   # Lets a pull request through only out of draft or with the "ready to merge" label, and only
@@ -116,7 +124,7 @@ jobs:
   # artifact can.
   build:
     needs: gate
-    runs-on: macos-26
+    runs-on: ${{ vars.OWE_SELF_HOSTED_MAC == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted", "macOS", "ARM64", "owe-mac"]') || 'macos-26' }}
     timeout-minutes: 45
     permissions:
       contents: read
@@ -129,6 +137,13 @@ jobs:
 
       - id: xcode
         uses: ./.github/actions/select-xcode
+
+      # On the Mac, DerivedData and the packages stay between runs and the build is incremental:
+      # the Actions cache and the products artifact are skipped there.
+      - id: mac
+        uses: ./.github/actions/mac-cache
+        with:
+          build: 'true'
 
       # The build's inputs: Xcode, the test build settings, the packages and every source. Two
       # builds with the same key are the same build.
@@ -145,6 +160,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Restore the Swift packages
+        if: steps.mac.outputs.local != 'true'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: build/SourcePackages
@@ -154,6 +170,7 @@ jobs:
         # An exact hit is a build of these very sources: it is used as is. A partial hit still
         # saves rebuilding the packages.
         id: dd
+        if: steps.mac.outputs.local != 'true'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: build/DerivedData
@@ -167,7 +184,7 @@ jobs:
         # anything under that name, and main's asset shards run the products with the steam-ci
         # secrets.
         id: reuse
-        if: steps.dd.outputs.cache-hit != 'true'
+        if: steps.dd.outputs.cache-hit != 'true' && steps.mac.outputs.local != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
@@ -205,13 +222,26 @@ jobs:
         if: ${{ !steps.reuse.outputs.run-id }}
         run: Scripts/check-toolchain-symbols.sh build/DerivedData
 
+      # On the Mac the shards read a clone of the products (APFS, so no copy) that the next run's
+      # incremental build can't change under them. Clones over two days old are removed.
+      - name: Keep the products for this run's tests
+        if: steps.mac.outputs.local == 'true'
+        env:
+          ROOT: ${{ steps.mac.outputs.root }}
+          PRODUCTS: ${{ steps.mac.outputs.products }}
+        run: |
+          set -euo pipefail
+          find "$ROOT/products" -mindepth 1 -maxdepth 1 -mtime +2 -exec rm -rf {} +
+          rm -rf "$PRODUCTS" && mkdir -p "$PRODUCTS"
+          cp -cR build/DerivedData/Build/Products "$PRODUCTS/"
+
       - name: Pack the test build
-        if: ${{ !steps.reuse.outputs.run-id }}
+        if: ${{ !steps.reuse.outputs.run-id && steps.mac.outputs.local != 'true' }}
         run: tar -C build/DerivedData -czf products.tgz Build/Products
 
       # Kept a week, so a pull request that merges days after its run still hands its build over.
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: ${{ !steps.reuse.outputs.run-id }}
+        if: ${{ !steps.reuse.outputs.run-id && steps.mac.outputs.local != 'true' }}
         with:
           name: ${{ steps.name.outputs.artifact }}
           path: products.tgz
@@ -219,7 +249,7 @@ jobs:
           compression-level: 0
 
       - name: Save the build
-        if: steps.dd.outputs.cache-hit != 'true' && !steps.reuse.outputs.run-id
+        if: steps.dd.outputs.cache-hit != 'true' && !steps.reuse.outputs.run-id && steps.mac.outputs.local != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: build/DerivedData
@@ -233,12 +263,12 @@ jobs:
           path: xcodebuild.log
 
   # The suite in three shards, split by test class. Each shard runs its parallel classes, then its
-  # serial ones.
+  # serial ones. On the Mac it's one shard: its one runner would only run three one after another.
   test:
-    name: build-and-test (${{ matrix.shard }}/3)
+    name: build-and-test (${{ matrix.shard }}/${{ strategy.job-total }})
     needs: [plan, build]
     if: needs.plan.outputs.selection != 'none'
-    runs-on: macos-26
+    runs-on: ${{ vars.OWE_SELF_HOSTED_MAC == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted", "macOS", "ARM64", "owe-mac"]') || 'macos-26' }}
     timeout-minutes: 45
     permissions:
       contents: read
@@ -246,12 +276,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: ${{ fromJSON(vars.OWE_SELF_HOSTED_MAC == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && '[1]' || '[1, 2, 3]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - id: xcode
         uses: ./.github/actions/select-xcode
+
+      - id: mac
+        uses: ./.github/actions/mac-cache
 
       - name: Test the release scripts
         if: matrix.shard == 1
@@ -262,17 +295,25 @@ jobs:
           python3 Scripts/test_steam_totp.py
           for f in Scripts/release/*.sh Scripts/*.sh; do bash -n "$f"; done
 
-      # This run's build, or the earlier run's that it reused.
+      # This run's build, or the earlier run's that it reused. On the Mac, the build job's clone.
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: steps.mac.outputs.local != 'true'
         with:
           name: ${{ needs.build.outputs.artifact }}
           run-id: ${{ needs.build.outputs.run-id }}
           github-token: ${{ needs.build.outputs.run-id && github.token || '' }}
 
       - name: Unpack the test build
+        env:
+          PRODUCTS: ${{ steps.mac.outputs.products }}
         run: |
-          mkdir -p build/DerivedData && tar -C build/DerivedData -xzf products.tgz
-          runs=("$PWD"/build/DerivedData/Build/Products/*.xctestrun)
+          if [[ -n "$PRODUCTS" ]]; then
+            [[ -d "$PRODUCTS/Products" ]] || { echo "::error::The build job's products are gone from $PRODUCTS; re-run the build."; exit 1; }
+            runs=("$PRODUCTS"/Products/*.xctestrun)
+          else
+            mkdir -p build/DerivedData && tar -C build/DerivedData -xzf products.tgz
+            runs=("$PWD"/build/DerivedData/Build/Products/*.xctestrun)
+          fi
           echo "XCTESTRUN=${runs[0]}" >> "$GITHUB_ENV"
           python3 Scripts/ci-test-summary.py --env >> "$GITHUB_STEP_SUMMARY"
 
@@ -280,6 +321,7 @@ jobs:
         # -only-testing runs only the classes ci-test-plan.py finds; compare with the test bundle.
         if: matrix.shard == 1
         run: |
+          mkdir -p build
           xcodebuild test-without-building -xctestrun "$XCTESTRUN" -destination platform=macOS \
             -enumerate-tests -test-enumeration-style flat -test-enumeration-format json \
             -test-enumeration-output-path build/enumeration.json > build/enumeration.log 2>&1 \
@@ -287,7 +329,9 @@ jobs:
           python3 Scripts/ci-test-plan.py check --enumeration build/enumeration.json
 
       # Only the fixtures' shaders (the project's own) are translated here, so the cache is plain.
+      # The Mac keeps its own between runs.
       - id: shadercache
+        if: steps.mac.outputs.local != 'true'
         uses: ./.github/actions/shader-cache
         with:
           mode: restore
@@ -297,8 +341,10 @@ jobs:
         env:
           SELECTION: ${{ needs.plan.outputs.selection }}
           SHARD: ${{ matrix.shard }}
+          SHARDS: ${{ strategy.job-total }}
         run: |
-          python3 Scripts/ci-test-plan.py shard --index "$SHARD" --count 3 --select "$SELECTION" > build/classes.txt
+          mkdir -p build
+          python3 Scripts/ci-test-plan.py shard --index "$SHARD" --count "$SHARDS" --select "$SELECTION" > build/classes.txt
           echo "Shard $SHARD: $(wc -l < build/classes.txt | tr -d ' ') test classes" >> "$GITHUB_STEP_SUMMARY"
           Scripts/ci-run-tests.sh "$XCTESTRUN" build/classes.txt build/results
 
@@ -318,7 +364,7 @@ jobs:
 
       # One shard saves, on main, what the run translated and compiled.
       - uses: ./.github/actions/shader-cache
-        if: success() && matrix.shard == 1 && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: success() && matrix.shard == 1 && github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.mac.outputs.local != 'true'
         with:
           mode: save
           xcode-version: ${{ steps.xcode.outputs.version }}
@@ -341,7 +387,7 @@ jobs:
   # The local packages' own tests (Packages/*), which the app's test bundle doesn't hold.
   packages:
     needs: gate
-    runs-on: macos-26
+    runs-on: ${{ vars.OWE_SELF_HOSTED_MAC == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted", "macOS", "ARM64", "owe-mac"]') || 'macos-26' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -349,11 +395,17 @@ jobs:
       - id: xcode
         uses: ./.github/actions/select-xcode
 
+      - id: mac
+        uses: ./.github/actions/mac-cache
+
       - name: Test the packages
+        env:
+          # On the Mac the packages' builds stay between runs.
+          SCRATCH: ${{ steps.mac.outputs.root && format('{0}/packages', steps.mac.outputs.root) || 'build/packages' }}
         run: |
           set -o pipefail
           for package in Packages/*/; do
-            swift test --package-path "$package" --scratch-path "build/packages/$(basename "$package")"
+            swift test --package-path "$package" --scratch-path "$SCRATCH/$(basename "$package")"
           done
 
   # The required status check: passes only when the build, every shard and the packages passed (or
@@ -390,7 +442,7 @@ jobs:
   # if they can't.
   asset-cache:
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
-    runs-on: macos-26
+    runs-on: ${{ vars.OWE_SELF_HOSTED_MAC == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted", "macOS", "ARM64", "owe-mac"]') || 'macos-26' }}
     timeout-minutes: 40
     environment: steam-ci
     outputs:
@@ -401,7 +453,12 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # On the Mac with OWE_CI_ASSETS set, the shards use the Mac's assets: nothing to cache.
+      - id: mac
+        uses: ./.github/actions/mac-cache
+
       - id: assets
+        if: ${{ !steps.mac.outputs.assets }}
         uses: ./.github/actions/we-assets
         with:
           cache-key: ${{ secrets.OWE_ASSET_CACHE_KEY }}
@@ -415,7 +472,7 @@ jobs:
     name: asset-tests (${{ matrix.shard }}/4)
     needs: [build, asset-cache]
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
-    runs-on: macos-26
+    runs-on: ${{ vars.OWE_SELF_HOSTED_MAC == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted", "macOS", "ARM64", "owe-mac"]') || 'macos-26' }}
     timeout-minutes: 60
     environment: steam-ci
     permissions:
@@ -424,7 +481,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        # One shard on the Mac, as for the test job.
+        shard: ${{ fromJSON(vars.OWE_SELF_HOSTED_MAC == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && '[1]' || '[1, 2, 3, 4]') }}
     env:
       WE_ASSETS: ${{ github.workspace }}/../we-assets
       WE_ASSETS_ENC: ${{ github.workspace }}/../we-assets.tar.enc
@@ -434,29 +492,44 @@ jobs:
       - id: xcode
         uses: ./.github/actions/select-xcode
 
-      # Restore only, the build asset-cache saved: the shards never log in to Steam.
-      - uses: ./.github/actions/we-assets
+      - id: mac
+        uses: ./.github/actions/mac-cache
+
+      # Restore only, the build asset-cache saved: the shards never log in to Steam. The Mac's own
+      # assets need no restore.
+      - if: ${{ !steps.mac.outputs.assets }}
+        uses: ./.github/actions/we-assets
         with:
           cache-key: ${{ secrets.OWE_ASSET_CACHE_KEY }}
           build-id: ${{ needs.asset-cache.outputs.build-id }}
           download: 'false'
 
-      # This run's build, or the earlier run's that it reused.
+      # This run's build, or the earlier run's that it reused. On the Mac, the build job's clone.
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: steps.mac.outputs.local != 'true'
         with:
           name: ${{ needs.build.outputs.artifact }}
           run-id: ${{ needs.build.outputs.run-id }}
           github-token: ${{ needs.build.outputs.run-id && github.token || '' }}
 
       - name: Unpack the test build
+        env:
+          PRODUCTS: ${{ steps.mac.outputs.products }}
         run: |
-          mkdir -p build/DerivedData && tar -C build/DerivedData -xzf products.tgz
-          runs=("$PWD"/build/DerivedData/Build/Products/*.xctestrun)
+          if [[ -n "$PRODUCTS" ]]; then
+            [[ -d "$PRODUCTS/Products" ]] || { echo "::error::The build job's products are gone from $PRODUCTS; re-run the build."; exit 1; }
+            runs=("$PRODUCTS"/Products/*.xctestrun)
+          else
+            mkdir -p build/DerivedData && tar -C build/DerivedData -xzf products.tgz
+            runs=("$PWD"/build/DerivedData/Build/Products/*.xctestrun)
+          fi
           echo "XCTESTRUN=${runs[0]}" >> "$GITHUB_ENV"
           python3 Scripts/ci-test-summary.py --env >> "$GITHUB_STEP_SUMMARY"
 
-      # Encrypted: here the cache holds MSL translated from Wallpaper Engine's shaders.
+      # Encrypted: here the cache holds MSL translated from Wallpaper Engine's shaders. The Mac
+      # keeps its own between runs.
       - id: shadercache
+        if: steps.mac.outputs.local != 'true'
         uses: ./.github/actions/shader-cache
         with:
           mode: restore
@@ -466,10 +539,12 @@ jobs:
       - name: Test with the assets
         # OWE_LIBRARY stays unset: the library-gated tests skip.
         env:
-          TEST_RUNNER_OWE_ASSETS: ${{ env.WE_ASSETS }}
+          TEST_RUNNER_OWE_ASSETS: ${{ steps.mac.outputs.assets || env.WE_ASSETS }}
           SHARD: ${{ matrix.shard }}
+          SHARDS: ${{ strategy.job-total }}
         run: |
-          python3 Scripts/ci-test-plan.py shard --index "$SHARD" --count 4 --select all > build/classes.txt
+          mkdir -p build
+          python3 Scripts/ci-test-plan.py shard --index "$SHARD" --count "$SHARDS" --select all > build/classes.txt
           echo "Shard $SHARD: $(wc -l < build/classes.txt | tr -d ' ') test classes" >> "$GITHUB_STEP_SUMMARY"
           Scripts/ci-run-tests.sh "$XCTESTRUN" build/classes.txt build/results
 
@@ -489,7 +564,7 @@ jobs:
           retention-days: 30
 
       - uses: ./.github/actions/shader-cache
-        if: success() && matrix.shard == 1
+        if: success() && matrix.shard == 1 && steps.mac.outputs.local != 'true'
         with:
           mode: save
           xcode-version: ${{ steps.xcode.outputs.version }}

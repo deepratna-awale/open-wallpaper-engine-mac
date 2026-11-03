@@ -12,21 +12,31 @@ permissions:
 
 jobs:
   slow-tests:
-    runs-on: macos-26
+    runs-on: ${{ vars.OWE_SELF_HOSTED_MAC == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted", "macOS", "ARM64", "owe-mac"]') || 'macos-26' }}
     timeout-minutes: 120
     # The Steam secrets live in this environment, which only main can use.
     environment: steam-ci
     env:
       WE_ASSETS: ${{ github.workspace }}/../we-assets
       WE_ASSETS_ENC: ${{ github.workspace }}/../we-assets.tar.enc
+      # Tests that read the maintainer's drive (OwnerMachine.swift) skip, on the Mac too.
+      TEST_RUNNER_OWE_HERMETIC: '1'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - id: xcode
         uses: ./.github/actions/select-xcode
 
+      # On the Mac, DerivedData stays between runs (an incremental build), and the Mac's own
+      # assets and shader cache are used.
+      - id: mac
+        uses: ./.github/actions/mac-cache
+        with:
+          build: 'true'
+
       # Restores the encrypted asset cache, or downloads the assets and (on main) saves them.
-      - uses: ./.github/actions/we-assets
+      - if: ${{ !steps.mac.outputs.assets }}
+        uses: ./.github/actions/we-assets
         with:
           cache-key: ${{ secrets.OWE_ASSET_CACHE_KEY }}
           steam-user: ${{ secrets.OWE_CI_STEAM_USER }}
@@ -39,6 +49,7 @@ jobs:
 
       # Encrypted: the cache holds MSL translated from Wallpaper Engine's shaders.
       - id: shadercache
+        if: steps.mac.outputs.local != 'true'
         uses: ./.github/actions/shader-cache
         with:
           mode: restore
@@ -48,7 +59,7 @@ jobs:
       - name: Build and test, slow tests included
         # A failing test is retried once; a test that fails both times fails the run.
         env:
-          TEST_RUNNER_OWE_ASSETS: ${{ env.WE_ASSETS }}
+          TEST_RUNNER_OWE_ASSETS: ${{ steps.mac.outputs.assets || env.WE_ASSETS }}
           TEST_RUNNER_OWE_SLOW_TESTS: '1'
           TEST_RUNNER_OWE_TEST_PHASES: ${{ github.workspace }}/build/results/phases
         run: |
@@ -83,7 +94,7 @@ jobs:
           retention-days: 30
 
       - uses: ./.github/actions/shader-cache
-        if: success() && github.ref == 'refs/heads/main'
+        if: success() && github.ref == 'refs/heads/main' && steps.mac.outputs.local != 'true'
         with:
           mode: save
           xcode-version: ${{ steps.xcode.outputs.version }}

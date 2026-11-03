@@ -10,9 +10,9 @@ import XCTest
 /// perspective scenes) are checked when every survey scene is present. Skipped when the library
 /// is absent (CI).
 final class SpatialLibraryDecodeTests: XCTestCase {
-    private static let weRoot = "/Volumes/980Pro/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps"
+    private static let weRoot = "\(OwnerMachine.volume)/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps"
     private static let roots = [URL(fileURLWithPath: "\(weRoot)/workshop/content/431960"),
-                                URL(fileURLWithPath: "/Volumes/980Pro/OpenWallpaperStorage"),
+                                URL(fileURLWithPath: "\(OwnerMachine.volume)/OpenWallpaperStorage"),
                                 URL(fileURLWithPath: "\(weRoot)/common/wallpaper_engine/projects/defaultprojects")]
 
     /// The survey's model objects per scene (`dd-models/model_objects.json`).

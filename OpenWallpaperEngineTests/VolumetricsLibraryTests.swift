@@ -16,7 +16,7 @@ import simd
 /// Skipped when the library is absent (CI).
 @MainActor
 final class VolumetricsLibraryTests: XCTestCase {
-    private static let storage = URL(fileURLWithPath: "/Volumes/980Pro/OpenWallpaperStorage")
+    private static let storage = URL(fileURLWithPath: "\(OwnerMachine.volume)/OpenWallpaperStorage")
     private static let drawable = SIMD2(480, 270)
     private var scripts: URL!
 

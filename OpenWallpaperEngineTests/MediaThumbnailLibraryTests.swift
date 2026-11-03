@@ -11,7 +11,7 @@ import simd
 /// `OWE_GROUND_TRUTH_OUT` set, the frames are written there.
 final class MediaThumbnailLibraryTests: XCTestCase {
     private static var library: URL {
-        URL(fileURLWithPath: ProcessInfo.processInfo.environment["OWE_LIBRARY"] ?? "/Volumes/980Pro/OpenWallpaperStorage")
+        URL(fileURLWithPath: ProcessInfo.processInfo.environment["OWE_LIBRARY"] ?? "\(OwnerMachine.volume)/OpenWallpaperStorage")
     }
 
     private static var out: URL? {

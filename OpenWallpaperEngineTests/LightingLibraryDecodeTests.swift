@@ -9,9 +9,9 @@ import XCTest
 /// `bloomhdrstrength`. The survey's lit and HDR scenes (`known`) are checked by name as well; one
 /// the library no longer has is skipped. Skipped when the library is absent (CI).
 final class LightingLibraryDecodeTests: XCTestCase {
-    private static let weRoot = "/Volumes/980Pro/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps"
+    private static let weRoot = "\(OwnerMachine.volume)/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps"
     static let roots = [URL(fileURLWithPath: "\(weRoot)/workshop/content/431960"),
-                        URL(fileURLWithPath: "/Volumes/980Pro/OpenWallpaperStorage"),
+                        URL(fileURLWithPath: "\(OwnerMachine.volume)/OpenWallpaperStorage"),
                         URL(fileURLWithPath: "\(weRoot)/common/wallpaper_engine/projects/defaultprojects")]
 
     private struct Survey: Equatable {

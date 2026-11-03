@@ -95,7 +95,7 @@ final class SceneTextScriptLayoutTests: XCTestCase {
     /// "Song Title" layers (limitwidth on, authored 1200): the decoded layer keeps 1200 and the
     /// scripts' value is what the text wraps at.
     func testKatanaGirlMaxWidthScriptsReachTheLayout() throws {
-        let folder = URL(fileURLWithPath: "/Volumes/980Pro/OpenWallpaperStorage/3238423642")
+        let folder = URL(fileURLWithPath: "\(OwnerMachine.volume)/OpenWallpaperStorage/3238423642")
         let sceneURL = folder.appending(path: "scene.json")
         guard FileManager.default.fileExists(atPath: sceneURL.path) else { throw XCTSkip("no local copy of 3238423642") }
         let data = try Data(contentsOf: sceneURL)

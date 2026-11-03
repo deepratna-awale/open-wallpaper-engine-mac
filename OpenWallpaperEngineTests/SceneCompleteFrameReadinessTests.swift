@@ -28,7 +28,7 @@ final class SceneCompleteFrameReadinessTests: XCTestCase {
     /// shadows high. The first complete frame's atlas holds every caster draw the settled scene's does.
     func testTheFirstCompleteFrameHasEveryShadowCaster() throws {
         _ = try Fixtures.assets()
-        let directory = URL(fileURLWithPath: "/Volumes/980Pro/OpenWallpaperStorage/3734636606", isDirectory: true)
+        let directory = URL(fileURLWithPath: "\(OwnerMachine.volume)/OpenWallpaperStorage/3734636606", isDirectory: true)
         try XCTSkipUnless(FileManager.default.fileExists(atPath: directory.appending(path: "project.json").path),
                           "3734636606 isn't in the library")
         var off = SceneRenderSettings()

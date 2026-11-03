@@ -8,10 +8,10 @@ import XCTest
 /// wallpaper is compared with the index only while it is `current`: its folder still extracts to
 /// the same sites. One that changed or left the library is reported, not failed.
 enum SceneScriptCorpus {
-    static let directory = URL(fileURLWithPath: "/Volumes/980Pro/dd-scenescript/corpus", isDirectory: true)
+    static let directory = URL(fileURLWithPath: "\(OwnerMachine.volume)/dd-scenescript/corpus", isDirectory: true)
     static let roots = [
-        "workshop": URL(fileURLWithPath: "/Volumes/980Pro/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps/workshop/content/431960"),
-        "owe": URL(fileURLWithPath: "/Volumes/980Pro/OpenWallpaperStorage"),
+        "workshop": URL(fileURLWithPath: "\(OwnerMachine.volume)/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps/workshop/content/431960"),
+        "owe": URL(fileURLWithPath: "\(OwnerMachine.volume)/OpenWallpaperStorage"),
     ]
 
     struct Entry {
