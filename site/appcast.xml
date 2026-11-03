@@ -6,6 +6,31 @@
         <description>Open Wallpaper Engine updates. Items are added by .github/workflows/appcast.yml when a release is published.</description>
         <language>en</language>
         <item>
+            <title>1.0.0-beta.15</title>
+            <pubDate>Tue, 03 Nov 2026 01:48:07 +0000</pubDate>
+            <sparkle:version>20</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.15</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.15/OpenWallpaperEngine-1.0.0-beta.15.zip" length="160348786" type="application/octet-stream" sparkle:edSignature="lUqIaketjASjTTapv/DTCONhcVkBU5baVA5l9Gq9vLbUnlusoWOaFPLOLbm4YD9J3QhQAURp2xNAjegrmVC2Bw==" />
+            <sparkle:deltas>
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.15/OpenWallpaperEngine-1.0.0-beta.15-from-19.delta" sparkle:deltaFrom="19" length="3599242" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="LUE6KlpnThC3jnhYvvMwAPXgECLTq3ylONJaLW9YYmjkYPrCMquYMB/ZMeVcbRBTP5wBfkOOSmltBoxlHc4CCQ==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.15/OpenWallpaperEngine-1.0.0-beta.15-from-18.delta" sparkle:deltaFrom="18" length="3917194" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="2xAMn3E8P7YriYba9bMEFKxueJHq6CoEXF6UrM9Nm8UKvn6pL+f8TVBfO5JvWY0a4uAGlx7vhScPB26/CMA1DQ==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.15/OpenWallpaperEngine-1.0.0-beta.15-from-16.delta" sparkle:deltaFrom="16" length="68968850" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="hLHJMpFNW06ahpxuD5T0y1YfWnkinWmJ0yjLojiu6y3b49tjJm57O0DZbBR9SaC9VDHAF5F2CVlVjIOkFKhrDA==" />
+            </sparkle:deltas>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:fullReleaseNotesLink>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.15</sparkle:fullReleaseNotesLink>
+            <link>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.15</link>
+            <description>&lt;h3 dir="auto"&gt;Changed&lt;/h3&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;Sparkle 2.10.1&lt;/strong&gt; for updates. It fixes an update that could install before the app quit when the app's path used composed Unicode characters.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 dir="auto"&gt;Fixed&lt;/h3&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;The live screen saver animates after the app is relaunched.&lt;/strong&gt; After a relaunch the app looked for the screen saver's helper before macOS had started it, never looked again, and "Open Wallpaper Engine Live" only ever showed the still. The app now keeps trying for a while, and again whenever the helper is turned on in Login Items.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;The "Open Wallpaper Engine" screen saver no longer crashes about once a second&lt;/strong&gt; once the app starts drawing for it, which made the screen flicker.&lt;/li&gt;
+&lt;/ul&gt;</description>
+        </item>
+        <item>
             <title>1.0.0-beta.14</title>
             <pubDate>Sun, 01 Nov 2026 03:28:32 +0000</pubDate>
             <sparkle:version>19</sparkle:version>
