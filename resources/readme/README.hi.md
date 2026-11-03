@@ -13,11 +13,11 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
 
 <!-- demo: desktop -->
 
-[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+<a href="../../docs/media/demo/hero.webm"><img src="../../docs/media/demo/hero.webp" alt="Open Wallpaper Engine: set a wallpaper from the library" width="720"></a>
 
-[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+<a href="../../docs/media/demo/wallpapers-in-motion.webm"><img src="../../docs/media/demo/wallpapers-in-motion.webp" alt="Scene wallpapers running live" width="720"></a>
 
-![लाइब्रेरी](../../docs/images/library.jpg)
+<img src="../../docs/images/library.jpg" alt="लाइब्रेरी" width="720">
 
 ## इसे क्या अलग बनाता है
 
@@ -29,14 +29,14 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
 ## ख़ास बातें
 
 - **सीन, वीडियो और वेब वॉलपेपर**: इफ़ेक्ट, पार्टिकल, 3D मॉडल, लाइट, टाइमलाइन, SceneScript और ऑडियो पर प्रतिक्रिया देने वाले विज़ुअल वाले सीन, और जो डिस्प्ले इसे दिखा सकते हैं उन पर सीन और HDR10 या HLG वीडियो के लिए HDR आउटपुट. वेब वॉलपेपर WebKit में या वैकल्पिक Chromium इंजन में चलते हैं, अपनी फ़ोल्डर प्रॉपर्टी, लाइव ऑडियो और Now Playing (अभी चल रहा मीडिया) के साथ.
-- **Steam Workshop**: Wallpaper Engine के सॉर्ट और फ़िल्टर के साथ ब्राउज़ करें, अपने Steam अकाउंट से डाउनलोड करें (Steam मोबाइल ऐप के QR कोड या अपने पासवर्ड से लॉग इन करें), या वॉलपेपर फ़ोल्डर और zip इंपोर्ट करें. इंस्टॉल किए गए टैब में Wallpaper Engine के फ़ोल्डर और सॉर्ट हैं.
+- **Steam Workshop**: Wallpaper Engine के सॉर्ट और फ़िल्टर के साथ ब्राउज़ करें, अपने Steam अकाउंट से डाउनलोड करें (Steam मोबाइल ऐप के QR कोड या अपने पासवर्ड से लॉग इन करें), या वॉलपेपर फ़ोल्डर और zip इंपोर्ट करें. इंस्टॉल किए गए टैब में Wallpaper Engine के फ़ोल्डर और सॉर्ट हैं. SteamCMD और Steam Web API कुंजी अब बंद (deprecated) हैं और इस्तेमाल नहीं होतीं: 1.0.0-beta.13 से Steam मोबाइल ऐप से साइन-इन इन दोनों की जगह लेता है।
 - **वॉलपेपर एडिटर**: Wallpaper Engine के एडिटर की तर्ज़ पर बना एडिटर. गिज़्मो से लेयर जोड़ें और व्यवस्थित करें, प्रीव्यू के साथ इफ़ेक्ट जोड़ें, शेडर एडिटर में अपने इफ़ेक्ट लिखें और एडिट करें, FBX और OBJ मॉडल इंपोर्ट करें, टाइमलाइन पर एनिमेट करें, SceneScript लिखें, यूज़र प्रॉपर्टी बनाएँ, पार्टिकल सिस्टम और Puppet Warp रिग एडिट करें, और Wallpaper Engine के इमेज टूल इस्तेमाल करें (फ़ोरग्राउंड सेपरेशन, कैरेक्टर शीट क्रिएशन, नॉर्मल मैप जनरेशन). **नया वॉलपेपर…** किसी तस्वीर से या Wallpaper Engine के किसी टेम्पलेट से नया वॉलपेपर शुरू करता है. आप एक ड्राफ़्ट एडिट करते हैं: **सहेजें** उसे लागू करता है, **नए वॉलपेपर के रूप में सहेजें** लाइब्रेरी में एक कॉपी जोड़ता है, और वॉलपेपर की अपनी फ़ाइलें कभी नहीं बदलतीं.
 
   <!-- demo: wallpaper-editor -->
 
-  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+  <a href="../../docs/media/demo/wallpaper-editor.webm"><img src="../../docs/media/demo/wallpaper-editor.webp" alt="Wallpaper Editor: layers, gizmo and effects" width="720"></a>
 
-  ![वॉलपेपर एडिटर](../../docs/images/wallpaper-editor.jpg)
+  <img src="../../docs/images/wallpaper-editor.jpg" alt="वॉलपेपर एडिटर" width="720">
 
   <!-- demo: model-import -->
 
@@ -44,9 +44,9 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
 
 - **सीन एडिट/एक्सपोर्ट**: चल रहे वॉलपेपर की लेयर और इफ़ेक्ट सीधे डेस्कटॉप पर लाइव बदलें, चुनें कि स्क्रीन सेवर क्या दिखाए, या वॉलपेपर को Live Photo या Android पैकेज के रूप में एक्सपोर्ट करें.
 
-  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
+  <a href="../../docs/media/demo/scene-edit.webm"><img src="../../docs/media/demo/scene-edit.webp" alt="Scene Edit / Export: versions and layers changed live on the desktop" width="720"></a>
 
-  ![सीन एडिट/एक्सपोर्ट](../../docs/images/scene-editor-live.jpg)
+  <img src="../../docs/images/scene-editor-live.jpg" alt="सीन एडिट/एक्सपोर्ट" width="720">
 
 - **स्क्रीन सेवर और लॉक स्क्रीन**: स्क्रीन सेवर हर डिस्प्ले का वॉलपेपर लाइव दिखाता है (*स्क्रीन सेवर वॉलपेपर जैसा ही*), या आपका चुना हुआ कोई वॉलपेपर, और लॉक स्क्रीन उसकी एक तस्वीर दिखाती है.
 
@@ -56,30 +56,30 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
 
   <!-- demo: live-photo-export -->
 
-  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+  <a href="../../docs/media/demo/live-photo-export.webm"><img src="../../docs/media/demo/live-photo-export.webp" alt="iPhone &amp; iPad Export: Live Photo preview" width="720"></a>
 
   <!-- demo: android-export -->
 
-  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
+  <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  ![Wi-Fi पर भेजें](../../docs/images/send-over-wifi.png)
+  <img src="../../docs/images/send-over-wifi.png" alt="Wi-Fi पर भेजें" width="456">
 
 - **डिस्प्ले**: हर डिस्प्ले पर अलग वॉलपेपर, एक वॉलपेपर सभी डिस्प्ले पर फैला हुआ या हर डिस्प्ले पर क्लोन किया हुआ, साथ ही ग्रुप, स्प्लिट और प्रोफ़ाइल — बिल्कुल Wallpaper Engine की तरह. **विंडो में चलाएँ** किसी वॉलपेपर को उसकी अपनी विंडो में चलाता है.
 
-  ![डिस्प्ले](../../docs/images/displays.png)
+  <img src="../../docs/images/displays.png" alt="डिस्प्ले" width="400">
 
 - **प्लेलिस्ट**: टाइमर पर, लॉगिन पर, दिन के समय या हफ़्ते के दिन के हिसाब से वॉलपेपर बदलें, Wallpaper Engine के ट्रांज़िशन के साथ.
 
-  ![प्लेलिस्ट सेटिंग](../../docs/images/playlists.png)
+  <img src="../../docs/images/playlists.png" alt="प्लेलिस्ट सेटिंग" width="420">
 
 - **कंट्रोल**: ऐक्शन, प्लेलिस्ट, वॉलपेपर और डिस्प्ले प्रोफ़ाइल के लिए हॉटकी; Wallpaper Engine की `-control` [कमांड लाइन](../../docs/command-line.md); और **MCP सर्वर** प्लग-इन, जिसके ज़रिए MCP क्लाइंट वॉलपेपर, प्लेलिस्ट और सेटिंग सेट करते हैं और सीन एडिट करते हैं, एक लोकल कनेक्शन पर जिसे सिर्फ़ आपका अकाउंट खोल सकता है.
 
-  ![MCP सर्वर प्लग-इन](../../docs/images/mcp-plugin.png)
+  <img src="../../docs/images/mcp-plugin.png" alt="MCP सर्वर प्लग-इन" width="456">
 
 - **पावर**: स्क्रीन लॉक रहने पर वॉलपेपर रुक जाते हैं, Wallpaper Engine के *लैपटॉप बैटरी पर हो तब* नियम का पालन करते हैं, और बैटरी पर या लो पावर मोड में कम क्वालिटी प्रीसेट और कम फ़्रेम रेट पर जा सकते हैं.
 - **थीमिंग**: मेन्यू बार, एक्सेंट कलर और टिंट किए गए आइकन और फ़ोल्डर वॉलपेपर के रंग के हिसाब से बदलते हैं; Open Wallpaper Engine की अपनी विंडो ठीक वही रंग इस्तेमाल कर सकती हैं.
 
-  ![थीमिंग](../../docs/images/theming.png)
+  <img src="../../docs/images/theming.png" alt="थीमिंग" width="540">
 
 बाकी सब कुछ, हिस्से के हिसाब से: [docs/features.md](../../docs/features.md).
 
@@ -127,6 +127,8 @@ Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वी
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal सीन रेंडरर और इफ़ेक्ट पाइपलाइन, GLSL→MSL शेडर ट्रांसलेशन और कैशिंग, SceneScript रनटाइम, ऑडियो पर प्रतिक्रिया देने वाली रेंडरिंग, Workshop/डाउनलोड का नया रूप, प्लेसमेंट और परफ़ॉर्मेंस सेटिंग, लोगो रीडिज़ाइन
 
 मूल प्रोजेक्ट की तरह, [GPL-3.0](../../LICENSE) के तहत लाइसेंस प्राप्त.
+
+ऐप जिस Steam हेल्पर को अलग प्रोग्राम के रूप में चलाता है ([`SteamHelper/`](../../SteamHelper/README.md#license)), वह GPL-2.0-or-later के तहत लाइसेंस प्राप्त है, क्योंकि उसमें [DepotDownloader](https://github.com/SteamRE/DepotDownloader) (GPL-2.0) और [SteamKit2](https://github.com/SteamRE/SteamKit) (LGPL-2.1) शामिल हैं।
 
 ## कानूनी जानकारी
 

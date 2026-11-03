@@ -13,11 +13,11 @@ Open Wallpaper Engine — безкоштовна програма з відкр�
 
 <!-- demo: desktop -->
 
-[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+<a href="../../docs/media/demo/hero.webm"><img src="../../docs/media/demo/hero.webp" alt="Open Wallpaper Engine: set a wallpaper from the library" width="720"></a>
 
-[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+<a href="../../docs/media/demo/wallpapers-in-motion.webm"><img src="../../docs/media/demo/wallpapers-in-motion.webp" alt="Scene wallpapers running live" width="720"></a>
 
-![Бібліотека](../../docs/images/library.jpg)
+<img src="../../docs/images/library.jpg" alt="Бібліотека" width="720">
 
 ## Чим вона вирізняється
 
@@ -29,14 +29,14 @@ Open Wallpaper Engine — безкоштовна програма з відкр�
 ## Основні можливості
 
 - **Шпалери-сцени, відео та вебшпалери**: сцени з ефектами, частинками, 3D-моделями, джерелами світла, таймлайнами, SceneScript і візуалізаціями, що реагують на звук, а також виведення HDR для сцен і відео HDR10 чи HLG на дисплеях, які можуть його показати. Вебшпалери працюють у WebKit або в додатковому рушії Chromium, з їхніми властивостями-теками, живим звуком і «Зараз відтворюється».
-- **Майстерня Steam**: переглядайте Майстерню із сортуваннями й фільтрами Wallpaper Engine, викачуйте зі своїм обліковим записом Steam (вхід за QR-кодом у мобільному застосунку Steam або паролем) або імпортуйте теки й zip-архіви зі шпалерами. Вкладка «Встановлені» має теки й сортування Wallpaper Engine.
+- **Майстерня Steam**: переглядайте Майстерню із сортуваннями й фільтрами Wallpaper Engine, викачуйте зі своїм обліковим записом Steam (вхід за QR-кодом у мобільному застосунку Steam або паролем) або імпортуйте теки й zip-архіви зі шпалерами. Вкладка «Встановлені» має теки й сортування Wallpaper Engine. SteamCMD і ключ Steam Web API застаріли й більше не використовуються: починаючи з 1.0.0-beta.13 їх обидва замінює вхід через мобільний застосунок Steam.
 - **Редактор шпалер**: редактор у дусі редактора Wallpaper Engine. Додавайте й розташовуйте шари за допомогою гізмо, додавайте ефекти з попереднім переглядом, пишіть і редагуйте власні ефекти в Редакторі шейдерів, імпортуйте моделі FBX і OBJ, анімуйте на таймлайні, пишіть SceneScript, створюйте властивості користувача, редагуйте системи частинок і риги Puppet Warp та користуйтеся інструментами зображень Wallpaper Engine (Відокремлення переднього плану, Створення аркуша персонажа, Генерація нормальної карти). **Нові шпалери…** створює нову шпалеру із зображення або з одного із шаблонів Wallpaper Engine. Ви редагуєте чернетку: **Зберегти** застосовує її, **Зберегти як нову шпалеру** додає копію до бібліотеки, а власні файли шпалери ніколи не змінюються.
 
   <!-- demo: wallpaper-editor -->
 
-  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+  <a href="../../docs/media/demo/wallpaper-editor.webm"><img src="../../docs/media/demo/wallpaper-editor.webp" alt="Wallpaper Editor: layers, gizmo and effects" width="720"></a>
 
-  ![Редактор шпалер](../../docs/images/wallpaper-editor.jpg)
+  <img src="../../docs/images/wallpaper-editor.jpg" alt="Редактор шпалер" width="720">
 
   <!-- demo: model-import -->
 
@@ -44,9 +44,9 @@ Open Wallpaper Engine — безкоштовна програма з відкр�
 
 - **Редагування/експорт сцени**: змінюйте шари й ефекти запущеної шпалери просто на робочому столі, вибирайте, що показує заставка, або експортуйте шпалеру як Live Photo чи як пакет для Android.
 
-  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
+  <a href="../../docs/media/demo/scene-edit.webm"><img src="../../docs/media/demo/scene-edit.webp" alt="Scene Edit / Export: versions and layers changed live on the desktop" width="720"></a>
 
-  ![Редагування/експорт сцени](../../docs/images/scene-editor-live.jpg)
+  <img src="../../docs/images/scene-editor-live.jpg" alt="Редагування/експорт сцени" width="720">
 
 - **Заставка й екран блокування**: заставка показує шпалеру кожного дисплея наживо (*Заставка як шпалери*) або вибрану вами шпалеру, а екран блокування показує її зображення.
 
@@ -56,30 +56,30 @@ Open Wallpaper Engine — безкоштовна програма з відкр�
 
   <!-- demo: live-photo-export -->
 
-  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+  <a href="../../docs/media/demo/live-photo-export.webm"><img src="../../docs/media/demo/live-photo-export.webp" alt="iPhone &amp; iPad Export: Live Photo preview" width="720"></a>
 
   <!-- demo: android-export -->
 
-  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
+  <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  ![Надсилання через Wi-Fi](../../docs/images/send-over-wifi.png)
+  <img src="../../docs/images/send-over-wifi.png" alt="Надсилання через Wi-Fi" width="456">
 
 - **Дисплеї**: окрема шпалера на кожному дисплеї, одна шпалера, розтягнута на всі дисплеї або продубльована на кожному, а також групи, поділ і профілі — як у Wallpaper Engine. **Відтворити у вікні** відтворює шпалеру в окремому вікні.
 
-  ![Дисплеї](../../docs/images/displays.png)
+  <img src="../../docs/images/displays.png" alt="Дисплеї" width="400">
 
 - **Списки відтворення**: зміна шпалер за таймером, під час входу, залежно від часу доби або дня тижня, з переходами Wallpaper Engine.
 
-  ![Параметри списку відтворення](../../docs/images/playlists.png)
+  <img src="../../docs/images/playlists.png" alt="Параметри списку відтворення" width="420">
 
 - **Керування**: гарячі клавіші для дій, списків відтворення, шпалер і профілів дисплеїв; [командний рядок](../../docs/command-line.md) `-control` програми Wallpaper Engine; і плагін **Сервер MCP**, через який MCP-клієнти встановлюють шпалери, списки відтворення й параметри та редагують сцени через локальне зʼєднання, відкрити яке може лише ваш обліковий запис.
 
-  ![Плагін MCP-сервера](../../docs/images/mcp-plugin.png)
+  <img src="../../docs/images/mcp-plugin.png" alt="Плагін MCP-сервера" width="456">
 
 - **Живлення**: шпалери стають на паузу, поки екран заблоковано, дотримуються правила Wallpaper Engine *Ноутбук від акумулятора* і можуть переходити на нижчий набір якості й нижчу частоту кадрів під час роботи від акумулятора або в режимі низького енергоспоживання.
 - **Колірна тема**: смуга меню, колір акценту, тоновані іконки й теки підлаштовуються під колір шпалери; власні вікна Open Wallpaper Engine можуть використовувати точний колір.
 
-  ![Колірна тема](../../docs/images/theming.png)
+  <img src="../../docs/images/theming.png" alt="Колірна тема" width="540">
 
 Усе інше, за розділами: [docs/features.md](../../docs/features.md).
 
@@ -127,6 +127,8 @@ Open Wallpaper Engine — безкоштовна програма з відкр�
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — рендерер сцен і конвеєр ефектів на Metal, трансляція шейдерів GLSL→MSL та їх кешування, середовище виконання SceneScript, рендеринг, що реагує на звук, оновлення Майстерні та викачування, параметри розміщення й продуктивності, редизайн логотипа
 
 Поширюється за ліцензією [GPL-3.0](../../LICENSE), як і оригінальний проєкт.
+
+Помічник Steam, який застосунок запускає як окрему програму ([`SteamHelper/`](../../SteamHelper/README.md#license)), поширюється за ліцензією GPL-2.0-or-later, бо містить [DepotDownloader](https://github.com/SteamRE/DepotDownloader) (GPL-2.0) і [SteamKit2](https://github.com/SteamRE/SteamKit) (LGPL-2.1).
 
 ## Правова інформація
 

@@ -13,11 +13,11 @@ Open Wallpaper Engine 是一款免费、开源的 macOS App，可播放和编辑
 
 <!-- demo: desktop -->
 
-[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+<a href="../../docs/media/demo/hero.webm"><img src="../../docs/media/demo/hero.webp" alt="Open Wallpaper Engine: set a wallpaper from the library" width="720"></a>
 
-[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+<a href="../../docs/media/demo/wallpapers-in-motion.webm"><img src="../../docs/media/demo/wallpapers-in-motion.webp" alt="Scene wallpapers running live" width="720"></a>
 
-![资源库](../../docs/images/library.jpg)
+<img src="../../docs/images/library.jpg" alt="资源库" width="720">
 
 ## 与众不同之处
 
@@ -29,14 +29,14 @@ Open Wallpaper Engine 是一款免费、开源的 macOS App，可播放和编辑
 ## 亮点
 
 - **场景、视频和网页墙纸**：场景支持特效、粒子、3D 模型、光源、时间线、SceneScript 和音频响应视觉效果，并在能够显示 HDR 的显示器上为场景以及 HDR10 或 HLG 视频提供 HDR 输出。网页墙纸在 WebKit 或可选的 Chromium 引擎中运行，支持其文件夹属性、实时音频和 Now Playing。
-- **Steam 创意工坊**：使用 Wallpaper Engine 的排序和筛选方式浏览，用你自己的 Steam 账户下载（用 Steam 手机 App 扫描二维码或输入密码登录），或导入墙纸文件夹和 zip 文件。“已安装”标签页提供 Wallpaper Engine 的文件夹和排序方式。
+- **Steam 创意工坊**：使用 Wallpaper Engine 的排序和筛选方式浏览，用你自己的 Steam 账户下载（用 Steam 手机 App 扫描二维码或输入密码登录），或导入墙纸文件夹和 zip 文件。“已安装”标签页提供 Wallpaper Engine 的文件夹和排序方式。SteamCMD 和 Steam Web API 密钥已弃用，不再使用：自 1.0.0-beta.13 起，Steam 手机应用登录取代了两者。
 - **墙纸编辑器**：一款秉承 Wallpaper Engine 编辑器理念的编辑器。使用操纵器添加和排列图层，添加带预览的效果，在着色器编辑器中编写和编辑你自己的效果，导入 FBX 和 OBJ 模型，在时间线上制作动画，编写 SceneScript，创建用户属性，编辑粒子系统和 Puppet Warp 骨架，并使用 Wallpaper Engine 的图像工具（前景分离、角色属性表创建、法线贴图生成）。**新墙纸…** 可从一张图片或 Wallpaper Engine 的某个模板开始创建墙纸。你编辑的是一份草稿：**保存** 会应用它，**保存为新墙纸** 会在资源库中添加一份副本，墙纸本身的文件绝不会被更改。
 
   <!-- demo: wallpaper-editor -->
 
-  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+  <a href="../../docs/media/demo/wallpaper-editor.webm"><img src="../../docs/media/demo/wallpaper-editor.webp" alt="Wallpaper Editor: layers, gizmo and effects" width="720"></a>
 
-  ![墙纸编辑器](../../docs/images/wallpaper-editor.jpg)
+  <img src="../../docs/images/wallpaper-editor.jpg" alt="墙纸编辑器" width="720">
 
   <!-- demo: model-import -->
 
@@ -44,9 +44,9 @@ Open Wallpaper Engine 是一款免费、开源的 macOS App，可播放和编辑
 
 - **场景编辑/导出**：直接在桌面上实时修改正在运行的墙纸的图层和效果，选择屏幕保护程序显示的内容，或将墙纸导出为实况照片或 Android 墙纸包。
 
-  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
+  <a href="../../docs/media/demo/scene-edit.webm"><img src="../../docs/media/demo/scene-edit.webp" alt="Scene Edit / Export: versions and layers changed live on the desktop" width="720"></a>
 
-  ![场景编辑/导出](../../docs/images/scene-editor-live.jpg)
+  <img src="../../docs/images/scene-editor-live.jpg" alt="场景编辑/导出" width="720">
 
 - **屏幕保护程序与锁定屏幕**：屏幕保护程序实时显示每台显示器的墙纸（*屏幕保护程序与壁纸相同*），或显示你选择的墙纸；锁定屏幕显示它的一张图片。
 
@@ -56,30 +56,30 @@ Open Wallpaper Engine 是一款免费、开源的 macOS App，可播放和编辑
 
   <!-- demo: live-photo-export -->
 
-  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+  <a href="../../docs/media/demo/live-photo-export.webm"><img src="../../docs/media/demo/live-photo-export.webp" alt="iPhone &amp; iPad Export: Live Photo preview" width="720"></a>
 
   <!-- demo: android-export -->
 
-  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
+  <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  ![通过 Wi-Fi 发送](../../docs/images/send-over-wifi.png)
+  <img src="../../docs/images/send-over-wifi.png" alt="通过 Wi-Fi 发送" width="456">
 
 - **显示器**：与 Wallpaper Engine 一样：每台显示器一张墙纸、一张墙纸横跨所有显示器或在每台显示器上克隆，并支持分组、分割和配置文件。**在窗口中播放** 可在单独的窗口中播放墙纸。
 
-  ![显示器](../../docs/images/displays.png)
+  <img src="../../docs/images/displays.png" alt="显示器" width="400">
 
 - **播放列表**：按计时器、登录时、一天中的时段或星期几更换墙纸，并使用 Wallpaper Engine 的过渡效果。
 
-  ![播放列表设置](../../docs/images/playlists.png)
+  <img src="../../docs/images/playlists.png" alt="播放列表设置" width="420">
 
 - **控制**：用于操作、播放列表、墙纸和显示器配置文件的热键；Wallpaper Engine 的 `-control` [命令行](../../docs/command-line.md)；以及 **MCP 服务器** 插件，MCP 客户端可通过它设定墙纸、播放列表和设置并编辑场景，连接仅限本地，且只有你的账户可以打开。
 
-  ![MCP 服务器插件](../../docs/images/mcp-plugin.png)
+  <img src="../../docs/images/mcp-plugin.png" alt="MCP 服务器插件" width="456">
 
 - **电源**：屏幕锁定时墙纸会暂停，遵循 Wallpaper Engine 的 *笔记本电脑使用电池时* 规则，并可在使用电池或处于低电量模式时降至较低的画质预设和帧速率。
 - **主题颜色**：菜单栏、强调色以及着色的图标和文件夹会跟随墙纸的颜色变化；Open Wallpaper Engine 自己的窗口可以使用墙纸的准确颜色。
 
-  ![主题颜色](../../docs/images/theming.png)
+  <img src="../../docs/images/theming.png" alt="主题颜色" width="540">
 
 其他所有功能（按领域分类）：[docs/features.md](../../docs/features.md)。
 
@@ -127,6 +127,8 @@ App 保存的所有内容都留在你的 Mac 上，它不收集任何数据或�
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal 场景渲染器与效果管线、GLSL→MSL 着色器转换与缓存、SceneScript 运行时、音频响应渲染、创意工坊／下载功能全面改进、摆放与性能设置、标志重新设计
 
 与原项目相同，本项目采用 [GPL-3.0](../../LICENSE) 许可证。
+
+应用作为独立程序运行的 Steam 助手（[`SteamHelper/`](../../SteamHelper/README.md#license)）采用 GPL-2.0-or-later 许可证，因为它包含 [DepotDownloader](https://github.com/SteamRE/DepotDownloader)（GPL-2.0）和 [SteamKit2](https://github.com/SteamRE/SteamKit)（LGPL-2.1）。
 
 ## 法律信息
 

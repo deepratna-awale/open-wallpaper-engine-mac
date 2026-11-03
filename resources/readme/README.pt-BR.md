@@ -13,11 +13,11 @@ O Open Wallpaper Engine é um app gratuito e de código aberto para macOS que re
 
 <!-- demo: desktop -->
 
-[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+<a href="../../docs/media/demo/hero.webm"><img src="../../docs/media/demo/hero.webp" alt="Open Wallpaper Engine: set a wallpaper from the library" width="720"></a>
 
-[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+<a href="../../docs/media/demo/wallpapers-in-motion.webm"><img src="../../docs/media/demo/wallpapers-in-motion.webp" alt="Scene wallpapers running live" width="720"></a>
 
-![A biblioteca](../../docs/images/library.jpg)
+<img src="../../docs/images/library.jpg" alt="A biblioteca" width="720">
 
 ## O que o diferencia
 
@@ -29,14 +29,14 @@ O Open Wallpaper Engine é um app gratuito e de código aberto para macOS que re
 ## Destaques
 
 - **Imagens de fundo de cena, vídeo e web**: cenas com efeitos, partículas, modelos 3D, luzes, linhas do tempo, SceneScript e visuais reativos ao áudio, e saída HDR para cenas e vídeos HDR10 ou HLG nas telas capazes de exibi-la. As imagens de fundo web rodam no WebKit ou no mecanismo Chromium opcional, com as propriedades da pasta, áudio ao vivo e Tocando Agora.
-- **Oficina Steam**: navegue com as ordenações e os filtros do Wallpaper Engine, baixe com a sua própria conta Steam (inicie sessão com o código QR do app Steam Mobile ou com a senha), ou importe pastas e arquivos zip de imagens de fundo. A aba Instaladas tem as pastas e as ordenações do Wallpaper Engine.
+- **Oficina Steam**: navegue com as ordenações e os filtros do Wallpaper Engine, baixe com a sua própria conta Steam (inicie sessão com o código QR do app Steam Mobile ou com a senha), ou importe pastas e arquivos zip de imagens de fundo. A aba Instaladas tem as pastas e as ordenações do Wallpaper Engine. O SteamCMD e a chave da API Web da Steam estão obsoletos e não são mais usados: desde a 1.0.0-beta.13, o login com o app móvel da Steam substitui os dois.
 - **Editor de Imagem de Fundo**: um editor no estilo do Wallpaper Engine. Adicione e organize camadas com gizmos, adicione efeitos com pré-visualização, escreva e edite seus próprios efeitos no Editor de shaders, importe modelos FBX e OBJ, anime em uma linha do tempo, escreva SceneScript, crie propriedades do usuário, edite sistemas de partículas e rigs de Puppet Warp, e use as ferramentas de imagem do Wallpaper Engine (Separação do plano frontal, Criação de ficha de personagem, Geração de mapa normal). **Nova Imagem de Fundo…** cria uma a partir de uma imagem ou de um dos modelos do Wallpaper Engine. Você edita um rascunho: **Salvar** aplica o rascunho, **Salvar como Nova Imagem de Fundo** adiciona uma cópia à biblioteca, e os arquivos da própria imagem de fundo nunca são alterados.
 
   <!-- demo: wallpaper-editor -->
 
-  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+  <a href="../../docs/media/demo/wallpaper-editor.webm"><img src="../../docs/media/demo/wallpaper-editor.webp" alt="Wallpaper Editor: layers, gizmo and effects" width="720"></a>
 
-  ![Editor de Imagem de Fundo](../../docs/images/wallpaper-editor.jpg)
+  <img src="../../docs/images/wallpaper-editor.jpg" alt="Editor de Imagem de Fundo" width="720">
 
   <!-- demo: model-import -->
 
@@ -44,9 +44,9 @@ O Open Wallpaper Engine é um app gratuito e de código aberto para macOS que re
 
 - **Editar/Exportar Cena**: altere ao vivo, na mesa, as camadas e os efeitos da imagem de fundo em execução, escolha o que o protetor de tela mostra, ou exporte a imagem de fundo como Live Photo ou como pacote Android.
 
-  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
+  <a href="../../docs/media/demo/scene-edit.webm"><img src="../../docs/media/demo/scene-edit.webp" alt="Scene Edit / Export: versions and layers changed live on the desktop" width="720"></a>
 
-  ![Editar/Exportar Cena](../../docs/images/scene-editor-live.jpg)
+  <img src="../../docs/images/scene-editor-live.jpg" alt="Editar/Exportar Cena" width="720">
 
 - **Protetor de tela e tela bloqueada**: o protetor de tela mostra ao vivo a imagem de fundo de cada tela (*Protetor de Tela Igual ao Papel de Parede*), ou uma que você escolher, e a tela bloqueada mostra uma imagem dela.
 
@@ -56,30 +56,30 @@ O Open Wallpaper Engine é um app gratuito e de código aberto para macOS que re
 
   <!-- demo: live-photo-export -->
 
-  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+  <a href="../../docs/media/demo/live-photo-export.webm"><img src="../../docs/media/demo/live-photo-export.webp" alt="iPhone &amp; iPad Export: Live Photo preview" width="720"></a>
 
   <!-- demo: android-export -->
 
-  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
+  <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  ![Enviar por Wi-Fi](../../docs/images/send-over-wifi.png)
+  <img src="../../docs/images/send-over-wifi.png" alt="Enviar por Wi-Fi" width="456">
 
 - **Telas**: uma imagem de fundo por tela, uma esticada em todas ou clonada em cada uma, grupos, divisões e perfis, como no Wallpaper Engine. **Reproduzir em Janela** reproduz uma imagem de fundo em uma janela própria.
 
-  ![Telas](../../docs/images/displays.png)
+  <img src="../../docs/images/displays.png" alt="Telas" width="400">
 
 - **Playlists**: troque de imagem de fundo com um timer, no login, pela hora do dia ou pelo dia da semana, com as transições do Wallpaper Engine.
 
-  ![Ajustes de playlist](../../docs/images/playlists.png)
+  <img src="../../docs/images/playlists.png" alt="Ajustes de playlist" width="420">
 
 - **Controle**: atalhos para ações, playlists, imagens de fundo e perfis de tela; a [linha de comando](../../docs/command-line.md) `-control` do Wallpaper Engine; e o plug-in **Servidor MCP**, por meio do qual clientes MCP definem imagens de fundo, playlists e ajustes e editam cenas, por uma conexão local que só a sua conta pode abrir.
 
-  ![Plug-in Servidor MCP](../../docs/images/mcp-plugin.png)
+  <img src="../../docs/images/mcp-plugin.png" alt="Plug-in Servidor MCP" width="456">
 
 - **Energia**: as imagens de fundo pausam enquanto a tela está bloqueada, seguem a regra *Notebook na bateria* do Wallpaper Engine e podem passar para uma predefinição de qualidade e uma taxa de quadros menores na bateria ou no Modo de Baixa Energia.
 - **Temas de Cor**: a barra de menus, a cor de destaque e os ícones e pastas tingidos acompanham a cor da imagem de fundo; as próprias janelas do Open Wallpaper Engine podem usar a cor exata.
 
-  ![Temas de Cor](../../docs/images/theming.png)
+  <img src="../../docs/images/theming.png" alt="Temas de Cor" width="540">
 
 Todo o resto, área por área: [docs/features.md](../../docs/features.md).
 
@@ -127,6 +127,8 @@ Este projeto foi construído sobre o trabalho de:
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Renderizador de cenas em Metal e pipeline de efeitos, tradução e cache de shaders GLSL→MSL, runtime do SceneScript, renderização sensível a áudio, reformulação da Oficina e dos Downloads, ajustes de posicionamento e de desempenho, redesenho do logotipo
 
 Licenciado sob a [GPL-3.0](../../LICENSE), assim como o projeto original.
+
+O auxiliar da Steam que o app executa como um programa separado ([`SteamHelper/`](../../SteamHelper/README.md#license)) é licenciado sob a GPL-2.0-or-later, porque inclui o [DepotDownloader](https://github.com/SteamRE/DepotDownloader) (GPL-2.0) e o [SteamKit2](https://github.com/SteamRE/SteamKit) (LGPL-2.1).
 
 ## Informações legais
 

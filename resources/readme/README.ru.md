@@ -13,11 +13,11 @@ Open Wallpaper Engine — бесплатное приложение с откр�
 
 <!-- demo: desktop -->
 
-[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+<a href="../../docs/media/demo/hero.webm"><img src="../../docs/media/demo/hero.webp" alt="Open Wallpaper Engine: set a wallpaper from the library" width="720"></a>
 
-[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+<a href="../../docs/media/demo/wallpapers-in-motion.webm"><img src="../../docs/media/demo/wallpapers-in-motion.webp" alt="Scene wallpapers running live" width="720"></a>
 
-![Медиатека](../../docs/images/library.jpg)
+<img src="../../docs/images/library.jpg" alt="Медиатека" width="720">
 
 ## Чем оно выделяется
 
@@ -29,14 +29,14 @@ Open Wallpaper Engine — бесплатное приложение с откр�
 ## Основные возможности
 
 - **Обои-сцены, видео и веб-обои**: сцены с эффектами, частицами, 3D-моделями, источниками света, таймлайнами, SceneScript и визуализациями, реагирующими на звук, а также вывод HDR для сцен и видео HDR10 или HLG на дисплеях, которые могут его показать. Веб-обои работают в WebKit или в дополнительном движке Chromium со свойствами своей папки, живым звуком и Now Playing.
-- **Мастерская Steam**: просматривайте обои с сортировками и фильтрами Wallpaper Engine, скачивайте их под своей учётной записью Steam (вход по QR-коду в мобильном приложении Steam или по паролю) или импортируйте папки и zip-архивы с обоями. На вкладке «Установленные» есть папки и сортировки Wallpaper Engine.
+- **Мастерская Steam**: просматривайте обои с сортировками и фильтрами Wallpaper Engine, скачивайте их под своей учётной записью Steam (вход по QR-коду в мобильном приложении Steam или по паролю) или импортируйте папки и zip-архивы с обоями. На вкладке «Установленные» есть папки и сортировки Wallpaper Engine. SteamCMD и ключ Steam Web API устарели и больше не используются: начиная с 1.0.0-beta.13 их оба заменяет вход через мобильное приложение Steam.
 - **Редактор обоев**: редактор в духе редактора Wallpaper Engine. Добавляйте и располагайте слои с помощью гизмо, добавляйте эффекты с предпросмотром, пишите и правьте собственные эффекты в Редакторе шейдеров, импортируйте модели FBX и OBJ, анимируйте на таймлайне, пишите SceneScript, создавайте пользовательские свойства, редактируйте системы частиц и риги Puppet Warp и пользуйтесь инструментами Wallpaper Engine для изображений («Отделение переднего плана», «Создание страницы персонажа», «Создание карты нормалей»). **Новые обои…** создают обои из изображения или одного из шаблонов Wallpaper Engine. Вы правите черновик: **Сохранить** применяет его, **Сохранить как новые обои** добавляет копию в медиатеку, а собственные файлы обоев никогда не меняются.
 
   <!-- demo: wallpaper-editor -->
 
-  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+  <a href="../../docs/media/demo/wallpaper-editor.webm"><img src="../../docs/media/demo/wallpaper-editor.webp" alt="Wallpaper Editor: layers, gizmo and effects" width="720"></a>
 
-  ![Редактор обоев](../../docs/images/wallpaper-editor.jpg)
+  <img src="../../docs/images/wallpaper-editor.jpg" alt="Редактор обоев" width="720">
 
   <!-- demo: model-import -->
 
@@ -44,9 +44,9 @@ Open Wallpaper Engine — бесплатное приложение с откр�
 
 - **Правка/экспорт сцены**: меняйте слои и эффекты запущенных обоев прямо на рабочем столе, выбирайте, что показывает заставка, или экспортируйте обои как Live Photo либо как пакет для Android.
 
-  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
+  <a href="../../docs/media/demo/scene-edit.webm"><img src="../../docs/media/demo/scene-edit.webp" alt="Scene Edit / Export: versions and layers changed live on the desktop" width="720"></a>
 
-  ![Правка/экспорт сцены](../../docs/images/scene-editor-live.jpg)
+  <img src="../../docs/images/scene-editor-live.jpg" alt="Правка/экспорт сцены" width="720">
 
 - **Заставка и экран блокировки**: заставка показывает обои каждого дисплея вживую (*Заставка как обои*) или выбранные вами обои, а экран блокировки показывает их изображение.
 
@@ -56,30 +56,30 @@ Open Wallpaper Engine — бесплатное приложение с откр�
 
   <!-- demo: live-photo-export -->
 
-  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+  <a href="../../docs/media/demo/live-photo-export.webm"><img src="../../docs/media/demo/live-photo-export.webp" alt="iPhone &amp; iPad Export: Live Photo preview" width="720"></a>
 
   <!-- demo: android-export -->
 
-  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
+  <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  ![Отправка по Wi-Fi](../../docs/images/send-over-wifi.png)
+  <img src="../../docs/images/send-over-wifi.png" alt="Отправка по Wi-Fi" width="456">
 
 - **Дисплеи**: свои обои на каждом дисплее, одни обои, растянутые на все дисплеи или продублированные на каждом, а также группы, разделение и профили — как в Wallpaper Engine. **Воспроизвести в окне** воспроизводит обои в отдельном окне.
 
-  ![Дисплеи](../../docs/images/displays.png)
+  <img src="../../docs/images/displays.png" alt="Дисплеи" width="400">
 
 - **Плейлисты**: смена обоев по таймеру, при входе в систему, по времени суток или дню недели, с переходами Wallpaper Engine.
 
-  ![Настройки плейлиста](../../docs/images/playlists.png)
+  <img src="../../docs/images/playlists.png" alt="Настройки плейлиста" width="420">
 
 - **Управление**: горячие клавиши для действий, плейлистов, обоев и профилей дисплеев; [командная строка](../../docs/command-line.md) `-control` из Wallpaper Engine; и плагин **Сервер MCP**, через который MCP-клиенты устанавливают обои, плейлисты и настройки и редактируют сцены по локальному подключению, открыть которое может только ваша учётная запись.
 
-  ![Плагин MCP-сервера](../../docs/images/mcp-plugin.png)
+  <img src="../../docs/images/mcp-plugin.png" alt="Плагин MCP-сервера" width="456">
 
 - **Питание**: обои ставятся на паузу, пока экран заблокирован, следуют правилу Wallpaper Engine *Ноутбук от аккумулятора* и могут переходить на более низкий пресет качества и частоту кадров при работе от аккумулятора или в режиме энергосбережения.
 - **Цветовая тема**: строка меню, акцентный цвет, тонированные значки и папки подстраиваются под цвет обоев; собственные окна Open Wallpaper Engine могут использовать точный цвет.
 
-  ![Цветовая тема](../../docs/images/theming.png)
+  <img src="../../docs/images/theming.png" alt="Цветовая тема" width="540">
 
 Всё остальное, по разделам: [docs/features.md](../../docs/features.md).
 
@@ -127,6 +127,8 @@ Open Wallpaper Engine — бесплатное приложение с откр�
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — рендерер сцен на Metal и конвейер эффектов, трансляция шейдеров GLSL→MSL и их кэширование, среда выполнения SceneScript, рендеринг, реагирующий на звук, переработка Мастерской и загрузок, настройки размещения и производительности, редизайн логотипа
 
 Распространяется по лицензии [GPL-3.0](../../LICENSE), как и исходный проект.
+
+Помощник Steam, который приложение запускает как отдельную программу ([`SteamHelper/`](../../SteamHelper/README.md#license)), распространяется по лицензии GPL-2.0-or-later, так как включает [DepotDownloader](https://github.com/SteamRE/DepotDownloader) (GPL-2.0) и [SteamKit2](https://github.com/SteamRE/SteamKit) (LGPL-2.1).
 
 ## Правовая информация
 

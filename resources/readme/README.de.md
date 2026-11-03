@@ -13,11 +13,11 @@ Open Wallpaper Engine ist eine kostenlose Open-Source-App für macOS, die Wallpa
 
 <!-- demo: desktop -->
 
-[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+<a href="../../docs/media/demo/hero.webm"><img src="../../docs/media/demo/hero.webp" alt="Open Wallpaper Engine: set a wallpaper from the library" width="720"></a>
 
-[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+<a href="../../docs/media/demo/wallpapers-in-motion.webm"><img src="../../docs/media/demo/wallpapers-in-motion.webp" alt="Scene wallpapers running live" width="720"></a>
 
-![Die Mediathek](../../docs/images/library.jpg)
+<img src="../../docs/images/library.jpg" alt="Die Mediathek" width="720">
 
 ## Was die App auszeichnet
 
@@ -29,14 +29,14 @@ Open Wallpaper Engine ist eine kostenlose Open-Source-App für macOS, die Wallpa
 ## Highlights
 
 - **Szenen-, Video- und Web-Hintergrundbilder**: Szenen mit Effekten, Partikeln, 3D-Modellen, Lichtern, Zeitleisten, SceneScript und audioreaktiven Visuals sowie HDR-Ausgabe für Szenen und für HDR10- oder HLG-Videos auf Displays, die sie darstellen können. Web-Hintergrundbilder laufen in WebKit oder in der optionalen Chromium-Engine, mit ihren Ordnereigenschaften, Live-Audio und „Aktuelle Wiedergabe“.
-- **Steam Workshop**: mit den Sortierungen und Filtern von Wallpaper Engine durchsuchen, mit Ihrem eigenen Steam-Account laden (Anmeldung per QR-Code in der Steam Mobile App oder mit Passwort) oder Hintergrundbildordner und Zip-Dateien importieren. Der Tab „Installiert“ hat die Ordner und Sortierungen von Wallpaper Engine.
+- **Steam Workshop**: mit den Sortierungen und Filtern von Wallpaper Engine durchsuchen, mit Ihrem eigenen Steam-Account laden (Anmeldung per QR-Code in der Steam Mobile App oder mit Passwort) oder Hintergrundbildordner und Zip-Dateien importieren. Der Tab „Installiert“ hat die Ordner und Sortierungen von Wallpaper Engine. SteamCMD und der Steam-Web-API-Schlüssel sind veraltet und werden nicht mehr verwendet: Seit 1.0.0-beta.13 ersetzt die Anmeldung mit der Steam Mobile App beides.
 - **Hintergrundbild-Editor**: ein Editor nach dem Vorbild von Wallpaper Engine. Ebenen mit Gizmos hinzufügen und anordnen, Effekte mit Vorschauen hinzufügen, eigene Effekte im Shader-Editor schreiben und bearbeiten, FBX- und OBJ-Modelle importieren, auf einer Zeitleiste animieren, SceneScript schreiben, Benutzereigenschaften erstellen, Partikelsysteme und Puppet-Warp-Rigs bearbeiten und die Bildwerkzeuge von Wallpaper Engine nutzen (Vordergrund-Separation, Erstellung eines Character-Sheets, Generieren einer Normal-Map). **Neues Hintergrundbild …** beginnt eines aus einem Bild oder aus einer der Vorlagen von Wallpaper Engine. Sie bearbeiten einen Entwurf: **Sichern** übernimmt ihn, **Als neues Hintergrundbild sichern** fügt der Mediathek eine Kopie hinzu, und die eigenen Dateien des Hintergrundbilds werden nie verändert.
 
   <!-- demo: wallpaper-editor -->
 
-  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+  <a href="../../docs/media/demo/wallpaper-editor.webm"><img src="../../docs/media/demo/wallpaper-editor.webp" alt="Wallpaper Editor: layers, gizmo and effects" width="720"></a>
 
-  ![Hintergrundbild-Editor](../../docs/images/wallpaper-editor.jpg)
+  <img src="../../docs/images/wallpaper-editor.jpg" alt="Hintergrundbild-Editor" width="720">
 
   <!-- demo: model-import -->
 
@@ -44,9 +44,9 @@ Open Wallpaper Engine ist eine kostenlose Open-Source-App für macOS, die Wallpa
 
 - **Szene bearbeiten/exportieren**: Ebenen und Effekte des laufenden Hintergrundbilds live auf dem Schreibtisch ändern, festlegen, was der Bildschirmschoner zeigt, oder das Hintergrundbild als Live Photo oder als Android-Paket exportieren.
 
-  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
+  <a href="../../docs/media/demo/scene-edit.webm"><img src="../../docs/media/demo/scene-edit.webp" alt="Scene Edit / Export: versions and layers changed live on the desktop" width="720"></a>
 
-  ![Szene bearbeiten/exportieren](../../docs/images/scene-editor-live.jpg)
+  <img src="../../docs/images/scene-editor-live.jpg" alt="Szene bearbeiten/exportieren" width="720">
 
 - **Bildschirmschoner und Sperrbildschirm**: Der Bildschirmschoner zeigt das Hintergrundbild jedes Displays live (*Bildschirmschoner wie Hintergrundbild*) oder eines, das Sie auswählen, und der Sperrbildschirm zeigt ein Bild davon.
 
@@ -56,30 +56,30 @@ Open Wallpaper Engine ist eine kostenlose Open-Source-App für macOS, die Wallpa
 
   <!-- demo: live-photo-export -->
 
-  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+  <a href="../../docs/media/demo/live-photo-export.webm"><img src="../../docs/media/demo/live-photo-export.webp" alt="iPhone &amp; iPad Export: Live Photo preview" width="720"></a>
 
   <!-- demo: android-export -->
 
-  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
+  <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  ![Über WLAN senden](../../docs/images/send-over-wifi.png)
+  <img src="../../docs/images/send-over-wifi.png" alt="Über WLAN senden" width="456">
 
 - **Displays**: ein Hintergrundbild pro Display, eines über alle gestreckt oder auf jedes geklont, Gruppen, Teilungen und Profile, wie in Wallpaper Engine. **In Fenster abspielen** spielt ein Hintergrundbild in einem eigenen Fenster ab.
 
-  ![Displays](../../docs/images/displays.png)
+  <img src="../../docs/images/displays.png" alt="Displays" width="400">
 
 - **Playlists**: Hintergrundbilder per Timer, bei der Anmeldung, nach Tageszeit oder Wochentag wechseln, mit den Übergängen von Wallpaper Engine.
 
-  ![Playlist-Einstellungen](../../docs/images/playlists.png)
+  <img src="../../docs/images/playlists.png" alt="Playlist-Einstellungen" width="420">
 
 - **Steuerung**: Tastenkombinationen für Aktionen, Playlists, Hintergrundbilder und Display-Profile; die `-control`-[Befehlszeile](../../docs/command-line.md) von Wallpaper Engine; und das Plug-in **MCP-Server**, über das MCP-Clients Hintergrundbilder, Playlists und Einstellungen festlegen und Szenen bearbeiten, über eine lokale Verbindung, die nur Ihr Benutzeraccount öffnen kann.
 
-  ![Plug-in MCP-Server](../../docs/images/mcp-plugin.png)
+  <img src="../../docs/images/mcp-plugin.png" alt="Plug-in MCP-Server" width="456">
 
 - **Energie**: Hintergrundbilder pausieren, solange der Bildschirm gesperrt ist, folgen der Regel *Laptop im Batteriebetrieb* von Wallpaper Engine und können im Batteriebetrieb oder im Stromsparmodus auf eine niedrigere Qualitätsvoreinstellung und Bildrate wechseln.
 - **Farbanpassung**: Menüleiste, Akzentfarbe sowie eingefärbte Symbole und Ordner übernehmen die Farbe des Hintergrundbilds; die Fenster von Open Wallpaper Engine selbst können genau diese Farbe verwenden.
 
-  ![Farbanpassung](../../docs/images/theming.png)
+  <img src="../../docs/images/theming.png" alt="Farbanpassung" width="540">
 
 Alles Weitere, Bereich für Bereich: [docs/features.md](../../docs/features.md).
 
@@ -127,6 +127,8 @@ Dieses Projekt baut auf der Arbeit folgender Personen auf:
 - **[Deepratna Awale](https://github.com/deepratna-awale)** – Metal-Szenenrenderer und Effekt-Pipeline, Übersetzung und Caching von GLSL→MSL-Shadern, SceneScript-Laufzeitumgebung, audioreaktives Rendern, Überarbeitung von Workshop und Downloads, Platzierungs- und Leistungseinstellungen, Neugestaltung des Logos
 
 Lizenziert unter [GPL-3.0](../../LICENSE), wie das ursprüngliche Projekt.
+
+Der Steam-Helfer, den die App als eigenes Programm ausführt ([`SteamHelper/`](../../SteamHelper/README.md#license)), steht unter GPL-2.0-or-later, weil er [DepotDownloader](https://github.com/SteamRE/DepotDownloader) (GPL-2.0) und [SteamKit2](https://github.com/SteamRE/SteamKit) (LGPL-2.1) enthält.
 
 ## Rechtliches
 

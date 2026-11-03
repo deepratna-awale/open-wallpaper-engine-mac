@@ -15,11 +15,11 @@ Open Wallpaper Engine تطبيق مجاني ومفتوح المصدر لنظام
 
 <!-- demo: desktop -->
 
-[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+<a href="../../docs/media/demo/hero.webm"><img src="../../docs/media/demo/hero.webp" alt="Open Wallpaper Engine: set a wallpaper from the library" width="720"></a>
 
-[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+<a href="../../docs/media/demo/wallpapers-in-motion.webm"><img src="../../docs/media/demo/wallpapers-in-motion.webp" alt="Scene wallpapers running live" width="720"></a>
 
-![المكتبة](../../docs/images/library.jpg)
+<img src="../../docs/images/library.jpg" alt="المكتبة" width="720">
 
 ## ما يميّزه
 
@@ -31,14 +31,14 @@ Open Wallpaper Engine تطبيق مجاني ومفتوح المصدر لنظام
 ## أبرز الميزات
 
 - **خلفيات المشهد والفيديو والويب**: مشاهد بتأثيرات وجسيمات ونماذج ثلاثية الأبعاد وأضواء وخطوط زمنية وSceneScript ومؤثرات مرئية متفاعلة مع الصوت، وإخراج HDR للمشاهد ولفيديوهات HDR10 أو HLG على الشاشات التي يمكنها عرضه. تعمل خلفيات الويب في WebKit أو في محرك Chromium الاختياري، مع خصائص المجلدات الخاصة بها والصوت المباشر ومعلومات «قيد التشغيل الآن».
-- **ورشة Steam**: تصفّح بخيارات الفرز وعوامل التصفية الخاصة بـ Wallpaper Engine، ونزّل بحساب Steam الخاص بك (سجّل الدخول برمز QR في تطبيق Steam للجوّال أو بكلمة السر)، أو استورد مجلدات الخلفيات وملفات zip. تضم علامة التبويب «المثبتة» مجلدات Wallpaper Engine وخيارات الفرز الخاصة به.
+- **ورشة Steam**: تصفّح بخيارات الفرز وعوامل التصفية الخاصة بـ Wallpaper Engine، ونزّل بحساب Steam الخاص بك (سجّل الدخول برمز QR في تطبيق Steam للجوّال أو بكلمة السر)، أو استورد مجلدات الخلفيات وملفات zip. تضم علامة التبويب «المثبتة» مجلدات Wallpaper Engine وخيارات الفرز الخاصة به. أصبح SteamCMD ومفتاح Steam Web API مهمَلين ولم يعودا مستخدمين: منذ الإصدار 1.0.0-beta.13 يحل تسجيل الدخول عبر تطبيق Steam للهاتف محلهما معًا.
 - **محرر الخلفيات**: محرر على نهج محرر Wallpaper Engine. أضف الطبقات ورتّبها باستخدام أدوات التحكم المرئية (gizmos)، وأضف التأثيرات مع معاينات، واكتب تأثيراتك الخاصة وحرّرها في محرر المظللات، واستورد نماذج FBX وOBJ، وأنشئ الحركة على خط زمني، واكتب SceneScript، وأنشئ خصائص المستخدم، وحرّر أنظمة الجسيمات وهياكل Puppet Warp، واستخدم أدوات الصور في Wallpaper Engine (فصل الأمامية، وإنشاء ورقة الشخصية، وتوليد خريطة نواظم). يبدأ **خلفية جديدة…** خلفيةً من صورة أو من أحد قوالب Wallpaper Engine. أنت تحرّر مسودة: **حفظ** يطبّقها، و**حفظ كخلفية جديدة** يضيف نسخة منها إلى المكتبة، ولا تتغير ملفات الخلفية نفسها أبدًا.
 
   <!-- demo: wallpaper-editor -->
 
-  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+  <a href="../../docs/media/demo/wallpaper-editor.webm"><img src="../../docs/media/demo/wallpaper-editor.webp" alt="Wallpaper Editor: layers, gizmo and effects" width="720"></a>
 
-  ![محرر الخلفيات](../../docs/images/wallpaper-editor.jpg)
+  <img src="../../docs/images/wallpaper-editor.jpg" alt="محرر الخلفيات" width="720">
 
   <!-- demo: model-import -->
 
@@ -46,9 +46,9 @@ Open Wallpaper Engine تطبيق مجاني ومفتوح المصدر لنظام
 
 - **تحرير/تصدير المشهد**: غيّر طبقات الخلفية قيد التشغيل وتأثيراتها مباشرةً على سطح المكتب، أو اختر ما تعرضه شاشة التوقف، أو صدّر الخلفية كصورة حيّة (Live Photo) أو كحزمة Android.
 
-  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
+  <a href="../../docs/media/demo/scene-edit.webm"><img src="../../docs/media/demo/scene-edit.webp" alt="Scene Edit / Export: versions and layers changed live on the desktop" width="720"></a>
 
-  ![تحرير/تصدير المشهد](../../docs/images/scene-editor-live.jpg)
+  <img src="../../docs/images/scene-editor-live.jpg" alt="تحرير/تصدير المشهد" width="720">
 
 - **شاشة التوقف وشاشة القفل**: تعرض شاشة التوقف خلفية كل شاشة مباشرةً (*شاشة التوقف مثل الخلفية*) أو خلفيةً تختارها، وتعرض شاشة القفل صورةً منها.
 
@@ -58,30 +58,30 @@ Open Wallpaper Engine تطبيق مجاني ومفتوح المصدر لنظام
 
   <!-- demo: live-photo-export -->
 
-  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+  <a href="../../docs/media/demo/live-photo-export.webm"><img src="../../docs/media/demo/live-photo-export.webp" alt="iPhone &amp; iPad Export: Live Photo preview" width="720"></a>
 
   <!-- demo: android-export -->
 
-  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
+  <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  ![الإرسال عبر Wi-Fi](../../docs/images/send-over-wifi.png)
+  <img src="../../docs/images/send-over-wifi.png" alt="الإرسال عبر Wi-Fi" width="456">
 
 - **شاشات العرض**: خلفية لكل شاشة، أو خلفية واحدة ممتدة عبر الشاشات أو مكرّرة على كل منها، مع المجموعات والتقسيمات والملفات الشخصية، كما في Wallpaper Engine. يشغّل **تشغيل في نافذة** خلفيةً في نافذة خاصة بها.
 
-  ![شاشات العرض](../../docs/images/displays.png)
+  <img src="../../docs/images/displays.png" alt="شاشات العرض" width="400">
 
 - **قوائم التشغيل**: بدّل الخلفيات وفق مؤقّت، أو عند تسجيل الدخول، أو حسب وقت اليوم أو يوم الأسبوع، مع انتقالات Wallpaper Engine.
 
-  ![إعدادات قائمة التشغيل](../../docs/images/playlists.png)
+  <img src="../../docs/images/playlists.png" alt="إعدادات قائمة التشغيل" width="420">
 
 - **التحكم**: اختصارات للإجراءات وقوائم التشغيل والخلفيات والملفات الشخصية للشاشات؛ و[سطر الأوامر](../../docs/command-line.md) `-control` الخاص بـ Wallpaper Engine؛ وإضافة **خادم MCP** التي يعيّن عبرها عملاء MCP الخلفيات وقوائم التشغيل والإعدادات ويحرّرون المشاهد، عبر اتصال محلي لا يستطيع فتحه سوى حسابك.
 
-  ![إضافة خادم MCP](../../docs/images/mcp-plugin.png)
+  <img src="../../docs/images/mcp-plugin.png" alt="إضافة خادم MCP" width="456">
 
 - **الطاقة**: تتوقف الخلفيات مؤقتًا أثناء قفل الشاشة، وتتبع قاعدة *جهاز محمول يعمل بالبطارية* في Wallpaper Engine، ويمكنها الانتقال إلى إعداد جودة أقل ومعدل إطارات أقل عند العمل بالبطارية أو في وضع الطاقة المنخفضة.
 - **التلوين**: يتبع شريط القوائم ولون التمييز والأيقونات والمجلدات الملوّنة لونَ الخلفية؛ ويمكن لنوافذ Open Wallpaper Engine نفسها استخدام اللون الدقيق.
 
-  ![التلوين](../../docs/images/theming.png)
+  <img src="../../docs/images/theming.png" alt="التلوين" width="540">
 
 كل ما عدا ذلك، مرتّبًا حسب المجال: [docs/features.md](../../docs/features.md).
 
@@ -131,6 +131,8 @@ Open Wallpaper Engine تطبيق مجاني ومفتوح المصدر لنظام
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — عارض المشاهد المبني على Metal ومسار التأثيرات، وترجمة المظللات من GLSL إلى MSL وتخزينها المؤقت، وبيئة تشغيل SceneScript، والعرض المستجيب للصوت، وإعادة تصميم الورشة والتنزيلات، وإعدادات الموضع والأداء، وإعادة تصميم الشعار
 
 مرخَّص بموجب [GPL-3.0](../../LICENSE)، مثل المشروع الأصلي.
+
+مساعد Steam الذي يشغّله التطبيق كبرنامج منفصل ([`SteamHelper/`](../../SteamHelper/README.md#license)) مرخّص بموجب GPL-2.0-or-later، لأنه يتضمن [DepotDownloader](https://github.com/SteamRE/DepotDownloader) (GPL-2.0) و[SteamKit2](https://github.com/SteamRE/SteamKit) (LGPL-2.1).
 
 ## المعلومات القانونية
 

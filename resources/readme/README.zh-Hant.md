@@ -13,11 +13,11 @@ Open Wallpaper Engine 是一款免費、開源的 macOS App，可播放與編輯
 
 <!-- demo: desktop -->
 
-[![Open Wallpaper Engine: set a wallpaper from the library](../../docs/media/demo/hero.webp)](../../docs/media/demo/hero.webm)
+<a href="../../docs/media/demo/hero.webm"><img src="../../docs/media/demo/hero.webp" alt="Open Wallpaper Engine: set a wallpaper from the library" width="720"></a>
 
-[![Scene wallpapers running live](../../docs/media/demo/wallpapers-in-motion.webp)](../../docs/media/demo/wallpapers-in-motion.webm)
+<a href="../../docs/media/demo/wallpapers-in-motion.webm"><img src="../../docs/media/demo/wallpapers-in-motion.webp" alt="Scene wallpapers running live" width="720"></a>
 
-![資料庫](../../docs/images/library.jpg)
+<img src="../../docs/images/library.jpg" alt="資料庫" width="720">
 
 ## 與眾不同之處
 
@@ -29,14 +29,14 @@ Open Wallpaper Engine 是一款免費、開源的 macOS App，可播放與編輯
 ## 特色
 
 - **場景、影片與網頁背景圖片**：場景支援特效、粒子、3D 模型、光源、時間軸、SceneScript 與音訊響應視覺效果，並在能夠顯示 HDR 的顯示器上為場景以及 HDR10 或 HLG 影片提供 HDR 輸出。網頁背景圖片在 WebKit 或選用的 Chromium 引擎中執行，並支援其檔案夾屬性、即時音訊與 Now Playing。
-- **Steam 工作坊**：使用 Wallpaper Engine 的排序與篩選方式瀏覽，以你自己的 Steam 帳號下載（用 Steam 行動 App 掃描 QR 碼或輸入密碼登入），或輸入背景圖片檔案夾與 zip 檔。「已安裝」標籤頁提供 Wallpaper Engine 的檔案夾與排序方式。
+- **Steam 工作坊**：使用 Wallpaper Engine 的排序與篩選方式瀏覽，以你自己的 Steam 帳號下載（用 Steam 行動 App 掃描 QR 碼或輸入密碼登入），或輸入背景圖片檔案夾與 zip 檔。「已安裝」標籤頁提供 Wallpaper Engine 的檔案夾與排序方式。SteamCMD 與 Steam Web API 金鑰已棄用，不再使用：自 1.0.0-beta.13 起，Steam 行動應用程式登入取代了兩者。
 - **背景圖片編輯器**：一款延續 Wallpaper Engine 編輯器精神的編輯器。使用操控器加入與排列圖層，加入附預覽的效果，在著色器編輯器中撰寫與編輯你自己的效果，輸入 FBX 與 OBJ 模型，在時間軸上製作動畫，撰寫 SceneScript，建立使用者屬性，編輯粒子系統與 Puppet Warp 骨架，並使用 Wallpaper Engine 的圖像工具（前景分離、建立人物表單、法線貼圖產生）。**新背景圖片⋯** 可從一張圖片或 Wallpaper Engine 的某個範本開始建立背景圖片。你編輯的是一份草稿：**儲存** 會套用它，**儲存為新背景圖片** 會在資料庫中加入一份拷貝，背景圖片本身的檔案絕不會被更改。
 
   <!-- demo: wallpaper-editor -->
 
-  [![Wallpaper Editor: layers, gizmo and effects](../../docs/media/demo/wallpaper-editor.webp)](../../docs/media/demo/wallpaper-editor.webm)
+  <a href="../../docs/media/demo/wallpaper-editor.webm"><img src="../../docs/media/demo/wallpaper-editor.webp" alt="Wallpaper Editor: layers, gizmo and effects" width="720"></a>
 
-  ![背景圖片編輯器](../../docs/images/wallpaper-editor.jpg)
+  <img src="../../docs/images/wallpaper-editor.jpg" alt="背景圖片編輯器" width="720">
 
   <!-- demo: model-import -->
 
@@ -44,9 +44,9 @@ Open Wallpaper Engine 是一款免費、開源的 macOS App，可播放與編輯
 
 - **場景編輯/輸出**：直接在桌面上即時修改正在執行的背景圖片的圖層與效果，選擇螢幕保護程式顯示的內容，或將背景圖片輸出為原況照片或 Android 套件。
 
-  [![Scene Edit / Export: versions and layers changed live on the desktop](../../docs/media/demo/scene-edit.webp)](../../docs/media/demo/scene-edit.webm)
+  <a href="../../docs/media/demo/scene-edit.webm"><img src="../../docs/media/demo/scene-edit.webp" alt="Scene Edit / Export: versions and layers changed live on the desktop" width="720"></a>
 
-  ![場景編輯/輸出](../../docs/images/scene-editor-live.jpg)
+  <img src="../../docs/images/scene-editor-live.jpg" alt="場景編輯/輸出" width="720">
 
 - **螢幕保護程式與鎖定畫面**：螢幕保護程式即時顯示每台顯示器的背景圖片（*螢幕保護程式與桌布相同*），或顯示你選擇的背景圖片；鎖定畫面則顯示它的一張圖片。
 
@@ -56,30 +56,30 @@ Open Wallpaper Engine 是一款免費、開源的 macOS App，可播放與編輯
 
   <!-- demo: live-photo-export -->
 
-  [![iPhone & iPad Export: Live Photo preview](../../docs/media/demo/live-photo-export.webp)](../../docs/media/demo/live-photo-export.webm)
+  <a href="../../docs/media/demo/live-photo-export.webm"><img src="../../docs/media/demo/live-photo-export.webp" alt="iPhone &amp; iPad Export: Live Photo preview" width="720"></a>
 
   <!-- demo: android-export -->
 
-  [![Android Export settings](../../docs/media/demo/android-export.webp)](../../docs/media/demo/android-export.webm)
+  <a href="../../docs/media/demo/android-export.webm"><img src="../../docs/media/demo/android-export.webp" alt="Android Export settings" width="720"></a>
 
-  ![透過 Wi-Fi 傳送](../../docs/images/send-over-wifi.png)
+  <img src="../../docs/images/send-over-wifi.png" alt="透過 Wi-Fi 傳送" width="456">
 
 - **顯示器**：與 Wallpaper Engine 相同：每台顯示器一張背景圖片、一張背景圖片橫跨所有顯示器或在每台顯示器上複製，並支援群組、分割與設定檔。**在視窗中播放** 可在獨立的視窗中播放背景圖片。
 
-  ![顯示器](../../docs/images/displays.png)
+  <img src="../../docs/images/displays.png" alt="顯示器" width="400">
 
 - **播放列表**：依計時器、登入時、一天中的時段或星期幾更換背景圖片，並使用 Wallpaper Engine 的轉場效果。
 
-  ![播放列表設定](../../docs/images/playlists.png)
+  <img src="../../docs/images/playlists.png" alt="播放列表設定" width="420">
 
 - **控制**：用於動作、播放列表、背景圖片與顯示器設定檔的快速鍵；Wallpaper Engine 的 `-control` [命令列](../../docs/command-line.md)；以及 **MCP 伺服器** 外掛，MCP 用戶端可透過它設定背景圖片、播放列表與設定並編輯場景，連線僅限本機，且只有你的帳號可以開啟。
 
-  ![MCP 伺服器外掛](../../docs/images/mcp-plugin.png)
+  <img src="../../docs/images/mcp-plugin.png" alt="MCP 伺服器外掛" width="456">
 
 - **電源**：螢幕鎖定時背景圖片會暫停，遵循 Wallpaper Engine 的 *筆記型電腦使用電池時* 規則，並可在使用電池或處於低耗電模式時降至較低的畫質預設與畫面播放速率。
 - **主題顏色**：選單列、強調色以及著色的圖像與檔案夾會跟隨背景圖片的顏色變化；Open Wallpaper Engine 自己的視窗可以使用背景圖片的準確顏色。
 
-  ![主題顏色](../../docs/images/theming.png)
+  <img src="../../docs/images/theming.png" alt="主題顏色" width="540">
 
 其他所有功能（依領域分類）：[docs/features.md](../../docs/features.md)。
 
@@ -127,6 +127,8 @@ App 儲存的所有內容都留在你的 Mac 上，它不收集任何資料或�
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal 場景渲染器與效果管線、GLSL→MSL 著色器轉換與快取、SceneScript 執行環境、音訊回應式渲染、工作坊／下載功能全面翻新、擺放與效能設定、標誌重新設計
 
 與原始專案相同，本專案採用 [GPL-3.0](../../LICENSE) 授權。
+
+App 作為獨立程式執行的 Steam 輔助程式（[`SteamHelper/`](../../SteamHelper/README.md#license)）採用 GPL-2.0-or-later 授權，因為它包含 [DepotDownloader](https://github.com/SteamRE/DepotDownloader)（GPL-2.0）與 [SteamKit2](https://github.com/SteamRE/SteamKit)（LGPL-2.1）。
 
 ## 法律資訊
 
