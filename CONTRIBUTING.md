@@ -99,7 +99,11 @@ There is **one type per file** unless the types are tiny and private to it. A fi
 
 ## Reporting bugs
 
-Use the [issue templates](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/new/choose). A good report has the wallpaper's Workshop ID or link, its type, the macOS and Open Wallpaper Engine versions, and the logs from the time of the problem:
+Use the [issue templates](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/new/choose). A good report has the wallpaper's Workshop ID or link, its type, the macOS and Open Wallpaper Engine versions, and the logs from the time of the problem.
+
+The easiest way to get the logs is **Help › Report a Problem…** (also in Settings › Diagnostics, and offered on the launch after a crash). It collects the app's recent log, macOS's crash report and the wallpapers that were showing into one plain-text file, with your user name, your Mac's name and your home folder taken out. You read it first. **Report on GitHub…** saves it, selects it in Finder and opens a filled-in bug report; drag the file into the issue. The app sends nothing itself.
+
+Without the app (or for a longer stretch of time), the unified log works too:
 
 ```sh
 /usr/bin/log show --last 10m --predicate 'process == "Open Wallpaper Engine"' > owe.log

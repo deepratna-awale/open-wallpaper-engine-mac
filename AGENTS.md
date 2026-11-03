@@ -27,7 +27,10 @@ wallpaper, layer, effect or property name, no native look-alikes of WE effects.
 - Launch any development copy of the app isolated (`OWE_ISOLATED_STATE=<tag>`), or it overwrites
   the owner's real playlists and settings.
 - Logs: `/usr/bin/log show --last 10m --predicate 'process == "Open Wallpaper Engine"'` (a shell
-  `log` may shadow it). Shaders the translator rejected:
+  `log` may shadow it). The app also keeps its own `.info` and `.error` messages on disk for
+  Report a Problem (`RecentLog`): `~/Library/Caches/app.openwallpaperengine/Logs/current.log`, and
+  `previous.log` for the last run, which survive a crash. An isolated copy keeps its own under
+  `~/Library/Caches/Open Wallpaper Engine (isolated <tag>)/`. Shaders the translator rejected:
   `~/Library/Caches/app.openwallpaperengine/FailedShaders`.
 
 ## Things that are easy to miss
