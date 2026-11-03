@@ -44,6 +44,9 @@ Wallpaper Engine keeps the folders of its Installed tab in its `config.json`, be
 2. Switch to the **Workshop** tab and sign in with your Steam account (it must own Wallpaper Engine): scan the QR code with the Steam mobile app, or enter your account name, password and Steam Guard code. The sign-in is kept in your keychain; your Steam password is never stored
 3. Search, filter, and click **Download** on any wallpaper
 
+> [!NOTE]
+> **SteamCMD and the Steam Web API key are deprecated.** Since 1.0.0-beta.13 the app no longer uses either: one sign-in with the Steam mobile app (or your password and Steam Guard code) covers browsing, downloads, the assets and the imports. If you set up SteamCMD or a key for an earlier beta, there is nothing to migrate; you can delete SteamCMD (`~/Library/Application Support/Open Wallpaper Engine/steamcmd`, or `brew uninstall steamcmd`) and revoke the key at [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey).
+
 ### Import from Local Files
 
 - **Folder or zip:** File › Import Wallpaper from Folder… (⌘I) — select wallpaper folders containing `project.json`, or `.zip` files of wallpapers; you can also drop them onto the library

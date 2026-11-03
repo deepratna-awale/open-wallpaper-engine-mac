@@ -29,7 +29,7 @@ Open Wallpaper Engine è un’app gratuita e open source per macOS che riproduce
 ## In evidenza
 
 - **Sfondi scena, video e web**: scene con effetti, particelle, modelli 3D, luci, timeline, SceneScript ed elementi visivi reattivi all’audio, e uscita HDR per le scene e per i video HDR10 o HLG sugli schermi in grado di mostrarla. Gli sfondi web girano in WebKit o nel motore Chromium opzionale, con le proprietà della loro cartella, l’audio dal vivo e In riproduzione.
-- **Steam Workshop**: sfoglia con gli ordinamenti e i filtri di Wallpaper Engine, scarica con il tuo account Steam (accedi con il codice QR dell’app Steam Mobile o con la password), oppure importa cartelle e file zip di sfondi. La scheda Installati ha le cartelle e gli ordinamenti di Wallpaper Engine.
+- **Steam Workshop**: sfoglia con gli ordinamenti e i filtri di Wallpaper Engine, scarica con il tuo account Steam (accedi con il codice QR dell’app Steam Mobile o con la password), oppure importa cartelle e file zip di sfondi. La scheda Installati ha le cartelle e gli ordinamenti di Wallpaper Engine. SteamCMD e la chiave dell’API Web di Steam sono deprecati e non vengono più usati: dalla 1.0.0-beta.13 l’accesso con l’app mobile di Steam li sostituisce entrambi.
 - **Editor sfondi**: un editor sul modello di quello di Wallpaper Engine. Aggiungi e disponi i livelli con i gizmo, aggiungi effetti con anteprime, scrivi e modifica i tuoi effetti nell’Editor shader, importa modelli FBX e OBJ, anima su una timeline, scrivi SceneScript, crea proprietà utente, modifica sistemi particellari e rig Puppet Warp, e usa gli strumenti immagine di Wallpaper Engine (Separazione primo piano, Creazione del foglio del personaggio, Generazione mappatura normale). **Nuovo sfondo…** ne crea uno da un’immagine o da uno dei modelli di Wallpaper Engine. Modifichi una bozza: **Salva** la applica, **Salva come nuovo sfondo** ne aggiunge una copia alla libreria, e i file dello sfondo stesso non vengono mai modificati.
 
   <!-- demo: wallpaper-editor -->
@@ -127,6 +127,8 @@ Questo progetto si basa sul lavoro di:
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Renderer di scene Metal e pipeline degli effetti, traduzione e caching degli shader GLSL→MSL, runtime di SceneScript, rendering reattivo all’audio, revisione di Workshop e Download, impostazioni di posizionamento e prestazioni, riprogettazione del logo
 
 Distribuito con licenza [GPL-3.0](../../LICENSE), come il progetto originale.
+
+L’helper di Steam che l’app esegue come programma separato ([`SteamHelper/`](../../SteamHelper/README.md#license)) è distribuito con licenza GPL-2.0-or-later, perché include [DepotDownloader](https://github.com/SteamRE/DepotDownloader) (GPL-2.0) e [SteamKit2](https://github.com/SteamRE/SteamKit) (LGPL-2.1).
 
 ## Note legali
 

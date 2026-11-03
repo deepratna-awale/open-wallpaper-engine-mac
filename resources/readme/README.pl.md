@@ -29,7 +29,7 @@ Open Wallpaper Engine to darmowa aplikacja open source dla macOS, która odtwarz
 ## Najważniejsze funkcje
 
 - **Tapety typu scena, wideo i internetowe**: sceny z efektami, cząsteczkami, modelami 3D, światłami, osiami czasu, SceneScript i wizualizacjami reagującymi na dźwięk oraz wyjście HDR dla scen i filmów HDR10 lub HLG na wyświetlaczach, które potrafią je pokazać. Tapety internetowe działają w WebKit lub w opcjonalnym silniku Chromium, z właściwościami swojego folderu, dźwiękiem na żywo i funkcją Teraz odtwarzane.
-- **Warsztat Steam**: przeglądaj z sortowaniem i filtrami Wallpaper Engine, pobieraj z własnego konta Steam (logowanie kodem QR z aplikacji mobilnej Steam lub hasłem) albo importuj foldery i pliki zip z tapetami. Karta Zainstalowane ma foldery i sortowanie Wallpaper Engine.
+- **Warsztat Steam**: przeglądaj z sortowaniem i filtrami Wallpaper Engine, pobieraj z własnego konta Steam (logowanie kodem QR z aplikacji mobilnej Steam lub hasłem) albo importuj foldery i pliki zip z tapetami. Karta Zainstalowane ma foldery i sortowanie Wallpaper Engine. SteamCMD i klucz Steam Web API są przestarzałe i nie są już używane: od wersji 1.0.0-beta.13 oba zastępuje logowanie aplikacją mobilną Steam.
 - **Edytor tapet**: edytor wzorowany na edytorze Wallpaper Engine. Dodawaj i rozmieszczaj warstwy za pomocą uchwytów, dodawaj efekty z podglądem, pisz i edytuj własne efekty w Edytorze shaderów, importuj modele FBX i OBJ, animuj na osi czasu, pisz SceneScript, twórz właściwości użytkownika, edytuj systemy cząsteczek i szkielety Puppet Warp oraz korzystaj z narzędzi do obrazów Wallpaper Engine (Oddzielenie pierwszego planu, Stworzenie karty postaci, Generowanie mapy normalnych). **Nowa tapeta…** tworzy tapetę z obrazu lub z jednego z szablonów Wallpaper Engine. Edytujesz wersję roboczą: **Zachowaj** ją stosuje, **Zachowaj jako nową tapetę** dodaje kopię do biblioteki, a własne pliki tapety nigdy nie są zmieniane.
 
   <!-- demo: wallpaper-editor -->
@@ -127,6 +127,8 @@ Ten projekt powstał na bazie pracy następujących osób:
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — renderer scen i potok efektów w Metal, tłumaczenie shaderów GLSL→MSL i ich buforowanie, środowisko uruchomieniowe SceneScript, renderowanie reagujące na dźwięk, przebudowa Warsztatu i pobierania, ustawienia rozmieszczenia i wydajności, przeprojektowanie logo
 
 Projekt jest udostępniany na licencji [GPL-3.0](../../LICENSE), tak samo jak projekt oryginalny.
+
+Pomocnik Steam, który aplikacja uruchamia jako osobny program ([`SteamHelper/`](../../SteamHelper/README.md#license)), jest udostępniany na licencji GPL-2.0-or-later, ponieważ zawiera [DepotDownloader](https://github.com/SteamRE/DepotDownloader) (GPL-2.0) i [SteamKit2](https://github.com/SteamRE/SteamKit) (LGPL-2.1).
 
 ## Informacje prawne
 

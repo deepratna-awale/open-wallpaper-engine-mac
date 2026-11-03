@@ -29,7 +29,7 @@ Open Wallpaper Engine es una app gratuita y de código abierto para macOS que re
 ## Lo más destacado
 
 - **Fondos de pantalla de escena, de vídeo y web**: escenas con efectos, partículas, modelos 3D, luces, líneas de tiempo, SceneScript y visuales que reaccionan al audio, y salida HDR para escenas y vídeos HDR10 o HLG en las pantallas que puedan mostrarla. Los fondos web se ejecutan en WebKit o en el motor Chromium opcional, con las propiedades de su carpeta, audio en vivo y Ahora suena.
-- **Steam Workshop**: explora con las ordenaciones y los filtros de Wallpaper Engine, descarga con tu propia cuenta de Steam (inicia sesión con el código QR de la app Steam Mobile o con tu contraseña), o importa carpetas y archivos zip de fondos de pantalla. La pestaña Instalados tiene las carpetas y las ordenaciones de Wallpaper Engine.
+- **Steam Workshop**: explora con las ordenaciones y los filtros de Wallpaper Engine, descarga con tu propia cuenta de Steam (inicia sesión con el código QR de la app Steam Mobile o con tu contraseña), o importa carpetas y archivos zip de fondos de pantalla. La pestaña Instalados tiene las carpetas y las ordenaciones de Wallpaper Engine. SteamCMD y la clave de la API web de Steam están obsoletos y ya no se usan: desde la 1.0.0-beta.13, el inicio de sesión con la app móvil de Steam sustituye a ambos.
 - **Editor de fondos de pantalla**: un editor al estilo del de Wallpaper Engine. Añade y coloca capas con gizmos, añade efectos con vista previa, escribe y edita tus propios efectos en el Editor de sombreadores, importa modelos FBX y OBJ, anima en una línea de tiempo, escribe SceneScript, crea propiedades de usuario, edita sistemas de partículas y esqueletos de Puppet Warp, y usa las herramientas de imagen de Wallpaper Engine (Separación del primer plano, Hoja de creación de personaje, Generar mapeado normal). **Nuevo fondo de pantalla…** crea uno a partir de una imagen o de una de las plantillas de Wallpaper Engine. Editas un borrador: **Guardar** lo aplica, **Guardar como nuevo fondo de pantalla** añade una copia a la biblioteca, y los archivos del propio fondo de pantalla nunca se modifican.
 
   <!-- demo: wallpaper-editor -->
@@ -127,6 +127,8 @@ Este proyecto se basa en el trabajo de:
 - **[Deepratna Awale](https://github.com/deepratna-awale)**: renderizador de escenas Metal y pipeline de efectos, traducción y almacenamiento en caché de sombreadores GLSL→MSL, entorno de ejecución de SceneScript, renderizado que reacciona al audio, renovación del Workshop y las descargas, ajustes de colocación y rendimiento, rediseño del logotipo
 
 Con licencia [GPL-3.0](../../LICENSE), igual que el proyecto original.
+
+El asistente de Steam que la app ejecuta como un programa aparte ([`SteamHelper/`](../../SteamHelper/README.md#license)) tiene licencia GPL-2.0-or-later porque incluye [DepotDownloader](https://github.com/SteamRE/DepotDownloader) (GPL-2.0) y [SteamKit2](https://github.com/SteamRE/SteamKit) (LGPL-2.1).
 
 ## Aviso legal
 

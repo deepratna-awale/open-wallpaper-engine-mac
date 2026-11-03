@@ -29,7 +29,7 @@ Open Wallpaper Engine 是一款免费、开源的 macOS App，可播放和编辑
 ## 亮点
 
 - **场景、视频和网页墙纸**：场景支持特效、粒子、3D 模型、光源、时间线、SceneScript 和音频响应视觉效果，并在能够显示 HDR 的显示器上为场景以及 HDR10 或 HLG 视频提供 HDR 输出。网页墙纸在 WebKit 或可选的 Chromium 引擎中运行，支持其文件夹属性、实时音频和 Now Playing。
-- **Steam 创意工坊**：使用 Wallpaper Engine 的排序和筛选方式浏览，用你自己的 Steam 账户下载（用 Steam 手机 App 扫描二维码或输入密码登录），或导入墙纸文件夹和 zip 文件。“已安装”标签页提供 Wallpaper Engine 的文件夹和排序方式。
+- **Steam 创意工坊**：使用 Wallpaper Engine 的排序和筛选方式浏览，用你自己的 Steam 账户下载（用 Steam 手机 App 扫描二维码或输入密码登录），或导入墙纸文件夹和 zip 文件。“已安装”标签页提供 Wallpaper Engine 的文件夹和排序方式。SteamCMD 和 Steam Web API 密钥已弃用，不再使用：自 1.0.0-beta.13 起，Steam 手机应用登录取代了两者。
 - **墙纸编辑器**：一款秉承 Wallpaper Engine 编辑器理念的编辑器。使用操纵器添加和排列图层，添加带预览的效果，在着色器编辑器中编写和编辑你自己的效果，导入 FBX 和 OBJ 模型，在时间线上制作动画，编写 SceneScript，创建用户属性，编辑粒子系统和 Puppet Warp 骨架，并使用 Wallpaper Engine 的图像工具（前景分离、角色属性表创建、法线贴图生成）。**新墙纸…** 可从一张图片或 Wallpaper Engine 的某个模板开始创建墙纸。你编辑的是一份草稿：**保存** 会应用它，**保存为新墙纸** 会在资源库中添加一份副本，墙纸本身的文件绝不会被更改。
 
   <!-- demo: wallpaper-editor -->
@@ -127,6 +127,8 @@ App 保存的所有内容都留在你的 Mac 上，它不收集任何数据或�
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal 场景渲染器与效果管线、GLSL→MSL 着色器转换与缓存、SceneScript 运行时、音频响应渲染、创意工坊／下载功能全面改进、摆放与性能设置、标志重新设计
 
 与原项目相同，本项目采用 [GPL-3.0](../../LICENSE) 许可证。
+
+应用作为独立程序运行的 Steam 助手（[`SteamHelper/`](../../SteamHelper/README.md#license)）采用 GPL-2.0-or-later 许可证，因为它包含 [DepotDownloader](https://github.com/SteamRE/DepotDownloader)（GPL-2.0）和 [SteamKit2](https://github.com/SteamRE/SteamKit)（LGPL-2.1）。
 
 ## 法律信息
 

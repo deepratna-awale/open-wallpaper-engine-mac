@@ -29,7 +29,7 @@ Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・We
 ## 主な機能
 
 - **シーン・動画・Web 壁紙**：シーンはエフェクト、パーティクル、3D モデル、ライト、タイムライン、SceneScript、オーディオ連動ビジュアルに対応し、表示できるディスプレイでは、シーンと HDR10 または HLG の動画を HDR で出力します。Web 壁紙は WebKit またはオプションの Chromium エンジンで動作し、フォルダのプロパティ、ライブオーディオ、Now Playing に対応します。
-- **Steam ワークショップ**：Wallpaper Engine の並べ替えとフィルタで閲覧し、ご自身の Steam アカウントでダウンロードできるほか（Steam モバイルアプリの QR コードまたはパスワードでログイン）、壁紙のフォルダや zip を読み込むこともできます。「インストール済み」タブには Wallpaper Engine のフォルダと並べ替えがあります。
+- **Steam ワークショップ**：Wallpaper Engine の並べ替えとフィルタで閲覧し、ご自身の Steam アカウントでダウンロードできるほか（Steam モバイルアプリの QR コードまたはパスワードでログイン）、壁紙のフォルダや zip を読み込むこともできます。「インストール済み」タブには Wallpaper Engine のフォルダと並べ替えがあります。SteamCMD と Steam Web API キーは非推奨となり、使われなくなりました。1.0.0-beta.13 以降は Steam モバイルアプリでのサインインが両方に代わります。
 - **壁紙エディタ**：Wallpaper Engine のエディタにならったエディタです。ギズモでレイヤーを追加・配置し、プレビューを見ながらエフェクトを追加し、シェーダーエディタで独自のエフェクトを書いて編集し、FBX や OBJ のモデルを読み込み、タイムラインでアニメーションを付け、SceneScript を書き、ユーザープロパティを作成し、パーティクルシステムや Puppet Warp のリグを編集し、Wallpaper Engine の画像ツール（前景分離、キャラクターシート作成、法線マッピング生成）を使えます。**新しい壁紙…** で、画像または Wallpaper Engine のテンプレートから壁紙を作り始められます。編集はドラフトに対して行い、**保存** で適用し、**新規壁紙として保存** でライブラリにコピーを追加します。壁紙自体のファイルが変更されることはありません。
 
   <!-- demo: wallpaper-editor -->
@@ -127,6 +127,8 @@ Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・We
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal シーンレンダラーとエフェクトパイプライン、GLSL→MSL シェーダー変換とキャッシュ、SceneScript ランタイム、オーディオレスポンスのレンダリング、ワークショップ／ダウンロードの全面改良、配置とパフォーマンスの設定、ロゴのリデザイン
 
 オリジナルのプロジェクトと同じく、[GPL-3.0](../../LICENSE) のもとでライセンスされています。
+
+アプリが別のプログラムとして実行する Steam ヘルパー（[`SteamHelper/`](../../SteamHelper/README.md#license)）は、[DepotDownloader](https://github.com/SteamRE/DepotDownloader)（GPL-2.0）と [SteamKit2](https://github.com/SteamRE/SteamKit)（LGPL-2.1）を含むため、GPL-2.0-or-later でライセンスされています。
 
 ## 法的事項
 

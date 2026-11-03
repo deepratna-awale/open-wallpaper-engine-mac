@@ -54,7 +54,7 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 
 ### Setup, library & updates
 - **Setup assistant** — on first launch, a few skippable steps set the language, show the privacy notes, set up the Steam login, install the Wallpaper Engine assets and bring in your wallpapers.
-- **One Steam sign-in** — a QR code scanned in the Steam mobile app, or the account name, password and Steam Guard code. Browsing, downloads, the assets and the imports all use it, through the Steam helper built into the app; nothing else to install.
+- **One Steam sign-in** — a QR code scanned in the Steam mobile app, or the account name, password and Steam Guard code. Browsing, downloads, the assets and the imports all use it, through the Steam helper built into the app; nothing else to install. SteamCMD and the Steam Web API key are deprecated and no longer used (since 1.0.0-beta.13).
 - **Wallpaper Engine assets from your own Steam copy** — downloaded through the Steam login after you sign in, optionally with Wallpaper Engine's default wallpapers.
 - **Imports** — your Workshop collections and subscriptions (read from Steam through the Steam login), the Workshop items of an existing Steam library, and wallpaper folders.
 - **Comments** — a Workshop wallpaper's details panel has a Comments section (collapsed until opened) with its Steam comments and their authors, 20 at a time, through the Steam login.

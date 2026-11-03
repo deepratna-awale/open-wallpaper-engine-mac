@@ -29,7 +29,7 @@ Open Wallpaper Engine ist eine kostenlose Open-Source-App für macOS, die Wallpa
 ## Highlights
 
 - **Szenen-, Video- und Web-Hintergrundbilder**: Szenen mit Effekten, Partikeln, 3D-Modellen, Lichtern, Zeitleisten, SceneScript und audioreaktiven Visuals sowie HDR-Ausgabe für Szenen und für HDR10- oder HLG-Videos auf Displays, die sie darstellen können. Web-Hintergrundbilder laufen in WebKit oder in der optionalen Chromium-Engine, mit ihren Ordnereigenschaften, Live-Audio und „Aktuelle Wiedergabe“.
-- **Steam Workshop**: mit den Sortierungen und Filtern von Wallpaper Engine durchsuchen, mit Ihrem eigenen Steam-Account laden (Anmeldung per QR-Code in der Steam Mobile App oder mit Passwort) oder Hintergrundbildordner und Zip-Dateien importieren. Der Tab „Installiert“ hat die Ordner und Sortierungen von Wallpaper Engine.
+- **Steam Workshop**: mit den Sortierungen und Filtern von Wallpaper Engine durchsuchen, mit Ihrem eigenen Steam-Account laden (Anmeldung per QR-Code in der Steam Mobile App oder mit Passwort) oder Hintergrundbildordner und Zip-Dateien importieren. Der Tab „Installiert“ hat die Ordner und Sortierungen von Wallpaper Engine. SteamCMD und der Steam-Web-API-Schlüssel sind veraltet und werden nicht mehr verwendet: Seit 1.0.0-beta.13 ersetzt die Anmeldung mit der Steam Mobile App beides.
 - **Hintergrundbild-Editor**: ein Editor nach dem Vorbild von Wallpaper Engine. Ebenen mit Gizmos hinzufügen und anordnen, Effekte mit Vorschauen hinzufügen, eigene Effekte im Shader-Editor schreiben und bearbeiten, FBX- und OBJ-Modelle importieren, auf einer Zeitleiste animieren, SceneScript schreiben, Benutzereigenschaften erstellen, Partikelsysteme und Puppet-Warp-Rigs bearbeiten und die Bildwerkzeuge von Wallpaper Engine nutzen (Vordergrund-Separation, Erstellung eines Character-Sheets, Generieren einer Normal-Map). **Neues Hintergrundbild …** beginnt eines aus einem Bild oder aus einer der Vorlagen von Wallpaper Engine. Sie bearbeiten einen Entwurf: **Sichern** übernimmt ihn, **Als neues Hintergrundbild sichern** fügt der Mediathek eine Kopie hinzu, und die eigenen Dateien des Hintergrundbilds werden nie verändert.
 
   <!-- demo: wallpaper-editor -->
@@ -127,6 +127,8 @@ Dieses Projekt baut auf der Arbeit folgender Personen auf:
 - **[Deepratna Awale](https://github.com/deepratna-awale)** – Metal-Szenenrenderer und Effekt-Pipeline, Übersetzung und Caching von GLSL→MSL-Shadern, SceneScript-Laufzeitumgebung, audioreaktives Rendern, Überarbeitung von Workshop und Downloads, Platzierungs- und Leistungseinstellungen, Neugestaltung des Logos
 
 Lizenziert unter [GPL-3.0](../../LICENSE), wie das ursprüngliche Projekt.
+
+Der Steam-Helfer, den die App als eigenes Programm ausführt ([`SteamHelper/`](../../SteamHelper/README.md#license)), steht unter GPL-2.0-or-later, weil er [DepotDownloader](https://github.com/SteamRE/DepotDownloader) (GPL-2.0) und [SteamKit2](https://github.com/SteamRE/SteamKit) (LGPL-2.1) enthält.
 
 ## Rechtliches
 

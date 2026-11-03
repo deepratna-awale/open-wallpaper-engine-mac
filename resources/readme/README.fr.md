@@ -29,7 +29,7 @@ Open Wallpaper Engine est une app macOS gratuite et open source qui lit et modif
 ## Points forts
 
 - **Fonds d’écran de scène, vidéo et web** : des scènes avec effets, particules, modèles 3D, lumières, chronologies, SceneScript et visuels réactifs à l’audio, et une sortie HDR pour les scènes et les vidéos HDR10 ou HLG sur les moniteurs capables de l’afficher. Les fonds d’écran web s’exécutent dans WebKit ou dans le moteur Chromium facultatif, avec les propriétés de leur dossier, l’audio en direct et À l’écoute.
-- **Steam Workshop** : parcourez avec les tris et les filtres de Wallpaper Engine, téléchargez avec votre propre compte Steam (connexion par le code QR de l’app Steam Mobile ou par mot de passe), ou importez des dossiers et des fichiers zip de fonds d’écran. L’onglet Installés propose les dossiers et les tris de Wallpaper Engine.
+- **Steam Workshop** : parcourez avec les tris et les filtres de Wallpaper Engine, téléchargez avec votre propre compte Steam (connexion par le code QR de l’app Steam Mobile ou par mot de passe), ou importez des dossiers et des fichiers zip de fonds d’écran. L’onglet Installés propose les dossiers et les tris de Wallpaper Engine. SteamCMD et la clé de l’API Web Steam sont obsolètes et ne sont plus utilisés : depuis la 1.0.0-beta.13, la connexion avec l’application mobile Steam remplace les deux.
 - **Éditeur de fond d’écran** : un éditeur dans l’esprit de celui de Wallpaper Engine. Ajoutez et disposez des calques avec des gizmos, ajoutez des effets avec aperçus, écrivez et modifiez vos propres effets dans l’Éditeur de nuanceurs, importez des modèles FBX et OBJ, animez sur une chronologie, écrivez du SceneScript, créez des propriétés utilisateur, modifiez des systèmes de particules et des armatures Puppet Warp, et utilisez les outils d’image de Wallpaper Engine (Séparation premier plan, Création feuille du personnage, Génération de carte normale). **Nouveau fond d’écran…** en crée un à partir d’une image ou de l’un des modèles de Wallpaper Engine. Vous modifiez un brouillon : **Enregistrer** l’applique, **Enregistrer comme nouveau fond d’écran** en ajoute une copie à la bibliothèque, et les fichiers du fond d’écran lui-même ne sont jamais modifiés.
 
   <!-- demo: wallpaper-editor -->
@@ -127,6 +127,8 @@ Ce projet s’appuie sur le travail de :
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Moteur de rendu de scène Metal et pipeline d’effets, traduction et mise en cache des nuanceurs GLSL→MSL, environnement d’exécution SceneScript, rendu réactif au son, refonte du Workshop et des téléchargements, réglages de placement et de performances, refonte du logo
 
 Distribué sous licence [GPL-3.0](../../LICENSE), comme le projet d’origine.
+
+L’assistant Steam que l’app exécute comme programme distinct ([`SteamHelper/`](../../SteamHelper/README.md#license)) est sous licence GPL-2.0-or-later, car il inclut [DepotDownloader](https://github.com/SteamRE/DepotDownloader) (GPL-2.0) et [SteamKit2](https://github.com/SteamRE/SteamKit) (LGPL-2.1).
 
 ## Mentions légales
 

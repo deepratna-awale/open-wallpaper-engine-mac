@@ -29,7 +29,7 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 ## Öne Çıkanlar
 
 - **Sahne, video ve web duvar kâğıtları**: efektler, parçacıklar, 3B modeller, ışıklar, zaman çizelgeleri, SceneScript ve sese duyarlı görseller içeren sahneler; ayrıca bunu gösterebilen ekranlarda sahneler ve HDR10 ya da HLG videolar için HDR çıkışı. Web duvar kâğıtları WebKit’te veya isteğe bağlı Chromium motorunda; klasör özellikleri, canlı ses ve Şu An Çalan bilgisiyle çalışır.
-- **Steam Atölyesi**: Wallpaper Engine’in sıralamaları ve filtreleriyle göz atın, kendi Steam hesabınızla indirin (Steam mobil uygulamasının QR koduyla ya da parolanızla giriş yapın) ya da duvar kâğıdı klasörlerini ve zip dosyalarını içe aktarın. Yüklü sekmesinde Wallpaper Engine’in klasörleri ve sıralamaları bulunur.
+- **Steam Atölyesi**: Wallpaper Engine’in sıralamaları ve filtreleriyle göz atın, kendi Steam hesabınızla indirin (Steam mobil uygulamasının QR koduyla ya da parolanızla giriş yapın) ya da duvar kâğıdı klasörlerini ve zip dosyalarını içe aktarın. Yüklü sekmesinde Wallpaper Engine’in klasörleri ve sıralamaları bulunur. SteamCMD ve Steam Web API anahtarı kullanımdan kaldırıldı: 1.0.0-beta.13’ten beri ikisinin yerini Steam mobil uygulamasıyla giriş aldı.
 - **Duvar Kâğıdı Düzenleyici**: Wallpaper Engine’in düzenleyicisinin ruhunu taşıyan bir düzenleyici. Katmanları gizmo’larla ekleyip yerleştirin, efektleri önizlemeleriyle ekleyin, kendi efektlerinizi Gölgelendirici Düzenleyici’de yazıp düzenleyin, FBX ve OBJ modelleri içe aktarın, bir zaman çizelgesinde canlandırın, SceneScript yazın, kullanıcı özellikleri oluşturun, parçacık sistemlerini ve Puppet Warp iskeletlerini düzenleyin ve Wallpaper Engine’in görüntü araçlarını kullanın (Ön Plan Ayırma, Karakter Sayfası Oluşturma, Normal Harita Oluşturma). **Yeni Duvar Kâğıdı…** bir resimden ya da Wallpaper Engine’in şablonlarından birinden yeni bir duvar kâğıdı başlatır. Bir taslağı düzenlersiniz: **Kaydet** taslağı uygular, **Yeni Duvar Kâğıdı Olarak Kaydet** kitaplığa bir kopya ekler; duvar kâğıdının kendi dosyaları hiçbir zaman değiştirilmez.
 
   <!-- demo: wallpaper-editor -->
@@ -127,6 +127,8 @@ Bu proje aşağıdaki kişilerin çalışmaları üzerine inşa edilmiştir:
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal sahne işleyicisi ve efekt ardışık düzeni, GLSL→MSL gölgelendirici çevirisi ve önbelleğe alma, SceneScript çalışma zamanı, sese duyarlı işleme, Atölye ve İndirilenler bölümlerinin yenilenmesi, yerleşim ve performans ayarları, logo yeniden tasarımı
 
 Orijinal projeyle aynı şekilde [GPL-3.0](../../LICENSE) lisansı altında lisanslanmıştır.
+
+Uygulamanın ayrı bir program olarak çalıştırdığı Steam yardımcısı ([`SteamHelper/`](../../SteamHelper/README.md#license)), [DepotDownloader](https://github.com/SteamRE/DepotDownloader) (GPL-2.0) ve [SteamKit2](https://github.com/SteamRE/SteamKit) (LGPL-2.1) içerdiği için GPL-2.0-or-later lisanslıdır.
 
 ## Yasal
 

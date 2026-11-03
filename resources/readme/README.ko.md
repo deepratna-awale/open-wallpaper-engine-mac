@@ -29,7 +29,7 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 ## 주요 기능
 
 - **장면, 동영상, 웹 배경화면**: 장면은 효과, 파티클, 3D 모델, 조명, 타임라인, SceneScript, 오디오 반응형 비주얼을 지원하며, 이를 표시할 수 있는 디스플레이에서는 장면과 HDR10 또는 HLG 동영상을 HDR로 출력합니다. 웹 배경화면은 WebKit 또는 선택 사항인 Chromium 엔진에서 실행되며, 폴더 속성, 실시간 오디오, Now Playing을 지원합니다.
-- **Steam 창작마당**: Wallpaper Engine의 정렬 및 필터로 둘러보고, 사용자 본인의 Steam 계정으로 다운로드하거나(Steam 모바일 앱의 QR 코드나 암호로 로그인), 배경화면 폴더와 zip 파일을 가져올 수 있습니다. 설치됨 탭에는 Wallpaper Engine의 폴더와 정렬이 있습니다.
+- **Steam 창작마당**: Wallpaper Engine의 정렬 및 필터로 둘러보고, 사용자 본인의 Steam 계정으로 다운로드하거나(Steam 모바일 앱의 QR 코드나 암호로 로그인), 배경화면 폴더와 zip 파일을 가져올 수 있습니다. 설치됨 탭에는 Wallpaper Engine의 폴더와 정렬이 있습니다. SteamCMD와 Steam 웹 API 키는 지원이 중단되어 더 이상 사용되지 않습니다. 1.0.0-beta.13부터 Steam 모바일 앱 로그인이 둘 다 대신합니다.
 - **배경화면 편집기**: Wallpaper Engine 편집기를 본뜬 편집기입니다. 기즈모로 레이어를 추가하고 배치하며, 미리보기와 함께 효과를 추가하고, 셰이더 편집기에서 자신만의 효과를 작성하고 편집하며, FBX 및 OBJ 모델을 가져오고, 타임라인에서 애니메이션을 만들고, SceneScript를 작성하고, 사용자 속성을 만들고, 파티클 시스템과 Puppet Warp 리그를 편집하고, Wallpaper Engine의 이미지 도구(전경 분리, 캐릭터 시트 생성, 법선 맵 생성)를 사용할 수 있습니다. **새 배경화면…**은 이미지 또는 Wallpaper Engine 템플릿 중 하나로 새 배경화면을 시작합니다. 편집은 초안에서 이루어지며, **저장**하면 적용되고 **새 배경화면으로 저장**하면 보관함에 사본이 추가됩니다. 배경화면 자체의 파일은 절대 변경되지 않습니다.
 
   <!-- demo: wallpaper-editor -->
@@ -127,6 +127,8 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal 장면 렌더러와 효과 파이프라인, GLSL→MSL 셰이더 변환 및 캐싱, SceneScript 런타임, 오디오 응답 렌더링, 창작마당/다운로드 전면 개편, 배치 및 성능 설정, 로고 리디자인
 
 원본 프로젝트와 동일하게 [GPL-3.0](../../LICENSE) 라이선스가 적용됩니다.
+
+앱이 별도 프로그램으로 실행하는 Steam 도우미([`SteamHelper/`](../../SteamHelper/README.md#license))는 [DepotDownloader](https://github.com/SteamRE/DepotDownloader)(GPL-2.0)와 [SteamKit2](https://github.com/SteamRE/SteamKit)(LGPL-2.1)를 포함하므로 GPL-2.0-or-later 라이선스가 적용됩니다.
 
 ## 법적 고지
 
