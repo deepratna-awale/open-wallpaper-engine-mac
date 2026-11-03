@@ -53,12 +53,6 @@ runs:
           echo "::warning::OWE_CI_ASSETS ($assets) holds no assets/shaders; using the asset cache instead."
           assets=
         fi
-        # This Mac holds the maintainer's wallpaper library, which the library tests find on their
-        # own (/Volumes/980Pro/OpenWallpaperStorage, the Steam folder), and they need the assets
-        # with it. Every test job here gets them, as with Scripts/ci-local.sh.
-        if [[ -n "$assets" ]]; then
-          echo "TEST_RUNNER_OWE_ASSETS=$assets" >> "$GITHUB_ENV"
-        fi
         {
           echo "local=true"
           echo "root=$root"
