@@ -222,7 +222,7 @@ final class SceneValueTests: XCTestCase {
     // MARK: Data
 
     func testEveryStoredConstantParses() throws {
-        let root = URL(fileURLWithPath: "/Volumes/980Pro/OpenWallpaperStorage")
+        let root = URL(fileURLWithPath: "\(OwnerMachine.volume)/OpenWallpaperStorage")
         guard FileManager.default.fileExists(atPath: root.path) else {
             throw XCTSkip("no local wallpaper storage at \(root.path)")
         }

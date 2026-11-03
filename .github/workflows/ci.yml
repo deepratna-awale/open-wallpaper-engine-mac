@@ -34,6 +34,9 @@ env:
     -clonedSourcePackagesDirPath build/SourcePackages
     CODE_SIGNING_ALLOWED=NO
     COMPILER_INDEX_STORE_ENABLE=NO
+  # Tests that read the maintainer's drive (OwnerMachine.swift) skip in CI, on the self-hosted Mac
+  # as on GitHub's runners; Scripts/ci-local.sh still runs them.
+  TEST_RUNNER_OWE_HERMETIC: '1'
   # The slow tier (tests over about a minute, SlowTests.swift) skips unless OWE_SLOW_TESTS=1;
   # nightly.yml and Scripts/ci-local.sh run it. The test build is optimised
   # (Scripts/test-build-settings.txt) but stays a Debug build: DEBUG code, signing and @testable

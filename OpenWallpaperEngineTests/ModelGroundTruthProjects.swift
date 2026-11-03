@@ -165,7 +165,7 @@ final class ModelGroundTruthProjects: XCTestCase {
         XCTAssertGreaterThan(disabled, 4 * enabled, "the depth test hides most of what is over the sphere")
     }
 
-    private static let weAssets = "/Volumes/980Pro/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/"
+    private static let weAssets = "\(OwnerMachine.volume)/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/"
         + "steamapps/common/wallpaper_engine/assets"
 
     /// The orange pixels' density inside the sphere's disc over their density outside it, over

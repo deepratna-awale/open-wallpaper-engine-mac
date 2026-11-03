@@ -102,7 +102,7 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
     }
 
     func testFixtureMatchesTheTypings() throws {
-        let candidates = [URL(fileURLWithPath: "/Volumes/980Pro/dd-scenescript/spec/lib.sceneScript.d.ts")]
+        let candidates = [URL(fileURLWithPath: "\(OwnerMachine.volume)/dd-scenescript/spec/lib.sceneScript.d.ts")]
             + WallpaperEngineAssets.searchDirectories.map {
                 $0.deletingLastPathComponent().appending(path: "ui/dist/monaco/autocomplete/lib.sceneScript.d.ts")
             }

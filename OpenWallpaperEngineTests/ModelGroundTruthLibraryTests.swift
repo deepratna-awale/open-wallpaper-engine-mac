@@ -8,12 +8,12 @@ import simd
 /// are written there next to WE's for a look.
 final class ModelGroundTruthLibraryTests: XCTestCase {
     private static var library: URL {
-        URL(fileURLWithPath: ProcessInfo.processInfo.environment["OWE_LIBRARY"] ?? "/Volumes/980Pro/OpenWallpaperStorage")
+        URL(fileURLWithPath: ProcessInfo.processInfo.environment["OWE_LIBRARY"] ?? "\(OwnerMachine.volume)/OpenWallpaperStorage")
     }
 
     private static var captures: URL {
         URL(fileURLWithPath: ProcessInfo.processInfo.environment["OWE_MODELS_GT"]
-            ?? "/Volumes/980Pro/dd-agentREF/peer/tools/peer/models_gt")
+            ?? "\(OwnerMachine.volume)/dd-agentREF/peer/tools/peer/models_gt")
     }
 
     private static var out: URL? {

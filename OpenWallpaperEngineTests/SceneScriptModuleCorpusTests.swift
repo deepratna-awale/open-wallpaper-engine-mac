@@ -6,7 +6,7 @@ import XCTest
 /// keeps its line count, and yields a factory JavaScriptCore accepts. Skipped when the corpus is
 /// absent (CI), like `LibrarySweepTests`.
 final class SceneScriptModuleCorpusTests: XCTestCase {
-    private static let corpus = URL(fileURLWithPath: "/Volumes/980Pro/dd-scenescript/corpus/scripts", isDirectory: true)
+    private static let corpus = URL(fileURLWithPath: "\(OwnerMachine.volume)/dd-scenescript/corpus/scripts", isDirectory: true)
     /// 3802509485's text-layer script with a string literal broken across two lines: V8 cannot
     /// compile it either, so WE never runs it.
     private static let brokenScript = "8bb9b9a54120"

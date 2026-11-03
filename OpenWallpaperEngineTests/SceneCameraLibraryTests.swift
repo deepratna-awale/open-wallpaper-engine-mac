@@ -6,7 +6,7 @@ import simd
 /// scene starts with, and PaRappa's `camerastyle` choosing among eight layers. Skipped when the
 /// library is absent (CI).
 final class SceneCameraLibraryTests: XCTestCase {
-    private static let storage = URL(fileURLWithPath: "/Volumes/980Pro/OpenWallpaperStorage")
+    private static let storage = URL(fileURLWithPath: "\(OwnerMachine.volume)/OpenWallpaperStorage")
 
     private func scene(_ id: String) throws -> (WEScene, SceneSpatialContent) {
         let directory = Self.storage.appending(path: id, directoryHint: .isDirectory)

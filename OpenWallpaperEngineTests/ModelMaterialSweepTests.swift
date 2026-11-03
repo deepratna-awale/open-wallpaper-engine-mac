@@ -24,7 +24,7 @@ final class ModelMaterialSweepTests: XCTestCase {
         let library = LibrarySweepTests.libraryRoot
         try XCTSkipUnless(FileManager.default.fileExists(atPath: assets.path), "WE assets not present")
         try XCTSkipUnless(FileManager.default.fileExists(atPath: library.path), "wallpaper library not present")
-        let steam = "/Volumes/980Pro/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps"
+        let steam = "\(OwnerMachine.volume)/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps"
         let install = URL(fileURLWithPath: ProcessInfo.processInfo.environment["OWE_WE_INSTALL"] ?? "\(steam)/common/wallpaper_engine")
         let defaults = install.appending(path: "projects/defaultprojects", directoryHint: .isDirectory)
 

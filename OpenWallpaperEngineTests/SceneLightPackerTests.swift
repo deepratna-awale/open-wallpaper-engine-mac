@@ -365,7 +365,7 @@ final class SceneLightPackerTests: XCTestCase {
 
     /// The same from the library's own `scene.json`, when it is present.
     func testOnePieceGirlsFromTheLibrary() throws {
-        let url = URL(fileURLWithPath: "/Volumes/980Pro/OpenWallpaperStorage/3270035750/scene.json")
+        let url = URL(fileURLWithPath: "\(OwnerMachine.volume)/OpenWallpaperStorage/3270035750/scene.json")
         try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "wallpaper library not present")
         let scene = try decodeTolerant(WEScene.self, from: Data(contentsOf: url))
         let lighting = frameLighting(objects: scene.objects, general: scene.general)

@@ -4,7 +4,7 @@ import XCTest
 final class EffectDocumentTests: XCTestCase {
     /// Local Wallpaper Engine install and library; CI has neither, so those tests skip.
     private static let assetsRoot = ShaderVariantTests.weAssets
-    private static let libraryRoot = URL(fileURLWithPath: "/Volumes/980Pro/OpenWallpaperStorage", isDirectory: true)
+    private static let libraryRoot = URL(fileURLWithPath: "\(OwnerMachine.volume)/OpenWallpaperStorage", isDirectory: true)
 
     private func directories(in url: URL) -> [URL] {
         let names = (try? FileManager.default.contentsOfDirectory(atPath: url.path)) ?? [] // optional: absent dir = none

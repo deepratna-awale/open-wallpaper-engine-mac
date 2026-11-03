@@ -77,7 +77,7 @@ final class SceneRootMotionTests: XCTestCase {
     /// (`OWE_MG4_VARIANTS`, or the peer's ground-truth folder) those are read too.
     func testEveryEditorVariantParses() throws {
         let folder = ProcessInfo.processInfo.environment["OWE_MG4_VARIANTS"]
-            ?? "/Volumes/980Pro/dd-agentREF/peer/tools/peer/models_gt/mg4/mdl_variants"
+            ?? "\(OwnerMachine.volume)/dd-agentREF/peer/tools/peer/models_gt/mg4/mdl_variants"
         var files = 0
         for variant in Self.variants {
             var sources = [try Self.data(variant)]

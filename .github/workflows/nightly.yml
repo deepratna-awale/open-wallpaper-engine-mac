@@ -19,6 +19,8 @@ jobs:
     env:
       WE_ASSETS: ${{ github.workspace }}/../we-assets
       WE_ASSETS_ENC: ${{ github.workspace }}/../we-assets.tar.enc
+      # Tests that read the maintainer's drive (OwnerMachine.swift) skip, on the Mac too.
+      TEST_RUNNER_OWE_HERMETIC: '1'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 

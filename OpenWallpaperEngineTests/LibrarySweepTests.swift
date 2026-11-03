@@ -8,7 +8,7 @@ import MetalKit
 /// install is absent (CI). `OWE_LIBRARY` overrides the library root.
 final class LibrarySweepTests: XCTestCase {
     static var libraryRoot: URL {
-        URL(fileURLWithPath: ProcessInfo.processInfo.environment["OWE_LIBRARY"] ?? "/Volumes/980Pro/OpenWallpaperStorage")
+        URL(fileURLWithPath: ProcessInfo.processInfo.environment["OWE_LIBRARY"] ?? "\(OwnerMachine.volume)/OpenWallpaperStorage")
     }
 
     private struct Failure {

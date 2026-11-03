@@ -77,8 +77,8 @@ final class TEXSpriteFramesTests: XCTestCase {
     private static var roots: [String: URL] {
         let environment = ProcessInfo.processInfo.environment
         let workshop = environment["OWE_WORKSHOP"]
-            ?? "/Volumes/980Pro/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps/workshop/content/431960"
-        return ["storage": URL(fileURLWithPath: environment["OWE_LIBRARY"] ?? "/Volumes/980Pro/OpenWallpaperStorage"),
+            ?? "\(OwnerMachine.volume)/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps/workshop/content/431960"
+        return ["storage": URL(fileURLWithPath: environment["OWE_LIBRARY"] ?? "\(OwnerMachine.volume)/OpenWallpaperStorage"),
                 "workshop": URL(fileURLWithPath: workshop)]
     }
 

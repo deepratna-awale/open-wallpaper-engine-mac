@@ -95,6 +95,11 @@ what is already on the disk (`.github/actions/mac-cache`):
 - **Test state.** The tests use the isolated `Open Wallpaper Engine (isolated tests)` defaults and
   folders under `~/Library`, the same ones `Scripts/ci-local.sh` and Xcode's tests use. Don't run
   the tests locally while the runner is running a job, or the two will trip over each other.
+- **Your library stays out of CI.** Tests that read `/Volumes/980Pro` (the wallpaper library,
+  WE's install, the SceneScript corpus, reference captures) skip in CI on the Mac just as on
+  GitHub's runners: the workflows set `TEST_RUNNER_OWE_HERMETIC=1`
+  ([`OwnerMachine.swift`](../OpenWallpaperEngineTests/Support/OwnerMachine.swift)). They still run
+  locally, in Xcode and `Scripts/ci-local.sh`.
 - **Builds.** CI's `xcodebuild` doesn't go through the local build-slot script, so a CI job and
   local builds compete for the CPU. Pause the runner (`./svc.sh stop`) for heavy local work.
 - **Disk.** Checkouts and the kept DerivedData live under

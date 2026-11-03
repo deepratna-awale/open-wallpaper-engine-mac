@@ -16,7 +16,7 @@ final class ScenePuppetCanvasLibraryTests: XCTestCase {
     private static let puppet = "21"
 
     func testTheKnightsSwordDrawsPastItsImage() throws {
-        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["OWE_LIBRARY"] ?? "/Volumes/980Pro/OpenWallpaperStorage")
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["OWE_LIBRARY"] ?? "\(OwnerMachine.volume)/OpenWallpaperStorage")
         let directory = root.appending(path: "2515150033", directoryHint: .isDirectory)
         try XCTSkipUnless(FileManager.default.fileExists(atPath: directory.appending(path: "scene.json").path), "wallpaper not present")
         let frames = try sceneFrames(directory, only: Self.puppet)

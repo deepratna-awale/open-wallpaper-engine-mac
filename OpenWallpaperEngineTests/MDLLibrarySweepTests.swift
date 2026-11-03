@@ -36,10 +36,10 @@ final class MDLLibrarySweepTests: XCTestCase {
 
     private static var roots: [String: URL] {
         let environment = ProcessInfo.processInfo.environment
-        let steam = "/Volumes/980Pro/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps"
+        let steam = "\(OwnerMachine.volume)/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps"
         let install = URL(fileURLWithPath: environment["OWE_WE_INSTALL"] ?? "\(steam)/common/wallpaper_engine")
         return ["workshop": URL(fileURLWithPath: environment["OWE_WORKSHOP"] ?? "\(steam)/workshop/content/431960"),
-                "storage": URL(fileURLWithPath: environment["OWE_LIBRARY"] ?? "/Volumes/980Pro/OpenWallpaperStorage"),
+                "storage": URL(fileURLWithPath: environment["OWE_LIBRARY"] ?? "\(OwnerMachine.volume)/OpenWallpaperStorage"),
                 "default": install.appending(path: "projects/defaultprojects"),
                 "assets": install.appending(path: "assets")]
     }
