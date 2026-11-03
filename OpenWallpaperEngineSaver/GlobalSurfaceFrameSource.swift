@@ -131,7 +131,9 @@ final class GlobalSurfaceFrameSource: LiveFrameSource {
             // Delivered on the views' draw queue as each frame is drawn, never waiting for the
             // host's main thread (it stalls while the password prompt comes in): the views draw it then.
             let store = store
-            let status = notify_register_dispatch(ring.notifyName, &token, SaverDrawing.queue) { token in
+            // @Sendable: formed on the main actor, the handler would otherwise inherit it, and
+            // Swift 6's isolation check traps (SIGTRAP) the first time it runs on the draw queue.
+            let status = notify_register_dispatch(ring.notifyName, &token, SaverDrawing.queue) { @Sendable token in
                 Self.read(ring: id, token: token, into: store)
             }
             if status == UInt32(NOTIFY_STATUS_OK) { tokens[ring.id] = token }

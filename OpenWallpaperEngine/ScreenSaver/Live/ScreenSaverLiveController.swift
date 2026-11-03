@@ -120,6 +120,12 @@ final class ScreenSaverLiveController {
         if !observers.isEmpty { handle(.launchedForScreenSaver) }
     }
 
+    /// The broker's launch agent became enabled (registered, or allowed in Login Items): the frame
+    /// service registers with it again if it couldn't before.
+    func brokerAvailable() {
+        service?.brokerAvailable()
+    }
+
     private func setObserving(_ observing: Bool) {
         if observing, observers.isEmpty {
             observeLifecycle()

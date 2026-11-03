@@ -113,6 +113,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// The live screen saver's broker, a launch agent registered while the Screen Saver plugin is on.
     lazy var screenSaverBroker = ScreenSaverBrokerAgent()
     private var screenSaverBrokerCancellable: AnyCancellable?
+    private var screenSaverBrokerStateCancellable: AnyCancellable?
     /// The screen saver drawn live while it runs, the savers showing the frames.
     lazy var liveScreenSaver = ScreenSaverLiveController(plugin: screenSaver, environment: .init(
         settings: { [unowned self] in globalSettingsViewModel.effectiveSettings },
@@ -324,6 +325,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         screenSaverBrokerCancellable = screenSaver.$isEnabled.removeDuplicates().sink { [weak self] enabled in
             MainActor.assumeIsolated { self?.screenSaverBroker.update(enabled: enabled) }
         }
+        // The frame service may have looked the broker up before its agent was there.
+        screenSaverBrokerStateCancellable = screenSaverBroker.$state.removeDuplicates().filter { $0 == .enabled }
+            .sink { [weak self] _ in MainActor.assumeIsolated { self?.liveScreenSaver.brokerAvailable() } }
         // Settings › Optimizations › Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
             .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }
