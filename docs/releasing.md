@@ -124,15 +124,15 @@ Check locally: `security find-identity -v -p codesigning` lists
 Updates are signed with an EdDSA (ed25519) key pair. The app carries the public key and
 rejects any update the private key didn't sign, so **keep the private key safe and never lose
 it**: a new key pair can't update copies that carry the old public key. Create it once, on your
-Mac, with the tools from the Sparkle release the app links (2.10.0, see
+Mac, with the tools from the Sparkle release the app links (2.10.1, see
 `Scripts/release/fetch-sparkle-tools.sh`):
 
 ```sh
 set -euo pipefail
 cd "$(mktemp -d)"
-curl -fsSLO https://github.com/sparkle-project/Sparkle/releases/download/2.10.0/Sparkle-2.10.0.tar.xz
-echo "c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af32425dae6da0c  Sparkle-2.10.0.tar.xz" | shasum -a 256 -c -
-tar -xf Sparkle-2.10.0.tar.xz ./bin
+curl -fsSLO https://github.com/sparkle-project/Sparkle/releases/download/2.10.1/Sparkle-2.10.1.tar.xz
+echo "1a856d2a9edb8e628de88121d7be04cf0e2167f8641650b78fca00b14244cf27  Sparkle-2.10.1.tar.xz" | shasum -a 256 -c -
+tar -xf Sparkle-2.10.1.tar.xz ./bin
 
 # 1. Creates the key pair (the private key goes into your login Keychain, item
 #    "Private key for signing Sparkle updates") and prints the public key.
