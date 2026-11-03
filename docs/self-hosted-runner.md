@@ -15,7 +15,7 @@ labels `self-hosted`, `macOS`, `ARM64` and `owe-mac`, for:
 - pull requests from **this repository's own branches**.
 
 Pull requests from **forks always run on GitHub's `macos-26` runners**: a fork's code never runs on
-the Mac. The Linux jobs (gate, plan, the final checks) stay on GitHub. Release, Appcast, CodeQL,
+the Mac. The Linux jobs (gate, plan, the final checks) stay on GitHub. Release, Appcast,
 the Steam helper and the PR asset tests stay on GitHub's runners too.
 
 When the variable is anything else, or unset, every job runs on GitHub's runners as before. Turn
